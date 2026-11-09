@@ -175,7 +175,7 @@
     <string name="chatUiShareThisSession">¿Compartir esta conversación?</string>
     <string name="chatUiSharedAnyoneWithTheLinkCanView">Compartida: cualquiera con el enlace puede verla</string>
     <string name="chatUiShowAllSubagentSessions">Mostrar todas las conversaciones de subagentes</string>
-    <string name="chatUiSkill">Skill ·</string>
+    <string name="chatUiSkill">Habilidad ·</string>
     <string name="chatUiSlashCommandsAndAgents">Comandos con barra y agentes</string>
     <string name="chatUiSystemUpdate">Actualización del sistema</string>
     <string name="chatUiTellTheAgentWhyOrWhatTo">Dile al agente por qué, o qué hacer en su lugar (opcional)</string>

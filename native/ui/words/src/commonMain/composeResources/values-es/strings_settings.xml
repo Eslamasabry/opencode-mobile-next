@@ -827,10 +827,4 @@
     <string name="browserModeCors">El servidor debe permitir el origen de esta página. Si una prueba de conexión falla de inmediato aquí mientras la misma dirección funciona desde la app del teléfono, el servidor está rechazando las solicitudes del navegador desde este origen.</string>
     <string name="backgroundBatterySettingsInstead">Android no mostró su pregunta, así que se abrieron sus ajustes de batería. Configura esta app como Sin restricciones allí.</string>
     <string name="manageSpaceKeptAllComputers">Tus computadoras y todo lo que subiste a git se conservan</string>
-    <string name="appearanceGlassEdges">Bordes de cristal</string>
-    <string name="appearanceGlassEdgesLiquid">Líquido</string>
-    <string name="appearanceGlassEdgesFrosted">Esmerilado</string>
-    <string name="appearanceGlassEdgesNote">Líquido curva lo que se desplaza detrás de las barras, el cuadro de mensaje, las hojas y los menús. Esmerilado lo difumina.</string>
-    <string name="appearanceGlassEdgesNeedsAndroid13">Los bordes líquidos necesitan Android 13. Este teléfono los muestra esmerilados.</string>
-    <string name="appearanceGlassEdgesMotionOff">Los bordes se quedan esmerilados mientras el movimiento está desactivado.</string>
 </resources>

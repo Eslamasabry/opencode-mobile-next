@@ -3,15 +3,15 @@
      strings in this language. To be absorbed by :ui:words strings_os (see docs/native/units/NOTIFY.md). -->
 <resources>
     <string name="notify_live_channel">Conexión de código en directo</string>
-    <string name="notify_live_description">Se muestra mientras OpenCode mantiene activa una sesión del servidor en segundo plano</string>
+    <string name="notify_live_description">Se muestra mientras OpenCode mantiene activa una conversación del servidor en segundo plano</string>
     <string name="notify_coding_requests_channel">Solicitudes de código</string>
     <string name="notify_coding_requests_description">Avisos cuando OpenCode necesita permiso o una respuesta</string>
     <string name="notify_coding_requests_quiet_channel">Solicitudes de código (horas de silencio)</string>
     <string name="notify_coding_requests_quiet_description">Solicitudes que llegan en horas de silencio, sin sonido</string>
-    <string name="notify_coding_status_channel">Novedades de las sesiones</string>
-    <string name="notify_coding_status_description">Avisos cuando termina una sesión de OpenCode en segundo plano</string>
-    <string name="notify_team_progress_channel">Progreso del equipo de IA</string>
-    <string name="notify_team_progress_description">Una línea discreta mientras trabaja el equipo de IA</string>
+    <string name="notify_coding_status_channel">Novedades de las conversaciones</string>
+    <string name="notify_coding_status_description">Avisos cuando termina una conversación de OpenCode en segundo plano</string>
+    <string name="notify_team_progress_channel">Progreso de AI Team</string>
+    <string name="notify_team_progress_description">Una línea discreta mientras trabaja AI Team</string>
     <string name="notify_setup_channel">Configuración</string>
     <string name="notify_phone_server_channel">OpenCode en este teléfono</string>
     <string name="notify_phone_server_description">Se muestra mientras funciona el servidor del teléfono o el motor del proyecto</string>
@@ -28,7 +28,7 @@
     <string name="notify_ask_folder">¿Trabajar en %1$s?</string>
     <string name="notify_public_needs_you">Una solicitud te necesita</string>
     <string name="notify_public_finished">Terminó una conversación</string>
-    <string name="notify_status_public_stopped">OpenCode · se detuvo un chat</string>
+    <string name="notify_status_public_stopped">OpenCode · se detuvo una conversación</string>
     <string name="notify_test_title">Las notificaciones están activadas</string>
     <string name="notify_test_body">Las preguntas y el trabajo terminado llegarán así.</string>
     <string name="notify_alert_quota_title">El uso del proveedor alcanzó tu límite</string>
@@ -50,7 +50,7 @@
     <string name="notify_status_action_open">Abrir</string>
     <string name="notify_status_action_stop_reply">Detener la respuesta</string>
     <string name="notify_status_action_start">Iniciar</string>
-    <string name="notify_status_action_new_chat">Chat nuevo</string>
+    <string name="notify_status_action_new_chat">Conversación nueva</string>
     <string name="notify_status_action_stop_opencode">Detener OpenCode</string>
     <string name="notify_status_public_ready">OpenCode · listo</string>
     <string name="notify_status_public_paused">OpenCode · en pausa</string>

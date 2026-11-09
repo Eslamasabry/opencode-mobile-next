@@ -16,7 +16,7 @@
     <string name="readerUiChanges">Alterações</string>
     <string name="e7WorkspaceConnected">Conectado</string>
     <string name="e7WorkspaceConnecting">Conectando</string>
-    <string name="e7WorkspaceOffline">Offline</string>
+    <string name="e7WorkspaceOffline">Sem conexão</string>
     <string name="chatUiAlwaysAllow">Sempre permitir</string>
     <string name="chatUiDelegateThisPrompt">Delegar esta mensagem</string>
     <string name="chatUiOpenProviders">Abrir provedores</string>

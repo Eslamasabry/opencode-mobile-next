@@ -827,10 +827,4 @@
     <string name="backgroundBatterySettingsInstead">O Android não mostrou a pergunta dele, então as configurações de bateria foram abertas. Defina este app como Sem restrições lá.</string>
     <string name="privacyPagesSummary">Servidores, provedores, voz, arquivos e atualizações</string>
     <string name="manageSpaceKeptAllComputers">Seus computadores e tudo o que foi enviado ao git permanecem</string>
-    <string name="appearanceGlassEdges">Bordas de vidro</string>
-    <string name="appearanceGlassEdgesLiquid">Líquido</string>
-    <string name="appearanceGlassEdgesFrosted">Fosco</string>
-    <string name="appearanceGlassEdgesNote">O líquido curva o que rola atrás das barras, da caixa de mensagem, das folhas e dos menus. O fosco o desfoca.</string>
-    <string name="appearanceGlassEdgesNeedsAndroid13">As bordas líquidas precisam do Android 13. Este celular as mostra foscas.</string>
-    <string name="appearanceGlassEdgesMotionOff">As bordas ficam foscas enquanto o movimento está desativado.</string>
 </resources>

@@ -32,9 +32,9 @@
     <string name="settingsHubSearchExternalAgentsAliases">a2a external agents remote وكلاء خارجيون</string>
     <string name="settingsHubSearchTailscaleAliases">tailscale vpn network remote private شبكة خاصة بعيد</string>
     <string name="settingsHubSearchDisconnectAliases">disconnect leave server قطع الاتصال مغادرة خادم</string>
-    <string name="settingsHubSearchModelModeAliases">model mode agent variant thinking default selected نموذج وضع وكيل تفكير افتراضي session chat conversation جلسة دردشة محادثة</string>
+    <string name="settingsHubSearchModelModeAliases">model mode agent variant thinking default selected نموذج وضع وكيل تفكير افتراضي session chat conversation جلسة دردشة محادثة إعداد محادثة جارية وضع التفكير النموذج الحالي</string>
     <string name="settingsHubSearchShellAliases">shell terminal bash zsh command صدفة طرفية أوامر</string>
-    <string name="settingsHubSearchPermissionsAliases">permissions approvals always allow allowed revoke أذونات موافقات سماح دائم إلغاء</string>
+    <string name="settingsHubSearchPermissionsAliases">permissions approvals always allow allowed revoke أذونات موافقات سماح دائم إلغاء إذن سماح دائم رفض موافقة صلاحيات</string>
     <string name="settingsHubSearchTranscriptAliases">transcript display thinking reasoning timestamps usage سجل عرض تفكير استدلال طوابع زمنية استخدام</string>
     <string name="settingsHubSearchVoiceAliases">voice speech microphone dictation model صوت كلام ميكروفون إملاء نموذج</string>
     <string name="settingsHubSearchNotificationsAliases">notifications alerts quiet hours background check-in check in wi-fi wifi monitor saved servers finished runs approvals questions quota thresholds إشعارات تنبيهات ساعات الهدوء خلفية متابعة واي فاي مراقبة خوادم محفوظة العمليات المنتهية موافقات أسئلة حدود الحصص</string>
@@ -42,11 +42,11 @@
     <string name="settingsHubSearchModelsAliases">models agents provider AI reasoning favorites recent نماذج وكلاء مزود ذكاء اصطناعي استدلال مفضلة</string>
     <string name="settingsHubSearchProvidersAliases">provider api key keys authentication connect مزود مفتاح مفاتيح مصادقة اتصال</string>
     <string name="settingsHubSearchMcpAliases">mcp integrations servers tools تكاملات خوادم أدوات</string>
-    <string name="settingsHubSearchCommandsAliases">commands tools skills references slash capabilities أوامر أدوات مهارات مراجع إمكانات</string>
+    <string name="settingsHubSearchCommandsAliases">commands tools skills references slash capabilities أوامر أدوات مهارات مراجع إمكانات أمر أداة مهارة مرجع شرطة مائلة إضافة</string>
     <string name="settingsHubSearchPluginsAliases">plugins plugin installed source status AI Team Gas City إضافات مثبت مصدر حالة فريق</string>
     <string name="settingsHubSearchUsageAliases">usage cost tokens budget quota limit spent remaining threshold quota monitoring provider استخدام تكلفة رموز ميزانية حصة حد منفق متبقي مراقبة الحصص مزوّد plans subscriptions spending alerts خطط اشتراكات إنفاق تنبيهات</string>
-    <string name="settingsHubSearchPrivacyAliases">privacy drafts queue queued prompts read state storage clear delete خصوصية مسودات قائمة انتظار حالة القراءة تخزين مسح حذف</string>
-    <string name="settingsHubSearchGuideAliases">help guide connect tutorial start مساعدة دليل اتصال بدء</string>
+    <string name="settingsHubSearchPrivacyAliases">privacy drafts queue queued prompts read state storage clear delete خصوصية مسودات قائمة انتظار حالة القراءة تخزين مسح حذف سرية مسودة طلبات معلقة بيانات محفوظة تنظيف</string>
+    <string name="settingsHubSearchGuideAliases">help guide connect tutorial start مساعدة دليل اتصال بدء شرح تعليمات كيف أبدأ تعلّم</string>
     <string name="settingsHubSearchBugAliases">bug feedback issue support report خطأ ملاحظات مشكلة دعم بلاغ</string>
     <string name="settingsHubSearchDiagnosticsAliases">diagnostics debug errors log تشخيص أخطاء سجل</string>
     <string name="settingsHubSearchAboutAliases">about version licenses open source notices privacy data حول إصدار تراخيص مفتوح المصدر إشعارات خصوصية بيانات</string>
@@ -69,7 +69,7 @@
     <string name="discoverLanguageAliases">language arabic english locale اللغة العربية الإنجليزية ترجمة</string>
     <string name="discoverThemeAliases">theme colors palette السمة ألوان لوحة</string>
     <string name="discoverSpentAliases">spent cost tokens usage المصروف التكلفة الرموز الاستخدام إحصاءات</string>
-    <string name="discoverRemainingAliases">plans subscriptions remaining quota limit provider plan left reset الخطط الاشتراكات المتبقي الحصة الحد المزود الخطة التجدد</string>
+    <string name="discoverRemainingAliases">plans subscriptions remaining quota limit provider plan left reset الخطط الاشتراكات المتبقي الحصة الحد المزود الخطة التجدد اشتراك باقي نفاد الاستهلاك إعادة الضبط</string>
     <string name="discoverBudgetAliases">budget usd token ميزانية ميزانيات دولار رموز حد الإنفاق</string>
     <string name="discoverQuotaMonitorAliases">usage alerts quota monitoring threshold alert تنبيهات الاستخدام مراقبة الحصص حد تنبيه منخفض ساعات الهدوء</string>
     <string name="discoverCommandsAliases">commands slash أوامر أوامر الخادم تشغيل</string>
@@ -100,7 +100,7 @@
     <string name="tipsHubSubtitle">إيماءات مخفية وجولات قصيرة</string>
     <string name="tipsSearchAliases">نصائح جولة شرح تلميحات إيماءات ضغط مطول كيف أتعلم tips tutorial</string>
     <string name="starShareSearchAliases">نجمة قيّم جيت هاب مفضلة دعم مشروع مستودع شارك مشاركة التطبيق صديق إرسال رابط توصية دعوة star share github</string>
-    <string name="appUpdatesSearchAliases">update upgrade new version release install github check تحديث ترقية نسخة جديدة إصدار تثبيت</string>
+    <string name="appUpdatesSearchAliases">update upgrade new version release install github check تحديث ترقية نسخة جديدة إصدار تثبيت تنزيل أحدث تحقق فحص</string>
     <string name="localAssistantSearchAliases">مساعد ملخص دون اتصال نموذج محلي ذكاء اصطناعي</string>
     <string name="browserModeSubtitle">ما الذي يعمل في هذا المتصفح وما الذي يحتاج تطبيق الهاتف</string>
     <string name="settingsHubSearchPhoneLinuxAliases">phone linux ubuntu local on-device on device android install setup storage services هاتف لينكس محلي جهاز أندرويد تثبيت إعداد تخزين خدمات</string>

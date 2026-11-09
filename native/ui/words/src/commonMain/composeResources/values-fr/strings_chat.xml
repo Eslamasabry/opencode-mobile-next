@@ -188,7 +188,7 @@
     <string name="e7SharedDetail755">Choisissez jusqu'à %1$d</string>
     <string name="e7SharedDetail756">%1$s · %2$d sélectionné(s)</string>
     <string name="e7SharedDetail764">Ouvre %1$s dans votre navigateur</string>
-    <string name="e7SharedDetail765">Ce serveur a envoyé un type de champ que l'application ne comprend pas (« %1$s »).</string>
+    <string name="e7SharedDetail765">Ce serveur a envoyé un type de champ que l'application ne comprend pas («\u00A0%1$s\u00A0»).</string>
     <string name="e7WorkspaceDismissRequest">Ignorer cette demande\u00A0?</string>
     <string name="e7WorkspaceDismissDetail">OpenCode poursuivra sans réponse à ces questions.</string>
     <string name="e7WorkspaceNeedsInput">OpenCode attend une réponse</string>
@@ -203,7 +203,7 @@
     <string name="chatUiAgent">Agent</string>
     <string name="chatUiAlreadyAnsweredElsewhere">Déjà traité ailleurs</string>
     <string name="chatUiAlreadyDelivered">Déjà remis</string>
-    <string name="chatUiAlwaysAllowWouldAlsoCover">« Toujours autoriser » couvrirait aussi</string>
+    <string name="chatUiAlwaysAllowWouldAlsoCover">«\u00A0Toujours autoriser\u00A0» couvrirait aussi</string>
     <string name="chatUiAnswerWasCutOffByTheLength">La réponse a été coupée par la limite de longueur</string>
     <string name="chatUiAnyoneWithTheLinkCanViewThis">Toute personne disposant du lien peut voir cette conversation et son contexte partagé. Ne partagez pas de conversations contenant des secrets, des identifiants ou des fichiers privés.</string>
     <string name="chatUiAppDiagnostics">Diagnostics de l'application</string>
@@ -528,7 +528,7 @@
     <string name="approvalsUiFailedDetail">L'approbation automatique a échoué. Examinez cette demande.</string>
     <string name="approvalsUiSaveFailed">Impossible d'enregistrer le réglage d'approbation\u00A0: %1$s</string>
     <string name="approvalsUiIndicatorPaused">Approbation automatique en pause</string>
-    <string name="nudgeApprovals">« %1$s » demandé 3 fois\u00A0: cette conversation peut approuver les demandes à votre place.</string>
+    <string name="nudgeApprovals">«\u00A0%1$s\u00A0» demandé 3 fois\u00A0: cette conversation peut approuver les demandes à votre place.</string>
     <string name="nudgeReviewChanges">OpenCode a modifié des fichiers. Examinez-les avant de continuer.</string>
     <string name="nudgeLeave">Vous pouvez quitter\u00A0: ce téléphone vous prévient quand l'exécution est terminée.</string>
     <string name="nudgeCompact">Le contexte est plein à %1$s%\u00A0: raccourcissez la conversation pour continuer.</string>
@@ -825,7 +825,7 @@
     <string name="defaultModelChange">Choisir un autre modèle</string>
     <string name="consentAlwaysAllowQuestion">Demandé 3 fois. Toujours autoriser %1$s\u00A0?</string>
     <string name="consentAlwaysAllowDecline">Continuer à demander</string>
-    <string name="consentAlwaysAllowFailed">Le serveur n'a pas enregistré « Toujours autoriser ». La demande est toujours en attente\u00A0; réessayez ou répondez-y une seule fois.</string>
+    <string name="consentAlwaysAllowFailed">Le serveur n'a pas enregistré «\u00A0Toujours autoriser\u00A0». La demande est toujours en attente\u00A0; réessayez ou répondez-y une seule fois.</string>
     <string name="consentAlwaysAllowTitle">Toujours autoriser cette demande\u00A0?</string>
     <string name="kitToolFor">pour %1$s</string>
     <string name="kitToolOpenDetails">Ouvrir ses détails</string>
@@ -892,8 +892,8 @@
     <string name="chatWatchTeamInstructions__eq1">Instructions de l'équipe · 1 mot · %2$s</string>
     <string name="chatWatchEmptyStartingTitle">Démarrage</string>
     <string name="chatWatchEmptyStartingBody">Ses étapes apparaissent ici au fil de son travail.</string>
-    <string name="chatWatchEmptyWorkingOn">Travaille sur « %1$s ». Ses étapes apparaissent ici au fil de son travail.</string>
-    <string name="chatWatchEmptyReviewing">Examine les modifications de « %1$s ». Ses étapes apparaissent ici au fil de son travail.</string>
+    <string name="chatWatchEmptyWorkingOn">Travaille sur «\u00A0%1$s\u00A0». Ses étapes apparaissent ici au fil de son travail.</string>
+    <string name="chatWatchEmptyReviewing">Examine les modifications de «\u00A0%1$s\u00A0». Ses étapes apparaissent ici au fil de son travail.</string>
     <string name="chatWatchEmptyIdleTitle">En attente</string>
     <string name="chatWatchEmptyIdleBody">Il attend sa prochaine tâche. Écrivez-lui ci-dessous pour lui demander quelque chose.</string>
     <string name="kitComposerPillNoAnswer">Pas encore de réponse</string>
@@ -981,9 +981,9 @@
     </plurals>
     <string name="toolCardWhatWasSent">Ce qui a été envoyé</string>
     <string name="toolCardWhatCameBack">Ce qui est revenu</string>
-    <string name="sessionArchiveTitle">Archiver « %1$s »\u00A0?</string>
+    <string name="sessionArchiveTitle">Archiver «\u00A0%1$s\u00A0»\u00A0?</string>
     <string name="sessionArchiveBody">Elle passe dans Archivées, où vous pouvez toujours la lire.</string>
-    <string name="sessionDeleteTitle">Supprimer « %1$s »\u00A0?</string>
+    <string name="sessionDeleteTitle">Supprimer «\u00A0%1$s\u00A0»\u00A0?</string>
     <string name="sessionDeleteBody">La conversation et son historique sont supprimés définitivement. Cette action est irréversible.</string>
     <string name="kitContextSheetTitle">Fenêtre de contexte</string>
     <string name="kitContextSheetCompactNow">Raccourcir maintenant</string>
@@ -1204,7 +1204,7 @@
     <string name="chatStuckHours">%1$d h %2$d min</string>
     <string name="chatStuckUnnamed">Toujours en cours · %1$s · peut-être bloqué</string>
     <string name="chatStuckWaitsNote">Attend la fin de %1$s. Arrêtez-le pour passer maintenant.</string>
-    <string name="chatStuckNeverEnds">Cette réponse ne se terminera peut-être jamais. « Arrêter et envoyer » fait passer votre message tout de suite.</string>
+    <string name="chatStuckNeverEnds">Cette réponse ne se terminera peut-être jamais. «\u00A0Arrêter et envoyer\u00A0» fait passer votre message tout de suite.</string>
     <string name="chatStuckThisStep">cette étape</string>
     <string name="stopRowSemantics">Arrêter %1$s</string>
     <plurals name="queueEvictedTooOld">
@@ -1236,11 +1236,11 @@
     <string name="agentUpdateSendBlockedNoPercent">%1$s se met à jour. Vous pourrez envoyer une fois terminé.</string>
     <string name="childLimitTitle">Laisser les agents exécuter plus de programmes à la fois</string>
     <string name="childLimitBody">Android arrête les agents lorsque l'application exécute plus de 32 programmes. Le désactiver permet aux gros travaux de se terminer\u00A0; l'application met toujours le travail en pause quand le téléphone chauffe ou que la batterie est faible.</string>
-    <string name="childLimitStepsOpen">Dans les Options pour les développeurs, activez « Désactiver les restrictions des processus enfants », puis revenez.</string>
+    <string name="childLimitStepsOpen">Dans les Options pour les développeurs, activez «\u00A0Désactiver les restrictions des processus enfants\u00A0», puis revenez.</string>
     <string name="childLimitOpenDeveloper">Ouvrir les Options pour les développeurs</string>
     <string name="childLimitStepsEnable">Les Options pour les développeurs sont désactivées. Activez-les dans Paramètres › À propos du téléphone\u00A0: touchez sept fois Numéro de build.</string>
     <string name="childLimitOpenAbout">Ouvrir À propos du téléphone</string>
-    <string name="childLimitStepsText">Ouvrez Paramètres › Système › Options pour les développeurs et activez « Désactiver les restrictions des processus enfants ».</string>
+    <string name="childLimitStepsText">Ouvrez Paramètres › Système › Options pour les développeurs et activez «\u00A0Désactiver les restrictions des processus enfants\u00A0».</string>
     <string name="childLimitHide">Masquer</string>
     <string name="composerPasteImageFromClipboard">Coller l'image du presse-papiers</string>
     <string name="composerPasteImageFromClipboardSupporting">Joindre l'image copiée</string>

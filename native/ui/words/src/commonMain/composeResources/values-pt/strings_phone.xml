@@ -50,7 +50,7 @@
     <string name="termuxStorageNoteAgentScratch">Pastas temporárias podem conter trabalho não concluído ou arquivos usados por outras ferramentas. Os tamanhos aparecem só para consulta; não é possível remover essas pastas aqui.</string>
     <string name="termuxStorageCatProjectBuildOutputs">Pastas com nomes de compilação</string>
     <string name="termuxStorageNoteProjectBuildOutputs">Pastas chamadas build, .dart_tool, node_modules ou target também podem conter seus arquivos. Só pelo nome não dá para saber se podem ser descartadas, então não é possível removê-las aqui.</string>
-    <string name="termuxStorageCatToolchains">Ferramentas de desenvolvimento</string>
+    <string name="termuxStorageCatToolchains">Ferramentas de build</string>
     <string name="termuxStorageCatAiTeam">AI Team</string>
     <string name="termuxStorageNoteAiTeam">As pastas, bancos de dados e ferramentas da equipe podem conter trabalho que você precisa guardar. Não é possível removê-los aqui, mesmo com a equipe parada.</string>
     <string name="termuxStorageCatOpenCode">O próprio OpenCode</string>

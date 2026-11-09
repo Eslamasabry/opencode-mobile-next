@@ -28,7 +28,7 @@
     <string name="m40AuthCode">Código de inicio de sesión o URL de retorno</string>
     <string name="m40AuthFinish">Terminar el inicio de sesión</string>
     <string name="m40AuthDone">Listo</string>
-    <string name="m40AuthComplete">Inicio de sesión completado</string>
+    <string name="m40AuthComplete">Sesión iniciada</string>
     <string name="m40AuthCompleteBody">La lista de planes se actualizó.</string>
     <string name="m40AuthFailed">No se pudo terminar este paso. Inténtalo de nuevo.</string>
     <string name="m40AuthReenter">Vuelve a escribir la contraseña de este servidor en Servidores y regresa aquí.</string>

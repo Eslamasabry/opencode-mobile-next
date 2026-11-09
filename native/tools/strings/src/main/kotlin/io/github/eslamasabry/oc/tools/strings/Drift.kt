@@ -196,13 +196,13 @@ object Drift {
         val out = inputs.androidResOut
         if (out != null && inputs.words.isDirectory()) {
             val cmpFolders = inputs.words.listDirectoryEntries("values*").filter { it.resolve("strings_os.xml").exists() }.map { it.name }.toSet()
-            val resFolders = if (out.isDirectory()) out.listDirectoryEntries("values*").filter { it.resolve("strings_os.xml").exists() }.map { it.name }.toSet() else emptySet()
+            val resFolders = if (out.isDirectory()) out.listDirectoryEntries("values*").filter { it.resolve("strings_os.xml").exists() }.map { androidAlias(it.name) }.toSet() else emptySet()
             for (folder in (cmpFolders + resFolders).sorted()) {
                 val locale = localeOf(folder, inputs.template) ?: folder
                 if (folder !in resFolders) { f(Kind.ANDROID_RES, locale, "$folder/strings_os.xml", "missing in Android res"); continue }
                 if (folder !in cmpFolders) { f(Kind.ANDROID_RES, locale, "$folder/strings_os.xml", "no CMP strings_os.xml"); continue }
                 val cmp = read(inputs.words.resolve(folder).resolve("strings_os.xml").readText(), folder)
-                val android = AndroidStrings.parse(out.resolve(folder).resolve("strings_os.xml").readText(), folder).associateBy { it.name }
+                val android = AndroidStrings.parse(out.resolve(androidFolder(out, folder)).resolve("strings_os.xml").readText(), folder).associateBy { it.name }
                 for ((name, v) in cmp) {
                     val a = android[name]
                     val same = when {
@@ -236,6 +236,12 @@ object Drift {
         is Value.S -> token.findAll(v.text).mapTo(HashSet()) { it.groupValues[1] to it.groupValues[2] }
         is Value.P -> v.items.values.flatMapTo(HashSet()) { t -> token.findAll(t).map { it.groupValues[1] to it.groupValues[2] } }
     }
+
+    /** Android's legacy Indonesian code: the res copy is `values-in` (older devices report "in"), the CMP one `values-id`. */
+    private fun androidAlias(folder: String) = if (folder == "values-in") "values-id" else folder
+
+    private fun androidFolder(out: Path, folder: String) =
+        if (folder == "values-id" && out.resolve("values-in").isDirectory()) "values-in" else folder
 
     fun localeOf(folder: String, template: String): String? {
         if (folder == "values") return template

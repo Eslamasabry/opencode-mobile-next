@@ -763,10 +763,4 @@
     <string name="backgroundBatterySettingsInstead">Android không hiện câu hỏi của nó, nên cài đặt pin của Android đã mở thay thế. Hãy đặt ứng dụng này thành Không hạn chế ở đó.</string>
     <string name="privacyPagesSummary">Máy chủ, nhà cung cấp, giọng nói, tệp và cập nhật</string>
     <string name="manageSpaceKeptAllComputers">Các máy tính của bạn và mọi thứ đã đẩy lên git được giữ lại</string>
-    <string name="appearanceGlassEdges">Viền kính</string>
-    <string name="appearanceGlassEdgesLiquid">Lỏng</string>
-    <string name="appearanceGlassEdgesFrosted">Mờ đục</string>
-    <string name="appearanceGlassEdgesNote">Lỏng làm uốn cong những gì cuộn phía sau các thanh, ô nhập tin nhắn, bảng và menu. Mờ đục làm mờ chúng.</string>
-    <string name="appearanceGlassEdgesNeedsAndroid13">Viền lỏng cần Android 13. Điện thoại này hiển thị chúng ở dạng mờ đục.</string>
-    <string name="appearanceGlassEdgesMotionOff">Viền giữ dạng mờ đục khi chuyển động đang tắt.</string>
 </resources>
