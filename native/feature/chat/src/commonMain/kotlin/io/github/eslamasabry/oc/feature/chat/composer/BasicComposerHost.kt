@@ -85,6 +85,9 @@ import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerFieldRow
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerStatusStrip
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerLimitStrip
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerBox
+import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerChip
+import io.github.eslamasabry.oc.ui.kitchat.composer.kitComposerSlab
+import io.github.eslamasabry.oc.ui.kit.frame.KitReportBottomSlab
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerRowFit
 import io.github.eslamasabry.oc.ui.kit.chip.KitComposerModelChip
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerPrimaryAction
@@ -947,34 +950,42 @@ public fun BasicComposer(
             due = ComposerTipRules.sendTipDue(typed, busy, chrome.sendLater != null && sendReady),
             blocked = waitingRequest,
         )
-        KitComposerStatusStrip(
-            hasChips = true,
-            modifier = Modifier.padding(bottom = COMPOSER_STRIP_GAP.dp).testTag("composer-status-strip"),
-            stop = if (stopShown) stopPart else null,
-            model = {
-                val chipWords = modelWords(state, chrome)
-                val modelName = stringResource(Res.string.composerPreviewModelButton)
-                val openModels = {
-                    // B3: the keyboard never stays open over the picker.
-                    focusManager.clearFocus()
-                    modelsOpen = true
+        // Glass (owner 2026-11-10, "merge the model picker and approval mode with the input box so we get a slab of
+        // glass"): nothing rides above the box. The approval mode and the model move into the box's own row under the
+        // words and Stop to the end of the words' row; the frame then leaves the transcript sharp under the one pane.
+        val slab = kitComposerSlab()
+        KitReportBottomSlab(slab)
+        val modelPart: @Composable (inBox: Boolean) -> Unit = { inBox ->
+            val chipWords = modelWords(state, chrome)
+            val modelName = stringResource(Res.string.composerPreviewModelButton)
+            val openModels = {
+                // B3: the keyboard never stays open over the picker.
+                focusManager.clearFocus()
+                modelsOpen = true
+            }
+            // Spoken as before: "Model", then the model's words as its state (09-10_3), one node around the kit's
+            // chip; the chip's own label stays the visible words.
+            Box(
+                Modifier.testTag("chat-model-button").clearAndSetSemantics {
+                    contentDescription = modelName
+                    stateDescription = chipWords
+                    role = Role.Button
+                    onClick { openModels(); true }
                 }
-                // Spoken as before: "Model", then the model's words as its state (09-10_3), one node around the kit's
-                // chip; the chip's own label stays the visible words.
-                Box(
-                    Modifier.testTag("chat-model-button").clearAndSetSemantics {
-                        contentDescription = modelName
-                        stateDescription = chipWords
-                        role = Role.Button
-                        onClick { openModels(); true }
-                    }
-                ) {
-                    KitComposerModelChip(label = chipWords, onClick = openModels)
-                }
-            },
-        ) {
-            chrome.rowChips()
+            ) {
+                if (inBox) KitComposerChip(label = chipWords, onClick = openModels, icon = KitIcons.model, shrinks = true)
+                else KitComposerModelChip(label = chipWords, onClick = openModels)
+            }
         }
+        if (!slab)
+            KitComposerStatusStrip(
+                hasChips = true,
+                modifier = Modifier.padding(bottom = COMPOSER_STRIP_GAP.dp).testTag("composer-status-strip"),
+                stop = if (stopShown) stopPart else null,
+                model = { modelPart(false) },
+            ) {
+                chrome.rowChips()
+            }
         // S24-CHAT story 5: a picture the keyboard inserts (a GIF, a sticker, the clipboard chip) joins
         // the draft like a picked photo; only where this agent takes pictures.
         val takePicture: ((KitInsertedPicture) -> Unit)? =
@@ -991,11 +1002,18 @@ public fun BasicComposer(
                     }
                 }
         KitPictureReceiver(takePicture, Modifier.fillMaxWidth()) {
-        KitComposerRowFit(words, leadingTargets = 1, stack = false) { stacked ->
+        KitComposerRowFit(words, leadingTargets = 1, stack = slab) { stacked ->
             KitComposerBox(
                 running = busy && !waitingRequest,
                 stacked = stacked,
                 hasLeading = true,
+                chips = {
+                    if (slab) {
+                        chrome.rowChips()
+                        modelPart(true)
+                    }
+                },
+                fieldEnd = { if (slab && stopShown) stopPart() },
                 above = {
                     ComposerLimitArea(limits, state, conversationRef)
                     KitComposerTray(

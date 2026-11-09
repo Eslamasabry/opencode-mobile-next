@@ -1,5 +1,8 @@
 package io.github.eslamasabry.oc.ui.kit.action
 
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidPressLight
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidSwell
+import io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidPress
 import androidx.compose.foundation.shape.CircleShape
 import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
 import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
@@ -131,11 +134,13 @@ private fun RoundFace(label: String, icon: ImageVector, onClick: () -> Unit, bac
     val words = look.words ?: colors.onAccent // F: lib/ui/kit/kit_floating_action.dart:168-173
     // Glass: accent liquid glass over what the button floats over; null keeps the style's own face.
     val liquid = kitLiquidFace(LiquidRole.Action, backdrop, CircleShape)
+    val liquidPress = rememberKitLiquidPress(interactions, on = liquid != null)
     Box(
-        Modifier
+        Modifier.kitLiquidSwell(liquidPress)
             .size(KIT_FAB_SIZE.dp)
             .kitTappable(onClick = onClick, shape = KitShapeId.Circle, ink = TextTone.OnAccent, interactionSource = interactions)
             .then(liquid ?: look.modifier)
+            .kitLiquidPressLight(liquidPress, CircleShape)
             .semantics { contentDescription = label }
             .testTag("kit-fab"),
         contentAlignment = Alignment.Center,

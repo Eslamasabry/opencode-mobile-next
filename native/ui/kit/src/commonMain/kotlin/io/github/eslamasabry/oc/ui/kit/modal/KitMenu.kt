@@ -1,5 +1,9 @@
 package io.github.eslamasabry.oc.ui.kit.modal
 
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidTouchLight
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidTouchWatch
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.fillMaxSize
@@ -419,12 +423,23 @@ private fun MenuContent(
             exit = fadeOut(specs.exit()),
             label = "kit.menu",
         ) {
-            // The panel grows from the control that opened it (motion lead 2026-11-07): scale 0.9 → 1 on SpatialFast
-            // around the anchor's centre on the side it opens from, read in the draw phase. Full only.
+            // The panel grows out of the control that opened it (owner 2026-11-10, "the menu grows out of the ⋯ button
+            // instead of fading in"): from MENU_FROM_SCALE to 1 around the anchor's centre on the side it opens from,
+            // on the release spring (a finger let go of the control: it may settle with a slight overshoot), and back
+            // into the control on the way out. Read in the draw phase. Full only.
             val panelBox = remember { mutableStateOf(IntRect.Zero) }
+            // Fluid glass: opened from a control on a piece of glass (the bar's ⋯, a chip on the message box), the
+            // panel is drawn out of that glass and lets go of it as it settles; closing, it joins it again.
+            val merge = io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidMerge.current
+            val drop = io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidDrop("bar", on = motion.travels)
+            val pull by transition.animateFloat(
+                transitionSpec = { if (targetState == EnterExitState.Visible) specs.effectsSlow() else specs.effectsFast() },
+                label = "kit.menu.pull",
+            ) { if (it == EnterExitState.Visible) 0f else 1f }
+            val menuRadius = with(density) { MENU_MERGE_RADIUS_DP.dp.toPx() }
             val scale by transition.animateFloat(
                 transitionSpec = {
-                    if (targetState == EnterExitState.Visible) specs.spatialFast() else specs.exit()
+                    if (targetState == EnterExitState.Visible) specs.release() else specs.exit()
                 },
                 label = "kit.menu.scale",
             ) { if (it == EnterExitState.Visible || !motion.travels) 1f else MENU_FROM_SCALE }
@@ -435,7 +450,27 @@ private fun MenuContent(
                         .graphicsLayer {
                             scaleX = scale
                             scaleY = scale
-                            transformOrigin = MenuPlacement.origin(anchor, panelBox.value, opensAbove.value)
+                            val from = MenuPlacement.origin(anchor, panelBox.value, opensAbove.value)
+                            transformOrigin = from
+                            if (drop != null && merge != null) {
+                                // Where the panel is drawn now (its box, scaled about the point it grows from), in the
+                                // window; the body is whichever glass holds the control that opened it.
+                                val box = panelBox.value
+                                val ox = box.left + box.width * from.pivotFractionX
+                                val oy = box.top + box.height * from.pivotFractionY
+                                drop.rect =
+                                    Rect(
+                                        ox + (box.left - ox) * scale,
+                                        oy + (box.top - oy) * scale,
+                                        ox + (box.right - ox) * scale,
+                                        oy + (box.bottom - oy) * scale,
+                                    )
+                                drop.radius = menuRadius
+                                val centre = Offset(anchor.center.x.toFloat(), anchor.center.y.toFloat())
+                                val home = merge.bodies.entries.firstOrNull { it.value.rect.contains(centre) }?.key
+                                if (home != null) drop.body = home
+                                drop.pull = if (home != null) pull else 0f
+                            }
                         }
                         .layout { measurable, constraints ->
                         if (!constraints.hasBoundedHeight) {
@@ -479,15 +514,20 @@ public fun KitMenuPanel(
     val shape = KitShapeId.Panel.shape()
     // Glass: liquid glass over the page (Android 13+, not held), else a frosted pane with its soft rims; every other
     // style keeps surface2 and its hairline.
+    val liquidFace = kitLiquidMenuFace(shape, grow)
     val menuFace =
-        kitLiquidMenuFace(shape, grow)
+        liquidFace
             ?: kitGlassSheet(KitShapeId.Panel, colors.surface2)
             ?: Modifier.background(colors.surface2).border(1.dp, colors.hairline, shape)
+    // Glass: a soft light gathers under the finger and follows it down the rows (KitLiquidTouch.kt).
+    val touch = io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidTouch(on = liquidFace != null)
     Column(
         modifier
             .widthIn(min = MENU_MIN_WIDTH_DP.dp, max = MENU_MAX_WIDTH_DP.dp)
             .clip(shape)
+            .kitLiquidTouchWatch(touch)
             .then(menuFace)
+            .kitLiquidTouchLight(touch, shape)
             .verticalScroll(rememberScrollState())
             // Glass keeps its pane inset inside the menu (owner 2026-11-09): rows clear of the rim, sheen and lens.
             .padding(horizontal = kitPaneInset(), vertical = Space.S1.dp + kitPaneInset())
@@ -662,4 +702,7 @@ private class MenuPosition(
 }
 
 /** A menu grows from 90 % of its size at Full (scale and fade, never from nothing). */
-internal const val MENU_FROM_SCALE: Float = 0.9f
+internal const val MENU_FROM_SCALE: Float = 0.55f
+
+/** The panel's corner as the fluid bridge takes it, in dp (the kit's Panel corner on Glass). */
+private const val MENU_MERGE_RADIUS_DP: Int = 24

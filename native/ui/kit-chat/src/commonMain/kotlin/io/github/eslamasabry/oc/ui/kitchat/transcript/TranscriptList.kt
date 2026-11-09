@@ -213,7 +213,9 @@ public fun KitTranscriptList(
         // starts, at its strongest, so wherever nothing lay below it (liquid glass, a live background) it cut straight
         // across. It now settles over its 28 dp and holds on down to the list's edge; the screen's own scroll edge
         // fades it out with the words under the bottom block, so it has no edge of its own.
-        if (fade > 0f)
+        // Over a glass slab (owner 2026-11-10) there is no fade at all: the words run sharp under the one pane, and the
+        // pill is a drop of glass over them.
+        if (fade > 0f && !io.github.eslamasabry.oc.ui.kit.frame.kitScreenBottomIsSlab())
             Box(
                 Modifier.align(Alignment.BottomCenter)
                     .fillMaxWidth()

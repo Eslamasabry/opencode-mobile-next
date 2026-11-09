@@ -408,13 +408,16 @@ internal fun kitLiquidPaneSpec(role: LiquidRole, flip: LiquidFlip, chosen: Boole
                 fill = fill,
                 fillStart = face.fillStart?.let { lean(Color(it.v), faceDark) } ?: fill,
                 rtl = rtl,
-                rim = rim.copy(alpha = if (faceDark) look.spec.liquidRimDark else look.spec.liquidRimLight),
+                // Light glass: a white rim vanishes on a white page, so its edge is a faint dark line (the glass's own
+                // thickness seen edge-on); dark glass keeps the added light rim.
+                rim = if (faceDark) rim.copy(alpha = look.spec.liquidRimDark) else Color.Black.copy(alpha = LIGHT_EDGE_ALPHA),
                 rimAdds = faceDark,
                 rimDp = RIM_LIGHT_DP,
                 shadow = Color.Black.copy(alpha = recipe.shadowAlpha),
                 frostBlurDp = GlassSpec.FLOAT_FROST,
                 sheen = Color(face.sheen.v),
-                specular = rim.copy(alpha = if (faceDark) look.spec.liquidSpecularDark else look.spec.liquidSpecularLight),
+                // No painted glint: the edge's own light (the rim highlight) is the shine.
+                specular = Color.Transparent,
                 flipFill = if (smoke != null) fill else otherFace.fill?.let { lean(Color(it.v), !roles.dark) } ?: fill,
                 flipFillStart = if (smoke != null) face.fillStart?.let { lean(Color(it.v), faceDark) } ?: fill else (otherFace.fillStart ?: otherFace.fill)?.let { lean(Color(it.v), !roles.dark) } ?: fill,
                 flipSheen = Color(otherFace.sheen.v),
@@ -615,6 +618,9 @@ private class WordsPlateNode : Modifier.Node(), DrawModifierNode {
 /** The rim light's width, in dp: a sharp, thin 1 dp line with no blur (owner 2026-11-09, "crisper"). */
 internal const val RIM_LIGHT_DP: Float = 1f
 
+/** Light glass's dark edge line (see kitLiquidPaneSpec). */
+internal const val LIGHT_EDGE_ALPHA: Float = .10f
+
 /**
  * The rim light's strength over a dark theme (added light) and a light one (laid over): soft white light (owner
  * 2026-11-08: glass edges are a neutral white light, not accent-tinted; an HCT-pulled yellow accent read as blue-teal),
@@ -648,6 +654,7 @@ internal fun BoxScope.KitLiquidBarPane(face: Modifier) {
     Box(
         Modifier.matchParentSize()
             .padding(horizontal = LIQUID_BAR_INSET_X.dp, vertical = LIQUID_BAR_INSET_Y.dp)
+            .kitLiquidMergeBody("bar", LIQUID_BAR_RADIUS.dp, LiquidRole.Bar)
             .then(face)
             .testTag("kit-liquid-bar")
     )

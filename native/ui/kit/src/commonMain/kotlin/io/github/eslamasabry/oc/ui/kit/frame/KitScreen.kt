@@ -61,6 +61,16 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
 import io.github.eslamasabry.oc.ui.design.effects.FrostRole
 import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
 import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidBarPane
+import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidMerge
+import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidMergeLayer
+import io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidMerge
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidMergeBlur
+import io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidMergeProgram
+import io.github.eslamasabry.oc.ui.kit.effects.LIQUID_BAR_INSET_X
+import io.github.eslamasabry.oc.ui.kit.effects.LIQUID_BAR_INSET_Y
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidTouchLight
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidTouchWatch
+import io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidTouch
 import io.github.eslamasabry.oc.ui.kit.effects.LiquidBarShape
 import io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidChrome
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidFace
@@ -259,6 +269,8 @@ public fun KitScreen(
     body: @Composable () -> Unit,
 ) {
     val framed = topBar != null || page
+    // What the bottom block says it is (one pane of glass: KitReportBottomSlab), kept across the frame's two layouts.
+    val bottomState = remember { KitScreenBottom() }
     val window = LocalKitWindow.current
     val cap = if (window.cls == WindowClass.Compact) CapRole.Fill else width.cap
     // Overlaid chrome swaps between the overlay Box and the plain Column (a status line, Find,
@@ -294,11 +306,23 @@ public fun KitScreen(
             // Liquid glass (Glass only, where FrostPolicy does not hold it): the bar and the composer float as glass
             // over what scrolls behind them; a null face keeps today's ground.
             val barFace = if (topPart != null) kitLiquidFace(LiquidRole.Bar, frost, LiquidBarShape) else null
+            // The capsule answers a finger on its controls: a soft light under it, a brighter edge (KitLiquidTouch.kt).
+            val barTouch = rememberKitLiquidTouch(on = barFace != null)
+            val barInset = with(LocalDensity.current) { { Offset(LIQUID_BAR_INSET_X.dp.toPx(), LIQUID_BAR_INSET_Y.dp.toPx()) } }
             // Owner's pick 2026-11-09 (chat edge, option A): a page that records its body runs it edge to edge, under
             // the status bar and the bar; at rest its content starts below them (KitTopEdge.kt).
             val frostedFace = if (topPart != null && edgesFade && barFace == null) kitFrostedBarFace(frost) else null
             val look = topEdgeLook(liquid = barFace != null, frosted = frostedFace != null)
             val statusBlur = if (edgesFade && look != KitTopEdgeLook.Ground) kitStatusEdgeBlur() else null
+            // Glass: what scrolls under the bottom block shows on behind it as a soft blur of itself (KitBottomEdge.kt).
+            // A bottom block that is one pane of glass (KitReportBottomSlab) needs neither: the body stays sharp under it.
+            val slab = bottomState.slab && bottomPart != null
+            val bottomBlur = if (edgesFade && bottomPart != null && !slab && kitChromeIsGlass()) kitStatusEdgeBlur(BOTTOM_EDGE_BLUR_DP) else null
+            // Fluid glass (KitLiquidMerge.kt): a drop leaving or joining the bar's capsule or the bottom slab is bridged
+            // to it here, over the body and under the chrome. Only where the body is recorded and shaders run.
+            val mergeProgram = if (edgesFade && kitChromeIsGlass() && !KitMotion.state.reduced) rememberKitLiquidMergeProgram() else null
+            val mergeState = remember { KitLiquidMerge() }
+            val merge = mergeState.takeIf { mergeProgram != null }
             val scroll = remember { KitScreenScroll() }
             val under = kitUnderTop(scroll)
             val insetTop = if (framed) insets.getTop(density) else 0
@@ -332,7 +356,7 @@ public fun KitScreen(
                     )
                     .testTag("kit-screen")
             ) {
-                CompositionLocalProvider(LocalChromePadding provides padding, LocalKitScreenScroll provides scroll) {
+                CompositionLocalProvider(LocalChromePadding provides padding, LocalKitScreenScroll provides scroll, LocalKitScreenBottom provides bottomState, LocalKitLiquidMerge provides merge) {
                     Box(
                         Modifier.fillMaxSize()
                             .then(
@@ -344,7 +368,7 @@ public fun KitScreen(
                                         // From 8 dp above the block (inside the list's own 16 dp padding, so the
                                         // newest line at rest and the jump pill stay whole) over its top 16 dp.
                                         fadeFromBottom =
-                                            if (bottomPart == null) null
+                                            if (bottomPart == null || slab) null
                                             else ({ bottomPx + with(density) { EDGE_LEAD_DP.dp.toPx() } }),
                                         bottomReach = (EDGE_LEAD_DP + COMPOSER_FADE_DP).dp,
                                         topReachPx = { statusPx + reach - statusEdgeSolid(statusPx.toFloat()) },
@@ -353,6 +377,14 @@ public fun KitScreen(
                             .kitMaxWidth(cap)
                     ) { KitScreenBody(edges) { bodyPart() } }
                 }
+                if (frost != null && bottomBlur != null)
+                    KitBottomEdge(
+                        frost,
+                        fromBottom = { bottomPx + with(density) { EDGE_LEAD_DP.dp.toPx() } },
+                        reachPx = with(density) { (EDGE_LEAD_DP + COMPOSER_FADE_DP).dp.toPx() },
+                        blur = bottomBlur,
+                    )
+                if (frost != null && merge != null && mergeProgram != null) KitLiquidMergeLayer(merge, frost, mergeProgram, kitLiquidMergeBlur())
                 if (edgesFade && topPart != null && frost != null) {
                     if (look == KitTopEdgeLook.Ground) KitGroundBand(bandPx = statusPx + topPx, under = under)
                     else KitStatusEdge(frost, statusPx, under = under, blur = statusBlur)
@@ -363,6 +395,7 @@ public fun KitScreen(
                             .fillMaxWidth()
                             .then(if (statusPx > 0) Modifier.padding(top = with(density) { statusPx.toDp() }) else Modifier)
                             .onSizeChanged { topPx = it.height }
+                            .kitLiquidTouchWatch(barTouch)
                             .then(
                                 when {
                                     barFace != null -> kitLiquidWordsHost(LiquidRole.Bar, frost)
@@ -371,9 +404,11 @@ public fun KitScreen(
                                 }
                             )
                     ) {
-                        if (barFace != null) KitLiquidBarPane(barFace)
-                        else if (frostedFace != null) KitLiquidBarPane(frostedFace)
-                        it()
+                        CompositionLocalProvider(LocalKitLiquidMerge provides merge) {
+                            if (barFace != null) KitLiquidBarPane(barFace.kitLiquidTouchLight(barTouch, LiquidBarShape, barInset))
+                            else if (frostedFace != null) KitLiquidBarPane(frostedFace)
+                            it()
+                        }
                     }
                 }
                 bottomPart?.let {
@@ -386,12 +421,13 @@ public fun KitScreen(
                                 else Modifier.kitChromeGround(FrostRole.Composer, frost, reach = insetBottom)
                             )
                             .padding(
-                                horizontal = LocalKitTokens.current.gutter.dp,
+                                // A glass slab sits as far in from the sides as the bar's capsule does.
+                                horizontal = if (slab) LIQUID_BAR_INSET_X.dp else LocalKitTokens.current.gutter.dp,
                                 vertical = Space.S2.dp,
                             )
                             .testTag("kit-screen-bottom")
                     ) {
-                        CompositionLocalProvider(LocalKitLiquidChrome provides frost) { it() }
+                        CompositionLocalProvider(LocalKitLiquidChrome provides frost, LocalKitScreenBottom provides bottomState, LocalKitLiquidMerge provides merge) { it() }
                     }
                 }
             }
@@ -560,7 +596,7 @@ public fun KitScreen(
                                         .only(WindowInsetsSides.Bottom)
                                 )
                                 .padding(
-                                    horizontal = LocalKitTokens.current.gutter.dp,
+                                    horizontal = if (bottomState.slab) LIQUID_BAR_INSET_X.dp else LocalKitTokens.current.gutter.dp,
                                     vertical = Space.S2.dp,
                                 )
                                 .testTag("kit-screen-bottom"),
@@ -568,7 +604,7 @@ public fun KitScreen(
                             // width between the gutters (the page's primary is full width).
                             propagateMinConstraints = true,
                         ) {
-                            CompositionLocalProvider(LocalKitLiquidChrome provides frost) { it() }
+                            CompositionLocalProvider(LocalKitLiquidChrome provides frost, LocalKitScreenBottom provides bottomState) { it() }
                         }
                     }
                 }

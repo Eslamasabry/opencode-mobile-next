@@ -3,6 +3,9 @@ package io.github.eslamasabry.oc.ui.kitchat.composer
 import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
 import io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidChrome
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidFace
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidMergeBody
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidTouchLight
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidTouchWatch
 import androidx.compose.foundation.layout.widthIn
 import io.github.eslamasabry.oc.ui.kit.foundation.kitShadowRoom
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMayTruncate
@@ -34,7 +37,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -85,6 +91,20 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 
 /**
+ * Whether the message box here is the chat's one slab of glass (owner 2026-11-10: "merge the model picker and approval
+ * mode with the input box so we get a slab of glass"): Glass, on the chat's overlaid bottom block. The words sit on
+ * top; under them one row holds the plus, the approval mode, the model, Stop while a reply runs, and the mic or Send.
+ * Nothing rides above the box, so the transcript scrolls sharp up to the glass and bends under its edge. Every other
+ * style keeps Flutter's strip above a one-row box.
+ */
+@Composable
+public fun kitComposerSlab(): Boolean =
+    LocalKitLiquidChrome.current != null && LocalKitStyle.current.style == io.github.eslamasabry.oc.ui.design.style.Style.Glass
+
+/** True inside the slab ([kitComposerSlab]): its chips are quiet parts of the one pane, never glass of their own. */
+public val LocalKitComposerSlab: ProvidableCompositionLocal<Boolean> = staticCompositionLocalOf { false }
+
+/**
  * Flutter's composer: the input box on its own school-resolved floating surface (surface2 with the token phone/wide
  * radius; Solid adds KitGlass's hairline and floating shadow), inside the running glow. The short field shares one
  * row with its controls; growing text keeps its field slot and moves the controls below. Accessories stay inside the
@@ -104,6 +124,8 @@ public fun KitComposerBox(
     stacked: Boolean = true,
     above: @Composable () -> Unit = {},
     hasLeading: Boolean = false,
+    /** At the end of the words' own row when [stacked] (the slab's Stop while a reply runs): the row under keeps still. */
+    fieldEnd: @Composable RowScope.() -> Unit = {},
 ) {
     val tokens = LocalKitTokens.current
     val largeText = LocalDensity.current.fontScale >= 1.5f
@@ -160,10 +182,18 @@ public fun KitComposerBox(
         // Glass: on the chat's overlaid bottom block the box is liquid glass over the transcript scrolling behind it
         // (Android 13+, where not held); null keeps the style's own face.
         val liquid = kitLiquidFace(LiquidRole.Composer, LocalKitLiquidChrome.current, look.shape)
+        val slab = kitComposerSlab()
+        // Nothing inside the box is glass of its own: its chips and Stop are parts of this one pane.
+        CompositionLocalProvider(LocalKitLiquidChrome provides null, LocalKitComposerSlab provides slab) {
+        // The slab answers a finger on its controls: a soft light under it, a brighter edge.
+        val touch = io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidTouch(on = liquid != null)
         Column(
             Modifier.fillMaxWidth()
                 .then(shadow)
+                .kitLiquidTouchWatch(touch)
+                .then(if (liquid != null) Modifier.kitLiquidMergeBody("bottom", corner, LiquidRole.Composer) else Modifier)
                 .then(liquid ?: look.modifier)
+                .kitLiquidTouchLight(touch, look.shape)
                 .then(
                     if (solid) Modifier.border(hairline, colors.hairline, look.shape) else Modifier
                 )
@@ -185,7 +215,7 @@ public fun KitComposerBox(
                 ) {
                     field()
                 }
-                if (!stacked) trailing()
+                if (!stacked) trailing() else fieldEnd()
             }
             if (stacked) {
                 // At large text sizes choices get the full measure above the action targets.
@@ -216,6 +246,7 @@ public fun KitComposerBox(
                 }
             }
         }
+        }
     }
 }
 
@@ -239,8 +270,32 @@ public fun KitComposerChip(
      * name, the line's first chip, gives way only when even that does not fit).
      */
     shrinks: Boolean = false,
+    /**
+     * Only the glyph, in a round face (the slab's approval mode on a phone, where the model's name needs the room).
+     * It needs an [icon] and a [semanticsLabel]: the words are still what a screen reader hears.
+     */
+    wordless: Boolean = false,
 ) {
     val colors = LocalKitColors.current
+    // On the slab the chip is a quiet tint of the glass it lies in, never an opaque plate.
+    val face =
+        when {
+            active -> colors.accent.copy(alpha = if (LocalKitComposerSlab.current) .18f else .14f)
+            LocalKitComposerSlab.current -> colors.text1.copy(alpha = SLAB_CHIP_TINT)
+            else -> colors.surface3
+        }
+    if (wordless && icon != null) {
+        KitTappable(
+            onClick = onClick,
+            modifier = modifier.semantics { contentDescription = semanticsLabel ?: label },
+            shape = KitShapeId.Circle,
+        ) {
+            Box(Modifier.size(32.dp).clip(CircleShape).background(face, CircleShape), contentAlignment = Alignment.Center) {
+                KitIcon(icon, size = KitIconSize.Small, tone = if (active) TextTone.Accent else TextTone.Secondary)
+            }
+        }
+        return
+    }
     KitTappable(
         onClick = onClick,
         modifier =
@@ -254,12 +309,12 @@ public fun KitComposerChip(
         Row(
             Modifier.heightIn(min = 32.dp)
                 .clip(CircleShape)
-                .background(if (active) colors.accent.copy(alpha = .14f) else colors.surface3, RoundedCornerShape(50))
+                .background(face, RoundedCornerShape(50))
                 .padding(horizontal = Space.S3.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
         ) {
-            icon?.let { KitIcon(it, size = KitIconSize.Small, tone = TextTone.Secondary) }
+            icon?.let { KitIcon(it, size = KitIconSize.Small, tone = if (active) TextTone.Accent else TextTone.Secondary) }
             KitText(
                 label,
                 // The chip line gives a bounded width (it no longer scrolls), so the words take what the glyphs
@@ -480,6 +535,9 @@ private const val RING = 44
 
 /** The longest a composer chip's words grow before they end in "…" (the model's name stays readable). */
 private const val COMPOSER_CHIP_WORDS_MAX = 180
+
+/** A slab chip's face: the words' ink at this alpha over the glass. */
+private const val SLAB_CHIP_TINT = .08f
 
 /** E20-S11: the least a later chip (the approval mode) keeps beside the model: its words start, then "…". */
 private const val COMPOSER_CHIP_TAIL_MIN = 96

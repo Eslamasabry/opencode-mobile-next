@@ -71,13 +71,30 @@ public fun ApprovalChip(slot: ApprovalChipSlot, modifier: Modifier = Modifier) {
         // Flutter `_AutoApprovalIndicator` (approvals_sheet.dart:257-330), at the start of the strip above the
         // message box: an action chip with the shield, reading "Ask first" while asking and "Auto-approve on" (the
         // kit's selected check) for either automatic mode; the menu says which one.
+        val words =
+            when (state.choice) {
+                ApprovalChoice.Ask -> stringResource(Res.string.approvalModeAskTitle)
+                ApprovalChoice.Auto,
+                ApprovalChoice.Everything -> stringResource(Res.string.chatChipAutoApproveOn)
+            }
+        // On the glass slab (owner 2026-11-10) the chip is a quiet part of the message box's own row; on a phone it
+        // is the shield alone, tinted while approvals are automatic, so the model's name keeps the room. The menu and
+        // the screen reader still say the words.
+        if (io.github.eslamasabry.oc.ui.kitchat.composer.LocalKitComposerSlab.current)
+            io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerChip(
+                label = words,
+                onClick = actions::openApprovalMenu,
+                modifier = Modifier.testTag("chat-approval-chip"),
+                icon = if (state.choice != ApprovalChoice.Ask) KitIcons.shieldFilled else KitIcons.shield,
+                opensPicker = false,
+                active = state.choice != ApprovalChoice.Ask,
+                wordless =
+                    io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow.current.cls ==
+                        io.github.eslamasabry.oc.ui.design.layout.WindowClass.Compact,
+            )
+        else
         KitChip(
-            label =
-                when (state.choice) {
-                    ApprovalChoice.Ask -> stringResource(Res.string.approvalModeAskTitle)
-                    ApprovalChoice.Auto,
-                    ApprovalChoice.Everything -> stringResource(Res.string.chatChipAutoApproveOn)
-                },
+            label = words,
             kind = KitChipKind.Action,
             icon = KitIcons.shield,
             selected = if (state.choice != ApprovalChoice.Ask) true else null,

@@ -175,13 +175,13 @@ internal fun easedStops(color: Color, from: Float, to: Float): List<Color> =
         color.copy(alpha = (color.alpha * (from + (to - from) * edgeEase(f))).coerceIn(0f, 1f))
     }
 
-/** The blur the status edge draws with here, or null where the platform cannot blur or a hold keeps it sharp. */
+/** The blur an edge (the status edge, the bottom edge) draws with here, or null where the platform cannot blur or a hold keeps it sharp. */
 @Composable
-internal fun kitStatusEdgeBlur(): RenderEffect? {
+internal fun kitStatusEdgeBlur(sigmaDp: Float = STATUS_EDGE_BLUR_DP): RenderEffect? {
     val platform = LocalKitPlatform.current
     val density = LocalDensity.current.density
     if (frostConditionsHold()) return null
-    return remember(platform, density) { platform.frostEffect(FrostSpec(STATUS_EDGE_BLUR_DP, 1f, 0f), density) }
+    return remember(platform, density, sigmaDp) { platform.frostEffect(FrostSpec(sigmaDp, 1f, 0f), density) }
 }
 
 /** True when a hold (Saver, reduced motion, high contrast) keeps every frost of the page from drawing. */

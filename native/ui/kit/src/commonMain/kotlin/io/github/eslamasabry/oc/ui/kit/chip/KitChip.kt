@@ -1,5 +1,8 @@
 package io.github.eslamasabry.oc.ui.kit.chip
 
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidPressLight
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidSwell
+import io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidPress
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -196,7 +199,9 @@ public fun KitChip(
     val density = LocalDensity.current
     val measurer = rememberTextMeasurer()
     val platform = LocalKitPlatform.current
-    BoxWithConstraints(target, contentAlignment = Alignment.Center) {
+    // Liquid glass answers the finger: the drop swells a little and its edge catches light (KitLiquidTouch.kt).
+    val liquidPress = rememberKitLiquidPress(bodySource.face, on = liquid != null && onClick != null)
+    BoxWithConstraints(target.kitLiquidSwell(liquidPress), contentAlignment = Alignment.Center) {
         val available = maxWidth - Space.S3.dp * 2 - iconSize * 2 - Space.S2.dp - Space.S1.dp // F: lib/ui/kit/chat/kit_composer_chips.dart:472-477
         fun fits(probe: String): Boolean {
             if (available <= 0.dp) return false
@@ -210,6 +215,7 @@ public fun KitChip(
         val modelPairFits = iconSize * 2 + Space.S1.dp * 2 <= maxWidth // F: lib/ui/kit/chat/kit_composer_chips.dart:504-506
         Row(
             Modifier.onSizeChanged { faceSize = it }.heightIn(min = minHeight).then(liquid ?: look.modifier)
+                .kitLiquidPressLight(liquidPress, look.shape)
                 .drawWithContent {
                     drawContent()
                     if (bodyFocus || removeFocus) {

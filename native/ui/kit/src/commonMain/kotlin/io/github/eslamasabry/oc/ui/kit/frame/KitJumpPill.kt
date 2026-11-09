@@ -1,5 +1,15 @@
 package io.github.eslamasabry.oc.ui.kit.frame
 
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.runtime.getValue
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.runtime.remember
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidPressLight
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidSwell
+import io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidPress
 import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidFace
 import androidx.compose.animation.AnimatedVisibility
@@ -126,21 +136,45 @@ public fun KitJumpPill(
         return
     }
     val specs = KitMotion.specs
-    val risePx = with(LocalDensity.current) { JumpPillRules.riseDp(edge, state).dp.roundToPx() }
+    // Fluid glass (KitLiquidMerge.kt): over a glass slab the bottom pill is a drop of it. It rises out of the slab's
+    // top edge on the release spring, its neck thinning until it lets go, and sinks back into it when it leaves.
+    val merged =
+        backdrop != null && edge == KitJumpEdge.Bottom && state.travels && kitScreenBottomIsSlab() &&
+            io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidMerge.current != null
+    val risePx =
+        with(LocalDensity.current) { (if (merged) PILL_DROP_RISE_DP else JumpPillRules.riseDp(edge, state)).dp.roundToPx() }
     // The veiled pill also grows from 90 % on the kit's fast spring while it may travel (Calm only fades).
-    val grows = backdrop != null && state.travels
+    val grows = backdrop != null && state.travels && !merged
     val enter: EnterTransition =
-        fadeIn(specs.pace(KitPace.Standard)) +
-            (if (risePx != 0) slideInVertically(specs.pace<IntOffset>(KitPace.Standard)) { risePx } else EnterTransition.None) +
+        fadeIn(specs.pace(if (merged) KitPace.Quick else KitPace.Standard)) +
+            (if (risePx != 0) slideInVertically(if (merged) specs.release() else specs.pace<IntOffset>(KitPace.Standard)) { risePx } else EnterTransition.None) +
             if (grows) scaleIn(specs.spatialFast(), initialScale = PILL_ENTER_SCALE) else EnterTransition.None
     val exit: ExitTransition =
-        fadeOut(specs.pace(KitPace.Quick)) +
-            (if (risePx != 0) slideOutVertically(specs.pace<IntOffset>(KitPace.Quick)) { risePx } else ExitTransition.None) +
+        fadeOut(specs.pace(if (merged) KitPace.Standard else KitPace.Quick)) +
+            (if (risePx != 0) slideOutVertically(specs.pace<IntOffset>(if (merged) KitPace.Standard else KitPace.Quick)) { risePx } else ExitTransition.None) +
             if (grows) scaleOut(specs.spatialFast(), targetScale = PILL_ENTER_SCALE) else ExitTransition.None
     AnimatedVisibility(visible, modifier, enter = enter, exit = exit, label = "kit.jump") {
-        PillFace(label, onClick, Modifier.kitLeaving(transition.targetState == EnterExitState.PostExit), edge, backdrop)
+        // The drop lives while the pill is composed (arriving, resting, leaving), so nothing is bridged once it is gone.
+        val drop = io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidDrop("bottom", on = merged)
+        val pull by transition.animateFloat(
+            transitionSpec = { if (targetState == EnterExitState.Visible) specs.effectsSlow() else specs.effectsFast() },
+            label = "kit.jump.pull",
+        ) { if (it == EnterExitState.Visible) 0f else 1f }
+        PillFace(
+            label,
+            onClick,
+            Modifier.kitLeaving(transition.targetState == EnterExitState.PostExit)
+                // Written while the layer updates, so the pill is not recomposed for each frame of the pull.
+                .then(if (drop == null) Modifier else Modifier.graphicsLayer { drop.pull = pull }),
+            edge,
+            backdrop,
+            drop,
+        )
     }
 }
+
+/** How far below its rest the drop starts, in dp: its face (32) and its gap to the slab (8), so it starts inside it. */
+private const val PILL_DROP_RISE_DP = 44
 
 /** E20-S30: the veiled pill's visible face height (inside its 48 dp target). */
 public const val JUMP_PILL_FACE_DP: Int = 32
@@ -149,12 +183,19 @@ public const val JUMP_PILL_FACE_DP: Int = 32
 private const val PILL_ENTER_SCALE = 0.9f
 
 @Composable
-private fun PillFace(label: String, onClick: () -> Unit, modifier: Modifier, edge: KitJumpEdge, backdrop: KitFrostState?) {
+private fun PillFace(
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier,
+    edge: KitJumpEdge,
+    backdrop: KitFrostState?,
+    drop: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidDrop? = null,
+) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     val shape = KitShapeId.Pill.shape()
     if (backdrop != null) {
-        VeiledPillFace(label, onClick, modifier, edge, backdrop)
+        VeiledPillFace(label, onClick, modifier, edge, backdrop, drop)
         return
     }
     // A small floating pill (36 dp face) inside its 48 dp target: it points the way without covering the reading
@@ -183,26 +224,45 @@ private fun PillFace(label: String, onClick: () -> Unit, modifier: Modifier, edg
 
 /** E20-S30: the calmer pill on a translucent, blurred face: arrow and words, 32 dp, in its 48 dp target. */
 @Composable
-private fun VeiledPillFace(label: String, onClick: () -> Unit, modifier: Modifier, edge: KitJumpEdge, backdrop: KitFrostState) {
+private fun VeiledPillFace(
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier,
+    edge: KitJumpEdge,
+    backdrop: KitFrostState,
+    drop: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidDrop? = null,
+) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     val shape = KitShapeId.Pill.shape()
     val veil = rememberKitChromeVeil()
+    val interactions = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    // Glass: a drop of liquid glass over the transcript (Android 13+, not held); else the veil.
+    val liquid = kitLiquidFace(LiquidRole.Pill, backdrop, shape)
+    // The drop answers the finger: it swells a little and its edge catches light (KitLiquidTouch.kt).
+    val liquidPress = rememberKitLiquidPress(interactions, on = liquid != null)
     Box(
-        modifier
+        modifier.kitLiquidSwell(liquidPress)
             .testTag("kit-jump-pill")
             .heightIn(min = tokens.minTarget.dp)
-            .kitTappable(onClick = onClick, shape = KitShapeId.Pill)
+            .kitTappable(onClick = onClick, shape = KitShapeId.Pill, interactionSource = interactions)
             .semantics(mergeDescendants = true) { contentDescription = label },
         contentAlignment = Alignment.Center,
     ) {
-        // Glass: a drop of liquid glass over the transcript (Android 13+, not held); else the veil.
-        val liquid = kitLiquidFace(LiquidRole.Pill, backdrop, shape)
         Row(
             Modifier.heightIn(min = JUMP_PILL_FACE_DP.dp)
                 .then(
                     liquid
                         ?: Modifier.kitBackdropVeil(backdrop, veil, colors.surface3, shape).border(1.dp, colors.hairline, shape)
+                )
+                .kitLiquidPressLight(liquidPress, shape)
+                .then(
+                    if (drop == null) Modifier
+                    else
+                        Modifier.onGloballyPositioned {
+                            drop.rect = it.boundsInWindow()
+                            drop.radius = it.size.height / 2f
+                        }
                 )
                 .padding(horizontal = Space.S3.dp)
                 .testTag("kit-jump-pill-veiled"),
