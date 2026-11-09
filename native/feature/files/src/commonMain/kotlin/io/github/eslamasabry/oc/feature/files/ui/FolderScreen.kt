@@ -50,6 +50,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
+import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
@@ -79,6 +80,7 @@ import io.github.eslamasabry.oc.ui.words.res.filesMentionFailed
 import io.github.eslamasabry.oc.ui.words.res.filesNoTextBody
 import io.github.eslamasabry.oc.ui.words.res.filesNoTextTitle
 import io.github.eslamasabry.oc.ui.words.res.filesNotConnected
+import io.github.eslamasabry.oc.ui.words.res.filesShowingSaved
 import io.github.eslamasabry.oc.ui.words.res.filesOnlyHidden
 import io.github.eslamasabry.oc.ui.words.res.filesOpenPhone
 import io.github.eslamasabry.oc.ui.words.res.filesPreferencesFailed
@@ -285,6 +287,15 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                                 listOf(
                                     KitAction(stringResource(Res.string.fileReload), actions::retry)
                                 ),
+                        )
+                    }
+                if (state.offline)
+                    item("offline") {
+                        KitNotice(
+                            stringResource(Res.string.filesShowingSaved),
+                            tone = StatusTone.Attention,
+                            actions = listOf(KitLineAction(stringResource(Res.string.kitTryAgain), actions::retry)),
+                            liveRegion = false,
                         )
                     }
                 if (state.attachNotice != null)
