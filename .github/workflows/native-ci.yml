@@ -181,7 +181,7 @@ jobs:
         run: |
           set -o pipefail
           extra=""; [ "$LANE" = full ] && extra="compileAllTests"
-          ./gradlew :androidApp:compilePreviewBenchmarkKotlin $extra $GRADLE_FLAGS 2>&1 | tee "$RUNNER_TEMP/compile.log"
+          tool/ci/gradle_retry.sh "$RUNNER_TEMP/compile.log" :androidApp:compilePreviewBenchmarkKotlin $extra $GRADLE_FLAGS
       - name: Compile report
         if: always()
         env:
@@ -265,7 +265,7 @@ jobs:
         run: |
           set -o pipefail
           flags=""; [ "$LANE" = fast ] && flags="-PskipGoldens=true"
-          ./gradlew ${{ steps.pick.outputs.tasks }} $flags $GRADLE_FLAGS 2>&1 | tee "$RUNNER_TEMP/gradle.log"
+          tool/ci/gradle_retry.sh "$RUNNER_TEMP/gradle.log" ${{ steps.pick.outputs.tasks }} $flags $GRADLE_FLAGS
       - name: Gradle must have run
         # The step above never fails the job (the summary is the gate for test failures), so an infrastructure failure -
         # Gradle never started, e.g. a 504 on the distribution - would look like a pass. Fail here when no task ran.
@@ -332,7 +332,7 @@ jobs:
         run: |
           tasks="$(grep -l recordGoldens */*/build.gradle.kts | sed 's|/build.gradle.kts||; s|^|:|; s|/|:|g; s|$|:desktopTest|' | tr '\n' ' ')"
           echo "recording: $tasks"
-          ./gradlew $tasks -Poc.recordGoldens=true -PonlyGoldens=true -PrunQuarantined=true $GRADLE_FLAGS
+          tool/ci/gradle_retry.sh "$RUNNER_TEMP/record.log" $tasks -Poc.recordGoldens=true -PonlyGoldens=true -PrunQuarantined=true $GRADLE_FLAGS
       - name: Pack the recorded images
         if: always()
         working-directory: ${{ github.workspace }}
@@ -397,7 +397,7 @@ jobs:
           allprojects { tasks.configureEach { if (name.startsWith("lintVital")) enabled = false } }
           EOT
           set -o pipefail
-          ./gradlew :androidApp:assemblePreviewBenchmark -I "$RUNNER_TEMP/no-lint-vital.init.gradle" $GRADLE_FLAGS 2>&1 | tee "$RUNNER_TEMP/apk.log"
+          tool/ci/gradle_retry.sh "$RUNNER_TEMP/apk.log" :androidApp:assemblePreviewBenchmark -I "$RUNNER_TEMP/no-lint-vital.init.gradle" $GRADLE_FLAGS
       - name: Check the APK signer
         env:
           HAS_KEY: ${{ secrets.NATIVE_PREVIEW_KEYSTORE_B64 != '' }}
@@ -471,7 +471,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          ./gradlew ${{ inputs.tasks }} $GRADLE_FLAGS 2>&1 | tee "$RUNNER_TEMP/custom.log"
+          tool/ci/gradle_retry.sh "$RUNNER_TEMP/custom.log" ${{ inputs.tasks }} $GRADLE_FLAGS
       - name: Custom report
         if: always()
         env:
