@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.files.ui
 
+import androidx.compose.runtime.saveable.rememberSaveable
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -169,8 +170,8 @@ private fun backFromSearch(typed: TextFieldState, state: FolderUi, actions: Fold
 /** The project's real file, text and symbol reads; every uncommon act also has a visible button. */
 @Composable
 public fun FolderScreen(state: FolderUi, actions: FolderActions) {
-    var viewOptions by remember { mutableStateOf(false) }
-    var barMenuOpen by remember { mutableStateOf(false) }
+    var viewOptions by rememberSaveable { mutableStateOf(false) }
+    var barMenuOpen by rememberSaveable { mutableStateOf(false) }
     // E12-S04: one query for the field and the bar's Back, so Back closes a search before it leaves.
     val typed = rememberTextFieldState()
     val title =

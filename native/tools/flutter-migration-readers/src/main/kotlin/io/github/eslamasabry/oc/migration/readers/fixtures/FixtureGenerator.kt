@@ -117,6 +117,19 @@ public object FixtureGenerator {
         // Data of a server that is no longer in oc.profiles.
         put("oc.model.$ORPHAN", RawPref.Str("openai|gpt"))
         // Unknown keys (a newer Flutter build, a typo, a bad id): preserved, never dropped.
+        // Flutter 2.1.5+63: the owner's release. The consent answers, the report code counters and the crash offer marks
+        // as its app writes them (lib/telemetry, lib/feedback/crash_offer.dart): setInt lands as a long.
+        put("oc.telemetry.usage", RawPref.Bool(true))
+        put("oc.telemetry.crashes", RawPref.Bool(false))
+        put("oc.telemetry.crashReports", RawPref.Bool(true))
+        put("oc.telemetryConsentAsked", RawPref.Bool(true))
+        put("oc.telemetry.lastVersion", RawPref.Str("2.1.5+63"))
+        put("oc.telemetry.reportCounter", RawPref.Int64(3))
+        put("oc.telemetry.installCode", RawPref.Str("K7Q2M9"))
+        put("oc.telemetry.lastExitAt", RawPref.Int64(1_762_600_000_000L))
+        put("oc.crashReports.offer", RawPref.Bool(true))
+        put("oc.crashReports.lastOffered", RawPref.Int64(1_762_500_000_000L))
+        put("oc.builtin.nodeCompat.device", RawPref.Str("proot-compat"))
         put("oc.futureFeature.v9", RawPref.Str("kept"))
         put("oc.model.not a valid id", RawPref.Str("kept"))
         put("someOtherPlugin.flag", RawPref.Bool(false))

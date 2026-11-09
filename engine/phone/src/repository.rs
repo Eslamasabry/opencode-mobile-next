@@ -1237,7 +1237,7 @@ fn parse_oid(value: &str) -> Result<Oid> {
     }
     Oid::from_str(value).map_err(|_| RepoError("invalid_commit"))
 }
-fn task_branch(task: &str) -> String {
+pub(crate) fn task_branch(task: &str) -> String {
     format!("task/{task}")
 }
 fn incoming_ref(task: &str) -> String {
