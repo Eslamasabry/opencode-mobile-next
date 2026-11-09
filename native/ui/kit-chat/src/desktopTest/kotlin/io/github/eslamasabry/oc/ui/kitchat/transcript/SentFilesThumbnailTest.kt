@@ -32,14 +32,20 @@ class SentFilesThumbnailTest {
 
     @Test
     fun `B-CHAT-130 the message that replaces the bubble starts with the bubble's own bitmap`() = runComposeUiTest {
+        val echoed = mutableStateOf(false)
         val bubble = mutableStateOf<KitSentFiles?>(null)
-        setContent { ChatTestTheme { bubble.value = rememberKitSentFiles(listOf(file)) } }
+        var firstFrame: KitSentFiles? = null
+        setContent {
+            ChatTestTheme {
+                if (!echoed.value) bubble.value = rememberKitSentFiles(listOf(file))
+                else rememberKitSentFiles(listOf(file)).also { if (firstFrame == null) firstFrame = it }
+            }
+        }
         waitUntil(5_000) { bubble.value?.photos?.singleOrNull()?.image != null }
         val shown = bubble.value!!.photos.single().image
         assertNotNull(shown)
-        // A fresh composition (the echoed prompt row) has the picture on its very first frame.
-        var firstFrame: KitSentFiles? = null
-        setContent { ChatTestTheme { rememberKitSentFiles(listOf(file)).also { if (firstFrame == null) firstFrame = it } } }
+        // The echoed prompt row is a new composition: it has the picture on its very first frame.
+        echoed.value = true
         waitForIdle()
         assertSame(shown, firstFrame!!.photos.single().image)
     }
