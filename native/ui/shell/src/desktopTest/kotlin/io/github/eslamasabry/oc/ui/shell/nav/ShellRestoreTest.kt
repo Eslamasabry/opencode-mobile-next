@@ -104,7 +104,7 @@ class ShellRestoreTest {
         waitForIdle()
         assertTrue(onAllNodesWithText(SHEET_TITLE).fetchSemanticsNodes().isNotEmpty())
 
-        tester.emulateSavedInstanceStateRestore()
+        tester.emulateSaveAndRestore()
         waitForIdle()
 
         runOnIdle { assertEquals(listOf(ChatsRoute.Home, ChatsRoute.All()), pages.navigator.snapshot()) }
@@ -123,10 +123,10 @@ class ShellRestoreTest {
         nav.restoreStack(saved)
         val stack = mutableListOf<androidx.navigation3.runtime.NavKey>(ChatsRoute.Home)
         nav.attach(stack)
-        assertEquals(saved, stack)
+        assertEquals<List<androidx.navigation3.runtime.NavKey>>(saved, stack)
         assertEquals(ChatsRoute.Attention, nav.top.value)
         nav.restoreStack(emptyList())
-        assertEquals(saved, nav.snapshot(), "an empty request changes nothing")
+        assertEquals<List<androidx.navigation3.runtime.NavKey>>(saved, nav.snapshot(), "an empty request changes nothing")
     }
 
     private companion object {
