@@ -552,10 +552,10 @@ private fun BackBar(
 }
 
 /** The most of the bar's free width the inline actions may take (QA wave 4 N1). */
-private const val ACTIONS_SHARE = 0.35f
+private const val ACTIONS_SHARE = 0.5f
 
 /** A large bar's actions sit beside a title that may wrap, so they may take a little more. */
-private const val LARGE_ACTIONS_SHARE = 0.45f
+private const val LARGE_ACTIONS_SHARE = 0.55f
 
 /** The kit's tight title/subtitle step (a hub bar's title column): the line's words this far under the title's. */
 private val TITLE_LINE_GAP = 2.dp

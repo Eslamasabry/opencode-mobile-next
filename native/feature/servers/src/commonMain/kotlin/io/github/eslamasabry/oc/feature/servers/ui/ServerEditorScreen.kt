@@ -272,6 +272,10 @@ public fun ServerEditorScreen(
         if (state.saving || state.loading)
             KitEnabled.Disabled(stringResource(Res.string.serversWorking))
         else KitEnabled.Enabled
+    // C15: one accent button per page. While "Scan code" leads the Connect step it is the page's primary;
+    // the bottom "Save and connect" steps back to secondary until the address is typed by hand.
+    val scanLeads =
+        state.newServer && !manualOpen && backend == BackendKind.OpenCode2 && !tailscale && state.canScan
     val connectionEnabled =
         if (!enabled.isEnabled) enabled
         else if (requiresHttpReview(backend, address.text.toString(), confirmedOrigin))
@@ -344,6 +348,10 @@ public fun ServerEditorScreen(
                             else connectionEnabled,
                         working = state.saving,
                         fullWidth = true,
+                        role =
+                            if (state.step == ServerEditorStep.Connect && scanLeads)
+                                KitButtonRole.Secondary
+                            else KitButtonRole.Primary,
                     )
                 }),
         edges = KitScreenEdges.Bleed,
