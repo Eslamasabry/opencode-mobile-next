@@ -5,8 +5,10 @@
 set -euo pipefail
 out=${1:?out dir from device-bench.sh profile}
 cd "$(dirname "$0")/../.."
-base=$(find "$out" -name '*baseline-prof.txt' | head -1)
-start=$(find "$out" -name '*startup-prof.txt' | head -1)
+# With includeInStartupProfile = true the library writes ONE file (named ...-startup-prof.txt) that serves both profiles.
+start=$(find "$out" -name '*startup-prof.txt' ! -name '*-20[0-9][0-9]-*' | head -1)
+base=$(find "$out" -name '*baseline-prof.txt' ! -name '*-20[0-9][0-9]-*' | head -1)
+base=${base:-$start}
 [ -n "$base" ] && [ -n "$start" ] || { echo "no baseline-prof.txt / startup-prof.txt under $out" >&2; exit 1; }
 cp "$base" androidApp/src/main/baseline-prof.txt
 mkdir -p androidApp/src/main/baselineProfiles
