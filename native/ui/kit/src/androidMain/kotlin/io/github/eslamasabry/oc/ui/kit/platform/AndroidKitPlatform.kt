@@ -135,6 +135,9 @@ public class AndroidKitPlatform(
         return true
     }
 
+    override fun backdropSampler(): KitBackdropSampler? =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) AndroidBackdropSampler() else null
+
     override fun liquidPane(
         spec: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidPaneSpec,
         backdrop: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidBackdrop,
