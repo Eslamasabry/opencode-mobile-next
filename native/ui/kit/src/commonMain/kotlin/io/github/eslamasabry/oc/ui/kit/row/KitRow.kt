@@ -156,7 +156,7 @@ public fun KitRow(
     val body = @Composable {
     RowBody(
         title = title, modifier = modifier, supporting = if (unavailable) unavailableReason else supporting, leading = leading,
-        trailing = if (unavailable && enable != null) KitRowTrailing.Action(enable) else trailing,
+        trailingGiven = if (unavailable && enable != null) KitRowTrailing.Action(enable) else trailing,
         server = server, titleIsFileName = titleIsFileName, supportingMaxLines = supportingMaxLines,
         enabled = enabled, disabledReason = disabledReason, selected = selected, growKey = growKey,
         onClickLabel = onClickLabel, onLongClick = longClick, onLongClickLabel = onLongClickLabel,
@@ -190,8 +190,7 @@ public fun KitRow(
         modifier = modifier,
         supporting = supporting.text,
         leading = leading,
-        // C04: a chosen row says so with a check at its trailing edge when it has nothing else there.
-        trailing = if (selected && trailing == KitRowTrailing.None) KitRowTrailing.Check else trailing,
+        trailingGiven = trailing,
         supportingMaxLines = supportingMaxLines,
         enabled = enabled,
         disabledReason = disabledReason,
@@ -208,7 +207,7 @@ private fun RowBody(
     modifier: Modifier = Modifier,
     supporting: String? = null,
     leading: KitRowLeading? = null,
-    trailing: KitRowTrailing = KitRowTrailing.None,
+    trailingGiven: KitRowTrailing = KitRowTrailing.None,
     server: String? = null,
     titleIsFileName: Boolean = false,
     supportingMaxLines: Int = 1,
@@ -230,6 +229,8 @@ private fun RowBody(
     padding: PaddingValues? = null,
     highlight: String? = null,
 ) {
+    // C04: a chosen row says so with a check at its trailing edge when it has nothing else there.
+    val trailing = if (selected && trailingGiven == KitRowTrailing.None) KitRowTrailing.Check else trailingGiven
     kitAssert(title.isNotBlank()) { "KitRow: a row needs a title" }
     kitAssert(enabled || !disabledReason.isNullOrBlank()) { "KitRow: a disabled row must say why (B-KIT-051)" }
     val colors = LocalKitColors.current
