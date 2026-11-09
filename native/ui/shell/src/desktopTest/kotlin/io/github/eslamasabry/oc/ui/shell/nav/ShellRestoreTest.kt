@@ -8,7 +8,6 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.key
 import androidx.compose.runtime.saveable.LocalSaveableStateRegistry
 import androidx.compose.runtime.saveable.SaveableStateRegistry
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -89,9 +88,9 @@ class ShellRestoreTest {
         // StateRestorationTester is not implemented on desktop: do by hand what Android does. Save the registry, drop
         // the whole composition, and compose again from a registry built out of the saved values.
         var registry by mutableStateOf(SaveableStateRegistry(null) { true })
-        var generation by mutableStateOf(0)
+        var shown by mutableStateOf(true)
         setContent {
-            key(generation) {
+            if (shown) {
                 val platform = DesktopKitPlatform()
                 CompositionLocalProvider(LocalKitPlatform provides platform, LocalSaveableStateRegistry provides registry) {
                     KitTheme(appearance = KitAppearance(mode = AppearanceMode.Light), platform = platform, localeTag = "en") {
@@ -120,8 +119,11 @@ class ShellRestoreTest {
             pages.typed = null
             pages.homeFirstVisible = -1
             registry = SaveableStateRegistry(registry.performSave()) { true }
-            generation++
+            shown = false
         }
+        // Same position in the composition, so the saved keys match as they do for a rebuilt Activity.
+        waitForIdle()
+        runOnIdle { shown = true }
         waitForIdle()
         // The shell is up again: the activity puts the saved stack back (a no-op when the library restored it too).
         runOnIdle { pages.navigator.restoreStack(savedStack) }
