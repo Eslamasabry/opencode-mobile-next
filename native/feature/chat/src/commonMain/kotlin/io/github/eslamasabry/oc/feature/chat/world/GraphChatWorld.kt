@@ -267,7 +267,13 @@ internal class GraphChatWorld(
      */
     private var subagentNames: List<String> = emptyList()
 
-    override val transcript: StateFlow<TranscriptState> = mutableTranscript.asStateFlow()
+    /**
+     * Cache-first: what the screen draws. [mutableTranscript] is the live reducer's state, which every send, settle
+     * and run check reads; this one falls back to [lastRows] (kept from a past visit, or the last live rows) while the
+     * live state has nothing yet, so a kept prompt can never settle or baseline a new send.
+     */
+    private val shownTranscript = MutableStateFlow(TranscriptState.Empty)
+    override val transcript: StateFlow<TranscriptState> = shownTranscript.asStateFlow()
     override val load: StateFlow<ChatLoad> = mutableLoad.asStateFlow()
     override val readOnly: StateFlow<ReadOnlyChat?> = mutableReadOnly.asStateFlow()
     override val title: StateFlow<String?> = mutableTitle.asStateFlow()
@@ -741,14 +747,15 @@ internal class GraphChatWorld(
         mutableModels.value = ComposerModels()
         mutableCommands.value = emptyList()
         catalogDefaults = null
+        mutableTranscript.value = TranscriptState.Empty
+        historyReconciled = false
         // Cache-first: a reload or a lost server keeps the last rows on screen until newer ones arrive.
-        mutableTranscript.value = lastRows ?: TranscriptState.Empty
+        publishShown()
         mutableReadOnly.value = null
         mutableParent.value = null
         feedKeeper.reset()
         nextCursor = null
         mutableOlder.value = false
-        historyReconciled = false
         knownUserPrompts.clear()
         if (graph == null) {
             mutableLink.value = ChatLink.Offline
@@ -866,6 +873,7 @@ internal class GraphChatWorld(
                             lastRows = null
                             closeKept()
                             mutableTranscript.value = TranscriptState.Empty
+                            publishShown()
                             mutableModels.value = ComposerModels(failure = Failure.NotFound())
                             mutableLoad.value = ChatLoad.Failed(Failure.NotFound())
                             nextCursor = null
@@ -890,12 +898,8 @@ internal class GraphChatWorld(
                 scope.launch(registry.mainContext) {
                     handle.state.collect { s ->
                         if (sid in graph.session.reads.missing.value) return@collect
-                        // Cache-first: until the live history answers, an empty live list never replaces
-                        // the rows already on screen.
-                        if (historyReconciled || s.rows.isNotEmpty() || lastRows == null) {
-                            mutableTranscript.value = s
-                            lastRows = s.takeIf { it.rows.isNotEmpty() }
-                        }
+                        mutableTranscript.value = s
+                        publishShown()
                         knownUserPrompts +=
                             s.rows.filterIsInstance<PromptRow>().map { it.text.trim() }
                         refreshDraftProtection()
@@ -1068,12 +1072,22 @@ internal class GraphChatWorld(
                         if (historyReconciled || s.rows.isEmpty()) return@collect
                         if (mutableTranscript.value.rows.isEmpty()) {
                             lastRows = s
-                            mutableTranscript.value = s
+                            publishShown()
                         }
                     }
                 }
                 handle.loadHistory(kept.messages)
             }
+    }
+
+    /**
+     * The screen's transcript: the live state once it has rows or once the live history answered; until then the
+     * last rows known (kept page or last live rows), so a reload, reconnect or missing server never blanks the chat.
+     */
+    private fun publishShown() {
+        val live = mutableTranscript.value
+        if (live.rows.isNotEmpty() || historyReconciled) lastRows = live.takeIf { it.rows.isNotEmpty() }
+        shownTranscript.value = if (live.rows.isEmpty() && !historyReconciled) lastRows ?: live else live
     }
 
     private fun closeKept() {
@@ -1228,6 +1242,7 @@ internal class GraphChatWorld(
                         }
                 historyReconciled = true
                 closeKept()
+                publishShown()
                 keepLastKnown(handle)
                 refreshDraftProtection()
                 mutableLoad.value = ChatLoad.Live

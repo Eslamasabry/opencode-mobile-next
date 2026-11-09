@@ -167,6 +167,7 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
             disabled = input.disabled,
             withinGroup = input.withinGroup,
             action = input.action,
+            look = if (style.style == Style.Glass) io.github.eslamasabry.oc.ui.kit.effects.kitGlassLook().spec else io.github.eslamasabry.oc.ui.design.style.GlassLook.Default,
         )
     val isGlass = style.style == Style.Glass
     val backdrop = LocalKitGlassBackdrop.current

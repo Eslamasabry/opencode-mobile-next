@@ -61,8 +61,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
-import io.github.eslamasabry.oc.ui.kit.logo.KitProviderLogoRules
-import io.github.eslamasabry.oc.ui.kit.logo.LocalKitLogoLoader
+import io.github.eslamasabry.oc.ui.kit.logo.rememberAgentMarkArt
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.motion.KitPace
 import io.github.eslamasabry.oc.ui.kit.motion.pace
@@ -130,9 +129,9 @@ public fun KitAgentChoice(
     // Dart `EdgeInsets.all(space5).add(decoration.padding)`: a drawn border takes its room inside the card.
     val inset = Space.S5.dp + if (solid) hairline else 0.dp
     val ink = if (selected && !solid) look.words else null
-    val markBox = (FlutterKitTokens.MARK_SIZE + Space.S2).dp
+    val markBox = (FlutterKitTokens.MARK_SIZE + Space.S2 + Space.S2).dp // owner 2026-11-09: bigger logos, in proportion with the row mark
     val mark: @Composable () -> Unit = {
-        AgentMark(markSlug, if (dimmed) colors.text3 else colors.text1, if (wide) FlutterKitTokens.MARK_SIZE.dp else markBox)
+        AgentMark(markSlug, if (dimmed) colors.text3 else colors.text1, if (wide) (FlutterKitTokens.MARK_SIZE + Space.S2).dp else markBox, dimmed = dimmed)
     }
     val words: @Composable () -> Unit = {
         Words(name, line, large, wide, dimmed, ink)
@@ -214,31 +213,26 @@ private fun Words(text: String, role: TypeRole, tone: TextTone, maxLines: Int, i
 }
 
 /**
- * The agent's monochrome mark scaled to fill [box], or the terminal glyph while it has none. With [monogram], an agent
+ * The agent's mark scaled to fill [box] (in its brand colours when it has a colour file, else in [tint]), or the terminal glyph while it has none. With [monogram], an agent
  * whose mark is missing (no slug, or a load that found none) shows that letter on a neutral face instead: never an empty
  * box (owner 2026-11-08). While the mark is still loading the box stays empty, so a real mark never flashes a letter.
  */
 @Composable
-internal fun AgentMark(slug: String, tint: Color, box: Dp, monogram: String? = null) {
-    val loader = LocalKitLogoLoader.current
+internal fun AgentMark(slug: String, tint: Color, box: Dp, monogram: String? = null, dimmed: Boolean = false) {
     val platform = LocalKitPlatform.current
-    var svg by remember(slug, loader) { mutableStateOf<String?>(null) }
-    var looked by remember(slug, loader) { mutableStateOf(slug.isEmpty()) }
-    if (slug.isNotEmpty()) LaunchedEffect(slug, loader) {
-        svg = KitProviderLogoRules.load(loader, slug, agent = true)
-        looked = true
-    }
+    val (art, looked) = rememberAgentMarkArt(slug)
     val pixels = with(LocalDensity.current) { box.roundToPx() }.coerceIn(1, 256) // NV: the platform SVG decoder's pixel range (KitPlatform.svgPainter)
-    val painter = remember(svg, platform, pixels) { svg?.let { platform.svgPainter(it, pixels) } }
+    val painter = remember(art, platform, pixels) { art?.let { platform.svgPainter(it.svg, pixels) } }
     if (monogram != null && painter == null && looked) {
         AgentMonogram(monogram, box)
         return
     }
     val shown = painter ?: if (slug.isEmpty()) rememberVectorPainter(KitIcons.terminal) else null
-    // Dart KitIcon.mark: the picture is 0.84 of its square, centred; FittedBox scales that square to the box.
-    val drawn = box * 0.84f // F: lib/ui/kit/kit_icon.dart:252
+    // A logo reads at the full square (owner 2026-11-09: the old 0.84 inset made marks look like glyphs). A colour mark
+    // keeps its brand colours; a single-colour one takes [tint], the text colour at full strength.
     Box(Modifier.size(box), contentAlignment = Alignment.Center) {
-        if (shown != null) Image(shown, null, Modifier.size(if (painter != null) drawn else box), colorFilter = ColorFilter.tint(tint))
+        if (shown != null)
+            Image(shown, null, Modifier.size(box), alpha = if (dimmed) 0.45f else 1f, colorFilter = if (painter == null || art?.tinted != false) ColorFilter.tint(tint) else null)
     }
 }
 

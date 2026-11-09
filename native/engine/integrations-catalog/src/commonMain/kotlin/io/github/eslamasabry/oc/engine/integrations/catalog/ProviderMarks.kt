@@ -211,6 +211,19 @@ public object ProviderMarks {
             "copilot" to "copilot",
         )
 
+    /**
+     * Mark slugs that also ship a full-colour file (`marks/<slug>-color.svg`, lobe-icons by LobeHub, MIT). A brand
+     * left out is monochrome by design (OpenCode, Codex/OpenAI) or has no colour version (Kilo Code, Cline, Goose, Pi):
+     * it keeps its single-colour mark, drawn in the text colour.
+     */
+    public val colorSlugs: Set<String> = setOf("claude", "gemini", "google", "qwen", "copilot")
+
+    /** The bundled file name of [slug]'s colour mark, or null when that brand has none. */
+    public fun colorFile(slug: String): String? = if (slug in colorSlugs) "$slug-color" else null
+
+    /** The bundled colour file for an agent id, or null (the mono mark stands in). */
+    public fun agentColorFile(id: String): String? = agentSlug(id)?.let(::colorFile)
+
     public fun providerSlug(id: String): String? = providers[id.trim().lowercase()]
 
     public fun agentSlug(id: String): String? = agents[id.trim().lowercase()]

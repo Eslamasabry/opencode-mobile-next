@@ -107,7 +107,7 @@ public fun KitAgentTile(
     val hairline = kitHairline()
     val edge = if (solid) Modifier.kitHairlineBorder(hairline, colors.hairline, look.shape) else Modifier
     val inset = Space.S4.dp + if (solid) hairline else 0.dp
-    val markSize = FlutterKitTokens.MARK_SIZE.dp
+    val markSize = (FlutterKitTokens.MARK_SIZE + Space.S2).dp // owner 2026-11-09: bigger logos
     val lineTone =
         when (tone) {
             KitAgentTileTone.Calm -> TextTone.Secondary
@@ -115,7 +115,7 @@ public fun KitAgentTile(
             KitAgentTileTone.Dimmed -> TextTone.Tertiary
         }
     val mark: @Composable () -> Unit = {
-        AgentMark(markId, if (dimmed) colors.text3 else colors.text1, markSize, monogram = name)
+        AgentMark(markId, if (dimmed) colors.text3 else colors.text1, markSize, monogram = name, dimmed = dimmed)
     }
     val words: @Composable () -> Unit = {
         Column(Modifier.clearAndSetSemantics {}) {

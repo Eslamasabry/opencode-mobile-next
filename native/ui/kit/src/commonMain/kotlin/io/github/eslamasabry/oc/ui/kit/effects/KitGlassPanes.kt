@@ -56,7 +56,7 @@ internal fun kitClearPanesOn(): Boolean {
             styleAllows = LocalKitStyle.current.style == Style.Glass,
             lensSupported = platform.liquidGlass,
         )
-    return FrostPolicy.clearPanes(conditions, appearance.frost, appearance.glassEdges)
+    return FrostPolicy.clearPanes(conditions, appearance.frost, kitGlassLook().id)
 }
 
 /**
@@ -116,9 +116,10 @@ internal fun kitGlassChosenRow(): Modifier? {
     // Concentric with its group: the group's (grown) panel corner, less the group's pane inset and the row's own inset.
     val panel = StyleResolver.paneCorner(FlutterKitTokens.PANEL_CORNER_RADIUS.toFloat(), style.knobs.corners, style.spec.tokens)
     val radius = (panel - style.spec.tokens.paneInsetDp - CHOSEN_ROW_INSET_DP).coerceAtLeast(0f)
+    val look = kitGlassLook().spec
     val face =
-        remember(roles, style, clear, spots, radius) {
-            chosenRowFace(roles, style.knobs, clear, spots, radius)
+        remember(roles, style, clear, spots, radius, look) {
+            chosenRowFace(roles, style.knobs, clear, spots, radius, look)
         }
     return Modifier.drawBehind { inset(CHOSEN_ROW_INSET_DP.dp.toPx()) { drawGlassFace(face) } }
 }
@@ -136,8 +137,9 @@ internal fun chosenRowFace(
     clear: Boolean,
     spots: List<Argb>,
     radius: Float,
+    look: io.github.eslamasabry.oc.ui.design.style.GlassLook = io.github.eslamasabry.oc.ui.design.style.GlassLook.Default,
 ): SurfaceDecoration {
-    fun resolve(r: SurfaceRequest) = (if (clear) GlassSpec.resolveClear(r) else GlassSpec.resolve(r))!!
+    fun resolve(r: SurfaceRequest) = (if (clear) GlassSpec.resolveClear(r.copy(look = look)) else GlassSpec.resolve(r.copy(look = look)))!!
     val ground = roles.ground.withAlpha(1f)
     val group = resolve(SurfaceRequest(roles, SurfaceRole.Content, knobs, SurfaceLevel.Surface1))
     val under = (listOf(ground) + spots).flatMap { s -> listOfNotNull(group.fill, group.fillStart).map { it.over(s.withAlpha(1f)) } }

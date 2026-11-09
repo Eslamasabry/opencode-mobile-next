@@ -43,7 +43,7 @@ import io.github.eslamasabry.oc.ui.design.color.lerp
 import io.github.eslamasabry.oc.ui.design.color.over
 import io.github.eslamasabry.oc.ui.design.color.wcagContrast
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
-import io.github.eslamasabry.oc.ui.design.effects.GlassEdges
+import io.github.eslamasabry.oc.ui.design.style.GlassLookId
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.effects.LiquidEdge
 import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
@@ -172,15 +172,15 @@ class ChatEdgeATest {
         return Triple(l.average().toFloat(), (l.maxOrNull() ?: 0f) - (l.minOrNull() ?: 0f), step)
     }
 
-    private fun dark(style: Style, edges: GlassEdges = GlassEdges.Liquid) =
-        KitAppearance(style = style, mode = AppearanceMode.Dark, glassEdges = edges)
+    private fun dark(style: Style, look: GlassLookId = GlassLookId.Glossy) =
+        KitAppearance(style = style, mode = AppearanceMode.Dark, glassLook = look)
 
     @Test
     fun `E20-S13 at rest the first row starts right below the bar, in every look`() {
         val looks =
             listOf(
                 "liquid Glass" to (dark(Style.Glass) to LensPlatform()),
-                "frosted Glass" to (dark(Style.Glass, GlassEdges.Frosted) to LensPlatform()),
+                "frosted Glass" to (dark(Style.Glass, GlassLookId.Frosted) to LensPlatform()),
                 "Solid" to (dark(Style.Solid) to FakeKitPlatform()),
             )
         for ((what, look) in looks) {
@@ -195,7 +195,7 @@ class ChatEdgeATest {
 
     @Test
     fun `E20-S30 scrolled under liquid and frosted Glass the content blurs behind the status bar and the bar`() {
-        for ((what, appearance) in listOf("liquid" to dark(Style.Glass), "frosted" to dark(Style.Glass, GlassEdges.Frosted))) {
+        for ((what, appearance) in listOf("liquid" to dark(Style.Glass), "frosted" to dark(Style.Glass, GlassLookId.Frosted))) {
             val s = shot(appearance, LensPlatform(), first = 8)
             val ground = luma(s.image[(W * D / 2).toInt(), ((H - NAV_DP - 2) * D).toInt()])
             // Under the status bar, where it is all blur: the rows show, as a blur (no sharp edge between a row and its gap).

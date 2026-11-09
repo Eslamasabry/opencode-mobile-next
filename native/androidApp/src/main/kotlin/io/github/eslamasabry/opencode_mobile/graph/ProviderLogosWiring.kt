@@ -65,7 +65,7 @@ class AppProviderLogoHost(
 
     override suspend fun bundled(slug: String): String? =
         withContext(dispatchers.io) {
-            if (slug !in ProviderMarks.slugs) return@withContext null
+            if (slug !in ProviderMarks.slugs && slug.removeSuffix("-color") !in ProviderMarks.colorSlugs) return@withContext null
             application.assets.open("marks/$slug.svg").use { input ->
                 val bytes = input.logoBytes()
                 if (bytes.size > PROVIDER_LOGO_MAX_BYTES) null
@@ -169,6 +169,8 @@ class AppProviderLogoHost(
 class AppKitLogoLoader(private val logos: ProviderLogos) : KitLogoLoader {
     override suspend fun svg(id: String, agent: Boolean): String? =
         if (agent) logos.agentSvg(id) else logos.svgFor(id)
+
+    override suspend fun colorSvg(id: String): String? = logos.agentColorSvg(id)
 }
 
 @ContributesTo(AppScope::class)
