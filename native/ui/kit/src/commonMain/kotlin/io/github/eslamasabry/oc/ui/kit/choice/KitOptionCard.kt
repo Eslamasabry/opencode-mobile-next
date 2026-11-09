@@ -16,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.graphics.Color
@@ -129,20 +130,19 @@ private fun Modifier.optionSemantics(label: String, selected: Boolean): Modifier
 @Composable
 private fun optionFrame(selected: Boolean): Modifier {
     val colors = LocalKitColors.current
-    val asked = kitSurfaceLook(KitSurfaceInput(SurfaceRole.Content, KitShapeId.Card, ownFill = colors.surface1, selected = selected))
+    // C04: chosen is the check plus a breath of the accent, not a ring and a slab.
+    val face = if (selected) colors.accent.copy(alpha = .06f).compositeOver(colors.surface1) else colors.surface1
+    val asked = kitSurfaceLook(KitSurfaceInput(SurfaceRole.Content, KitShapeId.Card, ownFill = face, selected = selected))
     val raised =
         kitSurfaceLook(
-            KitSurfaceInput(SurfaceRole.Content, KitShapeId.Card, SurfaceLevel.Surface2, ownFill = colors.surface1, selected = selected)
+            KitSurfaceInput(SurfaceRole.Content, KitShapeId.Card, SurfaceLevel.Surface2, ownFill = face, selected = selected)
         )
     val look = if (asked.paints) asked else raised
     val solid = LocalKitStyle.current.style == Style.Solid
-    val glass = LocalKitStyle.current.style == Style.Glass
-    val edge = if (selected) kitFocusRingWidth() else kitHairline()
+    val edge = kitHairline()
     val ring =
         when {
-            solid -> Modifier.exactEdge(edge, if (selected) colors.accent else colors.hairline, look.shape)
-            // Glass's chosen face draws its own accent rim on its own outline: a second ring over it never matched.
-            selected && !glass -> Modifier.exactEdge(edge, colors.accent, look.shape)
+            solid -> Modifier.exactEdge(edge, colors.hairline, look.shape)
             else -> Modifier
         }
     // Flutter insets the content by the edge's width (a Container pads its child by its border). The native card
@@ -165,11 +165,11 @@ private fun CheckBadge(selected: Boolean, modifier: Modifier = Modifier) {
                 scaleX = scale
                 scaleY = scale
             }
-            .background(colors.accent, CircleShape)
             .clearAndSetSemantics {},
         contentAlignment = Alignment.Center,
     ) {
-        KitGlyph(KitIcons.check, colors.onAccent, (Space.S3 + Space.S1 / 2f).dp) // F: lib/ui/kit/kit_option_card.dart:381
+        // C04 (audit 2026-11-09): the bare accent check, no disc behind it.
+        KitGlyph(KitIcons.check, colors.accent, (Space.S4).dp) // F: lib/ui/kit/kit_option_card.dart:381
     }
 }
 

@@ -190,7 +190,8 @@ public fun KitRow(
         modifier = modifier,
         supporting = supporting.text,
         leading = leading,
-        trailing = trailing,
+        // C04: a chosen row says so with a check at its trailing edge when it has nothing else there.
+        trailing = if (selected && trailing == KitRowTrailing.None) KitRowTrailing.Check else trailing,
         supportingMaxLines = supportingMaxLines,
         enabled = enabled,
         disabledReason = disabledReason,
@@ -285,9 +286,9 @@ private fun RowBody(
                 if (!selected) Modifier
                 // On a flat list (Solid) the chosen row is a rounded plate inset space2 from the row's ends, never a
                 // square band across the page (kit_row.dart:672-690).
-                else if (LocalKitStyle.current.spec.tokens.flatLists) Modifier.kitChosenPlate(colors.surface3)
+                else if (LocalKitStyle.current.spec.tokens.flatLists) Modifier.kitChosenPlate(colors.accent.copy(alpha = CHOSEN_ROW_TINT))
                 // Glass: accent-tinted frost with the accent rim, its corners following the group's (owner 2026-11-08).
-                else glassChosen ?: Modifier.kitSelectedFill(colors.surface3, onRail)
+                else glassChosen ?: Modifier.kitSelectedFill(colors.accent.copy(alpha = CHOSEN_ROW_TINT), onRail)
             )
             .heightIn(min = (if (supportLine != null || state != null) tokens.rowHeightTwo else tokens.rowHeightOne).dp)
             // A row's 48 dp glyph target (its ⋯ menu or a labelled glyph) ends near the edge, so its glyph lines up
@@ -530,6 +531,9 @@ private fun Modifier.kitSelectedFill(color: androidx.compose.ui.graphics.Color, 
  */
 internal fun chevronEndPad(size: Float): androidx.compose.ui.unit.Dp =
     maxOf(0f, (Space.S4 - Space.S1) - CARET_INK_END * size).dp // F: lib/ui/kit/kit_optical.dart:53 lib/ui/kit/kit_row.dart:664
+
+/** A chosen row's wash: a breath of the accent, never a slab (audit 2026-11-09, C04). */
+internal const val CHOSEN_ROW_TINT: Float = 0.06f
 
 private const val CARET_INK_END = .28125f // F: lib/ui/kit/kit_optical.dart:26
 

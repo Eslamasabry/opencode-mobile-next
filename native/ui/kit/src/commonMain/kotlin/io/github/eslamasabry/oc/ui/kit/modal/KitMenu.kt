@@ -336,8 +336,9 @@ public fun KitMenuPanel(
             .kitFloating("menu")
             .testTag("kit-menu")
     ) {
-        // E20-S08: when any item has a glyph, the others keep its slot, so every label starts on one edge.
-        val glyphSlot = items.any { it.icon != null }
+        // C17 (audit 2026-11-09): glyphs are all or nothing. Every item has one, aligned in one column, or none shows
+        // one; a half-iconed menu makes the text column jump.
+        val glyphSlot = items.isNotEmpty() && items.all { it.icon != null }
         MenuLayout.arrange(items).forEach { entry ->
             when (entry) {
                 KitMenuEntry.Divider ->
@@ -384,8 +385,7 @@ private fun MenuRow(item: KitMenuItem, glyphSlot: Boolean, onChoose: (KitMenuIte
     ) {
         val ink = if (on) colors.text1 else colors.text3
         val glyph = item.icon
-        if (glyph != null) KitGlyph(glyph, ink, tokens.smallIcon.dp)
-        else if (glyphSlot) Spacer(Modifier.size(tokens.smallIcon.dp))
+        if (glyphSlot && glyph != null) KitGlyph(glyph, ink, tokens.smallIcon.dp, Modifier.testTag("kit-menu-glyph"))
         Column(Modifier.weight(1f)) {
             KitText(
                 item.label,

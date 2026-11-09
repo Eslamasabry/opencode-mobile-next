@@ -157,7 +157,7 @@ public fun KitStatusIcon(
     val colors = LocalKitColors.current
     val glyph =
         when (status.glyph) {
-            StatusGlyph.EmptyRing -> KitIcons.radioEmpty
+            StatusGlyph.EmptyRing -> KitIcons.info // C11: never the empty ring
             StatusGlyph.Sync -> KitIcons.sync
             StatusGlyph.Check -> KitIcons.check
             StatusGlyph.Warning -> KitIcons.warning
