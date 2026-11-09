@@ -128,6 +128,7 @@ class PacerTest {
             runCurrent()
             assertEquals(2, seen.size, "coming back on screen ticks at once")
             advanceTimeBy(5.seconds)
+            runCurrent()
             assertEquals(3, seen.size, "the foreground pace is 5 s, saver or not")
         }
 }
