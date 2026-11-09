@@ -40,6 +40,7 @@ public class ProjectsPickerViewModel(
     private val discovery: PhoneProjectDiscovery,
     private val creator: ProjectCreation = NoProjectCreation(),
     private val phoneFolders: PhoneFolders = NoPhoneFolders(),
+    private val lastKnown: ProjectsLastKnown = NoProjectsLastKnown(),
 ) : ViewModel(), ProjectsPickerActions {
     private val mutable = MutableStateFlow(ProjectsPickerUi())
     public val state: StateFlow<ProjectsPickerUi> = mutable.asStateFlow()
@@ -99,7 +100,8 @@ public class ProjectsPickerViewModel(
             return
         }
         val before = ProjectRules.openedBefore(opened.recent(server.profile))
-        all = emptyList()
+        // Cache-first: the projects this server last answered with draw at once, then the read replaces them.
+        all = lastKnown.peekProjects(server.profile).orEmpty()
         mutable.value =
             ProjectsPickerUi(
                 phase = ProjectsPhase.Ready,
@@ -118,7 +120,16 @@ public class ProjectsPickerViewModel(
                 canBrowseBuiltin =
                     server.phoneFolders && phoneFolders.builtinAvailable(server.profile),
             )
+        if (all.isNotEmpty()) publish()
         viewModelScope.launch {
+            if (all.isEmpty()) {
+                val kept = lastKnown.readProjects(server.profile).orEmpty()
+                if (run != generation) return@launch
+                if (kept.isNotEmpty() && all.isEmpty()) {
+                    all = kept
+                    publish()
+                }
+            }
             val read = readProjects(server)
             if (run != generation) return@launch
             when (read) {
@@ -126,6 +137,7 @@ public class ProjectsPickerViewModel(
                     all = read.value
                     mutable.update { it.copy(projectsLoading = false, projectsFailure = null) }
                     publish()
+                    lastKnown.keepProjects(server.profile, read.value)
                 }
                 is Outcome.Failed ->
                     mutable.update {
