@@ -13,5 +13,6 @@
     <string name="modelDefaultsFree">Free</string>
     <string name="modelDefaultsPrice">Input $%1$s · Output $%2$s per million tokens</string>
     <string name="modelDefaultsSelected">Selected</string>
+    <string name="modelDefaultsChecking">Checking the server’s models</string>
     <string name="modelDefaultsSaving">Saving the model choice</string>
 </resources>

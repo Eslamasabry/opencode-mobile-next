@@ -166,7 +166,7 @@ public class FileLastKnown(
         withContext(io) {
             disk.withLock {
                 val prefix = "${profileName(profile)}/"
-                memory.update { map -> map.keys.filter { it.startsWith(prefix) }.fold(map) { m, k -> m.remove(k) } }
+                memory.update { map -> map.keys.filter { it.startsWith(prefix) }.fold(map) { m, k -> m.removing(k) } }
                 try {
                     Outcome.Ok(removeTree(Path(root, profileName(profile))))
                 } catch (e: IOException) {
@@ -196,18 +196,18 @@ public class FileLastKnown(
     private fun <T> holdKey(key: String, mark: ServerMark, shelf: CacheShelf<T>, value: T, bytes: Long) {
         val held = Held(mark, shelf.serializer, value, bytes, ticks.fetchAndAdd(1))
         memory.update { map ->
-            var next = map.put(key, held)
+            var next = map.putting(key, held)
             var total = next.values.sumOf { it.bytes }
             while (total > memoryBudgetBytes && next.size > 1) {
                 val oldest = next.entries.filter { it.key != key }.minBy { it.value.tick }
-                next = next.remove(oldest.key)
+                next = next.removing(oldest.key)
                 total -= oldest.value.bytes
             }
             next
         }
     }
 
-    private fun forget(key: String) = memory.update { it.remove(key) }
+    private fun forget(key: String) = memory.update { it.removing(key) }
 
     private inline fun AtomicReference<PersistentMap<String, Held>>.update(
         change: (PersistentMap<String, Held>) -> PersistentMap<String, Held>
