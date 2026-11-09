@@ -341,6 +341,16 @@ class TelemetryServiceTest {
     }
 
     @Test
+    fun `OEM-KILL-014 the setup failure keeps the closed kill kind of a system kill`() {
+        // The kinds the phone setup sends with setup_step_failed when the system closed the app (issue #138).
+        for (kind in listOf("system_kill_other", "low_memory", "excessive_resources", "freezer", "signaled")) {
+            val kept = TelemetryService.cleanKeys(mapOf("step" to "start", "error" to "cannot_start", "kill" to kind))
+            assertEquals(kind, kept["kill"], kind)
+            assertEquals("start", kept["step"])
+        }
+    }
+
+    @Test
     fun `B-190-010 the log ring keeps the newest lines, cut short, with the UTC time`() {
         val ring = AppLogRing(capacity = 3)
         for (i in 0 until 5) ring.add("line $i", kotlin.time.Instant.fromEpochSeconds(3_723))

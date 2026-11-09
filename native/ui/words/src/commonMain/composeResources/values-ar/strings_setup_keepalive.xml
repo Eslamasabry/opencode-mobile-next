@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setupKilled">أغلق هاتفك OpenCode أثناء الإعداد. تبقى الخطوات المكتملة. اضغط متابعة لتكمل من حيث توقف.</string>
+    <string name="setupKilledMemory">نفدت ذاكرة هاتفك فأغلق OpenCode أثناء الإعداد. تبقى الخطوات المكتملة. اضغط متابعة لتكمل من حيث توقف.</string>
+    <string name="setupBatteryTitle">اترك OpenCode يعمل</string>
+    <string name="setupBatteryBody">تغلق بعض الهواتف التطبيقات لتوفير البطارية. غيّر هذه الإعدادات حتى لا ينقطع الإعداد.</string>
+    <string name="setupBatteryStepUnrestricted">افتح إعداد البطارية للتطبيق واختر «غير مقيَّد» (تسميه بعض الهواتف «بلا قيود»).</string>
+    <string name="setupBatteryStepAutostart">فعّل التشغيل التلقائي لـ OpenCode.</string>
+    <string name="setupBatteryStepNeverSleeping">أضف OpenCode إلى التطبيقات التي لا تنام أبدًا.</string>
+    <string name="setupBatteryOpenApp">افتح إعدادات التطبيق</string>
+    <string name="setupBatteryOpenAutostart">افتح التشغيل التلقائي</string>
+    <string name="setupBatteryOpenSamsung">افتح البطارية</string>
+    <string name="setupBatteryOpenFailed">لم يفتح هاتفك تلك الشاشة. اتبع الخطوات في الإعدادات يدويًا.</string>
+</resources>

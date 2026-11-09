@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Issue #138: a maker's battery manager closes the app while the phone setup runs. English; the pipeline fills the rest. -->
+<resources>
+    <string name="setupKilled">Your phone closed OpenCode while it was setting up. Finished steps stay. Continue to pick up where it stopped.</string>
+    <string name="setupKilledMemory">Your phone ran short of memory and closed OpenCode while it was setting up. Finished steps stay. Continue to pick up where it stopped.</string>
+    <string name="setupBatteryTitle">Let OpenCode keep running</string>
+    <string name="setupBatteryBody">Some phones close apps to save battery. Change these settings so the setup is not cut short.</string>
+    <string name="setupBatteryStepUnrestricted">Open the app's Battery setting and choose “Unrestricted” (some phones call it “No restrictions”).</string>
+    <string name="setupBatteryStepAutostart">Turn on Autostart for OpenCode.</string>
+    <string name="setupBatteryStepNeverSleeping">Add OpenCode to Never sleeping apps.</string>
+    <string name="setupBatteryOpenApp">Open app settings</string>
+    <string name="setupBatteryOpenAutostart">Open Autostart</string>
+    <string name="setupBatteryOpenSamsung">Open Battery</string>
+    <string name="setupBatteryOpenFailed">This phone would not open that screen. Follow the steps in Settings by hand.</string>
+</resources>
