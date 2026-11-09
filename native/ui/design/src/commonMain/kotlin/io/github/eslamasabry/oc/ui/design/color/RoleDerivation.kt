@@ -51,6 +51,16 @@ public object RoleDerivation {
         return hueDistance(a, att) >= ACCENT_MIN_HUE_DISTANCE && deltaE2000(a, att) >= ACCENT_MIN_DELTA_E
     }
 
+    /** A light theme's page: this share of its accent in the pack's background. */
+    private const val LIGHT_GROUND_TINT: Double = .055
+
+    /** A light theme's controls and chips (surface3): this share of the ink under the page, and of the accent. */
+    private const val LIGHT_CONTROL_STEP: Double = .085
+    private const val LIGHT_CONTROL_TINT: Double = .04
+
+    /** A light theme's hairline: its own ink at this alpha. */
+    private const val LIGHT_HAIRLINE_ALPHA: Float = .14f
+
     /**
      * Every role from an accent, a ground and a brightness, with the contrast floors built in (Dart `deriveRoles`):
      * text1 7:1, text2 and text3 4.5:1 on the ground and every surface, the accent reads as a link and carries its
@@ -64,10 +74,18 @@ public object RoleDerivation {
         attention: Argb? = null,
         success: Argb? = null,
         partners: List<Argb> = emptyList(),
+        /**
+         * A theme pack's light side (owner 2026-11-10: "the themes ... are all washed off"): the page takes a little of
+         * the theme's accent, so white cards stand off it and each theme reads as itself; controls and chips sit a
+         * clear step under the cards; secondary words stay nearer the ink; the hairline is the theme's own ink. Dark
+         * sides and a person's own accent-and-ground are derived as before.
+         */
+        themed: Boolean = false,
     ): Roles {
         val far = if (dark) DColor.White else DColor.Black
         val defaults = Graphite.of(dark)
-        val g = ground.toD()
+        val lightTheme = themed && !dark
+        val g = if (lightTheme) mix(ground.toD(), accent.toD(), LIGHT_GROUND_TINT) else ground.toD()
         val base = (text ?: defaults.text1).toD()
         val surface1: DColor
         val surface2: DColor
@@ -79,13 +97,13 @@ public object RoleDerivation {
         } else {
             surface1 = mix(g, DColor.White, .8)
             surface2 = surface1
-            surface3 = mix(g, base, .05)
+            surface3 = if (lightTheme) mix(mix(g, base, LIGHT_CONTROL_STEP), accent.toD(), LIGHT_CONTROL_TINT) else mix(g, base, .05)
         }
         val surfaces = listOf(g, surface1, surface2, surface3)
         val attentionCard = alphaBlend(defaults.attentionSurface.toD(), surface1)
         val text1 = readableOnD(base, surfaces + attentionCard, 7.0, far)
-        val text2 = readableOnD(mix(text1, g, if (dark) .36 else .30), surfaces, 4.5, far)
-        val text3 = readableOnD(mix(text1, g, if (dark) .46 else .40), surfaces, 4.5, far)
+        val text2 = readableOnD(mix(text1, g, if (dark) .36 else if (lightTheme) .22 else .30), surfaces, 4.5, far)
+        val text3 = readableOnD(mix(text1, g, if (dark) .46 else if (lightTheme) .32 else .40), surfaces, 4.5, far)
         val a = guardAccentD(accent.toD(), listOf(g, surface1), dark)
         val att = readableOnD((attention ?: defaults.attention).toD(), listOf(g, surface1, attentionCard), 4.5, far)
         val ok = readableOnD((success ?: defaults.success).toD(), listOf(g, surface1), 4.5, far)
@@ -102,7 +120,7 @@ public object RoleDerivation {
             surface1 = surface1.toArgb(),
             surface2 = surface2.toArgb(),
             surface3 = surface3.toArgb(),
-            hairline = defaults.hairline,
+            hairline = if (lightTheme) text1.toArgb().withAlpha(LIGHT_HAIRLINE_ALPHA) else defaults.hairline,
             text1 = text1.toArgb(),
             text2 = text2.toArgb(),
             text3 = text3.toArgb(),

@@ -1,5 +1,9 @@
 package io.github.eslamasabry.oc.feature.settings.ui
 
+import io.github.eslamasabry.oc.ui.kit.nav.KitTabStrip
+import io.github.eslamasabry.oc.ui.kit.nav.KitTab
+import io.github.eslamasabry.oc.ui.kit.guide.KitAppearancePreview
+import androidx.compose.runtime.MutableIntState
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -82,138 +86,87 @@ import io.github.eslamasabry.oc.ui.words.res.textSizeTitle
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * I04's supported Appearance questions. Theme cards apply at once and style cards draw their own
- * samples (Glass among them, order 34). The existing guide record selects a question; Saver holds
- * Style, Background and Motion. Background offers the looks the native app draws: Off and the
- * painted aurora (order 35); the glow question still needs its presentation fields (evidence/44.md).
+ * The Appearance page (owner 2026-11-10: "redesign my appearance page ... clean both"). One page for everyone: a live
+ * sample of the app at the top, then the four groups as tabs (Colours, Style, Background, Text & motion), each about
+ * one screen of choices that apply at once. A new person gets the same page with the tour's bar at its foot
+ * ([AppearanceGuideNext]) and "Skip the guide" under the choices; afterwards "Guide me again" sits there instead.
+ * Saver holds Style and Background and says so in their tabs.
  */
 @Composable
-internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActions) {
-    // The Glass look picker (glass looks 2026-11-09, D5): opened from the "Glass look" row and by tapping the chosen
-    // Glass card again; one sheet for the page, whichever question asks for it.
-    val glassLookOpen = rememberSaveable { mutableStateOf(false) }
-    CompositionLocalProvider(LocalGlassLookSheet provides glassLookOpen) { AppearanceBodyContent(ui, actions) }
-    if (glassLookOpen.value && ui.style == SurfaceStyle.Glass && !ui.heldBySaver) {
-        GlassLookSheet(ui, actions) { glassLookOpen.value = false }
-    }
-}
-
-/** Whether the Glass look picker is open (provided by [AppearanceBody]). */
-private val LocalGlassLookSheet = staticCompositionLocalOf<MutableState<Boolean>?> { null }
-
-/** The Glass look picker: a sheet of live previews over a moving field; a tap applies the look at once. */
-@Composable
-private fun GlassLookSheet(ui: AppearanceUi, actions: SettingsActions, onDismiss: () -> Unit) {
-    KitSheet(
-        visible = true,
-        onDismissRequest = onDismiss,
-        title = stringResource(Res.string.appearanceGlassLook),
-    ) {
-        KitGlassLookPicker(
-            options = ui.glassLooks.map { KitGlassLookOption(it, glassLookWords(it), glassLookLine(it)) },
-            selected = ui.glassLook,
-            onSelect = actions::onGlassLook,
-            disclosure = stringResource(Res.string.appearanceGlassLookDisclosure),
-            modifier = Modifier.testTag("appearance-glass-look-picker"),
+internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActions, tab: MutableIntState) {
+    val groups = appearanceTabs(ui)
+    val at = tab.intValue.coerceIn(groups.indices)
+    val gutter = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
+    Box(gutter) {
+        KitAppearancePreview(
+            ask = stringResource(Res.string.appearancePreviewAsk),
+            reply = stringResource(Res.string.appearancePreviewReply),
+            action = stringResource(Res.string.appearancePreviewAction),
+            spoken = stringResource(Res.string.appearancePreviewSpoken),
+            modifier = Modifier.testTag("appearance-preview"),
         )
     }
-}
-
-@Composable
-private fun ColumnScope.AppearanceBodyContent(ui: AppearanceUi, actions: SettingsActions) {
-    val onePage = ui.question == null && ui.guide?.done != false
-    if (onePage) {
-        AppearanceOnePage(ui, actions)
-        if (ui.guide != null) AppearanceGuideFooter(ui, actions)
-        return
-    }
-    if (ui.guide != null) {
-        AppearanceGuideHeader(ui, actions)
-        if (!ui.guide.done && ui.question == null) {
-            return
-        }
-    }
-    AppearanceControls(ui, actions, ui.question)
-}
-
-/** Returning visits use Flutter's two columns from Expanded; each column keeps its own rules. */
-@Composable
-private fun AppearanceOnePage(ui: AppearanceUi, actions: SettingsActions) {
-    if (LocalKitWindow.current.cls.isWide) {
-        Row(Modifier.fillMaxWidth().testTag("appearance-columns")) {
-            Column(Modifier.weight(1f)) {
-                AppearanceSection(ui, actions, AppearanceGroup.Colours, first = true)
-                AppearanceSection(ui, actions, AppearanceGroup.Style, first = false)
-            }
-            Column(Modifier.weight(1f)) {
-                AppearanceSection(ui, actions, AppearanceGroup.Background, first = true)
-                AppearanceSection(ui, actions, AppearanceGroup.Comfort, first = false)
-            }
-        }
-    } else {
-        Column {
-            listOf(
-                    AppearanceGroup.Colours,
-                    AppearanceGroup.Style,
-                    AppearanceGroup.Background,
-                    AppearanceGroup.Comfort,
-                )
-                .forEachIndexed { index, group ->
-                    AppearanceSection(ui, actions, group, first = index == 0)
-                }
-        }
-    }
-}
-
-@Composable
-private fun ColumnScope.AppearanceSection(
-    ui: AppearanceUi,
-    actions: SettingsActions,
-    group: AppearanceGroup,
-    first: Boolean,
-) {
-    if (group == AppearanceGroup.Style && !ui.styles) return
-    if (!first) {
-        Spacer(Modifier.height(Space.S6.dp))
-        KitDivider()
-    }
+    Spacer(Modifier.height(Space.S3.dp))
+    KitTabStrip(
+        tabs = groups.map { KitTab(appearanceGroupWords(it)) },
+        selected = at,
+        onSelected = { tab.intValue = it },
+        modifier = Modifier.testTag("appearance-tabs"),
+    )
+    val group = groups[at]
     if ((group == AppearanceGroup.Style || group == AppearanceGroup.Background) && ui.heldBySaver) {
-        AppearanceQuestionHeading(
-            appearanceGroupWords(group),
-            if (first) Space.S2.dp else Space.S6.dp,
-        )
         KitGroupNote(
             stringResource(
                 if (group == AppearanceGroup.Style) Res.string.appearanceSaverHoldsStyle
                 else Res.string.appearanceSaverHoldsBackground
             )
         )
-        return
+    } else {
+        group.questions
+            // Strength has nothing to act on while the background is off: it appears with the first look.
+            .filter { it in TAB_QUESTIONS && !(it == AppearanceQuestion.Strength && ui.liveLook == null) }
+            .forEachIndexed { index, question ->
+                AppearanceControls(ui, actions, question, onePage = true, top = if (index == 0) Space.S4.dp else Space.S6.dp)
+            }
     }
-    val supported =
-        setOf(
-            AppearanceQuestion.Mode,
-            AppearanceQuestion.Theme,
-            AppearanceQuestion.AccentColour,
-            AppearanceQuestion.Style,
-            AppearanceQuestion.Shape,
-            AppearanceQuestion.Look,
-            AppearanceQuestion.Strength,
-            AppearanceQuestion.Text,
-            AppearanceQuestion.Motion,
-        )
-    group.questions
-        .filter { it in supported }
-        .forEachIndexed { index, question ->
-            AppearanceControls(
-                ui,
-                actions,
-                question,
-                onePage = true,
-                top = if (first && index == 0) Space.S2.dp else Space.S6.dp,
-            )
-        }
+    val guide = ui.guide ?: return
+    Spacer(Modifier.height(Space.S4.dp))
+    KitButton(
+        stringResource(if (guide.done) Res.string.appearanceGuideAgain else Res.string.appearanceGuideSkip),
+        {
+            if (guide.done) {
+                tab.intValue = 0
+                actions.onAppearanceAgain()
+            } else actions.onAppearanceSkip()
+        },
+        gutter.testTag(if (guide.done) "appearance-guide-again" else "appearance-guide-skip"),
+        role = KitButtonRole.Tertiary,
+        fullWidth = false,
+    )
 }
+
+/** The page's tabs, in order; Style only where the app draws styles. */
+internal fun appearanceTabs(ui: AppearanceUi): List<AppearanceGroup> =
+    listOfNotNull(
+        AppearanceGroup.Colours,
+        AppearanceGroup.Style.takeIf { ui.styles },
+        AppearanceGroup.Background,
+        AppearanceGroup.Comfort,
+    )
+
+/** The questions the tabs draw (the glow question still needs its presentation fields, evidence/44.md). */
+private val TAB_QUESTIONS =
+    setOf(
+        AppearanceQuestion.Mode,
+        AppearanceQuestion.Theme,
+        AppearanceQuestion.AccentColour,
+        AppearanceQuestion.Style,
+        AppearanceQuestion.Shape,
+        AppearanceQuestion.Look,
+        AppearanceQuestion.Strength,
+        AppearanceQuestion.Text,
+        AppearanceQuestion.Motion,
+    )
 
 @Composable
 private fun ColumnScope.AppearanceControls(
@@ -257,7 +210,7 @@ private fun ColumnScope.AppearanceControls(
         )
         val guided = !onePage
         val columns = if (guided) 2 else 3 // F: lib/ui/screens/settings/appearance_screen.dart:904
-        val base = if (guided) 84 else 64 // F: lib/ui/screens/settings/appearance_screen.dart:905
+        val base = if (guided) 84 else 96 // the picture of a theme needs the room (Flutter 64: appearance_screen.dart:905)
         val scaleHeight =
             30 * // F: lib/ui/screens/settings/appearance_screen.dart:905
                 LocalDensity.current
@@ -339,30 +292,19 @@ private fun ColumnScope.AppearanceControls(
                 else KitEnabled.Enabled
             Box(gutter) {
                 val columns = 2 // F: lib/ui/screens/settings/appearance_screen.dart:973
-                val glassLookSheet = LocalGlassLookSheet.current
-                val glassChosen = ui.style == SurfaceStyle.Glass
-                // Tapping the chosen Glass card again opens its looks (D5); its name says the look.
-                val glassLabel = stringResource(Res.string.appearanceGlassCardLook, glassLookWords(ui.glassLook))
                 AppearanceGrid(SurfaceStyle.entries, columns) { style ->
-                    val glass = style == SurfaceStyle.Glass
                     KitStyleOptionCard(
                         style = Style.valueOf(style.name),
-                        label = if (glass && glassChosen) glassLabel else styleWords(style),
+                        label = styleWords(style),
                         selected = style == ui.style,
                         enabled = styleHeld.isEnabled,
                         disabledReason = styleHeld.reason,
-                        onSelect = {
-                            if (glass && glassChosen && ui.glassLookHold != EdgeHold.Motion) glassLookSheet?.value = true
-                            else actions.onStyle(style)
-                        },
+                        onSelect = { actions.onStyle(style) },
                         modifier = Modifier.testTag("appearance-style-${style.name}"),
                     )
                 }
             }
             if (ui.heldBySaver) KitGroupNote(stringResource(Res.string.appearanceSaverHoldsStyle))
-            else if (ui.style == SurfaceStyle.Glass && ui.glassLookHold != EdgeHold.Motion) {
-                KitGroupNote(stringResource(Res.string.appearanceGlassCardHint))
-            }
         }
     }
     if ((question == null || question == AppearanceQuestion.Shape) && ui.styles) {
@@ -398,26 +340,27 @@ private fun ColumnScope.AppearanceControls(
                 onChange = actions::onSpacing,
             )
         }
-        // Glass only: the Glass look row (in the place of the old Liquid/Frosted control) opens the looks' picker.
+        // Glass only: its look is a choice like Corners and Spacing, in plain sight (no row to a sheet, no second tap
+        // on the Glass card).
         if (ui.style == SurfaceStyle.Glass) {
-            val glassLookSheet = LocalGlassLookSheet.current
             val motionHeld = ui.glassLookHold == EdgeHold.Motion
-            val rowHeld =
+            val lookHeld =
                 when {
-                    !held.isEnabled -> held.reason
-                    motionHeld -> stringResource(Res.string.appearanceGlassLookHeldMotion)
-                    else -> null
+                    !held.isEnabled -> held
+                    motionHeld -> KitEnabled.Disabled(stringResource(Res.string.appearanceGlassLookHeldMotion))
+                    else -> KitEnabled.Enabled
                 }
-            KitRow(
-                title = stringResource(Res.string.appearanceGlassLook),
-                supporting = glassLookWords(ui.glassLook),
-                trailing = KitRowTrailing.Chevron,
-                enabled = rowHeld == null,
-                disabledReason = rowHeld,
-                onClickLabel = stringResource(Res.string.appearanceGlassLookPick),
-                modifier = Modifier.testTag("appearance-glass-look"),
-                onClick = { glassLookSheet?.value = true },
-            )
+            AppearanceKnobLabel(stringResource(Res.string.appearanceGlassLook))
+            Box(gutter) {
+                KitSegmented(
+                    segments = ui.glassLooks.map { KitSegment(it, glassLookWords(it)) },
+                    selected = ui.glassLook.takeIf { it in ui.glassLooks } ?: ui.glassLooks.first(),
+                    semanticsLabel = stringResource(Res.string.appearanceGlassLook),
+                    modifier = Modifier.testTag("appearance-glass-look"),
+                    enabled = lookHeld,
+                    onChange = actions::onGlassLook,
+                )
+            }
             when {
                 motionHeld -> KitGroupNote(stringResource(Res.string.appearanceGlassLookHeldMotion))
                 ui.glassLookHold == EdgeHold.Platform -> KitGroupNote(stringResource(Res.string.appearanceGlassLookNeedsAndroid13))
@@ -618,7 +561,8 @@ private fun AppearanceControlHeading(
     top: Dp,
 ) {
     if (onePage || question == null) {
-        AppearanceQuestionHeading(title, top)
+        // The page names the choice ("Theme", "Corners and spacing"); the tour's questions went with its steps.
+        AppearanceQuestionHeading(if (question != null) appearanceQuestionWords(question) else title, top)
         return
     }
     val changes =

@@ -895,4 +895,8 @@
     <string name="appearanceGlassLookNeedsAndroid13">انحناء الحواف يحتاج Android 13. يعرضها هذا الهاتف مموّهة في كل مظهر.</string>
     <string name="appearanceGlassCardHint">اضغط الزجاج مرة أخرى لتختار مظهره.</string>
     <string name="appearanceGlassCardLook">زجاج · %1$s</string>
+    <string name="appearancePreviewAsk">رتّب صفحة الإعدادات</string>
+    <string name="appearancePreviewReply">تم. تغيّرت ثلاثة ملفات ونجحت كل الفحوصات.</string>
+    <string name="appearancePreviewAction">راجِع التغييرات</string>
+    <string name="appearancePreviewSpoken">عيّنة من التطبيق بهذه الاختيارات</string>
 </resources>

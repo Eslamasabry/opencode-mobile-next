@@ -804,4 +804,8 @@
     <string name="appearanceGlassLookNeedsAndroid13">Bending edges need Android 13. This phone shows them blurred, in every look.</string>
     <string name="appearanceGlassCardHint">Tap Glass again to choose its look.</string>
     <string name="appearanceGlassCardLook">Glass · %1$s</string>
+    <string name="appearancePreviewAsk">Tidy up the settings page</string>
+    <string name="appearancePreviewReply">Done. Three files changed and every check passes.</string>
+    <string name="appearancePreviewAction">Review changes</string>
+    <string name="appearancePreviewSpoken">A sample of the app with these choices</string>
 </resources>

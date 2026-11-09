@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.choice
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.border
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -199,12 +201,10 @@ public fun KitThemeOptionCard(
     val roles = remember(pack, isDark) { ThemeResolver.roles(pack, null, isDark, false, null) }
     val swatch = roles.toKitColors()
     val chosen = selected && enabled
-    // Inside the card's edge; never below square (Corners › Sharp).
-    val radius = RoundedCornerShape((FlutterKitTokens.CARD_RADIUS - Space.S1).coerceAtLeast(0).dp)
-    val look =
-        kitSurfaceLook(
-            KitSurfaceInput(SurfaceRole.Content, KitShapeId.Card, ownFill = swatch.ground, color = swatch.ground, selected = chosen)
-        )
+    // The swatch is a picture of the theme, not a pane of the style in force (owner 2026-11-10: "borders cutoff", a
+    // block of shadow under each card): a flat fill of the theme's own ground in the card's shape, with its ring drawn
+    // inside that same shape, so no clip can cut the ring and no style shadow is cut into a rectangle.
+    val radius = KitShapeId.Card.shape()
     val ringWidth by animateDpAsState(if (chosen) kitFocusRingWidth() else kitHairline(), KitMotion.specs.enter(), label = "theme-ring")
     val ringColor by animateColorAsState(if (chosen) frame.accent else frame.hairline, KitMotion.specs.enter(), label = "theme-ring-colour")
     // The press clip rounds only the swatch's top corners: the name sits under the swatch at the card's bottom-start
@@ -225,10 +225,9 @@ public fun KitThemeOptionCard(
             Box(
                 Modifier.fillMaxWidth()
                     .weight(1f)
-                    .then(look.modifier)
                     .clip(radius)
                     .background(swatch.ground)
-                    .exactEdge(ringWidth, ringColor, radius)
+                    .border(ringWidth, ringColor, radius)
             ) {
                 if (!enabled && disabledReason != null) {
                     // Unavailable is said on the swatch, not faded (STATE-8).
@@ -247,19 +246,32 @@ public fun KitThemeOptionCard(
                         )
                     }
                 } else {
-                    Column(Modifier.fillMaxSize().padding(Space.S3.dp)) {
-                        CheckBadge(selected, Modifier.align(Alignment.End))
-                        Spacer(Modifier.weight(1f))
+                    // A small picture of the app in this theme: an asked line on the accent's tint, two lines of the
+                    // reply in its text colours on its own card, its action and its second colour. The check sits on
+                    // the action's row, so the picture reads the same chosen or not.
+                    Column(Modifier.fillMaxSize().padding(Space.S2.dp + ringWidth), verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+                        Box(
+                            Modifier.align(Alignment.End)
+                                .fillMaxWidth(.5f)
+                                .height(THEME_BAR_DP.dp * 2)
+                                .background(swatch.accent.copy(alpha = .28f), RoundedCornerShape(50))
+                        )
+                        Column(
+                            Modifier.fillMaxWidth()
+                                .weight(1f)
+                                .background(swatch.surface1, RoundedCornerShape(Space.S2.dp))
+                                .padding(horizontal = Space.S2.dp),
+                            verticalArrangement = Arrangement.spacedBy(Space.S1.dp, Alignment.CenterVertically),
+                        ) {
+                            Box(Modifier.fillMaxWidth(.82f).height(THEME_BAR_DP.dp).background(swatch.text1, RoundedCornerShape(50)))
+                            Box(Modifier.fillMaxWidth(.56f).height(THEME_BAR_DP.dp).background(swatch.text2, RoundedCornerShape(50)))
+                        }
                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            Box(Modifier.weight(1f)) {
-                                Box(
-                                    Modifier.fillMaxWidth(.72f) // F: lib/ui/kit/kit_option_card.dart:451
-                                        .height((Space.S1 + 2).dp) // F: lib/ui/kit/kit_option_card.dart:453
-                                        .background(swatch.accent, RoundedCornerShape(Space.S1.dp))
-                                )
-                            }
-                            Spacer(Modifier.width(Space.S2.dp))
+                            Box(Modifier.width(Space.S6.dp + Space.S2.dp).height(Space.S3.dp).background(swatch.accent, RoundedCornerShape(50)))
+                            Spacer(Modifier.width(Space.S1.dp))
                             Box(Modifier.size(Space.S3.dp).background(swatch.partner, CircleShape))
+                            Spacer(Modifier.weight(1f))
+                            CheckBadge(selected)
                         }
                     }
                 }
@@ -811,3 +823,6 @@ private fun glassSampleCard(r: SurfaceRequest): io.github.eslamasabry.oc.ui.desi
         r.roles,
         clear = true,
     )
+
+/** A line of words in a theme card's picture, in dp. */
+private const val THEME_BAR_DP = 3

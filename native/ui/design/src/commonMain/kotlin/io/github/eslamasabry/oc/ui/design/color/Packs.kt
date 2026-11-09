@@ -78,6 +78,7 @@ public class PackPalette internal constructor(
             text = onSurface,
             success = success,
             partners = listOf(secondary, tertiary),
+            themed = true,
         )
     }
 

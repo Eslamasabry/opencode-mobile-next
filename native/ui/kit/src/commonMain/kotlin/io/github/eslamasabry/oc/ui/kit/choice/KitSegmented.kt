@@ -274,7 +274,10 @@ private fun <T> RowSegments(segments: List<KitSegment<T>>, selected: T, enabled:
                         disabled = !on,
                     ),
                 )
-            val inkColors = colors
+            // A style that fills its chosen thumb with ink (Paper, Signal) gives the words to read on it: the chosen
+            // word then takes those, never the page's text1 on an ink fill (owner 2026-11-10: "Round" was black on
+            // black in Paper).
+            val inkColors = if (chosen && on) thumb.words?.let { colors.copy(text1 = it) } ?: colors else colors
             val ink = inkColors.tone(words)
             // The chosen glyph and check take the accent, the control's one accent mark.
             val glyph = if (chosen && on) colors.accent else ink

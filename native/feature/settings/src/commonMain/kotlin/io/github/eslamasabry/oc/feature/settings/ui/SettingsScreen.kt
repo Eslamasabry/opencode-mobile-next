@@ -124,7 +124,9 @@ public fun SettingsScreen(
             ) {
                 SavedServersBody(state, actions, page.section)
             }
-        SettingsPage.Appearance ->
+        SettingsPage.Appearance -> {
+            // The tab the page shows, shared with the tour's bar at its foot.
+            val appearanceTab = androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableIntStateOf(0) }
             SettingsFrame(
                 stringResource(Res.string.e7AppearanceTitle),
                 back,
@@ -133,11 +135,12 @@ public fun SettingsScreen(
                 modifier,
                 footer =
                     if (state.appearance.guide?.done == false) {
-                        { AppearanceGuideNext(state.appearance, actions) }
+                        { AppearanceGuideNext(state.appearance, actions, appearanceTab) }
                     } else null,
             ) {
-                AppearanceBody(state.appearance, actions)
+                AppearanceBody(state.appearance, actions, appearanceTab)
             }
+        }
         SettingsPage.Voice ->
             SettingsFrame(
                 stringResource(Res.string.settingsHubVoice),
