@@ -55,7 +55,7 @@ internal object CacheFirstGate {
     }
 
     /** Pending screens (not cache-first yet). Lower it with every screen made cache-first; never raise it. */
-    const val PENDING_CEILING: Int = 38
+    const val PENDING_CEILING: Int = 37
 
     private fun f(module: String, rest: String): String =
         "feature/$module/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/${module.replace("-", "")}/$rest"
@@ -106,7 +106,7 @@ internal object CacheFirstGate {
             f("servers", "account/ui/AgentAccountScreen.kt") to Review(2, Pending),
             f("settings", "ui/LibraryRegistrySheet.kt") to Review(2, Pending),
             f("settings", "ui/LibraryScreen.kt") to Review(1, Pending),
-            f("settings", "ui/ModelDefaultsScreen.kt") to Review(1, Pending),
+            f("settings", "ui/ModelDefaultsScreen.kt") to Review(1, Cold("CF-15")),
             f("settings", "ui/PermissionSettingsScreen.kt") to Review(1, Local),
             f("settings", "ui/VoiceLicensesView.kt") to Review(1, Local),
             f("setup", "ui/SetupScreen.kt") to Review(1, Local),

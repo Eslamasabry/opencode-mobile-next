@@ -68,7 +68,7 @@ this branch with a test; "home-connecting" means fixed by that branch (owner of 
 | 15 | Usage, limits | `usage/ui/LimitsContent.kt:106` | Skeleton until the first snapshot; offline keeps rows with a notice (the model to copy) | `UsageSnapshot` | Pending |
 | 16 | Servers list / details | `servers/ui/ServersScreen.kt:99`, `ServerEditorScreen.kt:272,320` | Loading bar overlay; check result replaced by "running check" | Last check result and time | Local list; check result Pending |
 | 17 | Server queue | `servers/ui/ServerQueueScreen.kt:81,239` | Refresh button instead of the plan | Last queue plan | Pending |
-| 18 | Settings › Model defaults | `settings/ui/ModelDefaultsScreen.kt:42,50` | Skeleton; real rows hidden while loading | Server default model/agent; model names (`oc.modelNames` exists) | Pending |
+| 18 | Settings › Model defaults | `settings/ui/ModelDefaultsScreen.kt:42,50` | Skeleton; real rows hidden while loading | Server default model/agent; model names (`oc.modelNames` exists) | **Fixed** (CF-15, CF-16) |
 | 19 | Settings › Library | `settings/ui/LibraryScreen.kt:450`, `LibraryRegistrySheet.kt:60-98` | Skeleton; Offline notice | Inventory rows; registry (`oc.setupRegistry` exists) | Pending |
 | 20 | Settings › Server configuration | `settings/ui/ServerConfigurationScreen.kt:75-80` | Full-body loading / unavailable states | The configuration sections | Pending |
 | 21 | Git | `git/ui/GitScreen.kt:150-170` | Blank body while loading; full-body unavailable state | Branch, ahead/behind, changed files, last commit | Pending |
@@ -88,7 +88,7 @@ connection forms, permission settings.
   - no feature composable named like an offline, cached, fallback or saved-titles layout (`OpeningRow` is the one left,
     listed until home-connecting removes it);
   - every loading branch in a feature that replaces a body (skeleton, loading state view, blank) is reviewed as
-    Local, Cold (cache-first; named first-frame test) or Pending; Pending screens have a ceiling (38) that only goes down.
+    Local, Cold (cache-first; named first-frame test) or Pending; Pending screens have a ceiling (38 at the start) that only goes down.
 - **First-frame tests per screen**: the frame with kept data has the same structure as the live frame (same phase,
   rows, keys and title; status in the status slot). Chat: `CacheFirstChatTest` CF-12…14, `KeptTranscriptTest`
   CF-10…11. Store: `LastKnownTest` CF-01…06.
