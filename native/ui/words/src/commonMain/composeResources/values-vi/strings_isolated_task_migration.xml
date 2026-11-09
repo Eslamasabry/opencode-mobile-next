@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="isolatedTaskCreateUnknown">Máy chủ chưa xác nhận bản sao đã được tạo hay chưa. Hãy kiểm tra dự án trước khi bắt đầu bản khác.</string>
+    <string name="isolatedTaskOpenUnknown">Máy chủ chưa xác nhận cuộc trò chuyện. Hãy kiểm tra Cuộc trò chuyện trước khi bắt đầu cuộc khác. Tác vụ của bạn vẫn được lưu ở đây.</string>
+    <string name="isolatedTaskProgress">Bước %1$d trên 3</string>
+    <string name="isolatedTaskOperationFailed">Bước đó chưa hoàn tất. Tác vụ của bạn vẫn được lưu ở đây.</string>
+    <string name="isolatedTaskCopies">Các bản sao riêng</string>
+    <string name="isolatedTaskRefreshCopies">Làm mới các bản sao</string>
+    <string name="isolatedTaskSendUnconfirmed">Không xác nhận được tác vụ của bạn đã được gửi hay chưa. Tác vụ vẫn được lưu ở đây. Hãy mở cuộc trò chuyện và kiểm tra trước khi gửi lại.</string>
+</resources>

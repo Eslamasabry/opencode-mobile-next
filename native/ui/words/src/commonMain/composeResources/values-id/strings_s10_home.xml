@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="s10HomeRowWorkingFor">Bekerja %1$s</string>
+    <string name="s10HomeRowMinutes">%1$s mnt</string>
+    <string name="s10HomeRowHoursMinutes">%1$s j %2$s mnt</string>
+    <string name="s10HomeUsageLeft">%1$s · sisa %2$s%</string>
+</resources>

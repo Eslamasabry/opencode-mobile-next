@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="hostSecTitle">Một máy trong mạng riêng của bạn</string>
+    <string name="hostSecIntro">Kiểm tra danh tính SSH của máy, chuẩn bị khóa công khai của điện thoại này, hoặc khôi phục một máy đã lưu.</string>
+    <string name="hostSecBundleMissing">Chưa thể cài đặt máy mới cho đến khi gói máy chủ OpenCode 2 đã được xem xét được phát hành. Các lệnh chuẩn bị này chỉ chạy khi bạn sao chép và chạy chúng trên máy của mình.</string>
+    <string name="hostSecWorking">Đang làm việc…</string>
+    <string name="hostSecRefresh">Làm mới các máy đã lưu</string>
+    <string name="hostSecSaved">Máy đã lưu</string>
+    <string name="hostSecAddress">Tài khoản SSH và địa chỉ tailnet (user@host)</string>
+    <string name="hostSecPort">Cổng SSH</string>
+    <string name="hostSecInspect">Kiểm tra danh tính máy</string>
+    <string name="hostSecTrustHelp">So sánh dấu vân tay này trong một phiên độc lập trên máy bằng lệnh ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub -E sha256. Chỉ tiếp tục khi hai bên khớp hoàn toàn.</string>
+    <string name="hostSecTrust">Dấu vân tay khớp — chuẩn bị khóa công khai</string>
+    <string name="hostSecPublicHelp">Bạn có thể sao chép khóa công khai này an toàn. Khóa riêng vẫn nằm trong Android Keystore. Việc cài đặt và đăng ký vẫn cần gói máy chủ đã được xem xét.</string>
+    <string name="hostSecCopy">Sao chép lệnh</string>
+    <string name="hostSecResume">Xác minh kết nối đã lưu</string>
+    <string name="hostSecVerified">Danh tính SSH đã ghim và danh tính trình giám sát đã lưu đã được xác minh qua đường hầm riêng.</string>
+    <string name="hostSecNotConnected">Chưa có kết nối máy chủ nào được xác minh.</string>
+    <string name="hostSecRevoke">Thu hồi điện thoại này và gỡ bỏ</string>
+    <string name="hostSecForget">Xóa dữ liệu máy chủ trên thiết bị</string>
+    <string name="hostSecRemoveConfirm">Gỡ bỏ</string>
+    <string name="hostSecRevokeHelp">Ứng dụng phải xác nhận việc thu hồi với máy chủ đã ghim trước khi xóa quyền truy cập trên thiết bị. Nếu thu hồi thất bại, dữ liệu đã lưu được giữ lại để thử lại. Các phiên trên máy vẫn tiếp tục chạy.</string>
+    <string name="hostSecForgetHelp">Xóa đường hầm, khóa và dữ liệu máy chủ đã lưu trên điện thoại này. Việc này không thu hồi quyền truy cập từ xa và không dừng các phiên trên máy.</string>
+    <string name="hostSecTargetFailure">Hãy dùng địa chỉ máy trong mạng Tailscale của bạn cùng tài khoản và cổng SSH hợp lệ. Các đường DNS công khai, cục bộ hoặc hỗn hợp đều bị từ chối.</string>
+    <string name="hostSecIdentityFailure">Danh tính của máy đã thay đổi. Chưa có gì được chấp nhận. Hãy xác minh máy một cách độc lập trước khi thử lại.</string>
+    <string name="hostSecRevokeFailure">Không thể xác nhận việc thu hồi quyền truy cập. Quyền truy cập đã lưu được giữ lại để bạn thử lại.</string>
+    <string name="hostSecStorageFailure">Không thể đọc hoặc thay đổi dữ liệu máy chủ một cách an toàn. Hãy giữ máy đã lưu và thử lại.</string>
+    <string name="hostSecFailure">Không thể hoàn tất thao tác riêng tư với máy chủ. Hãy kiểm tra thiết lập Linux của điện thoại và mạng riêng, rồi thử lại.</string>
+    <string name="hostSecStepTailnet">Kết nối cả hai thiết bị vào Tailscale của bạn. Các bước kiểm tra này hiển thị trạng thái và địa chỉ; chúng không chứng minh tư cách thành viên VPN. DNS được phân giải một lần, mọi kết quả phải nằm trong dải tailnet, và SSH dùng địa chỉ số đã xác thực với khóa được ghim.</string>
+    <string name="hostSecStepAccount">Dùng một tài khoản Ubuntu 24.04 riêng, không có quyền root. Hãy kiểm tra các công cụ này trước. Thiết lập sẽ kiểm tra hệ thống, UID không phải root, kiến trúc, Python và trình quản lý dịch vụ người dùng; nó không cài gói bằng sudo.</string>
+    <string name="hostSecStepNetwork">Giữ một phiên cứu hộ đang mở. Thay MACHINE_TAILSCALE_IP bằng địa chỉ số thực tế và xóa các mục ListenAddress công khai hoặc ký tự đại diện. Các lệnh của chủ máy này thay đổi toàn bộ SSH daemon. Trình cài đặt chỉ đọc các socket đang lắng nghe thực tế trên cổng SSH đã chọn và từ chối các bộ lắng nghe công khai, ký tự đại diện hoặc LAN thông thường; nó không thay đổi tường lửa hay liên kết SSH. Hãy tự xác minh riêng mọi cổng SSH khác.</string>
+    <string name="hostSecStepLinger">Chạy lệnh đầu tiên một lần với quyền quản trị. Trình cài đặt đọc Linger và yêu cầu giá trị yes, rồi kiểm tra systemctl --user hoạt động. Nó không bao giờ tự bật linger hay yêu cầu mật khẩu sudo.</string>
+    <string name="hostSecStepPolicy">Giữ một phiên quản trị đang mở. Thay PHONE_TAILSCALE_IP và MACHINE_TAILSCALE_IP bằng các địa chỉ số thực tế. Hãy kiểm tra hợp lệ trước khi tải lại. Các chỉ thị SSH ở trên có thể ghi đè tệp này. Trình cài đặt kiểm tra chuyển tiếp TCP cục bộ, chuyển tiếp ngược và socket bị tắt, không có thiết bị đường hầm, UseDNS no, DisableForwarding no, đăng nhập bằng khóa công khai và đường dẫn authorized_keys chuẩn. Việc phân tích cài đặt không chứng minh daemon đang chạy đã nạp chúng; hãy tự xác minh việc tải lại.</string>
+    <string name="hostSecStepIdentity">So sánh kết quả này với ứng dụng trong một phiên độc lập trên máy trước khi tin tưởng. Ứng dụng tính dấu vân tay Ed25519 SHA256 và chặn mọi thay đổi danh tính về sau.</string>
+    <string name="hostSecRevokeQuestion">Thu hồi điện thoại này và gỡ bỏ máy chủ?</string>
+    <string name="hostSecForgetQuestion">Xóa dữ liệu máy chủ trên thiết bị?</string>
+</resources>

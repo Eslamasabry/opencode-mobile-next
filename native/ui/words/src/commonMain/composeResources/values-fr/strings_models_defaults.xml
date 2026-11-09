@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="modelDefaultsPhoneTitle">Nouvelles conversations sur ce téléphone</string>
+    <string name="modelDefaultsNamedTitle">Nouvelles conversations sur %1$s</string>
+    <string name="modelDefaultsScope">Utilisé pour les nouvelles conversations. Chaque conversation garde son propre choix.</string>
+    <string name="modelDefaultsServerChoice">Utiliser le choix par défaut du serveur</string>
+    <string name="modelDefaultsRecommended">Choix suggérés</string>
+    <string name="modelDefaultsAll">Tous les modèles disponibles</string>
+    <string name="modelDefaultsFailed">Impossible de lire ou d’enregistrer le choix du modèle.</string>
+    <string name="modelDefaultsInUse">Utilisé</string>
+    <string name="modelDefaultsDefault">Choix par défaut du serveur</string>
+    <string name="modelDefaultsRecent">Choix récent</string>
+    <string name="modelDefaultsCheapest">Prix le plus bas</string>
+    <string name="modelDefaultsFree">Gratuit</string>
+    <string name="modelDefaultsPrice">Entrée %1$s $ · sortie %2$s $ par million de jetons</string>
+    <string name="modelDefaultsSelected">Sélectionné</string>
+    <string name="modelDefaultsSaving">Enregistrement du choix du modèle</string>
+</resources>

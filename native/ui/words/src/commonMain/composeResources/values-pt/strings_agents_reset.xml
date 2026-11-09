@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentsResetSavedSignIns">Redefinir logins salvos</string>
+    <string name="agentsResetSavedSignInsBody">Desconectar todos os servidores e remover deste app as senhas de servidor e as chaves de acesso do assistente salvas? Seus perfis, conversas, projetos e os logins próprios dos agentes continuam. Reinicie o app depois.</string>
+    <string name="agentsResetSavedSignInsFailed">Nem todos os logins salvos puderam ser redefinidos. Tente novamente e depois reinicie o app.</string>
+    <string name="agentsRestartAfterReset">Reinicie o app antes de conectar ou usar os agentes do celular de novo.</string>
+    <string name="agentsHelperStopped">O assistente dos agentes parou inesperadamente. Verifique a configuração do celular antes de iniciar outra conversa.</string>
+    <string name="agentsHelperMayHaveStopped">O assistente dos agentes parou. O Android pode tê-lo parado para liberar memória ou limitar processos em segundo plano.</string>
+    <string name="agentsPhoneHelperProfile">Agentes do celular</string>
+    <string name="agentsPreviousVersion">Usar a versão anterior de %1$s</string>
+    <string name="agentsPreviousVersionBody">Voltar para a versão anterior verificada guardada neste celular? O assistente para primeiro, depois os agentes do celular se conectam de novo. Logins e conversas continuam.</string>
+    <string name="agentsPreviousVersionFailed">Não foi possível restaurar a versão anterior. Termine qualquer trabalho em andamento e tente novamente.</string>
+    <string name="agentsPreviousVersionRestored">A versão anterior foi restaurada.</string>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="activityUndoRestart">Остановить перезапущенный сервер</string>
+    <string name="activityUndoing">Останавливаем перезапущенный сервер…</string>
+    <string name="activityUndone">Перезапуск отменён.</string>
+    <string name="activityUndoFailed">Не удалось отменить.</string>
+    <string name="activityUndoUnconfirmed">Результат отмены неизвестен. Повторной попытки не будет.</string>
+    <string name="activityUndoUnavailable">Отмена недоступна.</string>
+</resources>

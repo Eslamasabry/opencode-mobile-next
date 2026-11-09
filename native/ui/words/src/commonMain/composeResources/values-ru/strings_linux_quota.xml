@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxQuotaTitle">Расход по тарифу на этом телефоне</string>
+    <string name="linuxQuotaSetup">Настроить расход по тарифу</string>
+    <string name="linuxQuotaEnabled">Расход по тарифу настроен</string>
+    <string name="linuxQuotaBody">Узнавайте лимиты Codex, GLM и MiniMax из входов, уже выполненных на этом телефоне. Помощник работает только пока читается расход.</string>
+    <string name="linuxQuotaTurnOff">Выключить расход по тарифу</string>
+    <string name="linuxQuotaLinuxNotReady">Сначала настройте Linux на этом телефоне.</string>
+    <string name="linuxQuotaNoNode">Установите Node в компонентах Linux и повторите.</string>
+    <string name="linuxQuotaOldNode">Обновите Node до версии 20 или новее и повторите.</string>
+    <string name="linuxQuotaPrepareFailed">Не удалось подготовить файлы расхода. Повторите.</string>
+    <string name="linuxQuotaStartFailed">Помощник по расходу не ответил. Повторите.</string>
+    <string name="linuxQuotaRemoveFailed">Не удалось удалить помощника по расходу. Повторите.</string>
+</resources>

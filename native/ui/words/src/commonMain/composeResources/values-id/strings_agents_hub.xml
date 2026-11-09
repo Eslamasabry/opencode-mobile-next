@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentsHubOnPhone">Di ponsel ini</string>
+    <string name="agentsHubOnComputers">Di komputer Anda</string>
+    <string name="agentsHubComputersEmpty">Belum ada komputer. Tambahkan komputer yang menjalankan Paseo untuk memakai Claude Code atau Pi dari ponsel ini.</string>
+    <string name="agentsHubAddComputer">Tambah komputer</string>
+    <string name="agentsHubCheck">Periksa koneksi</string>
+    <string name="agentsHubCheckAgents">Periksa agen</string>
+    <string name="agentsHubFolderHint">/home/anda/proyek</string>
+    <string name="agentsHubInvalidAddress">Pakai alamat ws:// di perangkat ini atau jaringan pribadi Anda, atau alamat wss://.</string>
+    <string name="agentsHubInvalidFolder">Masukkan folder proyek sebagai path lengkap, seperti /home/you/project.</string>
+    <string name="agentsHubInvalidPassword">Kata sandi ini tidak dapat dipakai. Gunakan huruf, angka, dan simbol tanpa spasi.</string>
+    <string name="agentsHubAdded">Tersimpan. Percakapannya muncul di Percakapan.</string>
+    <string name="agentsHubAddFailed">Tidak dapat menyimpan komputer ini. Periksa detailnya dan coba lagi.</string>
+    <string name="agentsHubAgentsFailed">Tidak dapat membaca agen di komputer itu. Pastikan Paseo berjalan di sana.</string>
+    <string name="agentsHubStartFailed">Tidak dapat memulai percakapan di sana. Komputer tetap tersimpan.</string>
+    <string name="agentsHubSignInFailed">Komputer itu tidak menerima kata sandi.</string>
+    <string name="agentsHubNotAnswering">Komputer itu tidak menjawab. Pastikan Paseo berjalan dan ponsel ini dapat menjangkaunya.</string>
+    <string name="agentsHubNotConnected">Tidak terhubung</string>
+    <string name="agentsHubDefaultName">Paseo</string>
+</resources>

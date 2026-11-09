@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chat_model_favorite_add">Ajouter aux favoris</string>
+    <string name="chat_model_favorite_remove">Retirer des favoris</string>
+    <string name="chat_model_favorites">Favoris</string>
+</resources>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="filesViewOptions">Xem</string>
+    <string name="filesSearchNames">Tên tệp</string>
+    <string name="filesRowActions">Thao tác</string>
+    <string name="filesChangeDeleted">Đã xóa</string>
+    <string name="filesChangeAdded">Đã thêm</string>
+    <string name="filesChangeModified">Đã thay đổi</string>
+    <string name="filesWrapCode">Ngắt dòng</string>
+    <string name="filesUnwrapCode">Cuộn dòng ngang</string>
+    <string name="filesShowPreview">Xem trước</string>
+    <string name="filesMoreActions">Thêm thao tác với tệp</string>
+    <string name="filesAttachFailed">Không thể đính kèm tệp này. Hãy thử lại.</string>
+    <string name="filesPreferencesFailed">Không thể lưu lựa chọn hiển thị này. Hãy thử lại.</string>
+    <string name="filesLinkRefused">Không thể mở liên kết này một cách an toàn.</string>
+    <string name="filesOpenLinkQuestion">Mở %1$s?</string>
+    <string name="filesOpenLinkBody">Liên kết này sẽ mở bên ngoài ứng dụng.</string>
+    <string name="filesOpenLink">Mở liên kết</string>
+    <string name="filesAttachmentReady">Đã đính kèm tệp. Quay lại cuộc trò chuyện để thêm bình luận của bạn.</string>
+    <string name="filesScopedEmpty">Đây là thư mục được máy chủ của cuộc trò chuyện này chia sẻ. Kiểm tra quyền truy cập thư mục rồi làm mới.</string>
+    <string name="filesStorageFailed">Quyền truy cập thư mục chưa được thay đổi. Hãy thử lại.</string>
+    <string name="filesStorageRestart">Đã lưu quyền truy cập thư mục. Khởi động lại máy chủ của điện thoại này rồi làm mới.</string>
+    <string name="filesOpenPhone">Mở Điện thoại này</string>
+    <string name="filesReviewStorage">Xem lại các thư mục được chia sẻ</string>
+    <string name="filesSelectedStorageBody">Cho phép thư mục dự án này, hoặc xem lại các thư mục được chia sẻ. Quyền truy cập toàn bộ ổ lưu trữ sẽ vẫn tắt trừ khi bạn bật ở đó.</string>
+</resources>

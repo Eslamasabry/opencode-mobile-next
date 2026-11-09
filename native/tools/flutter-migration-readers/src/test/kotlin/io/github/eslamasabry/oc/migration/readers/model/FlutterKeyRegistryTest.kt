@@ -29,12 +29,18 @@ class FlutterKeyRegistryTest {
 
     private val repoRoot = File(System.getProperty("oc.repoRoot") ?: "../../..")
 
+    /**
+     * Flutter 2.1.5+63's own preference gate (`test/fixtures/coverage/settings_preferences_ledger.json` at that tag),
+     * copied here so the check follows the release on the owner's phone, not whatever `lib/` the native branch holds.
+     */
+    private val prefsLedgerFile = File("src/test/resources/fixtures/flutter-2.1.5/settings_preferences_ledger.json")
+
     @Test
     fun `every key in the Flutter preference ledger has a native shape`() {
-        val ledgerFile = File(repoRoot, "test/fixtures/coverage/settings_preferences_ledger.json")
+        val ledgerFile = prefsLedgerFile
         assertTrue(ledgerFile.exists(), "ledger not found at $ledgerFile")
         val ledger = MiniJson.parse(ledgerFile.readText()) as Map<*, *>
-        assertEquals(188, ledger.size, "the Flutter ledger changed size: add rows to FlutterKey, then update this count")
+        assertEquals(196, ledger.size, "the Flutter ledger changed size: add rows to FlutterKey, then update this count")
         // Ledger spellings that differ from the stored key, with the reason.
         val aliases = mapOf(
             "oc.factsbook" to "oc.factsbook-node.stopped", // ledger entry for the node-stopped flag
@@ -54,7 +60,7 @@ class FlutterKeyRegistryTest {
 
     @Test
     fun `ledger scope agrees with the registry scope`() {
-        val ledger = MiniJson.parse(File(repoRoot, "test/fixtures/coverage/settings_preferences_ledger.json").readText()) as Map<*, *>
+        val ledger = MiniJson.parse(prefsLedgerFile.readText()) as Map<*, *>
         val ledgerToScope = mapOf("profile" to setOf(KeyScope.Profile, KeyScope.Owner), "global" to setOf(KeyScope.App), "shared" to setOf(KeyScope.Shared), "other" to setOf(KeyScope.Other))
         val disagreements = mutableListOf<String>()
         for ((k, v) in ledger) {
@@ -190,8 +196,8 @@ class FlutterKeyRegistryTest {
     private val snapshot by lazy { NamesSnapshot.load(repoRoot) }
 
     @Test
-    fun `B-MIGR-005 every name the released 2_1_4 tree writes has a store ledger row`() {
-        assertEquals("2.1.4+62", snapshot.release)
+    fun `B-MIGR-005 every name the released 2_1_5 tree writes has a store ledger row`() {
+        assertEquals("2.1.5+63", snapshot.release)
         assertEquals(ledger.flutterCommit, snapshot.commit, "the ledger and the snapshot must describe the same Flutter commit")
         val unmapped = ledger.unmapped(snapshot.names.map { it.name })
         if (unmapped.isNotEmpty()) fail("names the Flutter app writes with no row in ${StoreLedger.PATH}: $unmapped")
@@ -200,7 +206,7 @@ class FlutterKeyRegistryTest {
     @Test
     fun `B-MIGR-005 rescanning a Flutter checkout finds the snapshot and nothing unmapped`() {
         val tree = System.getProperty("oc.flutterTree")
-        assumeTrue(tree != null, "set -PflutterTree=<checkout of origin/master> to rescan the released tree")
+        assumeTrue(tree != null, "set -PflutterTree=<checkout of v2.1.5+63> to rescan the released tree")
         val scanned = FlutterStoreScanner.scan(File(tree!!))
         val unmapped = ledger.unmapped(scanned.map { it.name })
         if (unmapped.isNotEmpty()) fail("names the Flutter app writes with no row in ${StoreLedger.PATH}: $unmapped")

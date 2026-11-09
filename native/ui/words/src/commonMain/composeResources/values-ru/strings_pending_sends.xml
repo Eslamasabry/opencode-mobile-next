@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="nativePendingTitle">Ждут отправки</string>
+    <string name="nativePendingReview">Проверить</string>
+    <string name="nativePendingFailed">Не удалось изменить эту отправку. Проверьте подключение и повторите попытку.</string>
+    <string name="nativePendingOffline">Отправится, когда появится сеть</string>
+    <string name="nativePendingAdmitted">Ожидает ответа сервера</string>
+    <string name="nativePendingJoining">Присоединяется к текущему ответу</string>
+    <string name="nativePendingUnconfirmed">Возможно, уже отправлено</string>
+    <string name="nativePendingEdit">Вернуть для правки</string>
+    <string name="nativePendingSteer">Присоединиться к этому ответу</string>
+    <string name="nativePendingCheck">Обновить</string>
+    <string name="nativePendingDiscard">Удалить</string>
+    <string name="nativePendingDiscardTitle">Удалить это сообщение?</string>
+    <string name="nativePendingEmpty">Нет сообщений, ждущих отправки.</string>
+    <plurals name="nativePendingCount">
+        <item quantity="one">%1$s сообщение ждёт отправки.</item>
+        <item quantity="few">%1$s сообщения ждут отправки.</item>
+        <item quantity="many">%1$s сообщений ждут отправки.</item>
+        <item quantity="other">%1$s сообщения ждут отправки.</item>
+    </plurals>
+</resources>

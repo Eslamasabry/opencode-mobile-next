@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="p12LogSearch">Rechercher dans le journal</string>
+    <string name="p12LogFollow">Suivre</string>
+    <string name="p12LogPause">Pause</string>
+    <string name="p12LogCopy">Tout copier</string>
+    <string name="p12LogWrap">Renvoyer à la ligne</string>
+    <plurals name="p12LogMatches">
+        <item quantity="one">%1$d sur %2$d ligne correspondante</item>
+        <item quantity="many">%1$d sur %2$d de lignes correspondantes</item>
+        <item quantity="other">%1$d sur %2$d lignes correspondantes</item>
+    </plurals>
+    <string name="p12LogPrevious">Résultat précédent</string>
+    <string name="p12LogNext">Résultat suivant</string>
+</resources>

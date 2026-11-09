@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="codexNativeTitle">Kiểm tra kết nối Codex</string>
+    <string name="codexNativeIntro">Chạy lệnh một dòng này trên máy tính của bạn. Nhập địa chỉ, đường dẫn tuyệt đối của thư mục và mã thông báo quyền để kiểm tra kết nối đã xác thực.</string>
+    <string name="codexNativeCopy">Sao chép lệnh khởi động</string>
+    <string name="codexNativeTokenHelp">Dùng đường dẫn tuyệt đối đến tệp mã thông báo của riêng bạn. Hãy giữ kín mã thông báo. WebSocket thường chỉ được phép trên thiết bị này; với máy tính khác, hãy dùng WebSocket bảo mật.</string>
+    <string name="codexNativeAddress">Địa chỉ WebSocket</string>
+    <string name="codexNativeDirectory">Đường dẫn tuyệt đối của thư mục</string>
+    <string name="codexNativeToken">Mã thông báo quyền</string>
+    <string name="codexNativeWorking">Đang kiểm tra kết nối…</string>
+    <string name="codexNativeProbe">Kiểm tra kết nối</string>
+    <string name="codexNativeProbed">Kết nối đã xác thực đã trả lời một lần đọc trong phạm vi thư mục. Kết quả trống không xác nhận thư mục có tồn tại.</string>
+    <string name="codexNativeFailed">Kiểm tra kết nối không thành công. Hãy kiểm tra Codex đang chạy rồi thử lại.</string>
+    <string name="codexNativeAuthFailed">Codex từ chối mã thông báo quyền. Hãy kiểm tra mã rồi thử lại.</string>
+    <string name="codexNativeScopeFailed">Hãy kiểm tra địa chỉ, đường dẫn tuyệt đối của thư mục và phạm vi kết nối được phép.</string>
+    <string name="codexNativeVersion">Kết nối này không cung cấp được mức sử dụng tài khoản. Việc đọc tài khoản cần giao thức Codex 0.153.4 đã được kiểm định.</string>
+    <string name="codexNativeOpen">Mở trình đọc tài khoản</string>
+    <string name="codexNativeReaderOpen">Trình đọc tài khoản đang mở. Hãy mở Gói để làm mới giới hạn tài khoản. Đóng nó tại đây khi xong.</string>
+    <string name="codexNativePlans">Mở Gói</string>
+    <string name="codexNativeClose">Đóng trình đọc tài khoản</string>
+    <string name="codexNativeReadOnly">Trang này kiểm tra kết nối và đọc mức sử dụng tài khoản. Nó không bắt đầu cuộc trò chuyện, không đăng nhập cho bạn và không gửi lời nhắc.</string>
+</resources>

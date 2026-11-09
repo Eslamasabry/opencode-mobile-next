@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="hostSecTitle">Une machine sur votre réseau privé</string>
+    <string name="hostSecIntro">Inspectez son identité SSH, préparez la clé publique de ce téléphone ou récupérez une machine enregistrée.</string>
+    <string name="hostSecBundleMissing">L’installation d’une nouvelle machine n’est pas disponible tant qu’un bundle d’hôte OpenCode 2 vérifié n’est pas publié. Ces commandes de préparation ne s’exécutent que si vous les copiez et les lancez sur votre machine.</string>
+    <string name="hostSecWorking">Travail en cours…</string>
+    <string name="hostSecRefresh">Actualiser les machines enregistrées</string>
+    <string name="hostSecSaved">Machines enregistrées</string>
+    <string name="hostSecAddress">Compte SSH et adresse tailnet (utilisateur@hôte)</string>
+    <string name="hostSecPort">Port SSH</string>
+    <string name="hostSecInspect">Inspecter l’identité de la machine</string>
+    <string name="hostSecTrustHelp">Comparez cette empreinte dans une connexion indépendante à la machine avec ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub -E sha256. Continuez uniquement si elle correspond exactement.</string>
+    <string name="hostSecTrust">L’empreinte correspond — préparer la clé publique</string>
+    <string name="hostSecPublicHelp">Cette clé publique peut être copiée sans risque. La clé privée reste dans le Keystore Android. L’installation et l’enregistrement nécessitent toujours le bundle d’hôte vérifié.</string>
+    <string name="hostSecCopy">Copier la commande</string>
+    <string name="hostSecResume">Vérifier la connexion enregistrée</string>
+    <string name="hostSecVerified">L’identité SSH épinglée et l’identité du superviseur enregistrée ont été vérifiées via le tunnel privé.</string>
+    <string name="hostSecNotConnected">Aucune connexion vérifiée à une machine n’est ouverte.</string>
+    <string name="hostSecRevoke">Révoquer ce téléphone et supprimer</string>
+    <string name="hostSecForget">Oublier les données locales de la machine</string>
+    <string name="hostSecRemoveConfirm">Supprimer</string>
+    <string name="hostSecRevokeHelp">L’application doit confirmer la révocation auprès de la machine épinglée avant d’effacer l’accès local. Si la révocation échoue, les données enregistrées sont conservées pour une nouvelle tentative. Les connexions en cours sur la machine continuent de fonctionner.</string>
+    <string name="hostSecForgetHelp">Supprime le tunnel local, la clé et les données de machine enregistrées de ce téléphone. Cela ne révoque pas l’accès à distance et n’arrête pas les connexions en cours sur la machine.</string>
+    <string name="hostSecTargetFailure">Utilisez une adresse de machine de votre réseau Tailscale, ainsi qu’un compte et un port SSH valides. Les routes DNS publiques, locales ou mixtes sont refusées.</string>
+    <string name="hostSecIdentityFailure">L’identité de la machine a changé. Rien n’a été adopté. Vérifiez la machine de façon indépendante avant de réessayer.</string>
+    <string name="hostSecRevokeFailure">La révocation de l’accès n’a pas pu être confirmée. L’accès enregistré est conservé pour que vous puissiez réessayer.</string>
+    <string name="hostSecStorageFailure">Les données de la machine n’ont pas pu être lues ou modifiées en toute sécurité. Conservez la machine enregistrée et réessayez.</string>
+    <string name="hostSecFailure">L’opération privée sur la machine n’a pas pu aboutir. Vérifiez la configuration Linux du téléphone et le réseau privé, puis réessayez.</string>
+    <string name="hostSecStepTailnet">Connectez les deux appareils à votre Tailscale. Ces vérifications affichent l’état et les adresses\u00A0; elles ne prouvent pas l’appartenance au VPN. Le DNS est résolu une seule fois, chaque réponse doit appartenir aux plages du tailnet, et SSH utilise l’adresse numérique validée avec une clé épinglée.</string>
+    <string name="hostSecStepAccount">Utilisez un compte Ubuntu 24.04 distinct, sans accès root. Vérifiez d’abord ces outils. La configuration contrôle le système, l’UID non root, l’architecture, Python et le gestionnaire de services utilisateur\u00A0; elle n’installe aucun paquet avec sudo.</string>
+    <string name="hostSecStepNetwork">Gardez une connexion de secours ouverte. Remplacez MACHINE_TAILSCALE_IP par l’adresse numérique réelle et supprimez les entrées ListenAddress publiques ou génériques. Ces commandes de propriétaire modifient tout le démon SSH. L’installateur lit seulement les sockets réellement à l’écoute sur le port SSH choisi et refuse les écoutes publiques, génériques ou sur un réseau local ordinaire\u00A0; il ne modifie ni le pare-feu ni les liaisons SSH. Vérifiez séparément chaque autre port SSH.</string>
+    <string name="hostSecStepLinger">Exécutez la première commande une fois avec un accès administrateur. L’installateur lit Linger et exige yes, puis vérifie que systemctl --user fonctionne. Il n’active jamais linger lui-même et ne demande jamais de mot de passe sudo.</string>
+    <string name="hostSecStepPolicy">Gardez une connexion administrateur ouverte. Remplacez PHONE_TAILSCALE_IP et MACHINE_TAILSCALE_IP par les adresses numériques réelles. Validez avant de recharger. Des directives SSH antérieures peuvent remplacer ce fichier. L’installateur vérifie le transfert TCP local, le transfert inverse et par socket désactivé, l’absence de périphériques de tunnel, UseDNS no, DisableForwarding no, la connexion par clé publique et le chemin standard authorized_keys. L’analyse des paramètres ne prouve pas que le démon en cours les a chargés\u00A0; vérifiez vous-même le rechargement.</string>
+    <string name="hostSecStepIdentity">Comparez ce résultat avec l’application dans une connexion indépendante à la machine avant de lui faire confiance. L’application calcule l’empreinte Ed25519 SHA256 et bloque tout changement d’identité ultérieur.</string>
+    <string name="hostSecRevokeQuestion">Révoquer ce téléphone et supprimer la machine\u00A0?</string>
+    <string name="hostSecForgetQuestion">Oublier les données locales de la machine\u00A0?</string>
+</resources>

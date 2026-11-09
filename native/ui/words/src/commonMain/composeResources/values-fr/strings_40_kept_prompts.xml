@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="keptPromptsTitle">Invites conservées</string>
+    <string name="keptPromptsBody">Invites conservées lors de la suppression d’un serveur. Restaurez-en une dans une conversation pour la relire avant de l’envoyer.</string>
+    <string name="keptPromptsEmpty">Aucune invite conservée</string>
+    <string name="keptPromptsChoose">Choisir une conversation</string>
+    <string name="keptPromptsChooseBody">Choisissez une conversation d’un serveur connecté. Cela ne fait que remplir son brouillon.</string>
+    <string name="keptPromptsNoTargets">Aucune conversation connectée</string>
+    <string name="keptPromptsNoTargetsBody">Connectez un serveur enregistré ou ouvrez une conversation, puis réessayez.</string>
+    <string name="keptPromptsConnect">Connecter un serveur</string>
+    <string name="keptPromptsUncertain">Cette invite a peut-être déjà été envoyée. Vérifiez sa conversation d’origine avant de l’envoyer à nouveau.</string>
+    <string name="keptPromptsFailed">Impossible de lire ou de modifier les invites conservées. Réessayez.</string>
+    <string name="keptPromptsKeptFrom">Conservée depuis un serveur supprimé</string>
+    <string name="keptPromptsRestoreFailed">L’invite enregistrée ou la conversation a changé. Rouvrez Invites enregistrées dans la conversation et réessayez.</string>
+    <string name="keptConversation">Conversation</string>
+</resources>

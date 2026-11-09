@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="modelDefaultsPhoneTitle">Новые чаты на этом телефоне</string>
+    <string name="modelDefaultsNamedTitle">Новые чаты на %1$s</string>
+    <string name="modelDefaultsScope">Используется для новых чатов. В каждом чате сохраняется его собственный выбор.</string>
+    <string name="modelDefaultsServerChoice">Использовать модель сервера по умолчанию</string>
+    <string name="modelDefaultsRecommended">Рекомендуемые варианты</string>
+    <string name="modelDefaultsAll">Все доступные модели</string>
+    <string name="modelDefaultsFailed">Не удалось прочитать или сохранить выбор модели.</string>
+    <string name="modelDefaultsInUse">Используется</string>
+    <string name="modelDefaultsDefault">По умолчанию на сервере</string>
+    <string name="modelDefaultsRecent">Недавний выбор</string>
+    <string name="modelDefaultsCheapest">Самая низкая цена</string>
+    <string name="modelDefaultsFree">Бесплатно</string>
+    <string name="modelDefaultsPrice">Ввод $%1$s · вывод $%2$s за миллион токенов</string>
+    <string name="modelDefaultsSelected">Выбрано</string>
+    <string name="modelDefaultsSaving">Сохранение выбора модели</string>
+</resources>

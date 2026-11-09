@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="widgetPanelSaving">Сохранение…</string>
+    <string name="widgetPanelClose">Закрыть</string>
+    <string name="widgetPanelPreview">Предпросмотр виджета</string>
+    <string name="widgetPanelSquare">Квадратный</string>
+    <string name="widgetPanelWide">Широкий</string>
+    <string name="widgetPanelBackground">Фон</string>
+    <string name="widgetPanelSolid">Сплошной</string>
+    <string name="widgetPanelTinted">Тонированный</string>
+    <string name="widgetPanelTransparent">Прозрачный</string>
+    <string name="widgetPanelAccent">Акцент</string>
+    <string name="widgetPanelActionUnavailable">Чтобы отправить сообщение, виджету нужно активное подключение.</string>
+    <string name="widgetPanelSending">Отправка…</string>
+    <string name="widgetPanelSent">Отправлено</string>
+    <string name="widgetPanelBusy">Другое действие виджета ещё выполняется. Ваше сообщение сохранено.</string>
+    <string name="widgetPanelDictate">Продиктовать</string>
+</resources>

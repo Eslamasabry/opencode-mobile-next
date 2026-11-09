@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="voice_download_title">Configuração de voz</string>
+    <string name="voice_download_downloading">Baixando o pacote de voz</string>
+    <string name="voice_download_verifying">Preparando a entrada de voz</string>
+    <string name="voice_download_complete">A entrada de voz está pronta</string>
+    <string name="voice_download_failed">Falha na configuração de voz. Abra o app para tentar novamente.</string>
+</resources>

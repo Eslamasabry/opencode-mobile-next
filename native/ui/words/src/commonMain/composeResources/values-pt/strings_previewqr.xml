@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="previewQrLeaveTitle">Abrir este link no navegador?</string>
+    <string name="previewQrPortLabel">Número da porta</string>
+    <string name="previewQrPortHelp">Ou digite a porta em que um servidor de desenvolvimento está escutando.</string>
+    <string name="previewQrPortInvalid">Digite uma porta de 1 a 65535.</string>
+    <string name="previewQrPortOpen">Abrir a porta</string>
+    <string name="previewQrPairFilled">Preenchido a partir do código de pareamento. Confira e salve.</string>
+    <string name="previewQrLinkFilled">Endereço preenchido a partir do link. Adicione a senha e salve.</string>
+    <string name="previewQrScanRejected">Esse QR não é um código de pareamento. Aponte a câmera para o código que o opencode2 pair mostra.</string>
+    <string name="previewQrPairingCodeLabel">Código de pareamento</string>
+</resources>

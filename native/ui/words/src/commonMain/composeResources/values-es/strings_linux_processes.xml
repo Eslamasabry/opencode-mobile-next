@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <plurals name="linuxProcessMembers">
+        <item quantity="one">1 proceso</item>
+        <item quantity="many">%1$d de procesos</item>
+        <item quantity="other">%1$d procesos</item>
+    </plurals>
+    <string name="linuxProcessHeavy">Uso intensivo</string>
+</resources>

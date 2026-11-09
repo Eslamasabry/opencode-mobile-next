@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxAgentPayloadRefresh">Atualizar agentes do celular</string>
+    <string name="linuxAgentPayloadRemove">Remover %1$s</string>
+    <string name="linuxAgentPayloadRemoveTitle">Remover %1$s deste celular?</string>
+    <string name="linuxAgentPayloadRemoveBody">Remove o programa baixado e os downloads incompletos. Suas contas, conversas e ferramentas compartilhadas continuam neste celular.</string>
+    <plurals name="linuxAgentPayloadRemoved">
+        <item quantity="one">Programa removido. 1 byte liberado.</item>
+        <item quantity="many">Programa removido. %1$d bytes liberados.</item>
+        <item quantity="other">Programa removido. %1$d bytes liberados.</item>
+    </plurals>
+    <string name="linuxAgentPayloadBusy">O agente ou outra configuração do celular está em andamento. Pare-o e tente novamente.</string>
+    <string name="linuxAgentPayloadUnsafe">Estes arquivos não correspondem a uma instalação do app. Nada foi removido.</string>
+    <string name="linuxAgentPayloadUnconfirmed">Não foi possível confirmar a remoção. Atualize a lista antes de tentar de novo.</string>
+    <string name="linuxAgentPayloadUnavailable">Não foi possível ler ou remover os arquivos dos agentes do celular. Atualize e tente novamente.</string>
+</resources>

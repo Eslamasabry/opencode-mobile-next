@@ -250,7 +250,7 @@ internal object FirstLaunchRules {
     private val PINNED = Regex(Regex.escape(PinnedShortcuts.ID_PREFIX) + "([^:]+):(.+)")
 
     /** 2.1.4 `AppLocaleStore.supportedLanguages`: `oc.appLocale` holds one of these bare codes, or is absent. */
-    private val LANGUAGES = setOf("en", "ar", "es", "ja", "pt", "ru", "zh")
+    private val LANGUAGES: Set<String> = io.github.eslamasabry.oc.ui.words.LanguageCoverage.offered
 }
 
 /** How OcApplication reaches the wiring. */

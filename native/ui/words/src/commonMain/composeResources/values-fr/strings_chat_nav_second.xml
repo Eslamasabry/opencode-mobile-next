@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatCyclePrevious">Modèle récent précédent</string>
+    <string name="chatCycleNext">Modèle récent suivant</string>
+    <string name="chatHomeAllow">Autoriser une fois</string>
+    <string name="chatHomeReject">Refuser</string>
+    <string name="chatHomeAnswerFailed">Impossible d’envoyer votre réponse. Ouvrez la conversation pour vérifier.</string>
+    <string name="chatHomeRunning">En cours</string>
+    <string name="chatHomeMinutes">%1$s min</string>
+    <string name="chatQueueMoveTitle">Déplacer une invite en attente</string>
+    <string name="chatQueueMoveEmpty">Aucune invite en attente non envoyée dans cette conversation.</string>
+    <string name="chatQueueMoveChoosePrompt">Choisissez une invite</string>
+    <string name="chatQueueMoveChooseServer">Choisissez son serveur de destination</string>
+    <string name="chatQueueMoveChooseDestination">Déplacer vers une conversation</string>
+    <string name="chatQueueMoveFailure">Impossible de déplacer l’invite. Rien n’a été envoyé.</string>
+    <string name="chatQueueMoveMore">Plus de conversations</string>
+    <string name="chatQueueMoveSelectionNote">L’invite reste en attente. Un modèle ou un agent que la destination ne propose pas est retiré.</string>
+    <string name="chatPhraseHide">Masquer %1$s</string>
+    <string name="chatHomeSeconds">%1$s s</string>
+</resources>

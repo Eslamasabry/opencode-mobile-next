@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateFormTitle">Responder ao agente</string>
+    <string name="stateFormAnswer">Resposta</string>
+    <string name="stateFormHeld">Sua resposta será enviada em instantes.</string>
+    <string name="stateFormUndo">Desfazer</string>
+    <string name="stateFormInvalid">Confira as respostas marcadas antes de enviar.</string>
+    <string name="stateFormOther">Outra coisa</string>
+    <string name="stateFormOpenLink">Abrir link</string>
+    <string name="stateFormRestoring">Restaurando suas respostas salvas…</string>
+    <string name="stateFormSend">Enviar respostas</string>
+    <string name="stateFormDecline">Recusar este pedido</string>
+    <string name="stateFormDeclineTitle">Recusar este pedido?</string>
+    <string name="stateFormDeclineBody">O agente continuará sem as suas respostas. Este pedido não pode ser restaurado.</string>
+    <string name="stateFormKeepEditing">Continuar editando</string>
+    <string name="stateFormStorageFailed">Não foi possível ler ou salvar suas respostas. Feche e reabra este pedido para tentar novamente.</string>
+    <string name="stateFormUncertain">A entrega não foi confirmada. Veja a conversa antes de responder de novo.</string>
+    <string name="stateFormChanged">Este pedido mudou. Reabra o pedido atual.</string>
+    <string name="stateFormNotAccepted">Sua resposta não foi aceita. Revise o pedido antes de tentar novamente.</string>
+    <string name="stateFormDismiss">Dispensar</string>
+</resources>

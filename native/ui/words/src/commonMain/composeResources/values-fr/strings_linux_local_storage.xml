@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxLocalProjects">Parcourir les projets du téléphone</string>
+    <string name="linuxLocalProjectsDetail">Parcourez les dossiers pendant que le serveur est arrêté, y compris les projets conservés après la suppression de Linux.</string>
+    <string name="linuxLocalParent">Dossier parent</string>
+    <string name="linuxLocalClose">Fermer les dossiers</string>
+    <string name="linuxLocalGit">Projet Git</string>
+    <string name="linuxLocalFolder">Dossier</string>
+    <string name="linuxLocalReading">Lecture des dossiers…</string>
+    <string name="linuxLocalFolderFailed">Ce dossier ne peut pas être lu. Il a peut-être été déplacé, supprimé, ou c’est un lien.</string>
+    <string name="linuxLocalEmpty">Aucun dossier ici.</string>
+    <string name="linuxLocalMeasure">Mesurer les options de suppression de Linux</string>
+    <string name="linuxLocalRemoveKeep">Supprimer Linux, garder les projets</string>
+    <string name="linuxLocalRemoveAll">Supprimer Linux et les projets</string>
+    <string name="linuxLocalFreed">Libère %1$s</string>
+    <string name="linuxLocalRemoveKeepQuestion">Supprimer Linux et garder les projets\u00A0?</string>
+    <string name="linuxLocalRemoveAllQuestion">Supprimer Linux et tous les projets du téléphone\u00A0?</string>
+    <string name="linuxLocalRemoveKeepBody">Arrête les programmes du téléphone et supprime Linux, les outils installés, les connexions et l’historique du serveur local. Les fichiers de vos projets restent consultables. Libère %1$s.</string>
+    <string name="linuxLocalRemoveAllBody">Arrête les programmes du téléphone et supprime Linux, les outils installés, les connexions, l’historique du serveur local et tous les fichiers de projet conservés sur le téléphone. Cette action est irréversible. Libère %1$s.</string>
+    <string name="linuxLocalStorageFailed">Le téléphone n’a pas pu terminer la lecture ou la suppression du stockage Linux. Fermez les tâches du téléphone et réessayez.</string>
+    <string name="linuxLocalRemoved">Stockage Linux supprimé.</string>
+    <string name="linuxLocalCreate">Créer un projet sur le téléphone</string>
+    <string name="linuxLocalCreatePath">Chemin absolu du dossier du projet</string>
+    <string name="linuxLocalInvalidPath">Saisissez un chemin de dossier absolu, sans remontée vers un dossier parent ni saut de ligne.</string>
+</resources>

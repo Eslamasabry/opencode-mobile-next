@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentsResetSavedSignIns">Đặt lại các đăng nhập đã lưu</string>
+    <string name="agentsResetSavedSignInsBody">Ngắt kết nối mọi máy chủ và xóa mật khẩu máy chủ đã lưu cùng khóa truy cập trình hỗ trợ khỏi ứng dụng này? Hồ sơ, cuộc trò chuyện, dự án và đăng nhập riêng của các tác nhân vẫn được giữ. Hãy khởi động lại ứng dụng sau đó.</string>
+    <string name="agentsResetSavedSignInsFailed">Không đặt lại hết được các đăng nhập đã lưu. Hãy thử lại, rồi khởi động lại ứng dụng.</string>
+    <string name="agentsRestartAfterReset">Hãy khởi động lại ứng dụng trước khi kết nối hoặc dùng lại tác nhân trên điện thoại.</string>
+    <string name="agentsHelperStopped">Trình hỗ trợ tác nhân đã dừng đột ngột. Hãy kiểm tra thiết lập điện thoại trước khi bắt đầu cuộc trò chuyện khác.</string>
+    <string name="agentsHelperMayHaveStopped">Trình hỗ trợ tác nhân đã dừng. Android có thể đã dừng nó để giải phóng bộ nhớ hoặc hạn chế tiến trình nền.</string>
+    <string name="agentsPhoneHelperProfile">Tác nhân trên điện thoại</string>
+    <string name="agentsPreviousVersion">Dùng phiên bản %1$s trước đó</string>
+    <string name="agentsPreviousVersionBody">Chuyển sang phiên bản trước đã được xác minh còn lưu trên điện thoại này? Trình hỗ trợ sẽ dừng trước, rồi tác nhân trên điện thoại kết nối lại. Đăng nhập và các cuộc trò chuyện vẫn được giữ.</string>
+    <string name="agentsPreviousVersionFailed">Không khôi phục được phiên bản trước. Hãy hoàn tất công việc đang chạy rồi thử lại.</string>
+    <string name="agentsPreviousVersionRestored">Đã khôi phục phiên bản trước.</string>
+</resources>

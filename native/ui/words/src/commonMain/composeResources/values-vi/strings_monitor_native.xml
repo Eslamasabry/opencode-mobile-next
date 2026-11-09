@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="monitorNativeTitle">Kiểm tra máy chủ khác</string>
+    <string name="monitorNativeBack">Quay lại</string>
+    <string name="monitorNativeForegroundOnly">Kiểm tra các máy chủ đã lưu khi trang này đang mở. Đóng trang sẽ dừng việc đọc. Việc này không khởi động máy chủ trên điện thoại hay bật cảnh báo nền.</string>
+    <string name="monitorNativeCheck">Kiểm tra ngay</string>
+    <string name="monitorNativeChecking">Đang kiểm tra…</string>
+    <string name="monitorNativeAllow">Cho phép kiểm tra</string>
+    <string name="monitorNativeConsent">Cho phép ứng dụng này đọc các yêu cầu và trạng thái cuộc trò chuyện gần đây từ máy chủ đã lưu này.</string>
+    <string name="monitorNativeUnsupported">Không thể kiểm tra máy chủ đã lưu này tại đây.</string>
+    <string name="monitorNativeOff">Kiểm tra đang tắt</string>
+    <string name="monitorNativeWaiting">Chưa kiểm tra</string>
+    <string name="monitorNativeCurrent">Đã kiểm tra</string>
+    <string name="monitorNativePartial">Mới kiểm tra một phần. Hãy kiểm tra lại để đọc thêm cuộc trò chuyện.</string>
+    <string name="monitorNativeUnknown">Không xác nhận được trạng thái mới nhất. Có thể vẫn đang hiện các quan sát trước đó.</string>
+    <string name="monitorNativePaused">Đã tạm dừng kiểm tra</string>
+    <string name="monitorNativePending">Đang chờ bạn: %1$d</string>
+    <string name="monitorNativeRunning">Đang chạy: %1$d</string>
+    <string name="monitorNativeConversation">Cuộc trò chuyện</string>
+    <string name="monitorNativeFailed">Lượt gần nhất đã kiểm tra bị lỗi</string>
+    <string name="monitorNativeEarlierFailure">Lỗi trước đó; chưa rõ trạng thái mới nhất</string>
+    <string name="monitorNativeSaveFailed">Không thể lưu hoặc tải các cài đặt này. Hãy thử lại.</string>
+    <string name="monitorNativeEmpty">Không có máy chủ đã lưu nào để kiểm tra.</string>
+    <string name="monitorNativeRequest">Đang chờ bạn</string>
+    <string name="monitorNativeEarlierRequest">Yêu cầu trước đó; chưa rõ trạng thái mới nhất</string>
+    <string name="monitorNativeReconnect">Hãy kết nối với máy chủ này hoặc cập nhật đăng nhập của nó trong Máy chủ trước khi kiểm tra.</string>
+</resources>

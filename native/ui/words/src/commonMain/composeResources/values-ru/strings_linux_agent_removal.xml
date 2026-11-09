@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxAgentPayloadRefresh">Обновить агентов на телефоне</string>
+    <string name="linuxAgentPayloadRemove">Удалить %1$s</string>
+    <string name="linuxAgentPayloadRemoveTitle">Удалить %1$s с этого телефона?</string>
+    <string name="linuxAgentPayloadRemoveBody">Удаляются загруженная программа и незавершённые загрузки. Ваши аккаунты, чаты и общие инструменты остаются на этом телефоне.</string>
+    <plurals name="linuxAgentPayloadRemoved">
+        <item quantity="one">Программа удалена. Освобождён %1$d байт.</item>
+        <item quantity="few">Программа удалена. Освобождено %1$d байта.</item>
+        <item quantity="many">Программа удалена. Освобождено %1$d байт.</item>
+        <item quantity="other">Программа удалена. Освобождено %1$d байта.</item>
+    </plurals>
+    <string name="linuxAgentPayloadBusy">Агент или другая настройка телефона сейчас работает. Остановите её и повторите.</string>
+    <string name="linuxAgentPayloadUnsafe">Эти файлы не соответствуют установке, которой владеет приложение. Ничего не удалено.</string>
+    <string name="linuxAgentPayloadUnconfirmed">Удаление не удалось подтвердить. Обновите список, прежде чем повторять.</string>
+    <string name="linuxAgentPayloadUnavailable">Не удалось прочитать или удалить файлы агента на телефоне. Обновите и повторите.</string>
+</resources>

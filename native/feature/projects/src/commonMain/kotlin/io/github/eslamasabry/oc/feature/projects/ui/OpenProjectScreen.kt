@@ -211,6 +211,11 @@ private fun Folders(state: OpenProjectUi, actions: OpenProjectActions) {
     val failure = state.failure
     val projects = state.step == OpenProjectStep.Projects
     when {
+        // Cache-first: kept or live rows always draw as the real list; a failure is a notice above them.
+        state.folders.isNotEmpty() -> {
+            if (failure != null) FolderProblemView(failure, actions)
+            FolderRows(state, projects, actions)
+        }
         state.loading && state.slow -> {
             // F: folder_browser.dart (KitSince after KitMotion.escalateAfter): the skeleton stays, a word says why.
             KitInlineStateView(
@@ -235,16 +240,20 @@ private fun Folders(state: OpenProjectUi, actions: OpenProjectActions) {
                         if (projects) Res.string.openProjectProjectsEmptyBody else Res.string.folderBrowserEmptyBody
                     ),
             )
-        else ->
-            KitRowGroup(
-                label =
-                    stringResource(
-                        if (projects) Res.string.folderBrowserProjectsHere else Res.string.folderBrowserFoldersLabel
-                    ),
-                leadingTiles = true,
-            ) {
-                state.folders.forEach { folder -> FolderRow(folder, projects, actions) }
-            }
+        else -> Unit
+    }
+}
+
+@Composable
+private fun FolderRows(state: OpenProjectUi, projects: Boolean, actions: OpenProjectActions) {
+    KitRowGroup(
+        label =
+            stringResource(
+                if (projects) Res.string.folderBrowserProjectsHere else Res.string.folderBrowserFoldersLabel
+            ),
+        leadingTiles = true,
+    ) {
+        state.folders.forEach { folder -> FolderRow(folder, projects, actions) }
     }
 }
 

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateFolderNameEmpty">Escribe un nombre de carpeta.</string>
+    <string name="stateFolderNameSegment">Usa un solo nombre de carpeta, sin barras.</string>
+    <string name="stateFolderNameCharacters">Usa letras, dígitos, puntos, guiones o guiones bajos, empezando por una letra o un dígito (hasta 64 caracteres).</string>
+    <string name="stateFolderCreating">Creando la carpeta del proyecto…</string>
+</resources>

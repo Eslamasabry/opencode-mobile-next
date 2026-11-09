@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="m40UsageAlerts">Peringatan</string>
+    <string name="m40UsageWidget">Widget layar utama</string>
+    <string name="m40UsageReadFrom">Baca penggunaan</string>
+    <string name="m40UsageAdd">Tambah langganan</string>
+    <string name="m40UsageSaveFailed">Perubahan itu tidak dapat disimpan. Coba lagi.</string>
+    <string name="m40UsageAlertsWatch">Pantau paket saya</string>
+    <string name="m40UsageAlertsEvery">Pantau setiap langganan yang batasnya dapat dibaca.</string>
+    <string name="m40UsageTellMe">Beri tahu saya saat</string>
+    <string name="m40UsageReset">Paket yang habis tersedia lagi</string>
+    <string name="m40UsageDifferent">Berbeda untuk paket ini</string>
+    <string name="m40UsageWhen">Kapan memberi tahu saya</string>
+    <string name="m40UsageQuiet">Jam tenang</string>
+    <string name="m40UsageQuietShared">Jam tenang yang sama dengan notifikasi lain.</string>
+    <string name="m40UsageQuietStart">Mulai</string>
+    <string name="m40UsageQuietEnd">Selesai</string>
+    <string name="m40UsageQuietAllDay">Waktu ini membisukan peringatan sepanjang hari.</string>
+    <string name="m40UsageWifi">Hanya Wi-Fi</string>
+    <string name="m40UsageNothingToWatch">Belum ada paket yang dapat dibaca untuk dipantau.</string>
+    <string name="m40UsageDownTo">Saat paket tersisa</string>
+    <string name="m40UsageSameAsOthers">Sama dengan yang lain: %1$d% tersisa</string>
+    <string name="m40UsageWidgetPlans">Paket di widget</string>
+    <string name="m40UsageWidgetSetup">Tampilkan paket yang perlu disiapkan</string>
+    <string name="m40UsageWidgetWindows">Periode yang ditampilkan</string>
+    <string name="m40UsageBoth">5 jam dan minggu ini</string>
+    <string name="m40UsageReaderGone">Sambungan tersimpan ini tidak tersedia lagi.</string>
+    <string name="m40UsageReadPhoneBody">Siapkan pembaca di Ubuntu dalam aplikasi untuk membaca batas paket Anda yang sudah masuk. Kunci penyedia tetap di host.</string>
+    <string name="m40UsageReadComputerBody">Izinkan pemeriksaan singkat hanya-baca lewat server ini saat penggunaan dimuat ulang. Pemeriksaan mencari batas paket yang sudah masuk di komputer ini. Anda bisa mematikannya di sini.</string>
+    <string name="m40UsageWhatRuns">Yang berjalan di komputer</string>
+    <string name="m40UsageReadCommand">node --input-type=module -e &lt;check&gt;</string>
+    <string name="m40UsageReadPrivacy">Pemeriksaan membaca data masuk penyedia secara lokal dan hanya mengembalikan batas paket serta referensi akun yang buram. Kunci dan token tidak pernah kembali ke aplikasi.</string>
+    <string name="m40UsageCopying">Menyalin pembaca</string>
+    <string name="m40UsageCheckingSignIns">Memeriksa data masuk</string>
+    <string name="m40UsageStarting">Memulai pembaca</string>
+    <string name="m40UsageReading">Membaca batas paket</string>
+    <string name="m40UsageChecking">Memeriksa sambungan</string>
+    <string name="m40UsageNeedsNode">Komputer ini memerlukan Node 20 atau lebih baru untuk membaca batas paket.</string>
+    <string name="m40UsageLinuxNotReady">Siapkan Ubuntu dalam aplikasi dulu, lalu coba lagi.</string>
+    <string name="m40UsageServerTooOld">Perbarui server ini untuk membaca penggunaan lewat terminal perintah.</string>
+    <string name="m40UsagePrepareFailed">Pembaca tidak dapat disiapkan. Coba lagi.</string>
+    <string name="m40UsageStartFailed">Pembaca tidak berjalan. Coba lagi.</string>
+    <string name="m40UsageRemoveFailed">Pembaca tidak dapat dihapus. Coba lagi.</string>
+    <string name="m40UsageUnreachable">Komputer ini tidak dapat dijangkau. Periksa sambungan dan coba lagi.</string>
+    <string name="m40UsageNoAnswer">Pemeriksaan tidak mengembalikan jawaban yang dapat dibaca. Coba lagi.</string>
+    <string name="m40UsageFoundNone">Pemeriksaan tidak menemukan paket yang sudah masuk dengan batas yang dapat dibaca.</string>
+    <string name="m40UsageFound">Ditemukan: %1$s</string>
+    <string name="m40UsageReadNow">Baca sekarang</string>
+    <string name="m40UsageTurnOn">Aktifkan pembacaan</string>
+    <string name="m40UsageTurnOff">Matikan pembacaan</string>
+    <string name="m40UsageThreshold">Tingkat peringatan untuk paket ini</string>
+    <string name="m40UsageResetHelp">Beri tahu saya saat paket ini tersedia lagi.</string>
+    <string name="m40UsageReadOff">Matikan pembacaan dari %1$s</string>
+    <string name="m40UsageChooseSignIn">Pilih tempat masuk</string>
+</resources>

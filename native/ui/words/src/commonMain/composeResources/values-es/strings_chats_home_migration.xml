@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="homeOpeningConnecting">Conectando con %1$s</string>
+    <string name="homeOpeningFailed">%1$s no responde</string>
+    <string name="homeOpeningSavedTitles">Estos son los títulos de conversación guardados la última vez. Se abren cuando el servidor responda.</string>
+    <string name="homeOpeningStarting">Iniciando este teléfono…</string>
+    <string name="homeOpeningWaiting">Tus conversaciones aparecen aquí cuando responda.</string>
+    <string name="homeOpeningFailedBody">Comprueba que el servidor esté encendido y que este teléfono pueda llegar a él, e inténtalo de nuevo.</string>
+    <string name="homeWatchedServers">Servidores vigilados</string>
+    <string name="homeInboxCount">Bandeja · %1$s</string>
+    <string name="homeSourcesFailed">No se pudieron cambiar las conexiones de esta lista. Inténtalo de nuevo.</string>
+    <string name="homeWatchedOpenBody">Comprobaremos que esta misma solicitud siga esperando en este servidor antes de abrir su conversación.</string>
+    <string name="homeWatchedOpenFailed">No se pudo abrir esta solicitud. Actualiza los servidores vigilados e inténtalo de nuevo.</string>
+    <string name="homeRefreshWatched">Actualizar servidores vigilados</string>
+    <string name="homeMonitorOff">Desactivado. Actívalo para revisar las solicitudes pendientes de este servidor.</string>
+    <string name="homeMonitorWaiting">Esperando la próxima comprobación</string>
+    <string name="homeMonitorChecking">Comprobando solicitudes pendientes</string>
+    <string name="homeMonitorCurrent">Las solicitudes pendientes están al día</string>
+    <string name="homeMonitorUnavailable">No responde. No se muestran sus solicitudes.</string>
+    <string name="homeMonitorWifi">Esperando Wi-Fi</string>
+    <string name="homeMonitorPaused">Las comprobaciones están en pausa mientras la app y el servicio en segundo plano están detenidos.</string>
+</resources>

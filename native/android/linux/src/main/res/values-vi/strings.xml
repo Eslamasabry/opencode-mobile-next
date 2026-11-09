@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <plurals name="native_chip_pending">
+        <item quantity="other">%1$d cần bạn</item>
+    </plurals>
+    <plurals name="native_chip_running">
+        <item quantity="other">%1$d đang chạy</item>
+    </plurals>
+    <string name="native_live_channel">Kết nối lập trình trực tiếp</string>
+    <string name="native_live_description">Hiện khi OpenCode giữ kết nối máy chủ hoạt động trong nền</string>
+    <string name="native_phone_server_body">Tác nhân của bạn vẫn tiếp tục làm việc khi bạn dùng ứng dụng khác.</string>
+    <string name="native_phone_server_channel">OpenCode trên điện thoại này</string>
+    <string name="native_phone_server_description">Hiện khi máy chủ trên điện thoại hoặc công cụ dự án đang chạy</string>
+    <string name="native_setup_channel">Thiết lập</string>
+    <string name="native_status_action_new_chat">Cuộc trò chuyện mới</string>
+    <string name="native_status_action_open">Mở</string>
+    <string name="native_status_action_start">Bắt đầu</string>
+    <string name="native_status_action_stop_opencode">Dừng OpenCode</string>
+    <string name="native_status_action_stop_reply">Dừng câu trả lời</string>
+    <string name="native_status_on_this_phone">trên điện thoại này</string>
+    <string name="native_status_paused_android_body">Android dừng công việc nền sau 6 giờ mỗi ngày. Hãy mở OpenCode để tiếp tục.</string>
+    <string name="native_status_paused_android_title">Đã tạm dừng · giới hạn nền của Android</string>
+    <string name="native_status_paused_idle_body">Chạm để khởi động lại OpenCode</string>
+    <string name="native_status_paused_idle_title">Đã tạm dừng · không có gì đang chạy</string>
+    <string name="native_status_public_paused">OpenCode · đã tạm dừng</string>
+    <string name="native_status_public_ready">OpenCode · sẵn sàng</string>
+    <string name="native_status_ready_body">Sẵn sàng khi bạn cần</string>
+    <string name="native_status_ready_title">Sẵn sàng · không có gì đang chạy</string>
+</resources>

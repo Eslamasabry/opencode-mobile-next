@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="notify_widget_action">Отправка действия виджета</string>
+    <string name="notify_widget_action_description">Проверяем нужный чат и запрос.</string>
+</resources>

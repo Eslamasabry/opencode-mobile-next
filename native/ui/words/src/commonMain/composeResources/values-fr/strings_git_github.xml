@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="gitRemotePickGitHub">Choisir depuis GitHub</string>
+    <string name="gitRemotePickGitHubTitle">Choisir un dépôt</string>
+    <string name="gitRemotePickGitHubNone">Aucun dépôt sur ce compte GitHub pour l’instant.</string>
+    <string name="gitRemoteRepoPrivate">Privé</string>
+    <string name="gitProblemInvalidGitHubRepositoryName">Utilisez un nom de dépôt de 100 caractères maximum : lettres, chiffres, points, tirets ou tirets bas.</string>
+    <string name="gitProblemGitHubRepositoryNameUnavailable">Ce nom est déjà utilisé ou indisponible dans votre compte GitHub. Essayez-en un autre.</string>
+    <string name="gitActionInitialize">Activer le suivi</string>
+    <string name="gitActionPublish">Créer sur GitHub</string>
+    <string name="gitBusyInitialize">Démarrage de Git dans ce projet…</string>
+    <string name="gitBusyPublish">Création du dépôt sur GitHub…</string>
+    <string name="gitDoneInitialized">Git est prêt dans ce projet.</string>
+    <string name="gitDoneGitHubRepositoryCreated">Dépôt GitHub créé et connecté. Votre projet n’a pas encore été envoyé.</string>
+    <string name="gitInitializeProject">Activer le suivi de ce projet</string>
+    <string name="gitInitializeProjectHint">Gardez ces fichiers ici et commencez à utiliser Git.</string>
+    <string name="gitPublishToGitHub">Créer un dépôt GitHub</string>
+    <string name="gitPublishToGitHubHint">Choisissez un nom et qui peut le voir.</string>
+    <string name="gitPublishTitle">Créer un dépôt</string>
+    <string name="gitPublishName">Nom du dépôt</string>
+    <string name="gitPublishNameHint">Utilisez des lettres, des chiffres, des points, des tirets ou des tirets bas.</string>
+    <string name="gitPublishVisibility">Qui peut le voir</string>
+    <string name="gitPublishPrivate">Privé</string>
+    <string name="gitPublishPublic">Public</string>
+    <string name="gitPublishPrivateHint">Seuls vous et les personnes que vous choisissez peuvent voir ce dépôt.</string>
+    <string name="gitPublishPublicHint">Tout le monde peut voir ce dépôt.</string>
+    <string name="gitPublishButton">Créer le dépôt</string>
+</resources>

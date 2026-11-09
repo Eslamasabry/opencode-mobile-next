@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="crashOfferSection">Rapports de plantage</string>
+    <string name="crashOfferSettingTitle">Proposer des rapports de plantage</string>
+    <string name="crashOfferSettingDetail">Quand l’application se ferme de façon inattendue, propose un rapport que vous pouvez relire d’abord. Rien n’est jamais envoyé automatiquement.</string>
+    <string name="telemetryConsentTitle">Aider à améliorer OpenCode Mobile\u00A0?</string>
+    <string name="telemetryConsentBody">Si vous acceptez, l’application envoie via Google Firebase des chiffres anonymes d’utilisation et d’état de l’application, ainsi que des rapports de plantage. Vous pouvez changer chacun dans Paramètres › Confidentialité et données.</string>
+    <string name="telemetryConsentSends">Envoyé\u00A0: pages et fonctions utilisées, bon fonctionnement de la connexion, de l’envoi et de la configuration, rapidité de l’application, tranches de mémoire et de stockage, rapports de plantage. Un identifiant d’installation aléatoire.</string>
+    <string name="telemetryConsentNever">Jamais envoyé\u00A0: votre code, vos conversations, fichiers, adresses de serveur ou clés. Aucun identifiant publicitaire.</string>
+    <string name="telemetryConsentShare">Partager les deux</string>
+    <string name="telemetryConsentNotNow">Pas maintenant</string>
+</resources>

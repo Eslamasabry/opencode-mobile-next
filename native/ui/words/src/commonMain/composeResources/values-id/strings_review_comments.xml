@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="reviewCommentTitleLine">Komentari baris %1$s</string>
+    <string name="reviewCommentTitleLines">Komentari baris %1$s–%2$s</string>
+    <string name="reviewCommentField">Apa yang perlu diubah agen?</string>
+    <string name="reviewCommentAdd">Tambah komentar</string>
+    <string name="reviewCommentLine">Baris %1$s</string>
+    <string name="reviewCommentLines">Baris %1$s–%2$s</string>
+    <string name="reviewCommentRemovedLine">Baris %1$s dihapus</string>
+    <string name="reviewCommentRemovedLines">Baris %1$s–%2$s dihapus</string>
+    <string name="reviewCommentDraft">Belum dikirim</string>
+    <string name="reviewCommentSending">Mengirim</string>
+    <string name="reviewCommentWaiting">Menunggu agen</string>
+    <string name="reviewCommentFixed">Sudah diperbaiki</string>
+    <string name="reviewCommentRemove">Hapus</string>
+    <string name="reviewCommentsLabel">Komentar Anda</string>
+    <string name="reviewCommentHint">Ketuk nomor baris, lalu Komentar, untuk meminta agen mengubahnya.</string>
+    <string name="reviewCommentNotPlaced">Baris yang dimaksud tidak dapat ditentukan. Pilih barisnya lagi.</string>
+    <string name="reviewCommentsSendFailed">Komentar tidak dapat dikirim. Komentar tetap tersimpan di sini.</string>
+    <plurals name="reviewSendComments">
+        <item quantity="other">Kirim %1$d komentar</item>
+    </plurals>
+    <plurals name="reviewCommentsWaitingNotice">
+        <item quantity="other">%1$d komentar menunggu agen.</item>
+    </plurals>
+    <string name="reviewGuided">Berpemandu</string>
+    <string name="reviewGuidedSupporting">Agen memandu Anda melalui perubahannya, dari yang terpenting</string>
+    <string name="reviewGuideMaking">Meminta agen memandu Anda melalui perubahannya…</string>
+    <string name="reviewGuideFallback">Panduan tidak dapat dibuat kali ini. Menampilkan semua file.</string>
+    <string name="reviewGuideBusy">Panduan menunggu hingga agen selesai. Sementara ini menampilkan semua file.</string>
+    <string name="reviewGuideAlsoChanged">Juga berubah</string>
+</resources>

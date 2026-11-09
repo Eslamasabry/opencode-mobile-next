@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="reportR1Optional">Opcional</string>
+    <string name="reportR1Included">O que está incluído</string>
+    <string name="reportR1IncludedLine">Dados do app e do celular. Senhas, chaves e endereços de servidor são removidos.</string>
+    <string name="reportR1IncludedCrash">Dados do app e do celular, e a falha em %1$s. Senhas, chaves e endereços de servidor são removidos.</string>
+    <string name="reportR1IncludedFreeze">Dados do app e do celular, e a trava em %1$s. Senhas, chaves e endereços de servidor são removidos.</string>
+    <string name="reportR1IncludedClose">Dados do app e do celular, e o fechamento em %1$s. Senhas, chaves e endereços de servidor são removidos.</string>
+    <string name="reportR1IncludedOpen">Mostrar o que está incluído</string>
+    <string name="reportR1Send">Enviar relatório</string>
+    <string name="reportR1CopyText">Copiar texto</string>
+    <string name="reportR1PostGitHub">Publicar no GitHub</string>
+    <string name="reportR1NoSend">Esta versão não consegue enviar relatórios. Copie o texto ou publique-o no GitHub.</string>
+    <string name="reportR1SheetSubtitle">Isto é exatamente o que será enviado.</string>
+    <string name="reportR1Words">Suas palavras</string>
+    <string name="reportR1NoWords">Nada escrito</string>
+    <string name="reportR1LastClose">Última vez que o app fechou</string>
+    <string name="reportR1Crashed">Fechou inesperadamente · %1$s</string>
+    <string name="reportR1Froze">Parou de responder · %1$s</string>
+    <string name="reportR1ClosedForMemory">Fechado pelo Android para liberar memória · %1$s</string>
+    <string name="reportR1App">App</string>
+    <string name="reportR1AppValue">OpenCode Mobile %1$s (%2$s)</string>
+    <string name="reportR1Phone">Celular</string>
+    <string name="reportR1Android">Android %1$s</string>
+    <string name="reportR1Memory">%1$s GB de memória</string>
+    <string name="reportR1Connection">Conexão</string>
+    <string name="reportR1AddressOut">%1$s · endereço removido</string>
+    <string name="reportR1NotConnected">Não conectado</string>
+    <string name="reportR1Problems">Problemas recentes</string>
+    <string name="reportR1NoProblems">Nenhum</string>
+    <string name="reportR1ProblemCount">%1$s (%2$s)</string>
+    <string name="reportR1NeverSent">Nunca enviamos: suas conversas, arquivos, senhas, chaves e endereços de servidor.</string>
+    <string name="reportR1SentBody">Obrigado. Se você nos escrever sobre este problema, informe este código para encontrarmos seu relatório.</string>
+    <string name="reportR1PublicTitle">Publicar este relatório para todos verem?</string>
+    <string name="reportR1PublicBody">Qualquer pessoa pode ler os problemas do GitHub. O formulário abre com suas palavras e os dados do app, e nada é publicado até você enviá-lo lá.</string>
+    <string name="reportR1PublicConfirm">Abrir o GitHub</string>
+    <string name="reportR1GitHubFailed">Não foi possível abrir o GitHub. Tente novamente.</string>
+    <string name="reportR1KindTimeout">Tempo esgotado</string>
+    <string name="reportR1KindAuth">Login recusado</string>
+    <string name="reportR1KindTls">Certificado não confiável</string>
+    <string name="reportR1KindServer">Erro do servidor</string>
+    <string name="reportR1KindProtocol">Resposta inesperada do servidor</string>
+    <string name="reportR1KindDns">Endereço não encontrado</string>
+    <string name="reportR1KindRefused">Conexão recusada</string>
+    <string name="reportR1KindOffline">Sem rede</string>
+    <string name="reportR1KindTooLarge">Mensagem grande demais</string>
+    <string name="reportR1KindRejected">Mensagem recusada</string>
+    <string name="reportR1KindOther">Outro problema</string>
+    <string name="reportKeptCopyErrors">Copiar registro de erros</string>
+    <string name="reportKeptClearErrors">Limpar erros</string>
+</resources>

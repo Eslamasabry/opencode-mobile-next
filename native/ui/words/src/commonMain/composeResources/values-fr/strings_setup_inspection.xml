@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="setupInspectTitle">Consulter la configuration</string>
+    <string name="setupInspectReadOnly">Cette vue lit la configuration et l’état des outils. Appliquer et Annuler ne sont pas disponibles, car ce serveur ne peut pas restaurer sans risque les modifications de configuration.</string>
+    <string name="setupInspectFailed">Impossible de charger les informations de configuration. Reconnectez-vous au serveur et réessayez.</string>
+    <string name="setupInspectRefresh">Actualiser la configuration</string>
+    <string name="setupInspectLoading">Lecture de la configuration…</string>
+    <string name="setupInspectConfig">Sources de configuration</string>
+    <string name="setupInspectNoSources">Aucune source de configuration n’a été signalée.</string>
+    <string name="setupInspectMcp">Connexions d’outils</string>
+    <string name="setupInspectNoMcp">Aucune connexion d’outil n’a été signalée.</string>
+    <string name="setupMcpConnected">Connecté</string>
+    <string name="setupMcpPending">Connexion en cours</string>
+    <string name="setupMcpDisabled">Désactivé</string>
+    <string name="setupMcpFailed">Échec de la connexion</string>
+    <string name="setupMcpSignIn">Connexion requise</string>
+    <string name="setupMcpUnknown">État inconnu</string>
+    <string name="setupRegistryTitle">Registre public d’outils</string>
+    <string name="setupRegistryConsent">Parcourir le registre public</string>
+    <string name="setupRegistryPrivacy">Actualiser contacte le registre MCP public sans identifiants du serveur. Les termes recherchés sont envoyés au registre et ne sont jamais enregistrés.</string>
+    <string name="setupRegistryDisabled">La navigation est désactivée. Activez-la pour charger les fiches lorsque vous choisissez Actualiser.</string>
+    <string name="setupRegistryLoading">Chargement des fiches publiques…</string>
+    <string name="setupRegistryOffline">Vous êtes hors ligne. Affichage des fiches enregistrées.</string>
+    <string name="setupRegistryError">Impossible de charger le registre public. Affichage des fiches enregistrées.</string>
+    <string name="setupRegistryEmpty">Aucune fiche chargée. Actualisez ou recherchez dans le registre.</string>
+    <string name="setupRegistryReadOnly">Les fiches sont données à titre informatif. Configurez les outils manuellement sur votre serveur ; cette page n’exécute jamais de commandes du registre et n’ouvre pas les liens listés.</string>
+    <string name="setupRegistrySearch">Rechercher dans les fiches</string>
+    <string name="setupRegistryRefresh">Actualiser les fiches</string>
+    <string name="setupRegistrySaved">Afficher les fiches enregistrées</string>
+    <string name="setupInspectUnsupported">La consultation de la configuration n’est pas disponible sur ce serveur.</string>
+    <string name="setupMigrationRequired">Transfert de vos anciennes conversations…</string>
+    <string name="setupMigrationProgress">Transfert de vos anciennes conversations (%1$d sur %2$d)…</string>
+    <string name="setupMigrationError">Le serveur n’a pas pu terminer le transfert de vos anciennes conversations. Vos données d’origine sont toujours sur ce téléphone, intactes.</string>
+    <string name="setupMigrationUnavailable">Le serveur n’a pas pu indiquer l’état de vos anciennes conversations. Actualisez pour réessayer.</string>
+</resources>

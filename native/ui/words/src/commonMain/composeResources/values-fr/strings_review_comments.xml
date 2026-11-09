@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="reviewCommentTitleLine">Commenter la ligne %1$s</string>
+    <string name="reviewCommentTitleLines">Commenter les lignes %1$s–%2$s</string>
+    <string name="reviewCommentField">Que doit modifier l’agent\u00A0?</string>
+    <string name="reviewCommentAdd">Ajouter le commentaire</string>
+    <string name="reviewCommentLine">Ligne %1$s</string>
+    <string name="reviewCommentLines">Lignes %1$s–%2$s</string>
+    <string name="reviewCommentRemovedLine">Ligne supprimée %1$s</string>
+    <string name="reviewCommentRemovedLines">Lignes supprimées %1$s–%2$s</string>
+    <string name="reviewCommentDraft">Non envoyé</string>
+    <string name="reviewCommentSending">Envoi</string>
+    <string name="reviewCommentWaiting">En attente de l’agent</string>
+    <string name="reviewCommentFixed">Corrigé</string>
+    <string name="reviewCommentRemove">Retirer le commentaire</string>
+    <string name="reviewCommentsLabel">Vos commentaires</string>
+    <string name="reviewCommentHint">Touchez un numéro de ligne, puis Commenter, pour demander à l’agent une modification à cet endroit.</string>
+    <string name="reviewCommentNotPlaced">Impossible de savoir de quelles lignes il s’agit. Sélectionnez à nouveau les lignes.</string>
+    <string name="reviewCommentsSendFailed">Impossible d’envoyer les commentaires. Ils sont conservés ici.</string>
+    <plurals name="reviewSendComments">
+        <item quantity="one">Envoyer 1 commentaire</item>
+        <item quantity="many">Envoyer %1$d commentaires</item>
+        <item quantity="other">Envoyer %1$d commentaires</item>
+    </plurals>
+    <plurals name="reviewCommentsWaitingNotice">
+        <item quantity="one">1 commentaire attend l’agent.</item>
+        <item quantity="many">%1$d commentaires attendent l’agent.</item>
+        <item quantity="other">%1$d commentaires attendent l’agent.</item>
+    </plurals>
+    <string name="reviewGuided">Guidée</string>
+    <string name="reviewGuidedSupporting">L’agent vous présente ses modifications, les plus importantes d’abord</string>
+    <string name="reviewGuideMaking">Demande à l’agent de vous présenter ses modifications…</string>
+    <string name="reviewGuideFallback">Impossible de créer un guide cette fois. Tous les fichiers sont affichés.</string>
+    <string name="reviewGuideBusy">Le guide attend que l’agent ait terminé. Tous les fichiers sont affichés pour l’instant.</string>
+    <string name="reviewGuideAlsoChanged">Également modifiés</string>
+</resources>

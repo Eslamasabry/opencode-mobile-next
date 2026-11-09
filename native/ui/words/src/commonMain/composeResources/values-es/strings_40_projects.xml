@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="r40RelationsTitle">Conversaciones relacionadas</string>
+    <string name="r40RelationsRefresh">Actualizar conversaciones relacionadas</string>
+    <string name="r40RelationsStale">Cambió la ubicación de esta conversación. Vuelve atrás y abre de nuevo las conversaciones relacionadas.</string>
+    <string name="r40RelationsFailure">No se pudo terminar. Inténtalo de nuevo, o vuelve atrás y abre de nuevo las conversaciones relacionadas.</string>
+    <string name="r40RelationsParent">Iniciada desde</string>
+    <string name="r40RelationsEmpty">Aún no hay conversaciones de subagentes</string>
+    <string name="r40RelationsEmptyBody">El trabajo delegado aparece aquí sin mezclarse con tu conversación.</string>
+    <string name="r40RelationsChildren">Conversaciones de subagentes · %1$s</string>
+    <string name="r40RelationsUntitled">Conversación sin título</string>
+    <string name="r40RelationsNeedsYou">Te necesita · Abre para responder</string>
+    <string name="r40RelationsWorking">Trabajando</string>
+    <string name="r40RelationsIdle">Inactiva</string>
+    <string name="r40RelationsDone">Terminada</string>
+    <string name="r40RelationsCurrent">Esta conversación</string>
+    <string name="r40RelationsPinned">Fijada</string>
+    <string name="r40RelationsActions">Acciones</string>
+    <string name="r40RelationsOpening">Trabajando…</string>
+    <string name="r40RelationsOpen">Abrir conversación</string>
+    <string name="r40RelationsResume">Continuar en la computadora</string>
+    <string name="r40RelationsPin">Fijar conversación</string>
+    <string name="r40RelationsUnpin">Dejar de fijar conversación</string>
+    <string name="r40RelationsStop">Detener subagente</string>
+    <string name="r40RelationsStopTitle">¿Detener %1$s?</string>
+    <string name="r40RelationsStopBody">Esto detiene su trabajo actual. La conversación y el trabajo ya terminado se conservan.</string>
+    <string name="r40RelationsKeepRunning">Dejar en marcha</string>
+    <string name="r40RelationsResumeBody">Ejecuta este comando en la computadora que aloja este servidor, en el mismo proyecto. Copiarlo no envía nada.</string>
+    <string name="r40RelationsCopy">Copiar comando</string>
+    <string name="r40RelationsJustNow">Ahora mismo</string>
+    <string name="r40RelationsMinutes">hace %1$s min</string>
+    <string name="r40RelationsHours">hace %1$s h</string>
+    <string name="r40RelationsDays">hace %1$s d</string>
+</resources>

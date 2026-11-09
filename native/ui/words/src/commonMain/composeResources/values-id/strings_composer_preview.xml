@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="composerPreviewModelButton">Model</string>
+    <string name="composerPreviewModelDefault">Bawaan server</string>
+    <string name="composerPreviewModelDefaultHint">Model bawaan milik server</string>
+    <string name="composerPreviewModelsTitle">Pilih model</string>
+    <string name="composerPreviewModelsLoading">Memuat model…</string>
+    <string name="composerPreviewModelsEmpty">Saat ini tidak ada model yang tersedia.</string>
+    <string name="composerPreviewModelsFailed">Daftar model tidak bisa dimuat.</string>
+    <string name="composerPreviewModelsRetry">Coba lagi</string>
+    <string name="composerPreviewModelsClose">Tutup</string>
+    <string name="composerPreviewAttachFile">Lampirkan file</string>
+    <string name="composerPreviewAttachNoPicker">Perangkat ini tidak bisa melampirkan file di sini.</string>
+    <string name="composerPreviewAttachModelWithoutFiles">Model ini tidak menerima file. Pilih model yang menerimanya.</string>
+    <string name="composerPreviewAttachmentRemove">Hapus</string>
+    <string name="composerPreviewAttachmentFailed">File tidak bisa dilampirkan.</string>
+    <string name="composerPreviewAttachmentTooLarge">File ini terlalu besar untuk dilampirkan.</string>
+    <string name="composerPreviewAttachmentUnsupported">Jenis file ini tidak bisa dilampirkan.</string>
+    <string name="composerPreviewAttachmentStorage">File tidak bisa disimpan di perangkat ini.</string>
+    <string name="composerPreviewAttachmentDismiss">Tutup</string>
+    <string name="composerPreviewAttachmentRetry">Coba lagi</string>
+</resources>

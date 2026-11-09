@@ -1,0 +1,68 @@
+# Glossary for vi. kinds (tab separated):
+#  keep<TAB>term: the English term stays exactly as written wherever it appears
+#  term<TAB>english regex<TAB>target regex: when the English matches, the translation must match (case-insensitive)
+#  forbid<TAB>target regex<TAB>why: the translation must not match
+#  allow<TAB>word: an English word that may stay in the translation (names, units, standards)
+keep	OpenCode
+keep	AI Team
+keep	Gas City
+keep	Tailscale
+keep	Termux
+keep	Ubuntu
+keep	Android
+keep	Wi-Fi
+keep	GitHub
+keep	Codex
+keep	Claude
+keep	Gemma
+keep	Hugging Face
+keep	Shorebird
+keep	Gemini
+keep	Antigravity
+keep	SHA-256
+keep	Markdown
+keep	JSON
+keep	SSH
+keep	HTTPS
+keep	QR
+term	\bThis phone\b	Điện thoại này|điện thoại này
+term	\b[Cc]onversations?\b	cuộc trò chuyện
+term	\bTry again\b	Thử lại
+term	\bSettings\b	Cài đặt
+term	\bServers?\b	máy chủ
+term	\bProjects?\b	dự án
+term	\b(?<!Claude )Agents?\b	tác nhân
+term	^Files$	tệp
+term	^Cancel$	Hủy
+term	^Offline$	Ngoại tuyến
+term	^Disconnect$	Ngắt kết nối
+term	^Allow$	Cho phép
+term	^Deny$	Từ chối
+term	^Delete$	Xóa
+term	^Search$	Tìm kiếm|Tìm
+term	^Refresh$	Làm mới
+term	^Model$	mô hình
+forbid	\bphiên(?! bản)\b	say cuộc trò chuyện, not phiên
+forbid	\bchat\b	say cuộc trò chuyện, not chat
+allow	OK
+allow	Wi-Fi
+allow	Bluetooth
+allow	URL
+allow	API
+allow	SSH
+allow	QR
+allow	PDF
+allow	GB
+allow	MB
+allow	KB
+allow	Markdown
+allow	terminal
+allow	Terminal
+allow	offline
+allow	online
+allow	email
+allow	Email
+allow	Android
+allow	Linux
+allow	Git
+allow	git

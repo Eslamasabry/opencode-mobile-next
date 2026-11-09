@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="background_pause_time_limit">Kết nối nền đã tạm dừng %1$s để tiết kiệm pin.</string>
+    <string name="background_pause_restricted">Kết nối nền đã tạm dừng: mức dùng pin bị hạn chế.</string>
+    <string name="background_pause_user_stopped">Kết nối nền đã dừng khi ứng dụng đóng %1$s.</string>
+    <string name="background_pause_app_updated">Kết nối nền đã dừng khi ứng dụng được cập nhật %1$s.</string>
+    <string name="background_pause_interrupted">Kết nối nền đã dừng không rõ lý do.</string>
+    <string name="background_pause_device_restarted">Kết nối nền đã dừng khi điện thoại khởi động lại.</string>
+    <string name="background_pause_resume">Tiếp tục kết nối nền</string>
+    <string name="background_pause_resume_short">Tiếp tục</string>
+    <string name="background_pause_resuming">Đang tiếp tục kết nối nền…</string>
+    <string name="background_pause_resume_failed">Không thể tiếp tục. Hãy mở cài đặt Giữ chạy nền.</string>
+    <string name="background_pause_open_keep_running">Mở cài đặt Giữ chạy nền</string>
+    <string name="background_pause_resumed">Đã tiếp tục kết nối nền.</string>
+    <string name="background_error_notifications_required">Cần quyền truy cập thông báo.</string>
+    <string name="background_error_could_not_change">Android không thể đổi chế độ chạy nền.</string>
+    <string name="background_error_android_app_only">Chế độ chạy nền trực tiếp chỉ có trong ứng dụng Android.</string>
+</resources>

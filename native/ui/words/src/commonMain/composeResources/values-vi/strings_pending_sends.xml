@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="nativePendingTitle">Đang chờ gửi</string>
+    <string name="nativePendingReview">Xem lại</string>
+    <string name="nativePendingFailed">Không cập nhật được tin nhắn này. Hãy kiểm tra kết nối và thử lại.</string>
+    <string name="nativePendingOffline">Sẽ gửi khi có mạng lại</string>
+    <string name="nativePendingAdmitted">Đang chờ máy chủ</string>
+    <string name="nativePendingJoining">Đang nhập vào câu trả lời đang chạy</string>
+    <string name="nativePendingUnconfirmed">Có thể đã được gửi</string>
+    <string name="nativePendingEdit">Đưa về để sửa</string>
+    <string name="nativePendingSteer">Nhập vào câu trả lời này</string>
+    <string name="nativePendingCheck">Làm mới</string>
+    <string name="nativePendingDiscard">Bỏ</string>
+    <string name="nativePendingDiscardTitle">Bỏ tin nhắn này?</string>
+    <string name="nativePendingEmpty">Không có tin nhắn nào đang chờ gửi.</string>
+    <plurals name="nativePendingCount">
+        <item quantity="other">%1$s tin nhắn đang chờ gửi.</item>
+    </plurals>
+</resources>

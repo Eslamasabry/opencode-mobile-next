@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentsResetSavedSignIns">Réinitialiser les connexions enregistrées</string>
+    <string name="agentsResetSavedSignInsBody">Déconnecter tous les serveurs et retirer de cette application les mots de passe de serveur et les clés d’accès de l’assistant enregistrés\u00A0? Vos profils, conversations, projets et les connexions propres aux agents sont conservés. Redémarrez ensuite l’application.</string>
+    <string name="agentsResetSavedSignInsFailed">Les connexions enregistrées n’ont pas toutes pu être réinitialisées. Réessayez, puis redémarrez l’application.</string>
+    <string name="agentsRestartAfterReset">Redémarrez l’application avant de vous reconnecter ou d’utiliser de nouveau les agents du téléphone.</string>
+    <string name="agentsHelperStopped">L’assistant des agents s’est arrêté de façon inattendue. Vérifiez la configuration du téléphone avant de démarrer une autre conversation.</string>
+    <string name="agentsHelperMayHaveStopped">L’assistant des agents s’est arrêté. Android l’a peut-être arrêté pour libérer de la mémoire ou limiter les processus en arrière-plan.</string>
+    <string name="agentsPhoneHelperProfile">Agents du téléphone</string>
+    <string name="agentsPreviousVersion">Utiliser la version antérieure de %1$s</string>
+    <string name="agentsPreviousVersionBody">Passer à la version antérieure vérifiée conservée sur ce téléphone\u00A0? L’assistant s’arrêtera d’abord, puis les agents du téléphone se reconnecteront. Les connexions et les conversations sont conservées.</string>
+    <string name="agentsPreviousVersionFailed">La version antérieure n’a pas pu être restaurée. Terminez les tâches en cours, puis réessayez.</string>
+    <string name="agentsPreviousVersionRestored">La version antérieure est restaurée.</string>
+</resources>

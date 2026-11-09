@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="editor40Edit">Sửa máy chủ</string>
+    <string name="editor40Loading">Đang đọc máy chủ đã lưu…</string>
+    <string name="editor40Kind">Máy tính của bạn đang chạy gì?</string>
+    <string name="editor40Folder">Thư mục dự án</string>
+    <string name="editor40Token">Token hoặc mật khẩu</string>
+    <string name="editor40More">Thêm tùy chọn</string>
+    <string name="editor40OtherCommands">Hiện các lệnh khác</string>
+    <string name="editor40Check">Kiểm tra kết nối</string>
+    <string name="editor40CancelCheck">Hủy kiểm tra</string>
+    <string name="editor40Slow">Máy chủ đang phản hồi chậm. Bạn có thể hủy lần kiểm tra này và tiếp tục chỉnh sửa.</string>
+    <string name="editor40SaveConnect">Lưu và kết nối</string>
+    <string name="editor40SaveAnyway">Vẫn lưu</string>
+    <string name="editor40SavedFailed">Máy chủ đã được lưu nhưng chưa kết nối được. Hãy kiểm tra địa chỉ và đăng nhập, rồi thử lại.</string>
+    <string name="editor40Checked">Đã kiểm tra kết nối · %1$s</string>
+    <string name="editor40Ready">Máy chủ của bạn đã kết nối. Các cuộc trò chuyện của bạn vẫn nằm trên máy chủ.</string>
+    <string name="editor40Open">Mở các cuộc trò chuyện</string>
+    <string name="editor40DiscardTitle">Bỏ các thay đổi này?</string>
+    <string name="editor40Discard">Bỏ thay đổi</string>
+    <string name="editor40DiscardBody">Các thay đổi bạn đã nhập chưa được lưu.</string>
+    <string name="editor40HttpTitle">Dùng kết nối không mã hóa?</string>
+    <string name="editor40UseAddress">Dùng địa chỉ này</string>
+    <string name="editor40HttpBody">Người khác trên mạng này có thể đọc mật khẩu và các cuộc trò chuyện của bạn. Nên dùng HTTPS hoặc mạng Tailscale riêng. Lựa chọn này chỉ áp dụng cho đúng địa chỉ này.</string>
+    <string name="editor40Inspect">Xem chứng chỉ</string>
+    <string name="editor40Pinned">Một chứng chỉ đã được lưu cho địa chỉ này. Nếu chứng chỉ thay đổi, kết nối sẽ bị dừng.</string>
+    <string name="editor40CertificateTitle">Tin cậy chứng chỉ này?</string>
+    <string name="editor40TrustCertificate">Tin cậy chứng chỉ này</string>
+    <string name="editor40CertificateBody">Hãy đối chiếu dấu vân tay SHA-256 này với chủ máy chủ qua một kênh đáng tin khác. Nếu chứng chỉ khác đi, kết nối sẽ bị dừng.</string>
+    <string name="editor40CertificateDates">Có hiệu lực từ %1$s đến %2$s (UTC)</string>
+    <string name="editor40TailscaleBody">Kết nối cả hai thiết bị vào cùng một mạng Tailscale. Dùng địa chỉ 100.x của máy tính hoặc tên .ts.net của nó. Hãy giữ mật khẩu riêng của máy chủ: Tailscale không thay thế nó.</string>
+    <string name="editor40EnterAddress">Nhập địa chỉ máy tính</string>
+    <string name="permissions40Title">Hành động luôn được cho phép</string>
+    <string name="permissions40Intro">Các hành động tác nhân có thể chạy trong dự án này mà không cần hỏi. Hãy thu hồi một hành động để lần sau được hỏi lại.</string>
+    <string name="permissions40RevokeTitle">Thu hồi hành động luôn được cho phép này?</string>
+    <string name="permissions40Revoke">Thu hồi quyền</string>
+    <string name="permissions40RevokeBody">Tác nhân sẽ hỏi trước khi chạy lại hành động này. Hành động đang chạy sẽ không bị dừng.</string>
+    <string name="permissions40AllResources">Mọi tài nguyên phù hợp</string>
+    <string name="permissions40Loading">Đang đọc các hành động được cho phép…</string>
+    <string name="permissions40Failed">Không đọc hoặc thay đổi được các hành động được cho phép. Hãy kiểm tra kết nối và thử lại.</string>
+    <string name="permissions40Empty">Dự án này chưa có hành động nào luôn được cho phép. Tác nhân sẽ hỏi khi cần quyền.</string>
+    <string name="permissions40Revoked">Đã thu hồi: %1$s. Lần sau tác nhân sẽ hỏi.</string>
+    <string name="permissions40Dismiss">Đóng</string>
+    <string name="permissions40Refresh">Làm mới các hành động được cho phép</string>
+    <string name="editor40TailscaleInstalled">Tailscale đã được cài. Hãy mở nó, đăng nhập và bật VPN. Ứng dụng này không kiểm tra được việc đăng nhập VPN của bạn.</string>
+    <string name="editor40TailscaleMissing">Hãy cài ứng dụng Tailscale chính thức trên điện thoại này trước.</string>
+    <string name="editor40TailscaleUnknown">Không kiểm tra được ứng dụng Tailscale. Hãy kiểm tra lại khi nó sẵn sàng.</string>
+    <string name="editor40TailscaleOpen">Mở Tailscale</string>
+    <string name="editor40TailscaleInstall">Tải Tailscale</string>
+    <string name="editor40TailscaleRefresh">Kiểm tra lại Tailscale</string>
+    <plurals name="rows40Waiting">
+        <item quantity="other">%1$d cần bạn</item>
+    </plurals>
+    <string name="rows40Working">%1$d đang làm việc</string>
+    <string name="rows40Secret">Nhập lại thông tin đăng nhập đã lưu</string>
+    <plurals name="rows40Queued">
+        <item quantity="other">%1$d lời nhắc đang chờ</item>
+    </plurals>
+    <plurals name="rows40Move">
+        <item quantity="other">Chuyển %1$d lời nhắc đang chờ sang %2$s</item>
+    </plurals>
+    <string name="rows40Schedules">Lời nhắc đã lên lịch</string>
+    <string name="queue40Title">Chuyển các lời nhắc đang chờ</string>
+    <string name="queue40Loading">Đang đọc các lời nhắc đang chờ và cuộc trò chuyện đích…</string>
+    <string name="queue40Failed">Chưa chuyển gì cả. Kết nối hoặc các lời nhắc đang chờ đã thay đổi, hoặc bộ nhớ từ chối thay đổi. Hãy làm mới và xem lại lựa chọn.</string>
+    <string name="queue40Intro">Chuyển các lời nhắc đang chờ từ %1$s sang %2$s. Không có gì được gửi ở đây. Mật khẩu và khóa trong nội dung sẽ được ẩn trước khi chuyển.</string>
+    <string name="queue40Empty">Máy chủ này không có lời nhắc nào đang chờ.</string>
+    <string name="queue40Attachment">Lời nhắc có tệp đính kèm</string>
+    <string name="queue40Uncertain">Lời nhắc này có thể đã được gửi. Hãy xem lại trên máy chủ gốc của nó.</string>
+    <string name="queue40ServerFile">Tệp đính kèm này chỉ mở được trên máy chủ gốc.</string>
+    <string name="queue40Mentions">Việc ẩn thông tin bí mật sẽ làm thay đổi các lượt nhắc tác nhân trong lời nhắc này. Hãy sửa nó trên máy chủ gốc trước.</string>
+    <string name="queue40Sending">Lời nhắc này đang được gửi. Hãy chờ kết quả.</string>
+    <string name="queue40CannotMove">Lời nhắc này phải ở lại máy chủ gốc.</string>
+    <string name="queue40Destination">Cuộc trò chuyện đích</string>
+    <string name="queue40NewConversation">Bắt đầu cuộc trò chuyện mới</string>
+    <string name="queue40Untitled">Cuộc trò chuyện chưa đặt tên</string>
+    <plurals name="queue40Move">
+        <item quantity="other">Chuyển %1$d lời nhắc sang %2$s</item>
+    </plurals>
+    <string name="queue40Select">Hãy chọn ít nhất một lời nhắc có thể chuyển.</string>
+    <plurals name="queue40Moved">
+        <item quantity="other">Đã chuyển %1$d lời nhắc. Ở lại máy chủ gốc: %2$d. Dùng lựa chọn mô hình hoặc tác nhân của nơi đến: %3$d. Chưa có gì được gửi.</item>
+    </plurals>
+    <string name="queue40Undo">Hoàn tác việc chuyển</string>
+    <string name="queue40Open">Mở cuộc trò chuyện đích</string>
+    <plurals name="queue40Undone">
+        <item quantity="other">Đã trả lại %1$d lời nhắc vẫn đang chờ. Các lời nhắc đang gửi vẫn ở nguyên chỗ cũ.</item>
+    </plurals>
+    <string name="queue40Refresh">Làm mới các lời nhắc đang chờ</string>
+    <string name="remove40Title">Xóa máy chủ này</string>
+    <string name="remove40ConfirmTitle">Xóa %1$s?</string>
+    <string name="remove40Body">Việc này xóa kết nối đã lưu và dữ liệu cục bộ của ứng dụng. Các cuộc trò chuyện trên máy chủ không bị xóa.</string>
+    <plurals name="remove40QueueLost">
+        <item quantity="other">%1$d lời nhắc đang chờ sẽ bị xóa khỏi điện thoại này.</item>
+    </plurals>
+    <plurals name="remove40QueueKept">
+        <item quantity="other">%1$d lời nhắc đang chờ sẽ được giữ trong mục Lời nhắc đã lưu.</item>
+    </plurals>
+    <plurals name="remove40Uncertain">
+        <item quantity="other">%1$d lời nhắc trong số đó có thể đã được gửi; chúng cũng bị xóa khỏi điện thoại này.</item>
+    </plurals>
+    <plurals name="remove40DraftsLost">
+        <item quantity="other">%1$d bản nháp cuộc trò chuyện đã lưu sẽ bị xóa.</item>
+    </plurals>
+    <string name="remove40Active">Kết nối hiện tại sẽ đóng. Bạn sẽ quay lại danh sách máy chủ đã lưu.</string>
+    <string name="remove40ServerKeeps">Máy chủ vẫn giữ các cuộc trò chuyện và tệp của nó.</string>
+    <string name="remove40Loading">Đang kiểm tra những gì điện thoại này giữ cho máy chủ…</string>
+    <string name="remove40Failed">Không xóa xong máy chủ này. Máy chủ có thể đã bị ngắt kết nối và một phần dữ liệu cục bộ đã được dọn. Máy chủ đã lưu vẫn được giữ trong khi việc dọn dẹp hoặc kiểm tra gửi tin còn dang dở.</string>
+    <string name="remove40DeleteQueue">Xóa cả các lời nhắc đang chờ</string>
+    <string name="remove40DeleteQueueHelp">Để tắt để giữ nội dung và tệp đính kèm của chúng trong mục Lời nhắc đã lưu.</string>
+    <string name="remove40Refresh">Xem lại dữ liệu đã lưu</string>
+    <string name="queue40UndoFailed">Không hoàn tác được việc chuyển. Hãy xem lại cuộc trò chuyện đích trước khi thử lại; các lời nhắc đã bắt đầu gửi sẽ ở lại đó.</string>
+    <string name="editor40SaveChanges">Lưu thay đổi</string>
+    <string name="editor40Stale">Máy chủ đã lưu này hoặc đăng nhập của nó đã thay đổi. Hãy đóng trang này và mở lại máy chủ trước khi thử.</string>
+    <string name="editor40Deleted">Máy chủ này đã bị xóa. Hãy đóng trang này để quay lại danh sách máy chủ đã lưu.</string>
+</resources>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="widget_label">Cuộc trò chuyện</string>
+    <string name="widget_description">Điều quan trọng nhất lúc này: việc cần bạn, việc đang chạy, hoặc cuộc trò chuyện gần nhất của bạn.</string>
+    <string name="native_team_working">Đang làm việc</string>
+    <string name="native_widget_now">bây giờ</string>
+    <string name="native_widget_minutes">%1$s phút</string>
+    <string name="native_widget_hours">%1$s giờ</string>
+    <string name="native_widget_days">%1$s ngày</string>
+    <string name="usage_widget_title">Mức dùng</string>
+    <string name="usage_widget_description">Phần còn lại của từng giới hạn gói và thời điểm đặt lại.</string>
+    <string name="usage_widget_empty">Chưa có số liệu giới hạn. Hãy mở Mức dùng để kết nối một nguồn.</string>
+    <string name="usage_widget_resets">Đặt lại sau %1$s</string>
+    <string name="usage_widget_updated">Cập nhật %1$s trước</string>
+    <string name="usage_widget_sign_in">Đăng nhập</string>
+    <string name="usage_widget_add_key">Thêm khóa</string>
+    <string name="usage_widget_not_signed_in">Chưa đăng nhập</string>
+    <string name="usage_widget_no_key">Chưa thêm khóa</string>
+    <string name="usage_widget_set_up">Thiết lập</string>
+    <string name="usage_widget_cant_read">Chưa đọc được</string>
+    <string name="usage_widget_auth">Cần đăng nhập</string>
+    <string name="usage_widget_this_phone">Điện thoại này</string>
+    <string name="usage_widget_provider_claude">Claude</string>
+    <string name="usage_widget_provider_codex">Codex</string>
+    <string name="usage_widget_provider_minimax">MiniMax</string>
+    <string name="usage_widget_provider_glm">GLM</string>
+    <string name="usage_widget_column">%1$s \u0020còn %2$s%%</string>
+    <string name="usage_widget_short_hours">%1$s giờ</string>
+    <string name="usage_widget_short_days">%1$s ngày</string>
+    <string name="usage_widget_short_week">Tuần</string>
+    <string name="usage_widget_short_month">Tháng</string>
+    <string name="widget_label_wide">Các cuộc trò chuyện</string>
+    <string name="widget_label_list">Danh sách cuộc trò chuyện</string>
+    <string name="widget_label_strip">Dải cuộc trò chuyện</string>
+    <string name="widget_description_wide">Việc cần bạn hoặc đang chạy lúc này, cùng các cuộc trò chuyện tiếp theo.</string>
+    <string name="widget_description_list">Điều quan trọng nhất lúc này, và các cuộc trò chuyện khác ngay bên dưới.</string>
+    <string name="widget_description_strip">Điều quan trọng nhất lúc này, gọn trong một dòng.</string>
+    <string name="usage_widget_title_wide">Mức dùng, bản rộng</string>
+    <string name="usage_widget_description_wide">Phần còn lại của từng giới hạn gói, rộng hai cột.</string>
+    <string name="widget_label_status">Trạng thái</string>
+    <string name="widget_description_status">Các máy chủ của bạn, Linux trên điện thoại này, các tác vụ đang chạy và giới hạn gói sắp hết nhất.</string>
+</resources>

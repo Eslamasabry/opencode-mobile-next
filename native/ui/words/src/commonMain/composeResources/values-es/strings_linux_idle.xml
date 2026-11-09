@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxIdleTitle">Detener el servidor cuando esté inactivo</string>
+    <string name="linuxIdleDetail">Ahorra recursos del teléfono cuando termina el trabajo. Reanuda el mismo servidor cuando lo necesites.</string>
+    <string name="linuxIdleMinutes">Tiempo de inactividad en minutos</string>
+    <plurals name="linuxIdleMinutesValue">
+        <item quantity="one">1 minuto</item>
+        <item quantity="many">%1$d de minutos</item>
+        <item quantity="other">%1$d minutos</item>
+    </plurals>
+    <string name="linuxIdleInvalid">Escribe un número entero del 1 al 60.</string>
+    <string name="linuxIdleFailed">El teléfono no pudo leer ni cambiar su estado de inactividad. Abre esta página de nuevo para reintentar.</string>
+    <string name="linuxIdleResume">Reanudar el servidor inactivo del teléfono</string>
+    <string name="linuxIdleSave">Guardar tiempo de inactividad</string>
+    <string name="linuxIdleWorking">Actualizando el estado de inactividad…</string>
+</resources>

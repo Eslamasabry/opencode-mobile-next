@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="terminalSourceBuiltIn">Встроенный Linux</string>
+    <string name="terminalSourceServer">Сервер OpenCode</string>
+    <string name="terminalSourceServerRuntime">%1$s · сервер OpenCode</string>
+    <string name="terminalRerun">Повторить команду</string>
+    <string name="terminalRerunUncertain">Не удалось подтвердить повторный запуск. Обновите терминалы и повторите.</string>
+    <string name="terminalKeyControl">Ctrl</string>
+    <string name="terminalKeyAlt">Alt</string>
+    <string name="terminalKeyEscape">Esc</string>
+    <string name="terminalKeyTab">Tab</string>
+    <string name="terminalKeyUp">↑</string>
+    <string name="terminalKeyDown">↓</string>
+    <string name="terminalKeyLeft">←</string>
+    <string name="terminalKeyRight">→</string>
+    <string name="terminalKeyHome">Home</string>
+    <string name="terminalKeyEnd">End</string>
+    <string name="terminalKeyPageUp">Page Up</string>
+    <string name="terminalKeyPageDown">Page Down</string>
+    <string name="terminalKeyPipe">|</string>
+    <string name="terminalKeySlash">/</string>
+    <string name="terminalKeyBackslash">\\</string>
+    <string name="terminalKeyTilde">~</string>
+    <string name="terminalKeyMinus">−</string>
+    <string name="terminalKeyUnderscore">_</string>
+</resources>

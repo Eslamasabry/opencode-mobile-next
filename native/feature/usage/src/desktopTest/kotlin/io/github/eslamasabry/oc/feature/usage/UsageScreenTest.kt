@@ -13,7 +13,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageBudgetUnit
@@ -152,7 +152,7 @@ class UsageScreenTest {
 
     @Test
     fun `SCREENS-NAV-96 the total comes first, then the calendar and project filters, then the breakdowns`() =
-        runComposeUiTest {
+        runDesktopComposeUiTest(412, 2600) {
             val actions = Actions()
             setContent { Screen(ready(), actions) }
             onNodeWithText("Usage and cost").assertExists()
@@ -170,14 +170,14 @@ class UsageScreenTest {
         }
 
     @Test
-    fun `B-NAV-078 a failed refresh that kept the previous result says so`() = runComposeUiTest {
+    fun `B-NAV-078 a failed refresh that kept the previous result says so`() = runDesktopComposeUiTest(412, 2600) {
         setContent { Screen(ready().copy(phase = UsagePhase.Failed, previous = true), Actions()) }
         onNodeWithText("Showing the previous result for these filters.").assertExists()
         onNodeWithText("Couldn't load usage.").assertExists()
     }
 
     @Test
-    fun `B-NAV-078 a server without usage is explained in place, not as an error`() = runComposeUiTest {
+    fun `B-NAV-078 a server without usage is explained in place, not as an error`() = runDesktopComposeUiTest(412, 2600) {
         setContent { Screen(ready().copy(phase = UsagePhase.Unsupported, report = null), Actions()) }
         // F: lib/ui/screens/usage_screen.dart:266-275: the whole page is the OpenCode 2 explainer; no Refresh, no
         // filters and no budgets for a server that reports no usage.
@@ -189,7 +189,7 @@ class UsageScreenTest {
     }
 
     @Test
-    fun `B-NAV-078 authorization problems read plainly with Try again`() = runComposeUiTest {
+    fun `B-NAV-078 authorization problems read plainly with Try again`() = runDesktopComposeUiTest(412, 2600) {
         val actions = Actions()
         setContent { Screen(ready().copy(phase = UsagePhase.Authorization, report = null), actions) }
         onNodeWithText("Check this server's password and permissions, then refresh.").assertExists()
@@ -198,14 +198,14 @@ class UsageScreenTest {
     }
 
     @Test
-    fun `B-L10N-010 the usage screen reads in Arabic`() = runComposeUiTest {
+    fun `B-L10N-010 the usage screen reads in Arabic`() = runDesktopComposeUiTest(412, 2600) {
         Locale.setDefault(Locale.forLanguageTag("ar"))
         setContent { Screen(ready(), Actions(), "ar") }
         onNodeWithText("إنفاق آخر 30 يومًا").assertExists()
     }
 
     @Test
-    fun `B-160 the cost segment switches between 24 hours, 7, 30 and 90 days`() = runComposeUiTest {
+    fun `B-160 the cost segment switches between 24 hours, 7, 30 and 90 days`() = runDesktopComposeUiTest(412, 2600) {
         val actions = Actions()
         setContent { Screen(ready(), actions) }
         onNodeWithText("7d").performClick()
@@ -215,7 +215,7 @@ class UsageScreenTest {
 
     @Test
     fun `B-160 the split shows each provider's share of the cost and the token details sit under a fold`() =
-        runComposeUiTest {
+        runDesktopComposeUiTest(412, 2600) {
             setContent { Screen(ready(), Actions()) }
             onNodeWithText("Split by provider", ignoreCase = true).assertExists()
             onNodeWithText("100% of cost · 12K tokens · 1 model").assertExists()
@@ -227,7 +227,7 @@ class UsageScreenTest {
 
     @Test
     fun `B-160 a day-by-day chart is drawn for 30 days, and 24 hours says there is no hourly series`() =
-        runComposeUiTest {
+        runDesktopComposeUiTest(412, 2600) {
             var state by mutableStateOf(ready())
             setContent { Screen(state, Actions()) }
             onNodeWithTag("usage-chart").assertExists()

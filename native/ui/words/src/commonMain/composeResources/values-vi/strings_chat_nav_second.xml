@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatCyclePrevious">Mô hình gần đây trước đó</string>
+    <string name="chatCycleNext">Mô hình gần đây tiếp theo</string>
+    <string name="chatHomeAllow">Cho phép một lần</string>
+    <string name="chatHomeReject">Từ chối</string>
+    <string name="chatHomeAnswerFailed">Không thể gửi câu trả lời của bạn. Mở cuộc trò chuyện để kiểm tra.</string>
+    <string name="chatHomeRunning">Đang chạy</string>
+    <string name="chatHomeMinutes">%1$s phút</string>
+    <string name="chatQueueMoveTitle">Chuyển lời nhắc trong hàng chờ</string>
+    <string name="chatQueueMoveEmpty">Không có lời nhắc chưa gửi nào trong hàng chờ của cuộc trò chuyện này.</string>
+    <string name="chatQueueMoveChoosePrompt">Chọn một lời nhắc</string>
+    <string name="chatQueueMoveChooseServer">Chọn máy chủ đích</string>
+    <string name="chatQueueMoveChooseDestination">Chuyển đến một cuộc trò chuyện</string>
+    <string name="chatQueueMoveFailure">Không thể chuyển lời nhắc. Chưa có gì được gửi.</string>
+    <string name="chatQueueMoveMore">Thêm cuộc trò chuyện</string>
+    <string name="chatQueueMoveSelectionNote">Lời nhắc vẫn nằm trong hàng chờ. Mô hình hoặc tác nhân mà nơi đến không có sẽ bị bỏ.</string>
+    <string name="chatPhraseHide">Ẩn %1$s</string>
+    <string name="chatHomeSeconds">%1$s giây</string>
+</resources>

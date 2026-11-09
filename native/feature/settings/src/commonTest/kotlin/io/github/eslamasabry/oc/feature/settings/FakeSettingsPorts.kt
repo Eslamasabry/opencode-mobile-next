@@ -66,7 +66,7 @@ class FakeChoices(initial: PersonalPrefs = PersonalPrefs()) : PersonalChoices {
                 is PersonalChange.Language -> v.copy(language = change.language)
                 is PersonalChange.Corner -> v.copy(corners = change.corners)
                 is PersonalChange.Spacing -> v.copy(spacing = change.spacing)
-                is PersonalChange.Edges -> v.copy(glassEdges = change.edges)
+                is PersonalChange.Look -> v.copy(glassLook = change.look)
                 is PersonalChange.Accent -> v.copy(accent = change.id)
                 is PersonalChange.LiveLook ->
                     v.copy(liveBackground = change.id != null, liveStyle = change.id ?: v.liveStyle)

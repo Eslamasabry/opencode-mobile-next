@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="p12NewDefaultModel">Modèle par défaut</string>
+    <string name="p12NewDefaultAgent">Agent par défaut</string>
+    <string name="p12NewAgent">Agent</string>
+    <string name="p12NewFolder">Dossier du projet</string>
+    <string name="p12NewUseFolder">Utiliser ce dossier</string>
+    <string name="p12NewDraftFailed">Votre message n’a pas pu être enregistré sur ce téléphone. Gardez cette page ouverte et réessayez.</string>
+    <string name="p12NewCreationUnconfirmed">Le serveur n’a pas confirmé si la conversation a été créée. Consultez Conversations avant d’en démarrer une autre. Votre message reste enregistré ici.</string>
+    <string name="p12NewBoundProject">Cette connexion utilise son dossier de projet enregistré. Ajoutez une connexion pour un autre dossier.</string>
+    <string name="p12NewDeliveryUnconfirmed">Le serveur n’a pas confirmé ce message. Ouvrez la conversation créée pour le vérifier avant d’en démarrer une autre. Votre texte reste enregistré ici.</string>
+    <string name="p12NewOpenCreated">Ouvrir la conversation créée</string>
+    <string name="chatsNewFolderMissing">Le dossier de ce projet n’est plus sur le serveur. Recréez-le en tant que projet vide, ou choisissez un autre projet.</string>
+    <string name="chatsNewFolderRemake">Recréer le dossier</string>
+    <string name="chatsNewFolderChooseAnother">Choisir un autre projet</string>
+    <string name="chatSendFolderMissing">Le dossier de ce projet n’est plus sur le serveur, donc le message n’a pas été envoyé. Démarrez une nouvelle conversation pour recréer le dossier ou choisissez un autre projet.</string>
+</resources>

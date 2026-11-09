@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateFormTitle">Responder al agente</string>
+    <string name="stateFormAnswer">Responder</string>
+    <string name="stateFormHeld">Tu respuesta se enviará en un momento.</string>
+    <string name="stateFormUndo">Deshacer</string>
+    <string name="stateFormInvalid">Revisa las respuestas marcadas antes de enviar.</string>
+    <string name="stateFormOther">Otra cosa</string>
+    <string name="stateFormOpenLink">Abrir enlace</string>
+    <string name="stateFormRestoring">Restaurando tus respuestas guardadas…</string>
+    <string name="stateFormSend">Enviar respuestas</string>
+    <string name="stateFormDecline">Rechazar esta solicitud</string>
+    <string name="stateFormDeclineTitle">¿Rechazar esta solicitud?</string>
+    <string name="stateFormDeclineBody">El agente continuará sin tus respuestas. Esta solicitud no se puede restaurar.</string>
+    <string name="stateFormKeepEditing">Seguir editando</string>
+    <string name="stateFormStorageFailed">No se pudieron leer ni guardar tus respuestas guardadas. Cierra y vuelve a abrir esta solicitud para intentarlo de nuevo.</string>
+    <string name="stateFormUncertain">No se confirmó la entrega. Revisa la conversación antes de responder de nuevo.</string>
+    <string name="stateFormChanged">Esta solicitud cambió. Vuelve a abrir la solicitud actual.</string>
+    <string name="stateFormNotAccepted">No se aceptó tu respuesta. Revisa la solicitud antes de intentarlo de nuevo.</string>
+    <string name="stateFormDismiss">Descartar</string>
+</resources>

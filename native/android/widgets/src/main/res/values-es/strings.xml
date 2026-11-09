@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="widget_label">Conversación</string>
+    <string name="widget_description">Lo único que importa ahora: lo que te necesita, lo que está trabajando o tu última conversación.</string>
+    <string name="native_team_working">Trabajando</string>
+    <string name="native_widget_now">ahora</string>
+    <string name="native_widget_minutes">%1$sm</string>
+    <string name="native_widget_hours">%1$sh</string>
+    <string name="native_widget_days">%1$sd</string>
+    <string name="usage_widget_title">Uso</string>
+    <string name="usage_widget_description">Lo que queda en cada límite del plan y cuándo se restablece.</string>
+    <string name="usage_widget_empty">Aún no hay lecturas de límites. Abre Uso para conectar una fuente.</string>
+    <string name="usage_widget_resets">Se restablece en %1$s</string>
+    <string name="usage_widget_updated">Actualizado hace %1$s</string>
+    <string name="usage_widget_sign_in">Iniciar sesión</string>
+    <string name="usage_widget_add_key">Agregar clave</string>
+    <string name="usage_widget_not_signed_in">Sin iniciar sesión</string>
+    <string name="usage_widget_no_key">Sin clave agregada</string>
+    <string name="usage_widget_set_up">Configurar</string>
+    <string name="usage_widget_cant_read">Aún no se puede leer</string>
+    <string name="usage_widget_auth">Falta iniciar sesión</string>
+    <string name="usage_widget_this_phone">Este teléfono</string>
+    <string name="usage_widget_provider_claude">Claude</string>
+    <string name="usage_widget_provider_codex">Codex</string>
+    <string name="usage_widget_provider_minimax">MiniMax</string>
+    <string name="usage_widget_provider_glm">GLM</string>
+    <string name="usage_widget_column">%1$s \u0020%2$s%% restante</string>
+    <string name="usage_widget_short_hours">%1$sh</string>
+    <string name="usage_widget_short_days">%1$sd</string>
+    <string name="usage_widget_short_week">Semana</string>
+    <string name="usage_widget_short_month">Mes</string>
+    <string name="widget_label_wide">Conversaciones</string>
+    <string name="widget_label_list">Lista de conversaciones</string>
+    <string name="widget_label_strip">Franja de conversación</string>
+    <string name="widget_description_wide">Lo que te necesita o está trabajando ahora, y tus próximas conversaciones.</string>
+    <string name="widget_description_list">Lo único que importa ahora, con tus otras conversaciones debajo.</string>
+    <string name="widget_description_strip">Lo único que importa ahora, en una sola línea.</string>
+    <string name="usage_widget_title_wide">Uso, ancho</string>
+    <string name="usage_widget_description_wide">Lo que queda en cada límite del plan, en dos columnas.</string>
+    <string name="widget_label_status">Estado</string>
+    <string name="widget_description_status">Tus servidores, el Linux de este teléfono, las tareas en curso y el límite del plan que está por agotarse.</string>
+</resources>

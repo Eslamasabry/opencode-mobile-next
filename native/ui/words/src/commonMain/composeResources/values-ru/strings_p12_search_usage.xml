@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="p12SearchTitle">Поиск по чатам</string>
+    <string name="p12SearchField">Поиск по чатам</string>
+    <string name="p12SearchServer">Сервер</string>
+    <string name="p12SearchRecent">Недавние запросы</string>
+    <string name="p12SearchRecentEmpty">Здесь появятся ваши поисковые запросы на этом телефоне.</string>
+    <string name="p12SearchRecentClear">Очистить недавние запросы</string>
+    <string name="p12SearchRecentRemove">Удалить «%1$s»</string>
+    <string name="p12SearchRecentFailed">Не удалось обновить недавние запросы. Поиск по-прежнему работает.</string>
+    <string name="p12SearchInside">Искать также внутри недавних чатов</string>
+    <string name="p12SearchInsideHelp">Читает новейшие сообщения из 20 последних чатов на этом сервере.</string>
+    <string name="p12SearchTitles">Названия</string>
+    <string name="p12SearchInsideSection">Внутри чатов</string>
+    <string name="p12SearchInsideReading">Читаем недавние чаты…</string>
+    <string name="p12SearchInsideFailed">Не удалось прочитать недавние чаты. Результаты по названиям по-прежнему показаны.</string>
+    <string name="p12SearchFromYou">Вы: %1$s</string>
+    <string name="p12SearchFromAgent">Ответ: %1$s</string>
+    <string name="p12SearchOneProject">Поиск идёт только в текущем проекте этого сервера.</string>
+    <string name="p12SearchSearching">Ищем…</string>
+    <string name="p12SearchFailed">Не удалось выполнить поиск по чатам.</string>
+    <string name="p12SearchTryAgain">Повторить</string>
+    <string name="p12SearchNoServerTitle">Сервер не подключён</string>
+    <string name="p12SearchNoServerBody">Подключите сервер, чтобы искать по его чатам.</string>
+    <string name="p12SearchOpenServers">Открыть «Серверы»</string>
+    <string name="p12SearchConversationsWhat">чаты</string>
+    <string name="p12UsageCost">Примерная стоимость</string>
+    <string name="p12UsageRange">Период</string>
+    <string name="p12UsageActivity">Активность по дням</string>
+    <string name="p12UsageDay">%1$s · шагов: %2$s</string>
+    <string name="p12UsageProjectsFailed">Не удалось получить список проектов. Вариант «Все проекты» по-прежнему работает.</string>
+    <string name="p12UsageNoServerBody">Подключите сервер, чтобы увидеть его расход и стоимость.</string>
+    <string name="p12UsageFailed">Не удалось загрузить расход.</string>
+    <string name="p12UsageTryAgain">Повторить</string>
+    <string name="p12UsageCounts">Активность</string>
+    <string name="p12UsageServer">Сервер</string>
+</resources>

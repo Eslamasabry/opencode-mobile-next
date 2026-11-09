@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="andrMonitorExplanation">Vérifiez les autres serveurs enregistrés tant que cette application est ouverte, ou que votre connexion en arrière-plan fonctionne. Chaque serveur demande votre autorisation. La surveillance n’active jamais la connexion en arrière-plan.</string>
+    <string name="andrMonitorEnabled">Vérifier ce serveur</string>
+    <string name="andrMonitorOff">Désactivé. Aucune vérification en arrière-plan.</string>
+    <string name="andrMonitorWaiting">En attente de la prochaine vérification. Les informations précédentes peuvent être périmées.</string>
+    <string name="andrMonitorChecking">Vérification en cours. Les informations précédentes peuvent être périmées.</string>
+    <string name="andrMonitorCurrent">À jour après la dernière vérification.</string>
+    <string name="andrMonitorUnavailable">Vérification impossible. Ouvrez ce serveur pour consulter sa dernière activité.</string>
+    <string name="andrMonitorWifi">En attente du Wi-Fi.</string>
+    <string name="andrMonitorPaused">En pause tant que l’application et la connexion en arrière-plan sont arrêtées.</string>
+    <string name="andrMonitorSaveFailed">Ce choix n’a pas pu être enregistré. Réessayez.</string>
+    <string name="andrMonitorCheckIn">Me rappeler les longues réponses</string>
+    <string name="andrMonitorCheckInDetail">Un seul rappel quand une conversation est observée en train de travailler aussi longtemps. Les vérifications échouées ne comptent pas comme du travail.</string>
+    <string name="andrMonitorMinutes">%1$s minutes</string>
+</resources>

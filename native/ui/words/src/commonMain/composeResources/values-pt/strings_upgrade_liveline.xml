@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <plurals name="liveStepReading">
+        <item quantity="one">Lendo 1 arquivo</item>
+        <item quantity="many">Lendo %1$d arquivos</item>
+        <item quantity="other">Lendo %1$d arquivos</item>
+    </plurals>
+    <plurals name="liveStepSearching">
+        <item quantity="one">Pesquisando no projeto</item>
+        <item quantity="many">Pesquisando no projeto, %1$d pesquisas</item>
+        <item quantity="other">Pesquisando no projeto, %1$d pesquisas</item>
+    </plurals>
+    <plurals name="liveStepListing">
+        <item quantity="one">Percorrendo 1 pasta</item>
+        <item quantity="many">Percorrendo %1$d pastas</item>
+        <item quantity="other">Percorrendo %1$d pastas</item>
+    </plurals>
+    <plurals name="liveStepEditing">
+        <item quantity="one">Editando 1 arquivo</item>
+        <item quantity="many">Editando %1$d arquivos</item>
+        <item quantity="other">Editando %1$d arquivos</item>
+    </plurals>
+    <plurals name="liveStepFetching">
+        <item quantity="one">Buscando 1 página</item>
+        <item quantity="many">Buscando %1$d páginas</item>
+        <item quantity="other">Buscando %1$d páginas</item>
+    </plurals>
+    <plurals name="liveStepDelegating">
+        <item quantity="one">Passando 1 tarefa adiante</item>
+        <item quantity="many">Passando %1$d tarefas adiante</item>
+        <item quantity="other">Passando %1$d tarefas adiante</item>
+    </plurals>
+    <string name="liveStepRunning">Executando %1$s</string>
+    <string name="liveStepRunningCommand">Executando um comando</string>
+    <string name="liveFailedStillWorking">O agente ainda está trabalhando. Você não precisa fazer nada por enquanto.</string>
+    <string name="liveFailedStopped">O agente parou. Envie uma mensagem para pedir que continue.</string>
+</resources>

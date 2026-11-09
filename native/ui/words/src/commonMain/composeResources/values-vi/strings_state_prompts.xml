@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="statePromptMigrationPending">Một số bản nháp hoặc tệp đính kèm cũ chưa thể chuyển. Nội dung bạn đã lưu vẫn được giữ. Hãy giải phóng bộ nhớ nếu cần, rồi thử lại.</string>
+    <string name="statePromptFilesUnavailable">Không thể khôi phục các tệp này tại đây: %1$s. Lời nhắc đã lưu vẫn được giữ.</string>
+</resources>

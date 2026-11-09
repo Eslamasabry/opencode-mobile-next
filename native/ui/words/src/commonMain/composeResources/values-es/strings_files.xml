@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="filesProjectRoot">Proyecto</string>
+    <string name="filesOpenWith">Abrir con</string>
+    <string name="filesOpenWithNone">Ninguna app de este teléfono puede abrir este archivo.</string>
+    <string name="filesOpenWithFailed">No se pudo pasar este archivo a otra app. Inténtalo de nuevo.</string>
+    <string name="filesUnavailable">Este servidor no deja que la app explore sus archivos.</string>
+    <string name="filesNotConnected">El servidor de esta conversación no está conectado. Vuelve a la conversación e inténtalo de nuevo.</string>
+    <string name="filesHideHidden">Ocultar archivos ocultos</string>
+    <string name="filesOpenFailed">No se pudo abrir este archivo. Inténtalo de nuevo.</string>
+    <string name="filesMentionFailed">No se pudo agregar este archivo a tu mensaje. Inténtalo de nuevo.</string>
+    <string name="filesFolderLabel">Carpeta %1$s</string>
+    <string name="filesUp">Subir una carpeta</string>
+    <string name="filesShareStarting">Iniciando el uso compartido…</string>
+    <string name="filesSaveFailed">No se pudo guardar el archivo. Inténtalo de nuevo.</string>
+    <string name="filesReasonTooBig">Este archivo es demasiado grande para mostrarlo aquí.</string>
+    <string name="filesReasonTooBigBody">El límite es de 2 MB. Ábrelo en la computadora donde está, o pídele al agente una parte más pequeña.</string>
+    <string name="filesReasonTooBigPhoneBody">El límite es de 2 MB. Está en este teléfono, así que otra app puede abrirlo: elige Abrir con.</string>
+    <string name="filesReasonMissing">Ese archivo ya no está ahí.</string>
+    <string name="filesReasonMissingBody">Puede que se haya movido o eliminado.</string>
+    <string name="filesReasonDenied">Esta app no tiene permiso para leer ese archivo.</string>
+    <string name="filesReasonDeniedBody">Revisa quién puede leer la carpeta e inténtalo de nuevo.</string>
+    <string name="filesReasonNotShowable">Este tipo de archivo no se puede mostrar aquí.</string>
+    <string name="filesReasonNotShowableBody">No es texto ni una imagen. Ábrelo en la computadora donde está.</string>
+    <string name="filesReasonNotShowablePhoneBody">No es texto ni una imagen. Está en este teléfono, así que otra app puede abrirlo: elige Abrir con.</string>
+</resources>

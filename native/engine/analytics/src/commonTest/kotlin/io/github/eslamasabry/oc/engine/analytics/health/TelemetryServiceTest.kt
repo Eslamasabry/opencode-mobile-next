@@ -51,9 +51,10 @@ class TelemetryServiceTest {
     fun `B-190-001 the event names are Flutter 2_1_5's, and every new event has fixed values`() {
         assertEquals(
             listOf(
-                "app_open", "setup_step_reached", "setup_step_failed", "setup_done", "first_reply",
+                "app_open", "setup_step_reached", "setup_done", "setup_abandoned", "setup_resumed", "first_reply",
                 "connect_computer_chosen", "update_offered", "update_installed", "screen_view", "feature_used",
-                "session_length", "conn_attempt", "conn_drop", "send_result", "turn_stall", "queue_flush",
+                "session_length", "conn_attempt", "conn_drop", "send_result", "turn_stall", "chat_turn", "approval",
+                "queue_flush",
                 "linux_setup_step", "agent_start", "bg_service_end", "update_result", "app_start", "jank",
                 "memory_pressure",
             ),

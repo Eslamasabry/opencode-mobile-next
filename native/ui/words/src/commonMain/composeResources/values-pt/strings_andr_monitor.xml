@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="andrMonitorExplanation">Verifique os outros servidores salvos enquanto este app estiver aberto ou a conexão em segundo plano estiver ativa. Cada servidor precisa da sua permissão. O monitoramento nunca liga a conexão em segundo plano.</string>
+    <string name="andrMonitorEnabled">Verificar este servidor</string>
+    <string name="andrMonitorOff">Desativado. Sem verificações em segundo plano.</string>
+    <string name="andrMonitorWaiting">Aguardando a próxima verificação. As informações anteriores podem estar desatualizadas.</string>
+    <string name="andrMonitorChecking">Verificando agora. As informações anteriores podem estar desatualizadas.</string>
+    <string name="andrMonitorCurrent">Atualizado após a última verificação.</string>
+    <string name="andrMonitorUnavailable">Não foi possível verificar. Abra este servidor para ver a atividade mais recente.</string>
+    <string name="andrMonitorWifi">Aguardando o Wi-Fi.</string>
+    <string name="andrMonitorPaused">Pausado enquanto o app e a conexão em segundo plano estão parados.</string>
+    <string name="andrMonitorSaveFailed">Não foi possível salvar esta escolha. Tente novamente.</string>
+    <string name="andrMonitorCheckIn">Lembrar de respostas demoradas</string>
+    <string name="andrMonitorCheckInDetail">Um lembrete depois que uma conversa for vista trabalhando por este tempo. Verificações que falham não contam como trabalho.</string>
+    <string name="andrMonitorMinutes">%1$s minutos</string>
+</resources>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="gitRemotePickGitHub">Escolher no GitHub</string>
+    <string name="gitRemotePickGitHubTitle">Escolha um repositório</string>
+    <string name="gitRemotePickGitHubNone">Ainda não há repositórios nesta conta do GitHub.</string>
+    <string name="gitRemoteRepoPrivate">Privado</string>
+    <string name="gitProblemInvalidGitHubRepositoryName">Use um nome de repositório com até 100 letras, números, pontos, hifens ou sublinhados.</string>
+    <string name="gitProblemGitHubRepositoryNameUnavailable">Esse nome já está em uso ou indisponível na sua conta do GitHub. Tente outro.</string>
+    <string name="gitActionInitialize">Começar a rastrear</string>
+    <string name="gitActionPublish">Criar no GitHub</string>
+    <string name="gitBusyInitialize">Iniciando o Git neste projeto…</string>
+    <string name="gitBusyPublish">Criando repositório no GitHub…</string>
+    <string name="gitDoneInitialized">O Git está pronto neste projeto.</string>
+    <string name="gitDoneGitHubRepositoryCreated">Repositório do GitHub criado e conectado. Seu projeto ainda não foi enviado.</string>
+    <string name="gitInitializeProject">Começar a rastrear este projeto</string>
+    <string name="gitInitializeProjectHint">Mantenha estes arquivos aqui e comece a usar o Git.</string>
+    <string name="gitPublishToGitHub">Criar um repositório no GitHub</string>
+    <string name="gitPublishToGitHubHint">Escolha um nome e quem pode vê-lo.</string>
+    <string name="gitPublishTitle">Criar repositório</string>
+    <string name="gitPublishName">Nome do repositório</string>
+    <string name="gitPublishNameHint">Use letras, números, pontos, hifens ou sublinhados.</string>
+    <string name="gitPublishVisibility">Quem pode ver</string>
+    <string name="gitPublishPrivate">Privado</string>
+    <string name="gitPublishPublic">Público</string>
+    <string name="gitPublishPrivateHint">Somente você e as pessoas que você escolher podem ver este repositório.</string>
+    <string name="gitPublishPublicHint">Qualquer pessoa pode ver este repositório.</string>
+    <string name="gitPublishButton">Criar repositório</string>
+</resources>

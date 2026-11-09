@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="account40Title">Akun Codex</string>
+    <string name="account40ScopeLost">Server ini berubah. Kembali ke Server dan buka akun untuk server yang terhubung.</string>
+    <string name="account40Refresh">Muat ulang akun</string>
+    <string name="account40Loading">Memeriksa akun host</string>
+    <string name="account40Unavailable">Panel akun tidak tersedia</string>
+    <string name="account40ReadFailed">Akun tidak bisa dibaca</string>
+    <string name="account40Disconnected">Koneksi terputus</string>
+    <string name="account40Connected">Sudah masuk di host</string>
+    <string name="account40SignedOut">Siap untuk masuk</string>
+    <string name="account40InProgress">Sedang masuk</string>
+    <string name="account40NeedsAttention">Proses masuk perlu perhatian</string>
+    <string name="account40NoAuth">Host tidak mewajibkan masuk</string>
+    <string name="account40ApiKey">Kunci API</string>
+    <string name="account40HostAuth">Autentikasi host</string>
+    <string name="account40HostNote">Runtime resmi menyimpan status masuk. Perubahan akun memengaruhi setiap server tersimpan yang terhubung ke host ini.</string>
+    <string name="account40UnsupportedDetail">Panel ini diverifikasi dengan Codex 0.153.4. Runtime yang terhubung mungkin tidak mendukung metode akun ini.</string>
+    <string name="account40ReconnectDetail">Data akun dan kode masuk telah dihapus. Hubungkan ulang untuk memuat ulang. Proses masuk tidak akan dimulai ulang otomatis.</string>
+    <string name="account40SignIn">Masuk dengan ChatGPT</string>
+    <string name="account40SignInNote">Masuk dengan akun ChatGPT Anda. Anda menyelesaikannya di browser; aplikasi ini tidak pernah melihat kata sandi Anda.</string>
+    <string name="account40Limits">Batas penggunaan</string>
+    <string name="account40LimitsUnavailable">Batas penggunaan tidak tersedia untuk akun atau host ini.</string>
+    <string name="account40Usage">Penggunaan token</string>
+    <string name="account40UsageUnavailable">Penggunaan token tidak tersedia untuk akun atau host ini.</string>
+    <string name="account40LifetimeTokens">Total token seumur akun</string>
+    <string name="account40PeakTokens">Token harian tertinggi</string>
+    <string name="account40UsageNote">Nilai dilaporkan oleh host. Nilai yang kosong berarti tidak diketahui, bukan nol. Jumlah token bukan tagihan atau sisa jatah pesan.</string>
+    <string name="account40Updated">Terakhir diperiksa %1$s</string>
+    <string name="account40Starting">Meminta kode masuk</string>
+    <string name="account40Waiting">Selesaikan proses masuk di browser Anda</string>
+    <string name="account40Cancelling">Membatalkan proses masuk</string>
+    <string name="account40Cancelled">Proses masuk dibatalkan</string>
+    <string name="account40LoginFailed">Proses masuk tidak selesai. Periksa host lalu coba lagi.</string>
+    <string name="account40LoginUncertain">Host tidak bisa memastikan proses masuk atau pembatalannya. Mungkin masih menunggu. Periksa runtime host resmi sebelum memulai lagi.</string>
+    <string name="account40LoginCompleted">Berhasil masuk. Memeriksa akun.</string>
+    <string name="account40CodeHint">Masukkan kode sekali pakai ini di halaman masuk resmi. Jaga kerahasiaannya.</string>
+    <string name="account40OpenSignIn">Buka halaman masuk resmi</string>
+    <string name="account40Cancel">Batalkan proses masuk</string>
+    <string name="account40Allowance">Jatah yang dilaporkan</string>
+    <string name="account40PercentUsed">%1$d% terpakai</string>
+    <string name="account40WindowUnknown">Durasi periode tidak tersedia</string>
+    <string name="account40WindowMinutes">Periode %1$d menit</string>
+    <string name="account40WindowHours">Periode %1$d jam</string>
+    <string name="account40WindowDays">Periode %1$d hari</string>
+    <string name="account40ResetUnknown">Waktu reset tidak tersedia</string>
+    <string name="account40ScopeLostTitle">Server ini berubah</string>
+    <string name="account40BackToServers">Kembali ke Server</string>
+    <string name="account40NotConnected">Hubungkan ke server ini untuk melihat akun Codex-nya.</string>
+    <string name="account40SignInMethod">Masuk dengan</string>
+    <string name="account40PlanTitle">Paket</string>
+    <string name="account40CopyCode">Salin kode masuk</string>
+    <string name="account40LimitReached">Anda telah mencapai batas Codex. %1$s</string>
+    <string name="account40ResetDue">Segera direset</string>
+    <string name="account40ResetWhen">%1$s (%2$s)</string>
+    <plurals name="account40ResetInDays">
+        <item quantity="other">Reset dalam %1$d hari</item>
+    </plurals>
+    <plurals name="account40ResetInHours">
+        <item quantity="other">Reset dalam %1$d jam</item>
+    </plurals>
+    <plurals name="account40ResetInMinutes">
+        <item quantity="other">Reset dalam %1$d menit</item>
+    </plurals>
+    <string name="account40Back">Kembali</string>
+    <string name="account40Details">Detail</string>
+    <string name="account40CopyDetails">Salin detail</string>
+    <string name="account40Copied">Kode tersalin</string>
+    <string name="account40OpenQuestion">Buka halaman masuk resmi di %1$s?</string>
+    <string name="account40OpenPage">Buka halaman masuk</string>
+    <string name="account40OpenFailed">Halaman masuk atau papan klip tidak bisa dibuka.</string>
+    <string name="account40ChatGpt">ChatGPT</string>
+    <string name="account40Bedrock">Amazon Bedrock</string>
+</resources>

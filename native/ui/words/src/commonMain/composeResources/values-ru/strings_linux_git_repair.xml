@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxGitRepairAction">Восстановить связанные файлы Git</string>
+    <string name="linuxGitRepairWorking">Восстановление файлов Git…</string>
+    <string name="linuxGitRepairHealthy">Git может прочитать этот проект. Файлы объектов восстанавливать не пришлось.</string>
+    <plurals name="linuxGitRepairRestored">
+        <item quantity="one">Восстановлен %1$d файл объектов Git. Git снова может прочитать проект.</item>
+        <item quantity="few">Восстановлено %1$d файла объектов Git. Git снова может прочитать проект.</item>
+        <item quantity="many">Восстановлено %1$d файлов объектов Git. Git снова может прочитать проект.</item>
+        <item quantity="other">Восстановлено %1$d файла объектов Git. Git снова может прочитать проект.</item>
+    </plurals>
+    <string name="linuxGitRepairMissing">Часть объектов Git не удалось восстановить или проверить. Клонируйте проект заново или восстановите копию.</string>
+    <string name="linuxGitRepairNotProject">Здесь можно восстановить только проекты Git из папки проектов этого телефона.</string>
+    <string name="linuxGitRepairFailed">Телефон не смог завершить восстановление файлов Git. Повторите.</string>
+    <string name="linuxGitRepairDetailLocal">Восстановите проверенные объекты Git из копий внутри этого проекта. Файлы проекта сохраняются.</string>
+</resources>

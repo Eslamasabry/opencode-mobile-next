@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="rb23_devPreviewUnsupportedTitle">Pratinjau tidak tersedia di sini</string>
+    <string name="rb23_devPreviewUnsupportedBody">Perangkat ini tidak dapat menampilkan halaman di dalam aplikasi. Buka di browser.</string>
+</resources>

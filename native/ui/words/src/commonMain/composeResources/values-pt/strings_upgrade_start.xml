@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="upgradeStartSending">Enviando…</string>
+    <string name="upgradeStartFailed">Sua mensagem foi salva. Tente novamente quando quiser.</string>
+</resources>

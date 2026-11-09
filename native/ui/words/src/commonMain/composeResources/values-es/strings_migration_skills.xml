@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="migrationSkillUseNew">Usar en una conversación nueva</string>
+    <string name="migrationSkillReady">La habilidad está lista en una conversación nueva. El agente no se ha ejecutado.</string>
+    <string name="migrationSkillChanged">La conexión cambió. Se conserva cualquier conversación que ya se hubiera creado.</string>
+    <string name="migrationSkillInvalid">Esta habilidad no tiene un identificador compatible. Actualiza la lista de habilidades.</string>
+    <string name="migrationSkillUncertain">Puede que la solicitud haya llegado al servidor. Se conserva cualquier conversación que ya se hubiera creado. Revísala antes de intentarlo de nuevo.</string>
+    <string name="migrationSkillOpen">Abrir conversación</string>
+</resources>

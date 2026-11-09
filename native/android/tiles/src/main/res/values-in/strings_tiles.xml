@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="shortcut_connect_short">Hubungkan</string>
+    <string name="shortcut_connect_long">Pilih server untuk dihubungkan</string>
+    <string name="shortcut_new_task_short">Percakapan baru</string>
+    <string name="shortcut_new_task_long">Mulai percakapan baru di server saat ini</string>
+    <string name="shortcut_session_untitled">Percakapan tanpa judul</string>
+    <string name="shortcut_session_unavailable">Percakapan ini sudah tidak tersedia</string>
+    <string name="tile_label">OpenCode</string>
+    <string name="tile_label_with_count">OpenCode · %1$s</string>
+    <string name="tile_all_clear">Tidak ada yang perlu Anda tangani</string>
+    <plurals name="tile_need_you">
+        <item quantity="other">%1$d perlu Anda tangani</item>
+    </plurals>
+    <string name="pause_tile_label">Mode latar belakang</string>
+    <string name="pause_tile_label_with_state">Mode latar belakang · %1$s</string>
+    <string name="pause_tile_on">Aktif</string>
+    <string name="pause_tile_paused">Dijeda</string>
+    <string name="pause_tile_off">Nonaktif di Pengaturan</string>
+</resources>

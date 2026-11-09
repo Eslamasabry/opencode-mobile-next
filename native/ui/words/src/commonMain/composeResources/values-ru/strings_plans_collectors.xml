@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="plansCollectors">Чтение лимитов тарифов</string>
+    <string name="plansCollectorTarget">%1$s · %2$s</string>
+    <string name="plansCollectorEnabled">Чтение включено. Нажмите, чтобы выключить и очистить эти цифры.</string>
+    <string name="plansCollectorDisabled">Читать через сборщик, установленный на этом сервере</string>
+    <string name="plansCollectorQuestion">Читать лимиты %1$s с этого сервера?</string>
+    <string name="plansCollectorAllow">Доверять сборщику и читать</string>
+    <string name="plansCollectorTrust">Продолжайте, только если доверяете сборщику лимитов, установленному на «%1$s». Он получает сохранённые данные для входа на этот сервер по фиксированному адресу лимитов. Запросы не следуют перенаправлениям. Чтение можно выключить здесь. При смене адреса или входа потребуется новое разрешение.</string>
+    <string name="plansCollectorFailed">Не удалось сохранить этот выбор. Переподключитесь к серверу и повторите попытку.</string>
+    <string name="plansPaseoDisabled">Читать расход с этого сервера Paseo</string>
+    <string name="plansPaseoQuestion">Читать расход по тарифам с Paseo?</string>
+    <string name="plansPaseoTrust">Читать лимиты тарифов, которые сообщает «%1$s», пока приложение открыто. Если выключить, сохранённые цифры виджета будут очищены. Фоновое чтение не запускается.</string>
+    <string name="plansBuiltinReader">Чтение расхода на телефоне</string>
+    <string name="plansBuiltinDisabled">Настроить чтение расхода внутри Ubuntu на этом телефоне</string>
+    <string name="plansBuiltinQuestion">Читать лимиты тарифов на этом телефоне?</string>
+    <string name="plansBuiltinTrust">Установить встроенное средство чтения расхода в «%1$s» и читать сохранённые там входы у провайдеров. Его токен чтения хранится в защищённом хранилище и закрытых файлах. Сбор данных Claude остаётся недоступным. Если выключить, его служба остановится, а цифры виджета будут очищены.</string>
+</resources>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="keptPromptsTitle">Mensajes conservados</string>
+    <string name="keptPromptsBody">Mensajes que se conservaron al quitar un servidor. Restaura uno en una conversación para revisarlo antes de enviarlo.</string>
+    <string name="keptPromptsEmpty">No hay mensajes conservados</string>
+    <string name="keptPromptsChoose">Elige una conversación</string>
+    <string name="keptPromptsChooseBody">Elige una conversación de un servidor conectado. Esto solo rellena su borrador.</string>
+    <string name="keptPromptsNoTargets">No hay conversaciones conectadas</string>
+    <string name="keptPromptsNoTargetsBody">Conecta un servidor guardado o abre una conversación, y luego inténtalo de nuevo.</string>
+    <string name="keptPromptsConnect">Conectar un servidor</string>
+    <string name="keptPromptsUncertain">Puede que este mensaje ya se haya enviado. Revisa su conversación original antes de enviarlo otra vez.</string>
+    <string name="keptPromptsFailed">No se pudieron leer ni cambiar los mensajes conservados. Inténtalo de nuevo.</string>
+    <string name="keptPromptsKeptFrom">Conservado de un servidor quitado</string>
+    <string name="keptPromptsRestoreFailed">El mensaje guardado o la conversación cambió. Vuelve a abrir Mensajes guardados en la conversación e inténtalo de nuevo.</string>
+    <string name="keptConversation">Conversación</string>
+</resources>

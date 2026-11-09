@@ -9,7 +9,7 @@ public enum class Reason {
     BoundaryUnverified, ProtocolUnverified, EngineUnavailable, TransportUncertain, Busy, SaveFailed, ReadOnly, Closed,
     CommandRefused, ImportFailed, PayloadInvalid, SchemaUnsupported, EngineClosed, SessionFailed, ModelNotConfigured,
     ModelUnavailable, AuthFailed, CloneFailed, SessionUncertain, PlanInvalid, CheckerUnreadable, NeedsAnswer,
-    RecoveryReview, AppStopped, ChatBusy, BudgetReached,
+    RecoveryReview, AppStopped, ServerRestarted, RestartResend, ChatBusy, BudgetReached,
 }
 
 /** What the unknown-code sentence says the team could not do (Dart `_did`). */
@@ -58,6 +58,8 @@ public object TeamReasons {
             "recoveryNeedsReview" to Reason.RecoveryReview,
             "restartNeedsReconciliation" to Reason.AppStopped,
             "pauseNeedsReconciliation" to Reason.AppStopped,
+            "serverRestarted" to Reason.ServerRestarted,
+            "restartResend" to Reason.RestartResend,
             "chatBusy" to Reason.ChatBusy,
             "budgetReached" to Reason.BudgetReached,
             "transport_unavailable" to Reason.EngineUnavailable,

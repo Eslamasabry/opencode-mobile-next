@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="homeStartOpenProject">Открыть проект</string>
+    <string name="homeStartOpenProjectDetail">Начните новый или выберите папку</string>
+    <string name="homeStartConnectDetail">Запускайте агента на своём компьютере</string>
+    <string name="homeStartDemo">Посмотреть, что умеет агент</string>
+    <string name="homeStartDemoDetail">Короткий пример, настраивать ничего не нужно</string>
+    <string name="homeProjectSheetNew">Новый проект</string>
+    <string name="homeProjectSheetNewDetail">Создаёт папку в ваших проектах вместе с Git</string>
+    <string name="homeProjectSheetByPath">Выбрать папку по пути</string>
+</resources>

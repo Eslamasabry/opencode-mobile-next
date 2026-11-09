@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="widgetPanelSaving">Menyimpan…</string>
+    <string name="widgetPanelClose">Tutup</string>
+    <string name="widgetPanelPreview">Pratinjau widget</string>
+    <string name="widgetPanelSquare">Persegi</string>
+    <string name="widgetPanelWide">Lebar</string>
+    <string name="widgetPanelBackground">Latar belakang</string>
+    <string name="widgetPanelSolid">Solid</string>
+    <string name="widgetPanelTinted">Berwarna</string>
+    <string name="widgetPanelTransparent">Transparan</string>
+    <string name="widgetPanelAccent">Aksen</string>
+    <string name="widgetPanelActionUnavailable">Widget ini memerlukan sambungan aktif sebelum dapat mengirim pesan.</string>
+    <string name="widgetPanelSending">Mengirim…</string>
+    <string name="widgetPanelSent">Terkirim</string>
+    <string name="widgetPanelBusy">Tindakan widget lain masih berjalan. Pesan Anda masih ada di sini.</string>
+    <string name="widgetPanelDictate">Dikte</string>
+</resources>

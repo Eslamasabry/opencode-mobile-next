@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="s10HomeRowWorkingFor">En cours depuis %1$s</string>
+    <string name="s10HomeRowMinutes">%1$s\u00A0min</string>
+    <string name="s10HomeRowHoursMinutes">%1$s\u00A0h %2$s\u00A0min</string>
+    <string name="s10HomeUsageLeft">%1$s · %2$s% restant</string>
+</resources>

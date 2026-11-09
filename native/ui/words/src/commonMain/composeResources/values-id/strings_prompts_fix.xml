@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="promptFixFilesStay">Perintah ini berisi file atau catatan tinjauan yang belum dapat dimasukkan ke pesan di versi ini. Semuanya tetap tersimpan di sini.</string>
+    <string name="promptFixWordsOnly">Tambahkan teksnya saja</string>
+</resources>

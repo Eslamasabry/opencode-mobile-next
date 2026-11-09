@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentsTileInstalling">Memasang…</string>
+    <string name="agentsHelperNotConnected">Agen ponsel tidak terhubung.</string>
+    <string name="agentsHelperNotStarted">Agen ponsel tidak terhubung: pembantu agen tidak mulai.</string>
+    <string name="agentsHelperNoAnswer">Agen ponsel tidak terhubung: pembantu agen tidak menjawab.</string>
+    <string name="agentsHelperKeyRefused">Agen ponsel tidak terhubung: pembantu agen tidak menerima kunci aplikasi ini.</string>
+    <string name="agentsHelperKeyUnreadable">Agen ponsel tidak terhubung: ponsel ini tidak dapat membaca kunci pembantu agen.</string>
+    <string name="agentsHelperNoLinux">Agen ponsel tidak terhubung: Linux bawaan ponsel ini belum disiapkan.</string>
+    <string name="agentsTabsLabel">Tempat agen berjalan</string>
+    <string name="agentsTabComputers">Di komputer</string>
+    <string name="agentsPhoneReady">Ponsel ini siap</string>
+    <string name="agentsPhoneReadyDetails">Ponsel ini siap · %1$s · Android %2$s</string>
+    <string name="agentsCheckAgain">Muat ulang</string>
+    <string name="agentsAddComputerLine">Pakai Claude Code atau Pi di komputer yang menjalankan Paseo.</string>
+    <string name="agentsComputerLooking">Mencari agen di komputer ini…</string>
+    <string name="agentsComputerReadFailed">Agen di komputer ini tidak dapat dibaca. Tarik ke bawah untuk mencoba lagi.</string>
+    <string name="agentsNewChat">Percakapan baru</string>
+    <string name="agentsNewChatWith">Percakapan baru dengan %1$s</string>
+    <string name="agentsConversationsStored">Tempat percakapan disimpan</string>
+    <string name="agentsConversationsStoredOn">Tempat percakapan disimpan: %1$s</string>
+    <string name="agentsHostAccount">Akun host: %1$s</string>
+</resources>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="staleFailureTitle">Сообщить об этом сбое?</string>
+    <string name="staleFailureBody">Это произошло на %1$s. Возможно, версия %2$s уже исправляет его.</string>
+    <string name="staleFailureUpdateFirst">Сначала обновить</string>
+    <string name="staleFailureReportAnyway">Всё равно сообщить</string>
+</resources>

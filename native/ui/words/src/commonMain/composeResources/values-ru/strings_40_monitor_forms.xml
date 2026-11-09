@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="monitor40FormTitle">Ответ на этот запрос</string>
+    <string name="monitor40FormGone">Этот запрос изменился или больше недоступен. Откройте его снова из входящих.</string>
+    <string name="monitor40FormSent">Ваш ответ отправлен.</string>
+    <string name="monitor40FormElsewhere">На этот запрос уже ответили в другом месте.</string>
+    <string name="monitor40FormHeld">Ваш ответ скоро будет отправлен.</string>
+    <string name="monitor40Undo">Отменить</string>
+    <string name="monitor40FormFailed">Не удалось отправить ваш ответ.</string>
+    <string name="monitor40Other">Другое</string>
+    <string name="monitor40OpenLink">Открыть страницу</string>
+    <string name="monitor40Send">Отправить ответы</string>
+    <string name="monitor40Decline">Отклонить запрос</string>
+    <string name="monitor40FixFields">Проверьте отмеченные ответы перед отправкой.</string>
+    <string name="monitor40NotConfirmed">Пока не подтверждено</string>
+    <string name="monitor40Sending">Отправляем ваш ответ</string>
+    <string name="monitor40DeclineQuestion">Отклонить этот запрос?</string>
+    <string name="monitor40DeclineBody">Запрос закроется без ваших ответов.</string>
+    <string name="monitor40LinkQuestion">Открыть эту страницу?</string>
+    <string name="monitor40Required">Введите ответ.</string>
+    <string name="monitor40Number">Введите число.</string>
+    <string name="monitor40Integer">Введите целое число.</string>
+    <string name="monitor40NotOffered">Выберите один из предложенных ответов или введите значение, которое принимает форма.</string>
+    <plurals name="monitor40MinLength">
+        <item quantity="one">Введите не менее %1$d символа.</item>
+        <item quantity="few">Введите не менее %1$d символов.</item>
+        <item quantity="many">Введите не менее %1$d символов.</item>
+        <item quantity="other">Введите не менее %1$d символа.</item>
+    </plurals>
+    <plurals name="monitor40MaxLength">
+        <item quantity="one">Используйте не более %1$d символа.</item>
+        <item quantity="few">Используйте не более %1$d символов.</item>
+        <item quantity="many">Используйте не более %1$d символов.</item>
+        <item quantity="other">Используйте не более %1$d символа.</item>
+    </plurals>
+    <string name="monitor40Range">Введите значение в допустимых пределах: от %1$s до %2$s.</string>
+    <plurals name="monitor40MinItems">
+        <item quantity="one">Выберите не менее %1$d ответа.</item>
+        <item quantity="few">Выберите не менее %1$d ответов.</item>
+        <item quantity="many">Выберите не менее %1$d ответов.</item>
+        <item quantity="other">Выберите не менее %1$d ответа.</item>
+    </plurals>
+    <plurals name="monitor40MaxItems">
+        <item quantity="one">Выберите не более %1$d ответа.</item>
+        <item quantity="few">Выберите не более %1$d ответов.</item>
+        <item quantity="many">Выберите не более %1$d ответов.</item>
+        <item quantity="other">Выберите не более %1$d ответа.</item>
+    </plurals>
+    <string name="monitor40QuestionCount">Вопросов: %1$d</string>
+    <string name="monitor40Answer">Ответ</string>
+</resources>

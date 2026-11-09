@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="tipTerminalLinksTitle">Liên kết trong terminal</string>
+    <string name="tipTerminalLinks">Nhấn vào liên kết, hoặc dùng Mở liên kết.</string>
+</resources>

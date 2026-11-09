@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="p12LogSearch">Cari di log</string>
+    <string name="p12LogFollow">Ikuti</string>
+    <string name="p12LogPause">Jeda</string>
+    <string name="p12LogCopy">Salin semua</string>
+    <string name="p12LogWrap">Bungkus baris</string>
+    <plurals name="p12LogMatches">
+        <item quantity="other">%1$d dari %2$d baris cocok</item>
+    </plurals>
+    <string name="p12LogPrevious">Kecocokan sebelumnya</string>
+    <string name="p12LogNext">Kecocokan berikutnya</string>
+</resources>

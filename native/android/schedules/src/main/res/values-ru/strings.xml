@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="oc_schedule_channel">Запросы по расписанию</string>
+    <string name="oc_schedule_title">Запрос по расписанию</string>
+    <string name="oc_schedule_running">Выполняется ваш запрос по расписанию…</string>
+    <string name="oc_schedule_ran">Отправлено. Ответ в чате.</string>
+    <string name="oc_schedule_finished">Готово. Нажмите, чтобы прочитать ответ.</string>
+    <string name="oc_schedule_skipped">В этот раз пропущено. Нажмите, чтобы узнать причину.</string>
+    <string name="oc_schedule_failed">Не завершено. Нажмите, чтобы узнать причину.</string>
+    <string name="oc_schedule_why_needs_you">Ждёт вашего ответа. Откройте чат, чтобы продолжить.</string>
+    <string name="oc_schedule_why_sign_in">Сервер просит войти снова.</string>
+    <string name="oc_schedule_why_agent">Агент остановился из-за ошибки.</string>
+    <string name="oc_schedule_why_timeout">Не завершено вовремя. Повторно не отправлялось.</string>
+    <string name="oc_schedule_why_unavailable">Не удалось связаться с сервером.</string>
+    <string name="oc_schedule_digest_title">Запросы по расписанию этим утром</string>
+    <string name="oc_schedule_digest_body">Ответов: %1$d, не завершено: %2$d, пропущено: %3$d</string>
+    <string name="oc_schedule_open">Открыть</string>
+</resources>

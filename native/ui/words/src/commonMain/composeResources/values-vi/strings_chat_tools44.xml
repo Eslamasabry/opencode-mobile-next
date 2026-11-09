@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="tools44ShowAll">Hiện toàn bộ kết quả</string>
+    <string name="tools44Lines">Dòng</string>
+    <string name="tools44HiddenLines">dòng bị ẩn</string>
+</resources>

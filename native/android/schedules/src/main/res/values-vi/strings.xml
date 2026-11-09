@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="oc_schedule_channel">Lời nhắc theo lịch</string>
+    <string name="oc_schedule_title">Lời nhắc theo lịch</string>
+    <string name="oc_schedule_running">Đang chạy lời nhắc theo lịch của bạn…</string>
+    <string name="oc_schedule_ran">Đã gửi. Câu trả lời nằm trong cuộc trò chuyện.</string>
+    <string name="oc_schedule_finished">Đã xong. Chạm để đọc câu trả lời.</string>
+    <string name="oc_schedule_skipped">Lần này đã bỏ qua. Chạm để xem lý do.</string>
+    <string name="oc_schedule_failed">Chưa hoàn tất. Chạm để xem lý do.</string>
+    <string name="oc_schedule_why_needs_you">Đang chờ câu trả lời của bạn. Hãy mở cuộc trò chuyện để tiếp tục.</string>
+    <string name="oc_schedule_why_sign_in">Máy chủ yêu cầu đăng nhập lại.</string>
+    <string name="oc_schedule_why_agent">Tác nhân đã dừng vì gặp lỗi.</string>
+    <string name="oc_schedule_why_timeout">Không hoàn tất kịp lúc. Lời nhắc không được gửi lại.</string>
+    <string name="oc_schedule_why_unavailable">Không kết nối được với máy chủ.</string>
+    <string name="oc_schedule_digest_title">Lời nhắc theo lịch sáng nay</string>
+    <string name="oc_schedule_digest_body">%1$d đã trả lời, %2$d chưa hoàn tất, %3$d bỏ qua</string>
+    <string name="oc_schedule_open">Mở</string>
+</resources>

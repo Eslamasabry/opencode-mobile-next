@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateSkillsTitle">Kỹ năng</string>
+    <string name="stateSkillsUse">Dùng trong cuộc trò chuyện này</string>
+    <string name="stateSkillsDone">Đã thêm kỹ năng vào cuộc trò chuyện này.</string>
+    <string name="stateSkillsChanged">Cuộc trò chuyện hoặc thư mục đã thay đổi. Hãy mở lại danh sách.</string>
+    <string name="stateSkillsBusy">Đang thêm một kỹ năng. Hãy đợi nó hoàn tất.</string>
+    <string name="stateSkillsStaged">Hoàn tất hoặc hủy thao tác hoàn tác đang chờ trước khi thêm kỹ năng.</string>
+    <string name="stateSkillsUnsupported">Máy chủ này không thể thêm kỹ năng vào cuộc trò chuyện.</string>
+    <string name="stateSkillsUncertain">Không thể xác nhận kết quả. Hãy làm mới trước khi thử lại.</string>
+</resources>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="p12LogSearch">Buscar en el registro</string>
+    <string name="p12LogFollow">Seguir</string>
+    <string name="p12LogPause">Pausar</string>
+    <string name="p12LogCopy">Copiar todo</string>
+    <string name="p12LogWrap">Ajustar líneas</string>
+    <plurals name="p12LogMatches">
+        <item quantity="one">%1$d de %2$d línea coincidente</item>
+        <item quantity="many">%1$d de %2$d de líneas coincidentes</item>
+        <item quantity="other">%1$d de %2$d líneas coincidentes</item>
+    </plurals>
+    <string name="p12LogPrevious">Coincidencia anterior</string>
+    <string name="p12LogNext">Coincidencia siguiente</string>
+</resources>

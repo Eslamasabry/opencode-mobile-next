@@ -119,7 +119,7 @@ internal fun kitLiquidOn(): Boolean {
             styleAllows = LocalKitStyle.current.style == Style.Glass,
             lensSupported = platform.liquidGlass,
         )
-    return FrostPolicy.liquidEdges(conditions, appearance.frost, appearance.glassEdges)
+    return FrostPolicy.liquidEdges(conditions, appearance.frost, kitGlassLook().id)
 }
 
 /** Whether Glass's floating parts may be liquid glass here and now (before the window's budget). */
@@ -320,15 +320,21 @@ private fun Modifier.liquidPane(
     // What the page's live background can put behind the content (glass-live): the face is thickened for that look
     // alone, not for every picture the app can draw, so the motion behind it shows through.
     val picture = kitLivePictureSpots()
+    val look = kitGlassLook()
     val spec =
-        remember(roles, role, rtl, appearance.pack, appearance.accent, flip, chosen, keepRim, picture) {
+        remember(roles, role, rtl, appearance.pack, appearance.accent, flip, chosen, keepRim, picture, look, platform.liquidResolution) {
             // The face carries its words itself (no plate): its tint is thickened for the theme's ink over the content
             // that ink lies over; over content of the other brightness the words flip to the other theme's ink and the
             // face to the other theme's face, which carries that ink there.
             val other = ThemeResolver.roles(appearance.pack, appearance.accent, !roles.dark, saver = false, dynamic = null)
-            val face = LiquidEdge.face(roles, role, picture = picture)
+            // Smoked (glass looks D6): the dark theme's face in both modes, measured over the page it floats over; it
+            // never flips (smokedInk), so its other face is itself.
+            val smoke = if (look.smoked) (if (roles.dark) roles else other) else null
+            val face =
+                if (smoke != null) LiquidEdge.face(smoke, role, picture = picture, look = look, page = roles)
+                else LiquidEdge.face(roles, role, picture = picture, look = look)
             // The other theme's face (over content of the other brightness) keeps the whole measure.
-            val otherFace = LiquidEdge.face(other, role)
+            val otherFace = if (smoke != null) face else LiquidEdge.face(other, role, look = look)
             // A chosen part's glass leans to the accent and holds a little more (GlassSpec's chosen tint and lift).
             fun lean(c: Color, dark: Boolean): Color {
                 if (!chosen) return c
@@ -336,26 +342,29 @@ private fun Modifier.liquidPane(
                 val opaque = io.github.eslamasabry.oc.ui.design.color.Argb(c.copy(alpha = 1f).toArgb())
                 return Color(GlassSpec.chosenTintOf(theme, opaque).v).copy(alpha = minOf(1f, c.alpha + GlassSpec.CHOSEN_LIFT))
             }
-            val fill = lean(face.fill?.let { Color(it.v) } ?: Color.Transparent, roles.dark)
-            val recipe = LiquidEdge.recipe(role, roles.dark)
+            val faceDark = smoke?.dark ?: roles.dark
+            val fill = lean(face.fill?.let { Color(it.v) } ?: Color.Transparent, faceDark)
+            val recipe = LiquidEdge.recipe(role, faceDark, look)
             val rim = LiquidRim.Light
             KitLiquidPaneSpec(
                 recipe = recipe,
                 fill = fill,
-                fillStart = face.fillStart?.let { lean(Color(it.v), roles.dark) } ?: fill,
+                fillStart = face.fillStart?.let { lean(Color(it.v), faceDark) } ?: fill,
                 rtl = rtl,
-                rim = rim.copy(alpha = if (roles.dark) RIM_ALPHA_DARK else RIM_ALPHA_LIGHT),
-                rimAdds = roles.dark,
+                rim = rim.copy(alpha = if (faceDark) look.spec.liquidRimDark else look.spec.liquidRimLight),
+                rimAdds = faceDark,
                 rimDp = RIM_LIGHT_DP,
                 shadow = Color.Black.copy(alpha = recipe.shadowAlpha),
                 frostBlurDp = GlassSpec.FLOAT_FROST,
                 sheen = Color(face.sheen.v),
-                specular = rim.copy(alpha = if (roles.dark) SPECULAR_ALPHA_DARK else SPECULAR_ALPHA_LIGHT),
-                flipFill = otherFace.fill?.let { lean(Color(it.v), !roles.dark) } ?: fill,
-                flipFillStart = (otherFace.fillStart ?: otherFace.fill)?.let { lean(Color(it.v), !roles.dark) } ?: fill,
+                specular = rim.copy(alpha = if (faceDark) look.spec.liquidSpecularDark else look.spec.liquidSpecularLight),
+                flipFill = if (smoke != null) fill else otherFace.fill?.let { lean(Color(it.v), !roles.dark) } ?: fill,
+                flipFillStart = if (smoke != null) face.fillStart?.let { lean(Color(it.v), faceDark) } ?: fill else (otherFace.fillStart ?: otherFace.fill)?.let { lean(Color(it.v), !roles.dark) } ?: fill,
                 flipSheen = Color(otherFace.sheen.v),
                 flip = flip,
                 keepRim = keepRim,
+                glintShare = look.spec.glintShare,
+                resolution = liquidResolutionOf(recipe, platform.liquidResolution),
             )
         }
     val words = kitLiquidWords(backdrop, flip)
@@ -373,13 +382,16 @@ private fun Modifier.liquidPane(
 internal fun kitLiquidWords(backdrop: KitLiquidBackdrop?, flip: LiquidFlip?): KitLiquidWords {
     val roles = LocalKitRoles.current
     val appearance = LocalKitAppearance.current
-    return remember(roles, backdrop, appearance.pack, appearance.accent, flip) {
+    val smoked = kitGlassLook().smoked
+    return remember(roles, backdrop, appearance.pack, appearance.accent, flip, smoked) {
         val other = ThemeResolver.roles(appearance.pack, appearance.accent, !roles.dark, saver = false, dynamic = null)
         KitLiquidWords(
             flipInk = Color(other.text1.v),
             themeInk = LiquidInkRule.of(roles.dark),
             backdrop = backdrop,
             flip = flip ?: LiquidFlip(),
+            // Smoked: the dark theme's ink in both modes, whatever lies behind (its face is measured for it).
+            fixedFlip = if (smoked) (if (roles.dark) 0f else 1f) else null,
         )
     }
 }
@@ -392,6 +404,8 @@ internal data class KitLiquidWords(
     val backdrop: KitLiquidBackdrop?,
     /** Shared with the pane's face, which flips with the words. */
     val flip: LiquidFlip,
+    /** A flip that never samples (Smoked: 0 in a dark theme, 1 in a light one); null samples the content. */
+    val fixedFlip: Float? = null,
 )
 
 /**
@@ -432,6 +446,7 @@ private class PlateHostNode(var words: KitLiquidWords) :
 
     override fun onAttach() {
         ink = words.themeInk
+        if (words.fixedFlip != null) return
         val backdrop = words.backdrop ?: return
         val platform = currentValueOf(LocalKitPlatform)
         // One sampler for the pane's life (smoothness 2026-11-09): a sample reuses one small target and never holds the
@@ -522,8 +537,8 @@ private class WordsPlateNode : Modifier.Node(), DrawModifierNode {
 
     override fun ContentDrawScope.draw() {
         val h = hostNow()
-        val f = h?.flip?.value ?: 0f
         val words = h?.words
+        val f = words?.fixedFlip ?: h?.flip?.value ?: 0f
         if (words == null || f <= 0f) {
             drawContent()
             return

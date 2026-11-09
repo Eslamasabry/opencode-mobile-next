@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxIdleTitle">Parar o servidor quando ocioso</string>
+    <string name="linuxIdleDetail">Economiza os recursos do celular quando o trabalho termina. Retome o mesmo servidor quando precisar.</string>
+    <string name="linuxIdleMinutes">Tempo ocioso em minutos</string>
+    <plurals name="linuxIdleMinutesValue">
+        <item quantity="one">1 minuto</item>
+        <item quantity="many">%1$d minutos</item>
+        <item quantity="other">%1$d minutos</item>
+    </plurals>
+    <string name="linuxIdleInvalid">Digite um número inteiro de 1 a 60.</string>
+    <string name="linuxIdleFailed">O celular não conseguiu ler nem alterar o estado ocioso. Abra esta página de novo para tentar outra vez.</string>
+    <string name="linuxIdleResume">Retomar o servidor ocioso do celular</string>
+    <string name="linuxIdleSave">Salvar tempo ocioso</string>
+    <string name="linuxIdleWorking">Atualizando o estado ocioso…</string>
+</resources>

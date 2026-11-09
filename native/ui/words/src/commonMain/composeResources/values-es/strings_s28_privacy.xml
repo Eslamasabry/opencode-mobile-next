@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="telemetryUsageTitle">Uso y estado de la app</string>
+    <string name="telemetryUsageDetail">Envía recuentos anónimos a Google Analytics para Firebase: qué tipos de páginas y funciones usas, si funcionan la conexión, el envío, la configuración, los agentes, el servicio en segundo plano y las actualizaciones, qué tan rápido inicia la app y qué tan fluidas son las páginas, avisos de memoria, y rangos de la memoria, el almacenamiento libre, la CPU y la versión de WebView de tu teléfono. También envía tiempos a Firebase Performance Monitoring: cuánto tardan el inicio de la app, la conexión, la primera respuesta, los pasos de configuración y el arranque de un agente. Solo palabras fijas, rangos y números, con un ID de instalación aleatorio, el modelo de tu teléfono y la versión de Android. Sin código, conversaciones, archivos, direcciones, claves ni ID de publicidad.</string>
+    <string name="telemetryCrashesTitle">Informes de fallos</string>
+    <string name="telemetryCrashesDetail">Envía informes de fallos a Google Firebase Crashlytics: el tipo de error y en qué parte del código de la app ocurrió, nunca su mensaje, los últimos pasos que diste como palabras cortas, y por qué Android cerró la app la última vez. Sin código, conversaciones, archivos, direcciones, claves ni ID de publicidad.</string>
+    <string name="collectTitle">Qué recopilamos</string>
+    <string name="collectRowSummary">Ambos interruptores empiezan desactivados. Mira exactamente qué envía cada uno.</string>
+    <string name="collectUsageNotSentYet">Esta versión aún no envía el uso y el estado de la app. Tu respuesta se guarda y se usará cuando lo haga.</string>
+    <string name="collectRules">Solo se envían palabras fijas y rangos de números, nunca texto libre. Al desactivar un interruptor se borra lo que aún no se envió.</string>
+    <string name="collectUsageLabel">Con Uso y estado de la app</string>
+    <string name="collectCrashesLabel">Con Informes de fallos</string>
+    <string name="collectReportLabel">Solo cuando envías un informe de un problema</string>
+    <string name="collectNeverLabel">Nunca se envía</string>
+    <string name="collectConnect">Si la conexión con un servidor funcionó, el tipo de fallo y cuánto tardó</string>
+    <string name="collectDrop">Por qué se cayó una conexión y si volvió</string>
+    <string name="collectSend">Si el envío de un mensaje funcionó o esperó en la cola, y qué tan pronto llegó la primera respuesta</string>
+    <string name="collectStall">Dónde hubo una espera larga (una herramienta, una aprobación) y cuánto duró</string>
+    <string name="collectQueue">Cuántos mensajes en cola se enviaron o fallaron</string>
+    <string name="collectPhoneSetup">Hasta dónde llegó la configuración en este teléfono, cuánto tardó cada paso y el tipo de fallo</string>
+    <string name="collectAgents">Si un agente se inició y el tipo de fallo</string>
+    <string name="collectBackground">Por qué se detuvo el servicio en segundo plano</string>
+    <string name="collectUpdates">Si una actualización se instaló y el tipo de fallo</string>
+    <string name="collectPages">Qué tipos de páginas y funciones usas, los pasos de configuración, la primera respuesta y cuánto dura una visita</string>
+    <string name="collectStart">Qué tan rápido inicia la app</string>
+    <string name="collectSmooth">Qué tan fluidas son las páginas y la frecuencia de actualización de la pantalla</string>
+    <string name="collectMemory">Avisos de memoria de Android</string>
+    <string name="collectDevice">Rangos de la memoria y el almacenamiento libre de tu teléfono, su tipo de procesador y la versión de WebView, si las notificaciones están permitidas, y el tipo y la versión del servidor que usas</string>
+    <string name="collectCrashKind">El tipo de error y en qué parte del código de la app ocurrió, nunca su mensaje</string>
+    <string name="collectExit">Por qué Android cerró la app la última vez (por ejemplo, un fallo, un bloqueo o poca memoria)</string>
+    <string name="collectSteps">Tus últimos 30 pasos, como palabras cortas, por ejemplo chat.send</string>
+    <string name="collectCrashKeys">La versión de la app, cómo se instaló, el tipo de servidor, si el servidor de este teléfono está en marcha, cuántas conexiones hay abiertas y la versión del servidor</string>
+    <string name="collectReport">Las últimas 500 líneas del registro propio de la app, con claves, direcciones y rutas borradas. Lo ves todo y eliges Enviar o Cancelar.</string>
+    <string name="collectNever">Tus mensajes y respuestas, nombres o rutas de archivos, direcciones web, nombres de host, direcciones IP, texto de mensajes de error, claves o tokens, el ID de publicidad o el ID de Android</string>
+</resources>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="voiceConversationNativeSends">Cuando termina una grabación, sus palabras se envían a esta conversación. Toca Escuchar para el siguiente turno. Las respuestas se leen en voz alta solo si lo activas.</string>
+    <string name="voiceConversationNativeTourSpeak">Habla y toca Enviar para mandar lo que dijiste. Escuchar inicia tu siguiente turno.</string>
+    <string name="voiceConversationNativeTourReplies">Leer respuestas en voz alta pide tu permiso y una voz del teléfono. Puedes detener la lectura en cualquier momento.</string>
+    <string name="voiceConversationNativeTourLeave">Salir del modo de voz detiene la escucha y la lectura automática. Un envío incierto nunca se reenvía automáticamente.</string>
+    <string name="voiceConversationNativeTourDone">Entendido</string>
+    <string name="voiceConversationNativeTourNext">Siguiente</string>
+    <string name="voiceConversationNativeTourReset">Mostrar los consejos otra vez</string>
+    <string name="voiceConversationNativeTourResetFailed">No se pudieron restablecer los consejos. Inténtalo de nuevo.</string>
+    <string name="voiceConversationNativeTourReplay">Muéstrame</string>
+    <string name="voiceConversationNativeTourLoadFailed">No se pudieron abrir los consejos. Inténtalo de nuevo.</string>
+</resources>

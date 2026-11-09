@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatHistoryReadFailed">Không thể tải các tin nhắn cũ hơn. Các tin nhắn đã tải vẫn còn ở đây. Thử lại.</string>
+    <string name="chatTranscriptTokens">%1$s token</string>
+    <string name="chatTranscriptCost">Chi phí ước tính: $%1$s</string>
+    <string name="chatHistoryTitle">Dùng lại lời nhắc</string>
+    <string name="chatHistorySubtitle">Chọn nội dung từ cuộc trò chuyện này hoặc những lần gửi gần đây. Nội dung được thêm vào bản nháp; không có gì được gửi đi.</string>
+    <string name="chatHistorySearch">Tìm lời nhắc gần đây</string>
+    <string name="chatHistoryEmpty">Chưa có lời nhắc gần đây.</string>
+    <string name="chatHistoryLoading">Đang tải lời nhắc gần đây…</string>
+    <string name="chatHistoryLoadFailed">Không thể tải lời nhắc gần đây. Bạn vẫn dùng được các lời nhắc trong cuộc trò chuyện này.</string>
+</resources>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="b169SwitchModel">Changer de modèle</string>
+    <string name="b169UsedUp">%1$s est épuisé pour l’instant</string>
+    <string name="b169UsedUpNoName">Ce modèle est épuisé pour l’instant</string>
+    <string name="b169ConnectProvider">Connecter un fournisseur…</string>
+    <plurals name="b169AskTitle">
+        <item quantity="one">La réponse interrompue a déjà exécuté %1$d étape. Renvoyer avec %2$s\u00A0?</item>
+        <item quantity="many">La réponse interrompue a déjà exécuté %1$d étapes. Renvoyer avec %2$s\u00A0?</item>
+        <item quantity="other">La réponse interrompue a déjà exécuté %1$d étapes. Renvoyer avec %2$s\u00A0?</item>
+    </plurals>
+    <string name="b169AskSend">Envoyer</string>
+    <string name="b169AttachAgain">Joignez de nouveau %1$s pour envoyer</string>
+    <string name="b169Free">Gratuit · peut utiliser vos invites</string>
+    <string name="b169TooLong">Trop long pour ce modèle</string>
+    <string name="b169Suggested">Suggéré</string>
+    <string name="b169Offline">Le changement de modèle refonctionnera dès que le serveur sera de retour.</string>
+</resources>

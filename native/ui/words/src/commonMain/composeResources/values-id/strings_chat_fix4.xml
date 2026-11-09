@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatReplyFailedNoCredit">Akun penyedia model tidak punya saldo untuk model ini. Tambah saldo di penyedia itu, atau pilih model lain.</string>
+    <string name="chatReplyFailedConnectionLost">Koneksi ke penyedia model terputus sehingga balasan berhenti. Minta model melanjutkan, atau kirim lagi.</string>
+</resources>

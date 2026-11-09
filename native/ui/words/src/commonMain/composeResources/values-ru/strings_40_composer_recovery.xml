@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="composerKeptRestoreTitle">Сохранённый запрос</string>
+    <string name="composerKeptRestoreRefused">Не удалось восстановить этот запрос. Он по-прежнему в разделе «Сохранённые запросы». Откройте его снова, чтобы восстановить.</string>
+    <string name="composerKeptMissingFiles">Не удалось восстановить эти файлы: %1$s. Сохранённый запрос не изменён.</string>
+</resources>

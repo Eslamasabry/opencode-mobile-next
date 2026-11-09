@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="shortcut_connect_short">Conectar</string>
+    <string name="shortcut_connect_long">Elige un servidor para conectar</string>
+    <string name="shortcut_new_task_short">Nueva conversación</string>
+    <string name="shortcut_new_task_long">Inicia una nueva conversación en el servidor actual</string>
+    <string name="shortcut_session_untitled">Conversación sin título</string>
+    <string name="shortcut_session_unavailable">Esta conversación ya no está disponible</string>
+    <string name="tile_label">OpenCode</string>
+    <string name="tile_label_with_count">OpenCode · %1$s</string>
+    <string name="tile_all_clear">Nada requiere tu atención</string>
+    <plurals name="tile_need_you">
+        <item quantity="one">%1$d te necesita</item>
+        <item quantity="many">%1$d te necesitan</item>
+        <item quantity="other">%1$d te necesitan</item>
+    </plurals>
+    <string name="pause_tile_label">Modo en segundo plano</string>
+    <string name="pause_tile_label_with_state">Modo en segundo plano · %1$s</string>
+    <string name="pause_tile_on">Activado</string>
+    <string name="pause_tile_paused">En pausa</string>
+    <string name="pause_tile_off">Desactivado en Ajustes</string>
+</resources>

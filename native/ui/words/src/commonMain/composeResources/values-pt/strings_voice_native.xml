@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="voiceNativeSendNow">Enviar agora</string>
+    <string name="voiceNativeDetect">Detectar pela fala</string>
+    <string name="voiceNativeSizeMb">%1$d MB</string>
+    <string name="voiceNativePhoneEngine">A digitação por voz usa o reconhecimento de fala do próprio celular, então o áudio fica neste celular. Celulares sem ele não mostram o microfone. Esta versão ainda não usa os modelos de fala abaixo.</string>
+    <string name="voiceNativeNaturalNeedsEngine">Precisa do mecanismo de fala offline, que esta versão ainda não inclui.</string>
+    <string name="voiceNativeSettingsAction">Configurações de voz</string>
+    <string name="voiceNativeStoppedAfterPause">Parou após uma pausa. Suas palavras estão na caixa.</string>
+    <string name="voiceNativeNoRecognizer">Este celular não tem um serviço de reconhecimento de fala. Ative um nas configurações do Android e tente novamente.</string>
+    <string name="voiceNativeReadAloud">Ler em voz alta</string>
+    <string name="voiceNativePartial">Baixado %1$s de %2$s</string>
+    <string name="voiceNativePhoneRecognizer">Reconhecimento de fala do celular</string>
+</resources>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="monitor40FormTitle">Responder esta solicitud</string>
+    <string name="monitor40FormGone">Esta solicitud cambió o ya no está disponible. Ábrela de nuevo desde la bandeja de entrada.</string>
+    <string name="monitor40FormSent">Se envió tu respuesta.</string>
+    <string name="monitor40FormElsewhere">Esta solicitud se respondió en otro lugar.</string>
+    <string name="monitor40FormHeld">Tu respuesta se enviará en un momento.</string>
+    <string name="monitor40Undo">Deshacer</string>
+    <string name="monitor40FormFailed">No se pudo enviar tu respuesta.</string>
+    <string name="monitor40Other">Otra cosa</string>
+    <string name="monitor40OpenLink">Abrir página</string>
+    <string name="monitor40Send">Enviar respuestas</string>
+    <string name="monitor40Decline">Rechazar solicitud</string>
+    <string name="monitor40FixFields">Revisa las respuestas marcadas antes de enviar.</string>
+    <string name="monitor40NotConfirmed">Aún sin confirmar</string>
+    <string name="monitor40Sending">Enviando tu respuesta</string>
+    <string name="monitor40DeclineQuestion">¿Rechazar esta solicitud?</string>
+    <string name="monitor40DeclineBody">La solicitud se cerrará sin tus respuestas.</string>
+    <string name="monitor40LinkQuestion">¿Abrir esta página?</string>
+    <string name="monitor40Required">Escribe una respuesta.</string>
+    <string name="monitor40Number">Escribe un número.</string>
+    <string name="monitor40Integer">Escribe un número entero.</string>
+    <string name="monitor40NotOffered">Elige una respuesta de las ofrecidas o escribe un valor que acepte el formulario.</string>
+    <plurals name="monitor40MinLength">
+        <item quantity="one">Escribe al menos 1 carácter.</item>
+        <item quantity="many">Escribe al menos %1$d caracteres.</item>
+        <item quantity="other">Escribe al menos %1$d caracteres.</item>
+    </plurals>
+    <plurals name="monitor40MaxLength">
+        <item quantity="one">Usa como máximo 1 carácter.</item>
+        <item quantity="many">Usa como máximo %1$d caracteres.</item>
+        <item quantity="other">Usa como máximo %1$d caracteres.</item>
+    </plurals>
+    <string name="monitor40Range">Escribe un valor dentro de los límites permitidos: de %1$s a %2$s.</string>
+    <plurals name="monitor40MinItems">
+        <item quantity="one">Elige al menos 1 respuesta.</item>
+        <item quantity="many">Elige al menos %1$d respuestas.</item>
+        <item quantity="other">Elige al menos %1$d respuestas.</item>
+    </plurals>
+    <plurals name="monitor40MaxItems">
+        <item quantity="one">Elige como máximo 1 respuesta.</item>
+        <item quantity="many">Elige como máximo %1$d respuestas.</item>
+        <item quantity="other">Elige como máximo %1$d respuestas.</item>
+    </plurals>
+    <string name="monitor40QuestionCount">Preguntas: %1$d</string>
+    <string name="monitor40Answer">Respuesta</string>
+</resources>

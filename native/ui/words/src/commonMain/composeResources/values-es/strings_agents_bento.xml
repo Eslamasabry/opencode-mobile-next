@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentsTileInstalling">Instalando…</string>
+    <string name="agentsHelperNotConnected">Los agentes del teléfono no están conectados.</string>
+    <string name="agentsHelperNotStarted">Los agentes del teléfono no están conectados: el ayudante de agentes no se inició.</string>
+    <string name="agentsHelperNoAnswer">Los agentes del teléfono no están conectados: el ayudante de agentes no respondió.</string>
+    <string name="agentsHelperKeyRefused">Los agentes del teléfono no están conectados: el ayudante de agentes no aceptó la clave de esta app.</string>
+    <string name="agentsHelperKeyUnreadable">Los agentes del teléfono no están conectados: este teléfono no pudo leer la clave del ayudante de agentes.</string>
+    <string name="agentsHelperNoLinux">Los agentes del teléfono no están conectados: el Linux integrado de este teléfono no está configurado.</string>
+    <string name="agentsTabsLabel">Dónde se ejecutan los agentes</string>
+    <string name="agentsTabComputers">En computadoras</string>
+    <string name="agentsPhoneReady">Este teléfono está listo</string>
+    <string name="agentsPhoneReadyDetails">Este teléfono está listo · %1$s · Android %2$s</string>
+    <string name="agentsCheckAgain">Actualizar</string>
+    <string name="agentsAddComputerLine">Usa Claude Code o Pi en una computadora que ejecute Paseo.</string>
+    <string name="agentsComputerLooking">Buscando agentes en esta computadora…</string>
+    <string name="agentsComputerReadFailed">No se pudieron leer los agentes de esta computadora. Desliza hacia abajo para intentarlo de nuevo.</string>
+    <string name="agentsNewChat">Nueva conversación</string>
+    <string name="agentsNewChatWith">Nueva conversación con %1$s</string>
+    <string name="agentsConversationsStored">Dónde se guardan las conversaciones</string>
+    <string name="agentsConversationsStoredOn">Dónde se guardan las conversaciones: %1$s</string>
+    <string name="agentsHostAccount">Cuenta del equipo anfitrión: %1$s</string>
+</resources>

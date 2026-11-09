@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="mcpNativeTitle">Catalogue de connecteurs</string>
+    <string name="mcpNativeConsent">Parcourez le registre MCP public. Votre recherche n’est envoyée au registre qu’après l’activation de cette option.</string>
+    <string name="mcpNativeTurnOn">Activer</string>
+    <string name="mcpNativeTurnOff">Désactiver le catalogue</string>
+    <string name="mcpNativeRefresh">Actualiser</string>
+    <string name="mcpNativeSearch">Rechercher des connecteurs</string>
+    <string name="mcpNativeEmpty">Aucun connecteur trouvé.</string>
+    <string name="mcpNativeLoadFailed">Actualisation impossible. Affichage des fiches enregistrées si disponibles.</string>
+    <string name="mcpNativeUnsupported">Cette connexion ne peut pas ajouter de connecteurs. Vous pouvez quand même consulter les fiches.</string>
+    <string name="mcpNativeReview">Vérifier le connecteur</string>
+    <string name="mcpNativeRuntimeOnly">Cela ajoute le connecteur à ce projet jusqu’au redémarrage du serveur. Vérifiez d’abord l’adresse ou la commande.</string>
+    <string name="mcpNativeAdd">Ajouter le connecteur</string>
+    <string name="mcpNativeAdded">Le serveur liste ce connecteur. La disponibilité des outils n’est pas encore confirmée.</string>
+    <string name="mcpNativeCheck">Vérifier la connexion</string>
+    <string name="mcpNativeAddUncertain">L’ajout n’a pas pu être confirmé. Vérifiez la connexion avant de réessayer.</string>
+    <string name="mcpNativeConflict">Ce nom de connecteur existe déjà. Choisissez-en un autre.</string>
+    <string name="mcpNativeName">Nom</string>
+    <string name="mcpNativeAddress">Adresse</string>
+    <string name="mcpNativeCommand">Commande</string>
+    <string name="mcpNativeNeedsSettings">Cette fiche demande davantage de détails de connexion ou d’arguments de commande. Configurez-la manuellement sur votre serveur.</string>
+    <string name="mcpNativeNotAddable">Cette fiche ne peut pas être ajoutée depuis le catalogue.</string>
+    <string name="mcpNativeBack">Retour</string>
+    <string name="mcpNativeSaveFailed">Impossible d’enregistrer la préférence du catalogue. Réessayez.</string>
+    <string name="mcpNativeSourceChanged">La connexion a changé. Rouvrez le catalogue.</string>
+    <string name="mcpNativeToolsReady">Les outils du connecteur sont prêts pour le prochain échange.</string>
+    <string name="mcpNativeSignIn">Se connecter au connecteur</string>
+    <string name="mcpNativeCode">URL de retour ou code</string>
+    <string name="mcpNativeFinishSignIn">Terminer la connexion</string>
+    <string name="mcpNativeCancelSignIn">Annuler la connexion</string>
+</resources>

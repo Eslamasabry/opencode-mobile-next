@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="notify_status_working">Bekerja…</string>
+    <string name="notify_status_still_working">%1$s masih bekerja</string>
+    <string name="notify_status_chats_working">%1$s percakapan bekerja</string>
+    <string name="notify_status_more">+%1$s lagi</string>
+    <string name="notify_status_waiting_count">%1$s menunggu</string>
+    <string name="notify_status_tasks_progress">%1$s dari %2$s tugas</string>
+    <string name="notify_status_minutes">%1$s mnt</string>
+    <string name="notify_status_hours">%1$s j</string>
+    <string name="notify_status_waiting_provider">Menunggu · batas %1$s</string>
+    <string name="notify_status_waiting_generic">Menunggu · penyedia sedang sibuk</string>
+    <string name="notify_status_tries_again_at">Mencoba lagi pukul %1$s</string>
+    <string name="notify_status_tries_again_soon">Segera mencoba lagi</string>
+    <string name="notify_status_paused_android_title">Dijeda · batas latar belakang Android</string>
+    <string name="notify_status_paused_android_body">Android menghentikan pekerjaan latar belakang setelah 6 jam sehari. Buka OpenCode untuk melanjutkan.</string>
+    <string name="notify_status_paused_hot_title">Dijeda · ponsel panas</string>
+    <string name="notify_status_paused_hot_body">Lanjut setelah dingin</string>
+    <string name="notify_status_paused_idle_title">Dijeda · tidak ada yang berjalan</string>
+    <string name="notify_status_paused_idle_body">Ketuk untuk memulai OpenCode lagi</string>
+    <string name="notify_status_reconnecting_title">Menyambung kembali ke %1$s</string>
+    <string name="notify_status_reconnecting_generic">Menyambung kembali</string>
+    <string name="notify_status_reconnecting_body">Menunggu koneksi</string>
+    <string name="notify_status_ready_title">Siap · tidak ada yang berjalan</string>
+    <string name="notify_status_ready_body">Siap kapan pun Anda siap</string>
+    <string name="notify_status_last_reply">Balasan terakhir %1$s lalu</string>
+    <string name="notify_status_last_reply_now">Balasan terakhir baru saja</string>
+    <string name="notify_status_setup_title">Penyiapan · %1$s dari %2$s</string>
+    <string name="notify_status_on_server">di %1$s</string>
+    <string name="notify_status_on_this_phone">di ponsel ini</string>
+    <string name="notify_status_lock_working">%1$s bekerja</string>
+    <string name="notify_status_lock_waiting">Menunggu</string>
+    <string name="notify_status_lock_paused">Dijeda</string>
+    <string name="notify_status_lock_reconnecting">Menyambung kembali</string>
+    <string name="notify_status_lock_ready">Siap</string>
+    <string name="notify_status_lock_setup">Menyiapkan</string>
+    <plurals name="notify_status_needs_you">
+        <item quantity="other">%1$s butuh Anda</item>
+    </plurals>
+</resources>

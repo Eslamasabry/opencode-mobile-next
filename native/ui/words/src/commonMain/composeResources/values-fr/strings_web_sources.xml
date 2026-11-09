@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="webSourcesDuplicateNative">Cette URL est déjà dans votre liste de vérification.</string>
+    <string name="webSourcesFullNative">Vous pouvez vérifier jusqu'à 10 sources. Retirez-en une avant d'en ajouter une autre.</string>
+    <string name="webSourcesChooseNative">Choisissez au moins une source vérifiée.</string>
+</resources>

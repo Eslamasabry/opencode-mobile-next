@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="nativeHandoffTitle">Продолжить с новым агентом</string>
+    <string name="nativeHandoffIntro">Выберите агента на этом сервере. Перед запуском проверьте запись чата со скрытыми данными и первый запрос. Исходный чат не изменится.</string>
+    <string name="nativeHandoffPreparing">Готовим запись чата…</string>
+    <string name="nativeHandoffReview">Эта запись будет сохранена в новой игнорируемой папке того же проекта. Учётные данные скрыты; рассуждения и содержимое вложений не включаются.</string>
+    <string name="nativeHandoffPrompt">Первое сообщение новому агенту</string>
+    <string name="nativeHandoffSend">Запустить нового агента</string>
+    <string name="nativeHandoffSending">Сохраняем запись и запускаем новый чат…</string>
+    <string name="nativeHandoffSucceeded">Новый агент получил запись чата.</string>
+    <string name="nativeHandoffFailed">Передачу не удалось завершить. Исходный чат не изменён. Проверьте подключение и проект, затем снова откройте это окно.</string>
+    <string name="nativeHandoffUnconfirmed">Не удалось подтвердить создание нового чата. Прежде чем начинать другой, проверьте раздел «Все чаты»: возможно, агент уже получил запись.</string>
+    <string name="nativeHandoffLinkFailed">Новый агент получил запись, но ссылку на чат сохранить не удалось. Повторите сохранение ссылки; сообщение не будет отправлено заново.</string>
+    <string name="nativeHandoffSaveLink">Сохранить ссылку на чат</string>
+</resources>

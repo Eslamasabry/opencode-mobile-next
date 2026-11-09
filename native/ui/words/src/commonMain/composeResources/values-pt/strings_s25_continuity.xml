@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="crashOfferSection">Relatórios de falhas</string>
+    <string name="crashOfferSettingTitle">Oferecer relatórios de falhas</string>
+    <string name="crashOfferSettingDetail">Depois que o app fechar inesperadamente, oferece um relatório para você revisar antes. Nada é enviado automaticamente.</string>
+    <string name="telemetryConsentTitle">Ajudar a melhorar o OpenCode Mobile?</string>
+    <string name="telemetryConsentBody">Se você concordar, o app envia números anônimos de uso e de saúde do app, além de relatórios de falhas, pelo Google Firebase. Você pode mudar cada um em Configurações › Privacidade e dados.</string>
+    <string name="telemetryConsentSends">Enviado: páginas e recursos usados, se conectar, enviar e configurar funcionam, velocidade do app, faixas de memória e de armazenamento, relatórios de falhas. Um ID de instalação aleatório.</string>
+    <string name="telemetryConsentNever">Nunca enviado: seu código, conversas, arquivos, endereços de servidor ou chaves. Nenhum ID de publicidade.</string>
+    <string name="telemetryConsentShare">Compartilhar os dois</string>
+    <string name="telemetryConsentNotNow">Agora não</string>
+</resources>

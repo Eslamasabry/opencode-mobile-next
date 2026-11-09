@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateReaderWrap">Bungkus baris kode</string>
+    <string name="stateReaderNoWrap">Jaga kode tetap satu baris</string>
+    <string name="stateReaderSaveFailed">Pilihan tampilan tidak dapat disimpan. Coba lagi.</string>
+    <string name="stateUsageBudgets">Anggaran pemakaian pribadi</string>
+    <string name="stateUsageUsd">USD</string>
+</resources>

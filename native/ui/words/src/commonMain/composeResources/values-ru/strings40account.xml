@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="account40Title">Аккаунт Codex</string>
+    <string name="account40ScopeLost">Сервер изменился. Вернитесь к серверам и откройте аккаунт подключённого сервера.</string>
+    <string name="account40Refresh">Обновить аккаунт</string>
+    <string name="account40Loading">Проверка аккаунта на хосте</string>
+    <string name="account40Unavailable">Панель аккаунта недоступна</string>
+    <string name="account40ReadFailed">Не удалось прочитать аккаунт</string>
+    <string name="account40Disconnected">Соединение прервано</string>
+    <string name="account40Connected">Вход выполнен на хосте</string>
+    <string name="account40SignedOut">Можно войти</string>
+    <string name="account40InProgress">Идёт вход</string>
+    <string name="account40NeedsAttention">Вход требует внимания</string>
+    <string name="account40NoAuth">Хосту вход не нужен</string>
+    <string name="account40ApiKey">Ключ API</string>
+    <string name="account40HostAuth">Аутентификация на хосте</string>
+    <string name="account40HostNote">Вход хранится в официальной среде выполнения. Изменения аккаунта затрагивают все сохранённые серверы, подключённые к этому хосту.</string>
+    <string name="account40UnsupportedDetail">Эта панель проверена с Codex 0.153.4. Подключённая среда выполнения может не поддерживать эти методы аккаунта.</string>
+    <string name="account40ReconnectDetail">Данные аккаунта и код входа удалены. Подключитесь заново, чтобы обновить. Вход не начнётся автоматически.</string>
+    <string name="account40SignIn">Войти через ChatGPT</string>
+    <string name="account40SignInNote">Войдите в свой аккаунт ChatGPT. Вы завершите вход в браузере; приложение никогда не видит ваш пароль.</string>
+    <string name="account40Limits">Лимиты запросов</string>
+    <string name="account40LimitsUnavailable">Лимиты запросов недоступны для этого аккаунта или хоста.</string>
+    <string name="account40Usage">Расход токенов</string>
+    <string name="account40UsageUnavailable">Расход токенов недоступен для этого аккаунта или хоста.</string>
+    <string name="account40LifetimeTokens">Токенов за всё время</string>
+    <string name="account40PeakTokens">Максимум токенов за день</string>
+    <string name="account40UsageNote">Значения сообщает хост. Отсутствующие значения неизвестны, а не равны нулю. Число токенов не является счётом и не показывает остаток сообщений.</string>
+    <string name="account40Updated">Проверено: %1$s</string>
+    <string name="account40Starting">Запрашиваем код для входа</string>
+    <string name="account40Waiting">Завершите вход в браузере</string>
+    <string name="account40Cancelling">Отмена входа</string>
+    <string name="account40Cancelled">Вход отменён</string>
+    <string name="account40LoginFailed">Вход не завершён. Проверьте хост и повторите.</string>
+    <string name="account40LoginUncertain">Хост не смог подтвердить вход или отмену. Возможно, он всё ещё ждёт. Проверьте официальную среду выполнения на хосте, прежде чем начинать снова.</string>
+    <string name="account40LoginCompleted">Вход выполнен. Проверяем аккаунт.</string>
+    <string name="account40CodeHint">Введите этот одноразовый код на официальной странице входа. Никому его не показывайте.</string>
+    <string name="account40OpenSignIn">Открыть официальную страницу входа</string>
+    <string name="account40Cancel">Отменить вход</string>
+    <string name="account40Allowance">Заявленный лимит</string>
+    <string name="account40PercentUsed">Использовано: %1$d%</string>
+    <string name="account40WindowUnknown">Длительность окна неизвестна</string>
+    <string name="account40WindowMinutes">Окно: %1$d мин</string>
+    <string name="account40WindowHours">Окно: %1$d ч</string>
+    <string name="account40WindowDays">Окно: %1$d д</string>
+    <string name="account40ResetUnknown">Время сброса неизвестно</string>
+    <string name="account40ScopeLostTitle">Сервер изменился</string>
+    <string name="account40BackToServers">Назад к серверам</string>
+    <string name="account40NotConnected">Подключитесь к этому серверу, чтобы увидеть его аккаунт Codex.</string>
+    <string name="account40SignInMethod">Способ входа</string>
+    <string name="account40PlanTitle">Тариф</string>
+    <string name="account40CopyCode">Копировать код для входа</string>
+    <string name="account40LimitReached">Вы достигли лимита Codex. %1$s</string>
+    <string name="account40ResetDue">Сброс с минуты на минуту</string>
+    <string name="account40ResetWhen">%1$s (%2$s)</string>
+    <plurals name="account40ResetInDays">
+        <item quantity="one">Сброс через %1$d день</item>
+        <item quantity="few">Сброс через %1$d дня</item>
+        <item quantity="many">Сброс через %1$d дней</item>
+        <item quantity="other">Сброс через %1$d дня</item>
+    </plurals>
+    <plurals name="account40ResetInHours">
+        <item quantity="one">Сброс через %1$d ч</item>
+        <item quantity="few">Сброс через %1$d ч</item>
+        <item quantity="many">Сброс через %1$d ч</item>
+        <item quantity="other">Сброс через %1$d ч</item>
+    </plurals>
+    <plurals name="account40ResetInMinutes">
+        <item quantity="one">Сброс через %1$d мин</item>
+        <item quantity="few">Сброс через %1$d мин</item>
+        <item quantity="many">Сброс через %1$d мин</item>
+        <item quantity="other">Сброс через %1$d мин</item>
+    </plurals>
+    <string name="account40Back">Назад</string>
+    <string name="account40Details">Подробности</string>
+    <string name="account40CopyDetails">Копировать подробности</string>
+    <string name="account40Copied">Код скопирован</string>
+    <string name="account40OpenQuestion">Открыть официальную страницу входа %1$s?</string>
+    <string name="account40OpenPage">Открыть страницу входа</string>
+    <string name="account40OpenFailed">Не удалось открыть страницу входа или буфер обмена.</string>
+    <string name="account40ChatGpt">ChatGPT</string>
+    <string name="account40Bedrock">Amazon Bedrock</string>
+</resources>

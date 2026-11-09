@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxGitRepairAction">Sửa các tệp Git được liên kết</string>
+    <string name="linuxGitRepairWorking">Đang sửa các tệp Git…</string>
+    <string name="linuxGitRepairHealthy">Git đọc được dự án này. Không có tệp đối tượng nào cần sửa.</string>
+    <plurals name="linuxGitRepairRestored">
+        <item quantity="other">Đã khôi phục %1$d tệp đối tượng Git. Git đã đọc được dự án trở lại.</item>
+    </plurals>
+    <string name="linuxGitRepairMissing">Không thể khôi phục hoặc xác minh một số đối tượng Git. Hãy clone lại dự án hoặc khôi phục từ một bản sao.</string>
+    <string name="linuxGitRepairNotProject">Ở đây chỉ sửa được các dự án Git nằm trong thư mục dự án của điện thoại này.</string>
+    <string name="linuxGitRepairFailed">Điện thoại không thể sửa xong các tệp Git. Hãy thử lại.</string>
+    <string name="linuxGitRepairDetailLocal">Khôi phục các đối tượng Git đã xác minh từ các bản sao trong dự án này. Các tệp dự án được giữ nguyên.</string>
+</resources>

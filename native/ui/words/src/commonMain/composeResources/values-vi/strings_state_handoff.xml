@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateHandoffTitle">Các cuộc trò chuyện được liên kết</string>
+    <string name="stateHandoffWorking">Đang xử lý…</string>
+    <string name="stateHandoffFailed">Không thể mở các cuộc trò chuyện được liên kết. Thử lại.</string>
+    <string name="stateHandoffTransferFailed">Chưa xác nhận việc chuyển này. Hãy đóng bảng này và kiểm tra các cuộc trò chuyện của bạn trước khi bắt đầu chuyển lần nữa.</string>
+    <string name="stateHandoffReviewNote">Hãy xem bản ghi cuộc trò chuyện đã che thông tin này và lời nhắc đầu tiên trước khi tiếp tục. Nội dung tệp đính kèm và phần suy luận riêng tư không được đưa vào.</string>
+    <string name="stateHandoffRecord">Bản ghi cuộc trò chuyện</string>
+    <string name="stateHandoffPrompt">Lời nhắc đầu tiên</string>
+    <string name="stateHandoffRetryLink">Lưu lại liên kết</string>
+    <string name="stateHandoffContinue">Bắt đầu cuộc trò chuyện được liên kết</string>
+    <string name="stateHandoffLinked">Các cuộc trò chuyện được liên kết</string>
+    <string name="stateHandoffNoLinks">Cuộc trò chuyện này chưa có liên kết nào được lưu.</string>
+    <string name="stateHandoffNew">Tiếp tục trong cuộc trò chuyện mới</string>
+    <string name="stateHandoffNewNote">Chọn một mô hình trên kết nối này. Dự án của bạn giữ nguyên, và bạn sẽ xem lại nội dung chuyển giao trước khi gửi bất cứ thứ gì.</string>
+</resources>

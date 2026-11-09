@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="crashOfferSection">Báo cáo sự cố</string>
+    <string name="crashOfferSettingTitle">Đề nghị gửi báo cáo sự cố</string>
+    <string name="crashOfferSettingDetail">Sau khi ứng dụng đóng đột ngột, đề nghị một báo cáo để bạn xem lại trước. Không có gì tự động được gửi đi.</string>
+    <string name="telemetryConsentTitle">Giúp cải thiện OpenCode Mobile?</string>
+    <string name="telemetryConsentBody">Nếu bạn đồng ý, ứng dụng gửi số liệu sử dụng và tình trạng ứng dụng ẩn danh, cùng báo cáo sự cố, qua Google Firebase. Bạn có thể thay đổi từng mục trong Cài đặt › Quyền riêng tư và dữ liệu.</string>
+    <string name="telemetryConsentSends">Được gửi: các trang và tính năng đã dùng, việc kết nối, gửi và thiết lập có hoạt động không, tốc độ ứng dụng, mức bộ nhớ và dung lượng lưu trữ, báo cáo sự cố. Một mã cài đặt ngẫu nhiên.</string>
+    <string name="telemetryConsentNever">Không bao giờ gửi: mã nguồn, cuộc trò chuyện, tệp, địa chỉ máy chủ hoặc khóa của bạn. Không có ID quảng cáo.</string>
+    <string name="telemetryConsentShare">Chia sẻ cả hai</string>
+    <string name="telemetryConsentNotNow">Để sau</string>
+</resources>

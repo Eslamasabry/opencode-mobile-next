@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateReaderWrap">Ngắt dòng mã</string>
+    <string name="stateReaderNoWrap">Giữ mã trên một dòng</string>
+    <string name="stateReaderSaveFailed">Không thể lưu lựa chọn hiển thị. Thử lại.</string>
+    <string name="stateUsageBudgets">Ngân sách sử dụng cá nhân</string>
+    <string name="stateUsageUsd">USD</string>
+</resources>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="protoToolsTitle">Outils</string>
+    <string name="protoToolsRefresh">Actualiser</string>
+    <string name="protoToolsPlugins">Modules</string>
+    <string name="protoToolsSkills">Compétences</string>
+    <string name="protoToolsMcp">Serveurs MCP</string>
+    <string name="protoToolsLoadFailed">Impossible de charger cette liste. Essayez Actualiser.</string>
+    <string name="protoToolsUnavailable">Les outils ne sont pas disponibles sur cette connexion. Connectez-vous à un serveur qui les prend en charge.</string>
+    <string name="protoToolsEmpty">Rien ici pour le moment.</string>
+    <string name="protoToolsUnnamedPlugin">Module sans nom</string>
+    <string name="protoToolsSkillNeedsChat">Ouvrez les outils depuis une conversation pour y ajouter une compétence.</string>
+    <string name="protoToolsSkillReview">Ajoutez cette compétence à la conversation en cours. Choisissez si l’agent doit continuer maintenant.</string>
+    <string name="protoToolsResume">Poursuivre la conversation maintenant</string>
+    <string name="protoToolsActivate">Ajouter la compétence</string>
+    <string name="protoToolsDisconnect">Déconnecter %1$s</string>
+    <string name="protoToolsAddMcp">Ajouter un serveur MCP</string>
+    <string name="protoToolsRuntimeScope">Ceci ajoute le serveur au projet en cours jusqu’au redémarrage du serveur. Les noms existants ne sont jamais remplacés.</string>
+    <string name="protoToolsName">Nom du serveur</string>
+    <string name="protoToolsLocal">Exécuter une commande locale</string>
+    <string name="protoToolsCommand">Commande et arguments, un par ligne</string>
+    <string name="protoToolsUrl">Adresse HTTP ou HTTPS</string>
+    <string name="protoToolsAdd">Ajouter le serveur</string>
+    <string name="protoToolsChanged">Cette connexion ou ce projet a changé. Actualisez avant de réessayer.</string>
+    <string name="protoToolsInvalidDraft">Vérifiez le nom du serveur et l’adresse ou la commande, puis réessayez.</string>
+    <string name="protoToolsAddFailed">Impossible d’ajouter le serveur. Actualisez la liste avant de réessayer.</string>
+    <string name="protoToolsDisconnectFailed">Impossible de confirmer la déconnexion. Actualisez la liste avant de réessayer.</string>
+    <string name="protoToolsActivateFailed">Impossible d’ajouter la compétence. Vérifiez qu’elle est toujours disponible.</string>
+    <string name="protoToolsStaged">Terminez ou annulez l’annulation de modifications en attente avant d’ajouter une compétence.</string>
+    <string name="protoToolsUncertain">Le serveur a peut-être reçu cette action. Vérifiez la conversation avant de réessayer.</string>
+    <string name="protoToolsDone">Terminé.</string>
+    <string name="protoToolsActive">Actif</string>
+    <string name="protoToolsFailed">À vérifier</string>
+    <string name="protoToolsUnknown">État inconnu</string>
+    <string name="protoToolsBuiltin">Intégré</string>
+    <string name="protoToolsPackage">Paquet</string>
+    <string name="protoToolsLocalSource">Local</string>
+    <string name="protoToolsSdk">SDK</string>
+    <string name="protoToolsUnknownSource">Source inconnue</string>
+    <string name="protoToolsConnected">Connecté</string>
+    <string name="protoToolsDisabled">Désactivé</string>
+    <string name="protoToolsSignIn">Connexion requise</string>
+    <string name="protoToolsDisconnected">Déconnecté</string>
+    <string name="protoToolsConnecting">Connexion en cours</string>
+    <string name="protoWorktreeInvalid">Saisissez un nom d’arbre de travail de 1 à 120 caractères, sans caractères de contrôle.</string>
+    <string name="protoWebInvalid">Saisissez une recherche web de 1 à 1000 caractères.</string>
+    <string name="protoToolsProviders">Fournisseurs</string>
+    <string name="protoToolsConnect">Connecter %1$s</string>
+</resources>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxFindProjects">Tìm dự án trên điện thoại này</string>
+    <string name="linuxFindProjectsBody">Tìm trong không gian dự án và bộ nhớ chung của điện thoại. Các thư mục vẫn ở nguyên chỗ cũ.</string>
+    <string name="linuxStopFinding">Ngừng tìm</string>
+    <string name="linuxFindProjectsDone">Đã tìm xong</string>
+    <string name="linuxFindProjectsLimited">Đã dừng ở giới hạn quét. Đây là những kết quả đầu tiên.</string>
+    <string name="linuxProjectDart">Dart / Flutter</string>
+    <string name="linuxProjectNode">Node</string>
+    <string name="linuxProjectPython">Python</string>
+    <string name="linuxProjectRust">Rust</string>
+    <string name="linuxProjectGo">Go</string>
+    <string name="linuxProjectJava">Java / Gradle</string>
+    <string name="linuxProjectRuby">Ruby</string>
+    <string name="linuxProjectPhp">PHP</string>
+    <string name="linuxProjectDotnet">.NET</string>
+    <string name="linuxProjectCpp">C / C++</string>
+    <string name="linuxProjectFolder">Thư mục dự án</string>
+</resources>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxToolsTitle">Установленные инструменты</string>
+    <string name="linuxToolsAiTeam">AI Team</string>
+    <string name="linuxToolsPart">Инструмент телефона</string>
+    <string name="linuxToolsFreedBytes">Можно освободить около %1$s.</string>
+    <string name="linuxToolsWait">Дождитесь окончания текущей операции на телефоне.</string>
+    <string name="linuxToolsInstalled">Установлен</string>
+    <string name="linuxToolsAbsent">Не установлен</string>
+    <string name="linuxToolsUnknown">Не удалось проверить. Обновите и повторите.</string>
+    <string name="linuxToolsRefresh">Обновить установленные инструменты</string>
+    <string name="linuxToolsRemovePython">Удалить инструменты Python</string>
+    <string name="linuxToolsRemoveQuestion">Удалить инструменты Python?</string>
+    <string name="linuxToolsRemoveBody">Удаляются pip и пакеты виртуального окружения. Сам Python, проекты и чаты остаются.</string>
+    <string name="linuxToolsRemoved">Инструменты Python удалены.</string>
+    <string name="linuxToolsDependent">Этот компонент нужен другому установленному инструменту.</string>
+    <string name="linuxToolsDependencyUnknown">Не удалось проверить другой инструмент, которому может быть нужен этот компонент. Обновите и повторите.</string>
+    <string name="linuxToolsRequired">Этот компонент обязателен для инструментов телефона.</string>
+    <string name="linuxToolsUnsupported">Этот компонент нельзя удалить здесь.</string>
+    <string name="linuxToolsInventoryFailed">Не удалось проверить установленные инструменты. Обновите и повторите. Ничего не удалено.</string>
+    <string name="linuxToolsSetupRunning">Остановите настройку или дождитесь её окончания, прежде чем удалять инструменты.</string>
+    <string name="linuxToolsRemoveFailed">Не удалось полностью удалить инструменты Python. Обновите установленные инструменты и повторите.</string>
+    <string name="linuxSetupStatusUnreadable">Не удалось прочитать сохранённую настройку. Продолжите настройку, чтобы повторить.</string>
+    <string name="linuxSetupHostMismatch">Эта сохранённая настройка относится к другой среде Linux. Начните настройку для этого телефона.</string>
+    <string name="linuxSetupHostRefused">Не удалось безопасно начать настройку телефона. Продолжите настройку, чтобы повторить.</string>
+    <string name="linuxSetupSavedFailed">Не удалось сохранить настройку. Освободите место в хранилище и продолжите настройку.</string>
+    <string name="linuxSetupBytes">%1$s из %2$s</string>
+    <string name="linuxSetupCheckingPart">Проверка установленных инструментов</string>
+    <string name="linuxSetupPartPending">Ожидание</string>
+    <string name="linuxSetupPartRunning">Установка</string>
+    <string name="linuxSetupPartDone">Готово</string>
+    <string name="linuxSetupPartFailed">Не удалось завершить</string>
+</resources>

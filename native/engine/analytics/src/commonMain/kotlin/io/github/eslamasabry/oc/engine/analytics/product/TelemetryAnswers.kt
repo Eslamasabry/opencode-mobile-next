@@ -25,6 +25,12 @@ public object TelemetryKeys {
     /** "Offer crash reports"; on unless turned off. */
     public const val CRASH_OFFER: String = "oc.crashReports.offer"
 
+    /** Whether this install ever saw a reply (`first_reply` is sent once). */
+    public const val FIRST_REPLY_SEEN: String = "oc.telemetry.firstReplySeen"
+
+    /** The setup funnel's memory across restarts: last step, attempts, start time (words and numbers only). */
+    public const val SETUP_JOURNEY: String = "oc.telemetry.setupJourney"
+
     /** The time (epoch ms) of the newest crash already offered, so each crash is offered at most once. */
     public const val CRASH_LAST_OFFERED: String = "oc.crashReports.lastOffered"
 }
@@ -46,6 +52,16 @@ public class TelemetryAnswers(private val store: KeyValueStore, private val lane
 
     public suspend fun setLastVersion(version: String): Outcome<Unit> =
         store.commit(lane) { putString(TelemetryKeys.LAST_VERSION, version) }
+
+    public fun firstReplySeen(): Boolean = store.bool(TelemetryKeys.FIRST_REPLY_SEEN) ?: false
+
+    public suspend fun markFirstReplySeen(): Outcome<Unit> =
+        store.commit(lane) { putBool(TelemetryKeys.FIRST_REPLY_SEEN, true) }
+
+    public fun setupJourney(): String? = store.string(TelemetryKeys.SETUP_JOURNEY)
+
+    public suspend fun saveSetupJourney(encoded: String?): Outcome<Unit> =
+        store.commit(lane) { if (encoded == null) remove(TelemetryKeys.SETUP_JOURNEY) else putString(TelemetryKeys.SETUP_JOURNEY, encoded) }
 
     public fun crashOfferEnabled(): Boolean = store.bool(TelemetryKeys.CRASH_OFFER) ?: true
 

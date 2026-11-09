@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="protoToolsTitle">Инструменты</string>
+    <string name="protoToolsRefresh">Обновить</string>
+    <string name="protoToolsPlugins">Плагины</string>
+    <string name="protoToolsSkills">Навыки</string>
+    <string name="protoToolsMcp">Серверы MCP</string>
+    <string name="protoToolsLoadFailed">Не удалось загрузить этот список. Нажмите «Обновить».</string>
+    <string name="protoToolsUnavailable">Инструменты недоступны при этом подключении. Подключитесь к серверу, который их поддерживает.</string>
+    <string name="protoToolsEmpty">Здесь пока ничего нет.</string>
+    <string name="protoToolsUnnamedPlugin">Плагин без названия</string>
+    <string name="protoToolsSkillNeedsChat">Откройте «Инструменты» из чата, чтобы добавить в него навык.</string>
+    <string name="protoToolsSkillReview">Добавить этот навык в текущий чат. Выберите, должен ли агент продолжить сейчас.</string>
+    <string name="protoToolsResume">Продолжить чат сейчас</string>
+    <string name="protoToolsActivate">Добавить навык</string>
+    <string name="protoToolsDisconnect">Отключить %1$s</string>
+    <string name="protoToolsAddMcp">Добавить сервер MCP</string>
+    <string name="protoToolsRuntimeScope">Сервер добавляется для текущего проекта до перезапуска сервера. Существующие имена не заменяются.</string>
+    <string name="protoToolsName">Имя сервера</string>
+    <string name="protoToolsLocal">Запустить локальную команду</string>
+    <string name="protoToolsCommand">Команда и аргументы, по одному в строке</string>
+    <string name="protoToolsUrl">Адрес HTTP или HTTPS</string>
+    <string name="protoToolsAdd">Добавить сервер</string>
+    <string name="protoToolsChanged">Подключение или проект изменились. Обновите, прежде чем повторить.</string>
+    <string name="protoToolsInvalidDraft">Проверьте имя и адрес или команду сервера и повторите.</string>
+    <string name="protoToolsAddFailed">Не удалось добавить сервер. Обновите список, прежде чем повторить.</string>
+    <string name="protoToolsDisconnectFailed">Не удалось подтвердить отключение. Обновите список, прежде чем повторить.</string>
+    <string name="protoToolsActivateFailed">Не удалось добавить навык. Проверьте, доступен ли он по-прежнему.</string>
+    <string name="protoToolsStaged">Завершите или отмените подготовленный откат, прежде чем добавлять навык.</string>
+    <string name="protoToolsUncertain">Возможно, сервер получил это действие. Проверьте чат, прежде чем повторить.</string>
+    <string name="protoToolsDone">Готово.</string>
+    <string name="protoToolsActive">Активен</string>
+    <string name="protoToolsFailed">Требует внимания</string>
+    <string name="protoToolsUnknown">Состояние неизвестно</string>
+    <string name="protoToolsBuiltin">Встроенный</string>
+    <string name="protoToolsPackage">Пакет</string>
+    <string name="protoToolsLocalSource">Локальный</string>
+    <string name="protoToolsSdk">SDK</string>
+    <string name="protoToolsUnknownSource">Источник неизвестен</string>
+    <string name="protoToolsConnected">Подключён</string>
+    <string name="protoToolsDisabled">Выключен</string>
+    <string name="protoToolsSignIn">Нужно войти</string>
+    <string name="protoToolsDisconnected">Отключён</string>
+    <string name="protoToolsConnecting">Подключение</string>
+    <string name="protoWorktreeInvalid">Введите имя рабочей копии длиной от 1 до 120 символов без управляющих символов.</string>
+    <string name="protoWebInvalid">Введите запрос для поиска длиной от 1 до 1000 символов.</string>
+    <string name="protoToolsProviders">Поставщики</string>
+    <string name="protoToolsConnect">Подключить %1$s</string>
+</resources>

@@ -161,6 +161,13 @@ public val LocalLiveClock: ProvidableCompositionLocal<LiveFrameClock?> = staticC
 @Composable
 internal fun rememberLiveFrameClock(): LiveFrameClock {
     val clock = remember { LiveFrameClock() }
+    RunLiveFrameClock(clock)
+    return clock
+}
+
+/** Runs [clock] while this is composed: the only `withFrameNanos` loop of the live backgrounds that use it. */
+@Composable
+internal fun RunLiveFrameClock(clock: LiveFrameClock) {
     LaunchedEffect(clock) {
         while (true) {
             if (!clock.wantsFrames) {
@@ -170,5 +177,4 @@ internal fun rememberLiveFrameClock(): LiveFrameClock {
             withFrameNanos { clock.frame(it) }
         }
     }
-    return clock
 }

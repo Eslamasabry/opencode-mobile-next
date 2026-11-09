@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateNoteTitle">Заметка к чату</string>
+    <string name="stateNoteDescription">Эта заметка направляет ответы в этом чате. Она сохраняется на этом сервере.</string>
+    <string name="stateNoteField">Заметка для этого чата</string>
+    <string name="stateNoteSave">Сохранить заметку</string>
+    <string name="stateNoteRemove">Удалить заметку</string>
+    <string name="stateNoteReload">Прочитать сохранённую заметку снова</string>
+    <string name="stateNoteWorking">Заметка сохраняется или читается. Подождите.</string>
+    <string name="stateNoteReloadFirst">Сначала внесите изменение. Заметка должна быть загружена и уместиться в 8192 закодированных байта.</string>
+    <string name="stateNoteTooLarge">Заметка слишком длинная. Уложитесь в 8192 закодированных байта.</string>
+    <string name="stateNoteChanged">Чат или его сохранённая заметка изменились. Прочитайте её снова, прежде чем сохранять.</string>
+    <string name="stateNoteFailed">Не удалось прочитать или сохранить заметку. Проверьте подключение и повторите.</string>
+    <string name="stateNoteSaved">Заметка сохранена.</string>
+    <string name="stateNoteRemoved">Заметка удалена.</string>
+    <string name="stateNoteDiscardTitle">Отменить изменение заметки?</string>
+    <string name="stateNoteDiscardBody">Несохранённое изменение будет потеряно. Сохранённая заметка останется прежней.</string>
+    <string name="stateNoteDiscard">Отменить изменение</string>
+</resources>

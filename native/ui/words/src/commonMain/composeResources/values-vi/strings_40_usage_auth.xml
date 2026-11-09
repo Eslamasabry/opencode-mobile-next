@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="m40AuthTitle">Đăng nhập %1$s</string>
+    <string name="m40AuthBack">Quay lại</string>
+    <string name="m40AuthWorking">Đang xử lý…</string>
+    <string name="m40AuthPlaces">Bạn muốn đăng nhập ở đâu?</string>
+    <string name="m40AuthBest">Có thể đọc mức sử dụng ngay tại đây.</string>
+    <string name="m40AuthServer">Thông tin đăng nhập được lưu trên máy chủ này.</string>
+    <string name="m40AuthPhone">Điện thoại này</string>
+    <string name="m40AuthMethods">Chọn cách đăng nhập</string>
+    <string name="m40AuthNoPlace">Không có nơi nào để đăng nhập</string>
+    <string name="m40AuthNoPlaceBody">Hãy thêm một máy chủ OpenCode hoặc cài tác nhân của nhà cung cấp này trên điện thoại.</string>
+    <string name="m40AuthUnavailable">Không thể đăng nhập tại đây</string>
+    <string name="m40AuthUnavailableBody">Kết nối này không hỗ trợ cách đăng nhập nào cho nhà cung cấp này.</string>
+    <string name="m40AuthKey">Khóa API</string>
+    <string name="m40AuthKeyHelp">Khóa của bạn được gửi đến kết nối này và lưu ở đó.</string>
+    <string name="m40AuthSaveKey">Lưu khóa</string>
+    <string name="m40AuthContinue">Tiếp tục</string>
+    <string name="m40AuthEnterValue">Nhập một giá trị.</string>
+    <string name="m40AuthSelectValue">Chọn một tùy chọn.</string>
+    <string name="m40AuthOpenPage">Mở trang đăng nhập</string>
+    <string name="m40AuthAskPage">Mở %1$s trong trình duyệt của bạn?</string>
+    <string name="m40AuthOpenBrowser">Mở trong trình duyệt</string>
+    <string name="m40AuthCheck">Kiểm tra đăng nhập</string>
+    <string name="m40AuthWaiting">Hãy hoàn tất đăng nhập, rồi kiểm tra tại đây.</string>
+    <string name="m40AuthCommandWaiting">Kết nối đang chạy bước đăng nhập. Hãy kiểm tra tại đây khi nó xong.</string>
+    <string name="m40AuthCode">Mã đăng nhập hoặc URL gọi lại</string>
+    <string name="m40AuthFinish">Hoàn tất đăng nhập</string>
+    <string name="m40AuthDone">Xong</string>
+    <string name="m40AuthComplete">Đã đăng nhập</string>
+    <string name="m40AuthCompleteBody">Danh sách gói đã được làm mới.</string>
+    <string name="m40AuthFailed">Không hoàn tất được bước này. Hãy thử lại.</string>
+    <string name="m40AuthReenter">Hãy nhập lại mật khẩu của máy chủ này trong mục Máy chủ, rồi quay lại đây.</string>
+    <string name="m40AuthDetails">Chi tiết</string>
+    <string name="m40AuthCopyDetails">Sao chép chi tiết</string>
+    <string name="m40AuthDeviceCode">Dùng mã %1$s trên trang đăng nhập.</string>
+    <string name="m40AuthCopyCode">Sao chép mã</string>
+    <string name="m40AuthCopied">Đã sao chép mã</string>
+    <string name="m40AuthBrowserHint">Cách này phải được hoàn tất trong trình duyệt trên máy đang chạy máy chủ này.</string>
+    <string name="m40AuthDeviceHint">Đăng nhập bằng mã thiết bị.</string>
+    <string name="m40AuthAccountHint">Đăng nhập bằng tài khoản nhà cung cấp của bạn.</string>
+    <string name="m40AuthCommandHint">Kết nối tự chạy bước đăng nhập này; điện thoại không chạy lệnh nào.</string>
+    <string name="m40AuthPhoneHint">Dùng tác nhân đã cài của nhà cung cấp này trên điện thoại.</string>
+</resources>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="m40AuthTitle">Iniciar sesión en %1$s</string>
+    <string name="m40AuthBack">Atrás</string>
+    <string name="m40AuthWorking">Trabajando…</string>
+    <string name="m40AuthPlaces">¿Dónde quieres iniciar sesión?</string>
+    <string name="m40AuthBest">Aquí el uso está listo para leerse.</string>
+    <string name="m40AuthServer">El inicio de sesión se guarda en este servidor.</string>
+    <string name="m40AuthPhone">Este teléfono</string>
+    <string name="m40AuthMethods">Elige cómo iniciar sesión</string>
+    <string name="m40AuthNoPlace">No hay dónde iniciar sesión</string>
+    <string name="m40AuthNoPlaceBody">Agrega un servidor de OpenCode o instala el agente de este proveedor en este teléfono.</string>
+    <string name="m40AuthUnavailable">El inicio de sesión no está disponible aquí</string>
+    <string name="m40AuthUnavailableBody">Esta conexión no ofrece un método de inicio de sesión compatible para este proveedor.</string>
+    <string name="m40AuthKey">Clave de API</string>
+    <string name="m40AuthKeyHelp">Tu clave se envía a esta conexión y se guarda allí.</string>
+    <string name="m40AuthSaveKey">Guardar clave</string>
+    <string name="m40AuthContinue">Continuar</string>
+    <string name="m40AuthEnterValue">Escribe un valor.</string>
+    <string name="m40AuthSelectValue">Elige una opción.</string>
+    <string name="m40AuthOpenPage">Abrir la página de inicio de sesión</string>
+    <string name="m40AuthAskPage">¿Abrir %1$s en tu navegador?</string>
+    <string name="m40AuthOpenBrowser">Abrir en el navegador</string>
+    <string name="m40AuthCheck">Comprobar inicio de sesión</string>
+    <string name="m40AuthWaiting">Termina de iniciar sesión y luego comprueba aquí.</string>
+    <string name="m40AuthCommandWaiting">La conexión está ejecutando su inicio de sesión. Comprueba aquí cuando termine.</string>
+    <string name="m40AuthCode">Código de inicio de sesión o URL de retorno</string>
+    <string name="m40AuthFinish">Terminar el inicio de sesión</string>
+    <string name="m40AuthDone">Listo</string>
+    <string name="m40AuthComplete">Inicio de sesión completado</string>
+    <string name="m40AuthCompleteBody">La lista de planes se actualizó.</string>
+    <string name="m40AuthFailed">No se pudo terminar este paso. Inténtalo de nuevo.</string>
+    <string name="m40AuthReenter">Vuelve a escribir la contraseña de este servidor en Servidores y regresa aquí.</string>
+    <string name="m40AuthDetails">Detalles</string>
+    <string name="m40AuthCopyDetails">Copiar detalles</string>
+    <string name="m40AuthDeviceCode">Usa el código %1$s en la página de inicio de sesión.</string>
+    <string name="m40AuthCopyCode">Copiar código</string>
+    <string name="m40AuthCopied">Código copiado</string>
+    <string name="m40AuthBrowserHint">Este método debe terminarse en un navegador de la máquina que ejecuta este servidor.</string>
+    <string name="m40AuthDeviceHint">Inicia sesión con el código del dispositivo.</string>
+    <string name="m40AuthAccountHint">Inicia sesión con tu cuenta del proveedor.</string>
+    <string name="m40AuthCommandHint">La conexión ejecuta este inicio de sesión; el teléfono no ejecuta ningún comando.</string>
+    <string name="m40AuthPhoneHint">Usa el agente instalado de este proveedor en este teléfono.</string>
+</resources>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="serverSettingsTitle">Настройки сервера</string>
+    <string name="serverSettingsShell">Оболочка по умолчанию</string>
+    <string name="serverSettingsFailed">Не удалось завершить. Повторите.</string>
+    <string name="serverSettingsRemove">Удалить сервер</string>
+    <string name="serverSettingsRemoveBody">Это удалит из приложения сохранённое подключение и его локальные данные. Сервер и файлы на его компьютере останутся на месте.</string>
+    <string name="serverSettingsDisconnected">Не подключено</string>
+    <string name="serverSettingsConnect">Подключиться к этому серверу</string>
+    <string name="serverSettingsOnServer">Изменения здесь сохраняются на %1$s и видны другим приложениям, которые его используют.</string>
+    <string name="serverSettingsWaiting">Ожидание</string>
+    <string name="serverSettingsPassed">Пройдено</string>
+    <string name="serverSettingsAttention">Требует внимания</string>
+    <string name="serverSettingsFailedCheck">Нужно исправить</string>
+    <string name="serverSettingsSkipped">Не проверялось</string>
+    <string name="serverSettingsShellUnavailable">Подключитесь к серверу, поддерживающему общие настройки оболочки, чтобы изменить оболочку по умолчанию.</string>
+    <string name="serverSettingsSaving">Сохранение…</string>
+    <string name="serverSettingsTerminal">Терминал</string>
+    <string name="serverSettingsFiles">Просмотр файлов</string>
+    <string name="serverSettingsProjects">Управление проектами</string>
+    <string name="serverSettingsSchedules">Запросы по расписанию</string>
+    <string name="serverSettingsProviders">Поставщики моделей</string>
+    <string name="serverSettingsPermissions">Запросы разрешений</string>
+    <string name="serverSettingsSteering">Направлять ответ в процессе</string>
+    <string name="serverSettingsSupported">Доступно на этом сервере</string>
+    <string name="serverSettingsUnsupported">Недоступно на этом сервере</string>
+    <string name="server40DisconnectConfirm">Отключиться от %1$s?</string>
+    <string name="server40Disconnect">Отключить</string>
+    <string name="server40DisconnectBody">Подключение на этом телефоне будет закрыто. Ваши чаты, черновики и сообщения в очереди сохранятся.</string>
+    <string name="server40Reconnect">Подключить снова</string>
+    <string name="server40AgentsNone">На этом компьютере нет готовых агентов.</string>
+    <string name="server40Plugins">Плагины сервера</string>
+    <string name="server40ResetDone">Ваши значения по умолчанию снова действуют здесь.</string>
+    <string name="server40ModelHelp">Этот выбор действует для новых чатов на этом сервере. Существующие чаты сохраняют свою модель.</string>
+</resources>

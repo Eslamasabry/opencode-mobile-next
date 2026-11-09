@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="protoProvidersTitle">Đăng nhập nhà cung cấp</string>
+    <string name="protoProvidersRefresh">Làm mới nhà cung cấp</string>
+    <string name="protoProvidersEmpty">Máy chủ này chưa có đăng nhập nhà cung cấp nào.</string>
+    <string name="protoProvidersConnected">Đã kết nối</string>
+    <string name="protoProvidersNotConnected">Chưa kết nối</string>
+    <string name="protoProvidersUseKey">Dùng khóa API</string>
+    <string name="protoProvidersDisconnect">Xóa đăng nhập đã lưu</string>
+    <string name="protoProvidersStart">Bắt đầu đăng nhập</string>
+    <string name="protoProvidersKey">Khóa API</string>
+    <string name="protoProvidersConnect">Kết nối nhà cung cấp</string>
+    <string name="protoProvidersFinishBrowser">Hoàn tất đăng nhập trong trình duyệt, rồi kiểm tra kết quả tại đây.</string>
+    <string name="protoProvidersCode">Mã đăng nhập</string>
+    <string name="protoProvidersComplete">Hoàn tất đăng nhập</string>
+    <string name="protoProvidersCheck">Kiểm tra đăng nhập</string>
+    <string name="protoProvidersCancel">Hủy đăng nhập</string>
+    <string name="protoProvidersOpenTitle">Mở trang đăng nhập?</string>
+    <string name="protoProvidersOpenHost">Trình duyệt của bạn sẽ mở %1$s.</string>
+    <string name="protoProvidersOpenInsecure">Trang tại %1$s dùng kết nối không mã hóa.</string>
+    <string name="protoProvidersOpen">Mở trình duyệt</string>
+    <string name="protoProvidersUnavailable">Máy chủ này không hỗ trợ đăng nhập nhà cung cấp.</string>
+    <string name="protoProvidersLoadFailed">Không tải được đăng nhập nhà cung cấp. Thử lại.</string>
+    <string name="protoProvidersChanged">Máy chủ hoặc dự án này đã thay đổi. Làm mới trước khi bắt đầu đăng nhập khác.</string>
+    <string name="protoProvidersInvalidInput">Điền các thông tin đăng nhập bắt buộc.</string>
+    <string name="protoProvidersFailed">Không hoàn tất được đăng nhập. Kiểm tra trạng thái hoặc thử lại.</string>
+    <string name="protoProvidersPending">Đang chờ nhà cung cấp hoàn tất đăng nhập.</string>
+    <string name="protoProvidersCompleteStatus">Máy chủ đã xác nhận đăng nhập. Làm mới để xem các nhà cung cấp đã kết nối.</string>
+    <string name="protoProvidersExpired">Lượt đăng nhập này đã hết hạn. Hãy bắt đầu lại.</string>
+    <string name="protoProvidersCancelled">Đã hủy đăng nhập.</string>
+    <string name="protoProvidersDisconnected">Đã xóa đăng nhập đã lưu. Làm mới để xem các kết nối hiện tại.</string>
+</resources>

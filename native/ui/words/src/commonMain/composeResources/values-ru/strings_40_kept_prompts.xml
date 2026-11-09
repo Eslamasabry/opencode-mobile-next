@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="keptPromptsTitle">Сохранённые запросы</string>
+    <string name="keptPromptsBody">Запросы, сохранённые при удалении сервера. Восстановите запрос в чате, чтобы проверить его перед отправкой.</string>
+    <string name="keptPromptsEmpty">Нет сохранённых запросов</string>
+    <string name="keptPromptsChoose">Выберите чат</string>
+    <string name="keptPromptsChooseBody">Выберите чат подключённого сервера. Это только заполнит его черновик.</string>
+    <string name="keptPromptsNoTargets">Нет подключённых чатов</string>
+    <string name="keptPromptsNoTargetsBody">Подключите сохранённый сервер или откройте чат и повторите.</string>
+    <string name="keptPromptsConnect">Подключить сервер</string>
+    <string name="keptPromptsUncertain">Возможно, этот запрос уже отправлен. Проверьте исходный чат, прежде чем отправлять его снова.</string>
+    <string name="keptPromptsFailed">Не удалось прочитать или изменить сохранённые запросы. Повторите.</string>
+    <string name="keptPromptsKeptFrom">Сохранено с удалённого сервера</string>
+    <string name="keptPromptsRestoreFailed">Сохранённый запрос или чат изменился. Снова откройте «Сохранённые запросы» в чате и повторите.</string>
+    <string name="keptConversation">Чат</string>
+</resources>

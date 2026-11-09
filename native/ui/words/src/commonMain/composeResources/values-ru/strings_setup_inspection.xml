@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="setupInspectTitle">Просмотр настройки</string>
+    <string name="setupInspectReadOnly">Здесь можно только смотреть конфигурацию и состояние инструментов. Применить и Отменить недоступны: этот сервер не может безопасно восстанавливать изменения настройки.</string>
+    <string name="setupInspectFailed">Не удалось загрузить сведения о настройке. Подключитесь к серверу снова и повторите попытку.</string>
+    <string name="setupInspectRefresh">Обновить настройку</string>
+    <string name="setupInspectLoading">Чтение настройки…</string>
+    <string name="setupInspectConfig">Источники конфигурации</string>
+    <string name="setupInspectNoSources">Источники конфигурации не сообщены.</string>
+    <string name="setupInspectMcp">Подключения инструментов</string>
+    <string name="setupInspectNoMcp">Подключения инструментов не сообщены.</string>
+    <string name="setupMcpConnected">Подключено</string>
+    <string name="setupMcpPending">Подключение</string>
+    <string name="setupMcpDisabled">Выключено</string>
+    <string name="setupMcpFailed">Не удалось подключиться</string>
+    <string name="setupMcpSignIn">Нужно войти</string>
+    <string name="setupMcpUnknown">Состояние неизвестно</string>
+    <string name="setupRegistryTitle">Публичный реестр инструментов</string>
+    <string name="setupRegistryConsent">Открыть публичный реестр</string>
+    <string name="setupRegistryPrivacy">Обновление обращается к публичному реестру MCP без учётных данных сервера. Поисковые запросы отправляются в реестр и никогда не сохраняются.</string>
+    <string name="setupRegistryDisabled">Просмотр выключен. Включите его, чтобы загружать записи при нажатии «Обновить».</string>
+    <string name="setupRegistryLoading">Загрузка публичных записей…</string>
+    <string name="setupRegistryOffline">Нет сети. Показаны сохранённые записи.</string>
+    <string name="setupRegistryError">Не удалось загрузить публичный реестр. Показаны сохранённые записи.</string>
+    <string name="setupRegistryEmpty">Записи не загружены. Обновите реестр или выполните поиск.</string>
+    <string name="setupRegistryReadOnly">Записи только для информации. Настраивайте инструменты вручную на своём сервере: эта страница не выполняет команды реестра и не открывает ссылки из записей.</string>
+    <string name="setupRegistrySearch">Поиск по записям</string>
+    <string name="setupRegistryRefresh">Обновить записи</string>
+    <string name="setupRegistrySaved">Показать сохранённые записи</string>
+    <string name="setupInspectUnsupported">Просмотр настройки недоступен на этом сервере.</string>
+    <string name="setupMigrationRequired">Перенос ваших прежних чатов…</string>
+    <string name="setupMigrationProgress">Перенос ваших прежних чатов (%1$d из %2$d)…</string>
+    <string name="setupMigrationError">Серверу не удалось завершить перенос ваших прежних чатов. Исходные данные по-прежнему на этом телефоне и не тронуты.</string>
+    <string name="setupMigrationUnavailable">Сервер не смог сообщить состояние ваших прежних чатов. Обновите и повторите попытку.</string>
+</resources>

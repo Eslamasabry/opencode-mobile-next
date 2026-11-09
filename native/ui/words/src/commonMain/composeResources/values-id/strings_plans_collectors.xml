@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="plansCollectors">Baca batas paket</string>
+    <string name="plansCollectorTarget">%1$s · %2$s</string>
+    <string name="plansCollectorEnabled">Pembacaan aktif. Ketuk untuk menonaktifkan dan menghapus angka ini.</string>
+    <string name="plansCollectorDisabled">Baca dari pengumpul yang terpasang di server ini</string>
+    <string name="plansCollectorQuestion">Baca batas %1$s dari server ini?</string>
+    <string name="plansCollectorAllow">Percayai pengumpul dan baca</string>
+    <string name="plansCollectorTrust">Lanjutkan hanya jika Anda memercayai pengumpul kuota yang terpasang di %1$s. Pengumpul menerima kredensial masuk tersimpan server ini pada alamat kuota yang tetap. Permintaan tidak mengikuti pengalihan. Anda dapat menonaktifkan pembacaan di sini. Mengubah alamat atau info masuk memerlukan izin lagi.</string>
+    <string name="plansCollectorFailed">Pilihan ini tidak dapat disimpan. Sambungkan ulang ke server lalu coba lagi.</string>
+    <string name="plansPaseoDisabled">Baca pemakaian dari server Paseo ini</string>
+    <string name="plansPaseoQuestion">Baca pemakaian paket dari Paseo?</string>
+    <string name="plansPaseoTrust">Baca batas paket yang dilaporkan oleh %1$s selama aplikasi ini terlihat. Menonaktifkannya menghapus angka widget yang tersimpan. Tidak ada pembaca latar belakang yang dimulai.</string>
+    <string name="plansBuiltinReader">Pembaca pemakaian di ponsel</string>
+    <string name="plansBuiltinDisabled">Siapkan pembaca pemakaian di dalam Ubuntu ponsel ini</string>
+    <string name="plansBuiltinQuestion">Baca batas paket di ponsel ini?</string>
+    <string name="plansBuiltinTrust">Pasang pembaca pemakaian bawaan di %1$s dan baca info masuk penyedia yang tersimpan di sana. Token bacanya tetap di penyimpanan aman dan file privat. Pengumpulan Claude tetap tidak tersedia. Menonaktifkannya menghentikan layanannya dan menghapus angka widget.</string>
+</resources>

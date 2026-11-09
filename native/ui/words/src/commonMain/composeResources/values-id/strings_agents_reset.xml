@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentsResetSavedSignIns">Atur ulang data masuk tersimpan</string>
+    <string name="agentsResetSavedSignInsBody">Putuskan semua server dan hapus kata sandi server tersimpan serta kunci akses pembantu dari aplikasi ini? Profil, percakapan, proyek, dan akun masuk milik agen tetap ada. Mulai ulang aplikasi setelahnya.</string>
+    <string name="agentsResetSavedSignInsFailed">Tidak semua data masuk tersimpan dapat diatur ulang. Coba lagi, lalu mulai ulang aplikasi.</string>
+    <string name="agentsRestartAfterReset">Mulai ulang aplikasi sebelum menghubungkan atau memakai agen ponsel lagi.</string>
+    <string name="agentsHelperStopped">Pembantu agen berhenti tiba-tiba. Periksa penyiapan ponsel sebelum memulai percakapan lain.</string>
+    <string name="agentsHelperMayHaveStopped">Pembantu agen berhenti. Android mungkin menghentikannya untuk mengosongkan memori atau membatasi proses latar belakang.</string>
+    <string name="agentsPhoneHelperProfile">Agen ponsel</string>
+    <string name="agentsPreviousVersion">Pakai %1$s versi sebelumnya</string>
+    <string name="agentsPreviousVersionBody">Beralih ke versi sebelumnya yang terverifikasi dan tersimpan di ponsel ini? Pembantu akan berhenti dulu, lalu agen ponsel terhubung lagi. Akun masuk dan percakapan tetap ada.</string>
+    <string name="agentsPreviousVersionFailed">Versi sebelumnya tidak dapat dipulihkan. Selesaikan pekerjaan yang sedang berjalan, lalu coba lagi.</string>
+    <string name="agentsPreviousVersionRestored">Versi sebelumnya dipulihkan.</string>
+</resources>

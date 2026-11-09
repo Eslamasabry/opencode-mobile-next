@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="setupStepTimedOut">Шаг «%1$s» занимает намного больше времени, чем должен. Повторите попытку или воспользуйтесь компьютером.</string>
+    <string name="setupUseComputerInstead">Использовать компьютер</string>
+    <string name="setupActivityDownloading">Загружаем файлы</string>
+    <string name="setupActivityUnpacking">Распаковываем файлы</string>
+    <string name="setupActivityConfiguring">Настраиваем всё нужное</string>
+    <string name="setupActivityChecking">Проверяем, что установлено</string>
+    <string name="setupActivityWorking">Работаем</string>
+    <string name="setupHeartbeatLine">%1$s · %2$s</string>
+    <string name="setupHeartbeatQuiet">Всё ещё работаем. Долгие шаги могут занять несколько минут.</string>
+    <string name="chatModelFailRateLimit">Модель сейчас занята. Выберите другую модель или повторите через несколько минут.</string>
+    <string name="chatModelFailDailyLimit">Бесплатный дневной лимит для этой модели исчерпан. Выберите другую модель или повторите завтра.</string>
+    <string name="chatModelFailSignIn">Чтобы пользоваться этой моделью, сначала нужно войти. Войдите или выберите другую модель.</string>
+    <string name="chatModelFailQuota">На вашем счёте не осталось средств для этой модели. Пополните счёт или выберите другую модель.</string>
+    <string name="chatModelFailGeneric">Модель не смогла ответить. Выберите другую модель или повторите ещё раз.</string>
+    <string name="chatModelFailSwitch">Выбрать другую модель</string>
+    <string name="chatModelFailSignInAction">Войти</string>
+    <string name="chatStalledOnTool">Всё ещё ждём: %1$s.</string>
+    <string name="chatStalledStop">Остановить</string>
+</resources>

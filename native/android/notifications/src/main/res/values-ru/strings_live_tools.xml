@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="notify_tool_command">Выполняется команда…</string>
+    <string name="notify_tool_edit">Правка файлов…</string>
+    <string name="notify_tool_read">Чтение файлов…</string>
+    <string name="notify_tool_search">Поиск по файлам…</string>
+    <string name="notify_tool_web">Поиск в интернете…</string>
+    <string name="notify_tool_subagent">Работает субагент…</string>
+    <string name="notify_tool_plan">Составление плана…</string>
+    <string name="notify_tool_working">Работа…</string>
+    <string name="notify_tool_card">Показ карточки…</string>
+    <string name="notify_tool_backgroundtask">Проверка фоновой задачи…</string>
+    <string name="notify_tool_other">Выполняется: %1$s…</string>
+</resources>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="connectionCheckAction">Verificar conexão</string>
+    <string name="connectionCheckTitle">Verificação da conexão</string>
+    <string name="connectionCheckAgain">Atualizar</string>
+    <string name="connectionCheckAddress">Endereço</string>
+    <string name="connectionCheckSignIn">Login</string>
+    <string name="connectionCheckVersion">Versão do servidor</string>
+    <string name="connectionCheckLive">Atualizações ao vivo</string>
+    <string name="connectionCheckSpeed">Tempo de resposta</string>
+    <string name="connectionCheckWaiting">Aguardando</string>
+    <string name="connectionCheckRunning">Verificando…</string>
+    <string name="connectionCheckPassed">Aprovado</string>
+    <string name="connectionCheckVersionValue">Versão %1$s</string>
+    <string name="connectionCheckMillis">%1$s ms</string>
+    <string name="connectionCheckUnreachable">Não foi possível acessar o servidor. Confira o endereço e se o servidor está em execução.</string>
+    <string name="connectionCheckNotServer">Este endereço não respondeu como um servidor compatível. Confira o endereço.</string>
+    <string name="connectionCheckNeedsPassword">Digite novamente a senha ou o token do servidor salvo e tente de novo.</string>
+    <string name="connectionCheckPasswordRejected">O servidor recusou o login salvo. Atualize a senha ou o token.</string>
+    <string name="connectionCheckUnsupported">Esta versão do servidor não é compatível. Atualize o servidor.</string>
+    <string name="connectionCheckNotReady">O servidor respondeu, mas ainda não está pronto. Aguarde um instante e verifique de novo.</string>
+    <string name="connectionCheckStreamUnchecked">Conecte este servidor para verificar as atualizações ao vivo.</string>
+    <string name="connectionCheckStreamConnecting">A conexão ao vivo ainda está sendo restabelecida. Verifique de novo em instantes.</string>
+    <string name="connectionCheckStreamDown">A conexão ao vivo caiu. Reconecte este servidor.</string>
+    <string name="connectionCheckSlow">%1$s ms — o servidor está respondendo devagar. Verifique a rede ou a carga do servidor.</string>
+    <string name="connectionCheckSkipped">Não verificado porque uma etapa anterior precisa de atenção.</string>
+    <string name="connectionCheckTrust">Revise a confiança na conexão deste servidor antes de verificar de novo.</string>
+    <string name="connectionCheckChanged">O servidor salvo mudou. Feche esta verificação e abra-a de novo.</string>
+</resources>

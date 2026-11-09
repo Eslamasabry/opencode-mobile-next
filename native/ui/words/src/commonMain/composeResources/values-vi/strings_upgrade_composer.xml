@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="upgradeComposerAsk">Hỏi %1$s…</string>
+    <string name="upgradeComposerFree"> · Miễn phí</string>
+    <string name="upgradeComposerVoiceHoldTitle">Trò chuyện với tác nhân</string>
+    <string name="upgradeComposerVoiceHold">Giữ micro và nói; thả tay để đưa lời nói của bạn vào ô nhập. Để trò chuyện bằng giọng nói, mở + rồi chọn Trò chuyện bằng giọng nói.</string>
+    <string name="upgradeComposerHoldDictate">Giữ để đọc chính tả</string>
+</resources>

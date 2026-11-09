@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateNoteTitle">Ghi chú cuộc trò chuyện</string>
+    <string name="stateNoteDescription">Ghi chú này định hướng các câu trả lời trong cuộc trò chuyện này. Ghi chú được lưu trên máy chủ này.</string>
+    <string name="stateNoteField">Ghi chú cho cuộc trò chuyện này</string>
+    <string name="stateNoteSave">Lưu ghi chú</string>
+    <string name="stateNoteRemove">Xóa ghi chú</string>
+    <string name="stateNoteReload">Đọc lại ghi chú đã lưu</string>
+    <string name="stateNoteWorking">Đang lưu hoặc đọc ghi chú. Vui lòng đợi.</string>
+    <string name="stateNoteReloadFirst">Hãy thay đổi nội dung trước. Ghi chú phải được tải xong và không vượt quá 8192 byte sau khi mã hóa.</string>
+    <string name="stateNoteTooLarge">Ghi chú quá dài. Giữ trong 8192 byte sau khi mã hóa.</string>
+    <string name="stateNoteChanged">Cuộc trò chuyện hoặc ghi chú đã lưu đã thay đổi. Hãy đọc lại trước khi lưu.</string>
+    <string name="stateNoteFailed">Không thể đọc hoặc lưu ghi chú. Kiểm tra kết nối và thử lại.</string>
+    <string name="stateNoteSaved">Đã lưu ghi chú.</string>
+    <string name="stateNoteRemoved">Đã xóa ghi chú.</string>
+    <string name="stateNoteDiscardTitle">Bỏ thay đổi ghi chú này?</string>
+    <string name="stateNoteDiscardBody">Thay đổi chưa lưu của bạn sẽ mất. Ghi chú đã lưu vẫn giữ nguyên.</string>
+    <string name="stateNoteDiscard">Bỏ thay đổi</string>
+</resources>

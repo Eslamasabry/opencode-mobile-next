@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="composerKeptRestoreTitle">Lời nhắc đã giữ</string>
+    <string name="composerKeptRestoreRefused">Không khôi phục được lời nhắc này. Nó vẫn nằm trong Lời nhắc đã giữ. Hãy mở lại để khôi phục.</string>
+    <string name="composerKeptMissingFiles">Không khôi phục được các tệp này: %1$s. Lời nhắc đã giữ của chúng không thay đổi.</string>
+</resources>

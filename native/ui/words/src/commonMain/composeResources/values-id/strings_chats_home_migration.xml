@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="homeOpeningConnecting">Menyambung ke %1$s</string>
+    <string name="homeOpeningFailed">%1$s tidak menjawab</string>
+    <string name="homeOpeningSavedTitles">Ini judul percakapan yang tersimpan terakhir kali. Percakapan terbuka setelah server menjawab.</string>
+    <string name="homeOpeningStarting">Memulai ponsel ini…</string>
+    <string name="homeOpeningWaiting">Percakapan Anda tampil di sini setelah server menjawab.</string>
+    <string name="homeOpeningFailedBody">Pastikan server menyala dan ponsel ini bisa menjangkaunya, lalu coba lagi.</string>
+    <string name="homeWatchedServers">Server yang dipantau</string>
+    <string name="homeInboxCount">Kotak masuk · %1$s</string>
+    <string name="homeSourcesFailed">Tidak bisa mengubah koneksi daftar ini. Coba lagi.</string>
+    <string name="homeWatchedOpenBody">Kami akan memeriksa bahwa permintaan ini masih menunggu di server ini sebelum membuka percakapannya.</string>
+    <string name="homeWatchedOpenFailed">Permintaan ini tidak bisa dibuka. Muat ulang server yang dipantau dan coba lagi.</string>
+    <string name="homeRefreshWatched">Muat ulang server yang dipantau</string>
+    <string name="homeMonitorOff">Nonaktif. Aktifkan untuk memeriksa permintaan tertunda di server ini.</string>
+    <string name="homeMonitorWaiting">Menunggu pemeriksaan berikutnya</string>
+    <string name="homeMonitorChecking">Memeriksa permintaan tertunda</string>
+    <string name="homeMonitorCurrent">Permintaan tertunda sudah terbaru</string>
+    <string name="homeMonitorUnavailable">Tidak menjawab. Permintaannya tidak ditampilkan.</string>
+    <string name="homeMonitorWifi">Menunggu Wi-Fi</string>
+    <string name="homeMonitorPaused">Pemeriksaan dijeda selagi aplikasi dan layanan latar belakang berhenti.</string>
+</resources>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="widgetPanelSaving">Guardando…</string>
+    <string name="widgetPanelClose">Cerrar</string>
+    <string name="widgetPanelPreview">Vista previa del widget</string>
+    <string name="widgetPanelSquare">Cuadrado</string>
+    <string name="widgetPanelWide">Ancho</string>
+    <string name="widgetPanelBackground">Fondo</string>
+    <string name="widgetPanelSolid">Sólido</string>
+    <string name="widgetPanelTinted">Con tinte</string>
+    <string name="widgetPanelTransparent">Transparente</string>
+    <string name="widgetPanelAccent">Acento</string>
+    <string name="widgetPanelActionUnavailable">Este widget necesita una conexión activa para poder enviar un mensaje.</string>
+    <string name="widgetPanelSending">Enviando…</string>
+    <string name="widgetPanelSent">Enviado</string>
+    <string name="widgetPanelBusy">Otra acción del widget sigue en curso. Tu mensaje sigue aquí.</string>
+    <string name="widgetPanelDictate">Dictar</string>
+</resources>

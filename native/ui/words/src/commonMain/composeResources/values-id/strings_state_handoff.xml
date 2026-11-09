@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateHandoffTitle">Percakapan tertaut</string>
+    <string name="stateHandoffWorking">Memproses…</string>
+    <string name="stateHandoffFailed">Percakapan tertaut tidak dapat dibuka. Coba lagi.</string>
+    <string name="stateHandoffTransferFailed">Pemindahan ini belum dikonfirmasi. Tutup lembar ini dan periksa percakapan Anda sebelum memulai pemindahan lain.</string>
+    <string name="stateHandoffReviewNote">Tinjau catatan percakapan yang disamarkan ini dan perintah pertama sebelum melanjutkan. Isi lampiran dan penalaran pribadi tidak disertakan.</string>
+    <string name="stateHandoffRecord">Catatan percakapan</string>
+    <string name="stateHandoffPrompt">Perintah pertama</string>
+    <string name="stateHandoffRetryLink">Simpan tautan lagi</string>
+    <string name="stateHandoffContinue">Mulai percakapan tertaut</string>
+    <string name="stateHandoffLinked">Percakapan tertaut</string>
+    <string name="stateHandoffNoLinks">Percakapan ini tidak memiliki tautan tersimpan.</string>
+    <string name="stateHandoffNew">Lanjutkan di percakapan baru</string>
+    <string name="stateHandoffNewNote">Pilih model di koneksi ini. Proyek Anda tetap sama, dan Anda meninjau serah terima sebelum apa pun dikirim.</string>
+</resources>

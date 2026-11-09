@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="keptSvcTitle">Службы</string>
+    <string name="keptSvcFailed">Службы не смогли это выполнить</string>
+    <string name="keptSvcFailedBody">Проверьте, что Linux настроен, и повторите. Ваш выбор по службам сохранён.</string>
+    <string name="keptSvcAdd">Добавить службу</string>
+    <string name="keptSvcKeepsRunning">Запущенная вами служба продолжает работать после сбоя или при повторном открытии приложения, пока вы её не остановите.</string>
+    <string name="keptSvcEmpty">Служб пока нет. Добавьте свою команду, чтобы она всегда работала.</string>
+    <string name="keptSvcScreenOff">Службы могут приостанавливаться при выключенном экране, если телефон не заряжается.</string>
+    <string name="keptSvcStartNamed">Запустить %1$s</string>
+    <string name="keptSvcStopNamed">Остановить %1$s</string>
+    <string name="keptSvcRestartNamed">Перезапустить %1$s</string>
+    <string name="keptSvcOpenNamed">Открыть %1$s</string>
+    <string name="keptSvcRemoveNamed">Удалить %1$s</string>
+    <string name="keptSvcWorking">Выполняется действие со службой…</string>
+    <string name="keptSvcCopyLog">Копировать журнал</string>
+    <plurals name="keptSvcRestarts">
+        <item quantity="one">Вернулась после %1$d перезапуска</item>
+        <item quantity="few">Вернулась после %1$d перезапусков</item>
+        <item quantity="many">Вернулась после %1$d перезапусков</item>
+        <item quantity="other">Вернулась после %1$d перезапуска</item>
+    </plurals>
+    <string name="keptSvcLogTitle">Журнал службы</string>
+    <string name="keptSvcSearchLog">Найти в журнале</string>
+    <string name="keptSvcLogEmpty">Вывода пока нет.</string>
+    <string name="keptSvcRemoveQuestion">Удалить %1$s?</string>
+    <string name="keptSvcRemoveBody">Служба останавливается, прежде чем её сохранённое описание и журналы удаляются.</string>
+    <string name="keptSvcRemoveGoes">Её команда, выбор «вкл./выкл.» и журналы удаляются.</string>
+    <string name="keptSvcRemoveStays">Установленные инструменты и файлы проекта остаются.</string>
+    <string name="keptSvcSaveStart">Сохранить и запустить службу</string>
+    <string name="keptSvcName">Название</string>
+    <string name="keptSvcNameHint">От 2 до 24 строчных букв, цифр или дефисов; начинайте с буквы.</string>
+    <string name="keptSvcCommand">Команда</string>
+    <string name="keptSvcDirectory">Папка внутри Linux</string>
+    <string name="keptSvcPort">Порт (необязательно)</string>
+    <string name="keptSvcPortHint">Свободный порт от 1024 до 65535. Оставьте пустым, если у службы нет веб-страницы.</string>
+    <string name="keptSvcBadName">Выберите другое название в указанном выше формате. Названия служб приложения зарезервированы.</string>
+    <string name="keptSvcBadCommand">Введите одну строку команды, не длиннее 4096 символов.</string>
+    <string name="keptSvcBadDirectory">Используйте абсолютный путь папки Linux без сегментов родительской папки (..).</string>
+    <string name="keptSvcBadPort">Выберите неиспользуемый порт от 1024 до 65535, не входящий в зарезервированные приложением.</string>
+    <string name="keptSvcRestart">Перезапускать после сбоя</string>
+    <string name="keptSvcRestartBody">Повторять попытку после сбоя; остановиться после нескольких быстрых сбоев подряд.</string>
+    <string name="keptSvcLimit">Уже есть 16 служб. Удалите одну, прежде чем добавлять другую.</string>
+    <string name="keptSvcPaused">Приостановлена, пока телефон горячий</string>
+    <string name="keptSvcOff">Выключена</string>
+    <string name="keptSvcStarting">Запуск…</string>
+    <string name="keptSvcRunning">Работает</string>
+    <string name="keptSvcRunningFor">Работает %1$d мин</string>
+    <string name="keptSvcStopping">Остановка…</string>
+    <string name="keptSvcRetrying">Сбой (код %1$d). Повторная попытка через %2$d с</string>
+    <string name="keptSvcPortBusy">Порт %1$d занят. Скоро повторим попытку.</string>
+    <plurals name="keptSvcGaveUp">
+        <item quantity="one">Остановлена после повторяющихся сбоев (%1$d перезапуск)</item>
+        <item quantity="few">Остановлена после повторяющихся сбоев (%1$d перезапуска)</item>
+        <item quantity="many">Остановлена после повторяющихся сбоев (%1$d перезапусков)</item>
+        <item quantity="other">Остановлена после повторяющихся сбоев (%1$d перезапуска)</item>
+    </plurals>
+    <string name="keptSvcExited">Завершена (код %1$d)</string>
+    <string name="keptSvcPortNumber">Порт %1$d</string>
+    <string name="keptSvcLogStarted">Запущена</string>
+    <string name="keptSvcLogExit">Завершена (код %1$d)</string>
+    <string name="keptSvcLogRetry">Повторная попытка через %1$d с</string>
+    <string name="keptSvcLogGaveUp">Остановлена после повторяющихся сбоев</string>
+</resources>

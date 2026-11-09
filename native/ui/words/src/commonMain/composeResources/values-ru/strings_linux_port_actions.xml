@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxPortActions">Действия с портом</string>
+    <string name="linuxPortCopiedAddress">Копировать адрес</string>
+    <string name="linuxPortOwnerStop">Остановить %1$s</string>
+    <string name="linuxPortOwnerQuestion">Остановить %1$s?</string>
+    <plurals name="linuxPortOwnerStopBody">
+        <item quantity="one">Остановите выбранную программу и её помощников (%1$d процесс). Каждый процесс по-прежнему должен совпадать с показанным идентификатором. Ничто не запустит её снова.</item>
+        <item quantity="few">Остановите выбранную программу и её помощников (%1$d процесса). Каждый процесс по-прежнему должен совпадать с показанным идентификатором. Ничто не запустит её снова.</item>
+        <item quantity="many">Остановите выбранную программу и её помощников (%1$d процессов). Каждый процесс по-прежнему должен совпадать с показанным идентификатором. Ничто не запустит её снова.</item>
+        <item quantity="other">Остановите выбранную программу и её помощников (%1$d процесса). Каждый процесс по-прежнему должен совпадать с показанным идентификатором. Ничто не запустит её снова.</item>
+    </plurals>
+    <string name="linuxPortOwnerResult">Завершено: %1$d · принудительно: %2$d · ещё работает: %3$d · идентификатор изменился, оставлено: %4$d</string>
+</resources>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="hub40Changed">Cette entrée d’utilisation a changé. Actualisez Forfaits pour voir les comptes actuels.</string>
+    <string name="hub40ContinueOn">Continuer sur %1$s\u00A0?</string>
+    <string name="hub40ContinueBody">Ce raccourci demande à ouvrir la connexion enregistrée pour vous connecter au fournisseur. Rien n’est envoyé tant que vous n’avez pas continué.</string>
+    <string name="hub40Continue">Continuer</string>
+</resources>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="tools44ShowAll">Tampilkan semua keluaran</string>
+    <string name="tools44Lines">Baris</string>
+    <string name="tools44HiddenLines">baris tersembunyi</string>
+</resources>

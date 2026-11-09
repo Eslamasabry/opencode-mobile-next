@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatHistoryReadFailed">Не удалось загрузить более ранние сообщения. Уже загруженные сообщения на месте. Повторите попытку.</string>
+    <string name="chatTranscriptTokens">Токенов: %1$s</string>
+    <string name="chatTranscriptCost">Примерная стоимость: $%1$s</string>
+    <string name="chatHistoryTitle">Использовать запрос снова</string>
+    <string name="chatHistorySubtitle">Выберите слова из этого чата или из недавних отправок. Они добавятся в черновик, ничего не отправится.</string>
+    <string name="chatHistorySearch">Поиск по недавним запросам</string>
+    <string name="chatHistoryEmpty">Недавних запросов пока нет.</string>
+    <string name="chatHistoryLoading">Загружаем недавние запросы…</string>
+    <string name="chatHistoryLoadFailed">Не удалось загрузить недавние запросы. Запросы из этого чата по-прежнему доступны.</string>
+</resources>

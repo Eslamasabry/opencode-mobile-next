@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="reviewTurnTitle">Alterações desta rodada</string>
+    <string name="reviewOneFileUnavailable">Desfazer um arquivo por vez ainda não está disponível: este servidor só consegue desfazer a partir de uma mensagem. Use Desfazer tudo ou Desfazer daqui em diante em uma mensagem.</string>
+    <string name="reviewNoDiff">O servidor não informou as linhas que mudaram neste arquivo.</string>
+    <string name="reviewFileGone">Este arquivo não está mais nestas alterações.</string>
+    <string name="reviewIncomplete">Não foi possível ler as mensagens mais antigas, então esta lista pode estar sem alguns arquivos.</string>
+    <string name="reviewNoChangesBody">O agente não informou edições de arquivos aqui.</string>
+    <string name="reviewWaiting">Um desfazer aguarda sua revisão. As mensagens depois dela ficam ocultas até você escolher.</string>
+    <string name="reviewUndoUnknown">Desfazer tudo precisa da mensagem em que estas alterações começaram, e não foi possível lê-la.</string>
+    <string name="reviewUndoUnavailable">Este servidor não consegue desfazer a partir de uma mensagem.</string>
+    <string name="reviewToolEvidence">Com base no que as ferramentas do agente informaram. Alterações feitas por comandos não aparecem.</string>
+    <string name="reviewSendBackFailed">Não foi possível colocar sua nota na mensagem. Tente novamente.</string>
+</resources>

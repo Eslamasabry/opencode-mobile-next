@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="tipMessageDetailsTitle">Подробности сообщения</string>
+    <string name="tipMessageDetails">Удерживайте сообщение и выберите «Подробности» или нажмите кнопку «Ещё», чтобы увидеть модель и время.</string>
+</resources>

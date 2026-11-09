@@ -51,10 +51,15 @@ import kotlin.math.floor
  * stops with the app (the frame clock pauses when the window is hidden). Saver hides the look; a style may cap or hide
  * it.
  *
+ * [shared] (every framed page, `KitScreen`): the page shows the theme root's one live background ([KitLiveShare]): one
+ * clock, and per page size one recorded picture, one shader frame and one set of blurred copies, so a push or a pop
+ * draws the look once (smoothness round 2). Each page still draws that picture in its own frame, so nothing is seen
+ * through a page. A thumbnail of a look ([KitLiveLookPreview]) keeps its own.
+ *
  * States: off (flat ground), shader, still fallback, painted.
  */
 @Composable
-public fun KitLiveBackground(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+public fun KitLiveBackground(modifier: Modifier = Modifier, shared: Boolean = false, content: @Composable () -> Unit) {
     val appearance = LocalKitAppearance.current
     val style = LocalKitStyle.current
     val colors = LocalKitColors.current
@@ -62,7 +67,9 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, content: @Composable
     val motion = LocalKitMotion.current
     val platform = LocalKitPlatform.current
     val backdrop = rememberKitGlassBackdrop()
-    val clock = rememberLiveFrameClock()
+    val share = if (shared) LocalKitLiveShare.current else null
+    val clock = share?.clock ?: rememberLiveFrameClock()
+    val pictures = share?.pictures
     // Hook H7: a style may cap the look or hide it (kit_live_background.dart:266-271).
     val strength = style.spec.tokens.live.cap(appearance.liveStrength)
     val on = appearance.liveBackground && !appearance.saver && strength > 0f
@@ -81,8 +88,15 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, content: @Composable
     // The picture every pane blurs steps at the look's own pace up to GLASS_PICTURE_FPS: on a 120 Hz screen every other
     // frame re-records no picture and re-blurs no pane (the shader alone still follows every frame where it draws itself).
     val pictureTime = rememberLiveTime(clock, animates, GLASS_PICTURE_FPS)
+    // A shared page (smoothness round 2) draws a shader look through the shared picture whatever the style: one shader
+    // frame for every page of its size. Where no pane blurs it, it keeps every display frame, exactly as LiveShaderLayer.
+    val shaderTime = if (glassBlurs) pictureTime else time
     val shaderPicture =
-        if (glassBlurs && look != null && render == LiveRender.Shader) rememberLiveShaderBackdrop(look, strength, pictureTime) else null
+        if ((glassBlurs || pictures != null) && look != null && render == LiveRender.Shader) {
+            rememberLiveShaderBackdrop(look, strength, shaderTime, pictures)
+        } else {
+            null
+        }
     val painted = plate != null || shaderPicture != null
     // Six steps a second for the painted picture (its drift moves under a pixel a second): Glass panes re-blur it on
     // every step.
@@ -93,7 +107,7 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, content: @Composable
             when {
                 !animates -> NoSteps
                 plate != null -> drift::value
-                shaderPicture != null -> pictureTime
+                shaderPicture != null -> shaderTime
                 else -> NoSteps
             }
         backdrop.painted = painted
@@ -127,13 +141,13 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, content: @Composable
         when {
             plate != null -> {
                 val (image, filter) = plate
-                Modifier.kitGlassBackdropSource(backdrop) {
+                Modifier.kitGlassBackdropSource(backdrop, pictures) {
                     drawRect(ground)
                     val at = if (animates) drift.value.toDouble() else 0.0
                     drawAuroraPlate(image, filter, alpha, AuroraImage.driftAt(at))
                 }
             }
-            shaderPicture != null -> Modifier.kitGlassBackdropSource(backdrop, shaderPicture)
+            shaderPicture != null -> Modifier.kitGlassBackdropSource(backdrop, pictures, shaderPicture)
             else -> null
         }
     // A touch wakes a resting clock; it never consumes the touch.

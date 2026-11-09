@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="p12ProjectsTitle">Проекты</string>
+    <string name="p12OpenFolder">Открыть папку на сервере</string>
+    <string name="p12NewProjectUnavailable">Этот сервер не может создавать папки с телефона. Создайте папку на том компьютере, затем откройте её здесь.</string>
+    <string name="p12PhoneFolder">Папка на этом телефоне</string>
+    <string name="p12PhoneFolderUnavailable">OpenCode на этом телефоне пока не настроен в этой версии.</string>
+    <string name="p12ProjectsOnServer">Проекты на %1$s</string>
+    <string name="p12ProjectsLoadFailed">Не удалось загрузить проекты этого сервера.</string>
+    <string name="p12NoServerTitle">Нет подключённого сервера</string>
+    <string name="p12NoServerBody">Подключите сервер, чтобы увидеть его проекты и чаты.</string>
+    <string name="p12PathNotAbsolute">Введите полный путь, начинающийся с /.</string>
+    <string name="p12PathBadParts">Путь не может содержать «..» или переносы строк.</string>
+    <string name="p12NewHere">Новый чат здесь</string>
+    <string name="p12NewHereBody">Начинает чат, который работает в %1$s.</string>
+    <string name="p12ProjectConversations">Чаты в этом проекте</string>
+    <string name="p12ProjectNoConversations">В этом проекте пока нет чатов.</string>
+    <string name="p12ElsewhereTitle">В других проектах</string>
+    <string name="p12CreateFailed">Не удалось начать чат.</string>
+    <string name="p12Select">Выбрать</string>
+    <string name="p12SelectCancel">Отменить выбор</string>
+    <string name="p12Rename">Переименовать</string>
+    <string name="p12RenameTitle">Переименовать чат</string>
+    <string name="p12RenameField">Название</string>
+    <string name="p12RenameEmpty">В названии должна быть хотя бы одна буква.</string>
+    <string name="p12RenameFailed">Не удалось переименовать чат.</string>
+    <plurals name="p12DeleteSelected">
+        <item quantity="one">Удалить %1$d чат</item>
+        <item quantity="few">Удалить %1$d чата</item>
+        <item quantity="many">Удалить %1$d чатов</item>
+        <item quantity="other">Удалить %1$d чата</item>
+    </plurals>
+    <plurals name="p12ArchiveSelected">
+        <item quantity="one">Архивировать %1$d чат</item>
+        <item quantity="few">Архивировать %1$d чата</item>
+        <item quantity="many">Архивировать %1$d чатов</item>
+        <item quantity="other">Архивировать %1$d чата</item>
+    </plurals>
+    <string name="p12Deleted">Удалён чат «%1$s»</string>
+    <string name="chatsRowArchived">Чат «%1$s» архивирован</string>
+    <string name="chatsRowActions">Действия с чатом</string>
+    <plurals name="p12DeletedMany">
+        <item quantity="one">Удалён %1$d чат</item>
+        <item quantity="few">Удалено %1$d чата</item>
+        <item quantity="many">Удалено %1$d чатов</item>
+        <item quantity="other">Удалено %1$d чата</item>
+    </plurals>
+    <string name="p12DeleteFailed">Не удалось удалить чат, поэтому он снова в списке.</string>
+    <string name="p12ArchiveUnavailable">Этот сервер не может архивировать чаты.</string>
+    <string name="p12ArchiveFailed">Не удалось архивировать чат.</string>
+    <string name="p12ArchivedFilter">В архиве</string>
+    <string name="p12MoreFor">Ещё для %1$s</string>
+    <string name="p12OpenChat">Открыть чат</string>
+</resources>

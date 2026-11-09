@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="reportR1Optional">Необязательно</string>
+    <string name="reportR1Included">Что входит в отчёт</string>
+    <string name="reportR1IncludedLine">Сведения о приложении и телефоне. Пароли, ключи и адреса серверов удаляются.</string>
+    <string name="reportR1IncludedCrash">Сведения о приложении и телефоне, а также сбой в %1$s. Пароли, ключи и адреса серверов удаляются.</string>
+    <string name="reportR1IncludedFreeze">Сведения о приложении и телефоне, а также зависание в %1$s. Пароли, ключи и адреса серверов удаляются.</string>
+    <string name="reportR1IncludedClose">Сведения о приложении и телефоне, а также закрытие в %1$s. Пароли, ключи и адреса серверов удаляются.</string>
+    <string name="reportR1IncludedOpen">Показать, что входит в отчёт</string>
+    <string name="reportR1Send">Отправить отчёт</string>
+    <string name="reportR1CopyText">Скопировать текст</string>
+    <string name="reportR1PostGitHub">Опубликовать на GitHub</string>
+    <string name="reportR1NoSend">В этой версии нельзя отправлять отчёты. Скопируйте текст или опубликуйте его на GitHub.</string>
+    <string name="reportR1SheetSubtitle">Именно это и будет отправлено.</string>
+    <string name="reportR1Words">Ваше описание</string>
+    <string name="reportR1NoWords">Ничего не написано</string>
+    <string name="reportR1LastClose">Последнее закрытие приложения</string>
+    <string name="reportR1Crashed">Неожиданно закрылось · %1$s</string>
+    <string name="reportR1Froze">Перестало отвечать · %1$s</string>
+    <string name="reportR1ClosedForMemory">Закрыто Android для освобождения памяти · %1$s</string>
+    <string name="reportR1App">Приложение</string>
+    <string name="reportR1AppValue">OpenCode Mobile %1$s (%2$s)</string>
+    <string name="reportR1Phone">Телефон</string>
+    <string name="reportR1Android">Android %1$s</string>
+    <string name="reportR1Memory">Память: %1$s ГБ</string>
+    <string name="reportR1Connection">Подключение</string>
+    <string name="reportR1AddressOut">%1$s · адрес удалён</string>
+    <string name="reportR1NotConnected">Не подключено</string>
+    <string name="reportR1Problems">Недавние проблемы</string>
+    <string name="reportR1NoProblems">Нет</string>
+    <string name="reportR1ProblemCount">%1$s (%2$s)</string>
+    <string name="reportR1NeverSent">Никогда не отправляются: ваши чаты, файлы, пароли, ключи и адреса серверов.</string>
+    <string name="reportR1SentBody">Спасибо. Если вы напишете нам об этой проблеме, назовите этот код, чтобы мы нашли ваш отчёт.</string>
+    <string name="reportR1PublicTitle">Опубликовать этот отчёт?</string>
+    <string name="reportR1PublicBody">Задачи на GitHub может читать любой. Форма откроется с вашим описанием и сведениями о приложении, и ничего не будет опубликовано, пока вы не отправите её там.</string>
+    <string name="reportR1PublicConfirm">Открыть GitHub</string>
+    <string name="reportR1GitHubFailed">Не удалось открыть GitHub. Повторите.</string>
+    <string name="reportR1KindTimeout">Истекло время ожидания</string>
+    <string name="reportR1KindAuth">Вход отклонён</string>
+    <string name="reportR1KindTls">Сертификат не заслуживает доверия</string>
+    <string name="reportR1KindServer">Ошибка сервера</string>
+    <string name="reportR1KindProtocol">Неожиданный ответ сервера</string>
+    <string name="reportR1KindDns">Адрес не найден</string>
+    <string name="reportR1KindRefused">Соединение отклонено</string>
+    <string name="reportR1KindOffline">Нет сети</string>
+    <string name="reportR1KindTooLarge">Сообщение слишком большое</string>
+    <string name="reportR1KindRejected">Сообщение отклонено</string>
+    <string name="reportR1KindOther">Другая проблема</string>
+    <string name="reportKeptCopyErrors">Скопировать журнал ошибок</string>
+    <string name="reportKeptClearErrors">Очистить ошибки</string>
+</resources>

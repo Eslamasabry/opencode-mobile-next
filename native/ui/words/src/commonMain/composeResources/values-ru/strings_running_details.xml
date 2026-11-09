@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="runningDetailMemory">Память: %1$d МБ</string>
+    <string name="runningDetailElapsed">Работает %1$d мин</string>
+    <string name="runningDetailPid">Процесс %1$d</string>
+    <plurals name="runningDetailHelpers">
+        <item quantity="one">Также останавливает %1$d его вспомогательный процесс. Его подлинность проверяется ещё раз.</item>
+        <item quantity="few">Также останавливает %1$d его вспомогательных процесса. Подлинность каждого проверяется ещё раз.</item>
+        <item quantity="many">Также останавливает %1$d его вспомогательных процессов. Подлинность каждого проверяется ещё раз.</item>
+        <item quantity="other">Также останавливает %1$d его вспомогательного процесса. Подлинность каждого проверяется ещё раз.</item>
+    </plurals>
+    <string name="runningDetailBusy">Занят</string>
+    <string name="runningDetailIdle">Простаивает</string>
+</resources>

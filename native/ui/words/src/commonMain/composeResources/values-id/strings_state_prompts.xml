@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="statePromptMigrationPending">Beberapa draf atau lampiran lama belum dapat dipindahkan. Pekerjaan tersimpan Anda tetap aman. Kosongkan ruang jika perlu, lalu coba lagi.</string>
+    <string name="statePromptFilesUnavailable">File ini tidak dapat dipulihkan di sini: %1$s. Perintah tersimpan tetap disimpan.</string>
+</resources>

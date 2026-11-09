@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxToolsTitle">Công cụ đã cài</string>
+    <string name="linuxToolsAiTeam">AI Team</string>
+    <string name="linuxToolsPart">Công cụ cho điện thoại</string>
+    <string name="linuxToolsFreedBytes">Có thể giải phóng khoảng %1$s.</string>
+    <string name="linuxToolsWait">Hãy chờ thao tác hiện tại trên điện thoại hoàn tất.</string>
+    <string name="linuxToolsInstalled">Đã cài đặt</string>
+    <string name="linuxToolsAbsent">Chưa cài đặt</string>
+    <string name="linuxToolsUnknown">Không kiểm tra được. Hãy làm mới để thử lại.</string>
+    <string name="linuxToolsRefresh">Làm mới các công cụ đã cài</string>
+    <string name="linuxToolsRemovePython">Gỡ công cụ Python</string>
+    <string name="linuxToolsRemoveQuestion">Gỡ công cụ Python?</string>
+    <string name="linuxToolsRemoveBody">Gỡ pip và các gói trong môi trường ảo. Bản thân Python, dự án và cuộc trò chuyện vẫn còn.</string>
+    <string name="linuxToolsRemoved">Đã gỡ công cụ Python.</string>
+    <string name="linuxToolsDependent">Một công cụ khác đã cài đang cần thành phần này.</string>
+    <string name="linuxToolsDependencyUnknown">Không kiểm tra được một công cụ khác có thể cần thành phần này. Hãy làm mới và thử lại.</string>
+    <string name="linuxToolsRequired">Thành phần này là bắt buộc cho các công cụ của điện thoại.</string>
+    <string name="linuxToolsUnsupported">Không thể gỡ thành phần này ở đây.</string>
+    <string name="linuxToolsInventoryFailed">Không kiểm tra được các công cụ đã cài. Hãy làm mới và thử lại. Chưa có gì bị gỡ.</string>
+    <string name="linuxToolsSetupRunning">Hãy dừng thiết lập hoặc chờ nó xong trước khi gỡ công cụ.</string>
+    <string name="linuxToolsRemoveFailed">Không gỡ hết được công cụ Python. Hãy làm mới các công cụ đã cài rồi thử lại.</string>
+    <string name="linuxSetupStatusUnreadable">Không đọc được bản thiết lập đã lưu. Hãy tiếp tục thiết lập để thử lại.</string>
+    <string name="linuxSetupHostMismatch">Bản thiết lập đã lưu này thuộc về một môi trường Linux khác. Hãy bắt đầu thiết lập cho điện thoại này.</string>
+    <string name="linuxSetupHostRefused">Không thể bắt đầu thiết lập điện thoại một cách an toàn. Hãy tiếp tục thiết lập để thử lại.</string>
+    <string name="linuxSetupSavedFailed">Không lưu được thiết lập. Hãy giải phóng bớt bộ nhớ rồi tiếp tục thiết lập.</string>
+    <string name="linuxSetupBytes">%1$s trên %2$s</string>
+    <string name="linuxSetupCheckingPart">Đang kiểm tra các công cụ đã cài</string>
+    <string name="linuxSetupPartPending">Đang chờ</string>
+    <string name="linuxSetupPartRunning">Đang cài đặt</string>
+    <string name="linuxSetupPartDone">Sẵn sàng</string>
+    <string name="linuxSetupPartFailed">Chưa hoàn tất</string>
+</resources>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="staleFailureTitle">¿Informar de este fallo?</string>
+    <string name="staleFailureBody">Esto ocurrió en %1$s. Puede que la versión %2$s ya lo corrija.</string>
+    <string name="staleFailureUpdateFirst">Actualizar primero</string>
+    <string name="staleFailureReportAnyway">Informar de todos modos</string>
+</resources>

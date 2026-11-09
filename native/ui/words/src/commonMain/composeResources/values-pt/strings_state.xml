@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="statePin">Fixar conversa</string>
+    <string name="stateUnpin">Desafixar conversa</string>
+    <string name="statePinFailed">Não foi possível salvar a fixação. Tente novamente.</string>
+    <string name="stateContextUsage">Último contexto: %1$d%</string>
+    <string name="stateSavedPreview">Lista salva. Conecte-se para abrir esta conversa.</string>
+</resources>

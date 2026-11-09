@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxComponentsTitle">Componentes do Linux</string>
+    <string name="linuxComponentsRefresh">Verificar componentes instalados</string>
+    <string name="linuxComponentsTeam">AI Team</string>
+    <string name="linuxComponentsUnknown">Componente</string>
+    <string name="linuxComponentsInstalled">Instalado</string>
+    <string name="linuxComponentsDependents">Necessário para %1$s. Remova esses componentes primeiro.</string>
+    <string name="linuxComponentsDependencyUnknown">Não foi possível verificar %1$s. Verifique de novo antes de remover este componente.</string>
+    <string name="linuxComponentsRequired">Necessário para o servidor deste celular.</string>
+    <string name="linuxComponentsUnsupported">Este componente não pode ser removido separadamente.</string>
+    <string name="linuxComponentsAbsent">Não instalado</string>
+    <string name="linuxComponentsUnknownPresence">Não foi possível verificar os componentes instalados. Tente novamente.</string>
+    <string name="linuxComponentsBusy">Aguarde o fim da configuração ou da operação em andamento.</string>
+    <string name="linuxComponentsFailed">Não foi possível remover o componente. Verifique de novo e tente outra vez.</string>
+    <string name="linuxComponentsRemove">Remover %1$s</string>
+    <string name="linuxComponentsRemoveQuestion">Remover %1$s?</string>
+    <string name="linuxComponentsRemoveBody">Somente este componente é removido. Seus projetos e conversas permanecem. As dependências serão verificadas de novo antes da remoção.</string>
+    <string name="linuxSetupOpenSettings">Abrir configurações do app</string>
+    <string name="linuxSetupStepWaiting">Aguardando</string>
+    <string name="linuxSetupStepKept">Já instalado</string>
+    <string name="linuxSetupSwitchBusy">Conclua o trabalho em andamento e responda aos pedidos pendentes neste celular; depois tente a configuração de novo.</string>
+    <string name="linuxSetupSwitchFailed">A configuração não conseguiu preparar este celular com segurança. Suas conversas e mensagens salvas foram mantidas. Verifique a conexão e o espaço livre e tente novamente.</string>
+</resources>

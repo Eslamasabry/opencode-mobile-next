@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateFormTitle">Ответить агенту</string>
+    <string name="stateFormAnswer">Ответ</string>
+    <string name="stateFormHeld">Ваш ответ скоро будет отправлен.</string>
+    <string name="stateFormUndo">Отменить</string>
+    <string name="stateFormInvalid">Проверьте отмеченные ответы перед отправкой.</string>
+    <string name="stateFormOther">Другое</string>
+    <string name="stateFormOpenLink">Открыть ссылку</string>
+    <string name="stateFormRestoring">Восстановление сохранённых ответов…</string>
+    <string name="stateFormSend">Отправить ответы</string>
+    <string name="stateFormDecline">Отклонить этот запрос</string>
+    <string name="stateFormDeclineTitle">Отклонить этот запрос?</string>
+    <string name="stateFormDeclineBody">Агент продолжит без ваших ответов. Этот запрос нельзя восстановить.</string>
+    <string name="stateFormKeepEditing">Продолжить правку</string>
+    <string name="stateFormStorageFailed">Не удалось прочитать или сохранить ваши ответы. Закройте и снова откройте этот запрос, чтобы повторить.</string>
+    <string name="stateFormUncertain">Доставка не подтверждена. Проверьте чат, прежде чем отвечать снова.</string>
+    <string name="stateFormChanged">Этот запрос изменился. Откройте актуальный запрос.</string>
+    <string name="stateFormNotAccepted">Ваш ответ не принят. Просмотрите запрос, прежде чем повторить.</string>
+    <string name="stateFormDismiss">Закрыть</string>
+</resources>

@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="editor40Edit">Изменить сервер</string>
+    <string name="editor40Loading">Чтение сохранённого сервера…</string>
+    <string name="editor40Kind">Что запущено на вашем компьютере?</string>
+    <string name="editor40Folder">Папка проекта</string>
+    <string name="editor40Token">Токен или пароль</string>
+    <string name="editor40More">Дополнительные параметры</string>
+    <string name="editor40OtherCommands">Показать другие команды</string>
+    <string name="editor40Check">Проверить подключение</string>
+    <string name="editor40CancelCheck">Отменить проверку</string>
+    <string name="editor40Slow">Сервер отвечает долго. Можно отменить эту проверку и продолжить редактирование.</string>
+    <string name="editor40SaveConnect">Сохранить и подключиться</string>
+    <string name="editor40SaveAnyway">Всё равно сохранить</string>
+    <string name="editor40SavedFailed">Сервер сохранён, но подключиться не удалось. Проверьте адрес и вход, затем повторите попытку.</string>
+    <string name="editor40Checked">Подключение проверено · %1$s</string>
+    <string name="editor40Ready">Ваш сервер подключён. Ваши чаты остаются на сервере.</string>
+    <string name="editor40Open">Открыть чаты</string>
+    <string name="editor40DiscardTitle">Отменить эти изменения?</string>
+    <string name="editor40Discard">Отменить изменения</string>
+    <string name="editor40DiscardBody">Введённые вами изменения не сохранены.</string>
+    <string name="editor40HttpTitle">Использовать незашифрованное соединение?</string>
+    <string name="editor40UseAddress">Использовать этот адрес</string>
+    <string name="editor40HttpBody">Ваш пароль и чаты могут прочитать другие пользователи этой сети. Лучше использовать HTTPS или частную сеть Tailscale. Этот выбор действует только для этого точного адреса.</string>
+    <string name="editor40Inspect">Просмотреть сертификат</string>
+    <string name="editor40Pinned">Для этого адреса сохранён сертификат. Если сертификат изменится, соединение будет прервано.</string>
+    <string name="editor40CertificateTitle">Доверять этому сертификату?</string>
+    <string name="editor40TrustCertificate">Доверять этому сертификату</string>
+    <string name="editor40CertificateBody">Сравните этот отпечаток SHA-256 с владельцем сервера по другому надёжному каналу. Другой сертификат прервёт соединение.</string>
+    <string name="editor40CertificateDates">Действителен с %1$s по %2$s (UTC)</string>
+    <string name="editor40TailscaleBody">Подключите оба устройства к одной сети Tailscale. Используйте адрес компьютера 100.x или его имя .ts.net. Пароль самого сервера сохраните: Tailscale его не заменяет.</string>
+    <string name="editor40EnterAddress">Введите адрес компьютера</string>
+    <string name="permissions40Title">Всегда разрешённые действия</string>
+    <string name="permissions40Intro">Действия, которые агент может выполнять в этом проекте без запроса. Отзовите действие, чтобы в следующий раз агент спросил снова.</string>
+    <string name="permissions40RevokeTitle">Отозвать это всегда разрешённое действие?</string>
+    <string name="permissions40Revoke">Отозвать доступ</string>
+    <string name="permissions40RevokeBody">Агент спросит разрешения, прежде чем снова выполнить это действие. Уже выполняемое действие не будет остановлено.</string>
+    <string name="permissions40AllResources">Все подходящие ресурсы</string>
+    <string name="permissions40Loading">Чтение разрешённых действий…</string>
+    <string name="permissions40Failed">Не удалось прочитать или изменить разрешённые действия. Проверьте подключение и повторите.</string>
+    <string name="permissions40Empty">В этом проекте нет всегда разрешённых действий. Агент спросит, когда ему понадобится разрешение.</string>
+    <string name="permissions40Revoked">Отозвано: %1$s. Агент спросит в следующий раз.</string>
+    <string name="permissions40Dismiss">Закрыть</string>
+    <string name="permissions40Refresh">Обновить разрешённые действия</string>
+    <string name="editor40TailscaleInstalled">Tailscale установлен. Откройте его, войдите и включите VPN. Это приложение не может проверить ваш вход в VPN.</string>
+    <string name="editor40TailscaleMissing">Сначала установите на этот телефон официальное приложение Tailscale.</string>
+    <string name="editor40TailscaleUnknown">Не удалось проверить приложение Tailscale. Проверьте снова, когда оно будет доступно.</string>
+    <string name="editor40TailscaleOpen">Открыть Tailscale</string>
+    <string name="editor40TailscaleInstall">Установить Tailscale</string>
+    <string name="editor40TailscaleRefresh">Проверить Tailscale снова</string>
+    <plurals name="rows40Waiting">
+        <item quantity="one">%1$d ждёт вас</item>
+        <item quantity="few">%1$d ждут вас</item>
+        <item quantity="many">%1$d ждут вас</item>
+        <item quantity="other">%1$d ждут вас</item>
+    </plurals>
+    <string name="rows40Working">Работают: %1$d</string>
+    <string name="rows40Secret">Введите сохранённые данные для входа снова</string>
+    <plurals name="rows40Queued">
+        <item quantity="one">%1$d запрос ожидает</item>
+        <item quantity="few">%1$d запроса ожидают</item>
+        <item quantity="many">%1$d запросов ожидают</item>
+        <item quantity="other">%1$d запроса ожидают</item>
+    </plurals>
+    <plurals name="rows40Move">
+        <item quantity="one">Перенести %1$d ожидающий запрос в %2$s</item>
+        <item quantity="few">Перенести %1$d ожидающих запроса в %2$s</item>
+        <item quantity="many">Перенести %1$d ожидающих запросов в %2$s</item>
+        <item quantity="other">Перенести %1$d ожидающих запроса в %2$s</item>
+    </plurals>
+    <string name="rows40Schedules">Запросы по расписанию</string>
+    <string name="queue40Title">Перенос ожидающих запросов</string>
+    <string name="queue40Loading">Чтение ожидающих запросов и чатов назначения…</string>
+    <string name="queue40Failed">Ничего не перенесено. Подключение или ожидающие запросы изменились, либо хранилище отклонило изменение. Обновите и проверьте выбор снова.</string>
+    <string name="queue40Intro">Перенесите ожидающие запросы из %1$s в %2$s. Здесь ничего не отправляется. Пароли и ключи в их тексте скрываются перед переносом.</string>
+    <string name="queue40Empty">На этом сервере нет ожидающих запросов.</string>
+    <string name="queue40Attachment">Запрос с вложением</string>
+    <string name="queue40Uncertain">Возможно, он уже отправлен. Проверьте его на исходном сервере.</string>
+    <string name="queue40ServerFile">Это вложение можно открыть только на исходном сервере.</string>
+    <string name="queue40Mentions">Скрытие секрета изменит упоминания агентов в этом запросе. Сначала измените его на исходном сервере.</string>
+    <string name="queue40Sending">Этот запрос отправляется. Дождитесь результата.</string>
+    <string name="queue40CannotMove">Этот запрос должен остаться на исходном сервере.</string>
+    <string name="queue40Destination">Чат назначения</string>
+    <string name="queue40NewConversation">Начать новый чат</string>
+    <string name="queue40Untitled">Чат без названия</string>
+    <plurals name="queue40Move">
+        <item quantity="one">Перенести %1$d запрос в %2$s</item>
+        <item quantity="few">Перенести %1$d запроса в %2$s</item>
+        <item quantity="many">Перенести %1$d запросов в %2$s</item>
+        <item quantity="other">Перенести %1$d запроса в %2$s</item>
+    </plurals>
+    <string name="queue40Select">Выберите хотя бы один запрос, который можно перенести.</string>
+    <plurals name="queue40Moved">
+        <item quantity="one">Перенесён %1$d запрос. Остались на исходном сервере: %2$d. С выбором модели или агента из места назначения: %3$d. Ничего не отправлено.</item>
+        <item quantity="few">Перенесено %1$d запроса. Остались на исходном сервере: %2$d. С выбором модели или агента из места назначения: %3$d. Ничего не отправлено.</item>
+        <item quantity="many">Перенесено %1$d запросов. Остались на исходном сервере: %2$d. С выбором модели или агента из места назначения: %3$d. Ничего не отправлено.</item>
+        <item quantity="other">Перенесено %1$d запроса. Остались на исходном сервере: %2$d. С выбором модели или агента из места назначения: %3$d. Ничего не отправлено.</item>
+    </plurals>
+    <string name="queue40Undo">Отменить перенос</string>
+    <string name="queue40Open">Открыть чат назначения</string>
+    <plurals name="queue40Undone">
+        <item quantity="one">Возвращён %1$d запрос, который ещё ожидал. Запросы, которые уже отправляются, остались на месте.</item>
+        <item quantity="few">Возвращено %1$d запроса, которые ещё ожидали. Запросы, которые уже отправляются, остались на месте.</item>
+        <item quantity="many">Возвращено %1$d запросов, которые ещё ожидали. Запросы, которые уже отправляются, остались на месте.</item>
+        <item quantity="other">Возвращено %1$d запроса, которые ещё ожидали. Запросы, которые уже отправляются, остались на месте.</item>
+    </plurals>
+    <string name="queue40Refresh">Обновить ожидающие запросы</string>
+    <string name="remove40Title">Удалить этот сервер</string>
+    <string name="remove40ConfirmTitle">Удалить %1$s?</string>
+    <string name="remove40Body">Сохранённое подключение и локальные данные этого приложения будут удалены. Чаты на сервере не удаляются.</string>
+    <plurals name="remove40QueueLost">
+        <item quantity="one">%1$d ожидающий запрос будет удалён с этого телефона.</item>
+        <item quantity="few">%1$d ожидающих запроса будут удалены с этого телефона.</item>
+        <item quantity="many">%1$d ожидающих запросов будут удалены с этого телефона.</item>
+        <item quantity="other">%1$d ожидающих запроса будут удалены с этого телефона.</item>
+    </plurals>
+    <plurals name="remove40QueueKept">
+        <item quantity="one">%1$d ожидающий запрос будет сохранён в разделе «Сохранённые запросы».</item>
+        <item quantity="few">%1$d ожидающих запроса будут сохранены в разделе «Сохранённые запросы».</item>
+        <item quantity="many">%1$d ожидающих запросов будут сохранены в разделе «Сохранённые запросы».</item>
+        <item quantity="other">%1$d ожидающих запроса будут сохранены в разделе «Сохранённые запросы».</item>
+    </plurals>
+    <plurals name="remove40Uncertain">
+        <item quantity="one">%1$d из них, возможно, уже отправлен; он тоже удаляется с этого телефона.</item>
+        <item quantity="few">%1$d из них, возможно, уже отправлены; они тоже удаляются с этого телефона.</item>
+        <item quantity="many">%1$d из них, возможно, уже отправлены; они тоже удаляются с этого телефона.</item>
+        <item quantity="other">%1$d из них, возможно, уже отправлены; они тоже удаляются с этого телефона.</item>
+    </plurals>
+    <plurals name="remove40DraftsLost">
+        <item quantity="one">%1$d сохранённый черновик чата будет удалён.</item>
+        <item quantity="few">%1$d сохранённых черновика чата будут удалены.</item>
+        <item quantity="many">%1$d сохранённых черновиков чата будут удалены.</item>
+        <item quantity="other">%1$d сохранённых черновика чата будут удалены.</item>
+    </plurals>
+    <string name="remove40Active">Текущее подключение будет закрыто. Вы вернётесь к сохранённым серверам.</string>
+    <string name="remove40ServerKeeps">На сервере остаются его чаты и файлы.</string>
+    <string name="remove40Loading">Проверка данных, которые телефон хранит для сервера…</string>
+    <string name="remove40Failed">Не удалось завершить удаление этого сервера. Возможно, он отключён и часть локальной очистки выполнена. Сохранённый сервер остаётся, пока не завершена нужная очистка или проверка доставки.</string>
+    <string name="remove40DeleteQueue">Удалить и ожидающие запросы</string>
+    <string name="remove40DeleteQueueHelp">Если выключить, их текст и вложения сохранятся в разделе «Сохранённые запросы».</string>
+    <string name="remove40Refresh">Проверить сохранённые данные снова</string>
+    <string name="queue40UndoFailed">Не удалось отменить перенос. Проверьте чат назначения, прежде чем пробовать снова; запросы, которые уже начали отправляться, остаются там.</string>
+    <string name="editor40SaveChanges">Сохранить изменения</string>
+    <string name="editor40Stale">Этот сохранённый сервер или вход в него изменился. Закройте эту страницу и снова откройте сервер, прежде чем продолжить.</string>
+    <string name="editor40Deleted">Этот сервер удалён. Закройте страницу, чтобы вернуться к сохранённым серверам.</string>
+</resources>

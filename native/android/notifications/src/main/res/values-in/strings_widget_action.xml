@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="notify_widget_action">Mengirim tindakan widget Anda</string>
+    <string name="notify_widget_action_description">Memeriksa percakapan dan permintaan yang tepat.</string>
+</resources>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="plansCollectors">Ler limites dos planos</string>
+    <string name="plansCollectorTarget">%1$s · %2$s</string>
+    <string name="plansCollectorEnabled">Leitura ativada. Toque para desativar e limpar estes números.</string>
+    <string name="plansCollectorDisabled">Ler a partir do coletor instalado neste servidor</string>
+    <string name="plansCollectorQuestion">Ler os limites de %1$s a partir deste servidor?</string>
+    <string name="plansCollectorAllow">Confiar no coletor e ler</string>
+    <string name="plansCollectorTrust">Só continue se você confia no coletor de cota instalado em %1$s. Ele recebe a credencial de login salva deste servidor em um endereço de cota fixo. Os pedidos não seguem redirecionamentos. Você pode desativar a leitura aqui. Mudar o endereço ou o login exige nova permissão.</string>
+    <string name="plansCollectorFailed">Não foi possível salvar esta escolha. Reconecte ao servidor e tente novamente.</string>
+    <string name="plansPaseoDisabled">Ler o uso a partir deste servidor Paseo</string>
+    <string name="plansPaseoQuestion">Ler o uso do plano a partir do Paseo?</string>
+    <string name="plansPaseoTrust">Lê os limites do plano informados por %1$s enquanto este app está visível. Desativar limpa os números salvos do widget. Nenhum leitor em segundo plano é iniciado.</string>
+    <string name="plansBuiltinReader">Leitor de uso no celular</string>
+    <string name="plansBuiltinDisabled">Configurar o leitor de uso dentro do Ubuntu deste celular</string>
+    <string name="plansBuiltinQuestion">Ler os limites dos planos neste celular?</string>
+    <string name="plansBuiltinTrust">Instala o leitor de uso incluído em %1$s e lê os logins de provedores salvos ali. O token de leitura dele fica no armazenamento seguro e em arquivos privados. A coleta do Claude continua indisponível. Desativar para o serviço e limpa os números do widget.</string>
+</resources>

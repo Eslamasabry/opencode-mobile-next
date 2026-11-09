@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="p12ProjectsTitle">Projetos</string>
+    <string name="p12OpenFolder">Abrir uma pasta no servidor</string>
+    <string name="p12NewProjectUnavailable">Este servidor não cria pastas pelo celular. Crie a pasta no computador dele e abra aqui.</string>
+    <string name="p12PhoneFolder">Pasta neste celular</string>
+    <string name="p12PhoneFolderUnavailable">O OpenCode neste celular ainda não está configurado nesta versão.</string>
+    <string name="p12ProjectsOnServer">Projetos em %1$s</string>
+    <string name="p12ProjectsLoadFailed">Não foi possível carregar os projetos deste servidor.</string>
+    <string name="p12NoServerTitle">Nenhum servidor conectado</string>
+    <string name="p12NoServerBody">Conecte um servidor para ver os projetos e as conversas dele.</string>
+    <string name="p12PathNotAbsolute">Digite um caminho completo que comece com /.</string>
+    <string name="p12PathBadParts">Um caminho não pode conter “..” nem quebras de linha.</string>
+    <string name="p12NewHere">Nova conversa aqui</string>
+    <string name="p12NewHereBody">Inicia uma conversa que trabalha em %1$s.</string>
+    <string name="p12ProjectConversations">Conversas deste projeto</string>
+    <string name="p12ProjectNoConversations">Ainda não há conversas neste projeto.</string>
+    <string name="p12ElsewhereTitle">Em outros projetos</string>
+    <string name="p12CreateFailed">Não foi possível iniciar a conversa.</string>
+    <string name="p12Select">Selecionar</string>
+    <string name="p12SelectCancel">Cancelar seleção</string>
+    <string name="p12Rename">Renomear</string>
+    <string name="p12RenameTitle">Renomear conversa</string>
+    <string name="p12RenameField">Título</string>
+    <string name="p12RenameEmpty">O título precisa ter pelo menos uma letra.</string>
+    <string name="p12RenameFailed">Não foi possível renomear a conversa.</string>
+    <plurals name="p12DeleteSelected">
+        <item quantity="one">Excluir 1 conversa</item>
+        <item quantity="many">Excluir %1$d de conversas</item>
+        <item quantity="other">Excluir %1$d conversas</item>
+    </plurals>
+    <plurals name="p12ArchiveSelected">
+        <item quantity="one">Arquivar 1 conversa</item>
+        <item quantity="many">Arquivar %1$d de conversas</item>
+        <item quantity="other">Arquivar %1$d conversas</item>
+    </plurals>
+    <string name="p12Deleted">“%1$s” excluída</string>
+    <string name="chatsRowArchived">“%1$s” arquivada</string>
+    <string name="chatsRowActions">Ações da conversa</string>
+    <plurals name="p12DeletedMany">
+        <item quantity="one">1 conversa excluída</item>
+        <item quantity="many">%1$d de conversas excluídas</item>
+        <item quantity="other">%1$d conversas excluídas</item>
+    </plurals>
+    <string name="p12DeleteFailed">Não foi possível excluir uma conversa, então ela voltou para a lista.</string>
+    <string name="p12ArchiveUnavailable">Este servidor não arquiva conversas.</string>
+    <string name="p12ArchiveFailed">Não foi possível arquivar a conversa.</string>
+    <string name="p12ArchivedFilter">Arquivadas</string>
+    <string name="p12MoreFor">Mais opções para %1$s</string>
+    <string name="p12OpenChat">Abrir conversa</string>
+</resources>

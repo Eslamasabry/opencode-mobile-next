@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="monitorNativeTitle">Проверка других серверов</string>
+    <string name="monitorNativeBack">Назад</string>
+    <string name="monitorNativeForegroundOnly">Проверяйте сохранённые серверы, пока эта страница открыта. Если закрыть её, проверка остановится. Сервер на телефоне при этом не запускается, фоновые уведомления не включаются.</string>
+    <string name="monitorNativeCheck">Проверить сейчас</string>
+    <string name="monitorNativeChecking">Проверяем…</string>
+    <string name="monitorNativeAllow">Разрешить проверки</string>
+    <string name="monitorNativeConsent">Разрешите приложению читать запросы и состояние последних чатов на этом сохранённом сервере.</string>
+    <string name="monitorNativeUnsupported">Этот сохранённый сервер нельзя проверить здесь.</string>
+    <string name="monitorNativeOff">Проверки отключены</string>
+    <string name="monitorNativeWaiting">Ещё не проверялось</string>
+    <string name="monitorNativeCurrent">Проверено</string>
+    <string name="monitorNativePartial">Проверено частично. Проверьте ещё раз, чтобы прочитать больше чатов.</string>
+    <string name="monitorNativeUnknown">Не удалось подтвердить последнее состояние. Возможно, показаны более ранние данные.</string>
+    <string name="monitorNativePaused">Проверки приостановлены</string>
+    <string name="monitorNativePending">Ждут вас: %1$d</string>
+    <string name="monitorNativeRunning">Выполняются: %1$d</string>
+    <string name="monitorNativeConversation">Чат</string>
+    <string name="monitorNativeFailed">Последний проверенный ход завершился ошибкой</string>
+    <string name="monitorNativeEarlierFailure">Более ранняя ошибка; последнее состояние неизвестно</string>
+    <string name="monitorNativeSaveFailed">Не удалось сохранить или загрузить эти настройки. Повторите попытку.</string>
+    <string name="monitorNativeEmpty">Нет сохранённых серверов для проверки.</string>
+    <string name="monitorNativeRequest">Ждёт вас</string>
+    <string name="monitorNativeEarlierRequest">Более ранний запрос; последнее состояние неизвестно</string>
+    <string name="monitorNativeReconnect">Перед проверкой подключитесь к этому серверу или обновите вход в разделе «Серверы».</string>
+</resources>

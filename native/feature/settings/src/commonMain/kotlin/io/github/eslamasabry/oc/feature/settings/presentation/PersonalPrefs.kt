@@ -2,7 +2,7 @@ package io.github.eslamasabry.oc.feature.settings.presentation
 
 import io.github.eslamasabry.oc.ui.design.color.PackId
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
-import io.github.eslamasabry.oc.ui.design.effects.GlassEdges
+import io.github.eslamasabry.oc.ui.design.style.GlassLookId
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Corners
 import io.github.eslamasabry.oc.ui.design.text.AppTextSize
@@ -50,8 +50,8 @@ public data class PersonalPrefs(
     /** The chosen look's id (`oc.effectsLiveStyle`, Dart `KitLiveStyle.id`). */
     val liveStyle: String = "aurora",
     val liveStrength: LiveStrength = LiveStrength.Normal,
-    /** Glass's floating edges (`oc.glassEdges`): liquid by default, or frosted (Fine-tune under Glass). */
-    val glassEdges: GlassEdges = GlassEdges.Liquid,
+    /** The Glass look (`oc.glassLook`): Glossy by default (glass looks 2026-11-09). */
+    val glassLook: GlassLookId = GlassLookId.Glossy,
 ) {
     public val saver: Boolean get() = mode == AppearanceMode.Saver
 }
@@ -73,8 +73,8 @@ public sealed interface PersonalChange {
     /** Fine-tune Spacing; null puts the style's own back. */
     public data class Spacing(val spacing: Density?) : PersonalChange
 
-    /** Fine-tune under Glass: liquid or frosted floating edges. */
-    public data class Edges(val edges: GlassEdges) : PersonalChange
+    /** The Glass look (the Glass look picker). */
+    public data class Look(val look: GlassLookId) : PersonalChange
 
     /** The Accent swatch by id; null = Match theme. */
     public data class Accent(val id: String?) : PersonalChange
@@ -107,5 +107,8 @@ public enum class AppLanguage(public val tag: String?) {
     Japanese("ja"),
     Portuguese("pt"),
     Russian("ru"),
+    Vietnamese("vi"),
+    Indonesian("id"),
+    French("fr"),
     Chinese("zh"),
 }
