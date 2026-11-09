@@ -65,6 +65,7 @@ import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitTurnLiveLine
 import io.github.eslamasabry.oc.ui.kit.motion.kitItemMotion
 import io.github.eslamasabry.oc.ui.kit.KitButton
+import io.github.eslamasabry.oc.ui.words.res.chatStalledStop
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
@@ -342,6 +343,8 @@ internal fun ChatTranscriptList(
         null,
     reasoningExpanded: Boolean = false,
     onCompactAgain: (() -> Unit)? = null,
+    /** Stop on the live line while a tool call has waited minutes (null hides it). */
+    onStopLive: (() -> Unit)? = null,
     /** A finished turn's "All files" (the project's Files); null hides the link. */
     onAllFiles: (() -> Unit)? = null,
     /** "Send again" under the newest prompt that got no reply (Flutter no_reply_reason.dart:198); null hides it. */
@@ -450,6 +453,11 @@ internal fun ChatTranscriptList(
                                 if (stepsShown) Res.string.chatLiveHideSteps else Res.string.chatLiveShowSteps
                             ),
                         modifier = Modifier.padding(horizontal = Space.S4.dp).testTag("chat-live-line"),
+                        actionLabel =
+                            if (notice is LiveNoticeUi.ToolWait && onStopLive != null)
+                                stringResource(Res.string.chatStalledStop)
+                            else null,
+                        onAction = onStopLive,
                     )
                 } else {
                     val minutes = stringResource(Res.string.chatHomeMinutes)

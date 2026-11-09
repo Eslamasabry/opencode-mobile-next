@@ -441,7 +441,10 @@ public fun ChatScreen(
                 onStop = actions::stop,
                 stopping = { latest.live?.stopping == true },
                 // S28 story 14: the live line's stuck-command notice also turns Send into "Stop and send".
-                stuck = { factsState.live is io.github.eslamasabry.oc.feature.chat.presentation.LiveNoticeUi.StuckCommand },
+                stuck = {
+                    factsState.live is io.github.eslamasabry.oc.feature.chat.presentation.LiveNoticeUi.StuckCommand ||
+                        factsState.live is io.github.eslamasabry.oc.feature.chat.presentation.LiveNoticeUi.ToolWait
+                },
                 stopAfterStep = {
                     if (latest.live?.canStopAfterStep == true) { { actions.stopAfterStep(stopNote) } }
                     else null
@@ -895,6 +898,7 @@ public fun ChatScreen(
                                             facts = facts,
                                             display = transcriptDisplay,
                                             onOpenSession = onOpenSession,
+                                            onStopLive = actions::stop,
                                             reply =
                                                 rememberReplyActions(
                                                     actions,
