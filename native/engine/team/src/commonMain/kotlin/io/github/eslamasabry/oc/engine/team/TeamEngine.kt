@@ -102,6 +102,8 @@ public data class TeamState(
     val refusedAction: String? = null,
     /** The engine's health from the last good read; null before one. */
     val health: TeamHealth? = null,
+    /** [workspace] is the one kept from an earlier run, not read yet in this one: any live read replaces it. */
+    val fromKept: Boolean = false,
 ) {
     /**
      * What the engine can run now; everything for the simulated demo, which is never gated, and before any health is
@@ -130,7 +132,7 @@ public class TeamEngine(
             current[profileId]?.let { return it }
             // Cache-first: the kept workspace is the first frame, drawn as the real (not stale) Ready layout.
             val seed = kept?.peek(profileId)?.decode()
-            val created = MutableStateFlow(if (seed != null) TeamState(TeamPhase.Ready, workspace = seed) else TeamState())
+            val created = MutableStateFlow(if (seed != null) TeamState(TeamPhase.Ready, workspace = seed, fromKept = true) else TeamState())
             if (states.compareAndSet(current, current.put(profileId, created))) return created
         }
     }
@@ -145,7 +147,7 @@ public class TeamEngine(
             state.update { it.copy(loading = true) }
             if (state.value.workspace == null) {
                 kept?.read(profileId)?.decode()?.let { seed ->
-                    state.update { if (it.workspace == null) it.copy(phase = TeamPhase.Ready, workspace = seed) else it }
+                    state.update { if (it.workspace == null) it.copy(phase = TeamPhase.Ready, workspace = seed, fromKept = true) else it }
                 }
             }
             val config = host.config(profileId)
@@ -158,7 +160,7 @@ public class TeamEngine(
                 return@withLock Outcome.Ok(Unit)
             }
             // Before the first live read the workspace is the kept one (no config yet): it stands in for the last read.
-            val fromKept = state.value.config == null && state.value.workspace != null
+            val fromKept = state.value.fromKept && state.value.workspace != null
             val previous = state.value.workspace?.takeIf { fromKept || state.value.config == config }
             when (val read = host.workspace(profileId, config)) {
                 is Outcome.Ok -> {
@@ -172,6 +174,7 @@ public class TeamEngine(
                             health = read.value.health,
                             loading = false,
                             stale = false,
+                            fromKept = false,
                         )
                     }
                     next?.let { w -> KeptTeam.of(w)?.let { kept?.keep(profileId, it) } }
