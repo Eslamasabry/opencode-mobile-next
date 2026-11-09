@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.factsbook.ui
 
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenRefresh
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,6 +28,7 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitAction
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
@@ -40,7 +42,8 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
-import io.github.eslamasabry.oc.ui.kit.modal.KitInputOperationDialog
+import io.github.eslamasabry.oc.ui.kit.input.KitField
+import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.row.KitProvenance
@@ -104,6 +107,7 @@ public fun NeedsYouScreen(state: NeedsYouUi, actions: NeedsYouActions) {
             loading = state.load == FactsBookLoad.Loading,
             loadingLabel = title,
             edges = KitScreenEdges.Bleed,
+            refresh = KitScreenRefresh(refreshing = false, onRefresh = actions::refresh, enabled = state.load != FactsBookLoad.Failed),
         ) {
             when {
                 state.load == FactsBookLoad.Failed -> {
@@ -210,18 +214,27 @@ public fun NeedsYouScreen(state: NeedsYouUi, actions: NeedsYouActions) {
             }
         }
         val edit = editing
-        KitInputOperationDialog(
-            visible = edit != null,
-            title = stringResource(Res.string.fbCareEditTitle),
-            fieldLabel = stringResource(Res.string.fbCareEditLabel),
-            confirmLabel = stringResource(Res.string.fbCareEditSave),
-            initial = edit?.text.orEmpty(),
-            onSubmit = { text ->
-                editing = null
-                edit?.let { actions.approveEdited(it, text) }
-            },
-            onDismissRequest = { editing = null },
-        )
+        if (edit != null) {
+            // Edit what it says: a sheet with the words in a field, as Flutter (`factsbook-care-edit-sheet`).
+            val field = rememberTextFieldState(edit.text.orEmpty())
+            KitSheet(
+                visible = true,
+                onDismissRequest = { editing = null },
+                title = stringResource(Res.string.fbCareEditTitle),
+                icon = KitIcons.edit,
+                primary =
+                    KitAction(
+                        stringResource(Res.string.fbCareEditSave),
+                        {
+                            val text = field.text.toString().trim()
+                            editing = null
+                            if (text.isNotEmpty()) actions.approveEdited(edit, text)
+                        },
+                    ),
+            ) {
+                KitField(field, stringResource(Res.string.fbCareEditLabel), kind = KitFieldKind.Multiline)
+            }
+        }
     }
 }
 
@@ -442,11 +455,19 @@ private fun OfferCard(offer: ConversationOffer, state: NeedsYouUi, actions: Need
         val working = offer.id in state.working
         Row(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
             KitButton(
-                KitAction(stringResource(Res.string.fbOfferTalk), { actions.talk(offer, leadIn) }, working = working),
+                KitAction(
+                    stringResource(Res.string.fbOfferTalk),
+                    { if (!working) actions.talk(offer, leadIn) },
+                    working = working,
+                    icon = KitIcons.chat,
+                ),
                 role = KitButtonRole.Secondary,
             )
             KitButton(
-                KitAction(stringResource(Res.string.fbOfferNotNow), { actions.notNow(offer) }, working = working),
+                KitAction(
+                    stringResource(Res.string.fbOfferNotNow),
+                    { if (!working) actions.notNow(offer) },
+                ),
                 role = KitButtonRole.Tertiary,
             )
         }

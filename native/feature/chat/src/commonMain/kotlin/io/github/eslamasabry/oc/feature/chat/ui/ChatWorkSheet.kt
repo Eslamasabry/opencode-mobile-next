@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.core.model.BackgroundWorkResult
 import io.github.eslamasabry.oc.core.model.ManagedShell
 import io.github.eslamasabry.oc.core.model.ManagedShellStatus
 import io.github.eslamasabry.oc.feature.chat.work.ChatWorkModel
@@ -33,6 +34,8 @@ import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.backgroundWorkNoop
+import io.github.eslamasabry.oc.ui.words.res.backgroundWorkPromoted
 import io.github.eslamasabry.oc.ui.words.res.chatRunShellEmpty
 import io.github.eslamasabry.oc.ui.words.res.chatRunShellHelper
 import io.github.eslamasabry.oc.ui.words.res.chatRunShellHint
@@ -41,12 +44,16 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiRunShellCommand
 import io.github.eslamasabry.oc.ui.words.res.commandRun
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmFailed
 import io.github.eslamasabry.oc.ui.words.res.kitSheetDismiss
+import io.github.eslamasabry.oc.ui.words.res.runningWorkBackgroundAction
+import io.github.eslamasabry.oc.ui.words.res.runningWorkBackgroundBody
 import io.github.eslamasabry.oc.ui.words.res.runningWorkCommandState
 import io.github.eslamasabry.oc.ui.words.res.runningWorkCommandsFailed
 import io.github.eslamasabry.oc.ui.words.res.runningWorkEmptyBody
 import io.github.eslamasabry.oc.ui.words.res.runningWorkEmptyTitle
 import io.github.eslamasabry.oc.ui.words.res.runningWorkTitle
 import io.github.eslamasabry.oc.ui.words.res.shellOutputLimitTitle
+import io.github.eslamasabry.oc.ui.words.res.workBackgroundPending
+import io.github.eslamasabry.oc.ui.words.res.workBackgroundRequested
 import io.github.eslamasabry.oc.ui.words.res.workExitCode
 import io.github.eslamasabry.oc.ui.words.res.workFinished
 import io.github.eslamasabry.oc.ui.words.res.workMoreOutput
@@ -128,6 +135,48 @@ internal fun ChatWorkSheet(
 
 @Composable
 private fun WorkList(state: ChatWorkUi, model: ChatWorkModel) {
+    WorkListRows(state, model)
+    BackgroundNotice(state, model)
+}
+
+/** Flutter `running-work-background`: what moving the work frees, then the act, then what the server said. */
+@Composable
+private fun BackgroundNotice(state: ChatWorkUi, model: ChatWorkModel) {
+    if (!state.backgroundNotice) return
+    val result = state.backgroundResult
+    if (result == null)
+        KitNotice(
+            message = stringResource(Res.string.runningWorkBackgroundBody),
+            tone = StatusTone.Neutral,
+            actions =
+                listOf(
+                    KitLineAction(
+                        stringResource(
+                            if (state.backgrounding) Res.string.workBackgroundPending
+                            else Res.string.runningWorkBackgroundAction
+                        ),
+                        { if (state.canBackground && !state.backgrounding) model.runInBackground() },
+                    )
+                ),
+            modifier = Modifier.testTag("running-work-background"),
+        )
+    else
+        KitNotice(
+            message =
+                stringResource(
+                    when (result) {
+                        BackgroundWorkResult.Promoted -> Res.string.backgroundWorkPromoted
+                        BackgroundWorkResult.Unchanged -> Res.string.backgroundWorkNoop
+                        BackgroundWorkResult.Requested -> Res.string.workBackgroundRequested
+                    }
+                ),
+            tone = StatusTone.Ok,
+            modifier = Modifier.testTag("running-work-background"),
+        )
+}
+
+@Composable
+private fun WorkListRows(state: ChatWorkUi, model: ChatWorkModel) {
     when {
         state.failed && state.shells.isEmpty() ->
             KitNotice(

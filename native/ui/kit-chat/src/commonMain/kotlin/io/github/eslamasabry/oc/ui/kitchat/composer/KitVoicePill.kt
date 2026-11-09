@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kitchat.composer
 
+import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -67,7 +68,7 @@ public fun KitVoicePill(
         modifier
             .fillMaxWidth()
             .testTag(VOICE_PILL_TAG)
-            .then(if (reduced) Modifier else Modifier.animateContentSize())
+            .then(if (reduced) Modifier else Modifier.animateContentSize(KitMotion.specs.quick()))
             .background(if (attention) colors.attentionSurface else colors.surface2, shape)
             .border(1.dp, if (attention) colors.attentionLine else colors.hairline, shape)
             .padding(horizontal = Space.S4.dp, vertical = Space.S3.dp),

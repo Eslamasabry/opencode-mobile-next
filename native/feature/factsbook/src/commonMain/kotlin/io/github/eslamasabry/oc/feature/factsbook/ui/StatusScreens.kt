@@ -30,6 +30,7 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
+import io.github.eslamasabry.oc.ui.kit.motion.KitRefresh
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
@@ -158,7 +159,7 @@ public fun StatusScreen(state: StatusUi, actions: StatusActions) {
             when {
                 status == null && state.error == null -> KitSkeletonRows()
                 status == null -> PageError(state.error, actions::reload)
-                else -> StatusBody(state, status, actions, name)
+                else -> KitRefresh(state.loading, actions::reload, Modifier.fillMaxSize()) { StatusBody(state, status, actions, name) }
             }
         }
         KitConfirm(
@@ -303,7 +304,7 @@ private fun ModuleRow(state: StatusUi, name: String, module: ModuleStatus) {
         title = moduleName(name),
         supporting = listOfNotNull(moduleStateWords(module.state), reason, since).joinToString(" · "),
         supportingMaxLines = 3,
-        state = stateTone(module.state)?.let { KitRowState(null, it) },
+        state = stateTone(module.state)?.let { KitRowState(moduleStateWords(module.state), it) },
     )
 }
 
@@ -326,6 +327,7 @@ public fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
             settings == null && state.error == null -> KitSkeletonRows()
             settings == null -> PageError(state.error, actions::reload)
             else ->
+              KitRefresh(state.loading, actions::reload, Modifier.fillMaxSize()) {
                 LazyColumn(Modifier.fillMaxSize()) {
                     if (!state.canApprove) {
                         item("owner") {
@@ -423,6 +425,7 @@ public fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
                     }
                     item("foot") { KitGroupNote(stringResource(Res.string.fbSettingsFootnote)) }
                 }
+              }
         }
     }
 }

@@ -66,6 +66,29 @@ if (
     )
 }
 
+// Shared remote build cache (tools/FACTORY.md). Opt-in by environment: a machine without OC_BUILD_CACHE_URL (CI, a fresh
+// clone) builds exactly as before. Every machine reads; the factory machines (VPS, PC, desktop) also push.
+// OC_BUILD_CACHE_PUSH=false makes a machine read-only. The credentials come from the environment, never from the repo.
+System.getenv("OC_BUILD_CACHE_URL")
+    ?.takeIf { it.isNotBlank() }
+    ?.let { cacheUrl ->
+        buildCache {
+            remote<HttpBuildCache> {
+                setUrl(cacheUrl)
+                isAllowInsecureProtocol = cacheUrl.startsWith("http://")
+                isPush = System.getenv("OC_BUILD_CACHE_PUSH") != "false"
+                val user = System.getenv("OC_BUILD_CACHE_USER")
+                val password = System.getenv("OC_BUILD_CACHE_PASSWORD")
+                if (!user.isNullOrBlank() && !password.isNullOrBlank()) {
+                    credentials {
+                        username = user
+                        this.password = password
+                    }
+                }
+            }
+        }
+    }
+
 rootProject.name = "opencode-mobile-native"
 
 // Module discovery (plan 03 S2): every direct child folder of these layer folders that holds a
