@@ -102,6 +102,8 @@ public data class FolderUi(
      * draft to ask in, reference into or attach to, and no conversation review.
      */
     val inConversation: Boolean = true,
+    /** The rows are the last ones seen and the server could not be reached to refresh them (status slot). */
+    val offline: Boolean = false,
 ) {
     val name: String
         get() = FilePaths.name(path)
@@ -191,7 +193,10 @@ public class FolderViewModel(
     private val preferences: Set<FilesReaderPreferences>,
     private val mentions: ComposerMentions,
     private val storageAccess: Set<FilesStorageAccess>,
+    lastKnownPorts: Set<FilesLastKnown> = emptySet(),
 ) : ViewModel(), FolderActions {
+    private val lastKnown = lastKnownPorts.singleOrNull()
+    private val keptKey = route.place.keptKey(FilePaths.normalize(route.path))
     private val local = MutableStateFlow(FolderUi(FilePaths.normalize(route.path)))
     public val state: StateFlow<FolderUi> = local.asStateFlow()
     private var all: List<FileNode> = emptyList()
@@ -217,6 +222,7 @@ public class FolderViewModel(
                 inConversation = ref != null,
             )
         }
+        seedFromKept()
         load()
         // The root is titled with the project's own name, not the word "Project" (P-025).
         viewModelScope.launch {
@@ -270,10 +276,30 @@ public class FolderViewModel(
         if (local.value.query != null) search(local.value.query.orEmpty()) else load()
     }
 
+    /** Cache-first: the last listing draws the real rows at once; the live read replaces them in place. */
+    private fun seedFromKept() {
+        val port = lastKnown ?: return
+        val profile = route.place.profileId
+        val peeked = port.peekFolder(profile, keptKey)
+        if (peeked != null) {
+            all = peeked.nodes()
+            publish()
+            return
+        }
+        viewModelScope.launch {
+            val kept = port.readFolder(profile, keptKey) ?: return@launch
+            if (local.value.phase != FolderPhase.Loading) return@launch
+            all = kept.nodes()
+            publish()
+        }
+    }
+
     private fun load() {
         val mine = ++loads
         val gateway = files.gateway()
+        val showing = local.value.phase == FolderPhase.Ready
         when {
+            gateway == null && showing -> local.update { it.copy(offline = true) }
             gateway == null ->
                 local.update { it.copy(phase = FolderPhase.NotConnected, failure = null) }
             !files.canBrowse() ->
@@ -281,7 +307,7 @@ public class FolderViewModel(
             else -> {
                 local.update {
                     it.copy(
-                        phase = FolderPhase.Loading,
+                        phase = if (showing) FolderPhase.Ready else FolderPhase.Loading,
                         failure = null,
                         storageBlock = FilesStorageBlock.None,
                     )
@@ -292,11 +318,16 @@ public class FolderViewModel(
                     when (listed) {
                         is Outcome.Failed ->
                             local.update {
-                                it.copy(phase = FolderPhase.Failed, failure = listed.failure)
+                                if (showing) it.copy(offline = true)
+                                else it.copy(phase = FolderPhase.Failed, failure = listed.failure)
                             }
                         is Outcome.Ok -> {
                             all = listed.value
+                            local.update { it.copy(offline = false) }
                             publish()
+                            lastKnown?.let { port ->
+                                launch { port.keepFolder(route.place.profileId, keptKey, KeptFolder.of(listed.value)) }
+                            }
                             loadChanges(mine)
                             checkStorage(mine, gateway)
                         }

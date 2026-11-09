@@ -1603,6 +1603,7 @@ internal fun rememberReplyActions(
                     },
                     openFilePictures = true,
                     readPicture = actions::readPicture,
+                    pictureScope = actions.pictureScope,
                     pictureLabel = { p ->
                         p.label
                             ?: p.path?.let { onServer.replace("\u0000", it) }

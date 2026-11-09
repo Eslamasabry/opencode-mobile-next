@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.servers.account.ui
 
+import io.github.eslamasabry.oc.ui.kit.platform.KitSecureContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -257,11 +258,13 @@ private fun Login(state: AgentAccountUi, actions: AgentAccountActions) {
     if (panel.loginStatus == AccountLoginStatus.Failed) KitErrorNotice(label) else KitNotice(label)
     panel.deviceCode?.let { code ->
         KitText(stringResource(Res.string.account40CodeHint), role = KitTextRole.Supporting)
-        KitText(
-            code.userCode,
-            Modifier.semantics { contentDescription = code.userCode.toList().joinToString(" ") },
-            role = TypeRole.Title,
-        )
+        KitSecureContent {
+            KitText(
+                code.userCode,
+                Modifier.semantics { contentDescription = code.userCode.toList().joinToString(" ") },
+                role = TypeRole.Title,
+            )
+        }
         KitButton(
             stringResource(Res.string.account40CopyCode),
             actions::copyCode,
