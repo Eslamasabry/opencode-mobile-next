@@ -809,10 +809,4 @@
     <string name="backgroundBatterySettingsInstead">Android n’a pas affiché sa question, ses paramètres de batterie se sont donc ouverts à la place. Réglez-y cette application sur Sans restriction.</string>
     <string name="privacyPagesSummary">Serveurs, fournisseurs, voix, fichiers et mises à jour</string>
     <string name="manageSpaceKeptAllComputers">Vos ordinateurs et tout ce qui a été poussé vers git restent</string>
-    <string name="appearanceGlassEdges">Bords en verre</string>
-    <string name="appearanceGlassEdgesLiquid">Liquide</string>
-    <string name="appearanceGlassEdgesFrosted">Dépoli</string>
-    <string name="appearanceGlassEdgesNote">Liquide déforme ce qui défile derrière les barres, la zone de message, les feuilles et les menus. Dépoli le floute.</string>
-    <string name="appearanceGlassEdgesNeedsAndroid13">Les bords liquides nécessitent Android 13. Ce téléphone les affiche dépolis.</string>
-    <string name="appearanceGlassEdgesMotionOff">Les bords restent dépolis tant que le mouvement est désactivé.</string>
 </resources>

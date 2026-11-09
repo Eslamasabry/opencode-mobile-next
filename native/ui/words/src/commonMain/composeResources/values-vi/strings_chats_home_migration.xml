@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
-    <string name="homeOpeningConnecting">Đang kết nối với %1$s</string>
     <string name="homeOpeningFailed">%1$s không phản hồi</string>
-    <string name="homeOpeningSavedTitles">Đây là tên các cuộc trò chuyện đã lưu lần trước. Chúng sẽ mở được khi máy chủ phản hồi.</string>
-    <string name="homeOpeningStarting">Đang khởi động điện thoại này…</string>
-    <string name="homeOpeningWaiting">Các cuộc trò chuyện của bạn sẽ hiển thị ở đây khi máy chủ phản hồi.</string>
     <string name="homeOpeningFailedBody">Hãy kiểm tra máy chủ đã bật và điện thoại này kết nối được với nó, rồi thử lại.</string>
     <string name="homeWatchedServers">Máy chủ đang theo dõi</string>
     <string name="homeInboxCount">Hộp thư · %1$s</string>

@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
-    <string name="homeOpeningConnecting">Conectando con %1$s</string>
     <string name="homeOpeningFailed">%1$s no responde</string>
-    <string name="homeOpeningSavedTitles">Estos son los títulos de conversación guardados la última vez. Se abren cuando el servidor responda.</string>
-    <string name="homeOpeningStarting">Iniciando este teléfono…</string>
-    <string name="homeOpeningWaiting">Tus conversaciones aparecen aquí cuando responda.</string>
     <string name="homeOpeningFailedBody">Comprueba que el servidor esté encendido y que este teléfono pueda llegar a él, e inténtalo de nuevo.</string>
     <string name="homeWatchedServers">Servidores vigilados</string>
     <string name="homeInboxCount">Bandeja · %1$s</string>
