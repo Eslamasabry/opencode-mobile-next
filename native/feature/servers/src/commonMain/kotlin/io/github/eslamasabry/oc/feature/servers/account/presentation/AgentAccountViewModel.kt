@@ -26,7 +26,10 @@ public class AgentAccountViewModel(
     private val nav: AppNavigator,
     private val appScope: AppCoroutineScope,
     private val clock: Clock,
+    kept: Set<AgentAccountLastKnown> = emptySet(),
 ) : ViewModel(), AgentAccountActions {
+    private val shelf = kept.firstOrNull()
+    private var keptAccount: KeptAgentAccount? = shelf?.peek(route.profile)
     private val local = MutableStateFlow(AgentAccountUi())
     public val state: StateFlow<AgentAccountUi> = local.asStateFlow()
     private var pinned: Any? = null
@@ -37,6 +40,17 @@ public class AgentAccountViewModel(
     private var opening = 0
 
     init {
+        keptAccount?.let { publish(it.toPanel(), keptUpdating = true) }
+        if (shelf != null && keptAccount == null) {
+            viewModelScope.launch {
+                // Disk read: only when memory had no first frame; a live answer that came first wins.
+                val old = shelf.read(route.profile) ?: return@launch
+                if (keptAccount == null) {
+                    keptAccount = old
+                    if (local.value.phase == AgentAccountPhase.Loading) publish(old.toPanel(), keptUpdating = true)
+                }
+            }
+        }
         viewModelScope.launch {
             port.watch(route.profile).distinctUntilChanged().collect { source ->
                 if (lost) return@collect
@@ -57,9 +71,12 @@ public class AgentAccountViewModel(
                 local.update { it.copy(profileName = source.name) }
                 if (!source.connected || source.scope == null) {
                     retire()
-                    local.update {
-                        it.copy(phase = AgentAccountPhase.Disconnected, panel = AccountPanelState())
-                    }
+                    val old = keptAccount
+                    if (old != null) publish(old.toPanel(), keptUpdating = false)
+                    else
+                        local.update {
+                            it.copy(phase = AgentAccountPhase.Disconnected, panel = AccountPanelState())
+                        }
                     return@collect
                 }
                 if (!source.supported) {
@@ -92,7 +109,14 @@ public class AgentAccountViewModel(
                         observing = viewModelScope.launch {
                             owner.state.collect { panel ->
                                 if (handle === owner && !lost) {
-                                    if (owner.active) publish(panel)
+                                    if (owner.active) {
+                                        val shown = shownPanel(panel, keptAccount)
+                                        publish(shown.panel, shown.updating)
+                                        KeptAgentAccount.of(panel)?.let { fresh ->
+                                            keptAccount = fresh
+                                            shelf?.keep(route.profile, fresh)
+                                        }
+                                    }
                                     else
                                         local.value =
                                             AgentAccountUi(
@@ -110,7 +134,7 @@ public class AgentAccountViewModel(
         }
     }
 
-    private fun publish(panel: AccountPanelState) {
+    private fun publish(panel: AccountPanelState, keptUpdating: Boolean = false) {
         val moments =
             panel.limits
                 .orEmpty()
@@ -121,6 +145,7 @@ public class AgentAccountViewModel(
         local.update {
             it.copy(
                 phase = AgentAccountPhase.Panel,
+                updating = keptUpdating,
                 panel = panel,
                 nowMs = clock.now().toEpochMilliseconds(),
                 updated = panel.updatedAt?.toEpochMilliseconds()?.let(port::moment),

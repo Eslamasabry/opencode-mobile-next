@@ -35,6 +35,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
+import io.github.eslamasabry.oc.feature.agenttools.presentation.hasRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.words.res.*
@@ -69,6 +70,7 @@ public fun AgentToolsScreen(state: AgentToolsUi, actions: AgentToolsActions) {
         },
         width = KitScreenWidth.Reading,
         edges = KitScreenEdges.Bleed,
+        loading = state.loading && state.hasRows(), // quiet: kept rows stay, a thin line says they update
     ) {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
             if (!state.connected)
@@ -87,7 +89,7 @@ public fun AgentToolsScreen(state: AgentToolsUi, actions: AgentToolsActions) {
             else {
                 if (state.directory.isNotEmpty())
                     item(key = "directory") { KitText(state.directory) }
-                if (state.loading) item(key = "loading") { KitSkeletonRows(count = 3) }
+                if (state.loading && !state.hasRows()) item(key = "loading") { KitSkeletonRows(count = 3) }
                 state.failure?.let { failure ->
                     item(key = "failure") {
                         KitErrorNotice(
@@ -188,7 +190,7 @@ public fun AgentToolsScreen(state: AgentToolsUi, actions: AgentToolsActions) {
                         )
                     }
                 }
-                if (state.canOptions && !state.loading) {
+                if (state.canOptions && (!state.loading || state.hasRows())) {
                     if (state.models.isNotEmpty())
                         item(key = "models") {
                             KitRowGroup(label = stringResource(Res.string.agentToolsModel)) {

@@ -36,7 +36,12 @@ public sealed interface ActiveContextUi {
     public data object Failed : ActiveContextUi
 
     /** Every message the server returned. [refreshFailed] = the previous snapshot is still shown after a failed refresh. */
-    public class Ready(public val messages: ImmutableList<ActiveContextMessage>, public val refreshFailed: Boolean = false) :
+    public class Ready(
+        public val messages: ImmutableList<ActiveContextMessage>,
+        public val refreshFailed: Boolean = false,
+        /** A live read is under way behind these (kept or previous) messages; shown as a quiet line, never a skeleton. */
+        public val refreshing: Boolean = false,
+    ) :
         ActiveContextUi
 }
 
@@ -45,7 +50,11 @@ public sealed interface ActiveContextUi {
  * connection and keeps the graph it opened on: if the conversation moves to another connection the view says it is
  * outdated rather than showing another server's context.
  */
-public class ActiveContextModel(private val ref: ConversationRef, private val registry: ConnectionRegistry) {
+public class ActiveContextModel(
+    private val ref: ConversationRef,
+    private val registry: ConnectionRegistry,
+    private val kept: ActiveContextLastKnown? = null,
+) {
     private val mutableState = MutableStateFlow<ActiveContextUi>(ActiveContextUi.Loading)
     public val state: StateFlow<ActiveContextUi> = mutableState.asStateFlow()
     private val mutableVisible = MutableStateFlow(false)
@@ -77,7 +86,7 @@ public class ActiveContextModel(private val ref: ConversationRef, private val re
         mutableState.value =
             when {
                 source == null || !source.supported -> ActiveContextUi.Unsupported
-                else -> ActiveContextUi.Loading
+                else -> kept?.peek(ref)?.toMessages()?.let { ActiveContextUi.Ready(it.toImmutableList(), refreshing = true) } ?: ActiveContextUi.Loading
             }
         if (source != null && source.supported) load()
     }
@@ -104,8 +113,14 @@ public class ActiveContextModel(private val ref: ConversationRef, private val re
         job?.cancel()
         job =
             registry.appScope.launch(registry.mainContext) {
-                val previous = (mutableState.value as? ActiveContextUi.Ready)?.messages
-                if (previous == null) mutableState.value = ActiveContextUi.Loading
+                var previous = (mutableState.value as? ActiveContextUi.Ready)?.messages
+                if (previous == null) {
+                    // A first frame from the shelf (disk), if memory had none; a skeleton only for a first-ever read.
+                    previous = kept?.read(ref)?.toMessages()?.toImmutableList()
+                    mutableState.value = previous?.let { ActiveContextUi.Ready(it, refreshing = true) } ?: ActiveContextUi.Loading
+                } else {
+                    mutableState.value = ActiveContextUi.Ready(previous, refreshing = true)
+                }
                 val answer = source.load(ref.sessionId.raw)
                 // A result for a connection the conversation has left is never shown.
                 if (registry.graphFor(ref) !== graph) {
@@ -114,7 +129,10 @@ public class ActiveContextModel(private val ref: ConversationRef, private val re
                 }
                 mutableState.value =
                     when (answer) {
-                        is Outcome.Ok -> ActiveContextUi.Ready(answer.value.toImmutableList())
+                        is Outcome.Ok -> {
+                            kept?.keep(ref, KeptActiveContext.of(answer.value))
+                            ActiveContextUi.Ready(answer.value.toImmutableList())
+                        }
                         is Outcome.Failed ->
                             when {
                                 previous != null && source.supported && answer.failure !is Failure.UnreadableReply ->

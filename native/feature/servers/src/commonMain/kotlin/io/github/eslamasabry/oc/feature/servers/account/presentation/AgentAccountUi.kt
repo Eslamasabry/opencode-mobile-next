@@ -74,6 +74,8 @@ public data class AgentAccountUi(
     val lifetime: String? = null,
     val peak: String? = null,
     val resetMoments: Map<Long, String> = emptyMap(),
+    /** A live read is under way behind the kept account on screen; the page shows a quiet line. */
+    val updating: Boolean = false,
 ) {
     override fun toString(): String =
         "AgentAccountUi(phase=$phase, status=${panel.status}, login=${panel.loginStatus})"
