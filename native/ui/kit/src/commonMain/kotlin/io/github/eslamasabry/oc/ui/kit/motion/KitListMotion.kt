@@ -36,3 +36,18 @@ public fun LazyItemScope.kitItemMotion(fadeIn: Boolean = true, fadeOut: Boolean 
  */
 @Composable
 public fun LazyItemScope.kitLoadingItemMotion(): Modifier = kitItemMotion(fadeIn = false, fadeOut = true, placement = false)
+
+/** A lazy item standing for content on its way ([kitLoadingItemMotion]); the kit part, so screens hold no motion. */
+@Composable
+public fun LazyItemScope.KitLoadingItem(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    androidx.compose.foundation.layout.Box(kitLoadingItemMotion().then(modifier)) { content() }
+}
+
+/**
+ * A lazy item that holds a panel easing its own height (`KitRowPanel`): it fades in and out but never places, so the
+ * items around it follow the panel's height frame by frame instead of a second spring chasing it.
+ */
+@Composable
+public fun LazyItemScope.KitPanelItem(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    androidx.compose.foundation.layout.Box(kitItemMotion(placement = false).then(modifier)) { content() }
+}

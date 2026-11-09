@@ -28,7 +28,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import io.github.eslamasabry.oc.ui.kit.motion.kitItemMotion
-import io.github.eslamasabry.oc.ui.kit.motion.kitLoadingItemMotion
+import io.github.eslamasabry.oc.ui.kit.motion.KitLoadingItem
+import io.github.eslamasabry.oc.ui.kit.motion.KitPanelItem
 import io.github.eslamasabry.oc.ui.kit.frame.KitStatusPill
 import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
 import androidx.compose.foundation.layout.height
@@ -276,8 +277,8 @@ public fun ChatsScreen(
                 ),
         ) {
             state.home.opening?.let { opening ->
-                item(key = "opening-status") { Box(kitLoadingItemMotion()) { OpeningStatus(opening, actions) } }
-                items(opening.rows, key = { "cached:${it.key}" }) { row -> Box(kitLoadingItemMotion()) { OpeningRow(row) } }
+                item(key = "opening-status") { KitLoadingItem { OpeningStatus(opening, actions) } }
+                items(opening.rows, key = { "cached:${it.key}" }) { row -> KitLoadingItem { OpeningRow(row) } }
                 // E20-S09: placeholder rows stand for titles that are on their way; under a failure nothing is.
                 if (opening.rows.isEmpty() && opening.phase != ChatsOpeningPhase.Failed)
                     item(key = "opening") { KitSkeletonItem() }
@@ -358,8 +359,7 @@ public fun ChatsScreen(
                     val recent = state.recent.filterNot { it.key in briefKeys }
                     if (rightNow.isNotEmpty())
                         item(key = "right-now") {
-                            // The panel eases its own height; the item must not also place (one clock per change).
-                            Box(kitItemMotion(placement = false)) {
+                            KitPanelItem {
                                 KitRowPanel(
                                     label = stringResource(Res.string.chatsHomeRightNow),
                                     // A step of air under the chips, as above Recent, so the first label is not pressed up.
@@ -372,7 +372,7 @@ public fun ChatsScreen(
                         }
                     if (recent.isNotEmpty())
                         item(key = "recent") {
-                            Box(kitItemMotion(placement = false)) {
+                            KitPanelItem {
                                 KitRowPanel(
                                     label = stringResource(Res.string.chatsHomeRecent),
                                     gapBefore = if (above || rightNow.isNotEmpty()) sectionGap else Space.S4.dp,
@@ -383,7 +383,7 @@ public fun ChatsScreen(
                             }
                         }
                     item(key = "all-conversations") {
-                        Box(kitItemMotion(placement = false)) {
+                        KitPanelItem {
                             // Short of the floating + (its 56 dp and a S3 gap), so the two share the list's last line.
                             KitRowPanel(
                                 Modifier.padding(top = Space.S5.dp, end = (KIT_FAB_SIZE + Space.S3).dp),
