@@ -56,15 +56,23 @@ class TranslationQualityTest {
 
     private fun tokens(e: Entry) = e.texts().flatMap { placeholder.findAll(it).map { m -> m.value }.toList() }.toSet()
 
+    /**
+     * Arabic count variants (`zero`, `one`, `two`, written as `key__eq0/1/2` strings) may omit the count: the CLDR
+     * singular and dual forms carry the number in the word ("ملفين", "ساعتين"). At most one numeric argument may go,
+     * and nothing else; every other locale and quantity keeps the full rule.
+     */
+    private fun arabicCountMayDrop(locale: String, key: String, want: Set<String>, got: Set<String>): Boolean =
+        isArabicCountVariant(locale, key) && (want - got).let { it.size == 1 && it.single().endsWith("d") }
+
     @Test
     fun `placeholder parity - a translation uses the same arguments as the English`() =
-        gate("placeholders") { _, en, tr ->
+        gate("placeholders") { l, en, tr ->
             val want = tokens(en)
             when {
                 tr.isPlural != en.isPlural -> "string in one, plurals in the other"
                 tr.texts().any { t -> (placeholder.findAll(t).map { it.value }.toSet() - want).isNotEmpty() } ->
                     "uses an argument English lacks (${tokens(tr)} vs $want)"
-                tokens(tr) != want -> "drops an argument (${tokens(tr)} vs $want)"
+                tokens(tr) != want && !arabicCountMayDrop(l, en.key, want, tokens(tr)) -> "drops an argument (${tokens(tr)} vs $want)"
                 else -> null
             }
         }
@@ -200,4 +208,27 @@ class TranslationQualityTest {
         assertTrue(!File(nativeRoot, "androidApp/src/main/res/xml/locales_config.xml").exists(), "locales_config.xml is generated, not hand-kept")
         println("language coverage: " + coverage.entries.joinToString { "${it.key} ${"%.1f".format(it.value)}%" } + "; offered: en $offered")
     }
+
+    @Test
+    fun `arabic zero, one and two variants may omit the count, nothing else may`() {
+        val count = setOf("%1\$d")
+        assertTrue(arabicCountMayDrop("ar", "chatRequestAskEditFiles__eq2", count, emptySet()))
+        assertTrue(arabicCountMayDrop("ar", "gitAhead__eq0", count, emptySet()))
+        assertTrue(arabicCountMayDrop("ar", "chatTurnAllFilesMore__eq1", count, emptySet()))
+        // keeps the other arguments: only the count goes
+        assertTrue(arabicCountMayDrop("ar", "fbRuleWeekOffers__eq2", setOf("%1\$d", "%2\$d", "%3\$d"), setOf("%1\$d", "%2\$d")))
+        assertTrue(!arabicCountMayDrop("ar", "fbRuleWeekOffers__eq2", setOf("%1\$d", "%2\$d", "%3\$d"), setOf("%1\$d")))
+        // a text argument is not a count
+        assertTrue(!arabicCountMayDrop("ar", "fbSearchMatches__eq2", setOf("%2\$s"), emptySet()))
+        // few, many and other (and plain strings) keep the count
+        assertTrue(!arabicCountMayDrop("ar", "chatRequestAskEditFiles__eq3", count, emptySet()))
+        assertTrue(!arabicCountMayDrop("ar", "chatRequestAskEditFiles", count, emptySet()))
+        // other locales keep the rule for every quantity
+        for (l in listOf("es", "fr", "ru", "pt", "id", "vi")) {
+            assertTrue(!arabicCountMayDrop(l, "chatRequestAskEditFiles__eq2", count, emptySet()), l)
+        }
+    }
+
+    private fun isArabicCountVariant(locale: String, key: String) =
+        locale == "ar" && Regex("""__eq[012]$""").containsMatchIn(key)
 }

@@ -508,7 +508,7 @@
         <item quantity="other">يتحقق مجددًا بعد %1$d دقيقة</item>
     </plurals>
     <string name="serverSwitcherChecksAgain__eq1">يتحقق مجددًا بعد دقيقة</string>
-    <string name="serverSwitcherChecksAgain__eq2">يتحقق مجددًا بعد %1$d د</string>
+    <string name="serverSwitcherChecksAgain__eq2">يتحقق مجددًا بعد دقيقتين</string>
     <string name="serverSwitcherTryAgainLabel">إعادة المحاولة مع %1$s</string>
     <string name="serverSwitcherOpenRequest">فتح</string>
     <string name="serverSwitcherOpenRequestLabel">فتح %1$s</string>
