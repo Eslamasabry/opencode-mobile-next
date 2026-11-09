@@ -545,6 +545,19 @@ Recommendations in **bold**. Each visual decision has a mockup brief in §9. D4 
   - A: en and ar only.
   - **B: en, ar, es, pt.**
 
+## 8a. Owner decisions, 2026-11-09
+
+The owner approved the recommended options today:
+
+- **D1:** phase 0 and the feasibility spike (§5.1) now; phase 1 after both.
+- **D2:** the PDF is made by the build step and shown in the existing viewer, if Arabic passes the spike; otherwise app-drawn slides.
+- **D3:** one coarse survey event, sent only with usage consent.
+- **D5:** the answer changes starters only.
+- **D6:** the question appears under the setup progress.
+- **D7:** one sheet for the three questions.
+- **D8:** new strings in en, ar, es, pt.
+
+
 ## 9. Mockup briefs (for the visual decisions)
 
 Shared rules for every mockup:
