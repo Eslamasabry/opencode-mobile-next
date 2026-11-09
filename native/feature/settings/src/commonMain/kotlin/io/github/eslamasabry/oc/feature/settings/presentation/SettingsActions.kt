@@ -88,8 +88,7 @@ public interface SettingsActions {
     /** Appearance › Spacing: the person's choice over the style's own. */
     public fun onSpacing(spacing: Density) {}
 
-    /** Appearance › Glass edges (under Glass): liquid or frosted. */
-    /** Applies the Glass look at once (the page behind the picker shows it). */
+    /** Appearance › Glass look (under Glass): applies the look at once (the page behind the picker shows it). */
     public fun onGlassLook(look: io.github.eslamasabry.oc.ui.design.style.GlassLookId) {}
 
     /** Appearance › Reset to the style's defaults: Corners and Spacing back to the style's own. */
