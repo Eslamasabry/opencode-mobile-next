@@ -127,6 +127,17 @@ public class KitMarkdownActions(
     public val openFilePictures: Boolean = false,
     /** Only server/phone paths enter this callback. Web images are never fetched. */
     public val readPicture: (suspend (path: String) -> ByteArray?)? = null,
+    /**
+     * An agent ```choices line was tapped: its words go into the message box. Null copies them instead
+     * (Flutter: "can be pasted into the composer").
+     */
+    public val onChoice: ((String) -> Unit)? = null,
+    /** "Choose: X", the spoken name of a choice row. */
+    public val chooseLabel: (String) -> String = { it },
+    public val doneWord: String = "Done",
+    public val todoWord: String = "To do",
+    /** The caption over a ```command block ("Run on your computer"). */
+    public val runOnComputerLabel: String? = null,
 )
 
 /**
@@ -239,6 +250,7 @@ public fun KitMarkdownBlock(
                 is KitMdBlock.Table -> KitMarkdownTable(block, actions, modifier)
                 is KitMdBlock.Rule -> KitMarkdownRule(modifier)
                 is KitMdBlock.Pictures -> KitPictureTiles(block, actions, modifier)
+                is KitMdBlock.Agent -> KitAgentBlock(block, actions, modifier)
                 is KitMdBlock.Code ->
                     KitCodeBlock(
                         source = block.text,

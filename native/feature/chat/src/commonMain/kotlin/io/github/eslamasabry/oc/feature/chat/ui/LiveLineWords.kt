@@ -58,7 +58,8 @@ internal fun liveLineWords(
                 val words = liveNoticeWords(notice)
                 val tone =
                     when (notice) {
-                        is LiveNoticeUi.StuckCommand -> KitTurnLiveTone.WaitingForYou
+                        is LiveNoticeUi.StuckCommand,
+                        is LiveNoticeUi.ToolWait -> KitTurnLiveTone.WaitingForYou
                         is LiveNoticeUi.Retry,
                         is LiveNoticeUi.Stall -> KitTurnLiveTone.Quiet
                         else -> KitTurnLiveTone.Working

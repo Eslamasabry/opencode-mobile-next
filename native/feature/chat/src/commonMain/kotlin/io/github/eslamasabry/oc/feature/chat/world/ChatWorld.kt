@@ -66,6 +66,17 @@ public interface ChatWorld {
     public val linkRetryAtMs: StateFlow<Long?>
         get() = NoRetry
 
+    /**
+     * Why the link stopped for good, when retrying cannot fix it (a rejected or missing password or
+     * token): the connection line then offers Update password / Update token instead of Try now.
+     */
+    public val linkStopped: StateFlow<Failure?>
+        get() = NoStop
+
+    /** The conversation that delegated this one (a subagent's child session); null for a top-level one. */
+    public val parent: StateFlow<ConversationRef?>
+        get() = NoParent
+
     /** Flutter "Try now": cancel the wait and try the link at once. Never resends anything. */
     public fun tryLinkNow() {}
 
@@ -361,7 +372,12 @@ public data class PendingSend(
     val failure: Failure? = null,
     /** The exact dispatched queue record has a receipt on this connection. */
     val canCheckReceipt: Boolean = false,
+    /** Pictures and files the bubble carries, shown at once from the bytes the phone already holds. */
+    val files: List<PendingFile> = emptyList(),
 )
+
+/** A file riding a pending prompt; [url] is a `data:` address for a picture from this phone. */
+public data class PendingFile(val name: String, val mime: String?, val url: String?)
 
 public enum class PendingState {
     /** On its way; the bubble shows at once (bubble first). */
@@ -445,6 +461,8 @@ private val NoCommands =
 
 public data class ReadOnlyChat(val parent: ConversationRef? = null)
 
+private val NoParent: StateFlow<ConversationRef?> = kotlinx.coroutines.flow.MutableStateFlow(null)
+private val NoStop: StateFlow<Failure?> = kotlinx.coroutines.flow.MutableStateFlow(null)
 private val NoRetry: StateFlow<Long?> = kotlinx.coroutines.flow.MutableStateFlow(null)
 
 private val NoReadOnly = kotlinx.coroutines.flow.MutableStateFlow<ReadOnlyChat?>(null)

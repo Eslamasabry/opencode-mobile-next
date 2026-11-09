@@ -10,6 +10,7 @@ import io.github.eslamasabry.oc.core.common.ok
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -54,6 +55,13 @@ public class SetupEngine(
     private val foreground: () -> Boolean = { true },
     /** Receives only fixed timing names, component ids and states, never output or credentials. */
     private val timing: ((SetupTiming) -> Unit)? = null,
+    /**
+     * How long one install step may run before the job is stopped as [SetupError.StepTimedOut] (phase 0: setup must
+     * never look hung). Generous: slow phones and slow networks finish well inside it.
+     */
+    private val stepTimeout: (SetupComponent) -> Duration = { component ->
+        maxOf(20.minutes, (component.estimatedSeconds * 8).seconds)
+    },
 ) {
     public val hostKind: SetupHostKind = SetupHostKind.Builtin
 
@@ -80,6 +88,7 @@ public class SetupEngine(
     private var localFirstSetup = false
     private var localAdding: List<String> = emptyList()
     private var handedOver: String? = null
+    private var timedOut: Pair<String, String>? = null
     private var finishing: String? = null
     private var appStep: Job? = null
     private var appStepKey: String? = null
@@ -579,6 +588,7 @@ public class SetupEngine(
     private suspend fun refresh() {
         val current = (read() as? Outcome.Ok)?.value ?: return
         if (startingJobId != null && current.jobId != startingJobId) return
+        stopIfStepStuck(current)
         show(current)
         if (current.state == "running") {
             val component = jobComponents.firstOrNull { it.id == current.current }
@@ -626,6 +636,22 @@ public class SetupEngine(
                 scope.launch { finish(current, step) }
             }
         }
+    }
+
+    /**
+     * A step that has run past its limit is stopped (the runner keeps what finished), and the job then reads as a
+     * failure the page answers with Try again and Use a computer instead. App-run steps (downloads) are exempt: they
+     * report their own bytes.
+     */
+    private suspend fun stopIfStepStuck(job: SetupJobRecord) {
+        if (job.state != "running" || cancelRequested || timedOut?.first == job.jobId) return
+        val row = job.components.firstOrNull { it.componentState == ComponentState.Running } ?: return
+        val component = jobComponents.firstOrNull { it.id == row.id } ?: return
+        if (component.app != null || component.jobStep) return
+        val started = row.startedAt ?: return
+        if (clock.now().toEpochMilliseconds() - started <= stepTimeout(component).inWholeMilliseconds) return
+        timedOut = job.jobId to row.id
+        guarded { host.cancelSetup() }
     }
 
     private suspend fun finish(job: SetupJobRecord, step: SetupJobComponent) {
@@ -724,8 +750,18 @@ public class SetupEngine(
                 floors,
             )
         val app = appProgress
+        val stuck = timedOut
         publish(
-            if (app == null || saved.state != "running") base
+            if (stuck != null && stuck.first == saved.jobId && saved.state != "done") {
+                val title = jobComponents.firstOrNull { it.id == stuck.second }?.shortTitle ?: stuck.second
+                base.copy(
+                    state = SetupState.Failed,
+                    error = SetupError.StepTimedOut(title),
+                    stepElapsedSeconds = null,
+                    activity = null,
+                    quietSeconds = null,
+                )
+            } else if (app == null || saved.state != "running") base
             else
                 base.copy(
                     components =

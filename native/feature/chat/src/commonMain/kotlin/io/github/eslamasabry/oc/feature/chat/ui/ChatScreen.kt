@@ -160,6 +160,10 @@ import io.github.eslamasabry.oc.ui.words.res.composerFullCommands
 import io.github.eslamasabry.oc.ui.words.res.workCount
 import io.github.eslamasabry.oc.ui.words.res.chatSendFailureAccountAction
 import io.github.eslamasabry.oc.ui.words.res.chatUiChooseAnotherModel
+import io.github.eslamasabry.oc.ui.words.res.chatUiChooseOption
+import io.github.eslamasabry.oc.ui.words.res.chatUiRunOnYourComputer
+import io.github.eslamasabry.oc.ui.words.res.chatUiTodo
+import io.github.eslamasabry.oc.ui.words.res.modelChoiceDone
 import io.github.eslamasabry.oc.ui.words.res.chatUiOpenProviders
 import io.github.eslamasabry.oc.ui.words.res.chatUiUseModelAndResend
 import io.github.eslamasabry.oc.ui.words.res.b169AskSend
@@ -192,6 +196,15 @@ import io.github.eslamasabry.oc.ui.words.res.chatStopAfterStepPrompt
 import io.github.eslamasabry.oc.ui.words.res.connectionReconnectingQuiet
 import io.github.eslamasabry.oc.ui.words.res.connectionRestartPhoneServer
 import io.github.eslamasabry.oc.ui.words.res.connectionTryNow
+import io.github.eslamasabry.oc.ui.words.res.chatUiDelegatedSession
+import io.github.eslamasabry.oc.ui.words.res.chatUiOpenParentSession
+import io.github.eslamasabry.oc.ui.words.res.chatUiShowAllSubagentSessions
+import io.github.eslamasabry.oc.ui.words.res.connectionPasswordRejectedFor
+import io.github.eslamasabry.oc.ui.words.res.connectionTokenRejectedFor
+import io.github.eslamasabry.oc.ui.words.res.e7BannerDetails
+import io.github.eslamasabry.oc.ui.words.res.e7BannerUpdatePassword
+import io.github.eslamasabry.oc.ui.words.res.productStatesSwitchServer
+import io.github.eslamasabry.oc.ui.words.res.updateConnectionToken
 import io.github.eslamasabry.oc.ui.words.res.connectionTryingAgainIn
 import io.github.eslamasabry.oc.ui.words.res.connectionTryingAgainNow
 import io.github.eslamasabry.oc.ui.words.res.workServerNotAnsweringPhone
@@ -320,6 +333,10 @@ public fun ChatScreen(
             mutableStateOf<List<io.github.eslamasabry.oc.feature.chat.composer.ComposerSlashCommand>>(emptyList())
         }
     var workOpen by remember(state.ref) { mutableStateOf(false) }
+    var connectionDetails by remember(state.ref) { mutableStateOf(false) }
+    fun openConnectionDetails() {
+        connectionDetails = true
+    }
     var commandInsert by
         remember(state.ref) {
             mutableStateOf<io.github.eslamasabry.oc.feature.chat.composer.InsertRequest?>(null)
@@ -424,7 +441,10 @@ public fun ChatScreen(
                 onStop = actions::stop,
                 stopping = { latest.live?.stopping == true },
                 // S28 story 14: the live line's stuck-command notice also turns Send into "Stop and send".
-                stuck = { factsState.live is io.github.eslamasabry.oc.feature.chat.presentation.LiveNoticeUi.StuckCommand },
+                stuck = {
+                    factsState.live is io.github.eslamasabry.oc.feature.chat.presentation.LiveNoticeUi.StuckCommand ||
+                        factsState.live is io.github.eslamasabry.oc.feature.chat.presentation.LiveNoticeUi.ToolWait
+                },
                 stopAfterStep = {
                     if (latest.live?.canStopAfterStep == true) { { actions.stopAfterStep(stopNote) } }
                     else null
@@ -754,7 +774,7 @@ public fun ChatScreen(
                                     // An unconfirmed send is said once, on its own bubble with Check again.
                                     state.status
                                         ?.takeUnless { it.kind == ChatStatusKind.SendUnconfirmed }
-                                        ?.let { statusLine(it, actions) },
+                                        ?.let { statusLine(it, actions, header?.state?.serverName, ::openConnectionDetails) },
                                     appStatus,
                                 )
                             ),
@@ -878,6 +898,7 @@ public fun ChatScreen(
                                             facts = facts,
                                             display = transcriptDisplay,
                                             onOpenSession = onOpenSession,
+                                            onStopLive = actions::stop,
                                             reply =
                                                 rememberReplyActions(
                                                     actions,
@@ -889,6 +910,16 @@ public fun ChatScreen(
                                                         modelPicker = (modelPicker ?: 0L) + 1L
                                                     },
                                                     onOpenCode = { codeReader = it },
+                                                    onChoice = { text ->
+                                                        // An agent choice goes after the person's words (negative ids,
+                                                        // never equal to the chat's or the prompts' own).
+                                                        commandInsertId -= 1
+                                                        commandInsert =
+                                                            io.github.eslamasabry.oc.feature.chat.composer.InsertRequest(
+                                                                commandInsertId,
+                                                                text,
+                                                            )
+                                                    },
                                                     onRerunCommand =
                                                         if (workModel != null && state.capabilities.shell && !demoMode)
                                                             workModel::openShellDialog
@@ -975,6 +1006,12 @@ public fun ChatScreen(
                     )
                 } else PictureSheet(shown, actions)
                 CodeReaderSheet(codeReader, actions) { codeReader = null }
+                ConnectionDetailsSheet(
+                    visible = connectionDetails && state.status?.kind.let { it == ChatStatusKind.Offline || it == ChatStatusKind.Connecting },
+                    line = state.status,
+                    actions = actions,
+                    onDismiss = { connectionDetails = false },
+                )
                 ChatTimelineSheet(state.timeline, actions, facts.nowMs)
                 // B-169 §3: Switch model on a failed reply.
                 io.github.eslamasabry.oc.feature.chat.composer.SwitchModelSheet(state.switching, modelChoices, actions)
@@ -1227,9 +1264,51 @@ private fun confirmSpec(confirm: ChatConfirm?): KitConfirmSpec? =
  * More. With no try scheduled, Restart (this phone) or Retry is the action.
  */
 @Composable
-private fun connectionLine(line: ChatStatusUi, actions: ChatActions): KitStatus {
+private fun connectionLine(
+    line: ChatStatusUi,
+    actions: ChatActions,
+    serverName: String?,
+    onDetails: () -> Unit,
+): KitStatus {
     val offline = line.kind == ChatStatusKind.Offline
     val seconds = line.retryInSeconds
+    val details =
+        KitLineAction(
+            stringResource(Res.string.e7BannerDetails),
+            onDetails,
+            testTag = "chat-connection-details",
+        )
+    val changeServer =
+        KitLineAction(
+            stringResource(Res.string.productStatesSwitchServer),
+            actions::openServers,
+            testTag = "chat-connection-change-server",
+        )
+    // A stopped link that retrying cannot fix: the saved password or token is wrong or missing, so the way
+    // forward is to type it again where it is kept (Flutter `credentialsRequired`).
+    val signIn = (line.failure as? io.github.eslamasabry.oc.core.common.Failure.SignIn)?.why
+    if (signIn != null) {
+        val token =
+            signIn == io.github.eslamasabry.oc.core.common.SignInWhy.TokenMissing ||
+                signIn == io.github.eslamasabry.oc.core.common.SignInWhy.TokenRejected
+        val name = serverName ?: "OpenCode"
+        return KitStatus(
+            KitStatusKind.Connection,
+            stringResource(
+                if (token) Res.string.connectionTokenRejectedFor else Res.string.connectionPasswordRejectedFor,
+                name,
+            ),
+            id = "chat-status-${line.id}",
+            tone = StatusTone.Failure,
+            action =
+                KitLineAction(
+                    stringResource(if (token) Res.string.updateConnectionToken else Res.string.e7BannerUpdatePassword),
+                    actions::editServer,
+                    testTag = if (token) "chat-banner-update-token" else "chat-banner-update-password",
+                ),
+            more = listOf(details, changeServer),
+        )
+    }
     val message =
         stringResource(
             when {
@@ -1262,10 +1341,11 @@ private fun connectionLine(line: ChatStatusUi, actions: ChatActions): KitStatus 
                     actions::tryLinkNow,
                     testTag = "chat-connection-try-now",
                 ),
-            more = listOfNotNull(restart),
+            more = listOfNotNull(restart, details, changeServer),
         )
     // Already reconnecting with no schedule: waiting is the way out, so nothing is offered.
-    if (!offline) return KitStatus(KitStatusKind.Connection, message, id = id)
+    if (!offline)
+        return KitStatus(KitStatusKind.Connection, message, id = id, more = listOf(details, changeServer))
     val retry =
         KitLineAction(
             stringResource(Res.string.commonRetry),
@@ -1277,7 +1357,7 @@ private fun connectionLine(line: ChatStatusUi, actions: ChatActions): KitStatus 
         message,
         id = id,
         action = restart ?: retry,
-        more = if (restart != null) listOf(retry) else emptyList(),
+        more = listOfNotNull(restart?.let { retry }, details, changeServer),
     )
 }
 
@@ -1286,10 +1366,15 @@ private fun connectionLine(line: ChatStatusUi, actions: ChatActions): KitStatus 
  * changes nothing).
  */
 @Composable
-private fun statusLine(line: ChatStatusUi, actions: ChatActions): KitStatus =
+private fun statusLine(
+    line: ChatStatusUi,
+    actions: ChatActions,
+    serverName: String? = null,
+    onDetails: () -> Unit = {},
+): KitStatus =
     when (line.kind) {
         ChatStatusKind.Offline,
-        ChatStatusKind.Connecting -> connectionLine(line, actions)
+        ChatStatusKind.Connecting -> connectionLine(line, actions, serverName, onDetails)
         ChatStatusKind.SendFailed ->
             KitStatus(
                 KitStatusKind.Info,
@@ -1373,6 +1458,29 @@ private fun statusLine(line: ChatStatusUi, actions: ChatActions): KitStatus =
                         icon = KitIcons.history,
                     ),
             )
+        // Flutter `_subagentStatus`: this conversation was delegated; the way back to the one that delegated it.
+        ChatStatusKind.Subagent ->
+            KitStatus(
+                KitStatusKind.Info,
+                stringResource(Res.string.chatUiDelegatedSession),
+                id = "chat-status-${line.id}",
+                tone = StatusTone.Neutral,
+                action =
+                    KitLineAction(
+                        stringResource(Res.string.chatUiOpenParentSession),
+                        actions::openParent,
+                        testTag = "subagent-parent-session",
+                    ),
+                icon = KitIcons.nested,
+                more =
+                    listOf(
+                        KitLineAction(
+                            stringResource(Res.string.chatUiShowAllSubagentSessions),
+                            actions::showSubagents,
+                            testTag = "subagent-session-list",
+                        )
+                    ),
+            )
         ChatStatusKind.Undone ->
             KitStatus(
                 KitStatusKind.Info,
@@ -1402,8 +1510,13 @@ internal fun rememberReplyActions(
     canCompact: Boolean = false,
     onChooseModel: () -> Unit = {},
     onOpenCode: (KitMdBlock.Code) -> Unit = {},
+    onChoice: ((String) -> Unit)? = null,
     onRerunCommand: ((String) -> Unit)? = null,
 ): ReplyActions {
+    val chooseTemplate = stringResource(Res.string.chatUiChooseOption, "\u0000")
+    val doneWord = stringResource(Res.string.modelChoiceDone)
+    val todoWord = stringResource(Res.string.chatUiTodo)
+    val runOnComputer = stringResource(Res.string.chatUiRunOnYourComputer)
     val openFullCode = stringResource(Res.string.terminalOpenFull, "\u0000")
     val chooseModel = stringResource(Res.string.chatUiChooseAnotherModel)
     val useModelTemplate = stringResource(Res.string.chatUiUseModelAndResend, "\u0000")
@@ -1454,6 +1567,11 @@ internal fun rememberReplyActions(
         compactLabel,
         openFullCode,
         onOpenCode,
+        onChoice,
+        chooseTemplate,
+        doneWord,
+        todoWord,
+        runOnComputer,
         onRerunCommand,
     ) {
         ReplyActions(
@@ -1469,6 +1587,11 @@ internal fun rememberReplyActions(
                     onCopyCode = actions::copyText,
                     moreCodeLabel = { hidden -> openFullCode.replace("\u0000", hidden.toString()) },
                     onOpenCode = onOpenCode,
+                    onChoice = onChoice,
+                    chooseLabel = { text -> chooseTemplate.replace("\u0000", text) },
+                    doneWord = doneWord,
+                    todoWord = todoWord,
+                    runOnComputerLabel = runOnComputer,
                     onPicture = { p ->
                         val url = p.url
                         val path = p.path

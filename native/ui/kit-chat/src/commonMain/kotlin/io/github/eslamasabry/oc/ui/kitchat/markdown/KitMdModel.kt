@@ -87,7 +87,20 @@ public sealed interface KitMdBlock {
 
     /** P12-CHAT-FEEL: a line of only pictures (B-CHAT-059), drawn as tiles the person taps to open. */
     public data class Pictures(override val key: String, val pictures: ImmutableList<KitPicture>) : KitMdBlock
+
+    /**
+     * A closed ```choices / ```checklist / ```command fence (Flutter `AgentBlockKinds`): tappable options that fill the
+     * message box, a read-only checklist, or commands to run on the person's own computer.
+     */
+    public data class Agent(override val key: String, val kind: KitAgentKind, val items: ImmutableList<KitAgentItem>) :
+        KitMdBlock
 }
+
+public enum class KitAgentKind { Choices, Checklist, Command }
+
+/** One line of an agent block; [done] is set for a checklist line only. */
+@Immutable
+public data class KitAgentItem(val text: String, val done: Boolean = false)
 
 /**
  * One Markdown picture (B-CHAT-059). [url] is set for a web picture (never fetched: a tap goes through the link
