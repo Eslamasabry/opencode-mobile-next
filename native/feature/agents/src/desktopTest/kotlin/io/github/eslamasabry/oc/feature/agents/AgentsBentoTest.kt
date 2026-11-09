@@ -294,9 +294,16 @@ class AgentsBentoTest {
             )
 
         /** The app's bundled marks (`androidApp/src/main/assets/marks/<slug>.svg`) by agent id. */
-        val MARKS = KitLogoLoader { id, _ ->
-            val slug = AgentPersona.agentMarkSlug(id) ?: return@KitLogoLoader null
-            File(System.getProperty("user.dir"), "../../androidApp/src/main/assets/marks/$slug.svg").takeIf { it.isFile }?.readText()
-        }
+        val MARKS =
+            object : KitLogoLoader {
+                private fun mark(name: String) =
+                    File(System.getProperty("user.dir"), "../../androidApp/src/main/assets/marks/$name.svg").takeIf { it.isFile }?.readText()
+
+                override suspend fun svg(id: String, agent: Boolean): String? = AgentPersona.agentMarkSlug(id)?.let(::mark)
+
+                /** Like the app: the brand's colour file when it has one (`ProviderMarks.agentColorFile`). */
+                override suspend fun colorSvg(id: String): String? =
+                    io.github.eslamasabry.oc.engine.integrations.catalog.ProviderMarks.agentColorFile(id)?.let(::mark)
+            }
     }
 }
