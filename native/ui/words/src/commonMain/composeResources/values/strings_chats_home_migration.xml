@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="homeOpeningConnecting">Connecting to %1$s</string>
     <string name="homeOpeningFailed">%1$s isn’t answering</string>
-    <string name="homeOpeningSavedTitles">These are the conversation titles saved last time. They open once the server answers.</string>
-    <string name="homeOpeningStarting">Starting this phone…</string>
-    <string name="homeOpeningWaiting">Your conversations show here once it answers.</string>
     <string name="homeOpeningFailedBody">Check that the server is on and this phone can reach it, then try again.</string>
     <string name="homeWatchedServers">Watched servers</string>
     <string name="homeInboxCount">Inbox · %1$s</string>
