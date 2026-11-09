@@ -6,11 +6,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.ImageBitmap
-import io.github.eslamasabry.oc.ui.kitchat.LocalKitChatWork
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.kit.image.KitImages
+import io.github.eslamasabry.oc.ui.kit.image.LocalKitImageWork
+import io.github.eslamasabry.oc.ui.kit.image.kitImageKeyOf
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
-import kotlinx.coroutines.withContext
-import org.jetbrains.compose.resources.decodeToImageBitmap
 
 /** One file a sent prompt carried: its name, kind and address (a `data:` address for a picture from this phone). */
 @Immutable
@@ -28,18 +30,23 @@ public class KitSentFiles(public val photos: List<KitPromptPhoto>, public val at
 @Composable
 public fun rememberKitSentFiles(files: List<KitSentFile>): KitSentFiles {
     if (files.isEmpty()) return remember { KitSentFiles(emptyList(), emptyList()) }
-    val work = LocalKitChatWork.current
+    val work = LocalKitImageWork.current
+    val edge = with(LocalDensity.current) { SENT_EDGE.toPx() }.toInt()
     val inline = remember(files) { files.filter { it.isInlineImage() } }
-    // A picture already decoded (by the sending bubble) is there on the first frame: the echoed message keeps the
-    // very same bitmap, so the swap from bubble to message does not blink.
+    // A picture already decoded (by the sending bubble) is there on the first frame: the kit picture pipeline keeps
+    // the very same bitmap by address, so the swap from bubble to echoed message does not blink.
     val decoded by
         produceState<Map<KitSentFile, ImageBitmap?>>(
-            inline.filter { SentPictureCache[it] != null }.associateWith { SentPictureCache[it] },
+            inline.mapNotNull { f -> f.pictureKey()?.let { KitImages.peek(it, edge) }?.let { f to it } }.toMap(),
             inline,
+            edge,
         ) {
             value =
-                withContext(work) { inline.associateWith { SentPictureCache[it] ?: decode(it) } }
-                    .also { got -> got.forEach { (file, bitmap) -> SentPictureCache[file] = bitmap } }
+                inline.associateWith { file ->
+                    val key = file.pictureKey()
+                    if (key == null) null
+                    else KitImages.load(key, edge, work = work) { file.url?.let(::dataUrlBytes) }
+                }
         }
     return remember(files, decoded) {
         val photos = ArrayList<KitPromptPhoto>()
@@ -73,27 +80,7 @@ public fun dataUrlBytes(url: String): ByteArray? {
     }
 }
 
-@Suppress("TooGenericExceptionCaught") // Refused bytes stay a named chip; decoder details never reach the UI.
-private fun decode(file: KitSentFile): ImageBitmap? {
-    val bytes = file.url?.let(::dataUrlBytes) ?: return null
-    return try {
-        if (bytes.isEmpty()) null else bytes.decodeToImageBitmap()
-    } catch (_: Exception) {
-        null
-    }
-}
+private fun KitSentFile.pictureKey(): String? = url?.let { "sent:" + kitImageKeyOf(it) }
 
-/** The last few decoded sent pictures by address; touched only from composition. */
-internal object SentPictureCache {
-    private const val LIMIT = 16
-    private val map = object : LinkedHashMap<String, ImageBitmap>(LIMIT, 0.75f, true) {
-        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, ImageBitmap>?): Boolean = size > LIMIT
-    }
-
-    operator fun get(file: KitSentFile): ImageBitmap? = file.url?.let { map[it] }
-
-    operator fun set(file: KitSentFile, bitmap: ImageBitmap?) {
-        val url = file.url ?: return
-        if (bitmap != null) map[url] = bitmap
-    }
-}
+/** The longest side a sent-picture thumbnail draws. */
+private val SENT_EDGE = 320.dp
