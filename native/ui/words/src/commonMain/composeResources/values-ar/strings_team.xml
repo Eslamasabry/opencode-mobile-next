@@ -1851,4 +1851,8 @@
     <string name="teamVoiceApprovePlan">ابدأ بناء %1$s</string>
     <string name="teamVoiceAcceptPhase">اقبل %1$s</string>
     <string name="teamVoicePutOnMain">انقل %1$s إلى main</string>
+    <string name="teamRefusalServerRestarted">أُعيد تشغيل OpenCode أثناء تنفيذ هذه الخطوة، فانقطعت.</string>
+    <string name="teamRefusalServerRestartedNext">استأنف لإرسال هذه الخطوة مرة أخرى. ستكمل من العمل المنجز.</string>
+    <string name="teamRefusalRestartResend">أُعيد تشغيل OpenCode أثناء تنفيذ هذه الخطوة. يرسلها الفريق مرة أخرى.</string>
+    <string name="teamRefusalRestartResendNext">لا شيء مطلوب منك. العمل المنجز محفوظ.</string>
 </resources>

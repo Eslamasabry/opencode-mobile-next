@@ -152,7 +152,8 @@ public class TeamEngine(
             val previous = state.value.workspace?.takeIf { state.value.config == config }
             when (val read = host.workspace(profileId, config)) {
                 is Outcome.Ok -> {
-                    val fresh = read.value.workspace
+                    // Dart `teamWorkspace()` words the engine's raw states before any page reads them.
+                    val fresh = TeamPhonePresentation.present(read.value.workspace, read.value.health.commandActions)
                     val next = fresh.takeIf { previous == null || it.revision >= previous.revision } ?: previous
                     state.update {
                         it.copy(
