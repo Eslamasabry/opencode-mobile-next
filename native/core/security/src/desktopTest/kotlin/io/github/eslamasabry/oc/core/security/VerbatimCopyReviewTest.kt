@@ -63,7 +63,15 @@ class VerbatimCopyReviewTest {
             "ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/diff/KitDiffView.kt" to
                 (1 to "selected lines of the person's own diff (Dart kit_diff_view.dart, verbatim there too)"),
             "ui/kit-content/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/content/log/KitLogPanel.kt" to
-                (1 to "takes already-redacted text; its one caller passes the Kept services log redacted by KeptServicesWiring"),
+                (2 to "Copy all and the header copy take already-redacted lines; the caller passes the log redacted by the Redactor"),
+            "ui/kit-content/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/content/terminal/KitTerminalLinks.kt" to
+                (1 to "Copy link: a link the person's own terminal printed (their shell, their content), like the terminal selection"),
+            "ui/kit-content/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/content/terminal/KitTerminalView.kt" to
+                (1 to "OSC 52 from the person's own terminal program, honoured only while the terminal is on screen (TerminalOsc52 bounds it)"),
+            "ui/kit-content/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/content/viewer/KitViewerFrame.kt" to
+                (1 to "Copy contents of the person's own project file (SEC-13, verbatim there too, like KitViewerDocument)"),
+            "ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/state/KitNotice.kt" to
+                (1 to "copies d.text of a Redacted value built by the one Redactor (the Details fold), like KitStateView"),
             "ui/kit-content/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/content/viewer/KitViewerDocument.kt" to
                 (1 to "Copy contents of the person's own project file (Dart kit_viewer.dart, verbatim there too)"),
             "ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/log/KitLogPanel.kt" to
