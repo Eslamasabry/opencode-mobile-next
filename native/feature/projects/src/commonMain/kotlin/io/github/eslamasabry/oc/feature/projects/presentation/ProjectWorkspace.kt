@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.projects.presentation
 
+import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
@@ -13,6 +14,7 @@ import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.core.model.VcsDiffMode
 import io.github.eslamasabry.oc.core.model.VersionControlFile
 import io.github.eslamasabry.oc.core.model.VersionControlHealth
+import io.github.eslamasabry.oc.core.model.VersionControlSetupState
 import io.github.eslamasabry.oc.core.model.WorktreeInfo
 import io.github.eslamasabry.oc.core.model.WorktreeScope
 import io.github.eslamasabry.oc.engine.git.WorktreeInspection
@@ -59,7 +61,13 @@ public data class ProjectWorkspaceUi(
     val inspectionCursor: String? = null,
     val inspectionBusy: Boolean = false,
     val inspectionFailure: Failure? = null,
-)
+    /** The server can run `git init` here (`gitInit`), so a folder without Git offers Initialize. */
+    val canInitGit: Boolean = false,
+    val initializingGit: Boolean = false,
+) {
+    /** True when the folder is known not to be a Git repository (nothing to inspect: offer Initialize, not an error). */
+    val notARepository: Boolean get() = health?.setupState == VersionControlSetupState.Absent
+}
 
 public interface ProjectWorkspaceActions {
     public fun openWorkspace() {}
@@ -98,6 +106,9 @@ public interface ProjectWorkspaceActions {
     public fun workspaceDiffPage(delta: Int) {}
 
     public fun inspectCopy(directory: String) {}
+
+    /** Runs `git init` in this folder, then reads it again (B-107). */
+    public fun initializeGit() {}
 
     public fun loadMoreCopyConversations() {}
 
@@ -140,6 +151,7 @@ internal class ProjectWorkspace(
                 canReadWorktrees = trees,
                 canCreate = trees && caps?.worktreeCreate == true,
                 canReset = trees && caps?.worktreeReset == true,
+                canInitGit = read && caps?.gitInit == true,
             )
         )
     }
@@ -249,6 +261,26 @@ internal class ProjectWorkspace(
                     )
                 )
                 if (selected != null) readInspection(live, run, selected, null, false)
+            }
+        }
+    }
+
+    override fun initializeGit() {
+        val live = server ?: return
+        if (!state.visible || !state.canInitGit || !state.notARepository || state.initializingGit || state.busy) return
+        val run = ++generation
+        operationLocation = live.gateway.location.value
+        set(state.copy(initializingGit = true, failure = null, inspectionFailure = null))
+        scope.launch {
+            val ops = scoped(live)
+            val result = ops?.initializeGitRepository() ?: Outcome.Failed(Failure.Unavailable(FeatureId("gitInit")))
+            if (!current(run, live)) return@launch
+            when (result) {
+                is Outcome.Failed -> set(state.copy(initializingGit = false, failure = result.failure))
+                is Outcome.Ok -> {
+                    set(state.copy(initializingGit = false))
+                    retryWorkspace()
+                }
             }
         }
     }

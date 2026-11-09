@@ -82,9 +82,16 @@ internal fun ProjectWorkspaceSheet(state: ProjectWorkspaceUi, actions: ProjectWo
                 WorkspaceSection("copy-inspection") { WorktreeInspectionPane(state, actions) }
             state.health?.let { health ->
                 WorkspaceSection("checkout-health") {
-                    if (health.setupState == VersionControlSetupState.Absent)
+                    if (health.setupState == VersionControlSetupState.Absent) {
                         KitNotice(stringResource(Res.string.agentProjectNoGit))
-                    else {
+                        if (state.canInitGit)
+                            KitButton(
+                                stringResource(Res.string.e7LibraryInitializeGit),
+                                actions::initializeGit,
+                                role = KitButtonRole.Primary,
+                                working = state.initializingGit,
+                            )
+                    } else {
                         KitRow(
                             title = stringResource(Res.string.agentProjectBranch),
                             supporting =
