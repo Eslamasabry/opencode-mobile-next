@@ -42,8 +42,10 @@ half4 main(float2 fragCoord) {
     float mid = layer(p, 130.0, 24.0, 0.18, 2.0, 7.9, t);
     float near = layer(p, 240.0, 52.0, 0.3, 1.2, 19.4, t);
     float a = far * 0.6 + mid * 0.7 + near * 0.75;
-    float hue = vnoise(p * 0.004 + t * 0.01);
-    half3 tint = mix(glowTint(), mix(uInk.rgb, uAccent.rgb, half(0.3)), half(hue));
+    // Lights in the accent in some parts of the page and the partner in others (sharpened, so the two hues keep their
+    // own regions instead of averaging to grey where they meet).
+    float hue = smoothstep(0.35, 0.65, vnoise(p * 0.004 + t * 0.01));
+    half3 tint = mix(glowTint(), uPartner.rgb, half(hue));
     return liveOut(fragCoord, tint, min(a, 1.0));
 }
 """

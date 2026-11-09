@@ -5,8 +5,12 @@ import io.github.eslamasabry.oc.ui.kit.live.LiveUniforms
 import kotlin.math.sin
 
 /**
- * Breathing mesh: four soft colour points wander slowly and blend into one smooth gradient that gently brightens and
- * dims, like a mesh gradient breathing. The points move on the CPU once a frame (four uniforms), not per pixel.
+ * Breathing mesh: four soft pools of colour wander slowly over the page and breathe, like a mesh gradient lit from
+ * behind. Each pool is its own light (a Gaussian in page space, bent by a gentle warp), so where two meet their colours
+ * add as light instead of averaging into grey: a green accent and a lavender partner no longer meet in mud. Between the
+ * pools the ground shows through, which gives the page depth. The points move on the CPU once a frame (four uniforms).
+ *
+ * Per pixel: two value noises (the warp), four exps, four glow blends; no loops.
  */
 public object MeshLook : LiveLook {
     override val id: String = "mesh"
@@ -19,29 +23,27 @@ uniform float2 uP2;
 uniform float2 uP3;
 uniform float uBreath;
 
-float w(float2 uv, float2 c) {
-    float2 d = uv - c;
-    float r = dot(d, d) + 0.02;
-    return 1.0 / (r * r);
+// A pool of light at c (page shares) with radius s (page heights), in aspect-true space.
+float pool(float2 q, float2 c, float aspect, float s) {
+    float2 d = q - float2(c.x * aspect, c.y);
+    return exp(-dot(d, d) / (2.0 * s * s));
 }
 
 half4 main(float2 fragCoord) {
-    float2 uv = fragCoord / uRes;
-    // A gentle warp so the blends are not perfect circles.
-    uv += 0.04 * (float2(liveNoise(uv * 3.0 + uTime * 0.02), liveNoise(uv * 3.0 + 9.0 - uTime * 0.02)) - 0.5);
+    float aspect = uRes.x / uRes.y;
+    float2 q = fragCoord / uRes.y;
+    float t = uTime;
+    // A slow, large warp so the pools are never perfect circles.
+    q += 0.06 * (float2(liveNoise(q * 2.2 + t * 0.017), liveNoise(q * 2.2 + 9.0 - t * 0.013)) - 0.5);
     float3 a = float3(uAccent.rgb);
     float3 b = float3(uPartner.rgb);
     float3 g = float3(uGlow.rgb);
-    float3 ground = float3(uGround.rgb);
-    float w0 = w(uv, uP0);
-    float w1 = w(uv, uP1);
-    float w2 = w(uv, uP2);
-    float w3 = w(uv, uP3);
-    float3 tint = (a * w0 + b * w1 + mix(a, g, 0.6) * w2 + g * w3) / (w0 + w1 + w2 + w3);
-    // Coverage falls off away from every point, so plain ground shows between them.
-    float near = max(max(w0, w1), max(w2, w3));
-    float cover = smoothstep(2.0, 60.0, near);
-    float3 col = liveGlow(ground, tint, cover * (0.22 + 0.04 * uBreath) * uIntensity);
+    float k = (0.21 + 0.015 * uBreath) * uIntensity;
+    float3 col = float3(uGround.rgb);
+    col = liveGlow(col, a, pool(q, uP0, aspect, 0.20) * k);
+    col = liveGlow(col, b, pool(q, uP1, aspect, 0.22) * k);
+    col = liveGlow(col, g, pool(q, uP2, aspect, 0.17) * k * 0.8);
+    col = liveGlow(col, b, pool(q, uP3, aspect, 0.19) * k * 0.9);
     return liveOut(col, fragCoord);
 }
 """

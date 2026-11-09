@@ -30,8 +30,12 @@ half4 main(float2 fragCoord) {
     float3 b = float3(uPartner.rgb);
     float3 g = float3(uGlow.rgb);
 
+    // The haze: two slow fields, one per hue, each laid as its own light (an average of accent and partner turns grey).
     float haze = liveFbm(p * 1.5 + float2(t * 0.6, -t * 0.4));
-    float3 col = liveGlow(ground, mix(a, b, haze), smoothstep(0.35, 0.85, haze) * 0.10 * uIntensity);
+    float side = smoothstep(0.25, 0.75, liveNoise(p * 0.8 + float2(t * 0.2, 3.0)));
+    float hz = smoothstep(0.3, 0.85, haze) * 0.11 * uIntensity;
+    float3 col = liveGlow(ground, a, hz * (1.0 - side));
+    col = liveGlow(col, b, hz * side);
 
     float aspect = uRes.x / uRes.y;
     float2 q = float2(p.x / max(aspect, 0.001) * 1.2, p.y);
@@ -40,7 +44,7 @@ half4 main(float2 fragCoord) {
     float fade = smoothstep(0.95, 0.15, p.y);
     float3 tint0 = mix(a, g, 0.5 + 0.5 * sin(q.x * 2.0 + t));
     col = liveGlow(col, tint0, c0 * fade * 0.42 * uIntensity);
-    col = liveGlow(col, mix(b, a, 0.35), c1 * fade * 0.30 * uIntensity);
+    col = liveGlow(col, b, c1 * fade * 0.30 * uIntensity);
     return liveOut(col, fragCoord);
 }
 """

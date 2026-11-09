@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.live.looks
 
 import io.github.eslamasabry.oc.ui.kit.live.LiveLook
+import io.github.eslamasabry.oc.ui.kit.live.LiveResolution
 import io.github.eslamasabry.oc.ui.kit.live.LiveShaderLib
 import io.github.eslamasabry.oc.ui.kit.live.LiveUniforms
 
@@ -10,6 +11,7 @@ import io.github.eslamasabry.oc.ui.kit.live.LiveUniforms
  */
 public object HalftoneLook : LiveLook {
     override val id: String = "halftone"
+    override val resolution: Float = LiveResolution.FULL // fine marks: crisp only at the screen's own pixels
 
     override val shader: String =
         LiveShaderLib.TINT +
@@ -28,7 +30,7 @@ half4 main(float2 fragCoord) {
     float radius = cell * 0.5 * sqrt(cloud) * 0.85;
     float d = length(r - g);
     float disc = 1.0 - smoothstep(radius - px(), radius + px(), d);
-    half3 tint = mix(uInk.rgb, glowTint(), half(0.45 + 0.4 * cloud));
+    half3 tint = mix(uInk.rgb, glowTint(), half(0.6 + 0.35 * cloud));
     return liveOut(fragCoord, tint, disc * 0.6 * step(0.05, radius));
 }
 """

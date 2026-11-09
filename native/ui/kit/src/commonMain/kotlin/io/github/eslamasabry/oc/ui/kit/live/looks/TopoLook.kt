@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.live.looks
 
 import io.github.eslamasabry.oc.ui.kit.live.LiveLook
+import io.github.eslamasabry.oc.ui.kit.live.LiveResolution
 import io.github.eslamasabry.oc.ui.kit.live.LiveShaderLib
 import io.github.eslamasabry.oc.ui.kit.live.LiveUniforms
 
@@ -10,6 +11,7 @@ import io.github.eslamasabry.oc.ui.kit.live.LiveUniforms
  */
 public object TopoLook : LiveLook {
     override val id: String = "topo"
+    override val resolution: Float = LiveResolution.FULL // fine marks: crisp only at the screen's own pixels
 
     override val shader: String =
         LiveShaderLib.TINT +
@@ -36,7 +38,7 @@ half4 main(float2 fragCoord) {
     float major = step(abs(fract((floor(f + 0.5)) / 5.0)), 0.01);
     float w = mix(0.5, 0.9, major);
     float line = 1.0 - smoothstep(w, w + px() * 1.2, dist);
-    half3 tint = mix(uInk.rgb, glowTint(), half(0.35 + 0.4 * major));
+    half3 tint = mix(uInk.rgb, glowTint(), half(0.6 + 0.3 * major));
     return liveOut(fragCoord, tint, line * mix(0.42, 0.75, major));
 }
 """

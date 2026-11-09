@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.live.looks
 
 import io.github.eslamasabry.oc.ui.kit.live.LiveLook
+import io.github.eslamasabry.oc.ui.kit.live.LiveResolution
 import io.github.eslamasabry.oc.ui.kit.live.LiveShaderLib
 import io.github.eslamasabry.oc.ui.kit.live.LiveUniforms
 
@@ -10,6 +11,7 @@ import io.github.eslamasabry.oc.ui.kit.live.LiveUniforms
  */
 public object ConstellationLook : LiveLook {
     override val id: String = "constellation"
+    override val resolution: Float = LiveResolution.FULL // fine marks: crisp only at the screen's own pixels
 
     override val shader: String =
         LiveShaderLib.TINT +
@@ -84,7 +86,7 @@ half4 main(float2 fragCoord) {
     lines = max(lines, link(p, u, r, t));
     lines = max(lines, link(p, r, d, t));
     lines = max(lines, link(p, d, l, t));
-    half3 tint = mix(uInk.rgb, glowTint(), half(0.45));
+    half3 tint = mix(uInk.rgb, glowTint(), half(0.7));
     return liveOut(fragCoord, tint, max(stars * 1.5, lines * 0.7));
 }
 """

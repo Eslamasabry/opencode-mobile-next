@@ -18,6 +18,15 @@ public interface LiveLook {
     public val id: String
     public val shader: String /*AGSL*/
 
+    /**
+     * Share of the screen's pixels per side the look's shader runs at (bg-looks 2026-11-10): [LiveResolution.FULL] for
+     * looks of fine marks (a line or a dot is only crisp at the screen's own pixels), [LiveResolution.FIELD] for smooth
+     * colour fields, whose reduced pass is filtered up and finished (decoded and dithered) at full resolution. The
+     * platform may lower it ([io.github.eslamasabry.oc.ui.kit.platform.KitPlatform.liveResolutionCap]).
+     */
+    public val resolution: Float
+        get() = LiveResolution.FIELD
+
     public fun uniforms(u: LiveUniforms)
 }
 
@@ -51,4 +60,23 @@ public abstract class LiveUniforms {
     public abstract fun float3(name: String, x: Float, y: Float, z: Float)
 
     public abstract fun float4(name: String, x: Float, y: Float, z: Float, w: Float)
+}
+
+/** How many of the screen's pixels a look's shader runs at ([LiveLook.resolution]). */
+public object LiveResolution {
+    /** Every screen pixel: the line and dot looks. */
+    public const val FULL: Float = 1f
+
+    /** Half the pixels per side (a quarter of the fragments): the smooth colour fields. */
+    public const val FIELD: Float = .5f
+
+    /**
+     * Debug only, never a setting: true draws every look at full resolution whatever its own [LiveLook.resolution] and
+     * the platform's cap, to measure frame times on a phone. Flip it here and build.
+     */
+    public const val FORCE_FULL: Boolean = false
+
+    /** The share [look] draws at under the platform's [cap] (1 = no cap). */
+    public fun of(look: LiveLook, cap: Float = 1f): Float =
+        if (FORCE_FULL) FULL else minOf(look.resolution, cap).coerceIn(.25f, FULL)
 }

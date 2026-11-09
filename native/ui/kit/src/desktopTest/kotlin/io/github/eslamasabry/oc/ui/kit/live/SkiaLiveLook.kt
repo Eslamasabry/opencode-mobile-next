@@ -65,12 +65,13 @@ internal class SkiaLiveLook(val look: LiveLook) {
 
     /**
      * One frame, [w]×[h] pixels, as packed RGB (alpha dropped: every look is opaque). With [blurSigma] > 0 (pixels) the
-     * frame is then blurred as a Glass pane blurs what lies behind it (Gaussian, edges clamped).
+     * frame is then blurred as a Glass pane blurs what lies behind it (Gaussian, edges clamped). [encoded]: as a reduced
+     * pass writes it for the full-resolution finish (the look's distance from the ground, undithered).
      */
-    fun pixels(w: Int, h: Int, palette: LivePalette, at: Moment, blurSigma: Float = 0f): IntArray {
+    fun pixels(w: Int, h: Int, palette: LivePalette, at: Moment, blurSigma: Float = 0f, encoded: Boolean = false): IntArray {
         set.clear()
         sink.setSize(w.toFloat(), h.toFloat(), at.density)
-        sink.setFrame(look, at.time, at.strength, palette)
+        sink.setFrame(look, at.time, at.strength, palette, encoded)
         var surface = Surface.makeRasterN32Premul(w, h)
         surface.canvas.drawRect(Rect.makeWH(w.toFloat(), h.toFloat()), Paint().apply { shader = builder.makeShader() })
         if (blurSigma > 0f) {

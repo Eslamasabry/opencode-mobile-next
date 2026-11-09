@@ -73,6 +73,8 @@ public class DesktopKitPlatform : KitPlatform {
 
     override val liveShaders: LiveShaderCompiler = LiveShaderCompiler(DesktopLiveShader::compile)
 
+    override fun liveFinish(ground: androidx.compose.ui.graphics.Color): RenderEffect? = DesktopLiveShader.finish(ground)
+
     @OptIn(ExperimentalResourceApi::class)
     override fun svgPainter(text: String, pixels: Int): Painter? {
         if (!isStaticKitSvg(text) || pixels !in 1..256) return null
