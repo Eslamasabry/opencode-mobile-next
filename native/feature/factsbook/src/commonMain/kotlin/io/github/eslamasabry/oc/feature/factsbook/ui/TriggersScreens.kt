@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.factsbook.ui
 
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenRefresh
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,6 +14,11 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.factsbook.FactsBookError
@@ -55,6 +61,7 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
+import io.github.eslamasabry.oc.ui.kit.motion.KitRefresh
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
@@ -147,7 +154,10 @@ public fun TriggersScreen(state: TriggersUi, actions: TriggersActions) {
                     icon = KitIcons.sparkle,
                 )
             TriggersLoad.Failed -> Failed(state.error, actions::refresh)
-            TriggersLoad.Ready -> LazyColumn(Modifier.fillMaxSize()) { triggerList(state, actions) }
+            TriggersLoad.Ready ->
+                KitRefresh(state.refreshing, actions::refresh, Modifier.fillMaxSize()) {
+                    LazyColumn(Modifier.fillMaxSize()) { triggerList(state, actions) }
+                }
             else -> KitSkeletonRows()
         }
     }
@@ -241,6 +251,15 @@ private fun EventRow(event: TriggerEvent, actions: TriggersActions) {
 @Composable
 public fun RuleEditorScreen(state: RuleEditorUi, actions: RuleEditorActions) {
     val saved = state.saved
+    // A new rule starts in the app's language (F: rule_editor_screen.dart initState).
+    val appIsArabic = Locale.current.language == "ar"
+    var languageSet by remember { mutableStateOf(false) }
+    LaunchedEffect(state.formSeed, state.canApprove) {
+        if (!languageSet && state.formSeed > 0 && state.canApprove && saved == null) {
+            languageSet = true
+            if (appIsArabic && state.form.locale != "ar") actions.edit { it.copy(locale = "ar") }
+        }
+    }
     val owner = if (state.canApprove) KitEnabled.Enabled else KitEnabled.Disabled(stringResource(Res.string.fbCareNeedsOwnerShort))
     KitSheetHost(Modifier.fillMaxSize()) {
         KitScreen(
@@ -552,6 +571,7 @@ public fun EventScreen(state: EventUi, actions: EventActions) {
         width = KitScreenWidth.Reading,
         loading = state.loading && event != null,
         loadingLabel = title,
+        refresh = if (event != null) KitScreenRefresh(refreshing = state.loading, onRefresh = actions::reload) else null,
         edges = KitScreenEdges.Bleed,
     ) {
         when {

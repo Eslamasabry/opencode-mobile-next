@@ -353,6 +353,7 @@ public object SetupPlanning {
                 )
         }
         val state = jobState(record.state)
+        val running = if (state == SetupState.Running) record.components.firstOrNull { it.componentState == ComponentState.Running } else null
         val overall = overallFraction(components, list, floors)
         val failedText =
             if (state == SetupState.Failed) {
@@ -395,6 +396,15 @@ public object SetupPlanning {
             logTail = redact(setupLogForPeople(log)),
             firstSetup = SetupJobParams.isFirstSetup(record.params),
             adding = SetupJobParams.addingIds(record.params),
+            stepElapsedSeconds = running?.let { row ->
+                row.startedAt?.let { ((nowMillis - it) / 1000).toInt().coerceAtLeast(0) }
+            },
+            activity = if (running != null) SetupActivity.fromLog(setupLogForPeople(record.logTail)) else null,
+            quietSeconds = if (running != null && record.updatedAt > 0) {
+                ((nowMillis - record.updatedAt) / 1000).toInt().coerceAtLeast(0)
+            } else {
+                null
+            },
         )
     }
 }

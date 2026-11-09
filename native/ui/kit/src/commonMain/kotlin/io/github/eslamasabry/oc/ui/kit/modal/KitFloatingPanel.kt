@@ -36,6 +36,7 @@ public fun KitFloatingPanel(
 ) {
     val colors = LocalKitColors.current
     val still = KitMotion.state.reduced
+    val travels = KitMotion.state.travels
     var entered by remember { mutableStateOf(still) }
     LaunchedEffect(Unit) { entered = true }
     val progress by
@@ -76,7 +77,8 @@ public fun KitFloatingPanel(
                     .fillMaxWidth() // F: lib/ui/kit/kit_floating_panel.dart:31
                     .graphicsLayer {
                         alpha = progress
-                        translationY = (1 - progress) * 24.dp.toPx()
+                        // Calm fades only; the 24 dp rise is Full's.
+                        translationY = if (travels) (1 - progress) * 24.dp.toPx() else 0f
                     } // F: lib/ui/kit/kit_floating_panel.dart:72
                     .clip(look.shape)
                     .then(look.modifier)

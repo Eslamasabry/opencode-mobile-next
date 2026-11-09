@@ -112,6 +112,8 @@ import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import io.github.eslamasabry.oc.ui.kitchat.transcript.rememberTranscriptListState
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.backgroundWorkShortcut
+import io.github.eslamasabry.oc.ui.words.res.chatSendFailureSignInAction
+import io.github.eslamasabry.oc.ui.words.res.chatSendFailureSignInAgain
 import io.github.eslamasabry.oc.ui.words.res.chatStripBackground
 import io.github.eslamasabry.oc.ui.words.res.revertReview
 import io.github.eslamasabry.oc.ui.words.res.revertStaged
@@ -1525,6 +1527,19 @@ internal fun rememberReplyActions(
     val continueLabel = stringResource(Res.string.returnBriefContinue)
     val signInSettings =
         stringResource(io.github.eslamasabry.oc.ui.words.res.Res.string.agentErrorOpenSettings)
+    // B-AGENT-189 (#137): a lapsed sign-in of an agent on this phone says "sign in again" and offers Sign in.
+    val signInAgainTemplate = stringResource(Res.string.chatSendFailureSignInAgain, "\u0000")
+    val signInAgainLabel = stringResource(Res.string.chatSendFailureSignInAction)
+    val phoneAgentSignIn = remember(actions) { actions.phoneAgentSignIn() }
+    val signInAgainWords: (String) -> String? = remember(signInAgainTemplate) {
+        { provider ->
+            when (provider) {
+                "claude" -> "Claude Code"
+                "codex" -> "Codex"
+                else -> null
+            }?.let { signInAgainTemplate.replace("\u0000", it) }
+        }
+    }
     return remember(
         actions,
         copy,
@@ -1535,6 +1550,9 @@ internal fun rememberReplyActions(
         confirmedPaths,
         continueLabel,
         signInSettings,
+        signInAgainWords,
+        signInAgainLabel,
+        phoneAgentSignIn,
         models,
         canCompact,
         onChooseModel,
@@ -1595,6 +1613,9 @@ internal fun rememberReplyActions(
             onContinue = actions::continueReply,
             signInSettingsLabel = signInSettings,
             onSignInSettings = actions::openSignInSettings,
+            signInAgainWords = if (phoneAgentSignIn) signInAgainWords else null,
+            signInAgainLabel = signInAgainLabel,
+            onAgentSignIn = actions::openAgentSignIn,
             models = models,
             canCompact = canCompact,
             onCompact = actions::compactAgain,

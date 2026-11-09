@@ -175,4 +175,17 @@ class FactsBookTriggersTest {
         assertIs<CaptureOutcome.SavedAtNode>(e.capture(CaptureRequest(CaptureKind.Note, "Buy milk"), rulesLook = true))
         assertTrue(http.sent.any { it.path == "/v1/inbox" })
     }
+
+    @Test
+    fun `the rule editor offers the templates the node lists, never bill due`() {
+        val listed =
+            FactsBookCapabilities.read(
+                Json.parseToJsonElement("""{"milestone":"B5","supported":{"local_trigger_slice":true},"disabled":{},"trigger_templates_v1":["appointment","delivery"]}""")
+                    .jsonObject
+            )
+        assertEquals(setOf("appointment", "delivery"), listed.triggerTemplates)
+        val own = FactsBookCapabilities.read(Json.parseToJsonElement("""{"milestone":"B5","supported":{},"disabled":{}}""").jsonObject)
+        assertTrue(own.triggerTemplates.isEmpty())
+        assertFalse(TriggerTemplateId.BillDue in TriggerTemplateId.offered)
+    }
 }
