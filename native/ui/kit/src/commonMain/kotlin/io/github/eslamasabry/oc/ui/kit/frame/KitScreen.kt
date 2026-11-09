@@ -372,7 +372,7 @@ public fun KitScreen(
                                         fadeFromBottom =
                                             when {
                                                 bottomPart == null -> null
-                                                slab -> ({ with(density) { (SLAB_UNDER_FADE_DP + Space.S2).dp.toPx() } })
+                                                slab -> ({ with(density) { (SLAB_UNDER_FADE_DP + SLAB_UNDER_CLEAR_DP).dp.toPx() } })
                                                 else -> ({ bottomPx + with(density) { EDGE_LEAD_DP.dp.toPx() } })
                                             },
                                         bottomReach = if (slab) SLAB_UNDER_FADE_DP.dp else (EDGE_LEAD_DP + COMPOSER_FADE_DP).dp,
@@ -830,8 +830,13 @@ internal const val COMPOSER_FADE_DP = 16
 /** How far above a chat's bottom block its transcript starts to fade out (within the list's own padding). */
 internal const val EDGE_LEAD_DP = 8
 
-/** Under a glass slab: the body dissolves over this much behind the slab's bottom edge and is gone in the margin below it. */
-internal const val SLAB_UNDER_FADE_DP = 8
+/**
+ * Under a glass slab: the body dissolves over [SLAB_UNDER_FADE_DP] behind the slab's bottom edge and is gone in the last
+ * [SLAB_UNDER_CLEAR_DP] of the frame (the slab's 8 dp margin and the start of its round corners), so no part of a line
+ * shows below the slab or beside its corners. The glass itself still shows the whole recording.
+ */
+internal const val SLAB_UNDER_FADE_DP = 16
+internal const val SLAB_UNDER_CLEAR_DP = 12
 
 /** How far the chat header's ground fades down into the body. */
 internal const val HEADER_FADE_DP = 12
