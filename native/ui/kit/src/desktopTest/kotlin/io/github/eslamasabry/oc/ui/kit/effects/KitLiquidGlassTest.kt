@@ -28,7 +28,7 @@ import io.github.eslamasabry.oc.ui.design.color.PackId
 import io.github.eslamasabry.oc.ui.design.color.ThemeResolver
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.FrostStrength
-import io.github.eslamasabry.oc.ui.design.effects.GlassEdges
+import io.github.eslamasabry.oc.ui.design.style.GlassLookId
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
@@ -102,9 +102,9 @@ class KitLiquidGlassTest {
     }
 
     @Test
-    fun `B-KIT-018 frost Off and Glass edges Frosted keep today's frost`() {
+    fun `B-KIT-018 frost Off and the Frosted look keep today's frost`() {
         assertFalse(liquidAt(glass.copy(frost = FrostStrength.Off), lens), "frost off")
-        assertFalse(liquidAt(glass.copy(glassEdges = GlassEdges.Frosted), lens), "the kill switch")
+        assertFalse(liquidAt(glass.copy(glassLook = GlassLookId.Frosted), lens), "the Frosted look has no lens")
     }
 
     @Test
@@ -183,7 +183,7 @@ class KitLiquidGlassTest {
                 listOf(KitAppearance(style = s, mode = AppearanceMode.Dark), KitAppearance(style = s, mode = AppearanceMode.Light))
             } + listOf(
                 glass.copy(motion = MotionLevel.Off),
-                glass.copy(glassEdges = GlassEdges.Frosted),
+                glass.copy(glassLook = GlassLookId.Frosted),
                 glass.copy(frost = FrostStrength.Off),
             )
         for (case in cases) {
@@ -192,7 +192,7 @@ class KitLiquidGlassTest {
             assertEquals(without.width to without.height, with.width to with.height, "${case.style} size")
             var differ = 0
             for (y in 0 until without.height) for (x in 0 until without.width) if (without[x, y] != with[x, y]) differ++
-            assertEquals(0, differ, "${case.style} ${case.mode} motion=${case.motion} edges=${case.glassEdges}: $differ pixels changed")
+            assertEquals(0, differ, "${case.style} ${case.mode} motion=${case.motion} look=${case.glassLook}: $differ pixels changed")
         }
     }
 
