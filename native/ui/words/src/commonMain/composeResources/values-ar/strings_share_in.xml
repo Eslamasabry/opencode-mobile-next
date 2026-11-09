@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="shareInPartial">
+        <item quantity="zero">لم تتم إضافة أي ملف من %2$d. %3$s</item>
+        <item quantity="one">تمت إضافة ملف واحد من %2$d. %3$s</item>
+        <item quantity="two">تمت إضافة ملفين من %2$d. %3$s</item>
+        <item quantity="few">تمت إضافة %1$d ملفات من %2$d. %3$s</item>
+        <item quantity="many">تمت إضافة %1$d ملفًا من %2$d. %3$s</item>
+        <item quantity="other">تمت إضافة %1$d ملف من %2$d. %3$s</item>
+    </plurals>
+    <string name="shareInReasonLimit">تتّسع المسودة لـ 5 ملفات و20 ميغابايت على الأكثر.</string>
+    <string name="shareInReasonTooLarge">الباقي أكبر من أن يُرفق (10 ميغابايت لكل ملف).</string>
+    <string name="shareInReasonUnsupported">الباقي نوع من الملفات لا يمكن إرفاقه.</string>
+    <string name="shareInReasonUnreadable">تعذّرت قراءة الباقي. جرّب مشاركته مرة أخرى.</string>
+    <string name="shareInNoneTooLarge">لم تتم إضافة شيء. الملف أكبر من أن يُرفق (10 ميغابايت لكل ملف، و20 ميغابايت في المجموع).</string>
+    <string name="shareInNoneUnsupported">لم تتم إضافة شيء. لا يمكن إرفاق هذا النوع من الملفات.</string>
+    <string name="shareInNoneUnreadable">لم تتم إضافة شيء. تعذّرت قراءة الملف. جرّب مشاركته مرة أخرى.</string>
+    <string name="shareInGotIt">حسنًا</string>
+</resources>

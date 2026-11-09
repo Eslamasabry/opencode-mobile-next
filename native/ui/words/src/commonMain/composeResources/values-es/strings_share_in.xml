@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="shareInPartial">
+        <item quantity="one">Se añadió %1$d de %2$d archivos. %3$s</item>
+        <item quantity="many">Se añadieron %1$d de %2$d archivos. %3$s</item>
+        <item quantity="other">Se añadieron %1$d de %2$d archivos. %3$s</item>
+    </plurals>
+    <string name="shareInReasonLimit">Un borrador admite hasta 5 archivos y 20 MB.</string>
+    <string name="shareInReasonTooLarge">El resto es demasiado grande para adjuntarlo (10 MB cada uno).</string>
+    <string name="shareInReasonUnsupported">El resto es un tipo de archivo que no se puede adjuntar.</string>
+    <string name="shareInReasonUnreadable">No se pudo leer el resto. Prueba a compartirlo de nuevo.</string>
+    <string name="shareInNoneTooLarge">No se añadió nada. Es demasiado grande para adjuntarlo (10 MB cada uno, 20 MB en total).</string>
+    <string name="shareInNoneUnsupported">No se añadió nada. Este tipo de archivo no se puede adjuntar.</string>
+    <string name="shareInNoneUnreadable">No se añadió nada. No se pudo leer el archivo. Prueba a compartirlo de nuevo.</string>
+    <string name="shareInGotIt">Entendido</string>
+</resources>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="shareInPartial">
+        <item quantity="one">Added %1$d of %2$d files. %3$s</item>
+        <item quantity="other">Added %1$d of %2$d files. %3$s</item>
+    </plurals>
+    <string name="shareInReasonLimit">A draft holds up to 5 files and 20 MB.</string>
+    <string name="shareInReasonTooLarge">The rest are too large to attach (10 MB each).</string>
+    <string name="shareInReasonUnsupported">The rest are a kind of file that can't be attached.</string>
+    <string name="shareInReasonUnreadable">The rest couldn't be read. Try sharing them again.</string>
+    <string name="shareInNoneTooLarge">Nothing was added. It is too large to attach (10 MB each, 20 MB in total).</string>
+    <string name="shareInNoneUnsupported">Nothing was added. This kind of file can't be attached.</string>
+    <string name="shareInNoneUnreadable">Nothing was added. The file couldn't be read. Try sharing it again.</string>
+    <string name="shareInGotIt">Got it</string>
+</resources>

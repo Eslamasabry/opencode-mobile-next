@@ -10,6 +10,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import io.github.eslamasabry.oc.engine.media.attach.ShareInProblem
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitText
@@ -26,11 +27,21 @@ import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.commonRetry
 import io.github.eslamasabry.oc.ui.words.res.kitMore
 import io.github.eslamasabry.oc.ui.words.res.shareDiscarded
+import io.github.eslamasabry.oc.ui.words.res.shareInGotIt
+import io.github.eslamasabry.oc.ui.words.res.shareInNoneTooLarge
+import io.github.eslamasabry.oc.ui.words.res.shareInNoneUnreadable
+import io.github.eslamasabry.oc.ui.words.res.shareInNoneUnsupported
+import io.github.eslamasabry.oc.ui.words.res.shareInPartial
+import io.github.eslamasabry.oc.ui.words.res.shareInReasonLimit
+import io.github.eslamasabry.oc.ui.words.res.shareInReasonTooLarge
+import io.github.eslamasabry.oc.ui.words.res.shareInReasonUnreadable
+import io.github.eslamasabry.oc.ui.words.res.shareInReasonUnsupported
 import io.github.eslamasabry.oc.ui.words.res.shareFailedAgainLine
 import io.github.eslamasabry.oc.ui.words.res.shareFailedCopy
 import io.github.eslamasabry.oc.ui.words.res.shareFailedDiscard
 import io.github.eslamasabry.oc.ui.words.res.shareFailedLine
 import io.github.eslamasabry.oc.ui.words.res.shareWaitingForServer
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /** The incoming share uses the existing window status slot and kit overlays. */
@@ -39,8 +50,11 @@ internal fun IncomingShareHost(owner: IncomingShare, content: @Composable () -> 
     val phase by owner.phase.collectAsState()
     var more by remember { mutableStateOf(false) }
     val failed = phase == IncomingSharePhase.Failed || phase == IncomingSharePhase.FailedAgain
+    val note by owner.note.collectAsState()
+    val noted = phase == IncomingSharePhase.Noted
     val message =
         when (phase) {
+            IncomingSharePhase.Noted -> note?.let { shareInLine(it) }.orEmpty()
             IncomingSharePhase.Failed -> stringResource(Res.string.shareFailedLine)
             IncomingSharePhase.FailedAgain -> stringResource(Res.string.shareFailedAgainLine)
             else -> stringResource(Res.string.shareWaitingForServer)
@@ -52,9 +66,15 @@ internal fun IncomingShareHost(owner: IncomingShare, content: @Composable () -> 
                 kind = KitStatusKind.Work,
                 id = "incoming-share",
                 message = message,
-                tone = if (failed) StatusTone.Failure else StatusTone.Progress,
+                tone =
+                    when {
+                        failed -> StatusTone.Failure
+                        noted -> StatusTone.Attention
+                        else -> StatusTone.Progress
+                    },
                 action =
-                    if (phase != IncomingSharePhase.Opening)
+                    if (noted) KitLineAction(stringResource(Res.string.shareInGotIt), owner::dismissNote)
+                    else if (phase != IncomingSharePhase.Opening)
                         KitLineAction(stringResource(Res.string.kitMore), { more = true })
                     else null,
             )
@@ -77,7 +97,7 @@ internal fun IncomingShareHost(owner: IncomingShare, content: @Composable () -> 
                 )
             }
             KitSheet(
-                visible = more && visible,
+                visible = more && visible && !noted,
                 onDismissRequest = { more = false },
                 title = message,
                 primary =
@@ -107,4 +127,28 @@ internal fun IncomingShareHost(owner: IncomingShare, content: @Composable () -> 
             }
         }
     }
+}
+
+/** Plain words for what a share-in left out: how many were added, then why. No names, no technical text. */
+@Composable
+private fun shareInLine(note: ShareInNote): String {
+    if (note.added == 0)
+        return stringResource(
+            when (note.problem) {
+                ShareInProblem.Unsupported -> Res.string.shareInNoneUnsupported
+                ShareInProblem.Unreadable -> Res.string.shareInNoneUnreadable
+                ShareInProblem.TooLarge,
+                ShareInProblem.OverLimit -> Res.string.shareInNoneTooLarge
+            }
+        )
+    val reason =
+        stringResource(
+            when (note.problem) {
+                ShareInProblem.OverLimit -> Res.string.shareInReasonLimit
+                ShareInProblem.TooLarge -> Res.string.shareInReasonTooLarge
+                ShareInProblem.Unsupported -> Res.string.shareInReasonUnsupported
+                ShareInProblem.Unreadable -> Res.string.shareInReasonUnreadable
+            }
+        )
+    return pluralStringResource(Res.plurals.shareInPartial, note.added, note.added, note.total, reason)
 }

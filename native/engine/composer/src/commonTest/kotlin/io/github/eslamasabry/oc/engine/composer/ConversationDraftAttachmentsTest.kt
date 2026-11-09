@@ -74,6 +74,24 @@ class ConversationDraftAttachmentsTest {
         }
 
     @Test
+    fun `B-ANDR-076 shared files are added beside the draft's own and the words stay untouched and unsent`() =
+        runTest {
+            val own = dataAttachment("own.txt", "own bytes")
+            val shared = listOf(dataAttachment("one.txt", "shared one"), dataAttachment("two.txt", "shared two"))
+            val handle = facade().open(ref())
+            runCurrent()
+            handle.changed("my words")
+            assertIs<Outcome.Ok<Unit>>(handle.replaceAttachments(listOf(own)))
+            assertIs<Outcome.Ok<Unit>>(handle.replaceAttachments(handle.state.value.attachments + shared))
+            assertEquals(listOf(own) + shared, handle.state.value.attachments)
+            assertEquals("my words", handle.state.value.text)
+            val restarted = facade().open(ref())
+            runCurrent()
+            assertEquals(listOf(own) + shared, restarted.state.value.attachments)
+            assertEquals("my words", restarted.state.value.text)
+        }
+
+    @Test
     fun `B-STATE-100 add and remove persist across restarts and collected payloads leave nothing behind`() =
         runTest {
             val first = dataAttachment("first.txt", "first bytes")

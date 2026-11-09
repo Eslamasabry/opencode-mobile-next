@@ -87,6 +87,14 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/plain" />
             </intent-filter>
+            <!-- Share target for pictures and files (share-in): copied to private storage at once, then a draft. -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
             <!-- Static launcher shortcuts (Connect, New conversation), ids as in the Flutter app. -->
             <meta-data
                 android:name="android.app.shortcuts"
