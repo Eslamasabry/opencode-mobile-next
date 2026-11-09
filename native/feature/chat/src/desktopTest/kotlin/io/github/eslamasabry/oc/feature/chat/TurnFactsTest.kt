@@ -190,6 +190,23 @@ class TurnFactsTest {
     }
 
     @Test
+    fun `B-CHAT-131 a fetch waiting three minutes is named on the live line, a shell command or a short wait is not`() {
+        val k = keeper()
+        k.history(listOf(prompt, msg(info("m2", Role.Assistant, 2_000), tool("t1", "m2", "webfetch", ToolStatus.Running, start = 0))))
+        k.link(ChatLink.Live)
+        k.event(GatewayEvent.RunStarted(SessionId(sid)), 0)
+        val p = TurnFactsPresenter(FixedClock)
+        assertEquals(false, p.present(k.feed.value, 2 * 60_000).live is LiveNoticeUi.ToolWait, "two minutes is not yet a wait")
+        assertEquals(LiveNoticeUi.ToolWait("webfetch", 4 * 60_000), p.present(k.feed.value, 4 * 60_000).live)
+
+        val shell = keeper()
+        shell.history(listOf(prompt, msg(info("m2", Role.Assistant, 2_000), tool("t1", "m2", "bash", ToolStatus.Running, start = 0))))
+        shell.link(ChatLink.Live)
+        shell.event(GatewayEvent.RunStarted(SessionId(sid)), 0)
+        assertEquals(false, TurnFactsPresenter(FixedClock).present(shell.feed.value, 4 * 60_000).live is LiveNoticeUi.ToolWait)
+    }
+
+    @Test
     fun `B-CHAT-118 waiting for the person is never a stall`() {
         val k = keeper()
         k.link(ChatLink.Live)

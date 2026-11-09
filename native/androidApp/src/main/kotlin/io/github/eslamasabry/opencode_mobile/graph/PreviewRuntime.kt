@@ -65,6 +65,7 @@ class PreviewRuntime(
     private val deliveryStores: Set<DeliveryStorage>,
     private val profileClosers: Set<ProfileCloser>,
     private val clock: Clock,
+    private val localGates: LocalServerGates,
 ) : ServerConnections, ServerDisconnects {
     val profiles: ProfileStore = stores.profiles
     private val lane = dispatchers.serial("preview-runtime")
@@ -387,6 +388,24 @@ class PreviewRuntime(
             loadedSources.update { it - id }
             mutableSourceFailures.update { it - id }
             rebuildFeed()
+        }
+        // Phase 0: This phone's own server may still be booting (right after setup or an app start). Wait for it
+        // to answer before the first connection instead of being refused.
+        if (
+            !loaded.profile.usesAgentSocket &&
+                io.github.eslamasabry.oc.engine.runtime.switching.ManagedLocalServer.isBuiltin(
+                    loaded.profile.baseUrl
+                )
+        ) {
+            val gate = localGates.gate
+            if (
+                gate != null &&
+                    gate(id) == io.github.eslamasabry.oc.engine.runtime.server.LocalServerWait.NotAnswering
+            ) {
+                return Failure.Runtime(RuntimeProblem.ServerStartUnavailable)
+                    .failed()
+                    .atStage(ConnectionStage.OpenGateway)
+            }
         }
         when (val opened = registry.open(profile)) {
             is Outcome.Failed -> {

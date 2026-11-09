@@ -15,6 +15,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import io.github.eslamasabry.oc.ui.kit.KitButton
+import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.semantics
@@ -55,6 +57,9 @@ public fun KitTurnLiveLine(
     step: String? = null,
     onTap: (() -> Unit)? = null,
     tapLabel: String? = null,
+    /** A way out of a long wait (Stop), drawn quietly under the words; null draws none. */
+    actionLabel: String? = null,
+    onAction: (() -> Unit)? = null,
 ) {
     val colors = LocalKitColors.current
     val style = LocalKitTypography.current.style(TypeRole.Secondary)
@@ -102,6 +107,13 @@ public fun KitTurnLiveLine(
             KitTappable(onClick = onTap, onClickLabel = tapLabel, shape = KitShapeId.Button) {
                 line(Modifier.padding(vertical = Space.S1.dp))
             }
+        if (actionLabel != null && onAction != null)
+            KitButton(
+                actionLabel,
+                onAction,
+                role = KitButtonRole.Tertiary,
+                modifier = Modifier.padding(start = dot + Space.S2.dp).testTag(LIVE_ACTION_TAG),
+            )
         // The leaving line keeps its words while it folds away.
         val held = remember { arrayOfNulls<String>(1) }
         if (!step.isNullOrEmpty()) held[0] = step
@@ -120,6 +132,9 @@ public fun KitTurnLiveLine(
 
 /** Test handle of the live line's row. */
 public const val LIVE_LINE_TAG: String = "kit-turn-live-line"
+
+/** Test handle of the live line's Stop. */
+public const val LIVE_ACTION_TAG: String = "kit-turn-live-action"
 
 /** Test handle of the live line's muted step line. */
 public const val LIVE_STEP_TAG: String = "kit-turn-live-step"

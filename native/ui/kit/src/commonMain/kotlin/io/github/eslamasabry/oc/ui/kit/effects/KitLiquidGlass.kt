@@ -76,7 +76,10 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitGlassBackdrop
 import io.github.eslamasabry.oc.ui.kit.foundation.LocalKitGlassBackdrop
 import io.github.eslamasabry.oc.ui.kit.foundation.kitFrostSource
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
+import io.github.eslamasabry.oc.ui.kit.foundation.kitBackdropRimLight
 import io.github.eslamasabry.oc.ui.kit.foundation.kitGlassStackRoot
+import io.github.eslamasabry.oc.ui.kit.live.kitLivePictureSpots
+import io.github.eslamasabry.oc.ui.kit.platform.KitBackdropSampler
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -134,7 +137,9 @@ public class KitLiquidSource internal constructor(internal val layer: GraphicsLa
     /** Each liquid role's ink flip over this content (see `KitFrostState.liquidFlips`). */
     internal val liquidFlips: MutableMap<Any, LiquidFlip> = HashMap()
     internal var users: Int by mutableIntStateOf(0)
-    internal var version: Int = 0
+
+    /** Counts the recordings; snapshot state read by the panes' draws (see `KitFrostState.version`). */
+    internal var version: Int by mutableIntStateOf(0)
 }
 
 @Composable
@@ -195,7 +200,10 @@ private fun kitLiquidClaim(role: LiquidRole, source: Any?, asking: Boolean): Boo
         if (asking) budget.claims += claim
         onDispose { budget.claims.remove(claim) }
     }
-    return asking && key in budget.granted
+    // Read through its own derived state: a menu opening changes the window's grants, and only a pane whose own grant
+    // changed recomposes (smoothness 2026-11-09), not every pane on the page.
+    val mine by remember(budget, key) { derivedStateOf { key in budget.granted } }
+    return asking && mine
 }
 
 /**
@@ -223,7 +231,8 @@ public fun kitLiquidFace(
 internal fun kitLiquidFace(role: LiquidRole, source: KitLiquidSource?, shape: Shape, transform: () -> Float = NoTransform): Modifier? {
     val ground = LocalKitColors.current.ground.copy(alpha = 1f)
     val picture = LocalKitGlassBackdrop.current
-    val backdrop = remember(source, ground, picture) { source?.let { liquidSourceBackdrop(it, ground, picture) } }
+    val live = io.github.eslamasabry.oc.ui.kit.foundation.LocalKitLivePicture.current?.backdrop
+    val backdrop = remember(source, ground, picture, live) { source?.let { liquidSourceBackdrop(it, ground, picture, live) } }
     return liquidFace(role, source, backdrop, shape, transform)
 }
 
@@ -308,13 +317,17 @@ private fun Modifier.liquidPane(
     val platform = LocalKitPlatform.current
     val appearance = LocalKitAppearance.current
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    // What the page's live background can put behind the content (glass-live): the face is thickened for that look
+    // alone, not for every picture the app can draw, so the motion behind it shows through.
+    val picture = kitLivePictureSpots()
     val spec =
-        remember(roles, role, rtl, appearance.pack, appearance.accent, flip, chosen, keepRim) {
+        remember(roles, role, rtl, appearance.pack, appearance.accent, flip, chosen, keepRim, picture) {
             // The face carries its words itself (no plate): its tint is thickened for the theme's ink over the content
             // that ink lies over; over content of the other brightness the words flip to the other theme's ink and the
             // face to the other theme's face, which carries that ink there.
             val other = ThemeResolver.roles(appearance.pack, appearance.accent, !roles.dark, saver = false, dynamic = null)
-            val face = LiquidEdge.face(roles, role)
+            val face = LiquidEdge.face(roles, role, picture = picture)
+            // The other theme's face (over content of the other brightness) keeps the whole measure.
             val otherFace = LiquidEdge.face(other, role)
             // A chosen part's glass leans to the accent and holds a little more (GlassSpec's chosen tint and lift).
             fun lean(c: Color, dark: Boolean): Color {
@@ -347,7 +360,8 @@ private fun Modifier.liquidPane(
         }
     val words = kitLiquidWords(backdrop, flip)
     val latest by rememberUpdatedState(transform)
-    return this.then(platform.liquidPane(spec, backdrop, shape) { latest() }).kitGlassStackRoot().kitLiquidPlateHost(words)
+    // The rim catches the live picture's light over the whole pane (glass-live): drawn after it, so it lies on top.
+    return this.kitBackdropRimLight(shape).then(platform.liquidPane(spec, backdrop, shape) { latest() }).kitGlassStackRoot().kitLiquidPlateHost(words)
 }
 
 /**
@@ -410,6 +424,7 @@ private class PlateHostNode(var words: KitLiquidWords) :
     private var coordinates: LayoutCoordinates? = null
     private var ink: LiquidInk = words.themeInk
     private var sample: GraphicsLayer? = null
+    private var sampler: KitBackdropSampler? = null
 
     override fun onGloballyPositioned(coordinates: LayoutCoordinates) {
         this.coordinates = coordinates
@@ -419,6 +434,9 @@ private class PlateHostNode(var words: KitLiquidWords) :
         ink = words.themeInk
         val backdrop = words.backdrop ?: return
         val platform = currentValueOf(LocalKitPlatform)
+        // One sampler for the pane's life (smoothness 2026-11-09): a sample reuses one small target and never holds the
+        // UI thread on the GPU. Without one (desktop), a snapshot of a small layer is read back as before.
+        val own = platform.backdropSampler().also { sampler = it }
         coroutineScope.launch {
             var seen = Int.MIN_VALUE
             while (isActive) {
@@ -430,14 +448,19 @@ private class PlateHostNode(var words: KitLiquidWords) :
                 seen = v
                 val w = (c.size.width / SAMPLE_SCALE).coerceAtLeast(1)
                 val h = (c.size.height / SAMPLE_SCALE).coerceAtLeast(1)
-                val layer = sample ?: requireGraphicsContext().createGraphicsLayer().also { sample = it }
-                layer.record(requireDensity(), LayoutDirection.Ltr, IntSize(w, h)) {
-                    scale(1f / SAMPLE_SCALE, 1f / SAMPLE_SCALE, Offset.Zero) { backdrop.draw(this, c) }
-                }
-                val pixels = IntArray(w * h)
-                // A sample the platform could not read back (empty or clear) says nothing about the content.
-                if (!platform.readPixels(layer.toImageBitmap(), pixels, w, h)) continue
-                if (pixels.count { (it ushr 24) > 0x80 } < pixels.size / 2) continue
+                val small: DrawScope.() -> Unit = { scale(1f / SAMPLE_SCALE, 1f / SAMPLE_SCALE, Offset.Zero) { backdrop.draw(this, c) } }
+                val pixels =
+                    if (own != null) {
+                        own.sample(w, h, requireDensity(), small) ?: continue
+                    } else {
+                        val layer = sample ?: requireGraphicsContext().createGraphicsLayer().also { sample = it }
+                        layer.record(requireDensity(), LayoutDirection.Ltr, IntSize(w, h), small)
+                        val read = IntArray(w * h)
+                        // A sample the platform could not read back (empty or clear) says nothing about the content.
+                        if (!platform.readPixels(layer.toImageBitmap(), read, w, h)) continue
+                        read
+                    }
+                if (pixels.size < w * h || pixels.count { (it ushr 24) > 0x80 } < pixels.size / 2) continue
                 val (mean, _) = LiquidInkRule.measure(pixels)
                 val next = LiquidInkRule.next(ink, mean)
                 if (next != ink) {
@@ -451,6 +474,8 @@ private class PlateHostNode(var words: KitLiquidWords) :
     override fun onDetach() {
         sample?.let { requireGraphicsContext().releaseGraphicsLayer(it) }
         sample = null
+        sampler?.release()
+        sampler = null
         coordinates = null
     }
 }
@@ -526,15 +551,15 @@ internal const val RIM_LIGHT_DP: Float = 1f
  * 2026-11-08: glass edges are a neutral white light, not accent-tinted; an HCT-pulled yellow accent read as blue-teal),
  * low in a light theme where white on milk needs little.
  */
-internal const val RIM_ALPHA_DARK: Float = .36f
-internal const val RIM_ALPHA_LIGHT: Float = .55f
+internal val RIM_ALPHA_DARK: Float get() = io.github.eslamasabry.oc.ui.design.style.GlassLook.Default.liquidRimDark
+internal val RIM_ALPHA_LIGHT: Float get() = io.github.eslamasabry.oc.ui.design.style.GlassLook.Default.liquidRimLight
 
 /**
  * The specular light (the rim light's colour): a bright segment round the top-start corner and a thin glint line just
  * inside the top edge, as Glass's in-flow panes draw it (`drawGlassSpecular`). Restrained, never plastic.
  */
-internal const val SPECULAR_ALPHA_DARK: Float = .60f
-internal const val SPECULAR_ALPHA_LIGHT: Float = .85f
+internal val SPECULAR_ALPHA_DARK: Float get() = io.github.eslamasabry.oc.ui.design.style.GlassLook.Default.liquidSpecularDark
+internal val SPECULAR_ALPHA_LIGHT: Float get() = io.github.eslamasabry.oc.ui.design.style.GlassLook.Default.liquidSpecularLight
 
 /**
  * The rim light's colour on every glass edge, liquid and frosted (panes, sheets, menus): neutral white light (owner
@@ -610,6 +635,8 @@ internal fun Modifier.kitRunUnderBar(barPx: () -> Int): Modifier =
 private fun DrawScope.drawGroundUnder(ground: Color, picture: KitGlassBackdrop?, at: LayoutCoordinates) {
     drawRect(ground, Offset(-size.width, -size.height), Size(size.width * 3f, size.height * 3f))
     val bd = picture ?: return
+    // The pane draws again on every new frame of the picture or another look (glass-live: never a stale picture).
+    bd.frame()
     val layer = bd.layer ?: return
     if (!bd.painted || bd.root !== at.findRootCoordinates()) return
     val shift = bd.origin - at.positionInRoot()
@@ -619,6 +646,8 @@ private fun DrawScope.drawGroundUnder(ground: Color, picture: KitGlassBackdrop?,
 /** A feature's [KitFrostState] (its content recorded by [kitFrostSource]) seen from a pane in the same window. */
 private fun frostStateBackdrop(state: KitFrostState, ground: Color, picture: KitGlassBackdrop?): KitLiquidBackdrop =
     KitLiquidBackdrop({ state.version }) { c ->
+        // Read here so the pane draws again when the content behind it records again (a scroll under the bar).
+        state.version
         drawGroundUnder(ground, picture, c)
         val shift = state.sourceOrigin - c.positionInRoot()
         translate(shift.x, shift.y) { drawLayer(state.layer) }
@@ -628,8 +657,11 @@ private fun frostStateBackdrop(state: KitFrostState, ground: Color, picture: Kit
  * A [KitLiquidSource] seen from a pane: in its own window by the layout's own mapping, from a popup's window (a menu) by
  * screen position, which both windows share.
  */
-private fun liquidSourceBackdrop(source: KitLiquidSource, ground: Color, picture: KitGlassBackdrop?): KitLiquidBackdrop =
+private fun liquidSourceBackdrop(source: KitLiquidSource, ground: Color, picture: KitGlassBackdrop?, live: KitGlassBackdrop? = null): KitLiquidBackdrop =
     KitLiquidBackdrop({ source.version }) { c ->
+        source.version
+        // A sheet or a menu outside the page's live background still follows the picture the page shows.
+        if (picture == null) live?.frame()
         drawGroundUnder(ground, picture, c)
         val s = source.coordinates?.takeIf { it.isAttached } ?: return@KitLiquidBackdrop
         val shift =
@@ -666,7 +698,7 @@ private class LiquidSourceNode(var source: KitLiquidSource) : Modifier.Node(), D
         // Read in the draw phase: a pane arriving or leaving redraws this once, to start or stop recording.
         if (source.users > 0) {
             source.layer.record { this@draw.drawContent() }
-            source.version++
+            androidx.compose.runtime.snapshots.Snapshot.withoutReadObservation { source.version++ }
             drawLayer(source.layer)
         } else {
             drawContent()

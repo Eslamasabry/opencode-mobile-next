@@ -7,5 +7,9 @@
         <activity
             android:name=".proof.StreamProofActivity"
             android:exported="true" />
+        <!-- Smoothness proof (docs/native/qa/smoothness-2026-11-09): one kit page in a chosen look, scrolled by itself. -->
+        <activity
+            android:name=".proof.GlassProofActivity"
+            android:exported="true" />
     </application>
 </manifest>

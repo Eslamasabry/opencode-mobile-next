@@ -216,6 +216,8 @@ internal class GraphChatWorld(
     private val mutableCaps = MutableStateFlow(ServerCapabilities())
     private val mutableLink = MutableStateFlow(ChatLink.Connecting)
     private val mutableRetryAt = MutableStateFlow<Long?>(null)
+    private val mutableParent = MutableStateFlow<ConversationRef?>(null)
+    private val mutableStopped = MutableStateFlow<Failure?>(null)
     private val mutablePending = MutableStateFlow<ImmutableList<PendingSend>>(persistentListOf())
     private val mutableDraft = MutableStateFlow(DraftFacts(ready = draftSession == null))
     private val mutableHistoryFailure = MutableStateFlow<Failure?>(null)
@@ -270,6 +272,8 @@ internal class GraphChatWorld(
     override val capabilities: StateFlow<ServerCapabilities> = mutableCaps.asStateFlow()
     override val link: StateFlow<ChatLink> = mutableLink.asStateFlow()
     override val linkRetryAtMs: StateFlow<Long?> = mutableRetryAt.asStateFlow()
+    override val parent: StateFlow<ConversationRef?> = mutableParent.asStateFlow()
+    override val linkStopped: StateFlow<Failure?> = mutableStopped.asStateFlow()
 
     override fun tryLinkNow() {
         currentAttached()?.gateway?.events?.retryNow()
@@ -601,6 +605,8 @@ internal class GraphChatWorld(
                 sentFiles(bubble.localId) == files
         }
 
+    private fun pendingFile(a: PromptAttachment): PendingFile = PendingFile(a.filename, a.mime, a.url)
+
     private fun sentFiles(localId: Long): List<PromptAttachment> =
         sentSnapshots[localId]?.files.orEmpty()
 
@@ -725,6 +731,7 @@ internal class GraphChatWorld(
         catalogDefaults = null
         mutableTranscript.value = TranscriptState.Empty
         mutableReadOnly.value = null
+        mutableParent.value = null
         feedKeeper.reset()
         nextCursor = null
         mutableOlder.value = false
@@ -787,6 +794,7 @@ internal class GraphChatWorld(
                                 PendingState.Unconfirmed,
                                 canCheckReceipt =
                                     entry.dispatched && gateway.capabilities.value.commandReceipts,
+                                files = entry.attachments.map(::pendingFile),
                             ))
                         .toImmutableList()
                 }
@@ -961,6 +969,8 @@ internal class GraphChatWorld(
                 },
                 scope.launch(registry.mainContext) {
                     gateway.events.status.collect {
+                        // Before the link flips, so the line that appears already knows why.
+                        mutableStopped.value = (it as? StreamStatus.Stopped)?.failure
                         mutableLink.value = linkOf(it)
                         mutableRetryAt.value = retryAtOf(it)
                         feedKeeper.link(mutableLink.value)
@@ -1018,6 +1028,7 @@ internal class GraphChatWorld(
     }
 
     private fun refreshReadOnly(gateway: ServerGateway, session: Session? = null) {
+        if (session != null) mutableParent.value = session.parentId?.let { ConversationRef(ref.profileId, it) }
         val readOnly = gateway.facet<ReadOnlySessionsGateway>()?.isReadOnlySession(sid) == true
         mutableReadOnly.value =
             if (readOnly)
@@ -1819,7 +1830,7 @@ internal class GraphChatWorld(
         val expected = currentAttached()
         baselines[id] = expected?.handle?.messageIds()?.mapTo(HashSet()) { "prompt:$it" }.orEmpty()
         mutablePending.update {
-            (it + PendingSend(id, text, PendingState.Sending)).toImmutableList()
+            (it + PendingSend(id, text, PendingState.Sending, files = files.map(::pendingFile))).toImmutableList()
         }
         // QA wave 4 N5: the words left the box again, so their not-sent bubble (and its Try again)
         // goes now; one copy
@@ -2063,7 +2074,7 @@ internal class GraphChatWorld(
                 sentSnapshots[localId] = SentSnapshot(send.attachments, null)
                 baselines[localId] = emptySet()
                 mutablePending.update {
-                    (it + PendingSend(localId, send.text, PendingState.Sending)).toImmutableList()
+                    (it + PendingSend(localId, send.text, PendingState.Sending, files = send.attachments.map(::pendingFile))).toImmutableList()
                 }
             }
         }
@@ -2208,8 +2219,11 @@ internal class GraphChatWorld(
     private fun settlePending(s: TranscriptState) {
         val prompts = s.rows.filterIsInstance<PromptRow>()
         // A file-only user message has no prompt row (no words): it is matched by its server id.
+        // A picture sent without words now has its own prompt row (blank text), so it is matched by its row key too.
         val wordless =
-            userMessageKeys.filterTo(LinkedHashSet()) { key -> prompts.none { it.key == key } }
+            userMessageKeys.filterTo(LinkedHashSet()) { key ->
+                prompts.none { it.key == key && it.text.isNotBlank() }
+            }
         for (bubble in mutablePending.value) {
             val id = canonical[bubble.localId]
             if (bubble.state == PendingState.Failed) continue
