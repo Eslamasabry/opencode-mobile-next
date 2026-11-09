@@ -148,6 +148,7 @@ class VibranceHomeRenders {
     private fun render(option: LiveVibrance, style: Style, dark: Boolean, ui: ChatsUi, out: File) {
         Locale.setDefault(Locale.forLanguageTag("en"))
         runDesktopComposeUiTest(W_PX, H_PX) {
+            mainClock.autoAdvance = false
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(SCALE, 1f)) {
                     ChatEnvironment {
@@ -173,9 +174,7 @@ class VibranceHomeRenders {
                     }
                 }
             }
-            waitForIdle()
-            mainClock.advanceTimeBy(1_500)
-            waitForIdle()
+            repeat(30) { mainClock.advanceTimeBy(100) }
             val file = File(out, "${option.wire}-home-${style.storageName}-${if (dark) "dark" else "light"}.png")
             ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", file)
             assertTrue(file.isFile)

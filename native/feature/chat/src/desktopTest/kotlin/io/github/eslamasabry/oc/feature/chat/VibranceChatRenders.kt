@@ -110,6 +110,7 @@ class VibranceChatRenders {
                 }
             }
         runDesktopComposeUiTest(1081, 2402) {
+            mainClock.autoAdvance = false
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(2.625f)) {
                     KitTheme(
@@ -132,9 +133,7 @@ class VibranceChatRenders {
                     }
                 }
             }
-            waitForIdle()
-            mainClock.advanceTimeBy(1_500)
-            waitForIdle()
+            repeat(30) { mainClock.advanceTimeBy(100) }
             ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(out, "${option.wire}-chat-${style.storageName}-${if (dark) "dark" else "light"}.png"))
         }
     }
