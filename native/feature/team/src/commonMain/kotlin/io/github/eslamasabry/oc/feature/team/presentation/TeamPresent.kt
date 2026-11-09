@@ -1,5 +1,8 @@
 package io.github.eslamasabry.oc.feature.team.presentation
 
+import io.github.eslamasabry.oc.engine.team.SetupPhase
+import io.github.eslamasabry.oc.engine.team.SetupState
+import io.github.eslamasabry.oc.engine.team.SetupStep
 import io.github.eslamasabry.oc.engine.team.TeamEngine
 import io.github.eslamasabry.oc.engine.team.TeamPhonePresentation
 import io.github.eslamasabry.oc.engine.team.TeamCapabilities
@@ -82,6 +85,14 @@ public object TeamPresent {
             refusal = refusal(state),
         )
     }
+
+    /** Dart `PhoneTeamOffPage`: a check waiting for the person is not work; one going shows its step. */
+    public fun phoneOff(setup: SetupState): PhoneOffUi =
+        when {
+            setup.phase == SetupPhase.Confirming -> PhoneOffUi(PhoneOffKind.Waiting)
+            setup.running -> PhoneOffUi(PhoneOffKind.Working, step = (setup.finished + 1).coerceIn(1, SetupStep.entries.size), of = SetupStep.entries.size)
+            else -> PhoneOffUi()
+        }
 
     private fun projectRow(p: TeamProject, stale: Boolean, nowMs: Long): HomeRow.Project {
         val budget = p.settings.budget

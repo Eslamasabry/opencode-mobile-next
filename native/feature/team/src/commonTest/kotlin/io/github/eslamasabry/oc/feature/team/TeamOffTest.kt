@@ -1,6 +1,5 @@
 package io.github.eslamasabry.oc.feature.team
 
-import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.team.TeamCommand
@@ -8,9 +7,7 @@ import io.github.eslamasabry.oc.engine.team.TeamCommandResult
 import io.github.eslamasabry.oc.engine.team.TeamConfig
 import io.github.eslamasabry.oc.engine.team.TeamEngine
 import io.github.eslamasabry.oc.engine.team.TeamHost
-import io.github.eslamasabry.oc.engine.team.TeamHostMode
 import io.github.eslamasabry.oc.engine.team.TeamPhase
-import io.github.eslamasabry.oc.engine.team.TeamProvider
 import io.github.eslamasabry.oc.engine.team.TeamRead
 import io.github.eslamasabry.oc.feature.team.presentation.TeamHomeViewModel
 import io.github.eslamasabry.oc.feature.team.presentation.TeamIntroPrimary
@@ -25,7 +22,6 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
@@ -54,11 +50,8 @@ class TeamOffTest {
 
     private fun TestScope.watch(flow: StateFlow<*>) = backgroundScope.launch { flow.collect {} }
 
-    private class OffHost(val can: Boolean, var turnOn: Outcome<Unit> = Outcome.Ok(Unit)) : TeamHost {
-        var config: TeamConfig? = null
-        var turnOns = 0
-
-        override suspend fun config(profileId: String): TeamConfig? = config
+    private class OffHost(val can: Boolean) : TeamHost {
+        override suspend fun config(profileId: String): TeamConfig? = null
 
         override suspend fun workspace(profileId: String, config: TeamConfig): Outcome<TeamRead> =
             Outcome.Ok(TeamRead(READY_HEALTH, team(shop())))
@@ -71,23 +64,16 @@ class TeamOffTest {
         ): Outcome<TeamCommandResult> = Outcome.Ok(TeamCommandResult(accepted = true))
 
         override suspend fun canTurnOnPhoneTeam(profileId: String): Boolean = can
-
-        override suspend fun turnOnPhoneTeam(profileId: String): Outcome<Unit> {
-            turnOns++
-            if (turnOn is Outcome.Ok)
-                config = TeamConfig(TeamProvider.PhoneEngine, "http://127.0.0.1:4098", hostMode = TeamHostMode.Phone)
-            return turnOn
-        }
     }
 
     private val phone = TeamServerFacts { TeamServer(TeamServerKind.ThisPhone, "This phone") }
     private val computer = TeamServerFacts { TeamServer(TeamServerKind.Computer, "studio-pc") }
 
     @Test
-    fun `B-AGENT-294 this phone turns its team on from the off page, and the page becomes the team`() =
+    fun `B-AGENT-294 this phone turns its team on from the off page, on the four-step page`() =
         runTest(dispatcher) {
-            val host = OffHost(can = true)
-            val vm = TeamHomeViewModel(TeamRoute.Home(pid), TeamEngine(host), FakeNav(), FIXED_CLOCK, phone)
+            val nav = FakeNav()
+            val vm = TeamHomeViewModel(TeamRoute.Home(pid), TeamEngine(OffHost(can = true)), nav, FIXED_CLOCK, phone)
             watch(vm.state)
             runCurrent()
             val off = vm.state.value
@@ -95,26 +81,7 @@ class TeamOffTest {
             assertEquals(TeamServer(TeamServerKind.ThisPhone, "This phone"), off.intro.server)
             assertEquals(TeamIntroPrimary.TurnOnPhone, off.intro.primary())
             vm.turnOn()
-            vm.turnOn() // a second tap while the first runs is not a second turn-on
-            runCurrent()
-            assertEquals(1, host.turnOns)
-            assertEquals(TeamPhase.Ready, vm.state.value.phase)
-            assertTrue(vm.state.value.rows.isNotEmpty())
-        }
-
-    @Test
-    fun `B-AGENT-043 a failed turn-on keeps the team off and says so, with Start again`() =
-        runTest(dispatcher) {
-            val host = OffHost(can = true, turnOn = Outcome.Failed(Failure.Unexpected()))
-            val vm = TeamHomeViewModel(TeamRoute.Home(pid), TeamEngine(host), FakeNav(), FIXED_CLOCK, phone)
-            watch(vm.state)
-            runCurrent()
-            vm.turnOn()
-            runCurrent()
-            val ui = vm.state.value
-            assertEquals(TeamPhase.Off, ui.phase)
-            assertIs<Failure.Unexpected>(ui.intro.failure)
-            assertFalse(ui.intro.turningOn)
+            assertEquals(listOf<Any>(TeamRoute.TurnOn(pid)), nav.opened)
         }
 
     @Test

@@ -70,6 +70,8 @@ public data class TeamHomeUi(
     val accepting: AskAnswer.AcceptMilestone? = null,
     /** [TeamPhase.Off]: how to turn the team on (Flutter team_intro_screen.dart). */
     val intro: TeamIntroUi = TeamIntroUi(),
+    /** [TeamPhase.PhoneOff]: whether a check is already going (Flutter `PhoneTeamOffPage`). */
+    val phoneOff: PhoneOffUi = PhoneOffUi(),
 )
 
 public interface TeamHomeActions : TeamIntroActions {
@@ -84,6 +86,12 @@ public interface TeamHomeActions : TeamIntroActions {
     public fun resumeProject(projectId: String)
 
     public fun retry()
+
+    /** The top bar's Team settings (Dart `openTeamSettings`). */
+    public fun openSettings() {}
+
+    /** The phone-off page's action: the four-step set-up page (Dart `openPhoneTeamSetup`), which joins a check already going. */
+    public fun openSetup() {}
 
     /** The top bar's Team defaults and Roles, and the bottom's New project and Quick task (Dart `openTeam*`). */
     public fun openEditor(kind: EditorKind, projectId: String = "") {}

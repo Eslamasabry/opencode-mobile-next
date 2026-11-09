@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The nine plain lines that name where the phone's safety check stopped (Dart phoneTeamProof*, lib/l10n/app_en.arb). -->
+<resources>
+    <string name="phoneTeamProofSignal">The safety test was closed by Android (signal %1$d) before it could finish.</string>
+    <string name="phoneTeamProofCheckSignal">The safety check “%1$s” was closed by Android (signal %2$d).</string>
+    <string name="phoneTeamProofNotBlocked">The safety check “%1$s” failed: this phone did not block it the way the team's sandbox needs.</string>
+    <string name="phoneTeamProofSandbox">The team's sandbox could not start on this phone.</string>
+    <string name="phoneTeamProofUbuntu">The Ubuntu step “%1$s” failed inside the team's sandbox.</string>
+    <string name="phoneTeamProofFixture">The safety check's private test files changed or could not be set up.</string>
+    <string name="phoneTeamProofNoAnswer">The safety test did not answer in time.</string>
+    <string name="phoneTeamProofProot">The proot safety check “%1$s” did not pass.</string>
+    <string name="phoneTeamProofOther">The safety check stopped at “%1$s”.</string>
+</resources>

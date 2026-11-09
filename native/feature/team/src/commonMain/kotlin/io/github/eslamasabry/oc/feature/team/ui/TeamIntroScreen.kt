@@ -32,16 +32,11 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.state.KitCostNotice
-import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeBlock
 import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeKind
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitCodeCopyCommand
-import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
-import io.github.eslamasabry.oc.ui.words.res.kitDetails
-import io.github.eslamasabry.oc.ui.words.res.phoneTeamFailEngineBody
-import io.github.eslamasabry.oc.ui.words.res.phoneTeamFailEngineTitle
 import io.github.eslamasabry.oc.ui.words.res.teamDiscoverBatteryTitle
 import io.github.eslamasabry.oc.ui.words.res.teamDiscoverComputerBody
 import io.github.eslamasabry.oc.ui.words.res.teamDiscoverComputerTitle
@@ -71,7 +66,6 @@ import io.github.eslamasabry.oc.ui.words.res.teamIntroInstalledTitle
 import io.github.eslamasabry.oc.ui.words.res.teamIntroSetUpOn
 import io.github.eslamasabry.oc.ui.words.res.teamIntroSetUpPhone
 import io.github.eslamasabry.oc.ui.words.res.teamIntroTurnOnPhone
-import io.github.eslamasabry.oc.ui.words.res.teamStartAgain
 import io.github.eslamasabry.oc.ui.words.res.teamUiHostGuideIntro
 import io.github.eslamasabry.oc.ui.words.res.teamUiHostGuideStep1
 import io.github.eslamasabry.oc.ui.words.res.teamUiHostGuideStep2
@@ -125,18 +119,6 @@ internal fun TeamIntro(intro: TeamIntroUi, actions: TeamIntroActions) {
             }
         }
         if (server != null) item(key = "needs") { Needs(server, intro.canTurnOn, inset) }
-        intro.failure?.let { failure ->
-            item(key = "failed") {
-                KitErrorNotice(
-                    stringResource(Res.string.phoneTeamFailEngineBody),
-                    inset.testTag("team-intro-failed"),
-                    title = stringResource(Res.string.phoneTeamFailEngineTitle),
-                    failure = failure,
-                    detailsLabel = stringResource(Res.string.kitDetails),
-                    copyLabel = stringResource(Res.string.kitCopyDetails),
-                )
-            }
-        }
     }
     HostGuide(intro.guide, actions::closeGuide)
 }
@@ -205,14 +187,7 @@ internal fun TeamIntroBottom(intro: TeamIntroUi, actions: TeamIntroActions) {
         when (intro.primary()) {
             null -> null
             TeamIntroPrimary.TurnOnPhone ->
-                KitAction(
-                    stringResource(
-                        if (intro.failure != null) Res.string.teamStartAgain else Res.string.teamIntroTurnOnPhone
-                    ),
-                    actions::turnOn,
-                    icon = KitIcons.play,
-                    working = intro.turningOn,
-                )
+                KitAction(stringResource(Res.string.teamIntroTurnOnPhone), actions::turnOn, icon = KitIcons.play)
             TeamIntroPrimary.SetUpPhone -> KitAction(
                 stringResource(Res.string.teamIntroSetUpPhone),
                 actions::setUpOnPhone,

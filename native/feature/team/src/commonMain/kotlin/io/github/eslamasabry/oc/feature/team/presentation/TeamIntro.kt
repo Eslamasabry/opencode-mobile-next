@@ -1,6 +1,5 @@
 package io.github.eslamasabry.oc.feature.team.presentation
 
-import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 
 /**
@@ -26,9 +25,6 @@ public data class TeamIntroUi(
     val server: TeamServer? = null,
     /** This phone can turn its team on here and now: "Turn on AI Team on this phone". */
     val canTurnOn: Boolean = false,
-    val turningOn: Boolean = false,
-    /** The last turn-on failed; the team stays off. */
-    val failure: Failure? = null,
     /** The computer's set-up guide is open. */
     val guide: Boolean = false,
 )
@@ -53,6 +49,7 @@ public fun TeamIntroUi.primary(): TeamIntroPrimary? =
     }
 
 public interface TeamIntroActions {
+    /** Opens the four-step set-up page, which starts the run (Flutter `openPhoneTeamSetup`). */
     public fun turnOn() {}
 
     public fun setUpOnPhone() {}
@@ -61,3 +58,20 @@ public interface TeamIntroActions {
 
     public fun closeGuide() {}
 }
+
+/**
+ * The phone's team is on but not answering (an app update stops it), as the team page says it (Dart `PhoneTeamOffPage`):
+ * one headline, one action and the progress of a check that is already going.
+ */
+public enum class PhoneOffKind {
+    /** Nothing is running: "AI Team is off" and Turn on. */
+    Off,
+
+    /** A check is going: "Step n of 4". */
+    Working,
+
+    /** The check waits for the person's yes: Review and choose when. */
+    Waiting,
+}
+
+public data class PhoneOffUi(val kind: PhoneOffKind = PhoneOffKind.Off, val step: Int = 1, val of: Int = 4)

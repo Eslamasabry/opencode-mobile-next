@@ -9,7 +9,6 @@ import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
-import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.engine.team.TeamAction
 import io.github.eslamasabry.oc.engine.team.TeamCommand
 import io.github.eslamasabry.oc.engine.team.TeamEngine
@@ -43,11 +42,13 @@ public class TeamHomeViewModel(
     private val intro = MutableStateFlow(TeamIntroUi())
 
     public val state: StateFlow<TeamHomeUi> =
-        combine(engine.polled(profile) { clock.now().toEpochMilliseconds() }, accepting, intro) {
+        combine(engine.polled(profile) { clock.now().toEpochMilliseconds() }, accepting, intro, engine.setupState(profile)) {
                 (state, now),
                 accept,
-                off ->
-                val home = TeamPresent.home(state, now).copy(accepting = accept)
+                off,
+                setup ->
+                val home =
+                    TeamPresent.home(state, now).copy(accepting = accept, phoneOff = TeamPresent.phoneOff(setup))
                 // The server is read again while the page is off, so a server that connects meanwhile is named.
                 if (home.phase != TeamPhase.Off) home
                 else home.copy(intro = off.copy(server = off.server ?: facts.server(route.profileId)))
@@ -61,23 +62,22 @@ public class TeamHomeViewModel(
         }
     }
 
-    /** The off page's primary on this phone: one turn-on at a time; the page becomes the team once it is on. */
+    /** The off page's primary on this phone: the four-step set-up page, which starts the run and becomes the team. */
     override fun turnOn() {
-        var admitted = false
-        intro.update {
-            admitted = !it.turningOn && it.canTurnOn
-            if (admitted) it.copy(turningOn = true, failure = null) else it
-        }
-        if (!admitted) return
-        viewModelScope.launch {
-            val done = engine.turnOn(profile)
-            intro.update { it.copy(turningOn = false, failure = (done as? Outcome.Failed)?.failure) }
-        }
+        if (intro.value.canTurnOn) nav.open(TeamRoute.TurnOn(route.profileId))
     }
 
     /** Flutter's Termux path, and this phone where the app cannot turn it on itself: Add tools › AI Team. */
     override fun setUpOnPhone() {
         nav.open(PhoneSetupRoute.Customize(adding = true))
+    }
+
+    override fun openSetup() {
+        nav.open(TeamRoute.TurnOn(route.profileId))
+    }
+
+    override fun openSettings() {
+        nav.open(TeamRoute.Settings(route.profileId))
     }
 
     override fun openGuide() {

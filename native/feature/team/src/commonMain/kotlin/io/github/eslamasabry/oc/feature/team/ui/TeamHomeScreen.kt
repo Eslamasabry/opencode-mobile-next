@@ -19,11 +19,14 @@ import io.github.eslamasabry.oc.engine.team.TeamPhase
 import io.github.eslamasabry.oc.feature.team.presentation.AskAnswer
 import io.github.eslamasabry.oc.feature.team.presentation.EditorKind
 import io.github.eslamasabry.oc.feature.team.presentation.HomeRow
+import io.github.eslamasabry.oc.feature.team.presentation.PhoneOffKind
+import io.github.eslamasabry.oc.feature.team.presentation.PhoneOffUi
 import io.github.eslamasabry.oc.feature.team.presentation.TeamHomeActions
 import io.github.eslamasabry.oc.feature.team.presentation.TeamHomeUi
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
+import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
@@ -34,6 +37,8 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitInputDialog
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
@@ -55,6 +60,8 @@ import org.jetbrains.compose.resources.stringResource
 public fun TeamHomeScreen(state: TeamHomeUi, actions: TeamHomeActions) {
     val title = stringResource(Res.string.teamProjectHome)
     var answering by remember { mutableStateOf<HomeRow.Request?>(null) }
+    var barMenuOpen by remember { mutableStateOf(false) }
+    val moreLabel = stringResource(Res.string.kitTopBarMore)
     val ready = state.phase == TeamPhase.Ready
     KitSheetHost(Modifier.fillMaxSize()) {
         KitScreen(
@@ -86,7 +93,29 @@ public fun TeamHomeScreen(state: TeamHomeUi, actions: TeamHomeActions) {
                                     icon = KitIcons.agent,
                                     testTag = "team-roles",
                                 ),
+                                KitLineAction(
+                                    stringResource(Res.string.teamSettingsOpenTooltip),
+                                    actions::openSettings,
+                                    icon = KitIcons.settingsGear,
+                                    testTag = "team-settings",
+                                ),
                             ),
+                    // A phone's bar holds two; Team settings waits in the menu there.
+                    more = { hidden ->
+                        KitMenu(
+                            expanded = barMenuOpen,
+                            items = hidden.map { KitMenuItem(it.label, it.onClick, icon = it.icon) },
+                            onDismissRequest = { barMenuOpen = false },
+                            title = moreLabel,
+                        ) {
+                            KitIconButton(
+                                KitIcons.more,
+                                moreLabel,
+                                { barMenuOpen = true },
+                                modifier = Modifier.testTag("team-more"),
+                            )
+                        }
+                    },
                 )
             },
             loading = state.phase == TeamPhase.Loading || state.loading,
@@ -115,13 +144,7 @@ public fun TeamHomeScreen(state: TeamHomeUi, actions: TeamHomeActions) {
                         stringResource(Res.string.teamUiHomeTitle),
                         body = stringResource(Res.string.nativeCapabilityTeamDeferred),
                     )
-                TeamPhase.PhoneOff ->
-                    KitStateView(
-                        KitStateKind.Missing,
-                        stringResource(Res.string.phoneTeamOffTitle),
-                        body = stringResource(Res.string.phoneTeamOffBody),
-                        primary = KitAction(stringResource(Res.string.teamProjectRetry), actions::retry),
-                    )
+                TeamPhase.PhoneOff -> PhoneOffPage(state.phoneOff, actions)
                 TeamPhase.Ready -> Projects(state, actions) { answering = it }
             }
         }
@@ -236,5 +259,48 @@ private fun Projects(state: TeamHomeUi, actions: TeamHomeActions, text: (HomeRow
                     )
             }
         }
+    }
+}
+
+/**
+ * The phone's team when it is on but not answering (an app update stops it), Dart `PhoneTeamOffPage`: one headline, one
+ * action, and the progress of a check that is already going.
+ */
+@Composable
+private fun PhoneOffPage(off: PhoneOffUi, actions: TeamHomeActions) {
+    val action = KitAction(
+        stringResource(if (off.kind == PhoneOffKind.Waiting) Res.string.phoneTeamOffReview else Res.string.teamIntroTurnOnPhone),
+        actions::openSetup,
+        icon = if (off.kind == PhoneOffKind.Waiting) null else KitIcons.play,
+    )
+    when (off.kind) {
+        // The check waits for the person, not working: say so.
+        PhoneOffKind.Waiting ->
+            KitStateView(
+                KitStateKind.Missing,
+                stringResource(Res.string.phoneTeamStripWaiting),
+                Modifier.testTag("team-phone-off-waiting"),
+                body = stringResource(Res.string.phoneTeamStripReview),
+                icon = KitIcons.phone,
+                primary = action,
+            )
+        PhoneOffKind.Working ->
+            KitStateView(
+                KitStateKind.Working,
+                stringResource(Res.string.phoneTeamStripChecking),
+                Modifier.testTag("team-phone-off-working"),
+                body = stringResource(Res.string.phoneTeamStripStep, off.step, off.of),
+                icon = KitIcons.waiting,
+                primary = action,
+            )
+        PhoneOffKind.Off ->
+            KitStateView(
+                KitStateKind.Missing,
+                stringResource(Res.string.phoneTeamOffTitle),
+                Modifier.testTag("team-phone-off"),
+                body = stringResource(Res.string.phoneTeamOffBody),
+                icon = KitIcons.cloudOff,
+                primary = action,
+            )
     }
 }

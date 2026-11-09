@@ -36,4 +36,15 @@ public sealed interface TeamRoute : AppRoute {
     /** One project's timeline (Dart `TeamProjectTimeline`): what the team did, newest first. */
     @Serializable
     public data class Timeline(val profileId: ProfileId, val projectId: String) : TeamRoute
+
+    /**
+     * "Turn on AI Team on this phone" (Dart `openPhoneTeamSetup`): the four steps of the one-tap set-up with their
+     * times. It starts the run when it opens and none is going; a run that already is going is shown, not doubled.
+     */
+    @Serializable
+    public data class TurnOn(val profileId: ProfileId) : TeamRoute
+
+    /** Team settings (Dart `TeamSettingsScreen`): the agents, how the team runs here, Turn off. */
+    @Serializable
+    public data class Settings(val profileId: ProfileId) : TeamRoute
 }

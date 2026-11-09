@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Converted once from lib/l10n/app_ar.arb by native/tools/strings (plan 06 §13.3). -->
+<resources>
+    <string name="phoneTeamProofSignal">أغلق أندرويد اختبار الأمان (الإشارة %1$d) قبل أن يكتمل.</string>
+    <string name="phoneTeamProofCheckSignal">أغلق أندرويد فحص الأمان «%1$s» (الإشارة %2$d).</string>
+    <string name="phoneTeamProofNotBlocked">فشل فحص الأمان «%1$s»: لم يمنعه هذا الهاتف كما يحتاج صندوق الفريق المعزول.</string>
+    <string name="phoneTeamProofSandbox">تعذر تشغيل صندوق الفريق المعزول على هذا الهاتف.</string>
+    <string name="phoneTeamProofUbuntu">فشلت خطوة أوبونتو «%1$s» داخل صندوق الفريق المعزول.</string>
+    <string name="phoneTeamProofFixture">تغيرت ملفات الاختبار الخاصة بفحص الأمان أو تعذر إعدادها.</string>
+    <string name="phoneTeamProofNoAnswer">لم يستجب اختبار الأمان في الوقت المحدد.</string>
+    <string name="phoneTeamProofProot">لم ينجح فحص أمان proot «%1$s».</string>
+    <string name="phoneTeamProofOther">توقف فحص الأمان عند «%1$s».</string>
+</resources>
