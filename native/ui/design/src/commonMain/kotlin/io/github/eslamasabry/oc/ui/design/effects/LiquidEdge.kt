@@ -268,9 +268,12 @@ public object LiquidEdge {
         return content.map { filtered(it, recipe) }
     }
 
-    /** How much of the ink a line of words keeps once the glass has blurred it (7 dp over 14 sp words: ink covers a
-     * fifth of a line's box). */
-    public const val BLURRED_INK: Float = .20f
+    /**
+     * How much of the ink a line of words keeps once the glass has blurred it. Measured (ChatEdgeATest, 2026-11-09):
+     * a paragraph of the transcript's Body text under the bar's 7 dp blur keeps .28 at its densest; the transcript now
+     * scrolls on under the bar (chat edge A), so the bar's words are held over that, with a little room.
+     */
+    public const val BLURRED_INK: Float = .30f
 
     /** An accent-filled part (a chip, a link run) behind the glass, blurred into the ground. */
     public const val ACCENT_WASH: Float = .25f
