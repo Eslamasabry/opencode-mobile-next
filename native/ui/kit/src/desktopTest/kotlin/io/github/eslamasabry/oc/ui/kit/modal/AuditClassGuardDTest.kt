@@ -108,9 +108,40 @@ class AuditClassGuardDTest {
     }
 
     @Test
-    fun `C03 the server status line paints no capsule`() {
-        assertNoCapsule("kit-status-pill") {
-            KitStatusPill("Laptop", KitConnectionTone.Ok, "Laptop, connected", onClick = {}, word = null)
+    fun `C03 the tappable server pill keeps its capsule`() {
+        runDesktopComposeUiTest(412, 400) {
+            setContent {
+                Theme {
+                    Box(Modifier.fillMaxSize()) {
+                        Box(Modifier.padding(24.dp)) {
+                            KitStatusPill("Laptop", KitConnectionTone.Ok, "Laptop, connected", onClick = {}, word = null)
+                        }
+                    }
+                }
+            }
+            waitForIdle()
+            val b = onAllNodesWithTag("kit-status-pill", useUnmergedTree = true).fetchSemanticsNodes().first().boundsInRoot
+            val pixels = onRoot().captureToImage().toPixelMap()
+            val y = (b.center.y - 13 * density.density).roundToInt()
+            assertTrue(!same(pixels[b.center.x.roundToInt(), y], pixels[2, 2]), "the server pill is a capsule (the owner approved it)")
+        }
+    }
+
+    @Test
+    fun `C03 every status word is a dot and a plain word, the same way`() {
+        listOf(KitChipTone.Neutral, KitChipTone.Attention, KitChipTone.Active).forEach { tone ->
+            runDesktopComposeUiTest(412, 300) {
+                setContent { Theme { KitChip("Word", tone = tone) } }
+                waitForIdle()
+                onAllNodesWithTag("kit-status-dot", useUnmergedTree = true).assertCountEquals(1)
+            }
+        }
+        KitStatusTagTone.entries.forEach { tone ->
+            runDesktopComposeUiTest(412, 300) {
+                setContent { Theme { KitStatusTag("Word", tone) } }
+                waitForIdle()
+                onAllNodesWithTag("kit-status-dot", useUnmergedTree = true).assertCountEquals(1)
+            }
         }
     }
 
