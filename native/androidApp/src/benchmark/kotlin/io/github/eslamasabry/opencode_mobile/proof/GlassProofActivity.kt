@@ -210,13 +210,7 @@ class GlassProofActivity : ComponentActivity() {
                     item(key = "start", contentType = "start") {
                         Row(Modifier.padding(16.dp)) {
                             if (showsStart) KitButton(label = "Start", onClick = { started = true })
-                            if (scene == "menu" && hold) {
-                menu = true
-                delay(1_500)
-                done = true
-                return@LaunchedEffect
-            }
-            if (scene == "menu") {
+                            if (scene == "menu") {
                                 KitMenu(
                                     expanded = menu,
                                     items = listOf(KitMenuItem("Copy", {}), KitMenuItem("Share", {}), KitMenuItem("Fork from here", {}), KitMenuItem("Retry", {})),
