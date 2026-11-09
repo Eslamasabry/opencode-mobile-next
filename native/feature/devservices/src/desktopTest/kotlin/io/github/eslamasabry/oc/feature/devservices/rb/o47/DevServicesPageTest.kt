@@ -98,7 +98,7 @@ class DevServicesPageTest {
             onNodeWithText("Register service").performClick()
             assertEquals(listOf("add" to emptyList()), calls)
             onNodeWithText("Details").performClick()
-            onNodeWithText("/work/shop").assertExists()
+            onNodeWithText("/work/shop", useUnmergedTree = true).assertExists()
         }
 
     @Test
