@@ -47,7 +47,12 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -487,8 +492,8 @@ private fun Modifier.chosenRing(accent: Color): Modifier =
     }
 
 private fun Modifier.radioSemantics(name: String, line: String, selected: Boolean): Modifier =
-    androidx.compose.ui.semantics.semantics {
-        role = androidx.compose.ui.semantics.Role.RadioButton
+    semantics {
+        role = Role.RadioButton
         this.selected = selected
         contentDescription = "$name. $line"
     }
