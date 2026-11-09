@@ -113,10 +113,10 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, shared: Boolean = fa
         backdrop.painted = painted
         backdrop.frostedSpots =
             when {
-                plate != null -> AuroraImage.clearSpotsOf(roles.ground, accent, roles.dark)
+                plate != null -> AuroraImage.clearSpotsOf(roles.ground, accent, roles.dark, appearance.liveVibrance)
                 // The look's own measured reach under a clear pane's frost (LiveReach), not the whole cap: a pane over
                 // thin glyphs stays clear enough to show them move.
-                shaderPicture != null -> LiveSpots.forLook(roles, appearance.liveStyle, lens = false)
+                shaderPicture != null -> LiveSpots.forLook(roles, appearance.liveStyle, lens = false, vibe = appearance.liveVibrance)
                 else -> emptyList<Argb>()
             }
     }
@@ -140,11 +140,11 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, shared: Boolean = fa
     val source =
         when {
             plate != null -> {
-                val (image, filter) = plate
+                val (image, filter, second) = plate
                 Modifier.kitGlassBackdropSource(backdrop, pictures) {
                     drawRect(ground)
                     val at = if (animates) drift.value.toDouble() else 0.0
-                    drawAuroraPlate(image, filter, alpha, AuroraImage.driftAt(at))
+                    drawAuroraPlate(image, filter, alpha, AuroraImage.driftAt(at * appearance.liveVibrance.speed), second, appearance.liveVibrance.plateSecond, appearance.liveVibrance.blobs)
                 }
             }
             shaderPicture != null -> Modifier.kitGlassBackdropSource(backdrop, pictures, shaderPicture)
@@ -195,11 +195,11 @@ internal fun kitLivePictureSpots(): List<Argb> {
     val strength = style.spec.tokens.live.cap(appearance.liveStrength)
     val on = appearance.liveBackground && !appearance.saver && strength > 0f
     val id = appearance.liveStyle
-    return remember(on, id, roles) {
+    return remember(on, id, roles, appearance.liveVibrance) {
         when {
             !on || !LiveLooks.draws(id) -> emptyList()
-            id == AuroraImage.ID -> AuroraImage.spotsOf(roles.ground, roles.accent, roles.dark, frosted = true).toList()
-            else -> LiveSpots.forLook(roles, id, lens = true)
+            id == AuroraImage.ID -> AuroraImage.spotsOf(roles.ground, roles.accent, roles.dark, frosted = true, vibe = appearance.liveVibrance).toList()
+            else -> LiveSpots.forLook(roles, id, lens = true, vibe = appearance.liveVibrance)
         }
     }
 }

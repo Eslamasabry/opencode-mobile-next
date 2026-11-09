@@ -150,6 +150,9 @@ private fun LiveUniforms.setShared(p: LivePalette) {
     color(LiveShaderLib.PARTNER, p.partner)
     color(LiveShaderLib.GLOW, p.glow)
     color(LiveShaderLib.INK, p.ink)
+    // chroma, cap scale, amount, blob scale / speed packed as (chroma, cap, amount, blobs) and speed in its own float.
+    float4(LiveShaderLib.VIBE, p.vibe.chroma, p.vibe.capScale, p.vibe.amount, p.vibe.blobs)
+    float(LiveShaderLib.SPEED, p.vibe.speed)
 }
 
 private fun LiveUniforms.color(name: String, c: Color) = float4(name, c.red, c.green, c.blue, 1f)

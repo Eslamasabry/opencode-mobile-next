@@ -69,19 +69,34 @@ public object AuroraImage {
      * The 4x5 colour matrix (row-major, offsets 0..255, as Android's and Compose's `ColorMatrix`) that turns the plate to
      * [accent]'s hue and tints it onto [ground] (Dart `_matrixFor`, `kit_live_aurora_image.dart:141-145`).
      */
-    public fun matrixFor(ground: Argb, accent: Argb, dark: Boolean): FloatArray {
-        val tint = tintOn(ground, chromaFor(dark))
+    public fun matrixFor(ground: Argb, accent: Argb, dark: Boolean, vibe: LiveVibrance = LiveVibrance.Calm): FloatArray {
+        val tint = tintOn(ground, chromaFor(dark) * vibe.plateChroma)
         val hue = hueFor(accent)
         return if (hue == null) tint else compose(hue, tint)
     }
+
+    /**
+     * The same picture's second copy for Playful: turned [turnDegrees] further round the hue wheel, so the field has two
+     * hues instead of one. Null when the vibrance has no second copy.
+     */
+    public fun secondMatrixFor(ground: Argb, accent: Argb, dark: Boolean, vibe: LiveVibrance, turnDegrees: Double = SECOND_TURN): FloatArray? {
+        if (vibe.plateSecond <= 0f) return null
+        val tint = tintOn(ground, chromaFor(dark) * vibe.plateChroma)
+        val base = hueFor(accent)
+        val turned = hueRotation((turnDegrees) * PI / 180)
+        return compose(if (base == null) turned else compose(base, turned), tint)
+    }
+
+    /** Playful's second hue sits this far round the wheel from the first (spike). */
+    public const val SECOND_TURN: Double = 105.0
 
     /**
      * The picture's darkest and brightest spots as shown on [ground] ([frosted]: under a Glass pane's blur), each moved
      * 3 % past itself towards black or white, so a pane over the picture never thickens too little
      * (`kit_live_aurora_image.dart:174-198`).
      */
-    public fun spotsOf(ground: Argb, accent: Argb, dark: Boolean, frosted: Boolean): Pair<Argb, Argb> {
-        val shown = matrixFor(ground, accent, dark)
+    public fun spotsOf(ground: Argb, accent: Argb, dark: Boolean, frosted: Boolean, vibe: LiveVibrance = LiveVibrance.Calm): Pair<Argb, Argb> {
+        val shown = matrixFor(ground, accent, dark, vibe)
         val (darkest, brightest) =
             when {
                 dark && frosted -> darkPlateFrostedDarkest to darkPlateFrostedBrightest
@@ -98,9 +113,9 @@ public object AuroraImage {
      * to the picture's raw darkest and brightest. Conservative: Flutter measured the frost under a 40 px Gaussian, and
      * Glass's clear panes still blur 10-12 dp.
      */
-    public fun clearSpotsOf(ground: Argb, accent: Argb, dark: Boolean): List<Argb> {
-        val (fd, fb) = spotsOf(ground, accent, dark, frosted = true)
-        val (rd, rb) = spotsOf(ground, accent, dark, frosted = false)
+    public fun clearSpotsOf(ground: Argb, accent: Argb, dark: Boolean, vibe: LiveVibrance = LiveVibrance.Calm): List<Argb> {
+        val (fd, fb) = spotsOf(ground, accent, dark, frosted = true, vibe)
+        val (rd, rb) = spotsOf(ground, accent, dark, frosted = false, vibe)
         return listOf(
             io.github.eslamasabry.oc.ui.design.color.lerp(fd, rd, LIGHT_FROST_SHARE),
             io.github.eslamasabry.oc.ui.design.color.lerp(fb, rb, LIGHT_FROST_SHARE),

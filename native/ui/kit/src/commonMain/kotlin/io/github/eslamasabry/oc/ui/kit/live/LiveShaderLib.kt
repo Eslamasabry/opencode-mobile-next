@@ -25,6 +25,8 @@ public object LiveShaderLib {
     internal const val PARTNER = "uPartner"
     internal const val GLOW = "uGlow"
     internal const val INK = "uInk"
+    internal const val VIBE = "uVibe"
+    internal const val SPEED = "uSpeed"
 
     /** The smallest shader: compiles wherever runtime shaders exist, so the host can choose the fallback once. */
     internal const val PROBE: String = "half4 main(float2 c) { return half4(0.0); }"
@@ -41,6 +43,9 @@ uniform half4 uAccent;
 uniform half4 uPartner;
 uniform half4 uGlow;
 uniform half4 uInk;
+// Vibrance spike: (chroma, cap scale, amount, blob scale) and the drift speed. Calm is (1, 1, 1, 1) and 1.
+uniform half4 uVibe;
+uniform float uSpeed;
 
 // Hash without sine: stable on mobile GPUs at the coordinates we use (a few hundred at most).
 float liveHash(float2 p) {
@@ -79,6 +84,25 @@ float liveFbm(float2 p) {
     return v;
 }
 
+// More (s > 1) or less colour in [c], keeping its luma.
+float3 liveSat(float3 c, float s) {
+    float l = dot(c, float3(0.2126, 0.7152, 0.0722));
+    return clamp(float3(l) + (c - float3(l)) * s, 0.0, 1.0);
+}
+
+// [c] turned round the hue wheel by [turn] (1 = a full circle), luma kept (YIQ rotation).
+float3 liveHue(float3 c, float turn) {
+    float a = turn * 6.2831853;
+    float cs = cos(a);
+    float sn = sin(a);
+    float y = dot(c, float3(0.299, 0.587, 0.114));
+    float i = dot(c, float3(0.596, -0.274, -0.322));
+    float q = dot(c, float3(0.211, -0.523, 0.312));
+    float i2 = i * cs - q * sn;
+    float q2 = i * sn + q * cs;
+    return clamp(float3(y + 0.956 * i2 + 0.621 * q2, y - 0.272 * i2 - 0.647 * q2, y - 1.106 * i2 + 1.703 * q2), 0.0, 1.0);
+}
+
 // Light added to the ground: a screen blend on dark themes, a tint on light ones, so a glow never greys a light page.
 float3 liveGlow(float3 base, float3 tint, float a) {
     a = clamp(a, 0.0, 1.0);
@@ -93,7 +117,7 @@ half4 liveOut(float3 col, float2 fragCoord) {
     float3 g = float3(uGround.rgb);
     float3 d = col - g;
     float m = length(d);
-    float cap = mix(0.20, 0.30, uDark);
+    float cap = mix(0.20, 0.30, uDark) * float(uVibe.y);
     if (m > cap) { d *= cap / m; }
     float n = liveHash(fragCoord) + liveHash(fragCoord + 71.3) - 1.0;
     return half4(clamp(g + d + n / 255.0, 0.0, 1.0), 1.0);

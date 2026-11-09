@@ -19,6 +19,33 @@ public enum class AppearanceMode {
 }
 
 /**
+ * How lively the Background draws (vibrance spike, 2026-11-09; proposed key `oc.effectsLiveVibrance`, default Calm).
+ * Calm is today's look, bit for bit. Every number scales one thing the look already has, so the contrast rules keep
+ * holding: [capScale] widens how far a pixel may stray from the ground (the shader's `liveOut` cap, the glass spots),
+ * [chroma] how much colour the tints keep, [plateChroma] the same for the painted aurora, [blobs] how large the colour
+ * fields are and how many hues they use (1 = today's accent and partner), [speed] how fast they drift.
+ */
+public enum class LiveVibrance(
+    public val wire: String,
+    public val chroma: Float,
+    public val capScale: Float,
+    public val amount: Float,
+    public val blobs: Float,
+    public val speed: Float,
+    public val plateChroma: Float,
+    public val plateSecond: Float,
+) {
+    Calm("calm", 1f, 1f, 1f, 1f, 1f, 1f, 0f),
+    Vivid("vivid", 1.6f, 1.3f, 1.5f, 1f, 1f, 2.3f, 0f),
+    Playful("playful", 1.45f, 1.4f, 1.55f, 1.6f, 1.35f, 2.6f, .55f),
+    ;
+
+    public companion object {
+        public fun of(wire: String?): LiveVibrance = entries.firstOrNull { it.wire == wire } ?: Calm
+    }
+}
+
+/**
  * Stored style identities (port-kit name). One enum serves both names: [Style] carries the
  * storage names and the resolver specs; this alias keeps the kit's `KitSurfaceStyle` callers.
  */
@@ -60,6 +87,8 @@ public data class KitAppearance(
      * lib/state/effects.dart:45-47 at GLASS_REF). A style may cap it (`LivePolicy.cap`).
      */
     val liveStrength: Float = 1f,
+    /** `oc.effectsLiveVibrance` (proposed): how lively the Background draws; Calm = today. */
+    val liveVibrance: LiveVibrance = LiveVibrance.Calm,
 ) {
     public val saver: Boolean
         get() = mode == AppearanceMode.Saver

@@ -52,7 +52,24 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 
 /** Draws the aurora [image] over the whole scope at [drift], through [filter], at [alpha] (`kit_live_aurora_image.dart:282-314`). */
-internal fun DrawScope.drawAuroraPlate(image: ImageBitmap, filter: ColorFilter, alpha: Float, drift: AuroraImage.Drift) {
+internal fun DrawScope.drawAuroraPlate(
+    image: ImageBitmap,
+    filter: ColorFilter,
+    alpha: Float,
+    drift: AuroraImage.Drift,
+    second: ColorFilter? = null,
+    secondShare: Float = 0f,
+    blobs: Float = 1f,
+) {
+    val zoomed = if (blobs == 1f) drift else drift.copy(zoom = drift.zoom * (1f + (blobs - 1f) * .6f))
+    drawPlateOnce(image, filter, alpha, zoomed)
+    if (second != null) {
+        // Playful's second hue: the same picture mirrored in its pan and a little closer, laid over the first.
+        drawPlateOnce(image, second, alpha * secondShare, zoomed.copy(zoom = zoomed.zoom * 1.12f, panX = -zoomed.panX, panY = -zoomed.panY))
+    }
+}
+
+private fun DrawScope.drawPlateOnce(image: ImageBitmap, filter: ColorFilter, alpha: Float, drift: AuroraImage.Drift) {
     val src = AuroraImage.sourceRect(image.width.toFloat(), image.height.toFloat(), size.width, size.height, drift)
     drawImage(
         image,
@@ -68,16 +85,24 @@ internal fun DrawScope.drawAuroraPlate(image: ImageBitmap, filter: ColorFilter, 
 
 /** The plate for this brightness, turned to the accent and tinted onto the ground; null for a look the app does not draw. */
 @Composable
-internal fun rememberAuroraPlate(look: String?): Pair<ImageBitmap, ColorFilter>? {
+internal fun rememberAuroraPlate(look: String?): AuroraPlate? {
     if (look != AuroraImage.ID) return null
     val roles = LocalKitRoles.current
+    val vibe = io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance.current.liveVibrance
     val image = imageResource(if (roles.dark) Res.drawable.aurora_dark else Res.drawable.aurora_light)
     val filter =
-        remember(roles.ground, roles.accent, roles.dark) {
-            ColorFilter.colorMatrix(ColorMatrix(AuroraImage.matrixFor(roles.ground, roles.accent, roles.dark)))
+        remember(roles.ground, roles.accent, roles.dark, vibe) {
+            ColorFilter.colorMatrix(ColorMatrix(AuroraImage.matrixFor(roles.ground, roles.accent, roles.dark, vibe)))
         }
-    return if (image.width > 1 && image.height > 1) image to filter else null
+    val second =
+        remember(roles.ground, roles.accent, roles.dark, vibe) {
+            AuroraImage.secondMatrixFor(roles.ground, roles.accent, roles.dark, vibe)?.let { ColorFilter.colorMatrix(ColorMatrix(it)) }
+        }
+    return if (image.width > 1 && image.height > 1) AuroraPlate(image, filter, second) else null
 }
+
+/** The painted aurora ready to draw: the picture, its tint and, for Playful, a second hue (vibrance spike). */
+internal data class AuroraPlate(val image: ImageBitmap, val filter: ColorFilter, val second: ColorFilter? = null)
 
 /**
  * A sample of [look] (null: the plain ground) behind a tiny mock conversation, for a look's choice card (Dart

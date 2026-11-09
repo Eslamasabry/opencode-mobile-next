@@ -34,7 +34,8 @@ public object LiveSpots {
      * instead of the whole cap, under the clear panes' frost ([lens] false) or the liquid lens's light blur ([lens] true).
      * A look with no measured reach (an id the kit does not draw) keeps the whole cap.
      */
-    public fun forLook(roles: Roles, id: String?, lens: Boolean): List<Argb> = of(roles, LiveReach.of(id, roles.dark, lens))
+    public fun forLook(roles: Roles, id: String?, lens: Boolean, vibe: LiveVibrance = LiveVibrance.Calm): List<Argb> =
+        of(roles, LiveReach.of(id, roles.dark, lens) * vibe.capScale)
 
     /**
      * The ground and the farthest a shader look can move it, along each look colour and each pair of them: [reach] of
