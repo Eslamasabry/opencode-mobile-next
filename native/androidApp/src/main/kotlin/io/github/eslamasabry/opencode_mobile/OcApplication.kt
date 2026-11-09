@@ -51,6 +51,10 @@ class OcApplication : Application(), GraphOwner {
 
     override fun onCreate() {
         super.onCreate()
+        // The isolated PDF parser in ":local_pdf" has no storage and no UserManager: opening SharedPreferences there
+        // throws and kills the process before it can answer, so every PDF showed "could not be displayed". It needs
+        // none of the product below, so any process but the main one stops here.
+        if (!isMainProcess()) return
         // 1. B-SEC-043, as the Flutter OcApplication: the category-only handler goes in before
         // anything else can crash; it stores nothing until crash capture is turned on.
         // Crash reports go through the vendor-neutral Reporting layer (consent + redaction) before any vendor sees them.
@@ -79,12 +83,9 @@ class OcApplication : Application(), GraphOwner {
             )
         // Every component of the main process (activities, alert buttons, services, workers,
         // tiles, widgets) may be the first thing in a cold process and relies on the started
-        // product, as before. The isolated PDF parser in ":local_pdf" never warms profiles,
-        // connects, or starts Linux.
-        if (isMainProcess()) {
-            PhoneServerScripts.configurePort { BuiltinLinux.get(this).selectedServerPort }
-            startProduct()
-        }
+        // product, as before.
+        PhoneServerScripts.configurePort { BuiltinLinux.get(this).selectedServerPort }
+        startProduct()
     }
 
     private fun isMainProcess(): Boolean {
