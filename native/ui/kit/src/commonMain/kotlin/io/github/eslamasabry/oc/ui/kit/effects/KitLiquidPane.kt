@@ -64,6 +64,8 @@ public data class KitLiquidPaneSpec(
     val flip: LiquidFlip? = null,
     /** Frost beyond the window's budget: the rim light stays while the transform holds the lens at frost. */
     val keepRim: Boolean = false,
+    /** The specular's glint line as a share of [specular] (the glass look's). */
+    val glintShare: Float = io.github.eslamasabry.oc.ui.design.style.SurfaceDecoration.GLINT_SHARE,
 )
 
 /** How far a liquid pane has flipped to the other theme's ink and face (0: its own; 1: the other). Snapshot state. */
@@ -97,7 +99,7 @@ internal fun DrawScope.drawLiquidTint(spec: KitLiquidPaneSpec, shape: Shape? = n
         // The same crisp specular as Glass's in-flow panes: a bright rim segment at the top start and a thin glint line
         // just inside the top edge (owner 2026-11-09, "crisper glossy glass").
         val top = (shape as? CornerBasedShape)?.let { it.topStart.toPx(size, this) } ?: (size.minDimension / 2f)
-        drawGlassSpecular(shape, spec.specular, spec.rtl, minOf(top, size.minDimension / 2f))
+        drawGlassSpecular(shape, spec.specular, spec.rtl, minOf(top, size.minDimension / 2f), glintShare = spec.glintShare)
     }
 }
 

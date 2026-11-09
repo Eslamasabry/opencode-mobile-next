@@ -156,7 +156,10 @@ internal val LocalKitLivePicture: ProvidableCompositionLocal<KitLivePicture?> = 
 /** The backdrop of the page being drawn, or null where no live background hosts the page. */
 internal val LocalKitGlassBackdrop: ProvidableCompositionLocal<KitGlassBackdrop?> = staticCompositionLocalOf { null }
 
-/** How much a frost lifts the saturation of the colour it blurs (1 keeps it): frosted glass glows with what is behind. */
+/**
+ * How much a frost lifts the saturation of the colour it blurs (1 keeps it): frosted glass glows with what is behind.
+ * The glass look's own ([io.github.eslamasabry.oc.ui.design.style.GlassLook.frostSaturation]) where one is drawn.
+ */
 internal val FROST_SATURATION: Float get() = io.github.eslamasabry.oc.ui.design.style.GlassLook.Default.frostSaturation // FG: lib/ui/kit/kit_surface_look.dart:101 (1.7)
 
 /**
@@ -185,13 +188,14 @@ internal fun Modifier.kitSurfaceGlass(decoration: SurfaceDecoration?): Modifier 
     val backdrop = LocalKitGlassBackdrop.current
     val ground = LocalKitColors.current.ground
     val light = kitRimLightGround()
+    val saturation = io.github.eslamasabry.oc.ui.kit.effects.kitGlassLook().spec.frostSaturation
     // Reduced motion and high contrast hold the frost solid (Dart `KitFrost.heldBy`; high contrast already draws Solid).
     val held = reduced || signals.highContrast
     val sigma = decoration.frost
     // The shared copy is blurred at FROST_SCALE of the picture's size, so the blur's radius is scaled with it.
     val effect =
-        remember(sigma, density, platform, held) {
-            if (held) null else platform.frostEffect(FrostSpec(sigma, FROST_SATURATION, 0f), density * FROST_SCALE)
+        remember(sigma, density, platform, held, saturation) {
+            if (held) null else platform.frostEffect(FrostSpec(sigma, saturation, 0f), density * FROST_SCALE)
         }
     return this then GlassFrostElement(if (effect == null) null else backdrop, effect, ground, decoration.shape(), sigma, light)
 }
@@ -368,7 +372,7 @@ internal fun DrawScope.drawGlassFace(d: SurfaceDecoration) {
     // line just inside the top edge. Crisp, never blurred.
     if (d.specular.alpha > 0) {
         val top = if (d.circle) minOf(size.width, size.height) / 2f else d.radii.topStart.dp.toPx()
-        drawGlassSpecular(shape, Color(d.specular.v), rtl, top, d.edgeWidthDp)
+        drawGlassSpecular(shape, Color(d.specular.v), rtl, top, d.edgeWidthDp, d.glint)
     }
 }
 
@@ -383,7 +387,7 @@ internal fun DrawScope.sheenDepthPx(): Float =
  * the top corners, brightest a quarter of the way from the start and gone at both ends ([SurfaceDecoration.GLINT_SHARE]
  * of [color]). [topRadiusPx] is the top-start corner's radius. Both are crisp strokes clipped to the face.
  */
-internal fun DrawScope.drawGlassSpecular(shape: Shape, color: Color, rtl: Boolean, topRadiusPx: Float, rimDp: Float = 1f) {
+internal fun DrawScope.drawGlassSpecular(shape: Shape, color: Color, rtl: Boolean, topRadiusPx: Float, rimDp: Float = 1f, glintShare: Float = SurfaceDecoration.GLINT_SHARE) {
     val w = rimDp.coerceIn(1f, 1.5f).dp.toPx()
     if (size.width <= w * 4f || size.height <= w * 4f || color.alpha <= 0f) return
     val corner = Offset(if (rtl) size.width else 0f, 0f)
@@ -396,7 +400,7 @@ internal fun DrawScope.drawGlassSpecular(shape: Shape, color: Color, rtl: Boolea
     val x0 = margin
     val x1 = size.width - margin
     if (x1 - x0 < w * 8f || y + w >= size.height / 2f) return
-    val glint = color.copy(alpha = color.alpha * SurfaceDecoration.GLINT_SHARE)
+    val glint = color.copy(alpha = color.alpha * glintShare)
     val peak = if (rtl) .75f else .25f
     val brush = Brush.horizontalGradient(0f to Color.Transparent, peak to glint, 1f to Color.Transparent, startX = x0, endX = x1)
     clipPath(Path().apply { addOutline(shape.createOutline(size, layoutDirection, this@drawGlassSpecular)) }) {
@@ -483,8 +487,8 @@ private data class GlassFrostElement(
     val ground: Color,
     val shape: Shape,
     val sigma: Float,
-    /** The ground's luma for the backdrop's rim light (a dark theme), or null: no rim light. */
-    val light: Float? = null,
+    /** The backdrop's rim light (a dark theme, a look with one), or null: no rim light. */
+    val light: KitRimLight? = null,
 ) : ModifierNodeElement<GlassFrostNode>() {
     override fun create(): GlassFrostNode = GlassFrostNode(backdrop, effect, ground, shape, sigma, light)
 
@@ -509,7 +513,7 @@ private class GlassFrostNode(
     var ground: Color,
     var shape: Shape,
     var sigma: Float,
-    var light: Float?,
+    var light: KitRimLight?,
 ) : Modifier.Node(), DrawModifierNode, GlobalPositionAwareModifierNode, TraversableNode {
     override val traverseKey: Any get() = GlassTraverseKey
     private var coordinates: LayoutCoordinates? = null
@@ -603,18 +607,18 @@ private class GlassFrostNode(
  */
 internal class BackdropRimLight {
     private var layer: GraphicsLayer? = null
-    private var filtered: Float = Float.NaN
+    private var filtered: KitRimLight? = null
 
-    fun draw(scope: DrawScope, context: androidx.compose.ui.graphics.GraphicsContext, picture: GraphicsLayer, shift: Offset, shape: Shape, groundLuma: Float) {
+    fun draw(scope: DrawScope, context: androidx.compose.ui.graphics.GraphicsContext, picture: GraphicsLayer, shift: Offset, shape: Shape, light: KitRimLight) {
         with(scope) {
-            val band = RIM_LIGHT_BAND_DP.dp.toPx()
-            if (RIM_LIGHT_GAIN <= 0f || size.width <= band * 4f || size.height <= band * 4f) return
+            val band = light.bandDp.dp.toPx()
+            if (light.gain <= 0f || size.width <= band * 4f || size.height <= band * 4f) return
             val l = layer ?: context.createGraphicsLayer().also { layer = it }
-            if (filtered != groundLuma) {
-                l.colorFilter = androidx.compose.ui.graphics.ColorFilter.colorMatrix(rimLightMatrix(groundLuma))
-                filtered = groundLuma
+            if (filtered != light) {
+                l.colorFilter = androidx.compose.ui.graphics.ColorFilter.colorMatrix(rimLightMatrix(light.groundLuma, light.gain))
+                filtered = light
             }
-            l.alpha = RIM_LIGHT_MAX
+            l.alpha = light.max
             recordDetached(l) { translate(shift.x, shift.y) { drawLayer(picture) } }
             // The corners' radius: the bands stay on the straight edges, inside the face.
             val r = cornerOf(shape, size, this).coerceAtMost(minOf(size.width, size.height) / 2f)
@@ -637,7 +641,7 @@ internal class BackdropRimLight {
     fun release(context: androidx.compose.ui.graphics.GraphicsContext) {
         layer?.let { context.releaseGraphicsLayer(it) }
         layer = null
-        filtered = Float.NaN
+        filtered = null
     }
 }
 
@@ -645,8 +649,8 @@ internal class BackdropRimLight {
  * White at an alpha of [RIM_LIGHT_GAIN] × how far the picture's luma lies above the ground's ([groundLuma], 0..1): the
  * picture as light. Colour matrix rows in Compose's order (offsets 0..255).
  */
-internal fun rimLightMatrix(groundLuma: Float): androidx.compose.ui.graphics.ColorMatrix {
-    val k = RIM_LIGHT_GAIN
+internal fun rimLightMatrix(groundLuma: Float, gain: Float = RIM_LIGHT_GAIN): androidx.compose.ui.graphics.ColorMatrix {
+    val k = gain
     return androidx.compose.ui.graphics.ColorMatrix(
         floatArrayOf(
             0f, 0f, 0f, 0f, 255f,
@@ -657,13 +661,19 @@ internal fun rimLightMatrix(groundLuma: Float): androidx.compose.ui.graphics.Col
     )
 }
 
-/** The ground's luma for the rim light in a dark theme, or null (a light theme: no rim light). */
+/** The rim light's ground luma and the glass look's gain, most and band ([BackdropRimLight]). */
+internal data class KitRimLight(val groundLuma: Float, val gain: Float, val max: Float, val bandDp: Float)
+
+/** The rim light in a dark theme under a look that has one, or null (a light theme, or a look without it). */
 @Composable
-internal fun kitRimLightGround(): Float? {
+internal fun kitRimLightGround(): KitRimLight? {
     val roles = io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles.current
     if (!roles.dark) return null
+    val look = io.github.eslamasabry.oc.ui.kit.effects.kitGlassLook().spec
+    if (look.backdropLightGain <= 0f) return null
     val g = roles.ground
-    return (LUMA_R * g.red + LUMA_G * g.green + LUMA_B * g.blue) / 255f
+    val luma = (LUMA_R * g.red + LUMA_G * g.green + LUMA_B * g.blue) / 255f
+    return KitRimLight(luma, look.backdropLightGain, look.backdropLightMax, look.backdropLightBandDp)
 }
 
 /** How wide the lit band inside a pane's edge is, in dp: a touch wider than the 1 dp rim, so the light reads. */
@@ -690,7 +700,7 @@ internal fun Modifier.kitBackdropRimLight(shape: Shape): Modifier {
     return this then RimLightElement(backdrop, shape, light)
 }
 
-private data class RimLightElement(val backdrop: KitGlassBackdrop, val shape: Shape, val light: Float) : ModifierNodeElement<RimLightNode>() {
+private data class RimLightElement(val backdrop: KitGlassBackdrop, val shape: Shape, val light: KitRimLight) : ModifierNodeElement<RimLightNode>() {
     override fun create(): RimLightNode = RimLightNode(backdrop, shape, light)
 
     override fun update(node: RimLightNode) {
@@ -705,7 +715,7 @@ private data class RimLightElement(val backdrop: KitGlassBackdrop, val shape: Sh
     }
 }
 
-private class RimLightNode(var backdrop: KitGlassBackdrop, var shape: Shape, var light: Float) :
+private class RimLightNode(var backdrop: KitGlassBackdrop, var shape: Shape, var light: KitRimLight) :
     Modifier.Node(), DrawModifierNode, GlobalPositionAwareModifierNode {
     private var coordinates: LayoutCoordinates? = null
     private var last: Offset = Offset.Unspecified

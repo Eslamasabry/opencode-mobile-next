@@ -51,6 +51,7 @@ public object SurfaceFade {
             innerGlow = c(a.innerGlow, b.innerGlow) ?: Argb(0),
             sheen = c(a.sheen, b.sheen) ?: Argb(0),
             specular = c(a.specular, b.specular) ?: Argb(0),
+            glint = d(a.glint, b.glint),
         )
     }
 
