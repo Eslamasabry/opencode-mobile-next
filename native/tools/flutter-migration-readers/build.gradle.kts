@@ -55,9 +55,9 @@ tasks.register<JavaExec>("generateFixtures") {
     args(layout.buildDirectory.dir("fixtures").get().asFile.absolutePath)
 }
 
-// Rescans a checkout of the released Flutter line and rewrites docs/native/migration/flutter-2.1.4-names.json.
-//   git worktree add ../flutter-2.1.4 origin/master
-//   ./gradlew scanFlutterTree -PflutterTree=../flutter-2.1.4 -PflutterCommit=$(git rev-parse origin/master)
+// Rescans a checkout of the released Flutter line and rewrites docs/native/migration/flutter-2.1.5-names.json.
+//   git worktree add ../flutter-2.1.5 v2.1.5+63
+//   ./gradlew scanFlutterTree -PflutterTree=../flutter-2.1.5 -PflutterCommit=$(git rev-parse 'v2.1.5+63^{commit}')
 tasks.register<JavaExec>("scanFlutterTree") {
     group = "verification"
     description = "Rewrite the committed store-ledger snapshot from a Flutter checkout"
@@ -65,8 +65,8 @@ tasks.register<JavaExec>("scanFlutterTree") {
     mainClass.set("io.github.eslamasabry.oc.migration.readers.ledger.FlutterStoreScannerMain")
     val tree = providers.gradleProperty("flutterTree")
     val commit = providers.gradleProperty("flutterCommit")
-    val out = rootDir.resolve("../../../docs/native/migration/flutter-2.1.4-names.json").canonicalPath
+    val out = rootDir.resolve("../../../docs/native/migration/flutter-2.1.5-names.json").canonicalPath
     argumentProviders += CommandLineArgumentProvider {
-        listOf(file(tree.get()).canonicalPath, out, "2.1.4+62", "origin/master", commit.get())
+        listOf(file(tree.get()).canonicalPath, out, "2.1.5+63", "v2.1.5+63", commit.get())
     }
 }

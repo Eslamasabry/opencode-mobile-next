@@ -29,8 +29,13 @@ class CacheFirstGateTest {
         val pending = CacheFirstGate.REVIEWED.count { (p, r) -> r.kind == CacheFirstGate.Pending && (counts[p] ?: 0) > 0 }
         assertTrue(pending <= CacheFirstGate.PENDING_CEILING, "$pending pending screens, ceiling ${CacheFirstGate.PENDING_CEILING}")
         val cold = CacheFirstGate.REVIEWED.values.mapNotNull { (it.kind as? CacheFirstGate.Cold)?.proof }.toSet()
-        val proofs = File(root, "feature").walkTopDown().filter { it.isFile && it.extension == "kt" && "Test" in it.path }
-            .map { it.readText() }.joinToString("\n")
+        // A screen's first frame may be proven where its kept data lives: the feature, its engine or the app wiring.
+        val proofs = listOf("feature", "engine", "androidApp").flatMap { layer ->
+            File(root, layer).walkTopDown()
+                .filter { it.isFile && it.extension == "kt" && "/build/" !in it.path && "Test" in it.name }
+                .map { it.readText() }
+                .toList()
+        }.joinToString("\n")
         assertEquals(emptySet(), cold.filter { "`$it " !in proofs }.toSet(), "every cache-first screen names its first-frame test")
     }
 

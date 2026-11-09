@@ -11,7 +11,9 @@ import io.github.eslamasabry.oc.ui.design.effects.EdgeHold
 import io.github.eslamasabry.oc.ui.design.effects.FrostConditions
 import io.github.eslamasabry.oc.ui.design.effects.FrostPolicy
 import io.github.eslamasabry.oc.ui.design.effects.FrostStrength
-import io.github.eslamasabry.oc.ui.design.effects.GlassEdges
+import io.github.eslamasabry.oc.ui.design.effects.LiquidEdge
+import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
+import io.github.eslamasabry.oc.ui.design.effects.LiveReach
 import io.github.eslamasabry.oc.ui.design.effects.LiveSpots
 import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
 import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
@@ -55,8 +57,8 @@ class GlassPanesTest {
     /** Where a pane's words lie under its sheen (GlassFinish.sheenAt): a card's below the pane inset, a chip's anywhere. */
     private fun wordsDp(role: SurfaceRole): Float = if (role == SurfaceRole.Content) GlassFinish.PANE_WORDS_DP else 0f
 
-    private fun finished(roles: Roles, role: SurfaceRole, level: SurfaceLevel, spots: List<Argb>, selected: Boolean = false): Pair<SurfaceDecoration, Argb> {
-        val request = SurfaceRequest(roles, role, Knobs(), level, selected = selected)
+    private fun finished(roles: Roles, role: SurfaceRole, level: SurfaceLevel, spots: List<Argb>, selected: Boolean = false, look: GlassLook = GlassLook.Default): Pair<SurfaceDecoration, Argb> {
+        val request = SurfaceRequest(roles, role, Knobs(), level, selected = selected, look = look)
         val solid = request.levelFill.over(roles.ground.withAlpha(1f))
         return GlassFinish.thickened(GlassSpec.resolveClear(request)!!, roles, solid, spots, GlassFinish.paneInks(roles, solid), wordsDp = wordsDp(role)) to solid
     }
@@ -158,15 +160,134 @@ class GlassPanesTest {
     fun `B-KIT-018 clear panes need only the blur, every other hold keeps today's panes`() {
         val ready = FrostConditions(styleAllows = true, lensSupported = true)
         val b = FrostStrength.Balanced
-        assertTrue(FrostPolicy.clearPanes(ready, b, GlassEdges.Liquid))
-        assertTrue(FrostPolicy.clearPanes(ready.copy(lensSupported = false), b, GlassEdges.Liquid), "no lens: still clear")
-        assertFalse(FrostPolicy.clearPanes(ready, b, GlassEdges.Frosted), "Glass edges: Frosted")
-        assertFalse(FrostPolicy.clearPanes(ready, FrostStrength.Off, GlassEdges.Liquid), "frost Off")
-        for (held in listOf(ready.copy(saver = true), ready.copy(reducedMotion = true), ready.copy(highContrast = true), ready.copy(styleAllows = false))) {
-            assertFalse(FrostPolicy.clearPanes(held, b, GlassEdges.Liquid), "$held")
-            assertNotEquals(null, FrostPolicy.edgesHeldBy(held, b, GlassEdges.Liquid))
+        val glossy = GlassLookId.Glossy
+        assertTrue(FrostPolicy.clearPanes(ready, b, glossy))
+        assertTrue(FrostPolicy.clearPanes(ready.copy(lensSupported = false), b, glossy), "no lens: still clear")
+        // Glass looks D7: the Frosted look draws its own lighter clear panes, no longer the old thick ones.
+        assertTrue(FrostPolicy.clearPanes(ready, b, GlassLookId.Frosted), "the Frosted look: clear panes")
+        assertFalse(FrostPolicy.clearPanes(ready, FrostStrength.Off, glossy), "frost Off")
+        for (look in GlassLookId.entries) for (held in listOf(ready.copy(saver = true), ready.copy(reducedMotion = true), ready.copy(highContrast = true), ready.copy(styleAllows = false))) {
+            assertFalse(FrostPolicy.clearPanes(held, b, look), "$look $held")
+            assertNotEquals(null, FrostPolicy.edgesHeldBy(held, b, look))
         }
-        assertEquals(EdgeHold.Platform, FrostPolicy.edgesHeldBy(ready.copy(lensSupported = false), b, GlassEdges.Liquid))
+        assertEquals(EdgeHold.Platform, FrostPolicy.edgesHeldBy(ready.copy(lensSupported = false), b, glossy))
+    }
+
+    // ---- Glass looks (docs/designs/glass-looks-2026-11-09.md v2)
+
+    @Test
+    fun `B-KIT-003 the default look is Glossy, exactly glass-live's GlassLook Default`() {
+        assertEquals(GlassLookId.Glossy, GlassLookId.fromStorage(null))
+        assertEquals(GlassLookId.Glossy, io.github.eslamasabry.oc.ui.design.effects.KitAppearance().glassLook)
+        val glossy = GlassLooks.of(GlassLookId.Glossy)
+        assertEquals(GlassLook.Default, glossy.spec)
+        assertTrue(glossy.lens)
+        assertEquals(1f, glossy.tintFactor)
+        assertFalse(glossy.smoked)
+        // Glossy changes no recipe: the default page draws as glass-live does.
+        for (role in LiquidRole.entries) for (dark in listOf(true, false)) assertEquals(LiquidEdge.recipe(role, dark), LiquidEdge.recipe(role, dark, glossy))
+        for ((role, level) in panes) {
+            val r = SurfaceRequest(roles(PackId.Opencode, true), role, Knobs(), level)
+            assertEquals(GlassSpec.resolveClear(r), GlassSpec.resolveClear(r.copy(look = glossy.spec)))
+        }
+    }
+
+    @Test
+    fun `B-KIT-003 every look draws its own numbers - Frosted's thicker blur, Smoked's smoke, Clear's thinner start`() {
+        val roles = roles(PackId.Opencode, true)
+        val content = SurfaceRequest(roles, SurfaceRole.Content, Knobs())
+        val frostedPane = GlassSpec.resolveClear(content.copy(look = GlassLooks.Frosted.spec))!!
+        assertEquals(GlassLook.Frosted.contentFrostDp, frostedPane.frost)
+        assertEquals(GlassLook.Frosted.glintShare, frostedPane.glint)
+        assertTrue(frostedPane.frost > GlassSpec.resolveClear(content)!!.frost, "Frosted blurs more than Glossy")
+        assertFalse(GlassLooks.Frosted.lens, "Frosted has no lens")
+        val clearBar = LiquidEdge.recipe(LiquidRole.Bar, true, GlassLooks.Clear)
+        assertTrue(clearBar.tint < LiquidEdge.recipe(LiquidRole.Bar, true).tint, "Clear starts thinner")
+        for (role in LiquidRole.entries.filter { it != LiquidRole.Action }) {
+            assertTrue(LiquidEdge.recipe(role, true, GlassLooks.Smoked).tint >= GlassLooks.Smoked.smokeTint, "$role: Smoked starts at its smoke")
+        }
+        // The stored names round-trip.
+        for (id in GlassLookId.entries) assertEquals(id, GlassLookId.fromStorage(id.storageName))
+    }
+
+    /** What a liquid face floats over, per backdrop: the painted aurora, frosted, and the farthest a shader look reaches. */
+    private fun liquidPictures(roles: Roles): List<List<Argb>> =
+        listOf(
+            AuroraImage.spotsOf(roles.ground, roles.accent, roles.dark, frosted = true).toList(),
+            LiveSpots.of(roles, LiveReach.most(roles.dark, lens = true)),
+        )
+
+    private val wordRoles = listOf(LiquidRole.Bar, LiquidRole.Composer, LiquidRole.Sheet, LiquidRole.Menu, LiquidRole.Pill)
+
+    @Test
+    fun `B-KIT-003 every look keeps the readability floor, every pack, light and dark, over the aurora and the shader looks`() {
+        for (pack in PackId.entries) for (dark in listOf(true, false)) {
+            val page = roles(pack, dark)
+            val darkRoles = roles(pack, true)
+            for (id in GlassLookId.entries) {
+                val look = GlassLooks.of(id)
+                // In-flow panes: the look's clear panes (Smoked keeps the page's own, D6).
+                for ((role, level) in panes) for (spots in backdrops(page)) {
+                    val (d, solid) = finished(page, role, level, spots, look = look.spec)
+                    val sheen = GlassFinish.sheenAt(d.sheen, wordsDp(role))
+                    for (face in listOfNotNull(d.fill, d.fillStart)) for (spot in spots) {
+                        val bare = face.over(spot)
+                        for (seen in listOf(bare, sheen.over(bare))) for ((ink, target) in GlassFinish.textInks(page, solid)) {
+                            val c = wcagContrast(ink, seen)
+                            assertTrue(c >= target - 1e-3, "$id $pack dark=$dark $role/$level: $c < $target")
+                        }
+                    }
+                }
+                // Floating pieces with a lens: the look's liquid face (Smoked: the dark theme's, over this page).
+                if (!look.lens) continue
+                val faceRoles = if (look.smoked) darkRoles else page
+                for (role in wordRoles) for (picture in liquidPictures(page)) {
+                    val face = LiquidEdge.face(faceRoles, role, picture = picture, look = look, page = page)
+                    val recipe = LiquidEdge.recipe(role, faceRoles.dark, look)
+                    val spots = LiquidEdge.themeSpots(page, recipe, picture)
+                    for (f in listOfNotNull(face.fill, face.fillStart)) for (spot in spots) {
+                        val bare = f.over(spot)
+                        for (seen in listOf(bare, face.sheen.over(bare))) for ((ink, target) in LiquidEdge.inks(faceRoles, role)) {
+                            val c = wcagContrast(ink, seen)
+                            assertTrue(c >= target - 1e-3, "$id $pack dark=$dark $role: $c < $target")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Gate 1 (glass looks D3): Clear ships beside Glossy only if, after the floor, its median liquid face is at least
+     * [GlassLooks.CLEAR_TINT_GAP] thinner, or its gloss-kept count differs by [GlassLooks.CLEAR_GLOSS_GAP] of the faces,
+     * for every pack, in dark and in light, over the aurora and over the shader looks. (The in-flow panes are Glossy's
+     * in both, but for the specular, so the gap can only come from the liquid faces' starting tint.)
+     */
+    @Test
+    fun `B-KIT-003 Clear is offered only when the floor leaves a measured gap to Glossy`() {
+        val report = mutableListOf<String>()
+        val modePasses = mutableMapOf<Boolean, Boolean>()
+        for (dark in listOf(true, false)) {
+            var all = true
+            for (pack in PackId.entries) for ((b, picture) in liquidPictures(roles(pack, dark)).withIndex()) {
+                val roles = roles(pack, dark)
+                val glossy = wordRoles.map { LiquidEdge.face(roles, it, picture = picture, look = GlassLooks.Glossy) }
+                val clear = wordRoles.map { LiquidEdge.face(roles, it, picture = picture, look = GlassLooks.Clear) }
+                val gaps = glossy.zip(clear).map { (g, c) -> (g.fill!!.alpha - c.fill!!.alpha) / 255f }.sorted()
+                val median = gaps[gaps.size / 2]
+                val glossDiff = kotlin.math.abs(glossy.count { it.sheen.alpha > 0 } - clear.count { it.sheen.alpha > 0 }).toFloat() / wordRoles.size
+                val pass = median >= GlassLooks.CLEAR_TINT_GAP - 1e-4f || glossDiff >= GlassLooks.CLEAR_GLOSS_GAP - 1e-4f
+                if (!pass) all = false
+                report += "$pack ${if (dark) "dark" else "light"} over ${if (b == 0) "aurora" else "shader"}: median gap ${"%.3f".format(median)}, gloss-kept diff ${"%.2f".format(glossDiff)}, ${if (pass) "pass" else "fail"}"
+            }
+            modePasses[dark] = all
+        }
+        println("Clear vs Glossy (gate 1):\n" + report.joinToString("\n"))
+        val earns = modePasses.values.all { it }
+        assertEquals(earns, GlassLooks.clearEarnsItsPlace, "the measured gate says Clear ${if (earns) "earns" else "does not earn"} its place")
+        assertEquals(earns, GlassLookId.Clear in GlassLooks.offered)
+        assertEquals(if (earns) 4 else 3, GlassLooks.offered.size)
+        assertEquals(GlassLookId.Glossy, GlassLooks.offered.first { it != GlassLookId.Clear }, "Glossy leads the looks it is offered with")
     }
 
     @Test

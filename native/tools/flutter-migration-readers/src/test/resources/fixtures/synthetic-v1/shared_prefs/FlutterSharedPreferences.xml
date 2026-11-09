@@ -273,6 +273,17 @@
     <string name="flutter.oc.widgetUsageSubs">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;WidgetUsageSubs&quot;}</string>
     <string name="flutter.oc.withdrawnPrompts.1735000000000001">VGhpcyBpcyB0aGUgcHJlZml4IGZvciBhIGxpc3Qu![&quot;a:WithdrawnPrompts&quot;,&quot;b&quot;]</string>
     <string name="flutter.oc.withdrawnPrompts.1735000000000002">VGhpcyBpcyB0aGUgcHJlZml4IGZvciBhIGxpc3QurO0ABXNyABpqYXZhLnV0aWwuQXJyYXlzJEFycmF5TGlzdNmkPL7NiAbSAgABWwABYXQAE1tMamF2&#10;YS9sYW5nL09iamVjdDt4cHVyABNbTGphdmEubGFuZy5TdHJpbmc7rdJW5+kde0cCAAB4cAAAAAF0&#10;AAtzZXNfMXxtc2dfMQ==&#10;</string>
+    <string name="flutter.oc.builtin.nodeCompat.device">proot-compat</string>
+    <long name="flutter.oc.crashReports.lastOffered" value="1762500000000" />
+    <boolean name="flutter.oc.crashReports.offer" value="true" />
+    <boolean name="flutter.oc.telemetry.crashReports" value="true" />
+    <boolean name="flutter.oc.telemetry.crashes" value="false" />
+    <string name="flutter.oc.telemetry.installCode">K7Q2M9</string>
+    <long name="flutter.oc.telemetry.lastExitAt" value="1762600000000" />
+    <string name="flutter.oc.telemetry.lastVersion">2.1.5+63</string>
+    <long name="flutter.oc.telemetry.reportCounter" value="3" />
+    <boolean name="flutter.oc.telemetry.usage" value="true" />
+    <boolean name="flutter.oc.telemetryConsentAsked" value="true" />
     <string name="flutter.oc.widgetStyle.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;WidgetStyle&quot;}</string>
     <string name="flutter.oc.widgetStyle.1735000000000002">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;WidgetStyle&quot;}</string>
     <string name="flutter.oc.widgetActions.1735000000000001">{&quot;v&quot;:1,&quot;fixture&quot;:&quot;WidgetActions&quot;}</string>

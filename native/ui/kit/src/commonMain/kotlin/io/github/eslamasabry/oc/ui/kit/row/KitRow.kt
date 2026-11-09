@@ -326,7 +326,8 @@ private fun RowBody(
                 val grow = minOf(scale, TextScalePolicy.ICON_CAP)
                 val icon = (KitIconSize.Large.dp * grow).dp
                 Box(lead.size((tokens.iconTile * grow).dp).clearAndSetSemantics {}, contentAlignment = Alignment.Center) {
-                    KitProviderLogo(leading.id, leading.name, leading.agent, Modifier.size(icon), markSize = icon)
+                    val mark = if (leading.agent) maxOf(icon, 28.dp) else icon // owner 2026-11-09: an agent's logo reads clearly
+                    KitProviderLogo(leading.id, leading.name, leading.agent, Modifier.size(mark), markSize = mark)
                 }
             }
             leading != null -> Box(lead) { RowLeadingTile(leading, dim = !enabled || unavailable, selected = selected) }
