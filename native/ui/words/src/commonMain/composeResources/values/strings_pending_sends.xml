@@ -8,7 +8,7 @@
   <string name="nativePendingUnconfirmed">May already have been sent</string>
   <string name="nativePendingEdit">Bring back to edit</string>
   <string name="nativePendingSteer">Join this reply</string>
-  <string name="nativePendingCheck">Check again</string>
+  <string name="nativePendingCheck">Refresh</string>
   <string name="nativePendingDiscard">Discard</string>
   <string name="nativePendingDiscardTitle">Discard this message?</string>
     <string name="nativePendingEmpty">No sends are waiting.</string>

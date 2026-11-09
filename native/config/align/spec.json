@@ -4,7 +4,7 @@
   "rail": 20,
   "leadColumns": [40, 32],
   "iconTile": 28,
-  "iconSizes": [20, 22, 24],
+  "iconSizes": [16, 20, 22, 24, 28],
   "grid": 4,
   "lineGap": 2,
   "stepMax": 48,

@@ -7,6 +7,7 @@ import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.name
+import kotlin.io.path.readLines
 import kotlin.io.path.readText
 
 /**
@@ -56,6 +57,13 @@ object Drift {
         /** `:ui:words` `android-res/` (the generated strings_os copies), or null. */
         val androidResOut: Path?,
         val template: String = "en",
+        /**
+         * Reviewed divergences (`drift-reviewed.tsv`, `locale<TAB>name`): copy the native app rewrote in the XML after
+         * the Flutter app was frozen (2026-11-08), so the ARB no longer holds the live wording. Each listed pair
+         * suppresses CHANGED/SHAPE/STALE for that key; a pair that no longer diverges is itself a finding, so the
+         * list only shrinks.
+         */
+        val reviewed: Set<Pair<String, String>> = emptySet(),
     ) {
         companion object {
             fun forRepo(repo: Path) = Inputs(
@@ -65,6 +73,11 @@ object Drift {
                 words = repo.resolve(Paths.WORDS),
                 unused = repo.resolve(Paths.UNUSED),
                 androidResOut = repo.resolve(Paths.WORDS_ANDROID_RES),
+                reviewed = repo.resolve("native/tools/strings/drift-reviewed.tsv").takeIf { it.exists() }
+                    ?.readLines().orEmpty()
+                    .filter { it.isNotBlank() && !it.startsWith("#") }
+                    .map { it.substringBefore('\t') to it.substringAfter('\t').trim() }
+                    .toSet(),
             )
         }
     }
@@ -197,7 +210,20 @@ object Drift {
                 for (name in android.keys - cmp.keys) f(Kind.ANDROID_RES, locale, name, "only in Android res")
             }
         }
-        return findings
+        if (inputs.reviewed.isEmpty()) return findings
+        fun base(name: String) = name.substringBefore("__")
+        val divergent = setOf(Kind.CHANGED, Kind.SHAPE, Kind.STALE)
+        val used = mutableSetOf<Pair<String, String>>()
+        val kept = findings.filter { fd ->
+            val key = fd.locale to base(fd.name)
+            val hide = fd.kind in divergent && key in inputs.reviewed
+            if (hide) used += key
+            !hide
+        }.toMutableList()
+        for (e in inputs.reviewed - used) {
+            kept += Finding(Kind.CHANGED, e.first, e.second, "drift-reviewed.tsv entry no longer diverges: drop it")
+        }
+        return kept
     }
 
     private fun tokens(v: Value?): Set<Pair<String, String>> = when (v) {

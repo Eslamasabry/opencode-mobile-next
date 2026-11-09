@@ -147,8 +147,8 @@ class AlignRulesTest {
 
     @Test
     fun `icon-size and icon-squeezed a glyph off the kit sizes or in a smaller box is reported`() {
-        assertTrue("icon-size" in rules(screen = false) { icon(0, 16f, 100f, size = 16f) })
-        assertTrue("icon-size" !in rules(screen = false) { icon(0, 16f, 100f, size = 20f) })
+        assertTrue("icon-size" in rules(screen = false) { icon(0, 16f, 100f, size = 18f) })
+        assertTrue("icon-size" !in rules(screen = false) { icon(0, 16f, 100f, size = 16f) })
         assertTrue("icon-squeezed" in rules(screen = false) { icon(0, 16f, 100f, size = 24f, box = 16f) })
         assertTrue("icon-squeezed" !in rules(screen = false) { icon(0, 16f, 100f, size = 24f) })
     }

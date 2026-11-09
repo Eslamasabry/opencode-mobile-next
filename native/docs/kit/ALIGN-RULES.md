@@ -17,7 +17,7 @@ guard asks "does it fit", the alignment gate asks "does it line up". Numbers com
 | `target` | Every tappable is at least 48 x 48 dp (mirrors the layout guard's `small-target`). | all | 48 dp |
 | `ellipsis-frame` | Frame words never end in "…": window chrome, a bar's title (`kitContentEdge`), a button, chip or other non-row control. Screen standard §5. | all | no ellipsis; even a `kitMayTruncate` slot inside a control |
 | `clip` | No words or icon are laid out past their parent's box (they are cut off or hang out). Not read under scrollers and lists. | all | inside the parent |
-| `icon-size` | A KitIcon glyph is drawn at a kit size. | all | `KitIconSize`: 20, 22, 24 |
+| `icon-size` | A KitIcon glyph is drawn at a kit size. | all | `KitIconSize`: 16, 20, 22, 24, 28 |
 | `icon-squeezed` | A KitIcon glyph's box is not smaller than its glyph (sweep 2 P-101: `Modifier.size(16.dp)` on a 24 dp icon cut the status marks). | all | box ≥ asked size |
 | `row-height` | Rows of one kind (same number of text lines, with or without an icon) in one list are equally tall. | all | the most common height in the list |
 

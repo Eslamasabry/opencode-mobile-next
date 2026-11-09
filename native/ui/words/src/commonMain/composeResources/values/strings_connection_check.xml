@@ -2,7 +2,7 @@
 <resources>
     <string name="connectionCheckAction">Check connection</string>
     <string name="connectionCheckTitle">Connection check</string>
-    <string name="connectionCheckAgain">Check again</string>
+    <string name="connectionCheckAgain">Refresh</string>
     <string name="connectionCheckAddress">Address</string>
     <string name="connectionCheckSignIn">Sign-in</string>
     <string name="connectionCheckVersion">Server version</string>

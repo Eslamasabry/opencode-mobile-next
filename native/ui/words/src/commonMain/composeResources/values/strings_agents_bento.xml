@@ -12,12 +12,12 @@
     <string name="agentsTabComputers">On computers</string>
     <string name="agentsPhoneReady">This phone is ready</string>
     <string name="agentsPhoneReadyDetails">This phone is ready · %1$s · Android %2$s</string>
-    <string name="agentsCheckAgain">Check again</string>
+    <string name="agentsCheckAgain">Refresh</string>
     <string name="agentsAddComputerLine">Use Claude Code or Pi on a computer that runs Paseo.</string>
     <string name="agentsComputerLooking">Looking for agents on this computer…</string>
     <string name="agentsComputerReadFailed">This computer’s agents could not be read. Pull down to try again.</string>
-    <string name="agentsNewChat">New chat</string>
-    <string name="agentsNewChatWith">New chat with %1$s</string>
+    <string name="agentsNewChat">New conversation</string>
+    <string name="agentsNewChatWith">New conversation with %1$s</string>
     <string name="agentsConversationsStored">Where conversations are stored</string>
     <string name="agentsConversationsStoredOn">Where conversations are stored: %1$s</string>
     <string name="agentsHostAccount">Host account: %1$s</string>
