@@ -21,7 +21,7 @@ private const val GLASS = "io.github.eslamasabry.opencode_mobile.proof.GlassProo
 class GlassBenchmark {
     @get:Rule val rule = MacrobenchmarkRule()
 
-    private fun scroll(look: String, scene: String) =
+    private fun scroll(look: String, scene: String, liquid: String = "") =
         rule.measureRepeated(
             packageName = PKG_NATIVE,
             metrics = listOf(FrameTimingMetric()),
@@ -34,7 +34,9 @@ class GlassBenchmark {
                 device.executeShellCommand("settings put global transition_animation_scale 1")
                 device.executeShellCommand("settings put global window_animation_scale 1")
                 killProcess()
-                startActivityAndWait(Intent().setClassName(PKG_NATIVE, GLASS).putExtra("look", look).putExtra("scene", scene))
+                startActivityAndWait(
+                    Intent().setClassName(PKG_NATIVE, GLASS).putExtra("look", look).putExtra("scene", scene).putExtra("liquid", liquid),
+                )
                 check(device.wait(Until.hasObject(By.text("Ready")), 30_000)) { "not ready" }
                 Thread.sleep(1_500) // let the page settle (first frames, the bar's liquid face)
             },
@@ -68,6 +70,15 @@ class GlassBenchmark {
     @Test fun pushGlassAurora() = scroll("glass-aurora", "push")
 
     @Test fun pushGlass() = scroll("glass", "push")
+
+    /** The same paths with liquid panes at full resolution (the library's own behaviour): fix 1's before, same build. */
+    @Test fun chatGlassAuroraLiquidFull() = scroll("glass-aurora", "chat", liquid = "full")
+
+    @Test fun chatGlassLiquidFull() = scroll("glass", "chat", liquid = "full")
+
+    @Test fun menuGlassLiquidFull() = scroll("glass", "menu", liquid = "full")
+
+    @Test fun menuGlassAuroraLiquidFull() = scroll("glass-aurora", "menu", liquid = "full")
 }
 
 private const val PKG_NATIVE = "io.github.eslamasabry.opencode_mobile.native"

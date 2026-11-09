@@ -28,7 +28,8 @@ import io.github.eslamasabry.oc.ui.kit.effects.drawLiquidTint
  * min(12 dp, 20 % of the shorter side), with no depth effect and no dispersion; today's Glass tint lies over it, and a
  * soft rim light tinted from the accent runs round it. While a transform the library cannot follow runs ([transform]
  * rising to 1), the lens and the rim light let go and the blur grows to Glass's float frost: plain frost, never a
- * misaligned picture.
+ * misaligned picture. A frosted pane draws its backdrop at [KitLiquidPaneSpec.resolution] (half on Android) and the
+ * library scales it up; the rim light, specular and tint are drawn at full resolution.
  */
 internal object AndroidLiquidGlass {
     fun pane(spec: KitLiquidPaneSpec, backdrop: KitLiquidBackdrop, shape: CornerBasedShape, transform: () -> Float): Modifier {
@@ -61,6 +62,9 @@ internal object AndroidLiquidGlass {
             },
             shadow = if (spec.shadow.alpha > 0f) ({ Shadow(radius = 24.dp, color = spec.shadow) }) else null,
             onDrawSurface = { drawLiquidTint(spec, shape) },
+            // The backdrop layer (colour controls, blur, lens) at the pane's resolution; rim light, specular and tint
+            // above stay at full resolution (third_party/backdrop/README.md).
+            resolutionScale = spec.resolution,
         )
     }
 

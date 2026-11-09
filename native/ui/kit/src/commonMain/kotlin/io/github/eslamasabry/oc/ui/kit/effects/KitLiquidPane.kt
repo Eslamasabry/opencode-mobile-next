@@ -64,7 +64,24 @@ public data class KitLiquidPaneSpec(
     val flip: LiquidFlip? = null,
     /** Frost beyond the window's budget: the rim light stays while the transform holds the lens at frost. */
     val keepRim: Boolean = false,
+    /**
+     * The share of the pane's pixels (per side) its backdrop, blur and lens are drawn at, then scaled up; 1 = full. The
+     * rim light, the specular and the tint are always drawn at full resolution ([liquidResolutionOf]).
+     */
+    val resolution: Float = 1f,
 )
+
+/**
+ * The resolution a pane of [recipe] draws its backdrop at on a platform offering [platform] (smoothness 2026-11-09):
+ * panes frosted at least [LIQUID_REDUCED_MIN_BLUR_DP] (the bars, the message box, sheets and menus) take it, since their
+ * blur hides the lower resolution and they are the large panes; the lightly frosted chips and the + stay at full
+ * resolution, where text behind them would read softer, and they are small.
+ */
+internal fun liquidResolutionOf(recipe: io.github.eslamasabry.oc.ui.design.effects.LiquidRecipe, platform: Float): Float =
+    if (recipe.blurDp >= LIQUID_REDUCED_MIN_BLUR_DP) platform.coerceIn(.25f, 1f) else 1f
+
+/** The least frost (dp) at which a liquid pane draws its backdrop at the platform's reduced resolution. */
+internal const val LIQUID_REDUCED_MIN_BLUR_DP: Float = 4f
 
 /** How far a liquid pane has flipped to the other theme's ink and face (0: its own; 1: the other). Snapshot state. */
 @androidx.compose.runtime.Stable

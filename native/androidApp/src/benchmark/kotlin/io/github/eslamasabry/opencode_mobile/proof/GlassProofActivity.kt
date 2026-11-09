@@ -106,10 +106,14 @@ class GlassProofActivity : ComponentActivity() {
         // Test Lab devices run with animations off; that would hold the kit's motion (and liquid glass) and end every
         // animation at once, so the page sees the system's animator scale as 1 and scrolls by frames, not animations.
         val android = AndroidKitPlatform(window.decorView)
+        // `liquid=full`: liquid panes draw their backdrop at full resolution (the library's own behaviour), for the
+        // same-device comparison with the reduced resolution the app uses (smoothness round 2).
+        val liquidFull = intent.getStringExtra("liquid") == "full"
         val platform =
             object : KitPlatform by android {
                 override val signals: StateFlow<KitSystemSignals> =
                     MutableStateFlow(android.signals.value.copy(animatorScale = 1f, powerSave = false, severeHeat = false))
+                override val liquidResolution: Float = if (liquidFull) 1f else android.liquidResolution
             }
         setContent {
             appGraph.kitChatEnvironment.Provide {

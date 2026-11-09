@@ -35,10 +35,13 @@ internal abstract class BackdropEffectScopeImpl : BackdropEffectScope, RuntimeSh
         return runtimeShaderCache.obtainRuntimeShader(key, string)
     }
 
-    fun update(scope: DrawScope): Boolean {
-        val newDensity = scope.density
+    // OC fork (third_party/backdrop/README.md): the effects are built for the backdrop layer's own pixels, which are
+    // [resolutionScale] of the node's; density and size are scaled with them, so every dp and px value an effect
+    // computes lands on the smaller layer.
+    fun update(scope: DrawScope, resolutionScale: Float = 1f): Boolean {
+        val newDensity = scope.density * resolutionScale
         val newFontScale = scope.fontScale
-        val newSize = scope.size
+        val newSize = if (resolutionScale == 1f) scope.size else scope.size * resolutionScale
         val newLayoutDirection = scope.layoutDirection
 
         val changed = newDensity != density ||

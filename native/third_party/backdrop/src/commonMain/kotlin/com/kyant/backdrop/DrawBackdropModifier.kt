@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.GraphicsLayerScope
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
@@ -23,11 +24,14 @@ import androidx.compose.ui.node.LayoutModifierNode
 import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.node.ObserverModifierNode
 import androidx.compose.ui.node.observeReads
+import androidx.compose.ui.node.requireDensity
 import androidx.compose.ui.node.requireGraphicsContext
 import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.geometry.Offset
+import kotlin.math.ceil
 import com.kyant.backdrop.backdrops.LayerBackdrop
 import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.highlight.HighlightElement
@@ -51,7 +55,8 @@ fun Modifier.drawPlainBackdrop(
     onDrawBehind: (DrawScope.() -> Unit)? = null,
     onDrawBackdrop: DrawScope.(drawBackdrop: DrawScope.() -> Unit) -> Unit = DefaultOnDrawBackdrop,
     onDrawSurface: (DrawScope.() -> Unit)? = null,
-    onDrawFront: (DrawScope.() -> Unit)? = null
+    onDrawFront: (DrawScope.() -> Unit)? = null,
+    resolutionScale: Float = 1f
 ): Modifier {
     val shapeProvider = ShapeProvider(shape)
     return this
@@ -72,7 +77,8 @@ fun Modifier.drawPlainBackdrop(
                 onDrawBehind = onDrawBehind,
                 onDrawBackdrop = onDrawBackdrop,
                 onDrawSurface = onDrawSurface,
-                onDrawFront = onDrawFront
+                onDrawFront = onDrawFront,
+                resolutionScale = resolutionScale
             )
         )
 }
@@ -89,7 +95,8 @@ fun Modifier.drawBackdrop(
     onDrawBehind: (DrawScope.() -> Unit)? = null,
     onDrawBackdrop: DrawScope.(drawBackdrop: DrawScope.() -> Unit) -> Unit = DefaultOnDrawBackdrop,
     onDrawSurface: (DrawScope.() -> Unit)? = null,
-    onDrawFront: (DrawScope.() -> Unit)? = null
+    onDrawFront: (DrawScope.() -> Unit)? = null,
+    resolutionScale: Float = 1f
 ): Modifier {
     val shapeProvider = ShapeProvider(shape)
     return this
@@ -140,7 +147,8 @@ fun Modifier.drawBackdrop(
                 onDrawBehind = onDrawBehind,
                 onDrawBackdrop = onDrawBackdrop,
                 onDrawSurface = onDrawSurface,
-                onDrawFront = onDrawFront
+                onDrawFront = onDrawFront,
+                resolutionScale = resolutionScale
             )
         )
 }
@@ -154,7 +162,8 @@ private class DrawBackdropElement(
     val onDrawBehind: (DrawScope.() -> Unit)?,
     val onDrawBackdrop: DrawScope.(drawBackdrop: DrawScope.() -> Unit) -> Unit,
     val onDrawSurface: (DrawScope.() -> Unit)?,
-    val onDrawFront: (DrawScope.() -> Unit)?
+    val onDrawFront: (DrawScope.() -> Unit)?,
+    val resolutionScale: Float
 ) : ModifierNodeElement<DrawBackdropNode>() {
 
     override fun create(): DrawBackdropNode {
@@ -167,7 +176,8 @@ private class DrawBackdropElement(
             onDrawBehind = onDrawBehind,
             onDrawBackdrop = onDrawBackdrop,
             onDrawSurface = onDrawSurface,
-            onDrawFront = onDrawFront
+            onDrawFront = onDrawFront,
+            resolutionScale = resolutionScale
         )
     }
 
@@ -184,6 +194,7 @@ private class DrawBackdropElement(
         node.onDrawBackdrop = onDrawBackdrop
         node.onDrawSurface = onDrawSurface
         node.onDrawFront = onDrawFront
+        node.resolutionScale = resolutionScale
         node.invalidateDrawCache()
     }
 
@@ -198,6 +209,7 @@ private class DrawBackdropElement(
         properties["onDrawBackdrop"] = onDrawBackdrop
         properties["onDrawSurface"] = onDrawSurface
         properties["onDrawFront"] = onDrawFront
+        properties["resolutionScale"] = resolutionScale
     }
 
     override fun equals(other: Any?): Boolean {
@@ -213,6 +225,7 @@ private class DrawBackdropElement(
         if (onDrawBackdrop != other.onDrawBackdrop) return false
         if (onDrawSurface != other.onDrawSurface) return false
         if (onDrawFront != other.onDrawFront) return false
+        if (resolutionScale != other.resolutionScale) return false
 
         return true
     }
@@ -227,6 +240,7 @@ private class DrawBackdropElement(
         result = 31 * result + onDrawBackdrop.hashCode()
         result = 31 * result + (onDrawSurface?.hashCode() ?: 0)
         result = 31 * result + (onDrawFront?.hashCode() ?: 0)
+        result = 31 * result + resolutionScale.hashCode()
         return result
     }
 }
@@ -240,7 +254,8 @@ private class DrawBackdropNode(
     var onDrawBehind: (DrawScope.() -> Unit)?,
     var onDrawBackdrop: DrawScope.(drawBackdrop: DrawScope.() -> Unit) -> Unit,
     var onDrawSurface: (DrawScope.() -> Unit)?,
-    var onDrawFront: (DrawScope.() -> Unit)?
+    var onDrawFront: (DrawScope.() -> Unit)?,
+    resolutionScale: Float
 ) : LayoutModifierNode, DrawModifierNode, GlobalPositionAwareModifierNode, ObserverModifierNode, Modifier.Node() {
 
     private val effectScope =
@@ -261,20 +276,51 @@ private class DrawBackdropNode(
 
     private var padding by mutableFloatStateOf(0f)
 
+    /**
+     * OC fork: the share of the node's pixels the backdrop layer (the backdrop and its effects: colour controls, blur,
+     * lens) is drawn at, then scaled back up when drawn. 1 is upstream's behaviour. The highlight, shadow and the
+     * surface drawn by [onDrawSurface] are not in this layer and stay at full resolution.
+     */
+    var resolutionScale: Float = resolutionScale
+        set(value) {
+            val v = value.coerceIn(MIN_RESOLUTION_SCALE, 1f)
+            if (field != v) {
+                field = v
+                effectScope.size = androidx.compose.ui.geometry.Size.Unspecified // re-run the effects at the new scale
+            }
+        }
+
     private val recordBackdropBlock: (DrawScope.() -> Unit) = {
         val canvas = drawContext.canvas
         val padding = padding
+        val scale = resolutionScale
 
         if (padding != 0f) {
             canvas.translate(padding, padding)
         }
-        onDrawBackdrop {
-            with(backdrop) {
-                drawBackdrop(
-                    density = effectScope,
-                    coordinates = layoutCoordinates,
-                    layerBlock = layerBlock
-                )
+        if (scale == 1f) {
+            onDrawBackdrop {
+                with(backdrop) {
+                    drawBackdrop(
+                        density = effectScope,
+                        coordinates = layoutCoordinates,
+                        layerBlock = layerBlock
+                    )
+                }
+            }
+        } else {
+            // OC fork: the backdrop is drawn in the node's own units, scaled down onto the smaller layer.
+            val nodeDensity = requireDensity()
+            scale(scale, scale, Offset.Zero) {
+                onDrawBackdrop {
+                    with(backdrop) {
+                        drawBackdrop(
+                            density = nodeDensity,
+                            coordinates = layoutCoordinates,
+                            layerBlock = layerBlock
+                        )
+                    }
+                }
             }
         }
         if (padding != 0f) {
@@ -286,12 +332,13 @@ private class DrawBackdropNode(
         val layer = graphicsLayer
         if (layer != null) {
             val padding = padding
+            val scale = resolutionScale
 
             recordLayer(
                 layer,
                 size = IntSize(
-                    size.width.toInt() + padding.toInt() * 2,
-                    size.height.toInt() + padding.toInt() * 2
+                    scaledExtent(size.width, scale) + padding.toInt() * 2,
+                    scaledExtent(size.height, scale) + padding.toInt() * 2
                 ),
                 block = recordBackdropBlock
             )
@@ -299,7 +346,12 @@ private class DrawBackdropNode(
             layer.topLeft =
                 if (padding != 0f) IntOffset(-padding.toInt(), -padding.toInt())
                 else IntOffset.Zero
-            drawLayer(layer)
+            if (scale == 1f) {
+                drawLayer(layer)
+            } else {
+                // OC fork: the small layer (its effects already applied at its own size) is filtered up to the node.
+                scale(1f / scale, 1f / scale, Offset.Zero) { drawLayer(layer) }
+            }
         }
     }
 
@@ -314,7 +366,7 @@ private class DrawBackdropNode(
     }
 
     override fun ContentDrawScope.draw() {
-        if (effectScope.update(this)) {
+        if (effectScope.update(this, resolutionScale)) {
             updateEffects()
         }
 
@@ -386,3 +438,10 @@ private class DrawBackdropNode(
         exportedBackdrop?.layerCoordinates = null
     }
 }
+
+/** OC fork: the smallest backdrop resolution a node accepts (a quarter of its pixels per side). */
+private const val MIN_RESOLUTION_SCALE: Float = .25f
+
+/** OC fork: a node's [extent] in backdrop-layer pixels at [scale]; whole pixels, never cutting the node's last one off. */
+internal fun scaledExtent(extent: Float, scale: Float): Int =
+    if (scale == 1f) extent.toInt() else ceil(extent * scale).toInt()
