@@ -1049,16 +1049,21 @@ private fun BatteryCardNotice(state: SetupJourneyUi, actions: SetupJourneyAction
             )
         }
     val failed = if (state.batteryOpenFailed) listOf(stringResource(Res.string.setupBatteryOpenFailed)) else emptyList()
-    val app = KitLineAction(stringResource(Res.string.setupBatteryOpenApp)) { actions.openBatterySettings(BatteryOpen.App) }
+    val app = KitLineAction(
+            label = stringResource(Res.string.setupBatteryOpenApp),
+            onClick = { actions.openBatterySettings(BatteryOpen.App) },
+        )
     val maker =
         if (!card.hasMakerScreen) null
         else
             KitLineAction(
-                stringResource(
-                    if (card.maker == SetupMaker.Samsung) Res.string.setupBatteryOpenSamsung
-                    else Res.string.setupBatteryOpenAutostart
-                )
-            ) { actions.openBatterySettings(BatteryOpen.Maker) }
+                label =
+                    stringResource(
+                        if (card.maker == SetupMaker.Samsung) Res.string.setupBatteryOpenSamsung
+                        else Res.string.setupBatteryOpenAutostart
+                    ),
+                onClick = { actions.openBatterySettings(BatteryOpen.Maker) },
+            )
     KitNotice(
         message = stringResource(Res.string.setupBatteryBody),
         modifier = Modifier.testTag("setup-battery-card"),
