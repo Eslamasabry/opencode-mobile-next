@@ -19,6 +19,7 @@ public enum class PreviousExitKind {
     Normal,
     Update,
     ForceStop,
+    BackgroundStop,
     LowMemory,
     MemoryLimit,
     Crash,
@@ -29,10 +30,12 @@ public enum class PreviousExitKind {
     public val notable: Boolean get() = this != Normal && this != Update
 
     /**
-     * Whether a notice tells the person about it: a system kill (low memory, memory limit, any other kill) or a crash.
-     * Never the person's own force stop, an update or a normal exit (same rule as `ExitKind.announced`).
+     * Whether a notice tells the person about it: a system kill (low memory, memory limit, any other kill), a crash, or
+     * a stop in the background (softer words: it may have been a battery manager). Never a stop while the app was in
+     * use, an update or a normal exit (same rule as `ExitKind.announced`).
      */
-    public val announced: Boolean get() = this == LowMemory || this == MemoryLimit || this == Killed || this == Crash
+    public val announced: Boolean
+        get() = this == LowMemory || this == MemoryLimit || this == Killed || this == Crash || this == BackgroundStop
 
     /** A crash is ours to fix, not a phone setting to change. */
     public val offersKeepAlive: Boolean get() = this != Crash

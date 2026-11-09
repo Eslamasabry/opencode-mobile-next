@@ -2,6 +2,7 @@
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
     <string name="andr_appExitForceStopped">OpenCode Mobile đã bị đóng %1$s</string>
+    <string name="andr_appExitStoppedBackground">OpenCode đã bị dừng. Nếu không phải bạn làm, trình quản lý pin của điện thoại có thể đã đóng nó</string>
     <string name="andr_appExitLowMemory">Android đã đóng OpenCode Mobile %1$s để giải phóng bộ nhớ</string>
     <string name="andr_appExitCrashed">OpenCode Mobile đã dừng đột ngột %1$s</string>
     <string name="andr_appExitKilled">Android đã dừng OpenCode Mobile %1$s</string>

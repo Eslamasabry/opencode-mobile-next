@@ -41,6 +41,9 @@ public object ExitReason {
 
     /** `ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND`. */
     public const val IMPORTANCE_FOREGROUND: Int = 100
+
+    /** No importance recorded (a record built without one); read as "in front", so it never announces a stop. */
+    public const val IMPORTANCE_UNKNOWN: Int = 0
 }
 
 /** Why the previous process ended, in the app's terms (port of Dart `AppExitKind` + plan 11 §7.3 `MemoryLimit`). */
@@ -51,8 +54,15 @@ public enum class ExitKind {
     /** Updated or reinstalled. */
     Update,
 
-    /** Force-stopped: Settings, a swipe on phones that force-stop then, or the maker's battery manager. */
+    /** Force-stopped while in use: the person's own stop with the app in front, or a swipe from Recents. */
     ForceStop,
+
+    /**
+     * Stopped "at the user's request" while the app was in the background (`REASON_USER_REQUESTED` or
+     * `REASON_USER_STOPPED`, importance below foreground): the person in Settings, or a maker's battery manager, which
+     * Android records the same way (issue #138, RedMagic and ZTE). Never a swipe from Recents or an update's stop.
+     */
+    BackgroundStop,
 
     /** Android reclaimed its memory. */
     LowMemory,
@@ -71,17 +81,17 @@ public enum class ExitKind {
     public val notable: Boolean get() = this != Normal && this != Update
 
     /**
-     * The phone, not the person, ended the app: low memory, the memory limiter, the freezer, a maker's battery manager
-     * or any other system kill. A force stop (`REASON_USER_REQUESTED`, `REASON_USER_STOPPED`, a swipe from Recents), an
-     * update and a normal exit are never one.
+     * The phone, not the person, ended the app: low memory, the memory limiter, the freezer or any other system kill.
+     * A stop "at the user's request" ([ForceStop], [BackgroundStop]), an update and a normal exit are never one.
      */
     public val closedBySystem: Boolean get() = this == LowMemory || this == MemoryLimit || this == Killed
 
     /**
-     * Whether a notice ("Android closed OpenCode Mobile ...") tells the person about it: a system kill or a crash. The
-     * person's own force stop is not news to them (upgrade test 2026-11-09), so it stays in diagnostics only.
+     * Whether a notice tells the person about it: a system kill or a crash in its own words, and a [BackgroundStop] in
+     * a softer line (it may have been a battery manager). A stop while the app was in use ([ForceStop]) is the person's
+     * own and not news to them (upgrade test 2026-11-09); it stays in diagnostics only, like an update.
      */
-    public val announced: Boolean get() = closedBySystem || this == Crash
+    public val announced: Boolean get() = closedBySystem || this == Crash || this == BackgroundStop
 
     /** A crash is ours to fix, not a phone setting to change (B-STATE-026). */
     public val offersKeepAlive: Boolean get() = this != Crash
@@ -98,12 +108,24 @@ public object ExitClassifier {
             ExitReason.SUB_LARGE_CACHED, ExitReason.SUB_MEMORY_PRESSURE, ExitReason.SUB_REMOVE_LRU,
         )
 
-    public fun classify(reason: Int, subReason: Int, memoryLimited: Boolean = false): ExitKind =
+    public fun classify(
+        reason: Int,
+        subReason: Int,
+        memoryLimited: Boolean = false,
+        importance: Int = ExitReason.IMPORTANCE_UNKNOWN,
+    ): ExitKind =
         when (reason) {
             ExitReason.PACKAGE_UPDATED, ExitReason.PACKAGE_STATE_CHANGE -> ExitKind.Update
             ExitReason.USER_REQUESTED, ExitReason.USER_STOPPED ->
-                // An update also ends the old process "because the user asked".
-                if (subReason == ExitReason.SUB_PACKAGE_UPDATE) ExitKind.Update else ExitKind.ForceStop
+                when {
+                    // An update also ends the old process "because the user asked".
+                    subReason == ExitReason.SUB_PACKAGE_UPDATE -> ExitKind.Update
+                    subReason == ExitReason.SUB_REMOVE_TASK -> ExitKind.ForceStop
+                    // In the background (a foreground service counts): the person, or a maker's battery manager.
+                    importance > ExitReason.IMPORTANCE_FOREGROUND -> ExitKind.BackgroundStop
+                    // In front, or no importance recorded: the person's own stop.
+                    else -> ExitKind.ForceStop
+                }
             ExitReason.LOW_MEMORY -> ExitKind.LowMemory
             ExitReason.CRASH, ExitReason.CRASH_NATIVE, ExitReason.ANR, ExitReason.INITIALIZATION_FAILURE -> ExitKind.Crash
             ExitReason.EXIT_SELF, ExitReason.UNKNOWN -> ExitKind.Normal
@@ -136,7 +158,7 @@ public class ExitRecord(
 ) {
     private val memoryLimited: Boolean = description?.contains(ExitClassifier.MEMORY_LIMITER_MARK) == true
 
-    public val kind: ExitKind = ExitClassifier.classify(reason, subReason, memoryLimited)
+    public val kind: ExitKind = ExitClassifier.classify(reason, subReason, memoryLimited, importance)
 
     /** A record without a time is no record (B-ANDR-005). */
     public val hasTime: Boolean get() = timestampMs > 0

@@ -2,6 +2,7 @@
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
     <string name="andr_appExitForceStopped">OpenCode Mobile ditutup %1$s</string>
+    <string name="andr_appExitStoppedBackground">OpenCode dihentikan. Jika bukan Anda yang melakukannya, pengelola baterai ponsel Anda mungkin telah menutupnya</string>
     <string name="andr_appExitLowMemory">Android menutup OpenCode Mobile %1$s untuk mengosongkan memori</string>
     <string name="andr_appExitCrashed">OpenCode Mobile berhenti tiba-tiba %1$s</string>
     <string name="andr_appExitKilled">Android menghentikan OpenCode Mobile %1$s</string>

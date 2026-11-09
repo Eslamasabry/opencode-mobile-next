@@ -128,17 +128,22 @@ class AndroidAppNotices(
                         exit != null -> {
                             val at = exitTimeWords(exitNoticeTime(exit.at, clock.now(), ZoneId.systemDefault()))
                             val why =
-                                words.text(
-                                    when (exit.kind) {
-                                        PreviousExitKind.LowMemory,
-                                        PreviousExitKind.MemoryLimit ->
-                                            R.string.andr_appExitLowMemory
-                                        PreviousExitKind.Crash -> R.string.andr_appExitCrashed
-                                        PreviousExitKind.Killed -> R.string.andr_appExitKilled
-                                        else -> R.string.andr_appExitForceStopped
-                                    },
-                                    at,
-                                )
+                                if (exit.kind == PreviousExitKind.BackgroundStop)
+                                    // Issue #138: a maker's battery manager records the same stop as the person's own,
+                                    // so the line names both and blames neither; "Keep it running" leads to the steps.
+                                    words.text(R.string.andr_appExitStoppedBackground)
+                                else
+                                    words.text(
+                                        when (exit.kind) {
+                                            PreviousExitKind.LowMemory,
+                                            PreviousExitKind.MemoryLimit ->
+                                                R.string.andr_appExitLowMemory
+                                            PreviousExitKind.Crash -> R.string.andr_appExitCrashed
+                                            PreviousExitKind.Killed -> R.string.andr_appExitKilled
+                                            else -> R.string.andr_appExitForceStopped
+                                        },
+                                        at,
+                                    )
                             val sentence =
                                 when {
                                     back ->

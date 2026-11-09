@@ -176,7 +176,9 @@ class NativeAppExitRecovery(
 
     private fun ExitKind.phoneKind(): PhoneExitKind? =
         when (this) {
-            ExitKind.ForceStop -> PhoneExitKind.ForceStop
+            // "The app was closed while OpenCode was running": true for both, and blames no one.
+            ExitKind.ForceStop,
+            ExitKind.BackgroundStop -> PhoneExitKind.ForceStop
             ExitKind.LowMemory -> PhoneExitKind.LowMemory
             ExitKind.MemoryLimit -> PhoneExitKind.MemoryLimit
             ExitKind.Crash -> PhoneExitKind.Crash

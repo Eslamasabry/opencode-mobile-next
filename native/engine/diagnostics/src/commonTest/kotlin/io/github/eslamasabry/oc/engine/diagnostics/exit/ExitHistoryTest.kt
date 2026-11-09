@@ -196,7 +196,8 @@ class ExitHistoryTest {
             val source = FakeLifecycle()
             source.launch = { Outcome.Ok(RawLaunchReport(exit = owner, previousServices = listOf("server", "aiteam"))) }
             val report = PolicyExitHistory(source).launchReport()
-            assertEquals(ExitKind.ForceStop, report.exit?.kind)
+            // Importance 125 (a foreground service): stopped in the background, maybe by the maker's battery manager.
+            assertEquals(ExitKind.BackgroundStop, report.exit?.kind)
             assertEquals(listOf("server", "aiteam"), report.previousServices)
         }
 }
