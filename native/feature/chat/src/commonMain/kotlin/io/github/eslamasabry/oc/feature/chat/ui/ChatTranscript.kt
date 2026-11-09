@@ -85,6 +85,8 @@ import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownBlock
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdBlock
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdReveal
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdSource
+import io.github.eslamasabry.oc.ui.kitchat.transcript.KitSentFile
+import io.github.eslamasabry.oc.ui.kitchat.transcript.rememberKitSentFiles
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdNest
 import io.github.eslamasabry.oc.ui.kitchat.markdown.settle
 import io.github.eslamasabry.oc.ui.kitchat.markdown.takesCaret
@@ -745,10 +747,10 @@ private fun ChatRow(
                         label = listWords.messageActions,
                         onOpen = { onOpenMenu(row.key) },
                     ) {
-                        KitPromptBubble(CardAnswerDisplay.text(row.text))
+                        SentPromptBubble(row)
                     }
                 } else {
-                    KitPromptBubble(CardAnswerDisplay.text(row.text))
+                    SentPromptBubble(row)
                 }
                 // A turn with no assistant row still has an explicit end next to its prompt.
                 if (facts.reading.metadata[row.turnId] == null)
@@ -1240,4 +1242,19 @@ internal fun pathsOf(blocks: List<KitMdBlock>): List<String> {
     }
     blocks.forEach(::walk)
     return out.toList()
+}
+
+
+/** The person's prompt with what it carried: pictures as thumbnails under the words, other files as chips. */
+@Composable
+private fun SentPromptBubble(row: PromptRow) {
+    val sent =
+        rememberKitSentFiles(
+            remember(row.files) { row.files.map { KitSentFile(it.name, it.mime, it.url) } }
+        )
+    KitPromptBubble(
+        CardAnswerDisplay.text(row.text),
+        photos = sent.photos,
+        attachments = sent.attachments,
+    )
 }

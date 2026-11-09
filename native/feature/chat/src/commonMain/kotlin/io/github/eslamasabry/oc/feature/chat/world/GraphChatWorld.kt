@@ -2216,8 +2216,11 @@ internal class GraphChatWorld(
     private fun settlePending(s: TranscriptState) {
         val prompts = s.rows.filterIsInstance<PromptRow>()
         // A file-only user message has no prompt row (no words): it is matched by its server id.
+        // A picture sent without words now has its own prompt row (blank text), so it is matched by its row key too.
         val wordless =
-            userMessageKeys.filterTo(LinkedHashSet()) { key -> prompts.none { it.key == key } }
+            userMessageKeys.filterTo(LinkedHashSet()) { key ->
+                prompts.none { it.key == key && it.text.isNotBlank() }
+            }
         for (bubble in mutablePending.value) {
             val id = canonical[bubble.localId]
             if (bubble.state == PendingState.Failed) continue

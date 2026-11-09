@@ -67,3 +67,13 @@ class KitMdSourceTest {
         assertIs<KitMdBlock.Code>(KitMdSource.blocks("r", "```choices\n- unfinished", true).single(), "an open fence stays plain")
     }
 }
+
+class KitSentFilesTest {
+    @Test
+    fun `B-CHAT-130 a picture's data address gives its bytes and anything else gives none`() {
+        val bytes = io.github.eslamasabry.oc.ui.kitchat.transcript.dataUrlBytes("data:image/png;base64,AQID")
+        assertEquals(listOf<Byte>(1, 2, 3), bytes?.toList())
+        assertNull(io.github.eslamasabry.oc.ui.kitchat.transcript.dataUrlBytes("file:///tmp/a.png"))
+        assertNull(io.github.eslamasabry.oc.ui.kitchat.transcript.dataUrlBytes("data:image/png,raw"))
+    }
+}

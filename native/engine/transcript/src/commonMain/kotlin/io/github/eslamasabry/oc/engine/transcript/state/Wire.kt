@@ -50,6 +50,10 @@ public data class Part(
     val synthetic: Boolean = false,
     val ended: Boolean = false,
     val searchText: String = "",
+    /** File parts: the kind, the name and the address (a `data:` address for a picture the phone sent). */
+    val mime: String? = null,
+    val filename: String? = null,
+    val url: String? = null,
 ) {
     /** Dart Part.isRenderable (plan 09 §2.2). */
     public val isRenderable: Boolean
