@@ -4,6 +4,7 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
+import dev.zacsweers.metro.binding
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
@@ -54,7 +55,7 @@ private val QUIET_RETRY_EVERY = 3.seconds
  * may still own.
  */
 @SingleIn(AppScope::class)
-@ContributesBinding(AppScope::class, replaces = [NoChatsHomeExtras::class])
+@ContributesBinding(AppScope::class, binding = binding<ChatsHomeExtras>(), replaces = [NoChatsHomeExtras::class])
 @Inject
 class AppChatsHome(
     private val runtime: PreviewRuntime,
