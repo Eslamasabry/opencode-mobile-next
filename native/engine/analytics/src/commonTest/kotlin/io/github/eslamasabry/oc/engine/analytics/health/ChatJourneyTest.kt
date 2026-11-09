@@ -205,6 +205,6 @@ class ChatJourneyTest {
         j.sent("s1", true)
         j.busy("s1")
         j.ended("s1")
-        assertEquals(emptyList(), vendor.events)
+        assertEquals(0, vendor.events.size)
     }
 }

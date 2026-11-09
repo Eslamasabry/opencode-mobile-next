@@ -101,7 +101,8 @@ class SetupJourneyTest {
         assertEquals("skipped", r.events().last().second["result"])
         r.journey.observe("job1", SetupJobState.Running, running("opencode"), true)
         r.journey.observe("job1", SetupJobState.Cancelled, running("opencode"), true)
-        assertEquals(mapOf("opencode" to "cancelled"), mapOf(r.events().last().second["step"] to r.events().last().second["result"]))
+        val cancelled = r.events().last().second
+        assertEquals("opencode" to "cancelled", cancelled["step"] to cancelled["result"])
         r.journey.observe("job2", SetupJobState.Running, running("node"), true)
         r.journey.observe("job2", SetupJobState.Interrupted, running("node"), true)
         assertEquals("killed_by_system", r.events().last().second["fail_kind"])
@@ -172,6 +173,6 @@ class SetupJourneyTest {
         val later = Rig(this, memory)
         later.now += 24 * 3_600_000L
         later.journey.coldStart()
-        assertEquals(emptyList(), later.events())
+        assertEquals(0, later.events().size)
     }
 }
