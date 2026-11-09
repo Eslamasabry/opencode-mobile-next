@@ -1,9 +1,9 @@
 #!/bin/bash
 # run.sh <apk> <package> <out-dir>: the emulator half of native-chat-emu.yml. Installs the APK, connects it to the
-# A push to native/chat-emu-crash that touches this folder (commit without the skip marker) starts the bisect; after
-# that first run the workflow can be dispatched with chosen suspects.
 # runner's OpenCode 2 server (127.0.0.1:4321 through adb reverse, password in $PW), opens a conversation and records
 # whether the emulator survived. Never fails the step: the verdict is in <out>/result.txt.
+# A push to native/chat-emu-crash that touches this folder (commit without the skip marker) starts the bisect; after
+# that first run the workflow can be dispatched with chosen suspects.
 set -u
 apk=$1; pkg=$2; out=$3; here=$(cd "$(dirname "$0")" && pwd)
 mkdir -p "$out"
