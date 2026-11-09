@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
@@ -93,7 +94,10 @@ public class ChatsAllViewModel(
             )
 
     init {
-        viewModelScope.launch { connections.servers.collect { adopt(it) } }
+        viewModelScope.launch {
+            combine(connections.servers, connections.waiting) { live, waiting -> live to waiting }
+                .collect { (live, waiting) -> adopt(live, waiting) }
+        }
         // Pins stored by another surface: re-read each live server's set.
         viewModelScope.launch {
             pins.changes.collect {
@@ -116,7 +120,12 @@ public class ChatsAllViewModel(
         }
     }
 
-    private fun adopt(live: ImmutableList<ConversationServer>) {
+    /** Waiting servers whose kept rows are shown (cache-first); they become live sources when they connect. */
+    private var waitingNow: List<ServerName> = emptyList()
+
+    private fun adopt(live: ImmutableList<ConversationServer>, waiting: List<ServerName> = waitingNow) {
+        val waitingOnly = waiting.filter { w -> live.none { it.profile == w.profile } }
+        waitingNow = waitingOnly
         val before = servers.map { it.profile to it.gateway }
         val after = live.map { it.profile to it.gateway }
         live.forEach { server ->
@@ -127,9 +136,15 @@ public class ChatsAllViewModel(
         }
         servers = live
         model.update { m ->
+            val kept =
+                waitingOnly.associate { w ->
+                    w.profile to
+                        (m.sources[w.profile]?.takeIf { it.preview }
+                            ?: SourcePages(sessions = previews.read(w.profile), preview = true))
+                }
             m.copy(
-                sources = m.sources.filterKeys { id -> live.any { it.profile == id } },
-                servers = live.map { ServerName(it.profile, it.name) },
+                sources = m.sources.filterKeys { id -> live.any { it.profile == id } } + kept,
+                servers = live.map { ServerName(it.profile, it.name) } + waitingOnly,
                 known = true,
                 archiveCapable =
                     live
