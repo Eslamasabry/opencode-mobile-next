@@ -264,8 +264,15 @@ public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -
     val page = rememberKitLiquidSource()
     // One budget per window: the floating parts that may be liquid at once, and which drop to frost first.
     val budget = remember { KitLiquidBudget() }
+    // Menus open in this window, above the page, its sheet and its dialog (smoothness round 2: no popup window per menu).
+    val menus = remember { KitMenuLayerState() }
     Box(modifier) {
-        CompositionLocalProvider(LocalKitSheetHost provides state, LocalKitLiquidPage provides page, LocalKitLiquidBudget provides budget) {
+        CompositionLocalProvider(
+            LocalKitSheetHost provides state,
+            LocalKitLiquidPage provides page,
+            LocalKitLiquidBudget provides budget,
+            LocalKitMenuLayer provides menus,
+        ) {
             // The in-window modal is a sibling of the page, never a descendant of its
             // cleared semantics. Keep the page composed (drafts/scroll survive) but remove
             // its accessibility nodes while a modal owns the window, including its exit.
@@ -285,6 +292,7 @@ public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -
             Box(Modifier.zIndex(2f)) {
                 CompositionLocalProvider(LocalKitGrowTitle provides null, LocalKitLiquidOverModal provides true) { DialogLayer(state) }
             }
+            Box(Modifier.zIndex(3f)) { MenuLayer(menus) }
         }
     }
 }
