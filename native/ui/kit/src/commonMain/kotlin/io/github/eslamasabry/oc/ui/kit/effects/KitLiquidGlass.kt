@@ -196,7 +196,10 @@ private fun kitLiquidClaim(role: LiquidRole, source: Any?, asking: Boolean): Boo
         if (asking) budget.claims += claim
         onDispose { budget.claims.remove(claim) }
     }
-    return asking && key in budget.granted
+    // Read through its own derived state: a menu opening changes the window's grants, and only a pane whose own grant
+    // changed recomposes (smoothness 2026-11-09), not every pane on the page.
+    val mine by remember(budget, key) { derivedStateOf { key in budget.granted } }
+    return asking && mine
 }
 
 /**
