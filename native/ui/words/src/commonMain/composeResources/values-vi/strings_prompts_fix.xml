@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="promptFixFilesStay">Lời nhắc này có tệp hoặc ghi chú đánh giá chưa đưa vào tin nhắn được trong phiên bản này. Chúng vẫn được lưu tại đây.</string>
+    <string name="promptFixWordsOnly">Chỉ thêm phần chữ</string>
+</resources>

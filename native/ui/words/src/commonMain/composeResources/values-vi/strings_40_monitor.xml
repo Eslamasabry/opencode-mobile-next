@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="monitorInboxTitle">Hộp thư đến</string>
+    <string name="monitorInboxEmpty">Hiện không có yêu cầu hay lời nhắc nào từ các máy chủ bạn đang theo dõi.</string>
+    <string name="monitorInboxFailedRun">Một lượt chạy cần bạn xem lại</string>
+    <string name="monitorInboxOpening">Đang mở yêu cầu…</string>
+    <string name="monitorInboxSettings">Chọn máy chủ đã lưu cần theo dõi trong Thông báo.</string>
+    <string name="monitorInboxSwitchBody">Mở yêu cầu trên máy chủ này. Công việc đang chạy trên các máy chủ khác của bạn vẫn tiếp tục.</string>
+</resources>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="voice_download_title">Thiết lập giọng nói</string>
+    <string name="voice_download_downloading">Đang tải gói giọng nói</string>
+    <string name="voice_download_verifying">Đang chuẩn bị nhập bằng giọng nói</string>
+    <string name="voice_download_complete">Nhập bằng giọng nói đã sẵn sàng</string>
+    <string name="voice_download_failed">Thiết lập giọng nói không thành công. Mở ứng dụng để thử lại.</string>
+</resources>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatDraftRestoring">Đang mở bản nháp đã lưu của bạn…</string>
+    <string name="chatDraftAlreadySent">Nội dung này có thể đã được gửi. Hãy kiểm tra cuộc trò chuyện trước khi gửi lại.</string>
+    <string name="chatDraftRepeatTitle">Gửi lại nội dung này?</string>
+    <string name="chatDraftRepeatAction">Gửi lại</string>
+    <string name="chatDraftRepeatBody">Nội dung này đã có trong cuộc trò chuyện. Chỉ gửi lại nếu bạn muốn nhận phản hồi mới.</string>
+</resources>

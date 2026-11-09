@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="approvalToolLabel">Công cụ: %1$s</string>
+    <string name="approvalToolTerminal">Lệnh terminal</string>
+    <string name="approvalToolEdit">Thay đổi tệp</string>
+    <string name="approvalToolRead">Đọc tệp</string>
+    <string name="approvalToolWeb">Yêu cầu web</string>
+    <string name="approvalToolOutside">Ngoài dự án này</string>
+    <string name="approvalToolOther">Công cụ khác</string>
+    <string name="approvalCopyAsk">Sao chép nội dung nó muốn chạy</string>
+    <string name="approvalCopied">Đã sao chép</string>
+    <string name="approvalAllow">Cho phép</string>
+    <string name="approvalAlwaysAllowExact">Luôn cho phép %1$s</string>
+    <string name="approvalDeny">Từ chối</string>
+    <string name="approvalReplyLabel">Cho nó biết cần làm gì thay thế</string>
+    <string name="approvalReplySend">Từ chối và gửi</string>
+    <string name="approvalReplyJustDeny">Chỉ từ chối</string>
+    <string name="approvalReplyBack">Quay lại</string>
+    <string name="approvalReplyEmpty">Viết điều nó nên làm thay thế, hoặc chọn Chỉ từ chối.</string>
+    <string name="approvalAllowedWhat">Đã cho phép: %1$s</string>
+    <string name="approvalAlwaysAllowedWhat">Luôn cho phép: %1$s</string>
+    <string name="approvalDenied">Đã từ chối</string>
+    <string name="approvalDeniedInstead">Đã từ chối, yêu cầu làm việc này thay thế: %1$s</string>
+</resources>

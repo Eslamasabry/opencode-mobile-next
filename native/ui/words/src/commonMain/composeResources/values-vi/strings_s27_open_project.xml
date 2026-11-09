@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="openProjectWhereTitle">Dự án ở đâu?</string>
+    <string name="openProjectWhereBody">Chọn điện thoại hoặc máy tính có dự án.</string>
+    <string name="openProjectStatusConnected">Đã kết nối</string>
+    <string name="openProjectStatusConnecting">Đang kết nối</string>
+    <string name="openProjectStatusNotConnected">Chưa kết nối</string>
+    <string name="openProjectTypePath">Nhập đường dẫn</string>
+    <string name="openProjectTypePathBody">Mở thư mục bằng đường dẫn đầy đủ</string>
+    <string name="openProjectNewFolder">Thư mục mới</string>
+    <string name="openProjectNewFolderBody">Tạo một thư mục trong %1$s và mở nó</string>
+    <string name="openProjectCloneBody">Sao chép một kho mã vào %1$s và mở nó</string>
+    <string name="openProjectCloneFailed">Không sao chép được kho mã. Kiểm tra địa chỉ của nó và xem máy chủ có truy cập được không.</string>
+    <string name="openProjectSlowBody">Máy chủ phản hồi chậm hơn bình thường.</string>
+    <string name="openProjectProjectsEmptyBody">Sao chép một kho mã hoặc tạo thư mục mới để bắt đầu.</string>
+    <string name="openProjectServerNotConnected">Hiện máy chủ này chưa kết nối. Hãy thử lại khi đã kết nối.</string>
+</resources>

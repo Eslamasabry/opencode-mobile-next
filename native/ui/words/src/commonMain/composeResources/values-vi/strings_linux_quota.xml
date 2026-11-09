@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxQuotaTitle">Mức dùng gói trên điện thoại này</string>
+    <string name="linuxQuotaSetup">Thiết lập mức dùng gói</string>
+    <string name="linuxQuotaEnabled">Mức dùng gói đã được thiết lập</string>
+    <string name="linuxQuotaBody">Đọc giới hạn của Codex, GLM và MiniMax từ các lần đăng nhập đã có trên điện thoại này. Trình hỗ trợ chỉ chạy khi đang đọc mức dùng.</string>
+    <string name="linuxQuotaTurnOff">Tắt mức dùng gói</string>
+    <string name="linuxQuotaLinuxNotReady">Hãy thiết lập Linux trên Điện thoại này trước.</string>
+    <string name="linuxQuotaNoNode">Hãy cài Node từ Thành phần Linux, rồi thử lại.</string>
+    <string name="linuxQuotaOldNode">Hãy cập nhật Node lên phiên bản 20 trở lên, rồi thử lại.</string>
+    <string name="linuxQuotaPrepareFailed">Không chuẩn bị được các tệp về mức dùng. Hãy thử lại.</string>
+    <string name="linuxQuotaStartFailed">Trình hỗ trợ mức dùng không phản hồi. Hãy thử lại.</string>
+    <string name="linuxQuotaRemoveFailed">Không gỡ được trình hỗ trợ mức dùng. Hãy thử lại.</string>
+</resources>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="upgradeFindTitle">Tìm trên mạng của tôi</string>
+    <string name="upgradeFindBody">Tìm OpenCode trên các máy tính dùng chung Wi-Fi này.</string>
+    <string name="upgradeFindReason">Để tìm máy tính của bạn, ứng dụng xem các thiết bị trên mạng Wi-Fi của bạn. Ứng dụng không gửi mật khẩu và chỉ hỏi các địa chỉ ở gần.</string>
+    <string name="upgradeFindScanning">Đang tìm trên Wi-Fi này…</string>
+    <string name="upgradeFindStop">Dừng</string>
+    <string name="upgradeFindSearchAgain">Tìm lại</string>
+    <string name="upgradeFindResultsLabel">Máy tính tìm thấy trên mạng của bạn</string>
+    <string name="upgradeFindNeedsPassword">Cần mật khẩu</string>
+    <string name="upgradeFindVersion">Phiên bản %1$s</string>
+    <string name="upgradeFindPickLabel">Dùng %1$s</string>
+    <string name="upgradeFindEmptyTitle">Không tìm thấy gì</string>
+    <string name="upgradeFindEmptyBody">Khởi động OpenCode trên máy tính của bạn bằng `opencode serve --mdns`, đảm bảo cả hai dùng chung Wi-Fi, hoặc tự nhập địa chỉ.</string>
+    <string name="upgradeFindEnterAddress">Nhập địa chỉ</string>
+    <string name="upgradeFindDeniedBody">Nếu không có quyền truy cập mạng cục bộ, ứng dụng không thể tìm máy tính của bạn. Bạn có thể cho phép rồi thử lại, hoặc tự nhập địa chỉ.</string>
+    <string name="upgradeFindAllow">Cho phép và tìm</string>
+    <string name="upgradeFindBlockedBody">Quyền truy cập mạng cục bộ đang tắt cho ứng dụng này. Hãy bật trong cài đặt ứng dụng, hoặc tự nhập địa chỉ.</string>
+    <string name="upgradeFindOpenSettings">Mở cài đặt ứng dụng</string>
+</resources>

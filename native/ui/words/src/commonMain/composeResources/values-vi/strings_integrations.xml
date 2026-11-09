@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="intTitle">Nhà cung cấp và công cụ</string>
+    <string name="intBack">Quay lại</string>
+    <string name="intRefresh">Làm mới</string>
+    <string name="intServers">Máy chủ</string>
+    <string name="intNoServer">Hãy kết nối với một máy chủ trước</string>
+    <string name="intProviders">Nhà cung cấp</string>
+    <string name="intConnected">Đã đăng nhập</string>
+    <string name="intNotConnected">Chưa đăng nhập</string>
+    <string name="intKey">Khóa API</string>
+    <string name="intSaveKey">Lưu khóa trên máy chủ</string>
+    <string name="intKeyPage">Lấy khóa API</string>
+    <string name="intOpenSignIn">Mở trang đăng nhập</string>
+    <string name="intCode">Mã hoặc URL callback</string>
+    <string name="intCompleteSignIn">Hoàn tất đăng nhập</string>
+    <string name="intSignInHelp">Hoàn tất trong trình duyệt, rồi dán mã hoặc URL callback vào đây.</string>
+    <string name="intConnectors">Trình kết nối</string>
+    <string name="intConnectorConnected">Đã kết nối</string>
+    <string name="intConnectorNotConnected">Cần chú ý</string>
+    <string name="intConnectorName">Tên trình kết nối</string>
+    <string name="intConnectorUrl">Địa chỉ HTTPS</string>
+    <string name="intHeaderName">Tên header (không bắt buộc)</string>
+    <string name="intHeaderValue">Giá trị header</string>
+    <string name="intSaveConnector">Thêm trình kết nối</string>
+    <string name="intHeaderHelp">Giá trị header là bí mật. Chúng chỉ được gửi đến máy chủ này và không bao giờ hiện trong chẩn đoán.</string>
+    <string name="intSkills">Viết một kỹ năng</string>
+    <string name="intRequirements">Kỹ năng này nên làm gì?</string>
+    <string name="intDraftHelp">Tác nhân sẽ soạn nháp một tệp SKILL.md trong cuộc trò chuyện mới để bạn xem lại. Nó sẽ không được yêu cầu cài đặt hay thay đổi tệp.</string>
+    <string name="intAskDraft">Nhờ tác nhân soạn nháp</string>
+    <string name="intOpenDraft">Mở cuộc trò chuyện soạn nháp</string>
+    <string name="intSaved">Đã lưu trên máy chủ.</string>
+    <string name="intFailed">Chưa hoàn tất. Hãy làm mới trước khi thử lại.</string>
+    <string name="intUnsupported">Máy chủ này không hỗ trợ thao tác này.</string>
+    <string name="intChanged">Kết nối đã thay đổi. Hãy mở lại trang này.</string>
+    <string name="intInvalid">Hãy kiểm tra các trường bắt buộc rồi thử lại.</string>
+    <string name="intDraftSent">Đã gửi yêu cầu soạn nháp. Mở cuộc trò chuyện để theo dõi.</string>
+    <string name="intDraftUncertain">Yêu cầu có thể đã được gửi đến. Hãy kiểm tra cuộc trò chuyện trước khi gửi lại.</string>
+    <string name="intOpenQuestion">Mở trang này?</string>
+    <string name="intOpen">Mở trang</string>
+    <string name="intInsecure">Địa chỉ này không được mã hóa.</string>
+    <string name="intConnectorReady">Đã kết nối cho tin nhắn tiếp theo.</string>
+    <string name="intConnectorUnknown">Đã kết nối. Chưa xác nhận được việc tìm công cụ.</string>
+    <string name="intConnectorAuth">Trình kết nối này cần bạn đăng nhập.</string>
+    <string name="intConnecting">Đang kết nối</string>
+    <string name="intConnectorSignIn">Đăng nhập vào trình kết nối này</string>
+    <string name="intConnectorCancelSignIn">Hủy đăng nhập</string>
+</resources>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="searchB1Web">Web</string>
+    <string name="searchB1InsideMessages">Trong tin nhắn</string>
+    <string name="searchB1AboutOptions">Giới thiệu các tùy chọn tìm kiếm</string>
+    <string name="searchB1OptionsTitle">Tùy chọn tìm kiếm</string>
+    <string name="searchB1ChooseServer">Chọn máy chủ để tìm</string>
+    <string name="searchB1RecentConversations">Cuộc trò chuyện gần đây</string>
+    <string name="searchB1Clear">Xóa</string>
+    <string name="searchB1Conversations">Cuộc trò chuyện</string>
+    <string name="searchB1Places">Cài đặt và trang</string>
+    <string name="searchB1SeeAll">Xem tất cả %1$s</string>
+    <string name="searchB1SeeAllSpoken">Xem tất cả %1$s cuộc trò chuyện</string>
+    <plurals name="searchB1ProjectConversations">
+        <item quantity="other">%1$s cuộc trò chuyện</item>
+    </plurals>
+</resources>

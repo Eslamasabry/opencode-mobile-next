@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="shortcut_connect_short">Kết nối</string>
+    <string name="shortcut_connect_long">Chọn máy chủ để kết nối</string>
+    <string name="shortcut_new_task_short">Cuộc trò chuyện mới</string>
+    <string name="shortcut_new_task_long">Bắt đầu cuộc trò chuyện mới trên máy chủ hiện tại</string>
+    <string name="shortcut_session_untitled">Cuộc trò chuyện chưa đặt tên</string>
+    <string name="shortcut_session_unavailable">Cuộc trò chuyện này không còn nữa</string>
+    <string name="tile_label">OpenCode</string>
+    <string name="tile_label_with_count">OpenCode · %1$s</string>
+    <string name="tile_all_clear">Không có gì cần bạn</string>
+    <plurals name="tile_need_you">
+        <item quantity="other">%1$d cần bạn</item>
+    </plurals>
+    <string name="pause_tile_label">Chế độ nền</string>
+    <string name="pause_tile_label_with_state">Chế độ nền · %1$s</string>
+    <string name="pause_tile_on">Bật</string>
+    <string name="pause_tile_paused">Đã tạm dừng</string>
+    <string name="pause_tile_off">Đang tắt trong Cài đặt</string>
+</resources>

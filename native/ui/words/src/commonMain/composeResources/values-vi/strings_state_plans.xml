@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="statePlansCopy0">Gói và giới hạn</string>
+    <string name="statePlansCopy1">Quay lại</string>
+    <string name="statePlansCopy2">Đang đọc các gói của bạn</string>
+    <string name="statePlansCopy3">Làm mới</string>
+    <string name="statePlansCopy4">Đang làm mới</string>
+    <string name="statePlansCopy5">Chưa đăng nhập gói nào</string>
+    <string name="statePlansCopy6">Đăng nhập Codex, Claude, GLM hoặc MiniMax trên một máy chủ hoặc trên điện thoại này để xem còn lại bao nhiêu.</string>
+    <string name="statePlansCopy7">Khóa API (không có giới hạn gói)</string>
+    <string name="statePlansCopy8">Chưa đăng nhập ở đâu cả</string>
+    <string name="statePlansCopy9">Điện thoại này</string>
+    <string name="statePlansCopy10">Còn nhiều</string>
+    <string name="statePlansCopy11">Sắp chạm giới hạn</string>
+    <string name="statePlansCopy12">Đã chạm giới hạn</string>
+    <string name="statePlansCopy13">Đã đăng nhập, nhưng chưa đọc được số liệu</string>
+    <string name="statePlansCopy14">Phiên đăng nhập đã hết hạn</string>
+    <string name="statePlansCopy15">Chưa đăng nhập</string>
+    <string name="statePlansCopy16">Lần này không đọc được số liệu</string>
+    <string name="statePlansCopy17">Ngoại tuyến. Đây là số liệu gần nhất.</string>
+    <string name="statePlansCopy18">Không có giới hạn nào được báo</string>
+    <string name="statePlansCopy19">Khóa API, không có giới hạn gói</string>
+    <string name="statePlansCopy20">Đăng nhập để xem số liệu</string>
+    <string name="statePlansCopy21">Đăng nhập trên %1$s để xem số liệu</string>
+    <string name="statePlansCopy22">Thêm khóa để xem số liệu</string>
+    <string name="statePlansCopy23">Thêm khóa trên %1$s để xem số liệu</string>
+    <string name="statePlansCopy24">Thiết lập việc đọc để xem số liệu</string>
+    <string name="statePlansCopy25">Thiết lập việc đọc trên %1$s để xem số liệu</string>
+    <string name="statePlansCopy26">Thử lại</string>
+    <string name="statePlansCopy27">5 giờ</string>
+    <string name="statePlansCopy28">Tuần này</string>
+    <string name="statePlansCopy29">Tháng này</string>
+    <string name="statePlansCopy30">Giới hạn</string>
+    <string name="statePlansCopy31">Còn %1$s%</string>
+    <string name="statePlansCopy32">đặt lại ngay bây giờ</string>
+    <string name="statePlansCopy33">đặt lại sau %1$s phút</string>
+    <string name="statePlansCopy34">đặt lại sau %1$s giờ</string>
+    <string name="statePlansCopy35">đặt lại sau %1$s ngày</string>
+    <string name="statePlansCopy36">Đã đặt lại kể từ khi đọc các số liệu này.</string>
+    <string name="statePlansCopy37">Gói: %1$s</string>
+    <string name="statePlansCopy38">Cảnh báo khi đã dùng %1$s%</string>
+    <string name="statePlansCopy39">ngoại tuyến</string>
+    <string name="statePlansCopy40">đăng nhập đã hết hạn</string>
+    <string name="statePlansCopy41">chưa đăng nhập</string>
+    <string name="statePlansCopy42">số liệu đọc tại đây</string>
+    <string name="statePlansCopy43">đã đăng nhập</string>
+    <string name="statePlansCopy44">Không thể đọc giới hạn gói của Claude qua OpenCode</string>
+    <string name="statePlansAlerts">Cảnh báo mức sử dụng</string>
+    <string name="statePlansThreshold">Cảnh báo khi đã dùng %1$d%</string>
+    <string name="statePlansResetOn">Thông báo đặt lại đang bật</string>
+    <string name="statePlansResetOff">Thông báo đặt lại đang tắt</string>
+    <string name="statePlansPercent">Phần trăm đã dùng (1–100)</string>
+    <string name="statePlansSaveFailed">Không thể lưu. Nhập phần trăm từ 1 đến 100 rồi thử lại.</string>
+    <string name="statePlansSave">Lưu mức cảnh báo</string>
+    <string name="statePlansUseDefault">Dùng mức cảnh báo mặc định</string>
+</resources>

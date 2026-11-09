@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="terminalNavDevServer">Máy chủ phát triển đang chạy</string>
+    <string name="terminalNavOpenPreview">Mở bản xem trước</string>
+</resources>

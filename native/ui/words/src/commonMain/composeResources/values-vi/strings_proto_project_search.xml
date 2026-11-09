@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="protoProjectTools">Công cụ dự án của máy chủ</string>
+    <string name="protoWorking">Đang xử lý…</string>
+    <string name="protoGitInitialized">Thư mục này là một kho Git.</string>
+    <string name="protoWorktreeCreated">Worktree đã sẵn sàng trong thư mục bên dưới.</string>
+    <string name="protoShellSaved">Đã lưu shell mặc định.</string>
+    <string name="protoGitInitialize">Khởi tạo Git trong thư mục này</string>
+    <string name="protoWorktreeName">Tên worktree mới</string>
+    <string name="protoWorktreeCreate">Tạo worktree</string>
+    <string name="protoShellTitle">Shell mặc định của terminal</string>
+    <string name="protoShellDefault">Dùng mặc định của máy chủ</string>
+    <string name="protoShellUnavailable">Máy chủ này không dùng được shell này.</string>
+    <string name="protoWebSearch">Tìm kiếm trên web</string>
+    <string name="protoWebSearchHelp">Tìm bằng nhà cung cấp của máy chủ này. Các lượt tìm không được lưu vào lịch sử cuộc trò chuyện.</string>
+    <string name="protoWebUnavailable">Máy chủ này không có tính năng tìm kiếm trên web.</string>
+    <string name="protoWebFailed">Không hoàn tất được lượt tìm trên web. Tải lại danh sách nhà cung cấp hoặc tìm lại.</string>
+    <string name="protoWebQuery">Từ khóa tìm trên web</string>
+    <string name="protoWebProvider">Nhà cung cấp tìm kiếm</string>
+    <string name="protoWebEmpty">Không có kết quả web nào.</string>
+    <string name="protoWebOpenQuestion">Mở %1$s trong trình duyệt?</string>
+    <string name="protoWebOpenBrowser">Mở trình duyệt</string>
+    <string name="protoWebInsecure">Liên kết này dùng kết nối không mã hóa.</string>
+    <string name="protoWebLeaveApp">Thao tác này mở một trang web bên ngoài ứng dụng.</string>
+    <string name="protoGitToolsFailed">Không thành công. Kiểm tra máy chủ rồi thử lại.</string>
+    <string name="protoPairingCheck">%1$s: %2$s</string>
+</resources>

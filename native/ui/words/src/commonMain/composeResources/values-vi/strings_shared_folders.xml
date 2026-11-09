@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="sharedFoldersTitle">Bộ nhớ dùng chung</string>
+    <string name="sharedFoldersSelected">Linux chỉ thấy các thư mục dự án bạn mở và Download › OpenCode. Quyền truy cập tệp của Android cho phép ứng dụng đọc các thư mục đó; nó không chia sẻ toàn bộ bộ nhớ của bạn với Linux.</string>
+    <string name="sharedFoldersAll">Cho Linux thấy toàn bộ bộ nhớ dùng chung</string>
+    <string name="sharedFoldersAllDetail">Dùng cách truy cập bộ nhớ cũ thay cho các thư mục dự án đã chọn. Thay đổi có hiệu lực khi máy chủ trên điện thoại khởi động lại.</string>
+    <string name="sharedFoldersAllRisk">Các tác nhân chạy trong Linux sẽ có thể đọc và thay đổi tệp bên ngoài các dự án bạn đã mở.</string>
+    <string name="sharedFoldersProtection">Chế độ bảo vệ giữ Linux chỉ truy cập các thư mục dự án đã chọn.</string>
+    <string name="sharedFoldersRestart">Đã lưu quyền truy cập thư mục. Hãy khởi động lại máy chủ trên điện thoại từ Điện thoại này khi công việc của bạn sẵn sàng, rồi làm mới Tệp. Chưa có máy chủ nào bị dừng.</string>
+    <string name="sharedFoldersFailed">Không đọc hoặc lưu được quyền truy cập thư mục. Thử lại.</string>
+    <string name="sharedFoldersAndroid">Quyền truy cập tệp của Android</string>
+    <string name="sharedFoldersAndroidDetail">Cho phép truy cập khi bạn mở dự án trong bộ nhớ dùng chung.</string>
+    <string name="sharedFoldersGranted">Đã cho phép. Linux vẫn theo lựa chọn thư mục bên dưới.</string>
+    <string name="sharedFoldersWorking">Đang cập nhật quyền truy cập thư mục…</string>
+</resources>

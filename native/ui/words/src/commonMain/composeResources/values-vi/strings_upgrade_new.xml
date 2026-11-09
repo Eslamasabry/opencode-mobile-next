@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="upgradeNewStart">Bắt đầu</string>
+    <string name="upgradeAgentReady">Sẵn sàng</string>
+    <string name="upgradeMode">Chế độ</string>
+    <string name="upgradeModeBuild">Xây dựng</string>
+    <string name="upgradeModePlan">Lập kế hoạch</string>
+</resources>

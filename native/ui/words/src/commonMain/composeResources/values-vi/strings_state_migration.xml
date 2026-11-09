@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateAppearanceOverview">Tất cả lựa chọn giao diện</string>
+    <string name="stateAppearanceChangedLast">Thay đổi gần nhất: %1$s</string>
+</resources>

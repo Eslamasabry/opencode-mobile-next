@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="mcpNativeTitle">Danh mục trình kết nối</string>
+    <string name="mcpNativeConsent">Duyệt registry MCP công khai. Từ khóa tìm kiếm của bạn chỉ được gửi đến registry sau khi bạn bật tính năng này.</string>
+    <string name="mcpNativeTurnOn">Bật</string>
+    <string name="mcpNativeTurnOff">Tắt danh mục</string>
+    <string name="mcpNativeRefresh">Làm mới</string>
+    <string name="mcpNativeSearch">Tìm trình kết nối</string>
+    <string name="mcpNativeEmpty">Không tìm thấy trình kết nối nào.</string>
+    <string name="mcpNativeLoadFailed">Không làm mới được. Đang hiện các mục đã lưu nếu có.</string>
+    <string name="mcpNativeUnsupported">Kết nối này không thêm được trình kết nối. Bạn vẫn có thể xem các mục.</string>
+    <string name="mcpNativeReview">Xem lại trình kết nối</string>
+    <string name="mcpNativeRuntimeOnly">Việc này thêm trình kết nối vào dự án này cho đến khi máy chủ khởi động lại. Hãy xem lại địa chỉ hoặc lệnh trước.</string>
+    <string name="mcpNativeAdd">Thêm trình kết nối</string>
+    <string name="mcpNativeAdded">Máy chủ có liệt kê trình kết nối này. Chưa xác nhận được các công cụ có dùng được hay không.</string>
+    <string name="mcpNativeCheck">Kiểm tra kết nối</string>
+    <string name="mcpNativeAddUncertain">Không xác nhận được việc thêm. Hãy kiểm tra kết nối trước khi thử lại.</string>
+    <string name="mcpNativeConflict">Tên trình kết nối đó đã tồn tại. Hãy chọn tên khác.</string>
+    <string name="mcpNativeName">Tên</string>
+    <string name="mcpNativeAddress">Địa chỉ</string>
+    <string name="mcpNativeCommand">Lệnh</string>
+    <string name="mcpNativeNeedsSettings">Mục này cần thêm thông tin kết nối hoặc đối số của lệnh. Hãy thiết lập thủ công trên máy chủ của bạn.</string>
+    <string name="mcpNativeNotAddable">Không thể thêm mục này từ danh mục.</string>
+    <string name="mcpNativeBack">Quay lại</string>
+    <string name="mcpNativeSaveFailed">Không lưu được lựa chọn về danh mục. Hãy thử lại.</string>
+    <string name="mcpNativeSourceChanged">Kết nối đã thay đổi. Hãy mở lại danh mục.</string>
+    <string name="mcpNativeToolsReady">Công cụ của trình kết nối đã sẵn sàng cho lượt tiếp theo.</string>
+    <string name="mcpNativeSignIn">Đăng nhập vào trình kết nối</string>
+    <string name="mcpNativeCode">URL trả về hoặc mã</string>
+    <string name="mcpNativeFinishSignIn">Hoàn tất đăng nhập</string>
+    <string name="mcpNativeCancelSignIn">Hủy đăng nhập</string>
+</resources>

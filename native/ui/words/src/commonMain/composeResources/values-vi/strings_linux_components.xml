@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxComponentsTitle">Thành phần Linux</string>
+    <string name="linuxComponentsRefresh">Kiểm tra các thành phần đã cài</string>
+    <string name="linuxComponentsTeam">AI Team</string>
+    <string name="linuxComponentsUnknown">Thành phần</string>
+    <string name="linuxComponentsInstalled">Đã cài đặt</string>
+    <string name="linuxComponentsDependents">%1$s đang cần thành phần này. Hãy gỡ các thành phần đó trước.</string>
+    <string name="linuxComponentsDependencyUnknown">Không kiểm tra được %1$s. Hãy kiểm tra lại trước khi gỡ thành phần này.</string>
+    <string name="linuxComponentsRequired">Cần cho máy chủ trên điện thoại này.</string>
+    <string name="linuxComponentsUnsupported">Không thể gỡ riêng thành phần này.</string>
+    <string name="linuxComponentsAbsent">Chưa cài đặt</string>
+    <string name="linuxComponentsUnknownPresence">Không kiểm tra được các thành phần đã cài. Hãy thử lại.</string>
+    <string name="linuxComponentsBusy">Hãy chờ thiết lập hoặc thao tác hiện tại hoàn tất.</string>
+    <string name="linuxComponentsFailed">Không thể gỡ thành phần này. Hãy kiểm tra lại rồi thử lại.</string>
+    <string name="linuxComponentsRemove">Gỡ %1$s</string>
+    <string name="linuxComponentsRemoveQuestion">Gỡ %1$s?</string>
+    <string name="linuxComponentsRemoveBody">Chỉ thành phần này bị gỡ. Dự án và cuộc trò chuyện của bạn vẫn còn. Các phần phụ thuộc sẽ được kiểm tra lại trước khi gỡ.</string>
+    <string name="linuxSetupOpenSettings">Mở cài đặt ứng dụng</string>
+    <string name="linuxSetupStepWaiting">Đang chờ</string>
+    <string name="linuxSetupStepKept">Đã cài đặt sẵn</string>
+    <string name="linuxSetupSwitchBusy">Hãy hoàn tất công việc đang chạy và trả lời các yêu cầu đang chờ trên điện thoại này, rồi thử thiết lập lại.</string>
+    <string name="linuxSetupSwitchFailed">Thiết lập không thể chuẩn bị điện thoại này một cách an toàn. Các cuộc trò chuyện và tin nhắn đã lưu của bạn vẫn được giữ. Hãy kiểm tra kết nối và dung lượng trống, rồi thử lại.</string>
+</resources>

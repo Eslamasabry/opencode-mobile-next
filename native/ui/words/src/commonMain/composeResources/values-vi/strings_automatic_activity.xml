@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="activityUndoRestart">Dừng máy chủ vừa khởi động lại</string>
+    <string name="activityUndoing">Đang dừng máy chủ vừa khởi động lại…</string>
+    <string name="activityUndone">Đã hoàn tác việc khởi động lại.</string>
+    <string name="activityUndoFailed">Hoàn tác không thành công.</string>
+    <string name="activityUndoUnconfirmed">Chưa rõ kết quả hoàn tác. Sẽ không thử lại.</string>
+    <string name="activityUndoUnavailable">Không thể hoàn tác.</string>
+</resources>

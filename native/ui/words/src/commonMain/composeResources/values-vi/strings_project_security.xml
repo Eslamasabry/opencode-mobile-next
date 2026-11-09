@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="secBuiltinFolders">Thư mục Linux tích hợp</string>
+    <string name="secBuiltinFoldersBody">Duyệt bộ nhớ dự án và các thư mục Linux trên điện thoại này.</string>
+    <string name="secBuiltinFolderLinked">Thư mục này là một liên kết. Hãy chọn một thư mục thật.</string>
+    <string name="secBuiltinFolderNotInstalled">Cài Linux trên điện thoại này để duyệt các thư mục này.</string>
+</resources>

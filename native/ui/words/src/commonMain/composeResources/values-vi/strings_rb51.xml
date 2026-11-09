@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="rb51VoiceEnglish">Tiếng Anh</string>
+    <string name="rb51VoiceArabic">Tiếng Ả Rập</string>
+    <string name="rb51VoiceMoreLanguages">Thêm ngôn ngữ</string>
+</resources>

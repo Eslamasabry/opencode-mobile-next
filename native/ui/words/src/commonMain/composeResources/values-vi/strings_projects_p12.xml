@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="p12ProjectsTitle">Dự án</string>
+    <string name="p12OpenFolder">Mở một thư mục trên máy chủ</string>
+    <string name="p12NewProjectUnavailable">Máy chủ này không tạo được thư mục từ điện thoại. Hãy tạo thư mục trên máy tính đó rồi mở tại đây.</string>
+    <string name="p12PhoneFolder">Thư mục trên điện thoại này</string>
+    <string name="p12PhoneFolderUnavailable">OpenCode trên điện thoại này chưa được thiết lập trong phiên bản này.</string>
+    <string name="p12ProjectsOnServer">Dự án trên %1$s</string>
+    <string name="p12ProjectsLoadFailed">Không tải được dự án của máy chủ này.</string>
+    <string name="p12NoServerTitle">Chưa kết nối máy chủ</string>
+    <string name="p12NoServerBody">Kết nối máy chủ để xem dự án và cuộc trò chuyện của nó.</string>
+    <string name="p12PathNotAbsolute">Nhập đường dẫn đầy đủ bắt đầu bằng /.</string>
+    <string name="p12PathBadParts">Đường dẫn không được chứa “..” hoặc ngắt dòng.</string>
+    <string name="p12NewHere">Cuộc trò chuyện mới tại đây</string>
+    <string name="p12NewHereBody">Bắt đầu một cuộc trò chuyện làm việc trong %1$s.</string>
+    <string name="p12ProjectConversations">Cuộc trò chuyện trong dự án này</string>
+    <string name="p12ProjectNoConversations">Dự án này chưa có cuộc trò chuyện nào.</string>
+    <string name="p12ElsewhereTitle">Trong các dự án khác</string>
+    <string name="p12CreateFailed">Không bắt đầu được cuộc trò chuyện.</string>
+    <string name="p12Select">Chọn</string>
+    <string name="p12SelectCancel">Hủy chọn</string>
+    <string name="p12Rename">Đổi tên</string>
+    <string name="p12RenameTitle">Đổi tên cuộc trò chuyện</string>
+    <string name="p12RenameField">Tiêu đề</string>
+    <string name="p12RenameEmpty">Tiêu đề cần có ít nhất một chữ cái.</string>
+    <string name="p12RenameFailed">Không đổi tên được cuộc trò chuyện.</string>
+    <plurals name="p12DeleteSelected">
+        <item quantity="other">Xóa %1$d cuộc trò chuyện</item>
+    </plurals>
+    <plurals name="p12ArchiveSelected">
+        <item quantity="other">Lưu trữ %1$d cuộc trò chuyện</item>
+    </plurals>
+    <string name="p12Deleted">Đã xóa “%1$s”</string>
+    <string name="chatsRowArchived">Đã lưu trữ “%1$s”</string>
+    <string name="chatsRowActions">Thao tác với cuộc trò chuyện</string>
+    <plurals name="p12DeletedMany">
+        <item quantity="other">Đã xóa %1$d cuộc trò chuyện</item>
+    </plurals>
+    <string name="p12DeleteFailed">Không xóa được một cuộc trò chuyện nên nó đã trở lại danh sách.</string>
+    <string name="p12ArchiveUnavailable">Máy chủ này không lưu trữ được cuộc trò chuyện.</string>
+    <string name="p12ArchiveFailed">Không lưu trữ được cuộc trò chuyện.</string>
+    <string name="p12ArchivedFilter">Đã lưu trữ</string>
+    <string name="p12MoreFor">Thêm tùy chọn cho %1$s</string>
+    <string name="p12OpenChat">Mở cuộc trò chuyện</string>
+</resources>

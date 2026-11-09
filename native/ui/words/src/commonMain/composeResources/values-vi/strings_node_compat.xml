@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="phoneSetupErrorNodeCannotRun">Hệ thống của điện thoại này không chạy được Node.js bên trong Linux tích hợp. Bạn vẫn có thể dùng OpenCode Mobile bằng cách kết nối với máy tính của bạn.</string>
+    <string name="phoneSetupNodeConnectComputer">Kết nối máy tính</string>
+    <string name="phoneSetupNodeReportFailure">Báo lỗi này</string>
+</resources>

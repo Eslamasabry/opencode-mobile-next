@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="rb44AboutCheckUpdates">Kiểm tra bản cập nhật</string>
+    <string name="rb44AboutUpdateIdle">Tìm phiên bản mới hơn của ứng dụng này</string>
+    <string name="rb44AboutUpdateChecking">Đang kiểm tra…</string>
+    <string name="rb44AboutUpdateCurrent">Bạn đang dùng phiên bản mới nhất</string>
+    <string name="rb44AboutUpdateDownloading">Đang tải bản cập nhật…</string>
+    <string name="rb44AboutUpdateFailed">Không kiểm tra được bản cập nhật. Kiểm tra kết nối rồi thử lại.</string>
+</resources>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="gitRemotePickGitHub">Chọn từ GitHub</string>
+    <string name="gitRemotePickGitHubTitle">Chọn một kho lưu trữ</string>
+    <string name="gitRemotePickGitHubNone">Tài khoản GitHub này chưa có kho lưu trữ nào.</string>
+    <string name="gitRemoteRepoPrivate">Riêng tư</string>
+    <string name="gitProblemInvalidGitHubRepositoryName">Dùng tên kho lưu trữ tối đa 100 ký tự gồm chữ cái, số, dấu chấm, dấu gạch ngang hoặc gạch dưới.</string>
+    <string name="gitProblemGitHubRepositoryNameUnavailable">Tên này đã được dùng hoặc không khả dụng trong tài khoản GitHub của bạn. Hãy thử tên khác.</string>
+    <string name="gitActionInitialize">Bắt đầu theo dõi</string>
+    <string name="gitActionPublish">Tạo trên GitHub</string>
+    <string name="gitBusyInitialize">Đang khởi tạo Git trong dự án này…</string>
+    <string name="gitBusyPublish">Đang tạo kho lưu trữ trên GitHub…</string>
+    <string name="gitDoneInitialized">Git đã sẵn sàng trong dự án này.</string>
+    <string name="gitDoneGitHubRepositoryCreated">Đã tạo và kết nối kho lưu trữ GitHub. Dự án của bạn chưa được gửi lên.</string>
+    <string name="gitInitializeProject">Bắt đầu theo dõi dự án này</string>
+    <string name="gitInitializeProjectHint">Giữ nguyên các tệp này tại đây và bắt đầu dùng Git.</string>
+    <string name="gitPublishToGitHub">Tạo kho lưu trữ GitHub</string>
+    <string name="gitPublishToGitHubHint">Chọn tên và người được xem.</string>
+    <string name="gitPublishTitle">Tạo kho lưu trữ</string>
+    <string name="gitPublishName">Tên kho lưu trữ</string>
+    <string name="gitPublishNameHint">Dùng chữ cái, số, dấu chấm, dấu gạch ngang hoặc gạch dưới.</string>
+    <string name="gitPublishVisibility">Ai có thể xem</string>
+    <string name="gitPublishPrivate">Riêng tư</string>
+    <string name="gitPublishPublic">Công khai</string>
+    <string name="gitPublishPrivateHint">Chỉ bạn và những người bạn chọn mới xem được kho lưu trữ này.</string>
+    <string name="gitPublishPublicHint">Ai cũng xem được kho lưu trữ này.</string>
+    <string name="gitPublishButton">Tạo kho lưu trữ</string>
+</resources>

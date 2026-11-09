@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="andrMonitorExplanation">Kiểm tra các máy chủ đã lưu khác khi ứng dụng đang mở, hoặc khi kết nối nền đang chạy. Mỗi máy chủ cần có sự cho phép của bạn. Việc theo dõi không bao giờ tự bật kết nối nền.</string>
+    <string name="andrMonitorEnabled">Kiểm tra máy chủ này</string>
+    <string name="andrMonitorOff">Tắt. Không kiểm tra nền.</string>
+    <string name="andrMonitorWaiting">Đang chờ lần kiểm tra tiếp theo. Thông tin trước đó có thể đã cũ.</string>
+    <string name="andrMonitorChecking">Đang kiểm tra. Thông tin trước đó có thể đã cũ.</string>
+    <string name="andrMonitorCurrent">Đã cập nhật sau lần kiểm tra gần nhất.</string>
+    <string name="andrMonitorUnavailable">Không kiểm tra được. Hãy mở máy chủ này để xem hoạt động mới nhất.</string>
+    <string name="andrMonitorWifi">Đang chờ Wi-Fi.</string>
+    <string name="andrMonitorPaused">Tạm dừng khi ứng dụng và kết nối nền đang dừng.</string>
+    <string name="andrMonitorSaveFailed">Không lưu được lựa chọn này. Hãy thử lại.</string>
+    <string name="andrMonitorCheckIn">Nhắc tôi về các phản hồi dài</string>
+    <string name="andrMonitorCheckInDetail">Một lời nhắc sau khi một cuộc trò chuyện được thấy là đã làm việc lâu như vậy. Các lần kiểm tra thất bại không tính là làm việc.</string>
+    <string name="andrMonitorMinutes">%1$s phút</string>
+</resources>

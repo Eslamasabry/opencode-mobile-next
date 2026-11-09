@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="p12SearchTitle">Tìm cuộc trò chuyện</string>
+    <string name="p12SearchField">Tìm cuộc trò chuyện</string>
+    <string name="p12SearchServer">Máy chủ</string>
+    <string name="p12SearchRecent">Tìm kiếm gần đây</string>
+    <string name="p12SearchRecentEmpty">Các tìm kiếm của bạn trên điện thoại này sẽ hiện ở đây.</string>
+    <string name="p12SearchRecentClear">Xóa các tìm kiếm gần đây</string>
+    <string name="p12SearchRecentRemove">Bỏ %1$s</string>
+    <string name="p12SearchRecentFailed">Không cập nhật được các tìm kiếm gần đây. Tìm kiếm vẫn dùng được.</string>
+    <string name="p12SearchInside">Tìm cả trong các cuộc trò chuyện gần đây</string>
+    <string name="p12SearchInsideHelp">Đọc các tin nhắn mới nhất của 20 cuộc trò chuyện gần đây nhất trên máy chủ này.</string>
+    <string name="p12SearchTitles">Tiêu đề</string>
+    <string name="p12SearchInsideSection">Trong cuộc trò chuyện</string>
+    <string name="p12SearchInsideReading">Đang đọc các cuộc trò chuyện gần đây…</string>
+    <string name="p12SearchInsideFailed">Không đọc được các cuộc trò chuyện gần đây. Kết quả theo tiêu đề vẫn hiện.</string>
+    <string name="p12SearchFromYou">Bạn: %1$s</string>
+    <string name="p12SearchFromAgent">Trả lời: %1$s</string>
+    <string name="p12SearchOneProject">Chỉ tìm trong dự án hiện tại của máy chủ này.</string>
+    <string name="p12SearchSearching">Đang tìm…</string>
+    <string name="p12SearchFailed">Không tìm được cuộc trò chuyện.</string>
+    <string name="p12SearchTryAgain">Thử lại</string>
+    <string name="p12SearchNoServerTitle">Chưa kết nối máy chủ</string>
+    <string name="p12SearchNoServerBody">Hãy kết nối máy chủ để tìm các cuộc trò chuyện của nó.</string>
+    <string name="p12SearchOpenServers">Mở Máy chủ</string>
+    <string name="p12SearchConversationsWhat">cuộc trò chuyện</string>
+    <string name="p12UsageCost">Chi phí ước tính</string>
+    <string name="p12UsageRange">Khoảng ngày</string>
+    <string name="p12UsageActivity">Hoạt động theo ngày</string>
+    <string name="p12UsageDay">%1$s · %2$s bước</string>
+    <string name="p12UsageProjectsFailed">Không liệt kê được các dự án. Tất cả dự án vẫn dùng được.</string>
+    <string name="p12UsageNoServerBody">Hãy kết nối máy chủ để xem mức dùng và chi phí của nó.</string>
+    <string name="p12UsageFailed">Không tải được mức dùng.</string>
+    <string name="p12UsageTryAgain">Thử lại</string>
+    <string name="p12UsageCounts">Hoạt động</string>
+    <string name="p12UsageServer">Máy chủ</string>
+</resources>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="keptPromptsTitle">Lời nhắc đã giữ</string>
+    <string name="keptPromptsBody">Các lời nhắc được giữ lại khi một máy chủ bị gỡ. Hãy khôi phục một lời nhắc vào cuộc trò chuyện để xem lại trước khi gửi.</string>
+    <string name="keptPromptsEmpty">Chưa có lời nhắc nào được giữ</string>
+    <string name="keptPromptsChoose">Chọn một cuộc trò chuyện</string>
+    <string name="keptPromptsChooseBody">Chọn cuộc trò chuyện của một máy chủ đang kết nối. Việc này chỉ điền vào bản nháp của nó.</string>
+    <string name="keptPromptsNoTargets">Không có cuộc trò chuyện nào đang kết nối</string>
+    <string name="keptPromptsNoTargetsBody">Hãy kết nối một máy chủ đã lưu hoặc mở một cuộc trò chuyện, rồi thử lại.</string>
+    <string name="keptPromptsConnect">Kết nối máy chủ</string>
+    <string name="keptPromptsUncertain">Lời nhắc này có thể đã được gửi. Hãy kiểm tra cuộc trò chuyện gốc của nó trước khi gửi lại.</string>
+    <string name="keptPromptsFailed">Không đọc hoặc thay đổi được các lời nhắc đã giữ. Hãy thử lại.</string>
+    <string name="keptPromptsKeptFrom">Được giữ từ một máy chủ đã gỡ</string>
+    <string name="keptPromptsRestoreFailed">Lời nhắc hoặc cuộc trò chuyện đã lưu đã thay đổi. Hãy mở lại Lời nhắc đã lưu trong cuộc trò chuyện rồi thử lại.</string>
+    <string name="keptConversation">Cuộc trò chuyện</string>
+</resources>

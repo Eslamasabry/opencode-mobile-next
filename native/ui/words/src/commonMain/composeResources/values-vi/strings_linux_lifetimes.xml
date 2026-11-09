@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxLifetimeTitle">Thời gian chạy của dịch vụ</string>
+    <string name="linuxLifetimeRefresh">Kiểm tra thời gian chạy của dịch vụ</string>
+    <string name="linuxLifetimeReading">Đang đọc thời gian chạy của dịch vụ…</string>
+    <string name="linuxLifetimeRunning">Đang chạy</string>
+    <string name="linuxLifetimeStopped">Không chạy</string>
+    <string name="linuxLifetimeUptime">Lần chạy hiện tại: %1$d ms</string>
+    <string name="linuxLifetimeLastUptime">Lần chạy trước: %1$d ms</string>
+    <string name="linuxLifetimeExit">Lần thoát gần nhất: %1$d</string>
+    <string name="linuxLifetimeRestarts">Số lần khởi động lại: %1$d</string>
+    <string name="linuxLifetimeUnknown">Không rõ nguyên nhân thoát</string>
+    <string name="linuxLifetimeExited">Chương trình đã thoát</string>
+    <string name="linuxLifetimeKilled">Thiếu bộ nhớ hoặc chạm giới hạn tiến trình của Android</string>
+    <string name="linuxLifetimeFailed">Không đọc được thời gian chạy của dịch vụ.</string>
+    <string name="linuxLifetimeEmpty">Chưa có dữ liệu quan sát thời gian chạy của dịch vụ.</string>
+</resources>

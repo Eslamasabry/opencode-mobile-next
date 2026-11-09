@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateShareViewedTitle">Chia sẻ những cuộc trò chuyện tôi đã xem</string>
+    <string name="stateShareViewedDetail">Cho máy chủ này biết bạn đã mở những câu trả lời đã hoàn tất nào. Khi tắt, thông tin này chỉ nằm trên thiết bị này.</string>
+    <string name="stateShareViewedSaving">Đang lưu lựa chọn quyền riêng tư của bạn…</string>
+</resources>

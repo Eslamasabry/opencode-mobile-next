@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="migrationStorageTitle">Bộ nhớ</string>
+    <string name="migrationStorageAssistant">Mô hình trợ lý trên điện thoại này</string>
+    <string name="migrationStorageDelete">Xóa mô hình</string>
+    <string name="migrationStorageDeleteTitle">Xóa mô hình trợ lý?</string>
+    <string name="migrationStorageDeleteBody">Thao tác này xóa mô hình đã lưu và các bản tải dở khỏi điện thoại này, giải phóng %1$s.</string>
+    <string name="migrationStorageEmpty">Điện thoại này chưa lưu mô hình trợ lý nào</string>
+    <string name="localModelSaveFailed">Không thể đổi mô hình đã lưu. Thử lại.</string>
+</resources>

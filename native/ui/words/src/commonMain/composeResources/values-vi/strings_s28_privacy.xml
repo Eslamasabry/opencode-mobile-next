@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="telemetryUsageTitle">Mức sử dụng và tình trạng ứng dụng</string>
+    <string name="telemetryUsageDetail">Gửi các số liệu ẩn danh đến Google Analytics for Firebase: bạn dùng loại trang và tính năng nào, việc kết nối, gửi, thiết lập, tác nhân, dịch vụ nền và cập nhật có hoạt động không, ứng dụng khởi động nhanh ra sao và các trang mượt thế nào, cảnh báo bộ nhớ, và các mức bộ nhớ, dung lượng trống, CPU và phiên bản WebView của điện thoại. Cũng gửi số đo thời gian đến Firebase Performance Monitoring: thời gian khởi động ứng dụng, kết nối, phản hồi đầu tiên, các bước thiết lập và khởi động một tác nhân. Chỉ gồm các từ cố định, mức và con số, cùng một mã cài đặt ngẫu nhiên, kiểu điện thoại và phiên bản Android. Không có mã nguồn, cuộc trò chuyện, tệp, địa chỉ, khóa hay ID quảng cáo.</string>
+    <string name="telemetryCrashesTitle">Báo cáo sự cố</string>
+    <string name="telemetryCrashesDetail">Gửi báo cáo sự cố đến Google Firebase Crashlytics: loại lỗi và vị trí xảy ra trong mã của ứng dụng, không bao giờ gửi nội dung thông báo lỗi, các bước gần nhất bạn đã làm dưới dạng từ ngắn, và lý do Android kết thúc ứng dụng lần trước. Không có mã nguồn, cuộc trò chuyện, tệp, địa chỉ, khóa hay ID quảng cáo.</string>
+    <string name="collectTitle">Chúng tôi thu thập gì</string>
+    <string name="collectRowSummary">Cả hai công tắc đều tắt từ đầu. Xem chính xác mỗi công tắc gửi gì.</string>
+    <string name="collectUsageNotSentYet">Phiên bản này chưa gửi mức sử dụng và tình trạng ứng dụng. Lựa chọn của bạn được giữ lại và sẽ áp dụng khi có.</string>
+    <string name="collectRules">Chỉ gửi các từ cố định và khoảng số, không bao giờ gửi văn bản tự do. Tắt một công tắc sẽ xóa những gì chưa gửi.</string>
+    <string name="collectUsageLabel">Với Mức sử dụng và tình trạng ứng dụng</string>
+    <string name="collectCrashesLabel">Với Báo cáo sự cố</string>
+    <string name="collectReportLabel">Chỉ khi bạn gửi báo cáo sự cố</string>
+    <string name="collectNeverLabel">Không bao giờ gửi</string>
+    <string name="collectConnect">Việc kết nối đến máy chủ có thành công không, loại lỗi và thời gian kết nối</string>
+    <string name="collectDrop">Lý do kết nối bị ngắt và có khôi phục được không</string>
+    <string name="collectSend">Việc gửi tin nhắn có thành công hay phải chờ trong hàng đợi, và bao lâu thì có phản hồi đầu tiên</string>
+    <string name="collectStall">Nơi xảy ra một lần chờ lâu (một công cụ, một lần phê duyệt) và kéo dài bao lâu</string>
+    <string name="collectQueue">Số tin nhắn trong hàng đợi đã được gửi hoặc bị lỗi</string>
+    <string name="collectPhoneSetup">Thiết lập trên điện thoại này đã đến bước nào, mỗi bước mất bao lâu và loại lỗi</string>
+    <string name="collectAgents">Tác nhân có khởi động được không, và loại lỗi</string>
+    <string name="collectBackground">Lý do dịch vụ nền dừng</string>
+    <string name="collectUpdates">Bản cập nhật có cài được không, và loại lỗi</string>
+    <string name="collectPages">Bạn dùng loại trang và tính năng nào, các bước thiết lập, phản hồi đầu tiên và mỗi lần dùng kéo dài bao lâu</string>
+    <string name="collectStart">Ứng dụng khởi động nhanh thế nào</string>
+    <string name="collectSmooth">Các trang mượt thế nào, và tốc độ làm mới của màn hình</string>
+    <string name="collectMemory">Cảnh báo bộ nhớ từ Android</string>
+    <string name="collectDevice">Các mức bộ nhớ và dung lượng trống của điện thoại, loại bộ xử lý và phiên bản WebView, thông báo có được cho phép không, và loại cũng như phiên bản máy chủ bạn dùng</string>
+    <string name="collectCrashKind">Loại lỗi và vị trí xảy ra trong mã của ứng dụng, không bao giờ gửi nội dung thông báo</string>
+    <string name="collectExit">Lý do Android kết thúc ứng dụng lần trước (ví dụ sự cố, treo hoặc thiếu bộ nhớ)</string>
+    <string name="collectSteps">30 bước gần nhất của bạn, dưới dạng từ ngắn như chat.send</string>
+    <string name="collectCrashKeys">Phiên bản ứng dụng, cách cài đặt, loại máy chủ, máy chủ của điện thoại này có đang chạy không, số kết nối đang mở và phiên bản máy chủ</string>
+    <string name="collectReport">500 dòng gần nhất trong nhật ký của chính ứng dụng, với khóa, địa chỉ và đường dẫn đã được che. Bạn xem được toàn bộ và chọn Gửi hoặc Hủy.</string>
+    <string name="collectNever">Lời nhắc và phản hồi, tên hoặc đường dẫn tệp, địa chỉ web, tên máy chủ, địa chỉ IP, nội dung thông báo lỗi, khóa hoặc mã thông báo, ID quảng cáo hay ID Android</string>
+</resources>
