@@ -149,6 +149,14 @@ class AppPreferences(stores: PreviewStores, appScope: AppCoroutineScope) {
     private val mutable = MutableStateFlow(DevicePreferences.Defaults)
     val value: StateFlow<DevicePreferences> = mutable.asStateFlow()
 
+    /**
+     * True once the stored preferences have been read (or cannot be). Until then [appearance] is the defaults, and the
+     * app's first frame waits for it: drawn early, the home showed the default theme and its green glow for a moment
+     * before the person's own (owner 2026-11-10).
+     */
+    private val mutableWarmed = MutableStateFlow(false)
+    val warmed: StateFlow<Boolean> = mutableWarmed.asStateFlow()
+
     /** What `KitTheme` wears, live (B-KIT-010). */
     val appearance: StateFlow<KitAppearance> =
         mutable
@@ -175,11 +183,15 @@ class AppPreferences(stores: PreviewStores, appScope: AppCoroutineScope) {
         scope.launch {
             if (stores.warm() is Outcome.Failed) {
                 ready.complete(null)
+                mutableWarmed.value = true
                 return@launch
             }
             val prefs = Preferences(stores.prefs, stores.lanes.app, scope)
             ready.complete(prefs)
-            prefs.value.collect { mutable.value = it }
+            prefs.value.collect {
+                mutable.value = it
+                mutableWarmed.value = true
+            }
         }
     }
 

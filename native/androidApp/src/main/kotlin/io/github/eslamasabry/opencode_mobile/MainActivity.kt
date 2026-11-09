@@ -76,12 +76,15 @@ class MainActivity : ComponentActivity() {
         setContent {
             graph.kitChatEnvironment.Provide {
                 val appearance by settings.appPreferences.appearance.collectAsState()
+                // Nothing is drawn until the stored appearance is known (a few frames on the window's own background),
+                // so the first frame is already in the person's theme.
+                val appearanceKnown by settings.appPreferences.warmed.collectAsState()
                 LaunchedEffect(Unit) {
                     settings.appPreferences.storedLocaleTag.collect { tag ->
                         if (AppLocale.changed(tag)) recreate()
                     }
                 }
-                CompositionLocalProvider(
+                if (appearanceKnown) CompositionLocalProvider(
                     LocalKitSecureWindow provides secureWindow,
                     LocalKitTerminalSlot provides AndroidKitTerminalSlot,
                     LocalTerminalLinkHost provides (graph as TerminalLinksGraph).terminalLinkHost,

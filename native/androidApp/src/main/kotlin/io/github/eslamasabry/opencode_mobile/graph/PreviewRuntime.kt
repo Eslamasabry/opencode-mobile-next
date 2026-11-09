@@ -87,6 +87,9 @@ class PreviewRuntime(
         get() = mutableSourceFailures.value
 
     private val loadedSources = MutableStateFlow<Set<ProfileId>>(emptySet())
+
+    /** True once any server's list has been read in this run of the app; see [publish]. */
+    @Volatile private var anySourceLoaded = false
     private var feed: ChatFeed? = null
     private var feedJob: Job? = null
     private val eventJobs = mutableMapOf<ProfileId, Job>()
@@ -696,8 +699,21 @@ class PreviewRuntime(
             }
         val merged = ChatFeed(sources, scope)
         feed = merged
-        snapshot.value = openingFlags(merged.snapshot.value)
-        feedJob = scope.launch { merged.snapshot.collect { snapshot.value = openingFlags(it) } }
+        publish(merged.snapshot.value)
+        feedJob = scope.launch { merged.snapshot.collect(::publish) }
+    }
+
+    /**
+     * Shows [next], except that an empty feed never replaces rows the home already shows before any server has
+     * answered in this run of the app. Until then "no rows" means "not known yet", not "no conversations": the rows
+     * read from the last run stay, marked not verified (owner 2026-11-10, a cold start while the phone's server was
+     * still starting: the saved list, then "No conversations yet", then skeleton rows, then the list again).
+     */
+    private fun publish(next: ChatFeedSnapshot) {
+        val held = snapshot.value
+        snapshot.value =
+            if (!anySourceLoaded && next.items.isEmpty() && held.items.isNotEmpty()) held.copy(loading = false, complete = false)
+            else openingFlags(next)
     }
 
     private fun openingFlags(value: ChatFeedSnapshot): ChatFeedSnapshot =
@@ -905,6 +921,7 @@ class PreviewRuntime(
                         acrossProjects =
                             graph.session.server.capabilities.value.globalSessionSearch,
                     )
+anySourceLoaded = true
                 loadedSources.update { it + id }
                 publishReadState(id, listing)
                 // Unknown optional asks affect the feed's completeness, never healthy
