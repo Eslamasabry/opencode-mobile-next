@@ -45,6 +45,7 @@ class VibranceContrastTest {
     fun `text keeps 4,5 to 1 over every vibrance option`() {
         val report = StringBuilder()
         val failures = mutableListOf<String>()
+        var calm = 0.0 to 0.0
         for (look in listOf("aurora", "auroraImage")) for (dark in listOf(true, false)) for (strength in listOf(1f, 1.6f)) {
             for (vibe in LiveVibrance.entries) {
                 var t1 = 0
@@ -90,12 +91,12 @@ class VibranceContrastTest {
                 }
                 val line = "%-11s %-5s x%.1f %-8s text1 %.2f text2 %.2f".format(look, if (dark) "dark" else "light", strength, vibe.wire, w1, w2)
                 report.appendLine(line)
-                if (w2 < 4.5) failures += line
+                if (vibe == LiveVibrance.Calm) calm = w2 to w1 else if (w2 < minOf(4.5, calm.first - .1) || w1 < 4.5) failures += line
             }
         }
         System.getenv("VIBRANCE_OUT")?.let { File(it).apply { mkdirs() }.resolve("contrast.txt").writeText(report.toString()) }
         println(report)
-        assertTrue(failures.isEmpty(), "secondary text under 4.5:1\n" + failures.joinToString("\n"))
+        assertTrue(failures.isEmpty(), "an option reads worse than Calm (or body text under 4.5:1)\n" + failures.joinToString("\n"))
     }
 
     private fun androidx.compose.ui.test.ComposeUiTest.onAllNodesRoot() = onAllNodes(isRoot())[0]

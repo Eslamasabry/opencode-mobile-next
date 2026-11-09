@@ -28,17 +28,21 @@ public enum class AppearanceMode {
 public enum class LiveVibrance(
     public val wire: String,
     public val chroma: Float,
-    public val capScale: Float,
+    public val capLight: Float,
+    public val capDark: Float,
     public val amount: Float,
     public val blobs: Float,
     public val speed: Float,
     public val plateChroma: Float,
     public val plateSecond: Float,
 ) {
-    Calm("calm", 1f, 1f, 1f, 1f, 1f, 1f, 0f),
-    Vivid("vivid", 1.6f, 1.3f, 1.5f, 1f, 1f, 2.3f, 0f),
-    Playful("playful", 1.45f, 1.4f, 1.55f, 1.6f, 1.35f, 2.6f, .55f),
+    Calm("calm", 1f, 1f, 1f, 1f, 1f, 1f, 1f, 0f),
+    Vivid("vivid", 1.8f, 1.3f, 1f, 1.7f, 1f, 1f, 4.2f, 0f),
+    Playful("playful", 1.6f, 1.35f, 1f, 1.8f, 1.6f, 1.35f, 4.6f, .7f),
     ;
+
+    /** How far past Calm's cap a pixel may stray from the ground: dark grounds keep Calm's cap (their text is already at the limit). */
+    public fun capFor(dark: Boolean): Float = if (dark) capDark else capLight
 
     public companion object {
         public fun of(wire: String?): LiveVibrance = entries.firstOrNull { it.wire == wire } ?: Calm

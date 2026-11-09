@@ -182,18 +182,24 @@ class VibranceHomeRenders {
         }
     }
 
-    /** Not a check: runs only when VIBRANCE_OUT names a folder. */
-    @Test
-    fun `vibrance renders of the Conversations home`() {
+    private fun one(option: LiveVibrance, style: Style, dark: Boolean) {
         val out = System.getenv("VIBRANCE_OUT")?.let(::File) ?: return
         out.mkdirs()
-        for (option in LiveVibrance.entries) {
-            for (dark in listOf(true, false)) {
-                render(option, Style.Glass, dark, state(), out)
-                render(option, Style.Solid, dark, state(), out)
-            }
-        }
+        render(option, style, dark, state(), out)
     }
+
+    @Test fun `vibrance Calm Glass Dark`() = one(LiveVibrance.Calm, Style.Glass, true)
+    @Test fun `vibrance Calm Glass Light`() = one(LiveVibrance.Calm, Style.Glass, false)
+    @Test fun `vibrance Calm Solid Dark`() = one(LiveVibrance.Calm, Style.Solid, true)
+    @Test fun `vibrance Calm Solid Light`() = one(LiveVibrance.Calm, Style.Solid, false)
+    @Test fun `vibrance Vivid Glass Dark`() = one(LiveVibrance.Vivid, Style.Glass, true)
+    @Test fun `vibrance Vivid Glass Light`() = one(LiveVibrance.Vivid, Style.Glass, false)
+    @Test fun `vibrance Vivid Solid Dark`() = one(LiveVibrance.Vivid, Style.Solid, true)
+    @Test fun `vibrance Vivid Solid Light`() = one(LiveVibrance.Vivid, Style.Solid, false)
+    @Test fun `vibrance Playful Glass Dark`() = one(LiveVibrance.Playful, Style.Glass, true)
+    @Test fun `vibrance Playful Glass Light`() = one(LiveVibrance.Playful, Style.Glass, false)
+    @Test fun `vibrance Playful Solid Dark`() = one(LiveVibrance.Playful, Style.Solid, true)
+    @Test fun `vibrance Playful Solid Light`() = one(LiveVibrance.Playful, Style.Solid, false)
 
     private companion object {
         const val NOW = 1_800_000_000_000L
