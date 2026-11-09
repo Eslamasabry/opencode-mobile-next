@@ -8,11 +8,13 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.key
+import androidx.compose.runtime.saveable.LocalSaveableStateRegistry
+import androidx.compose.runtime.saveable.SaveableStateRegistry
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.StateRestorationTester
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -83,12 +85,17 @@ class ShellRestoreTest {
     @Test
     fun `the back stack, scroll, open sheet and typed text come back after the activity is rebuilt`() = runComposeUiTest {
         val pages = Pages()
-        val tester = StateRestorationTester(this)
-        tester.setContent {
-            val platform = DesktopKitPlatform()
-            CompositionLocalProvider(LocalKitPlatform provides platform) {
-                KitTheme(appearance = KitAppearance(mode = AppearanceMode.Light), platform = platform, localeTag = "en") {
-                    NavShell(start = ChatsRoute.Home, deps = pages.deps)
+        // StateRestorationTester is not implemented on desktop: do by hand what Android does. Save the registry, drop
+        // the whole composition, and compose again from a registry built out of the saved values.
+        var registry by mutableStateOf(SaveableStateRegistry(null) { true })
+        var generation by mutableStateOf(0)
+        setContent {
+            key(generation) {
+                val platform = DesktopKitPlatform()
+                CompositionLocalProvider(LocalKitPlatform provides platform, LocalSaveableStateRegistry provides registry) {
+                    KitTheme(appearance = KitAppearance(mode = AppearanceMode.Light), platform = platform, localeTag = "en") {
+                        NavShell(start = ChatsRoute.Home, deps = pages.deps)
+                    }
                 }
             }
         }
@@ -104,7 +111,10 @@ class ShellRestoreTest {
         waitForIdle()
         assertTrue(onAllNodesWithText(SHEET_TITLE).fetchSemanticsNodes().isNotEmpty())
 
-        tester.emulateSaveAndRestore()
+        runOnIdle {
+            registry = SaveableStateRegistry(registry.performSave()) { true }
+            generation++
+        }
         waitForIdle()
 
         runOnIdle { assertEquals(listOf(ChatsRoute.Home, ChatsRoute.All()), pages.navigator.snapshot()) }
