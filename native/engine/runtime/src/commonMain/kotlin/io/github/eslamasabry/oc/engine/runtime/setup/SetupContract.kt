@@ -167,6 +167,12 @@ public sealed interface SetupError {
     /** `phoneSetupErrorInterrupted`. */
     public data object Interrupted : SetupError
 
+    /**
+     * A step ran far past any normal time with no end (phase 0, setup must never look hung). The job was stopped;
+     * the page offers Try again and Use a computer instead. Failure kind for analytics: `step_timeout`.
+     */
+    public data class StepTimedOut(val title: String) : SetupError
+
     /** `phoneSetupErrorNoInternet` (the job line for an offline row). */
     public data object NoInternet : SetupError
 
@@ -228,6 +234,12 @@ public data class SetupProgress(
     val jobId: String? = null,
     val firstSetup: Boolean = false,
     val adding: List<String> = emptyList(),
+    /** Seconds the running step has been going; null when nothing runs. The visible clock of a long step. */
+    val stepElapsedSeconds: Int? = null,
+    /** The last line of the install output in plain categories, never the line itself. */
+    val activity: SetupActivity? = null,
+    /** Seconds since the runner last wrote anything; a large value is the "still working" heartbeat. */
+    val quietSeconds: Int? = null,
 ) {
     val canContinue: Boolean
         get() =
@@ -284,6 +296,36 @@ public object OpenCodeInstallFailure {
     public const val WONT_RUN: String = "[oc] OpenCode's program does not run on this phone"
     public const val WRONG_VERSION: String = "[oc] OpenCode's program reports another version"
     public const val NO_START: String = "[oc] OpenCode was installed but did not start"
+}
+
+/** What the install is doing right now, from the newest line of its output (words live in `:ui:words`). */
+public enum class SetupActivity {
+    Downloading,
+    Unpacking,
+    Configuring,
+    Checking,
+    Working,
+    ;
+
+    public companion object {
+        /** The newest meaningful line of [log]; null for an empty log. Matches only fixed apt/curl/tar phrases. */
+        public fun fromLog(log: String): SetupActivity? {
+            val line =
+                log.lineSequence().map { it.trim() }.lastOrNull { it.isNotEmpty() && !it.contains("OCTRACE") }
+                    ?: return null
+            return when {
+                Regex("^(Get:|Fetched|Downloading|Hit:|Ign:|==> Downloading)|curl", RegexOption.IGNORE_CASE)
+                    .containsMatchIn(line) -> Downloading
+                Regex("^(Unpacking|Extracting|Preparing to unpack|Selecting previously)|extract|unpack|tar ", RegexOption.IGNORE_CASE)
+                    .containsMatchIn(line) -> Unpacking
+                Regex("^(Setting up|Processing triggers|Configuring|Created symlink)", RegexOption.IGNORE_CASE)
+                    .containsMatchIn(line) -> Configuring
+                Regex("^(Reading package lists|Building dependency tree|Reading state)", RegexOption.IGNORE_CASE)
+                    .containsMatchIn(line) -> Checking
+                else -> Working
+            }
+        }
+    }
 }
 
 /** The job's log as people see it: never the app's `OCTRACE` timing lines (`setupLogForPeople`). */
