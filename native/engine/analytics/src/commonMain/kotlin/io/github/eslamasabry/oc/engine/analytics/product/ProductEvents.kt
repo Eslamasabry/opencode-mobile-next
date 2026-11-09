@@ -336,7 +336,7 @@ private fun healthSchema(): Map<String, Map<String, Set<String>>> {
         ProductEvent.SendResult.wire to
             mapOf(
                 "result" to setOf("ok", "fail", "queued"),
-                "fail_kind" to HealthWords.failKinds + HealthWords.sendOnlyFailKinds,
+                "fail_kind" to HealthWords.failKinds + HealthWords.sendOnlyFailKinds + HealthWords.modelFailKinds,
                 "first_reply_range" to HealthRanges.firstReply.toSet(),
                 "agent" to HealthWords.chatAgents,
                 "server_kind" to HealthWords.serverKinds,

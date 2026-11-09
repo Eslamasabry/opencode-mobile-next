@@ -195,9 +195,9 @@ public class ConnectionDelivery(
             is GatewayEvent.RunStarted -> trace.busy(event.sessionId.raw)
             is GatewayEvent.RunEnded ->
                 when (val outcome = event.outcome) {
-                    is RunOutcome.Failed -> trace.error(event.sessionId.raw, outcome.kind?.name)
+                    is RunOutcome.Failed -> trace.error(event.sessionId.raw, outcome.kind?.name, outcome.tag?.raw)
                     is RunOutcome.Interrupted ->
-                        if (outcome.reason == InterruptReason.User) trace.error(event.sessionId.raw, "Aborted")
+                        if (outcome.reason == InterruptReason.User) trace.error(event.sessionId.raw, "Aborted", null)
                         else trace.idle(event.sessionId.raw)
                     else -> trace.idle(event.sessionId.raw)
                 }

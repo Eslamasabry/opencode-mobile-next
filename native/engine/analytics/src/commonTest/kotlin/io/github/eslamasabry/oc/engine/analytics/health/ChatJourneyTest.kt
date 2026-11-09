@@ -207,4 +207,31 @@ class ChatJourneyTest {
         j.ended("s1")
         assertEquals(0, vendor.events.size)
     }
+
+    @Test
+    fun `B-JOURNEY-019 a model refusal with no reply is a failed send with its kind, not an ok one`() = runTest {
+        val r = Rig(this)
+        for ((n, pair) in listOf("rate" to ("Unknown" to "RateLimitError"), "free" to ("Unknown" to "FreeUsageLimitError"), "auth" to ("ProviderAuth" to null), "other" to ("ContextOverflow" to null)).withIndex()) {
+            val (name, kind) = pair
+            r.journey.sent("s$n", true)
+            r.journey.busy("s$n")
+            r.journey.ended("s$n", ChatJourney.errorKindWord(kind.first, kind.second))
+            val send = r.vendor.events.last { it.first == "send_result" }.second
+            assertEquals("fail", send["result"], name)
+        }
+        assertEquals(
+            listOf("rate_limit", "free_limit", "sign_in", "model_error"),
+            r.vendor.events.filter { it.first == "send_result" }.map { it.second.getValue("fail_kind") },
+        )
+        assertEquals(
+            listOf("rate_limit", "free_limit", "provider_auth", "context_overflow"),
+            r.vendor.events.filter { it.first == "chat_turn" }.map { it.second.getValue("fail_kind") },
+        )
+        // Stop is not a failure, and an error after a reply stays an ok send with an error turn.
+        r.journey.sent("s9", true)
+        r.journey.busy("s9")
+        r.journey.reply("s9")
+        r.journey.ended("s9", "server")
+        assertEquals("ok", r.vendor.events.last { it.first == "send_result" }.second["result"])
+    }
 }

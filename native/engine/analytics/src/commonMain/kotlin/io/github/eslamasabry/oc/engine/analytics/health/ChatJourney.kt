@@ -132,7 +132,14 @@ public class ChatJourney(
         val t = turns.value[sessionId] ?: return
         if (!t.busy) return
         turns.update { it - sessionId }
-        if (!t.replied) flow.sendResult("ok", firstReplyMs = null, serverKind = serverKind(t), traits = send(t))
+        // A turn the model refused (rate limit, free-tier limit, sign-in needed, any model error) with no reply is a
+        // failed send, not an "ok" one; the person pressing Stop is not a failure.
+        val refused = errorKind != null && errorKind != "aborted" && !t.stopped && !t.replied
+        if (refused) {
+            flow.sendResult("fail", firstReplyMs = null, serverKind = serverKind(t), traits = send(t), failWord = sendFailWord(errorKind))
+        } else if (!t.replied) {
+            flow.sendResult("ok", firstReplyMs = null, serverKind = serverKind(t), traits = send(t))
+        }
         val outcome =
             when {
                 t.stopped -> "stopped_by_user"
@@ -242,6 +249,27 @@ public class ChatJourney(
 
         /** `turn_stall` is sent when a turn has been quiet for 1, 5, 15 and 60 minutes. */
         private val STALL_STEPS_MS = listOf(60_000L, 300_000L, 900_000L, 3_600_000L)
+
+        /** The `send_result` fail kind for a turn error word. */
+        public fun sendFailWord(errorKind: String?): String =
+            when (errorKind) {
+                "provider_auth" -> "sign_in"
+                "rate_limit", "free_limit" -> errorKind
+                else -> "model_error"
+            }
+
+        /**
+         * The word for a message error kind's name (`ContextOverflow` becomes `context_overflow`). [tag] is the server's
+         * symbolic error tag, read for logic only (a rate-limit or free-tier tag), never sent.
+         */
+        public fun errorKindWord(kindName: String?, tag: String?): String {
+            val t = tag?.lowercase()?.replace(Regex("[^a-z]"), "").orEmpty()
+            return when {
+                "ratelimit" in t || "toomanyrequests" in t -> "rate_limit"
+                "freeusage" in t || "freetier" in t || "quota" in t || "creditsexhausted" in t -> "free_limit"
+                else -> errorKindWord(kindName)
+            }
+        }
 
         /** The word for a message error kind's name (`ContextOverflow` becomes `context_overflow`). */
         public fun errorKindWord(kindName: String?): String {

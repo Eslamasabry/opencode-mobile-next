@@ -140,6 +140,9 @@ public object HealthWords {
     public val failKinds: Set<String> =
         setOf("dns", "tls", "auth", "timeout", "refused", "server_5xx", "protocol", "offline", "other")
     public val sendOnlyFailKinds: Set<String> = setOf("rejected", "too_large")
+
+    /** `send_result.fail_kind` when the model's side refused the turn: a rate limit, the free-tier limit, sign-in needed. */
+    public val modelFailKinds: Set<String> = setOf("rate_limit", "free_limit", "sign_in", "model_error")
     public val serverKinds: Set<String> = setOf("phone", "computer")
     public val okFail: Set<String> = setOf("ok", "fail")
     public val dropReasons: Set<String> = setOf("network_change", "server_closed", "idle_timeout", "background", "other")
@@ -155,7 +158,7 @@ public object HealthWords {
 
     /** `linux_setup_step.fail_kind`. */
     public val setupFailKinds: Set<String> =
-        linkedSetOf("network", "storage", "permission", "download", "checksum", "killed_by_system", "timeout", "unknown")
+        linkedSetOf("network", "storage", "apt", "permission", "download", "checksum", "killed_by_system", "timeout", "unknown")
 
     /** `setup_abandoned.reason`: how the person left the setup unfinished. */
     public val abandonReasons: Set<String> = linkedSetOf("background", "closed")
@@ -163,8 +166,8 @@ public object HealthWords {
     /** `chat_turn.fail_kind`: why a turn ended in error, by the message error's kind only. */
     public val turnErrorKinds: Set<String> =
         linkedSetOf(
-            "provider_auth", "context_overflow", "output_length", "content_filter", "model_not_found", "aborted",
-            "server", "other",
+            "provider_auth", "rate_limit", "free_limit", "context_overflow", "output_length", "content_filter",
+            "model_not_found", "aborted", "server", "other",
         )
 
     /** `chat_turn.outcome`. */

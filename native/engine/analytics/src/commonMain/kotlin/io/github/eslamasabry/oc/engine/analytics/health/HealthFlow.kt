@@ -98,15 +98,18 @@ public class HealthFlow(private val telemetry: () -> Telemetry = { AppTelemetry.
         firstReplyMs: Long? = null,
         serverKind: String? = null,
         traits: SendTraits? = null,
+        /** A failure already reduced to a word of [HealthWords.modelFailKinds] (the model's side refused the turn). */
+        failWord: String? = null,
     ) {
         val t = telemetry()
+        val kindWord = failWord?.takeIf { it in HealthWords.modelFailKinds } ?: failKindOf(failure, forSend = true)
         t.breadcrumb("chat.send")
-        if (result == "fail") ProblemTally.note(t.ring, failKindOf(failure, forSend = true))
+        if (result == "fail") ProblemTally.note(t.ring, kindWord)
         t.track(
             ProductEvent.SendResult,
             buildMap {
                 put("result", result)
-                if (result == "fail") put("fail_kind", failKindOf(failure, forSend = true))
+                if (result == "fail") put("fail_kind", kindWord)
                 put("first_reply_range", HealthRanges.firstReplyOf(firstReplyMs))
                 if (traits != null) {
                     put("agent", chatAgentWord(traits.agent))

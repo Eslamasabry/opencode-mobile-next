@@ -72,9 +72,9 @@ class AppPromptTracing(trace: io.github.eslamasabry.oc.engine.diagnostics.perf.P
         journey?.stream(onPhone, connected)
     }
 
-    override fun error(sessionId: String, kind: String?) {
+    override fun error(sessionId: String, kind: String?, tag: String?) {
         timeline.observe(io.github.eslamasabry.oc.engine.diagnostics.perf.PromptSignal.Error(sessionId))
-        journey?.ended(sessionId, io.github.eslamasabry.oc.engine.analytics.health.ChatJourney.errorKindWord(kind))
+        journey?.ended(sessionId, io.github.eslamasabry.oc.engine.analytics.health.ChatJourney.errorKindWord(kind, tag))
     }
 
     override fun accepted(sessionId: String, error: Boolean) {

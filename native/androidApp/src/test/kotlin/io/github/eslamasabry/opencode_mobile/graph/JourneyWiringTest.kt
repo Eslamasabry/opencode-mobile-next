@@ -30,6 +30,8 @@ class JourneyWiringTest {
         assertEquals("storage", setupFailKindOf(SetupError.NoSpace("x")))
         assertEquals("checksum", setupFailKindOf(SetupError.Checksum("x")))
         assertEquals("killed_by_system", setupFailKindOf(SetupError.Interrupted))
+        assertEquals("apt", setupFailKindOf(SetupError.Install("x")))
+        assertEquals("permission", setupFailKindOf(SetupError.HostRefused))
         assertEquals("unknown", setupFailKindOf(null))
     }
 
