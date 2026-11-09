@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Phase 0 (first reply): setup never looks hung; a failed model reply says what to do next. -->
+<resources>
+    <string name="setupStepTimedOut">%1$s is taking far longer than it should. Try again, or use a computer instead.</string>
+    <string name="setupUseComputerInstead">Use a computer instead</string>
+    <string name="setupActivityDownloading">Downloading files</string>
+    <string name="setupActivityUnpacking">Unpacking files</string>
+    <string name="setupActivityConfiguring">Setting things up</string>
+    <string name="setupActivityChecking">Checking what is installed</string>
+    <string name="setupActivityWorking">Working</string>
+    <string name="setupHeartbeatLine">%1$s · %2$s</string>
+    <string name="setupHeartbeatQuiet">Still working. Long steps can take several minutes.</string>
+    <string name="chatModelFailRateLimit">The model is busy right now. Switch model, or try again in a few minutes.</string>
+    <string name="chatModelFailDailyLimit">The free daily limit for this model is used up. Switch model, or try again tomorrow.</string>
+    <string name="chatModelFailSignIn">This model needs you to sign in first. Sign in, or switch model.</string>
+    <string name="chatModelFailQuota">Your account has no credit left for this model. Add credit, or switch model.</string>
+    <string name="chatModelFailGeneric">The model could not answer. Switch model, or try again.</string>
+    <string name="chatModelFailSwitch">Switch model</string>
+    <string name="chatModelFailSignInAction">Sign in</string>
+    <string name="chatStalledOnTool">Still waiting for %1$s.</string>
+    <string name="chatStalledStop">Stop</string>
+</resources>
