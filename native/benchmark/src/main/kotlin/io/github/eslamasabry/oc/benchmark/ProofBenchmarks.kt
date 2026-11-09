@@ -83,29 +83,38 @@ class StartupProfileGenerator {
             walk()
         }
 
+    /** The screen changes under UiAutomator while it works; a stale node only means "look again". */
+    private fun safely(block: () -> Unit) {
+        try {
+            block()
+        } catch (_: androidx.test.uiautomator.StaleObjectException) {
+        }
+    }
+
     private fun androidx.benchmark.macro.MacrobenchmarkScope.walk() {
         // Fling the first scrollable (home list, welcome pages), both ways.
-        device.findObject(By.scrollable(true))?.let {
-            it.setGestureMargin(device.displayWidth / 8)
-            it.fling(androidx.test.uiautomator.Direction.DOWN)
-            device.waitForIdle()
-            it.fling(androidx.test.uiautomator.Direction.UP)
+        repeat(2) { n ->
+            safely {
+                device.findObject(By.scrollable(true))?.fling(
+                    if (n == 0) androidx.test.uiautomator.Direction.DOWN else androidx.test.uiautomator.Direction.UP
+                )
+            }
             device.waitForIdle()
         }
         // Open up to four distinct clickable things and come back; stay inside the app.
         val seen = HashSet<String>()
         repeat(4) {
-            val target =
-                device.findObjects(By.clickable(true).pkg(PKG)).firstOrNull { o ->
-                    val key = (o.contentDescription ?: o.text ?: "") + "@" + o.visibleBounds.toShortString()
-                    o.visibleBounds.height() > 0 && seen.add(key)
-                } ?: return
-            target.click()
-            device.waitForIdle()
-            device.findObject(By.scrollable(true))?.let {
-                it.fling(androidx.test.uiautomator.Direction.DOWN)
-                device.waitForIdle()
+            safely {
+                val target =
+                    device.findObjects(By.clickable(true).pkg(PKG)).firstOrNull { o ->
+                        val key = (o.contentDescription ?: o.text ?: "") + "@" + o.visibleBounds.toShortString()
+                        o.visibleBounds.height() > 0 && seen.add(key)
+                    }
+                target?.click()
             }
+            device.waitForIdle()
+            safely { device.findObject(By.scrollable(true))?.fling(androidx.test.uiautomator.Direction.DOWN) }
+            device.waitForIdle()
             device.pressBack()
             device.waitForIdle()
             if (device.currentPackageName != PKG) startActivityAndWait()
