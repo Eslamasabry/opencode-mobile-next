@@ -409,7 +409,7 @@ public fun KitComposerStopRing(
     onLongClickLabel: String? = null,
 ) {
     val colors = LocalKitColors.current
-    val still = KitMotion.state.reduced || LocalKitAppearance.current.saver
+    val still = !KitMotion.state.ambientLoops || LocalKitAppearance.current.saver
     val turn =
         if (still) {
             0.15f
