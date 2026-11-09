@@ -88,8 +88,10 @@ public object GlassLooks {
     /**
      * Gate 1 (D3), measured by `GlassPanesTest` over every pack, both modes, the painted aurora and the shader looks:
      * Clear ships only if, after the floor, its median liquid face is at least [CLEAR_TINT_GAP] thinner than Glossy's, or
-     * its gloss-kept count differs by at least [CLEAR_GLOSS_GAP] of the faces. Measured 2026-11-09: it is not (see the
-     * test's report), so three looks ship. The test fails if a retune opens the gap, so this flag is never stale.
+     * its gloss-kept count differs by at least [CLEAR_GLOSS_GAP] of the faces. Measured 2026-11-09 (GitHub CI run
+     * 42587811814): the median gap is 3.1-5.5 points in dark mode and 0 in light mode in every pack, over both
+     * backdrops, and the gloss-kept count never differs, so Clear is cut and three looks ship. The test fails if a
+     * retune opens the gap, so this flag is never stale.
      */
     public const val clearEarnsItsPlace: Boolean = false
 
