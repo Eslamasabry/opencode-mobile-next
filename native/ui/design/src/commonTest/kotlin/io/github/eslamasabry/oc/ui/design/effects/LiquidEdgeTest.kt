@@ -195,6 +195,22 @@ class LiquidEdgeTest {
     }
 
     @Test
+    fun `B-KIT-018 opening a reply's menu changes no other pane's face, however many chips the chat shows`() {
+        // Smoothness 2026-11-09 (owner: the reply's menu janks in Glass): two of the chat's chips flipped to frost as
+        // the menu opened and back as it closed, each rebuilding its glass.
+        val page = Any()
+        val chat =
+            listOf(LiquidClaim("composer", LiquidRole.Composer, null), LiquidClaim("bar", LiquidRole.Bar, null)) +
+                (0 until 3).map { LiquidClaim("chip$it", LiquidRole.Pill, null, order = it) }
+        val before = LiquidEdge.faceOf(chat)
+        for (modal in listOf(listOf(LiquidClaim("menu", LiquidRole.Menu, page)), listOf(LiquidClaim("sheet", LiquidRole.Sheet, page), LiquidClaim("menu", LiquidRole.Menu, page)))) {
+            val open = LiquidEdge.faceOf(chat + modal)
+            for (c in chat) assertEquals(before.getValue(c.key), open.getValue(c.key), "${modal.map { it.key }} open: ${c.key}")
+            for (m in modal) assertEquals(LiquidFaceKind.Liquid, open.getValue(m.key), "${m.key} is liquid")
+        }
+    }
+
+    @Test
     fun `B-KIT-018 beyond the budget a part is frost of the same shape, never solid`() {
         val claims = (0 until 9).map { LiquidClaim("chip$it", LiquidRole.Pill, null, order = it) }
         val kinds = LiquidEdge.faceOf(claims)

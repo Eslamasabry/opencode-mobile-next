@@ -79,6 +79,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.kitBackdropRimLight
 import io.github.eslamasabry.oc.ui.kit.foundation.kitGlassStackRoot
 import io.github.eslamasabry.oc.ui.kit.live.kitLivePictureSpots
+import io.github.eslamasabry.oc.ui.kit.platform.KitBackdropSampler
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -197,7 +198,10 @@ private fun kitLiquidClaim(role: LiquidRole, source: Any?, asking: Boolean): Boo
         if (asking) budget.claims += claim
         onDispose { budget.claims.remove(claim) }
     }
-    return asking && key in budget.granted
+    // Read through its own derived state: a menu opening changes the window's grants, and only a pane whose own grant
+    // changed recomposes (smoothness 2026-11-09), not every pane on the page.
+    val mine by remember(budget, key) { derivedStateOf { key in budget.granted } }
+    return asking && mine
 }
 
 /**
@@ -417,6 +421,7 @@ private class PlateHostNode(var words: KitLiquidWords) :
     private var coordinates: LayoutCoordinates? = null
     private var ink: LiquidInk = words.themeInk
     private var sample: GraphicsLayer? = null
+    private var sampler: KitBackdropSampler? = null
 
     override fun onGloballyPositioned(coordinates: LayoutCoordinates) {
         this.coordinates = coordinates
@@ -426,6 +431,9 @@ private class PlateHostNode(var words: KitLiquidWords) :
         ink = words.themeInk
         val backdrop = words.backdrop ?: return
         val platform = currentValueOf(LocalKitPlatform)
+        // One sampler for the pane's life (smoothness 2026-11-09): a sample reuses one small target and never holds the
+        // UI thread on the GPU. Without one (desktop), a snapshot of a small layer is read back as before.
+        val own = platform.backdropSampler().also { sampler = it }
         coroutineScope.launch {
             var seen = Int.MIN_VALUE
             while (isActive) {
@@ -437,14 +445,19 @@ private class PlateHostNode(var words: KitLiquidWords) :
                 seen = v
                 val w = (c.size.width / SAMPLE_SCALE).coerceAtLeast(1)
                 val h = (c.size.height / SAMPLE_SCALE).coerceAtLeast(1)
-                val layer = sample ?: requireGraphicsContext().createGraphicsLayer().also { sample = it }
-                layer.record(requireDensity(), LayoutDirection.Ltr, IntSize(w, h)) {
-                    scale(1f / SAMPLE_SCALE, 1f / SAMPLE_SCALE, Offset.Zero) { backdrop.draw(this, c) }
-                }
-                val pixels = IntArray(w * h)
-                // A sample the platform could not read back (empty or clear) says nothing about the content.
-                if (!platform.readPixels(layer.toImageBitmap(), pixels, w, h)) continue
-                if (pixels.count { (it ushr 24) > 0x80 } < pixels.size / 2) continue
+                val small: DrawScope.() -> Unit = { scale(1f / SAMPLE_SCALE, 1f / SAMPLE_SCALE, Offset.Zero) { backdrop.draw(this, c) } }
+                val pixels =
+                    if (own != null) {
+                        own.sample(w, h, requireDensity(), small) ?: continue
+                    } else {
+                        val layer = sample ?: requireGraphicsContext().createGraphicsLayer().also { sample = it }
+                        layer.record(requireDensity(), LayoutDirection.Ltr, IntSize(w, h), small)
+                        val read = IntArray(w * h)
+                        // A sample the platform could not read back (empty or clear) says nothing about the content.
+                        if (!platform.readPixels(layer.toImageBitmap(), read, w, h)) continue
+                        read
+                    }
+                if (pixels.size < w * h || pixels.count { (it ushr 24) > 0x80 } < pixels.size / 2) continue
                 val (mean, _) = LiquidInkRule.measure(pixels)
                 val next = LiquidInkRule.next(ink, mean)
                 if (next != ink) {
@@ -458,6 +471,8 @@ private class PlateHostNode(var words: KitLiquidWords) :
     override fun onDetach() {
         sample?.let { requireGraphicsContext().releaseGraphicsLayer(it) }
         sample = null
+        sampler?.release()
+        sampler = null
         coordinates = null
     }
 }
