@@ -20,12 +20,14 @@ import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.data.lane.WriterLanes
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
+import io.github.eslamasabry.oc.core.domain.events.InterruptReason
 import io.github.eslamasabry.oc.core.domain.events.RunOutcome
 import io.github.eslamasabry.oc.core.model.ModelSelection
 import io.github.eslamasabry.oc.core.model.PromptAgentMention
 import io.github.eslamasabry.oc.core.model.PromptAttachment
 import io.github.eslamasabry.oc.core.model.ServerProfile
 import io.github.eslamasabry.oc.core.model.StreamStatus
+import io.github.eslamasabry.oc.core.model.transcript.PartType
 import io.github.eslamasabry.oc.core.model.transcript.Role
 import io.github.eslamasabry.oc.engine.delivery.live.InboxProjection
 import io.github.eslamasabry.oc.engine.delivery.port.AutomationPolicy
@@ -158,6 +160,7 @@ public class ConnectionDelivery(
             },
             object : StopMemory {
                 override fun noteStopFromThisApp(ref: ConversationRef) {
+                    tracing?.stopped(ref.sessionId.raw)
                     requestedStop.update { it + ref }
                 }
 
@@ -184,13 +187,20 @@ public class ConnectionDelivery(
                     event.message.id,
                     event.message.role == Role.Assistant,
                 )
-            is GatewayEvent.PartUpserted ->
+            is GatewayEvent.PartUpserted -> {
                 trace.part(event.part.sessionId, event.part.messageId, event.part.rawType)
+                if (event.part.type == PartType.Tool) trace.tool(event.part.sessionId, event.part.id)
+            }
             is GatewayEvent.PartDelta -> trace.delta(event.sessionId.raw)
             is GatewayEvent.RunStarted -> trace.busy(event.sessionId.raw)
             is GatewayEvent.RunEnded ->
-                if (event.outcome is RunOutcome.Failed) trace.error(event.sessionId.raw)
-                else trace.idle(event.sessionId.raw)
+                when (val outcome = event.outcome) {
+                    is RunOutcome.Failed -> trace.error(event.sessionId.raw, outcome.kind?.name)
+                    is RunOutcome.Interrupted ->
+                        if (outcome.reason == InterruptReason.User) trace.error(event.sessionId.raw, "Aborted")
+                        else trace.idle(event.sessionId.raw)
+                    else -> trace.idle(event.sessionId.raw)
+                }
             else -> Unit
         }
     }
@@ -204,6 +214,17 @@ public class ConnectionDelivery(
     init {
         tracing?.let { trace ->
             scope.launch { gateway.events.project.collect { feed(trace, it.event) } }
+            // The stream going away and coming back, for a turn that was running through it (analytics only).
+            scope.launch {
+                var connected = gateway.events.status.value == StreamStatus.Connected
+                gateway.events.status.collect { status ->
+                    val now = status == StreamStatus.Connected
+                    if (now != connected) {
+                        connected = now
+                        trace.stream(profile.managedOnPhone, now)
+                    }
+                }
+            }
         }
         val lane = reconcileLane
         // A message the server already shows for this send scope proves the prompt arrived, so a

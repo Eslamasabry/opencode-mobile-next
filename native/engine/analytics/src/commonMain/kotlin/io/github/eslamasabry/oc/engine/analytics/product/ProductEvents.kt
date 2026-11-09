@@ -17,16 +17,19 @@ public enum class ProductEvent(public val wire: String) {
     /** The app came to the front: `kind` cold (a new process) or warm. */
     AppOpen("app_open"),
 
-    /** A setup step started: `step`. */
+    /** A setup step started: `step`, `attempt`. */
     SetupStepReached("setup_step_reached"),
 
-    /** A setup step failed: `step`, `kind`, `compat_mode`, `node_variant`. */
-    SetupStepFailed("setup_step_failed"),
-
-    /** A setup job finished: `minutes` (a bucket). */
+    /** A setup job finished: `minutes_range` (the whole setup), `server_kind`. */
     SetupDone("setup_done"),
 
-    /** The first reply this install ever saw: `server_kind`, `seconds` (a bucket). */
+    /** The person left an unfinished setup for 5 minutes or more: `step` (the last reached), `reason`, `minutes_range`. */
+    SetupAbandoned("setup_abandoned"),
+
+    /** The person came back to an unfinished setup: `step`, `minutes_range` (how long they were away). */
+    SetupResumed("setup_resumed"),
+
+    /** The first reply this install ever saw: `server_kind`, `first_reply_range`. */
     FirstReply("first_reply"),
 
     /** The person chose to connect a computer. */
@@ -44,7 +47,7 @@ public enum class ProductEvent(public val wire: String) {
     /** The person used a feature: `feature`, from [ProductFeature]. */
     FeatureUsed("feature_used"),
 
-    /** The app went to the background: `minutes` it was in front, a range. */
+    /** The app went to the background: `minutes_range` it was in front. */
     SessionLength("session_length"),
 
     // ---- B-190 health and diagnostics (docs/telemetry/health-and-diagnostics.md) ----
@@ -55,11 +58,17 @@ public enum class ProductEvent(public val wire: String) {
     /** A live connection ended: `server_kind`, `reason`, `recovered`. */
     ConnDrop("conn_drop"),
 
-    /** A message was sent: `result`, `fail_kind`, `first_reply_range`. */
+    /** A message was sent: `result`, `fail_kind`, `first_reply_range`, `agent`, `server_kind`, `input`. */
     SendResult("send_result"),
 
     /** A turn stopped moving: `stage`, `minutes_range`. */
     TurnStall("turn_stall"),
+
+    /** A turn ended: `outcome`, `agent`, `server_kind`, `first_reply_range`, `ms_range`, `tools_range`, `fail_kind`, `recovered`, `follow_up`. */
+    ChatTurn("chat_turn"),
+
+    /** An approval or question the person was asked: `kind`, `result`, `ms_range` (asked to answered). */
+    Approval("approval"),
 
     /** Queued messages were flushed: `sent`, `failed` (count ranges). */
     QueueFlush("queue_flush"),
@@ -278,23 +287,29 @@ public val productSchema: Map<String, Map<String, Set<String>>> =
         val steps = ProductSetupStep.entries.map { it.wire }.toSet()
         mapOf(
             ProductEvent.AppOpen.wire to mapOf("kind" to setOf("cold", "warm")),
-            ProductEvent.SetupStepReached.wire to mapOf("step" to steps),
-            ProductEvent.SetupStepFailed.wire to
+            ProductEvent.SetupStepReached.wire to
+                mapOf("step" to steps, "attempt" to HealthRanges.attempts.toSet()),
+            ProductEvent.SetupDone.wire to
+                mapOf(
+                    "minutes_range" to HealthRanges.setupTotal.toSet(),
+                    "server_kind" to ProductServerKind.entries.map { it.wire }.toSet(),
+                ),
+            ProductEvent.SetupAbandoned.wire to
                 mapOf(
                     "step" to steps,
-                    "kind" to ProductFailureKind.entries.map { it.wire }.toSet(),
-                    "compat_mode" to bool,
-                    "node_variant" to ProductNodeVariant.entries.map { it.wire }.toSet(),
+                    "reason" to HealthWords.abandonReasons,
+                    "minutes_range" to HealthRanges.away.toSet(),
                 ),
-            ProductEvent.SetupDone.wire to mapOf("minutes" to ProductBuckets.minutes.toSet()),
+            ProductEvent.SetupResumed.wire to
+                mapOf("step" to steps, "minutes_range" to HealthRanges.away.toSet()),
             ProductEvent.FirstReply.wire to
                 mapOf(
                     "server_kind" to ProductServerKind.entries.map { it.wire }.toSet(),
-                    "seconds" to ProductBuckets.seconds.toSet(),
+                    "first_reply_range" to HealthRanges.firstReply.toSet(),
                 ),
             ProductEvent.ScreenView.wire to mapOf("screen" to ProductScreen.entries.map { it.wire }.toSet()),
             ProductEvent.FeatureUsed.wire to mapOf("feature" to ProductFeature.entries.map { it.wire }.toSet()),
-            ProductEvent.SessionLength.wire to mapOf("minutes" to ProductBuckets.sessionMinutes.toSet()),
+            ProductEvent.SessionLength.wire to mapOf("minutes_range" to HealthRanges.sessionMinutes.toSet()),
             ProductEvent.ConnectComputerChosen.wire to emptyMap(),
             ProductEvent.UpdateOffered.wire to emptyMap(),
             ProductEvent.UpdateInstalled.wire to emptyMap(),
@@ -323,15 +338,38 @@ private fun healthSchema(): Map<String, Map<String, Set<String>>> {
                 "result" to setOf("ok", "fail", "queued"),
                 "fail_kind" to HealthWords.failKinds + HealthWords.sendOnlyFailKinds,
                 "first_reply_range" to HealthRanges.firstReply.toSet(),
+                "agent" to HealthWords.chatAgents,
+                "server_kind" to HealthWords.serverKinds,
+                "input" to HealthWords.inputs,
             ),
         ProductEvent.TurnStall.wire to
             mapOf("stage" to HealthWords.stallStages, "minutes_range" to HealthRanges.stallMinutes.toSet()),
+        ProductEvent.ChatTurn.wire to
+            mapOf(
+                "outcome" to HealthWords.turnOutcomes,
+                "agent" to HealthWords.chatAgents,
+                "server_kind" to HealthWords.serverKinds,
+                "first_reply_range" to HealthRanges.firstReply.toSet(),
+                "ms_range" to HealthRanges.turn.toSet(),
+                "tools_range" to HealthRanges.tools.toSet(),
+                "fail_kind" to HealthWords.turnErrorKinds,
+                "recovered" to HealthWords.recoveredTurn,
+                "follow_up" to HealthWords.followUps,
+            ),
+        ProductEvent.Approval.wire to
+            mapOf(
+                "kind" to HealthWords.approvalKinds,
+                "result" to HealthWords.approvalResults,
+                "ms_range" to HealthRanges.turn.toSet(),
+            ),
         ProductEvent.QueueFlush.wire to
             mapOf("sent" to HealthRanges.counts.toSet(), "failed" to HealthRanges.counts.toSet()),
         ProductEvent.LinuxSetupStep.wire to
             mapOf(
                 "step" to HealthWords.linuxSteps,
-                "result" to HealthWords.okFail,
+                "result" to HealthWords.setupResults,
+                "attempt" to HealthRanges.attempts.toSet(),
+                "fail_kind" to HealthWords.setupFailKinds,
                 "ms_range" to HealthRanges.setupMs.toSet(),
                 "exit_kind" to HealthWords.exitKinds,
                 "signal" to HealthWords.signals,

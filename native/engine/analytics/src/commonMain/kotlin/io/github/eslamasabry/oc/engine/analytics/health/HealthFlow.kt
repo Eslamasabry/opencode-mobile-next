@@ -92,7 +92,13 @@ public class HealthFlow(private val telemetry: () -> Telemetry = { AppTelemetry.
     }
 
     /** [firstReplyMs] is how long the first reply took, or null for none; [serverKind] is `phone` or `computer`. */
-    public fun sendResult(result: String, failure: Failure? = null, firstReplyMs: Long? = null, serverKind: String? = null) {
+    public fun sendResult(
+        result: String,
+        failure: Failure? = null,
+        firstReplyMs: Long? = null,
+        serverKind: String? = null,
+        traits: SendTraits? = null,
+    ) {
         val t = telemetry()
         t.breadcrumb("chat.send")
         if (result == "fail") ProblemTally.note(t.ring, failKindOf(failure, forSend = true))
@@ -102,6 +108,11 @@ public class HealthFlow(private val telemetry: () -> Telemetry = { AppTelemetry.
                 put("result", result)
                 if (result == "fail") put("fail_kind", failKindOf(failure, forSend = true))
                 put("first_reply_range", HealthRanges.firstReplyOf(firstReplyMs))
+                if (traits != null) {
+                    put("agent", chatAgentWord(traits.agent))
+                    put("input", traits.input)
+                    if (serverKind != null) put("server_kind", serverKind)
+                }
             },
         )
         if (firstReplyMs != null && serverKind != null) {
@@ -130,24 +141,38 @@ public class HealthFlow(private val telemetry: () -> Telemetry = { AppTelemetry.
         exit: Int? = null,
         compatMode: String = "none",
         freeGigabytes: Double? = null,
+        attempt: Int? = null,
+        failKind: String? = null,
+        /** `skipped` or `cancelled` in place of ok/fail; [ok] is then false and no failure is counted. */
+        notRun: String? = null,
     ) {
         val t = telemetry()
-        val result = if (ok) "ok" else "fail"
+        val result = notRun ?: if (ok) "ok" else "fail"
+        val failed = result == "fail"
         t.breadcrumb("linux.step:$step")
-        if (!ok) t.breadcrumb("linux.fail")
+        if (failed) t.breadcrumb("linux.fail")
         t.track(
             ProductEvent.LinuxSetupStep,
             buildMap {
                 put("step", step)
                 put("result", result)
+                if (attempt != null) put("attempt", HealthRanges.attemptOf(attempt))
+                if (failed && failKind != null) put("fail_kind", failKind)
                 put("ms_range", HealthRanges.setupMsOf(elapsedMs))
-                put("exit_kind", exitKindOf(exit, ok))
-                put("signal", if (ok) "none" else signalOfExit(exit))
+                // Native steps have no exit code: leave the two out rather than send a word that means "unknown".
+                if (ok || exit != null) {
+                    put("exit_kind", exitKindOf(exit, ok))
+                    put("signal", if (ok) "none" else signalOfExit(exit))
+                }
                 put("compat_mode", compatMode)
                 if (freeGigabytes != null) put("free_space_range", HealthRanges.storageOf(freeGigabytes))
             },
         )
-        t.performanceTrace(PerfSchema.linuxSetup(step), elapsedMs, mapOf("step" to step, "result" to result))
+        t.performanceTrace(
+            PerfSchema.linuxSetup(step),
+            elapsedMs,
+            mapOf("step" to step, "result" to if (result == "ok" || result == "fail") result else "fail"),
+        )
     }
 
     public fun agentStart(agent: String, ok: Boolean, failKind: String = "other", elapsedMs: Long? = null) {
@@ -195,25 +220,75 @@ public class HealthFlow(private val telemetry: () -> Telemetry = { AppTelemetry.
         )
     }
 
-    /**
-     * One timing of the phone setup engine (`setup.component` with its `id`, or `setup.job` with its `state`), as the
-     * `linux_setup_step` event and its trace (Flutter G table): `linux` is `unpack`, `essentials` and `python` are
-     * `essentials`, `aiteam` is `agents`, a finished job is `done`; other components are not counted.
-     */
-    public fun setupTiming(
-        name: String,
-        attributes: Map<String, String>,
-        durationMs: Long,
-        failed: Boolean,
-        freeGigabytes: Double? = null,
-    ) {
-        val step =
-            when (name) {
-                "setup.component" -> linuxStepOf(attributes["id"])
-                "setup.job" -> "done".takeIf { attributes["state"] == "done" }
-                else -> null
-            } ?: return
-        linuxSetupStep(step, ok = !failed, elapsedMs = durationMs, freeGigabytes = freeGigabytes)
+    // ---- setup journey ----
+
+    public fun setupStepReached(step: String, attempt: Int) {
+        telemetry().track(
+            ProductEvent.SetupStepReached,
+            mapOf("step" to step, "attempt" to HealthRanges.attemptOf(attempt)),
+        )
+    }
+
+    public fun setupDone(totalMs: Long, serverKind: String) {
+        telemetry().track(
+            ProductEvent.SetupDone,
+            mapOf("minutes_range" to HealthRanges.setupTotalOf(totalMs), "server_kind" to serverKind),
+        )
+    }
+
+    public fun setupAbandoned(step: String, reason: String, awayMs: Long) {
+        telemetry().track(
+            ProductEvent.SetupAbandoned,
+            mapOf("step" to step, "reason" to reason, "minutes_range" to HealthRanges.awayOf(awayMs)),
+        )
+    }
+
+    public fun setupResumed(step: String, awayMs: Long) {
+        telemetry().track(
+            ProductEvent.SetupResumed,
+            mapOf("step" to step, "minutes_range" to HealthRanges.awayOf(awayMs)),
+        )
+    }
+
+    /** The first reply this install ever saw. */
+    public fun firstReply(serverKind: String, firstReplyMs: Long) {
+        telemetry().track(
+            ProductEvent.FirstReply,
+            mapOf("server_kind" to serverKind, "first_reply_range" to HealthRanges.firstReplyOf(firstReplyMs)),
+        )
+    }
+
+    // ---- chat journey ----
+
+    public fun chatTurn(turn: ChatTurnSummary) {
+        val t = telemetry()
+        t.track(
+            ProductEvent.ChatTurn,
+            buildMap {
+                put("outcome", turn.outcome)
+                put("agent", chatAgentWord(turn.agent))
+                put("server_kind", turn.serverKind)
+                put("first_reply_range", HealthRanges.firstReplyOf(turn.firstReplyMs))
+                put("ms_range", HealthRanges.turnOf(turn.totalMs))
+                put("tools_range", HealthRanges.toolsOf(turn.tools))
+                if (turn.failKind != null) put("fail_kind", turn.failKind)
+                put("recovered", turn.recovered)
+                put("follow_up", turn.followUp)
+            },
+        )
+    }
+
+    public fun feature(feature: io.github.eslamasabry.oc.engine.analytics.product.ProductFeature) {
+        telemetry().feature(feature)
+    }
+
+    public fun approval(kind: String, result: String, waitedMs: Long) {
+        val t = telemetry()
+        t.breadcrumb(if (result == "denied" || result == "declined") "chat.deny" else "chat.approve")
+        t.track(
+            ProductEvent.Approval,
+            mapOf("kind" to kind, "result" to result, "ms_range" to HealthRanges.turnOf(waitedMs)),
+        )
     }
 
     public companion object {
@@ -226,8 +301,14 @@ public class HealthFlow(private val telemetry: () -> Telemetry = { AppTelemetry.
                 "opencode" -> "opencode"
                 "paseo" -> "paseo"
                 "aiteam" -> "agents"
+                "start" -> "start"
+                "voice" -> "voice"
                 else -> null
             }
+
+        /** The chat agent word: the built-in names only; a custom agent's own name is never sent. */
+        public fun chatAgentWord(agent: String?): String =
+            agent?.trim()?.lowercase()?.takeIf { it in HealthWords.chatAgents && it != "other" } ?: "other"
 
         /** The agent word: a native agent id (`claude`, `claude-code`) or a contract word; anything else `other`. */
         public fun agentWord(agent: String): String {
@@ -266,6 +347,22 @@ public class HealthFlow(private val telemetry: () -> Telemetry = { AppTelemetry.
         private const val SIGNAL_BASE = 128
     }
 }
+
+/** What the send path knows about a prompt, as words: [input] is one of [HealthWords.inputs]. */
+public data class SendTraits(val agent: String? = null, val input: String = "text")
+
+/** One finished turn, as words and numbers only. */
+public data class ChatTurnSummary(
+    val outcome: String,
+    val agent: String?,
+    val serverKind: String,
+    val firstReplyMs: Long?,
+    val totalMs: Long,
+    val tools: Int,
+    val failKind: String?,
+    val recovered: String,
+    val followUp: String,
+)
 
 /** The inert default: sends nothing, keeps nothing, has no vendor. */
 public object NoTelemetry : Telemetry {

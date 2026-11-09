@@ -72,7 +72,47 @@ public object HealthRanges {
             else -> "other"
         }
 
-    /** `ram_range` (GB). */
+    /** `linux_setup_step.attempt`, `setup_step_reached.attempt`: the try number of one step. */
+    public val attempts: List<String> = listOf("1", "2", "3+")
+
+    public fun attemptOf(attempt: Int): String = attempts[(attempt - 1).coerceIn(0, 2)]
+
+    /** `setup_done.minutes_range`: the whole setup, first start to done (wall clock, breaks included). */
+    public val setupTotal: List<String> = listOf("under_2", "2_to_5", "5_to_10", "10_to_20", "20_to_40", "over_40")
+
+    public fun setupTotalOf(elapsedMs: Long): String =
+        pick(elapsedMs / 60_000.0, listOf(2.0, 5.0, 10.0, 20.0, 40.0), setupTotal)
+
+    /** `setup_abandoned.minutes_range` and `setup_resumed.minutes_range`: how long the person was away (5 minutes or more). */
+    public val away: List<String> = listOf("5-15", "15-60", "60-1440", ">1440")
+
+    public fun awayOf(elapsedMs: Long): String = pick(elapsedMs / 60_000.0, listOf(15.0, 60.0, 1440.0), away)
+
+    /** `chat_turn.ms_range` (send to done) and `approval.ms_range` (asked to answered). */
+    public val turn: List<String> = listOf("<10s", "10-30s", "30-120s", "2-10m", ">10m")
+
+    public fun turnOf(elapsedMs: Long): String =
+        pick(elapsedMs / 1000.0, listOf(10.0, 30.0, 120.0, 600.0), turn)
+
+    /** `chat_turn.tools_range`: tool calls in one turn. */
+    public val tools: List<String> = listOf("0", "1-3", "4-10", "11-30", ">30")
+
+    public fun toolsOf(count: Int): String =
+        when {
+            count <= 0 -> "0"
+            count <= 3 -> "1-3"
+            count <= 10 -> "4-10"
+            count <= 30 -> "11-30"
+            else -> ">30"
+        }
+
+    /** `session_length.minutes_range`: the app in front. */
+    public val sessionMinutes: List<String> = listOf("under_1", "1_to_5", "5_to_15", "15_to_60", "over_60")
+
+    public fun sessionMinutesOf(elapsedMs: Long): String =
+        pick(elapsedMs / 60_000.0, listOf(1.0, 5.0, 15.0, 60.0), sessionMinutes)
+
+    /** `first_reply.first_reply_range` is [firstReply]. `ram_range` (GB). */
     public val ram: List<String> = listOf("<3", "3-4", "4-6", "6-8", "8-12", ">12")
 
     public fun ramOf(gigabytes: Double): String = pick(gigabytes, listOf(3.0, 4.0, 6.0, 8.0, 12.0), ram)
@@ -108,7 +148,46 @@ public object HealthWords {
 
     /** `linux_setup_step.step`. */
     public val linuxSteps: Set<String> =
-        linkedSetOf("download", "unpack", "essentials", "node", "opencode", "paseo", "agents", "done")
+        linkedSetOf("download", "unpack", "essentials", "node", "opencode", "paseo", "agents", "start", "voice", "done")
+
+    /** `linux_setup_step.result`: Flutter had ok and fail; native adds the two ways a step does not run. */
+    public val setupResults: Set<String> = linkedSetOf("ok", "fail", "skipped", "cancelled")
+
+    /** `linux_setup_step.fail_kind`. */
+    public val setupFailKinds: Set<String> =
+        linkedSetOf("network", "storage", "permission", "download", "checksum", "killed_by_system", "timeout", "unknown")
+
+    /** `setup_abandoned.reason`: how the person left the setup unfinished. */
+    public val abandonReasons: Set<String> = linkedSetOf("background", "closed")
+
+    /** `chat_turn.fail_kind`: why a turn ended in error, by the message error's kind only. */
+    public val turnErrorKinds: Set<String> =
+        linkedSetOf(
+            "provider_auth", "context_overflow", "output_length", "content_filter", "model_not_found", "aborted",
+            "server", "other",
+        )
+
+    /** `chat_turn.outcome`. */
+    public val turnOutcomes: Set<String> =
+        linkedSetOf("done", "stopped_by_user", "error", "connection_lost", "approval_timeout")
+
+    /** `send_result.input`: how the prompt was made. */
+    public val inputs: Set<String> = linkedSetOf("text", "voice", "attachment", "voice_attachment")
+
+    /** `chat_turn.follow_up`: `steer` is a prompt sent into a running turn, `after_fail` the next prompt after a failed turn. */
+    public val followUps: Set<String> = linkedSetOf("none", "steer", "after_fail")
+
+    /** `chat_turn.recovered`: `none` when the stream never dropped in the turn. */
+    public val recoveredTurn: Set<String> = linkedSetOf("none", "yes", "no")
+
+    /** `send_result.agent` / `chat_turn.agent`: the chat's own agent mode, by built-in name only. */
+    public val chatAgents: Set<String> = linkedSetOf("build", "plan", "general", "other")
+
+    /** `approval.kind`: what was asked for. */
+    public val approvalKinds: Set<String> = linkedSetOf("run", "edit", "read", "web", "question", "other")
+
+    /** `approval.result`. */
+    public val approvalResults: Set<String> = linkedSetOf("allowed", "always", "denied", "answered", "declined", "expired")
     public val exitKinds: Set<String> = setOf("0", "1", "126", "127", "signal", "other")
     public val signals: Set<String> = setOf("SIGILL", "SIGSEGV", "SIGBUS", "SIGKILL", "other", "none")
     public val compatModes: Set<String> = setOf("none", "armcap", "threads", "both")
