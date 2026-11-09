@@ -110,4 +110,24 @@ class PacerTest {
             assertTrue(gaps.all { it >= 60.seconds }, "gaps $gaps")
             assertTrue(gaps.toSet().size > 1, "jitter above the floor still varies")
         }
+
+    @Test
+    fun `battery saver slows a background-watching job to a quarter of its pace and leaves the foreground alone`() =
+        runTest {
+            val visibility = MutableStateFlow(Visibility.HiddenWatching)
+            val saver = MutableStateFlow(true)
+            val seen = mutableListOf<Long>()
+            val pacer = DefaultPacer(visibility, Random(1), saver)
+            backgroundScope.launch { pacer.ticks(poll).collect { seen += testScheduler.currentTime } }
+            runCurrent()
+            advanceTimeBy(39.seconds)
+            assertEquals(emptyList(), seen, "10 s becomes 40 s under Battery Saver")
+            advanceTimeBy(2.seconds)
+            assertEquals(listOf(40_000L), seen)
+            visibility.value = Visibility.Foreground
+            runCurrent()
+            assertEquals(2, seen.size, "coming back on screen ticks at once")
+            advanceTimeBy(5.seconds)
+            assertEquals(3, seen.size, "the foreground pace is 5 s, saver or not")
+        }
 }
