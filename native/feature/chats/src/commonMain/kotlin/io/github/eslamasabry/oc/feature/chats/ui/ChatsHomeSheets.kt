@@ -13,18 +13,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.platform.testTag
-import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsActions
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsHomeSheet
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsMonitorStatus
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningPhase
-import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningRow
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningUi
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsWatchedKind
 import io.github.eslamasabry.oc.feature.chats.presentation.ConversationRowUi
-import io.github.eslamasabry.oc.feature.chats.presentation.RowTitle
 import io.github.eslamasabry.oc.feature.chats.presentation.SwitcherServerState
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceRow
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceMark
@@ -365,35 +362,11 @@ private fun MonitoringSettings(state: ChatsUi, actions: ChatsActions) {
 
 @Composable
 internal fun OpeningStatus(opening: ChatsOpeningUi, actions: ChatsActions) {
-    // E20-S08: while the server opens, the saved titles are a list on the gutter under it; a centred page state
-    // over that list read as two layouts. The words start where the rows do.
-    // E20-S09: the words speak of saved titles only when there are saved titles to show under them.
-    val saved = opening.rows.isNotEmpty()
-    if (opening.phase != ChatsOpeningPhase.Failed) {
-        KitNotice(
-            message = stringResource(if (saved) Res.string.homeOpeningSavedTitles else Res.string.homeOpeningWaiting),
-            modifier =
-                Modifier.padding(horizontal = io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens.current.gutter.dp)
-                    .testTag("home-opening-connecting"),
-            // E05-S20: a phone server the app just started is starting, not failing.
-            title =
-                if (opening.phase == ChatsOpeningPhase.Starting) stringResource(Res.string.homeOpeningStarting)
-                else stringResource(Res.string.homeOpeningConnecting, opening.serverName),
-            tone = io.github.eslamasabry.oc.ui.design.color.StatusTone.Progress,
-        )
-        return
-    }
+    // Connecting and starting live in the server pill; only a failure needs its own card.
     KitStateView(
-        kind =
-            if (opening.phase == ChatsOpeningPhase.Failed) KitStateKind.Error
-            else KitStateKind.Calm,
-        title =
-            stringResource(
-                if (opening.phase == ChatsOpeningPhase.Failed) Res.string.homeOpeningFailed
-                else Res.string.homeOpeningConnecting,
-                opening.serverName,
-            ),
-        body = stringResource(if (saved) Res.string.homeOpeningSavedTitles else Res.string.homeOpeningFailedBody),
+        kind = KitStateKind.Error,
+        title = stringResource(Res.string.homeOpeningFailed, opening.serverName),
+        body = stringResource(Res.string.homeOpeningFailedBody),
         failure = opening.failure,
         primary =
             if (opening.phase == ChatsOpeningPhase.Failed)
@@ -425,15 +398,6 @@ internal fun OpeningStatus(opening: ChatsOpeningUi, actions: ChatsActions) {
             else emptyList(),
     )
 }
-
-@Composable
-internal fun OpeningRow(row: ChatsOpeningRow) {
-    // A saved title reads as a conversation (the glyph All conversations uses), quiet until its server answers.
-    KitRow(title = title(row.title), leading = KitRowLeading.Glyph(KitIcons.chat))
-}
-
-@Composable
-private fun title(value: RowTitle): String = rowTitleWords(value)
 
 /** The glyph of a project's kind (Dart `phoneProjectKindIcon`, lib/ui/widgets/phone_project_kind.dart): the plain open folder when unknown. */
 internal fun projectKindGlyph(kind: HomeProjectKind?): ImageVector =
