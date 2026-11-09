@@ -96,10 +96,12 @@ class E20S30JumpPillTest {
             // The calmer 32 dp face, 8 dp clear of the composer's veil.
             assertEquals(32.dp, face.bottom - face.top)
             assertTrue(abs((veil - face.bottom - 8.dp).value) <= .5f, "gap ${veil - face.bottom}")
-            // A short fade, never the old lane (minTarget + 8 + 16 dp + the composer, ground all the way down).
+            // A short fade, never the old lane: it settles over 28 dp above the composer and holds on under it (owner
+            // 2026-11-09: ending at the composer it cut a hard line), where the screen's scroll edge fades it out.
             val fade = onNodeWithTag("transcript-jump-fade").getBoundsInRoot()
-            assertEquals(JUMP_FADE_DP.dp, fade.bottom - fade.top)
-            assertTrue(abs((fade.bottom - veil).value) <= .5f, "fade $fade ends at the composer's veil $veil")
+            assertTrue(abs((veil - fade.top - JUMP_FADE_DP.dp).value) <= .5f, "fade $fade starts 28 dp above the composer $veil")
+            val list = onNodeWithTag("transcript-list").getBoundsInRoot()
+            assertTrue(abs((fade.bottom - list.bottom).value) <= .5f, "fade $fade runs on to the list's edge $list")
             assertTrue(JUMP_FADE_ALPHA < 1f, "the fade never reaches a solid block")
         }
 

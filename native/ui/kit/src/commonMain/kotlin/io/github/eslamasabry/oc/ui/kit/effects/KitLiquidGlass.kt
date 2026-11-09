@@ -19,10 +19,8 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.RectangleShape
@@ -573,81 +571,6 @@ public const val LIQUID_BAR_INSET_Y: Int = 4
 /** The most a bar's capsule's ends round, in dp (a two-line bar is a rounded panel, not a lozenge). */
 public const val LIQUID_BAR_RADIUS: Int = 26
 
-/**
- * The edge where a page's content meets its floating bar ([top]) or bottom block: no band of ground, only a soft fade
- * of it towards the screen's edge, so what scrolls past the glass fades rather than cuts.
- */
-@Composable
-internal fun Modifier.kitLiquidEdgeFade(top: Boolean): Modifier {
-    val ground = LocalKitColors.current.ground.copy(alpha = 1f)
-    return drawBehind {
-        // The content fades out over the block's inner quarter, so the parts that lie on the block itself (the chips
-        // above the message box, the bar's own words) sit on the page's ground, never on the words scrolling past.
-        if (top) {
-            val stops = arrayOf(0f to ground.copy(alpha = EDGE_FADE_ALPHA), .55f to ground.copy(alpha = EDGE_FADE_ALPHA * .8f), 1f to ground.copy(alpha = 0f))
-            drawRect(Brush.verticalGradient(*stops, startY = 0f, endY = size.height))
-        } else {
-            // The scroll edge: the content fades out over EDGE_FADE_DP above the block, and the block itself (the chips
-            // row, the gaps round the message box) lies on the ground. The message box stays glass over the content.
-            val reach = EDGE_FADE_DP.dp.toPx()
-            drawRect(
-                Brush.verticalGradient(0f to ground.copy(alpha = 0f), 1f to ground.copy(alpha = EDGE_FADE_ALPHA), startY = -reach, endY = 0f),
-                topLeft = Offset(0f, -reach),
-                size = Size(size.width, reach),
-            )
-            drawRect(ground.copy(alpha = EDGE_FADE_ALPHA))
-        }
-    }
-}
-
-/**
- * The soft fade of the page's ground behind a row of glass chips over the message box (owner 2026-11-09: "transcript
- * text must not read through behind controls"): under the chips only, never a band behind the whole bottom block (the
- * message box stays glass over the transcript), feathered [CHIPS_FADE_FEATHER_DP] past the row on every side. Drawn
- * only where the chips are liquid glass on a chat's bottom block; elsewhere the modifier draws nothing.
- */
-@Composable
-public fun Modifier.kitLiquidChipsFade(): Modifier {
-    if (LocalKitLiquidChrome.current == null || !kitLiquidOn()) return this
-    val ground = LocalKitColors.current.ground.copy(alpha = 1f)
-    return drawBehind {
-        val f = CHIPS_FADE_FEATHER_DP.dp.toPx()
-        val w = size.width + 2 * f
-        val h = size.height + 2 * f
-        if (w <= 0f || h <= 0f) return@drawBehind
-        val core = ground.copy(alpha = CHIPS_FADE_ALPHA)
-        val clear = ground.copy(alpha = 0f)
-        val fy = f / h
-        val fx = f / w
-        drawIntoCanvas { canvas ->
-            val bounds = androidx.compose.ui.geometry.Rect(-f, -f, size.width + f, size.height + f)
-            canvas.saveLayer(bounds, Paint())
-            drawRect(
-                Brush.verticalGradient(0f to clear, fy * 1.6f to core, 1f - fy to core, 1f to clear, startY = -f, endY = size.height + f),
-                topLeft = Offset(-f, -f),
-                size = Size(w, h),
-            )
-            // Feather the ends: keep the band only where the horizontal mask is opaque.
-            drawRect(
-                Brush.horizontalGradient(0f to Color.Transparent, fx * 1.6f to Color.Black, 1f - fx * 1.6f to Color.Black, 1f to Color.Transparent, startX = -f, endX = size.width + f),
-                topLeft = Offset(-f, -f),
-                size = Size(w, h),
-                blendMode = BlendMode.DstIn,
-            )
-            canvas.restore()
-        }
-    }
-}
-
-/** How far the chips' fade reaches past the row, in dp. */
-internal const val CHIPS_FADE_FEATHER_DP: Int = 14
-
-/** How much of the ground lies behind the chips at the fade's core: words behind them no longer read. */
-internal const val CHIPS_FADE_ALPHA: Float = .86f
-
-/** How far above a page's bottom block its content fades out (Apple's scroll edge effect: 16-24 dp). */
-internal const val EDGE_FADE_DP: Int = 20
-
 /** The words of [role]'s liquid pane over a feature's [source], for words that lie beside their pane (a bar). */
 @Composable
 internal fun kitLiquidWordsHost(role: LiquidRole, source: KitFrostState?): Modifier {
@@ -665,9 +588,6 @@ internal fun kitLiquidWordsHost(role: LiquidRole, source: KitLiquidSource?): Mod
     val backdrop = remember(source, ground, picture) { source?.let { liquidSourceBackdrop(it, ground, picture) } }
     return Modifier.kitLiquidPlateHost(kitLiquidWords(backdrop, liquidFlipFor(source, role)))
 }
-
-/** How much of the ground the edge fade reaches at the screen's edge. */
-internal const val EDGE_FADE_ALPHA: Float = .96f
 
 
 /**
