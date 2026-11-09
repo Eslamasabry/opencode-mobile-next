@@ -49,13 +49,13 @@ class KitStatusPillTest {
     }
 
     @Test
-    fun status_line_has_no_capsule_and_the_dot_is_the_accent() = runComposeUiTest {
-        var ground = Color.Unspecified
+    fun pill_is_neutral_and_the_dot_is_the_accent() = runComposeUiTest {
+        var surface = Color.Unspecified
         var accent = Color.Unspecified
         setContent {
             Themed(rtl = false, fontScale = 1f) {
                 val c = LocalKitColors.current
-                ground = c.ground
+                surface = c.surface3
                 accent = c.accent
                 Box(Modifier.background(c.ground)) {
                     KitStatusPill("This phone", KitConnectionTone.Ok, "This phone, Connected, Switch server", {})
@@ -64,9 +64,9 @@ class KitStatusPillTest {
         }
         val map = onNodeWithTag("kit-status-pill", useUnmergedTree = true).captureToImage().toPixelMap()
         fun near(a: Color, b: Color) = abs(a.red - b.red) < .03f && abs(a.green - b.green) < .03f && abs(a.blue - b.blue) < .03f
-        // C03: inside the old capsule's start padding it is the page's own colour, never a fill or a status tint.
+        // Inside the pill's start padding: the neutral surface, never a status tint.
         val face = map[(3 * 3), map.height / 2]
-        assertTrue(near(face, ground), "face $face vs ground $ground")
+        assertTrue(near(face, surface), "face $face vs surface $surface")
         var dotHit = false
         for (x in 0 until map.width / 3) if (near(map[x, map.height / 2], accent)) dotHit = true
         assertTrue(dotHit, "an accent-coloured dot")

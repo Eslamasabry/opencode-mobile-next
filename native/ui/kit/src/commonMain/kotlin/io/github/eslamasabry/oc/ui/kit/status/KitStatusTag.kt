@@ -1,6 +1,13 @@
 package io.github.eslamasabry.oc.ui.kit.status
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.platform.testTag
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,24 +39,18 @@ public enum class KitStatusTagTone { NeedsYou, Running, Done, Failed }
 @Composable
 public fun KitStatusTag(label: String, tone: KitStatusTagTone, modifier: Modifier = Modifier) {
     val c = LocalKitColors.current
-    val base = when (tone) {
+    // One rule for every status word in the kit: a dot in the status colour (grey when done or failed), then the word in
+    // plain secondary text.
+    val dot = when (tone) {
         KitStatusTagTone.NeedsYou -> c.attention
         KitStatusTagTone.Running -> c.accent
-        KitStatusTagTone.Done, KitStatusTagTone.Failed -> c.text2 // F: kit_status_tag.dart:49 calm, not a second green
+        KitStatusTagTone.Done, KitStatusTagTone.Failed -> c.text3
     }
-    // C03 (audit 2026-11-09): never a tinted capsule. The word alone, in the tone's ink where colour carries meaning
-    // (needs you, running) and in calm secondary text otherwise.
-    val ink = if (tone == KitStatusTagTone.Done || tone == KitStatusTagTone.Failed) c.text2 else Color(
-        RoleDerivation.readableOn(Argb(base.toArgb()), listOf(Argb(c.surface1.toArgb())), 4.7, Argb(c.text1.toArgb())).v, // F: lib/ui/kit/kit_status_tag.dart:59
-    )
-    val style = LocalKitTypography.current.style(TypeRole.Caption).copy(color = ink)
+    val style = LocalKitTypography.current.style(TypeRole.Caption).copy(color = c.text2)
     KitSwap(label to tone, modifier.kitMaxWidth(CapRole.Chip), alignment = Alignment.CenterStart) { (word, _) ->
-        BasicText(
-            word,
-            Modifier.padding(vertical = Space.S1.dp),
-            style = style,
-            maxLines = Int.MAX_VALUE,
-            overflow = TextOverflow.Clip,
-        )
+        Row(Modifier.padding(vertical = Space.S1.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+            Box(Modifier.size(Space.S2.dp).background(dot, CircleShape).testTag("kit-status-dot"))
+            BasicText(word, Modifier.weight(1f, fill = false), style = style, maxLines = Int.MAX_VALUE, overflow = TextOverflow.Clip)
+        }
     }
 }
