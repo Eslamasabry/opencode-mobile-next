@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.PressInteraction
@@ -160,6 +161,33 @@ public fun KitChip(
         if (onClick != null || onRemove != null) Modifier.widthIn(min = tokens.minTarget.dp) else Modifier,
     ).onPreviewKeyEvent {
         if (onRemove != null && it.type == KeyEventType.KeyDown && (it.key == Key.Delete || it.key == Key.Backspace)) { onRemove(); true } else false
+    }
+    // C03 (audit 2026-11-09): a chip nobody can tap states a fact, and a fact is never a tinted capsule. It is a small
+    // dot (only when the tone carries meaning) and a plain word, set on the row's own surface.
+    if (onClick == null && onRemove == null && selected == null && glyph == null && !adaptiveModel) {
+        val dotInk = when (tone) {
+            KitChipTone.Attention -> c.attention
+            KitChipTone.Active -> c.accent
+            KitChipTone.Neutral -> null
+        }
+        val plainStyle = style.copy(
+            color = if (tone == KitChipTone.Attention) c.text1 else c.text2,
+            fontWeight = baseStyle.fontWeight,
+        )
+        Row(
+            modifier.kitMaxWidth(CapRole.Chip).heightIn(min = minHeight).testTag("kit-chip-plain")
+                .clearAndSetSemantics {
+                    contentDescription = accessible
+                    if (liveRegion) this.liveRegion = LiveRegionMode.Polite
+                },
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
+        ) {
+            if (icon != null) KitGlyph(icon, c.text2, iconSize)
+            else if (dotInk != null) Box(Modifier.size(Space.S2.dp).background(dotInk, androidx.compose.foundation.shape.CircleShape).testTag("kit-chip-dot"))
+            BasicText(text, Modifier.weight(1f, fill = false).testTag("kit-chip-label"), style = plainStyle, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+        return
     }
     val density = LocalDensity.current
     val measurer = rememberTextMeasurer()

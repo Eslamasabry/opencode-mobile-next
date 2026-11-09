@@ -53,4 +53,27 @@ class KitMdSourceTest {
         assertEquals("val x = 1", code.text.trimEnd())
         assertTrue(KitMdSource.blocks("r", "", false).isEmpty())
     }
+
+    @Test
+    fun `B-CHAT-101 closed choices, checklist and command fences become agent blocks, not plain code`() {
+        val choices = KitMdSource.blocks("r", "```choices\n- Yes, do it\n2. Not now\n```", false)
+        val c = assertIs<KitMdBlock.Agent>(choices.single())
+        assertEquals(KitAgentKind.Choices, c.kind)
+        assertEquals(listOf("Yes, do it", "Not now"), c.items.map { it.text })
+        val list = assertIs<KitMdBlock.Agent>(KitMdSource.blocks("r", "```checklist\n[x] one\n[ ] two\n```", false).single())
+        assertEquals(listOf(true, false), list.items.map { it.done })
+        val cmd = assertIs<KitMdBlock.Agent>(KitMdSource.blocks("r", "```command\nls -la\n```", false).single())
+        assertEquals(KitAgentKind.Command, cmd.kind)
+        assertIs<KitMdBlock.Code>(KitMdSource.blocks("r", "```choices\n- unfinished", true).single(), "an open fence stays plain")
+    }
+}
+
+class KitSentFilesTest {
+    @Test
+    fun `B-CHAT-130 a picture's data address gives its bytes and anything else gives none`() {
+        val bytes = io.github.eslamasabry.oc.ui.kitchat.transcript.dataUrlBytes("data:image/png;base64,AQID")
+        assertEquals(listOf<Byte>(1, 2, 3), bytes?.toList())
+        assertNull(io.github.eslamasabry.oc.ui.kitchat.transcript.dataUrlBytes("file:///tmp/a.png"))
+        assertNull(io.github.eslamasabry.oc.ui.kitchat.transcript.dataUrlBytes("data:image/png,raw"))
+    }
 }

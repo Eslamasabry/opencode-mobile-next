@@ -49,6 +49,17 @@ import io.github.eslamasabry.oc.ui.kitchat.rememberKitRedactedCopyAction
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitCopied
 import io.github.eslamasabry.oc.ui.words.res.kitReportProblem
+import io.github.eslamasabry.oc.ui.words.res.appDiagnosticsClearBody
+import io.github.eslamasabry.oc.ui.words.res.appDiagnosticsClearConfirm
+import io.github.eslamasabry.oc.ui.words.res.appDiagnosticsClearTitle
+import io.github.eslamasabry.oc.ui.words.res.perfTraceClearTimings
+import io.github.eslamasabry.oc.ui.words.res.perfTraceCopied
+import io.github.eslamasabry.oc.ui.words.res.perfTraceCopy
+import io.github.eslamasabry.oc.ui.words.res.perfTraceTitle
+import io.github.eslamasabry.oc.ui.words.res.reportProblemClearFailed
+import io.github.eslamasabry.oc.ui.words.res.reportKeptClearErrors
+import io.github.eslamasabry.oc.ui.words.res.reportKeptCopyErrors
+import io.github.eslamasabry.oc.ui.words.res.reportProblemErrorsLabel
 import io.github.eslamasabry.oc.ui.words.res.reportCodeCopy
 import io.github.eslamasabry.oc.ui.words.res.reportCodeLabel
 import io.github.eslamasabry.oc.ui.words.res.reportProblemDescribeHint
@@ -101,7 +112,10 @@ import io.github.eslamasabry.oc.ui.words.res.reportR1Words
 import io.github.eslamasabry.oc.ui.words.res.sendReportDone
 import io.github.eslamasabry.oc.ui.words.res.sendReportFailed
 import io.github.eslamasabry.oc.ui.words.res.sendReportSentTitle
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
+import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -142,6 +156,34 @@ internal fun ReportProblemPage(
             }
         }
         IncludedSheet(report, actions)
+        KitConfirm(
+            spec =
+                if (report.confirmClearErrors)
+                    KitConfirmSpec(
+                        title =
+                            pluralStringResource(
+                                Res.plurals.appDiagnosticsClearTitle,
+                                report.errorsKept,
+                                report.errorsKept,
+                            ),
+                        confirmLabel =
+                            pluralStringResource(
+                                Res.plurals.appDiagnosticsClearConfirm,
+                                report.errorsKept,
+                                report.errorsKept,
+                            ),
+                        kind = KitConfirmKind.Neutral,
+                        body =
+                            pluralStringResource(
+                                Res.plurals.appDiagnosticsClearBody,
+                                report.errorsKept,
+                                report.errorsKept,
+                            ),
+                    )
+                else null,
+            onConfirm = { actions.onConfirmClearErrors(true) },
+            onCancel = { actions.onConfirmClearErrors(false) },
+        )
         KitConfirm(
             spec =
                 if (report.confirmPublic)
@@ -198,6 +240,69 @@ private fun ColumnScope.ReportForm(description: String, report: ReportUi, action
         modifier = Modifier.testTag("report-included"),
         onClick = { actions.onShowIncluded(true) },
     )
+    KeptOnPhone(report, actions)
+}
+
+/**
+ * What this phone kept, with the two local things a person can do about it: copy the error log or the timing report
+ * (both redacted, nothing is sent) and clear them. Shown only when there is something; it replaces the retired
+ * "Everything this phone kept" page's errors and performance lines, inside this page.
+ */
+@Composable
+private fun KeptOnPhone(report: ReportUi, actions: SettingsActions) {
+    val copyErrors =
+        rememberKitRedactedCopyAction(
+            label = stringResource(Res.string.reportKeptCopyErrors),
+            copiedLabel = stringResource(Res.string.kitCopied),
+            text = { report.errorLog },
+        )
+    val copyTimings =
+        rememberKitRedactedCopyAction(
+            label = stringResource(Res.string.perfTraceCopy),
+            copiedLabel = stringResource(Res.string.perfTraceCopied),
+            text = { report.timingReport },
+        )
+    if (report.errorsKept > 0) {
+        KitSectionLabel(
+            pluralStringResource(Res.plurals.reportProblemErrorsLabel, report.errorsKept, report.errorsKept)
+        )
+        KitRow(
+            title = copyErrors.label,
+            leading = KitRowLeading.Glyph(KitIcons.copy),
+            modifier = Modifier.testTag("report-copy-errors"),
+            onClick = copyErrors.onClick,
+        )
+        KitRow(
+            title = stringResource(Res.string.reportKeptClearErrors),
+            leading = KitRowLeading.Glyph(KitIcons.delete),
+            modifier = Modifier.testTag("report-clear-errors"),
+            onClick = { actions.onClearErrors(true) },
+        )
+        if (report.clearFailed) {
+            KitText(
+                stringResource(Res.string.reportProblemClearFailed),
+                Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp).testTag("report-clear-failed"),
+                role = TypeRole.Secondary,
+                tone = TextTone.Attention,
+                kind = KitTextKind.Frame,
+            )
+        }
+    }
+    if (report.timingReport.isNotBlank()) {
+        KitSectionLabel(stringResource(Res.string.perfTraceTitle))
+        KitRow(
+            title = copyTimings.label,
+            leading = KitRowLeading.Glyph(KitIcons.copy),
+            modifier = Modifier.testTag("report-copy-timings"),
+            onClick = copyTimings.onClick,
+        )
+        KitRow(
+            title = stringResource(Res.string.perfTraceClearTimings),
+            leading = KitRowLeading.Glyph(KitIcons.delete),
+            modifier = Modifier.testTag("report-clear-timings"),
+            onClick = actions::onClearTimings,
+        )
+    }
 }
 
 /** "App and phone details[, and the crash at 23:12]. Passwords, keys and server addresses are taken out." */

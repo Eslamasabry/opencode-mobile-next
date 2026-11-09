@@ -111,8 +111,13 @@ public fun KitUndoBar(offer: KitUndoOffer?, onUndo: () -> Unit, onTimeout: () ->
     AnimatedVisibility(
         visible = offer != null,
         modifier = modifier,
-        enter = fadeIn(specs.enter()) + slideInVertically(specs.enter<IntOffset>()) { it / 2 },
-        exit = fadeOut(specs.exit()) + slideOutVertically(specs.exit<IntOffset>()) { it / 2 },
+        // Calm fades only; Full also rises half its height (MOT: travel is Full's).
+        enter =
+            if (KitMotion.state.travels) fadeIn(specs.enter()) + slideInVertically(specs.enter<IntOffset>()) { it / 2 }
+            else fadeIn(specs.enter()),
+        exit =
+            if (KitMotion.state.travels) fadeOut(specs.exit()) + slideOutVertically(specs.exit<IntOffset>()) { it / 2 }
+            else fadeOut(specs.exit()),
     ) {
         val o = shown ?: return@AnimatedVisibility
         val shape = KitShapeId.Panel.shape()

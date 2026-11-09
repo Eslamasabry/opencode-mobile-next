@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.engine.transcript.state.NoticeRow
 import io.github.eslamasabry.oc.engine.transcript.state.Origin
 import io.github.eslamasabry.oc.engine.transcript.state.Part
 import io.github.eslamasabry.oc.engine.transcript.state.PartType
+import io.github.eslamasabry.oc.engine.transcript.state.PromptFile
 import io.github.eslamasabry.oc.engine.transcript.state.PromptRow
 import io.github.eslamasabry.oc.engine.transcript.state.Role
 import io.github.eslamasabry.oc.engine.transcript.state.RunFacts
@@ -482,8 +483,13 @@ internal class TranscriptModel(
         var current: ArrayList<MsgEntry>? = null
         var currentId = "head"
         for (m in messages.values) {
+            // A picture or file sent without words is a prompt too (its own turn, shown with its thumbnail).
             val isPrompt =
-                m.info.role == Role.User && m.parts.values.any { it.part.type == PartType.Text }
+                m.info.role == Role.User &&
+                    m.parts.values.any {
+                        it.part.type == PartType.Text ||
+                            (it.part.type == PartType.File && !it.part.synthetic)
+                    }
             if (isPrompt || current == null) {
                 current?.let { out += currentId to it }
                 current = ArrayList()
@@ -520,12 +526,25 @@ internal class TranscriptModel(
                 failed = (error != null || errorKind != null) && !stopped
                 reason = if (failed) error?.trim()?.takeIf { it.isNotEmpty() } else null
             }
+            val sentFiles =
+                if (m.info.role != Role.User) emptyList()
+                else
+                    m.parts.values
+                        .filter { it.part.type == PartType.File && !it.part.synthetic }
+                        .map { PromptFile(it.part.filename.orEmpty(), it.part.mime, it.part.url) }
+            var filesShown = sentFiles.isEmpty()
             for (pe in m.parts.values) {
                 val p = pe.part
                 when (p.type) {
                     PartType.Text ->
                         if (m.info.role == Role.User) {
-                            rows += promptRowOf(pe, m.info.id, turnId, m.info.createdMs)
+                            val row = promptRowOf(pe, m.info.id, turnId, m.info.createdMs)
+                            rows +=
+                                if (filesShown) row
+                                else {
+                                    filesShown = true
+                                    reuse(row.copy(files = sentFiles))
+                                }
                         } else {
                             addBlocks(rows, turnId, pe, live = !p.ended && !finished)
                         }
@@ -566,6 +585,17 @@ internal class TranscriptModel(
                     else -> Unit
                 }
             }
+            if (!filesShown)
+                rows +=
+                    reuse(
+                        PromptRow(
+                            "prompt:${m.info.id}",
+                            turnId,
+                            "",
+                            m.info.createdMs,
+                            files = sentFiles,
+                        )
+                    )
         }
         if (workAt >= 0) {
             val state =
@@ -589,6 +619,12 @@ internal class TranscriptModel(
                         errorKind = errorKind,
                         createdMs =
                             members.lastOrNull { it.info.role == Role.Assistant }?.info?.createdMs,
+                        providerId =
+                            members
+                                .lastOrNull { it.info.role == Role.Assistant }
+                                ?.info
+                                ?.providerId
+                                ?.takeIf { it.isNotBlank() },
                     )
                 )
         }

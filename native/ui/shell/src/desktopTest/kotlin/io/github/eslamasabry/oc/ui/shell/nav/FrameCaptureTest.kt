@@ -55,6 +55,21 @@ class FrameCaptureTest {
         }
     }
 
+    @Test
+    fun `MOT-ALL home to All conversations frames`() = runDesktopComposeUiTest(W, H) {
+        val h = Harness()
+        setContent { h.Content() }
+        waitForIdle()
+        mainClock.autoAdvance = false
+        onNodeWithText(ALL_LABEL).performClick()
+        var t = 0L
+        for (at in listOf(16L, 64L, 128L, 192L, 256L, 320L, 384L, 450L)) {
+            mainClock.advanceTimeBy(at - t)
+            t = at
+            capture("all_open_${at}ms")
+        }
+    }
+
     private fun predictive(rtl: Boolean) = runDesktopComposeUiTest(W, H) {
         val h = Harness()
         setContent { h.Content(rtl = rtl) }

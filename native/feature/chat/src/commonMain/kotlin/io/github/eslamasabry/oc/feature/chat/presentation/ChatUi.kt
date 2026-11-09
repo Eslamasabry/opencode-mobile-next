@@ -182,6 +182,9 @@ public enum class ChatStatusKind {
 
     /** S28 story 3: turns were undone at once; "Put back" restores them. */
     Undone,
+
+    /** This conversation was delegated by another one: the way back to it (Flutter `_subagentStatus`). */
+    Subagent,
 }
 
 /**
@@ -499,6 +502,18 @@ public interface ChatActions {
 
     public fun confirmRestartPhoneServer() {}
 
+    /** Flutter "Update password / Update token" on the connection line: opens this server's editor. */
+    public fun editServer() {}
+
+    /** Flutter "Open parent conversation" on a subagent's conversation. */
+    public fun openParent() {}
+
+    /** Flutter "Show all subagent conversations": the linked-conversations page. */
+    public fun showSubagents() {}
+
+    /** Flutter "Switch server" on the connection line: opens the Servers page. */
+    public fun openServers() {}
+
     /**
      * From a prompt (tap or long-press) or a reply's footer; the ViewModel resolves the message.
      */
@@ -589,6 +604,12 @@ public interface ChatActions {
 
     /** Recovery for a missing/rejected provider credential; opens the visible settings path. */
     public fun openSignInSettings() {}
+
+    /** B-AGENT-189: this conversation's agent runs on this phone, so its sign-in page can open from the chat. */
+    public fun phoneAgentSignIn(): Boolean = false
+
+    /** B-AGENT-189: opens the agent's sign-in page (no code to paste when its page needs none). */
+    public fun openAgentSignIn(providerId: String) {}
 
     /** Hold Send / "Send later or repeat": opens the schedule editor for this conversation. */
     public fun sendLater(words: String) {}

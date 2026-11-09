@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.feature.chat.presentation.LiveNoticeUi
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnResultUi
 import io.github.eslamasabry.oc.feature.chat.presentation.WorkLineRules
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.chatStalledOnTool
 import io.github.eslamasabry.oc.ui.words.res.chatStuckCommand
 import io.github.eslamasabry.oc.ui.words.res.chatStuckHours
 import io.github.eslamasabry.oc.ui.words.res.chatStuckMinutes
@@ -323,6 +324,8 @@ internal fun liveNoticeWords(n: LiveNoticeUi): String =
             }
         LiveNoticeUi.Compacting -> stringResource(Res.string.chatUiCompactingConversation)
         // S28 story 14 (Flutter `_stuckWords`): "2 h 29 min · may be stuck".
+        // Phase 0: "Still waiting for read." (the tool as the server names it).
+        is LiveNoticeUi.ToolWait -> stringResource(Res.string.chatStalledOnTool, n.toolName)
         is LiveNoticeUi.StuckCommand -> {
             val minutes = (n.runningMs / 60_000L).toInt()
             val time =

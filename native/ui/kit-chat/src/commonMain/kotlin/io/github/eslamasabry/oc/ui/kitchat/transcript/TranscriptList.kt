@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kitchat.transcript
 
+import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.frame.JUMP_PILL_FACE_DP
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -10,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -50,7 +50,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
-import io.github.eslamasabry.oc.ui.design.motion.MotionTokens
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.frame.kitScreenChromePadding
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
@@ -202,21 +201,27 @@ public fun KitTranscriptList(
         val fade by
             animateFloatAsState(
                 if (state.awayFromLatest) 1f else 0f,
-                if (motion == KitMotionLevel.Off) snap() else tween(MotionTokens.STANDARD),
+                // KitMotion's STANDARD on the kit's Enter curve, not Compose's default curve.
+                if (motion == KitMotionLevel.Off) snap() else KitMotion.specs.enter(),
                 label = "jump-fade",
             )
+        // Owner 2026-11-09 ("a rough line just below Jump to latest"): the fade ended where the composer's room
+        // starts, at its strongest, so wherever nothing lay below it (liquid glass, a live background) it cut straight
+        // across. It now settles over its 28 dp and holds on down to the list's edge; the screen's own scroll edge
+        // fades it out with the words under the bottom block, so it has no edge of its own.
         if (fade > 0f)
             Box(
                 Modifier.align(Alignment.BottomCenter)
-                    .padding(bottom = chromeBottom)
                     .fillMaxWidth()
-                    .height(JUMP_FADE_DP.dp)
+                    .height(JUMP_FADE_DP.dp + chromeBottom)
                     .testTag("transcript-jump-fade")
                     .drawBehind {
                         drawRect(
                             Brush.verticalGradient(
                                 0f to ground.copy(alpha = 0f),
                                 1f to ground.copy(alpha = JUMP_FADE_ALPHA),
+                                startY = 0f,
+                                endY = JUMP_FADE_DP.dp.toPx(),
                             ),
                             alpha = fade,
                         )
