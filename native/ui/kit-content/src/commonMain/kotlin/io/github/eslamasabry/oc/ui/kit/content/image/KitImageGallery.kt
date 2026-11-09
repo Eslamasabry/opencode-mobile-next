@@ -71,7 +71,9 @@ import io.github.eslamasabry.oc.ui.words.res.kitTopBarMore
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.math.min
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.decodeToImageBitmap
+import io.github.eslamasabry.oc.ui.kit.image.KIT_VIEWER_EDGE
+import io.github.eslamasabry.oc.ui.kit.image.KitImages
+import io.github.eslamasabry.oc.ui.kit.image.LocalKitImageWork
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -395,10 +397,11 @@ private fun GalleryPicture(picture: KitGalleryPicture, bytes: ByteArray, onZoom:
     val zoom = remember(picture.id) { KitZoomState() }
     val latestZoom by rememberUpdatedState(onZoom)
     LaunchedEffect(zoom) { snapshotFlow { zoom.scale > GALLERY_ZOOMED_SCALE }.collect { latestZoom(it) } }
+    val work = LocalKitImageWork.current
     val decoded by produceState<ImageBitmap?>(null, bytes) {
         value =
             try {
-                bytes.decodeToImageBitmap()
+                KitImages.loadBytes(bytes, KIT_VIEWER_EDGE, work)
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) { // KitImage shows its own failure state for bytes it cannot read

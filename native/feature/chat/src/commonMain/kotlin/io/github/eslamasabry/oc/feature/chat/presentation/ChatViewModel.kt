@@ -324,6 +324,8 @@ public class ChatViewModel(
 
     override suspend fun readPicture(path: String): ByteArray? = presenter.readPicture(path)
 
+    override val pictureScope: String get() = presenter.pictureScope
+
     override fun openPicture(path: String, name: String): Unit = presenter.openPicture(path, name)
 
     override fun closePicture(): Unit = presenter.closePicture()

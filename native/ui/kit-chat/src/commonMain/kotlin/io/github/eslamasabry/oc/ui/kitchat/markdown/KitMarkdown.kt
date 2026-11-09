@@ -128,6 +128,11 @@ public class KitMarkdownActions(
     /** Only server/phone paths enter this callback. Web images are never fetched. */
     public val readPicture: (suspend (path: String) -> ByteArray?)? = null,
     /**
+     * The profile that owns the pictures [readPicture] returns. With it the kit keeps thumbnails on disk under that
+     * profile (`oc.imageCache.<profileId>`, deleted with it); null keeps pictures in memory only.
+     */
+    public val pictureScope: String? = null,
+    /**
      * An agent ```choices line was tapped: its words go into the message box. Null copies them instead
      * (Flutter: "can be pasted into the composer").
      */
