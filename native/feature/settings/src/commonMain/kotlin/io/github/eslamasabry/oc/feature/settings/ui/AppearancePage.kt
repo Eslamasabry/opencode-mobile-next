@@ -603,7 +603,8 @@ private fun AppearanceQuestionHeading(title: String, top: Dp = Space.S6.dp) {
 }
 
 /** Flutter's `_lookPicks`, in its order (GLASS_REF lib/ui/screens/settings/appearance_screen.dart:58-66). */
-private val LOOK_PICKS = listOf("aurora", "mesh", "dotRipple", "lightRays", "bokeh", "silk", "topo")
+// The first row is the looks that are finished best, the owner's glow among them (2026-11-10); the rest are one tap away.
+private val LOOK_PICKS = listOf("aurora", "glowSpill", "mesh", "silk", "topo", "lightRays", "dotRipple")
 
 @Composable
 private fun <T> AppearanceGrid(
