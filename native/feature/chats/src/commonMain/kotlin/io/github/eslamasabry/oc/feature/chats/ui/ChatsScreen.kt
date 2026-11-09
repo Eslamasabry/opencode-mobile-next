@@ -273,13 +273,9 @@ public fun ChatsScreen(
                         }
                 ),
         ) {
-            state.home.opening?.let { opening ->
+            // The saved rows draw as the normal list (the view model puts them in the feed); only a failure adds its card.
+            state.home.opening?.takeIf { it.phase == ChatsOpeningPhase.Failed }?.let { opening ->
                 item(key = "opening-status", contentType = "opening-status") { OpeningStatus(opening, actions) }
-                items(opening.rows, key = { "cached:${it.key}" }, contentType = { "cached" }) { row -> OpeningRow(row) }
-                // E20-S09: placeholder rows stand for titles that are on their way; under a failure nothing is.
-                if (opening.rows.isEmpty() && opening.phase != ChatsOpeningPhase.Failed)
-                    item(key = "opening", contentType = "opening") { KitSkeletonRows() }
-                return@LazyColumn
             }
             replyOffer?.let { offer -> item(key = "reply-notification-offer", contentType = "reply-notification-offer") { offer() } }
             state.brief?.let { brief -> item(key = "brief", contentType = "brief") { Box(kitItemMotion()) { BriefBlock(brief, actions, state) } } }
@@ -330,7 +326,8 @@ public fun ChatsScreen(
             if (state.phase != ChatsPhase.Opening)
                 sections.forEachIndexed { index, section -> item(key = "home-section-$index", contentType = "home-section") { section() } }
             when (state.phase) {
-                ChatsPhase.Opening -> item(key = "opening", contentType = "opening") { KitSkeletonRows() }
+                ChatsPhase.Opening ->
+                    if (state.home.opening?.phase != ChatsOpeningPhase.Failed) item(key = "opening", contentType = "opening") { KitSkeletonRows() }
                 ChatsPhase.Empty ->
                     item(key = "empty", contentType = "empty") {
                         // A person with no computer saved may have come for one: the quiet second way in, only then.

@@ -264,8 +264,15 @@ public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -
     val page = rememberKitLiquidSource()
     // One budget per window: the floating parts that may be liquid at once, and which drop to frost first.
     val budget = remember { KitLiquidBudget() }
+    // The page's live picture, for the sheets' and menus' liquid faces (they follow its every frame).
+    val livePicture = remember { io.github.eslamasabry.oc.ui.kit.foundation.KitLivePicture() }
     Box(modifier) {
-        CompositionLocalProvider(LocalKitSheetHost provides state, LocalKitLiquidPage provides page, LocalKitLiquidBudget provides budget) {
+        CompositionLocalProvider(
+            LocalKitSheetHost provides state,
+            LocalKitLiquidPage provides page,
+            LocalKitLiquidBudget provides budget,
+            io.github.eslamasabry.oc.ui.kit.foundation.LocalKitLivePicture provides livePicture,
+        ) {
             // The in-window modal is a sibling of the page, never a descendant of its
             // cleared semantics. Keep the page composed (drafts/scroll survive) but remove
             // its accessibility nodes while a modal owns the window, including its exit.
