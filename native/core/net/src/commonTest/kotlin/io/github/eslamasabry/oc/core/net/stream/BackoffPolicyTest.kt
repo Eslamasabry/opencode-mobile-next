@@ -79,4 +79,16 @@ class BackoffPolicyTest {
         assertFailsWith<IllegalArgumentException> { BackoffPolicy.OpenCode2.copy(hiddenRangeMs = 30_000L..120_000L) }
         assertFailsWith<IllegalArgumentException> { BackoffPolicy.OpenCode2.copy(hiddenRangeMs = 120_000L..60_000L) }
     }
+
+    @Test
+    fun `battery saver sends a background-watching retry straight to the slow pace`() {
+        val policy = BackoffPolicy.OpenCode2
+        val quick = policy.delayMs(1, Random(1), hidden)
+        assertTrue(quick != null && quick < 60_000, "without the saver the first retries are quick")
+        repeat(20) { seed ->
+            val slow = policy.delayMs(1, Random(seed), hidden, batterySaver = true)
+            assertTrue(slow != null && slow in policy.hiddenRangeMs, "saver retry waited $slow")
+        }
+        assertEquals(1_000L, policy.delayMs(1, Random(1), Visibility.Foreground, batterySaver = true), "foreground is unchanged")
+    }
 }

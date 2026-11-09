@@ -273,18 +273,14 @@ public fun ChatsScreen(
                         }
                 ),
         ) {
-            state.home.opening?.let { opening ->
-                item(key = "opening-status") { OpeningStatus(opening, actions) }
-                items(opening.rows, key = { "cached:${it.key}" }) { row -> OpeningRow(row) }
-                // E20-S09: placeholder rows stand for titles that are on their way; under a failure nothing is.
-                if (opening.rows.isEmpty() && opening.phase != ChatsOpeningPhase.Failed)
-                    item(key = "opening") { KitSkeletonRows() }
-                return@LazyColumn
+            // The saved rows draw as the normal list (the view model puts them in the feed); only a failure adds its card.
+            state.home.opening?.takeIf { it.phase == ChatsOpeningPhase.Failed }?.let { opening ->
+                item(key = "opening-status", contentType = "opening-status") { OpeningStatus(opening, actions) }
             }
-            replyOffer?.let { offer -> item(key = "reply-notification-offer") { offer() } }
-            state.brief?.let { brief -> item(key = "brief") { Box(kitItemMotion()) { BriefBlock(brief, actions, state) } } }
+            replyOffer?.let { offer -> item(key = "reply-notification-offer", contentType = "reply-notification-offer") { offer() } }
+            state.brief?.let { brief -> item(key = "brief", contentType = "brief") { Box(kitItemMotion()) { BriefBlock(brief, actions, state) } } }
             if (state.archiveFailure != null)
-                item(key = "archive-failure") {
+                item(key = "archive-failure", contentType = "archive-failure") {
                     // E04-S05: the row is already back in the list, so closing the notice changes nothing real.
                     KitNotice(
                         message =
@@ -304,21 +300,21 @@ public fun ChatsScreen(
                     )
                 }
             if (state.renameFailure != null)
-                item(key = "rename-failure") {
+                item(key = "rename-failure", contentType = "rename-failure") {
                     io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice(
                         message = stringResource(Res.string.p12RenameFailed),
                         failure = state.renameFailure,
                     )
                 }
             if (state.answerFailure != null)
-                item(key = "answer-failure") {
+                item(key = "answer-failure", contentType = "answer-failure") {
                     io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice(
                         message = stringResource(Res.string.chatHomeAnswerFailed),
                         failure = state.answerFailure,
                     )
                 }
             if (state.incomplete.isNotEmpty()) {
-                item(key = "incomplete") {
+                item(key = "incomplete", contentType = "incomplete") {
                     KitNotice(
                         stringResource(
                             Res.string.chatsHomeIncompleteNamed,
@@ -328,11 +324,12 @@ public fun ChatsScreen(
                 }
             }
             if (state.phase != ChatsPhase.Opening)
-                sections.forEachIndexed { index, section -> item(key = "home-section-$index") { section() } }
+                sections.forEachIndexed { index, section -> item(key = "home-section-$index", contentType = "home-section") { section() } }
             when (state.phase) {
-                ChatsPhase.Opening -> item(key = "opening") { KitSkeletonRows() }
+                ChatsPhase.Opening ->
+                    if (state.home.opening?.phase != ChatsOpeningPhase.Failed) item(key = "opening", contentType = "opening") { KitSkeletonRows() }
                 ChatsPhase.Empty ->
-                    item(key = "empty") {
+                    item(key = "empty", contentType = "empty") {
                         // A person with no computer saved may have come for one: the quiet second way in, only then.
                         CalmPage(
                             title = stringResource(Res.string.chatsHomeEmptyTitle),
@@ -345,7 +342,7 @@ public fun ChatsScreen(
                         )
                     }
                 ChatsPhase.NoMatch ->
-                    item(key = "no-match") { CalmNoMatchPage(state, actions, Modifier.fillParentMaxSize()) }
+                    item(key = "no-match", contentType = "no-match") { CalmNoMatchPage(state, actions, Modifier.fillParentMaxSize()) }
                 ChatsPhase.List -> {
                     // A1 (owner, 2026-11-08): "Right now" holds everything working or waiting on the person, never
                     // capped; "Recent" the five latest of the rest; then the way to the whole list. Each section is
@@ -355,7 +352,7 @@ public fun ChatsScreen(
                     val rightNow = state.rightNow.filterNot { it.key in briefKeys }
                     val recent = state.recent.filterNot { it.key in briefKeys }
                     if (rightNow.isNotEmpty())
-                        item(key = "right-now") {
+                        item(key = "right-now", contentType = "right-now") {
                             Box(kitItemMotion()) {
                                 KitRowPanel(
                                     label = stringResource(Res.string.chatsHomeRightNow),
@@ -368,7 +365,7 @@ public fun ChatsScreen(
                             }
                         }
                     if (recent.isNotEmpty())
-                        item(key = "recent") {
+                        item(key = "recent", contentType = "recent") {
                             Box(kitItemMotion()) {
                                 KitRowPanel(
                                     label = stringResource(Res.string.chatsHomeRecent),
@@ -379,7 +376,7 @@ public fun ChatsScreen(
                                 }
                             }
                         }
-                    item(key = "all-conversations") {
+                    item(key = "all-conversations", contentType = "all-conversations") {
                         Box(kitItemMotion()) {
                             // Short of the floating + (its 56 dp and a S3 gap), so the two share the list's last line.
                             KitRowPanel(

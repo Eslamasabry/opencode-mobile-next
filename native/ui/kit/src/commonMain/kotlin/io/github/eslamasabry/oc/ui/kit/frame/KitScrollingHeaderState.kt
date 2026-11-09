@@ -92,9 +92,9 @@ public class KitScrollingHeaderState {
 internal fun KitScrollingHeaderFrame(
     header: @Composable ColumnScope.() -> Unit,
     modifier: Modifier = Modifier,
+    state: KitScrollingHeaderState = remember { KitScrollingHeaderState() },
     rest: @Composable ColumnScope.() -> Unit,
 ) {
-    val state = remember { KitScrollingHeaderState() }
     Layout(
         content = {
             Column(Modifier.fillMaxWidth().testTag("kit-screen-header"), content = header)
