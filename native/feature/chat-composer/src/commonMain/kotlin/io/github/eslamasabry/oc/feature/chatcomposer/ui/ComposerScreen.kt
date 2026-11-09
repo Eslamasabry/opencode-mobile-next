@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -117,7 +118,7 @@ fun ComposerScreen(
 ) {
     val currentActions by rememberUpdatedState(actions)
     val focus = LocalFocusManager.current
-    var editorOpen by remember { mutableStateOf(false) }
+    var editorOpen by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(field) {
         snapshotFlow { field.text.toString() }.collect { currentActions.onTextChanged(it) }

@@ -17,6 +17,7 @@ import io.github.eslamasabry.oc.ui.kit.content.terminal.LocalTerminalLinkHost
 import io.github.eslamasabry.oc.ui.kit.logo.LocalKitLogoLoader
 import io.github.eslamasabry.oc.ui.kit.platform.AndroidKitPlatform
 import io.github.eslamasabry.oc.ui.routes.AppRoute
+import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.shell.App
 import io.github.eslamasabry.opencode_mobile.graph.AppLocale
 import io.github.eslamasabry.opencode_mobile.graph.AppNoticesAccessors
@@ -39,7 +40,7 @@ class MainActivity : ComponentActivity() {
     private var routeWhenReady = false
 
     /** P-110: the page the killed process was on, reopened once the shell is up. */
-    private var lastRoute: AppRoute? = null
+    private var lastRoute: List<AppRoute> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Before super.onCreate: the product's activity-lifecycle owners (ResumedActivities, the
@@ -109,8 +110,10 @@ class MainActivity : ComponentActivity() {
                                 )
                                     settings.whatsNewStarter.start()
                                 val navigator = graph.shell.navigator
-                                LastRoute.reopen(lastRoute, navigator.top.value)?.let(navigator::open)
-                                lastRoute = null
+                                navigator.restoreStack(
+                                    LastRoute.reopen(lastRoute, navigator.top.value, ChatsRoute.Home)
+                                )
+                                lastRoute = emptyList()
                                 if (routeWhenReady) {
                                     routeWhenReady = false
                                     platformHub.route(intent)
@@ -126,7 +129,7 @@ class MainActivity : ComponentActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         // Before the shell is up the saved page is still the one to reopen, not home.
-        LastRoute.save(if (shellReady) appGraph.shell.navigator.top.value else lastRoute, outState)
+        LastRoute.save(if (shellReady) appGraph.shell.navigator.snapshot() else lastRoute, outState)
     }
 
     override fun attachBaseContext(newBase: Context) {

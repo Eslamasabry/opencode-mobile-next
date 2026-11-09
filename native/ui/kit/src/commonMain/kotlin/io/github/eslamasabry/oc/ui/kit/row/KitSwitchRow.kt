@@ -25,7 +25,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -233,7 +233,8 @@ public fun KitSwitchRow(
     val scope = riskSpec?.scope ?: risk
     val until = riskSpec?.until ?: listOf(KitUntil.Off)
     val on = enabled.isEnabled
-    var asking by rememberSaveable { mutableStateOf(false) }
+    // The "for how long?" step before a risky switch turns on is a confirm: it is never restored after a process death.
+    var asking by remember { mutableStateOf(false) }
     val step = SwitchRules.keepStep(asking, checked, scope != null)
     if (asking && !step) SideEffect { asking = false }
     val untilLabels = KitUntil.entries.associateWith { kitUntilLabel(it) }

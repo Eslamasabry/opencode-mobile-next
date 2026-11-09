@@ -415,6 +415,7 @@ dependencies {
     testImplementation(kotlin("test-junit"))
     testImplementation(libs.junit4)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.robolectric) // gap 2: LastRouteTest sends a Bundle through a Parcel
     testImplementation(
         project(":core:testing")
     ) // P12-CHAT-BUGS: FakeServerGateway for the B1 paging test
@@ -701,3 +702,6 @@ val verifyProductionLineage by tasks.registering {
 tasks.configureEach {
     if (name.startsWith("package") && name.endsWith("Release")) dependsOn(verifyProductionLineage)
 }
+
+// Robolectric 4.17 reads jdk.internal.access.SharedSecrets on the JDK 21 launcher (as in :ui:shell's host tests).
+tasks.withType<Test>().configureEach { jvmArgs("--add-exports=java.base/jdk.internal.access=ALL-UNNAMED") }

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chat.ui
 
+import androidx.compose.runtime.saveable.rememberSaveable
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.focusGroup
 import androidx.compose.ui.focus.FocusDirection
@@ -348,7 +349,7 @@ public fun ChatScreen(
     var pictureSeq by remember(state.ref) { mutableStateOf(0L) }
     var codeReader by remember(state.ref) { mutableStateOf<KitMdBlock.Code?>(null) }
     val folds = rememberTranscriptFolds()
-    var contextOpen by remember { mutableStateOf(false) }
+    var contextOpen by rememberSaveable { mutableStateOf(false) }
     var tasksOpen by remember(state.ref) { mutableStateOf(false) }
     var barMenuOpen by remember(state.ref) { mutableStateOf(false) }
     val startState by rememberUpdatedState(start)
