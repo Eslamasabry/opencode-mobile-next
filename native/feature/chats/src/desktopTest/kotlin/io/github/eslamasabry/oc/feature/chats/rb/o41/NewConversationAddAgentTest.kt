@@ -97,4 +97,18 @@ class NewConversationAddAgentTest {
             java.util.Locale.setDefault(previous)
         }
     }
+
+    @Test
+    fun `B-098 coming back with the agent sheet open does not raise the keyboard over it`() = runComposeUiTest {
+        show(ui(listOf("claude")), Actions())
+        waitForIdle()
+        onNode(hasSetTextAction()).assertIsNotFocused()
+    }
+
+    @Test
+    fun `B-098 with no sheet open the field still takes focus`() = runComposeUiTest {
+        show(ui(listOf("claude")).copy(sheet = null), Actions())
+        waitForIdle()
+        onNode(hasSetTextAction()).assertIsFocused()
+    }
 }

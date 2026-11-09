@@ -208,7 +208,8 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                             .testTag("chats-new-field"),
                         enabled = enabled,
                         minLines = 2,
-                        autofocus = !state.busy,
+                        // B-098: not while a sheet is open; coming back from agent setup re-ran this and the keyboard covered the sheet.
+                        autofocus = !state.busy && state.sheet == null,
                         onTextChanged = actions::draftChanged,
                         focusKey = state.focusRevision.takeIf { it > 0 },
                     )
