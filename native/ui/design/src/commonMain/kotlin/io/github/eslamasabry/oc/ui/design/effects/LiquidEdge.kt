@@ -84,7 +84,7 @@ public object LiquidEdge {
     public const val MODAL_BUDGET: Int = 3
 
     /** How much colour the glass lifts from what lies behind it (vibrancy; the library's own is 1.5). */
-    public const val SATURATION: Float = 1.45f
+    public const val SATURATION: Float = 1.6f
 
     /** How far the glass presses the backdrop's contrast together (1 keeps it): lightly, so the content shows. */
     public const val PRESS: Float = .86f

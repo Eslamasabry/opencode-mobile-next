@@ -55,6 +55,12 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.TextLayoutResult
 import io.github.eslamasabry.oc.ui.design.color.Argb
 import io.github.eslamasabry.oc.ui.design.color.ThemeResolver
 import io.github.eslamasabry.oc.ui.design.color.lerp
@@ -114,11 +120,36 @@ public object LookFieldPolicy {
     /** The most previews one field feeds (the picker's own budget). */
     public const val MAX_PREVIEWS: Int = 4
 
+    /** The most a preview's face may hold: light milk, dark glass, and Smoked's smoke (always over the field). */
+    public fun faceCap(smoked: Boolean, dark: Boolean, lens: Boolean = true): Float = when {
+        smoked -> .62f
+        !lens -> if (dark) .50f else .46f // Frosted: milky
+        else -> if (dark) .34f else .26f // Glossy: clear glass, the field shows through
+    }
+
+    /** A lens look's blur over the field (Glossy, Smoked): light, so the text behind shows and visibly bends. */
+    public const val LENS_BLUR_DP: Float = 2.5f
+
     /** The field is recorded at this share of its size on each side. */
     public const val RECORD_SCALE: Float = .5f
 
     /** The drifting lines' ink, as a share of the theme's text colour: faint, like the mockup's code behind the glass. */
-    public const val INK_ALPHA: Float = .30f
+    public const val INK_ALPHA: Float = .34f
+
+    /** The code drifting behind the previews (the mockup's): any text with long and short lines does. */
+    internal val CODE: List<String> =
+        listOf(
+            "val sunset = Palette(ground = Color(0xFF0E1220)),",
+            "    accent = Color(0xFF3DDC97), glow = .42f)",
+            "fun Modifier.glass(look: GlassLook) = this",
+            "    .blur(4.dp).lens(24.dp, 48.dp)",
+            "@Composable fun Preview() { KitTheme { Chat() } }",
+            "  partner = Color(0xFFFFC857), // late sun gold",
+            "when (look) { Glossy -> shine(); else -> frost() }",
+            "  val face = tint.copy(alpha = .22f)",
+            "LaunchedEffect(Unit) { field.start() }",
+            "  rows.forEach { row -> Card(row) }",
+        )
 
     /** A look without a lens (Frosted) blurs its preview's field this many times its role's blur (glass looks §3). */
     public const val FROSTED_BLUR_FACTOR: Float = 2f
@@ -229,7 +260,7 @@ internal object LookFieldPalette {
     private val hues = listOf(0xFF3DDC97.toInt(), 0xFF8B6CF6.toInt(), 0xFFF2A65A.toInt(), 0xFF3FA7F5.toInt())
 
     /** The blobs' colours for a page of [ground] (dark: lifted towards the hue; light: dyed). */
-    fun blobs(ground: Argb, dark: Boolean): List<Argb> = hues.map { lerp(ground, Argb(it), if (dark) .62f else .55f) }
+    fun blobs(ground: Argb, dark: Boolean): List<Argb> = hues.map { lerp(ground, Argb(it), if (dark) .72f else .80f) }
 
     /** Every colour a preview can find behind it, for its face's measure (the ground and each blob at its peak). */
     fun spots(ground: Argb, dark: Boolean): List<Argb> = listOf(ground) + blobs(ground, dark)
@@ -239,10 +270,21 @@ internal object LookFieldPalette {
  * Draws the field at [t] seconds over [area] (the field's own size, whatever the scope it is drawn in: the recording is
  * smaller): four soft colour blobs drifting over the ground, and faint lines of text drifting up.
  */
-internal fun DrawScope.drawLookField(t: Float, ground: Color, blobs: List<Color>, ink: Color, area: Size) {
+internal fun DrawScope.drawLookField(t: Float, ground: Color, blobs: List<Color>, ink: Color, area: Size, lines: List<TextLayoutResult> = emptyList()) {
     val w = area.width
     val h = area.height
     drawRect(ground, Offset.Zero, area)
+    // Colour edge to edge (the mockup's field): a glow of the hues in every corner under the drifting blobs, so no corner
+    // shows the bare page ground (a white corner under Smoked's dark sheet).
+    if (blobs.size >= 4) {
+        // One soft glow per corner (radial, like the blobs; a linear wash crashed the emulator's renderer).
+        val corners = listOf(Offset(0f, 0f), Offset(w, 0f), Offset(w, h), Offset(0f, h))
+        val r = maxOf(w, h) * .95f
+        corners.forEachIndexed { i, o ->
+            val c = blobs[(i + 1) % blobs.size]
+            drawCircle(Brush.radialGradient(listOf(c, c.copy(alpha = 0f)), o, r), r, o)
+        }
+    }
     blobs.forEachIndexed { i, c ->
         val p = i * 1.7f
         val cx = w * (.5f + .38f * sin(t * .21f + p).toFloat())
@@ -250,23 +292,16 @@ internal fun DrawScope.drawLookField(t: Float, ground: Color, blobs: List<Color>
         val r = maxOf(w, h) * .42f
         drawCircle(Brush.radialGradient(listOf(c, c.copy(alpha = 0f)), Offset(cx, cy), r), r, Offset(cx, cy))
     }
-    // Lines of transcript, word by word, drifting up: they show the blur and the bend at the rim.
-    val pitch = 22.dp.toPx()
-    val stroke = 5.dp.toPx()
-    val drift = (t * 9.dp.toPx()) % pitch
-    var y = -drift + pitch / 2f
-    var line = 0
+    // Faint lines of code drifting up (the mockup's): they show the blur and the bend at the rim.
+    if (lines.isEmpty()) return
+    val pitch = lines.first().size.height * 1.45f
+    val drift = (t * 9.dp.toPx()) % (pitch * lines.size)
+    var y = -drift
+    var i = 0
     while (y < h + pitch) {
-        var x = 12.dp.toPx() + ((line * 37) % 23).dp.toPx()
-        var word = line * 7
-        while (x < w) {
-            val len = (18 + (word * 29) % 46).dp.toPx()
-            drawRoundRect(ink, Offset(x, y - stroke / 2f), Size(minOf(len, w - x), stroke), CornerRadius(stroke / 2f))
-            x += len + 8.dp.toPx()
-            word++
-        }
+        if (y > -pitch) drawText(lines[i % lines.size], ink, Offset(-((i * 37) % 23).dp.toPx(), y))
         y += pitch
-        line++
+        i++
     }
 }
 
@@ -289,6 +324,9 @@ public fun KitLookField(
     val blobs = remember(roles.ground, roles.dark) { LookFieldPalette.blobs(roles.ground, roles.dark).map { Color(it.v) } }
     // Faint: the lines show the blur and the bend, never compete with the previews' words.
     val ink = colors.text1.copy(alpha = LookFieldPolicy.INK_ALPHA)
+    val measurer = rememberTextMeasurer()
+    val codeStyle = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 15.sp)
+    val lines = remember(measurer) { LookFieldPolicy.CODE.map { measurer.measure(it, codeStyle, softWrap = false, maxLines = 1) } }
     LaunchedEffect(state, still) {
         if (still) {
             state.moving = false
@@ -340,7 +378,7 @@ public fun KitLookField(
                     // The recording's scope is `small`: the field is drawn over its own full size, scaled down into it
                     // (it once filled only the recording's size, scaled down again: a quarter of the field).
                     layer.record(this, layoutDirection, small) {
-                        scale(k, k, Offset.Zero) { drawLookField(t, ground, blobs, ink, area) }
+                        scale(k, k, Offset.Zero) { drawLookField(t, ground, blobs, ink, area, lines) }
                     }
                     scale(1f / k, 1f / k, Offset.Zero) { drawLayer(layer) }
                 }
@@ -400,12 +438,16 @@ public fun KitGlassLookPreview(
         remember(roles, smoke, preset, rtl) {
             val picture = LookFieldPalette.spots(roles.ground, roles.dark)
             val face = LiquidEdge.face(smoke, PREVIEW_ROLE, picture = picture, look = preset, page = roles)
-            val fill = face.fill?.let { Color(it.v) } ?: Color.Transparent
+            // A preview is glass, never a solid plate: the face may thicken for its words only up to the look's cap
+            // (measured over the field's brightest spot it would fall to the solid surface, the owner's "black block").
+            val cap = LookFieldPolicy.faceCap(preset.smoked, smoke.dark, preset.lens)
+            val fill = face.fill?.let { Color(it.v) }?.let { it.copy(alpha = minOf(it.alpha, cap)) } ?: Color.Transparent
             val dark = smoke.dark
             KitLiquidPaneSpec(
-                recipe = LiquidEdge.recipe(PREVIEW_ROLE, dark, preset),
+                // A lens look keeps the field readable under it, so the bend at the rim shows (Kyant's guide: ~4 dp).
+                recipe = LiquidEdge.recipe(PREVIEW_ROLE, dark, preset).let { if (preset.lens) it.copy(blurDp = LookFieldPolicy.LENS_BLUR_DP) else it },
                 fill = fill,
-                fillStart = face.fillStart?.let { Color(it.v) } ?: fill,
+                fillStart = face.fillStart?.let { Color(it.v) }?.let { it.copy(alpha = minOf(it.alpha, cap + .06f)) } ?: fill,
                 rtl = rtl,
                 rim = Color.White.copy(alpha = if (dark) preset.spec.liquidRimDark else preset.spec.liquidRimLight),
                 rimAdds = dark,
