@@ -72,9 +72,9 @@ class AppPromptTracing(trace: io.github.eslamasabry.oc.engine.diagnostics.perf.P
         journey?.stream(onPhone, connected)
     }
 
-    override fun error(sessionId: String, kind: String?, tag: String?) {
+    override fun error(sessionId: String, kind: String?, tag: String?, reason: String?) {
         timeline.observe(io.github.eslamasabry.oc.engine.diagnostics.perf.PromptSignal.Error(sessionId))
-        journey?.ended(sessionId, io.github.eslamasabry.oc.engine.analytics.health.ChatJourney.errorKindWord(kind, tag))
+        journey?.ended(sessionId, io.github.eslamasabry.oc.engine.analytics.health.turnErrorWord(kind, tag, reason))
     }
 
     override fun accepted(sessionId: String, error: Boolean) {
@@ -111,4 +111,21 @@ class AppPromptTracing(trace: io.github.eslamasabry.oc.engine.diagnostics.perf.P
         timeline.observe(io.github.eslamasabry.oc.engine.diagnostics.perf.PromptSignal.Error(sessionId))
         journey?.ended(sessionId, "server")
     }
+}
+
+/**
+ * The closed word for a failed turn: the server's own words are classified (rate limit, no credit, sign-in, model not
+ * offered, provider connection) and dropped; only the word goes on. Falls back to the error kind and symbolic tag.
+ */
+internal fun turnErrorWord(kind: String?, tag: String?, reason: String?): String {
+    val word =
+        when (io.github.eslamasabry.oc.engine.transcript.turnfacts.classifyAgentRunFailure(reason)) {
+            io.github.eslamasabry.oc.engine.transcript.turnfacts.AgentRunFailureKind.SignIn -> "provider_auth"
+            io.github.eslamasabry.oc.engine.transcript.turnfacts.AgentRunFailureKind.NoCredit -> "free_limit"
+            io.github.eslamasabry.oc.engine.transcript.turnfacts.AgentRunFailureKind.Busy -> "rate_limit"
+            io.github.eslamasabry.oc.engine.transcript.turnfacts.AgentRunFailureKind.ModelUnavailable -> "model_not_found"
+            io.github.eslamasabry.oc.engine.transcript.turnfacts.AgentRunFailureKind.ConnectionLost -> "provider_connection"
+            io.github.eslamasabry.oc.engine.transcript.turnfacts.AgentRunFailureKind.Unknown -> null
+        }
+    return word ?: io.github.eslamasabry.oc.engine.analytics.health.ChatJourney.errorKindWord(kind, tag)
 }

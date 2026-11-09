@@ -20,7 +20,7 @@ class JourneyWiringTest {
             SetupError.PersistenceFailure, SetupError.PackageRepair, SetupError.CannotStart, SetupError.PortBusy(4096),
             SetupError.OpenCodeNoProgram, SetupError.OpenCodeWontRun, SetupError.OpenCodeNoStart, SetupError.NodeCannotRun,
             SetupError.Interrupted, SetupError.NoInternet, SetupError.NoSpace("Node"), SetupError.Offline("Node"),
-            SetupError.Checksum("Node"), SetupError.Install("Node"), SetupError.HostRefused, SetupError.Unexpected,
+            SetupError.Checksum("Node"), SetupError.Install("Node"), SetupError.StepTimedOut("Node"), SetupError.HostRefused, SetupError.Unexpected,
         )
 
     @Test
@@ -30,6 +30,7 @@ class JourneyWiringTest {
         assertEquals("storage", setupFailKindOf(SetupError.NoSpace("x")))
         assertEquals("checksum", setupFailKindOf(SetupError.Checksum("x")))
         assertEquals("killed_by_system", setupFailKindOf(SetupError.Interrupted))
+        assertEquals("timeout", setupFailKindOf(SetupError.StepTimedOut("x")))
         assertEquals("apt", setupFailKindOf(SetupError.Install("x")))
         assertEquals("permission", setupFailKindOf(SetupError.HostRefused))
         assertEquals("unknown", setupFailKindOf(null))
@@ -85,5 +86,16 @@ class JourneyWiringTest {
             listOf("asked r1 run", "answered r1 denied", "asked r2 edit", "gone r1", "gone r2"),
             sink.calls,
         )
+    }
+
+    @Test
+    fun `B-JOURNEY-033 a failed turn's own words become one closed word and are dropped`() {
+        assertEquals("rate_limit", turnErrorWord(null, null, "Provider is busy, try again later"))
+        assertEquals("provider_auth", turnErrorWord("Unknown", null, "Please sign in to continue"))
+        assertEquals("context_overflow", turnErrorWord("ContextOverflow", null, null))
+        assertEquals("server", turnErrorWord(null, null, null))
+        val allowed = HealthWords.turnErrorKinds
+        for (reason in listOf("sk-secret-123 at /home/me/app", "quota exceeded", "model gpt-x not found", null))
+            assertTrue(turnErrorWord(null, null, reason) in allowed)
     }
 }

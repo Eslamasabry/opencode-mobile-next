@@ -275,7 +275,8 @@ public class ChatJourney(
         public fun errorKindWord(kindName: String?): String {
             val word = kindName?.replace(Regex("([a-z0-9])([A-Z])"), "$1_$2")?.lowercase()
             return when (word) {
-                "provider_auth", "context_overflow", "output_length", "content_filter", "model_not_found", "aborted" -> word
+                "provider_auth", "rate_limit", "free_limit", "context_overflow", "output_length", "content_filter", "model_not_found",
+                "provider_connection", "aborted" -> word
                 null -> "server"
                 else -> "other"
             }

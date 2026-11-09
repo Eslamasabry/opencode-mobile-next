@@ -167,7 +167,7 @@ public object HealthWords {
     public val turnErrorKinds: Set<String> =
         linkedSetOf(
             "provider_auth", "rate_limit", "free_limit", "context_overflow", "output_length", "content_filter",
-            "model_not_found", "aborted", "server", "other",
+            "model_not_found", "provider_connection", "aborted", "server", "other",
         )
 
     /** `chat_turn.outcome`. */

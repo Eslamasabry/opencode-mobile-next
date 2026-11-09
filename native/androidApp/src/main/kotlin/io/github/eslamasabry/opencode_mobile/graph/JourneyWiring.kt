@@ -37,6 +37,7 @@ internal fun setupFailKindOf(error: SetupError?): String =
         SetupError.HostRefused, SetupError.OwnershipUnknown, SetupError.HostMismatch -> "permission"
         is SetupError.Checksum -> "checksum"
         SetupError.Interrupted -> "killed_by_system"
+        is SetupError.StepTimedOut -> "timeout"
         is SetupError.Install, SetupError.PackageRepair -> "apt"
         SetupError.NodeCannotRun, SetupError.OpenCodeNoProgram, SetupError.OpenCodeWontRun,
         SetupError.OpenCodeNoStart, SetupError.CannotStart, is SetupError.PortBusy,

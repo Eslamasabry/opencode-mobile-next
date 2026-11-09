@@ -33,8 +33,8 @@ public interface PromptTracing {
     /** The live stream of a connection dropped or came back; [onPhone] says which kind of server. */
     public fun stream(onPhone: Boolean, connected: Boolean) {}
 
-    /** The turn ended in error; [kind] is the message error's kind name and [tag] its symbolic tag (never its text). */
-    public fun error(sessionId: String, kind: String?, tag: String?) {
+    /** The turn ended in error; [kind] is the message error's kind name and [tag] its symbolic tag (never its text). [reason] is the server's own words, for the receiver to classify and drop; it is never stored or sent. */
+    public fun error(sessionId: String, kind: String?, tag: String?, reason: String?) {
         error(sessionId)
     }
 
