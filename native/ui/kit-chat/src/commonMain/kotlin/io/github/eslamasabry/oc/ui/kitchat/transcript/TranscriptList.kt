@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kitchat.transcript
 
+import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.frame.JUMP_PILL_FACE_DP
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -10,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -50,7 +50,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
-import io.github.eslamasabry.oc.ui.design.motion.MotionTokens
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.frame.kitScreenChromePadding
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
@@ -202,7 +201,8 @@ public fun KitTranscriptList(
         val fade by
             animateFloatAsState(
                 if (state.awayFromLatest) 1f else 0f,
-                if (motion == KitMotionLevel.Off) snap() else tween(MotionTokens.STANDARD),
+                // KitMotion's STANDARD on the kit's Enter curve, not Compose's default curve.
+                if (motion == KitMotionLevel.Off) snap() else KitMotion.specs.enter(),
                 label = "jump-fade",
             )
         if (fade > 0f)
