@@ -30,9 +30,16 @@ public fun rememberKitSentFiles(files: List<KitSentFile>): KitSentFiles {
     if (files.isEmpty()) return remember { KitSentFiles(emptyList(), emptyList()) }
     val work = LocalKitChatWork.current
     val inline = remember(files) { files.filter { it.isInlineImage() } }
+    // A picture already decoded (by the sending bubble) is there on the first frame: the echoed message keeps the
+    // very same bitmap, so the swap from bubble to message does not blink.
     val decoded by
-        produceState<Map<KitSentFile, ImageBitmap?>>(emptyMap(), inline) {
-            value = withContext(work) { inline.associateWith { decode(it) } }
+        produceState<Map<KitSentFile, ImageBitmap?>>(
+            inline.filter { SentPictureCache[it] != null }.associateWith { SentPictureCache[it] },
+            inline,
+        ) {
+            value =
+                withContext(work) { inline.associateWith { SentPictureCache[it] ?: decode(it) } }
+                    .also { got -> got.forEach { (file, bitmap) -> SentPictureCache[file] = bitmap } }
         }
     return remember(files, decoded) {
         val photos = ArrayList<KitPromptPhoto>()
@@ -73,5 +80,20 @@ private fun decode(file: KitSentFile): ImageBitmap? {
         if (bytes.isEmpty()) null else bytes.decodeToImageBitmap()
     } catch (_: Exception) {
         null
+    }
+}
+
+/** The last few decoded sent pictures by address; touched only from composition. */
+internal object SentPictureCache {
+    private const val LIMIT = 16
+    private val map = object : LinkedHashMap<String, ImageBitmap>(LIMIT, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, ImageBitmap>?): Boolean = size > LIMIT
+    }
+
+    operator fun get(file: KitSentFile): ImageBitmap? = file.url?.let { map[it] }
+
+    operator fun set(file: KitSentFile, bitmap: ImageBitmap?) {
+        val url = file.url ?: return
+        if (bitmap != null) map[url] = bitmap
     }
 }

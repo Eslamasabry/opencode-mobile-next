@@ -599,7 +599,17 @@ private fun PendingBubble(
     onReview: (() -> Unit)? = null,
 ) {
     Column {
-        KitPromptBubble(p.text, Modifier.kitPromptLift(p.localId, p.text))
+        // The same thumbnails the echoed message will show (cached by address), so the swap does not flicker.
+        val sent =
+            rememberKitSentFiles(
+                remember(p.files) { p.files.map { KitSentFile(it.name, it.mime, it.url) } }
+            )
+        KitPromptBubble(
+            p.text,
+            Modifier.kitPromptLift(p.localId, p.text),
+            photos = sent.photos,
+            attachments = sent.attachments,
+        )
         when (p.state) {
             PendingState.Sending -> KitQuietLine(words.sending)
             PendingState.Unconfirmed -> ReceiptCheckLine(p.localId, check, onCheck, onReview)

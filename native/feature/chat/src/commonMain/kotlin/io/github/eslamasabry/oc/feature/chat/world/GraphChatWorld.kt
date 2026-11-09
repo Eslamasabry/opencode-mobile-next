@@ -605,6 +605,8 @@ internal class GraphChatWorld(
                 sentFiles(bubble.localId) == files
         }
 
+    private fun pendingFile(a: PromptAttachment): PendingFile = PendingFile(a.filename, a.mime, a.url)
+
     private fun sentFiles(localId: Long): List<PromptAttachment> =
         sentSnapshots[localId]?.files.orEmpty()
 
@@ -792,6 +794,7 @@ internal class GraphChatWorld(
                                 PendingState.Unconfirmed,
                                 canCheckReceipt =
                                     entry.dispatched && gateway.capabilities.value.commandReceipts,
+                                files = entry.attachments.map(::pendingFile),
                             ))
                         .toImmutableList()
                 }
@@ -1827,7 +1830,7 @@ internal class GraphChatWorld(
         val expected = currentAttached()
         baselines[id] = expected?.handle?.messageIds()?.mapTo(HashSet()) { "prompt:$it" }.orEmpty()
         mutablePending.update {
-            (it + PendingSend(id, text, PendingState.Sending)).toImmutableList()
+            (it + PendingSend(id, text, PendingState.Sending, files = files.map(::pendingFile))).toImmutableList()
         }
         // QA wave 4 N5: the words left the box again, so their not-sent bubble (and its Try again)
         // goes now; one copy
@@ -2071,7 +2074,7 @@ internal class GraphChatWorld(
                 sentSnapshots[localId] = SentSnapshot(send.attachments, null)
                 baselines[localId] = emptySet()
                 mutablePending.update {
-                    (it + PendingSend(localId, send.text, PendingState.Sending)).toImmutableList()
+                    (it + PendingSend(localId, send.text, PendingState.Sending, files = send.attachments.map(::pendingFile))).toImmutableList()
                 }
             }
         }

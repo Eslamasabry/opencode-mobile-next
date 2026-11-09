@@ -372,7 +372,12 @@ public data class PendingSend(
     val failure: Failure? = null,
     /** The exact dispatched queue record has a receipt on this connection. */
     val canCheckReceipt: Boolean = false,
+    /** Pictures and files the bubble carries, shown at once from the bytes the phone already holds. */
+    val files: List<PendingFile> = emptyList(),
 )
+
+/** A file riding a pending prompt; [url] is a `data:` address for a picture from this phone. */
+public data class PendingFile(val name: String, val mime: String?, val url: String?)
 
 public enum class PendingState {
     /** On its way; the bubble shows at once (bubble first). */
