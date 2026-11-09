@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.handoff.ui
 
+import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonItem
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -54,7 +55,7 @@ public fun AgentHandoffScreen(state: AgentHandoffUi, actions: AgentHandoffAction
         edges = KitScreenEdges.Bleed,
     ) {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
-            if (state.loading) item { KitSkeletonRows(count = 3) }
+            if (state.loading) item { KitSkeletonItem(count = 3) }
             if (!state.loading && !state.connected && sourceReview == null)
                 item {
                     KitStateView(

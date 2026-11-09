@@ -70,8 +70,10 @@ public fun KitComposerStripReveal(
             }
             AnimatedVisibility(
                 visible = stop != null,
-                enter = if (motion.reduced) EnterTransition.None else fadeIn(specs.quick()),
-                exit = if (motion.reduced) ExitTransition.None else fadeOut(specs.quick()),
+                // The Stop fades by itself only when chips keep the strip open; otherwise the strip's own unfold and
+                // fold carry it, and a second fade on top would be two animations on one thing.
+                enter = if (motion.reduced || chips == null) EnterTransition.None else fadeIn(specs.quick()),
+                exit = if (motion.reduced || chips == null) ExitTransition.None else fadeOut(specs.quick()),
                 label = "composer-stop",
             ) {
                 Box { (stop ?: heldStop[0])?.invoke() }

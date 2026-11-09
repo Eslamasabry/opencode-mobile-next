@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.usage.ui
 
+import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonItem
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -103,7 +104,7 @@ public fun LimitsContent(state: LimitsUi, actions: LimitsActions, modifier: Modi
             contentPadding = PaddingValues(top = Space.S3.dp, bottom = Space.S6.dp),
         ) {
             when (state.phase) {
-                LimitsPhase.Loading -> item(key = "loading") { KitSkeletonRows() }
+                LimitsPhase.Loading -> item(key = "loading") { KitSkeletonItem() }
                 LimitsPhase.Empty ->
                     item(key = "empty") {
                         KitStateView(

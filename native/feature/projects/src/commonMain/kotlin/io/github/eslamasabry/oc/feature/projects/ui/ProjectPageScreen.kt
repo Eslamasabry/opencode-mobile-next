@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.projects.ui
 
+import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonItem
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
@@ -118,7 +119,7 @@ public fun ProjectPageScreen(
                 return@LazyColumn
             }
             if (state.phase == ProjectPagePhase.Opening) {
-                item(key = "opening") { KitSkeletonRows() }
+                item(key = "opening") { KitSkeletonItem() }
                 return@LazyColumn
             }
             if (state.phase == ProjectPagePhase.NoServer) {
@@ -247,7 +248,7 @@ public fun ProjectPageScreen(
                 }
             }
             when (state.phase) {
-                ProjectPagePhase.Opening -> item(key = "opening") { KitSkeletonRows() }
+                ProjectPagePhase.Opening -> item(key = "opening") { KitSkeletonItem() }
                 ProjectPagePhase.Failed ->
                     item(key = "failed") {
                         KitStateView(

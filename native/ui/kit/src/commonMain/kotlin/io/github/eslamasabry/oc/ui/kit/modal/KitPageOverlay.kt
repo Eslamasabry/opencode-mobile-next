@@ -1,6 +1,14 @@
 package io.github.eslamasabry.oc.ui.kit.modal
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.remember
+import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
@@ -25,10 +33,22 @@ import io.github.eslamasabry.oc.ui.kit.motion.LocalKitGrowTitle
  */
 @Composable
 public fun KitPageOverlay(visible: Boolean, title: String, onDismissRequest: () -> Unit, content: @Composable () -> Unit) {
-    if (!visible) return
+    // The popup outlives `visible` by the exit, so the page fades out instead of vanishing: fade in on the enter pace,
+    // out on QUICK; reduced motion snaps (the specs snap) and the popup goes in the same frame.
+    val shown = remember { MutableTransitionState(false) }
+    shown.targetState = visible
+    if (!visible && !shown.currentState) return
+    val specs = KitMotion.specs
     Popup(onDismissRequest = onDismissRequest, properties = PopupProperties(focusable = true)) {
-        CompositionLocalProvider(LocalKitGrowHost provides null, LocalKitGrowTitle provides null) {
-            OverlayPage(title, content)
+        AnimatedVisibility(
+            visibleState = shown,
+            enter = if (KitMotion.state.reduced) EnterTransition.None else fadeIn(specs.enter()),
+            exit = if (KitMotion.state.reduced) ExitTransition.None else fadeOut(specs.exit()),
+            label = "kit.pageOverlay",
+        ) {
+            CompositionLocalProvider(LocalKitGrowHost provides null, LocalKitGrowTitle provides null) {
+                OverlayPage(title, content)
+            }
         }
     }
 }

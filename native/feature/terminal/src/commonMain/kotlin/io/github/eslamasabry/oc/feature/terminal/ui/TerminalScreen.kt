@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.terminal.ui
 
+import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonItem
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -221,7 +222,7 @@ public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions) 
             if (terminal == null) {
                 LazyColumn(Modifier.fillMaxSize()) {
                     when {
-                        state.loading -> item { KitSkeletonRows() }
+                        state.loading -> item { KitSkeletonItem() }
                         state.failure != null && state.terminals.isEmpty() -> Unit
                         state.terminals.isEmpty() ->
                             item {

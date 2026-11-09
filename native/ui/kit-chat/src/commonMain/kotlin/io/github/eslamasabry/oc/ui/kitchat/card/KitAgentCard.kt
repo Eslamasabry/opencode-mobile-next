@@ -1,6 +1,5 @@
 package io.github.eslamasabry.oc.ui.kitchat.card
 
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -218,7 +217,8 @@ public fun KitAgentCard(
                     horizontal = (LocalKitTokens.current.gutter - FlutterKitTokens.NEEDS_YOU_RING_WIDTH).dp,
                     vertical = Space.S1.dp,
                 )
-    Box(placed.animateContentSize(KitMotion.specs.quick()).testTag("kit-agent-card")) {
+    // The card does not animate its own size: only the part the person opens does (KitReveal), one clock per change.
+    Box(placed.testTag("kit-agent-card")) {
         when (mode) {
             KitAgentCardMode.Ask, KitAgentCardMode.Report -> {
                 val attention = mode == KitAgentCardMode.Ask

@@ -39,13 +39,25 @@ public fun KitFloatingPanel(
     val travels = KitMotion.state.travels
     var entered by remember { mutableStateOf(still) }
     LaunchedEffect(Unit) { entered = true }
+    // The panel leaves the way it came (fade, and Full's 24 dp sink) before the owner is told: the scrim, back and the
+    // heading's Close all go through [leave]. Reduced motion calls the owner at once.
+    var leaving by remember { mutableStateOf(false) }
+    var afterLeave by remember { mutableStateOf<(() -> Unit)?>(null) }
     val progress by
         animateFloatAsState(
-            if (entered) 1f else 0f,
-            KitMotion.specs.enter(),
+            if (entered && !leaving) 1f else 0f,
+            if (leaving) KitMotion.specs.exit() else KitMotion.specs.enter(),
             label = "floating-panel",
+            finishedListener = { if (leaving) afterLeave?.also { afterLeave = null }?.invoke() },
         )
-    KitBackGuard(true) { onDismiss?.invoke() }
+    val leave: (() -> Unit) -> Unit = { then ->
+        if (still) then()
+        else if (!leaving) {
+            afterLeave = then
+            leaving = true
+        }
+    }
+    KitBackGuard(true) { if (onDismiss != null) leave(onDismiss) }
     val look =
         kitSurfaceLook(
             KitSurfaceInput(
@@ -61,7 +73,7 @@ public fun KitFloatingPanel(
             Modifier.fillMaxSize()
                 .background(colors.scrim.copy(alpha = colors.scrim.alpha * progress))
                 .clickable(enabled = onDismiss != null, onClickLabel = dismissLabel) {
-                    onDismiss?.invoke()
+                    if (onDismiss != null) leave(onDismiss)
                 }
                 .testTag("floating-panel-scrim")
                 .kitEdge(KitEdge.Chrome) // the scrim covers the window (native/docs/kit/LAYOUT-RULES.md §2)
@@ -86,11 +98,14 @@ public fun KitFloatingPanel(
                     .padding(Space.S4.dp)
                     .testTag("kit-floating-panel")
                     .semantics { isTraversalGroup = true },
-                content = content,
+                content = { CompositionLocalProvider(LocalKitPanelLeave provides leave) { content() } },
             )
         }
     }
 }
+
+/** How a panel's own Close leaves through the panel's exit; null outside a [KitFloatingPanel]. */
+private val LocalKitPanelLeave = staticCompositionLocalOf<(((() -> Unit)) -> Unit)?> { null }
 
 /** The title and visible Close target shared by the widget's three floating panels. */
 @Composable
@@ -107,6 +122,7 @@ public fun KitPanelHeading(
             role = TypeRole.Headline,
             maxLines = 2,
         ) // F: lib/ui/kit/kit_steer_box.dart:116
-        KitIconButton(KitIcons.close, closeLabel, onClose, enabled = enabled)
+        val leave = LocalKitPanelLeave.current
+        KitIconButton(KitIcons.close, closeLabel, { if (leave != null) leave(onClose) else onClose() }, enabled = enabled)
     }
 }

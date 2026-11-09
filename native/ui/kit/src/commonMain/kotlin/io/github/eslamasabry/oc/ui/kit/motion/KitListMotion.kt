@@ -28,3 +28,11 @@ public fun LazyItemScope.kitItemMotion(fadeIn: Boolean = true, fadeOut: Boolean 
         fadeOutSpec = if (fadeOut) specs.pace(KitPace.Quick) else null,
     )
 }
+
+/**
+ * The modifier for a lazy item that stands for content on its way (skeleton rows, cached rows, an opening status): it
+ * leaves on QUICK where it stands, never fades in and never places, so when the real rows arrive (fading in on their
+ * own [kitItemMotion]) the two cross-fade with no blank frame between. Nothing at Off.
+ */
+@Composable
+public fun LazyItemScope.kitLoadingItemMotion(): Modifier = kitItemMotion(fadeIn = false, fadeOut = true, placement = false)

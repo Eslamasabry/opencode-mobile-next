@@ -25,6 +25,14 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.animation.core.Animatable
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.toSize
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -195,10 +203,49 @@ public fun KitTabStrip(
     val pill = KitShapeId.Pill
     val pillShape = pill.shape()
     // C08: a strip wider than the window fades out at the edge with more past it (the board's "Don" stood cut there).
+    // The selection pill is one shape that slides to the chosen tab (KitMotion spatialFast, in reading direction because
+    // it follows the tab's own place); it jumps at Calm and Off (TabRules.indicatorMoves).
+    val rects = remember(tabs.size) { mutableStateMapOf<Int, Rect>() }
+    val pillMoves = TabRules.indicatorMoves(KitMotion.state.level)
+    val pillSpec = KitMotion.specs.spatialFast<Float>()
+    val pillLeft = remember { Animatable(0f) }
+    val pillTop = remember { Animatable(0f) }
+    val pillWidth = remember { Animatable(0f) }
+    val pillHeight = remember { Animatable(0f) }
+    var pillPlaced by remember { mutableStateOf(false) }
+    val pillTarget = rects[selected]
+    LaunchedEffect(pillTarget, pillMoves) {
+        val t = pillTarget ?: return@LaunchedEffect
+        if (!pillPlaced || !pillMoves) {
+            pillLeft.snapTo(t.left)
+            pillTop.snapTo(t.top)
+            pillWidth.snapTo(t.width)
+            pillHeight.snapTo(t.height)
+            pillPlaced = true
+        } else {
+            launch { pillLeft.animateTo(t.left, pillSpec) }
+            launch { pillTop.animateTo(t.top, pillSpec) }
+            launch { pillWidth.animateTo(t.width, pillSpec) }
+            launch { pillHeight.animateTo(t.height, pillSpec) }
+        }
+    }
+    val pillLook = kitSurfaceLook(KitSurfaceInput(role = SurfaceRole.Control, shape = pill, level = SurfaceLevel.Surface3, ownFill = colors.surface3, selected = true))
     Box(modifier.clipToBounds().kitScrollFade(scroll).testTag("kit-tab-strip")) {
+      Box(Modifier.horizontalScroll(scroll).padding(horizontal = kitPageGutter())) {
+        if (pillPlaced) {
+            Box(
+                Modifier.layout { m, _ ->
+                        val w = pillWidth.value.roundToInt().coerceAtLeast(0)
+                        val h = pillHeight.value.roundToInt().coerceAtLeast(0)
+                        val p = m.measure(Constraints.fixed(w, h))
+                        layout(0, 0) { p.place(pillLeft.value.roundToInt(), pillTop.value.roundToInt()) }
+                    }
+                    .then(pillLook.modifier)
+                    .testTag("kit-tab-pill")
+            )
+        }
         Row(
-            Modifier.horizontalScroll(scroll)
-                .padding(horizontal = kitPageGutter())
+            Modifier
                 .semantics {
                     selectableGroup()
                     if (semanticsLabel != null) paneTitle = semanticsLabel
@@ -238,14 +285,13 @@ public fun KitTabStrip(
                         tab.needsYou == 1 -> stringResource(Res.string.kitNeedsYouBadgeSuffix__eq1)
                         else -> pluralStringResource(Res.plurals.kitNeedsYouBadgeSuffix, tab.needsYou, tab.needsYou)
                     }
-                val look = kitSurfaceLook(KitSurfaceInput(role = SurfaceRole.Control, shape = pill, level = SurfaceLevel.Surface3, ownFill = colors.surface3, selected = true))
                 val ringColor = colors.accent
                 val ringWidth = kitFocusRingWidth()
                 Row(
                     Modifier
                         .bringIntoViewRequester(reveal[i])
                         .heightIn(min = tokens.minTarget.dp)
-                        .then(if (chosen) look.modifier else Modifier)
+                        .onPlaced { rects[i] = Rect(it.positionInParent(), it.size.toSize()) }
                         .focusProperties { canFocus = i == roving }
                         .focusRequester(focus[i])
                         .onFocusChanged { ring = it.isFocused }
@@ -293,6 +339,7 @@ public fun KitTabStrip(
                 }
             }
         }
+      }
     }
 }
 

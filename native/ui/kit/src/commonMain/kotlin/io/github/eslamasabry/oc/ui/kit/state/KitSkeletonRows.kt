@@ -10,7 +10,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.runtime.Composable
+import io.github.eslamasabry.oc.ui.kit.motion.kitLoadingItemMotion
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -64,4 +66,10 @@ public fun KitSkeletonRows(modifier: Modifier = Modifier, count: Int = 4) {
             }
         }
     }
+}
+
+/** [KitSkeletonRows] as a lazy list item: placeholders that cross-fade into the rows that replace them. */
+@Composable
+public fun LazyItemScope.KitSkeletonItem(modifier: Modifier = Modifier, count: Int = 4) {
+    Box(kitLoadingItemMotion().then(modifier)) { KitSkeletonRows(count = count) }
 }

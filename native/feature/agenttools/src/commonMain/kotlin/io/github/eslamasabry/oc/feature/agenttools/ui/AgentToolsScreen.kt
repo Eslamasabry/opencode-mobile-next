@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.agenttools.ui
 
+import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonItem
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
@@ -87,7 +88,7 @@ public fun AgentToolsScreen(state: AgentToolsUi, actions: AgentToolsActions) {
             else {
                 if (state.directory.isNotEmpty())
                     item(key = "directory") { KitText(state.directory) }
-                if (state.loading) item(key = "loading") { KitSkeletonRows(count = 3) }
+                if (state.loading) item(key = "loading") { KitSkeletonItem(count = 3) }
                 state.failure?.let { failure ->
                     item(key = "failure") {
                         KitErrorNotice(

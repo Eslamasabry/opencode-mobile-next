@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chats.ui
 
+import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonItem
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -249,7 +250,7 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
                 }
             }
             when (state.phase) {
-                AllPhase.Opening -> item(key = "opening") { KitSkeletonRows(count = 7) } // F: lib/ui/screens/global_sessions_screen.dart:814
+                AllPhase.Opening -> item(key = "opening") { KitSkeletonItem(count = 7) } // F: lib/ui/screens/global_sessions_screen.dart:814
                 AllPhase.NoServer ->
                     item(key = "no-server") {
                         KitStateView(
