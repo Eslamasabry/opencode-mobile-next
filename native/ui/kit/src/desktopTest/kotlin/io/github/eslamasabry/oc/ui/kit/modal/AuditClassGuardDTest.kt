@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.modal
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -133,6 +134,55 @@ class AuditClassGuardDTest {
             setContent { Theme { KitRow("Main", selected = true, onClick = {}) } }
             waitForIdle()
             onNodeWithTag("kit-row-check", useUnmergedTree = true)
+        }
+    }
+
+    /** The wash's left and right edge on the row's top strip (clear of words) and the count of accent-coloured check pixels. */
+    private class Look(val left: Int, val right: Int, val accentPixels: Int)
+
+    private fun selectedLook(dark: Boolean, content: @Composable () -> Unit): Look {
+        var look = Look(0, 0, 0)
+        var accent = Color.Unspecified
+        runDesktopComposeUiTest(412, 400) {
+            setContent {
+                KitTheme(
+                    appearance = KitAppearance(
+                        mode = if (dark) io.github.eslamasabry.oc.ui.design.effects.AppearanceMode.Dark else io.github.eslamasabry.oc.ui.design.effects.AppearanceMode.Light,
+                        motion = MotionLevel.Off,
+                    ),
+                    platform = FakeKitPlatform(),
+                    localeTag = "en",
+                ) {
+                    val colors = io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors.current
+                    accent = colors.accent
+                    Box(Modifier.fillMaxSize().background(colors.ground)) { Box(Modifier.testTag("sel")) { content() } }
+                }
+            }
+            waitForIdle()
+            val b = onNodeWithTag("sel", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+            val px = onRoot().captureToImage().toPixelMap()
+            val page = px[2, 2]
+            val y = (b.top + 2 * density.density).roundToInt()
+            val xs = (0 until px.width).filter { !same(px[it, y], page) }
+            var count = 0
+            for (x in (b.right - 56 * density.density).roundToInt() until b.right.roundToInt())
+                for (yy in b.top.roundToInt() until b.bottom.roundToInt())
+                    if (abs(px[x, yy].red - accent.red) < .1f && abs(px[x, yy].green - accent.green) < .1f && abs(px[x, yy].blue - accent.blue) < .1f) count++
+            look = Look(xs.minOrNull() ?: -1, xs.maxOrNull() ?: -1, count)
+        }
+        return look
+    }
+
+    @Test
+    fun `C04 a chosen choice row and a chosen KitRow share one wash shape and one check colour`() {
+        listOf(false, true).forEach { dark ->
+            val choice = selectedLook(dark) { KitChoiceRow("Claude", selected = true, onClick = {}) }
+            val row = selectedLook(dark) { KitRow("Main", selected = true, onClick = {}) }
+            assertTrue(choice.left > 0 && choice.right > 0, "the choice row washes (dark=$dark)")
+            assertEquals(row.left, choice.left, "same wash start (dark=$dark)")
+            assertEquals(row.right, choice.right, "same wash end (dark=$dark)")
+            assertTrue(choice.accentPixels > 0, "the choice row's check is the accent (dark=$dark)")
+            assertTrue(row.accentPixels > 0, "the KitRow's check is the accent (dark=$dark)")
         }
     }
 
