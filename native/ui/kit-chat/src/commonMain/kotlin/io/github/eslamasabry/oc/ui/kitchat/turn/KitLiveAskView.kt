@@ -76,7 +76,7 @@ public fun KitLiveAskView(ask: KitLiveAsk, modifier: Modifier = Modifier) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 KitSurface(Modifier.size(ASK_BOX), SurfaceLevel.Surface3, KitShapeId.Tile, KitSurfacePadding.None) {
                     Box(Modifier.size(ASK_BOX), contentAlignment = Alignment.Center) {
-                        KitIcon(KitIcons.github, size = KitIconSize.Medium, tone = TextTone.Primary)
+                        KitIcon(KitIcons.githubMark, size = KitIconSize.Medium, tone = TextTone.Primary)
                     }
                 }
                 Spacer(Modifier.width(Space.S3.dp))
