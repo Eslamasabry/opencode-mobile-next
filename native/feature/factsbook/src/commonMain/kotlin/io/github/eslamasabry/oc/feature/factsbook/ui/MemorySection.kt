@@ -80,13 +80,16 @@ public fun MemorySectionContent(state: MemorySectionUi, actions: MemorySectionAc
             }
             return@Column
         }
-        if (state.load == FactsBookLoad.Loading) {
+        // The label above the loading rows, or above the error when nothing is held on this phone (F: memory_section.dart:291).
+        if (state.load == FactsBookLoad.Loading || (state.load == FactsBookLoad.Failed && state.needsYou.isEmpty())) {
             KitText(
                 title,
                 Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
                 role = TypeRole.Label,
                 tone = TextTone.Secondary,
             )
+        }
+        if (state.load == FactsBookLoad.Loading) {
             KitSkeletonRows(count = 2)
         } else {
             val failed = state.load == FactsBookLoad.Failed

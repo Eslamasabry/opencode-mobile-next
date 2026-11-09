@@ -16,10 +16,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.factsbook.CaptureKind
 import io.github.eslamasabry.oc.engine.factsbook.CouldNotSaveEntry
 import io.github.eslamasabry.oc.engine.factsbook.Fact
+import io.github.eslamasabry.oc.engine.factsbook.FactsBookLoad
 import io.github.eslamasabry.oc.feature.factsbook.presentation.AreasActions
 import io.github.eslamasabry.oc.feature.factsbook.presentation.AreasUi
 import io.github.eslamasabry.oc.feature.factsbook.presentation.CaptureActions
@@ -29,6 +32,7 @@ import io.github.eslamasabry.oc.feature.factsbook.presentation.CaptureReminder
 import io.github.eslamasabry.oc.feature.factsbook.presentation.ConnectActions
 import io.github.eslamasabry.oc.feature.factsbook.presentation.ConnectUi
 import io.github.eslamasabry.oc.feature.factsbook.presentation.NotSavedActions
+import io.github.eslamasabry.oc.feature.factsbook.presentation.NotSavedNotice
 import io.github.eslamasabry.oc.feature.factsbook.presentation.NotSavedUi
 import io.github.eslamasabry.oc.feature.factsbook.presentation.SearchActions
 import io.github.eslamasabry.oc.feature.factsbook.presentation.SearchUi
@@ -47,6 +51,7 @@ import io.github.eslamasabry.oc.ui.kit.choice.KitSegmented
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenRefresh
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
@@ -57,12 +62,14 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitInputOperationDialog
+import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.KitMonoText
 import io.github.eslamasabry.oc.ui.kit.action.KitCopyButton
 import io.github.eslamasabry.oc.ui.kit.row.KitFactRow
+import io.github.eslamasabry.oc.ui.kit.row.KitProvenance
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
@@ -118,6 +125,7 @@ public fun AreasScreen(state: AreasUi, actions: AreasActions) {
         width = KitScreenWidth.Reading,
         loading = (state.loading && state.areas != null) || state.working.isNotEmpty(),
         loadingLabel = title,
+        refresh = if (state.areas != null) KitScreenRefresh(refreshing = state.loading, onRefresh = actions::reload) else null,
         edges = KitScreenEdges.Bleed,
     ) {
         val areas = state.areas
@@ -211,12 +219,20 @@ public fun ThingScreen(state: ThingUi, actions: ThingActions) {
     val thing = state.thing
     var adding by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf<Fact?>(null) }
+    var explaining by remember { mutableStateOf<Fact?>(null) }
     KitSheetHost(Modifier.fillMaxSize()) {
     KitScreen(
-        topBar = { BackBar(thing?.let { bidiName(it.title) } ?: stringResource(Res.string.fbAboutYouTitle), actions::back, thing?.let { kindWords(it.kind) }) },
+        topBar = {
+            BackBar(
+                thing?.let { bidiName(it.title) } ?: "",
+                actions::back,
+                thing?.let { t -> listOfNotNull(kindWords(t.kind), t.area.takeIf { it.isNotEmpty() }?.let { areaName(it) }).joinToString(" · ") },
+            )
+        },
         width = KitScreenWidth.Reading,
-        loading = state.working,
-        loadingLabel = stringResource(Res.string.fbThingFacts),
+        loading = (state.loading && thing != null) || state.working,
+        loadingLabel = thing?.title ?: "",
+        refresh = if (thing != null) KitScreenRefresh(refreshing = state.loading, onRefresh = actions::reload) else null,
         edges = KitScreenEdges.Bleed,
     ) {
         when {
@@ -239,22 +255,41 @@ public fun ThingScreen(state: ThingUi, actions: ThingActions) {
                                         ThingNotice.FactProposed -> stringResource(Res.string.fbCaptureFactProposed)
                                         ThingNotice.FactChanged -> stringResource(Res.string.fbThingFactChanged)
                                         ThingNotice.ChangeProposed -> stringResource(Res.string.fbThingChangeProposed)
+                                        ThingNotice.ReminderMade -> stringResource(Res.string.fbThingReminderMade, bidiName(thing.title))
                                         null -> failureWords(state.writeError)
                                     },
                                 modifier = Modifier.padding(horizontal = gutter(), vertical = Space.S2.dp),
                                 tone = if (notice == null) StatusTone.Attention else StatusTone.Ok,
+                                actions =
+                                    if (notice?.waitsForOk == true) listOf(KitLineAction(stringResource(Res.string.fbCaptureSeeNeedsYou), actions::seeNeedsYou))
+                                    else emptyList(),
                                 dismiss = KitLineAction(stringResource(Res.string.fbDismiss), actions::dismiss),
                             )
                         }
                     }
-                    item("add") {
-                        KitRowGroup {
-                            KitRow(
-                                title = stringResource(Res.string.fbThingAddFact, bidiName(thing.title)),
-                                leading = KitRowLeading.Glyph(KitIcons.add, tile = true),
-                                titleAccent = true,
-                                onClick = { adding = true },
-                            )
+                    if (state.canWrite || state.canRemind) {
+                        item("add") {
+                            KitRowGroup {
+                                if (state.canWrite) {
+                                    KitRow(
+                                        title = stringResource(Res.string.fbThingAddFact, bidiName(thing.title)),
+                                        leading = KitRowLeading.Glyph(KitIcons.add, tile = true),
+                                        titleAccent = true,
+                                        titleMaxLines = 2,
+                                        trailing = KitRowTrailing.Chevron,
+                                        onClick = { adding = true },
+                                    )
+                                }
+                                if (state.canRemind) {
+                                    KitRow(
+                                        title = stringResource(Res.string.fbThingRemind, bidiName(thing.title)),
+                                        leading = KitRowLeading.Glyph(KitIcons.clock),
+                                        titleMaxLines = 2,
+                                        trailing = KitRowTrailing.Chevron,
+                                        onClick = actions::remind,
+                                    )
+                                }
+                            }
                         }
                     }
                     item("label") { KitSectionLabel(stringResource(Res.string.fbThingFacts)) }
@@ -276,8 +311,19 @@ public fun ThingScreen(state: ThingUi, actions: ThingActions) {
                                 modifier = Modifier.padding(horizontal = gutter(), vertical = Space.S1.dp),
                                 source = sourceWords(fact.source),
                                 waitingForOk = fact.waitingForOk,
-                                onOpen = { editing = fact },
+                                onOpen = { explaining = fact },
                             )
+                        }
+                        // An edited fact keeps where the original was read: the node retains that evidence through edits.
+                        fact.support.forEachIndexed { i, evidence ->
+                            item("${fact.id}-support-$i") {
+                                KitText(
+                                    stringResource(Res.string.fbThingOriginally, sourceWords(evidence.source) ?: stringResource(Res.string.fbSourceOther), observedWords(evidence.observedAt)),
+                                    Modifier.padding(start = gutter() + Space.S4.dp, end = gutter(), bottom = Space.S1.dp),
+                                    role = TypeRole.Caption,
+                                    tone = TextTone.Secondary,
+                                )
+                            }
                         }
                     }
                     if (thing.facts.any { it.waitingForOk }) item("waiting") { KitGroupNote(stringResource(Res.string.fbThingWaitingNote)) }
@@ -299,6 +345,40 @@ public fun ThingScreen(state: ThingUi, actions: ThingActions) {
             },
             onDismissRequest = { adding = false },
         )
+    }
+    val about = explaining
+    if (about != null) {
+        val date = observedWords(about.observedAt)
+        val source = sourceWords(about.source)
+        val words =
+            stringResource(
+                when (kitProvenanceOf(about.provenance)) {
+                    KitProvenance.Told -> Res.string.fbThingExplainTold
+                    KitProvenance.Seen -> if (source == null) Res.string.fbThingExplainSeenNoSource else Res.string.fbThingExplainSeen
+                    KitProvenance.Guessed -> if (source == null) Res.string.fbThingExplainGuessedNoSource else Res.string.fbThingExplainGuessed
+                    KitProvenance.Calculated -> Res.string.fbThingExplainCalculated
+                },
+                *when (kitProvenanceOf(about.provenance)) {
+                    KitProvenance.Told, KitProvenance.Calculated -> arrayOf<Any>(date)
+                    else -> if (source == null) arrayOf<Any>(date) else arrayOf<Any>(source, date)
+                },
+            )
+        KitSheet(
+            visible = true,
+            onDismissRequest = { explaining = null },
+            title = bidiName(about.text),
+            closeLabel = stringResource(Res.string.fbDismiss),
+            icon = KitIcons.info,
+            primary =
+                if (state.canWrite) {
+                    KitAction(stringResource(Res.string.fbThingEditFact), { explaining = null; editing = about }, icon = KitIcons.edit)
+                } else null,
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+                KitText(words)
+                if (about.waitingForOk) KitText(stringResource(Res.string.fbThingExplainWaiting))
+            }
+        }
     }
     val fact = editing
     KitInputOperationDialog(
@@ -324,31 +404,47 @@ public fun ThingScreen(state: ThingUi, actions: ThingActions) {
 public fun SearchScreen(state: SearchUi, actions: SearchActions) {
     val title = stringResource(Res.string.fbSearchTitle)
     val result = state.result
+    val field = rememberTextFieldState(state.query)
     KitScreen(
-        topBar = { BackBar(title, actions::back, state.query) },
+        topBar = { BackBar(title, actions::back) },
         width = KitScreenWidth.Reading,
         loading = result == null && state.error == null,
         loadingLabel = title,
+        header = {
+            KitSearchField(
+                label = stringResource(Res.string.fbSearchLabel),
+                onSearch = {},
+                onSubmit = actions::search,
+                state = field,
+                modifier = Modifier.padding(horizontal = gutter(), vertical = Space.S2.dp),
+            )
+        },
         edges = KitScreenEdges.Bleed,
     ) {
         when {
-            state.error != null -> ErrorState(state.error) { actions.search(state.query) }
+            state.error != null -> ErrorState(state.error) { actions.search(field.text.toString().ifBlank { state.query }) }
             result == null -> KitSkeletonRows()
-            result.hits.isEmpty() ->
-                KitStateView(
-                    KitStateKind.Empty,
-                    stringResource(Res.string.fbSearchNoneTitle),
-                    body = stringResource(Res.string.fbSearchNoneBody),
-                    icon = KitIcons.search,
-                )
             else ->
                 LazyColumn(Modifier.fillMaxSize()) {
-                    if (result.lockedNotesSkipped) {
-                        item("locked") {
-                            KitNotice(stringResource(Res.string.fbSearchLocked), Modifier.padding(horizontal = gutter(), vertical = Space.S2.dp))
+                    item("count") {
+                        Column(Modifier.padding(horizontal = gutter()), verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+                            KitText(
+                                pluralStringResource(Res.plurals.fbSearchMatches, result.hits.size, result.hits.size, bidiName(state.query)),
+                                role = TypeRole.Label,
+                            )
+                            KitText(stringResource(Res.string.fbSearchWordsOnly), role = TypeRole.Secondary, tone = TextTone.Secondary)
                         }
                     }
-                    item("count") { KitGroupNote(pluralStringResource(Res.plurals.fbSearchMatches, result.hits.size, result.hits.size, state.query)) }
+                    if (result.hits.isEmpty()) {
+                        item("none") {
+                            KitStateView(
+                                KitStateKind.Empty,
+                                stringResource(Res.string.fbSearchNoneTitle),
+                                body = stringResource(Res.string.fbSearchNoneBody),
+                                icon = KitIcons.search,
+                            )
+                        }
+                    }
                     result.hits.forEach { hit ->
                         item(hit.factId) {
                             KitFactRow(
@@ -362,7 +458,8 @@ public fun SearchScreen(state: SearchUi, actions: SearchActions) {
                             )
                         }
                     }
-                    item("words") { KitGroupNote(stringResource(Res.string.fbSearchWordsOnly)) }
+                    if (result.lockedNotesSkipped) item("locked") { KitGroupNote(stringResource(Res.string.fbSearchLocked)) }
+                    if (result.hits.isNotEmpty()) item("each") { KitGroupNote(stringResource(Res.string.fbSearchEachHit)) }
                 }
         }
     }
@@ -497,7 +594,12 @@ public fun CaptureScreen(state: CaptureUi, actions: CaptureActions) {
                             }, reminderWords).joinToString(" "),
                         modifier = Modifier.padding(horizontal = gutter(), vertical = Space.S3.dp),
                         tone = if (notice == null || kept) StatusTone.Attention else StatusTone.Ok,
-                        actions = if (kept) listOf(KitLineAction(stringResource(Res.string.fbCaptureSeeNotSaved), actions::seeNotSaved)) else emptyList(),
+                        actions =
+                            when {
+                                kept -> listOf(KitLineAction(stringResource(Res.string.fbCaptureSeeNotSaved), actions::seeNotSaved))
+                                notice == CaptureNotice.FactProposed -> listOf(KitLineAction(stringResource(Res.string.fbCaptureSeeNeedsYou), actions::seeNeedsYou))
+                                else -> emptyList()
+                            },
                         dismiss = KitLineAction(stringResource(Res.string.fbDismiss), actions::dismiss),
                     )
                 }
@@ -517,11 +619,15 @@ public fun NotSavedScreen(state: NotSavedUi, actions: NotSavedActions) {
     KitScreen(
         topBar = { BackBar(title, actions::back) },
         width = KitScreenWidth.Reading,
-        loading = state.working,
+        loading = state.working || state.load == FactsBookLoad.Loading,
         loadingLabel = title,
         edges = KitScreenEdges.Bleed,
+        refresh = KitScreenRefresh(refreshing = false, onRefresh = actions::refresh, enabled = state.entries.isNotEmpty()),
     ) {
-        if (state.entries.isEmpty()) {
+        // Notes kept on this phone show even when the node cannot be reached: they are what the person needs then.
+        if (state.load == FactsBookLoad.Failed && state.entries.isEmpty()) {
+            ErrorState(state.loadError, actions::refresh)
+        } else if (state.entries.isEmpty()) {
             KitStateView(
                 KitStateKind.Calm,
                 stringResource(Res.string.fbNotSavedEmptyTitle),
@@ -537,6 +643,23 @@ public fun NotSavedScreen(state: NotSavedUi, actions: NotSavedActions) {
                         role = TypeRole.Secondary,
                         tone = TextTone.Secondary,
                     )
+                }
+                if (state.load == FactsBookLoad.Failed) {
+                    item("unreachable") {
+                        KitNotice(failureWords(state.loadError), Modifier.padding(horizontal = gutter(), vertical = Space.S2.dp))
+                    }
+                }
+                state.notice?.let { notice ->
+                    item("notice") {
+                        val saved = notice == NotSavedNotice.Saved
+                        KitNotice(
+                            stringResource(if (saved) Res.string.fbNotSavedSaved else Res.string.fbNotSavedStill),
+                            Modifier.padding(horizontal = gutter(), vertical = Space.S2.dp),
+                            tone = if (saved) StatusTone.Ok else StatusTone.Neutral,
+                            icon = if (saved) KitIcons.check else KitIcons.info,
+                            dismiss = KitLineAction(stringResource(Res.string.fbDismiss), actions::dismiss),
+                        )
+                    }
                 }
                 state.error?.let { error ->
                     item("error") {
@@ -602,8 +725,11 @@ private fun EntryRow(entry: CouldNotSaveEntry, state: NotSavedUi, actions: NotSa
             "$where · ${stringResource(Res.string.fbNotSavedSince, age)}",
             if (due) stringResource(Res.string.fbNotSavedThirtyDays) else null,
         )
+    @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
+    val text = entry.text
     KitRow(
-        title = entry.text?.lineSequence()?.firstOrNull()?.take(80) ?: stringResource(Res.string.fbNotSavedNodeItem),
+        title = text?.let { bidiName(it) } ?: stringResource(Res.string.fbNotSavedNodeItem),
+        titleMaxLines = 3,
         supporting = lines.joinToString("\n"),
         supportingMaxLines = 4,
         leading = KitRowLeading.Glyph(if (entry.onPhone) KitIcons.phone else KitIcons.server),
@@ -611,7 +737,14 @@ private fun EntryRow(entry: CouldNotSaveEntry, state: NotSavedUi, actions: NotSa
             KitRowTrailing.Menu(
                 stringResource(Res.string.fbNotSavedTryNow),
                 listOfNotNull(
-                    KitMenuItem(stringResource(Res.string.fbNotSavedRetry), { actions.retry(entry) }),
+                    // From day 30 the page asks Retry, Export or Discard (F: not_saved_screen.dart `_entry`).
+                    KitMenuItem(stringResource(if (due) Res.string.fbNotSavedRetry else Res.string.fbNotSavedTryNow), { actions.retry(entry) }),
+                    if (text != null) {
+                        KitMenuItem(
+                            stringResource(if (due) Res.string.fbNotSavedExport else Res.string.fbNotSavedCopy),
+                            { clipboard.setText(AnnotatedString(text)) },
+                        )
+                    } else null,
                     if (!entry.onPhone && state.canExport) KitMenuItem(stringResource(Res.string.fbNotSavedExport), { actions.export(entry) }) else null,
                     KitMenuItem(stringResource(Res.string.fbNotSavedDiscard), { actions.askDiscard(entry) }, destructive = true),
                 ),
@@ -640,6 +773,11 @@ public fun ConnectScreen(state: ConnectUi, actions: ConnectActions) {
                     KitAction(
                         stringResource(Res.string.fbConnectButton),
                         { actions.connect(address.text.toString(), code.text.toString(), owner.text.toString()) },
+                        enabled =
+                            KitEnabled.of(
+                                address.text.isNotBlank() && code.text.isNotBlank() && !state.working,
+                                stringResource(Res.string.fbConnectNeeds),
+                            ),
                         working = state.working,
                     ),
             )
@@ -650,8 +788,8 @@ public fun ConnectScreen(state: ConnectUi, actions: ConnectActions) {
             item("form") {
                 Column(Modifier.padding(horizontal = gutter(), vertical = Space.S2.dp), verticalArrangement = Arrangement.spacedBy(Space.S4.dp)) {
                     KitText(stringResource(Res.string.fbConnectIntro), role = TypeRole.Secondary, tone = TextTone.Secondary)
-                    KitField(address, stringResource(Res.string.fbConnectAddress), placeholder = stringResource(Res.string.fbConnectAddressHint))
-                    KitField(code, stringResource(Res.string.fbConnectCode), helper = stringResource(Res.string.fbConnectCodeHelp))
+                    KitField(address, stringResource(Res.string.fbConnectAddress), placeholder = stringResource(Res.string.fbConnectAddressHint), kind = KitFieldKind.Url)
+                    KitField(code, stringResource(Res.string.fbConnectCode), helper = stringResource(Res.string.fbConnectCodeHelp), kind = KitFieldKind.Mono)
                     state.error?.let { error ->
                         // A refused code reads as "that code did not work", whatever the node calls it.
                         val refused = error.code == "forbidden_scope" || error.code == "unauthorized"
@@ -659,6 +797,7 @@ public fun ConnectScreen(state: ConnectUi, actions: ConnectActions) {
                             if (refused) stringResource(Res.string.fbErrorPairCode) else failureWords(error),
                             title = stringResource(Res.string.fbConnectFailedTitle),
                             tone = StatusTone.Attention,
+                            notes = listOfNotNull(failureDetails(error)),
                         )
                     }
                     KitSectionLabel(stringResource(Res.string.fbConnectOwnerTitle))
@@ -673,7 +812,7 @@ public fun ConnectScreen(state: ConnectUi, actions: ConnectActions) {
                             )
                         }
                     }
-                    KitField(owner, stringResource(Res.string.fbConnectOwnerId))
+                    KitField(owner, stringResource(Res.string.fbConnectOwnerId), kind = KitFieldKind.Mono)
                 }
             }
         }

@@ -24,6 +24,7 @@ import io.github.eslamasabry.oc.engine.factsbook.CouldNotSaveEntry
 import io.github.eslamasabry.oc.engine.factsbook.CouldNotSaveState
 import io.github.eslamasabry.oc.engine.factsbook.Fact
 import io.github.eslamasabry.oc.engine.factsbook.FactsBookError
+import io.github.eslamasabry.oc.engine.factsbook.FactsBookCapabilities
 import io.github.eslamasabry.oc.engine.factsbook.FactsBookGateway
 import io.github.eslamasabry.oc.engine.factsbook.FbResult
 import io.github.eslamasabry.oc.engine.factsbook.SearchResult
@@ -49,6 +50,9 @@ import kotlinx.coroutines.launch
 
 private val unreachable = FbResult.Err(FactsBookError(FactsBookError.UNREACHABLE))
 
+/** The node can take a person's own fact or change (F: `FactsBookCapabilities.ownerReview`). */
+private const val OWNER_REVIEW = "owner_review_and_correction"
+
 /** The engine opened on the connected profile, then its gateway (null while unpaired). */
 private suspend fun FactsBookAccess.node(): FactsBookGateway? {
     engine.open(activeProfileId.value)
@@ -58,7 +62,16 @@ private suspend fun FactsBookAccess.node(): FactsBookGateway? {
 // ---- Thing --------------------------------------------------------------------------------------------------------
 
 /** What a write on the thing page came to, worded by the screen. */
-public enum class ThingNotice { FactAdded, FactProposed, FactChanged, ChangeProposed }
+public enum class ThingNotice {
+    FactAdded,
+    FactProposed,
+    FactChanged,
+    ChangeProposed,
+    ReminderMade;
+
+    /** The change waits for the person's OK: the notice offers "See Needs you". */
+    public val waitsForOk: Boolean get() = this == FactProposed || this == ChangeProposed
+}
 
 public data class ThingUi(
     val thing: Thing? = null,
@@ -66,6 +79,12 @@ public data class ThingUi(
     val working: Boolean = false,
     val notice: ThingNotice? = null,
     val writeError: FactsBookError? = null,
+    /** True while the thing is read again behind what is shown (pull to refresh, after a write). */
+    val loading: Boolean = false,
+    /** The node takes a fact or a change from the person: Add a fact and Change this fact show. */
+    val canWrite: Boolean = false,
+    /** The node offers reminders: "Remind me about Sam" shows. */
+    val canRemind: Boolean = false,
 )
 
 public interface ThingActions {
@@ -77,6 +96,11 @@ public interface ThingActions {
 
     public fun editFact(fact: Fact, text: String)
 
+    /** "Remind me about Sam": the reminder check opens with the thing's name, tomorrow at 09:00. */
+    public fun remind()
+
+    public fun seeNeedsYou()
+
     public fun dismiss()
 }
 
@@ -86,25 +110,63 @@ public class ThingViewModel(
     @Assisted private val route: FactsBookRoute.Thing,
     private val access: FactsBookAccess,
     private val nav: AppNavigator,
+    private val checks: ReminderChecks,
 ) : ViewModel(), ThingActions {
     private val mutable = MutableStateFlow(ThingUi())
     public val state: StateFlow<ThingUi> = mutable.asStateFlow()
 
+    /** The thing a reminder check is waiting to answer for. */
+    private var remindingAbout: Thing? = null
+
     init {
         reload()
+        viewModelScope.launch {
+            checks.results.collect { result ->
+                val about = remindingAbout ?: return@collect
+                remindingAbout = null
+                if (result is ReminderCheckResult.Checked) makeReminder(result.preview)
+            }
+        }
     }
 
     override fun back(): Unit = nav.back()
 
     override fun reload() {
-        mutable.update { it.copy(error = null) }
+        mutable.update { it.copy(error = null, loading = true) }
         viewModelScope.launch {
-            when (val r = access.node()?.thing(route.id) ?: unreachable) {
-                is FbResult.Ok -> mutable.update { it.copy(thing = r.value, error = null) }
-                is FbResult.Err -> mutable.update { it.copy(error = r.error) }
+            val r = access.node()?.thing(route.id) ?: unreachable
+            val caps = access.engine.state.value.capabilities
+            mutable.update {
+                val now = it.copy(loading = false, canWrite = caps.supports(OWNER_REVIEW), canRemind = caps.supports(FactsBookCapabilities.REMINDERS))
+                when (r) {
+                    is FbResult.Ok -> now.copy(thing = r.value, error = null)
+                    is FbResult.Err -> now.copy(error = r.error)
+                }
             }
         }
     }
+
+    override fun remind() {
+        val thing = mutable.value.thing ?: return
+        if (!mutable.value.canRemind || mutable.value.working) return
+        remindingAbout = thing
+        mutable.update { it.copy(notice = null, writeError = null) }
+        nav.open(FactsBookRoute.ReminderEdit(null, fromText = thing.title, area = thing.area.ifEmpty { "general" }, exact = true))
+    }
+
+    private suspend fun makeReminder(preview: ReminderPreview) {
+        mutable.update { it.copy(working = true, notice = null, writeError = null) }
+        val r =
+            (access.engine.node as? FactsBookReminders)?.createReminder(preview, floatingConfirmed = preview.zone == "floating") ?: unreachable
+        mutable.update {
+            when (r) {
+                is FbResult.Ok -> it.copy(working = false, notice = ThingNotice.ReminderMade)
+                is FbResult.Err -> it.copy(working = false, writeError = r.error)
+            }
+        }
+    }
+
+    override fun seeNeedsYou(): Unit = nav.open(FactsBookRoute.NeedsYou)
 
     /** One line: runs of white space become one space, as Flutter sends it. */
     private fun oneLine(text: String): String = text.trim().replace(Regex("\\s+"), " ")
@@ -361,6 +423,9 @@ public interface CaptureActions {
 
     public fun seeNotSaved()
 
+    /** "See Needs you" under a fact that waits for the person's OK. */
+    public fun seeNeedsYou()
+
     public fun dismiss()
 
     public fun rules(on: Boolean)
@@ -496,13 +561,28 @@ public class CaptureViewModel(
 
     override fun seeNotSaved(): Unit = nav.open(FactsBookRoute.NotSaved)
 
+    override fun seeNeedsYou(): Unit = nav.open(FactsBookRoute.NeedsYou)
+
     override fun dismiss(): Unit = mutable.update { it.copy(notice = null, error = null) }
 }
 
 // ---- Not saved yet ------------------------------------------------------------------------------------------------
 
+/** What a Try now came to (F: not_saved_screen.dart `_retry`). */
+public enum class NotSavedNotice {
+    /** The note went through and is gone from this page. */
+    Saved,
+
+    /** The node could not be reached or did not take it: it stays here. */
+    Still,
+}
+
 public data class NotSavedUi(
     val entries: ImmutableList<CouldNotSaveEntry> = persistentListOf(),
+    val notice: NotSavedNotice? = null,
+    val load: io.github.eslamasabry.oc.engine.factsbook.FactsBookLoad = io.github.eslamasabry.oc.engine.factsbook.FactsBookLoad.Idle,
+    /** Why the node could not be read; the notes kept on this phone still show. */
+    val loadError: FactsBookError? = null,
     val confirmDiscard: CouldNotSaveEntry? = null,
     val working: Boolean = false,
     val error: FactsBookError? = null,
@@ -528,6 +608,9 @@ public interface NotSavedActions {
 
     public fun dismiss()
 
+    /** Read the node again (pull to refresh, and Retry when nothing could be read). */
+    public fun refresh() {}
+
     /** Export a note the node holds as the encrypted object it hands back. */
     public fun export(entry: CouldNotSaveEntry)
 
@@ -545,6 +628,7 @@ public class NotSavedViewModel(private val access: FactsBookAccess, private val 
         val working: Boolean = false,
         val error: FactsBookError? = null,
         val export: CaptureExport? = null,
+        val notice: NotSavedNotice? = null,
     )
 
     private val local = MutableStateFlow(Local())
@@ -553,6 +637,9 @@ public class NotSavedViewModel(private val access: FactsBookAccess, private val 
         combine(access.engine.state, local) { s, own ->
                 NotSavedUi(
                     entries = s.pending.filter { it.state != CouldNotSaveState.Discarded }.toImmutableList(),
+                    notice = own.notice,
+                    load = s.load,
+                    loadError = s.error,
                     confirmDiscard = own.confirm,
                     working = own.working,
                     error = own.error,
@@ -565,6 +652,10 @@ public class NotSavedViewModel(private val access: FactsBookAccess, private val 
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), NotSavedUi())
 
     init {
+        refresh()
+    }
+
+    override fun refresh() {
         viewModelScope.launch {
             access.engine.open(access.activeProfileId.value)
             access.engine.refresh()
@@ -575,10 +666,18 @@ public class NotSavedViewModel(private val access: FactsBookAccess, private val 
 
     override fun retry(entry: CouldNotSaveEntry) {
         if (local.value.working) return
-        local.update { it.copy(working = true, error = null) }
+        local.update { it.copy(working = true, error = null, notice = null) }
         viewModelScope.launch {
             val r = access.engine.retry(entry)
-            local.update { it.copy(working = false, error = (r as? FbResult.Err)?.error) }
+            // Not reaching the node is "still not saved"; anything else is said in its own words.
+            val still = access.engine.state.value.pending.any { it.id == entry.id && it.state != CouldNotSaveState.Discarded }
+            local.update {
+                when {
+                    r is FbResult.Err && !r.error.unreachable -> it.copy(working = false, error = r.error)
+                    r is FbResult.Err || still -> it.copy(working = false, notice = NotSavedNotice.Still)
+                    else -> it.copy(working = false, notice = NotSavedNotice.Saved)
+                }
+            }
         }
     }
 
@@ -595,7 +694,7 @@ public class NotSavedViewModel(private val access: FactsBookAccess, private val 
 
     override fun cancelDiscard(): Unit = local.update { it.copy(confirm = null) }
 
-    override fun dismiss(): Unit = local.update { it.copy(error = null) }
+    override fun dismiss(): Unit = local.update { it.copy(error = null, notice = null) }
 
     override fun export(entry: CouldNotSaveEntry) {
         if (entry.onPhone || local.value.working) return

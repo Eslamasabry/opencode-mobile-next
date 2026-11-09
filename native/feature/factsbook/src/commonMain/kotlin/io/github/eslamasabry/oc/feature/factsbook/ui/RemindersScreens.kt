@@ -36,6 +36,7 @@ import io.github.eslamasabry.oc.ui.kit.choice.KitWheel
 import io.github.eslamasabry.oc.ui.kit.choice.KitWheelColumn
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenRefresh
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
@@ -121,6 +122,7 @@ public fun RemindersScreen(state: RemindersUi, actions: RemindersActions) {
         loading = state.loading && reminders != null,
         loadingLabel = title,
         edges = KitScreenEdges.Bleed,
+        refresh = KitScreenRefresh(refreshing = false, onRefresh = actions::reload, enabled = reminders != null),
     ) {
         when {
             reminders == null && state.error == null -> KitSkeletonRows()
@@ -128,7 +130,7 @@ public fun RemindersScreen(state: RemindersUi, actions: RemindersActions) {
                 KitStateView(
                     KitStateKind.Error,
                     stringResource(Res.string.fbErrorTitle),
-                    body = failureWords(state.error),
+                    body = failureWords(state.error) + (failureDetails(state.error)?.let { "\n\n$it" } ?: ""),
                     primary = KitAction(stringResource(Res.string.commonRetry), actions::reload),
                 )
             else ->
@@ -277,6 +279,8 @@ private fun DraftForm(draft: ReminderDraft, state: ReminderEditUi, actions: Remi
             placeholder = stringResource(Res.string.fbReminderWhatHint),
             error = if (state.needsTitle) stringResource(Res.string.fbReminderNeedsTitle) else null,
         )
+        // When it will fire, above the detail rows: with the keyboard up the person still sees it (F: summary).
+        KitText(bidiName(timingWords(draft.timing)), role = TypeRole.Body)
     }
     KitRowGroup {
         KitRow(
@@ -326,7 +330,9 @@ private fun DraftForm(draft: ReminderDraft, state: ReminderEditUi, actions: Remi
         )
     }
     KitGroupNote(stringResource(Res.string.fbReminderClockNote))
-    if (state.cannotRing) KitGroupNote(stringResource(Res.string.fbReminderNotSoundedYet))
+    if (state.cannotRing) {
+        Column(pad()) { KitNotice(stringResource(Res.string.fbReminderNotSoundedYet)) }
+    }
 }
 
 /** Day and time for a one-time reminder; the clock time (and day of month or date) for a repeating one. */
@@ -347,7 +353,7 @@ private fun WhenWheel(draft: ReminderDraft, actions: ReminderEditActions) {
     when (timing.repeat) {
         ReminderRepeat.Never, ReminderRepeat.Yearly -> {
             val start = timing.at.date
-            val days = ((-1 until 366).map { start.plus(DatePeriod(days = it)) } + start).distinct().sorted()
+            val days = ((-365 until 5 * 366).map { start.plus(DatePeriod(days = it)) } + start).distinct().sorted()
             KitWheel(
                 listOf(
                     KitWheelColumn(
