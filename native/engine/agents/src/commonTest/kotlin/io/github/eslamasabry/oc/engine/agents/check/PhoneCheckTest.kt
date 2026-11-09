@@ -35,7 +35,7 @@ private class FakeCheckPorts : PhoneCheckPorts {
     var installResult: Outcome<Unit> = Unit.ok()
     var busy: Boolean? = false
     var live = false
-    var hello: Outcome<String?> = "0.11.2".ok()
+    var hello: Outcome<String?> = "0.15.3".ok()
     val calls = mutableListOf<String>()
     override suspend fun installAndWait(owner: OwnerId, agent: AgentId, helperOnly: Boolean): Outcome<Unit> { calls += "install:${agent.raw}"; return installResult }
     override suspend fun localWorkBusy(owner: OwnerId): Boolean? = busy
@@ -72,7 +72,7 @@ class PhoneCheckTest {
         assertTrue(r.passed, r.toString())
         assertTrue(r.arm64Qualified)
         assertEquals(PhoneCheckStep.entries.toList(), r.completed.toList())
-        assertEquals("0.11.2", r.observedHelperVersion)
+        assertEquals("0.15.3", r.observedHelperVersion)
         val gate = PhoneGate.read(rig.prefs, owner)["codex"]!!
         assertEquals(PhoneGate.fingerprint(catalog.byId(codex)!!, AgentArchitecture.Arm64, pins), (gate["fingerprint"] as kotlinx.serialization.json.JsonPrimitive).content)
         assertEquals("\"arm64\"", gate["architecture"].toString())
@@ -172,7 +172,7 @@ class PhoneCheckTest {
         val claude = catalog.byId(AgentId.CLAUDE)!!
         val sha = claude.artifactFor(AgentArchitecture.Arm64)!!.sha256
         val oldFp = io.github.eslamasabry.oc.engine.agents.json.AgentJson.encodeStrings(
-            listOf("claude", "2.1.294", sha, "0.11.2", pins.paseo.packageLockSha256, "v24.22.2"),
+            listOf("claude", "2.1.294", sha, "0.15.3", pins.paseo.packageLockSha256, "v24.22.2"),
         )
         rig.prefs.values["oc.agentPhoneGate.owner"] =
             "{\"claude\":{\"fingerprint\":${io.github.eslamasabry.oc.engine.agents.json.AgentJson.encodeStrings(listOf(oldFp)).removeSurrounding("[", "]")},\"architecture\":\"arm64\",\"activeVersion\":\"2.1.294\"}}"

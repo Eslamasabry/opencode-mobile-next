@@ -172,7 +172,7 @@ sync() {
     @Test
     fun `B-LINUX-114 shipped lock freezes every HTTPS tarball with SRI`() {
         assertEquals(PaseoPhoneScripts.PACKAGE_LOCK_SHA256, sha256Hex(lock.toByteArray()))
-        assertEquals("0.11.2", packages.getValue("node_modules/@getpaseo/cli").jsonObject.getValue("version").jsonPrimitive.content)
+        assertEquals("0.15.3", packages.getValue("node_modules/@getpaseo/cli").jsonObject.getValue("version").jsonPrimitive.content)
         for ((key, value) in packages) {
             if (key.isEmpty()) continue
             assertTrue(value.jsonObject.getValue("resolved").jsonPrimitive.content.startsWith("https://registry.npmjs.org/"), key)
@@ -191,7 +191,7 @@ sync() {
         assertEquals("node_modules/@getpaseo/cli/bin/paseo", PaseoPhoneScripts.CLI_RELATIVE_PATH)
         assertEquals("2b761f40e5a6416e4aaa733f38a47d5a4639b42cc1f88fc060256d2c4ed8cf94", PaseoPhoneScripts.CLI_SHA256)
         assertEquals("8620d03c3e7e6776c3bfc4d22a8875f92209a563612fe7cda63dea7512f83c09", PaseoPhoneScripts.PAYLOAD_SHA256)
-        assertEquals("aa0467db317397425785bafc5999e9b5287b0ef4e8d799718cf509cce82a7f04", PaseoPhoneScripts.CODE_TREE_SHA256)
+        assertEquals("6395eb8b0119db3ece44ca70ada09a6b2f8d896ca5afd56f9879f969e85a14fa", PaseoPhoneScripts.CODE_TREE_SHA256)
     }
 
     @Test

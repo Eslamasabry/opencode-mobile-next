@@ -396,9 +396,9 @@
     <ID>MaxLineLength:PaseoPhoneInstallTest.kt$PaseoPhoneInstallTest$" ${if (failLaunch) "echo private-cli-output &gt;&amp;2; exit 42" else "echo \"--home Local daemon home\""} ;;\n"</ID>
     <ID>MaxLineLength:PaseoPhoneInstallTest.kt$PaseoPhoneInstallTest$"mkdir -p \"\$1/node_modules/.bin\" \"\$1/node_modules/@getpaseo/cli/bin\" \"\$1/node_modules/@getpaseo/cli/dist\"\n"</ID>
     <ID>MaxLineLength:PaseoPhoneInstallTest.kt$PaseoPhoneInstallTest$.</ID>
-    <ID>MaxLineLength:PaseoPhoneInstallTest.kt$PaseoPhoneInstallTest$assertEquals("0.11.2", packages.getValue("node_modules/@getpaseo/cli").jsonObject.getValue("version").jsonPrimitive.content)</ID>
+    <ID>MaxLineLength:PaseoPhoneInstallTest.kt$PaseoPhoneInstallTest$assertEquals("0.15.3", packages.getValue("node_modules/@getpaseo/cli").jsonObject.getValue("version").jsonPrimitive.content)</ID>
     <ID>MaxLineLength:PaseoPhoneInstallTest.kt$PaseoPhoneInstallTest$assertEquals("8620d03c3e7e6776c3bfc4d22a8875f92209a563612fe7cda63dea7512f83c09", PaseoPhoneScripts.PAYLOAD_SHA256)</ID>
-    <ID>MaxLineLength:PaseoPhoneInstallTest.kt$PaseoPhoneInstallTest$assertEquals("aa0467db317397425785bafc5999e9b5287b0ef4e8d799718cf509cce82a7f04", PaseoPhoneScripts.CODE_TREE_SHA256)</ID>
+    <ID>MaxLineLength:PaseoPhoneInstallTest.kt$PaseoPhoneInstallTest$assertEquals("6395eb8b0119db3ece44ca70ada09a6b2f8d896ca5afd56f9879f969e85a14fa", PaseoPhoneScripts.CODE_TREE_SHA256)</ID>
     <ID>MaxLineLength:PaseoPhoneInstallTest.kt$PaseoPhoneInstallTest$assertEquals(dartRawStrings("lib/builtin/agents/paseo_scripts.dart").getValue("_requireAgentUser"), PaseoPhoneScripts.REQUIRE_AGENT_USER)</ID>
     <ID>MaxLineLength:PaseoPhoneInstallTest.kt$PaseoPhoneInstallTest$assertTrue(value.jsonObject.getValue("resolved").jsonPrimitive.content.startsWith("https://registry.npmjs.org/"), key)</ID>
     <ID>MaxLineLength:PaseoPhoneInstallTest.kt$PaseoPhoneInstallTest$val cliBase64 = Base64.getEncoder().encodeToString((fixtureCli + if (tamperCli) "# changed\n" else "").toByteArray())</ID>
@@ -438,11 +438,11 @@
     <ID>MaxLineLength:PhoneGate.kt$PhoneGate$val root = AgentJson.parseOrNull(prefs.string(AgentKeys.agentPhoneGate(owner))) as? JsonObject ?: return emptyMap()</ID>
     <ID>MaxLineLength:PhoneGateTest.kt$PhoneGateTest$JsonObject(mapOf("fingerprint" to JsonPrimitive(AgentJson.encodeStrings(fp.toList())), "architecture" to JsonPrimitive(arch)))</ID>
     <ID>MaxLineLength:PhoneGateTest.kt$PhoneGateTest$assertEquals("[\"a\\\"b\",\"\\\\\",\"\\n\\t\\u0001\",\"é/\",null]", AgentJson.encodeStrings(listOf("a\"b", "\\", "\n\t\u0001", "é/", null)))</ID>
-    <ID>MaxLineLength:PhoneGateTest.kt$PhoneGateTest$assertEquals(CheckRequiredReason.AgentVersion, PhoneGate.changeReason(gate("claude", "2.1.294", sha, "0.11.2", pins.paseo.packageLockSha256, "v24.22.2"), claude, pins))</ID>
-    <ID>MaxLineLength:PhoneGateTest.kt$PhoneGateTest$assertEquals(CheckRequiredReason.HelperVersion, PhoneGate.changeReason(gate("claude", v, sha, "0.11.2", pins.paseo.packageLockSha256, "v22.0.0"), claude, pins))</ID>
+    <ID>MaxLineLength:PhoneGateTest.kt$PhoneGateTest$assertEquals(CheckRequiredReason.AgentVersion, PhoneGate.changeReason(gate("claude", "2.1.294", sha, "0.15.3", pins.paseo.packageLockSha256, "v24.22.2"), claude, pins))</ID>
+    <ID>MaxLineLength:PhoneGateTest.kt$PhoneGateTest$assertEquals(CheckRequiredReason.HelperVersion, PhoneGate.changeReason(gate("claude", v, sha, "0.15.3", pins.paseo.packageLockSha256, "v22.0.0"), claude, pins))</ID>
     <ID>MaxLineLength:PhoneGateTest.kt$PhoneGateTest$assertEquals(CheckRequiredReason.HelperVersion, PhoneGate.changeReason(gate("claude", v, sha, "0.9.2", pins.paseo.packageLockSha256, "v24.22.2"), claude, pins))</ID>
     <ID>MaxLineLength:PhoneGateTest.kt$PhoneGateTest$assertEquals(CheckRequiredReason.InstallationChanged, PhoneGate.changeReason(JsonObject(mapOf("fingerprint" to JsonPrimitive("broken"))), claude, pins))</ID>
-    <ID>MaxLineLength:PhoneGateTest.kt$PhoneGateTest$assertEquals(CheckRequiredReason.InstallationChanged, PhoneGate.changeReason(gate("claude", v, "0".repeat(64), "0.11.2", pins.paseo.packageLockSha256, "v24.22.2"), claude, pins))</ID>
+    <ID>MaxLineLength:PhoneGateTest.kt$PhoneGateTest$assertEquals(CheckRequiredReason.InstallationChanged, PhoneGate.changeReason(gate("claude", v, "0".repeat(64), "0.15.3", pins.paseo.packageLockSha256, "v24.22.2"), claude, pins))</ID>
     <ID>MaxLineLength:ProjectFolderName.kt$ProjectFolderName$if (value == "." || value == ".." || '/' in value || '\\' in value) return ProjectFolderNameProblem.NotSingleSegment</ID>
     <ID>MaxLineLength:RunningFamily.kt$RunningFamily$add(RunningAgentEntry(s, s.id in busy, self, if (self) RunningAgentRelation.Current else RunningAgentRelation.Sibling))</ID>
     <ID>MaxLineLength:RunningFamily.kt$RunningFamily$val siblings = sessions.values.filter { parentId != null &amp;&amp; it.parentId == parentId }.sortedBy { it.createdMillis }</ID>

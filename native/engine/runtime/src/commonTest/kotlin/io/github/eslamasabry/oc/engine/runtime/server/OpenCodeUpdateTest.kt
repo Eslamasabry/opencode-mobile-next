@@ -13,7 +13,7 @@ import kotlin.test.assertTrue
 
 /** Port of test/in_app_auto_update_test.dart, plus the restart-after-update rule R7 (plan 11 §6.4). */
 class OpenCodeUpdateTest {
-    private val pinned = "2.2.5"
+    private val pinned = "2.2.6"
 
     private fun decide(
         installed: String? = "2.0.29",
@@ -26,8 +26,8 @@ class OpenCodeUpdateTest {
 
     @Test
     fun `B-LINUX-078 up to date does nothing, with or without a leading v, and an unknown version does nothing`() {
-        assertFalse(decide(installed = "2.2.5"))
-        assertFalse(decide(installed = "v2.2.5"))
+        assertFalse(decide(installed = "2.2.6"))
+        assertFalse(decide(installed = "v2.2.6"))
         assertFalse(decide(installed = null))
         assertFalse(decide(installed = " "))
     }
@@ -102,7 +102,7 @@ class OpenCodeUpdateTest {
 
     // R7: the phone server restarts itself after an OpenCode update.
 
-    private val host = FakeLinuxHost().apply { stage("2.2.5") }
+    private val host = FakeLinuxHost().apply { stage("2.2.6") }
     private val phone = StartTarget(ProfileId("builtin"), password = "secret")
 
     private fun TestScope.restart() =
@@ -113,7 +113,7 @@ class OpenCodeUpdateTest {
         host.running = true
         host.generation = 4
         val result = restart().afterInstall(phone) { true }
-        assertEquals(UpdateRestartResult.Updated("2.2.5", restarted = true), result)
+        assertEquals(UpdateRestartResult.Updated("2.2.6", restarted = true), result)
         assertEquals(listOf<LaunchMode>(LaunchMode.AfterUpdate(4)), host.launches)
         assertEquals("new", host.binary)
         assertTrue(host.running)
@@ -133,7 +133,7 @@ class OpenCodeUpdateTest {
         host.running = true
         host.personStops()
         val result = restart().afterInstall(phone) { true }
-        assertEquals(UpdateRestartResult.Updated("2.2.5", restarted = false), result)
+        assertEquals(UpdateRestartResult.Updated("2.2.6", restarted = false), result)
         assertEquals(0, host.launchCount)
         assertFalse(host.running)
         assertEquals("new", host.binary, "it picks the new version up at its next start")
@@ -141,7 +141,7 @@ class OpenCodeUpdateTest {
 
     @Test
     fun `B-LINUX-245 a server that was not running is not started by an update`() = runTest {
-        assertEquals(UpdateRestartResult.Updated("2.2.5", restarted = false), restart().afterInstall(phone) { true })
+        assertEquals(UpdateRestartResult.Updated("2.2.6", restarted = false), restart().afterInstall(phone) { true })
         assertEquals(0, host.launchCount)
     }
 
@@ -164,7 +164,7 @@ class OpenCodeUpdateTest {
         host.running = true
         host.duringPasswordWrite = { host.personStops() }
         val result = restart().afterInstall(phone) { true }
-        assertEquals(UpdateRestartResult.Updated("2.2.5", restarted = false), result)
+        assertEquals(UpdateRestartResult.Updated("2.2.6", restarted = false), result)
         assertEquals(listOf("activate"), host.journal)
         assertFalse(host.running)
     }

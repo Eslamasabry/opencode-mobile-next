@@ -17,11 +17,11 @@ class UbuntuHostScriptTest {
         assertEquals(UbuntuHostScript.ARM64_ASSET, UbuntuHostScript.assetFor("arm64"))
         assertNull(UbuntuHostScript.assetFor("armv7l"))
         assertEquals(
-            "https://registry.npmjs.org/@opencode/cli-linux-x64-baseline/-/cli-linux-x64-baseline-2.2.5.tgz",
+            "https://registry.npmjs.org/@opencode/cli-linux-x64-baseline/-/cli-linux-x64-baseline-2.2.6.tgz",
             UbuntuHostScript.downloadUrl(UbuntuHostScript.X64_ASSET),
         )
         assertEquals(
-            "https://registry.npmjs.org/@opencode/cli-linux-arm64/-/cli-linux-arm64-2.2.5.tgz",
+            "https://registry.npmjs.org/@opencode/cli-linux-arm64/-/cli-linux-arm64-2.2.6.tgz",
             UbuntuHostScript.downloadUrl(UbuntuHostScript.ARM64_ASSET),
         )
         // Exactly two recorded checksums, each the one this module pins, and the pin matches the managed runtime's.
@@ -49,7 +49,7 @@ class UbuntuHostScriptTest {
     fun `B-LINUX-076 install leaves an OpenCode 2 alone and refuses an unsupported one`() {
         assertEquals(InstallDecision.InstallPinned, UbuntuHostScript.installDecision(null))
         assertEquals(InstallDecision.KeepExisting, UbuntuHostScript.installDecision("2.0.0"))
-        assertEquals(InstallDecision.KeepExisting, UbuntuHostScript.installDecision("2.2.5"))
+        assertEquals(InstallDecision.KeepExisting, UbuntuHostScript.installDecision("2.2.6"))
         assertEquals(InstallDecision.RefuseUnsupported, UbuntuHostScript.installDecision("1.19.0"))
         assertEquals(InstallDecision.RefuseUnsupported, UbuntuHostScript.installDecision(""))
         assertTrue("This server runs OpenCode 1, which this app no longer supports." in UbuntuHostScript.TEXT)
@@ -61,7 +61,7 @@ class UbuntuHostScriptTest {
         assertEquals(UpdateDecision.MoveToPinned, UbuntuHostScript.updateDecision("2.2.4"))
         assertEquals(UpdateDecision.RefuseLegacy, UbuntuHostScript.updateDecision("1.19.0"))
         assertEquals(UpdateDecision.AlreadyCurrent, UbuntuHostScript.updateDecision("99.0.0"))
-        assertEquals(UpdateDecision.AlreadyCurrent, UbuntuHostScript.updateDecision("2.2.5"))
+        assertEquals(UpdateDecision.AlreadyCurrent, UbuntuHostScript.updateDecision("2.2.6"))
         assertEquals(UpdateDecision.AlreadyCurrent, UbuntuHostScript.updateDecision("2.10.0"), "compared as versions, not text")
         assertEquals(UpdateDecision.Unidentified, UbuntuHostScript.updateDecision(""))
         assertEquals(UpdateDecision.NotInstalled, UbuntuHostScript.updateDecision(null, found = false))

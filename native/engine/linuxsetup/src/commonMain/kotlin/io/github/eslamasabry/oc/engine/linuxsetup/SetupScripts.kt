@@ -365,9 +365,9 @@ public data class OpenCodeAsset(val url: String, val sha256: String, val member:
 
 public data class OpenCodeAssets(val arm64: OpenCodeAsset, val x64: OpenCodeAsset)
 
-/** The pinned OpenCode 2 program (`@opencode/cli` 2.2.5 per-platform packages; SHA-256 of those tarballs). */
+/** The pinned OpenCode 2 program (`@opencode/cli` 2.2.6 per-platform packages; SHA-256 of those tarballs). */
 public object OpenCodePins {
-    public const val VERSION: String = "2.2.5"
+    public const val VERSION: String = "2.2.6"
     public const val RUNTIME: String = "opencode2"
     public const val COMMAND: String = "opencode2"
     public const val DIR: String = "/opt/opencode2"
@@ -376,14 +376,14 @@ public object OpenCodePins {
         OpenCodeAssets(
             arm64 =
                 OpenCodeAsset(
-                    url = "https://registry.npmjs.org/@opencode/cli-linux-arm64/-/cli-linux-arm64-2.2.5.tgz",
-                    sha256 = "f8c5a82075fede9b5b044ed6c8a6d13ad807a7e62caea1cd0a878adef49eb053",
+                    url = "https://registry.npmjs.org/@opencode/cli-linux-arm64/-/cli-linux-arm64-2.2.6.tgz",
+                    sha256 = "22352e200630ec61a48a65b9f5c2b627328ae5002658d81c067f67c5fb689898",
                     member = "package/bin/opencode",
                 ),
             x64 =
                 OpenCodeAsset(
-                    url = "https://registry.npmjs.org/@opencode/cli-linux-x64-baseline/-/cli-linux-x64-baseline-2.2.5.tgz",
-                    sha256 = "873856acbaa71c5ed8df6433e312dfa0c82a86e2cddfb9d80f0a31123a917a08",
+                    url = "https://registry.npmjs.org/@opencode/cli-linux-x64-baseline/-/cli-linux-x64-baseline-2.2.6.tgz",
+                    sha256 = "00d8b036689fc35927d8f20f57000d5c091fe7a5a3345fef5326f330bfe6d0ce",
                     member = "package/bin/opencode",
                 ),
         )

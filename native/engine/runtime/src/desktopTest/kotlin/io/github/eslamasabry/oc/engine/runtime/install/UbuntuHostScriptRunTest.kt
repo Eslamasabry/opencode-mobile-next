@@ -118,7 +118,7 @@ cp "${'$'}FAKE_ROOT/release.tar.gz" "${'$'}out"
         assertTrue("got:      $archiveSha" in result.stderr)
         val asset = pinnedAsset()
         assertEquals(
-            "https://registry.npmjs.org/@opencode/${asset.replaceFirst("-2.2.5.tgz", "")}/-/$asset",
+            "https://registry.npmjs.org/@opencode/${asset.replaceFirst("-2.2.6.tgz", "")}/-/$asset",
             read("curl.log").trim(),
         )
         assertEquals(UbuntuHostScript.downloadUrl(asset), read("curl.log").trim())

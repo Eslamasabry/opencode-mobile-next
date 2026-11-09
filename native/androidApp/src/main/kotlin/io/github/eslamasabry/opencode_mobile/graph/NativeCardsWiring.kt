@@ -153,7 +153,7 @@ class NativeCardsQualifier(
                 if (
                     claude != "2.1.319" ||
                         pins.node.version != "v24.22.2" ||
-                        pins.paseo.version != "0.11.2" ||
+                        pins.paseo.version != "0.15.3" ||
                         hostVersion != pins.paseo.version
                 )
                     return@withContext null

@@ -34,7 +34,7 @@ class BuiltinScriptsTest {
     @Test
     fun `B-LINUX-023 fresh script defaults install and start OpenCode 2 at its pin`() {
         assertContains(install(), "export OC_RUNTIME='opencode2'")
-        assertContains(install(), "export OC_REQUESTED_VERSION='2.2.5'")
+        assertContains(install(), "export OC_REQUESTED_VERSION='2.2.6'")
         assertContains(server(), "exec opencode2 serve --hostname 127.0.0.1 --port 4098")
     }
 

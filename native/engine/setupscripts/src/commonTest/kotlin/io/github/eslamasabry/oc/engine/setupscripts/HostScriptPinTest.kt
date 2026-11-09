@@ -35,7 +35,7 @@ class HostScriptPinTest {
     @Test
     fun `B-SEC-092 install uses the official pinned OpenCode 2 package directly`() {
         val command = HostScripts.install(4747)
-        assertEquals("npm install -g @opencode/cli@2.2.5 &&\nopencode2 serve --hostname 127.0.0.1 --port 4747", command)
+        assertEquals("npm install -g @opencode/cli@2.2.6 &&\nopencode2 serve --hostname 127.0.0.1 --port 4747", command)
         assertFalse(command.contains("ubuntu-opencode.sh"))
         assertFalse(command.contains("opencode-ai"))
     }

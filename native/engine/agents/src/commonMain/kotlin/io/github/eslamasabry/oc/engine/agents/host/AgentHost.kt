@@ -96,7 +96,7 @@ public data class IdleResume(val expectedIdleGeneration: Long)
 public data class HelperStart(
     val password: Secret,
     val config: PaseoConfigFile,
-    /** "0.11.2" from the pins resource. */
+    /** "0.15.3" from the pins resource. */
     val expectedHelperVersion: String,
     val restartIfVersionChanged: Boolean,
     val forceRestart: Boolean = false,

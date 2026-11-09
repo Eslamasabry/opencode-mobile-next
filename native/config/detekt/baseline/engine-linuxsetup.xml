@@ -68,7 +68,7 @@
     <ID>MaxLineLength:SetupProgressTest.kt$SetupProgressTest$overallFraction(components, listOf(done, ComponentProgress("b", ComponentState.Running, percent = 20.0), pending))</ID>
     <ID>MaxLineLength:SetupProgressTest.kt$SetupProgressTest$overallFraction(components, listOf(done, ComponentProgress("b", ComponentState.Running, stage = "Installing"), pending))</ID>
     <ID>MaxLineLength:SetupProgressTest.kt$SetupProgressTest$private fun close(expected: Double, actual: Double)</ID>
-    <ID>MaxLineLength:SetupScripts.kt$OpenCodePins$url = "https://registry.npmjs.org/@opencode/cli-linux-x64-baseline/-/cli-linux-x64-baseline-2.2.5.tgz"</ID>
+    <ID>MaxLineLength:SetupScripts.kt$OpenCodePins$url = "https://registry.npmjs.org/@opencode/cli-linux-x64-baseline/-/cli-linux-x64-baseline-2.2.6.tgz"</ID>
     <ID>MaxLineLength:SetupScripts.kt$SetupScripts$public const val LINUX_CHECK: String = """[ -s /etc/os-release ] &amp;&amp; . /etc/os-release &amp;&amp; echo "${'$'}{VERSION%% *}""""</ID>
     <ID>ReturnCount:FakeSetupHost.kt$FakeSetupHost$override suspend fun run(script: String): HostReply&lt;SetupRunResult&gt;</ID>
     <ID>ReturnCount:SetupEngine.kt$SetupEngine$private suspend fun checkUntraced(job: List&lt;SetupComponent&gt;, requireComplete: Boolean): Map&lt;String, SetupCheckResult&gt;?</ID>

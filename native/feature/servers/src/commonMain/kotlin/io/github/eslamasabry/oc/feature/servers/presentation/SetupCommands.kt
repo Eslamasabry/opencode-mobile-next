@@ -44,7 +44,7 @@ public object SetupCommands {
 
     /** Replaces an unsupported OpenCode 1 install (Dart `openCode2UpgradeCommand`). */
     public const val OPENCODE2_UPGRADE: String =
-        "npm uninstall -g opencode-ai && npm install -g @opencode/cli@2.2.5"
+        "npm uninstall -g opencode-ai && npm install -g @opencode/cli@2.2.6"
 
     /**
      * The one command that starts each backend on the computer: data about the server, not a UI

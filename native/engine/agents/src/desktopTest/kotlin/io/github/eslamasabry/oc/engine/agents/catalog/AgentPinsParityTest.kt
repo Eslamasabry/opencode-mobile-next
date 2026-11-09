@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.engine.agents.catalog
 
+import io.github.eslamasabry.oc.engine.agents.scripts.PaseoPhoneScripts
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -15,7 +16,9 @@ class AgentPinsParityTest {
      * Agents added to Flutter after the freeze tip that this repository's Dart sources still lack: they are checked
      * against the commit's literal values below, not against the (older) Dart file.
      */
-    private val postFreeze = setOf("antigravity")
+    // Agents whose pins moved after the Flutter freeze (Flutter takes no new work since 2026-11-08): checked on their
+    // own below, and their old Flutter entries are left out of the comparison.
+    private val postFreeze = setOf("antigravity", "opencode2")
 
     private val repo: File = generateSequence(File("").absoluteFile) { it.parentFile }
         .first { File(it, "lib/domain/agent_catalog.dart").isFile }
@@ -35,8 +38,11 @@ class AgentPinsParityTest {
     fun `B-AGENT-008 every catalog URL, hash and size equals the freeze tip`() {
         val pins = AgentPins.builtIn
         val catalog = pins.catalog()
-        val dartHashes = Regex("'([a-f0-9]{64})'").findAll(dartCatalog).map { it.groupValues[1] }.toSet()
-        val dartUrls = Regex("'(https://[^']+)'").findAll(dartCatalog).map { it.groupValues[1] }
+        // The Flutter catalog without its entries for post-freeze agents (an entry runs from "entry(" to the next one).
+        val entries = dartCatalog.split("\n      entry(")
+        val frozenDart = entries.filterNot { e -> postFreeze.any { id -> e.trimStart().startsWith("'$id'") } }.joinToString("\n      entry(")
+        val dartHashes = Regex("'([a-f0-9]{64})'").findAll(frozenDart).map { it.groupValues[1] }.toSet()
+        val dartUrls = Regex("'(https://[^']+)'").findAll(frozenDart).map { it.groupValues[1] }
             .filter { it != "https://github.com" }.toSet() // the `const github` prefix itself
         val frozen = catalog.agents.filter { it.id.raw !in postFreeze }
         val ourHashes = frozen.flatMap { a -> a.recipe!!.artifacts.values.map { it.sha256 } }.toSet()
@@ -102,18 +108,19 @@ class AgentPinsParityTest {
     fun `B-AGENT-008 Paseo, lock, Node and tested Claude versions equal the freeze tip`() {
         val pins = AgentPins.builtIn
         fun dartConst(name: String) = Regex("static const $name =\\s*'([^']*)'").find(paseoScripts)!!.groupValues[1]
-        assertEquals(dartConst("version"), pins.paseo.version)
-        assertEquals(dartConst("packageLockSha256"), pins.paseo.packageLockSha256)
-        assertEquals(dartConst("cliSha256"), pins.paseo.cliSha256)
-        assertEquals(dartConst("payloadSha256"), pins.paseo.payloadSha256)
-        assertEquals(dartConst("codeTreeSha256"), pins.paseo.codeTreeSha256)
+        // Paseo moved to 0.15.3 after the Flutter freeze (B-193): the pins equal the install script's own checks.
+        assertEquals(PaseoPhoneScripts.VERSION, pins.paseo.version)
+        assertEquals(PaseoPhoneScripts.PACKAGE_LOCK_SHA256, pins.paseo.packageLockSha256)
+        assertEquals(PaseoPhoneScripts.CLI_SHA256, pins.paseo.cliSha256)
+        assertEquals(PaseoPhoneScripts.PAYLOAD_SHA256, pins.paseo.payloadSha256)
+        assertEquals(PaseoPhoneScripts.CODE_TREE_SHA256, pins.paseo.codeTreeSha256)
         assertEquals(dartConst("nodeVersion"), pins.node.version)
         assertEquals(dartConst("nodeArm64Sha256"), pins.node.sha256[AgentArchitecture.Arm64])
         assertEquals(dartConst("nodeX64Sha256"), pins.node.sha256[AgentArchitecture.X64])
-        assertTrue("installDirectory =\n      '/home/oc/.local/share/oc-paseo/\$version-b0bcc4f6191b'" in paseoScripts)
+        assertEquals("/home/oc/.local/share/oc-paseo/0.15.3-9a676a737ac4", PaseoPhoneScripts.INSTALL_DIRECTORY)
         val tested = Regex("claudeCodeTestedVersions = \\{([^}]*)\\}").find(testedVersions)!!.groupValues[1]
         assertEquals(Regex("'([^']+)'").findAll(tested).map { it.groupValues[1] }.toList(), pins.claudeCodeTestedVersions)
         val paseoTested = Regex("paseoTestedVersions = \\{([^}]*)\\}").find(testedVersions)!!.groupValues[1]
-        assertEquals(Regex("'([^']+)'").findAll(paseoTested).map { it.groupValues[1] }.toList(), pins.paseoTestedVersions)
+        assertEquals(Regex("'([^']+)'").findAll(paseoTested).map { it.groupValues[1] }.toList() + "0.15.3", pins.paseoTestedVersions)
     }
 }
