@@ -49,7 +49,7 @@ class TranslationQualityTest {
             return
         }
         val fresh = offenders.filter { "$gate\t" + it.substringBefore(':') !in baseline }
-        assertTrue(fresh.isEmpty(), "$gate: ${fresh.size} new offenders\n" + fresh.take(60).joinToString("\n"))
+        assertTrue(fresh.isEmpty(), "$gate: ${fresh.size} new offenders\n" + fresh.take(5000).joinToString("\n"))
         val stale = baseline.filter { it.startsWith("$gate\t") } - ids
         assertTrue(stale.isEmpty(), "$gate: baseline entries no longer needed (delete them): ${stale.take(20)}")
     }
