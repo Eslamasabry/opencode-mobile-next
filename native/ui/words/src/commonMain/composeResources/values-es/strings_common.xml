@@ -373,7 +373,7 @@
     <string name="bootstrapStartFreshConfirm">Quitar inicios de sesión guardados</string>
     <string name="bootstrapResettingTitle">Quitando inicios de sesión guardados…</string>
     <string name="bootstrapResettingBody">Mantén la app abierta hasta que termine.</string>
-    <string name="bootstrapResetFailedTitle">Falló el restablecimiento de sesiones</string>
+    <string name="bootstrapResetFailedTitle">Falló el restablecimiento del inicio de sesión</string>
     <string name="bootstrapResetFailedBody">No se pudieron quitar algunos inicios de sesión guardados. Inténtalo de nuevo.</string>
     <string name="aiSetupTitle">Configuración de IA</string>
     <string name="kitLastKnownRefreshing">%1$s · Actualizando</string>

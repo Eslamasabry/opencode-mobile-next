@@ -49,7 +49,7 @@
     <string name="localAgentEntryStillStarting">Aún iniciando · puede tardar un minuto</string>
     <string name="localAgentEntryDidNotStart">No se inició</string>
     <string name="localAgentEntryRemoving">Quitando</string>
-    <string name="localAgentEntrySignedOut">%1$s · Sin sesión en Claude</string>
+    <string name="localAgentEntrySignedOut">%1$s · Sin iniciar sesión en Claude</string>
     <string name="localAgentStartNamed">Iniciar Claude Code</string>
     <string name="agentsChooseTitle">Elegir un agente</string>
     <string name="agentsStateReady">Listo</string>
@@ -164,7 +164,7 @@
     <string name="agentsCheckRetry">Intentar de nuevo</string>
     <string name="agentsCheckUpdateHelper">Actualiza Paseo e inténtalo de nuevo</string>
     <string name="agentsCheckPrevious">Usar la versión anterior</string>
-    <string name="agentsCheckPreviousNote">La versión %1$s sigue en este teléfono. Se comprobará antes de que la uses. Tu sesión y tus conversaciones se conservan.</string>
+    <string name="agentsCheckPreviousNote">La versión %1$s sigue en este teléfono. Se comprobará antes de que la uses. Tu inicio de sesión y tus conversaciones se conservan.</string>
     <string name="agentsCheckAgentChanged">Cambió la versión requerida del agente. Comprueba este teléfono de nuevo.</string>
     <string name="agentsCheckHelperChanged">Cambió la versión requerida de Paseo. Comprueba la conexión de nuevo.</string>
     <string name="agentsCheckInstallChanged">La configuración del teléfono cambió. Compruébala de nuevo.</string>

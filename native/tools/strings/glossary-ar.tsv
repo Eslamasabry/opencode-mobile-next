@@ -1,0 +1,29 @@
+# Glossary for ar. kinds (tab separated), same as glossary-es.tsv:
+# No keep rows: Arabic copy may transliterate product names (see missing-ar.txt history); only the allow list applies.
+#  allow<TAB>word: an English word that may stay in the translation (names, units, standards, key names)
+allow	Git
+allow	GitHub
+allow	Linux
+allow	Android
+allow	Escape
+allow	English
+allow	Portugu
+allow	Brasil
+allow	Espa
+allow	node
+allow	input
+allow	type
+allow	module
+allow	check
+allow	API
+allow	URL
+allow	JSON
+allow	SSH
+allow	QR
+allow	Markdown
+allow	OpenCode
+allow	Codex
+allow	Claude
+allow	Team
+allow	Ubuntu
+allow	Tailscale

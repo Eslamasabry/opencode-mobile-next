@@ -66,3 +66,12 @@ allow	Android
 allow	Linux
 allow	Git
 allow	git
+allow	Menu
+allow	item
+allow	Plan
+allow	Build
+allow	English
+allow	Portugu
+allow	Espa
+allow	Brasil
+allow	min

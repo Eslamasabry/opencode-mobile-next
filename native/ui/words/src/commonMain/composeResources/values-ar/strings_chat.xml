@@ -45,7 +45,7 @@
         <item quantity="many">%1$d مرفقًا</item>
         <item quantity="other">%1$d مرفق</item>
     </plurals>
-    <string name="promptStashAttachments__eq0">لا توجد مرفقات</string>
+    <string name="promptStashAttachments__eq0">%1$d مرفقات</string>
     <string name="promptStashAttachments__eq1">مرفق واحد</string>
     <plurals name="promptStashReferences">
         <item quantity="zero">لا توجد مراجع</item>
@@ -55,7 +55,7 @@
         <item quantity="many">%1$d مرجعًا</item>
         <item quantity="other">%1$d مرجع</item>
     </plurals>
-    <string name="promptStashReferences__eq0">لا توجد مراجع</string>
+    <string name="promptStashReferences__eq0">%1$d مراجع</string>
     <string name="promptStashReferences__eq1">مرجع واحد</string>
     <string name="promptHistorySaveFailed">أُرسل الطلب، لكن تعذّر حفظه في السجل على هذا الجهاز.</string>
     <string name="promptStashMigrationPending">تعذّر نقل بعض المرفقات المحفوظة إلى تخزين المرفقات المحلي حتى الآن. احتُفظ بمحتواك المحفوظ. وفّر مساحة على الجهاز وأعد المحاولة.</string>
@@ -109,7 +109,7 @@
         <item quantity="many">التطابق %2$d من %1$d</item>
         <item quantity="other">التطابق %2$d من %1$d</item>
     </plurals>
-    <string name="transcriptFindCount__eq0">لا توجد تطابقات</string>
+    <string name="transcriptFindCount__eq0">%2$d من %1$d تطابقات</string>
     <string name="transcriptFindCount__eq1">تطابق واحد</string>
     <string name="transcriptFindPartial">الرسائل المحمّلة فقط. حمّل الرسائل الأقدم لتوسيع البحث.</string>
     <string name="transcriptFindTool">بيانات الأدوات</string>
@@ -655,7 +655,7 @@
         <item quantity="other">%1$d عنصر</item>
     </plurals>
     <string name="chatStartItemCount__eq1">عنصر واحد</string>
-    <string name="chatStartItemCount__eq2">عنصران</string>
+    <string name="chatStartItemCount__eq2">%1$d عناصر</string>
     <string name="chatStartGit">Git</string>
     <plurals name="chatStartChangeCount">
         <item quantity="zero">%1$d تغيير</item>
@@ -666,7 +666,7 @@
         <item quantity="other">%1$d تغيير</item>
     </plurals>
     <string name="chatStartChangeCount__eq1">تغيير واحد</string>
-    <string name="chatStartChangeCount__eq2">تغييران</string>
+    <string name="chatStartChangeCount__eq2">%1$d تغييرات</string>
     <string name="chatStartLooking">جارٍ فحص المجلد…</string>
     <string name="chatStartServerFolder">مجلد الخادم</string>
     <string name="chatStartTip">اكتب / للأوامر · اضغط مطولًا على رسالة لإجراءاتها</string>
@@ -1208,7 +1208,7 @@
         <item quantity="many">كل الملفات · %1$d ملفًا آخر تغيّر</item>
         <item quantity="other">كل الملفات · %1$d ملف آخر تغيّر</item>
     </plurals>
-    <string name="chatTurnAllFilesMore__eq1">كل الملفات · ملف آخر تغيّر</string>
+    <string name="chatTurnAllFilesMore__eq1">كل الملفات · تغيّر %1$d ملف آخر</string>
     <plurals name="chatTurnFileLinesAdded">
         <item quantity="zero">أُضيف %1$d سطر</item>
         <item quantity="one">أُضيف سطر واحد</item>
@@ -1241,7 +1241,7 @@
         <item quantity="other">تعديل %1$d ملف؟</item>
     </plurals>
     <string name="chatRequestAskEditFiles__eq1">تعديل ملف واحد؟</string>
-    <string name="chatRequestAskEditFiles__eq2">تعديل ملفين؟</string>
+    <string name="chatRequestAskEditFiles__eq2">تعديل %1$d ملفات؟</string>
     <string name="chatRequestAskCreateNamed">إنشاء %1$s؟</string>
     <plurals name="chatRequestAskCreateFiles">
         <item quantity="zero">إنشاء %1$d ملف؟</item>
@@ -1252,7 +1252,7 @@
         <item quantity="other">إنشاء %1$d ملف؟</item>
     </plurals>
     <string name="chatRequestAskCreateFiles__eq1">إنشاء ملف واحد؟</string>
-    <string name="chatRequestAskCreateFiles__eq2">إنشاء ملفين؟</string>
+    <string name="chatRequestAskCreateFiles__eq2">إنشاء %1$d ملفات؟</string>
     <string name="chatRequestAskDeleteNamed">حذف %1$s؟</string>
     <plurals name="chatRequestAskDeleteFiles">
         <item quantity="zero">حذف %1$d ملف؟</item>
@@ -1263,7 +1263,7 @@
         <item quantity="other">حذف %1$d ملف؟</item>
     </plurals>
     <string name="chatRequestAskDeleteFiles__eq1">حذف ملف واحد؟</string>
-    <string name="chatRequestAskDeleteFiles__eq2">حذف ملفين؟</string>
+    <string name="chatRequestAskDeleteFiles__eq2">حذف %1$d ملفات؟</string>
     <string name="chatRequestAskReadNamed">قراءة %1$s؟</string>
     <string name="chatRequestAlwaysAllowNamed">السماح دائمًا بـ %1$s</string>
     <string name="chatRequestAlwaysAllowEdits">السماح دائمًا بالتعديلات</string>
@@ -1316,7 +1316,7 @@
         <item quantity="other">%1$d مهمة ما زالت تعمل في الخلفية</item>
     </plurals>
     <string name="kitBackgroundWorkMany__eq1">مهمة واحدة ما زالت تعمل في الخلفية</string>
-    <string name="kitBackgroundWorkMany__eq2">مهمتان ما زالتا تعملان في الخلفية</string>
+    <string name="kitBackgroundWorkMany__eq2">%1$d مهام ما زالت تعمل في الخلفية</string>
     <string name="kitBackgroundWorkTask">%1$s · %2$s</string>
     <plurals name="kitBackgroundWorkMinutes">
         <item quantity="zero">أقل من دقيقة</item>
@@ -1339,7 +1339,7 @@
         <item quantity="other">%1$d مهمة ما زالت تعمل بعد توقّف التبادل</item>
     </plurals>
     <string name="kitBackgroundWorkManyAfterStop__eq1">مهمة واحدة ما زالت تعمل بعد توقّف التبادل</string>
-    <string name="kitBackgroundWorkManyAfterStop__eq2">مهمتان ما زالتا تعملان بعد توقّف التبادل</string>
+    <string name="kitBackgroundWorkManyAfterStop__eq2">%1$d مهام ما زالت تعمل بعد توقّف التبادل</string>
     <string name="chatAgentTurnLostConnectionTo">فقد %1$s اتصاله بـ%2$s، فتوقّف التبادل.</string>
     <string name="chatAgentTurnLostConnection">فقد %1$s اتصاله بمزوّد النموذج، فتوقّف التبادل.</string>
     <string name="chatBackgroundWorkWaitingFor">بانتظار %1$s</string>

@@ -37,7 +37,7 @@
     <string name="nlibAddSkill">Agregar habilidad a la conversación</string>
     <string name="nlibSkillHelp">Agrega estas instrucciones a esta conversación. «Ejecutar el agente ahora» también le pide al agente que continúe.</string>
     <string name="nlibRendered">Con formato</string>
-    <string name="nlibRaw">Texto sin formato</string>
+    <string name="nlibRaw">Sin formato</string>
     <string name="nlibView">Ver instrucciones</string>
     <string name="nlibCopyCommand">Copiar comando con barra</string>
     <string name="nlibConnected">Conectado</string>
