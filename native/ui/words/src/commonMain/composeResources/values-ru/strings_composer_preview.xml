@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="composerPreviewModelButton">Модель</string>
+    <string name="composerPreviewModelDefault">По умолчанию на сервере</string>
+    <string name="composerPreviewModelDefaultHint">Модель, которую сервер использует сам</string>
+    <string name="composerPreviewModelsTitle">Выберите модель</string>
+    <string name="composerPreviewModelsLoading">Загружаем модели…</string>
+    <string name="composerPreviewModelsEmpty">Сейчас нет доступных моделей.</string>
+    <string name="composerPreviewModelsFailed">Не удалось загрузить список моделей.</string>
+    <string name="composerPreviewModelsRetry">Повторить</string>
+    <string name="composerPreviewModelsClose">Закрыть</string>
+    <string name="composerPreviewAttachFile">Прикрепить файл</string>
+    <string name="composerPreviewAttachNoPicker">Это устройство не может прикреплять файлы здесь.</string>
+    <string name="composerPreviewAttachModelWithoutFiles">Эта модель не принимает файлы. Выберите ту, которая принимает.</string>
+    <string name="composerPreviewAttachmentRemove">Убрать</string>
+    <string name="composerPreviewAttachmentFailed">Не удалось прикрепить файл.</string>
+    <string name="composerPreviewAttachmentTooLarge">Этот файл слишком велик для вложения.</string>
+    <string name="composerPreviewAttachmentUnsupported">Файл такого типа нельзя прикрепить.</string>
+    <string name="composerPreviewAttachmentStorage">Не удалось сохранить файл на этом устройстве.</string>
+    <string name="composerPreviewAttachmentDismiss">Закрыть</string>
+    <string name="composerPreviewAttachmentRetry">Повторить</string>
+</resources>

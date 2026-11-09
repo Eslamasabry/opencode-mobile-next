@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="mcpNativeTitle">Каталог коннекторов</string>
+    <string name="mcpNativeConsent">Просматривайте общедоступный реестр MCP. Ваш поисковый запрос уходит в реестр, только когда вы это включите.</string>
+    <string name="mcpNativeTurnOn">Включить</string>
+    <string name="mcpNativeTurnOff">Выключить каталог</string>
+    <string name="mcpNativeRefresh">Обновить</string>
+    <string name="mcpNativeSearch">Искать коннекторы</string>
+    <string name="mcpNativeEmpty">Коннекторы не найдены.</string>
+    <string name="mcpNativeLoadFailed">Не удалось обновить. Если есть, показаны сохранённые записи.</string>
+    <string name="mcpNativeUnsupported">Это соединение не может добавлять коннекторы. Записи всё равно можно просмотреть.</string>
+    <string name="mcpNativeReview">Проверить коннектор</string>
+    <string name="mcpNativeRuntimeOnly">Коннектор добавится в этот проект до перезапуска сервера. Сначала проверьте адрес или команду.</string>
+    <string name="mcpNativeAdd">Добавить коннектор</string>
+    <string name="mcpNativeAdded">Сервер показывает этот коннектор. Доступность инструментов пока не подтверждена.</string>
+    <string name="mcpNativeCheck">Проверить соединение</string>
+    <string name="mcpNativeAddUncertain">Не удалось подтвердить добавление. Проверьте соединение, прежде чем повторять.</string>
+    <string name="mcpNativeConflict">Коннектор с таким названием уже есть. Выберите другое название.</string>
+    <string name="mcpNativeName">Название</string>
+    <string name="mcpNativeAddress">Адрес</string>
+    <string name="mcpNativeCommand">Команда</string>
+    <string name="mcpNativeNeedsSettings">Для этой записи нужны дополнительные сведения о подключении или аргументы команды. Настройте её вручную на своём сервере.</string>
+    <string name="mcpNativeNotAddable">Эту запись нельзя добавить из каталога.</string>
+    <string name="mcpNativeBack">Назад</string>
+    <string name="mcpNativeSaveFailed">Не удалось сохранить выбор каталога. Повторите.</string>
+    <string name="mcpNativeSourceChanged">Соединение изменилось. Откройте каталог снова.</string>
+    <string name="mcpNativeToolsReady">Инструменты коннектора готовы к следующему ходу.</string>
+    <string name="mcpNativeSignIn">Войти в коннектор</string>
+    <string name="mcpNativeCode">URL возврата или код</string>
+    <string name="mcpNativeFinishSignIn">Завершить вход</string>
+    <string name="mcpNativeCancelSignIn">Отменить вход</string>
+</resources>

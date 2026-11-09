@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="nativeCapabilitiesDetail">Узнайте, что умеет это приложение, и откройте настройку там, где она доступна.</string>
+    <string name="nativeCapabilityOpenFailed">Не удалось открыть эту настройку. Проверьте выбранный сервер и повторите попытку.</string>
+    <string name="nativeCapabilityAddServerTitle">Подключить сервер</string>
+    <string name="nativeCapabilityAddServerDetail">Сохраните адрес сервера, который работает на вашем компьютере.</string>
+    <string name="nativeCapabilityPhoneSetupTitle">Настроить этот телефон</string>
+    <string name="nativeCapabilityPhoneSetupDetail">Установите на этот телефон среду Linux и сервер.</string>
+    <string name="nativeCapabilityServerGenerationTitle">Использовать OpenCode 2</string>
+    <string name="nativeCapabilityServerGenerationDetail">Настройте нужное поколение сервера.</string>
+    <string name="nativeCapabilityAddServerCodexTitle">Подключить Codex</string>
+    <string name="nativeCapabilityAddServerCodexDetail">Подключите Codex на вашем компьютере.</string>
+    <string name="nativeCapabilityAddServerPaseoTitle">Подключить Paseo</string>
+    <string name="nativeCapabilityAddServerPaseoDetail">Подключите агентов на вашем компьютере с Paseo.</string>
+    <string name="nativeCapabilityModelSignInTitle">Войти у провайдера моделей</string>
+    <string name="nativeCapabilityModelSignInDetail">Управляйте учётными записями провайдеров для выбранного сервера.</string>
+    <string name="nativeCapabilityTeamTurnOnTitle">Настроить AI Team</string>
+    <string name="nativeCapabilityTeamTurnOnDetail">Откройте настройку команды для вашего проекта.</string>
+    <string name="nativeCapabilityTeamHostGuideTitle">Подключить компьютер команды</string>
+    <string name="nativeCapabilityTeamHostGuideDetail">Откройте руководство по настройке компьютера вашей команды.</string>
+    <string name="nativeCapabilityVoiceModelSetupTitle">Настроить голосовой ввод</string>
+    <string name="nativeCapabilityVoiceModelSetupDetail">Выберите и скачайте модель распознавания речи для работы на устройстве.</string>
+    <string name="nativeCapabilityMcpAddTitle">Добавить инструмент MCP</string>
+    <string name="nativeCapabilityMcpAddDetail">Подключите инструмент к выбранному серверу.</string>
+    <string name="nativeCapabilityProjectChooseTitle">Открыть проект</string>
+    <string name="nativeCapabilityProjectChooseDetail">Выберите папку, в которой хотите работать.</string>
+    <string name="nativeCapabilityProjectGitInitTitle">Настроить Git для проекта</string>
+    <string name="nativeCapabilityProjectGitInitDetail">Откройте настройку Git для проекта.</string>
+    <string name="nativeCapabilityAllowNotificationsTitle">Разрешить уведомления</string>
+    <string name="nativeCapabilityAllowNotificationsDetail">Выберите, о чём приложение сможет сообщать, пока вас нет.</string>
+    <string name="nativeCapabilityAllowBackgroundTitle">Не останавливать работу</string>
+    <string name="nativeCapabilityAllowBackgroundDetail">Откройте настройки Android для фоновой работы и батареи.</string>
+    <string name="nativeCapabilityAllowCameraTitle">Разрешить камеру</string>
+    <string name="nativeCapabilityAllowCameraDetail">Разрешите доступ к камере для подключения и фото.</string>
+    <string name="nativeCapabilityAllowMicrophoneTitle">Разрешить микрофон</string>
+    <string name="nativeCapabilityAllowMicrophoneDetail">Разрешите доступ к микрофону для голосового ввода.</string>
+    <string name="nativeCapabilityTailscaleSetupTitle">Подключиться через Tailscale</string>
+    <string name="nativeCapabilityTailscaleSetupDetail">Настройте закрытый доступ к вашему компьютеру.</string>
+    <string name="nativeCapabilityQuotaCollectorGuideTitle">Настроить показания расхода</string>
+    <string name="nativeCapabilityQuotaCollectorGuideDetail">Откройте настройку показаний расхода по подписке.</string>
+    <string name="nativeCapabilityAddExternalAgentTitle">Подключить внешнего агента</string>
+    <string name="nativeCapabilityAddExternalAgentDetail">Подключите агента через его опубликованную карточку.</string>
+    <string name="nativeCapabilityTeamDeferred">AI Team появится после перехода на нативную версию. Имеющиеся данные команды остаются на этом телефоне.</string>
+    <string name="nativeCapabilityExternalDropped">Агенты из других приложений не входят в это приложение. Ваши сохранённые данные остаются как есть.</string>
+</resources>

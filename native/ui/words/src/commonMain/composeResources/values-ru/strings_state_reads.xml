@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateShareViewedTitle">Сообщать, какие чаты я просматривал</string>
+    <string name="stateShareViewedDetail">Сообщать этому серверу, какие готовые ответы вы открыли. Если выключено, эти сведения остаются на этом устройстве.</string>
+    <string name="stateShareViewedSaving">Сохранение выбора конфиденциальности…</string>
+</resources>

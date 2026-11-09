@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxDevPrograms">Программы для разработки</string>
+    <string name="linuxDevProgramsNote">Программы, найденные в Linux этого телефона. Выберите программу, чтобы прочитать её файл вывода.</string>
+    <string name="linuxDevScanFailed">Не удалось проверить программы для разработки</string>
+    <string name="linuxDevProgram">Программа %1$d</string>
+    <string name="linuxDevPorts">Порты: %1$s</string>
+    <string name="linuxDevReadLog">Читать журнал</string>
+    <string name="linuxDevNoLog">Нет читаемого файла вывода</string>
+    <string name="linuxDevLog">Журнал программы</string>
+    <string name="linuxDevLogLoading">Чтение последнего вывода…</string>
+    <string name="linuxDevLogFailed">Не удалось прочитать вывод программы.</string>
+    <string name="linuxDevLogEmpty">Вывода пока нет.</string>
+    <string name="linuxDevStop">Остановить</string>
+    <string name="linuxDevStopTitle">Остановить эту программу?</string>
+    <string name="linuxDevStopBody">Остановите процесс %1$d на этом телефоне. Перед остановкой его команда проверяется ещё раз.</string>
+    <string name="linuxSvcTitle">Службы разработки</string>
+    <string name="linuxSvcFailed">Действие не завершено</string>
+    <string name="linuxSvcUnconfirmed">Не удалось подтвердить текущее соединение или принадлежность команды. Обновите, прежде чем повторять.</string>
+    <string name="linuxSvcCorrupt">Не удалось прочитать сохранённые команды. Сохранённые данные оставлены без изменений.</string>
+    <string name="linuxSvcUnsupported">Это соединение не может управлять службами разработки. Команды всё равно можно сохранить на потом.</string>
+    <string name="linuxSvcAdd">Добавить команду</string>
+    <string name="linuxSvcRefresh">Обновить</string>
+    <string name="linuxSvcSaved">Сохранённые команды</string>
+    <string name="linuxSvcSavedNote">Сохранение команды никогда её не запускает. Из сохранённой команды можно управлять только запуском, начатым здесь.</string>
+    <string name="linuxSvcEmpty">В этом проекте нет сохранённых команд.</string>
+    <string name="linuxSvcNotStarted">Не запущена</string>
+    <string name="linuxSvcRunning">Работает</string>
+    <string name="linuxSvcStopped">Остановлена</string>
+    <string name="linuxSvcUnknown">Запуск не подтверждён</string>
+    <string name="linuxSvcDetected">Найдена работающей</string>
+    <string name="linuxSvcStart">Запустить</string>
+    <string name="linuxSvcRestart">Перезапустить</string>
+    <string name="linuxSvcReport">Отчёт о сбое</string>
+    <string name="linuxSvcForget">Забыть запуск</string>
+    <string name="linuxSvcRemove">Удалить команду</string>
+    <string name="linuxSvcName">Название</string>
+    <string name="linuxSvcNext">Далее</string>
+    <string name="linuxSvcCommand">Команда</string>
+    <string name="linuxSvcSave">Сохранить команду</string>
+    <string name="linuxSvcInvalidName">Введите название от 1 до 80 символов.</string>
+    <string name="linuxSvcInvalidCommand">Введите команду от 1 до 4096 символов.</string>
+    <string name="linuxSvcRemoveTitle">Удалить эту команду?</string>
+    <string name="linuxSvcForgetTitle">Забыть этот запуск?</string>
+    <string name="linuxSvcStopBody">Выбранная программа остановится, только когда будет подтверждён её текущий идентификатор.</string>
+    <string name="linuxSvcRemoveBody">Удалите эту сохранённую команду и её локальную квитанцию. Это никогда не останавливает работающую программу.</string>
+    <string name="linuxSvcForgetBody">Забудьте неопределённую квитанцию на этом телефоне. Программа при этом не останавливается; прежде чем запускать другую копию, проверьте список работающих.</string>
+</resources>

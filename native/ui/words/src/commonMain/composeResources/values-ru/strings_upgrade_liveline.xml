@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <plurals name="liveStepReading">
+        <item quantity="one">Чтение файлов: %1$d</item>
+        <item quantity="few">Чтение файлов: %1$d</item>
+        <item quantity="many">Чтение файлов: %1$d</item>
+        <item quantity="other">Чтение файлов: %1$d</item>
+    </plurals>
+    <plurals name="liveStepSearching">
+        <item quantity="one">Поиск по проекту, запросов: %1$d</item>
+        <item quantity="few">Поиск по проекту, запросов: %1$d</item>
+        <item quantity="many">Поиск по проекту, запросов: %1$d</item>
+        <item quantity="other">Поиск по проекту, запросов: %1$d</item>
+    </plurals>
+    <plurals name="liveStepListing">
+        <item quantity="one">Просмотр папок: %1$d</item>
+        <item quantity="few">Просмотр папок: %1$d</item>
+        <item quantity="many">Просмотр папок: %1$d</item>
+        <item quantity="other">Просмотр папок: %1$d</item>
+    </plurals>
+    <plurals name="liveStepEditing">
+        <item quantity="one">Изменение файлов: %1$d</item>
+        <item quantity="few">Изменение файлов: %1$d</item>
+        <item quantity="many">Изменение файлов: %1$d</item>
+        <item quantity="other">Изменение файлов: %1$d</item>
+    </plurals>
+    <plurals name="liveStepFetching">
+        <item quantity="one">Загрузка страниц: %1$d</item>
+        <item quantity="few">Загрузка страниц: %1$d</item>
+        <item quantity="many">Загрузка страниц: %1$d</item>
+        <item quantity="other">Загрузка страниц: %1$d</item>
+    </plurals>
+    <plurals name="liveStepDelegating">
+        <item quantity="one">Передача задач: %1$d</item>
+        <item quantity="few">Передача задач: %1$d</item>
+        <item quantity="many">Передача задач: %1$d</item>
+        <item quantity="other">Передача задач: %1$d</item>
+    </plurals>
+    <string name="liveStepRunning">Выполняется: %1$s</string>
+    <string name="liveStepRunningCommand">Выполняется команда</string>
+    <string name="liveFailedStillWorking">Агент всё ещё работает. Пока ничего делать не нужно.</string>
+    <string name="liveFailedStopped">Агент остановился. Отправьте сообщение, чтобы он продолжил.</string>
+</resources>

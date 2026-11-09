@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="migration_opening">Открытие…</string>
+    <string name="migration_updating">Обновляем приложение…</string>
+    <string name="migration_still_updating">Обновление продолжается. Первый запуск после обновления может занять чуть больше времени.</string>
+    <string name="migration_try_again">Попробовать перенести данные ещё раз</string>
+    <string name="migration_reenter_title">Нужно снова войти в несколько мест</string>
+    <string name="migration_reenter_body">Обновлению не удалось прочитать эти сохранённые входы. Всё остальное перенесено.</string>
+    <string name="migration_reenter_row_password">%1$s · Введите пароль</string>
+    <string name="migration_reenter_row_token">%1$s · Введите токен</string>
+    <string name="migration_reenter_row_github">%1$s · Войдите в GitHub снова</string>
+    <string name="migration_reenter_row_byo">%1$s · Настройте заново</string>
+    <string name="migration_reenter_unnamed">Сохранённый сервер</string>
+    <string name="migration_reenter_later">Войти в них позже</string>
+    <string name="migration_reenter_field_password">Пароль для %1$s</string>
+    <string name="migration_reenter_field_token">Токен для %1$s</string>
+    <string name="migration_reenter_save">Сохранить</string>
+    <string name="migration_reenter_save_failed">Не удалось сохранить это на телефоне. Повторите.</string>
+    <string name="migration_reenter_back">Назад к списку</string>
+    <string name="migration_reenter_github_where">Чтобы снова войти в GitHub для %1$s, откройте один из его чатов, затем Git.</string>
+    <string name="migration_reenter_open_chats">Открыть чаты</string>
+    <string name="migration_reenter_byo_absent">Повторная настройка %1$s в этой версии пока недоступна. Её сохранённые данные остаются на этом телефоне.</string>
+    <string name="migration_failed_title">Обновлению не удалось завершить перенос ваших данных</string>
+    <string name="migration_failed_body">Ничего не удалено. Ваши данные до обновления в безопасности на этом телефоне.</string>
+    <string name="migration_restore_row">Восстановить данные до обновления</string>
+    <string name="migration_restore_confirm">Вернутся ваши настройки и серверы, какими они были до обновления. Изменения с тех пор сохранятся в копии.</string>
+    <string name="migration_restore_confirm_title">Восстановить прежние данные?</string>
+    <string name="migration_restore_confirm_action">Восстановить данные до обновления</string>
+    <string name="migration_start_fresh_row">Начать с нуля (копия старых данных сохранится)</string>
+    <string name="migration_start_fresh_confirm">Вы начнёте без сохранённых серверов; настройки будут стандартными. Копия ваших старых данных останется на этом телефоне.</string>
+    <string name="migration_start_fresh_confirm_title">Начать с нуля?</string>
+    <string name="migration_start_fresh_confirm_action">Начать с нуля и сохранить копию</string>
+    <string name="migration_report_row">Сообщить о проблеме</string>
+    <string name="migration_details">Подробности · %1$s</string>
+    <string name="migration_space_title">На телефоне почти нет места</string>
+    <string name="migration_space_body">Для обновления нужно %1$s свободного места, чтобы сохранить резервную копию ваших данных. Освободите место и повторите.</string>
+    <string name="migration_save_failed_title">Не удалось сохранить на телефоне</string>
+    <string name="migration_open_storage_row">Открыть настройки хранилища</string>
+    <string name="migration_close">Закрыть</string>
+    <string name="migration_deferred_notice">В этой версии пока нет: %1$s. Сохранённое вами для них остаётся на этом телефоне нетронутым.</string>
+    <string name="migration_deferred_ai_team">AI Team</string>
+    <string name="migration_deferred_memory">Память</string>
+    <string name="migration_deferred_gemma">модель ИИ на телефоне</string>
+    <string name="migration_deferred_separator">, </string>
+    <string name="migration_deferred_dismiss">Скрыть заметку о функциях, которых нет в этой версии</string>
+</resources>

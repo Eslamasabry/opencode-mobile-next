@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="secAutomationTitle">Что запускается само</string>
+    <string name="secAutomationDetail">Выберите, что этот сервер может делать автоматически. Выбор разрешает уже существующую работу, но не запускает её.</string>
+    <string name="secAutomationReconnect">Переподключаться</string>
+    <string name="secAutomationRetryIntake">Повторять входящую работу</string>
+    <string name="secAutomationReconcileQueuedSends">Сверять отправки в очереди</string>
+    <string name="secAutomationRetryProviderErrors">Повторять при ошибках провайдера</string>
+    <string name="secAutomationRestartPhoneServer">Перезапускать сервер на телефоне</string>
+    <string name="secAutomationResumeSetup">Продолжать настройку</string>
+    <string name="secAutomationRecheckEnvironment">Перепроверять окружение</string>
+    <string name="secAutomationPollRestartHealth">Проверять работу после перезапуска</string>
+    <string name="secAutomationThermalRecovery">Восстанавливаться после перегрева</string>
+    <string name="secAutomationReduceEffects">Уменьшать эффекты</string>
+    <string name="secAutomationChooseDefaults">Выбирать значения по умолчанию</string>
+    <string name="secAutomationDetectInstallations">Находить установленное</string>
+    <string name="secAutomationPreserveDrafts">Сохранять черновики</string>
+    <string name="secAutomationFollowOutput">Следовать за выводом</string>
+    <string name="secAutomationPollOpenPages">Обновлять открытые страницы</string>
+    <string name="secAutomationBoundedPaging">Подгружать больше результатов</string>
+    <string name="secAutomationRouteReadyWork">Распределять готовую работу</string>
+    <string name="secAutomationWakeStalledPool">Будить зависших исполнителей</string>
+    <string name="secAutomationRestartWorkers">Перезапускать исполнителей</string>
+    <string name="secAutomationRecycleWorkers">Обновлять исполнителей</string>
+    <string name="secAutomationHoldAtProviderLimit">Ждать при лимитах провайдера</string>
+    <string name="secAutomationRetryUnconfirmedAnswer">Повторять неподтверждённые ответы</string>
+    <string name="secAutomationRetryTransientTask">Повторять при временных сбоях</string>
+    <string name="secAutomationFallBackToDirectTask">Переходить на прямое выполнение задачи</string>
+    <string name="secAutomationApplyCodePush">Применять обновления кода</string>
+    <string name="secAutomationRestartDevServices">Перезапускать службы разработки</string>
+    <string name="secAutomationStopIdleHelpers">Останавливать простаивающих помощников</string>
+    <string name="secAutomationCleanCaches">Очищать кэш</string>
+    <string name="secAutomationUpdateWhenIdle">Обновлять в простое</string>
+    <string name="secAutomationMonitorOtherServers">Наблюдать за другими серверами</string>
+    <string name="secAutomationMonitorQuota">Следить за квотой</string>
+</resources>

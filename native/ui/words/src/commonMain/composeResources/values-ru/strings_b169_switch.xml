@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="b169SwitchModel">Сменить модель</string>
+    <string name="b169UsedUp">%1$s пока исчерпана</string>
+    <string name="b169UsedUpNoName">Эта модель пока исчерпана</string>
+    <string name="b169ConnectProvider">Подключить провайдера…</string>
+    <plurals name="b169AskTitle">
+        <item quantity="one">Остановленный ответ уже выполнил %1$d шаг. Отправить снова с %2$s?</item>
+        <item quantity="few">Остановленный ответ уже выполнил %1$d шага. Отправить снова с %2$s?</item>
+        <item quantity="many">Остановленный ответ уже выполнил %1$d шагов. Отправить снова с %2$s?</item>
+        <item quantity="other">Остановленный ответ уже выполнил %1$d шага. Отправить снова с %2$s?</item>
+    </plurals>
+    <string name="b169AskSend">Отправить</string>
+    <string name="b169AttachAgain">Прикрепите %1$s снова, чтобы отправить</string>
+    <string name="b169Free">Бесплатно · может использовать ваши запросы</string>
+    <string name="b169TooLong">Слишком длинно для этой модели</string>
+    <string name="b169Suggested">Рекомендуется</string>
+    <string name="b169Offline">Смена модели снова заработает, когда сервер вернётся.</string>
+</resources>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="m40AuthTitle">Вход в %1$s</string>
+    <string name="m40AuthBack">Назад</string>
+    <string name="m40AuthWorking">Выполняется…</string>
+    <string name="m40AuthPlaces">Где вы хотите войти?</string>
+    <string name="m40AuthBest">Здесь можно сразу читать расход.</string>
+    <string name="m40AuthServer">Данные для входа сохранятся на этом сервере.</string>
+    <string name="m40AuthPhone">Этот телефон</string>
+    <string name="m40AuthMethods">Выберите способ входа</string>
+    <string name="m40AuthNoPlace">Некуда войти</string>
+    <string name="m40AuthNoPlaceBody">Добавьте сервер OpenCode или установите на этот телефон агент этого поставщика.</string>
+    <string name="m40AuthUnavailable">Вход здесь недоступен</string>
+    <string name="m40AuthUnavailableBody">Это подключение не предлагает поддерживаемого способа входа для этого поставщика.</string>
+    <string name="m40AuthKey">Ключ API</string>
+    <string name="m40AuthKeyHelp">Ваш ключ отправляется в это подключение и сохраняется там.</string>
+    <string name="m40AuthSaveKey">Сохранить ключ</string>
+    <string name="m40AuthContinue">Продолжить</string>
+    <string name="m40AuthEnterValue">Введите значение.</string>
+    <string name="m40AuthSelectValue">Выберите вариант.</string>
+    <string name="m40AuthOpenPage">Открыть страницу входа</string>
+    <string name="m40AuthAskPage">Открыть %1$s в браузере?</string>
+    <string name="m40AuthOpenBrowser">Открыть в браузере</string>
+    <string name="m40AuthCheck">Проверить вход</string>
+    <string name="m40AuthWaiting">Завершите вход, затем проверьте здесь.</string>
+    <string name="m40AuthCommandWaiting">Подключение выполняет вход. Проверьте здесь, когда он завершится.</string>
+    <string name="m40AuthCode">Код входа или URL обратного вызова</string>
+    <string name="m40AuthFinish">Завершить вход</string>
+    <string name="m40AuthDone">Готово</string>
+    <string name="m40AuthComplete">Вход выполнен</string>
+    <string name="m40AuthCompleteBody">Список тарифов обновлён.</string>
+    <string name="m40AuthFailed">Не удалось завершить этот шаг. Повторите.</string>
+    <string name="m40AuthReenter">Снова введите пароль этого сервера в разделе «Серверы», затем вернитесь сюда.</string>
+    <string name="m40AuthDetails">Подробности</string>
+    <string name="m40AuthCopyDetails">Копировать подробности</string>
+    <string name="m40AuthDeviceCode">Введите код %1$s на странице входа.</string>
+    <string name="m40AuthCopyCode">Копировать код</string>
+    <string name="m40AuthCopied">Код скопирован</string>
+    <string name="m40AuthBrowserHint">Этот способ нужно завершить в браузере на компьютере, где работает этот сервер.</string>
+    <string name="m40AuthDeviceHint">Войдите с помощью кода устройства.</string>
+    <string name="m40AuthAccountHint">Войдите с помощью аккаунта поставщика.</string>
+    <string name="m40AuthCommandHint">Этот вход выполняет подключение; телефон никаких команд не запускает.</string>
+    <string name="m40AuthPhoneHint">Используйте установленный на этом телефоне агент этого поставщика.</string>
+</resources>

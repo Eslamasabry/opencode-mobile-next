@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxLifetimeTitle">Время работы служб</string>
+    <string name="linuxLifetimeRefresh">Проверить время работы служб</string>
+    <string name="linuxLifetimeReading">Чтение времени работы служб…</string>
+    <string name="linuxLifetimeRunning">Работает</string>
+    <string name="linuxLifetimeStopped">Не работает</string>
+    <string name="linuxLifetimeUptime">Текущий запуск: %1$d мс</string>
+    <string name="linuxLifetimeLastUptime">Предыдущий запуск: %1$d мс</string>
+    <string name="linuxLifetimeExit">Последний выход: %1$d</string>
+    <string name="linuxLifetimeRestarts">Перезапусков: %1$d</string>
+    <string name="linuxLifetimeUnknown">Причина выхода неизвестна</string>
+    <string name="linuxLifetimeExited">Программа завершилась</string>
+    <string name="linuxLifetimeKilled">Нехватка памяти или лимит процессов Android</string>
+    <string name="linuxLifetimeFailed">Не удалось прочитать время работы служб.</string>
+    <string name="linuxLifetimeEmpty">Нет данных о времени работы служб.</string>
+</resources>

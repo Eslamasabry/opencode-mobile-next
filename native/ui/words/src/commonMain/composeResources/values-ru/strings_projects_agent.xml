@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentProjectWorkspace">Изменения и рабочие копии</string>
+    <string name="agentProjectReadFailed">Не удалось завершить это действие с проектом. Проверьте текущее состояние и повторите.</string>
+    <string name="agentProjectNoGit">Эта папка не является репозиторием Git.</string>
+    <string name="agentProjectBranch">Текущая ветка</string>
+    <string name="agentProjectBaseBranch">Базовая ветка</string>
+    <string name="agentProjectDetached">Отсоединённое состояние</string>
+    <string name="agentProjectWorkingTree">Рабочее дерево</string>
+    <string name="agentProjectBranchChanges">С базовой ветки</string>
+    <string name="agentProjectAllFiles">Все изменённые файлы</string>
+    <string name="agentProjectNoPatch">У этого файла нет текстового патча.</string>
+    <string name="agentProjectPreviousLines">Предыдущие 200 строк</string>
+    <string name="agentProjectNextLines">Следующие 200 строк</string>
+    <string name="agentProjectChangedFiles">Изменённые файлы</string>
+    <string name="agentProjectNoChanges">В этом сравнении нет изменений.</string>
+    <string name="agentProjectLineChanges">Добавлено: %1$d · удалено: %2$d</string>
+    <string name="agentProjectWorktrees">Рабочие копии</string>
+    <string name="agentProjectNoWorktrees">Для этого проекта рабочие копии не найдены.</string>
+    <string name="agentProjectReady">Готово</string>
+    <string name="agentProjectRemove">Удалить рабочую копию</string>
+    <string name="agentProjectWorking">Дождитесь завершения этого действия.</string>
+    <string name="agentProjectNewWorktree">Новая рабочая копия с именем</string>
+    <string name="agentProjectGenerateWorktree">Создать с автоматическим именем</string>
+    <string name="agentProjectRefresh">Обновить состояние проекта</string>
+    <string name="agentProjectNameInvalid">Используйте от 1 до 128 букв, цифр, точек, подчёркиваний или дефисов. Начните с буквы или цифры и не ставьте две точки подряд.</string>
+    <string name="agentProjectWorktreeName">Имя рабочей копии</string>
+    <string name="agentProjectCreate">Создать рабочую копию</string>
+    <string name="agentProjectRemoveQuestion">Удалить «%1$s»?</string>
+    <string name="agentProjectRemoveBody">Рабочая копия и её чаты будут архивированы, а папка удалена: %1$s</string>
+    <plurals name="agentProjectRemoveChanges">
+        <item quantity="one">В этой рабочей копии %1$d изменённый файл. Он будет удалён вместе с папкой.</item>
+        <item quantity="few">В этой рабочей копии %1$d изменённых файла. Они будут удалены вместе с папкой.</item>
+        <item quantity="many">В этой рабочей копии %1$d изменённых файлов. Они будут удалены вместе с папкой.</item>
+        <item quantity="other">В этой рабочей копии %1$d изменённого файла. Они будут удалены вместе с папкой.</item>
+    </plurals>
+</resources>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxExitForceStop">Приложение закрыли, пока работал OpenCode</string>
+    <string name="linuxExitMemory">Android закрыл приложение, чтобы освободить память</string>
+    <string name="linuxExitMemoryLimit">Android закрыл приложение из-за предела памяти</string>
+    <string name="linuxExitCrash">Приложение аварийно завершилось, пока работал OpenCode</string>
+    <string name="linuxExitKilled">Android остановил приложение, пока работал OpenCode</string>
+    <string name="linuxExitRestored">OpenCode снова работает.</string>
+    <string name="linuxExitCheckStatus">Проверьте текущее состояние сервера ниже.</string>
+    <string name="linuxExitPolicyOff">Автоматический перезапуск выключен. Запустите OpenCode, когда будете готовы.</string>
+</resources>

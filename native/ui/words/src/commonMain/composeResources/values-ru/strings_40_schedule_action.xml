@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="scheduleActionWhen">Запланировать на %1$s</string>
+    <plurals name="scheduleActionHours">
+        <item quantity="one">Запускать каждый час</item>
+        <item quantity="few">Запускать каждые %1$d часа</item>
+        <item quantity="many">Запускать каждые %1$d часов</item>
+        <item quantity="other">Запускать каждые %1$d часа</item>
+    </plurals>
+</resources>

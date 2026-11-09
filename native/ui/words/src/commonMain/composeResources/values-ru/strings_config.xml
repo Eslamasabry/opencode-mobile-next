@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="configInspectionTitle">Конфигурация сервера</string>
+    <string name="configInspectionExplanation">Просмотр источников конфигурации сервера в порядке приоритета. Ключи, токены, значения окружения, заголовки, команды и запросы скрыты. Эта страница ничего не меняет.</string>
+    <string name="configInspectionUnavailable">Не удалось загрузить конфигурацию сервера. Подключитесь заново и повторите.</string>
+    <string name="configInspectionRefresh">Обновить конфигурацию</string>
+</resources>

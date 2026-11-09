@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="widget_ask_outside_write">Записать вне этого проекта?</string>
+    <string name="widget_ask_outside_read">Прочитать вне этого проекта?</string>
+    <string name="widget_ask_outside_run">Выполнить команду вне этого проекта?</string>
+    <string name="widget_ask_directory">Работать вне этого проекта?</string>
+    <string name="widget_ask_command">Выполнить эту команду?</string>
+    <string name="widget_ask_edit">Изменить этот файл?</string>
+    <string name="widget_ask_read">Прочитать этот файл?</string>
+    <string name="widget_ask_permission">Использовать: %1$s</string>
+</resources>

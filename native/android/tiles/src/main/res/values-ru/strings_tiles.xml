@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="shortcut_connect_short">Подключить</string>
+    <string name="shortcut_connect_long">Выберите сервер для подключения</string>
+    <string name="shortcut_new_task_short">Новый чат</string>
+    <string name="shortcut_new_task_long">Начать новый чат на текущем сервере</string>
+    <string name="shortcut_session_untitled">Чат без названия</string>
+    <string name="shortcut_session_unavailable">Этот чат больше недоступен</string>
+    <string name="tile_label">OpenCode</string>
+    <string name="tile_label_with_count">OpenCode · %1$s</string>
+    <string name="tile_all_clear">Ничего не ждёт вас</string>
+    <plurals name="tile_need_you">
+        <item quantity="one">Вас ждёт %1$d</item>
+        <item quantity="few">Вас ждут %1$d</item>
+        <item quantity="many">Вас ждут %1$d</item>
+        <item quantity="other">Вас ждут %1$d</item>
+    </plurals>
+    <string name="pause_tile_label">Фоновый режим</string>
+    <string name="pause_tile_label_with_state">Фоновый режим · %1$s</string>
+    <string name="pause_tile_on">Включён</string>
+    <string name="pause_tile_paused">Приостановлен</string>
+    <string name="pause_tile_off">Выключен в настройках</string>
+</resources>

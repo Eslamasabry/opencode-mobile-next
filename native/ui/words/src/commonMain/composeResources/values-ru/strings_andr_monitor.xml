@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="andrMonitorExplanation">Проверяйте другие сохранённые серверы, пока приложение открыто или работает фоновое подключение. Для каждого сервера нужно ваше разрешение. Наблюдение никогда не включает фоновое подключение.</string>
+    <string name="andrMonitorEnabled">Проверять этот сервер</string>
+    <string name="andrMonitorOff">Выключено. Фоновых проверок нет.</string>
+    <string name="andrMonitorWaiting">Ждём следующей проверки. Прежние данные могут быть устаревшими.</string>
+    <string name="andrMonitorChecking">Идёт проверка. Прежние данные могут быть устаревшими.</string>
+    <string name="andrMonitorCurrent">Данные актуальны после последней проверки.</string>
+    <string name="andrMonitorUnavailable">Не удалось проверить. Откройте этот сервер, чтобы посмотреть последнюю активность.</string>
+    <string name="andrMonitorWifi">Ждём подключения к Wi-Fi.</string>
+    <string name="andrMonitorPaused">Приостановлено, пока приложение и фоновое подключение остановлены.</string>
+    <string name="andrMonitorSaveFailed">Не удалось сохранить выбор. Повторите попытку.</string>
+    <string name="andrMonitorCheckIn">Напоминать о долгих ответах</string>
+    <string name="andrMonitorCheckInDetail">Одно напоминание, если чат работает так долго. Неудавшиеся проверки не считаются работой.</string>
+    <string name="andrMonitorMinutes">%1$s мин</string>
+</resources>

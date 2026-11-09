@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="usageWidgetIntro">Показывает остаток по вашим тарифам в виджете «Использование» на главном экране. Обновляется, пока работает приложение.</string>
+    <string name="usageEmptyTitle">Подписок пока нет</string>
+    <string name="usageOnConnection">на %1$s</string>
+    <string name="usageWidgetSettingsShow">Показывать эти тарифы</string>
+    <string name="usageWidgetSettingsWindows">Показывать 5-часовой, недельный или оба</string>
+    <string name="usageWidgetWindowBoth">Оба</string>
+    <string name="usageWidgetWindowFiveHour">5 часов</string>
+    <string name="usageWidgetWindowWeekly">Неделя</string>
+    <string name="usageWidgetSettingsSetup">Показывать строки, требующие настройки</string>
+    <string name="usageWidgetSettingsSetupHelp">Строки входа, добавления ключа и настройки</string>
+    <string name="widgetV2ConfigureTitle">Стиль виджета</string>
+    <string name="widgetProjectTitle">Показывать чаты из</string>
+    <string name="widgetProjectUnavailable">Не удалось сохранить выбор. Повторите.</string>
+    <string name="widgetV2AccentWallpaper">Обои</string>
+    <string name="widgetV2AccentApp">Тема приложения</string>
+    <string name="widgetV2AccentGreen">Зелёный</string>
+    <string name="widgetV2AccentTeal">Бирюзовый</string>
+    <string name="widgetV2AccentBlue">Синий</string>
+    <string name="widgetV2AccentAmber">Янтарный</string>
+    <string name="widgetV2SaveStyle">Сохранить стиль</string>
+    <string name="widgetV2SteerTitle">Добавить к этому ходу</string>
+    <string name="widgetV2AfterReplyTitle">Отправить после этого ответа</string>
+    <string name="widgetV2VoiceTitle">Новое сообщение</string>
+    <string name="widgetV2MessageHint">Напишите сообщение</string>
+    <string name="widgetV2Send">Отправить</string>
+    <string name="widgetV2StaleRequest">Чат изменился. Ваше сообщение сохранено.</string>
+    <string name="widgetV2Unavailable">Фоновое подключение недоступно. Ваше сообщение сохранено.</string>
+    <string name="widgetV2Unsupported">Это подключение так не умеет.</string>
+    <string name="widgetV2Uncertain">Не удалось подтвердить, отправлено ли сообщение. Проверьте чат, прежде чем отправлять снова.</string>
+    <string name="widgetV2InvalidRequest">Напишите сообщение, прежде чем отправлять.</string>
+    <string name="widgetV2UnknownBehavior">Ждём данные о чате…</string>
+    <string name="widgetV2StyleStale">Этот виджет изменился. Закройте это окно и повторите.</string>
+    <string name="widgetV2StyleUnavailable">Не удалось сохранить стиль. Повторите.</string>
+    <string name="widgetV2DictationUnavailable">Диктовка сейчас недоступна. Можно ввести текст вручную.</string>
+    <string name="widgetV2RestartUnavailable">Этот чат можно изменить только из приложения.</string>
+</resources>

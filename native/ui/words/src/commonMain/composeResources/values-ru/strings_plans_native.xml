@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="quotaCollectorService">Чтение расхода по тарифам</string>
+    <string name="plansNativeCollectors">Чтение лимитов тарифов</string>
+    <string name="plansNativeCollectorOn">Чтение включено</string>
+    <string name="plansNativeCollectorOff">Чтение выключено</string>
+    <string name="plansNativeCollectorSetup">Настроить чтение на этом телефоне</string>
+    <string name="plansNativeCollectorRemote">Разрешить чтение с этого сервера</string>
+    <string name="plansNativeCollectorWorking">Обновляем чтение тарифов</string>
+    <string name="plansNativeCollectorFailed">Не удалось изменить чтение тарифов. Проверьте сервер и повторите попытку.</string>
+    <string name="plansNativeAlerts">Оповещения о лимитах тарифов</string>
+    <string name="plansNativeAlertsBody">Оповещать, когда читаемый тариф достигает выбранного уровня. Для чтения с сервера по-прежнему нужно ваше разрешение.</string>
+    <string name="plansNativeSetupQuestion">Настроить чтение тарифов на «%1$s»?</string>
+    <string name="plansNativeRemoteQuestion">Разрешить чтение тарифов с «%1$s»?</string>
+    <string name="plansNativeOffQuestion">Выключить чтение тарифов на «%1$s»?</string>
+    <string name="plansNativeSetupBody">Приложение установит средство чтения тарифов внутри Ubuntu в приложении. Учётные данные провайдеров остаются на телефоне.</string>
+    <string name="plansNativeRemoteBody">Читать лимиты тарифов через сборщик, уже установленный на этом сервере. Это разрешение действует только для этого сервера и аккаунтов провайдеров, о которых он сообщает.</string>
+    <string name="plansNativeOffBody">Прекратить чтение этого источника и убрать разрешение на чтение. Входы у провайдеров сохраняются.</string>
+    <string name="plansNativeSetUp">Настроить чтение</string>
+    <string name="plansNativeAllow">Разрешить чтение</string>
+    <string name="plansNativeTurnOff">Выключить чтение</string>
+    <string name="plansNativeCancel">Отмена</string>
+</resources>

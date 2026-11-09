@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxAgentInstall">Установить или обновить %1$s</string>
+    <string name="linuxAgentInstalling">Установка %1$s</string>
+    <string name="linuxAgentInstallBackground">Установка продолжается в фоне. Нажмите «Обновить», чтобы увидеть последний ход.</string>
+    <string name="linuxAgentInstallCancel">Отменить установку</string>
+    <string name="linuxAgentInstallBusy">Уже идёт другая настройка. Дождитесь её завершения или сначала отмените её.</string>
+    <string name="linuxAgentInstallSpace">Не хватает свободного места для этой загрузки и установленных файлов. Освободите место в хранилище и повторите.</string>
+    <string name="linuxAgentInstallUnavailable">Сейчас этого агента нельзя установить на этот телефон.</string>
+    <string name="linuxAgentInstallDone">%1$s установлен. Перед использованием ещё нужны вход и проверка совместимости с телефоном.</string>
+    <string name="linuxAgentInstallFailed">Не удалось установить %1$s. Нажмите «Установить или обновить», чтобы повторить.</string>
+    <string name="linuxAgentInstallInterrupted">Установка %1$s прервана. Нажмите «Установить или обновить», чтобы безопасно повторить.</string>
+</resources>

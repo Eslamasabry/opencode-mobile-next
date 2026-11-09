@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxSetupStart">Настроить Linux и OpenCode</string>
+    <string name="linuxSetupAddPython">Добавить инструменты Python</string>
+    <string name="linuxSetupContinue">Продолжить настройку</string>
+    <string name="linuxSetupStop">Остановить настройку</string>
+    <string name="linuxSetupStopQuestion">Остановить настройку?</string>
+    <string name="linuxSetupStopBody">Установленные инструменты остаются на телефоне. Продолжить настройку можно позже.</string>
+    <string name="linuxSetupWorking">Настройка инструментов телефона…</string>
+    <string name="linuxSetupAddingPython">Добавление инструментов Python</string>
+    <string name="linuxSetupDone">Инструменты телефона готовы.</string>
+    <string name="linuxSetupFailed">Настройка остановилась, не завершившись. Продолжите настройку, чтобы проверить установленные инструменты и повторить.</string>
+</resources>

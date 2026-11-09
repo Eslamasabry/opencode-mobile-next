@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="statePin">Закрепить чат</string>
+    <string name="stateUnpin">Открепить чат</string>
+    <string name="statePinFailed">Не удалось сохранить закрепление. Повторите.</string>
+    <string name="stateContextUsage">Последний контекст: %1$d%</string>
+    <string name="stateSavedPreview">Сохранённый список. Подключитесь, чтобы открыть этот чат.</string>
+</resources>

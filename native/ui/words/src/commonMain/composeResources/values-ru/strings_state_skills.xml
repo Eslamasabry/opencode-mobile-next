@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateSkillsTitle">Навыки</string>
+    <string name="stateSkillsUse">Использовать в этом чате</string>
+    <string name="stateSkillsDone">Навык добавлен в этот чат.</string>
+    <string name="stateSkillsChanged">Чат или папка изменились. Откройте список снова.</string>
+    <string name="stateSkillsBusy">Навык уже добавляется. Дождитесь завершения.</string>
+    <string name="stateSkillsStaged">Завершите или отмените ожидающую отмену, прежде чем добавлять навык.</string>
+    <string name="stateSkillsUnsupported">Этот сервер не может добавлять навыки в чаты.</string>
+    <string name="stateSkillsUncertain">Не удалось подтвердить результат. Обновите, прежде чем повторять.</string>
+</resources>

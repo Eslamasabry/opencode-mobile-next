@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="serversTitle">Серверы</string>
+    <string name="serversNewTitle">Новый чат</string>
+    <string name="serversSaved">Сохранённые серверы</string>
+    <string name="serversEmpty">Добавьте сервер OpenCode 2, чтобы начать чат.</string>
+    <string name="serversAdd">Добавить сервер</string>
+    <string name="serversName">Название</string>
+    <string name="serversAddress">Адрес сервера</string>
+    <string name="serversUsername">Имя пользователя</string>
+    <string name="serversPassword">Пароль</string>
+    <string name="serversCleartext">Разрешить HTTP для этого адреса</string>
+    <string name="serversCleartextHelp">HTTP не шифрует ваш пароль и чаты. Используйте его только в сети, которой доверяете.</string>
+    <string name="serversCleartextRequired">Подтвердите HTTP для этого адреса, прежде чем подключаться.</string>
+    <string name="serversConnect">Подключить</string>
+    <string name="serversConnected">Подключено</string>
+    <string name="serversCreate">Начать чат</string>
+    <string name="serversSave">Сохранить и подключиться</string>
+    <string name="serversRemove">Удалить сервер</string>
+    <string name="serversCancel">Отмена</string>
+    <string name="serversRemoveConfirm">Удалить %1$s и сохранённые данные подключения из этого приложения?</string>
+    <string name="serversWorking">Подождите, пока завершится текущее действие.</string>
+    <string name="serversInvalidAddress">Введите адрес сервера.</string>
+    <string name="serversSaveFailed">Не удалось сохранить этот сервер. Проверьте адрес и повторите попытку.</string>
+    <string name="serversConnectFailed">Не удалось подключиться. Проверьте адрес сервера и сеть и повторите попытку.</string>
+    <string name="serversCreateFailed">Не удалось начать чат. Ваш сервер по-прежнему сохранён.</string>
+    <string name="serversRemoveFailed">Не удалось удалить этот сервер. Его сохранённые данные не изменились.</string>
+    <string name="serversSignInFailed">Сервер не принял эти данные для входа. Проверьте имя пользователя и пароль.</string>
+    <string name="serverHttpsRequired">Этот адрес находится в публичном интернете, поэтому нужен HTTPS. Обычный HTTP передаст ваш пароль без шифрования. Измените адрес так, чтобы он начинался с https://, или подключайтесь к серверу через Tailscale либо собственную сеть.</string>
+</resources>

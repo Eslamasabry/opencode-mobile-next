@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="voice_download_title">Настройка голоса</string>
+    <string name="voice_download_downloading">Загрузка голосового пакета</string>
+    <string name="voice_download_verifying">Подготовка голосового ввода</string>
+    <string name="voice_download_complete">Голосовой ввод готов</string>
+    <string name="voice_download_failed">Не удалось настроить голос. Откройте приложение и повторите.</string>
+</resources>

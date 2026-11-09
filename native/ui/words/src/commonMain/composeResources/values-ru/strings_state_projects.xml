@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateFolderNameEmpty">Введите название папки.</string>
+    <string name="stateFolderNameSegment">Укажите название одной папки без косой черты.</string>
+    <string name="stateFolderNameCharacters">Используйте буквы, цифры, точки, дефисы или подчёркивания; начинайте с буквы или цифры (до 64 символов).</string>
+    <string name="stateFolderCreating">Создание папки проекта…</string>
+</resources>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="sessionTransferTitle">Инструменты чата</string>
+    <string name="sessionTransferWait">Завершаем это действие…</string>
+    <string name="sessionTransferExport">Сохранить полную копию</string>
+    <string name="sessionTransferRedact">Скрыть личные значения</string>
+    <string name="sessionTransferRedactBody">Сервер заменяет конфиденциальные значения в экспортируемой копии.</string>
+    <string name="sessionTransferSave">Сохранить файл JSON</string>
+    <string name="sessionTransferImport">Импортировать чат</string>
+    <string name="sessionTransferChoose">Выбрать файл JSON</string>
+    <plurals name="sessionTransferRecords">
+        <item quantity="one">%1$d запись сообщения</item>
+        <item quantity="few">%1$d записи сообщений</item>
+        <item quantity="many">%1$d записей сообщений</item>
+        <item quantity="other">%1$d записи сообщений</item>
+    </plurals>
+    <string name="sessionTransferRedacted">В этой копии есть скрытые значения. При импорте заглушки сохраняются.</string>
+    <string name="sessionTransferDestination">Импортировать в эту папку сервера</string>
+    <string name="sessionTransferDestinationRequired">Сначала выберите папку назначения.</string>
+    <string name="sessionTransferImportAction">Импортировать проверенный чат</string>
+    <string name="sessionTransferNote">Заметка к чату</string>
+    <string name="sessionTransferLoadNote">Прочитать текущую заметку</string>
+    <string name="sessionTransferSaveNote">Сохранить заметку</string>
+    <string name="sessionTransferRemoveNote">Удалить заметку</string>
+    <plurals name="sessionTransferNoteLimit">
+        <item quantity="one">Заметка должна уместиться в %1$d закодированный байт. Сократите её и повторите попытку.</item>
+        <item quantity="few">Заметка должна уместиться в %1$d закодированных байта. Сократите её и повторите попытку.</item>
+        <item quantity="many">Заметка должна уместиться в %1$d закодированных байтов. Сократите её и повторите попытку.</item>
+        <item quantity="other">Заметка должна уместиться в %1$d закодированного байта. Сократите её и повторите попытку.</item>
+    </plurals>
+    <string name="sessionTransferSaved">Чат сохранён.</string>
+    <string name="sessionTransferImported">Чат импортирован.</string>
+    <string name="sessionTransferNoteSaved">Заметка сохранена.</string>
+    <string name="sessionTransferNoteRemoved">Заметка удалена.</string>
+    <string name="sessionTransferInvalid">Выберите корректный экспорт OpenCode в формате JSON.</string>
+    <string name="sessionTransferLarge">Выберите экспорт размером меньше 128 МиБ.</string>
+    <string name="sessionTransferChanged">Подключение к серверу изменилось. Откройте эти инструменты заново, прежде чем продолжать.</string>
+    <string name="sessionTransferSignIn">Сервер отказал в доступе. Проверьте данные входа на сервер и повторите попытку.</string>
+    <string name="sessionTransferConflict">Чат с таким идентификатором уже существует. Выберите другое место назначения или проверьте его на сервере.</string>
+    <string name="sessionTransferUnsupported">Этот сервер не поддерживает перенос чатов.</string>
+    <string name="sessionTransferFailed">Не удалось выполнить это действие. Проверьте подключение и повторите попытку.</string>
+    <string name="sessionTransferReference">Сослаться на папку сервера</string>
+    <string name="sessionTransferReferencePath">Полный путь к папке на этом сервере</string>
+    <string name="sessionTransferReferenceBody">Добавляет ссылку на папку в ваш следующий запрос. Папка остаётся на сервере.</string>
+    <string name="sessionTransferReferenceAdd">Добавить ссылку на папку</string>
+    <string name="sessionTransferReferenceRequired">Сначала введите путь к папке на сервере.</string>
+    <string name="sessionTransferReferenceAdded">Ссылка на папку добавлена в черновик.</string>
+    <string name="sessionTransferReferenceInvalid">Введите абсолютный путь к папке на сервере.</string>
+</resources>

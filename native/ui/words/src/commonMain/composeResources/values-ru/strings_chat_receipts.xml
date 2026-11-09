@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatReceiptCheckAgain">Обновить</string>
+    <string name="chatReceiptChecking">Проверяем, дошло ли ваше сообщение…</string>
+    <string name="chatReceiptLastChecked">Последняя проверка: %1$s.</string>
+</resources>

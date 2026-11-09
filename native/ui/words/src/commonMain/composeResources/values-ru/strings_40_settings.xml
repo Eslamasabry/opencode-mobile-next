@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="settings40_style_default">Стиль по умолчанию</string>
+    <string name="settings40_reset_question">Сбросить оформление?</string>
+    <string name="settings40_reset_body">Будут сброшены цвета, стиль, форма, стекло, размер текста, анимация и свечение ответа. Ваши чаты, язык и настройки уведомлений останутся прежними.</string>
+    <string name="settings40_local_work">Неотправленное на этом телефоне</string>
+    <string name="settings40_queue_title">Запросы в очереди</string>
+    <string name="settings40_drafts_title">Черновики чатов</string>
+    <plurals name="settings40_storage_size">
+        <item quantity="one">%1$d элемент · %2$s</item>
+        <item quantity="few">%1$d элемента · %2$s</item>
+        <item quantity="many">%1$d элементов · %2$s</item>
+        <item quantity="other">%1$d элемента · %2$s</item>
+    </plurals>
+    <string name="settings40_storage_unknown">Не удаётся прочитать это хранилище. Всё сохранено.</string>
+    <string name="settings40_storage_reading">Чтение локального хранилища…</string>
+    <string name="settings40_discard_queue">Удалить неотправленные запросы из очереди</string>
+    <string name="settings40_discard_drafts">Удалить черновики чатов</string>
+    <string name="settings40_queue_keeps">Удаляет запросы, которые ни разу не отправлялись. Запросы с отметкой отправки или квитанцией команды остаются для проверки.</string>
+    <string name="settings40_queue_empty">Нет запросов в очереди для удаления.</string>
+    <string name="settings40_drafts_empty">Нет сохранённых черновиков для удаления.</string>
+    <string name="settings40_discard_working">Удаление локального содержимого…</string>
+    <string name="settings40_queue_question">Удалить неотправленные запросы из очереди?</string>
+    <string name="settings40_drafts_question">Удалить черновики чатов?</string>
+    <string name="settings40_drafts_body">Сохранённый текст и вложения черновиков на этом телефоне будут удалены. Открытые чаты тоже обновятся. Удалению мешает то, что ещё отправляется или проверяется. Это нельзя отменить.</string>
+    <string name="settings40_discard_failed">Не удалось завершить удаление. Ему могут мешать отправляемые запросы, неясное состояние, нечитаемое хранилище или изменение во время сохранения. Проверьте количество и повторите.</string>
+    <plurals name="settings40_discard_done">
+        <item quantity="one">Удалён %1$d элемент.</item>
+        <item quantity="few">Удалено %1$d элемента.</item>
+        <item quantity="many">Удалено %1$d элементов.</item>
+        <item quantity="other">Удалено %1$d элемента.</item>
+    </plurals>
+    <plurals name="settings40_discard_kept">
+        <item quantity="one">Удалён %1$d элемент. Запросов оставлено для проверки: %2$d.</item>
+        <item quantity="few">Удалено %1$d элемента. Запросов оставлено для проверки: %2$d.</item>
+        <item quantity="many">Удалено %1$d элементов. Запросов оставлено для проверки: %2$d.</item>
+        <item quantity="other">Удалено %1$d элемента. Запросов оставлено для проверки: %2$d.</item>
+    </plurals>
+    <plurals name="settings40_discard_cleanup">
+        <item quantity="one">Удалён %1$d черновик. Часть файлов вложений удалить не удалось. Чтобы закончить, удалите черновики ещё раз.</item>
+        <item quantity="few">Удалено %1$d черновика. Часть файлов вложений удалить не удалось. Чтобы закончить, удалите черновики ещё раз.</item>
+        <item quantity="many">Удалено %1$d черновиков. Часть файлов вложений удалить не удалось. Чтобы закончить, удалите черновики ещё раз.</item>
+        <item quantity="other">Удалено %1$d черновика. Часть файлов вложений удалить не удалось. Чтобы закончить, удалите черновики ещё раз.</item>
+    </plurals>
+    <string name="settings40_no_answers">На этом сервере пока нет вопросов, ожидающих ответа.</string>
+    <string name="settings40_answer_failed">Этот шаг не завершён. Сохранённый ответ и настройки Android могут не совпадать. Проверьте «Уведомления» или «Не закрывать», затем повторите.</string>
+    <string name="settings40_held_action">Удалить и их</string>
+    <string name="settings40_held_question">Удалить запросы, оставленные для проверки?</string>
+    <string name="settings40_held_body">Возможно, они уже дошли до сервера. Это лишь убирает их с этого телефона, и больше ничего не отправляется.</string>
+    <plurals name="settings40_queue_held_body">
+        <item quantity="one">%1$d из них, возможно, уже дошёл до сервера. Удаление лишь убирает его с этого телефона, и больше ничего не отправляется.</item>
+        <item quantity="few">%1$d из них, возможно, уже дошли до сервера. Удаление лишь убирает их с этого телефона, и больше ничего не отправляется.</item>
+        <item quantity="many">%1$d из них, возможно, уже дошли до сервера. Удаление лишь убирает их с этого телефона, и больше ничего не отправляется.</item>
+        <item quantity="other">%1$d из них, возможно, уже дошли до сервера. Удаление лишь убирает их с этого телефона, и больше ничего не отправляется.</item>
+    </plurals>
+</resources>

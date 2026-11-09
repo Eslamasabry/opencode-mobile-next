@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatDraftRestoring">Открываем сохранённый черновик…</string>
+    <string name="chatDraftAlreadySent">Возможно, этот текст уже отправлен. Проверьте чат, прежде чем отправлять его снова.</string>
+    <string name="chatDraftRepeatTitle">Отправить этот текст снова?</string>
+    <string name="chatDraftRepeatAction">Отправить снова</string>
+    <string name="chatDraftRepeatBody">Этот текст уже есть в чате. Отправляйте его снова, только если хотите получить новый ответ.</string>
+</resources>

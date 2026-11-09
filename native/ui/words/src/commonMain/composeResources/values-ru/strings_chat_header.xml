@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatHeaderServer">Сервер</string>
+    <string name="chatHeaderContext">Занято контекста</string>
+    <string name="chatHeaderNotReported">Пока нет данных</string>
+    <string name="chatHeaderTokens">Токены</string>
+    <string name="chatHeaderInUse">Используется</string>
+    <string name="chatHeaderRenameFailed">Не удалось переименовать чат.</string>
+    <string name="chatHeaderShareFailed">Не удалось поделиться чатом.</string>
+    <string name="chatHeaderUnshareFailed">Не удалось закрыть общий доступ.</string>
+    <string name="chatHeaderForkFailed">Не удалось создать ответвление чата.</string>
+    <string name="chatHeaderArchiveFailed">Не удалось архивировать чат.</string>
+    <string name="chatHeaderDeleteFailed">Не удалось удалить чат.</string>
+    <string name="chatHeaderFailureDetails">Подробности</string>
+    <string name="chatHeaderApprovalSaveFailed">Не удалось сохранить настройку подтверждений.</string>
+</resources>
