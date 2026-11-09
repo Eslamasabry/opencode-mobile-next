@@ -108,6 +108,12 @@ public data class KitSurfaceInput(
      * panes are already translucent); edges and shadows are unchanged.
      */
     val faceAlpha: Float = 1f,
+    /**
+     * An already-resolved corner radius (Corners knob applied by the caller), drawn as given. A control that nests one
+     * shape inside another (a segmented thumb inside its track) derives the inner radius from the outer one, so it
+     * must not be run through the Corners knob a second time.
+     */
+    val exactRadius: Dp? = null,
 )
 
 private fun Argb.faded(a: Float): Argb = withAlpha(alpha / 255f * a)
@@ -133,13 +139,13 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
     val style = LocalKitStyle.current
     val roles = LocalKitRoles.current
     val sharp = style.spec.tokens.sharpRadius
-    val base = input.radius?.value ?: input.shape.radiusDp()
+    val base = input.exactRadius?.value ?: input.radius?.value ?: input.shape.radiusDp()
     val sheet = input.shape == KitShapeId.Sheet && !input.roundSheetBottom
     // A pane's corners grow with the style's pane inset (Glass, owner 2026-11-09), as its named shape does.
-    val r = if (input.shape.isPane) StyleResolver.paneCorner(base, style.knobs.corners, style.spec.tokens) else StyleResolver.corner(base, style.knobs.corners, sharp)
+    val r = if (input.exactRadius != null) base else if (input.shape.isPane) StyleResolver.paneCorner(base, style.knobs.corners, style.spec.tokens) else StyleResolver.corner(base, style.knobs.corners, sharp)
     val radii = if (sheet) Radii(r, r, 0f, 0f) else Radii.all(if (input.shape == KitShapeId.Square) 0f else r)
     val shape =
-        if (input.radius == null && !(input.shape == KitShapeId.Sheet && input.roundSheetBottom)) {
+        if (input.radius == null && input.exactRadius == null && !(input.shape == KitShapeId.Sheet && input.roundSheetBottom)) {
             input.shape.shape()
         } else {
             RoundedCornerShape(
