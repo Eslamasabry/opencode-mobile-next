@@ -8,7 +8,6 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -25,7 +24,8 @@ import kotlin.coroutines.EmptyCoroutineContext
  * - **Disk cache:** when a scope (the profile id) and a [KitImageDisk] are given, the downsampled thumbnail is kept on
  *   disk under that profile, so a later open skips the network read and the big decode. The app deletes it with the
  *   profile.
- * - **Off the main thread:** reading, decoding and encoding run on [Dispatchers.Default].
+ * - **Off the main thread:** reading, decoding and encoding run in the `work` context the app provides ([LocalKitImageWork], its default dispatcher); the
+ *   default is the caller's own context, which keeps tests and previews deterministic.
  *
  * The memory cache is touched only from the caller's own thread (the main thread in the app and in tests), as the
  * picture memo it replaces was; [trim] is called from `onTrimMemory`, also the main thread.
@@ -54,7 +54,7 @@ public object KitImages {
         key: String,
         maxEdge: Int,
         scope: String? = null,
-        work: CoroutineContext = Dispatchers.Default,
+        work: CoroutineContext = EmptyCoroutineContext,
         read: suspend () -> ByteArray?,
     ): ImageBitmap? {
         val mk = memoryKey(key, maxEdge)
@@ -86,7 +86,7 @@ public object KitImages {
     public suspend fun loadBytes(
         bytes: ByteArray,
         maxEdge: Int,
-        work: CoroutineContext = Dispatchers.Default,
+        work: CoroutineContext = EmptyCoroutineContext,
     ): ImageBitmap? {
         val key = withContext(work) { "b:${bytes.size}:${bytes.contentHashCode()}" }
         return load(key, maxEdge, null, work) { bytes }

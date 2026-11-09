@@ -426,6 +426,9 @@ dependencies {
     implementation(libs.androidx.fragment)
     // P3 stream proof screen (benchmark build type only)
     listOf(":feature:chat", ":ui:kit-chat").forEach { "benchmarkImplementation"(project(it)) }
+    // Memory hygiene (audit gap 5): leak detection in the dev-flavour debug build only, never in release, preview or
+    // switch. Apache-2.0, no network. Its provider installs itself; StrictMode joins in src/devDebug.
+    "devDebugImplementation"("com.squareup.leakcanary:leakcanary-android:${libs.versions.leakcanary.get()}")
     "benchmarkImplementation"(libs.compose.foundation)
     "benchmarkImplementation"(libs.kotlinx.serialization.json)
 }

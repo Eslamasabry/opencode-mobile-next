@@ -10,16 +10,21 @@ import java.security.MessageDigest
  */
 public class KitFileImageDisk(private val dir: File, private val maxBytes: Long = DEFAULT_MAX_BYTES) : KitImageDisk {
     override suspend fun get(key: String): ByteArray? =
-        runCatching { File(dir, name(key)).takeIf { it.isFile }?.also { it.setLastModified(System.currentTimeMillis()) }?.readBytes() }
-            .getOrNull()
+        try {
+            File(dir, name(key)).takeIf { it.isFile }?.also { it.setLastModified(System.currentTimeMillis()) }?.readBytes()
+        } catch (_: java.io.IOException) {
+            null
+        }
 
     override suspend fun put(key: String, bytes: ByteArray) {
-        runCatching {
+        try {
             dir.mkdirs()
             val tmp = File(dir, name(key) + ".tmp")
             tmp.writeBytes(bytes)
             if (!tmp.renameTo(File(dir, name(key)))) tmp.delete()
             prune()
+        } catch (_: java.io.IOException) {
+            // a full or refused disk only costs a re-read
         }
     }
 
