@@ -121,4 +121,22 @@ class JourneyEventsTest {
         assertEquals(">1440", HealthRanges.awayOf(25 * 3_600_000L))
         assertEquals("3+", HealthRanges.attemptOf(9))
     }
+
+    @Test
+    fun `B-JOURNEY-006 a screen view always carries a screen word from the closed set`() = runTest {
+        val vendor = RecordingVendor()
+        live(vendor)
+        val closed = io.github.eslamasabry.oc.engine.analytics.product.ProductScreen.entries.map { it.wire }.toSet()
+        for (route in listOf("ChatRoute(session=ses_secret)", "ChatsRoute.Home", "PhoneRoute.ThisPhone", "Never.Seen.Before", "")) {
+            AppTelemetry.current.track(
+                ProductEvent.ScreenView,
+                mapOf("screen" to io.github.eslamasabry.oc.engine.analytics.product.ProductScreen.of(route)),
+            )
+        }
+        AppTelemetry.current.track(ProductEvent.ScreenView, mapOf("screen" to "/chat/ses_secret"))
+        val views = vendor.events.filter { it.first == "screen_view" }
+        assertEquals(6, views.size)
+        assertTrue(views.take(5).all { it.second["screen"] in closed })
+        assertTrue(views.last().second["screen"] == null)
+    }
 }
