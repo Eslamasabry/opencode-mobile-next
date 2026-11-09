@@ -192,8 +192,15 @@ public class GitPage(
     private val ref: ConversationRef,
     private val workspaces: GitWorkspaces,
     private val account: GitHubAccount? = null,
+    private val kept: GitLastKnown? = null,
 ) {
-    private val mutableState = MutableStateFlow(GitPageState())
+    // Cache-first: with a kept snapshot in memory the page's first frame is the real Ready layout.
+    private val mutableState =
+        MutableStateFlow(
+            GitPageState(
+                view = kept?.peek(ref)?.let { GitPageView.Ready(it.toSnapshot()) } ?: GitPageView.Loading
+            )
+        )
     public val state: StateFlow<GitPageState> = mutableState.asStateFlow()
 
     private var repository: GitRepository? = null
@@ -202,6 +209,14 @@ public class GitPage(
     public suspend fun refresh() {
         if (!begin(GitBusy.Refresh)) return
         try {
+            // Opened with nothing in memory: the kept snapshot may still be on disk.
+            if (mutableState.value.view == GitPageView.Loading) {
+                kept?.read(ref)?.let { k ->
+                    mutableState.update {
+                        if (it.view == GitPageView.Loading) it.copy(view = GitPageView.Ready(k.toSnapshot())) else it
+                    }
+                }
+            }
             read()
         } finally {
             end()
@@ -399,7 +414,10 @@ public class GitPage(
                 ?: when (val found = workspaces.resolve(ref)) {
                     is GitWorkspaceResolution.Unavailable -> {
                         mutableState.update {
-                            it.copy(view = GitPageView.Unavailable(found.reason))
+                            // Cache-first: kept rows stay while the server is away; the status line says why.
+                            if (it.view is GitPageView.Ready && found.reason == GitUnavailableReason.NotConnected)
+                                it.copy(refreshFailure = GitFailure(GitProblem.EnvironmentUnavailable))
+                            else it.copy(view = GitPageView.Unavailable(found.reason))
                         }
                         return
                     }
@@ -422,10 +440,12 @@ public class GitPage(
                     }
                 }
         when (val read = repo.snapshot()) {
-            is GitSnapshotResult.Ready ->
+            is GitSnapshotResult.Ready -> {
                 mutableState.update {
                     it.copy(view = GitPageView.Ready(read.snapshot), refreshFailure = null)
                 }
+                kept?.keep(ref, KeptGit.of(read.snapshot))
+            }
             GitSnapshotResult.NotRepository ->
                 mutableState.update {
                     it.copy(view = GitPageView.NotRepository, refreshFailure = null)

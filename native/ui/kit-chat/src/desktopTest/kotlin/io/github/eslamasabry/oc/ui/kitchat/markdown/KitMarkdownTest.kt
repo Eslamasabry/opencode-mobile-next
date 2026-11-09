@@ -14,6 +14,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.ui.kitchat.ChatTestTheme
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -101,8 +102,9 @@ class KitMarkdownTest {
     fun `B-CHAT-101 a checklist says done or to do in words and a command block names where to run it`() =
         runComposeUiTest {
             val blocks =
-                KitMdSource.blocks("a", "```checklist\n[x] built\n[ ] shipped\n```", false) +
-                    KitMdSource.blocks("b", "```command\nls -la\n```", false)
+                (KitMdSource.blocks("a", "```checklist\n[x] built\n[ ] shipped\n```", false) +
+                        KitMdSource.blocks("b", "```command\nls -la\n```", false))
+                    .toImmutableList()
             setContent {
                 ChatTestTheme {
                     KitMarkdown(blocks, KitMarkdownActions(onLink = {}, runOnComputerLabel = "Run on your computer"))

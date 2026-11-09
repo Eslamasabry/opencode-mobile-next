@@ -80,6 +80,9 @@ public interface FilesPlatformBindings {
     @Multibinds(allowEmpty = true) public val fileStorageAccess: Set<FilesStorageAccess>
 
     @Multibinds(allowEmpty = true)
+    public val filesLastKnown: Set<io.github.eslamasabry.oc.feature.files.presentation.FilesLastKnown>
+
+    @Multibinds(allowEmpty = true)
     public val readerSettings:
         Set<io.github.eslamasabry.oc.feature.files.presentation.ReaderSettings>
 }

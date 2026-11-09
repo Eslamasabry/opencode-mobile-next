@@ -56,9 +56,15 @@ public class RemoteTerminals(
     private val source: RemoteTerminalSource,
     private val scope: CoroutineScope,
     private val dispatchers: AppDispatchers,
+    private val kept: TerminalLastKnown? = null,
 ) {
     private val lane = Mutex()
-    private val local = MutableStateFlow(RemoteTerminalState())
+    // Cache-first: the kept list is the first frame, with the live frame's row keys.
+    private val local =
+        MutableStateFlow(
+            kept?.peek(ref)?.let { RemoteTerminalState(loading = false, terminals = it.toProcesses()) }
+                ?: RemoteTerminalState()
+        )
     public val state: StateFlow<RemoteTerminalState> = local.asStateFlow()
     private var channel: TerminalChannel? = null
     private var reader: Job? = null
@@ -68,6 +74,11 @@ public class RemoteTerminals(
 
     public suspend fun refresh(): Unit = lane.withLock {
         local.update { it.copy(loading = true, failure = null) }
+        if (local.value.terminals.isEmpty()) {
+            kept?.read(ref)?.let { k ->
+                local.update { if (it.terminals.isEmpty()) it.copy(terminals = k.toProcesses()) else it }
+            }
+        }
         val admission = if (entered) source.resolve(ref) else source.activate(ref)
         // Activation is a page-entry action, never an automatic retry after scope changes.
         entered = true
@@ -77,9 +88,10 @@ public class RemoteTerminals(
                 when (val listed = live.value.gateway.listTerminals()) {
                     is Outcome.Failed -> fail(listed.failure)
                     is Outcome.Ok ->
-                        if (live.value.current())
+                        if (live.value.current()) {
                             local.update { it.copy(loading = false, terminals = listed.value) }
-                        else fail(Failure.Refused(RefusalReason.StaleScope))
+                            kept?.keep(ref, KeptTerminals.of(listed.value))
+                        } else fail(Failure.Refused(RefusalReason.StaleScope))
                 }
         }
     }

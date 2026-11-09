@@ -172,7 +172,7 @@ internal fun ReportProblemPage(
                                 report.errorsKept,
                                 report.errorsKept,
                             ),
-                        kind = KitConfirmKind.Neutral,
+                        kind = KitConfirmKind.Destructive,
                         body =
                             pluralStringResource(
                                 Res.plurals.appDiagnosticsClearBody,

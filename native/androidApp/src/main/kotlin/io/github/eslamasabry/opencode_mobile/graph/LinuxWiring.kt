@@ -340,7 +340,8 @@ object LinuxWiring {
      */
     @Provides
     @SingleIn(AppScope::class)
-    fun pacer(visibility: AppVisibility): Pacer = DefaultPacer(visibility.state)
+    fun pacer(visibility: AppVisibility, facts: io.github.eslamasabry.oc.core.domain.platform.DeviceFacts): Pacer =
+        DefaultPacer(visibility.state, batterySaver = facts.powerSave) // slows background watching under Battery Saver
 
     private fun Context.startSettings(intent: Intent): Boolean =
         try {

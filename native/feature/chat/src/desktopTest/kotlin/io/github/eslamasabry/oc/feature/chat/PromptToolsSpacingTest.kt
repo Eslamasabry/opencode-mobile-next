@@ -44,7 +44,10 @@ class PromptToolsSpacingTest {
             }
         }
         waitForIdle()
-        val nodes = onAllNodesWithTag("kit-row-group").fetchSemanticsNodes()
+        // The settings group carries its caller's tag in place of the kit's, so count both.
+        val nodes =
+            (onAllNodesWithTag("kit-row-group").fetchSemanticsNodes() + onAllNodesWithTag("composer-tools-settings").fetchSemanticsNodes())
+                .sortedBy { it.boundsInRoot.top }
         System.getenv("OC_RENDER_DIR")?.let { dir ->
             File(dir).mkdirs()
             val png = Image.makeFromBitmap(onRoot().captureToImage().asSkiaBitmap()).encodeToData(EncodedImageFormat.PNG)!!

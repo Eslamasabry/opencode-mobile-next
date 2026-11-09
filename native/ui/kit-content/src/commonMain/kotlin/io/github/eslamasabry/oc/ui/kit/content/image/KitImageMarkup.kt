@@ -130,7 +130,7 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.StringResource
-import org.jetbrains.compose.resources.decodeToImageBitmap
+import io.github.eslamasabry.oc.ui.kit.image.KitImages
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -277,7 +277,7 @@ public fun KitImageMarkup(
     encodePng: KitPngEncoder,
     modifier: Modifier = Modifier,
     canSend: Boolean = true,
-    decode: suspend (ByteArray) -> ImageBitmap = { it.decodeToImageBitmap() },
+    decode: suspend (ByteArray) -> ImageBitmap = { KitImages.loadBytes(it, MARKUP_EDGE) ?: error("undecodable") },
 ) {
     val scope = rememberCoroutineScope()
     var image by remember(bytes) { mutableStateOf<ImageBitmap?>(null) }
@@ -736,3 +736,6 @@ internal fun KitImageWorkingMark(label: String, modifier: Modifier = Modifier) {
         }
     }
 }
+
+/** The longest side the markup editor works at: a screen's worth, not a camera's. */
+private const val MARKUP_EDGE: Int = 2560
