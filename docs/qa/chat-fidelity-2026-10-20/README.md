@@ -40,7 +40,7 @@ Non-goal: redesigning the More sheet's rows.
 ## Evidence
 
 Renders at 412x915 dp with blurred shadows:
-`/home/eslam/Storage2/launch-footage/chat-fidelity/` (idle, working, question,
+`/home/owner/Storage2/launch-footage/chat-fidelity/` (idle, working, question,
 done, 320 dp at 2x, Arabic, and the "+" tray in idle and working states, dark
 and light). Iterations are in `pass0` to `pass4`. Capture:
 `tool/capture/chat_fidelity_test.dart`.

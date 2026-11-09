@@ -4,7 +4,7 @@ export PATH=$HOME/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a0
 rm -rf $RUN; mkdir -p $RUN/home $RUN/bin $RUN/proj; cp $D/agentpins/claude_x64 $RUN/bin/claude; chmod +x $RUN/bin/claude
 (cd $RUN/proj; git init -q .; echo hi > README.md)
 umask 077; head -c 24 /dev/urandom | od -An -tx1 | tr -d ' \n' > $RUN/secret
-export REALHOME=/home/eslam; export HOME=$RUN/fakehome; mkdir -p $HOME
+export REALHOME=$HOME; export HOME=$RUN/fakehome; mkdir -p $HOME
 cp $D/termux_daemon_body.sh $RUN/body.sh
 PATH=$D/pas/$N/node_modules/.bin:$RUN/bin:$PATH DISABLE_AUTOUPDATER=1 PASEO_DICTATION_ENABLED=false PASEO_VOICE_MODE_ENABLED=false \
  setsid nohup bash -c "$(cat $RUN/body.sh)" oc-paseo $RUN/home 127.0.0.1:$PORT < $RUN/secret > $RUN/daemon.log 2>&1 &

@@ -3,7 +3,7 @@
 - Build: release APK **2560** from `feat/git-in-chat` at `904a45eef`, built on the build server with `tool/qa/vps_build_apk.sh 2560`. Signer SHA-256 `1DE5BF08...94D60C` (verified with apksigner).
 - Device: emulator `emulator-5584` (AVD OC_Launch_Demo), 838x1860. Never the owner's phone.
 - Project: `neon-game` in the app's built-in Linux (`/root/projects/neon-game`, in-app Ubuntu connection). Everything below was done through the UI; the terminal was used only to set up the bare origin (`git init --bare /root/origin.git`, `git remote add origin`, first push), to create three untracked files (alpha, beta, gamma), to push one commit from a second clone, and to read `git log --stat`.
-- Screenshots: `/home/eslam/Storage2/launch-footage/git-in-chat/emu/` (one screen per image).
+- Screenshots: `/home/owner/Storage2/launch-footage/git-in-chat/emu/` (one screen per image).
 
 | # | Step (UI only) | Result | Evidence |
 |---|---|---|---|

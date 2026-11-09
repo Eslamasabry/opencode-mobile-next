@@ -1,5 +1,5 @@
 Base: codex/p65 at d97420b8
-SDK: /home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5
+SDK: /home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5
 
 Attempted:
   $SDK/bin/dart format --language-version=3.10 lib/state/lifecycle_report.dart test/lifecycle_report_test.dart
@@ -15,7 +15,7 @@ Formatter fallback (same pinned SDK, no copy or SDK mutation):
 Exit 0. Formatted 2 files (1 changed) in 0.01 seconds.
 Warning for both files: package:flutter_lints/flutter.yaml could not be resolved.
 An earlier direct Dart attempt formatted the files but exited 1 because telemetry
-could not update /home/eslam/.dart-tool/dart-flutter-telemetry-session.json.
+could not update /home/owner/.dart-tool/dart-flutter-telemetry-session.json.
 --suppress-analytics allowed the final formatter operation to exit successfully.
 
 Final formatter verification with --output=none --set-exit-if-changed:
@@ -27,7 +27,7 @@ Behavior test declarations: 15; execution remains blocked, not passed.
 Scoped git add and git commit succeeded with the requested message/trailers.
 Commit: e38b4344 (implementation, tests and initial QA).
 The subsequent QA correction's git add failed with exit 128:
-  fatal: Unable to create '/home/eslam/Storage/Code/oc_app/.git/worktrees/oc_app-codex-p65/index.lock': Read-only file system
+  fatal: Unable to create '/home/owner/Storage/Code/oc_app/.git/worktrees/oc_app-codex-p65/index.lock': Read-only file system
 The amend did not run. QA corrections remain uncommitted; COMMIT_MSG.txt holds
 the requested attributed fallback message for this documentation follow-up.
 No push, native command, device interaction or release action was performed.

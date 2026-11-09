@@ -1,304 +1,304 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_pointer_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_pointer_test.dart: a live file link takes the click cursor
-00:00 +1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_pointer_test.dart: android leaves the file link cursor alone
-00:00 +2: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_pointer_test.dart: an editable field still reports the text cursor
-00:00 +3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_pointer_test.dart: a ListTile row reports the click cursor and hovers
-00:00 +4: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_pointer_test.dart: the scroll wheel scrolls a list
-00:00 +5: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_pointer_test.dart: the Files split divider resizes and shows a resize cursor
-00:00 +6: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_pointer_test.dart: android keeps the plain Files hairline divider
-00:01 +7: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_pointer_test.dart: mouse drag selects text rather than scrolling the list
-00:01 +8: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_release_check_test.dart
-00:01 +8: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_release_check_test.dart: tag parsing and comparison extracts build numbers from release tags
-00:01 +9: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_release_check_test.dart: tag parsing and comparison newer means a strictly larger build number
-00:01 +10: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_release_check_test.dart: checker requests the releases API and skips drafts
-00:01 +11: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_release_check_test.dart: checker chooses the highest valid build from unordered entries
-00:01 +12: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_release_check_test.dart: unversioned and malformed entries do not hide a valid update
-00:01 +13: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_release_check_test.dart: checker network wait is bounded even when the adapter hangs
-00:01 +14: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_release_check_test.dart: a release URL that is not GitHub over https falls back
-00:01 +15: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_release_check_test.dart: a newer release shows one notice whose View action launches
-00:02 +16: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_release_check_test.dart: production View action uses the external-link confirmation
-00:02 +17: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_release_check_test.dart: a missing messenger does not consume the only notice
-00:02 +18: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_release_check_test.dart: throttle keeps rapid resumes to one check
-00:02 +19: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_release_check_test.dart: non-desktop platforms never check
-00:02 +20: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_scrollbar_test.dart
-00:03 +20: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_scrollbar_test.dart: a controller-owning list gets a pinned, single scrollbar
-00:03 +21: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_scrollbar_test.dart: android gets no desktop scrollbar
-00:04 +22: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_scrollbar_test.dart: the behaviour pins a thumb wherever a controller exists
-00:04 +23: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_scrollbar_test.dart: a controllerless list still gets Material's fading thumb
-00:04 +24: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_scrollbar_test.dart: the shell destinations all scroll with a pinned thumb
-00:04 +25: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_selection_test.dart
-00:05 +25: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_selection_test.dart: the transcript is selectable and Ctrl+C copies it
-00:06 +26: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_selection_test.dart: android keeps the transcript non-selectable
-00:06 +27: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_shortcuts_test.dart
-00:07 +27: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_shortcuts_test.dart: desktop the binding table carries no plain-letter accelerator
-00:07 +28: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_shortcuts_test.dart: desktop Ctrl+K opens the command launcher and Enter runs a command
-00:07 +29: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_shortcuts_test.dart: desktop Ctrl+N asks the shell for a new session
-00:07 +30: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_shortcuts_test.dart: desktop Ctrl+N inside the composer still reaches the shell
-00:07 +31: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_shortcuts_test.dart: desktop Ctrl+, opens settings
-00:07 +32: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_shortcuts_test.dart: desktop Ctrl+/ lists every shortcut
-00:08 +33: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_shortcuts_test.dart: desktop Ctrl+W closes the current route
-00:08 +34: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_shortcuts_test.dart: desktop Ctrl+W honours a PopScope veto
-00:08 +35: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_shortcuts_test.dart: desktop Ctrl+1..4 switch the shell destinations
-00:08 +36: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_shortcuts_test.dart: desktop Ctrl+1..4 and Ctrl+` return to the shell from a pushed route
-00:09 +37: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_shortcuts_test.dart: desktop Ctrl+F focuses the Files find field, and only there
-00:09 +38: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_shortcuts_test.dart: desktop Escape already closes a modal sheet
-00:09 +39: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_shortcuts_test.dart: android no shortcut layer is installed
-00:09 +40: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_shortcuts_test.dart: android the More menu hides the shortcuts entry
-00:09 +41: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_icon_test.dart
-00:10 +41: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_icon_test.dart: the declared window icon exists on disk
-00:10 +42: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_icon_test.dart: the window icon is bundled, and the master is not
-00:10 +43: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_icon_test.dart: the icon master is kept beside the bundled variant
-00:10 +44: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart
-00:10 +44: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: DesktopWindowState serialization round-trips through the encoded string
-00:10 +45: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: DesktopWindowState serialization rejects nothing, empty, and non-JSON
-00:10 +46: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: DesktopWindowState serialization rejects partial, non-finite and non-positive records
-00:10 +47: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: DesktopWindowState serialization treats a missing maximized flag as not maximized
-00:10 +48: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: displayForBounds returns null when the platform reported no displays
-00:10 +49: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: displayForBounds picks the display holding most of the window
-00:10 +50: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: displayForBounds falls back to the primary display when nothing overlaps
-00:10 +51: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: displayForBounds handles displays at negative coordinates
-00:10 +52: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: fitBoundsToDisplay leaves a window that already fits alone
-00:10 +53: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: fitBoundsToDisplay pulls a window that hangs off the right/bottom back inside
-00:10 +54: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: fitBoundsToDisplay never places the window above the work area top bar
-00:10 +55: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: fitBoundsToDisplay shrinks a window that is larger than the display
-00:10 +56: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: fitBoundsToDisplay enforces the minimum size
-00:10 +57: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: fitBoundsToDisplay a display smaller than the minimum still yields a legal rect
-00:10 +58: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: resolveStartupGeometry centers the default size when nothing was remembered
-00:10 +59: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: resolveStartupGeometry centers when the platform reports no displays
-00:10 +60: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: resolveStartupGeometry restores an exact rectangle that still fits
-00:10 +61: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: resolveStartupGeometry restores onto the secondary monitor it was saved on
-00:10 +62: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: resolveStartupGeometry re-homes to the primary display when the monitor is unplugged
-00:10 +63: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: resolveStartupGeometry re-homes a window saved at negative coordinates
-00:10 +64: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: resolveStartupGeometry a maximized window restores maximized, not tiny
-00:10 +65: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: resolveStartupGeometry a saved rectangle smaller than the floor grows to the floor
-00:10 +66: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: resolveStartupGeometry a saved rectangle wider than the new resolution shrinks
-00:10 +67: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: the minimum size fits inside the default size
-00:10 +68: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/development_service_gateway_test.dart
-00:11 +68: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/development_service_gateway_test.dart: v2 creates a location-scoped owned shell and retains only ownership metadata
-00:11 +69: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/development_services_screen_test.dart
-00:12 +69: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/development_services_screen_test.dart: register is explicit, persists, and does not start a process
-00:12 +70: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/development_services_screen_test.dart: start requires confirmation, logs are plain text, stop affects owned ID
-00:13 +71: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/development_services_screen_test.dart: unsupported profile retains save/copy/Visit without fake controls
-00:13 +72: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/development_services_screen_test.dart: scope change removes retained configuration/actions
-00:13 +73: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/development_services_screen_test.dart: Manage project opens the development services destination
-00:13 +74: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/development_services_screen_test.dart: location revision invalidates even when the path is unchanged
-00:13 +75: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/development_services_screen_test.dart: service layout and capture light
-00:14 +76: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/development_services_screen_test.dart: service layout and capture dark
-00:14 +77: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/development_services_screen_test.dart: service layout and capture large
-00:14 +78: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/development_services_test.dart
-00:15 +78: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/development_services_test.dart: registration survives restart and never starts a command
-00:15 +79: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/development_services_test.dart: start logs stop restart control only receipts from this feature
-00:15 +80: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/development_services_test.dart: lost create response stays unknown and recovers only its ownership nonce
-00:15 +81: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/development_services_test.dart: same ID with foreign ownership cannot authorize stop or logs
-00:15 +82: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/development_services_test.dart: failed refresh does not leave running status claimed
-00:15 +83: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/development_services_test.dart: scope change during resolution prevents POST and pending receipt
-00:15 +84: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/development_services_test.dart: scope change during stop revalidation prevents DELETE
-00:15 +85: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/development_services_test.dart: a late create response is saved for recovery after route disposal
-00:15 +86: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/development_services_test.dart: profile deletion blocks late receipt without recreating preferences
-00:15 +87: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/development_services_test.dart: log reading requests only a bounded byte tail and strips control sequences
-00:15 +88: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/development_services_test.dart: unsupported transport saves configuration without shell calls
-00:15 +89: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/development_services_test.dart: unknown runs need explicit local forgetting; removal never kills
-00:15 +90: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/development_services_test.dart: standard profile deletion sweep includes services but preserves peers
-00:15 +91: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/development_services_test.dart: corrupt saved configuration is not silently overwritten
-00:15 +92: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/diff_view_test.dart
-00:15 +92: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/diff_view_test.dart: patch view shows a sticky file header, gutter numbers and a count-only gap between hunks
-00:16 +93: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/diff_view_test.dart: before/after pairs collapse context and expand 20 lines per tap
-00:16 +94: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/diff_view_test.dart: code wraps below 600dp and scrolls sideways above it
-00:16 +95: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/diff_view_test.dart: change identity is visible and spoken without color
-00:16 +96: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/diff_view_test.dart: large text keeps header and wrapped changes readable
-00:16 +97: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/diff_view_test.dart: copy confirms the copied object and close returns to caller
-00:16 +98: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/diff_view_test.dart: review capture at normal and large text
-00:17 +99: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/draft_attachments_test.dart
-00:17 +99: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/draft_attachments_test.dart: restart restores exact Unicode content without payload in metadata
-00:17 +100: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/draft_attachments_test.dart: shared bytes remain until last reference and owners clean independently
-00:17 +101: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/draft_attachments_test.dart: corrupt bytes are reported and a subsequent save repairs them
-00:17 +102: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/draft_attachments_test.dart: project file references require matching location and are never read locally
-00:17 +103: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/draft_attachments_test.dart: invalid identities and temporary references cannot escape the vault
-00:17 +104: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/empty_transcript_suggestions_test.dart
-00:18 +104: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/empty_transcript_suggestions_test.dart: a selected project seeds the first suggestion chip
-00:18 +105: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/empty_transcript_suggestions_test.dart: trailing slashes and Windows separators still yield the name
-00:18 +106: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/empty_transcript_suggestions_test.dart: no project replaces the git-dependent chips
-00:18 +107: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/entrance_test.dart
-00:18 +107: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/entrance_test.dart: renders instantly with no wrapper when animations are off
-00:19 +108: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/entrance_test.dart: staggered entrance settles fully visible
-00:19 +109: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/entrance_test.dart: disposal mid-flight leaves no pending timers
-00:19 +110: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_client_test.dart
-00:19 +110: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_client_test.dart: official fixture discovery, send, same-task reply, query and cancel use pinned binding
-00:19 +111: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_client_test.dart: unsupported version card stays unavailable
-00:20 +112: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_client_test.dart: unsupported binding card stays unavailable
-00:20 +113: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_client_test.dart: unsupported origin card stays unavailable
-00:20 +114: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_client_test.dart: unsupported oauth card stays unavailable
-00:20 +115: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_client_test.dart: unsupported extension card stays unavailable
-00:20 +116: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_client_test.dart: unsupported skill card stays unavailable
-00:20 +117: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_client_test.dart: redirect does not forward credentials or follow another origin
-00:20 +118: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_client_test.dart: public discovery and unauthenticated operation omit bearer
-00:20 +119: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_client_test.dart: mismatched receipt is uncertain and never exposes remote error text
-00:20 +120: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_client_test.dart: oversized card fails closed
-00:20 +121: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_client_test.dart: terminal task cannot be continued and output is bounded
-00:20 +122: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_client_test.dart: unsafe addresses fail before network
-00:20 +123: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart
-00:20 +123: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: delivery marker is durable before send; continuation keeps task/context
-00:20 +124: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: lost submit response survives restart and is never resent
-00:20 +125: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: restart opens known task by query and terminal task never sends
-00:20 +126: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: uncertain reply remains blocked while same input request is reported
-00:20 +127: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: cancel checks fresh state; completion wins without cancel request
-00:20 +128: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: active cancellation result is never reported as canceled
-00:20 +129: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: credential change during preflight prevents a pending cancel
-00:20 +130: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: agent deletion removes credential and records; late response cannot recreate them
-00:20 +131: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: forget during request prevents late record resurrection
-00:20 +132: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: failed credential deletion leaves unavailable tombstone and retries cleanly
-00:20 +133: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: background pauses actions and late status cannot enable reply
-00:20 +134: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: two stale controllers cannot both claim the same send
-00:20 +135: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: mismatched context does not replace saved task
-00:20 +136: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: no bearer appears in persisted registry or task snapshots
-00:20 +137: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: full edited unsent draft survives store reconstruction and local deletion
-00:20 +138: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: draft writes cannot replace dispatched tasks or revive deleted tasks
-00:20 +139: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: oversized draft refuses persistence and leaves the previous draft intact
-00:20 +140: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: oversized local records are rejected without making existing data unreadable
-00:20 +141: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart
-00:21 +141: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: inspect save explicit task input result reopen and delete journey
-00:23 +142: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: uncertain delivery has no enabled send and restart does not resend
-00:23 +143: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: cancel keeps active state when agent does not confirm
-00:23 +144: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: failed draft save keeps review text and blocks Back and Send until retry
-00:23 +145: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: Back and Send wait for latest A after held B then A draft writes
-00:23 +146: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: capture external task input light
-00:23 +147: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: capture external task input dark
-00:23 +148: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: capture external task input large
-00:24 +149: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: capture external task result light
-00:24 +150: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: capture external task result dark
-00:24 +151: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: capture external task result large
-00:24 +152: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: capture external task uncertain light
-00:24 +153: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: capture external task uncertain dark
-00:24 +154: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: capture external task uncertain large
-00:24 +155: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: capture external task error light
-00:24 +156: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: capture external task error dark
-00:24 +157: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: capture external task error large
-00:24 +158: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: capture external task draft light
-00:24 +159: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: capture external task draft dark
-00:24 +160: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: capture external task draft large
-00:24 +161: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: capture inspected agent and saved tasks
-00:24 +162: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_link_test.dart
-00:25 +162: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_link_test.dart: safeExternalLinkUri accepts https and normalizes the scheme case
-00:25 +163: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_link_test.dart: safeExternalLinkUri accepts http so the caller can warn, not so it opens silently
-00:25 +164: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_link_test.dart: safeExternalLinkUri refuses every scheme a link label cannot describe
-00:25 +165: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_link_test.dart: safeExternalLinkUri refuses embedded credentials in any form
-00:25 +166: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_link_test.dart: safeExternalLinkUri refuses hostless, empty, and unparseable values
-00:25 +167: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_link_test.dart: safeExternalLinkUri refuses an overlong URL rather than passing it to the platform
-00:25 +168: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_link_test.dart: externalLinkHost names the port only when the URL does
-00:25 +169: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_link_test.dart: openExternalLink blocks a hostile scheme without asking the platform
-00:25 +170: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_link_test.dart: openExternalLink https still asks before leaving the app
-00:25 +171: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_link_test.dart: openExternalLink declining the confirmation opens nothing
-00:25 +172: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_link_test.dart: openExternalLink reports when no app can handle an allowed link
-00:25 +173: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/external_link_test.dart: openExternalLink reports a launcher failure instead of throwing
-00:25 +174: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/file_transport_test.dart
-00:26 +174: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/file_transport_test.dart: file surfaces use generated location-scoped contracts
-00:26 +175: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/file_transport_test.dart: successful loose file data remains compatible
-00:26 +176: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/file_transport_test.dart: file errors retain generated OpenCode details
-00:26 +177: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/files_screen_recovery_test.dart
-00:27 +177: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/files_screen_recovery_test.dart: retry stays in the requested folder and Back returns to root
-00:28 +178: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/files_screen_recovery_test.dart: empty folder refresh is actionable and keeps its location
-00:28 +179: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/files_screen_recovery_test.dart: late file read cannot publish after a transport switch
-00:28 +180: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/files_screen_recovery_test.dart: failed file read exposes retry and recovers
-00:28 +181: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/files_screen_recovery_test.dart: late attach read cannot cross a transport switch
-00:28 +182: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/files_screen_recovery_test.dart: late file status response cannot repopulate old scope
-00:28 +183: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/first_run_welcome_test.dart
-00:29 +183: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/first_run_welcome_test.dart: bare pasted addresses gain the right scheme
-00:29 +184: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/first_run_welcome_test.dart: first run shows the welcome paths instead of an empty list
-00:30 +185: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/first_run_welcome_test.dart: welcome routes reach the guide and Termux setup
-00:30 +186: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/first_run_welcome_test.dart: a saved profile keeps the ordinary server list
-00:30 +187: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/first_run_welcome_test.dart: editing inactive server names the save consequence
-00:31 +188: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/first_run_welcome_test.dart: editing active server names the save consequence
-00:31 +189: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/first_run_welcome_test.dart: welcome renders at 320dp with 2x text
-00:31 +190: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/first_run_welcome_test.dart: pasting a bare address into the editor fills the scheme
-00:31 +191: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/first_run_welcome_test.dart: test connection reports success with the server version
-00:31 +192: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/first_run_welcome_test.dart: test connection explains a refused connection
-00:31 +193: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/first_run_welcome_test.dart: timeout and refused verdicts point at the host setup guide
-00:31 +194: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/first_run_welcome_test.dart: a DNS failure verdict stays about the address, not the server
-00:32 +195: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/first_run_welcome_test.dart: an invalid url never reaches the probe
-00:32 +196: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart
-00:33 +196: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: renders header, origin line, apply bar, and locked keys
-00:33 +197: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: global forms are attributed to an MCP server
-00:33 +198: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: free string field prefills, shows counter, edits, submits
-00:33 +199: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: string with few options renders a radio card group
-00:33 +200: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: string with five or more options uses a dropdown menu
-00:34 +201: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: custom select reveals an Other text field
-00:34 +202: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: integer field filters to digits and validates the range
-00:34 +203: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: number field accepts decimals
-00:34 +204: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: boolean renders a switch seeded from default
-00:34 +205: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: multiselect chips enforce min/max items with a pick caption
-00:34 +206: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: multiselect with nine options renders a checkbox list
-00:34 +207: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: custom multiselect adds typed values as input chips
-00:34 +208: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: date field opens the date picker and submits an ISO date
-00:35 +209: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: external field renders an action card and never answers
-00:35 +210: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: external field refuses to launch javascript:alert(1)
-00:35 +211: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: external field refuses to launch file:///data/data/com.opencode.mobile/shared_prefs/prefs.xml
-00:35 +212: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: external field refuses to launch data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==
-00:35 +213: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: external field refuses to launch intent://scan/#Intent;scheme=zxing;end
-00:35 +214: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: external field refuses to launch content://com.android.providers.downloads/all_downloads/1
-00:35 +215: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: external field refuses to launch https://user:secret@example.com/oauth
-00:35 +216: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: external https field confirms with the real host first
-00:35 +217: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: when fields reveal, hide, retain drafts, and stay out of the payload
-00:35 +218: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: validation blocks submit and shows inline errors
-00:35 +219: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: submit failure surfaces the error banner and stays open
-00:35 +220: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: dismiss confirms before cancelling
-00:35 +221: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: presentation split on DECLARED field count four declared fields open as a modal bottom sheet
-00:35 +222: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: presentation split on DECLARED field count five declared fields open as a full-screen dialog
-00:35 +223: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: presentation split on DECLARED field count a long field description forces the full-screen dialog
-00:35 +224: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/glass_surface_test.dart
-00:36 +224: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/glass_surface_test.dart: high contrast uses opaque navigation without decorative depth
-00:37 +225: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/glass_surface_test.dart: accessible navigation uses opaque navigation without decorative depth
-00:37 +226: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/glass_surface_test.dart: reduced motion uses opaque navigation without decorative depth
-00:37 +227: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/glass_surface_test.dart: frosted material clips a single backdrop filter
-00:37 +228: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/glass_surface_test.dart: frosted foreground contrast opencode light
+00:00 +0: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_pointer_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_pointer_test.dart: a live file link takes the click cursor
+00:00 +1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_pointer_test.dart: android leaves the file link cursor alone
+00:00 +2: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_pointer_test.dart: an editable field still reports the text cursor
+00:00 +3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_pointer_test.dart: a ListTile row reports the click cursor and hovers
+00:00 +4: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_pointer_test.dart: the scroll wheel scrolls a list
+00:00 +5: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_pointer_test.dart: the Files split divider resizes and shows a resize cursor
+00:00 +6: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_pointer_test.dart: android keeps the plain Files hairline divider
+00:01 +7: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_pointer_test.dart: mouse drag selects text rather than scrolling the list
+00:01 +8: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_release_check_test.dart
+00:01 +8: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_release_check_test.dart: tag parsing and comparison extracts build numbers from release tags
+00:01 +9: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_release_check_test.dart: tag parsing and comparison newer means a strictly larger build number
+00:01 +10: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_release_check_test.dart: checker requests the releases API and skips drafts
+00:01 +11: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_release_check_test.dart: checker chooses the highest valid build from unordered entries
+00:01 +12: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_release_check_test.dart: unversioned and malformed entries do not hide a valid update
+00:01 +13: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_release_check_test.dart: checker network wait is bounded even when the adapter hangs
+00:01 +14: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_release_check_test.dart: a release URL that is not GitHub over https falls back
+00:01 +15: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_release_check_test.dart: a newer release shows one notice whose View action launches
+00:02 +16: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_release_check_test.dart: production View action uses the external-link confirmation
+00:02 +17: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_release_check_test.dart: a missing messenger does not consume the only notice
+00:02 +18: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_release_check_test.dart: throttle keeps rapid resumes to one check
+00:02 +19: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_release_check_test.dart: non-desktop platforms never check
+00:02 +20: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_scrollbar_test.dart
+00:03 +20: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_scrollbar_test.dart: a controller-owning list gets a pinned, single scrollbar
+00:03 +21: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_scrollbar_test.dart: android gets no desktop scrollbar
+00:04 +22: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_scrollbar_test.dart: the behaviour pins a thumb wherever a controller exists
+00:04 +23: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_scrollbar_test.dart: a controllerless list still gets Material's fading thumb
+00:04 +24: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_scrollbar_test.dart: the shell destinations all scroll with a pinned thumb
+00:04 +25: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_selection_test.dart
+00:05 +25: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_selection_test.dart: the transcript is selectable and Ctrl+C copies it
+00:06 +26: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_selection_test.dart: android keeps the transcript non-selectable
+00:06 +27: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_shortcuts_test.dart
+00:07 +27: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_shortcuts_test.dart: desktop the binding table carries no plain-letter accelerator
+00:07 +28: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_shortcuts_test.dart: desktop Ctrl+K opens the command launcher and Enter runs a command
+00:07 +29: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_shortcuts_test.dart: desktop Ctrl+N asks the shell for a new session
+00:07 +30: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_shortcuts_test.dart: desktop Ctrl+N inside the composer still reaches the shell
+00:07 +31: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_shortcuts_test.dart: desktop Ctrl+, opens settings
+00:07 +32: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_shortcuts_test.dart: desktop Ctrl+/ lists every shortcut
+00:08 +33: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_shortcuts_test.dart: desktop Ctrl+W closes the current route
+00:08 +34: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_shortcuts_test.dart: desktop Ctrl+W honours a PopScope veto
+00:08 +35: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_shortcuts_test.dart: desktop Ctrl+1..4 switch the shell destinations
+00:08 +36: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_shortcuts_test.dart: desktop Ctrl+1..4 and Ctrl+` return to the shell from a pushed route
+00:09 +37: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_shortcuts_test.dart: desktop Ctrl+F focuses the Files find field, and only there
+00:09 +38: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_shortcuts_test.dart: desktop Escape already closes a modal sheet
+00:09 +39: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_shortcuts_test.dart: android no shortcut layer is installed
+00:09 +40: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_shortcuts_test.dart: android the More menu hides the shortcuts entry
+00:09 +41: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_icon_test.dart
+00:10 +41: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_icon_test.dart: the declared window icon exists on disk
+00:10 +42: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_icon_test.dart: the window icon is bundled, and the master is not
+00:10 +43: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_icon_test.dart: the icon master is kept beside the bundled variant
+00:10 +44: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart
+00:10 +44: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: DesktopWindowState serialization round-trips through the encoded string
+00:10 +45: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: DesktopWindowState serialization rejects nothing, empty, and non-JSON
+00:10 +46: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: DesktopWindowState serialization rejects partial, non-finite and non-positive records
+00:10 +47: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: DesktopWindowState serialization treats a missing maximized flag as not maximized
+00:10 +48: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: displayForBounds returns null when the platform reported no displays
+00:10 +49: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: displayForBounds picks the display holding most of the window
+00:10 +50: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: displayForBounds falls back to the primary display when nothing overlaps
+00:10 +51: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: displayForBounds handles displays at negative coordinates
+00:10 +52: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: fitBoundsToDisplay leaves a window that already fits alone
+00:10 +53: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: fitBoundsToDisplay pulls a window that hangs off the right/bottom back inside
+00:10 +54: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: fitBoundsToDisplay never places the window above the work area top bar
+00:10 +55: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: fitBoundsToDisplay shrinks a window that is larger than the display
+00:10 +56: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: fitBoundsToDisplay enforces the minimum size
+00:10 +57: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: fitBoundsToDisplay a display smaller than the minimum still yields a legal rect
+00:10 +58: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: resolveStartupGeometry centers the default size when nothing was remembered
+00:10 +59: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: resolveStartupGeometry centers when the platform reports no displays
+00:10 +60: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: resolveStartupGeometry restores an exact rectangle that still fits
+00:10 +61: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: resolveStartupGeometry restores onto the secondary monitor it was saved on
+00:10 +62: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: resolveStartupGeometry re-homes to the primary display when the monitor is unplugged
+00:10 +63: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: resolveStartupGeometry re-homes a window saved at negative coordinates
+00:10 +64: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: resolveStartupGeometry a maximized window restores maximized, not tiny
+00:10 +65: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: resolveStartupGeometry a saved rectangle smaller than the floor grows to the floor
+00:10 +66: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: resolveStartupGeometry a saved rectangle wider than the new resolution shrinks
+00:10 +67: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_window_state_test.dart: the minimum size fits inside the default size
+00:10 +68: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/development_service_gateway_test.dart
+00:11 +68: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/development_service_gateway_test.dart: v2 creates a location-scoped owned shell and retains only ownership metadata
+00:11 +69: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/development_services_screen_test.dart
+00:12 +69: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/development_services_screen_test.dart: register is explicit, persists, and does not start a process
+00:12 +70: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/development_services_screen_test.dart: start requires confirmation, logs are plain text, stop affects owned ID
+00:13 +71: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/development_services_screen_test.dart: unsupported profile retains save/copy/Visit without fake controls
+00:13 +72: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/development_services_screen_test.dart: scope change removes retained configuration/actions
+00:13 +73: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/development_services_screen_test.dart: Manage project opens the development services destination
+00:13 +74: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/development_services_screen_test.dart: location revision invalidates even when the path is unchanged
+00:13 +75: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/development_services_screen_test.dart: service layout and capture light
+00:14 +76: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/development_services_screen_test.dart: service layout and capture dark
+00:14 +77: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/development_services_screen_test.dart: service layout and capture large
+00:14 +78: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/development_services_test.dart
+00:15 +78: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/development_services_test.dart: registration survives restart and never starts a command
+00:15 +79: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/development_services_test.dart: start logs stop restart control only receipts from this feature
+00:15 +80: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/development_services_test.dart: lost create response stays unknown and recovers only its ownership nonce
+00:15 +81: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/development_services_test.dart: same ID with foreign ownership cannot authorize stop or logs
+00:15 +82: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/development_services_test.dart: failed refresh does not leave running status claimed
+00:15 +83: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/development_services_test.dart: scope change during resolution prevents POST and pending receipt
+00:15 +84: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/development_services_test.dart: scope change during stop revalidation prevents DELETE
+00:15 +85: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/development_services_test.dart: a late create response is saved for recovery after route disposal
+00:15 +86: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/development_services_test.dart: profile deletion blocks late receipt without recreating preferences
+00:15 +87: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/development_services_test.dart: log reading requests only a bounded byte tail and strips control sequences
+00:15 +88: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/development_services_test.dart: unsupported transport saves configuration without shell calls
+00:15 +89: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/development_services_test.dart: unknown runs need explicit local forgetting; removal never kills
+00:15 +90: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/development_services_test.dart: standard profile deletion sweep includes services but preserves peers
+00:15 +91: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/development_services_test.dart: corrupt saved configuration is not silently overwritten
+00:15 +92: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/diff_view_test.dart
+00:15 +92: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/diff_view_test.dart: patch view shows a sticky file header, gutter numbers and a count-only gap between hunks
+00:16 +93: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/diff_view_test.dart: before/after pairs collapse context and expand 20 lines per tap
+00:16 +94: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/diff_view_test.dart: code wraps below 600dp and scrolls sideways above it
+00:16 +95: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/diff_view_test.dart: change identity is visible and spoken without color
+00:16 +96: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/diff_view_test.dart: large text keeps header and wrapped changes readable
+00:16 +97: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/diff_view_test.dart: copy confirms the copied object and close returns to caller
+00:16 +98: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/diff_view_test.dart: review capture at normal and large text
+00:17 +99: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/draft_attachments_test.dart
+00:17 +99: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/draft_attachments_test.dart: restart restores exact Unicode content without payload in metadata
+00:17 +100: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/draft_attachments_test.dart: shared bytes remain until last reference and owners clean independently
+00:17 +101: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/draft_attachments_test.dart: corrupt bytes are reported and a subsequent save repairs them
+00:17 +102: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/draft_attachments_test.dart: project file references require matching location and are never read locally
+00:17 +103: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/draft_attachments_test.dart: invalid identities and temporary references cannot escape the vault
+00:17 +104: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/empty_transcript_suggestions_test.dart
+00:18 +104: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/empty_transcript_suggestions_test.dart: a selected project seeds the first suggestion chip
+00:18 +105: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/empty_transcript_suggestions_test.dart: trailing slashes and Windows separators still yield the name
+00:18 +106: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/empty_transcript_suggestions_test.dart: no project replaces the git-dependent chips
+00:18 +107: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/entrance_test.dart
+00:18 +107: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/entrance_test.dart: renders instantly with no wrapper when animations are off
+00:19 +108: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/entrance_test.dart: staggered entrance settles fully visible
+00:19 +109: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/entrance_test.dart: disposal mid-flight leaves no pending timers
+00:19 +110: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_client_test.dart
+00:19 +110: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_client_test.dart: official fixture discovery, send, same-task reply, query and cancel use pinned binding
+00:19 +111: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_client_test.dart: unsupported version card stays unavailable
+00:20 +112: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_client_test.dart: unsupported binding card stays unavailable
+00:20 +113: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_client_test.dart: unsupported origin card stays unavailable
+00:20 +114: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_client_test.dart: unsupported oauth card stays unavailable
+00:20 +115: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_client_test.dart: unsupported extension card stays unavailable
+00:20 +116: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_client_test.dart: unsupported skill card stays unavailable
+00:20 +117: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_client_test.dart: redirect does not forward credentials or follow another origin
+00:20 +118: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_client_test.dart: public discovery and unauthenticated operation omit bearer
+00:20 +119: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_client_test.dart: mismatched receipt is uncertain and never exposes remote error text
+00:20 +120: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_client_test.dart: oversized card fails closed
+00:20 +121: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_client_test.dart: terminal task cannot be continued and output is bounded
+00:20 +122: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_client_test.dart: unsafe addresses fail before network
+00:20 +123: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart
+00:20 +123: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: delivery marker is durable before send; continuation keeps task/context
+00:20 +124: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: lost submit response survives restart and is never resent
+00:20 +125: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: restart opens known task by query and terminal task never sends
+00:20 +126: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: uncertain reply remains blocked while same input request is reported
+00:20 +127: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: cancel checks fresh state; completion wins without cancel request
+00:20 +128: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: active cancellation result is never reported as canceled
+00:20 +129: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: credential change during preflight prevents a pending cancel
+00:20 +130: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: agent deletion removes credential and records; late response cannot recreate them
+00:20 +131: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: forget during request prevents late record resurrection
+00:20 +132: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: failed credential deletion leaves unavailable tombstone and retries cleanly
+00:20 +133: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: background pauses actions and late status cannot enable reply
+00:20 +134: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: two stale controllers cannot both claim the same send
+00:20 +135: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: mismatched context does not replace saved task
+00:20 +136: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: no bearer appears in persisted registry or task snapshots
+00:20 +137: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: full edited unsent draft survives store reconstruction and local deletion
+00:20 +138: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: draft writes cannot replace dispatched tasks or revive deleted tasks
+00:20 +139: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: oversized draft refuses persistence and leaves the previous draft intact
+00:20 +140: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_state_test.dart: oversized local records are rejected without making existing data unreadable
+00:20 +141: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart
+00:21 +141: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: inspect save explicit task input result reopen and delete journey
+00:23 +142: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: uncertain delivery has no enabled send and restart does not resend
+00:23 +143: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: cancel keeps active state when agent does not confirm
+00:23 +144: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: failed draft save keeps review text and blocks Back and Send until retry
+00:23 +145: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: Back and Send wait for latest A after held B then A draft writes
+00:23 +146: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: capture external task input light
+00:23 +147: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: capture external task input dark
+00:23 +148: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: capture external task input large
+00:24 +149: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: capture external task result light
+00:24 +150: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: capture external task result dark
+00:24 +151: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: capture external task result large
+00:24 +152: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: capture external task uncertain light
+00:24 +153: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: capture external task uncertain dark
+00:24 +154: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: capture external task uncertain large
+00:24 +155: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: capture external task error light
+00:24 +156: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: capture external task error dark
+00:24 +157: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: capture external task error large
+00:24 +158: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: capture external task draft light
+00:24 +159: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: capture external task draft dark
+00:24 +160: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: capture external task draft large
+00:24 +161: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_agent_widget_test.dart: capture inspected agent and saved tasks
+00:24 +162: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_link_test.dart
+00:25 +162: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_link_test.dart: safeExternalLinkUri accepts https and normalizes the scheme case
+00:25 +163: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_link_test.dart: safeExternalLinkUri accepts http so the caller can warn, not so it opens silently
+00:25 +164: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_link_test.dart: safeExternalLinkUri refuses every scheme a link label cannot describe
+00:25 +165: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_link_test.dart: safeExternalLinkUri refuses embedded credentials in any form
+00:25 +166: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_link_test.dart: safeExternalLinkUri refuses hostless, empty, and unparseable values
+00:25 +167: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_link_test.dart: safeExternalLinkUri refuses an overlong URL rather than passing it to the platform
+00:25 +168: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_link_test.dart: externalLinkHost names the port only when the URL does
+00:25 +169: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_link_test.dart: openExternalLink blocks a hostile scheme without asking the platform
+00:25 +170: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_link_test.dart: openExternalLink https still asks before leaving the app
+00:25 +171: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_link_test.dart: openExternalLink declining the confirmation opens nothing
+00:25 +172: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_link_test.dart: openExternalLink reports when no app can handle an allowed link
+00:25 +173: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/external_link_test.dart: openExternalLink reports a launcher failure instead of throwing
+00:25 +174: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/file_transport_test.dart
+00:26 +174: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/file_transport_test.dart: file surfaces use generated location-scoped contracts
+00:26 +175: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/file_transport_test.dart: successful loose file data remains compatible
+00:26 +176: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/file_transport_test.dart: file errors retain generated OpenCode details
+00:26 +177: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/files_screen_recovery_test.dart
+00:27 +177: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/files_screen_recovery_test.dart: retry stays in the requested folder and Back returns to root
+00:28 +178: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/files_screen_recovery_test.dart: empty folder refresh is actionable and keeps its location
+00:28 +179: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/files_screen_recovery_test.dart: late file read cannot publish after a transport switch
+00:28 +180: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/files_screen_recovery_test.dart: failed file read exposes retry and recovers
+00:28 +181: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/files_screen_recovery_test.dart: late attach read cannot cross a transport switch
+00:28 +182: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/files_screen_recovery_test.dart: late file status response cannot repopulate old scope
+00:28 +183: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/first_run_welcome_test.dart
+00:29 +183: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/first_run_welcome_test.dart: bare pasted addresses gain the right scheme
+00:29 +184: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/first_run_welcome_test.dart: first run shows the welcome paths instead of an empty list
+00:30 +185: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/first_run_welcome_test.dart: welcome routes reach the guide and Termux setup
+00:30 +186: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/first_run_welcome_test.dart: a saved profile keeps the ordinary server list
+00:30 +187: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/first_run_welcome_test.dart: editing inactive server names the save consequence
+00:31 +188: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/first_run_welcome_test.dart: editing active server names the save consequence
+00:31 +189: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/first_run_welcome_test.dart: welcome renders at 320dp with 2x text
+00:31 +190: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/first_run_welcome_test.dart: pasting a bare address into the editor fills the scheme
+00:31 +191: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/first_run_welcome_test.dart: test connection reports success with the server version
+00:31 +192: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/first_run_welcome_test.dart: test connection explains a refused connection
+00:31 +193: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/first_run_welcome_test.dart: timeout and refused verdicts point at the host setup guide
+00:31 +194: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/first_run_welcome_test.dart: a DNS failure verdict stays about the address, not the server
+00:32 +195: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/first_run_welcome_test.dart: an invalid url never reaches the probe
+00:32 +196: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart
+00:33 +196: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: renders header, origin line, apply bar, and locked keys
+00:33 +197: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: global forms are attributed to an MCP server
+00:33 +198: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: free string field prefills, shows counter, edits, submits
+00:33 +199: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: string with few options renders a radio card group
+00:33 +200: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: string with five or more options uses a dropdown menu
+00:34 +201: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: custom select reveals an Other text field
+00:34 +202: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: integer field filters to digits and validates the range
+00:34 +203: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: number field accepts decimals
+00:34 +204: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: boolean renders a switch seeded from default
+00:34 +205: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: multiselect chips enforce min/max items with a pick caption
+00:34 +206: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: multiselect with nine options renders a checkbox list
+00:34 +207: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: custom multiselect adds typed values as input chips
+00:34 +208: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: date field opens the date picker and submits an ISO date
+00:35 +209: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: external field renders an action card and never answers
+00:35 +210: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: external field refuses to launch javascript:alert(1)
+00:35 +211: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: external field refuses to launch file:///data/data/com.opencode.mobile/shared_prefs/prefs.xml
+00:35 +212: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: external field refuses to launch data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==
+00:35 +213: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: external field refuses to launch intent://scan/#Intent;scheme=zxing;end
+00:35 +214: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: external field refuses to launch content://com.android.providers.downloads/all_downloads/1
+00:35 +215: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: external field refuses to launch https://user:secret@example.com/oauth
+00:35 +216: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: external https field confirms with the real host first
+00:35 +217: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: when fields reveal, hide, retain drafts, and stay out of the payload
+00:35 +218: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: validation blocks submit and shows inline errors
+00:35 +219: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: submit failure surfaces the error banner and stays open
+00:35 +220: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: dismiss confirms before cancelling
+00:35 +221: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: presentation split on DECLARED field count four declared fields open as a modal bottom sheet
+00:35 +222: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: presentation split on DECLARED field count five declared fields open as a full-screen dialog
+00:35 +223: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/form_renderer_test.dart: presentation split on DECLARED field count a long field description forces the full-screen dialog
+00:35 +224: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/glass_surface_test.dart
+00:36 +224: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/glass_surface_test.dart: high contrast uses opaque navigation without decorative depth
+00:37 +225: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/glass_surface_test.dart: accessible navigation uses opaque navigation without decorative depth
+00:37 +226: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/glass_surface_test.dart: reduced motion uses opaque navigation without decorative depth
+00:37 +227: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/glass_surface_test.dart: frosted material clips a single backdrop filter
+00:37 +228: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/glass_surface_test.dart: frosted foreground contrast opencode light
 Glass contrast opencode light: 7.92
-00:37 +229: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/glass_surface_test.dart: frosted foreground contrast opencode dark
+00:37 +229: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/glass_surface_test.dart: frosted foreground contrast opencode dark
 Glass contrast opencode dark: 5.96
-00:37 +230: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/glass_surface_test.dart: frosted foreground contrast catppuccin light
+00:37 +230: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/glass_surface_test.dart: frosted foreground contrast catppuccin light
 Glass contrast catppuccin light: 7.35
-00:37 +231: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/glass_surface_test.dart: frosted foreground contrast catppuccin dark
+00:37 +231: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/glass_surface_test.dart: frosted foreground contrast catppuccin dark
 Glass contrast catppuccin dark: 5.46
-00:37 +232: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/glass_surface_test.dart: frosted foreground contrast gruvbox light
+00:37 +232: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/glass_surface_test.dart: frosted foreground contrast gruvbox light
 Glass contrast gruvbox light: 7.06
-00:37 +233: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/glass_surface_test.dart: frosted foreground contrast gruvbox dark
+00:37 +233: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/glass_surface_test.dart: frosted foreground contrast gruvbox dark
 Glass contrast gruvbox dark: 5.72
-00:37 +234: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/glass_surface_test.dart: frosted foreground contrast solarized light
+00:37 +234: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/glass_surface_test.dart: frosted foreground contrast solarized light
 Glass contrast solarized light: 7.45
-00:37 +235: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/glass_surface_test.dart: frosted foreground contrast solarized dark
+00:37 +235: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/glass_surface_test.dart: frosted foreground contrast solarized dark
 Glass contrast solarized dark: 5.83
-00:37 +236: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/glass_surface_test.dart: error snackbar has readable light text
-00:37 +237: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/glass_surface_test.dart: error snackbar has readable dark text
-00:37 +238: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart
-00:38 +238: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: results are grouped by working directory, newest first
-00:39 +239: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: folders with the same name are told apart by their parent
-00:39 +240: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: empty and duplicate pages keep their continuation reachable
-00:39 +241: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: failed next page preserves rows and retries the same cursor
-00:39 +242: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: failed refresh preserves rows and offers a refresh retry
-00:39 +243: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: editing query invalidates a pending page before debounce
-00:39 +244: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: profile switch retires a delayed page from the old scope
-00:39 +245: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: repeated server cursor offers a restart instead of looping
-00:40 +246: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: finder searches server titles and includes archived on demand
-00:40 +247: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: accessible clear search resets the query and reloads all sessions
-00:40 +248: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: finder paginates with the exact opaque server token
-00:40 +249: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: global project rows keep a useful label and tap semantics
-00:40 +250: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: cross-project result switches location before opening chat
-00:40 +251: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: retained search refreshes through the replacement repository
-00:40 +252: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: retained search results stay openable after reconnecting
-00:40 +253: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: repository replacement retires a pending page and keeps retry
-00:40 +254: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: unavailable finder stays scoped on a compact large-text phone
-00:40 +255: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: steal affordance appears only for sessions elsewhere
-00:41 +256: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: stealing confirms, calls the repository, and opens the chat
-00:41 +257: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: placeholder titles stay readable in the list and confirmation
-00:41 +258: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: a failed steal reports inline and keeps the list
-00:41 +259: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: steal flow fits a 320dp phone at 2x text
-00:41 +260: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/goldens/theme_gallery_golden_test.dart
-00:42 +260: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/goldens/theme_gallery_golden_test.dart: (setUpAll)
-00:42 +260: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/goldens/theme_gallery_golden_test.dart: component gallery · opencode · dark
-00:43 +261: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/goldens/theme_gallery_golden_test.dart: component gallery · opencode · light
-00:43 +262: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/goldens/theme_gallery_golden_test.dart: component gallery · catppuccin · dark
-00:43 +263: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/goldens/theme_gallery_golden_test.dart: component gallery · catppuccin · light
-00:43 +264: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/goldens/theme_gallery_golden_test.dart: component gallery · gruvbox · dark
-00:43 +265: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/goldens/theme_gallery_golden_test.dart: component gallery · gruvbox · light
-00:43 +266: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/goldens/theme_gallery_golden_test.dart: component gallery · solarized · dark
-00:43 +267: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/goldens/theme_gallery_golden_test.dart: component gallery · solarized · light
-00:43 +268: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/goldens/theme_gallery_golden_test.dart: (tearDownAll)
+00:37 +236: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/glass_surface_test.dart: error snackbar has readable light text
+00:37 +237: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/glass_surface_test.dart: error snackbar has readable dark text
+00:37 +238: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart
+00:38 +238: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: results are grouped by working directory, newest first
+00:39 +239: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: folders with the same name are told apart by their parent
+00:39 +240: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: empty and duplicate pages keep their continuation reachable
+00:39 +241: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: failed next page preserves rows and retries the same cursor
+00:39 +242: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: failed refresh preserves rows and offers a refresh retry
+00:39 +243: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: editing query invalidates a pending page before debounce
+00:39 +244: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: profile switch retires a delayed page from the old scope
+00:39 +245: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: repeated server cursor offers a restart instead of looping
+00:40 +246: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: finder searches server titles and includes archived on demand
+00:40 +247: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: accessible clear search resets the query and reloads all sessions
+00:40 +248: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: finder paginates with the exact opaque server token
+00:40 +249: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: global project rows keep a useful label and tap semantics
+00:40 +250: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: cross-project result switches location before opening chat
+00:40 +251: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: retained search refreshes through the replacement repository
+00:40 +252: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: retained search results stay openable after reconnecting
+00:40 +253: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: repository replacement retires a pending page and keeps retry
+00:40 +254: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: unavailable finder stays scoped on a compact large-text phone
+00:40 +255: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: steal affordance appears only for sessions elsewhere
+00:41 +256: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: stealing confirms, calls the repository, and opens the chat
+00:41 +257: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: placeholder titles stay readable in the list and confirmation
+00:41 +258: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: a failed steal reports inline and keeps the list
+00:41 +259: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/global_sessions_screen_test.dart: steal flow fits a 320dp phone at 2x text
+00:41 +260: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/goldens/theme_gallery_golden_test.dart
+00:42 +260: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/goldens/theme_gallery_golden_test.dart: (setUpAll)
+00:42 +260: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/goldens/theme_gallery_golden_test.dart: component gallery · opencode · dark
+00:43 +261: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/goldens/theme_gallery_golden_test.dart: component gallery · opencode · light
+00:43 +262: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/goldens/theme_gallery_golden_test.dart: component gallery · catppuccin · dark
+00:43 +263: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/goldens/theme_gallery_golden_test.dart: component gallery · catppuccin · light
+00:43 +264: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/goldens/theme_gallery_golden_test.dart: component gallery · gruvbox · dark
+00:43 +265: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/goldens/theme_gallery_golden_test.dart: component gallery · gruvbox · light
+00:43 +266: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/goldens/theme_gallery_golden_test.dart: component gallery · solarized · dark
+00:43 +267: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/goldens/theme_gallery_golden_test.dart: component gallery · solarized · light
+00:43 +268: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/goldens/theme_gallery_golden_test.dart: (tearDownAll)
 00:43 +268: All tests passed!

@@ -21,7 +21,7 @@ from tool.qa.bd9_normal_restore import prepare_restore
 
 RUNNER_NAME = shared.PACKAGE + '.Bb8DeviceSmoke'
 RUNNER = shared.PACKAGE + '.test/' + RUNNER_NAME
-NORMAL_APK = Path('/home/eslam/Storage/tmp/oc-apk-share/oc-2196.apk')
+NORMAL_APK = Path(os.path.expanduser('~/Storage/tmp/oc-apk-share/oc-2196.apk'))
 DEFAULT_PROFILE_ID = '1790839392073695'
 PROFILE_PATTERN = r'[A-Za-z0-9_-]{1,80}'
 OWNER_PREFIX = 'flutter.oc.phoneAgentOwner.'
@@ -143,7 +143,7 @@ def run_device(args):
         stage = 'normal_apk_verification'
         restore = prepare_restore(NORMAL_APK, args.expected_signer,
                                   args.output / 'normal-restore.json')
-        lock = Path(os.environ.get('OC_EMULATOR_LOCK', '/home/eslam/Storage/tmp/oc-emulator.lock'))
+        lock = Path(os.environ.get('OC_EMULATOR_LOCK', os.path.expanduser('~/Storage/tmp/oc-emulator.lock')))
         lock.parent.mkdir(parents=True, exist_ok=True)
         with lock.open('a') as handle:
             fcntl.flock(handle, fcntl.LOCK_EX)

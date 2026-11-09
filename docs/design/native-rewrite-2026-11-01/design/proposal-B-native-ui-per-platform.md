@@ -12,10 +12,10 @@ The UI is written in each platform's own toolkit:
 - **Linux desktop, later:** Compose for Desktop. It reuses the Android UI code, because Jetpack Compose and Compose for
   Desktop share the same API and package names.
 
-**Inputs.** The 11 area maps in `/home/eslam/Storage/Code/wt/native-plan/map/`, the 9 research files in
-`/home/eslam/Storage/Code/wt/native-plan/research/`, the behaviour catalog in
-`/home/eslam/Storage/Code/wt/native-plan/catalog/` (1,544 behaviours from the 6,663 logic tests), the demo in
-`/home/eslam/Storage/Code/kmp-demo`, and the owner's memory files. Version facts come from the research files, which
+**Inputs.** The 11 area maps in `/home/owner/Storage/Code/wt/native-plan/map/`, the 9 research files in
+`/home/owner/Storage/Code/wt/native-plan/research/`, the behaviour catalog in
+`/home/owner/Storage/Code/wt/native-plan/catalog/` (1,544 behaviours from the 6,663 logic tests), the demo in
+`/home/owner/Storage/Code/kmp-demo`, and the owner's memory files. Version facts come from the research files, which
 checked them on 2026-11-01. I added a few web checks (§23).
 
 Labels, as in the research files:
@@ -1145,7 +1145,7 @@ OpenCode pin, notification languages.
   - `research/genui.md` §0;
   - `research/testing-perf.md` §0, §2, §4, §5, §12.
 - Catalog: `catalog/BEHAVIORS.md` (counts per area and level).
-- Demo: `/home/eslam/Storage/Code/kmp-demo` (module layout).
+- Demo: `/home/owner/Storage/Code/kmp-demo` (module layout).
 - Owner memory files:
   - `dev-freeze-native-rewrite-2026-11-01`, `android-native-feel`, `no-glass-rule`;
   - `codex-backend-claude-frontend`, `subagent-model-choice`, `pc-capacity-ceiling`, `quiet-hours-vps-only`;

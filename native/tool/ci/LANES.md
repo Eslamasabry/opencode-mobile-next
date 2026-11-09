@@ -34,7 +34,7 @@ everything once. There are no per-branch full test waits and no merge waves.
    `git fetch mobile-next && git merge mobile-next/native/next && git push mobile-next HEAD:native/next`.
    A rejected push means someone landed first: merge again and retry. Use a commit subject whose scope is your module
    (`fix(feature-chats): ...`, `feat(engine-composer): ...`), so a red run is traceable to the module's owner.
-3. Do nothing else. The batcher (`/home/eslam/Storage2/tools/next-batcher.sh`, systemd user timer, every 2 minutes) sees the new
+3. Do nothing else. The batcher (`/home/owner/Storage2/tools/next-batcher.sh`, systemd user timer, every 2 minutes) sees the new
    tip, and when no `native-ci` run on `native/next` is in progress dispatches ONE fast-lane run
    (`-f lane=fast -f base=<last green native/next sha>`), so the fast lane tests every module changed since the last green run,
    and the same run builds the preview APK and uploads `native-next-apk`. Everything that landed meanwhile is tested together once.
@@ -46,8 +46,8 @@ everything once. There are no per-branch full test waits and no merge waves.
    `skipped: red` with the failing modules and a desktop notification; the phone keeps the last good build. A green run
    is verified (signer 12de0107, package `io.github.eslamasabry.opencode_mobile.native`), installed with `adb install -r`
    unless the native app is in the foreground (it retries every minute), copied to
-   `/home/eslam/Storage/tmp/oc-apk-share/native-next-latest.apk` (http://100.126.15.6:8765/native-next-latest.apk), and logged
-   in `/home/eslam/Storage2/tools/phone-sync.log`.
+   `/home/owner/Storage/tmp/oc-apk-share/native-next-latest.apk` (http://<tailnet-host>:8765/native-next-latest.apk), and logged
+   in `/home/owner/Storage2/tools/phone-sync.log`.
 
 Rules: merge and push; never force-push `native/next`. Every commit carries `[skip ci]` (GitHub then suppresses push triggers,
 which is why the batcher dispatches). versionCode stays 10010 (`native/version.properties`); equal codes install with `-r`.

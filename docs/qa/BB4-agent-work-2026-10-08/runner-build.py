@@ -1,6 +1,6 @@
 import os,subprocess,time,threading,json,uuid,hashlib,shutil,signal
 from pathlib import Path
-ROOT=Path('/home/eslam/Storage/Code/oc_app-sol-bb');OUT=ROOT/'docs/qa/BB4-agent-work-2026-10-08'; marker='bb4-runner-'+uuid.uuid4().hex
+ROOT=Path('/home/owner/Storage/Code/oc_app-sol-bb');OUT=ROOT/'docs/qa/BB4-agent-work-2026-10-08'; marker='bb4-runner-'+uuid.uuid4().hex
 owned={};guard=threading.Lock();done=threading.Event()
 def ticks(pid):
  try:
@@ -19,9 +19,9 @@ def discover():
     with guard:owned[pid]={'pid':pid,'startTicks':start,'gradleDaemon':daemon}
    except (OSError,ValueError):continue
   done.wait(.6)
-env=os.environ.copy();env.update(JAVA_HOME='/home/eslam/Storage/tmp/codex-audit3-temurin17/jdk-17.0.20.1+1',GRADLE_OPTS='-Dorg.gradle.jvmargs="-Xmx1g -XX:MaxMetaspaceSize=512m" -Dorg.gradle.workers.max=1',OC_BB3_BUILD_OWNER=marker)
-flutter='/home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter'
-cmd=[str(ROOT/'tool/qa/machine_lock.sh'),'build','--','/home/eslam/.gradle/wrapper/dists/gradle-9.5.0-all/aca6g93cdtcf0oapcfka748qh/gradle-9.5.0/bin/gradle','-p','android','--no-daemon','--max-workers=1','-Dorg.gradle.jvmargs=-Xmx1g -XX:MaxMetaspaceSize=512m','-Pkotlin.compiler.execution.strategy=in-process','-PocBuiltinRuntimeQa=true','-PocStableEngineQa=true','-Ptarget-platform=android-x64','-Pflutter.versionCode=2214',':app:assembleReleaseAndroidTest']
+env=os.environ.copy();env.update(JAVA_HOME='/home/owner/Storage/tmp/codex-audit3-temurin17/jdk-17.0.20.1+1',GRADLE_OPTS='-Dorg.gradle.jvmargs="-Xmx1g -XX:MaxMetaspaceSize=512m" -Dorg.gradle.workers.max=1',OC_BB3_BUILD_OWNER=marker)
+flutter='/home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter'
+cmd=[str(ROOT/'tool/qa/machine_lock.sh'),'build','--','/home/owner/.gradle/wrapper/dists/gradle-9.5.0-all/aca6g93cdtcf0oapcfka748qh/gradle-9.5.0/bin/gradle','-p','android','--no-daemon','--max-workers=1','-Dorg.gradle.jvmargs=-Xmx1g -XX:MaxMetaspaceSize=512m','-Pkotlin.compiler.execution.strategy=in-process','-PocBuiltinRuntimeQa=true','-PocStableEngineQa=true','-Ptarget-platform=android-x64','-Pflutter.versionCode=2214',':app:assembleReleaseAndroidTest']
 oldTarget=hashlib.sha256((ROOT/'build/app/outputs/flutter-apk/app-release.apk').read_bytes()).hexdigest()
 watch=threading.Thread(target=discover,daemon=True);watch.start();before=time.monotonic()
 try:
@@ -43,10 +43,10 @@ try:
  if code==0:
   digest=hashlib.sha256(target.read_bytes()).hexdigest()
   if duplicate.is_file() and hashlib.sha256(duplicate.read_bytes()).hexdigest()==digest:duplicate.unlink()
-  signer=subprocess.run(['/home/eslam/Android/Sdk/build-tools/36.0.0/apksigner','verify','--print-certs',str(target)],capture_output=True,text=True,check=True)
+  signer=subprocess.run(['/home/owner/Android/Sdk/build-tools/36.0.0/apksigner','verify','--print-certs',str(target)],capture_output=True,text=True,check=True)
   import re
   certs=re.findall(r'Signer #\d+ certificate SHA-256 digest: ([a-f0-9]+)',signer.stdout);assert certs==['1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c']
-  aapt=subprocess.run(['/home/eslam/Android/Sdk/build-tools/36.0.0/aapt','dump','badging',str(target)],capture_output=True,text=True,check=True);assert "package:" in aapt.stdout
+  aapt=subprocess.run(['/home/owner/Android/Sdk/build-tools/36.0.0/aapt','dump','badging',str(target)],capture_output=True,text=True,check=True);assert "package:" in aapt.stdout
   assert hashlib.sha256((ROOT/'build/app/outputs/flutter-apk/app-release.apk').read_bytes()).hexdigest()==oldTarget
   artifact={'sha256':digest,'versionCode':2214,'signer':certs[0],'elapsedSeconds':round(time.monotonic()-before,1),'bytes':target.stat().st_size};(OUT/'runner-work-artifact.json').write_text(json.dumps(artifact,indent=2)+'\n');print(json.dumps(artifact),flush=True)
  with guard:values=list(owned.values())

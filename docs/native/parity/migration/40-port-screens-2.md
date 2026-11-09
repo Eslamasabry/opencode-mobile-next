@@ -80,7 +80,7 @@ Verification (implementation only): **2/2 requested compile targets passed; 0 fa
 From `native/`, serialized under the machine build lock and `/tmp/oc-native-gradle.lock`:
 
 ```bash
-JAVA_HOME=/home/eslam/Storage2/tools/jdk21 ANDROID_HOME="$HOME/Android/Sdk" \
+JAVA_HOME=/home/owner/Storage2/tools/jdk21 ANDROID_HOME="$HOME/Android/Sdk" \
   nice -n 5 ./gradlew --console=plain --continue \
   -Dorg.gradle.workers.max=2 -Dorg.gradle.daemon.idletimeout=300000 \
   -Dorg.gradle.jvmargs='-Xmx2g -XX:MaxMetaspaceSize=768m' \

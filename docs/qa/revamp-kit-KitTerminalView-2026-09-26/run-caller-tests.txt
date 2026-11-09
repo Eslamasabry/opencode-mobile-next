@@ -59,16 +59,16 @@ Downloading packages...
 Got dependencies!
 54 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart: states Linux not installed: one state with Set up
-00:00 +1: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart: states installed: a shell opens at once, with the key bar
-00:01 +2: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart: states the shell ended: its output stays, with Restart
-00:01 +3: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart: states a shell that cannot start says so, with Try again
-00:01 +4: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart: states AI Team on: the line says what a shell costs
-00:01 +5: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart: states AI Team off: no cost line
-00:01 +6: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart: keys sticky Ctrl, then c from the phone keyboard, sends 0x03
-00:01 +7: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart: keys the arrow keys and Esc reach the shell
-00:01 +8: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart: shells the menu lists shells and opens a new one
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart: states Linux not installed: one state with Set up
+00:00 +1: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart: states installed: a shell opens at once, with the key bar
+00:01 +2: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart: states the shell ended: its output stays, with Restart
+00:01 +3: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart: states a shell that cannot start says so, with Try again
+00:01 +4: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart: states AI Team on: the line says what a shell costs
+00:01 +5: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart: states AI Team off: no cost line
+00:01 +6: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart: keys sticky Ctrl, then c from the phone keyboard, sends 0x03
+00:01 +7: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart: keys the arrow keys and Esc reach the shell
+00:01 +8: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart: shells the menu lists shells and opens a new one
 
 Warning: A call to tap() with finder "Found 1 widget with text "Shell 1": [
   Text("Shell 1", dependencies: [DefaultSelectionStyle, DefaultTextStyle, MediaQuery]),
@@ -79,7 +79,7 @@ The hit test result at that offset is: HitTestResult(RenderPointerListener#7406b
 #0      WidgetController._getElementPoint (package:flutter_test/src/controller.dart:2165:25)
 #1      WidgetController.getCenter (package:flutter_test/src/controller.dart:1947:12)
 #2      WidgetController.tap (package:flutter_test/src/controller.dart:1080:7)
-#3      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart:207:20)
+#3      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart:207:20)
 <asynchronous suspension>
 #4      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -90,87 +90,87 @@ The hit test result at that offset is: HitTestResult(RenderPointerListener#7406b
 To silence this warning, pass "warnIfMissed: false" to "tap()".
 To make this warning fatal, set WidgetController.hitTestWarningShouldBeFatal to true.
 
-00:02 +9: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart: shells Stop asks first, then stops the shell
-00:02 +10: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart: shells leaving and coming back finds the shell and its output
-00:02 +11: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart: source choice This phone is the default once Linux is installed
-00:02 +12: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart: source choice without Linux the server is the default
-00:02 +13: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart: source choice the choice switches between the two
-00:02 +14: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart: source choice landscape with the keyboard up: no choice, one row of keys
-00:02 +15: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart: source choice off Android there is no choice, only the server
-00:03 +16: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart
-00:04 +16: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: a new shell starts at the terminal size, then runs
-00:04 +17: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: a new shell a failed start says why
-00:04 +18: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: a new shell shells are numbered in the order they were opened
-00:04 +19: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: output is drawn and every chunk is answered
-00:04 +20: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: output a character split across two chunks arrives whole
-00:05 +21: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: output a wide character at the last column wraps whole
-00:05 +22: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: output after clear, a selection copies the words it covers
-00:05 +23: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: output output for a shell this side does not know is still answered
-00:05 +24: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: output an exit ends the shell with its code
-00:05 +25: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: input typed text reaches the shell as UTF-8
-00:05 +26: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: input a sticky Ctrl turns the next typed letter into its control byte
-00:05 +27: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: input nothing is sent before the shell runs or after it ended
-00:05 +28: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: size a resize reaches the shell once the view settles
-00:05 +29: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: shells outlive the screen load adopts shells Android runs, with their recent output
-00:05 +30: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: shells outlive the screen load runs once
-00:05 +31: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: shells outlive the screen restart replaces an ended shell
-00:05 +32: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: shells outlive the screen stop leaves the shell listed as ended
-00:05 +33: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: channel events are parsed from the Android shapes
-00:05 +34: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart
-00:06 +34: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: state running: This phone, version and size, Stop and Show log
-00:07 +35: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: state an unmeasured or empty size is left out, never "0 B"
-00:07 +36: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: state without a known version it names the OpenCode generation
-00:07 +37: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: state running and not connected offers Open as the one action
-00:08 +38: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: state not installed any more: Set up
-00:08 +39: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: state a running setup job shows Setting up and its progress
-00:08 +40: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: state an interrupted job offers Continue setup
-00:08 +41: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: start and stop Start starts the server, shows Starting, then Running
-00:08 +42: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: start and stop Stop stops the server
-00:08 +43: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: start and stop Show log opens the log in a terminal view
-00:09 +44: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: menu Switch to OpenCode 2 re-runs opencode with its runtime
-00:09 +45: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: menu on OpenCode 2 it offers the way back
-00:09 +46: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: menu Update OpenCode re-runs opencode
-00:09 +47: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: menu Update on OpenCode 2 keeps OpenCode 2
-00:09 +48: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: menu Add tools installs what the sheet chose
-00:09 +49: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: menu Add tools closed without a choice installs nothing
-00:10 +50: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: menu Remove says how much space comes back, then uninstalls
-00:10 +51: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: menu Remove cancelled changes nothing
-00:10 +52: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: menu Terminal opens a shell on this phone with the server stopped
-00:10 +53: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: menu Terminal stays in the menu while a server start does not answer
-00:11 +54: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: menu a host that must close first receives the action instead
-00:11 +55: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: layout 2.5x on 320dp, 48dp targets (en)
-00:11 +56: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: layout 2.5x on 320dp, 48dp targets (ar)
-00:11 +57: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: the in-app server is named This phone everywhere
-00:11 +58: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: OpenCode 1 and 2 both on this phone are told apart only when both exist; stored names are kept
-00:11 +59: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: OpenCode 1 and 2 both on this phone the card says which one it stands for
-00:11 +60: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: OpenCode 1 and 2 both on this phone alone, the card is just This phone
-00:11 +61: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: hosts the switcher shows the card, not the old in-app row
-00:11 +62: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: hosts the switcher lists This phone when another server is on
-00:11 +63: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: hosts Servers lists the card instead of the address row
-00:12 +64: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart
-00:16 +64: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: rows show only real numbers bytes as "18 of 30 MB" with the stage
-00:17 +65: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: rows show only real numbers percent as "62%"
-00:17 +66: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: rows show only real numbers a stage alone shows its label and no second bar
-00:18 +67: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: rows show only real numbers a done row shows its version muted with a check
-00:18 +68: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: rows show only real numbers byte formatting rounds done down and keeps the unit
-00:18 +69: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: failure says the stage and the reason, red bar, Continue setup
-00:18 +70: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: failure network errors ask to reconnect
-00:18 +71: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: failure a failure between components still says why
-00:18 +72: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: failure interrupted and cancelled jobs offer Continue setup
-00:18 +73: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: overall bar eases and never goes backwards within a job
-00:19 +74: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: overall bar a re-run after done starts over
-00:19 +75: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: time left only when the engine gives one
-00:19 +76: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: screen restores on open and shows the title and note
-00:19 +77: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: screen Cancel confirms before stopping
-00:19 +78: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: screen done hands over to screen C, replacing this screen
-00:19 +79: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: screen an update or added tools end here, then close
-00:19 +80: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: screen Back while running just leaves; setup is not cancelled
-00:19 +81: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: Show details opens the log and follows it
-00:20 +82: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: layout 320dp at 2.5x text fits (LTR)
-00:20 +83: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: layout 320dp at 2.5x text fits (RTL)
-00:20 +84: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: layout RTL puts the detail on the leading-left side
-00:20 +85: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: layout LTR puts the detail on the right
-00:20 +86: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: layout Arabic at 2.5x on 320dp
-00:20 +87: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: reduce motion changes instantly and draws no spinners
-00:20 +88: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: the running row is a live region labelled by its stage
+00:02 +9: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart: shells Stop asks first, then stops the shell
+00:02 +10: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart: shells leaving and coming back finds the shell and its output
+00:02 +11: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart: source choice This phone is the default once Linux is installed
+00:02 +12: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart: source choice without Linux the server is the default
+00:02 +13: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart: source choice the choice switches between the two
+00:02 +14: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart: source choice landscape with the keyboard up: no choice, one row of keys
+00:02 +15: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_screen_test.dart: source choice off Android there is no choice, only the server
+00:03 +16: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart
+00:04 +16: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: a new shell starts at the terminal size, then runs
+00:04 +17: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: a new shell a failed start says why
+00:04 +18: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: a new shell shells are numbered in the order they were opened
+00:04 +19: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: output is drawn and every chunk is answered
+00:04 +20: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: output a character split across two chunks arrives whole
+00:05 +21: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: output a wide character at the last column wraps whole
+00:05 +22: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: output after clear, a selection copies the words it covers
+00:05 +23: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: output output for a shell this side does not know is still answered
+00:05 +24: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: output an exit ends the shell with its code
+00:05 +25: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: input typed text reaches the shell as UTF-8
+00:05 +26: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: input a sticky Ctrl turns the next typed letter into its control byte
+00:05 +27: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: input nothing is sent before the shell runs or after it ended
+00:05 +28: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: size a resize reaches the shell once the view settles
+00:05 +29: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: shells outlive the screen load adopts shells Android runs, with their recent output
+00:05 +30: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: shells outlive the screen load runs once
+00:05 +31: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: shells outlive the screen restart replaces an ended shell
+00:05 +32: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: shells outlive the screen stop leaves the shell listed as ended
+00:05 +33: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/local_terminal_test.dart: channel events are parsed from the Android shapes
+00:05 +34: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart
+00:06 +34: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: state running: This phone, version and size, Stop and Show log
+00:07 +35: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: state an unmeasured or empty size is left out, never "0 B"
+00:07 +36: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: state without a known version it names the OpenCode generation
+00:07 +37: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: state running and not connected offers Open as the one action
+00:08 +38: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: state not installed any more: Set up
+00:08 +39: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: state a running setup job shows Setting up and its progress
+00:08 +40: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: state an interrupted job offers Continue setup
+00:08 +41: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: start and stop Start starts the server, shows Starting, then Running
+00:08 +42: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: start and stop Stop stops the server
+00:08 +43: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: start and stop Show log opens the log in a terminal view
+00:09 +44: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: menu Switch to OpenCode 2 re-runs opencode with its runtime
+00:09 +45: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: menu on OpenCode 2 it offers the way back
+00:09 +46: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: menu Update OpenCode re-runs opencode
+00:09 +47: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: menu Update on OpenCode 2 keeps OpenCode 2
+00:09 +48: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: menu Add tools installs what the sheet chose
+00:09 +49: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: menu Add tools closed without a choice installs nothing
+00:10 +50: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: menu Remove says how much space comes back, then uninstalls
+00:10 +51: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: menu Remove cancelled changes nothing
+00:10 +52: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: menu Terminal opens a shell on this phone with the server stopped
+00:10 +53: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: menu Terminal stays in the menu while a server start does not answer
+00:11 +54: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: menu a host that must close first receives the action instead
+00:11 +55: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: layout 2.5x on 320dp, 48dp targets (en)
+00:11 +56: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: layout 2.5x on 320dp, 48dp targets (ar)
+00:11 +57: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: the in-app server is named This phone everywhere
+00:11 +58: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: OpenCode 1 and 2 both on this phone are told apart only when both exist; stored names are kept
+00:11 +59: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: OpenCode 1 and 2 both on this phone the card says which one it stands for
+00:11 +60: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: OpenCode 1 and 2 both on this phone alone, the card is just This phone
+00:11 +61: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: hosts the switcher shows the card, not the old in-app row
+00:11 +62: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: hosts the switcher lists This phone when another server is on
+00:11 +63: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_server_card_test.dart: hosts Servers lists the card instead of the address row
+00:12 +64: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart
+00:16 +64: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: rows show only real numbers bytes as "18 of 30 MB" with the stage
+00:17 +65: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: rows show only real numbers percent as "62%"
+00:17 +66: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: rows show only real numbers a stage alone shows its label and no second bar
+00:18 +67: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: rows show only real numbers a done row shows its version muted with a check
+00:18 +68: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: rows show only real numbers byte formatting rounds done down and keeps the unit
+00:18 +69: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: failure says the stage and the reason, red bar, Continue setup
+00:18 +70: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: failure network errors ask to reconnect
+00:18 +71: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: failure a failure between components still says why
+00:18 +72: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: failure interrupted and cancelled jobs offer Continue setup
+00:18 +73: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: overall bar eases and never goes backwards within a job
+00:19 +74: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: overall bar a re-run after done starts over
+00:19 +75: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: time left only when the engine gives one
+00:19 +76: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: screen restores on open and shows the title and note
+00:19 +77: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: screen Cancel confirms before stopping
+00:19 +78: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: screen done hands over to screen C, replacing this screen
+00:19 +79: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: screen an update or added tools end here, then close
+00:19 +80: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: screen Back while running just leaves; setup is not cancelled
+00:19 +81: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: Show details opens the log and follows it
+00:20 +82: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: layout 320dp at 2.5x text fits (LTR)
+00:20 +83: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: layout 320dp at 2.5x text fits (RTL)
+00:20 +84: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: layout RTL puts the detail on the leading-left side
+00:20 +85: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: layout LTR puts the detail on the right
+00:20 +86: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: layout Arabic at 2.5x on 320dp
+00:20 +87: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: reduce motion changes instantly and draws no spinners
+00:20 +88: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/phone_setup_progress_screen_test.dart: the running row is a live region labelled by its stage
 00:20 +89: All tests passed!

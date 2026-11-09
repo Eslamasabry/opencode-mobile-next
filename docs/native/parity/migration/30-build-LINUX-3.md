@@ -4,7 +4,7 @@ Branch: `p12x/30-build-LINUX-3`; integration base: `cde0afb45f598c00e89de766d9d0
 
 Finish line: account for all 57 assigned rows with reachable native behavior or an explicit prerequisite blocker. Non-goal: tests, APKs, signing, releases, pushes, and active Termux server management prohibited by plan/01 D7.
 
-Assignment was computed from the PC ledger `/home/eslam/Storage2/wt/parity-gate-pc/docs/native/parity/ledger.json`, this checkout's `native/catalog/scope.jsonl`, sorted unproven switch rows for LINUX, final third (`R[2*n//3:]`). The cited Flutter test cases were read as behavior specifications, followed into their lib implementations and native equivalents; no tests were written or run. Scope's old module labels sometimes resolve to `:engine:linuxsetup`, `:engine:termuxhost` or `:engine:linuxtools`; `:engine:project` is absent.
+Assignment was computed from the PC ledger `/home/owner/Storage2/wt/parity-gate-pc/docs/native/parity/ledger.json`, this checkout's `native/catalog/scope.jsonl`, sorted unproven switch rows for LINUX, final third (`R[2*n//3:]`). The cited Flutter test cases were read as behavior specifications, followed into their lib implementations and native equivalents; no tests were written or run. Scope's old module labels sometimes resolve to `:engine:linuxsetup`, `:engine:termuxhost` or `:engine:linuxtools`; `:engine:project` is absent.
 
 A row marked blocked remains incomplete even when its line names a useful implemented subset. Native helpers without app bindings do not count as already there. D7 migrate-out-only conflicts with rows requiring active Termux setup/runtime management; no deprecated management path was re-enabled.
 
@@ -70,7 +70,7 @@ Final accounting: **17 built now / 12 already there / 28 blocked = 57 rows**. Al
 
 ## Compile-only gate
 
-Ran from `native/` with `JAVA_HOME=/home/eslam/Storage2/tools/jdk21`, `ANDROID_HOME=$HOME/Android/Sdk`, shared `/home/eslam/Storage/tmp/oc-build.lock`, `nice -n 5`:
+Ran from `native/` with `JAVA_HOME=/home/owner/Storage2/tools/jdk21`, `ANDROID_HOME=$HOME/Android/Sdk`, shared `/home/owner/Storage/tmp/oc-build.lock`, `nice -n 5`:
 
 ```sh
 ./gradlew :androidApp:compilePreviewDebugKotlin compileKotlinDesktop \

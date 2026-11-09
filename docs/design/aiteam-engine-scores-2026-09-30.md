@@ -96,7 +96,7 @@ Attempted on this x86_64 PC, September 30:
 
 | Check | Result |
 |---|---|
-| PATH `opencode --version` | `/home/eslam/.bun/bin/opencode`; fails because postinstall binary was not installed; package metadata 1.18.23 |
+| PATH `opencode --version` | `/home/owner/.bun/bin/opencode`; fails because postinstall binary was not installed; package metadata 1.18.23 |
 | PATH `opencode2 --version` | Same missing-postinstall-binary failure; package metadata 0.0.0-beta-19242 |
 | Legacy `~/.opencode/bin/opencode --version` | 1.0.193; identified only, not substituted for the current candidate |
 | `adb devices` | adb unavailable in this execution environment |

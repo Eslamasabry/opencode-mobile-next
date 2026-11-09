@@ -179,7 +179,7 @@ requested command under the shared PC build lock:
 
 ```bash
 cd native
-export JAVA_HOME=/home/eslam/Storage2/tools/jdk21
+export JAVA_HOME=/home/owner/Storage2/tools/jdk21
 export ANDROID_HOME="$HOME/Android/Sdk"
 ../tool/qa/machine_lock.sh build -- nice -n 5 ./gradlew --console=plain --continue \
   -Dorg.gradle.workers.max=2 \
@@ -232,7 +232,7 @@ which verified the committed SHA-256, then reran the entire requested command.
 
 ```bash
 cd native
-export JAVA_HOME=/home/eslam/Storage2/tools/jdk21
+export JAVA_HOME=/home/owner/Storage2/tools/jdk21
 export ANDROID_HOME="$HOME/Android/Sdk"
 ../tool/qa/machine_lock.sh build -- nice -n 5 ./gradlew --console=plain --continue \
   -Dorg.gradle.workers.max=2 \
@@ -281,7 +281,7 @@ Ran the requested compile-only command under the shared PC build lock:
 
 ```bash
 cd native
-export JAVA_HOME=/home/eslam/Storage2/tools/jdk21
+export JAVA_HOME=/home/owner/Storage2/tools/jdk21
 export ANDROID_HOME="$HOME/Android/Sdk"
 ../tool/qa/machine_lock.sh build -- nice -n 5 ./gradlew --console=plain --continue \
   -Dorg.gradle.workers.max=2 \

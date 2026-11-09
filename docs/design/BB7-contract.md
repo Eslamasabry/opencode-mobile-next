@@ -207,7 +207,7 @@ those commands; integrated native compilation and actual device event results
 are recorded in the linked QA receipt.
 
 Device acceptance uses only `emulator-5554`, under a whole-session
-`flock -w 3600 /home/eslam/Storage/tmp/oc-emulator.lock`. Capture candidate hash,
+`flock -w 3600 /home/owner/Storage/tmp/oc-emulator.lock`. Capture candidate hash,
 installed version/target SDK/signer and baseline state without secret values.
 Use a real authenticated canonical server with saved wanted/policy state, close
 the Activity, perform an actual reboot, and show the new boot ID, receiver/FGS,
@@ -223,7 +223,7 @@ budget spend. Include Stop/update race and denied-start controls. A synthetic
 broadcast, manually edited package stamp, simulated timeout or pure test is
 separate evidence, never a substitute for the actual event journey.
 
-Restore `/home/eslam/Storage/tmp/oc-apk-share/oc-2202.apk` in the same emulator lock
+Restore `/home/owner/Storage/tmp/oc-apk-share/oc-2202.apk` in the same emulator lock
 using install-r, never uninstall. The higher-version update fixture must use a
 restorable release build/install scheme agreed before the run: do not discover
 a downgrade rejection at cleanup or bypass it by deleting app data. Verify

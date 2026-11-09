@@ -1,6 +1,6 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart: cold OC2 stable allowOnce uses the negotiated permission body and clears only the answered request
-00:00 +0 -1: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart: cold OC2 stable allowOnce uses the negotiated permission body and clears only the answered request [E]
+00:00 +0: loading /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart: cold OC2 stable allowOnce uses the negotiated permission body and clears only the answered request
+00:00 +0 -1: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart: cold OC2 stable allowOnce uses the negotiated permission body and clears only the answered request [E]
   Expected: [{'decision': 'once'}]
     Actual: [{'reply': 'once'}]
      Which: at location [0] is {'reply': 'once'} which is missing map key 'decision'
@@ -9,8 +9,8 @@
   package:flutter_test/src/widget_tester.dart 473:18  expect
   test/widget_action_runner_http_test.dart 134:15     main.<fn>.<fn>
 
-00:00 +0 -1: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart: cold OC2 stable reject uses the negotiated permission body and clears only the answered request
-00:00 +0 -2: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart: cold OC2 stable reject uses the negotiated permission body and clears only the answered request [E]
+00:00 +0 -1: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart: cold OC2 stable reject uses the negotiated permission body and clears only the answered request
+00:00 +0 -2: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart: cold OC2 stable reject uses the negotiated permission body and clears only the answered request [E]
   Expected: [{'decision': 'reject'}]
     Actual: [{'reply': 'reject'}]
      Which: at location [0] is {'reply': 'reject'} which is missing map key 'decision'
@@ -19,8 +19,8 @@
   package:flutter_test/src/widget_tester.dart 473:18  expect
   test/widget_action_runner_http_test.dart 134:15     main.<fn>.<fn>
 
-00:00 +0 -2: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart: cold OC2 beta allowOnce uses the negotiated permission body and clears only the answered request
-00:00 +0 -3: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart: cold OC2 beta allowOnce uses the negotiated permission body and clears only the answered request [E]
+00:00 +0 -2: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart: cold OC2 beta allowOnce uses the negotiated permission body and clears only the answered request
+00:00 +0 -3: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart: cold OC2 beta allowOnce uses the negotiated permission body and clears only the answered request [E]
   Expected: [
               'GET /api/health',
               'GET /api/permission/request',
@@ -36,8 +36,8 @@
   package:flutter_test/src/widget_tester.dart 473:18  expect
   test/widget_action_runner_http_test.dart 139:15     main.<fn>.<fn>
 
-00:00 +0 -3: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart: cold OC2 beta reject uses the negotiated permission body and clears only the answered request
-00:00 +0 -4: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart: cold OC2 beta reject uses the negotiated permission body and clears only the answered request [E]
+00:00 +0 -3: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart: cold OC2 beta reject uses the negotiated permission body and clears only the answered request
+00:00 +0 -4: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart: cold OC2 beta reject uses the negotiated permission body and clears only the answered request [E]
   Expected: [
               'GET /api/health',
               'GET /api/permission/request',
@@ -53,11 +53,11 @@
   package:flutter_test/src/widget_tester.dart 473:18  expect
   test/widget_action_runner_http_test.dart 139:15     main.<fn>.<fn>
 
-00:00 +0 -4: loading /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart
-00:01 +0 -4: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: allowOnce cold tap confirms exact pending request and closes transport
-00:01 +1 -4: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: reject cold tap confirms exact pending request and closes transport
-00:01 +2 -4: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: cold approval waits for health before reading or answering
-00:01 +2 -5: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: cold approval waits for health before reading or answering [E]
+00:00 +0 -4: loading /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart
+00:01 +0 -4: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: allowOnce cold tap confirms exact pending request and closes transport
+00:01 +1 -4: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: reject cold tap confirms exact pending request and closes transport
+00:01 +2 -4: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: cold approval waits for health before reading or answering
+00:01 +2 -5: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: cold approval waits for health before reading or answering [E]
   Expected: <1>
     Actual: <0>
 
@@ -65,8 +65,8 @@
   package:flutter_test/src/widget_tester.dart 473:18  expect
   test/widget_action_runner_test.dart 196:5           main.<fn>
 
-00:01 +2 -5: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: unhealthy cold transport never reads or answers permissions
-00:01 +2 -6: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: unhealthy cold transport never reads or answers permissions [E]
+00:01 +2 -5: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: unhealthy cold transport never reads or answers permissions
+00:01 +2 -6: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: unhealthy cold transport never reads or answers permissions [E]
   Expected: 'rejected'
     Actual: 'accepted'
      Which: is different.
@@ -79,8 +79,8 @@
   package:flutter_test/src/widget_tester.dart 473:18  expect
   test/widget_action_runner_test.dart 210:5           main.<fn>
 
-00:01 +2 -6: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: deadline during cold health never reads or answers permissions
-00:01 +2 -7: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: deadline during cold health never reads or answers permissions [E]
+00:01 +2 -6: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: deadline during cold health never reads or answers permissions
+00:01 +2 -7: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: deadline during cold health never reads or answers permissions [E]
   Expected: 'rejected'
     Actual: 'accepted'
      Which: is different.
@@ -93,8 +93,8 @@
   package:flutter_test/src/widget_tester.dart 473:18  expect
   test/widget_action_runner_test.dart 227:7           main.<fn>
 
-00:01 +2 -7: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: profile switch during cold health prevents permission dispatch
-00:01 +2 -8: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: profile switch during cold health prevents permission dispatch [E]
+00:01 +2 -7: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: profile switch during cold health prevents permission dispatch
+00:01 +2 -8: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: profile switch during cold health prevents permission dispatch [E]
   Expected: 'staleRequest'
     Actual: <null>
      Which: not an <Instance of 'String'>
@@ -103,32 +103,32 @@
   package:flutter_test/src/widget_tester.dart 473:18  expect
   test/widget_action_runner_test.dart 244:7           main.<fn>
 
-00:01 +2 -8: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: cold dispatch uses private target without exposing it in its result
-00:01 +3 -8: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: missing or stale private target never constructs a transport
-00:01 +4 -8: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: private target reader rejects mismatched identity and deleted target
-00:01 +5 -8: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: duplicate tap is dispatched once
-00:01 +6 -8: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: expired tap never constructs or dispatches transport
-00:01 +7 -8: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: deadline reached during pending read never dispatches afterwards
-00:01 +8 -8: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: cancel while read is in flight prevents late dispatch and closes
-00:01 +9 -8: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: profile deletion during read prevents mutation
-00:01 +10 -8: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: different pending request owner is never answered
-00:01 +11 -8: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: stop checks server user-message identity and busy status
-00:01 +12 -8: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: old run cannot stop a replacement run
-00:01 +13 -8: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: idle run cannot be stopped
-00:01 +14 -8: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: mutation error is uncertain, sanitized, closed, and never retried
-00:01 +15 -8: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: unsupported row action is rejected before opening connection
-00:01 +16 -8: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: durable ownership guard respects profile switch and deletion without opt-in writes
-00:01 +17 -8: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: suspension preserves target proofs and does not resurrect deletion
-00:01 +18 -8: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: cold Team resume uses reviewed revision and closes
-00:01 +19 -8: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: cold Team approvePlan uses reviewed revision and closes
-00:01 +20 -8: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: Team transport uncertainty cannot become retryable rejection
-00:01 +21 -8: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: same-scope durable replacement during read blocks old stop
-00:01 +22 -8: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: target-only load reads target secrets without migrations or writes
+00:01 +2 -8: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: cold dispatch uses private target without exposing it in its result
+00:01 +3 -8: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: missing or stale private target never constructs a transport
+00:01 +4 -8: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: private target reader rejects mismatched identity and deleted target
+00:01 +5 -8: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: duplicate tap is dispatched once
+00:01 +6 -8: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: expired tap never constructs or dispatches transport
+00:01 +7 -8: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: deadline reached during pending read never dispatches afterwards
+00:01 +8 -8: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: cancel while read is in flight prevents late dispatch and closes
+00:01 +9 -8: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: profile deletion during read prevents mutation
+00:01 +10 -8: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: different pending request owner is never answered
+00:01 +11 -8: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: stop checks server user-message identity and busy status
+00:01 +12 -8: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: old run cannot stop a replacement run
+00:01 +13 -8: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: idle run cannot be stopped
+00:01 +14 -8: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: mutation error is uncertain, sanitized, closed, and never retried
+00:01 +15 -8: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: unsupported row action is rejected before opening connection
+00:01 +16 -8: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: durable ownership guard respects profile switch and deletion without opt-in writes
+00:01 +17 -8: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: suspension preserves target proofs and does not resurrect deletion
+00:01 +18 -8: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: cold Team resume uses reviewed revision and closes
+00:01 +19 -8: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: cold Team approvePlan uses reviewed revision and closes
+00:01 +20 -8: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: Team transport uncertainty cannot become retryable rejection
+00:01 +21 -8: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: same-scope durable replacement during read blocks old stop
+00:01 +22 -8: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: target-only load reads target secrets without migrations or writes
 00:01 +23 -8: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart: cold OC2 beta allowOnce uses the negotiated permission body and clears only the answered request
-  /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart: cold OC2 beta reject uses the negotiated permission body and clears only the answered request
-  /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart: cold OC2 stable allowOnce uses the negotiated permission body and clears only the answered request
-  /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart: cold OC2 stable reject uses the negotiated permission body and clears only the answered request
+  /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart: cold OC2 beta allowOnce uses the negotiated permission body and clears only the answered request
+  /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart: cold OC2 beta reject uses the negotiated permission body and clears only the answered request
+  /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart: cold OC2 stable allowOnce uses the negotiated permission body and clears only the answered request
+  /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart: cold OC2 stable reject uses the negotiated permission body and clears only the answered request
   ... and 4 more

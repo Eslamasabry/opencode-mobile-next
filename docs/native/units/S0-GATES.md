@@ -166,7 +166,7 @@ scrubbed real values from `master` once (`ec2633fbd`). For each hit, review it, 
   - any VPS run;
   - a real T3 or T4 on a device;
   - a green T1 or T2 (both need the tree to compile);
-  - the PC build slot path (`/home/eslam/Storage/tmp/oc-build.lock`). Here the scripts fell back to `$TMPDIR` because
+  - the PC build slot path (`/home/owner/Storage/tmp/oc-build.lock`). Here the scripts fell back to `$TMPDIR` because
     that folder does not exist.
 
 ## 7. Catalog requests

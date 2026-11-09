@@ -8,7 +8,7 @@ Ownership: `engine/phone/src/opencode.rs` including embedded tests, and this REA
 
 ## Evidence and activation blocker
 
-Primary source was fetched on 2026-09-30 from upstream **v1.18.32**, resolved by GitHub tree API to **545f51d26cc39a907d2867492d498d9607ea5fa4**. Source artifacts are under `/home/eslam/Storage/Code/aiteam-protocol-source-1.18.32/`; no download or build artifact was placed in `/tmp`. The revision-linked source below is reproducible without that local artifact directory.
+Primary source was fetched on 2026-09-30 from upstream **v1.18.32**, resolved by GitHub tree API to **545f51d26cc39a907d2867492d498d9607ea5fa4**. Source artifacts are under `/home/owner/Storage/Code/aiteam-protocol-source-1.18.32/`; no download or build artifact was placed in `/tmp`. The revision-linked source below is reproducible without that local artifact directory.
 
 - [Pinned OpenAPI](https://github.com/anomalyco/opencode/blob/545f51d26cc39a907d2867492d498d9607ea5fa4/packages/sdk/openapi.json) documents `GET /global/health`, authenticated `GET /doc`, session create/update/status/messages/prompt_async/abort, and pending question/permission list. The runtime driver checks exact health version and current `/doc` operation IDs and callable role/model/permission fields. A local Python source inspection confirmed those ten operation IDs match; this is source evidence, **not a runtime/test pass**.
 - [`/doc` route](https://github.com/anomalyco/opencode/blob/545f51d26cc39a907d2867492d498d9607ea5fa4/packages/opencode/src/server/routes/instance/httpapi/server.ts#L183-L192) publishes `OpenApi.fromApi(PublicApi)` through auth middleware.

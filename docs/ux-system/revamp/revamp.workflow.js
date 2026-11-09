@@ -26,7 +26,7 @@ const ALL = CUT.units || A.units || []
 const WAVE = String(A.wave)
 const BASE = A.base || 'feat/phone-setup-v2'
 // A.repo: the checkout the integrator merges in (a separate worktree lets two runs integrate side by side).
-const REPO = A.repo || '/home/eslam/Storage/Code/oc_app'
+const REPO = A.repo || '/home/owner/Storage/Code/oc_app'
 const HOT = CUT.hotspots || A.hotspots || { exact: [], prefix: [], newUnder: [] }
 const LOCK_GROUPS = CUT.lockGroups || A.lockGroups || {}
 const SINGLE_LOCKS = CUT.singleFileLocks || A.singleFileLocks || []

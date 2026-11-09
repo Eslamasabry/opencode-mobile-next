@@ -57,265 +57,265 @@ Downloading packages...
 Got dependencies!
 54 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/test/kit/kit_manifest_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app/test/kit/kit_manifest_test.dart: G4: the manifest reads the kit library and every kit file
-00:00 +1: /home/eslam/Storage/Code/oc_app/test/kit/kit_manifest_test.dart: G4: every kit part and opener meets the manifest (allowlist only shrinks)
-00:06 +2: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: manifest the G4 manifest is read (the parser still works)
-00:06 +3: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: manifest every kit.dart part has reduced-motion samples (G8x)
-00:06 +4: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: manifest this file registers only the parts that predate G8x
-00:06 +5: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: manifest the ratchet only shrinks and names real samples
-00:06 +6: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: manifest registrations name parts kit.dart exports
-00:06 +7: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitActionBlock (MOT-7) default settles at once under system
-00:06 +8: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitActionBlock (MOT-7) working settles at once under system
-00:06 +9: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitActionBlock (MOT-7) default settles at once under effectsOff
-00:06 +10: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitActionBlock (MOT-7) working settles at once under effectsOff
-00:06 +11: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitActionStack (MOT-7) default settles at once under system
-00:06 +12: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitActionStack (MOT-7) default settles at once under effectsOff
-00:06 +13: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitAnimatedRows (MOT-7) default settles at once under system
-00:06 +14: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitAnimatedRows (MOT-7) row inserted changes and settles at once under system
-00:06 +15: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitAnimatedRows (MOT-7) row removed changes and settles at once under system
-00:06 +16: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitAnimatedRows (MOT-7) default settles at once under effectsOff
-00:06 +17: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitAnimatedRows (MOT-7) row inserted changes and settles at once under effectsOff
-00:06 +18: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitAnimatedRows (MOT-7) row removed changes and settles at once under effectsOff
-00:06 +19: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitAskLine (MOT-7) default settles at once under system
-00:06 +20: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitAskLine (MOT-7) default settles at once under effectsOff
-00:06 +21: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitButton (MOT-7) primary working settles at once under system
-00:06 +22: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitButton (MOT-7) secondary working settles at once under system
-00:07 +23: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitButton (MOT-7) tertiary settles at once under system
-00:07 +24: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitButton (MOT-7) disabled settles at once under system
-00:07 +25: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitButton (MOT-7) working ends changes and settles at once under system
-00:07 +26: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitButton (MOT-7) working ends with an icon changes and settles at once under system
-00:07 +27: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitButton (MOT-7) primary working settles at once under effectsOff
-00:07 +28: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitButton (MOT-7) secondary working settles at once under effectsOff
-00:07 +29: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitButton (MOT-7) tertiary settles at once under effectsOff
-00:07 +30: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitButton (MOT-7) disabled settles at once under effectsOff
-00:07 +31: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitButton (MOT-7) working ends changes and settles at once under effectsOff
-00:07 +32: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitButton (MOT-7) working ends with an icon changes and settles at once under effectsOff
-00:07 +33: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitChevron (MOT-7) default settles at once under system
-00:07 +34: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitChevron (MOT-7) default settles at once under effectsOff
-00:07 +35: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitConfirmSheet (MOT-7) default settles at once under system
-00:07 +36: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitConfirmSheet (MOT-7) working settles at once under system
-00:07 +37: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitConfirmSheet (MOT-7) details open changes and settles at once under system
-00:07 +38: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitConfirmSheet (MOT-7) default settles at once under effectsOff
-00:07 +39: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitConfirmSheet (MOT-7) working settles at once under effectsOff
-00:07 +40: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitConfirmSheet (MOT-7) details open changes and settles at once under effectsOff
-00:07 +41: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitEntrance (MOT-7) default settles at once under system
-00:07 +42: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitEntrance (MOT-7) trigger changes changes and settles at once under system
-00:07 +43: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitEntrance (MOT-7) default settles at once under effectsOff
-00:07 +44: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitEntrance (MOT-7) trigger changes changes and settles at once under effectsOff
-00:07 +45: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitExpandRow (MOT-7) closed settles at once under system
-00:07 +46: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitExpandRow (MOT-7) open settles at once under system
-00:07 +47: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitExpandRow (MOT-7) opens on press changes and settles at once under system
-00:07 +48: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitExpandRow (MOT-7) closes on press changes and settles at once under system
-00:07 +49: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitExpandRow (MOT-7) closed settles at once under effectsOff
-00:07 +50: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitExpandRow (MOT-7) open settles at once under effectsOff
-00:07 +51: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitExpandRow (MOT-7) opens on press changes and settles at once under effectsOff
-00:07 +52: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitExpandRow (MOT-7) closes on press changes and settles at once under effectsOff
-00:07 +53: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitGlass (MOT-7) default settles at once under system
-00:07 +54: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitGlass (MOT-7) default settles at once under effectsOff
-00:07 +55: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitIconButton (MOT-7) default settles at once under system
-00:07 +56: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitIconButton (MOT-7) default settles at once under effectsOff
-00:07 +57: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitIllustration (MOT-7) entrance settles at once under system
-00:07 +58: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitIllustration (MOT-7) ambient settles at once under system
-00:07 +59: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitIllustration (MOT-7) ambient turns on changes and settles at once under system
-00:07 +60: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitIllustration (MOT-7) entrance settles at once under effectsOff
-00:07 +61: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitIllustration (MOT-7) ambient settles at once under effectsOff
-00:07 +62: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitIllustration (MOT-7) ambient turns on changes and settles at once under effectsOff
-00:07 +63: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitInset (MOT-7) default settles at once under system
-00:07 +64: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitInset (MOT-7) default settles at once under effectsOff
-00:07 +65: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitLoadingBar (MOT-7) loading settles at once under system
-00:07 +66: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitLoadingBar (MOT-7) idle settles at once under system
-00:07 +67: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitLoadingBar (MOT-7) loading ends changes and settles at once under system
-00:08 +68: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitLoadingBar (MOT-7) loading settles at once under effectsOff
-00:08 +69: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitLoadingBar (MOT-7) idle settles at once under effectsOff
-00:08 +70: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitLoadingBar (MOT-7) loading ends changes and settles at once under effectsOff
-00:08 +71: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitNotice (MOT-7) default settles at once under system
-00:08 +72: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitNotice (MOT-7) default settles at once under effectsOff
-00:08 +73: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitPanel (MOT-7) default settles at once under system
-00:08 +74: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitPanel (MOT-7) default settles at once under effectsOff
-00:08 +75: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitPortalScene (MOT-7) ambient settles at once under system
-00:08 +76: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitPortalScene (MOT-7) ambient settles at once under effectsOff
-00:08 +77: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitProgressView (MOT-7) waiting settles at once under system
-00:08 +78: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitProgressView (MOT-7) known settles at once under system
-00:08 +79: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitProgressView (MOT-7) progress moves changes and settles at once under system
-00:08 +80: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitProgressView (MOT-7) waiting settles at once under effectsOff
-00:08 +81: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitProgressView (MOT-7) known settles at once under effectsOff
-00:08 +82: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitProgressView (MOT-7) progress moves changes and settles at once under effectsOff
-00:08 +83: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitRefresh (MOT-7) default settles at once under system
-00:08 +84: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitRefresh (MOT-7) pulled and released changes and settles at once under system
-00:08 +85: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitRefresh (MOT-7) default settles at once under effectsOff
-00:08 +86: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitRefresh (MOT-7) pulled and released changes and settles at once under effectsOff
-00:08 +87: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitRequestCard (MOT-7) default settles at once under system
-00:08 +88: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitRequestCard (MOT-7) default settles at once under effectsOff
-00:08 +89: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitReveal (MOT-7) default settles at once under system
-00:08 +90: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitReveal (MOT-7) child arrives changes and settles at once under system
-00:08 +91: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitReveal (MOT-7) child leaves changes and settles at once under system
-00:08 +92: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitReveal (MOT-7) default settles at once under effectsOff
-00:08 +93: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitReveal (MOT-7) child arrives changes and settles at once under effectsOff
-00:08 +94: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitReveal (MOT-7) child leaves changes and settles at once under effectsOff
-00:08 +95: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitRow (MOT-7) default settles at once under system
-00:08 +96: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitRow (MOT-7) disabled settles at once under system
-00:08 +97: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitRow (MOT-7) default settles at once under effectsOff
-00:08 +98: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitRow (MOT-7) disabled settles at once under effectsOff
-00:08 +99: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitRowIcon (MOT-7) current settles at once under system
-00:08 +100: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitRowIcon (MOT-7) current settles at once under effectsOff
-00:08 +101: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitRowMenu (MOT-7) default settles at once under system
-00:08 +102: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitRowMenu (MOT-7) menu opens changes and settles at once under system
-00:08 +103: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitRowMenu (MOT-7) default settles at once under effectsOff
-00:08 +104: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitRowMenu (MOT-7) menu opens changes and settles at once under effectsOff
-00:08 +105: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitScreen (MOT-7) loading settles at once under system
-00:08 +106: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitScreen (MOT-7) loading ends changes and settles at once under system
-00:08 +107: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: KitScreen (MOT-7) loading settles at once under effectsOff
-00:08 +108: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:08 +109: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:08 +110: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +111: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +112: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +113: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +114: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +115: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +116: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +117: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +118: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +119: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +120: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +121: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +122: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +123: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +124: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +125: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +126: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +127: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +128: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +129: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +130: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +131: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +132: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +133: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +134: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +135: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +136: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +137: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +138: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +139: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +140: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +141: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +142: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +143: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +144: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +145: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +146: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +147: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +148: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +149: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +150: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +151: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +152: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +153: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +154: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +155: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +156: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +157: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +158: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +159: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:09 +160: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: ProductEmptyState (MOT-7) default settles at once under system
-00:09 +161: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the busy composer lays out at 2.5x
-00:10 +162: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the busy composer lays out at 2.5x
-00:10 +163: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the busy composer lays out at 2.5x
-00:10 +164: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the busy composer lays out at 2.5x
-00:10 +165: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the busy composer lays out at 2.5x
-00:10 +166: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the busy composer lays out at 2.5x
-00:10 +167: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the busy composer lays out at 2.5x
-00:10 +168: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: SectionLabel (MOT-7) default settles at once under effectsOff
-00:10 +169: /home/eslam/Storage/Code/oc_app/test/kit_ratchet_test.dart: G1: modal and toast entry points live in the kit
-00:10 +170: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +171: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +172: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +173: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +174: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +175: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +176: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +177: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +178: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +179: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +180: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +181: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +182: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +183: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +184: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +185: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +186: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +187: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +188: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +189: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +190: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +191: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +192: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +193: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +194: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +195: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +196: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +197: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +198: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +199: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +200: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +201: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +202: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +203: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +204: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +205: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +206: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +207: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:10 +208: /home/eslam/Storage/Code/oc_app/test/kit_motion_test.dart: showKitSheet (MOT-7) dismissed changes and settles at once under system
-00:10 +209: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the home shell lays out at 2.5x
-00:10 +210: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the home shell lays out at 2.5x
-00:10 +211: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the home shell lays out at 2.5x
-00:10 +212: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the home shell lays out at 2.5x
-00:10 +213: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the home shell lays out at 2.5x
-00:10 +214: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the home shell lays out at 2.5x
-00:10 +215: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the home shell lays out at 2.5x
-00:10 +216: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the home shell lays out at 2.5x
-00:10 +217: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the home shell lays out at 2.5x
-00:10 +218: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the home shell lays out at 2.5x
-00:10 +219: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the home shell lays out at 2.5x
-00:10 +220: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the home shell lays out at 2.5x
-00:10 +221: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the home shell lays out at 2.5x
-00:10 +222: /home/eslam/Storage/Code/oc_app/test/golden_harness_test.dart: G23 font loaders register every family AppTheme and pubspec name (TEST-8)
-00:10 +223: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the Settings tab lays out at 2.5x
-00:10 +224: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the Settings tab lays out at 2.5x
-00:10 +225: /home/eslam/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
-00:10 +226: /home/eslam/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
-00:11 +227: /home/eslam/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
-00:11 +228: /home/eslam/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
-00:11 +229: /home/eslam/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
-00:11 +230: /home/eslam/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
-00:11 +231: /home/eslam/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
-00:11 +232: /home/eslam/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
-00:11 +233: /home/eslam/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
-00:11 +234: /home/eslam/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
-00:11 +235: /home/eslam/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
-00:11 +236: /home/eslam/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
-00:11 +237: /home/eslam/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
-00:11 +238: /home/eslam/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
-00:11 +239: /home/eslam/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
-00:11 +240: /home/eslam/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
-00:11 +241: /home/eslam/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
-00:11 +242: /home/eslam/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
-00:11 +243: /home/eslam/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
-00:11 +244: /home/eslam/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
-00:11 +245: /home/eslam/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
-00:11 +246: /home/eslam/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
-00:11 +247: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix LoadingList/loading fits every overflow size, text scale and direction
-00:11 +248: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix LoadingList/loading fits every overflow size, text scale and direction
-00:11 +249: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix LoadingList/loading fits every overflow size, text scale and direction
-00:11 +250: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix LoadingList/loading fits every overflow size, text scale and direction
-00:11 +251: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix LoadingList/loading fits every overflow size, text scale and direction
-00:11 +252: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix LoadingList/loading fits every overflow size, text scale and direction
-00:11 +253: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix LoadingList/loading fits every overflow size, text scale and direction
-00:12 +254: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix ProductEmptyState/empty fits every overflow size, text scale and direction
-00:12 +255: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix ProductEmptyState/empty fits every overflow size, text scale and direction
-00:12 +256: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix ProductEmptyState/empty fits every overflow size, text scale and direction
-00:12 +256: /home/eslam/Storage/Code/oc_app/test/l10n_coverage_test.dart: no file gained hardcoded UI strings
+00:00 +0: loading /home/owner/Storage/Code/oc_app/test/kit/kit_manifest_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app/test/kit/kit_manifest_test.dart: G4: the manifest reads the kit library and every kit file
+00:00 +1: /home/owner/Storage/Code/oc_app/test/kit/kit_manifest_test.dart: G4: every kit part and opener meets the manifest (allowlist only shrinks)
+00:06 +2: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: manifest the G4 manifest is read (the parser still works)
+00:06 +3: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: manifest every kit.dart part has reduced-motion samples (G8x)
+00:06 +4: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: manifest this file registers only the parts that predate G8x
+00:06 +5: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: manifest the ratchet only shrinks and names real samples
+00:06 +6: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: manifest registrations name parts kit.dart exports
+00:06 +7: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitActionBlock (MOT-7) default settles at once under system
+00:06 +8: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitActionBlock (MOT-7) working settles at once under system
+00:06 +9: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitActionBlock (MOT-7) default settles at once under effectsOff
+00:06 +10: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitActionBlock (MOT-7) working settles at once under effectsOff
+00:06 +11: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitActionStack (MOT-7) default settles at once under system
+00:06 +12: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitActionStack (MOT-7) default settles at once under effectsOff
+00:06 +13: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitAnimatedRows (MOT-7) default settles at once under system
+00:06 +14: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitAnimatedRows (MOT-7) row inserted changes and settles at once under system
+00:06 +15: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitAnimatedRows (MOT-7) row removed changes and settles at once under system
+00:06 +16: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitAnimatedRows (MOT-7) default settles at once under effectsOff
+00:06 +17: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitAnimatedRows (MOT-7) row inserted changes and settles at once under effectsOff
+00:06 +18: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitAnimatedRows (MOT-7) row removed changes and settles at once under effectsOff
+00:06 +19: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitAskLine (MOT-7) default settles at once under system
+00:06 +20: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitAskLine (MOT-7) default settles at once under effectsOff
+00:06 +21: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitButton (MOT-7) primary working settles at once under system
+00:06 +22: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitButton (MOT-7) secondary working settles at once under system
+00:07 +23: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitButton (MOT-7) tertiary settles at once under system
+00:07 +24: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitButton (MOT-7) disabled settles at once under system
+00:07 +25: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitButton (MOT-7) working ends changes and settles at once under system
+00:07 +26: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitButton (MOT-7) working ends with an icon changes and settles at once under system
+00:07 +27: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitButton (MOT-7) primary working settles at once under effectsOff
+00:07 +28: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitButton (MOT-7) secondary working settles at once under effectsOff
+00:07 +29: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitButton (MOT-7) tertiary settles at once under effectsOff
+00:07 +30: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitButton (MOT-7) disabled settles at once under effectsOff
+00:07 +31: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitButton (MOT-7) working ends changes and settles at once under effectsOff
+00:07 +32: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitButton (MOT-7) working ends with an icon changes and settles at once under effectsOff
+00:07 +33: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitChevron (MOT-7) default settles at once under system
+00:07 +34: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitChevron (MOT-7) default settles at once under effectsOff
+00:07 +35: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitConfirmSheet (MOT-7) default settles at once under system
+00:07 +36: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitConfirmSheet (MOT-7) working settles at once under system
+00:07 +37: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitConfirmSheet (MOT-7) details open changes and settles at once under system
+00:07 +38: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitConfirmSheet (MOT-7) default settles at once under effectsOff
+00:07 +39: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitConfirmSheet (MOT-7) working settles at once under effectsOff
+00:07 +40: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitConfirmSheet (MOT-7) details open changes and settles at once under effectsOff
+00:07 +41: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitEntrance (MOT-7) default settles at once under system
+00:07 +42: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitEntrance (MOT-7) trigger changes changes and settles at once under system
+00:07 +43: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitEntrance (MOT-7) default settles at once under effectsOff
+00:07 +44: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitEntrance (MOT-7) trigger changes changes and settles at once under effectsOff
+00:07 +45: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitExpandRow (MOT-7) closed settles at once under system
+00:07 +46: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitExpandRow (MOT-7) open settles at once under system
+00:07 +47: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitExpandRow (MOT-7) opens on press changes and settles at once under system
+00:07 +48: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitExpandRow (MOT-7) closes on press changes and settles at once under system
+00:07 +49: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitExpandRow (MOT-7) closed settles at once under effectsOff
+00:07 +50: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitExpandRow (MOT-7) open settles at once under effectsOff
+00:07 +51: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitExpandRow (MOT-7) opens on press changes and settles at once under effectsOff
+00:07 +52: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitExpandRow (MOT-7) closes on press changes and settles at once under effectsOff
+00:07 +53: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitGlass (MOT-7) default settles at once under system
+00:07 +54: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitGlass (MOT-7) default settles at once under effectsOff
+00:07 +55: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitIconButton (MOT-7) default settles at once under system
+00:07 +56: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitIconButton (MOT-7) default settles at once under effectsOff
+00:07 +57: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitIllustration (MOT-7) entrance settles at once under system
+00:07 +58: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitIllustration (MOT-7) ambient settles at once under system
+00:07 +59: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitIllustration (MOT-7) ambient turns on changes and settles at once under system
+00:07 +60: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitIllustration (MOT-7) entrance settles at once under effectsOff
+00:07 +61: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitIllustration (MOT-7) ambient settles at once under effectsOff
+00:07 +62: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitIllustration (MOT-7) ambient turns on changes and settles at once under effectsOff
+00:07 +63: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitInset (MOT-7) default settles at once under system
+00:07 +64: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitInset (MOT-7) default settles at once under effectsOff
+00:07 +65: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitLoadingBar (MOT-7) loading settles at once under system
+00:07 +66: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitLoadingBar (MOT-7) idle settles at once under system
+00:07 +67: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitLoadingBar (MOT-7) loading ends changes and settles at once under system
+00:08 +68: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitLoadingBar (MOT-7) loading settles at once under effectsOff
+00:08 +69: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitLoadingBar (MOT-7) idle settles at once under effectsOff
+00:08 +70: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitLoadingBar (MOT-7) loading ends changes and settles at once under effectsOff
+00:08 +71: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitNotice (MOT-7) default settles at once under system
+00:08 +72: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitNotice (MOT-7) default settles at once under effectsOff
+00:08 +73: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitPanel (MOT-7) default settles at once under system
+00:08 +74: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitPanel (MOT-7) default settles at once under effectsOff
+00:08 +75: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitPortalScene (MOT-7) ambient settles at once under system
+00:08 +76: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitPortalScene (MOT-7) ambient settles at once under effectsOff
+00:08 +77: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitProgressView (MOT-7) waiting settles at once under system
+00:08 +78: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitProgressView (MOT-7) known settles at once under system
+00:08 +79: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitProgressView (MOT-7) progress moves changes and settles at once under system
+00:08 +80: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitProgressView (MOT-7) waiting settles at once under effectsOff
+00:08 +81: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitProgressView (MOT-7) known settles at once under effectsOff
+00:08 +82: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitProgressView (MOT-7) progress moves changes and settles at once under effectsOff
+00:08 +83: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitRefresh (MOT-7) default settles at once under system
+00:08 +84: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitRefresh (MOT-7) pulled and released changes and settles at once under system
+00:08 +85: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitRefresh (MOT-7) default settles at once under effectsOff
+00:08 +86: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitRefresh (MOT-7) pulled and released changes and settles at once under effectsOff
+00:08 +87: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitRequestCard (MOT-7) default settles at once under system
+00:08 +88: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitRequestCard (MOT-7) default settles at once under effectsOff
+00:08 +89: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitReveal (MOT-7) default settles at once under system
+00:08 +90: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitReveal (MOT-7) child arrives changes and settles at once under system
+00:08 +91: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitReveal (MOT-7) child leaves changes and settles at once under system
+00:08 +92: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitReveal (MOT-7) default settles at once under effectsOff
+00:08 +93: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitReveal (MOT-7) child arrives changes and settles at once under effectsOff
+00:08 +94: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitReveal (MOT-7) child leaves changes and settles at once under effectsOff
+00:08 +95: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitRow (MOT-7) default settles at once under system
+00:08 +96: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitRow (MOT-7) disabled settles at once under system
+00:08 +97: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitRow (MOT-7) default settles at once under effectsOff
+00:08 +98: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitRow (MOT-7) disabled settles at once under effectsOff
+00:08 +99: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitRowIcon (MOT-7) current settles at once under system
+00:08 +100: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitRowIcon (MOT-7) current settles at once under effectsOff
+00:08 +101: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitRowMenu (MOT-7) default settles at once under system
+00:08 +102: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitRowMenu (MOT-7) menu opens changes and settles at once under system
+00:08 +103: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitRowMenu (MOT-7) default settles at once under effectsOff
+00:08 +104: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitRowMenu (MOT-7) menu opens changes and settles at once under effectsOff
+00:08 +105: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitScreen (MOT-7) loading settles at once under system
+00:08 +106: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitScreen (MOT-7) loading ends changes and settles at once under system
+00:08 +107: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: KitScreen (MOT-7) loading settles at once under effectsOff
+00:08 +108: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:08 +109: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:08 +110: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +111: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +112: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +113: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +114: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +115: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +116: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +117: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +118: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +119: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +120: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +121: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +122: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +123: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +124: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +125: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +126: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +127: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +128: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +129: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +130: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +131: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +132: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +133: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +134: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +135: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +136: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +137: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +138: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +139: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +140: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +141: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +142: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +143: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +144: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +145: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +146: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +147: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +148: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +149: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +150: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +151: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +152: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +153: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +154: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +155: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +156: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +157: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +158: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +159: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:09 +160: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: ProductEmptyState (MOT-7) default settles at once under system
+00:09 +161: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the busy composer lays out at 2.5x
+00:10 +162: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the busy composer lays out at 2.5x
+00:10 +163: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the busy composer lays out at 2.5x
+00:10 +164: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the busy composer lays out at 2.5x
+00:10 +165: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the busy composer lays out at 2.5x
+00:10 +166: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the busy composer lays out at 2.5x
+00:10 +167: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the busy composer lays out at 2.5x
+00:10 +168: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: SectionLabel (MOT-7) default settles at once under effectsOff
+00:10 +169: /home/owner/Storage/Code/oc_app/test/kit_ratchet_test.dart: G1: modal and toast entry points live in the kit
+00:10 +170: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +171: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +172: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +173: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +174: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +175: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +176: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +177: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +178: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +179: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +180: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +181: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +182: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +183: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +184: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +185: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +186: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +187: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +188: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +189: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +190: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +191: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +192: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +193: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +194: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +195: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +196: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +197: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +198: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +199: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +200: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +201: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +202: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +203: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +204: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +205: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +206: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +207: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:10 +208: /home/owner/Storage/Code/oc_app/test/kit_motion_test.dart: showKitSheet (MOT-7) dismissed changes and settles at once under system
+00:10 +209: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the home shell lays out at 2.5x
+00:10 +210: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the home shell lays out at 2.5x
+00:10 +211: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the home shell lays out at 2.5x
+00:10 +212: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the home shell lays out at 2.5x
+00:10 +213: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the home shell lays out at 2.5x
+00:10 +214: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the home shell lays out at 2.5x
+00:10 +215: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the home shell lays out at 2.5x
+00:10 +216: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the home shell lays out at 2.5x
+00:10 +217: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the home shell lays out at 2.5x
+00:10 +218: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the home shell lays out at 2.5x
+00:10 +219: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the home shell lays out at 2.5x
+00:10 +220: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the home shell lays out at 2.5x
+00:10 +221: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the home shell lays out at 2.5x
+00:10 +222: /home/owner/Storage/Code/oc_app/test/golden_harness_test.dart: G23 font loaders register every family AppTheme and pubspec name (TEST-8)
+00:10 +223: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the Settings tab lays out at 2.5x
+00:10 +224: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: the Settings tab lays out at 2.5x
+00:10 +225: /home/owner/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
+00:10 +226: /home/owner/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
+00:11 +227: /home/owner/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
+00:11 +228: /home/owner/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
+00:11 +229: /home/owner/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
+00:11 +230: /home/owner/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
+00:11 +231: /home/owner/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
+00:11 +232: /home/owner/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
+00:11 +233: /home/owner/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
+00:11 +234: /home/owner/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
+00:11 +235: /home/owner/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
+00:11 +236: /home/owner/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
+00:11 +237: /home/owner/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
+00:11 +238: /home/owner/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
+00:11 +239: /home/owner/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
+00:11 +240: /home/owner/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
+00:11 +241: /home/owner/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
+00:11 +242: /home/owner/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
+00:11 +243: /home/owner/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
+00:11 +244: /home/owner/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
+00:11 +245: /home/owner/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
+00:11 +246: /home/owner/Storage/Code/oc_app/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
+00:11 +247: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix LoadingList/loading fits every overflow size, text scale and direction
+00:11 +248: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix LoadingList/loading fits every overflow size, text scale and direction
+00:11 +249: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix LoadingList/loading fits every overflow size, text scale and direction
+00:11 +250: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix LoadingList/loading fits every overflow size, text scale and direction
+00:11 +251: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix LoadingList/loading fits every overflow size, text scale and direction
+00:11 +252: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix LoadingList/loading fits every overflow size, text scale and direction
+00:11 +253: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix LoadingList/loading fits every overflow size, text scale and direction
+00:12 +254: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix ProductEmptyState/empty fits every overflow size, text scale and direction
+00:12 +255: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix ProductEmptyState/empty fits every overflow size, text scale and direction
+00:12 +256: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix ProductEmptyState/empty fits every overflow size, text scale and direction
+00:12 +256: /home/owner/Storage/Code/oc_app/test/l10n_coverage_test.dart: no file gained hardcoded UI strings
 l10n: these files improved; lower their baseline in test/l10n_coverage_test.dart:
   lib/ui/screens/app_diagnostics_screen.dart: 1 (baseline 12)
   lib/ui/screens/chat_screen.dart: 1 (baseline 27)
@@ -381,242 +381,242 @@ l10n: these files improved; lower their baseline in test/l10n_coverage_test.dart
   lib/ui/widgets/tool_card.dart: 0 (baseline 7)
   lib/ui/widgets/transcript_display_toggles.dart: 0 (baseline 2)
   lib/voice/notices.dart: 0 (baseline 1)
-00:12 +257: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix ProductEmptyState/empty fits every overflow size, text scale and direction
-00:12 +258: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix ProductEmptyState/empty fits every overflow size, text scale and direction
-00:12 +259: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix ProductEmptyState/empty fits every overflow size, text scale and direction
-00:12 +260: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix ProductEmptyState/empty fits every overflow size, text scale and direction
-00:12 +261: /home/eslam/Storage/Code/oc_app/test/theme_packs_test.dart: theme pack persistence round-trips through the store
-00:12 +262: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix ProductErrorState/error fits every overflow size, text scale and direction
-00:13 +263: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix ProductErrorState/error fits every overflow size, text scale and direction
-00:13 +264: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix ProductErrorState/error fits every overflow size, text scale and direction
-00:13 +265: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix ProductErrorState/error fits every overflow size, text scale and direction
-00:13 +266: /home/eslam/Storage/Code/oc_app/test/theme_packs_test.dart: the appearance page picks packs and gates Material You
-00:14 +267: /home/eslam/Storage/Code/oc_app/test/theme_packs_test.dart: the appearance page picks packs and gates Material You
-00:14 +268: /home/eslam/Storage/Code/oc_app/test/kit/kit_confirm_sheet_test.dart: answers false unless confirmed cancel
-00:14 +269: /home/eslam/Storage/Code/oc_app/test/kit/kit_confirm_sheet_test.dart: answers false unless confirmed cancel
-00:14 +270: /home/eslam/Storage/Code/oc_app/test/kit/kit_confirm_sheet_test.dart: answers false unless confirmed cancel
-00:14 +271: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionStack/default fits every overflow size, text scale and direction
-00:14 +272: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionStack/default fits every overflow size, text scale and direction
-00:15 +273: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionStack/default fits every overflow size, text scale and direction
-00:15 +274: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionStack/default fits every overflow size, text scale and direction
-00:15 +275: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionStack/default fits every overflow size, text scale and direction
-00:15 +276: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionStack/default fits every overflow size, text scale and direction
-00:15 +277: /home/eslam/Storage/Code/oc_app/test/kit/kit_confirm_sheet_test.dart: error tone only for stop, destructive and discard; never ?
-00:15 +278: /home/eslam/Storage/Code/oc_app/test/kit/kit_row_group_test.dart: KitRowGroup (MOT-7) default settles at once under system
-00:15 +279: /home/eslam/Storage/Code/oc_app/test/kit/kit_row_group_test.dart: KitRowGroup (MOT-7) default settles at once under system
-00:15 +280: /home/eslam/Storage/Code/oc_app/test/kit/kit_row_group_test.dart: KitRowGroup (MOT-7) default settles at once under system
-00:15 +281: /home/eslam/Storage/Code/oc_app/test/kit/kit_row_group_test.dart: KitRowGroup (MOT-7) default settles at once under system
-00:15 +282: /home/eslam/Storage/Code/oc_app/test/kit/kit_row_group_test.dart: KitRowGroup (MOT-7) default settles at once under system
-00:15 +283: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitAskLine/default fits every overflow size, text scale and direction
-00:16 +284: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitAskLine/default fits every overflow size, text scale and direction
-00:16 +285: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitAskLine/default fits every overflow size, text scale and direction
-00:16 +286: /home/eslam/Storage/Code/oc_app/test/kit/kit_row_group_test.dart: KitRowGroup (MOT-7) default settles at once under effectsOff
-00:16 +287: /home/eslam/Storage/Code/oc_app/test/kit/kit_confirm_sheet_test.dart: commit haptic never with Vibration off
-00:16 +288: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitButton/default fits every overflow size, text scale and direction
-00:16 +289: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitButton/default fits every overflow size, text scale and direction
-00:16 +290: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitButton/default fits every overflow size, text scale and direction
-00:16 +291: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitButton/default fits every overflow size, text scale and direction
-00:16 +292: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitButton/default fits every overflow size, text scale and direction
-00:16 +293: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitButton/default fits every overflow size, text scale and direction
-00:16 +294: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitButton/default fits every overflow size, text scale and direction
-00:16 +295: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitButton/default fits every overflow size, text scale and direction
-00:16 +296: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitButton/default fits every overflow size, text scale and direction
-00:16 +297: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitButton/default fits every overflow size, text scale and direction
-00:16 +298: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitButton/default fits every overflow size, text scale and direction
-00:16 +299: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitButton/default fits every overflow size, text scale and direction
-00:16 +300: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitButton/default fits every overflow size, text scale and direction
-00:16 +301: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitButton/default fits every overflow size, text scale and direction
-00:16 +302: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitButton/working fits every overflow size, text scale and direction
-00:17 +303: /home/eslam/Storage/Code/oc_app/test/kit/kit_tokens_test.dart: a theme's tokens reach the sheet and the confirmation
-00:17 +304: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitButton/disabled fits every overflow size, text scale and direction
-00:17 +305: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitButton/disabled fits every overflow size, text scale and direction
-00:17 +306: /home/eslam/Storage/Code/oc_app/test/kit/kit_text_test.dart: KitText (MOT-7) default settles at once under system
-00:18 +307: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionBlock/default fits every overflow size, text scale and direction
-00:18 +308: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionBlock/default fits every overflow size, text scale and direction
-00:18 +309: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionBlock/default fits every overflow size, text scale and direction
-00:18 +310: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionBlock/default fits every overflow size, text scale and direction
-00:18 +311: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionBlock/default fits every overflow size, text scale and direction
-00:18 +312: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionBlock/default fits every overflow size, text scale and direction
-00:18 +313: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionBlock/default fits every overflow size, text scale and direction
-00:18 +314: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionBlock/default fits every overflow size, text scale and direction
-00:18 +315: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionBlock/default fits every overflow size, text scale and direction
-00:18 +316: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionBlock/default fits every overflow size, text scale and direction
-00:18 +317: /home/eslam/Storage/Code/oc_app/test/kit/kit_draft_test.dart: typed text survives swipe down, silently
-00:19 +318: /home/eslam/Storage/Code/oc_app/test/kit/kit_draft_test.dart: typed text survives swipe down, silently
-00:19 +319: /home/eslam/Storage/Code/oc_app/test/kit/kit_sheet_test.dart: the frame: title, subtitle, close, body and pinned actions
-00:19 +320: /home/eslam/Storage/Code/oc_app/test/kit/kit_sheet_test.dart: the frame: title, subtitle, close, body and pinned actions
-00:19 +321: /home/eslam/Storage/Code/oc_app/test/kit/kit_sheet_test.dart: the frame: title, subtitle, close, body and pinned actions
-00:19 +322: /home/eslam/Storage/Code/oc_app/test/kit/kit_sheet_test.dart: the frame: title, subtitle, close, body and pinned actions
-00:19 +323: /home/eslam/Storage/Code/oc_app/test/kit/kit_sheet_test.dart: the frame: title, subtitle, close, body and pinned actions
-00:19 +324: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitIconButton/default fits every overflow size, text scale and direction
-00:19 +325: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitIconButton/default fits every overflow size, text scale and direction
-00:19 +326: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitIconButton/default fits every overflow size, text scale and direction
-00:19 +327: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitIconButton/default fits every overflow size, text scale and direction
-00:20 +328: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitIconButton/default fits every overflow size, text scale and direction
-00:20 +329: /home/eslam/Storage/Code/oc_app/test/kit/kit_sheet_test.dart: unsaved input without a draft back asks in place; Keep editing keeps the text
-00:20 +330: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitIllustration/default fits every overflow size, text scale and direction
-00:20 +331: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitIllustration/default fits every overflow size, text scale and direction
-00:20 +332: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitIllustration/default fits every overflow size, text scale and direction
-00:20 +333: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitIllustration/default fits every overflow size, text scale and direction
-00:20 +334: /home/eslam/Storage/Code/oc_app/test/kit/kit_sheet_test.dart: unsaved input without a draft clean input closes without asking
-00:20 +335: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitPanel/default fits every overflow size, text scale and direction
-00:20 +336: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitPanel/default fits every overflow size, text scale and direction
-00:20 +337: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitPanel/default fits every overflow size, text scale and direction
-00:20 +338: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitPanel/default fits every overflow size, text scale and direction
-00:20 +339: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitPanel/default fits every overflow size, text scale and direction
-00:20 +340: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitPanel/default fits every overflow size, text scale and direction
-00:20 +341: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitPanel/default fits every overflow size, text scale and direction
-00:20 +342: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitPanel/default fits every overflow size, text scale and direction
-00:20 +343: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitPanel/default fits every overflow size, text scale and direction
-00:20 +344: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitPanel/default fits every overflow size, text scale and direction
-00:20 +345: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitPanel/default fits every overflow size, text scale and direction
-00:20 +346: /home/eslam/Storage/Code/oc_app/test/kit/kit_keyboard_test.dart: showKitConfirm Esc cancels
-00:21 +347: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitNotice/default fits every overflow size, text scale and direction
-00:21 +348: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitNotice/default fits every overflow size, text scale and direction
-00:21 +349: /home/eslam/Storage/Code/oc_app/test/kit/kit_keyboard_test.dart: showKitConfirm Enter does not confirm destructive; Tab to it does
-00:21 +350: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitLoadingBar/loading fits every overflow size, text scale and direction
-00:21 +351: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitLoadingBar/loading fits every overflow size, text scale and direction
-00:21 +352: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitLoadingBar/loading fits every overflow size, text scale and direction
-00:21 +353: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitLoadingBar/loading fits every overflow size, text scale and direction
-00:21 +354: /home/eslam/Storage/Code/oc_app/test/kit/kit_row_value_test.dart: KitRowValue (MOT-7) default settles at once under system
-00:22 +355: /home/eslam/Storage/Code/oc_app/test/kit/kit_row_value_test.dart: KitRowValue (MOT-7) default settles at once under system
-00:22 +356: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSkeletonRows/loading fits every overflow size, text scale and direction
-00:22 +357: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSkeletonRows/loading fits every overflow size, text scale and direction
-00:22 +358: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSkeletonRows/loading fits every overflow size, text scale and direction
-00:22 +359: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSkeletonRows/loading fits every overflow size, text scale and direction
-00:22 +360: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSkeletonRows/loading fits every overflow size, text scale and direction
-00:22 +361: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSkeletonRows/loading fits every overflow size, text scale and direction
-00:22 +362: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSkeletonRows/loading fits every overflow size, text scale and direction
-00:22 +363: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSkeletonRows/loading fits every overflow size, text scale and direction
-00:22 +364: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSkeletonRows/loading fits every overflow size, text scale and direction
-00:22 +365: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitProgressView/working fits every overflow size, text scale and direction
-00:22 +366: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRequestCard/default fits every overflow size, text scale and direction
-00:23 +367: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRequestCard/disabled fits every overflow size, text scale and direction
-00:23 +368: /home/eslam/Storage/Code/oc_app/test/kit/kit_secret_field_test.dart: KitSecretField masks until shown, then masks again
-00:24 +369: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRow/default fits every overflow size, text scale and direction
-00:24 +370: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRow/default fits every overflow size, text scale and direction
-00:24 +371: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRow/default fits every overflow size, text scale and direction
-00:24 +372: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRow/disabled fits every overflow size, text scale and direction
-00:25 +373: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRowIcon/default fits every overflow size, text scale and direction
-00:25 +374: /home/eslam/Storage/Code/oc_app/test/goldens/kit/kit_gallery_g5_test.dart: a clean tree passes
-00:25 +375: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRowMenu/default fits every overflow size, text scale and direction
-00:25 +376: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRowMenu/default fits every overflow size, text scale and direction
-00:25 +377: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRowMenu/default fits every overflow size, text scale and direction
-00:25 +378: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRowMenu/default fits every overflow size, text scale and direction
-00:25 +379: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRowMenu/default fits every overflow size, text scale and direction
-00:26 +380: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRowMenu/default fits every overflow size, text scale and direction
-00:26 +381: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRowMenu/default fits every overflow size, text scale and direction
-00:26 +382: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRowMenu/default fits every overflow size, text scale and direction
-00:26 +383: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRowMenu/default fits every overflow size, text scale and direction
-00:26 +384: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRowMenu/default fits every overflow size, text scale and direction
-00:26 +385: /home/eslam/Storage/Code/oc_app/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 360x800 · dark
-00:26 +386: /home/eslam/Storage/Code/oc_app/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 360x800 · dark
-00:26 +387: /home/eslam/Storage/Code/oc_app/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 360x800 · dark
-00:26 +388: /home/eslam/Storage/Code/oc_app/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 360x800 · dark
-00:26 +389: /home/eslam/Storage/Code/oc_app/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 360x800 · dark
-00:26 +390: /home/eslam/Storage/Code/oc_app/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 360x800 · dark
-00:26 +391: /home/eslam/Storage/Code/oc_app/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 360x800 · dark
-00:26 +392: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSwitchRow/default fits every overflow size, text scale and direction
-00:26 +393: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSwitchRow/default fits every overflow size, text scale and direction
-00:26 +394: /home/eslam/Storage/Code/oc_app/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 800x1280 · dark
-00:27 +395: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSwitchRow/disabled fits every overflow size, text scale and direction
-00:27 +396: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSwitchRow/disabled fits every overflow size, text scale and direction
-00:27 +397: /home/eslam/Storage/Code/oc_app/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 360x800 · dark
-00:27 +398: /home/eslam/Storage/Code/oc_app/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 360x800 · dark
-00:27 +399: /home/eslam/Storage/Code/oc_app/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 360x800 · dark
-00:27 +400: /home/eslam/Storage/Code/oc_app/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 360x800 · dark
-00:27 +401: /home/eslam/Storage/Code/oc_app/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 360x800 · dark
-00:27 +402: /home/eslam/Storage/Code/oc_app/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 360x800 · dark
-00:28 +403: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitExpandRow/expanded fits every overflow size, text scale and direction
-00:28 +404: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitExpandRow/expanded fits every overflow size, text scale and direction
-00:28 +405: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitExpandRow/expanded fits every overflow size, text scale and direction
-00:28 +406: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitExpandRow/expanded fits every overflow size, text scale and direction
-00:28 +407: /home/eslam/Storage/Code/oc_app/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm stop, working · dark
-00:28 +408: /home/eslam/Storage/Code/oc_app/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 800x1280 · dark
-00:28 +409: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitScreen/default fits every overflow size, text scale and direction
-00:28 +410: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitScreen/default fits every overflow size, text scale and direction
-00:28 +411: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitScreen/default fits every overflow size, text scale and direction
-00:28 +412: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitScreen/default fits every overflow size, text scale and direction
-00:28 +413: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitScreen/default fits every overflow size, text scale and direction
-00:28 +414: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitScreen/default fits every overflow size, text scale and direction
-00:28 +415: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitScreen/default fits every overflow size, text scale and direction
-00:28 +416: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitScreen/default fits every overflow size, text scale and direction
-00:29 +417: /home/eslam/Storage/Code/oc_app/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet · ar · 412x915 · dark
-00:29 +418: /home/eslam/Storage/Code/oc_app/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 412x915 · light
-00:29 +419: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitScreen/loading fits every overflow size, text scale and direction
-00:29 +420: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitScreen/loading fits every overflow size, text scale and direction
-00:29 +421: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitScreen/loading fits every overflow size, text scale and direction
-00:29 +422: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitScreen/loading fits every overflow size, text scale and direction
-00:29 +423: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitScreen/loading fits every overflow size, text scale and direction
-00:29 +424: /home/eslam/Storage/Code/oc_app/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet loading · dark
-00:29 +425: /home/eslam/Storage/Code/oc_app/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 1600x1000 · light
-00:29 +426: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/default fits every overflow size, text scale and direction
-00:29 +427: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/default fits every overflow size, text scale and direction
-00:29 +428: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/default fits every overflow size, text scale and direction
-00:29 +429: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/default fits every overflow size, text scale and direction
-00:29 +430: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/default fits every overflow size, text scale and direction
-00:29 +431: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/default fits every overflow size, text scale and direction
-00:29 +432: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/default fits every overflow size, text scale and direction
-00:30 +433: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/default fits every overflow size, text scale and direction
-00:30 +434: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/default fits every overflow size, text scale and direction
-00:30 +435: /home/eslam/Storage/Code/oc_app/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet full · 1280x800 · dark
-00:30 +436: /home/eslam/Storage/Code/oc_app/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet full · 1280x800 · dark
-00:30 +437: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/disabled fits every overflow size, text scale and direction
-00:30 +438: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/disabled fits every overflow size, text scale and direction
-00:30 +439: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/disabled fits every overflow size, text scale and direction
-00:30 +440: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/disabled fits every overflow size, text scale and direction
-00:30 +441: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/disabled fits every overflow size, text scale and direction
-00:30 +442: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/disabled fits every overflow size, text scale and direction
-00:30 +443: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/disabled fits every overflow size, text scale and direction
-00:30 +444: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/disabled fits every overflow size, text scale and direction
-00:30 +445: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/disabled fits every overflow size, text scale and direction
-00:30 +446: /home/eslam/Storage/Code/oc_app/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 1600x1000 · light
-00:30 +447: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/default fits every overflow size, text scale and direction
-00:30 +448: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/default fits every overflow size, text scale and direction
-00:31 +449: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/default fits every overflow size, text scale and direction
-00:31 +450: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/default fits every overflow size, text scale and direction
-00:31 +451: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/default fits every overflow size, text scale and direction
-00:31 +452: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/default fits every overflow size, text scale and direction
-00:31 +453: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/default fits every overflow size, text scale and direction
-00:31 +454: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/default fits every overflow size, text scale and direction
-00:31 +455: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/default fits every overflow size, text scale and direction
-00:31 +456: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/default fits every overflow size, text scale and direction
-00:31 +457: /home/eslam/Storage/Code/oc_app/test/goldens/kit/kit_foundation_golden_test.dart: foundation work · 412x915 · dark
-00:32 +458: /home/eslam/Storage/Code/oc_app/test/goldens/kit/kit_foundation_golden_test.dart: foundation work · 412x915 · dark
-00:32 +459: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/full fits every overflow size, text scale and direction
-00:32 +460: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/full fits every overflow size, text scale and direction
-00:32 +461: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/full fits every overflow size, text scale and direction
-00:32 +462: /home/eslam/Storage/Code/oc_app/test/goldens/kit/kit_foundation_golden_test.dart: foundation work · 2.0 text · dark
-00:32 +463: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/loading fits every overflow size, text scale and direction
-00:33 +464: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/loading fits every overflow size, text scale and direction
-00:33 +465: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/loading fits every overflow size, text scale and direction
-00:33 +466: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/loading fits every overflow size, text scale and direction
-00:33 +467: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/loading fits every overflow size, text scale and direction
-00:33 +468: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/loading fits every overflow size, text scale and direction
-00:33 +469: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/loading fits every overflow size, text scale and direction
-00:33 +470: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/disabled fits every overflow size, text scale and direction
-00:34 +471: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/inline fits every overflow size, text scale and direction
-00:34 +472: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitConfirmSheet/neutral fits every overflow size, text scale and direction
-00:35 +473: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitConfirmSheet/destructive fits every overflow size, text scale and direction
-00:36 +474: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitConfirmSheet/stop fits every overflow size, text scale and direction
-00:36 +475: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitConfirmSheet/working fits every overflow size, text scale and direction
-00:36 +476: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitConfirmSheet/error fits every overflow size, text scale and direction
-00:37 +477: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSkeletonTranscript/loading fits every overflow size, text scale and direction
-00:37 +478: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitStateView/error fits every overflow size, text scale and direction
-00:38 +479: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitStateView/working fits every overflow size, text scale and direction
-00:38 +480: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitStateView/empty fits every overflow size, text scale and direction
-00:38 +481: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitStateView/illustrated fits every overflow size, text scale and direction
-00:39 +482: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitStatusLine/default fits every overflow size, text scale and direction
-00:39 +483: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitStatusLine/together fits every overflow size, text scale and direction
-00:39 +484: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitStatusMark/default fits every overflow size, text scale and direction
-00:40 +485: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitTaskMark/default fits every overflow size, text scale and direction
-00:40 +486: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitAnimatedRows/default fits every overflow size, text scale and direction
-00:40 +487: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRefresh/default fits every overflow size, text scale and direction
-00:41 +488: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitReveal/default fits every overflow size, text scale and direction
-00:41 +489: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitTabSwitcher/default fits every overflow size, text scale and direction
-00:41 +490: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitGlass/default fits every overflow size, text scale and direction
-00:41 +491: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitEffectsScope/default fits every overflow size, text scale and direction
-00:42 +492: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitText/default fits every overflow size, text scale and direction
-00:42 +493: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRowGroup/default fits every overflow size, text scale and direction
-00:42 +494: /home/eslam/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix (tearDownAll)
+00:12 +257: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix ProductEmptyState/empty fits every overflow size, text scale and direction
+00:12 +258: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix ProductEmptyState/empty fits every overflow size, text scale and direction
+00:12 +259: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix ProductEmptyState/empty fits every overflow size, text scale and direction
+00:12 +260: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix ProductEmptyState/empty fits every overflow size, text scale and direction
+00:12 +261: /home/owner/Storage/Code/oc_app/test/theme_packs_test.dart: theme pack persistence round-trips through the store
+00:12 +262: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix ProductErrorState/error fits every overflow size, text scale and direction
+00:13 +263: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix ProductErrorState/error fits every overflow size, text scale and direction
+00:13 +264: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix ProductErrorState/error fits every overflow size, text scale and direction
+00:13 +265: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix ProductErrorState/error fits every overflow size, text scale and direction
+00:13 +266: /home/owner/Storage/Code/oc_app/test/theme_packs_test.dart: the appearance page picks packs and gates Material You
+00:14 +267: /home/owner/Storage/Code/oc_app/test/theme_packs_test.dart: the appearance page picks packs and gates Material You
+00:14 +268: /home/owner/Storage/Code/oc_app/test/kit/kit_confirm_sheet_test.dart: answers false unless confirmed cancel
+00:14 +269: /home/owner/Storage/Code/oc_app/test/kit/kit_confirm_sheet_test.dart: answers false unless confirmed cancel
+00:14 +270: /home/owner/Storage/Code/oc_app/test/kit/kit_confirm_sheet_test.dart: answers false unless confirmed cancel
+00:14 +271: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionStack/default fits every overflow size, text scale and direction
+00:14 +272: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionStack/default fits every overflow size, text scale and direction
+00:15 +273: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionStack/default fits every overflow size, text scale and direction
+00:15 +274: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionStack/default fits every overflow size, text scale and direction
+00:15 +275: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionStack/default fits every overflow size, text scale and direction
+00:15 +276: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionStack/default fits every overflow size, text scale and direction
+00:15 +277: /home/owner/Storage/Code/oc_app/test/kit/kit_confirm_sheet_test.dart: error tone only for stop, destructive and discard; never ?
+00:15 +278: /home/owner/Storage/Code/oc_app/test/kit/kit_row_group_test.dart: KitRowGroup (MOT-7) default settles at once under system
+00:15 +279: /home/owner/Storage/Code/oc_app/test/kit/kit_row_group_test.dart: KitRowGroup (MOT-7) default settles at once under system
+00:15 +280: /home/owner/Storage/Code/oc_app/test/kit/kit_row_group_test.dart: KitRowGroup (MOT-7) default settles at once under system
+00:15 +281: /home/owner/Storage/Code/oc_app/test/kit/kit_row_group_test.dart: KitRowGroup (MOT-7) default settles at once under system
+00:15 +282: /home/owner/Storage/Code/oc_app/test/kit/kit_row_group_test.dart: KitRowGroup (MOT-7) default settles at once under system
+00:15 +283: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitAskLine/default fits every overflow size, text scale and direction
+00:16 +284: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitAskLine/default fits every overflow size, text scale and direction
+00:16 +285: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitAskLine/default fits every overflow size, text scale and direction
+00:16 +286: /home/owner/Storage/Code/oc_app/test/kit/kit_row_group_test.dart: KitRowGroup (MOT-7) default settles at once under effectsOff
+00:16 +287: /home/owner/Storage/Code/oc_app/test/kit/kit_confirm_sheet_test.dart: commit haptic never with Vibration off
+00:16 +288: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitButton/default fits every overflow size, text scale and direction
+00:16 +289: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitButton/default fits every overflow size, text scale and direction
+00:16 +290: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitButton/default fits every overflow size, text scale and direction
+00:16 +291: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitButton/default fits every overflow size, text scale and direction
+00:16 +292: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitButton/default fits every overflow size, text scale and direction
+00:16 +293: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitButton/default fits every overflow size, text scale and direction
+00:16 +294: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitButton/default fits every overflow size, text scale and direction
+00:16 +295: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitButton/default fits every overflow size, text scale and direction
+00:16 +296: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitButton/default fits every overflow size, text scale and direction
+00:16 +297: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitButton/default fits every overflow size, text scale and direction
+00:16 +298: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitButton/default fits every overflow size, text scale and direction
+00:16 +299: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitButton/default fits every overflow size, text scale and direction
+00:16 +300: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitButton/default fits every overflow size, text scale and direction
+00:16 +301: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitButton/default fits every overflow size, text scale and direction
+00:16 +302: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitButton/working fits every overflow size, text scale and direction
+00:17 +303: /home/owner/Storage/Code/oc_app/test/kit/kit_tokens_test.dart: a theme's tokens reach the sheet and the confirmation
+00:17 +304: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitButton/disabled fits every overflow size, text scale and direction
+00:17 +305: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitButton/disabled fits every overflow size, text scale and direction
+00:17 +306: /home/owner/Storage/Code/oc_app/test/kit/kit_text_test.dart: KitText (MOT-7) default settles at once under system
+00:18 +307: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionBlock/default fits every overflow size, text scale and direction
+00:18 +308: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionBlock/default fits every overflow size, text scale and direction
+00:18 +309: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionBlock/default fits every overflow size, text scale and direction
+00:18 +310: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionBlock/default fits every overflow size, text scale and direction
+00:18 +311: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionBlock/default fits every overflow size, text scale and direction
+00:18 +312: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionBlock/default fits every overflow size, text scale and direction
+00:18 +313: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionBlock/default fits every overflow size, text scale and direction
+00:18 +314: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionBlock/default fits every overflow size, text scale and direction
+00:18 +315: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionBlock/default fits every overflow size, text scale and direction
+00:18 +316: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionBlock/default fits every overflow size, text scale and direction
+00:18 +317: /home/owner/Storage/Code/oc_app/test/kit/kit_draft_test.dart: typed text survives swipe down, silently
+00:19 +318: /home/owner/Storage/Code/oc_app/test/kit/kit_draft_test.dart: typed text survives swipe down, silently
+00:19 +319: /home/owner/Storage/Code/oc_app/test/kit/kit_sheet_test.dart: the frame: title, subtitle, close, body and pinned actions
+00:19 +320: /home/owner/Storage/Code/oc_app/test/kit/kit_sheet_test.dart: the frame: title, subtitle, close, body and pinned actions
+00:19 +321: /home/owner/Storage/Code/oc_app/test/kit/kit_sheet_test.dart: the frame: title, subtitle, close, body and pinned actions
+00:19 +322: /home/owner/Storage/Code/oc_app/test/kit/kit_sheet_test.dart: the frame: title, subtitle, close, body and pinned actions
+00:19 +323: /home/owner/Storage/Code/oc_app/test/kit/kit_sheet_test.dart: the frame: title, subtitle, close, body and pinned actions
+00:19 +324: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitIconButton/default fits every overflow size, text scale and direction
+00:19 +325: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitIconButton/default fits every overflow size, text scale and direction
+00:19 +326: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitIconButton/default fits every overflow size, text scale and direction
+00:19 +327: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitIconButton/default fits every overflow size, text scale and direction
+00:20 +328: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitIconButton/default fits every overflow size, text scale and direction
+00:20 +329: /home/owner/Storage/Code/oc_app/test/kit/kit_sheet_test.dart: unsaved input without a draft back asks in place; Keep editing keeps the text
+00:20 +330: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitIllustration/default fits every overflow size, text scale and direction
+00:20 +331: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitIllustration/default fits every overflow size, text scale and direction
+00:20 +332: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitIllustration/default fits every overflow size, text scale and direction
+00:20 +333: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitIllustration/default fits every overflow size, text scale and direction
+00:20 +334: /home/owner/Storage/Code/oc_app/test/kit/kit_sheet_test.dart: unsaved input without a draft clean input closes without asking
+00:20 +335: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitPanel/default fits every overflow size, text scale and direction
+00:20 +336: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitPanel/default fits every overflow size, text scale and direction
+00:20 +337: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitPanel/default fits every overflow size, text scale and direction
+00:20 +338: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitPanel/default fits every overflow size, text scale and direction
+00:20 +339: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitPanel/default fits every overflow size, text scale and direction
+00:20 +340: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitPanel/default fits every overflow size, text scale and direction
+00:20 +341: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitPanel/default fits every overflow size, text scale and direction
+00:20 +342: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitPanel/default fits every overflow size, text scale and direction
+00:20 +343: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitPanel/default fits every overflow size, text scale and direction
+00:20 +344: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitPanel/default fits every overflow size, text scale and direction
+00:20 +345: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitPanel/default fits every overflow size, text scale and direction
+00:20 +346: /home/owner/Storage/Code/oc_app/test/kit/kit_keyboard_test.dart: showKitConfirm Esc cancels
+00:21 +347: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitNotice/default fits every overflow size, text scale and direction
+00:21 +348: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitNotice/default fits every overflow size, text scale and direction
+00:21 +349: /home/owner/Storage/Code/oc_app/test/kit/kit_keyboard_test.dart: showKitConfirm Enter does not confirm destructive; Tab to it does
+00:21 +350: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitLoadingBar/loading fits every overflow size, text scale and direction
+00:21 +351: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitLoadingBar/loading fits every overflow size, text scale and direction
+00:21 +352: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitLoadingBar/loading fits every overflow size, text scale and direction
+00:21 +353: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitLoadingBar/loading fits every overflow size, text scale and direction
+00:21 +354: /home/owner/Storage/Code/oc_app/test/kit/kit_row_value_test.dart: KitRowValue (MOT-7) default settles at once under system
+00:22 +355: /home/owner/Storage/Code/oc_app/test/kit/kit_row_value_test.dart: KitRowValue (MOT-7) default settles at once under system
+00:22 +356: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSkeletonRows/loading fits every overflow size, text scale and direction
+00:22 +357: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSkeletonRows/loading fits every overflow size, text scale and direction
+00:22 +358: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSkeletonRows/loading fits every overflow size, text scale and direction
+00:22 +359: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSkeletonRows/loading fits every overflow size, text scale and direction
+00:22 +360: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSkeletonRows/loading fits every overflow size, text scale and direction
+00:22 +361: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSkeletonRows/loading fits every overflow size, text scale and direction
+00:22 +362: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSkeletonRows/loading fits every overflow size, text scale and direction
+00:22 +363: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSkeletonRows/loading fits every overflow size, text scale and direction
+00:22 +364: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSkeletonRows/loading fits every overflow size, text scale and direction
+00:22 +365: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitProgressView/working fits every overflow size, text scale and direction
+00:22 +366: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRequestCard/default fits every overflow size, text scale and direction
+00:23 +367: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRequestCard/disabled fits every overflow size, text scale and direction
+00:23 +368: /home/owner/Storage/Code/oc_app/test/kit/kit_secret_field_test.dart: KitSecretField masks until shown, then masks again
+00:24 +369: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRow/default fits every overflow size, text scale and direction
+00:24 +370: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRow/default fits every overflow size, text scale and direction
+00:24 +371: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRow/default fits every overflow size, text scale and direction
+00:24 +372: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRow/disabled fits every overflow size, text scale and direction
+00:25 +373: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRowIcon/default fits every overflow size, text scale and direction
+00:25 +374: /home/owner/Storage/Code/oc_app/test/goldens/kit/kit_gallery_g5_test.dart: a clean tree passes
+00:25 +375: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRowMenu/default fits every overflow size, text scale and direction
+00:25 +376: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRowMenu/default fits every overflow size, text scale and direction
+00:25 +377: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRowMenu/default fits every overflow size, text scale and direction
+00:25 +378: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRowMenu/default fits every overflow size, text scale and direction
+00:25 +379: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRowMenu/default fits every overflow size, text scale and direction
+00:26 +380: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRowMenu/default fits every overflow size, text scale and direction
+00:26 +381: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRowMenu/default fits every overflow size, text scale and direction
+00:26 +382: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRowMenu/default fits every overflow size, text scale and direction
+00:26 +383: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRowMenu/default fits every overflow size, text scale and direction
+00:26 +384: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRowMenu/default fits every overflow size, text scale and direction
+00:26 +385: /home/owner/Storage/Code/oc_app/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 360x800 · dark
+00:26 +386: /home/owner/Storage/Code/oc_app/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 360x800 · dark
+00:26 +387: /home/owner/Storage/Code/oc_app/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 360x800 · dark
+00:26 +388: /home/owner/Storage/Code/oc_app/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 360x800 · dark
+00:26 +389: /home/owner/Storage/Code/oc_app/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 360x800 · dark
+00:26 +390: /home/owner/Storage/Code/oc_app/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 360x800 · dark
+00:26 +391: /home/owner/Storage/Code/oc_app/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 360x800 · dark
+00:26 +392: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSwitchRow/default fits every overflow size, text scale and direction
+00:26 +393: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSwitchRow/default fits every overflow size, text scale and direction
+00:26 +394: /home/owner/Storage/Code/oc_app/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 800x1280 · dark
+00:27 +395: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSwitchRow/disabled fits every overflow size, text scale and direction
+00:27 +396: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSwitchRow/disabled fits every overflow size, text scale and direction
+00:27 +397: /home/owner/Storage/Code/oc_app/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 360x800 · dark
+00:27 +398: /home/owner/Storage/Code/oc_app/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 360x800 · dark
+00:27 +399: /home/owner/Storage/Code/oc_app/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 360x800 · dark
+00:27 +400: /home/owner/Storage/Code/oc_app/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 360x800 · dark
+00:27 +401: /home/owner/Storage/Code/oc_app/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 360x800 · dark
+00:27 +402: /home/owner/Storage/Code/oc_app/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 360x800 · dark
+00:28 +403: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitExpandRow/expanded fits every overflow size, text scale and direction
+00:28 +404: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitExpandRow/expanded fits every overflow size, text scale and direction
+00:28 +405: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitExpandRow/expanded fits every overflow size, text scale and direction
+00:28 +406: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitExpandRow/expanded fits every overflow size, text scale and direction
+00:28 +407: /home/owner/Storage/Code/oc_app/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm stop, working · dark
+00:28 +408: /home/owner/Storage/Code/oc_app/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 800x1280 · dark
+00:28 +409: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitScreen/default fits every overflow size, text scale and direction
+00:28 +410: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitScreen/default fits every overflow size, text scale and direction
+00:28 +411: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitScreen/default fits every overflow size, text scale and direction
+00:28 +412: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitScreen/default fits every overflow size, text scale and direction
+00:28 +413: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitScreen/default fits every overflow size, text scale and direction
+00:28 +414: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitScreen/default fits every overflow size, text scale and direction
+00:28 +415: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitScreen/default fits every overflow size, text scale and direction
+00:28 +416: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitScreen/default fits every overflow size, text scale and direction
+00:29 +417: /home/owner/Storage/Code/oc_app/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet · ar · 412x915 · dark
+00:29 +418: /home/owner/Storage/Code/oc_app/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 412x915 · light
+00:29 +419: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitScreen/loading fits every overflow size, text scale and direction
+00:29 +420: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitScreen/loading fits every overflow size, text scale and direction
+00:29 +421: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitScreen/loading fits every overflow size, text scale and direction
+00:29 +422: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitScreen/loading fits every overflow size, text scale and direction
+00:29 +423: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitScreen/loading fits every overflow size, text scale and direction
+00:29 +424: /home/owner/Storage/Code/oc_app/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet loading · dark
+00:29 +425: /home/owner/Storage/Code/oc_app/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 1600x1000 · light
+00:29 +426: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/default fits every overflow size, text scale and direction
+00:29 +427: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/default fits every overflow size, text scale and direction
+00:29 +428: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/default fits every overflow size, text scale and direction
+00:29 +429: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/default fits every overflow size, text scale and direction
+00:29 +430: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/default fits every overflow size, text scale and direction
+00:29 +431: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/default fits every overflow size, text scale and direction
+00:29 +432: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/default fits every overflow size, text scale and direction
+00:30 +433: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/default fits every overflow size, text scale and direction
+00:30 +434: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/default fits every overflow size, text scale and direction
+00:30 +435: /home/owner/Storage/Code/oc_app/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet full · 1280x800 · dark
+00:30 +436: /home/owner/Storage/Code/oc_app/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet full · 1280x800 · dark
+00:30 +437: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/disabled fits every overflow size, text scale and direction
+00:30 +438: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/disabled fits every overflow size, text scale and direction
+00:30 +439: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/disabled fits every overflow size, text scale and direction
+00:30 +440: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/disabled fits every overflow size, text scale and direction
+00:30 +441: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/disabled fits every overflow size, text scale and direction
+00:30 +442: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/disabled fits every overflow size, text scale and direction
+00:30 +443: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/disabled fits every overflow size, text scale and direction
+00:30 +444: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/disabled fits every overflow size, text scale and direction
+00:30 +445: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSecretField/disabled fits every overflow size, text scale and direction
+00:30 +446: /home/owner/Storage/Code/oc_app/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 1600x1000 · light
+00:30 +447: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/default fits every overflow size, text scale and direction
+00:30 +448: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/default fits every overflow size, text scale and direction
+00:31 +449: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/default fits every overflow size, text scale and direction
+00:31 +450: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/default fits every overflow size, text scale and direction
+00:31 +451: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/default fits every overflow size, text scale and direction
+00:31 +452: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/default fits every overflow size, text scale and direction
+00:31 +453: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/default fits every overflow size, text scale and direction
+00:31 +454: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/default fits every overflow size, text scale and direction
+00:31 +455: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/default fits every overflow size, text scale and direction
+00:31 +456: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/default fits every overflow size, text scale and direction
+00:31 +457: /home/owner/Storage/Code/oc_app/test/goldens/kit/kit_foundation_golden_test.dart: foundation work · 412x915 · dark
+00:32 +458: /home/owner/Storage/Code/oc_app/test/goldens/kit/kit_foundation_golden_test.dart: foundation work · 412x915 · dark
+00:32 +459: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/full fits every overflow size, text scale and direction
+00:32 +460: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/full fits every overflow size, text scale and direction
+00:32 +461: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/full fits every overflow size, text scale and direction
+00:32 +462: /home/owner/Storage/Code/oc_app/test/goldens/kit/kit_foundation_golden_test.dart: foundation work · 2.0 text · dark
+00:32 +463: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/loading fits every overflow size, text scale and direction
+00:33 +464: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/loading fits every overflow size, text scale and direction
+00:33 +465: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/loading fits every overflow size, text scale and direction
+00:33 +466: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/loading fits every overflow size, text scale and direction
+00:33 +467: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/loading fits every overflow size, text scale and direction
+00:33 +468: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/loading fits every overflow size, text scale and direction
+00:33 +469: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/loading fits every overflow size, text scale and direction
+00:33 +470: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/disabled fits every overflow size, text scale and direction
+00:34 +471: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSheet/inline fits every overflow size, text scale and direction
+00:34 +472: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitConfirmSheet/neutral fits every overflow size, text scale and direction
+00:35 +473: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitConfirmSheet/destructive fits every overflow size, text scale and direction
+00:36 +474: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitConfirmSheet/stop fits every overflow size, text scale and direction
+00:36 +475: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitConfirmSheet/working fits every overflow size, text scale and direction
+00:36 +476: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitConfirmSheet/error fits every overflow size, text scale and direction
+00:37 +477: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitSkeletonTranscript/loading fits every overflow size, text scale and direction
+00:37 +478: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitStateView/error fits every overflow size, text scale and direction
+00:38 +479: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitStateView/working fits every overflow size, text scale and direction
+00:38 +480: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitStateView/empty fits every overflow size, text scale and direction
+00:38 +481: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitStateView/illustrated fits every overflow size, text scale and direction
+00:39 +482: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitStatusLine/default fits every overflow size, text scale and direction
+00:39 +483: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitStatusLine/together fits every overflow size, text scale and direction
+00:39 +484: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitStatusMark/default fits every overflow size, text scale and direction
+00:40 +485: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitTaskMark/default fits every overflow size, text scale and direction
+00:40 +486: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitAnimatedRows/default fits every overflow size, text scale and direction
+00:40 +487: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRefresh/default fits every overflow size, text scale and direction
+00:41 +488: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitReveal/default fits every overflow size, text scale and direction
+00:41 +489: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitTabSwitcher/default fits every overflow size, text scale and direction
+00:41 +490: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitGlass/default fits every overflow size, text scale and direction
+00:41 +491: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitEffectsScope/default fits every overflow size, text scale and direction
+00:42 +492: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitText/default fits every overflow size, text scale and direction
+00:42 +493: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRowGroup/default fits every overflow size, text scale and direction
+00:42 +494: /home/owner/Storage/Code/oc_app/test/text_scale_overflow_test.dart: G6 kit overflow matrix (tearDownAll)
 00:42 +494: All tests passed!

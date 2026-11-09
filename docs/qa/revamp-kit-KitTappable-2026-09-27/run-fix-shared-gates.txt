@@ -58,25 +58,25 @@ Downloading packages...
 Got dependencies!
 54 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart: G3x: migrated screens hold every forbidden pattern at zero (or below their baseline)
-00:00 +1: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart: G3x: migrated classes in mixed files use the kit
-00:00 +2: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart: G3x: the baseline only shrinks and names only migrated entries
-00:00 +3: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart: G3x: a screen migrated on or after 2026-09-26 has an _ar_dark golden
-00:00 +4: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart: raw parts a migrated screen gave up do not come back
-00:00 +5: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart: every allowlist entry names a migrated file and gives a reason
-00:00 +6: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart: each migrated screen has dark and light goldens at 412x915
-00:00 +7: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart: scenes take their time only from KitIllustration (§10)
-00:00 +8: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart: the kit is the one place raw progress and filled buttons live
-00:00 +9: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) every G1, G2, G7, G17 and G21 pattern is forbidden
-00:00 +10: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) a screen that breaks one rule of each gate fails each
-00:00 +11: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) scopes: the kit and the theme files are judged by their own rules
-00:00 +12: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) directional and themed forms pass
-00:00 +13: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) bidi literals count outside the kit, as characters or escapes
-00:00 +14: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) an argument list is read to its closing parenthesis
-00:00 +15: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/l10n_coverage_test.dart
-00:01 +15: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/l10n_coverage_test.dart: hardcoded string detector
-00:01 +16: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/l10n_coverage_test.dart: no file gained hardcoded UI strings
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart: G3x: migrated screens hold every forbidden pattern at zero (or below their baseline)
+00:00 +1: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart: G3x: migrated classes in mixed files use the kit
+00:00 +2: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart: G3x: the baseline only shrinks and names only migrated entries
+00:00 +3: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart: G3x: a screen migrated on or after 2026-09-26 has an _ar_dark golden
+00:00 +4: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart: raw parts a migrated screen gave up do not come back
+00:00 +5: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart: every allowlist entry names a migrated file and gives a reason
+00:00 +6: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart: each migrated screen has dark and light goldens at 412x915
+00:00 +7: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart: scenes take their time only from KitIllustration (§10)
+00:00 +8: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart: the kit is the one place raw progress and filled buttons live
+00:00 +9: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) every G1, G2, G7, G17 and G21 pattern is forbidden
+00:00 +10: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) a screen that breaks one rule of each gate fails each
+00:00 +11: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) scopes: the kit and the theme files are judged by their own rules
+00:00 +12: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) directional and themed forms pass
+00:00 +13: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) bidi literals count outside the kit, as characters or escapes
+00:00 +14: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) an argument list is read to its closing parenthesis
+00:00 +15: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/l10n_coverage_test.dart
+00:01 +15: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/l10n_coverage_test.dart: hardcoded string detector
+00:01 +16: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/l10n_coverage_test.dart: no file gained hardcoded UI strings
 l10n: these files improved; lower their baseline in test/l10n_coverage_test.dart:
   lib/ui/screens/app_diagnostics_screen.dart: 1 (baseline 12)
   lib/ui/screens/chat_screen.dart: 1 (baseline 27)

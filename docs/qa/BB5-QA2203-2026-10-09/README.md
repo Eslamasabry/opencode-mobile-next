@@ -20,9 +20,9 @@ available-memory admission check and an owned-process watchdog below 800 MiB.
 Commands (wrapper supplies the resource settings and cleanup):
 
 ```sh
-BB7_BUILD_NUMBER=2203 tool/qa/machine_lock.sh build -- python3 /home/eslam/Storage/tmp/bb5-2203-build.py app
-tool/qa/machine_lock.sh build -- python3 /home/eslam/Storage/tmp/bb5-2203-build.py runner
-python3 /home/eslam/Storage/tmp/bb5-2203-verify.py
+BB7_BUILD_NUMBER=2203 tool/qa/machine_lock.sh build -- python3 /home/owner/Storage/tmp/bb5-2203-build.py app
+tool/qa/machine_lock.sh build -- python3 /home/owner/Storage/tmp/bb5-2203-build.py runner
+python3 /home/owner/Storage/tmp/bb5-2203-verify.py
 ```
 
 ## Artifact verification

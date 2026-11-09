@@ -12,7 +12,7 @@ qualification; app/controller integration requires its own validation.
 The production Python auth-probe body ran through the installed app's PRoot,
 uid 1000, with the same per-profile HOME, CLAUDE_CONFIG_DIR and CODEX_HOME as
 BuiltinLinux.startAgentProcess. It used existing profile `1790839392073695`.
-Each short device session held `/home/eslam/Storage/tmp/oc-emulator.lock`.
+Each short device session held `/home/owner/Storage/tmp/oc-emulator.lock`.
 Raw CLI stdout/stderr was captured only inside the private probe process, and
 only its allowlisted JSON result was returned. The account identity was replaced
 with a fixture stand-in before saving it. No sign-in or logout was run.

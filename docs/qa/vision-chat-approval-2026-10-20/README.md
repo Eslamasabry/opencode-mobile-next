@@ -8,7 +8,7 @@ server sheet, notification and widget rows (same request model, their own
 slices).
 
 Pick (owner, vision page): **A + B's file list**. Concept images:
-`/home/eslam/Storage2/launch-footage/screen-concepts/b1-chat-approval/`.
+`/home/owner/Storage2/launch-footage/screen-concepts/b1-chat-approval/`.
 
 ## Technical-honesty audit (written before editing)
 
@@ -123,7 +123,7 @@ two-row composer and the transcript styling belong to other slices.
 
 ## Evidence
 
-`/home/eslam/Storage2/launch-footage/vision-chat-approval/` (412×915 dp at 2x,
+`/home/owner/Storage2/launch-footage/vision-chat-approval/` (412×915 dp at 2x,
 one phone screen each): `command-dark.png`, `command-light.png`,
 `edit-one-file-dark.png`, `edit-five-files-dark.png`, `question-dark.png`,
 `allowed-undo-dark.png`, `small-320-text2-dark.png`, `arabic-rtl-dark.png`;

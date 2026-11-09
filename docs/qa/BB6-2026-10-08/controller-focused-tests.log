@@ -64,7 +64,7 @@ Downloading packages...
 Got dependencies!
 61 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart
 00:00 +0: (setUpAll)
 00:00 +0: list card answer refreshes activity and completion without opening chat
 Pending timers:
@@ -79,7 +79,7 @@ Timer (duration: 0:00:20.000000, periodic: true), created:
 <asynchronous suspension>
 #8      PaseoGateway.sessionPage (package:opencode_mobile/paseo/gateway.dart:449:20)
 <asynchronous suspension>
-#9      _ListCardGateway.sessionPage (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_genui_tests.dart:16:18)
+#9      _ListCardGateway.sessionPage (file:///home/owner/Storage/Code/oc_app-sol-ba/test/support/phone_agents_genui_tests.dart:16:18)
 <asynchronous suspension>
 #10     PaseoChatFeedSource._read (package:opencode_mobile/paseo/chat_feed_source.dart:167:24)
 <asynchronous suspension>
@@ -94,7 +94,7 @@ Timer (duration: 0:00:20.000000, periodic: true), created:
 <asynchronous suspension>
 #18     _ConnectionControllerPhoneAgents.refreshChatFeed (package:opencode_mobile/state/connection/phone_agents.dart:1263:5)
 <asynchronous suspension>
-#19     _genUiFeedRefreshTests.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_genui_tests.dart:106:7)
+#19     _genUiFeedRefreshTests.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/support/phone_agents_genui_tests.dart:106:7)
 <asynchronous suspension>
 #20     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -149,7 +149,7 @@ Timer (duration: 0:00:20.000000, periodic: true), created:
 <asynchronous suspension>
 #17     _ConnectionControllerPhoneAgents.refreshChatFeed (package:opencode_mobile/state/connection/phone_agents.dart:1263:5)
 <asynchronous suspension>
-#18     _nativeQuestionControllerTests.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_native_question_tests.dart:26:7)
+#18     _nativeQuestionControllerTests.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/support/phone_agents_native_question_tests.dart:26:7)
 <asynchronous suspension>
 #19     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -205,9 +205,9 @@ Timer (duration: 0:00:20.000000, periodic: true), created:
 <asynchronous suspension>
 #17     _ConnectionControllerPhoneAgents.refreshChatFeed (package:opencode_mobile/state/connection/phone_agents.dart:1263:5)
 <asynchronous suspension>
-#18     _listQuestionTests.setup (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_question_tests.dart:29:5)
+#18     _listQuestionTests.setup (file:///home/owner/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_question_tests.dart:29:5)
 <asynchronous suspension>
-#19     _listQuestionTests.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_question_tests.dart:41:17)
+#19     _listQuestionTests.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_question_tests.dart:41:17)
 <asynchronous suspension>
 #20     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -262,9 +262,9 @@ Timer (duration: 0:00:20.000000, periodic: true), created:
 <asynchronous suspension>
 #17     _ConnectionControllerPhoneAgents.refreshChatFeed (package:opencode_mobile/state/connection/phone_agents.dart:1263:5)
 <asynchronous suspension>
-#18     _listQuestionTests.setup (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_question_tests.dart:29:5)
+#18     _listQuestionTests.setup (file:///home/owner/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_question_tests.dart:29:5)
 <asynchronous suspension>
-#19     _listQuestionTests.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_question_tests.dart:41:17)
+#19     _listQuestionTests.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_question_tests.dart:41:17)
 <asynchronous suspension>
 #20     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -319,9 +319,9 @@ Timer (duration: 0:00:20.000000, periodic: true), created:
 <asynchronous suspension>
 #17     _ConnectionControllerPhoneAgents.refreshChatFeed (package:opencode_mobile/state/connection/phone_agents.dart:1263:5)
 <asynchronous suspension>
-#18     _listQuestionTests.setup (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_question_tests.dart:29:5)
+#18     _listQuestionTests.setup (file:///home/owner/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_question_tests.dart:29:5)
 <asynchronous suspension>
-#19     _listQuestionTests.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_question_tests.dart:96:15)
+#19     _listQuestionTests.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_question_tests.dart:96:15)
 <asynchronous suspension>
 #20     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -411,9 +411,9 @@ Timer (duration: 0:00:20.000000, periodic: true), created:
 <asynchronous suspension>
 #17     _ConnectionControllerPhoneAgents.refreshChatFeed (package:opencode_mobile/state/connection/phone_agents.dart:1263:5)
 <asynchronous suspension>
-#18     _listQuestionTests.setup (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_question_tests.dart:29:5)
+#18     _listQuestionTests.setup (file:///home/owner/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_question_tests.dart:29:5)
 <asynchronous suspension>
-#19     _listQuestionTests.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_question_tests.dart:143:15)
+#19     _listQuestionTests.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_question_tests.dart:143:15)
 <asynchronous suspension>
 #20     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -446,7 +446,7 @@ Timer (duration: 0:00:20.000000, periodic: true), created:
 <asynchronous suspension>
 #17     _ConnectionControllerPhoneAgents.refreshChatFeed (package:opencode_mobile/state/connection/phone_agents.dart:1263:5)
 <asynchronous suspension>
-#18     _listQuestionTests.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_question_tests.dart:152:5)
+#18     _listQuestionTests.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_question_tests.dart:152:5)
 <asynchronous suspension>
 #19     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -502,9 +502,9 @@ Timer (duration: 0:00:20.000000, periodic: true), created:
 <asynchronous suspension>
 #17     _ConnectionControllerPhoneAgents.refreshChatFeed (package:opencode_mobile/state/connection/phone_agents.dart:1263:5)
 <asynchronous suspension>
-#18     _listQuestionTests.setup (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_question_tests.dart:29:5)
+#18     _listQuestionTests.setup (file:///home/owner/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_question_tests.dart:29:5)
 <asynchronous suspension>
-#19     _listQuestionTests.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_question_tests.dart:219:17)
+#19     _listQuestionTests.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_question_tests.dart:219:17)
 <asynchronous suspension>
 #20     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -560,9 +560,9 @@ Timer (duration: 0:00:20.000000, periodic: true), created:
 <asynchronous suspension>
 #17     _ConnectionControllerPhoneAgents.refreshChatFeed (package:opencode_mobile/state/connection/phone_agents.dart:1263:5)
 <asynchronous suspension>
-#18     _listQuestionTests.setup (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_question_tests.dart:29:5)
+#18     _listQuestionTests.setup (file:///home/owner/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_question_tests.dart:29:5)
 <asynchronous suspension>
-#19     _listQuestionTests.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_question_tests.dart:295:15)
+#19     _listQuestionTests.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_question_tests.dart:295:15)
 <asynchronous suspension>
 #20     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -617,9 +617,9 @@ Timer (duration: 0:00:20.000000, periodic: true), created:
 <asynchronous suspension>
 #17     _ConnectionControllerPhoneAgents.refreshChatFeed (package:opencode_mobile/state/connection/phone_agents.dart:1263:5)
 <asynchronous suspension>
-#18     _permissionListSetup (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_permission_tests.dart:27:3)
+#18     _permissionListSetup (file:///home/owner/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_permission_tests.dart:27:3)
 <asynchronous suspension>
-#19     _listPermissionTests.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_permission_tests.dart:60:17)
+#19     _listPermissionTests.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_permission_tests.dart:60:17)
 <asynchronous suspension>
 #20     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -674,9 +674,9 @@ Timer (duration: 0:00:20.000000, periodic: true), created:
 <asynchronous suspension>
 #17     _ConnectionControllerPhoneAgents.refreshChatFeed (package:opencode_mobile/state/connection/phone_agents.dart:1263:5)
 <asynchronous suspension>
-#18     _permissionListSetup (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_permission_tests.dart:27:3)
+#18     _permissionListSetup (file:///home/owner/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_permission_tests.dart:27:3)
 <asynchronous suspension>
-#19     _listPermissionTests.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_permission_tests.dart:89:15)
+#19     _listPermissionTests.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_permission_tests.dart:89:15)
 <asynchronous suspension>
 #20     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -709,7 +709,7 @@ Timer (duration: 0:00:20.000000, periodic: true), created:
 <asynchronous suspension>
 #17     _ConnectionControllerPhoneAgents.refreshChatFeed (package:opencode_mobile/state/connection/phone_agents.dart:1263:5)
 <asynchronous suspension>
-#18     _listPermissionTests.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_permission_tests.dart:98:5)
+#18     _listPermissionTests.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_permission_tests.dart:98:5)
 <asynchronous suspension>
 #19     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -800,9 +800,9 @@ Timer (duration: 0:00:20.000000, periodic: true), created:
 <asynchronous suspension>
 #17     _ConnectionControllerPhoneAgents.refreshChatFeed (package:opencode_mobile/state/connection/phone_agents.dart:1263:5)
 <asynchronous suspension>
-#18     _permissionListSetup (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_permission_tests.dart:27:3)
+#18     _permissionListSetup (file:///home/owner/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_permission_tests.dart:27:3)
 <asynchronous suspension>
-#19     _listPermissionTests.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_permission_tests.dart:182:17)
+#19     _listPermissionTests.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_permission_tests.dart:182:17)
 <asynchronous suspension>
 #20     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -857,9 +857,9 @@ Timer (duration: 0:00:20.000000, periodic: true), created:
 <asynchronous suspension>
 #17     _ConnectionControllerPhoneAgents.refreshChatFeed (package:opencode_mobile/state/connection/phone_agents.dart:1263:5)
 <asynchronous suspension>
-#18     _permissionListSetup (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_permission_tests.dart:27:3)
+#18     _permissionListSetup (file:///home/owner/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_permission_tests.dart:27:3)
 <asynchronous suspension>
-#19     _listPermissionTests.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_permission_tests.dart:229:19)
+#19     _listPermissionTests.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_permission_tests.dart:229:19)
 <asynchronous suspension>
 #20     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -914,9 +914,9 @@ Timer (duration: 0:00:20.000000, periodic: true), created:
 <asynchronous suspension>
 #17     _ConnectionControllerPhoneAgents.refreshChatFeed (package:opencode_mobile/state/connection/phone_agents.dart:1263:5)
 <asynchronous suspension>
-#18     _permissionListSetup (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_permission_tests.dart:27:3)
+#18     _permissionListSetup (file:///home/owner/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_permission_tests.dart:27:3)
 <asynchronous suspension>
-#19     _listPermissionTests.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_permission_tests.dart:229:19)
+#19     _listPermissionTests.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/support/phone_agents_list_permission_tests.dart:229:19)
 <asynchronous suspension>
 #20     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -994,7 +994,7 @@ Timer (duration: 0:00:20.000000, periodic: true), created:
 <asynchronous suspension>
 #7      PaseoTransport.connect.<anonymous closure> (package:opencode_mobile/paseo/transport.dart:289:56)
 <asynchronous suspension>
-#8      _FakeHost.openGateway (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:394:30)
+#8      _FakeHost.openGateway (file:///home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:394:30)
 <asynchronous suspension>
 #9      _ConnectionControllerPhoneAgents._paAddSource (package:opencode_mobile/state/connection/phone_agents.dart:896:21)
 <asynchronous suspension>
@@ -1114,9 +1114,9 @@ Timer (duration: 0:00:20.000000, periodic: true), created:
 <asynchronous suspension>
 #17     _ConnectionControllerPhoneAgents.refreshChatFeed (package:opencode_mobile/state/connection/phone_agents.dart:1263:5)
 <asynchronous suspension>
-#18     main.ready (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:747:5)
+#18     main.ready (file:///home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:747:5)
 <asynchronous suspension>
-#19     main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:947:15)
+#19     main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:947:15)
 <asynchronous suspension>
 #20     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -1171,9 +1171,9 @@ Timer (duration: 0:00:20.000000, periodic: true), created:
 <asynchronous suspension>
 #17     _ConnectionControllerPhoneAgents.refreshChatFeed (package:opencode_mobile/state/connection/phone_agents.dart:1263:5)
 <asynchronous suspension>
-#18     main.ready (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:747:5)
+#18     main.ready (file:///home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:747:5)
 <asynchronous suspension>
-#19     main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:1011:15)
+#19     main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:1011:15)
 <asynchronous suspension>
 #20     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -1453,9 +1453,9 @@ Timer (duration: 0:00:20.000000, periodic: true), created:
 <asynchronous suspension>
 #17     _ConnectionControllerPhoneAgents.refreshChatFeed (package:opencode_mobile/state/connection/phone_agents.dart:1263:5)
 <asynchronous suspension>
-#18     main.ready (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:747:5)
+#18     main.ready (file:///home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:747:5)
 <asynchronous suspension>
-#19     main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:1273:15)
+#19     main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:1273:15)
 <asynchronous suspension>
 #20     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -1510,9 +1510,9 @@ Timer (duration: 0:00:20.000000, periodic: true), created:
 <asynchronous suspension>
 #17     _ConnectionControllerPhoneAgents.refreshChatFeed (package:opencode_mobile/state/connection/phone_agents.dart:1263:5)
 <asynchronous suspension>
-#18     main.ready (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:747:5)
+#18     main.ready (file:///home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:747:5)
 <asynchronous suspension>
-#19     main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:1295:17)
+#19     main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:1295:17)
 <asynchronous suspension>
 #20     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -1567,7 +1567,7 @@ Timer (duration: 0:00:20.000000, periodic: true), created:
 <asynchronous suspension>
 #17     _ConnectionControllerPhoneAgents.refreshChatFeed (package:opencode_mobile/state/connection/phone_agents.dart:1263:5)
 <asynchronous suspension>
-#18     main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:1325:5)
+#18     main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:1325:5)
 <asynchronous suspension>
 #19     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -1622,7 +1622,7 @@ Timer (duration: 0:00:20.000000, periodic: true), created:
 <asynchronous suspension>
 #17     _ConnectionControllerPhoneAgents.refreshChatFeed (package:opencode_mobile/state/connection/phone_agents.dart:1263:5)
 <asynchronous suspension>
-#18     main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:1344:5)
+#18     main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:1344:5)
 <asynchronous suspension>
 #19     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -1774,7 +1774,7 @@ Timer (duration: 0:00:20.000000, periodic: true), created:
 <asynchronous suspension>
 #17     _ConnectionControllerPhoneAgents.refreshChatFeed (package:opencode_mobile/state/connection/phone_agents.dart:1263:5)
 <asynchronous suspension>
-#18     main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:1544:5)
+#18     main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:1544:5)
 <asynchronous suspension>
 #19     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -1831,7 +1831,7 @@ Timer (duration: 0:00:20.000000, periodic: true), created:
 <asynchronous suspension>
 #17     _ConnectionControllerPhoneAgents.refreshChatFeed (package:opencode_mobile/state/connection/phone_agents.dart:1263:5)
 <asynchronous suspension>
-#18     main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:1612:5)
+#18     main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:1612:5)
 <asynchronous suspension>
 #19     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -1886,9 +1886,9 @@ Timer (duration: 0:00:20.000000, periodic: true), created:
 <asynchronous suspension>
 #17     _ConnectionControllerPhoneAgents.refreshChatFeed (package:opencode_mobile/state/connection/phone_agents.dart:1263:5)
 <asynchronous suspension>
-#18     main.ready (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:747:5)
+#18     main.ready (file:///home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:747:5)
 <asynchronous suspension>
-#19     main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:1630:15)
+#19     main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:1630:15)
 <asynchronous suspension>
 #20     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -1943,9 +1943,9 @@ Timer (duration: 0:00:20.000000, periodic: true), created:
 <asynchronous suspension>
 #17     _ConnectionControllerPhoneAgents.refreshChatFeed (package:opencode_mobile/state/connection/phone_agents.dart:1263:5)
 <asynchronous suspension>
-#18     main.ready (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:747:5)
+#18     main.ready (file:///home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:747:5)
 <asynchronous suspension>
-#19     main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:1655:15)
+#19     main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:1655:15)
 <asynchronous suspension>
 #20     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -1975,7 +1975,7 @@ Timer (duration: 0:00:20.000000, periodic: true), created:
 <asynchronous suspension>
 #13     _ConnectionControllerPhoneAgents.startAgentChatIn (package:opencode_mobile/state/connection/phone_agents.dart:1335:12)
 <asynchronous suspension>
-#14     main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:1660:16)
+#14     main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart:1660:16)
 <asynchronous suspension>
 #15     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -2012,8 +2012,8 @@ The test description was:
 00:12 +71 -34: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA1 agent sign-in comes from CLI even when helper disagrees
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: a Pi question shows under its row with no chat opened and is answered from the sheet
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: a chat the host still runs reopens after an app restart
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: a helper slower than half a minute still gets its rows read
+  /home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: BA1 agent sign-in comes from CLI even when helper disagrees
+  /home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: a Pi question shows under its row with no chat opened and is answered from the sheet
+  /home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: a chat the host still runs reopens after an app restart
+  /home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: a helper slower than half a minute still gets its rows read
   ... and 30 more

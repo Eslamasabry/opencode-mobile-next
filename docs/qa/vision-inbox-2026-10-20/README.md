@@ -98,7 +98,7 @@ All of 1–3 already reach the UI as one list: `chatFeed(...)` rows with `status
 
 ## 3. Visual passes against the pick (concept A's list, concept C's calm)
 
-Renders: `/home/eslam/Storage2/launch-footage/vision-inbox/` (final), with `before/` (the
+Renders: `/home/owner/Storage2/launch-footage/vision-inbox/` (final), with `before/` (the
 Conversations list on its old Needs you filter) and `pass1/`…`pass4/` kept as the record. Capture:
 `tool/capture/vision_inbox_test.dart` (real HomeScreen, the Inbox opened from the chip, blurred
 shadows, 412x915 at 2x).

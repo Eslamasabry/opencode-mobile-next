@@ -68,7 +68,7 @@ are unchanged. G16 ratchet did not go up.
 ## Evidence
 
 Renders (412x915 at 2x, one phone screen each) in
-`/home/eslam/vision-assets/out/vision-terminal/`: `after-main-{dark,light}`
+`/home/owner/vision-assets/out/vision-terminal/`: `after-main-{dark,light}`
 (dev server line), `after-tabs-*`, `after-server-*`, `after-server-tabs-*`,
 `after-ended-*`, `after-not-set-up-*`, `after-main-320-2x-dark`,
 `after-main-ar-dark`; `before-*` for today's screen. Capture test:

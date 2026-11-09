@@ -40,7 +40,7 @@ Nothing was built, pushed, uploaded or installed on a physical device.
 | PC server | OpenCode **1.18.23** (`~/node_modules/opencode-linux-x64/bin/opencode`). The `opencode` on `PATH` (`~/.bun/bin/opencode`) is broken: its postinstall never ran. Run `opencode serve --port 4096 --hostname 127.0.0.1` with isolated `XDG_DATA_HOME` / `XDG_STATE_HOME` / `XDG_CACHE_HOME` and the PC user's global config. Reach it from the emulator with `adb reverse tcp:4096 tcp:4096` only. |
 | Models | Real: `opencode/nemotron-3.5-lightning-free` (a free model, no key). Deterministic: `mock/stream` from `mock_llm.py`, used in project `proj3` only. |
 
-Local copies, not in git: `/home/eslam/Storage/tmp/issue87-fixture/` has both APKs and
+Local copies, not in git: `/home/owner/Storage/tmp/issue87-fixture/` has both APKs and
 `pc-server-fixture-2026-09-25.tgz`. That archive holds the server's data plus
 `proj`, `proj2` and `proj3`, with absolute paths, so extract it with `tar -C / -xzf`;
 `mcp-auth.json` is left out.
@@ -220,7 +220,7 @@ The same method on the same emulators. The candidate needs its own x86_64 APK:
 
 **emulator-5556 (OC_API35, Android 15): before/after and the built-in path**
 
-1. Restore the fixture: `tar -C / -xzf /home/eslam/Storage/tmp/issue87-fixture/pc-server-fixture-2026-09-25.tgz`. Then start the server and the mock with the environment in "How to reproduce", and `adb -s emulator-5556 reverse tcp:4096 tcp:4096`.
+1. Restore the fixture: `tar -C / -xzf /home/owner/Storage/tmp/issue87-fixture/pc-server-fixture-2026-09-25.tgz`. Then start the server and the mock with the environment in "How to reproduce", and `adb -s emulator-5556 reverse tcp:4096 tcp:4096`.
 2. `adb uninstall` 1.0.44+50 and install the candidate.
    - Welcome → On my computer → `http://127.0.0.1:4096`.
    - Open `proj2` and `proj3` as in Phase 1.
@@ -256,7 +256,7 @@ The same method on the same emulators. The candidate needs its own x86_64 APK:
 
 ```bash
 S=<work dir>   # the baseline used the session scratchpad …/scratchpad/i87
-T=/home/eslam/Storage/Code/oc_app/tool/qa/issue87
+T=/home/owner/Storage/Code/oc_app/tool/qa/issue87
 ADB=~/Android/Sdk/platform-tools/adb
 # Release APK
 gh release download -R Eslamasabry/opencode-mobile-next 'v1.0.44+50' -D $S

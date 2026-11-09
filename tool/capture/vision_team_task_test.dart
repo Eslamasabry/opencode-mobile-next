@@ -9,7 +9,7 @@
 //   flutter test --concurrency=1 --dart-define=VISION_OUT=<dir> \
 //     --dart-define=VISION_ONLY=merge-dark tool/capture/vision_team_task_test.dart
 //
-// Output: /home/eslam/Storage2/launch-footage/vision-team-task/<scene>.png
+// Output: /home/owner/Storage2/launch-footage/vision-team-task/<scene>.png
 //
 // The header's Now line and the gate cards' question look need the chat
 // library's side, docs/qa/vision-team-task-2026-10-20/chat-team-conversation.patch;
@@ -34,7 +34,7 @@ import 'audit/audit_env.dart';
 
 const _out = String.fromEnvironment(
   'VISION_OUT',
-  defaultValue: '/home/eslam/Storage2/launch-footage/vision-team-task',
+  defaultValue: '/home/owner/Storage2/launch-footage/vision-team-task',
 );
 
 /// Only these scenes (comma separated), when given.

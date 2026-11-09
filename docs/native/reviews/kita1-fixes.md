@@ -48,12 +48,12 @@ new tests were formatted with ktfmt 0.64, while production edits retain surround
 
 ## Reproduction and sandbox setup
 
-One Gradle invocation at a time under the existing shared `/home/eslam/Storage/tmp/oc-build.lock`, opened read-only
+One Gradle invocation at a time under the existing shared `/home/owner/Storage/tmp/oc-build.lock`, opened read-only
 and held with exclusive `flock`. From `native/`:
 
 ```sh
-JAVA_HOME=/home/eslam/Storage/tools/jdk-21.0.13+9 \
-ANDROID_HOME=/home/eslam/Android/Sdk \
+JAVA_HOME=/home/owner/Storage/tools/jdk-21.0.13+9 \
+ANDROID_HOME=/home/owner/Android/Sdk \
 JAVA_TOOL_OPTIONS=-Dskiko.data.path=/tmp/kita1-skiko \
 ./gradlew --no-daemon -Pkotlin.incremental=false \
   -Dorg.gradle.jvmargs='-Xmx2g -XX:MaxMetaspaceSize=768m -XX:+UseParallelGC -Dfile.encoding=UTF-8' \
@@ -67,7 +67,7 @@ The temporary init script redirects only test JVM home/lock files, reusing the e
 allprojects {
     tasks.withType(Test).configureEach {
         systemProperty 'user.home', '/tmp/kita1-test-home'
-        systemProperty 'maven.repo.local', '/home/eslam/.m2/repository'
+        systemProperty 'maven.repo.local', '/home/owner/.m2/repository'
     }
 }
 ```

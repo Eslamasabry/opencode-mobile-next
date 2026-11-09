@@ -49,7 +49,7 @@ Five decisions matter most:
 
 ## 1. What the Flutter app does today (inventory)
 
-Read-only source: `/home/eslam/Storage/Code/wt/oc_app-batch1`.
+Read-only source: `/home/owner/Storage/Code/wt/oc_app-batch1`.
 
 | Area | Flutter today | Native bridge already in Kotlin | Notes for the port |
 |---|---|---|---|
@@ -68,7 +68,7 @@ Read-only source: `/home/eslam/Storage/Code/wt/oc_app-batch1`.
 | System voice | — | `ReadAloudBridge.kt` (477 lines): offline voices only, focus `GAIN_TRANSIENT`, `USAGE_MEDIA`/`CONTENT_TYPE_SPEECH`, cancels on route loss, on any other recording, and on background | Port almost verbatim |
 | Video/audio playback | **none** | — | No day-1 need |
 
-The logic-test catalog (`/home/eslam/Storage/Code/wt/native-plan/catalog`) has **35 `media-voice` behaviours**. Examples:
+The logic-test catalog (`/home/owner/Storage/Code/wt/native-plan/catalog`) has **35 `media-voice` behaviours**. Examples:
 
 - PCM16 split-chunk normalisation
 - the silence/auto-send rules
@@ -642,4 +642,4 @@ The total media cost is about 12–14 MB, against the Flutter app's 107 MB. The 
 - Sharing audio input: https://developer.android.com/media/platform/sharing-audio-input
 - CDD 5.4 audio recording: https://android.googlesource.com/platform/compatibility/cdd/+/refs/tags/android-mainline-12.0.0_r98/5_multimedia/5_4_audio-recording.md · pre-processing: https://source.android.com/docs/core/audio/implement-pre-processing
 - AudioFocusRequest ref: https://developer.android.com/reference/kotlin/android/media/AudioFocusRequest
-- Repo facts: `/home/eslam/Storage/Code/wt/oc_app-batch1` (pubspec.yaml, lib/voice/*, lib/state/prompt_photos.dart, lib/platform/local_pdf.dart, android/.../LocalPdfService.kt, ReadAloudBridge.kt, MainActivityMedia.kt, AndroidManifest.xml, THIRD_PARTY_NOTICES.md); catalog `/home/eslam/Storage/Code/wt/native-plan/catalog`; demo `/home/eslam/Storage/Code/kmp-demo/gradle/libs.versions.toml`.
+- Repo facts: `/home/owner/Storage/Code/wt/oc_app-batch1` (pubspec.yaml, lib/voice/*, lib/state/prompt_photos.dart, lib/platform/local_pdf.dart, android/.../LocalPdfService.kt, ReadAloudBridge.kt, MainActivityMedia.kt, AndroidManifest.xml, THIRD_PARTY_NOTICES.md); catalog `/home/owner/Storage/Code/wt/native-plan/catalog`; demo `/home/owner/Storage/Code/kmp-demo/gradle/libs.versions.toml`.

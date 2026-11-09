@@ -23,7 +23,7 @@ The [three-line layout contract](../../design/BA-suite-fix-2-contract.md) record
 Each file runs in a separate invocation of:
 
 ```text
-OC_TEST_SLOTS=2 tool/qa/machine_lock.sh test -- /home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter test --no-pub --concurrency 1 <file>
+OC_TEST_SLOTS=2 tool/qa/machine_lock.sh test -- /home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter test --no-pub --concurrency 1 <file>
 ```
 
 All 45 assigned failures reproduced individually on the base production source; `red-*.txt` records each file. Two extra trailing-edge cases failed before the layout fix (`red-kit_composer_status_strip_test.txt`). The two production corrections fail when independently reverted, then are restored byte-for-byte (`revert-model.txt`, `revert-draft.txt`). Final per-file results are in `results.json` and `green-*.txt`. No Gradle, APK, emulator, full-suite or physical-device claim.

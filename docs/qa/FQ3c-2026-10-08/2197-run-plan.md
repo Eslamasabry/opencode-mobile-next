@@ -12,9 +12,9 @@ independent reviewers cover model/image, FQ9 baseline/first-run prerequisites,
 and background/evidence limits; they launch no device, test or build jobs.
 The FQ9 reviewer owns only additional installed-package identity fixtures.
 
-Coordinator-approved normal APK: `/home/eslam/Storage/tmp/oc-apk-share/oc-2197.apk`.
+Coordinator-approved normal APK: `/home/owner/Storage/tmp/oc-apk-share/oc-2197.apk`.
 Verify posted SHA-256, package/build and installed same signer before mutation.
-All device work holds `/home/eslam/Storage/tmp/oc-emulator.lock`; each phase has
+All device work holds `/home/owner/Storage/tmp/oc-emulator.lock`; each phase has
 a unique run/session title and cleans only its owned sessions. Restore normal
 2197 with `adb install -r` inside that lock when needed, retaining application
 data. No Claude sign-in/logout/configuration actions.

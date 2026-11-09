@@ -1,14 +1,14 @@
 Waiting for another flutter command to release the startup lock...
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/agent-af446b7b74cef745c/test/folder_browser_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/agent-af446b7b74cef745c/test/folder_browser_test.dart
 test/folder_browser_test.dart:111:26: Error: Setter not found: 'folderListerOverride'.
     ProjectFolderActions.folderListerOverride = (path) async {
                          ^^^^^^^^^^^^^^^^^^^^
 test/folder_browser_test.dart:134:26: Error: Setter not found: 'folderListerOverride'.
     ProjectFolderActions.folderListerOverride = null;
                          ^^^^^^^^^^^^^^^^^^^^
-00:00 +0 -1: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/agent-af446b7b74cef745c/test/folder_browser_test.dart [E]
-  Failed to load "/home/eslam/Storage/Code/oc_app/.claude/worktrees/agent-af446b7b74cef745c/test/folder_browser_test.dart":
-  Compilation failed for testPath=/home/eslam/Storage/Code/oc_app/.claude/worktrees/agent-af446b7b74cef745c/test/folder_browser_test.dart: test/folder_browser_test.dart:111:26: Error: Setter not found: 'folderListerOverride'.
+00:00 +0 -1: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/agent-af446b7b74cef745c/test/folder_browser_test.dart [E]
+  Failed to load "/home/owner/Storage/Code/oc_app/.claude/worktrees/agent-af446b7b74cef745c/test/folder_browser_test.dart":
+  Compilation failed for testPath=/home/owner/Storage/Code/oc_app/.claude/worktrees/agent-af446b7b74cef745c/test/folder_browser_test.dart: test/folder_browser_test.dart:111:26: Error: Setter not found: 'folderListerOverride'.
       ProjectFolderActions.folderListerOverride = (path) async {
                            ^^^^^^^^^^^^^^^^^^^^
   test/folder_browser_test.dart:134:26: Error: Setter not found: 'folderListerOverride'.
@@ -17,4 +17,4 @@ test/folder_browser_test.dart:134:26: Error: Setter not found: 'folderListerOver
   .
 00:00 +0 -1: Some tests failed.
 Failing tests:
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/agent-af446b7b74cef745c/test/folder_browser_test.dart: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/agent-af446b7b74cef745c/test/folder_browser_test.dart
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/agent-af446b7b74cef745c/test/folder_browser_test.dart: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/agent-af446b7b74cef745c/test/folder_browser_test.dart

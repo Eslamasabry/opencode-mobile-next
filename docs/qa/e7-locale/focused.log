@@ -24,21 +24,21 @@ Downloading packages...
 Got dependencies!
 21 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-e7-locale/test/app_locale_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app-e7-locale/test/app_locale_test.dart: Arabic override survives new controller and system removes override
-00:00 +1: /home/eslam/Storage/Code/oc_app-e7-locale/test/app_locale_test.dart: refused write and remove keep acknowledged locale and cache
-00:00 +2: /home/eslam/Storage/Code/oc_app-e7-locale/test/app_locale_test.dart: queued rapid choices wait for storage and newest choice wins
-00:00 +3: /home/eslam/Storage/Code/oc_app-e7-locale/test/app_locale_test.dart: unsupported stored value follows system; unsupported saves rejected
-00:00 +4: /home/eslam/Storage/Code/oc_app-e7-locale/test/app_locale_test.dart: profile deletion key sweep excludes global language choice
-00:00 +5: loading /home/eslam/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart
-00:02 +5: /home/eslam/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: choosing Arabic persists; closing leaves choice unchanged
+00:00 +0: loading /home/owner/Storage/Code/oc_app-e7-locale/test/app_locale_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app-e7-locale/test/app_locale_test.dart: Arabic override survives new controller and system removes override
+00:00 +1: /home/owner/Storage/Code/oc_app-e7-locale/test/app_locale_test.dart: refused write and remove keep acknowledged locale and cache
+00:00 +2: /home/owner/Storage/Code/oc_app-e7-locale/test/app_locale_test.dart: queued rapid choices wait for storage and newest choice wins
+00:00 +3: /home/owner/Storage/Code/oc_app-e7-locale/test/app_locale_test.dart: unsupported stored value follows system; unsupported saves rejected
+00:00 +4: /home/owner/Storage/Code/oc_app-e7-locale/test/app_locale_test.dart: profile deletion key sweep excludes global language choice
+00:00 +5: loading /home/owner/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart
+00:02 +5: /home/owner/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: choosing Arabic persists; closing leaves choice unchanged
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following TestFailure was thrown running a test:
 Expected: Locale:<ar>
   Actual: <null>
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart:103:5)
+#4      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart:103:5)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -48,15 +48,15 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart line 103
+  file:///home/owner/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart line 103
 The test description was:
   choosing Arabic persists; closing leaves choice unchanged
 ════════════════════════════════════════════════════════════════════════════════════════════════════
-00:03 +5 -1: /home/eslam/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: choosing Arabic persists; closing leaves choice unchanged [E]
+00:03 +5 -1: /home/owner/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: choosing Arabic persists; closing leaves choice unchanged [E]
   Test failed. See exception logs above.
   The test description was: choosing Arabic persists; closing leaves choice unchanged
   
-00:03 +5 -1: /home/eslam/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: save refusal stays on sheet with old selection and retry copy
+00:03 +5 -1: /home/owner/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: save refusal stays on sheet with old selection and retry copy
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following TestFailure was thrown running a test:
 Expected: exactly one matching candidate
@@ -65,7 +65,7 @@ still active: []>
    Which: means none were found but one was expected
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart:124:5)
+#4      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart:124:5)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -75,22 +75,22 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart line 124
+  file:///home/owner/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart line 124
 The test description was:
   save refusal stays on sheet with old selection and retry copy
 ════════════════════════════════════════════════════════════════════════════════════════════════════
-00:03 +5 -2: /home/eslam/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: save refusal stays on sheet with old selection and retry copy [E]
+00:03 +5 -2: /home/owner/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: save refusal stays on sheet with old selection and retry copy [E]
   Test failed. See exception logs above.
   The test description was: save refusal stays on sheet with old selection and retry copy
   
-00:03 +5 -2: /home/eslam/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: 320dp 2.5x en all choices reachable
+00:03 +5 -2: /home/owner/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: 320dp 2.5x en all choices reachable
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following TestFailure was thrown running a test:
 Expected: Locale:<ar>
   Actual: <null>
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart:177:7)
+#4      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart:177:7)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -100,22 +100,22 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart line 177
+  file:///home/owner/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart line 177
 The test description was:
   320dp 2.5x en all choices reachable
 ════════════════════════════════════════════════════════════════════════════════════════════════════
-00:03 +5 -3: /home/eslam/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: 320dp 2.5x en all choices reachable [E]
+00:03 +5 -3: /home/owner/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: 320dp 2.5x en all choices reachable [E]
   Test failed. See exception logs above.
   The test description was: 320dp 2.5x en all choices reachable
   
-00:03 +5 -3: /home/eslam/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: 320dp 2.5x ar all choices reachable
+00:03 +5 -3: /home/owner/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: 320dp 2.5x ar all choices reachable
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following TestFailure was thrown running a test:
 Expected: Locale:<ar>
   Actual: <null>
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart:177:7)
+#4      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart:177:7)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -125,30 +125,30 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart line 177
+  file:///home/owner/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart line 177
 The test description was:
   320dp 2.5x ar all choices reachable
 ════════════════════════════════════════════════════════════════════════════════════════════════════
-00:03 +5 -4: /home/eslam/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: 320dp 2.5x ar all choices reachable [E]
+00:03 +5 -4: /home/owner/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: 320dp 2.5x ar all choices reachable [E]
   Test failed. See exception logs above.
   The test description was: 320dp 2.5x ar all choices reachable
   
-00:03 +5 -4: /home/eslam/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: technical content isolates direction without changing sibling prose
-00:03 +6 -4: loading /home/eslam/Storage/Code/oc_app-e7-locale/test/launch_shortcut_routing_test.dart
-00:09 +6 -4: /home/eslam/Storage/Code/oc_app-e7-locale/test/launch_shortcut_routing_test.dart: connect opens server selection and keeps the connection
-00:10 +7 -4: /home/eslam/Storage/Code/oc_app-e7-locale/test/launch_shortcut_routing_test.dart: new task while connected creates exactly one empty session
-00:10 +8 -4: /home/eslam/Storage/Code/oc_app-e7-locale/test/launch_shortcut_routing_test.dart: new task without a saved server stays on server selection
-00:11 +9 -4: /home/eslam/Storage/Code/oc_app-e7-locale/test/launch_shortcut_routing_test.dart: new task during password re-entry drops with a notice
-00:11 +10 -4: /home/eslam/Storage/Code/oc_app-e7-locale/test/launch_shortcut_routing_test.dart: new task after a final connection error routes to servers
-00:11 +11 -4: /home/eslam/Storage/Code/oc_app-e7-locale/test/launch_shortcut_routing_test.dart: new task while connecting waits and creates once ready
-00:11 +12 -4: /home/eslam/Storage/Code/oc_app-e7-locale/test/launch_shortcut_routing_test.dart: a scope change aborts the stale creation without losing a newer launch
-00:11 +13 -4: /home/eslam/Storage/Code/oc_app-e7-locale/test/launch_shortcut_routing_test.dart: duplicate rapid new task taps while creation is held coalesce to one
-00:12 +14 -4: /home/eslam/Storage/Code/oc_app-e7-locale/test/launch_shortcut_routing_test.dart: new task leaves a persisted composer draft untouched
-00:12 +15 -4: /home/eslam/Storage/Code/oc_app-e7-locale/test/launch_shortcut_routing_test.dart: new task leaves a held shared draft untouched
+00:03 +5 -4: /home/owner/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: technical content isolates direction without changing sibling prose
+00:03 +6 -4: loading /home/owner/Storage/Code/oc_app-e7-locale/test/launch_shortcut_routing_test.dart
+00:09 +6 -4: /home/owner/Storage/Code/oc_app-e7-locale/test/launch_shortcut_routing_test.dart: connect opens server selection and keeps the connection
+00:10 +7 -4: /home/owner/Storage/Code/oc_app-e7-locale/test/launch_shortcut_routing_test.dart: new task while connected creates exactly one empty session
+00:10 +8 -4: /home/owner/Storage/Code/oc_app-e7-locale/test/launch_shortcut_routing_test.dart: new task without a saved server stays on server selection
+00:11 +9 -4: /home/owner/Storage/Code/oc_app-e7-locale/test/launch_shortcut_routing_test.dart: new task during password re-entry drops with a notice
+00:11 +10 -4: /home/owner/Storage/Code/oc_app-e7-locale/test/launch_shortcut_routing_test.dart: new task after a final connection error routes to servers
+00:11 +11 -4: /home/owner/Storage/Code/oc_app-e7-locale/test/launch_shortcut_routing_test.dart: new task while connecting waits and creates once ready
+00:11 +12 -4: /home/owner/Storage/Code/oc_app-e7-locale/test/launch_shortcut_routing_test.dart: a scope change aborts the stale creation without losing a newer launch
+00:11 +13 -4: /home/owner/Storage/Code/oc_app-e7-locale/test/launch_shortcut_routing_test.dart: duplicate rapid new task taps while creation is held coalesce to one
+00:12 +14 -4: /home/owner/Storage/Code/oc_app-e7-locale/test/launch_shortcut_routing_test.dart: new task leaves a persisted composer draft untouched
+00:12 +15 -4: /home/owner/Storage/Code/oc_app-e7-locale/test/launch_shortcut_routing_test.dart: new task leaves a held shared draft untouched
 00:12 +16 -4: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: 320dp 2.5x ar all choices reachable
-  /home/eslam/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: 320dp 2.5x en all choices reachable
-  /home/eslam/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: choosing Arabic persists; closing leaves choice unchanged
-  /home/eslam/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: save refusal stays on sheet with old selection and retry copy
+  /home/owner/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: 320dp 2.5x ar all choices reachable
+  /home/owner/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: 320dp 2.5x en all choices reachable
+  /home/owner/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: choosing Arabic persists; closing leaves choice unchanged
+  /home/owner/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: save refusal stays on sheet with old selection and retry copy

@@ -71,7 +71,7 @@ if [[ ! "$serial" =~ ^emulator-[0-9]+$ ]]; then
   ((phone)) && [[ "${OC_OWNER_PHONE_OK:-}" == 1 ]] ||
     { oc_say "serial $serial is not an emulator: the phone needs --phone and OC_OWNER_PHONE_OK=1 (the owner's OK)"; oc_status 2; exit 2; }
 fi
-lock="${OC_EMULATOR_LOCK:-/home/eslam/Storage/tmp/oc-emulator.lock}"
+lock="${OC_EMULATOR_LOCK:-$HOME/Storage/tmp/oc-emulator.lock}"
 [[ -d "$(dirname "$lock")" ]] || lock="${TMPDIR:-/tmp}/oc-emulator.lock"
 exec {emufd}>"$lock"
 flock -w "${OC_LOCK_WAIT:-1800}" "$emufd" || { oc_say "lock: emulator lock busy"; oc_status 2; exit 2; }

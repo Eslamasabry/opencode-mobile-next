@@ -16,7 +16,7 @@
    "metadata": {
     "gc.formula_hash": "9442d1c832fd61f6e7948c07272cf6aedb2c86f4ab74768e5e229e8472a12e8e",
     "gc.formula_name": "mol-digest-generate",
-    "gc.formula_source": "/home/eslam/.gc/cache/repos/d0e8066c2997e7d4c2c4c26b6ee527c7659dbd55626fb106c555d89af11b3996/gastown/formulas/mol-digest-generate.toml",
+    "gc.formula_source": "/home/owner/.gc/cache/repos/d0e8066c2997e7d4c2c4c26b6ee527c7659dbd55626fb106c555d89af11b3996/gastown/formulas/mol-digest-generate.toml",
     "gc.kind": "wisp",
     "gc.routed_to": "gastown.dog",
     "gc.var.event_timeout": "30",

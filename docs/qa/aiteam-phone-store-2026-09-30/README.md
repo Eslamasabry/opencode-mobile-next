@@ -22,6 +22,6 @@ Daily budget evidence remains date-bound. The coordinator may provide a current-
 
 ## Acceptance and deferred checks
 
-Focused deferred tests cover command replay across reopen, changed request payload, stale revisions, transaction rollback, plan/dependency validation, CAS and recovery, unknown usage, cross-instance deletion/tombstone, profile isolation, event metadata, imported-ref replay, promotion binding and scheduler evidence/caps. Test scratch data uses `OC_ENGINE_TEST_ROOT` or `/home/eslam/Storage/tmp/oc-phone-engine-tests`, never `/tmp`.
+Focused deferred tests cover command replay across reopen, changed request payload, stale revisions, transaction rollback, plan/dependency validation, CAS and recovery, unknown usage, cross-instance deletion/tombstone, profile isolation, event metadata, imported-ref replay, promotion binding and scheduler evidence/caps. Test scratch data uses `OC_ENGINE_TEST_ROOT` or `/home/owner/Storage/tmp/oc-phone-engine-tests`, never `/tmp`.
 
 Verification at the slice boundary: `rustfmt --edition 2021` on the two modules and two test files completed; `git diff --check` completed. Tests, cargo build/check, Flutter checks, analyzer and device checks remain unrun by explicit owner request. No execution or device-readiness pass is claimed.

@@ -1,8 +1,8 @@
 Waiting for another flutter command to release the startup lock...
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_manifest_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_manifest_test.dart: G4: the manifest reads the kit library and every kit file
-00:00 +1: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_manifest_test.dart: G4: every kit part and opener meets the manifest (allowlist only shrinks)
-00:00 +1 -1: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_manifest_test.dart: G4: every kit part and opener meets the manifest (allowlist only shrinks) [E]
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_manifest_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_manifest_test.dart: G4: the manifest reads the kit library and every kit file
+00:00 +1: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_manifest_test.dart: G4: every kit part and opener meets the manifest (allowlist only shrinks)
+00:00 +1 -1: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_manifest_test.dart: G4: every kit part and opener meets the manifest (allowlist only shrinks) [E]
   G4: 3 allowlist entries now pass; commit the smaller test/kit/kit_manifest_allowlist.json (or rerun with KIT_MANIFEST_WRITE=1):
     - states · KitNotice
     - gallery · KitNotice
@@ -291,10 +291,10 @@ Waiting for another flutter command to release the startup lock...
   package:matcher                         fail
   test/kit/kit_manifest_test.dart 1703:9  main.<fn>
   
-00:00 +1 -1: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/ui_ledger_coverage_test.dart
-00:01 +1 -1: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/ui_ledger_coverage_test.dart: every screen file has a home in the ledger
-00:01 +2 -1: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/ui_ledger_coverage_test.dart: ledger ids are unique and every edge lands on a page
+00:00 +1 -1: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/ui_ledger_coverage_test.dart
+00:01 +1 -1: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/ui_ledger_coverage_test.dart: every screen file has a home in the ledger
+00:01 +2 -1: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/ui_ledger_coverage_test.dart: ledger ids are unique and every edge lands on a page
 00:01 +3 -1: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_manifest_test.dart: G4: every kit part and opener meets the manifest (allowlist only shrinks)
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_manifest_test.dart: G4: every kit part and opener meets the manifest (allowlist only shrinks)

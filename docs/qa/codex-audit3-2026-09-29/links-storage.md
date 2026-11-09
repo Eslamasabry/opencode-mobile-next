@@ -13,7 +13,7 @@ Migration offer deletion admission/drain wiring in `lib/state/profiles.dart` and
 
 ## Focused verification
 
-Toolchain: `/home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter`. Every test invocation uses `tool/qa/machine_lock.sh test --`; formatting uses the paired Dart binary with `format --language-version=3.10`.
+Toolchain: `/home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter`. Every test invocation uses `tool/qa/machine_lock.sh test --`; formatting uses the paired Dart binary with `format --language-version=3.10`.
 
 1. Before the LS-1 source fix, `flutter test --concurrency=1 test/profile_deletion_test.dart --plain-name 'profile sweep matches owners'` failed: expected 8 owned keys, actual 13, including the five unrelated keys above. The initial owner-position fix passed 114 tests across the seven files below.
 2. [links-storage-red.log](links-storage-red.log) preserves the final failing-first run for dotted-ID isolation and the two LS-2 cases. Command: `flutter test --no-pub --concurrency=1 test/session_link_bindings_test.dart test/profile_deletion_test.dart --name 'normalized binding|newly known credentials|dotted profile ids'`. All three failed as expected.

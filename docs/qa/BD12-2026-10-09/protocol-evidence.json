@@ -3,7 +3,7 @@
     "server": "0.9.2",
     "protocol": "0.9.2"
   },
-  "source_root": "/home/eslam/Storage/tmp/claude-tmp/oc-paseo-lock-4pyx6dwm/node_modules/@getpaseo",
+  "source_root": "/home/owner/Storage/tmp/claude-tmp/oc-paseo-lock-4pyx6dwm/node_modules/@getpaseo",
   "files": {
     "server/dist/server/server/agent/providers/claude/model-manifest.js": "6cd026eb4aea7187bd74d66d61e432d14236e37f6c422cd5bd1f51685549d34e",
     "server/dist/server/server/session/provider/provider-catalog-session.js": "90bb81007628fad0ec735fea866e68d54d504c90aa8322134e709e3485631154",

@@ -2,7 +2,7 @@
 # Mutations in test/goldens/kit/kit_gallery.dart: ceiling check off; stale check off;
 # own theme only (for pass in [light]); whole-check exemption (any node of a listed check excused).
 # Command: tool/qa/machine_lock.sh test -- $F test --no-pub -j 1 test/goldens/kit/kit_gallery_g5_test.dart
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart
 00:00 +0: a clean tree passes
 00:00 +1: androidTapTarget: a 20 dp tall button fails
 00:00 +2: labeledTapTarget: an icon button with no label fails
@@ -19,7 +19,7 @@ Expected: contains 'outside kitGalleryG5Ceiling'
    Which: is not a string, map or iterable
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart:195:7)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart:195:7)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -29,7 +29,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart line 195
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart line 195
 The test description was:
   an entry outside the ceiling fails
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -46,7 +46,7 @@ Expected: contains '[textContrast] node "Other"'
    Which: is not a string, map or iterable
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart:223:7)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart:223:7)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -56,7 +56,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart line 223
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart line 223
 The test description was:
   another node failing the listed check still fails
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -72,7 +72,7 @@ Expected: contains 'Stale baseline'
    Which: is not a string, map or iterable
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart:234:7)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart:234:7)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -82,7 +82,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart line 234
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart line 234
 The test description was:
   a listed node that now passes fails as stale
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -107,7 +107,7 @@ RenderRepaintBoundary#2eb86),\n'
 zz_g5_theme_light'
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart:284:7)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart:284:7)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -117,7 +117,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart line 284
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart line 284
 The test description was:
   a dark-only gallery is still checked in light
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -129,7 +129,7 @@ The test description was:
 00:01 +11 -4: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: baseline a listed node that now passes fails as stale
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: baseline an entry outside the ceiling fails
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: baseline another node failing the listed check still fails
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: both themes a dark-only gallery is still checked in light
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: baseline a listed node that now passes fails as stale
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: baseline an entry outside the ceiling fails
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: baseline another node failing the listed check still fails
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: both themes a dark-only gallery is still checked in light

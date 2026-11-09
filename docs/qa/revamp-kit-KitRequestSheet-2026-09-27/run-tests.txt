@@ -1,60 +1,60 @@
-00:01 +3: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 3. answered elsewhere already not pending: nothing opens
-00:01 +4: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 4. dismissed back returns dismissed
-00:01 +5: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 4. dismissed Esc returns dismissed
-00:01 +6: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 4. dismissed Close returns dismissed
-00:01 +7: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 4. dismissed tap outside returns dismissed
-00:01 +8: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 4. dismissed swipe down returns dismissed
-00:01 +9: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 4. dismissed the typed reject note is restored on reopen
-00:01 +10: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 5. Always allow the switch unfolds the scope and calls nothing; a duration sends always once and closes
-00:01 +11: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 5. Always allow Not now folds and sends nothing; no pinned action is Always allow
-00:02 +12: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 6. question every option is listed; a tap calls onChosen once and closes
-00:02 +13: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 6. question Something else keeps its draft
-00:02 +14: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 7. ChooseMany: Send is disabled with "Choose at least one answer." until one is chosen, then sends the set
-00:02 +15: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 8. form submit disabled shows its reason
-00:02 +16: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 8. form with draft, dismissal keeps the typed text
-00:02 +17: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 8. form with dirty only, back asks the discard question in place and adds no route
-00:02 +18: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 9. gate Approve and Send back are pinned; the notes go with Send back
-00:02 +19: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 9. gate an in-place showKitConfirm adds no route
-00:02 +20: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 10. permission with change: a read-only diff; at 1280x800 an end-side sheet of 400–480 with the diff unified
-00:02 +21: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 11. details render last and collapsed in one fold
-00:02 +22: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 12. keyboard A allows while focus is on the sheet
-00:02 +23: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 12. keyboard D rejects; Enter on the sheet does not allow
-00:02 +24: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 12. keyboard typing A or D in the note field answers nothing
-00:02 +25: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 12. keyboard Tab reaches Close, the switch and the pinned answers
-00:03 +26: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 13. large text and sizes 2.0 text: the pinned answers are fully visible
-00:03 +27: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 13. large text and sizes the keyboard open (300 dp): the pinned answers are fully visible
-00:03 +28: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 13. large text and sizes no overflow at 320 dp
-00:03 +29: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 13. large text and sizes no overflow at 412 dp
-00:03 +30: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 13. large text and sizes no overflow at 600 dp
-00:03 +31: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 13. large text and sizes no overflow at 840 dp
-00:03 +32: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 13. large text and sizes no overflow at 1280 dp
-00:03 +33: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: reply: Send is disabled with "Type a reply first." while empty, then sends the words
-00:03 +34: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 15. reduced motion: opening, the risk unfold and the in-place confirm each settle after one pump
-00:03 +35: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart
-00:04 +35: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: (setUpAll)
-00:04 +35: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: permission · dark
-00:05 +36: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: permission_always · dark
-00:05 +37: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: permission_change · dark
-00:06 +38: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: question · dark
-00:06 +39: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: question_many · dark
-00:06 +40: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: form · dark
-00:06 +41: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: form_discard · dark
-00:06 +42: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: gate · dark
-00:06 +43: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: gate_confirm · dark
-00:06 +44: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: reply · dark
-00:07 +45: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: permission · 1280x800 · dark
-00:07 +46: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: permission_change · 1280x800 · dark
-00:07 +47: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: permission · light
-00:07 +48: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: permission_always · light
-00:07 +49: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: permission_change · light
-00:07 +50: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: question · light
-00:08 +51: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: question_many · light
-00:08 +52: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: form · light
-00:08 +53: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: form_discard · light
-00:08 +54: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: gate · light
-00:08 +55: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: gate_confirm · light
-00:08 +56: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: reply · light
-00:08 +57: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: permission · 1280x800 · light
-00:08 +58: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: permission_change · 1280x800 · light
-00:09 +59: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: (tearDownAll)
+00:01 +3: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 3. answered elsewhere already not pending: nothing opens
+00:01 +4: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 4. dismissed back returns dismissed
+00:01 +5: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 4. dismissed Esc returns dismissed
+00:01 +6: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 4. dismissed Close returns dismissed
+00:01 +7: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 4. dismissed tap outside returns dismissed
+00:01 +8: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 4. dismissed swipe down returns dismissed
+00:01 +9: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 4. dismissed the typed reject note is restored on reopen
+00:01 +10: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 5. Always allow the switch unfolds the scope and calls nothing; a duration sends always once and closes
+00:01 +11: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 5. Always allow Not now folds and sends nothing; no pinned action is Always allow
+00:02 +12: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 6. question every option is listed; a tap calls onChosen once and closes
+00:02 +13: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 6. question Something else keeps its draft
+00:02 +14: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 7. ChooseMany: Send is disabled with "Choose at least one answer." until one is chosen, then sends the set
+00:02 +15: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 8. form submit disabled shows its reason
+00:02 +16: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 8. form with draft, dismissal keeps the typed text
+00:02 +17: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 8. form with dirty only, back asks the discard question in place and adds no route
+00:02 +18: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 9. gate Approve and Send back are pinned; the notes go with Send back
+00:02 +19: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 9. gate an in-place showKitConfirm adds no route
+00:02 +20: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 10. permission with change: a read-only diff; at 1280x800 an end-side sheet of 400–480 with the diff unified
+00:02 +21: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 11. details render last and collapsed in one fold
+00:02 +22: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 12. keyboard A allows while focus is on the sheet
+00:02 +23: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 12. keyboard D rejects; Enter on the sheet does not allow
+00:02 +24: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 12. keyboard typing A or D in the note field answers nothing
+00:02 +25: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 12. keyboard Tab reaches Close, the switch and the pinned answers
+00:03 +26: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 13. large text and sizes 2.0 text: the pinned answers are fully visible
+00:03 +27: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 13. large text and sizes the keyboard open (300 dp): the pinned answers are fully visible
+00:03 +28: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 13. large text and sizes no overflow at 320 dp
+00:03 +29: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 13. large text and sizes no overflow at 412 dp
+00:03 +30: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 13. large text and sizes no overflow at 600 dp
+00:03 +31: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 13. large text and sizes no overflow at 840 dp
+00:03 +32: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 13. large text and sizes no overflow at 1280 dp
+00:03 +33: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: reply: Send is disabled with "Type a reply first." while empty, then sends the words
+00:03 +34: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/kit/kit_request_sheet_test.dart: 15. reduced motion: opening, the risk unfold and the in-place confirm each settle after one pump
+00:03 +35: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart
+00:04 +35: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: (setUpAll)
+00:04 +35: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: permission · dark
+00:05 +36: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: permission_always · dark
+00:05 +37: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: permission_change · dark
+00:06 +38: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: question · dark
+00:06 +39: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: question_many · dark
+00:06 +40: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: form · dark
+00:06 +41: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: form_discard · dark
+00:06 +42: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: gate · dark
+00:06 +43: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: gate_confirm · dark
+00:06 +44: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: reply · dark
+00:07 +45: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: permission · 1280x800 · dark
+00:07 +46: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: permission_change · 1280x800 · dark
+00:07 +47: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: permission · light
+00:07 +48: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: permission_always · light
+00:07 +49: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: permission_change · light
+00:07 +50: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: question · light
+00:08 +51: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: question_many · light
+00:08 +52: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: form · light
+00:08 +53: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: form_discard · light
+00:08 +54: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: gate · light
+00:08 +55: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: gate_confirm · light
+00:08 +56: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: reply · light
+00:08 +57: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: permission · 1280x800 · light
+00:08 +58: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: permission_change · 1280x800 · light
+00:09 +59: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_18f7158b-a32-2/test/goldens/kit/kit_request_sheet_golden_test.dart: (tearDownAll)
 00:09 +59: All tests passed!

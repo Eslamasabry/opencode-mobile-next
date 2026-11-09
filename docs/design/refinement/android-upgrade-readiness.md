@@ -19,16 +19,16 @@ Publisher-owned primary references checked live:
 
 ## Local evidence
 
-Inspected `/home/eslam/Storage/Code/oc_app-ui-integration/pubspec.lock`: desktop_drop at 108–115, flutter_timezone 355–362, mobile_scanner 584–591. Candidate `android/settings.gradle.kts` declares AGP 9.3.2; `android/gradle.properties` explicitly sets android.builtInKotlin=true and android.newDsl=false. The latter is a separate AGP DSL compatibility flag, not a Kotlin-disable flag.
+Inspected `/home/owner/Storage/Code/oc_app-ui-integration/pubspec.lock`: desktop_drop at 108–115, flutter_timezone 355–362, mobile_scanner 584–591. Candidate `android/settings.gradle.kts` declares AGP 9.3.2; `android/gradle.properties` explicitly sets android.builtInKotlin=true and android.newDsl=false. The latter is a separate AGP DSL compatibility flag, not a Kotlin-disable flag.
 
 Inspected exact cached package Android build.gradle files:
 
-- `/home/eslam/.pub-cache/hosted/pub.dev/desktop_drop-0.8.4/android/build.gradle`
-- `/home/eslam/.pub-cache/hosted/pub.dev/flutter_timezone-5.1.0/android/build.gradle`
-- `/home/eslam/.pub-cache/hosted/pub.dev/mobile_scanner-7.4.0/android/build.gradle`
+- `/home/owner/.pub-cache/hosted/pub.dev/desktop_drop-0.8.4/android/build.gradle`
+- `/home/owner/.pub-cache/hosted/pub.dev/flutter_timezone-5.1.0/android/build.gradle`
+- `/home/owner/.pub-cache/hosted/pub.dev/mobile_scanner-7.4.0/android/build.gradle`
 
 Pinned Flutter source explains the warning mechanism directly:
-`/home/eslam/.shorebird/bin/cache/flutter/e16cf749ccaa38d7050335ff305def49b1c7c84c/packages/flutter_tools/gradle/src/main/kotlin/FlutterPluginUtils.kt:624` emits the plugin warning. `getSubprojectPluginState` at 653–705 documents and implements regex scanning of build scripts rather than runtime plugin state; the scanner sees conditional declarations too. This is the precise warning source, not the unrelated app-language detector in project.dart.
+`/home/owner/.shorebird/bin/cache/flutter/e16cf749ccaa38d7050335ff305def49b1c7c84c/packages/flutter_tools/gradle/src/main/kotlin/FlutterPluginUtils.kt:624` emits the plugin warning. `getSubprojectPluginState` at 653–705 documents and implements regex scanning of build scripts rather than runtime plugin state; the scanner sees conditional declarations too. This is the precise warning source, not the unrelated app-language detector in project.dart.
 
 ## Decision and limitation
 

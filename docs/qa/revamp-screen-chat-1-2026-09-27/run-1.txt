@@ -57,45 +57,45 @@ Downloading packages...
 Got dependencies!
 54 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/revamp/screen_chat_1_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/revamp/screen_chat_1_test.dart: move names each place and its kind, and marks the current
-00:00 +1: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/revamp/screen_chat_1_test.dart: the move question says where changes go and where they stay, and moving without them leaves them
-00:00 +2: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/revamp/screen_chat_1_test.dart: a move the server refuses keeps the question open
-00:00 +3: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/revamp/screen_chat_1_test.dart: a cloud machine that is not connected says why it cannot be picked
-00:01 +4: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/revamp/screen_chat_1_test.dart: with nowhere else to go the sheet says so
-00:01 +5: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/revamp/screen_chat_1_test.dart: organizations are grouped once per account and the switch says what changes
-00:01 +6: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/revamp/screen_chat_1_test.dart: a switch that fails keeps the question open
-00:01 +7: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/revamp/screen_chat_1_test.dart: with one organization there is nothing to switch, said once
-00:01 +8: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/revamp/screen_chat_1_test.dart: the demo is titled, says it is simulated, and keeps "Set up your own server" reachable
-00:01 +9: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart
-00:02 +9: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: UXCHAT background eligibility updates while Tasks stays open
-00:03 +10: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: UXCHAT child Tasks discovers uncached siblings and its own children
-00:03 +11: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: UXCHAT completed command remains accessible by known ID
-00:03 +12: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: UXCHAT Tasks opens on its list, with no preamble, at large text
-00:03 +13: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: UXCHAT requested background promotion is not reported as confirmed
-00:03 +14: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: a reconnect covered by a dialog reconciles when the viewer becomes visible
-00:03 +15: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: running work filters other sessions and opens a linked subagent
-00:03 +16: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: unsupported shells disappear while subagent navigation stays available
-00:03 +17: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: Stop requires confirmation and retains already loaded output
-00:04 +18: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: timeout replacement and clearing use the selected duration
-00:04 +19: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: a command about to hit its time limit says so on its page
-00:04 +20: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: a time limit the server refuses is said with Try again
-00:04 +21: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: a stop the server refuses keeps the question open
-00:04 +22: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: a running agent is stopped from its row, asked first
-00:04 +23: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: output polling pauses behind a dialog, in background and after close
-00:05 +24: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: reconnect refreshes status and scope change disables old-server controls
-00:05 +25: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: running work and output remain scrollable at 360 dp with 2.5x text
-00:05 +26: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: Running now lists running work first, then the rest, by outcome
-00:05 +27: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: a command is named by what it runs, not where it lives
-00:05 +28: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/session_context_screen_test.dart
-00:06 +28: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/session_context_screen_test.dart: changing location clears context instead of loading the old session elsewhere
-00:06 +29: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/session_context_screen_test.dart: token parsing retains cache activity in the OpenCode total
-00:06 +30: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/session_context_screen_test.dart: context metrics use latest assistant truth and label estimates
-00:06 +31: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/session_context_screen_test.dart: context surface stays flat and fits compact large text
-00:07 +32: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/session_context_screen_test.dart: failed refresh keeps cached context and exposes retry
-00:07 +33: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/session_context_screen_test.dart: foreground data revision refreshes the retained context view
-00:07 +34: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/session_context_screen_test.dart: expired context cursor reloads recent history and retains usage
-00:07 +35: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/session_context_screen_test.dart: empty session explains how context becomes available
-00:07 +36: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/session_context_screen_test.dart: near the limit, the page says so and offers to compact
-00:07 +37: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/session_context_screen_test.dart: under half the limit there is no near-limit notice
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/revamp/screen_chat_1_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/revamp/screen_chat_1_test.dart: move names each place and its kind, and marks the current
+00:00 +1: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/revamp/screen_chat_1_test.dart: the move question says where changes go and where they stay, and moving without them leaves them
+00:00 +2: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/revamp/screen_chat_1_test.dart: a move the server refuses keeps the question open
+00:00 +3: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/revamp/screen_chat_1_test.dart: a cloud machine that is not connected says why it cannot be picked
+00:01 +4: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/revamp/screen_chat_1_test.dart: with nowhere else to go the sheet says so
+00:01 +5: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/revamp/screen_chat_1_test.dart: organizations are grouped once per account and the switch says what changes
+00:01 +6: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/revamp/screen_chat_1_test.dart: a switch that fails keeps the question open
+00:01 +7: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/revamp/screen_chat_1_test.dart: with one organization there is nothing to switch, said once
+00:01 +8: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/revamp/screen_chat_1_test.dart: the demo is titled, says it is simulated, and keeps "Set up your own server" reachable
+00:01 +9: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart
+00:02 +9: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: UXCHAT background eligibility updates while Tasks stays open
+00:03 +10: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: UXCHAT child Tasks discovers uncached siblings and its own children
+00:03 +11: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: UXCHAT completed command remains accessible by known ID
+00:03 +12: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: UXCHAT Tasks opens on its list, with no preamble, at large text
+00:03 +13: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: UXCHAT requested background promotion is not reported as confirmed
+00:03 +14: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: a reconnect covered by a dialog reconciles when the viewer becomes visible
+00:03 +15: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: running work filters other sessions and opens a linked subagent
+00:03 +16: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: unsupported shells disappear while subagent navigation stays available
+00:03 +17: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: Stop requires confirmation and retains already loaded output
+00:04 +18: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: timeout replacement and clearing use the selected duration
+00:04 +19: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: a command about to hit its time limit says so on its page
+00:04 +20: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: a time limit the server refuses is said with Try again
+00:04 +21: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: a stop the server refuses keeps the question open
+00:04 +22: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: a running agent is stopped from its row, asked first
+00:04 +23: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: output polling pauses behind a dialog, in background and after close
+00:05 +24: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: reconnect refreshes status and scope change disables old-server controls
+00:05 +25: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: running work and output remain scrollable at 360 dp with 2.5x text
+00:05 +26: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: Running now lists running work first, then the rest, by outcome
+00:05 +27: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/running_work_sheet_test.dart: a command is named by what it runs, not where it lives
+00:05 +28: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/session_context_screen_test.dart
+00:06 +28: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/session_context_screen_test.dart: changing location clears context instead of loading the old session elsewhere
+00:06 +29: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/session_context_screen_test.dart: token parsing retains cache activity in the OpenCode total
+00:06 +30: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/session_context_screen_test.dart: context metrics use latest assistant truth and label estimates
+00:06 +31: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/session_context_screen_test.dart: context surface stays flat and fits compact large text
+00:07 +32: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/session_context_screen_test.dart: failed refresh keeps cached context and exposes retry
+00:07 +33: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/session_context_screen_test.dart: foreground data revision refreshes the retained context view
+00:07 +34: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/session_context_screen_test.dart: expired context cursor reloads recent history and retains usage
+00:07 +35: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/session_context_screen_test.dart: empty session explains how context becomes available
+00:07 +36: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/session_context_screen_test.dart: near the limit, the page says so and offers to compact
+00:07 +37: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-1/test/session_context_screen_test.dart: under half the limit there is no near-limit notice
 00:07 +38: All tests passed!

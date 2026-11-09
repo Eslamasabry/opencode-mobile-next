@@ -12,7 +12,7 @@ Root owns the entire `lib/api2/` protocol cluster, domain/state integration if a
 
 Three independent initial inspections own only their classification notes: model switch plus images; permission allow/deny; cards tool round trip. They read the relevant contract and harness/app path, propose a minimal reproducer, and do not edit shared libraries or launch tests/device processes. Public methods and fixed error codes will be recorded here before any parallel implementation; there are no new product APIs at this stage.
 
-Use the pinned SDK and serial focused tests through `tool/qa/machine_lock.sh`. Device checks use `/home/eslam/Storage/tmp/oc-emulator.lock`, run-specific titles and durable exact-scope ownership cleanup. Read the runtime launch credential only through the established app-UID mechanism; never export credentials, provider configuration or raw transcripts. Preserve app data. Prepare/restore the approved normal APK within the lock after the coordinator posts 2197 and its signer/path. Failed assertions stay failed; classification must distinguish observed facts from hypotheses.
+Use the pinned SDK and serial focused tests through `tool/qa/machine_lock.sh`. Device checks use `/home/owner/Storage/tmp/oc-emulator.lock`, run-specific titles and durable exact-scope ownership cleanup. Read the runtime launch credential only through the established app-UID mechanism; never export credentials, provider configuration or raw transcripts. Preserve app data. Prepare/restore the approved normal APK within the lock after the coordinator posts 2197 and its signer/path. Failed assertions stay failed; classification must distinguish observed facts from hypotheses.
 
 ## Frozen harness revision contract
 

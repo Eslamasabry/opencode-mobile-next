@@ -1,4 +1,4 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart
 00:00 +0: (setUpAll)
 00:00 +0: chats_home_mixed · dark
 00:00 +1: chats_home_needs · dark
@@ -9,7 +9,7 @@
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following assertion was thrown while running async test code:
 Golden "chats_new_project_dark.png": Pixel test failed, 2.71%, 10211px diff detected.
-Failure feedback can be found at /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/failures
+Failure feedback can be found at /home/owner/Storage/Code/oc_app-sol-ba/test/goldens/failures
 
 When the exception was thrown, this was the stack:
 #0      LocalFileComparator.compare (package:flutter_test/src/_goldens_io.dart:108:5)
@@ -22,7 +22,7 @@ When the exception was thrown, this was the stack:
 <asynchronous suspension>
 #5      expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)
 <asynchronous suspension>
-#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart:217:11)
+#6      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart:217:11)
 <asynchronous suspension>
 #7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -41,7 +41,7 @@ The exception was caught asynchronously.
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following assertion was thrown while running async test code:
 Golden "chats_new_choose_dark.png": Pixel test failed, 2.71%, 10211px diff detected.
-Failure feedback can be found at /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/failures
+Failure feedback can be found at /home/owner/Storage/Code/oc_app-sol-ba/test/goldens/failures
 
 When the exception was thrown, this was the stack:
 #0      LocalFileComparator.compare (package:flutter_test/src/_goldens_io.dart:108:5)
@@ -54,7 +54,7 @@ When the exception was thrown, this was the stack:
 <asynchronous suspension>
 #5      expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)
 <asynchronous suspension>
-#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart:217:11)
+#6      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart:217:11)
 <asynchronous suspension>
 #7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -74,7 +74,7 @@ The exception was caught asynchronously.
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following assertion was thrown while running async test code:
 Golden "chats_new_copy_dark.png": Pixel test failed, 2.71%, 10211px diff detected.
-Failure feedback can be found at /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/failures
+Failure feedback can be found at /home/owner/Storage/Code/oc_app-sol-ba/test/goldens/failures
 
 When the exception was thrown, this was the stack:
 #0      LocalFileComparator.compare (package:flutter_test/src/_goldens_io.dart:108:5)
@@ -87,7 +87,7 @@ When the exception was thrown, this was the stack:
 <asynchronous suspension>
 #5      expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)
 <asynchronous suspension>
-#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart:217:11)
+#6      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart:217:11)
 <asynchronous suspension>
 #7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -111,7 +111,7 @@ The exception was caught asynchronously.
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following assertion was thrown while running async test code:
 Golden "chats_new_project_1280x800_dark.png": Pixel test failed, 1.00%, 10211px diff detected.
-Failure feedback can be found at /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/failures
+Failure feedback can be found at /home/owner/Storage/Code/oc_app-sol-ba/test/goldens/failures
 
 When the exception was thrown, this was the stack:
 #0      LocalFileComparator.compare (package:flutter_test/src/_goldens_io.dart:108:5)
@@ -124,7 +124,7 @@ When the exception was thrown, this was the stack:
 <asynchronous suspension>
 #5      expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)
 <asynchronous suspension>
-#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart:217:11)
+#6      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart:217:11)
 <asynchronous suspension>
 #7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -143,7 +143,7 @@ The exception was caught asynchronously.
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following assertion was thrown while running async test code:
 Golden "chats_new_choose_1280x800_dark.png": Pixel test failed, 1.00%, 10211px diff detected.
-Failure feedback can be found at /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/failures
+Failure feedback can be found at /home/owner/Storage/Code/oc_app-sol-ba/test/goldens/failures
 
 When the exception was thrown, this was the stack:
 #0      LocalFileComparator.compare (package:flutter_test/src/_goldens_io.dart:108:5)
@@ -156,7 +156,7 @@ When the exception was thrown, this was the stack:
 <asynchronous suspension>
 #5      expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)
 <asynchronous suspension>
-#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart:217:11)
+#6      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart:217:11)
 <asynchronous suspension>
 #7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -176,7 +176,7 @@ The exception was caught asynchronously.
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following assertion was thrown while running async test code:
 Golden "chats_new_copy_1280x800_dark.png": Pixel test failed, 1.00%, 10211px diff detected.
-Failure feedback can be found at /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/failures
+Failure feedback can be found at /home/owner/Storage/Code/oc_app-sol-ba/test/goldens/failures
 
 When the exception was thrown, this was the stack:
 #0      LocalFileComparator.compare (package:flutter_test/src/_goldens_io.dart:108:5)
@@ -189,7 +189,7 @@ When the exception was thrown, this was the stack:
 <asynchronous suspension>
 #5      expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)
 <asynchronous suspension>
-#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart:217:11)
+#6      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart:217:11)
 <asynchronous suspension>
 #7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -213,7 +213,7 @@ The exception was caught asynchronously.
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following assertion was thrown while running async test code:
 Golden "chats_new_project_light.png": Pixel test failed, 2.70%, 10197px diff detected.
-Failure feedback can be found at /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/failures
+Failure feedback can be found at /home/owner/Storage/Code/oc_app-sol-ba/test/goldens/failures
 
 When the exception was thrown, this was the stack:
 #0      LocalFileComparator.compare (package:flutter_test/src/_goldens_io.dart:108:5)
@@ -226,7 +226,7 @@ When the exception was thrown, this was the stack:
 <asynchronous suspension>
 #5      expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)
 <asynchronous suspension>
-#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart:217:11)
+#6      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart:217:11)
 <asynchronous suspension>
 #7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -245,7 +245,7 @@ The exception was caught asynchronously.
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following assertion was thrown while running async test code:
 Golden "chats_new_choose_light.png": Pixel test failed, 2.70%, 10197px diff detected.
-Failure feedback can be found at /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/failures
+Failure feedback can be found at /home/owner/Storage/Code/oc_app-sol-ba/test/goldens/failures
 
 When the exception was thrown, this was the stack:
 #0      LocalFileComparator.compare (package:flutter_test/src/_goldens_io.dart:108:5)
@@ -258,7 +258,7 @@ When the exception was thrown, this was the stack:
 <asynchronous suspension>
 #5      expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)
 <asynchronous suspension>
-#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart:217:11)
+#6      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart:217:11)
 <asynchronous suspension>
 #7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -278,7 +278,7 @@ The exception was caught asynchronously.
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following assertion was thrown while running async test code:
 Golden "chats_new_copy_light.png": Pixel test failed, 2.70%, 10197px diff detected.
-Failure feedback can be found at /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/failures
+Failure feedback can be found at /home/owner/Storage/Code/oc_app-sol-ba/test/goldens/failures
 
 When the exception was thrown, this was the stack:
 #0      LocalFileComparator.compare (package:flutter_test/src/_goldens_io.dart:108:5)
@@ -291,7 +291,7 @@ When the exception was thrown, this was the stack:
 <asynchronous suspension>
 #5      expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)
 <asynchronous suspension>
-#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart:217:11)
+#6      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart:217:11)
 <asynchronous suspension>
 #7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -315,7 +315,7 @@ The exception was caught asynchronously.
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following assertion was thrown while running async test code:
 Golden "chats_new_project_1280x800_light.png": Pixel test failed, 1.00%, 10197px diff detected.
-Failure feedback can be found at /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/failures
+Failure feedback can be found at /home/owner/Storage/Code/oc_app-sol-ba/test/goldens/failures
 
 When the exception was thrown, this was the stack:
 #0      LocalFileComparator.compare (package:flutter_test/src/_goldens_io.dart:108:5)
@@ -328,7 +328,7 @@ When the exception was thrown, this was the stack:
 <asynchronous suspension>
 #5      expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)
 <asynchronous suspension>
-#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart:217:11)
+#6      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart:217:11)
 <asynchronous suspension>
 #7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -347,7 +347,7 @@ The exception was caught asynchronously.
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following assertion was thrown while running async test code:
 Golden "chats_new_choose_1280x800_light.png": Pixel test failed, 1.00%, 10197px diff detected.
-Failure feedback can be found at /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/failures
+Failure feedback can be found at /home/owner/Storage/Code/oc_app-sol-ba/test/goldens/failures
 
 When the exception was thrown, this was the stack:
 #0      LocalFileComparator.compare (package:flutter_test/src/_goldens_io.dart:108:5)
@@ -360,7 +360,7 @@ When the exception was thrown, this was the stack:
 <asynchronous suspension>
 #5      expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)
 <asynchronous suspension>
-#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart:217:11)
+#6      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart:217:11)
 <asynchronous suspension>
 #7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -380,7 +380,7 @@ The exception was caught asynchronously.
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following assertion was thrown while running async test code:
 Golden "chats_new_copy_1280x800_light.png": Pixel test failed, 1.00%, 10197px diff detected.
-Failure feedback can be found at /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/failures
+Failure feedback can be found at /home/owner/Storage/Code/oc_app-sol-ba/test/goldens/failures
 
 When the exception was thrown, this was the stack:
 #0      LocalFileComparator.compare (package:flutter_test/src/_goldens_io.dart:108:5)
@@ -393,7 +393,7 @@ When the exception was thrown, this was the stack:
 <asynchronous suspension>
 #5      expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)
 <asynchronous suspension>
-#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart:217:11)
+#6      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart:217:11)
 <asynchronous suspension>
 #7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -412,8 +412,8 @@ The exception was caught asynchronously.
 00:06 +24 -12: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart: chats_new_choose · dark
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart: chats_new_choose · light
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart: chats_new_choose_1280x800 · dark
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart: chats_new_choose_1280x800 · light
+  /home/owner/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart: chats_new_choose · dark
+  /home/owner/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart: chats_new_choose · light
+  /home/owner/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart: chats_new_choose_1280x800 · dark
+  /home/owner/Storage/Code/oc_app-sol-ba/test/goldens/chats_home_golden_test.dart: chats_new_choose_1280x800 · light
   ... and 8 more

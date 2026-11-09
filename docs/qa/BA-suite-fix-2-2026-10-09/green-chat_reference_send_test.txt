@@ -1,4 +1,4 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/chat_reference_send_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app-sol-ba/test/chat_reference_send_test.dart
 00:00 +0: a staged reference does not turn a slash command into a prompt
 00:01 +1: the composer says staged references are not saved
 00:01 +2: references still ride along on an ordinary prompt

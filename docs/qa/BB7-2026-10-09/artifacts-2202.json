@@ -2,7 +2,7 @@
   "artifacts": [
     {
       "kind": "target",
-      "path": "/home/eslam/Storage/Code/oc_app-sol-bb/build/app/outputs/flutter-apk/app-release.apk",
+      "path": "/home/owner/Storage/Code/oc_app-sol-bb/build/app/outputs/flutter-apk/app-release.apk",
       "sha256": "6a25fbdb804bd8a3bc729834fb0222f941dc12243b44b9c0bfebdd89fa634f7e",
       "bytes": 65650745,
       "package": "io.github.eslamasabry.opencode_mobile",

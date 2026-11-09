@@ -1,269 +1,269 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_export_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_export_test.dart: exports complete response bytes with default redaction and no location
-00:00 +1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_export_test.dart: byte error 401 retains tag and does not disable export
-00:00 +2: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_export_test.dart: byte error 404 retains tag and does not disable export
-00:00 +3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_export_test.dart: byte error 500 retains tag and does not disable export
-00:00 +4: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_export_test.dart: absent endpoint is remembered without repeated requests
-00:00 +5: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_export_test.dart: JSON defaults to redaction and passes an isolated buffer
-00:00 +6: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_export_test.dart: session scope stays frozen when widget updates in place
-00:00 +7: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_export_test.dart: scope change while destination picker is open cannot report success
-00:00 +8: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_export_test.dart: progress from transport is clamped before rendering
-00:00 +9: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_export_test.dart: Markdown uses loaded transcript without a server export
-00:01 +10: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_export_test.dart: cancel and changed connection never open a save dialog
-00:01 +11: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_export_test.dart: failed export keeps options and allows retry
-00:01 +12: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_export_test.dart: export layout at 411.0 with reachable redaction and save
-00:01 +13: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_export_test.dart: export layout at 320.0 with reachable redaction and save
-00:01 +14: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart
-00:02 +14: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: streamed export envelope and bare payload preserve Unicode and all records
-00:02 +15: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: review snapshot isolates nested input and request mutations
-00:02 +16: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: unknown message types and nested protocol fields survive review
-00:02 +17: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: blank, control, and malformed references and destinations are rejected
-00:02 +18: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: identifies redaction and parent without discarding the source
-00:02 +19: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: malformed identifying data and duplicate messages are rejected
-00:02 +20: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: import wire body retains source IDs and explicit destination with no query
-00:02 +21: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: import 400 keeps capability and never retries or mutates IDs
-00:02 +22: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: import 401 keeps capability and never retries or mutates IDs
-00:02 +23: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: import 404 keeps capability and never retries or mutates IDs
-00:02 +24: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: import 409 keeps capability and never retries or mutates IDs
-00:02 +25: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: import 500 keeps capability and never retries or mutates IDs
-00:02 +26: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: review precedes import, conflicts retain file and chosen destination
-00:03 +27: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: successful import cannot be submitted twice and opens returned location
-00:03 +28: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: connection change during wake prevents a write and retains file
-00:03 +29: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: picker result after connection change is discarded
-00:03 +30: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: controller replacement retires picker scope
-00:03 +31: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: mismatched success response stays retryable and unconfirmed
-00:03 +32: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: oversize file is never read or uploaded
-00:03 +33: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: import review and action fit at 411.0
-00:03 +34: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: import review and action fit at 320.0
-00:03 +35: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_inventory_paging_test.dart
-00:05 +35: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_inventory_paging_test.dart: detail hydration does not suppress a concurrent busy snapshot
-00:05 +36: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_inventory_paging_test.dart: status failures leave older sessions reachable
-00:05 +37: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_inventory_paging_test.dart: empty and duplicate inventory pages keep continuation usable
-00:05 +38: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_inventory_paging_test.dart: partial refresh preserves cached older metadata and resets continuation
-00:05 +39: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_inventory_paging_test.dart: pending page cannot resurrect deletes or overwrite newer live metadata
-00:05 +40: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_inventory_paging_test.dart: new head refresh invalidates an older request without clearing new state
-00:05 +41: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_inventory_paging_test.dart: expired cursor reloads and transient failure retries the same token
-00:05 +42: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_inventory_paging_test.dart: direct reads coalesce and keep out-of-location metadata out of inventory
-00:05 +43: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_inventory_paging_test.dart: direct lookup protects newer details from a pending inventory page
-00:05 +44: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_inventory_paging_test.dart: confirmed local deletion and authoritative 404 clear cached entities
-00:05 +45: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_inventory_paging_test.dart: a newer session revision starts a fresh detail read instead of joining stale work
-00:05 +46: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_inventory_paging_test.dart: stale detail failure cannot replace a successful newer read
-00:05 +47: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_lifecycle_transport_test.dart
-00:06 +47: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_lifecycle_transport_test.dart: abort uses the generated location-scoped contract
-00:06 +48: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_lifecycle_transport_test.dart: declared abort errors retain product-facing details
-00:06 +49: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_management_transport_test.dart
-00:06 +49: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_management_transport_test.dart: create rename and delete use generated location contracts
-00:06 +50: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_management_transport_test.dart: session mutation errors retain generated server details
-00:06 +51: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_model_scope_test.dart
-00:07 +51: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_model_scope_test.dart: per-session choice does not move the default or other sessions
-00:07 +52: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_model_scope_test.dart: changing the default later does not override a session choice
-00:07 +53: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_model_scope_test.dart: a variant the catalog does not offer is rejected
-00:07 +54: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_model_scope_test.dart: store round-trips and prunes per-session choices
-00:07 +55: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_model_scope_test.dart: malformed stored choices are dropped, not thrown
-00:07 +56: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_needs_you_test.dart
-00:08 +56: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_needs_you_test.dart: workspace row moves under Needs you and names the permission, in the attention tone, while it is pending
-00:08 +57: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_needs_you_test.dart: sessions tab row carries a Needs you chip while a permission is pending
-00:08 +58: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart
-00:09 +58: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: wire operations isolate the mobile-owned key, auth and location
-00:09 +59: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: 8192 encoded bytes includes quotes, escapes and Unicode
-00:09 +60: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: read preserves authorization errors without disabling capability
-00:09 +61: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: save preserves authorization errors without disabling capability
-00:09 +62: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: remove preserves authorization errors without disabling capability
-00:09 +63: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: unsupported endpoint hides capability, missing session does not
-00:09 +64: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: server 413 retains its byte limit and unsupported value stays untouched
-00:09 +65: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: save re-reads before mutation and rejects another client change
-00:09 +66: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: wake and fresh-read scope changes never write into a new location
-00:09 +67: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: duplicate decisions serialize and only successful writes create receipts
-00:10 +68: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: live and reloaded transcript notices redact instruction keys and values
-00:10 +69: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: repository replacement disables a stale note review until refresh
-00:10 +70: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: an in-flight load completing after disposal does not update the screen
-00:10 +71: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: an in-flight save cannot pop a replacement session editor
-00:10 +72: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: a delayed old save failure cannot affect a fresh editor save
-00:11 +73: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: failed save retains draft and refresh shows remote note before replacing
-00:11 +74: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: authorization failure keeps the draft and successful retry returns to chat
-00:11 +75: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: compact large text scrolls, oversize save disabled and back protects draft
-00:11 +76: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_pins_test.dart
-00:12 +76: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_pins_test.dart: pins survive reload and serialize writes without crossing profile or location
-00:12 +77: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_pins_test.dart: failed storage is not shown as saved and later writes recover
-00:12 +78: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_pins_test.dart: pins sort first with recency retained and unpin restores the ordinary order
-00:12 +79: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_pins_test.dart: pinned history outside the head page is hydrated once and stays reachable
-00:12 +80: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_pins_test.dart: failed pinned reads remain retryable and do not drop the preference
-00:12 +81: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_pins_test.dart: session menu pins a conversation and exposes Unpin
-00:13 +82: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart
-00:13 +82: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: an unread transcript waits until its visible content is ready
-00:14 +83: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: a deferred rendered receipt retains its completion and location
-00:14 +84: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: a visible chat retries read sync after reconnect
-00:14 +85: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: v2 mapping and viewed events retain the exact idle watermark
-00:14 +86: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: a false read-state write is retried at the same watermark
-00:14 +87: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: refresh and remote viewed events synchronize without sending receipts
-00:14 +88: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: a receipt acknowledges only the observed run when a newer one finishes
-00:14 +89: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: background during wake prevents a server receipt
-00:14 +90: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: location during wake prevents a server receipt
-00:14 +91: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: privacy during wake prevents a server receipt
-00:14 +92: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: busy during wake prevents a server receipt
-00:14 +93: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: private read state persists locally and ignores another client receipts
-00:14 +94: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: a newly opened viewer can finish after a covered viewer cancels
-00:14 +95: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: failed server sync keeps local read state and retries only on explicit observation
-00:14 +96: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: covered chat stays unread until it becomes the foreground route
-00:14 +97: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: backgrounded chat sends nothing and observes on resume
-00:14 +98: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: unread status is text and reacts to cross-client receipts
-00:14 +99: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: privacy control is available only with the v2 capability
-00:14 +100: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_read_transport_test.dart
-00:15 +100: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_read_transport_test.dart: session reads use generated contracts without losing loose data
-00:15 +101: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_read_transport_test.dart: session read errors retain generated OpenCode details
-00:15 +102: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_relations_screen_test.dart
-00:15 +102: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_relations_screen_test.dart: shows parent and ordered subagents on a compact large-text phone
-00:16 +103: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_relations_screen_test.dart: returns the exact selected child session
-00:16 +104: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_relations_screen_test.dart: replaced controller retires its late load instead of overwriting new data
-00:16 +105: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_relations_screen_test.dart: late selection and pin completion retire after the reviewed session changes
-00:17 +106: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_review_transport_test.dart
-00:17 +106: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_review_transport_test.dart: session todos and diff use generated location-scoped contracts
-00:17 +107: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_review_transport_test.dart: successful loose todo and diff data retain older-server fields
-00:17 +108: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_review_transport_test.dart: session todo and diff errors retain generated OpenCode details
-00:17 +109: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_selection_sync_test.dart
-00:18 +109: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:19 +110: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_selection_sync_test.dart: offline v2 metadata remains server-owned and writes require a connection
-00:19 +111: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_selection_sync_test.dart: a queued prompt cancelled during selection is never delivered
-00:19 +112: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_selection_sync_test.dart: selection wait rejects a retired dispatch transport
-00:19 +113: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_selection_sync_test.dart: v2 reads retain variants and distinguish inherited from unknown
-00:19 +114: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_selection_sync_test.dart: live selection replaces variant and patches only the matching session
-00:19 +115: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_selection_sync_test.dart: a model event cannot establish an unhydrated agent or clear with malformed data
-00:19 +116: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_selection_sync_test.dart: pending metadata cannot overwrite a newer remote selection
-00:19 +117: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_selection_sync_test.dart: intentional writes serialize and confirmation adopts server state
-00:19 +118: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_selection_sync_test.dart: failed writes retain confirmed selection and allow retry
-00:19 +119: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_selection_sync_test.dart: new sessions receive defaults and offline replay applies its saved snapshot
-00:19 +120: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_skill_test.dart
-00:20 +120: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_skill_test.dart: catalog identity and activation body retain scope and explicit resume
-00:20 +121: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_skill_test.dart: known missing skill does not disable activation; server failures are uncertain
-00:20 +122: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_skill_test.dart: location change during wake or session read prevents dispatch
-00:20 +123: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_skill_test.dart: fresh staged revert and concurrent activation are guarded
-00:20 +124: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_skill_test.dart: skill events request a refresh without exposing skill instruction text
-00:20 +125: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_skill_test.dart: review permits add without run and returns to the conversation
-00:21 +126: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_skill_test.dart: uncertain activation keeps review and disables repeat submission
-00:21 +127: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_skill_test.dart: compact enlarged-text review keeps activation reachable
-00:21 +128: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_skill_test.dart: phone skill preview
-00:21 +129: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_title_test.dart
-00:22 +129: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_title_test.dart: the server placeholder loses its ISO timestamp
-00:22 +130: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_title_test.dart: real titles pass through untouched
-00:22 +131: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/session_title_test.dart: missing or blank titles fall back per surface
-00:22 +132: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart
-00:22 +132: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart: settings exposes process-local app diagnostics
-00:23 +133: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart: managed local profile opens the in-app updater
-00:23 +134: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart: remote profile clearly remains externally managed
-00:24 +135: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart: remote update event offers the exact generated upgrade
-00:24 +136: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart: failed remote upgrade remains visible and retryable
-00:24 +137: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart: remote update confirmation fits a compact large-text phone
-00:24 +138: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart: settings exposes current-project always allowed actions
-00:24 +139: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart: settings exposes the persisted native appearance choices
-00:25 +140: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart: settings selects a server shell through the current repository
-00:25 +141: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart: shell failure remains scoped and can be retried
-00:25 +142: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart: failed shell update retains the server-reported selection
-00:25 +143: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart: default shell picker fits a compact large-text phone
-00:25 +144: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart: settings hub lists every category on a compact large-text phone
-00:25 +145: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart: privacy settings size and clear the unsent work on device
-00:25 +146: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart: unreadable queue can be explicitly cleared from privacy settings
-00:26 +147: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart: the clear rows are inert when there is nothing to clear
-00:26 +148: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart: an Android service timeout turns the switch off and says why
-00:26 +149: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/share_intent_native_contract_test.dart
-00:26 +149: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/share_intent_native_contract_test.dart: native share delivery waits for Dart readiness acknowledgment
-00:26 +150: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/share_intent_test.dart
-00:27 +150: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/share_intent_test.dart: drains the share that launched the app
-00:27 +151: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/share_intent_test.dart: accepts a live share while running
-00:27 +152: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/share_intent_test.dart: ignores empty shares and missing implementations
-00:27 +153: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/share_intent_test.dart: is inert off Android
-00:27 +154: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/share_intent_test.dart: a newer live share wins over a pending cold-start consume
-00:27 +155: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/share_intent_test.dart: a warm share taken before cold-start completion stays consumed
-00:27 +156: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/share_intent_test.dart: dispose while cold-start consume is pending ignores its completion
-00:27 +157: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/share_intent_test.dart: disposing a never-started receiver preserves an active receiver
-00:27 +158: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/share_intent_test.dart: dispose unregisters the channel and blocks notifier callbacks
-00:27 +159: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/share_routing_test.dart
-00:28 +159: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/share_routing_test.dart: shared text opens a new session with the text as the prompt
-00:29 +160: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/share_routing_test.dart: shared text waits for a connection and says so once
-00:29 +161: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/share_routing_test.dart: startup share waits for connection and saved location restoration
-00:30 +162: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/share_routing_test.dart: failed shared session keeps text and waits for explicit retry
-00:30 +163: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/share_routing_test.dart: a newer share survives an older in-flight creation failure
-00:30 +164: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/share_routing_test.dart: share creation cannot route into a replacement connection
-00:31 +165: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/shell_output_test.dart
-00:31 +165: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/shell_output_test.dart: a malformed reset page leaves already loaded output intact
-00:31 +166: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/shell_output_test.dart: uses server byte cursors and never duplicates an unchanged page
-00:31 +167: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/shell_output_test.dart: restarts a reset capture from zero instead of duplicating stale output
-00:31 +168: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/shell_output_test.dart: bounded output preserves complete surrogate pairs and strips terminal escapes
-00:31 +169: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/shell_output_test.dart: a missing shell after reconnect is not called a restart without evidence
-00:31 +170: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/shell_output_test.dart: a retired repository response cannot replace the new connection state
-00:31 +171: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/shell_output_test.dart: concurrent refreshes coalesce and closing a viewer discards late results
-00:31 +172: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/shell_output_test.dart: errors preserve visible output and a retry clears the error
-00:31 +173: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/shorebird_update_notice_test.dart
-00:32 +173: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/shorebird_update_notice_test.dart: shows Shorebird download and restart notices
-00:32 +174: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/shorebird_update_notice_test.dart: never claims restart readiness after a failed update
+00:00 +0: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_export_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_export_test.dart: exports complete response bytes with default redaction and no location
+00:00 +1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_export_test.dart: byte error 401 retains tag and does not disable export
+00:00 +2: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_export_test.dart: byte error 404 retains tag and does not disable export
+00:00 +3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_export_test.dart: byte error 500 retains tag and does not disable export
+00:00 +4: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_export_test.dart: absent endpoint is remembered without repeated requests
+00:00 +5: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_export_test.dart: JSON defaults to redaction and passes an isolated buffer
+00:00 +6: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_export_test.dart: session scope stays frozen when widget updates in place
+00:00 +7: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_export_test.dart: scope change while destination picker is open cannot report success
+00:00 +8: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_export_test.dart: progress from transport is clamped before rendering
+00:00 +9: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_export_test.dart: Markdown uses loaded transcript without a server export
+00:01 +10: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_export_test.dart: cancel and changed connection never open a save dialog
+00:01 +11: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_export_test.dart: failed export keeps options and allows retry
+00:01 +12: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_export_test.dart: export layout at 411.0 with reachable redaction and save
+00:01 +13: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_export_test.dart: export layout at 320.0 with reachable redaction and save
+00:01 +14: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart
+00:02 +14: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: streamed export envelope and bare payload preserve Unicode and all records
+00:02 +15: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: review snapshot isolates nested input and request mutations
+00:02 +16: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: unknown message types and nested protocol fields survive review
+00:02 +17: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: blank, control, and malformed references and destinations are rejected
+00:02 +18: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: identifies redaction and parent without discarding the source
+00:02 +19: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: malformed identifying data and duplicate messages are rejected
+00:02 +20: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: import wire body retains source IDs and explicit destination with no query
+00:02 +21: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: import 400 keeps capability and never retries or mutates IDs
+00:02 +22: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: import 401 keeps capability and never retries or mutates IDs
+00:02 +23: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: import 404 keeps capability and never retries or mutates IDs
+00:02 +24: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: import 409 keeps capability and never retries or mutates IDs
+00:02 +25: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: import 500 keeps capability and never retries or mutates IDs
+00:02 +26: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: review precedes import, conflicts retain file and chosen destination
+00:03 +27: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: successful import cannot be submitted twice and opens returned location
+00:03 +28: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: connection change during wake prevents a write and retains file
+00:03 +29: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: picker result after connection change is discarded
+00:03 +30: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: controller replacement retires picker scope
+00:03 +31: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: mismatched success response stays retryable and unconfirmed
+00:03 +32: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: oversize file is never read or uploaded
+00:03 +33: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: import review and action fit at 411.0
+00:03 +34: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_import_test.dart: import review and action fit at 320.0
+00:03 +35: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_inventory_paging_test.dart
+00:05 +35: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_inventory_paging_test.dart: detail hydration does not suppress a concurrent busy snapshot
+00:05 +36: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_inventory_paging_test.dart: status failures leave older sessions reachable
+00:05 +37: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_inventory_paging_test.dart: empty and duplicate inventory pages keep continuation usable
+00:05 +38: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_inventory_paging_test.dart: partial refresh preserves cached older metadata and resets continuation
+00:05 +39: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_inventory_paging_test.dart: pending page cannot resurrect deletes or overwrite newer live metadata
+00:05 +40: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_inventory_paging_test.dart: new head refresh invalidates an older request without clearing new state
+00:05 +41: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_inventory_paging_test.dart: expired cursor reloads and transient failure retries the same token
+00:05 +42: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_inventory_paging_test.dart: direct reads coalesce and keep out-of-location metadata out of inventory
+00:05 +43: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_inventory_paging_test.dart: direct lookup protects newer details from a pending inventory page
+00:05 +44: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_inventory_paging_test.dart: confirmed local deletion and authoritative 404 clear cached entities
+00:05 +45: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_inventory_paging_test.dart: a newer session revision starts a fresh detail read instead of joining stale work
+00:05 +46: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_inventory_paging_test.dart: stale detail failure cannot replace a successful newer read
+00:05 +47: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_lifecycle_transport_test.dart
+00:06 +47: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_lifecycle_transport_test.dart: abort uses the generated location-scoped contract
+00:06 +48: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_lifecycle_transport_test.dart: declared abort errors retain product-facing details
+00:06 +49: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_management_transport_test.dart
+00:06 +49: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_management_transport_test.dart: create rename and delete use generated location contracts
+00:06 +50: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_management_transport_test.dart: session mutation errors retain generated server details
+00:06 +51: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_model_scope_test.dart
+00:07 +51: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_model_scope_test.dart: per-session choice does not move the default or other sessions
+00:07 +52: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_model_scope_test.dart: changing the default later does not override a session choice
+00:07 +53: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_model_scope_test.dart: a variant the catalog does not offer is rejected
+00:07 +54: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_model_scope_test.dart: store round-trips and prunes per-session choices
+00:07 +55: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_model_scope_test.dart: malformed stored choices are dropped, not thrown
+00:07 +56: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_needs_you_test.dart
+00:08 +56: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_needs_you_test.dart: workspace row moves under Needs you and names the permission, in the attention tone, while it is pending
+00:08 +57: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_needs_you_test.dart: sessions tab row carries a Needs you chip while a permission is pending
+00:08 +58: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart
+00:09 +58: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: wire operations isolate the mobile-owned key, auth and location
+00:09 +59: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: 8192 encoded bytes includes quotes, escapes and Unicode
+00:09 +60: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: read preserves authorization errors without disabling capability
+00:09 +61: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: save preserves authorization errors without disabling capability
+00:09 +62: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: remove preserves authorization errors without disabling capability
+00:09 +63: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: unsupported endpoint hides capability, missing session does not
+00:09 +64: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: server 413 retains its byte limit and unsupported value stays untouched
+00:09 +65: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: save re-reads before mutation and rejects another client change
+00:09 +66: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: wake and fresh-read scope changes never write into a new location
+00:09 +67: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: duplicate decisions serialize and only successful writes create receipts
+00:10 +68: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: live and reloaded transcript notices redact instruction keys and values
+00:10 +69: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: repository replacement disables a stale note review until refresh
+00:10 +70: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: an in-flight load completing after disposal does not update the screen
+00:10 +71: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: an in-flight save cannot pop a replacement session editor
+00:10 +72: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: a delayed old save failure cannot affect a fresh editor save
+00:11 +73: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: failed save retains draft and refresh shows remote note before replacing
+00:11 +74: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: authorization failure keeps the draft and successful retry returns to chat
+00:11 +75: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_note_test.dart: compact large text scrolls, oversize save disabled and back protects draft
+00:11 +76: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_pins_test.dart
+00:12 +76: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_pins_test.dart: pins survive reload and serialize writes without crossing profile or location
+00:12 +77: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_pins_test.dart: failed storage is not shown as saved and later writes recover
+00:12 +78: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_pins_test.dart: pins sort first with recency retained and unpin restores the ordinary order
+00:12 +79: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_pins_test.dart: pinned history outside the head page is hydrated once and stays reachable
+00:12 +80: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_pins_test.dart: failed pinned reads remain retryable and do not drop the preference
+00:12 +81: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_pins_test.dart: session menu pins a conversation and exposes Unpin
+00:13 +82: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart
+00:13 +82: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: an unread transcript waits until its visible content is ready
+00:14 +83: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: a deferred rendered receipt retains its completion and location
+00:14 +84: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: a visible chat retries read sync after reconnect
+00:14 +85: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: v2 mapping and viewed events retain the exact idle watermark
+00:14 +86: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: a false read-state write is retried at the same watermark
+00:14 +87: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: refresh and remote viewed events synchronize without sending receipts
+00:14 +88: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: a receipt acknowledges only the observed run when a newer one finishes
+00:14 +89: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: background during wake prevents a server receipt
+00:14 +90: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: location during wake prevents a server receipt
+00:14 +91: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: privacy during wake prevents a server receipt
+00:14 +92: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: busy during wake prevents a server receipt
+00:14 +93: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: private read state persists locally and ignores another client receipts
+00:14 +94: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: a newly opened viewer can finish after a covered viewer cancels
+00:14 +95: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: failed server sync keeps local read state and retries only on explicit observation
+00:14 +96: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: covered chat stays unread until it becomes the foreground route
+00:14 +97: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: backgrounded chat sends nothing and observes on resume
+00:14 +98: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: unread status is text and reacts to cross-client receipts
+00:14 +99: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_read_state_test.dart: privacy control is available only with the v2 capability
+00:14 +100: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_read_transport_test.dart
+00:15 +100: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_read_transport_test.dart: session reads use generated contracts without losing loose data
+00:15 +101: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_read_transport_test.dart: session read errors retain generated OpenCode details
+00:15 +102: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_relations_screen_test.dart
+00:15 +102: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_relations_screen_test.dart: shows parent and ordered subagents on a compact large-text phone
+00:16 +103: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_relations_screen_test.dart: returns the exact selected child session
+00:16 +104: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_relations_screen_test.dart: replaced controller retires its late load instead of overwriting new data
+00:16 +105: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_relations_screen_test.dart: late selection and pin completion retire after the reviewed session changes
+00:17 +106: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_review_transport_test.dart
+00:17 +106: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_review_transport_test.dart: session todos and diff use generated location-scoped contracts
+00:17 +107: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_review_transport_test.dart: successful loose todo and diff data retain older-server fields
+00:17 +108: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_review_transport_test.dart: session todo and diff errors retain generated OpenCode details
+00:17 +109: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_selection_sync_test.dart
+00:18 +109: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:19 +110: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_selection_sync_test.dart: offline v2 metadata remains server-owned and writes require a connection
+00:19 +111: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_selection_sync_test.dart: a queued prompt cancelled during selection is never delivered
+00:19 +112: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_selection_sync_test.dart: selection wait rejects a retired dispatch transport
+00:19 +113: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_selection_sync_test.dart: v2 reads retain variants and distinguish inherited from unknown
+00:19 +114: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_selection_sync_test.dart: live selection replaces variant and patches only the matching session
+00:19 +115: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_selection_sync_test.dart: a model event cannot establish an unhydrated agent or clear with malformed data
+00:19 +116: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_selection_sync_test.dart: pending metadata cannot overwrite a newer remote selection
+00:19 +117: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_selection_sync_test.dart: intentional writes serialize and confirmation adopts server state
+00:19 +118: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_selection_sync_test.dart: failed writes retain confirmed selection and allow retry
+00:19 +119: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_selection_sync_test.dart: new sessions receive defaults and offline replay applies its saved snapshot
+00:19 +120: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_skill_test.dart
+00:20 +120: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_skill_test.dart: catalog identity and activation body retain scope and explicit resume
+00:20 +121: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_skill_test.dart: known missing skill does not disable activation; server failures are uncertain
+00:20 +122: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_skill_test.dart: location change during wake or session read prevents dispatch
+00:20 +123: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_skill_test.dart: fresh staged revert and concurrent activation are guarded
+00:20 +124: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_skill_test.dart: skill events request a refresh without exposing skill instruction text
+00:20 +125: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_skill_test.dart: review permits add without run and returns to the conversation
+00:21 +126: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_skill_test.dart: uncertain activation keeps review and disables repeat submission
+00:21 +127: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_skill_test.dart: compact enlarged-text review keeps activation reachable
+00:21 +128: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_skill_test.dart: phone skill preview
+00:21 +129: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_title_test.dart
+00:22 +129: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_title_test.dart: the server placeholder loses its ISO timestamp
+00:22 +130: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_title_test.dart: real titles pass through untouched
+00:22 +131: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/session_title_test.dart: missing or blank titles fall back per surface
+00:22 +132: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart
+00:22 +132: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart: settings exposes process-local app diagnostics
+00:23 +133: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart: managed local profile opens the in-app updater
+00:23 +134: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart: remote profile clearly remains externally managed
+00:24 +135: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart: remote update event offers the exact generated upgrade
+00:24 +136: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart: failed remote upgrade remains visible and retryable
+00:24 +137: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart: remote update confirmation fits a compact large-text phone
+00:24 +138: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart: settings exposes current-project always allowed actions
+00:24 +139: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart: settings exposes the persisted native appearance choices
+00:25 +140: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart: settings selects a server shell through the current repository
+00:25 +141: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart: shell failure remains scoped and can be retried
+00:25 +142: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart: failed shell update retains the server-reported selection
+00:25 +143: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart: default shell picker fits a compact large-text phone
+00:25 +144: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart: settings hub lists every category on a compact large-text phone
+00:25 +145: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart: privacy settings size and clear the unsent work on device
+00:25 +146: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart: unreadable queue can be explicitly cleared from privacy settings
+00:26 +147: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart: the clear rows are inert when there is nothing to clear
+00:26 +148: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/settings_server_updates_test.dart: an Android service timeout turns the switch off and says why
+00:26 +149: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/share_intent_native_contract_test.dart
+00:26 +149: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/share_intent_native_contract_test.dart: native share delivery waits for Dart readiness acknowledgment
+00:26 +150: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/share_intent_test.dart
+00:27 +150: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/share_intent_test.dart: drains the share that launched the app
+00:27 +151: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/share_intent_test.dart: accepts a live share while running
+00:27 +152: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/share_intent_test.dart: ignores empty shares and missing implementations
+00:27 +153: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/share_intent_test.dart: is inert off Android
+00:27 +154: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/share_intent_test.dart: a newer live share wins over a pending cold-start consume
+00:27 +155: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/share_intent_test.dart: a warm share taken before cold-start completion stays consumed
+00:27 +156: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/share_intent_test.dart: dispose while cold-start consume is pending ignores its completion
+00:27 +157: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/share_intent_test.dart: disposing a never-started receiver preserves an active receiver
+00:27 +158: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/share_intent_test.dart: dispose unregisters the channel and blocks notifier callbacks
+00:27 +159: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/share_routing_test.dart
+00:28 +159: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/share_routing_test.dart: shared text opens a new session with the text as the prompt
+00:29 +160: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/share_routing_test.dart: shared text waits for a connection and says so once
+00:29 +161: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/share_routing_test.dart: startup share waits for connection and saved location restoration
+00:30 +162: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/share_routing_test.dart: failed shared session keeps text and waits for explicit retry
+00:30 +163: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/share_routing_test.dart: a newer share survives an older in-flight creation failure
+00:30 +164: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/share_routing_test.dart: share creation cannot route into a replacement connection
+00:31 +165: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/shell_output_test.dart
+00:31 +165: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/shell_output_test.dart: a malformed reset page leaves already loaded output intact
+00:31 +166: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/shell_output_test.dart: uses server byte cursors and never duplicates an unchanged page
+00:31 +167: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/shell_output_test.dart: restarts a reset capture from zero instead of duplicating stale output
+00:31 +168: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/shell_output_test.dart: bounded output preserves complete surrogate pairs and strips terminal escapes
+00:31 +169: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/shell_output_test.dart: a missing shell after reconnect is not called a restart without evidence
+00:31 +170: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/shell_output_test.dart: a retired repository response cannot replace the new connection state
+00:31 +171: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/shell_output_test.dart: concurrent refreshes coalesce and closing a viewer discards late results
+00:31 +172: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/shell_output_test.dart: errors preserve visible output and a retry clears the error
+00:31 +173: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/shorebird_update_notice_test.dart
+00:32 +173: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/shorebird_update_notice_test.dart: shows Shorebird download and restart notices
+00:32 +174: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/shorebird_update_notice_test.dart: never claims restart readiness after a failed update
 Shorebird update check failed: Exception: patch hash mismatch
-00:32 +175: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/staged_revert_workflow_test.dart
-00:33 +175: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/staged_revert_workflow_test.dart: offline replay keeps queued prompt when a missed remote stage exists
-00:33 +176: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/staged_revert_workflow_test.dart: full hydration and partial updates preserve typed stage and absent preview
-00:33 +177: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/staged_revert_workflow_test.dart: stage keeps metadata, returns preview immediately, and resets history
-00:33 +178: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/staged_revert_workflow_test.dart: remote stage invalidates an already reviewed commit without clobbering metadata
-00:33 +179: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/staged_revert_workflow_test.dart: fresh server boundary blocks commit even when its event was missed
-00:33 +180: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/staged_revert_workflow_test.dart: connection replacement during preflight cannot dispatch to either server
-00:33 +181: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/staged_revert_workflow_test.dart: rejects concurrent mutations and never overwrites a newer remote stage with HTTP
-00:33 +182: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/staged_revert_workflow_test.dart: ambiguous commit failure reconciles before retry becomes available
-00:33 +183: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/staged_revert_workflow_test.dart: clear and commit remove stage and invalidate structural history
-00:33 +184: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/staged_revert_workflow_test.dart: unsaved prompts and busy sessions cannot stage
-00:33 +185: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/staged_revert_workflow_test.dart: remote change disables an open permanent-revert confirmation
-00:34 +186: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/staged_revert_workflow_test.dart: missing preview and large text remain usable at compact width
-00:34 +187: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart
-00:34 +187: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: file backend keeps payloads out of preferences and preserves restart metadata
-00:34 +188: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: explicit legacy writer preserves inline compatibility
-00:34 +189: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: legacy-only consumer refuses file-backed records instead of dropping attachments
-00:34 +190: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: migration replaces only acknowledged metadata and is idempotent
-00:34 +191: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: metadata refusal preserves literal legacy data and permits retry
-00:35 +192: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: metadata exception preserves literal legacy data and permits retry
-00:35 +193: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: file failure never removes legacy input or acknowledges a new stash
-00:35 +194: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: failed pre-save reconciliation rejects publication and retry survives restart
-00:35 +195: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: uncertain preference cache suppresses GC until a successful reload
-00:35 +196: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: partial file publication collects only orphans and preserves acknowledged owners
-00:35 +197: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: stash and ordinary draft garbage collectors cannot delete each other payloads
-00:35 +198: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: missing files and wrong-location references are named without consuming source
-00:35 +199: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: metadata removal failure retains files and a cleanup failure stays retryable
-00:35 +200: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: corrupt bytes remain unavailable until an explicit save repairs the shared blob
-00:35 +201: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: oversized legacy attachment counts defer without truncation or eviction
-00:35 +202: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: input is snapshotted before queued file writes and clear drains prior saves
-00:35 +203: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: unknown metadata versions cannot turn retained payloads into garbage
-00:35 +204: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: a corrupt blob reference suspends collection until explicit profile cleanup
-00:35 +205: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: unused shelves never ask the vault to store or collect
-00:35 +206: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: owner marker refusal prevents file publication
-00:35 +207: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: owner marker exception prevents file publication
-00:35 +208: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: owner marker is durable before the first payload can be published
-00:35 +209: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: pre-marker file references cannot be deleted when ownership admission fails
-00:35 +210: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: failed marker retirement stays discoverable and is retried after restart
-00:35 +211: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: an optimistic unacknowledged owner marker never permits new file publication
-00:35 +212: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart
-00:35 +212: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: live controller enables file-backed save, restart, recovery and owner deletion
-00:35 +213: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: empty and text-only shelves do no file I/O, including profile deletion
-00:35 +214: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: preparation migrates legacy data once and returns deferred IDs without truncation
-00:35 +215: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: refused stash metadata has no phantom save and failed reload can recover
-00:35 +216: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: recovery checks actual directory and workspace and never consumes its source
-00:35 +217: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: missing stash bytes are reported without consuming saved work
-00:35 +218: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: corrupt stash bytes are reported without consuming saved work
-00:35 +219: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: invalid initial scope rejects every shelf action without file I/O
-00:35 +220: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: a pending save rejects stale location before metadata publication
-00:35 +221: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: a pending recovery rejects stale location without consuming the stash
-00:35 +222: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: a pending save rejects stale directory before metadata publication
-00:35 +223: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: a pending recovery rejects stale directory without consuming the stash
-00:35 +224: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: a pending save rejects stale workspace before metadata publication
-00:35 +225: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: a pending recovery rejects stale workspace without consuming the stash
-00:35 +226: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: a pending save rejects stale profile before metadata publication
-00:35 +227: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: a pending recovery rejects stale profile without consuming the stash
-00:35 +228: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: a pending save rejects stale disposal before metadata publication
-00:36 +229: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: a pending recovery rejects stale disposal without consuming the stash
-00:36 +230: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: a save already committing on a stale location stays recoverable only by its owner
-00:36 +231: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: stale queued removal cannot delete a stash when an older recovery releases
-00:36 +232: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: a queued recovery cannot substitute a new stash that reused the source ID
-00:36 +233: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: profile deletion closes admission and drains pending save before secret deletion
-00:36 +234: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: profile deletion closes admission and drains pending migration before secret deletion
-00:36 +235: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: profile deletion closes admission and drains pending recovery before secret deletion
-00:36 +236: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: failed stash cleanup retains its marker and profile, then restart retries orphan deletion
-00:36 +237: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: failed removal cleanup notifies the actual shelf and keeps retry ownership
-00:36 +238: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: pre-marker references survive failed admission and cannot lose their profile or secret
-00:36 +239: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: partial metadata cleanup reloads the surviving shelf and history without phantom entries
-00:36 +240: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: failed marker retirement and a later settings refusal never delete the secret early
-00:36 +241: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: disposal during authorized deletion permits cleanup without post-disposal notifications
+00:32 +175: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/staged_revert_workflow_test.dart
+00:33 +175: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/staged_revert_workflow_test.dart: offline replay keeps queued prompt when a missed remote stage exists
+00:33 +176: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/staged_revert_workflow_test.dart: full hydration and partial updates preserve typed stage and absent preview
+00:33 +177: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/staged_revert_workflow_test.dart: stage keeps metadata, returns preview immediately, and resets history
+00:33 +178: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/staged_revert_workflow_test.dart: remote stage invalidates an already reviewed commit without clobbering metadata
+00:33 +179: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/staged_revert_workflow_test.dart: fresh server boundary blocks commit even when its event was missed
+00:33 +180: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/staged_revert_workflow_test.dart: connection replacement during preflight cannot dispatch to either server
+00:33 +181: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/staged_revert_workflow_test.dart: rejects concurrent mutations and never overwrites a newer remote stage with HTTP
+00:33 +182: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/staged_revert_workflow_test.dart: ambiguous commit failure reconciles before retry becomes available
+00:33 +183: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/staged_revert_workflow_test.dart: clear and commit remove stage and invalidate structural history
+00:33 +184: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/staged_revert_workflow_test.dart: unsaved prompts and busy sessions cannot stage
+00:33 +185: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/staged_revert_workflow_test.dart: remote change disables an open permanent-revert confirmation
+00:34 +186: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/staged_revert_workflow_test.dart: missing preview and large text remain usable at compact width
+00:34 +187: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart
+00:34 +187: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: file backend keeps payloads out of preferences and preserves restart metadata
+00:34 +188: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: explicit legacy writer preserves inline compatibility
+00:34 +189: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: legacy-only consumer refuses file-backed records instead of dropping attachments
+00:34 +190: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: migration replaces only acknowledged metadata and is idempotent
+00:34 +191: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: metadata refusal preserves literal legacy data and permits retry
+00:35 +192: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: metadata exception preserves literal legacy data and permits retry
+00:35 +193: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: file failure never removes legacy input or acknowledges a new stash
+00:35 +194: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: failed pre-save reconciliation rejects publication and retry survives restart
+00:35 +195: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: uncertain preference cache suppresses GC until a successful reload
+00:35 +196: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: partial file publication collects only orphans and preserves acknowledged owners
+00:35 +197: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: stash and ordinary draft garbage collectors cannot delete each other payloads
+00:35 +198: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: missing files and wrong-location references are named without consuming source
+00:35 +199: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: metadata removal failure retains files and a cleanup failure stays retryable
+00:35 +200: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: corrupt bytes remain unavailable until an explicit save repairs the shared blob
+00:35 +201: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: oversized legacy attachment counts defer without truncation or eviction
+00:35 +202: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: input is snapshotted before queued file writes and clear drains prior saves
+00:35 +203: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: unknown metadata versions cannot turn retained payloads into garbage
+00:35 +204: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: a corrupt blob reference suspends collection until explicit profile cleanup
+00:35 +205: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: unused shelves never ask the vault to store or collect
+00:35 +206: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: owner marker refusal prevents file publication
+00:35 +207: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: owner marker exception prevents file publication
+00:35 +208: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: owner marker is durable before the first payload can be published
+00:35 +209: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: pre-marker file references cannot be deleted when ownership admission fails
+00:35 +210: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: failed marker retirement stays discoverable and is retried after restart
+00:35 +211: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_attachments_test.dart: an optimistic unacknowledged owner marker never permits new file publication
+00:35 +212: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart
+00:35 +212: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: live controller enables file-backed save, restart, recovery and owner deletion
+00:35 +213: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: empty and text-only shelves do no file I/O, including profile deletion
+00:35 +214: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: preparation migrates legacy data once and returns deferred IDs without truncation
+00:35 +215: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: refused stash metadata has no phantom save and failed reload can recover
+00:35 +216: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: recovery checks actual directory and workspace and never consumes its source
+00:35 +217: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: missing stash bytes are reported without consuming saved work
+00:35 +218: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: corrupt stash bytes are reported without consuming saved work
+00:35 +219: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: invalid initial scope rejects every shelf action without file I/O
+00:35 +220: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: a pending save rejects stale location before metadata publication
+00:35 +221: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: a pending recovery rejects stale location without consuming the stash
+00:35 +222: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: a pending save rejects stale directory before metadata publication
+00:35 +223: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: a pending recovery rejects stale directory without consuming the stash
+00:35 +224: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: a pending save rejects stale workspace before metadata publication
+00:35 +225: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: a pending recovery rejects stale workspace without consuming the stash
+00:35 +226: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: a pending save rejects stale profile before metadata publication
+00:35 +227: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: a pending recovery rejects stale profile without consuming the stash
+00:35 +228: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: a pending save rejects stale disposal before metadata publication
+00:36 +229: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: a pending recovery rejects stale disposal without consuming the stash
+00:36 +230: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: a save already committing on a stale location stays recoverable only by its owner
+00:36 +231: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: stale queued removal cannot delete a stash when an older recovery releases
+00:36 +232: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: a queued recovery cannot substitute a new stash that reused the source ID
+00:36 +233: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: profile deletion closes admission and drains pending save before secret deletion
+00:36 +234: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: profile deletion closes admission and drains pending migration before secret deletion
+00:36 +235: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: profile deletion closes admission and drains pending recovery before secret deletion
+00:36 +236: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: failed stash cleanup retains its marker and profile, then restart retries orphan deletion
+00:36 +237: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: failed removal cleanup notifies the actual shelf and keeps retry ownership
+00:36 +238: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: pre-marker references survive failed admission and cannot lose their profile or secret
+00:36 +239: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: partial metadata cleanup reloads the surviving shelf and history without phantom entries
+00:36 +240: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: failed marker retirement and a later settings refusal never delete the secret early
+00:36 +241: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/stash_lifecycle_test.dart: disposal during authorized deletion permits cleanup without post-disposal notifications
 00:36 +242: All tests passed!

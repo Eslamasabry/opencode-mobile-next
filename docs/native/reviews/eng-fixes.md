@@ -49,9 +49,9 @@ The final command, from `native/`, used JDK 21, the requested SDK, `-Xmx2g`, two
 and the PC's shared build lock:
 
 ```sh
-JAVA_HOME=/home/eslam/Storage/tools/jdk-21.0.13+9 \
-ANDROID_HOME=/home/eslam/Android/Sdk \
-flock -x /home/eslam/Storage/tmp/oc-build.lock \
+JAVA_HOME=/home/owner/Storage/tools/jdk-21.0.13+9 \
+ANDROID_HOME=/home/owner/Android/Sdk \
+flock -x /home/owner/Storage/tmp/oc-build.lock \
 ./gradlew --no-daemon --no-configuration-cache -Pkotlin.incremental=false \
   -I /tmp/eng-test-home.init.gradle.kts \
   :core:data:desktopTest :core:data:testAndroidHostTest \
@@ -61,7 +61,7 @@ flock -x /home/eslam/Storage/tmp/oc-build.lock \
 ```
 
 The temporary init script sets test JVM `user.home` to `/tmp/eng-test-home` and `maven.repo.local` to the existing
-`/home/eslam/.m2/repository`. A `.m2` symlink under that temporary home points to the same cache. Robolectric initially
+`/home/owner/.m2/repository`. A `.m2` symlink under that temporary home points to the same cache. Robolectric initially
 could not create its lock under the read-only real home; this environment-only adjustment resolved it. The sparse
 checkout also omitted the tracked Flutter ledger fixture; its unchanged HEAD contents were materialized locally for
 `ProfileSweepShapesTest`. Neither adjustment changes committed source. `tool/format-changed.sh` is absent; changed

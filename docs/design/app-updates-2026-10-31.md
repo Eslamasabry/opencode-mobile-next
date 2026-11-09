@@ -68,7 +68,7 @@ Hosts:
 - **BYO VPS over SSH** (lib/host/byo_host_ssh_runner.dart): automatic when the person turned on "keep it updated" for that host; otherwise "Update to 2.2.5" on that host's page
 - **the person's own computer:** the app can't touch it. That server's page says "This server runs OpenCode 2.1.1; this app is tested with 2.2.5", with a copyable update command
 
-The component list and pins come from the upgrade-scope report (/home/eslam/Storage2/wt/upgrade-scope-2026-10-31/REPORT.md). Layer 2 is built after that report.
+The component list and pins come from the upgrade-scope report (/home/owner/Storage2/wt/upgrade-scope-2026-10-31/REPORT.md). Layer 2 is built after that report.
 
 ## Frozen native channel contract: `oc/app_update` (Layer 1)
 

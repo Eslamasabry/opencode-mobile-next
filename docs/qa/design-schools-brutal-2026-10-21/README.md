@@ -2,7 +2,7 @@
 
 Branch `feat/style-brutal`. Guide: [schools/brutal.md](../../design/design-schools/schools/brutal.md). Brief: [briefs/brutal.md](../../design/design-schools/briefs/brutal.md). Spec: `lib/ui/kit/style/kit_style_brutal.dart`.
 
-Renders are outside git, in `/home/eslam/vision-assets/out/style-brutal/progress/` (`passN-<screen>-<light|dark>.png`; `LOG.md` has one line per pass). Captured with `tool/capture/surfaces_test.dart --plain-name " brutal "` at 412×915 dp, 2× pixels.
+Renders are outside git, in `/home/owner/vision-assets/out/style-brutal/progress/` (`passN-<screen>-<light|dark>.png`; `LOG.md` has one line per pass). Captured with `tool/capture/surfaces_test.dart --plain-name " brutal "` at 412×915 dp, 2× pixels.
 
 ## Before and after
 

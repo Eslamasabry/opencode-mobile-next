@@ -1,4 +1,4 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/agent-aa3a3435a59e76165/test/app_exit_recovery_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/agent-aa3a3435a59e76165/test/app_exit_recovery_test.dart
 00:00 +0: recovery on start after a force stop with the team running: one notice, and the phone's OpenCode and the team start again
 00:00 +0 -1: recovery on start after a force stop with the team running: one notice, and the phone's OpenCode and the team start again [E]
   Expected: ['start server', 'start aiteam']
@@ -21,5 +21,5 @@
 00:00 +3 -2: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/agent-aa3a3435a59e76165/test/app_exit_recovery_test.dart: recovery on start after a force stop with the team running: one notice, and the phone's OpenCode and the team start again
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/agent-aa3a3435a59e76165/test/app_exit_recovery_test.dart: recovery on start an update or a normal exit says nothing but still brings the server back
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/agent-aa3a3435a59e76165/test/app_exit_recovery_test.dart: recovery on start after a force stop with the team running: one notice, and the phone's OpenCode and the team start again
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/agent-aa3a3435a59e76165/test/app_exit_recovery_test.dart: recovery on start an update or a normal exit says nothing but still brings the server back

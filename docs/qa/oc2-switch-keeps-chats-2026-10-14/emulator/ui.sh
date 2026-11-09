@@ -1,6 +1,6 @@
 #!/bin/sh
 # helper: ui.sh dump -> prints clickable/text nodes; ui.sh shot name
-A=/home/eslam/Android/Sdk/platform-tools/adb; E="$A -s emulator-5554"
+A=$HOME/Android/Sdk/platform-tools/adb; E="$A -s emulator-5554"
 case $1 in
 dump) $E shell uiautomator dump /sdcard/u.xml >/dev/null 2>&1; $E exec-out cat /sdcard/u.xml | python3 -I -c "
 import sys,re

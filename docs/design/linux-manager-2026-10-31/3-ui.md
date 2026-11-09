@@ -300,12 +300,12 @@ These are throwaway widget renders (`tool/capture/zz_linuxplan_scratch_test.dart
 
 | File | Look at |
 |---|---|
-| `/home/eslam/Storage2/wt/shots-2026-10-31/linux-plan/1-linux-hub.png` | The vitals strip as the page head; Services first; Backups row; Repair and Reset apart |
-| `/home/eslam/Storage2/wt/shots-2026-10-31/linux-plan/2-services.png` | One list by urgency (failed my-bot first); named Start/Stop chips; the keep-running sentence |
-| `/home/eslam/Storage2/wt/shots-2026-10-31/linux-plan/3-service-detail.png` | Status in words; acts that name Syncthing; live log with a warning line |
-| `/home/eslam/Storage2/wt/shots-2026-10-31/linux-plan/4-add-service.png` | Fit tags (Works, Heavy); your own command; the "why not" row |
-| `/home/eslam/Storage2/wt/shots-2026-10-31/linux-plan/5-backups.png` | Choice of what to back up; folder row and list (S7 state); primary at the thumb. Not drawn: "Projects only" (Q6) and the "Restore from a file" row. |
-| `/home/eslam/Storage2/wt/shots-2026-10-31/linux-plan/6-package-search.png` | Available packages with size and named Install chips; "Installed" is left out when nothing installed matches; list freshness line |
+| `/home/owner/Storage2/wt/shots-2026-10-31/linux-plan/1-linux-hub.png` | The vitals strip as the page head; Services first; Backups row; Repair and Reset apart |
+| `/home/owner/Storage2/wt/shots-2026-10-31/linux-plan/2-services.png` | One list by urgency (failed my-bot first); named Start/Stop chips; the keep-running sentence |
+| `/home/owner/Storage2/wt/shots-2026-10-31/linux-plan/3-service-detail.png` | Status in words; acts that name Syncthing; live log with a warning line |
+| `/home/owner/Storage2/wt/shots-2026-10-31/linux-plan/4-add-service.png` | Fit tags (Works, Heavy); your own command; the "why not" row |
+| `/home/owner/Storage2/wt/shots-2026-10-31/linux-plan/5-backups.png` | Choice of what to back up; folder row and list (S7 state); primary at the thumb. Not drawn: "Projects only" (Q6) and the "Restore from a file" row. |
+| `/home/owner/Storage2/wt/shots-2026-10-31/linux-plan/6-package-search.png` | Available packages with size and named Install chips; "Installed" is left out when nothing installed matches; list freshness line |
 
 ## 7. Owner decisions for the owner
 

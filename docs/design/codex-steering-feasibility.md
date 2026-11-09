@@ -12,7 +12,7 @@ an app-server schema. Before this change its prompt path called `turn/start` and
 its cancel path called `turn/interrupt`. The exact official npm package
 [`@openai/codex@0.153.4`](https://registry.npmjs.org/@openai%2fcodex/0.153.4)
 was already installed in the isolated scratch prefix
-`/home/eslam/Storage/tmp/agent-handoff-codex-01534`. Its own
+`/home/owner/Storage/tmp/agent-handoff-codex-01534`. Its own
 `app-server generate-ts` / `generate-json-schema` output was inspected, not a
 newer system installation or an inferred endpoint.
 
@@ -98,7 +98,7 @@ when a live model consumes the added input, provider output, or phone UI behavio
 The probe interrupted immediately after admission; no claim is made that the
 synthetic steering text reached a model-generated answer.
 
-Local scratch evidence is in `/home/eslam/Storage/tmp/codex-steer-01534`:
+Local scratch evidence is in `/home/owner/Storage/tmp/codex-steer-01534`:
 `probe.py`, `results.json`, and `notifications.json`. The scratch project and
 isolated Codex home also live there; none is an owner project. Artifact hashes:
 

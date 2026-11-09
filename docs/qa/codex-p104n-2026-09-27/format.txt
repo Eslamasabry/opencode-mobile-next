@@ -1,5 +1,5 @@
 Warning: Package resolution error when reading "analysis_options.yaml" file for "lib/voice/automatic_setup.dart":
-Failed to resolve package URI "package:flutter_lints/flutter.yaml" in include at "/home/eslam/Storage/Code/oc_app-codex-p104n/analysis_options.yaml".
+Failed to resolve package URI "package:flutter_lints/flutter.yaml" in include at "/home/owner/Storage/Code/oc_app-codex-p104n/analysis_options.yaml".
 Warning: Package resolution error when reading "analysis_options.yaml" file for "test/voice_automatic_setup_test.dart":
-Failed to resolve package URI "package:flutter_lints/flutter.yaml" in include at "/home/eslam/Storage/Code/oc_app-codex-p104n/analysis_options.yaml".
+Failed to resolve package URI "package:flutter_lints/flutter.yaml" in include at "/home/owner/Storage/Code/oc_app-codex-p104n/analysis_options.yaml".
 Formatted 5 files (0 changed) in 0.03 seconds.

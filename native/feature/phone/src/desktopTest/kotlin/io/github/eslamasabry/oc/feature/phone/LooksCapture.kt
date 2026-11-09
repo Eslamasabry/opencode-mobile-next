@@ -27,7 +27,7 @@ import javax.imageio.ImageIO
 /** Capture-only: writes PNGs of a screen in light and dark at 412 x 915 dp, density 2.625 (1081 x 2402 px). No comparison. */
 @OptIn(ExperimentalTestApi::class)
 internal object Looks {
-    private val out = File("/home/eslam/wt/lane-looks/looks-out/screens").also { it.mkdirs() }
+    private val out = File(System.getProperty("java.io.tmpdir"), "oc-looks-out/screens").also { it.mkdirs() }
 
     fun shoot(name: String, advanceMs: Long = 1_000, setup: ComposeUiTest.() -> Unit = {}, content: @Composable (dark: Boolean) -> Unit) {
         Locale.setDefault(Locale.forLanguageTag("en"))

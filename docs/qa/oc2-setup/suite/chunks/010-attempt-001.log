@@ -1,305 +1,305 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/static_svg_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/static_svg_test.dart: local shapes, text and gradient paints retain their exact source
-00:00 +1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/static_svg_test.dart: unsupported or externally active SVG keeps Source fallback: <script>alert(1)</script>
-00:00 +2: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/static_svg_test.dart: unsupported or externally active SVG keeps Source fallback: <foreignObject/>
-00:00 +3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/static_svg_test.dart: unsupported or externally active SVG keeps Source fallback: <image href="https://example.org/private"/>
-00:00 +4: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/static_svg_test.dart: unsupported or externally active SVG keeps Source fallback: <use href="#cycle"/>
-00:00 +5: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/static_svg_test.dart: unsupported or externally active SVG keeps Source fallback: <animate attributeName="x"/>
-00:00 +6: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/static_svg_test.dart: unsupported or externally active SVG keeps Source fallback: <rect onclick="run()"/>
-00:00 +7: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/static_svg_test.dart: unsupported or externally active SVG keeps Source fallback: <rect fill="url(https://example.org/a)"/>
-00:00 +8: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/static_svg_test.dart: unsupported or externally active SVG keeps Source fallback: <rect style="fill: u\72l(https://example.org/a)"/>
-00:00 +9: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/static_svg_test.dart: unsupported or externally active SVG keeps Source fallback: <style>@import "https://example.org/a";</style>
-00:00 +10: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/static_svg_test.dart: unsupported or externally active SVG keeps Source fallback: <rect xmlns="http://example.org/other"/>
-00:00 +11: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/static_svg_test.dart: unsupported or externally active SVG keeps Source fallback: <rect id="same"/><circle id="same"/>
-00:00 +12: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/static_svg_test.dart: declarations, malformed XML and resource bounds are rejected
-00:00 +13: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/static_svg_test.dart: dash expansion is rejected before the SVG compiler is invoked
-00:00 +14: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/sync_transport_test.dart
-00:00 +14: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/sync_transport_test.dart: workspace sync start uses the generated location-scoped contract
-00:00 +15: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/sync_transport_test.dart: session steal posts the exact generated body and returns the confirmed session
-00:00 +16: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/sync_transport_test.dart: declared steal errors surface OpenCode detail as the product message
-00:00 +17: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/sync_transport_test.dart: an old server without sync keeps the bounded product error
-00:00 +18: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tailscale_profile_test.dart
-00:01 +18: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tailscale_profile_test.dart: Tailscale guidance and HTTPS profile survive reload and profile deletion removes guidance
-00:01 +19: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tailscale_setup_test.dart
-00:02 +19: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tailscale_setup_test.dart: review accepts HTTPS origins and bare MagicDNS without loosening policy
-00:02 +20: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tailscale_setup_test.dart: native bridge maps only explicit package evidence and fails closed
-00:02 +21: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tailscale_setup_test.dart: installed is unverified; open and resume preserve the typed address
-00:03 +22: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tailscale_setup_test.dart: missing app offers official install with external host review and recheck
-00:03 +23: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tailscale_setup_test.dart: failed launch gives recovery and review never probes or saves
-00:03 +24: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tailscale_setup_test.dart: late package check after dismissal is ignored
-00:03 +25: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/terminal_accessibility_test.dart
-00:04 +25: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/terminal_accessibility_test.dart: accessible transcript strips terminal and transport controls
-00:05 +26: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/terminal_accessibility_test.dart: terminal reconnect resumes from its cursor without replaying transcript
-00:05 +27: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/terminal_accessibility_test.dart: terminal key strip scrolls on phones with 48dp targets
-00:05 +28: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/terminal_accessibility_test.dart: closed terminal disables writes and announces why
-00:05 +29: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/terminal_accessibility_test.dart: terminal lifecycle closes once and resumes with one replacement channel
-00:05 +30: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/terminal_accessibility_test.dart: opted-in terminal remains connected while backgrounded
-00:05 +31: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/terminal_accessibility_test.dart: lifecycle invalidates a pending terminal connection
-00:06 +32: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/terminal_accessibility_test.dart: terminal reconnects through the replacement repository after resume
-00:06 +33: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/terminal_accessibility_test.dart: terminal reconnects when a retained surface changes process
-00:06 +34: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/terminal_input_queue_test.dart
-00:06 +34: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/terminal_input_queue_test.dart: queued keystrokes leave as one ordered write, none repeated
-00:06 +35: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/terminal_input_queue_test.dart: a channel that goes away drops what was never sent
-00:06 +36: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/terminal_input_queue_test.dart: fast desktop typing reaches the PTY in order, once
-00:07 +37: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_bridge_platform_test.dart
-00:08 +37: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_bridge_platform_test.dart: on a platform with no Termux bridge capabilities() reports unavailable instead of throwing
-00:08 +38: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_bridge_platform_test.dart: on a platform with no Termux bridge the boolean entry points answer false, never throw
-00:08 +39: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_bridge_platform_test.dart: on a platform with no Termux bridge run() fails as a bridge error the UI already handles
-00:08 +40: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_bridge_platform_test.dart: on a platform with no Termux bridge every derived command reports the same unsupported error
-00:08 +41: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_bridge_platform_test.dart: on a platform with no Termux bridge supported is false
-00:08 +42: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_bridge_platform_test.dart: on Android supported is true and the channel is used
-00:08 +43: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_bridge_platform_test.dart: on Android a missing handler is a bare device, not a crash
-00:08 +44: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_bridge_platform_test.dart: on Android a missing handler makes run() a bridge error, not a raw throw
-00:08 +45: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_bridge_platform_test.dart: on Android a PlatformException still surfaces its own message
-00:08 +46: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_recovery_scripts_test.dart
-00:09 +46: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_recovery_scripts_test.dart: storage accepts checked counts and rejects malformed or impossible responses
-00:09 +47: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_recovery_scripts_test.dart: recovery scripts validate syntax and shell identities
-00:09 +48: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_recovery_scripts_test.dart: executed preflight refuses changed operation, revoked permit, live PID and occupied port
-00:09 +49: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_recovery_scripts_test.dart: executed disarm revokes before cancelling its owned startup and retries incomplete cancellation
-00:09 +50: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_runtime_switch_test.dart
-00:10 +50: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_runtime_switch_test.dart: switch dispatch acknowledges while its detached manager is still running
-00:10 +51: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_runtime_switch_test.dart: switch rotates prior output under ownership and preserves bounded history on reopen
-00:10 +52: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_runtime_switch_test.dart: a switch without lock ownership does not rotate another operation output
-00:10 +53: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_runtime_switch_test.dart: explicit switch installs beta and preserves original binary/data/credential
-00:10 +54: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_runtime_switch_test.dart: return uses installed OC1 and leaves isolated beta data and credential intact
-00:10 +55: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_runtime_switch_test.dart: FAIL_INSTALL=1 leaves durable return and permits explicit old-runtime recovery
-00:11 +56: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_runtime_switch_test.dart: FAIL_START=1 leaves durable return and permits explicit old-runtime recovery
-00:11 +57: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_runtime_switch_test.dart: REFUSE_STOP=1 leaves durable return and permits explicit old-runtime recovery
-00:11 +58: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_runtime_switch_test.dart: interruption between password and marker writes never overwrites saved old credential
-00:11 +59: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_runtime_switch_test.dart: pre-existing first-run OC2 cannot launch OC1 against its default data
-00:11 +60: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_runtime_switch_test.dart: unknown data mode refuses switch before touching the managed server
-00:11 +61: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_runtime_switch_test.dart: return refuses changed saved credentials before stopping target server
-00:12 +62: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_runtime_switch_test.dart: persisted ready commits only the matching switch operation
-00:12 +63: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_runtime_switch_test.dart: pending journal suppresses automatic recovery and restores return metadata
-00:12 +64: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_runtime_switch_test.dart: switch requires explicit target credential and validates operation identity
-00:12 +65: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart
-00:12 +65: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: setup clock tolerates legacy and malformed timestamps
-00:12 +66: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: install dispatch starts its clock only after accepting the launch
-00:12 +67: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: manager clock survives phase writes and a fresh status process
-00:12 +68: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: legacy manager state stays without an invented clock
-00:12 +69: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: restart renews the clock only after launch rejection gates
-00:12 +70: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: generated termux scripts pass bash syntax validation
-00:13 +71: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: setup status parses persisted manager state
-00:13 +72: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: restart is treated as a running managed operation
-00:13 +73: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: restart validates ownership and reuses the installed server
-00:13 +74: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: restart operation IDs cannot inject shell syntax
-00:13 +75: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: setup snapshot keeps terminal output separate from status
-00:13 +76: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: Android RESULT_OK and shell exit zero indicate success
-00:13 +77: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: manager is installed before the single-flight lock is acquired
-00:13 +78: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: default setup installs the pinned OpenCode release
-00:13 +79: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: Ubuntu bootstrap disables io_uring before Node and npm run
-00:13 +80: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: Ubuntu bootstrap trims recommendations but retains coding tools
-00:13 +81: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: Ubuntu npm install requires its matching pinned binary and cleans cache
-00:13 +82: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: runtime selection survives phase writes and a fresh status process
-00:13 +83: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: runtime version uses the recorded command and normalizes its prefix
-00:13 +84: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: first-run runtime choice cannot silently migrate an installation
-00:13 +85: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: runtime inventory preserves legacy default and explicit beta choice
-00:13 +86: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: installation inventory accepts only a single sanitized version
-00:13 +87: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: installation inventory distinguishes absence from a failed probe
-00:13 +88: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: the npm dist-tag is reachable only by asking for it
-00:13 +89: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: managed server URL detection is narrow
-00:13 +90: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: live snapshot converts manager errors into a failed status
-00:13 +91: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: manager claims the dispatcher lock before package work
-00:13 +92: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: server owns the setup wake lock until it stops or exits
-00:13 +93: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: wake lock refresh script is safe to invoke repeatedly
-00:13 +94: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: setup reserves disk space and only cleans app-owned partial data
-00:13 +95: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: unhealthy setup repairs packages without allowing removals
-00:13 +96: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: healthy custom repository skips apt and drains long named-container help
-00:13 +97: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: unexpected manager errors persist the active setup stage
-00:13 +98: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: install and server logs are bounded and rotated by executable code
-00:13 +99: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: server runs through the bounded logger and stop validates its runner
-00:13 +100: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: manager stops its verified process group but refuses a decoy
-00:16 +101: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: the managed server never runs from the container home folder
-00:16 +102: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: project folders are created only as one safe name under projects
-00:16 +103: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: Ubuntu setup bypasses registries and verifies Canonical archives
-00:16 +104: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: OpenCode Ubuntu is isolated in its own v4 or v5 container
-00:16 +105: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: npm setup prefers IPv4 and retries transient downloads
-00:16 +106: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: only app-owned partial Ubuntu installs can be removed
-00:16 +107: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: only explicit manager launch markers are accepted
-00:16 +108: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: manager-missing stop validates the lock owner before clearing
-00:16 +109: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart
-00:18 +109: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: managed switch is visible first, preserves profiles and returns at scale 1.0
-00:18 +110: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: managed switch is visible first, preserves profiles and returns at scale 2.0
-00:19 +111: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: failed beta switch offers return without connecting unavailable beta
-00:19 +112: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: missing prior profile refuses switch without mutating setup
-00:19 +113: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: existing beta default data has no invented OC1 return
-00:19 +114: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: inspect and switch local runtime leave active remote connection selected
-00:19 +115: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: paste guide is inspectable at width 800.0, text scale 1.0
-00:19 +116: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: paste guide is inspectable at width 390.0, text scale 1.0
-00:19 +117: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: paste guide is inspectable at width 390.0, text scale 2.0
-00:19 +118: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: permission precedes copy and open, return verifies without installing
-00:20 +119: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: permission denial leaves clipboard alone and settings and retry usable
-00:20 +120: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: copy/open failure is recoverable: open false
-00:20 +121: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: copy/open failure is recoverable: open exception
-00:20 +122: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: copy/open failure is recoverable: clipboard exception
-00:20 +123: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: late permission resume does not verify before Termux backgrounds and returns
-00:20 +124: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: early return verifies after open completes and failed verification can retry
-00:20 +125: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: new switch hides prior elapsed clock until accepted and resumes durable timing
-00:20 +126: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: elapsed uses persisted start across background and route recreation
-00:20 +127: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: elapsed hides legacy total and follows authoritative operation timestamps
-00:21 +128: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: install shows immediate progress throughout slow native startup
-00:21 +129: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: prelaunch bridge failure stops waiting and offers a working retry
-00:21 +130: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: resuming during launch preserves progress and avoids stale polling
-00:21 +131: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: setup uses phone space without overflow at text scale 1.0
-00:21 +132: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: setup uses phone space without overflow at text scale 2.0
-00:21 +133: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: existing server stays reachable without Termux
-00:21 +134: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: existing server stays reachable without permission
-00:21 +135: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: desktop setup offers existing server with large text
-00:21 +136: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: failed inventory requires reviewed Ubuntu choice before launch
-00:21 +137: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: checks the environment before enabling installation
-00:21 +138: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: first installation asks and saves the selected beta before launch
-00:21 +139: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: legacy stopped state does not override the visible beta choice
-00:21 +140: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: fresh beta remains installed after ready and Stop on the same route
-00:22 +141: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: existing opencode1 retains its runtime on repair
-00:22 +142: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: existing opencode2 retains its runtime on repair
-00:22 +143: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: beta start reuses its saved profile without installing or selecting a generation
-00:22 +144: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: runtime choice wraps at 320 pixels with large text
-00:22 +145: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: starts the detected installation without downloading packages
-00:22 +146: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: reinstalling a detected version requires replacement review
-00:22 +147: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: checking Termux does not mark the download step complete
-00:22 +148: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: successful setup exposes controls and stops despite recovery cleanup failure
-00:22 +149: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: restart timeout does not accept a previous ready operation
-00:22 +150: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: restart timeout follows matching preflight until completion
-00:22 +151: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: launch timeout recovers the persisted phase and root cause
-00:22 +152: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/text_scale_overflow_test.dart
-00:23 +152: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
-00:24 +153: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/text_scale_overflow_test.dart: the busy composer lays out at 2.5x
-00:24 +154: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
-00:24 +155: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/text_scale_overflow_test.dart: the home shell lays out at 2.5x
-00:24 +156: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/text_scale_overflow_test.dart: the More hub lays out at 2.5x
-00:24 +157: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/text_scale_overflow_test.dart: settings lays out at 2.5x
-00:24 +158: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/text_scale_overflow_test.dart: the servers first-run screen lays out at 2.5x
-00:25 +159: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/text_scale_overflow_test.dart: the permission sheet lays out at 2.5x
-00:25 +160: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/text_scale_overflow_test.dart: the form renderer lays out at 2.5x
-00:25 +161: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/theme_packs_test.dart
-00:25 +161: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/theme_packs_test.dart: the default OpenCode pack preserves identity and semantic colors
-00:26 +162: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/theme_packs_test.dart: every static pack has complete, distinct dark and light palettes
-00:26 +163: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/theme_packs_test.dart: theme pack persistence round-trips through the store
-00:26 +164: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/theme_packs_test.dart: switching packs restyles the app live
-00:26 +165: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/theme_packs_test.dart: the appearance page picks packs and gates Material You
-00:26 +166: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/theme_packs_test.dart: a harvested Material You pack becomes selectable
-00:26 +167: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart
-00:27 +167: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: formatToolDuration uses tenths under a minute and m/ss past it
-00:27 +168: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: completed tools show their run time in the header
-00:27 +169: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: running tools show no duration yet
-00:27 +170: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: pruned output is announced under the header
-00:27 +171: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: never-run calls grey out with a Not run state
-00:28 +172: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: task cards show the agent chip, prompt and result
-00:28 +173: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: task cards hide the open-session action without a handler or child id
-00:28 +174: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: long prompts collapse to a preview with a toggle
-00:28 +175: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: a running task shows the subagent working line
-00:28 +176: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: a failed task keeps the prompt and shows the error as result
-00:28 +177: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: taskChildSessionId reads the server key and legacy spellings
-00:28 +178: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: v2 asynchronous launch shows its agent and child route without claiming child completion
-00:28 +179: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: v2 foreground completion unwraps the actual subagent envelope
-00:28 +180: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: v2 early progress remains foreground work and failures retain the child route
-00:28 +181: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: a v2 subagent the server did not execute has no launch or child action
-00:28 +182: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: renders the OpenCode shell contract without generic sections
-00:28 +183: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: renders OpenCode edit metadata as a colored diff
-00:28 +184: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: renders OpenCode todo items as structured task rows
-00:28 +185: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: a running tool card carries a primary left accent
-00:28 +186: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tool_state_test.dart
-00:29 +186: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tool_state_test.dart: completed string output preserves leading and trailing whitespace
-00:29 +187: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tool_state_test.dart: completed JSON object output remains pretty printed
-00:29 +188: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tool_state_test.dart: structured OpenCode input and metadata remain available to renderers
-00:29 +189: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tool_state_test.dart: ordinary URLs and path-like prose are not invented as files
-00:29 +190: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tool_state_test.dart: explicit filePath output remains a downloadable artifact
-00:29 +191: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tool_state_test.dart: read attachments inherit the requested file name
-00:29 +192: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tool_state_test.dart: pending state exposes raw input unchanged
-00:29 +193: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tool_state_test.dart: error text preserves leading and trailing whitespace
-00:29 +194: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tools_screen_test.dart
-00:29 +194: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tools_screen_test.dart: tool inventory renders flat and fits compact large text
-00:30 +195: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tools_screen_test.dart: tool search and schema use server-returned truth
-00:30 +196: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tools_screen_test.dart: optional capability failure does not hide model tools
-00:31 +197: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tools_screen_test.dart: long server descriptions keep parameter schema reachable
-00:31 +198: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/tools_screen_test.dart: Library exposes one native tools destination
-00:31 +199: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/transcript_search_test.dart
-00:32 +199: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/transcript_search_test.dart: literal occurrence counts preserve offsets and include reasoning/tool/file data
-00:32 +200: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/transcript_search_test.dart: streaming, older-page prepend and deletion update cached matches
-00:32 +201: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/transcript_search_test.dart: Markdown and code highlight without changing content or reparsing blocks
-00:32 +202: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/transcript_search_test.dart: count, next/previous, older recovery and close work in the real chat
-00:33 +203: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/transcript_search_test.dart: session menu find and timeline selection use the same search
-00:34 +204: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/transcript_search_test.dart: cancelling full-history search stops before the next page
-00:34 +205: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/transcript_search_test.dart: active occurrence excerpt is visible in a very long reply
-00:35 +206: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/transcript_search_test.dart: compact enlarged-text search keeps navigation reachable above a keyboard
-00:35 +207: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/transcript_search_test.dart: phone search preview
-00:35 +208: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/update_channel_platform_test.dart
-00:36 +208: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/update_channel_platform_test.dart: the unavailable service never claims an update
-00:36 +209: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/update_channel_platform_test.dart: the GitHub release check stays off where Shorebird patches
-00:36 +210: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/update_channel_platform_test.dart: the GitHub release check runs on desktop
-00:36 +211: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/usage_budgets_test.dart
-00:37 +211: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/usage_budgets_test.dart: restart keeps measured USD and token budgets in their exact scopes
-00:37 +212: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/usage_budgets_test.dart: failed write preserves durable previous budget and deletion sweeps it
-00:37 +213: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/usage_budgets_test.dart: mismatched persisted scope cannot masquerade as the current budget
-00:37 +214: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/usage_budgets_test.dart: one malformed persisted rule does not discard valid budgets
-00:37 +215: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/usage_budgets_test.dart: replacement screens serialize writes and merge separate units
-00:37 +216: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/usage_budgets_test.dart: deletion during a pending write cannot resurrect the budget
-00:37 +217: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/usage_budgets_test.dart: explicit clearing recovers full capacity without silently evicting rules
-00:37 +218: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/usage_labels_test.dart
-00:38 +218: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/usage_labels_test.dart: session usage labels show cost and diff only when the server sent them
-00:38 +219: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/usage_labels_test.dart: model cost label prices per million tokens
-00:38 +220: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/usage_statistics_test.dart
-00:39 +220: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/usage_statistics_test.dart: provider rollups use returned IDs, retain variants and do not count variants as new models
-00:39 +221: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/usage_statistics_test.dart: provider cost overflow stays unavailable and empty statistics have no invented providers
-00:39 +222: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/usage_statistics_test.dart: provider consumption summary retains all original model detail
-00:40 +223: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/usage_statistics_test.dart: temporary missing repository keeps usage refresh recoverable
-00:40 +224: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/usage_statistics_test.dart: response preserves tokens, models and reliability without fake empty values
-00:40 +225: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/usage_statistics_test.dart: calendar ranges include today and omit from for all time
-00:40 +226: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/usage_statistics_test.dart: wire request is global unless an explicit project ID is selected
-00:40 +227: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/usage_statistics_test.dart: authorization errors stay distinct; absent endpoint disables capability
-00:40 +228: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/usage_statistics_test.dart: native timezone is sent and unreadable timezone never silently becomes UTC
-00:40 +229: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/usage_statistics_test.dart: current project resolves its ID; missing project cannot become all projects
-00:40 +230: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/usage_statistics_test.dart: out-of-order responses cannot relabel old totals with new filters
-00:40 +231: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/usage_statistics_test.dart: location changes during wake detach the page without dispatching
-00:40 +232: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/usage_statistics_test.dart: failed refresh retains only the previous result for unchanged filters
-00:40 +233: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/usage_statistics_test.dart: Settings hides usage for v1 and known unsupported repositories
-00:40 +234: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/usage_statistics_test.dart: phone usage layout shows scoped totals and retains retry feedback
-00:41 +235: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/usage_statistics_test.dart: empty range and 320px large text remain usable
-00:41 +236: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart
-00:41 +236: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: the accessor reports transport truth an unattached controller reports the v1 superset
-00:41 +237: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: the accessor reports transport truth an attached v2 gateway narrows the flags
-00:41 +238: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: hidden: nav destination with no v2 backend (§7 row 20) catalog tabs stay reachable on a narrow large-text phone
-00:42 +239: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: hidden: nav destination with no v2 backend (§7 row 20) v1 keeps the Tools tab in Commands & tools
-00:42 +240: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: hidden: nav destination with no v2 backend (§7 row 20) v2 drops the tab and keeps the screen
-00:42 +241: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: hidden: More tile whose screen has no backend (§7 row 1) v1 offers Managed workspaces
-00:42 +242: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: hidden: More tile whose screen has no backend (§7 row 1) v2 hides the tile and leaves the rest of Coding
-00:43 +243: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: hidden: menu actions inside a surviving screen (§7 rows 10-12) v1 lists share and archive beside rename and delete
-00:43 +244: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: hidden: menu actions inside a surviving screen (§7 rows 10-12) v2 drops share and archive, keeping the rest
-00:43 +245: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: hidden: health sections + disabled git init (§7 rows 17-19) v1 shows both status sections and the live action
-00:43 +246: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: hidden: health sections + disabled git init (§7 rows 17-19) v2 hides both sections and explains git init in place
-00:43 +247: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: disabled settings rows carry an explainer (§7 rows 22, 24) v1 keeps the default shell row live
-00:43 +248: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: disabled settings rows carry an explainer (§7 rows 22, 24) v2 shows the shell row disabled and says why
-00:43 +249: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: disabled settings rows carry an explainer (§7 rows 22, 24) v2 points server updates at the host machine (§7 row 23)
-00:43 +250: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: disabled settings rows carry an explainer (§7 rows 22, 24) v2 disables the diagnostics send button in place
-00:43 +251: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: hidden: v2-only features on a v1 server (§7 rule 5) a v2 connection lists a pending form
-00:43 +252: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: hidden: v2-only features on a v1 server (§7 rule 5) the same form stays hidden on a v1 connection
-00:43 +253: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: GatedRow copy names the generation the feature needs
-00:43 +254: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart
-00:44 +254: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart: instruction notice never renders raw entry names or values
-00:44 +255: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart: v2VariantPart finds the tagged part and ignores v1 messages
-00:44 +256: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart: TranscriptMarker switches model switch renders the divider pill with tooltip detail
-00:45 +257: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart: TranscriptMarker switches agent switch renders its own icon and copy
-00:45 +258: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart: TranscriptMarker switches location switch shows the basename with full-path detail
-00:45 +259: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart: TranscriptNotice variants system notice collapses to two lines and expands on tap
-00:45 +260: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart: TranscriptNotice variants synthetic notice uses the description as its header
-00:45 +261: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart: TranscriptNotice variants skill notice names the skill in the header
-00:45 +262: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart: TranscriptNotice variants unknown variants degrade to a generic server notice
-00:45 +263: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart: compaction rows running renders the spinner pill
-00:45 +264: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart: compaction rows completed renders an expandable summary notice
-00:45 +265: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart: compaction rows failed renders the error-tinted notice
-00:45 +266: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart: interleaved tool content orders text and file segments as delivered
-00:45 +267: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart: interleaved tool content trailing-file order keeps the v1 layout
-00:45 +268: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart: apply-bar scope labels classic scope keeps the v1 wording
-00:45 +269: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart: apply-bar scope labels session scope labels the apply for this session
-00:45 +270: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart: apply-bar scope labels new-sessions scope labels the apply as the default
-00:45 +271: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_audio_test.dart
-00:46 +271: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_audio_test.dart: PCM16 little-endian samples normalize correctly across split chunks
-00:46 +272: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_audio_test.dart: recording buffer is strictly bounded at 30 seconds
-00:46 +273: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_composer_test.dart
-00:47 +273: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_composer_test.dart: voice draft preserves typed composer text and never auto-sends
-00:48 +274: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_composer_test.dart: model setup renders at 320dp with 2x text
-00:48 +275: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_composer_test.dart: busy model setup exposes disabled cards without nested actions
-00:48 +276: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_composer_test.dart: voice draft actions stack at 320dp with 2x text
-00:48 +277: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_composer_test.dart: app background cancels an active microphone session
-00:48 +278: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_composer_test.dart: exported voice notices view renders bundled license texts
+00:00 +0: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/static_svg_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/static_svg_test.dart: local shapes, text and gradient paints retain their exact source
+00:00 +1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/static_svg_test.dart: unsupported or externally active SVG keeps Source fallback: <script>alert(1)</script>
+00:00 +2: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/static_svg_test.dart: unsupported or externally active SVG keeps Source fallback: <foreignObject/>
+00:00 +3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/static_svg_test.dart: unsupported or externally active SVG keeps Source fallback: <image href="https://example.org/private"/>
+00:00 +4: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/static_svg_test.dart: unsupported or externally active SVG keeps Source fallback: <use href="#cycle"/>
+00:00 +5: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/static_svg_test.dart: unsupported or externally active SVG keeps Source fallback: <animate attributeName="x"/>
+00:00 +6: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/static_svg_test.dart: unsupported or externally active SVG keeps Source fallback: <rect onclick="run()"/>
+00:00 +7: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/static_svg_test.dart: unsupported or externally active SVG keeps Source fallback: <rect fill="url(https://example.org/a)"/>
+00:00 +8: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/static_svg_test.dart: unsupported or externally active SVG keeps Source fallback: <rect style="fill: u\72l(https://example.org/a)"/>
+00:00 +9: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/static_svg_test.dart: unsupported or externally active SVG keeps Source fallback: <style>@import "https://example.org/a";</style>
+00:00 +10: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/static_svg_test.dart: unsupported or externally active SVG keeps Source fallback: <rect xmlns="http://example.org/other"/>
+00:00 +11: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/static_svg_test.dart: unsupported or externally active SVG keeps Source fallback: <rect id="same"/><circle id="same"/>
+00:00 +12: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/static_svg_test.dart: declarations, malformed XML and resource bounds are rejected
+00:00 +13: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/static_svg_test.dart: dash expansion is rejected before the SVG compiler is invoked
+00:00 +14: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/sync_transport_test.dart
+00:00 +14: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/sync_transport_test.dart: workspace sync start uses the generated location-scoped contract
+00:00 +15: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/sync_transport_test.dart: session steal posts the exact generated body and returns the confirmed session
+00:00 +16: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/sync_transport_test.dart: declared steal errors surface OpenCode detail as the product message
+00:00 +17: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/sync_transport_test.dart: an old server without sync keeps the bounded product error
+00:00 +18: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tailscale_profile_test.dart
+00:01 +18: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tailscale_profile_test.dart: Tailscale guidance and HTTPS profile survive reload and profile deletion removes guidance
+00:01 +19: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tailscale_setup_test.dart
+00:02 +19: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tailscale_setup_test.dart: review accepts HTTPS origins and bare MagicDNS without loosening policy
+00:02 +20: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tailscale_setup_test.dart: native bridge maps only explicit package evidence and fails closed
+00:02 +21: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tailscale_setup_test.dart: installed is unverified; open and resume preserve the typed address
+00:03 +22: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tailscale_setup_test.dart: missing app offers official install with external host review and recheck
+00:03 +23: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tailscale_setup_test.dart: failed launch gives recovery and review never probes or saves
+00:03 +24: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tailscale_setup_test.dart: late package check after dismissal is ignored
+00:03 +25: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/terminal_accessibility_test.dart
+00:04 +25: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/terminal_accessibility_test.dart: accessible transcript strips terminal and transport controls
+00:05 +26: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/terminal_accessibility_test.dart: terminal reconnect resumes from its cursor without replaying transcript
+00:05 +27: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/terminal_accessibility_test.dart: terminal key strip scrolls on phones with 48dp targets
+00:05 +28: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/terminal_accessibility_test.dart: closed terminal disables writes and announces why
+00:05 +29: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/terminal_accessibility_test.dart: terminal lifecycle closes once and resumes with one replacement channel
+00:05 +30: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/terminal_accessibility_test.dart: opted-in terminal remains connected while backgrounded
+00:05 +31: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/terminal_accessibility_test.dart: lifecycle invalidates a pending terminal connection
+00:06 +32: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/terminal_accessibility_test.dart: terminal reconnects through the replacement repository after resume
+00:06 +33: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/terminal_accessibility_test.dart: terminal reconnects when a retained surface changes process
+00:06 +34: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/terminal_input_queue_test.dart
+00:06 +34: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/terminal_input_queue_test.dart: queued keystrokes leave as one ordered write, none repeated
+00:06 +35: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/terminal_input_queue_test.dart: a channel that goes away drops what was never sent
+00:06 +36: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/terminal_input_queue_test.dart: fast desktop typing reaches the PTY in order, once
+00:07 +37: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_bridge_platform_test.dart
+00:08 +37: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_bridge_platform_test.dart: on a platform with no Termux bridge capabilities() reports unavailable instead of throwing
+00:08 +38: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_bridge_platform_test.dart: on a platform with no Termux bridge the boolean entry points answer false, never throw
+00:08 +39: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_bridge_platform_test.dart: on a platform with no Termux bridge run() fails as a bridge error the UI already handles
+00:08 +40: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_bridge_platform_test.dart: on a platform with no Termux bridge every derived command reports the same unsupported error
+00:08 +41: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_bridge_platform_test.dart: on a platform with no Termux bridge supported is false
+00:08 +42: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_bridge_platform_test.dart: on Android supported is true and the channel is used
+00:08 +43: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_bridge_platform_test.dart: on Android a missing handler is a bare device, not a crash
+00:08 +44: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_bridge_platform_test.dart: on Android a missing handler makes run() a bridge error, not a raw throw
+00:08 +45: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_bridge_platform_test.dart: on Android a PlatformException still surfaces its own message
+00:08 +46: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_recovery_scripts_test.dart
+00:09 +46: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_recovery_scripts_test.dart: storage accepts checked counts and rejects malformed or impossible responses
+00:09 +47: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_recovery_scripts_test.dart: recovery scripts validate syntax and shell identities
+00:09 +48: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_recovery_scripts_test.dart: executed preflight refuses changed operation, revoked permit, live PID and occupied port
+00:09 +49: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_recovery_scripts_test.dart: executed disarm revokes before cancelling its owned startup and retries incomplete cancellation
+00:09 +50: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_runtime_switch_test.dart
+00:10 +50: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_runtime_switch_test.dart: switch dispatch acknowledges while its detached manager is still running
+00:10 +51: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_runtime_switch_test.dart: switch rotates prior output under ownership and preserves bounded history on reopen
+00:10 +52: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_runtime_switch_test.dart: a switch without lock ownership does not rotate another operation output
+00:10 +53: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_runtime_switch_test.dart: explicit switch installs beta and preserves original binary/data/credential
+00:10 +54: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_runtime_switch_test.dart: return uses installed OC1 and leaves isolated beta data and credential intact
+00:10 +55: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_runtime_switch_test.dart: FAIL_INSTALL=1 leaves durable return and permits explicit old-runtime recovery
+00:11 +56: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_runtime_switch_test.dart: FAIL_START=1 leaves durable return and permits explicit old-runtime recovery
+00:11 +57: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_runtime_switch_test.dart: REFUSE_STOP=1 leaves durable return and permits explicit old-runtime recovery
+00:11 +58: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_runtime_switch_test.dart: interruption between password and marker writes never overwrites saved old credential
+00:11 +59: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_runtime_switch_test.dart: pre-existing first-run OC2 cannot launch OC1 against its default data
+00:11 +60: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_runtime_switch_test.dart: unknown data mode refuses switch before touching the managed server
+00:11 +61: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_runtime_switch_test.dart: return refuses changed saved credentials before stopping target server
+00:12 +62: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_runtime_switch_test.dart: persisted ready commits only the matching switch operation
+00:12 +63: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_runtime_switch_test.dart: pending journal suppresses automatic recovery and restores return metadata
+00:12 +64: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_runtime_switch_test.dart: switch requires explicit target credential and validates operation identity
+00:12 +65: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart
+00:12 +65: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: setup clock tolerates legacy and malformed timestamps
+00:12 +66: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: install dispatch starts its clock only after accepting the launch
+00:12 +67: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: manager clock survives phase writes and a fresh status process
+00:12 +68: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: legacy manager state stays without an invented clock
+00:12 +69: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: restart renews the clock only after launch rejection gates
+00:12 +70: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: generated termux scripts pass bash syntax validation
+00:13 +71: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: setup status parses persisted manager state
+00:13 +72: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: restart is treated as a running managed operation
+00:13 +73: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: restart validates ownership and reuses the installed server
+00:13 +74: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: restart operation IDs cannot inject shell syntax
+00:13 +75: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: setup snapshot keeps terminal output separate from status
+00:13 +76: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: Android RESULT_OK and shell exit zero indicate success
+00:13 +77: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: manager is installed before the single-flight lock is acquired
+00:13 +78: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: default setup installs the pinned OpenCode release
+00:13 +79: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: Ubuntu bootstrap disables io_uring before Node and npm run
+00:13 +80: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: Ubuntu bootstrap trims recommendations but retains coding tools
+00:13 +81: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: Ubuntu npm install requires its matching pinned binary and cleans cache
+00:13 +82: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: runtime selection survives phase writes and a fresh status process
+00:13 +83: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: runtime version uses the recorded command and normalizes its prefix
+00:13 +84: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: first-run runtime choice cannot silently migrate an installation
+00:13 +85: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: runtime inventory preserves legacy default and explicit beta choice
+00:13 +86: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: installation inventory accepts only a single sanitized version
+00:13 +87: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: installation inventory distinguishes absence from a failed probe
+00:13 +88: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: the npm dist-tag is reachable only by asking for it
+00:13 +89: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: managed server URL detection is narrow
+00:13 +90: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: live snapshot converts manager errors into a failed status
+00:13 +91: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: manager claims the dispatcher lock before package work
+00:13 +92: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: server owns the setup wake lock until it stops or exits
+00:13 +93: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: wake lock refresh script is safe to invoke repeatedly
+00:13 +94: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: setup reserves disk space and only cleans app-owned partial data
+00:13 +95: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: unhealthy setup repairs packages without allowing removals
+00:13 +96: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: healthy custom repository skips apt and drains long named-container help
+00:13 +97: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: unexpected manager errors persist the active setup stage
+00:13 +98: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: install and server logs are bounded and rotated by executable code
+00:13 +99: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: server runs through the bounded logger and stop validates its runner
+00:13 +100: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: manager stops its verified process group but refuses a decoy
+00:16 +101: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: the managed server never runs from the container home folder
+00:16 +102: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: project folders are created only as one safe name under projects
+00:16 +103: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: Ubuntu setup bypasses registries and verifies Canonical archives
+00:16 +104: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: OpenCode Ubuntu is isolated in its own v4 or v5 container
+00:16 +105: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: npm setup prefers IPv4 and retries transient downloads
+00:16 +106: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: only app-owned partial Ubuntu installs can be removed
+00:16 +107: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: only explicit manager launch markers are accepted
+00:16 +108: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_scripts_test.dart: manager-missing stop validates the lock owner before clearing
+00:16 +109: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart
+00:18 +109: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: managed switch is visible first, preserves profiles and returns at scale 1.0
+00:18 +110: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: managed switch is visible first, preserves profiles and returns at scale 2.0
+00:19 +111: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: failed beta switch offers return without connecting unavailable beta
+00:19 +112: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: missing prior profile refuses switch without mutating setup
+00:19 +113: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: existing beta default data has no invented OC1 return
+00:19 +114: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: inspect and switch local runtime leave active remote connection selected
+00:19 +115: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: paste guide is inspectable at width 800.0, text scale 1.0
+00:19 +116: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: paste guide is inspectable at width 390.0, text scale 1.0
+00:19 +117: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: paste guide is inspectable at width 390.0, text scale 2.0
+00:19 +118: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: permission precedes copy and open, return verifies without installing
+00:20 +119: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: permission denial leaves clipboard alone and settings and retry usable
+00:20 +120: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: copy/open failure is recoverable: open false
+00:20 +121: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: copy/open failure is recoverable: open exception
+00:20 +122: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: copy/open failure is recoverable: clipboard exception
+00:20 +123: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: late permission resume does not verify before Termux backgrounds and returns
+00:20 +124: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: early return verifies after open completes and failed verification can retry
+00:20 +125: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: new switch hides prior elapsed clock until accepted and resumes durable timing
+00:20 +126: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: elapsed uses persisted start across background and route recreation
+00:20 +127: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: elapsed hides legacy total and follows authoritative operation timestamps
+00:21 +128: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: install shows immediate progress throughout slow native startup
+00:21 +129: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: prelaunch bridge failure stops waiting and offers a working retry
+00:21 +130: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: resuming during launch preserves progress and avoids stale polling
+00:21 +131: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: setup uses phone space without overflow at text scale 1.0
+00:21 +132: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: setup uses phone space without overflow at text scale 2.0
+00:21 +133: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: existing server stays reachable without Termux
+00:21 +134: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: existing server stays reachable without permission
+00:21 +135: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: desktop setup offers existing server with large text
+00:21 +136: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: failed inventory requires reviewed Ubuntu choice before launch
+00:21 +137: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: checks the environment before enabling installation
+00:21 +138: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: first installation asks and saves the selected beta before launch
+00:21 +139: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: legacy stopped state does not override the visible beta choice
+00:21 +140: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: fresh beta remains installed after ready and Stop on the same route
+00:22 +141: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: existing opencode1 retains its runtime on repair
+00:22 +142: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: existing opencode2 retains its runtime on repair
+00:22 +143: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: beta start reuses its saved profile without installing or selecting a generation
+00:22 +144: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: runtime choice wraps at 320 pixels with large text
+00:22 +145: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: starts the detected installation without downloading packages
+00:22 +146: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: reinstalling a detected version requires replacement review
+00:22 +147: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: checking Termux does not mark the download step complete
+00:22 +148: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: successful setup exposes controls and stops despite recovery cleanup failure
+00:22 +149: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: restart timeout does not accept a previous ready operation
+00:22 +150: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: restart timeout follows matching preflight until completion
+00:22 +151: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/termux_setup_screen_test.dart: launch timeout recovers the persisted phase and root cause
+00:22 +152: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/text_scale_overflow_test.dart
+00:23 +152: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/text_scale_overflow_test.dart: chat transcript and composer lay out at 2.5x
+00:24 +153: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/text_scale_overflow_test.dart: the busy composer lays out at 2.5x
+00:24 +154: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/text_scale_overflow_test.dart: workspace lays out at 2.5x
+00:24 +155: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/text_scale_overflow_test.dart: the home shell lays out at 2.5x
+00:24 +156: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/text_scale_overflow_test.dart: the More hub lays out at 2.5x
+00:24 +157: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/text_scale_overflow_test.dart: settings lays out at 2.5x
+00:24 +158: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/text_scale_overflow_test.dart: the servers first-run screen lays out at 2.5x
+00:25 +159: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/text_scale_overflow_test.dart: the permission sheet lays out at 2.5x
+00:25 +160: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/text_scale_overflow_test.dart: the form renderer lays out at 2.5x
+00:25 +161: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/theme_packs_test.dart
+00:25 +161: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/theme_packs_test.dart: the default OpenCode pack preserves identity and semantic colors
+00:26 +162: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/theme_packs_test.dart: every static pack has complete, distinct dark and light palettes
+00:26 +163: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/theme_packs_test.dart: theme pack persistence round-trips through the store
+00:26 +164: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/theme_packs_test.dart: switching packs restyles the app live
+00:26 +165: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/theme_packs_test.dart: the appearance page picks packs and gates Material You
+00:26 +166: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/theme_packs_test.dart: a harvested Material You pack becomes selectable
+00:26 +167: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart
+00:27 +167: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: formatToolDuration uses tenths under a minute and m/ss past it
+00:27 +168: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: completed tools show their run time in the header
+00:27 +169: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: running tools show no duration yet
+00:27 +170: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: pruned output is announced under the header
+00:27 +171: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: never-run calls grey out with a Not run state
+00:28 +172: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: task cards show the agent chip, prompt and result
+00:28 +173: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: task cards hide the open-session action without a handler or child id
+00:28 +174: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: long prompts collapse to a preview with a toggle
+00:28 +175: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: a running task shows the subagent working line
+00:28 +176: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: a failed task keeps the prompt and shows the error as result
+00:28 +177: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: taskChildSessionId reads the server key and legacy spellings
+00:28 +178: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: v2 asynchronous launch shows its agent and child route without claiming child completion
+00:28 +179: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: v2 foreground completion unwraps the actual subagent envelope
+00:28 +180: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: v2 early progress remains foreground work and failures retain the child route
+00:28 +181: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: a v2 subagent the server did not execute has no launch or child action
+00:28 +182: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: renders the OpenCode shell contract without generic sections
+00:28 +183: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: renders OpenCode edit metadata as a colored diff
+00:28 +184: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: renders OpenCode todo items as structured task rows
+00:28 +185: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tool_card_test.dart: a running tool card carries a primary left accent
+00:28 +186: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tool_state_test.dart
+00:29 +186: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tool_state_test.dart: completed string output preserves leading and trailing whitespace
+00:29 +187: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tool_state_test.dart: completed JSON object output remains pretty printed
+00:29 +188: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tool_state_test.dart: structured OpenCode input and metadata remain available to renderers
+00:29 +189: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tool_state_test.dart: ordinary URLs and path-like prose are not invented as files
+00:29 +190: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tool_state_test.dart: explicit filePath output remains a downloadable artifact
+00:29 +191: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tool_state_test.dart: read attachments inherit the requested file name
+00:29 +192: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tool_state_test.dart: pending state exposes raw input unchanged
+00:29 +193: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tool_state_test.dart: error text preserves leading and trailing whitespace
+00:29 +194: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tools_screen_test.dart
+00:29 +194: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tools_screen_test.dart: tool inventory renders flat and fits compact large text
+00:30 +195: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tools_screen_test.dart: tool search and schema use server-returned truth
+00:30 +196: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tools_screen_test.dart: optional capability failure does not hide model tools
+00:31 +197: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tools_screen_test.dart: long server descriptions keep parameter schema reachable
+00:31 +198: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/tools_screen_test.dart: Library exposes one native tools destination
+00:31 +199: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/transcript_search_test.dart
+00:32 +199: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/transcript_search_test.dart: literal occurrence counts preserve offsets and include reasoning/tool/file data
+00:32 +200: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/transcript_search_test.dart: streaming, older-page prepend and deletion update cached matches
+00:32 +201: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/transcript_search_test.dart: Markdown and code highlight without changing content or reparsing blocks
+00:32 +202: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/transcript_search_test.dart: count, next/previous, older recovery and close work in the real chat
+00:33 +203: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/transcript_search_test.dart: session menu find and timeline selection use the same search
+00:34 +204: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/transcript_search_test.dart: cancelling full-history search stops before the next page
+00:34 +205: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/transcript_search_test.dart: active occurrence excerpt is visible in a very long reply
+00:35 +206: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/transcript_search_test.dart: compact enlarged-text search keeps navigation reachable above a keyboard
+00:35 +207: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/transcript_search_test.dart: phone search preview
+00:35 +208: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/update_channel_platform_test.dart
+00:36 +208: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/update_channel_platform_test.dart: the unavailable service never claims an update
+00:36 +209: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/update_channel_platform_test.dart: the GitHub release check stays off where Shorebird patches
+00:36 +210: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/update_channel_platform_test.dart: the GitHub release check runs on desktop
+00:36 +211: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/usage_budgets_test.dart
+00:37 +211: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/usage_budgets_test.dart: restart keeps measured USD and token budgets in their exact scopes
+00:37 +212: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/usage_budgets_test.dart: failed write preserves durable previous budget and deletion sweeps it
+00:37 +213: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/usage_budgets_test.dart: mismatched persisted scope cannot masquerade as the current budget
+00:37 +214: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/usage_budgets_test.dart: one malformed persisted rule does not discard valid budgets
+00:37 +215: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/usage_budgets_test.dart: replacement screens serialize writes and merge separate units
+00:37 +216: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/usage_budgets_test.dart: deletion during a pending write cannot resurrect the budget
+00:37 +217: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/usage_budgets_test.dart: explicit clearing recovers full capacity without silently evicting rules
+00:37 +218: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/usage_labels_test.dart
+00:38 +218: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/usage_labels_test.dart: session usage labels show cost and diff only when the server sent them
+00:38 +219: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/usage_labels_test.dart: model cost label prices per million tokens
+00:38 +220: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/usage_statistics_test.dart
+00:39 +220: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/usage_statistics_test.dart: provider rollups use returned IDs, retain variants and do not count variants as new models
+00:39 +221: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/usage_statistics_test.dart: provider cost overflow stays unavailable and empty statistics have no invented providers
+00:39 +222: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/usage_statistics_test.dart: provider consumption summary retains all original model detail
+00:40 +223: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/usage_statistics_test.dart: temporary missing repository keeps usage refresh recoverable
+00:40 +224: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/usage_statistics_test.dart: response preserves tokens, models and reliability without fake empty values
+00:40 +225: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/usage_statistics_test.dart: calendar ranges include today and omit from for all time
+00:40 +226: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/usage_statistics_test.dart: wire request is global unless an explicit project ID is selected
+00:40 +227: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/usage_statistics_test.dart: authorization errors stay distinct; absent endpoint disables capability
+00:40 +228: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/usage_statistics_test.dart: native timezone is sent and unreadable timezone never silently becomes UTC
+00:40 +229: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/usage_statistics_test.dart: current project resolves its ID; missing project cannot become all projects
+00:40 +230: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/usage_statistics_test.dart: out-of-order responses cannot relabel old totals with new filters
+00:40 +231: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/usage_statistics_test.dart: location changes during wake detach the page without dispatching
+00:40 +232: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/usage_statistics_test.dart: failed refresh retains only the previous result for unchanged filters
+00:40 +233: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/usage_statistics_test.dart: Settings hides usage for v1 and known unsupported repositories
+00:40 +234: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/usage_statistics_test.dart: phone usage layout shows scoped totals and retains retry feedback
+00:41 +235: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/usage_statistics_test.dart: empty range and 320px large text remain usable
+00:41 +236: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart
+00:41 +236: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: the accessor reports transport truth an unattached controller reports the v1 superset
+00:41 +237: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: the accessor reports transport truth an attached v2 gateway narrows the flags
+00:41 +238: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: hidden: nav destination with no v2 backend (§7 row 20) catalog tabs stay reachable on a narrow large-text phone
+00:42 +239: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: hidden: nav destination with no v2 backend (§7 row 20) v1 keeps the Tools tab in Commands & tools
+00:42 +240: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: hidden: nav destination with no v2 backend (§7 row 20) v2 drops the tab and keeps the screen
+00:42 +241: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: hidden: More tile whose screen has no backend (§7 row 1) v1 offers Managed workspaces
+00:42 +242: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: hidden: More tile whose screen has no backend (§7 row 1) v2 hides the tile and leaves the rest of Coding
+00:43 +243: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: hidden: menu actions inside a surviving screen (§7 rows 10-12) v1 lists share and archive beside rename and delete
+00:43 +244: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: hidden: menu actions inside a surviving screen (§7 rows 10-12) v2 drops share and archive, keeping the rest
+00:43 +245: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: hidden: health sections + disabled git init (§7 rows 17-19) v1 shows both status sections and the live action
+00:43 +246: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: hidden: health sections + disabled git init (§7 rows 17-19) v2 hides both sections and explains git init in place
+00:43 +247: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: disabled settings rows carry an explainer (§7 rows 22, 24) v1 keeps the default shell row live
+00:43 +248: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: disabled settings rows carry an explainer (§7 rows 22, 24) v2 shows the shell row disabled and says why
+00:43 +249: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: disabled settings rows carry an explainer (§7 rows 22, 24) v2 points server updates at the host machine (§7 row 23)
+00:43 +250: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: disabled settings rows carry an explainer (§7 rows 22, 24) v2 disables the diagnostics send button in place
+00:43 +251: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: hidden: v2-only features on a v1 server (§7 rule 5) a v2 connection lists a pending form
+00:43 +252: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: hidden: v2-only features on a v1 server (§7 rule 5) the same form stays hidden on a v1 connection
+00:43 +253: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_feature_gating_test.dart: GatedRow copy names the generation the feature needs
+00:43 +254: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart
+00:44 +254: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart: instruction notice never renders raw entry names or values
+00:44 +255: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart: v2VariantPart finds the tagged part and ignores v1 messages
+00:44 +256: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart: TranscriptMarker switches model switch renders the divider pill with tooltip detail
+00:45 +257: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart: TranscriptMarker switches agent switch renders its own icon and copy
+00:45 +258: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart: TranscriptMarker switches location switch shows the basename with full-path detail
+00:45 +259: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart: TranscriptNotice variants system notice collapses to two lines and expands on tap
+00:45 +260: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart: TranscriptNotice variants synthetic notice uses the description as its header
+00:45 +261: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart: TranscriptNotice variants skill notice names the skill in the header
+00:45 +262: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart: TranscriptNotice variants unknown variants degrade to a generic server notice
+00:45 +263: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart: compaction rows running renders the spinner pill
+00:45 +264: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart: compaction rows completed renders an expandable summary notice
+00:45 +265: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart: compaction rows failed renders the error-tinted notice
+00:45 +266: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart: interleaved tool content orders text and file segments as delivered
+00:45 +267: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart: interleaved tool content trailing-file order keeps the v1 layout
+00:45 +268: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart: apply-bar scope labels classic scope keeps the v1 wording
+00:45 +269: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart: apply-bar scope labels session scope labels the apply for this session
+00:45 +270: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/v2_transcript_rows_test.dart: apply-bar scope labels new-sessions scope labels the apply as the default
+00:45 +271: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_audio_test.dart
+00:46 +271: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_audio_test.dart: PCM16 little-endian samples normalize correctly across split chunks
+00:46 +272: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_audio_test.dart: recording buffer is strictly bounded at 30 seconds
+00:46 +273: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_composer_test.dart
+00:47 +273: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_composer_test.dart: voice draft preserves typed composer text and never auto-sends
+00:48 +274: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_composer_test.dart: model setup renders at 320dp with 2x text
+00:48 +275: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_composer_test.dart: busy model setup exposes disabled cards without nested actions
+00:48 +276: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_composer_test.dart: voice draft actions stack at 320dp with 2x text
+00:48 +277: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_composer_test.dart: app background cancels an active microphone session
+00:48 +278: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_composer_test.dart: exported voice notices view renders bundled license texts
 00:49 +279: All tests passed!

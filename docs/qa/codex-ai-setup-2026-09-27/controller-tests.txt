@@ -1,4 +1,4 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_controller_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_controller_test.dart
 00:00 +0: redacted read strips arbitrary environment credentials and server errors
 00:00 +1: propose requires review and apply verifies outcome then undo restores
 00:00 +2: unsupported production writes never call transport

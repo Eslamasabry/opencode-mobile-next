@@ -93,7 +93,7 @@ Compile-only gate: **2/2 requested targets passed**, 0 Kotlin errors, 0 tests ru
 Command in `native/` (one build, native + machine build locks, nice 5):
 
 ```bash
-JAVA_HOME=/home/eslam/Storage2/tools/jdk21 ANDROID_HOME=$HOME/Android/Sdk \
+JAVA_HOME=/home/owner/Storage2/tools/jdk21 ANDROID_HOME=$HOME/Android/Sdk \
   nice -n 5 ./gradlew :androidApp:compilePreviewDebugKotlin compileKotlinDesktop \
   -Dorg.gradle.workers.max=2 -Dorg.gradle.daemon.idletimeout=300000 \
   '-Dorg.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=768m'

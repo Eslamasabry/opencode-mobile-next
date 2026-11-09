@@ -1,15 +1,15 @@
-00:00 +0: loading /home/eslam/wt/oc-app-schedule-fullqa/test/consent_in_flow_test.dart
-00:00 +0: /home/eslam/wt/oc-app-schedule-fullqa/test/consent_in_flow_test.dart: phone server first start asks battery then auto-start once; a No explains itself
-00:05 +1: /home/eslam/wt/oc-app-schedule-fullqa/test/consent_in_flow_test.dart: phone server first start an exempt battery on stock Android asks nothing
-00:06 +2: /home/eslam/wt/oc-app-schedule-fullqa/test/consent_in_flow_test.dart: phone server first start a declined consent can be allowed from its row
-00:08 +3: /home/eslam/wt/oc-app-schedule-fullqa/test/consent_in_flow_test.dart: Notify me when the agent needs me is kept for the server it was asked on and explained
-00:10 +4: /home/eslam/wt/oc-app-schedule-fullqa/test/consent_in_flow_test.dart: Notify me when the agent needs me accepting saves the yes, then turns on requests only
-00:10 +5: /home/eslam/wt/oc-app-schedule-fullqa/test/consent_in_flow_test.dart: Notify me when the agent needs me a server asked before is not asked again
-00:10 +6: /home/eslam/wt/oc-app-schedule-fullqa/test/consent_in_flow_test.dart: Always allow on the third identical ask offered once, states its scope, recorded after the server took it
-00:11 +7: /home/eslam/wt/oc-app-schedule-fullqa/test/consent_in_flow_test.dart: Always allow on the third identical ask Keep asking is remembered, explained and can be undone
-00:13 +8: /home/eslam/wt/oc-app-schedule-fullqa/test/consent_in_flow_test.dart: deleting a server removes its answers for good
-00:13 +9: loading /home/eslam/wt/oc-app-schedule-fullqa/test/server_profile_reentry_test.dart
-00:19 +9: /home/eslam/wt/oc-app-schedule-fullqa/test/server_profile_reentry_test.dart: Codex token re-entry opens setup without a network attempt
+00:00 +0: loading /home/owner/wt/oc-app-schedule-fullqa/test/consent_in_flow_test.dart
+00:00 +0: /home/owner/wt/oc-app-schedule-fullqa/test/consent_in_flow_test.dart: phone server first start asks battery then auto-start once; a No explains itself
+00:05 +1: /home/owner/wt/oc-app-schedule-fullqa/test/consent_in_flow_test.dart: phone server first start an exempt battery on stock Android asks nothing
+00:06 +2: /home/owner/wt/oc-app-schedule-fullqa/test/consent_in_flow_test.dart: phone server first start a declined consent can be allowed from its row
+00:08 +3: /home/owner/wt/oc-app-schedule-fullqa/test/consent_in_flow_test.dart: Notify me when the agent needs me is kept for the server it was asked on and explained
+00:10 +4: /home/owner/wt/oc-app-schedule-fullqa/test/consent_in_flow_test.dart: Notify me when the agent needs me accepting saves the yes, then turns on requests only
+00:10 +5: /home/owner/wt/oc-app-schedule-fullqa/test/consent_in_flow_test.dart: Notify me when the agent needs me a server asked before is not asked again
+00:10 +6: /home/owner/wt/oc-app-schedule-fullqa/test/consent_in_flow_test.dart: Always allow on the third identical ask offered once, states its scope, recorded after the server took it
+00:11 +7: /home/owner/wt/oc-app-schedule-fullqa/test/consent_in_flow_test.dart: Always allow on the third identical ask Keep asking is remembered, explained and can be undone
+00:13 +8: /home/owner/wt/oc-app-schedule-fullqa/test/consent_in_flow_test.dart: deleting a server removes its answers for good
+00:13 +9: loading /home/owner/wt/oc-app-schedule-fullqa/test/server_profile_reentry_test.dart
+00:19 +9: /home/owner/wt/oc-app-schedule-fullqa/test/server_profile_reentry_test.dart: Codex token re-entry opens setup without a network attempt
 -------------------------------------------------------------------------------
 The Shorebird Updater is unavailable in the current environment.
 -------------------------------------------------------------------------------
@@ -18,7 +18,7 @@ contain the Shorebird Engine. Most commonly this is due to building with
 `flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
 It can also occur when running on an unsupported platform (e.g. web).
 
-00:26 +10: /home/eslam/wt/oc-app-schedule-fullqa/test/server_profile_reentry_test.dart: startup does not auto-connect when the active password needs re-entry
+00:26 +10: /home/owner/wt/oc-app-schedule-fullqa/test/server_profile_reentry_test.dart: startup does not auto-connect when the active password needs re-entry
 -------------------------------------------------------------------------------
 The Shorebird Updater is unavailable in the current environment.
 -------------------------------------------------------------------------------
@@ -27,10 +27,10 @@ contain the Shorebird Engine. Most commonly this is due to building with
 `flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
 It can also occur when running on an unsupported platform (e.g. web).
 
-00:27 +11: /home/eslam/wt/oc-app-schedule-fullqa/test/server_profile_reentry_test.dart: failed profile save exposes an actionable error
-00:29 +12: /home/eslam/wt/oc-app-schedule-fullqa/test/server_profile_reentry_test.dart: failed active delete keeps the current connection
-00:29 +13: /home/eslam/wt/oc-app-schedule-fullqa/test/server_profile_reentry_test.dart: failed secure write leaves profile metadata and cache unchanged
-00:30 +14: /home/eslam/wt/oc-app-schedule-fullqa/test/server_profile_reentry_test.dart: failed secure delete preserves an active profile
-00:30 +15: loading /home/eslam/wt/oc-app-schedule-fullqa/test/while_away_inbox_test.dart
-00:32 +15: /home/eslam/wt/oc-app-schedule-fullqa/test/while_away_inbox_test.dart: deleting a server drains and removes its history
+00:27 +11: /home/owner/wt/oc-app-schedule-fullqa/test/server_profile_reentry_test.dart: failed profile save exposes an actionable error
+00:29 +12: /home/owner/wt/oc-app-schedule-fullqa/test/server_profile_reentry_test.dart: failed active delete keeps the current connection
+00:29 +13: /home/owner/wt/oc-app-schedule-fullqa/test/server_profile_reentry_test.dart: failed secure write leaves profile metadata and cache unchanged
+00:30 +14: /home/owner/wt/oc-app-schedule-fullqa/test/server_profile_reentry_test.dart: failed secure delete preserves an active profile
+00:30 +15: loading /home/owner/wt/oc-app-schedule-fullqa/test/while_away_inbox_test.dart
+00:32 +15: /home/owner/wt/oc-app-schedule-fullqa/test/while_away_inbox_test.dart: deleting a server drains and removes its history
 00:34 +16: All tests passed!

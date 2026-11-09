@@ -28,7 +28,7 @@ Commands ran with `OC_TEST_SLOTS=2 tool/qa/machine_lock.sh test --` and a watchd
 checking `MemAvailable` against 800 MB for each owned child process. No watchdog
 fired. Kotlin compilation used `-J-Xmx256m -J-XX:MaxMetaspaceSize=192m`; execution
 used `-J-Xmx128m`. Both used
-`/home/eslam/.sdkman/candidates/kotlin/current/bin/` executables, JUnit 4.13.2
+`/home/owner/.sdkman/candidates/kotlin/current/bin/` executables, JUnit 4.13.2
 and Hamcrest 1.3 from the local Gradle cache. No Gradle or Flutter command was
 launched for these checks.
 

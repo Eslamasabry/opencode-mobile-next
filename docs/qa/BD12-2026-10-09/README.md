@@ -1,7 +1,7 @@
 # BD12 Claude picker — 2026-10-09
 
 Base: `feat/genui-fe` at `17decdca4389198c007b768121aea2a8de3c722c`.
-Branch: `sol/bd-claude-picker`; checkout: `/home/eslam/Storage/Code/oc_app-sol-bd`.
+Branch: `sol/bd-claude-picker`; checkout: `/home/owner/Storage/Code/oc_app-sol-bd`.
 
 The picker projects its shared catalog through `catalogForSession(sessionID)`.
 Paseo conversations retain their provider, including empty drafts; unknown
@@ -43,7 +43,7 @@ All Flutter tests use the pinned SDK and exactly:
 
 ```sh
 OC_TEST_SLOTS=1 tool/qa/machine_lock.sh test -- \
-  /home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter \
+  /home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter \
   test --concurrency 1 <files>
 ```
 

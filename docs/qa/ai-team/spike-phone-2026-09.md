@@ -301,5 +301,5 @@ the background) and show these steps, in one sentence plus a "How" sheet.
 - [ ] 30 min screen-off observation.
 - [ ] Verdict.
 
-Files: `/home/eslam/Storage/Code/gascity-spike/phone/{phone-spike,phone-start,phone-run}.sh`
+Files: `/home/owner/Storage/Code/gascity-spike/phone/{phone-spike,phone-start,phone-run}.sh`
 are the exact scripts run inside the rootfs (copied to `/root/` there).

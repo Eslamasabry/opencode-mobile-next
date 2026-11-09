@@ -11,7 +11,7 @@ Font asset "Phosphor.ttf" was tree-shaken, reducing it from 488636 to 42080 byte
 Font asset "Phosphor-Fill.ttf" was tree-shaken, reducing it from 449252 to 1152 bytes (99.7% reduction). Tree-shaking can be disabled by providing the --no-tree-shake-icons flag when building your app.
 Font asset "Phosphor-Duotone.ttf" was tree-shaken, reducing it from 567808 to 1184 bytes (99.8% reduction). Tree-shaking can be disabled by providing the --no-tree-shake-icons flag when building your app.
 Font asset "MaterialIcons-Regular.otf" was tree-shaken, reducing it from 1645184 to 5000 bytes (99.7% reduction). Tree-shaking can be disabled by providing the --no-tree-shake-icons flag when building your app.
-/home/eslam/Storage/Code/oc_app-sol-ba/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java:54: error: package dev.flutter.plugins.integration_test does not exist
+/home/owner/Storage/Code/oc_app-sol-ba/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java:54: error: package dev.flutter.plugins.integration_test does not exist
       flutterEngine.getPlugins().add(new dev.flutter.plugins.integration_test.IntegrationTestPlugin());
                                                                              ^
 1 error
@@ -21,7 +21,7 @@ FAILURE: Build failed with an exception.
 * What went wrong:
 Execution failed for task ':app:compileReleaseJavaWithJavac' (registered by plugin 'com.android.internal.application').
 > Compilation failed; see the compiler output below.
-  /home/eslam/Storage/Code/oc_app-sol-ba/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java:54: error: package dev.flutter.plugins.integration_test does not exist
+  /home/owner/Storage/Code/oc_app-sol-ba/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java:54: error: package dev.flutter.plugins.integration_test does not exist
         flutterEngine.getPlugins().add(new dev.flutter.plugins.integration_test.IntegrationTestPlugin());
                                                                                ^
   1 error

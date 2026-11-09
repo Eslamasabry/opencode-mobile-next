@@ -50,7 +50,7 @@ Repository evidence (paths relative to this README):
   pinned version, empty catalogue, and unavailable fallback respectively.
 
 Paseo investigation used the local checkout at
-`/home/eslam/Storage/Code/paseo-spike/paseo-src`, commit
+`/home/owner/Storage/Code/paseo-spike/paseo-src`, commit
 `d636abd7a4ce302e7ccb9eb6074f637c6dd4d83b`. Its server package identifies as
 `0.9.0-beta.2`; the installed `@getpaseo/cli` package identifies as `0.9.1`.
 Neither establishes compatibility with the app's documented `0.8.0` target.
@@ -78,7 +78,7 @@ listed as working merely because their names are familiar.
 For Codex, generated public schemas locally with:
 
 ```sh
-/home/eslam/.codex/packages/standalone/releases/0.153.4-x86_64-unknown-linux-musl/bin/codex app-server generate-json-schema --out /tmp/p101-codex-schema
+/home/owner/.codex/packages/standalone/releases/0.153.4-x86_64-unknown-linux-musl/bin/codex app-server generate-json-schema --out /tmp/p101-codex-schema
 ```
 
 The command succeeded. `ClientRequest.json` includes `thread/compact/start`,
@@ -170,6 +170,6 @@ duplicate-send prevention, shell output and failure, and disposal during request
 - Implemented: no. Enabled: no. Live-verified: no. UI integrated: no.
 - Deployed/released/pushed: no.
 - Committed: no. `git add` failed because
-  `/home/eslam/Storage/Code/oc_app/.git/worktrees/oc_app-codex-p101/index.lock`
+  `/home/owner/Storage/Code/oc_app/.git/worktrees/oc_app-codex-p101/index.lock`
   cannot be created on the read-only filesystem. The exact requested message
   is retained in root `COMMIT_MSG.txt`; the README remains untracked.

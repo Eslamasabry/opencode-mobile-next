@@ -1,1 +1,1 @@
-fatal: Unable to create '/home/eslam/Storage/Code/oc_app/.git/worktrees/oc_app-codex-p62/index.lock': Read-only file system
+fatal: Unable to create '/home/owner/Storage/Code/oc_app/.git/worktrees/oc_app-codex-p62/index.lock': Read-only file system

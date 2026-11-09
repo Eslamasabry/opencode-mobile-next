@@ -7,7 +7,7 @@ here.
 Inputs: the three proposals in `../design/` (A shared UI, B native UI per platform, C Android-first), the three judge
 reports, the eleven maps in `../map/`, the nine research files in `../research/`, the behaviour catalog in `../catalog/`
 (1,544 rows, ids like `B-STATE-018`; 240 device-flow rows proven by 39 flows), the demo at
-`/home/eslam/Storage/Code/kmp-demo`, the read-only Flutter source at `/home/eslam/Storage/Code/wt/oc_app-batch1`, and the
+`/home/owner/Storage/Code/kmp-demo`, the read-only Flutter source at `/home/owner/Storage/Code/wt/oc_app-batch1`, and the
 owner memory files.
 
 Tags: **[V]** checked today against a primary source (Maven/Google Maven metadata, published `.module` files, official
@@ -67,7 +67,7 @@ put C first, and C scored higher on Android feel. This record therefore takes C'
    `imeNestedScroll`, non-linear font scaling and `RenderEffect` frost.
 3. **Portability is a compiler fact, not a lint rule.** In `commonMain`, `android.*`, `R.string` and `LocalContext` do not
    compile. C's later conversion bill (6–10 agent-weeks, landing in the middle of the iOS and desktop push) disappears.
-4. **The demo the owner felt was A in miniature.** Every screen of `/home/eslam/Storage/Code/kmp-demo` is in
+4. **The demo the owner felt was A in miniature.** Every screen of `/home/owner/Storage/Code/kmp-demo` is in
    `shared/src/commonMain` [R].
 5. **One kit everywhere** fits the owner's kit-only rule. B's design means two or three kits that drift.
 6. **Agents get an emulator-free loop.** The common tests run on the desktop JVM, and screenshots render on the VPS.
@@ -899,8 +899,8 @@ leaves the switch release on a default: removals and deferrals need the owner's 
 - Maps: `../map/packages-build.md` (signers §0.3, versionCode §0.4), `protocols.md` (OpenCode 1 removed),
   `agents-backends.md` (pins, A2A stance), `builtin-linux.md`, `ui-kit.md`, `screens-nav.md`.
 - Catalog: `../catalog/BEHAVIORS.md`, `behaviors.jsonl`, `e2e-flows.md`.
-- Repo: `/home/eslam/Storage/Code/wt/oc_app-batch1/docs/ux-system/kit-v2.md` §9 (kit-only allowlist), `AGENTS.md`.
-- Demo: `/home/eslam/Storage/Code/kmp-demo` (`shared/src/commonMain`, `shared/src/androidMain`).
+- Repo: `/home/owner/Storage/Code/wt/oc_app-batch1/docs/ux-system/kit-v2.md` §9 (kit-only allowlist), `AGENTS.md`.
+- Demo: `/home/owner/Storage/Code/kmp-demo` (`shared/src/commonMain`, `shared/src/androidMain`).
 - Owner memory: `dev-freeze-native-rewrite-2026-11-01`, `pc-capacity-ceiling`, `codex-backend-claude-frontend`,
   `no-heavy-workflows`, `subagent-model-choice`, `quiet-hours-vps-only`, `no-glass-rule`, `android-native-feel`,
   `text-scale-cap`, `app-updates-two-layers`.

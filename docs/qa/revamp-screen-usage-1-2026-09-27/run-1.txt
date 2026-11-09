@@ -1,63 +1,63 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: (setUpAll)
-00:00 +0: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Usage (Spent) the total comes first, then the range that shapes it
-00:01 +1: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Usage (Spent) a server without usage statistics explains why in place
-00:01 +2: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Usage (Spent) a failed refresh keeps the last total and says so
-00:01 +3: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Usage (Spent) an empty range says so and hides the zero breakdowns
-00:01 +4: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Usage (Spent) a USD budget is set, shown against spend, reached, and removed
-00:01 +5: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Usage (Spent) an invalid amount keeps Save disabled with the reason
-00:02 +6: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Usage (Spent) clearing budgets asks first, in its own words
-00:02 +7: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Usage (Spent) lays out without overflow at Size(320.0, 640.0), text 1.0
-00:02 +8: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Usage (Spent) lays out without overflow at Size(320.0, 640.0), text 2.0
-00:02 +9: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Usage (Spent) lays out without overflow at Size(412.0, 915.0), text 1.0
-00:02 +10: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Usage (Spent) lays out without overflow at Size(412.0, 915.0), text 2.0
-00:02 +11: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Usage (Spent) lays out without overflow at Size(915.0, 412.0), text 1.0
-00:02 +12: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Usage (Spent) lays out without overflow at Size(915.0, 412.0), text 2.0
-00:02 +13: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Usage (Spent) lays out without overflow at Size(1280.0, 800.0), text 1.0
-00:03 +14: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Usage (Spent) lays out without overflow at Size(1280.0, 800.0), text 2.0
-00:03 +15: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Codex account signed in: who, how, the limits with a relative reset
-00:03 +16: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Codex account a window at its limit says so and when it resets
-00:03 +17: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Codex account sign-in shows the code with Copy, then Cancel ends it
-00:03 +18: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Codex account a failed sign-in says so and offers a fresh one
-00:03 +19: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Codex account a server that cannot host a Codex account explains it
-00:03 +20: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Codex account a changed server says so and leads back to Servers
-00:03 +21: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Codex account not connected yet says so instead of "server changed"
-00:03 +22: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Codex account signed in lays out at Size(320.0, 640.0), text 2.0
-00:03 +23: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Codex account signed in lays out at Size(1280.0, 800.0), text 2.0
-00:03 +24: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: (tearDownAll)
-00:03 +24: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart
-00:04 +24: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: (setUpAll)
-00:04 +24: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage loaded, dark
-00:05 +25: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage loaded at 1280x800, dark
-00:05 +26: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage budget reached, dark
-00:06 +27: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage models, dark
-00:06 +28: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage empty range, dark
-00:06 +29: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage unsupported, dark
-00:06 +30: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage range picker, dark
-00:06 +31: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage budget dialog, dark
-00:07 +32: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage budget clear confirmation, dark
-00:07 +33: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: agent account signed out, dark
-00:07 +34: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: agent account sign-in code, dark
-00:07 +35: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: agent account sign-in failed, dark
-00:07 +36: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: agent account signed in, dark
-00:07 +37: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: agent account signed in at 1280x800, dark
-00:07 +38: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: agent account limit reached, dark
-00:08 +39: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: agent account not a Codex server, dark
-00:08 +40: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage loaded, light
-00:08 +41: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage loaded at 1280x800, light
-00:08 +42: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage budget reached, light
-00:08 +43: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage models, light
-00:08 +44: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage empty range, light
-00:08 +45: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage unsupported, light
-00:09 +46: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage range picker, light
-00:09 +47: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage budget dialog, light
-00:09 +48: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage budget clear confirmation, light
-00:09 +49: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: agent account signed out, light
-00:09 +50: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: agent account sign-in code, light
-00:09 +51: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: agent account sign-in failed, light
-00:09 +52: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: agent account signed in, light
-00:10 +53: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: agent account signed in at 1280x800, light
-00:10 +54: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: agent account limit reached, light
-00:10 +55: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: agent account not a Codex server, light
-00:10 +56: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: (tearDownAll)
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: (setUpAll)
+00:00 +0: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Usage (Spent) the total comes first, then the range that shapes it
+00:01 +1: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Usage (Spent) a server without usage statistics explains why in place
+00:01 +2: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Usage (Spent) a failed refresh keeps the last total and says so
+00:01 +3: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Usage (Spent) an empty range says so and hides the zero breakdowns
+00:01 +4: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Usage (Spent) a USD budget is set, shown against spend, reached, and removed
+00:01 +5: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Usage (Spent) an invalid amount keeps Save disabled with the reason
+00:02 +6: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Usage (Spent) clearing budgets asks first, in its own words
+00:02 +7: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Usage (Spent) lays out without overflow at Size(320.0, 640.0), text 1.0
+00:02 +8: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Usage (Spent) lays out without overflow at Size(320.0, 640.0), text 2.0
+00:02 +9: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Usage (Spent) lays out without overflow at Size(412.0, 915.0), text 1.0
+00:02 +10: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Usage (Spent) lays out without overflow at Size(412.0, 915.0), text 2.0
+00:02 +11: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Usage (Spent) lays out without overflow at Size(915.0, 412.0), text 1.0
+00:02 +12: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Usage (Spent) lays out without overflow at Size(915.0, 412.0), text 2.0
+00:02 +13: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Usage (Spent) lays out without overflow at Size(1280.0, 800.0), text 1.0
+00:03 +14: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Usage (Spent) lays out without overflow at Size(1280.0, 800.0), text 2.0
+00:03 +15: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Codex account signed in: who, how, the limits with a relative reset
+00:03 +16: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Codex account a window at its limit says so and when it resets
+00:03 +17: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Codex account sign-in shows the code with Copy, then Cancel ends it
+00:03 +18: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Codex account a failed sign-in says so and offers a fresh one
+00:03 +19: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Codex account a server that cannot host a Codex account explains it
+00:03 +20: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Codex account a changed server says so and leads back to Servers
+00:03 +21: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Codex account not connected yet says so instead of "server changed"
+00:03 +22: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Codex account signed in lays out at Size(320.0, 640.0), text 2.0
+00:03 +23: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: Codex account signed in lays out at Size(1280.0, 800.0), text 2.0
+00:03 +24: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_test.dart: (tearDownAll)
+00:03 +24: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart
+00:04 +24: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: (setUpAll)
+00:04 +24: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage loaded, dark
+00:05 +25: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage loaded at 1280x800, dark
+00:05 +26: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage budget reached, dark
+00:06 +27: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage models, dark
+00:06 +28: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage empty range, dark
+00:06 +29: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage unsupported, dark
+00:06 +30: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage range picker, dark
+00:06 +31: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage budget dialog, dark
+00:07 +32: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage budget clear confirmation, dark
+00:07 +33: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: agent account signed out, dark
+00:07 +34: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: agent account sign-in code, dark
+00:07 +35: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: agent account sign-in failed, dark
+00:07 +36: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: agent account signed in, dark
+00:07 +37: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: agent account signed in at 1280x800, dark
+00:07 +38: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: agent account limit reached, dark
+00:08 +39: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: agent account not a Codex server, dark
+00:08 +40: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage loaded, light
+00:08 +41: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage loaded at 1280x800, light
+00:08 +42: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage budget reached, light
+00:08 +43: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage models, light
+00:08 +44: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage empty range, light
+00:08 +45: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage unsupported, light
+00:09 +46: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage range picker, light
+00:09 +47: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage budget dialog, light
+00:09 +48: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: usage budget clear confirmation, light
+00:09 +49: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: agent account signed out, light
+00:09 +50: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: agent account sign-in code, light
+00:09 +51: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: agent account sign-in failed, light
+00:09 +52: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: agent account signed in, light
+00:10 +53: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: agent account signed in at 1280x800, light
+00:10 +54: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: agent account limit reached, light
+00:10 +55: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: agent account not a Codex server, light
+00:10 +56: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-3/test/revamp/screen_usage_1_golden_test.dart: (tearDownAll)
 00:10 +56: All tests passed!

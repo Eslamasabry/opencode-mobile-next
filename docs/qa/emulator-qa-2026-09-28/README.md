@@ -22,7 +22,7 @@ and one Android home-screen capture were removed.
 | Item | Value |
 | --- | --- |
 | Branch / source | `codex/qa`, APK built from `ef4057591b70b29838f4e409ddd51064b5a8abfd` |
-| APK | `/home/eslam/Storage/tmp/oc-apk-share/opencode-mobile-2058.apk` |
+| APK | `/home/owner/Storage/tmp/oc-apk-share/opencode-mobile-2058.apk` |
 | App | `io.github.eslamasabry.opencode_mobile`, version `1.0.44`, code `2058` |
 | APK SHA-256 | `3a80b6424070be2c2af9d63aefbee1bd6266b2078715f745916cf49da814a8ef` |
 | Device | `OC_API35`, Android 15 / API 35, x86_64, emulator 36.2.12 |
@@ -31,7 +31,7 @@ and one Android home-screen capture were removed.
 | Host server | Official OpenCode v1.18.32 baseline binary; SHA-256 verified before extraction: `763af386ef88a8cab18df00fcf055690e5a55e31a7088beabe02307142a6adce` |
 | Host server endpoint | `http://127.0.0.1:4123` tunneled with `adb -s emulator-5554 reverse tcp:4123 tcp:4123` |
 | Host server PID | `1599956` (exact process stopped after QA; port 4123 no longer listening) |
-| Host project | Isolated scratch project at `/home/eslam/Storage/tmp/qa-opencode/project` |
+| Host project | Isolated scratch project at `/home/owner/Storage/tmp/qa-opencode/project` |
 
 Every device command used `adb -s emulator-5554`. No physical device was
 queried or changed. The direct `http://10.0.2.2:4123` address was rejected by
@@ -150,7 +150,7 @@ run; this deliverable records manual emulator QA only.
 | Item | Value |
 | --- | --- |
 | Branch / source | `codex/qa`, `e1d651047e6471cee7d377584cd75231bd23aefb` |
-| APK | `/home/eslam/Storage/tmp/oc-apk-share/opencode-mobile-2060.apk`, package `io.github.eslamasabry.opencode_mobile`, version code `2060` |
+| APK | `/home/owner/Storage/tmp/oc-apk-share/opencode-mobile-2060.apk`, package `io.github.eslamasabry.opencode_mobile`, version code `2060` |
 | APK SHA-256 | `61e158a8bc868f70c6300301b58c1dd04cb6571ac53b21ae453b2fdf37bd779c` |
 | Install | `adb -s emulator-5554 install -r` succeeded; the old package was present before update and the saved “Quick check-in” conversation remained available. |
 | Emulator | `OC_API35`, Android 15 / API 35, x86_64, 1080×2400; tried at 4096 MB / 4 cores, then 2048 MB / 2 cores, then returned to 4096 MB / 4 cores. |

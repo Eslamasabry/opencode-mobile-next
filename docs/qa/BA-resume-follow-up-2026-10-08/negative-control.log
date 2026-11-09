@@ -1,4 +1,4 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart
 00:00 +0: (setUpAll)
 00:00 +0: first helper 0.9.2 refreshes arm64 Claude capability rows
 00:00 +0 -1: first helper 0.9.2 refreshes arm64 Claude capability rows [E]
@@ -35,7 +35,7 @@ Expected: true
   Actual: <false>
 
 When the exception was thrown, this was the stack:
-#4      _phoneCapabilityRefreshTests.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_capability_refresh_tests.dart:110:9)
+#4      _phoneCapabilityRefreshTests.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/support/phone_agents_capability_refresh_tests.dart:110:9)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -45,7 +45,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/support/phone_agents_capability_refresh_tests.dart line 110
+  file:///home/owner/Storage/Code/oc_app-sol-ba/test/support/phone_agents_capability_refresh_tests.dart line 110
 The test description was:
   first helper retry publishes resume without another screen read
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -57,7 +57,7 @@ The test description was:
 00:00 +1 -4: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: first helper 0.9.2 refreshes arm64 Claude capability rows
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: first helper 0.9.3 refreshes arm64 Claude capability rows
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: first helper capability scan rechecks the actual phone gate
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: first helper retry publishes resume without another screen read
+  /home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: first helper 0.9.2 refreshes arm64 Claude capability rows
+  /home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: first helper 0.9.3 refreshes arm64 Claude capability rows
+  /home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: first helper capability scan rechecks the actual phone gate
+  /home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_controller_test.dart: first helper retry publishes resume without another screen read

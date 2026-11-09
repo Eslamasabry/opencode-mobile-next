@@ -73,7 +73,7 @@ class TelemetryServiceTest {
     fun `B-190-002 unknown values, extra keys and free text are dropped for every new event`() {
         val hostile =
             listOf(
-                "a free text sentence", "/data/user/0/app/files", "vps.example.net", "100.126.15.6",
+                "a free text sentence", "/data/user/0/app/files", "vps.example.net", "100.100.100.100",
                 "https://host/x?token=1", "x".repeat(60), "", "<>", "500-2001", 42, null,
             )
         for (event in newEvents) {

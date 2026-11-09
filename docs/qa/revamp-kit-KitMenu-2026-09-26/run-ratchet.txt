@@ -57,42 +57,42 @@ Downloading packages...
 Got dependencies!
 54 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G1: modal and toast entry points live in the kit
-00:00 +1: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G15: no width literals outside the kit
-00:00 +2: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G16: every UI component comes from the kit
-00:00 +3: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G2: copy, haptics, links and motion go through the kit
-00:00 +4: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G7: layout is directional and bidi marks come from KitBidi
-00:00 +5: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G15 inside the kit: only kit_layout.dart owns widths
-00:00 +6: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G17 colour: every colour comes from a ThemeRoles role
-00:00 +7: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G21 look and motion: numbers and effects come from the kit
-00:00 +8: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G48 drafts: multiline input in a kit sheet keeps a draft
-00:00 +9: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: allowlists never grow (KIT-5)
-00:00 +10: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: allowlist keys are exact paths or folders under lib/
-00:00 +11: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: every G2/G7/G15x/G17/G21/G48 row is named once and has a reason
-00:00 +12: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: every allowlist entry gives a real reason
-00:00 +13: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: the Flutter widget catalogue exists and is non-trivial
-00:00 +14: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G1 matches showDialog<T>( but not showKitDialog( or a comment
-00:00 +15: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) SnackBar( does not count showSnackBar( or KitSnackBar(
-00:00 +16: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G16 counts real widget constructions, not static members or app classes
-00:00 +17: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G15 counts a width compared to a literal, not BoxConstraints(maxWidth: n)
-00:00 +18: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G2 counts uses of an old API, not its declaration
-00:00 +19: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G2 counts motion literals and seams, not KitMotion names
-00:00 +20: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings SEC-1: launchUrl in the kit is absolute with no allowlist
-00:00 +21: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G7 counts left/right layout, not the directional forms
-00:00 +22: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G7 is absolute in the kit, forced-LTR parts may align left
-00:00 +23: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G15x counts breakpoints and layout widths, not guards or gaps
-00:00 +24: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G17 counts literal colours and theme reads, not transparent
-00:00 +25: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G21 counts look literals the way the rulebook writes them
-00:00 +26: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G21 LOOK-21 in the kit: every stroke width comes from KitTokens
-00:00 +27: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G21 metal/chrome reads identifiers and file names
-00:00 +28: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G48 flags a sheet with a multiline field and no draft
-00:00 +29: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G17 and G21 also scan Flutter UI code outside lib/ui/
-00:00 +30: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings theme files, allowlist keys and scopes resolve as documented
-00:00 +31: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings KIT-5: an allowlist key the committed set lacks fails
-00:00 +32: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/l10n_coverage_test.dart
-00:00 +32: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/l10n_coverage_test.dart: hardcoded string detector
-00:00 +33: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/l10n_coverage_test.dart: no file gained hardcoded UI strings
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G1: modal and toast entry points live in the kit
+00:00 +1: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G15: no width literals outside the kit
+00:00 +2: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G16: every UI component comes from the kit
+00:00 +3: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G2: copy, haptics, links and motion go through the kit
+00:00 +4: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G7: layout is directional and bidi marks come from KitBidi
+00:00 +5: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G15 inside the kit: only kit_layout.dart owns widths
+00:00 +6: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G17 colour: every colour comes from a ThemeRoles role
+00:00 +7: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G21 look and motion: numbers and effects come from the kit
+00:00 +8: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G48 drafts: multiline input in a kit sheet keeps a draft
+00:00 +9: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: allowlists never grow (KIT-5)
+00:00 +10: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: allowlist keys are exact paths or folders under lib/
+00:00 +11: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: every G2/G7/G15x/G17/G21/G48 row is named once and has a reason
+00:00 +12: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: every allowlist entry gives a real reason
+00:00 +13: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: the Flutter widget catalogue exists and is non-trivial
+00:00 +14: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G1 matches showDialog<T>( but not showKitDialog( or a comment
+00:00 +15: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) SnackBar( does not count showSnackBar( or KitSnackBar(
+00:00 +16: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G16 counts real widget constructions, not static members or app classes
+00:00 +17: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G15 counts a width compared to a literal, not BoxConstraints(maxWidth: n)
+00:00 +18: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G2 counts uses of an old API, not its declaration
+00:00 +19: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G2 counts motion literals and seams, not KitMotion names
+00:00 +20: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings SEC-1: launchUrl in the kit is absolute with no allowlist
+00:00 +21: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G7 counts left/right layout, not the directional forms
+00:00 +22: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G7 is absolute in the kit, forced-LTR parts may align left
+00:00 +23: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G15x counts breakpoints and layout widths, not guards or gaps
+00:00 +24: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G17 counts literal colours and theme reads, not transparent
+00:00 +25: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G21 counts look literals the way the rulebook writes them
+00:00 +26: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G21 LOOK-21 in the kit: every stroke width comes from KitTokens
+00:00 +27: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G21 metal/chrome reads identifiers and file names
+00:00 +28: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G48 flags a sheet with a multiline field and no draft
+00:00 +29: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G17 and G21 also scan Flutter UI code outside lib/ui/
+00:00 +30: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings theme files, allowlist keys and scopes resolve as documented
+00:00 +31: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings KIT-5: an allowlist key the committed set lacks fails
+00:00 +32: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/l10n_coverage_test.dart
+00:00 +32: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/l10n_coverage_test.dart: hardcoded string detector
+00:00 +33: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/l10n_coverage_test.dart: no file gained hardcoded UI strings
 l10n: these files improved; lower their baseline in test/l10n_coverage_test.dart:
   lib/ui/screens/app_diagnostics_screen.dart: 1 (baseline 12)
   lib/ui/screens/chat_screen.dart: 1 (baseline 27)
@@ -158,26 +158,26 @@ l10n: these files improved; lower their baseline in test/l10n_coverage_test.dart
   lib/ui/widgets/tool_card.dart: 0 (baseline 7)
   lib/ui/widgets/transcript_display_toggles.dart: 0 (baseline 2)
   lib/voice/notices.dart: 0 (baseline 1)
-00:00 +34: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart
-00:02 +34: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: the label rule separates labels from sentences
-00:02 +35: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: action labels use the glossary word, not a banned synonym
-00:02 +36: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: every allow-listed key still needs its exemption
-00:02 +37: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: the noun rule matches standalone words only
-00:02 +38: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: labels say conversation, not session or chat
-00:02 +39: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: the engine-word rule catches Gas City terms, not plain words
-00:02 +40: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: AI Team rows and cards use the person's words, not the engine's
-00:02 +41: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: every allow-listed engine key is still there and still needs it
-00:02 +42: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: every allow-listed noun key still needs its exemption
-00:02 +43: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: G11 ICU messages expand to their plain wordings
-00:02 +44: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: G11 confirm titles and labels are checked through wrappers
-00:02 +45: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: G11 confirmation titles ask and labels name the act (COPY-9)
-00:02 +46: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: G11 the contradiction rule finds both halves of a pair
-00:02 +47: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: G11 the contradiction scan skips text that is never rendered
-00:02 +48: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: G11 no text says two contradicting states at once (COPY-17)
-00:02 +49: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: G11 every allow-listed contradiction key still needs it
-00:02 +50: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: G11 the technical-word rule finds engine words, ports, paths and versions
-00:02 +51: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: G11 technical words only in keys described as Technical: or Field example: (COPY-11)
-00:02 +52: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: G28 the glossary extension finds each pattern
-00:02 +53: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: G28 every allow-listed product key still needs it
-00:02 +54: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: G28 labels and copy follow the glossary (COPY-6–8, COPY-10, COPY-12, COPY-21, LOOK-15)
+00:00 +34: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart
+00:02 +34: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: the label rule separates labels from sentences
+00:02 +35: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: action labels use the glossary word, not a banned synonym
+00:02 +36: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: every allow-listed key still needs its exemption
+00:02 +37: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: the noun rule matches standalone words only
+00:02 +38: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: labels say conversation, not session or chat
+00:02 +39: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: the engine-word rule catches Gas City terms, not plain words
+00:02 +40: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: AI Team rows and cards use the person's words, not the engine's
+00:02 +41: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: every allow-listed engine key is still there and still needs it
+00:02 +42: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: every allow-listed noun key still needs its exemption
+00:02 +43: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: G11 ICU messages expand to their plain wordings
+00:02 +44: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: G11 confirm titles and labels are checked through wrappers
+00:02 +45: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: G11 confirmation titles ask and labels name the act (COPY-9)
+00:02 +46: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: G11 the contradiction rule finds both halves of a pair
+00:02 +47: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: G11 the contradiction scan skips text that is never rendered
+00:02 +48: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: G11 no text says two contradicting states at once (COPY-17)
+00:02 +49: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: G11 every allow-listed contradiction key still needs it
+00:02 +50: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: G11 the technical-word rule finds engine words, ports, paths and versions
+00:02 +51: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: G11 technical words only in keys described as Technical: or Field example: (COPY-11)
+00:02 +52: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: G28 the glossary extension finds each pattern
+00:02 +53: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: G28 every allow-listed product key still needs it
+00:02 +54: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/ui_glossary_test.dart: G28 labels and copy follow the glossary (COPY-6–8, COPY-10, COPY-12, COPY-21, LOOK-15)
 00:02 +55: All tests passed!

@@ -4,7 +4,7 @@ Written 2026-11-01. Binding inputs: `01-architecture-decision.md` (the ADR; it w
 working rules), `03` (modules and seams), `05` (stored formats), `06` (kit), `07` (screens). Detail sources:
 `../map/media-voice.md` (features `MEDIA-VOICE-01…50`), `../research/media.md`, the catalog rows `B-MEDIA-001…034` and
 the 41 rows of other areas that cite media tests (§20), and the read-only Flutter tree
-`/home/eslam/Storage/Code/wt/oc_app-batch1` plus the freeze branch `int/freeze-2026-11-01` (tip `fc5c1e78f`) for the
+`/home/owner/Storage/Code/wt/oc_app-batch1` plus the freeze branch `int/freeze-2026-11-01` (tip `fc5c1e78f`) for the
 items merged after the catalog (clipboard image paste, Wi-Fi share of chat links and phone files).
 
 Tags, same as the ADR: **[V]** checked today against a primary source (Maven metadata, published sources, official
@@ -2466,7 +2466,7 @@ Nothing in this section uses an Android type in commonMain; the nightly iOS klib
 - Research: `../research/media.md` (§0–§14), `../research/testing-perf.md` (§10 size, download module).
 - Catalog: `../catalog/BEHAVIORS.md` (MEDIA rows), `behaviors.jsonl` (sources of every row in §20), `e2e-flows.md`
   (E2E-12, 13, 14).
-- Flutter source (read-only): `/home/eslam/Storage/Code/wt/oc_app-batch1` — `lib/voice/*` (silence, controller,
+- Flutter source (read-only): `/home/owner/Storage/Code/wt/oc_app-batch1` — `lib/voice/*` (silence, controller,
   model_manifest, natural_voice, natural_synthesis), `lib/ui/kit/chat/kit_mic_hold.dart`, `lib/domain/office_text.dart`,
   `test/voice_downloader_test.dart:235-278`, `test/setup_voice_component_test.dart:100-170`,
   `android/app/src/main/AndroidManifest.xml`; freeze branch `int/freeze-2026-11-01` commits `9ac39cd68`, `92ed57977`

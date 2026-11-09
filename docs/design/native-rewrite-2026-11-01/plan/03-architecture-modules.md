@@ -3870,7 +3870,7 @@ Every other choice here is technical and reversible inside slice 0 (§0.2, §22.
 
 ## 25. Sources
 
-- Binding decision: `/home/eslam/Storage/Code/wt/native-plan/plan/01-architecture-decision.md` (§1–§12).
+- Binding decision: `/home/owner/Storage/Code/wt/native-plan/plan/01-architecture-decision.md` (§1–§12).
 - Research: `../research/architecture-stacks.md` (§3 DI, §4 state, §5 navigation, §7 errors, §8 concurrency, §9 logging,
   §12 sketches), `../research/kmp-cmp-status.md` (§4, §5, §6, §8, §11, §12), `../research/network-data.md` (§0, §2.2,
   §3.3, §4.3, §6.2, §7.2), `../research/testing-perf.md` (§0, §3.2, §5.4, §9.4, §10.1, §11), `../research/motion-native.md`
@@ -3884,7 +3884,7 @@ Every other choice here is technical and reversible inside slice 0 (§0.2, §22.
   `lib/domain/product_failure.dart`, `lib/platform/platform_capabilities.dart`, `lib/diagnostics/{app_diagnostics,
   crash_diagnostics,report_problem,perf_trace,failed_job_report}.dart`, `android/app/build.gradle.kts` (168 Kotlin
   files in one package; 26 reference `R`; Termux JitPack exclusive repository; `useLegacyPackaging`).
-- Demo: `/home/eslam/Storage/Code/kmp-demo` (`settings.gradle.kts`, `gradle/libs.versions.toml`, `gradle.properties`,
+- Demo: `/home/owner/Storage/Code/kmp-demo` (`settings.gradle.kts`, `gradle/libs.versions.toml`, `gradle.properties`,
   `shared/build.gradle.kts`, `androidApp/build.gradle.kts`).
 - Owner memory: `dev-freeze-native-rewrite-2026-11-01`, `pc-capacity-ceiling`, `agent-format-churn`,
   `codex-backend-claude-frontend`, `no-raw-errors-rule`, `design-standard-rule`, `component-max-width-rule`,

@@ -30,7 +30,7 @@ uploads, arbitrary exception messages or stack-trace collection.
 Pinned toolchain:
 
 ```sh
-FLUTTER=/home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter
+FLUTTER=/home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter
 OC_TEST_SLOTS=1 tool/qa/machine_lock.sh test -- "$FLUTTER" test --no-pub --concurrency=1 \
   test/crash_diagnostics_test.dart test/app_diagnostics_test.dart
 ```

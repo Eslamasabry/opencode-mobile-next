@@ -1,6 +1,6 @@
 {
  "name": "bright-lights",
- "path": "/home/eslam/Storage/Code/gascity-spike/city2",
+ "path": "/home/owner/Storage/Code/gascity-spike/city2",
  "version": "1.4.1",
  "uptime_sec": 1249,
  "suspended": false,
@@ -27,7 +27,7 @@
   "total": 0
  },
  "store_health": {
-  "path": "/home/eslam/Storage/Code/gascity-spike/city2/.beads/dolt",
+  "path": "/home/owner/Storage/Code/gascity-spike/city2/.beads/dolt",
   "size_bytes": 84652666,
   "live_rows": 475,
   "ratio_mb_per_row": 0.17821613894736843,
@@ -180,7 +180,7 @@
  "rig_details": [
   {
    "name": "ocproof",
-   "path": "/home/eslam/Storage/Code/oc-bg-proof",
+   "path": "/home/owner/Storage/Code/oc-bg-proof",
    "suspended": false
   }
  ],

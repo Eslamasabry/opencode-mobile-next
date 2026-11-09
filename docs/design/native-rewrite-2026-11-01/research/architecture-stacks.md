@@ -12,9 +12,9 @@ Labels (same as the companion file):
 - **[S]** secondary source: a blog post, community post or aggregator.
 - **[U]** unverified, or my projection. Check it in slice 0 before relying on it.
 
-Internal evidence: the area maps in `/home/eslam/Storage/Code/wt/native-plan/map/*.md`, the behaviour catalog in
-`/home/eslam/Storage/Code/wt/native-plan/catalog/raw-*.jsonl` (1,574 behaviour rows condensed from the 6,663 logic tests),
-the demo `/home/eslam/Storage/Code/kmp-demo`, and the Flutter source `/home/eslam/Storage/Code/wt/oc_app-batch1` (read-only).
+Internal evidence: the area maps in `/home/owner/Storage/Code/wt/native-plan/map/*.md`, the behaviour catalog in
+`/home/owner/Storage/Code/wt/native-plan/catalog/raw-*.jsonl` (1,574 behaviour rows condensed from the 6,663 logic tests),
+the demo `/home/owner/Storage/Code/kmp-demo`, and the Flutter source `/home/owner/Storage/Code/wt/oc_app-batch1` (read-only).
 
 ---
 
@@ -818,9 +818,9 @@ Libraries:
 
 Internal:
 
-- `/home/eslam/Storage/Code/wt/native-plan/research/kmp-cmp-status.md` (toolchain, Nav3/M3/AGP 9 details)
-- `/home/eslam/Storage/Code/wt/native-plan/map/state-data.md` §1, §2, §3, §5, §14
-- `/home/eslam/Storage/Code/wt/native-plan/map/screens-nav.md` §2–§5, §11
-- `/home/eslam/Storage/Code/wt/native-plan/map/chat-genui.md` (C1 coalescing, perf notes), `protocols.md` (lines 271–306, 452–528), `packages-build.md` (R8 lessons)
-- `/home/eslam/Storage/Code/wt/native-plan/catalog/raw-*.jsonl` (level counts in §1 and §10)
-- `/home/eslam/Storage/Code/kmp-demo` (`App.kt` predictive-back latch, `state/ChatModel.kt` per-part state, `gradle/libs.versions.toml`)
+- `/home/owner/Storage/Code/wt/native-plan/research/kmp-cmp-status.md` (toolchain, Nav3/M3/AGP 9 details)
+- `/home/owner/Storage/Code/wt/native-plan/map/state-data.md` §1, §2, §3, §5, §14
+- `/home/owner/Storage/Code/wt/native-plan/map/screens-nav.md` §2–§5, §11
+- `/home/owner/Storage/Code/wt/native-plan/map/chat-genui.md` (C1 coalescing, perf notes), `protocols.md` (lines 271–306, 452–528), `packages-build.md` (R8 lessons)
+- `/home/owner/Storage/Code/wt/native-plan/catalog/raw-*.jsonl` (level counts in §1 and §10)
+- `/home/owner/Storage/Code/kmp-demo` (`App.kt` predictive-back latch, `state/ChatModel.kt` per-part state, `gradle/libs.versions.toml`)

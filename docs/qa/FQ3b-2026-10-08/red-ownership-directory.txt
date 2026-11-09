@@ -2,7 +2,7 @@ Guard removal: ownership-directory
 Expected nonzero test exit; actual exit: 1
 Source restored immediately after execution.
 
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bc/test/fq3_session_ownership_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app-sol-bc/test/fq3_session_ownership_test.dart
 00:00 +0: cleanup retains durable ID when exact session scope disagrees
 00:00 +0 -1: cleanup retains durable ID when exact session scope disagrees [E]
   Expected: throws <Instance of 'ProbeFailure'> with `fixed failure code`: 'ownership_session_scope_mismatch'
@@ -19,4 +19,4 @@ Source restored immediately after execution.
 00:00 +0 -1: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app-sol-bc/test/fq3_session_ownership_test.dart: cleanup retains durable ID when exact session scope disagrees
+  /home/owner/Storage/Code/oc_app-sol-bc/test/fq3_session_ownership_test.dart: cleanup retains durable ID when exact session scope disagrees

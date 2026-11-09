@@ -14,7 +14,7 @@ The switch launch now clears the old status until the matching manager snapshot 
 
 ## Verification
 
-Pinned Flutter 3.47.2: `/home/eslam/.shorebird/bin/cache/flutter/e16cf749ccaa38d7050335ff305def49b1c7c84c/bin/flutter`.
+Pinned Flutter 3.47.2: `/home/owner/.shorebird/bin/cache/flutter/e16cf749ccaa38d7050335ff305def49b1c7c84c/bin/flutter`.
 
 All checks ran serially in this worktree, after pinned `flutter pub get`:
 
@@ -28,7 +28,7 @@ The 106 final focused cases cover held dispatch hiding the previous elapsed cloc
 
 An initial UI run failed only because the new test used an obsolete action label; the selector was corrected to the current “Switch version” text. The exact regression and final affected file both passed afterward.
 
-Logs are saved outside the repository at `/home/eslam/Storage/Code/oc_app-ui-audit-20260909/oc2-setup/`: `progress-script-tests.log`, `progress-final-focused.log`, `progress-ui-clock-rerun.log`, and `progress-analyze.log`. The initial failure log is retained as `progress-ui-tests.log`.
+Logs are saved outside the repository at `/home/owner/Storage/Code/oc_app-ui-audit-20260909/oc2-setup/`: `progress-script-tests.log`, `progress-final-focused.log`, `progress-ui-clock-rerun.log`, and `progress-analyze.log`. The initial failure log is retained as `progress-ui-tests.log`.
 
 Status: implemented and verified by focused host/widget checks. Final integrated APK acknowledgement, output and clock validation remains coordinator-owned; this branch makes no new device verification claim. No new screenshot is required for unchanged layout and copy; the defect concerns operation timing and streamed output.
 

@@ -22,7 +22,7 @@ import threading
 import time
 
 REPO = Path(__file__).resolve().parents[2]
-DART = Path('/home/eslam/.shorebird/bin/cache/flutter/6e5e949520159b5ceb029598be37520cd433b046/bin/cache/dart-sdk/bin/dart')
+DART = Path(os.path.expanduser('~/.shorebird/bin/cache/flutter/6e5e949520159b5ceb029598be37520cd433b046/bin/cache/dart-sdk/bin/dart'))
 
 
 def lan_address():

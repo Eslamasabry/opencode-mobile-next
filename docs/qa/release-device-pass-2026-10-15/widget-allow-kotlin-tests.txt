@@ -236,13 +236,13 @@ need to be translated.
 > Task :package_info_plus:generateReleaseRFile
 
 > Task :android_file_picker:compileReleaseKotlin
-w: file:///home/eslam/.pub-cache/hosted/pub.dev/android_file_picker-1.1.0/android/src/main/kotlin/com/mr/flutter/plugin/filepicker/FilePickerDelegate.kt:79:89 Elvis operator (?:) always returns the left operand of non-nullable type 'Uri'.
-w: file:///home/eslam/.pub-cache/hosted/pub.dev/android_file_picker-1.1.0/android/src/main/kotlin/com/mr/flutter/plugin/filepicker/FilePickerPlugin.kt:151:49 Unnecessary safe call on a non-null receiver of type 'HashMap<*, *>'.
-w: file:///home/eslam/.pub-cache/hosted/pub.dev/android_file_picker-1.1.0/android/src/main/kotlin/com/mr/flutter/plugin/filepicker/FilePickerPlugin.kt:152:38 Unnecessary safe call on a non-null receiver of type 'HashMap<*, *>'.
-w: file:///home/eslam/.pub-cache/hosted/pub.dev/android_file_picker-1.1.0/android/src/main/kotlin/com/mr/flutter/plugin/filepicker/FilePickerPlugin.kt:153:60 Unnecessary safe call on a non-null receiver of type 'HashMap<*, *>'.
-w: file:///home/eslam/.pub-cache/hosted/pub.dev/android_file_picker-1.1.0/android/src/main/kotlin/com/mr/flutter/plugin/filepicker/FilePickerPlugin.kt:164:70 Unchecked cast of 'Any?' to 'ArrayList<String>?'.
-w: file:///home/eslam/.pub-cache/hosted/pub.dev/android_file_picker-1.1.0/android/src/main/kotlin/com/mr/flutter/plugin/filepicker/FileUtils.kt:623:45 'enum entry WEBP: Bitmap.CompressFormat' is deprecated. Deprecated in Java.
-w: file:///home/eslam/.pub-cache/hosted/pub.dev/android_file_picker-1.1.0/android/src/main/kotlin/com/mr/flutter/plugin/filepicker/FileUtils.kt:631:35 'enum entry WEBP: Bitmap.CompressFormat' is deprecated. Deprecated in Java.
+w: file:///home/owner/.pub-cache/hosted/pub.dev/android_file_picker-1.1.0/android/src/main/kotlin/com/mr/flutter/plugin/filepicker/FilePickerDelegate.kt:79:89 Elvis operator (?:) always returns the left operand of non-nullable type 'Uri'.
+w: file:///home/owner/.pub-cache/hosted/pub.dev/android_file_picker-1.1.0/android/src/main/kotlin/com/mr/flutter/plugin/filepicker/FilePickerPlugin.kt:151:49 Unnecessary safe call on a non-null receiver of type 'HashMap<*, *>'.
+w: file:///home/owner/.pub-cache/hosted/pub.dev/android_file_picker-1.1.0/android/src/main/kotlin/com/mr/flutter/plugin/filepicker/FilePickerPlugin.kt:152:38 Unnecessary safe call on a non-null receiver of type 'HashMap<*, *>'.
+w: file:///home/owner/.pub-cache/hosted/pub.dev/android_file_picker-1.1.0/android/src/main/kotlin/com/mr/flutter/plugin/filepicker/FilePickerPlugin.kt:153:60 Unnecessary safe call on a non-null receiver of type 'HashMap<*, *>'.
+w: file:///home/owner/.pub-cache/hosted/pub.dev/android_file_picker-1.1.0/android/src/main/kotlin/com/mr/flutter/plugin/filepicker/FilePickerPlugin.kt:164:70 Unchecked cast of 'Any?' to 'ArrayList<String>?'.
+w: file:///home/owner/.pub-cache/hosted/pub.dev/android_file_picker-1.1.0/android/src/main/kotlin/com/mr/flutter/plugin/filepicker/FileUtils.kt:623:45 'enum entry WEBP: Bitmap.CompressFormat' is deprecated. Deprecated in Java.
+w: file:///home/owner/.pub-cache/hosted/pub.dev/android_file_picker-1.1.0/android/src/main/kotlin/com/mr/flutter/plugin/filepicker/FileUtils.kt:631:35 'enum entry WEBP: Bitmap.CompressFormat' is deprecated. Deprecated in Java.
 
 > Task :flutter_timezone:compileReleaseKotlin
 > Task :dynamic_color:compileReleaseKotlin
@@ -355,71 +355,71 @@ w: file:///home/eslam/.pub-cache/hosted/pub.dev/android_file_picker-1.1.0/androi
 > Task :flutter_secure_storage:extractDeepLinksRelease
 
 > Task :android_file_picker:processReleaseManifest
-package="com.mr.flutter.plugin.filepicker" found in source AndroidManifest.xml: /home/eslam/.pub-cache/hosted/pub.dev/android_file_picker-1.1.0/android/src/main/AndroidManifest.xml.
+package="com.mr.flutter.plugin.filepicker" found in source AndroidManifest.xml: /home/owner/.pub-cache/hosted/pub.dev/android_file_picker-1.1.0/android/src/main/AndroidManifest.xml.
 Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
-Recommendation: remove package="com.mr.flutter.plugin.filepicker" from the source AndroidManifest.xml: /home/eslam/.pub-cache/hosted/pub.dev/android_file_picker-1.1.0/android/src/main/AndroidManifest.xml.
+Recommendation: remove package="com.mr.flutter.plugin.filepicker" from the source AndroidManifest.xml: /home/owner/.pub-cache/hosted/pub.dev/android_file_picker-1.1.0/android/src/main/AndroidManifest.xml.
 
 > Task :flutter_plugin_android_lifecycle:processReleaseManifest
-package="io.flutter.plugins.flutter_plugin_android_lifecycle" found in source AndroidManifest.xml: /home/eslam/.pub-cache/hosted/pub.dev/flutter_plugin_android_lifecycle-2.0.35/android/src/main/AndroidManifest.xml.
+package="io.flutter.plugins.flutter_plugin_android_lifecycle" found in source AndroidManifest.xml: /home/owner/.pub-cache/hosted/pub.dev/flutter_plugin_android_lifecycle-2.0.35/android/src/main/AndroidManifest.xml.
 Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
-Recommendation: remove package="io.flutter.plugins.flutter_plugin_android_lifecycle" from the source AndroidManifest.xml: /home/eslam/.pub-cache/hosted/pub.dev/flutter_plugin_android_lifecycle-2.0.35/android/src/main/AndroidManifest.xml.
+Recommendation: remove package="io.flutter.plugins.flutter_plugin_android_lifecycle" from the source AndroidManifest.xml: /home/owner/.pub-cache/hosted/pub.dev/flutter_plugin_android_lifecycle-2.0.35/android/src/main/AndroidManifest.xml.
 
 > Task :flutter_secure_storage:processReleaseManifest
 > Task :desktop_drop:processReleaseManifest
 > Task :flutter_timezone:extractDeepLinksRelease
 
 > Task :dynamic_color:processReleaseManifest
-package="io.material.plugins.dynamic_color" found in source AndroidManifest.xml: /home/eslam/.pub-cache/hosted/pub.dev/dynamic_color-1.9.0/android/src/main/AndroidManifest.xml.
+package="io.material.plugins.dynamic_color" found in source AndroidManifest.xml: /home/owner/.pub-cache/hosted/pub.dev/dynamic_color-1.9.0/android/src/main/AndroidManifest.xml.
 Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
-Recommendation: remove package="io.material.plugins.dynamic_color" from the source AndroidManifest.xml: /home/eslam/.pub-cache/hosted/pub.dev/dynamic_color-1.9.0/android/src/main/AndroidManifest.xml.
+Recommendation: remove package="io.material.plugins.dynamic_color" from the source AndroidManifest.xml: /home/owner/.pub-cache/hosted/pub.dev/dynamic_color-1.9.0/android/src/main/AndroidManifest.xml.
 
 > Task :flutter_timezone:processReleaseManifest
-package="net.wolverinebeach.flutter_timezone" found in source AndroidManifest.xml: /home/eslam/.pub-cache/hosted/pub.dev/flutter_timezone-5.1.0/android/src/main/AndroidManifest.xml.
+package="net.wolverinebeach.flutter_timezone" found in source AndroidManifest.xml: /home/owner/.pub-cache/hosted/pub.dev/flutter_timezone-5.1.0/android/src/main/AndroidManifest.xml.
 Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
-Recommendation: remove package="net.wolverinebeach.flutter_timezone" from the source AndroidManifest.xml: /home/eslam/.pub-cache/hosted/pub.dev/flutter_timezone-5.1.0/android/src/main/AndroidManifest.xml.
+Recommendation: remove package="net.wolverinebeach.flutter_timezone" from the source AndroidManifest.xml: /home/owner/.pub-cache/hosted/pub.dev/flutter_timezone-5.1.0/android/src/main/AndroidManifest.xml.
 
 > Task :image_picker_android:extractDeepLinksRelease
 > Task :jni:extractDeepLinksRelease
 > Task :jni_flutter:extractDeepLinksRelease
 
 > Task :image_picker_android:processReleaseManifest
-package="io.flutter.plugins.imagepicker" found in source AndroidManifest.xml: /home/eslam/.pub-cache/hosted/pub.dev/image_picker_android-0.8.13+22/android/src/main/AndroidManifest.xml.
+package="io.flutter.plugins.imagepicker" found in source AndroidManifest.xml: /home/owner/.pub-cache/hosted/pub.dev/image_picker_android-0.8.13+22/android/src/main/AndroidManifest.xml.
 Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
-Recommendation: remove package="io.flutter.plugins.imagepicker" from the source AndroidManifest.xml: /home/eslam/.pub-cache/hosted/pub.dev/image_picker_android-0.8.13+22/android/src/main/AndroidManifest.xml.
+Recommendation: remove package="io.flutter.plugins.imagepicker" from the source AndroidManifest.xml: /home/owner/.pub-cache/hosted/pub.dev/image_picker_android-0.8.13+22/android/src/main/AndroidManifest.xml.
 
 > Task :jni:processReleaseManifest
-package="com.github.dart_lang.jni" found in source AndroidManifest.xml: /home/eslam/.pub-cache/hosted/pub.dev/jni-1.0.3/android/src/main/AndroidManifest.xml.
+package="com.github.dart_lang.jni" found in source AndroidManifest.xml: /home/owner/.pub-cache/hosted/pub.dev/jni-1.0.3/android/src/main/AndroidManifest.xml.
 Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
-Recommendation: remove package="com.github.dart_lang.jni" from the source AndroidManifest.xml: /home/eslam/.pub-cache/hosted/pub.dev/jni-1.0.3/android/src/main/AndroidManifest.xml.
+Recommendation: remove package="com.github.dart_lang.jni" from the source AndroidManifest.xml: /home/owner/.pub-cache/hosted/pub.dev/jni-1.0.3/android/src/main/AndroidManifest.xml.
 
 > Task :jni_flutter:processReleaseManifest
-package="com.github.dart_lang.jni_flutter" found in source AndroidManifest.xml: /home/eslam/.pub-cache/hosted/pub.dev/jni_flutter-1.0.2/android/src/main/AndroidManifest.xml.
+package="com.github.dart_lang.jni_flutter" found in source AndroidManifest.xml: /home/owner/.pub-cache/hosted/pub.dev/jni_flutter-1.0.2/android/src/main/AndroidManifest.xml.
 Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
-Recommendation: remove package="com.github.dart_lang.jni_flutter" from the source AndroidManifest.xml: /home/eslam/.pub-cache/hosted/pub.dev/jni_flutter-1.0.2/android/src/main/AndroidManifest.xml.
+Recommendation: remove package="com.github.dart_lang.jni_flutter" from the source AndroidManifest.xml: /home/owner/.pub-cache/hosted/pub.dev/jni_flutter-1.0.2/android/src/main/AndroidManifest.xml.
 
 > Task :local_auth_android:extractDeepLinksRelease
 > Task :mobile_scanner:extractDeepLinksRelease
 
 > Task :local_auth_android:processReleaseManifest
-package="io.flutter.plugins.localauth" found in source AndroidManifest.xml: /home/eslam/.pub-cache/hosted/pub.dev/local_auth_android-2.2.0/android/src/main/AndroidManifest.xml.
+package="io.flutter.plugins.localauth" found in source AndroidManifest.xml: /home/owner/.pub-cache/hosted/pub.dev/local_auth_android-2.2.0/android/src/main/AndroidManifest.xml.
 Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
-Recommendation: remove package="io.flutter.plugins.localauth" from the source AndroidManifest.xml: /home/eslam/.pub-cache/hosted/pub.dev/local_auth_android-2.2.0/android/src/main/AndroidManifest.xml.
+Recommendation: remove package="io.flutter.plugins.localauth" from the source AndroidManifest.xml: /home/owner/.pub-cache/hosted/pub.dev/local_auth_android-2.2.0/android/src/main/AndroidManifest.xml.
 
 > Task :package_info_plus:extractDeepLinksRelease
 > Task :record_android:extractDeepLinksRelease
 
 > Task :package_info_plus:processReleaseManifest
-package="dev.fluttercommunity.plus.packageinfo" found in source AndroidManifest.xml: /home/eslam/.pub-cache/hosted/pub.dev/package_info_plus-10.2.1/android/src/main/AndroidManifest.xml.
+package="dev.fluttercommunity.plus.packageinfo" found in source AndroidManifest.xml: /home/owner/.pub-cache/hosted/pub.dev/package_info_plus-10.2.1/android/src/main/AndroidManifest.xml.
 Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
-Recommendation: remove package="dev.fluttercommunity.plus.packageinfo" from the source AndroidManifest.xml: /home/eslam/.pub-cache/hosted/pub.dev/package_info_plus-10.2.1/android/src/main/AndroidManifest.xml.
+Recommendation: remove package="dev.fluttercommunity.plus.packageinfo" from the source AndroidManifest.xml: /home/owner/.pub-cache/hosted/pub.dev/package_info_plus-10.2.1/android/src/main/AndroidManifest.xml.
 
 > Task :shared_preferences_android:extractDeepLinksRelease
 > Task :record_android:processReleaseManifest
 
 > Task :shared_preferences_android:processReleaseManifest
-package="io.flutter.plugins.sharedpreferences" found in source AndroidManifest.xml: /home/eslam/.pub-cache/hosted/pub.dev/shared_preferences_android-2.4.27/android/src/main/AndroidManifest.xml.
+package="io.flutter.plugins.sharedpreferences" found in source AndroidManifest.xml: /home/owner/.pub-cache/hosted/pub.dev/shared_preferences_android-2.4.27/android/src/main/AndroidManifest.xml.
 Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
-Recommendation: remove package="io.flutter.plugins.sharedpreferences" from the source AndroidManifest.xml: /home/eslam/.pub-cache/hosted/pub.dev/shared_preferences_android-2.4.27/android/src/main/AndroidManifest.xml.
+Recommendation: remove package="io.flutter.plugins.sharedpreferences" from the source AndroidManifest.xml: /home/owner/.pub-cache/hosted/pub.dev/shared_preferences_android-2.4.27/android/src/main/AndroidManifest.xml.
 
 > Task :sherpa_onnx_android_arm64:extractDeepLinksRelease
 > Task :mobile_scanner:processReleaseManifest
@@ -427,40 +427,40 @@ Recommendation: remove package="io.flutter.plugins.sharedpreferences" from the s
 > Task :sherpa_onnx_android_armeabi:extractDeepLinksRelease
 
 > Task :sherpa_onnx_android_arm64:processReleaseManifest
-package="com.k2fsa.sherpa.onnx.arm64" found in source AndroidManifest.xml: /home/eslam/.pub-cache/hosted/pub.dev/sherpa_onnx_android_arm64-1.13.7/android/src/main/AndroidManifest.xml.
+package="com.k2fsa.sherpa.onnx.arm64" found in source AndroidManifest.xml: /home/owner/.pub-cache/hosted/pub.dev/sherpa_onnx_android_arm64-1.13.7/android/src/main/AndroidManifest.xml.
 Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
-Recommendation: remove package="com.k2fsa.sherpa.onnx.arm64" from the source AndroidManifest.xml: /home/eslam/.pub-cache/hosted/pub.dev/sherpa_onnx_android_arm64-1.13.7/android/src/main/AndroidManifest.xml.
+Recommendation: remove package="com.k2fsa.sherpa.onnx.arm64" from the source AndroidManifest.xml: /home/owner/.pub-cache/hosted/pub.dev/sherpa_onnx_android_arm64-1.13.7/android/src/main/AndroidManifest.xml.
 
 > Task :sherpa_onnx_android_armeabi:processReleaseManifest
-package="com.k2fsa.sherpa.onnx.armeabi" found in source AndroidManifest.xml: /home/eslam/.pub-cache/hosted/pub.dev/sherpa_onnx_android_armeabi-1.13.7/android/src/main/AndroidManifest.xml.
+package="com.k2fsa.sherpa.onnx.armeabi" found in source AndroidManifest.xml: /home/owner/.pub-cache/hosted/pub.dev/sherpa_onnx_android_armeabi-1.13.7/android/src/main/AndroidManifest.xml.
 Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
-Recommendation: remove package="com.k2fsa.sherpa.onnx.armeabi" from the source AndroidManifest.xml: /home/eslam/.pub-cache/hosted/pub.dev/sherpa_onnx_android_armeabi-1.13.7/android/src/main/AndroidManifest.xml.
+Recommendation: remove package="com.k2fsa.sherpa.onnx.armeabi" from the source AndroidManifest.xml: /home/owner/.pub-cache/hosted/pub.dev/sherpa_onnx_android_armeabi-1.13.7/android/src/main/AndroidManifest.xml.
 
 > Task :sherpa_onnx_android_x86:extractDeepLinksRelease
 > Task :sherpa_onnx_android_x86_64:extractDeepLinksRelease
 
 > Task :sherpa_onnx_android_x86:processReleaseManifest
-package="com.k2fsa.sherpa.onnx.x86" found in source AndroidManifest.xml: /home/eslam/.pub-cache/hosted/pub.dev/sherpa_onnx_android_x86-1.13.7/android/src/main/AndroidManifest.xml.
+package="com.k2fsa.sherpa.onnx.x86" found in source AndroidManifest.xml: /home/owner/.pub-cache/hosted/pub.dev/sherpa_onnx_android_x86-1.13.7/android/src/main/AndroidManifest.xml.
 Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
-Recommendation: remove package="com.k2fsa.sherpa.onnx.x86" from the source AndroidManifest.xml: /home/eslam/.pub-cache/hosted/pub.dev/sherpa_onnx_android_x86-1.13.7/android/src/main/AndroidManifest.xml.
+Recommendation: remove package="com.k2fsa.sherpa.onnx.x86" from the source AndroidManifest.xml: /home/owner/.pub-cache/hosted/pub.dev/sherpa_onnx_android_x86-1.13.7/android/src/main/AndroidManifest.xml.
 
 > Task :sherpa_onnx_android_x86_64:processReleaseManifest
-package="com.k2fsa.sherpa.onnx.x86_64" found in source AndroidManifest.xml: /home/eslam/.pub-cache/hosted/pub.dev/sherpa_onnx_android_x86_64-1.13.7/android/src/main/AndroidManifest.xml.
+package="com.k2fsa.sherpa.onnx.x86_64" found in source AndroidManifest.xml: /home/owner/.pub-cache/hosted/pub.dev/sherpa_onnx_android_x86_64-1.13.7/android/src/main/AndroidManifest.xml.
 Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
-Recommendation: remove package="com.k2fsa.sherpa.onnx.x86_64" from the source AndroidManifest.xml: /home/eslam/.pub-cache/hosted/pub.dev/sherpa_onnx_android_x86_64-1.13.7/android/src/main/AndroidManifest.xml.
+Recommendation: remove package="com.k2fsa.sherpa.onnx.x86_64" from the source AndroidManifest.xml: /home/owner/.pub-cache/hosted/pub.dev/sherpa_onnx_android_x86_64-1.13.7/android/src/main/AndroidManifest.xml.
 
 > Task :url_launcher_android:extractDeepLinksRelease
 > Task :desktop_drop:mapReleaseSourceSetPaths
 
 > Task :url_launcher_android:processReleaseManifest
-package="io.flutter.plugins.urllauncher" found in source AndroidManifest.xml: /home/eslam/.pub-cache/hosted/pub.dev/url_launcher_android-6.3.32/android/src/main/AndroidManifest.xml.
+package="io.flutter.plugins.urllauncher" found in source AndroidManifest.xml: /home/owner/.pub-cache/hosted/pub.dev/url_launcher_android-6.3.32/android/src/main/AndroidManifest.xml.
 Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
-Recommendation: remove package="io.flutter.plugins.urllauncher" from the source AndroidManifest.xml: /home/eslam/.pub-cache/hosted/pub.dev/url_launcher_android-6.3.32/android/src/main/AndroidManifest.xml.
+Recommendation: remove package="io.flutter.plugins.urllauncher" from the source AndroidManifest.xml: /home/owner/.pub-cache/hosted/pub.dev/url_launcher_android-6.3.32/android/src/main/AndroidManifest.xml.
 
 > Task :desktop_drop:compileReleaseLibraryResources
 
 > Task :shared_preferences_android:compileReleaseKotlin
-w: file:///home/eslam/.pub-cache/hosted/pub.dev/shared_preferences_android-2.4.27/android/src/main/kotlin/io/flutter/plugins/sharedpreferences/SharedPreferencesPlugin.kt:450:52 Unnecessary non-null assertion (!!) on a non-null receiver of type 'String'.
+w: file:///home/owner/.pub-cache/hosted/pub.dev/shared_preferences_android-2.4.27/android/src/main/kotlin/io/flutter/plugins/sharedpreferences/SharedPreferencesPlugin.kt:450:52 Unnecessary non-null assertion (!!) on a non-null receiver of type 'String'.
 
 > Task :app:processReleaseMainManifest
 > Task :shared_preferences_android:compileReleaseJavaWithJavac NO-SOURCE
@@ -546,31 +546,31 @@ w: file:///home/eslam/.pub-cache/hosted/pub.dev/shared_preferences_android-2.4.2
 > Task :app:processReleaseResources
 
 > Task :app:compileReleaseKotlin
-w: file:///home/eslam/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/AppLifecycle.kt:119:23 Condition is always 'false'.
-w: file:///home/eslam/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinInstallerProducerQaService.kt:275:51 Unnecessary non-null assertion (!!) on a non-null receiver of type 'String'.
-w: file:///home/eslam/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinInstallerProducerQaService.kt:486:24 'fun get(p0: String!): Any?' is deprecated. Deprecated in Java.
-w: file:///home/eslam/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinLinux.kt:523:60 Unnecessary non-null assertion (!!) on a non-null receiver of type 'RuntimeProcessIdentity'.
-w: file:///home/eslam/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinLinux.kt:1704:65 Unnecessary non-null assertion (!!) on a non-null receiver of type 'BuiltinLinux.Service'.
-w: file:///home/eslam/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinLinux.kt:1714:69 Unnecessary non-null assertion (!!) on a non-null receiver of type 'BuiltinLinux.Service'.
-w: file:///home/eslam/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/LocalTerminal.kt:53:28 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
-w: file:///home/eslam/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/MainActivity.kt:590:88 No cast needed.
-w: file:///home/eslam/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeIdleReturnNotification.kt:27:35 Condition is always 'true'.
-w: file:///home/eslam/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeIdleTimer.kt:105:66 Expression is unused.
-w: file:///home/eslam/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeIdleTimer.kt:166:65 Expression is unused.
-w: file:///home/eslam/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeIdleTimer.kt:170:66 Expression is unused.
-w: file:///home/eslam/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeRecoveryBudget.kt:46:23 No cast needed.
-w: file:///home/eslam/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeWorkLeaseHost.kt:272:66 Expression is unused.
-w: file:///home/eslam/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/PhoneAgentInventory.kt:25:25 Only safe (?.) or non-null asserted (!!.) calls are allowed on a nullable receiver of type 'File?'.
-w: file:///home/eslam/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:78:24 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
-w: file:///home/eslam/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:190:19 No cast needed.
-w: file:///home/eslam/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:190:22 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
-w: file:///home/eslam/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:203:19 No cast needed.
-w: file:///home/eslam/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:203:22 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
-w: file:///home/eslam/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:449:23 No cast needed.
-w: file:///home/eslam/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:449:26 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
-w: file:///home/eslam/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:510:19 No cast needed.
-w: file:///home/eslam/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:510:22 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
-w: file:///home/eslam/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/VoiceDownloadNotifications.kt:141:33 'constructor(p0: Context!): Notification.Builder' is deprecated. Deprecated in Java.
+w: file:///home/owner/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/AppLifecycle.kt:119:23 Condition is always 'false'.
+w: file:///home/owner/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinInstallerProducerQaService.kt:275:51 Unnecessary non-null assertion (!!) on a non-null receiver of type 'String'.
+w: file:///home/owner/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinInstallerProducerQaService.kt:486:24 'fun get(p0: String!): Any?' is deprecated. Deprecated in Java.
+w: file:///home/owner/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinLinux.kt:523:60 Unnecessary non-null assertion (!!) on a non-null receiver of type 'RuntimeProcessIdentity'.
+w: file:///home/owner/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinLinux.kt:1704:65 Unnecessary non-null assertion (!!) on a non-null receiver of type 'BuiltinLinux.Service'.
+w: file:///home/owner/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinLinux.kt:1714:69 Unnecessary non-null assertion (!!) on a non-null receiver of type 'BuiltinLinux.Service'.
+w: file:///home/owner/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/LocalTerminal.kt:53:28 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
+w: file:///home/owner/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/MainActivity.kt:590:88 No cast needed.
+w: file:///home/owner/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeIdleReturnNotification.kt:27:35 Condition is always 'true'.
+w: file:///home/owner/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeIdleTimer.kt:105:66 Expression is unused.
+w: file:///home/owner/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeIdleTimer.kt:166:65 Expression is unused.
+w: file:///home/owner/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeIdleTimer.kt:170:66 Expression is unused.
+w: file:///home/owner/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeRecoveryBudget.kt:46:23 No cast needed.
+w: file:///home/owner/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeWorkLeaseHost.kt:272:66 Expression is unused.
+w: file:///home/owner/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/PhoneAgentInventory.kt:25:25 Only safe (?.) or non-null asserted (!!.) calls are allowed on a nullable receiver of type 'File?'.
+w: file:///home/owner/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:78:24 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
+w: file:///home/owner/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:190:19 No cast needed.
+w: file:///home/owner/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:190:22 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
+w: file:///home/owner/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:203:19 No cast needed.
+w: file:///home/owner/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:203:22 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
+w: file:///home/owner/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:449:23 No cast needed.
+w: file:///home/owner/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:449:26 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
+w: file:///home/owner/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:510:19 No cast needed.
+w: file:///home/owner/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:510:22 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
+w: file:///home/owner/Storage/Code/oc_app-codex-relwidget/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/VoiceDownloadNotifications.kt:141:33 'constructor(p0: Context!): Notification.Builder' is deprecated. Deprecated in Java.
 
 > Task :app:compileReleaseJavaWithJavac
 > Task :app:processReleaseJavaRes
@@ -581,7 +581,7 @@ w: file:///home/eslam/Storage/Code/oc_app-codex-relwidget/android/app/src/main/k
 > Task :app:processReleaseUnitTestJavaRes
 > Task :app:testReleaseUnitTest
 
-[Incubating] Problems report is available at: file:///home/eslam/Storage/Code/oc_app-codex-relwidget/build/reports/problems/problems-report.html
+[Incubating] Problems report is available at: file:///home/owner/Storage/Code/oc_app-codex-relwidget/build/reports/problems/problems-report.html
 
 Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
 

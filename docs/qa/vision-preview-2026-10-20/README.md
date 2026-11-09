@@ -70,7 +70,7 @@ steer vs. the normal path, never the flavor.
    ellipsized, so the address now joins the title only when it fits; the
    hint wraps to two lines at 2x; the Arabic scene types Arabic.
 
-Images: `/home/eslam/vision-assets/out/vision-preview/` (main-dark,
+Images: `/home/owner/vision-assets/out/vision-preview/` (main-dark,
 main-light, typed, sent, sent-while-working, not-sent, listening,
 nothing-answering, nothing-answering-remote, details, no-conversation,
 small-320-text2 (+typed), arabic-rtl (+typed)). The page in them is a

@@ -1,42 +1,42 @@
 # Run 10: test/kit/kit_notice_live_region_test.dart + test/kit/kit_notice_test.dart after the review fixes
 Waiting for another flutter command to release the startup lock...
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_live_region_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_live_region_test.dart: live region (A11Y-3, semantics updates) a rebuild with the same words sends the live region nothing; each new message is announced exactly once
-00:00 +1: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_live_region_test.dart: live region (A11Y-3, semantics updates) a change of tone alone, with the same words, is not announced
-00:00 +2: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart
-00:06 +2: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: cost joins the items with a dot and is not a live region
-00:07 +3: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: cost an optional title sits above the line
-00:07 +4: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: offer one action and one close, by the keys passed in
-00:07 +5: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: offer a short sentence keeps its controls on its line
-00:07 +6: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: offer at 2.0 text the action and the close share the row under the sentence (en)
-00:07 +7: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: offer at 2.0 text the action and the close share the row under the sentence (ar)
-00:07 +8: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: NudgeCard wrapper keeps its keys, and each control calls once
-00:07 +9: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: error TimeoutException offers Try again and Switch server, no report
-00:07 +10: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: error SocketException offers Try again and Switch server, no report
-00:07 +11: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: error no details, no Copy details
-00:07 +12: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: error errorKind overrides the classifier
-00:07 +13: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: error another failure offers Report a problem when a handler is set; one tap sends a redacted report
-00:08 +14: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: error without a handler there is no Report a problem
-00:08 +15: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: error the report is reached in two taps from the error (P8.3)
-00:08 +16: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: error Copy details copies the redacted details, says Copied once, no SnackBar
-00:08 +17: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: KitErrorKind.of timeouts and IO types by name are network
-00:08 +18: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: KitErrorKind.of anything else, and null, is other
-00:08 +19: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: KitReportHook report is a no-op without a handler
-00:08 +20: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: KitReportHook redact is the kit redactor
-00:08 +21: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: tones warning and failure paint text1, never amber or danger (dark)
-00:08 +22: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: tones neutral text2, working accent, ok success (dark)
-00:08 +23: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: tones warning and failure paint text1, never amber or danger (light)
-00:08 +24: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: tones neutral text2, working accent, ok success (light)
-00:08 +25: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: tones the error form paints its glyph in text1
-00:08 +26: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: plain notice shows at most two actions and a labelled dismiss
-00:08 +27: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: plain notice dismissKey and dismissLabel replace the defaults
-00:08 +28: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: plain notice the retired card still draws
-00:08 +29: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: KitNotice (MOT-7) cost settles at once under system
-00:08 +30: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: KitNotice (MOT-7) offer settles at once under system
-00:08 +31: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: KitNotice (MOT-7) error settles at once under system
-00:08 +32: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: KitNotice (MOT-7) the verdict turns changes and settles at once under system
-00:08 +33: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: KitNotice (MOT-7) cost settles at once under effectsOff
-00:08 +34: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: KitNotice (MOT-7) offer settles at once under effectsOff
-00:08 +35: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: KitNotice (MOT-7) error settles at once under effectsOff
-00:08 +36: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: KitNotice (MOT-7) the verdict turns changes and settles at once under effectsOff
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_live_region_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_live_region_test.dart: live region (A11Y-3, semantics updates) a rebuild with the same words sends the live region nothing; each new message is announced exactly once
+00:00 +1: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_live_region_test.dart: live region (A11Y-3, semantics updates) a change of tone alone, with the same words, is not announced
+00:00 +2: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart
+00:06 +2: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: cost joins the items with a dot and is not a live region
+00:07 +3: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: cost an optional title sits above the line
+00:07 +4: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: offer one action and one close, by the keys passed in
+00:07 +5: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: offer a short sentence keeps its controls on its line
+00:07 +6: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: offer at 2.0 text the action and the close share the row under the sentence (en)
+00:07 +7: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: offer at 2.0 text the action and the close share the row under the sentence (ar)
+00:07 +8: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: NudgeCard wrapper keeps its keys, and each control calls once
+00:07 +9: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: error TimeoutException offers Try again and Switch server, no report
+00:07 +10: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: error SocketException offers Try again and Switch server, no report
+00:07 +11: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: error no details, no Copy details
+00:07 +12: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: error errorKind overrides the classifier
+00:07 +13: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: error another failure offers Report a problem when a handler is set; one tap sends a redacted report
+00:08 +14: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: error without a handler there is no Report a problem
+00:08 +15: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: error the report is reached in two taps from the error (P8.3)
+00:08 +16: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: error Copy details copies the redacted details, says Copied once, no SnackBar
+00:08 +17: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: KitErrorKind.of timeouts and IO types by name are network
+00:08 +18: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: KitErrorKind.of anything else, and null, is other
+00:08 +19: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: KitReportHook report is a no-op without a handler
+00:08 +20: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: KitReportHook redact is the kit redactor
+00:08 +21: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: tones warning and failure paint text1, never amber or danger (dark)
+00:08 +22: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: tones neutral text2, working accent, ok success (dark)
+00:08 +23: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: tones warning and failure paint text1, never amber or danger (light)
+00:08 +24: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: tones neutral text2, working accent, ok success (light)
+00:08 +25: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: tones the error form paints its glyph in text1
+00:08 +26: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: plain notice shows at most two actions and a labelled dismiss
+00:08 +27: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: plain notice dismissKey and dismissLabel replace the defaults
+00:08 +28: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: plain notice the retired card still draws
+00:08 +29: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: KitNotice (MOT-7) cost settles at once under system
+00:08 +30: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: KitNotice (MOT-7) offer settles at once under system
+00:08 +31: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: KitNotice (MOT-7) error settles at once under system
+00:08 +32: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: KitNotice (MOT-7) the verdict turns changes and settles at once under system
+00:08 +33: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: KitNotice (MOT-7) cost settles at once under effectsOff
+00:08 +34: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: KitNotice (MOT-7) offer settles at once under effectsOff
+00:08 +35: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: KitNotice (MOT-7) error settles at once under effectsOff
+00:08 +36: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_test.dart: KitNotice (MOT-7) the verdict turns changes and settles at once under effectsOff
 00:08 +37: All tests passed!

@@ -57,7 +57,7 @@ Downloading packages...
 Got dependencies!
 54 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/zz_g5_violation_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/zz_g5_violation_test.dart
 00:00 +0: (setUpAll)
 00:00 +0: violation · small tap target
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
@@ -75,9 +75,9 @@ When the exception was thrown, this was the stack:
 <asynchronous suspension>
 #8      expectLater.<anonymous closure> (package:flutter_test/src/widget_tester.dart:508:19)
 <asynchronous suspension>
-#9      kitGalleryShot (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery.dart:160:3)
+#9      kitGalleryShot (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery.dart:160:3)
 <asynchronous suspension>
-#10     main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/zz_g5_violation_test.dart:21:5)
+#10     main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/zz_g5_violation_test.dart:21:5)
 <asynchronous suspension>
 #11     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -103,11 +103,11 @@ found.
 
 When the exception was thrown, this was the stack:
 #0      fail (package:matcher/src/expect/expect.dart:187:31)
-#1      expectKitGalleryAccessible (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery.dart:231:5)
+#1      expectKitGalleryAccessible (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery.dart:231:5)
 <asynchronous suspension>
-#2      kitGalleryShot (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery.dart:152:5)
+#2      kitGalleryShot (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery.dart:152:5)
 <asynchronous suspension>
-#3      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/zz_g5_violation_test.dart:41:5)
+#3      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/zz_g5_violation_test.dart:41:5)
 <asynchronous suspension>
 #4      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -137,11 +137,11 @@ See also: https://www.w3.org/TR/UNDERSTANDING-WCAG20/visual-audio-contrast-contr
 
 When the exception was thrown, this was the stack:
 #0      fail (package:matcher/src/expect/expect.dart:187:31)
-#1      expectKitGalleryAccessible (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery.dart:231:5)
+#1      expectKitGalleryAccessible (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery.dart:231:5)
 <asynchronous suspension>
-#2      kitGalleryShot (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery.dart:152:5)
+#2      kitGalleryShot (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery.dart:152:5)
 <asynchronous suspension>
-#3      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/zz_g5_violation_test.dart:57:5)
+#3      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/zz_g5_violation_test.dart:57:5)
 <asynchronous suspension>
 #4      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -168,11 +168,11 @@ back up
 
 When the exception was thrown, this was the stack:
 #0      fail (package:matcher/src/expect/expect.dart:187:31)
-#1      expectKitGalleryAccessible (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery.dart:231:5)
+#1      expectKitGalleryAccessible (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery.dart:231:5)
 <asynchronous suspension>
-#2      kitGalleryShot (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery.dart:152:5)
+#2      kitGalleryShot (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery.dart:152:5)
 <asynchronous suspension>
-#3      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/zz_g5_violation_test.dart:73:5)
+#3      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/zz_g5_violation_test.dart:73:5)
 <asynchronous suspension>
 #4      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -192,7 +192,7 @@ The test description was:
 00:01 +0 -4: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/zz_g5_violation_test.dart: violation · low contrast
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/zz_g5_violation_test.dart: violation · reading order
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/zz_g5_violation_test.dart: violation · small tap target
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/zz_g5_violation_test.dart: violation · unlabelled tap target
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/zz_g5_violation_test.dart: violation · low contrast
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/zz_g5_violation_test.dart: violation · reading order
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/zz_g5_violation_test.dart: violation · small tap target
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/zz_g5_violation_test.dart: violation · unlabelled tap target

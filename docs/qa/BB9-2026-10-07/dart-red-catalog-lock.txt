@@ -1,4 +1,4 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_scripts_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app-sol-bb/test/phone_agent_scripts_test.dart
 00:00 +0: Claude check refuses another installer lock without changing code
 00:00 +0 -1: Claude check refuses another installer lock without changing code [E]
   Expected: not <0>
@@ -11,4 +11,4 @@
 00:00 +0 -1: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agent_scripts_test.dart: Claude check refuses another installer lock without changing code
+  /home/owner/Storage/Code/oc_app-sol-bb/test/phone_agent_scripts_test.dart: Claude check refuses another installer lock without changing code

@@ -42,10 +42,10 @@ Verification and local batches:
 
 Compile gate before batch 1: PASS (Android app Kotlin and all `compileKotlinDesktop` targets), 0 compiler errors, 125 warning lines across the repository. The frozen working-tree candidate included the independent automation/host slices that are committed in the following batches; none of those slices supplies a dependency needed by this first batch. No runtime or test qualification is claimed.
 
-Command (from `native/`, under `/home/eslam/Storage/tmp/oc-build.lock`):
+Command (from `native/`, under `/home/owner/Storage/tmp/oc-build.lock`):
 
 ```sh
-JAVA_HOME=/home/eslam/Storage2/tools/jdk21 ANDROID_HOME="$HOME/Android/Sdk" \
+JAVA_HOME=/home/owner/Storage2/tools/jdk21 ANDROID_HOME="$HOME/Android/Sdk" \
   nice -n 5 ./gradlew :androidApp:compilePreviewDebugKotlin compileKotlinDesktop \
   -Dorg.gradle.workers.max=2 -Dorg.gradle.daemon.idletimeout=300000 \
   '-Dorg.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=768m' --console=plain

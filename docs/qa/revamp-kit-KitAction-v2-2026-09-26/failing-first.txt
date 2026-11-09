@@ -1,6 +1,6 @@
 machine_lock: got test slot 4 after 6s
 Waiting for another flutter command to release the startup lock...
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-1/test/kit/kit_icon_button_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-1/test/kit/kit_icon_button_test.dart
 00:00 +0: the semantic label equals the tooltip; a fine pointer adds the shortcut
 00:00 +1: with no touch device, the tooltip has no shortcut span
 00:00 +2: an empty tooltip and no label asserts (KIT-22)
@@ -19,7 +19,7 @@ Expected: 'Read-only connection'
            Differ at offset 2
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-1/test/kit/kit_icon_button_test.dart:309:7)
+#4      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-1/test/kit/kit_icon_button_test.dart:309:7)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -29,7 +29,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-1/test/kit/kit_icon_button_test.dart line 309
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-1/test/kit/kit_icon_button_test.dart line 309
 The test description was:
   a disabled button tooltip says why: the label span, then the reason
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -58,7 +58,7 @@ Expected: true
   Actual: <false>
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-1/test/kit/kit_icon_button_test.dart:716:7)
+#4      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-1/test/kit/kit_icon_button_test.dart:716:7)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -68,7 +68,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-1/test/kit/kit_icon_button_test.dart line 716
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-1/test/kit/kit_icon_button_test.dart line 716
 The test description was:
   one Tab reaches it and it keeps focus: the ring shows, Enter and Space activate it
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -83,7 +83,7 @@ Expected: true
   Actual: <false>
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-1/test/kit/kit_icon_button_test.dart:767:7)
+#4      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-1/test/kit/kit_icon_button_test.dart:767:7)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -93,7 +93,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-1/test/kit/kit_icon_button_test.dart line 767
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-1/test/kit/kit_icon_button_test.dart line 767
 The test description was:
   after a focusable neighbour, exactly two Tabs reach it, and the ring goes when focus moves on
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -108,7 +108,7 @@ Expected: true
   Actual: <false>
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-1/test/kit/kit_icon_button_test.dart:803:7)
+#4      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-1/test/kit/kit_icon_button_test.dart:803:7)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -118,7 +118,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-1/test/kit/kit_icon_button_test.dart line 803
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-1/test/kit/kit_icon_button_test.dart line 803
 The test description was:
   focused and hovered, the ring paints above the hover fill (§8.3)
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -129,7 +129,7 @@ The test description was:
 00:01 +20 -4: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-1/test/kit/kit_icon_button_test.dart: a disabled button tooltip says why: the label span, then the reason
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-1/test/kit/kit_icon_button_test.dart: after a focusable neighbour, exactly two Tabs reach it, and the ring goes when focus moves on
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-1/test/kit/kit_icon_button_test.dart: focused and hovered, the ring paints above the hover fill (§8.3)
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-1/test/kit/kit_icon_button_test.dart: one Tab reaches it and it keeps focus: the ring shows, Enter and Space activate it
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-1/test/kit/kit_icon_button_test.dart: a disabled button tooltip says why: the label span, then the reason
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-1/test/kit/kit_icon_button_test.dart: after a focusable neighbour, exactly two Tabs reach it, and the ring goes when focus moves on
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-1/test/kit/kit_icon_button_test.dart: focused and hovered, the ring paints above the hover fill (§8.3)
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-1/test/kit/kit_icon_button_test.dart: one Tab reaches it and it keeps focus: the ring shows, Enter and Space activate it

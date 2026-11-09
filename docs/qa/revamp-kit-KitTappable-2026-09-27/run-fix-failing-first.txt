@@ -59,7 +59,7 @@ Downloading packages...
 Got dependencies!
 54 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/kit/kit_tappable_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/kit/kit_tappable_test.dart
 00:00 +0: disabled requires disabledReason (STATE-8, debug assert)
 00:00 +1: onLongPress cannot combine with a non-empty menu
 00:00 +2: 1. a 20×20 child gets a 48×48 hit area
@@ -77,7 +77,7 @@ Expected: <1>
 Enter reaches the child's action
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/kit/kit_tappable_test.dart:438:7)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/kit/kit_tappable_test.dart:438:7)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -87,7 +87,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/kit/kit_tappable_test.dart line 438
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/kit/kit_tappable_test.dart line 438
 The test description was:
   keys from a focused child belong to the child, not the row
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -104,7 +104,7 @@ Expected: equals ['Rename', 'Archive'] unordered
    Which: has too many elements (3 > 2)
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/kit/kit_tappable_test.dart:497:7)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/kit/kit_tappable_test.dart:497:7)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -114,7 +114,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/kit/kit_tappable_test.dart line 497
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/kit/kit_tappable_test.dart line 497
 The test description was:
   each enabled item is a custom action that runs it
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -129,7 +129,7 @@ Expected: true
   Actual: <false>
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/kit/kit_tappable_test.dart:522:7)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/kit/kit_tappable_test.dart:522:7)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -139,7 +139,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/kit/kit_tappable_test.dart line 522
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/kit/kit_tappable_test.dart line 522
 The test description was:
   the long-press action is "Show actions" and opens the menu
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -155,7 +155,7 @@ Expected: empty
 no menu items and no "Show actions" hint
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/kit/kit_tappable_test.dart:549:7)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/kit/kit_tappable_test.dart:549:7)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -165,7 +165,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/kit/kit_tappable_test.dart line 549
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/kit/kit_tappable_test.dart line 549
 The test description was:
   disabled with a menu: no custom actions, no long-press
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -189,7 +189,7 @@ Expected: <1>
 the child subtree was never remounted
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/kit/kit_tappable_test.dart:799:5)
+#4      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/kit/kit_tappable_test.dart:799:5)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -199,7 +199,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/kit/kit_tappable_test.dart line 799
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/kit/kit_tappable_test.dart line 799
 The test description was:
   the child keeps its state across Effects Off and tooltip
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -217,8 +217,8 @@ The test description was:
 00:02 +25 -5: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/kit/kit_tappable_test.dart: 4. menu: right-click, long-press, Shift+F10, onLongPress hook keys from a focused child belong to the child, not the row
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/kit/kit_tappable_test.dart: 5. screen reader: the menu as semantic actions disabled with a menu: no custom actions, no long-press
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/kit/kit_tappable_test.dart: 5. screen reader: the menu as semantic actions each enabled item is a custom action that runs it
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/kit/kit_tappable_test.dart: 5. screen reader: the menu as semantic actions the long-press action is "Show actions" and opens the menu
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/kit/kit_tappable_test.dart: the child keeps its state across Effects Off and tooltip
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/kit/kit_tappable_test.dart: 4. menu: right-click, long-press, Shift+F10, onLongPress hook keys from a focused child belong to the child, not the row
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/kit/kit_tappable_test.dart: 5. screen reader: the menu as semantic actions disabled with a menu: no custom actions, no long-press
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/kit/kit_tappable_test.dart: 5. screen reader: the menu as semantic actions each enabled item is a custom action that runs it
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/kit/kit_tappable_test.dart: 5. screen reader: the menu as semantic actions the long-press action is "Show actions" and opens the menu
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/kit/kit_tappable_test.dart: the child keeps its state across Effects Off and tooltip

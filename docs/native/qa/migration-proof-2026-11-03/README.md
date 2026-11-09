@@ -4,19 +4,19 @@
 the migration runner is safe under kills and failures, but two things the owner uses are **not in the native build at
 all** (built-in Linux and offline voice), and the re-enter flow had a dead end (fixed on this branch, see §4).
 
-Branch `native/migration-proof-2026-11-03` (worktree `/home/eslam/Storage2/wt/migration-proof`), based on
+Branch `native/migration-proof-2026-11-03` (worktree `/home/owner/Storage2/wt/migration-proof`), based on
 `native/p12-integrate-2026-11-03` at `c6d14e8d6`. Not pushed.
 
 ## 1. Setup
 
 | What | Value |
 |---|---|
-| Emulator | AVD `OC_API35` (API 35, google_apis x86_64, 2 GB RAM, 1080×2400), started `-read-only` on port 5570 so the shared AVD's saved state was never changed; held `/home/eslam/Storage2/wt/emu.lock` throughout. Never `emulator-5584`, never the owner's phone. |
+| Emulator | AVD `OC_API35` (API 35, google_apis x86_64, 2 GB RAM, 1080×2400), started `-read-only` on port 5570 so the shared AVD's saved state was never changed; held `/home/owner/Storage2/wt/emu.lock` throughout. Never `emulator-5584`, never the owner's phone. |
 | Flutter app | `app-release-4501.apk` (2.1.0, versionCode 4501), SHA-256 `7eb5e121…000f`, signer `1DE5BF08…D60C` |
 | Native app | `:androidApp:assembleSwitchRelease` → zipalign → `apksigner` with the local key (`~/.android/debug.keystore`, the key behind every native preview APK). Package `io.github.eslamasabry.opencode_mobile`, versionCode **10003**, signer SHA-256 **`1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C`** (checked with `apksigner verify --print-certs`). APK SHA-256 `2824c5a4…2639` (before the fix), `d618a99b…2e18` (with the fix) |
 | Kill/delay build | new `qa` build type of `:androidApp` (release + `:android:migration`'s qa `StepInterrupter`, debug-key signed, same signer) — commit `96af122f9` |
 | Test servers | two OpenCode 2.2.5 servers on this PC (`127.0.0.1:4311`, `:4312`, own `HOME`/`XDG_*` dirs under the artifacts dir, Basic auth with their per-run passwords, reached from the emulator at `10.0.2.2`). Stopped by exact listener PID at the end. |
-| Artifacts (not committed) | `/home/eslam/Storage2/wt/migration-proof-artifacts/` — APKs, logcats `j1…j5-logcat.txt`, prefs before/after, seed tar, journals |
+| Artifacts (not committed) | `/home/owner/Storage2/wt/migration-proof-artifacts/` — APKs, logcats `j1…j5-logcat.txt`, prefs before/after, seed tar, journals |
 
 ## 2. What was created in the Flutter app (through its UI, plus adb for files)
 
@@ -119,7 +119,7 @@ phone server's app-made password `renewedByOwner`, not listed).
 - `OC_API35` ran read-only every time: its saved state is unchanged. Stopped. The emulator lock was released and
   handed back to the issue-112 worker.
 - Both OpenCode test servers were stopped by their exact listener PIDs (2406151, 2406622). Their data dirs, the APKs,
-  logcats and the seed tars stay under `/home/eslam/Storage2/wt/migration-proof-artifacts/`; they hold only the test
+  logcats and the seed tars stay under `/home/owner/Storage2/wt/migration-proof-artifacts/`; they hold only the test
   servers' throwaway passwords and no owner data.
 
 ## Screenshots (one screen each)

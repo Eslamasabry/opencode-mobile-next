@@ -71,7 +71,7 @@ Passed both requested compile gates for the unchanged native source candidate:
 
 ```sh
 cd native
-JAVA_HOME=/home/eslam/Storage2/tools/jdk21 ANDROID_HOME="$HOME/Android/Sdk" \
+JAVA_HOME=/home/owner/Storage2/tools/jdk21 ANDROID_HOME="$HOME/Android/Sdk" \
   bash ../tool/qa/machine_lock.sh build -- nice -n 5 ./gradlew \
   :androidApp:assemblePreviewDebug compileKotlinDesktop \
   -Dorg.gradle.workers.max=2 -Dorg.gradle.daemon.idletimeout=300000 \

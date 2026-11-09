@@ -18,7 +18,7 @@
   ],
   "exit_code": 0,
   "seconds": 115.4,
-  "log": "/home/eslam/Storage/Code/oc_app-ui-audit-20260909/oc2-setup/local-build.log",
+  "log": "/home/owner/Storage/Code/oc_app-ui-audit-20260909/oc2-setup/local-build.log",
   "ci": false,
   "precompile_command": [
     "./android/gradlew",

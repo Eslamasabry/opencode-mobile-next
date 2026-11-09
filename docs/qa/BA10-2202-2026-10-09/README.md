@@ -17,7 +17,7 @@ Non-goal: shell cleanup, account changes, rebuilding or replacing product UI.
 ## Locked device observation
 
 Only `emulator-5554` was accessed, under
-`flock -w 3600 /home/eslam/Storage/tmp/oc-emulator.lock`, held through final
+`flock -w 3600 /home/owner/Storage/tmp/oc-emulator.lock`, held through final
 normal-APK verification. APK 2202's file signer, SHA-256, installed hash and
 version were verified before navigation and at the end. No APK replacement was
 needed. No install, removal, sign-in, sign-out, or manual payload deletion ran.

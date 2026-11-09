@@ -1,113 +1,113 @@
-00:00 +0: loading /home/eslam/wt/oc-app-schedule-clockqa/test/scheduled_prompt_send_admission_test.dart
-00:00 +0: /home/eslam/wt/oc-app-schedule-clockqa/test/scheduled_prompt_send_admission_test.dart: composer cannot start work on a leased phone; release permits send
-00:02 +1: /home/eslam/wt/oc-app-schedule-clockqa/test/scheduled_prompt_send_admission_test.dart: unavailable check fails closed without claiming an active lease
-00:02 +2: /home/eslam/wt/oc-app-schedule-clockqa/test/scheduled_prompt_send_admission_test.dart: connection change while native check waits prevents dispatch
-00:02 +3: /home/eslam/wt/oc-app-schedule-clockqa/test/scheduled_prompt_send_admission_test.dart: remote agents and non-Android do not query phone lease
-00:02 +4: /home/eslam/wt/oc-app-schedule-clockqa/test/scheduled_prompt_send_admission_test.dart: queued prompt stays unsent and retryable while phone is leased
-00:12 +5: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: cold start model fallback is per conversation and survives restart
-00:14 +6: /home/eslam/wt/oc-app-schedule-clockqa/test/command_receipts_queue_test.dart: lost response then receipt retry confirms without another send
-00:15 +7: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:15 +8: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:15 +9: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:15 +10: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:15 +11: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:15 +12: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:19 +13: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:19 +14: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:19 +15: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:19 +16: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:19 +17: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:19 +18: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:19 +19: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:19 +20: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:20 +21: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:20 +22: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:20 +23: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:20 +24: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:20 +25: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:20 +26: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:20 +27: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:20 +28: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:20 +29: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:20 +30: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:20 +31: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:20 +32: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:20 +33: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:20 +34: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:20 +35: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:20 +36: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:20 +37: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:20 +38: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:20 +39: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:20 +40: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:20 +41: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:20 +42: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:20 +43: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:20 +44: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:20 +45: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:20 +46: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:20 +47: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:20 +48: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:20 +49: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
-00:20 +50: /home/eslam/wt/oc-app-schedule-clockqa/test/gen_ui_state_test.dart: live card receipt missing card restored later cannot revive old live proof
-00:20 +51: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: offline v2 metadata remains server-owned and writes require a connection
-00:21 +52: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: offline v2 metadata remains server-owned and writes require a connection
-00:21 +53: /home/eslam/wt/oc-app-schedule-clockqa/test/gen_ui_state_test.dart: live card receipt restart retains dispatch protection but not volatile receipt content
-00:21 +54: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: a queued prompt cancelled during selection is never delivered
-00:21 +55: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: a queued prompt cancelled during selection is never delivered
-00:21 +56: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: a queued prompt cancelled during selection is never delivered
-00:21 +57: /home/eslam/wt/oc-app-schedule-clockqa/test/gen_ui_state_test.dart: live card receipt rejects scope mismatch
-00:21 +58: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: selection wait rejects a retired dispatch transport
-00:21 +59: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: selection wait rejects a retired dispatch transport
-00:21 +60: /home/eslam/wt/oc-app-schedule-clockqa/test/gen_ui_state_test.dart: live card receipt rejects role mismatch
-00:21 +61: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: v2 reads retain variants and distinguish inherited from unknown
-00:21 +62: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: v2 reads retain variants and distinguish inherited from unknown
-00:21 +63: /home/eslam/wt/oc-app-schedule-clockqa/test/gen_ui_state_test.dart: live card receipt rejects card mismatch
-00:21 +64: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: live selection replaces variant and patches only the matching session
-00:21 +65: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: live selection replaces variant and patches only the matching session
-00:21 +66: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: live selection replaces variant and patches only the matching session
-00:21 +67: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: live selection replaces variant and patches only the matching session
-00:21 +68: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: live selection replaces variant and patches only the matching session
-00:21 +69: /home/eslam/wt/oc-app-schedule-clockqa/test/gen_ui_state_test.dart: live card receipt invalidate scope clears the live receipt and rejects its late echo
-00:21 +70: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: a model event cannot establish an unhydrated agent or clear with malformed data
-00:21 +71: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: a model event cannot establish an unhydrated agent or clear with malformed data
-00:21 +72: /home/eslam/wt/oc-app-schedule-clockqa/test/gen_ui_state_test.dart: live card receipt delete session clears the live receipt and rejects its late echo
-00:21 +73: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: cold start phone selection stays unknown before its gateway exists
-00:21 +74: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: cold start v1 status does not discard selection hydration
-00:21 +75: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: cold start v2 status does not discard selection hydration
-00:21 +76: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: pending metadata cannot overwrite a newer remote selection
-00:21 +77: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: intentional writes serialize and confirmation adopts server state
-00:21 +78: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: failed writes retain confirmed selection and allow retry
-00:22 +79: /home/eslam/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: new sessions receive defaults and offline replay applies its saved snapshot
-00:30 +80: /home/eslam/wt/oc-app-schedule-clockqa/test/search_index_test.dart: ledger coverage every screen and tab is found by its title, or is excluded
+00:00 +0: loading /home/owner/wt/oc-app-schedule-clockqa/test/scheduled_prompt_send_admission_test.dart
+00:00 +0: /home/owner/wt/oc-app-schedule-clockqa/test/scheduled_prompt_send_admission_test.dart: composer cannot start work on a leased phone; release permits send
+00:02 +1: /home/owner/wt/oc-app-schedule-clockqa/test/scheduled_prompt_send_admission_test.dart: unavailable check fails closed without claiming an active lease
+00:02 +2: /home/owner/wt/oc-app-schedule-clockqa/test/scheduled_prompt_send_admission_test.dart: connection change while native check waits prevents dispatch
+00:02 +3: /home/owner/wt/oc-app-schedule-clockqa/test/scheduled_prompt_send_admission_test.dart: remote agents and non-Android do not query phone lease
+00:02 +4: /home/owner/wt/oc-app-schedule-clockqa/test/scheduled_prompt_send_admission_test.dart: queued prompt stays unsent and retryable while phone is leased
+00:12 +5: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: cold start model fallback is per conversation and survives restart
+00:14 +6: /home/owner/wt/oc-app-schedule-clockqa/test/command_receipts_queue_test.dart: lost response then receipt retry confirms without another send
+00:15 +7: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:15 +8: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:15 +9: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:15 +10: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:15 +11: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:15 +12: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:19 +13: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:19 +14: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:19 +15: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:19 +16: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:19 +17: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:19 +18: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:19 +19: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:19 +20: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:20 +21: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:20 +22: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:20 +23: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:20 +24: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:20 +25: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:20 +26: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:20 +27: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:20 +28: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:20 +29: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:20 +30: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:20 +31: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:20 +32: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:20 +33: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:20 +34: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:20 +35: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:20 +36: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:20 +37: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:20 +38: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:20 +39: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:20 +40: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:20 +41: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:20 +42: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:20 +43: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:20 +44: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:20 +45: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:20 +46: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:20 +47: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:20 +48: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:20 +49: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: session agent failure stays visible without changing defaults
+00:20 +50: /home/owner/wt/oc-app-schedule-clockqa/test/gen_ui_state_test.dart: live card receipt missing card restored later cannot revive old live proof
+00:20 +51: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: offline v2 metadata remains server-owned and writes require a connection
+00:21 +52: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: offline v2 metadata remains server-owned and writes require a connection
+00:21 +53: /home/owner/wt/oc-app-schedule-clockqa/test/gen_ui_state_test.dart: live card receipt restart retains dispatch protection but not volatile receipt content
+00:21 +54: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: a queued prompt cancelled during selection is never delivered
+00:21 +55: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: a queued prompt cancelled during selection is never delivered
+00:21 +56: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: a queued prompt cancelled during selection is never delivered
+00:21 +57: /home/owner/wt/oc-app-schedule-clockqa/test/gen_ui_state_test.dart: live card receipt rejects scope mismatch
+00:21 +58: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: selection wait rejects a retired dispatch transport
+00:21 +59: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: selection wait rejects a retired dispatch transport
+00:21 +60: /home/owner/wt/oc-app-schedule-clockqa/test/gen_ui_state_test.dart: live card receipt rejects role mismatch
+00:21 +61: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: v2 reads retain variants and distinguish inherited from unknown
+00:21 +62: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: v2 reads retain variants and distinguish inherited from unknown
+00:21 +63: /home/owner/wt/oc-app-schedule-clockqa/test/gen_ui_state_test.dart: live card receipt rejects card mismatch
+00:21 +64: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: live selection replaces variant and patches only the matching session
+00:21 +65: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: live selection replaces variant and patches only the matching session
+00:21 +66: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: live selection replaces variant and patches only the matching session
+00:21 +67: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: live selection replaces variant and patches only the matching session
+00:21 +68: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: live selection replaces variant and patches only the matching session
+00:21 +69: /home/owner/wt/oc-app-schedule-clockqa/test/gen_ui_state_test.dart: live card receipt invalidate scope clears the live receipt and rejects its late echo
+00:21 +70: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: a model event cannot establish an unhydrated agent or clear with malformed data
+00:21 +71: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: a model event cannot establish an unhydrated agent or clear with malformed data
+00:21 +72: /home/owner/wt/oc-app-schedule-clockqa/test/gen_ui_state_test.dart: live card receipt delete session clears the live receipt and rejects its late echo
+00:21 +73: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: cold start phone selection stays unknown before its gateway exists
+00:21 +74: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: cold start v1 status does not discard selection hydration
+00:21 +75: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: cold start v2 status does not discard selection hydration
+00:21 +76: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: pending metadata cannot overwrite a newer remote selection
+00:21 +77: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: intentional writes serialize and confirmation adopts server state
+00:21 +78: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: failed writes retain confirmed selection and allow retry
+00:22 +79: /home/owner/wt/oc-app-schedule-clockqa/test/session_selection_sync_test.dart: new sessions receive defaults and offline replay applies its saved snapshot
+00:30 +80: /home/owner/wt/oc-app-schedule-clockqa/test/search_index_test.dart: ledger coverage every screen and tab is found by its title, or is excluded
 search coverage: 56 findable + 66 excluded = 122 screen/tab pages
-00:30 +81: /home/eslam/wt/oc-app-schedule-clockqa/test/search_index_test.dart: ledger coverage exclusions are real pages, have a reason, and are not indexed
-00:30 +82: /home/eslam/wt/oc-app-schedule-clockqa/test/search_index_test.dart: ledger coverage every indexed page id exists in the ledger
-00:30 +83: /home/eslam/wt/oc-app-schedule-clockqa/test/search_index_test.dart: ledger coverage ids are unique and every entry can be found by its own title
-00:30 +84: /home/eslam/wt/oc-app-schedule-clockqa/test/search_index_test.dart: ledger coverage each result names the page that holds it (reachability audit)
-00:30 +85: /home/eslam/wt/oc-app-schedule-clockqa/test/search_index_test.dart: gates: a result the server or device cannot open is absent OpenCode 1 on a phone has everything but desktop and AI Team
-00:31 +86: /home/eslam/wt/oc-app-schedule-clockqa/test/search_index_test.dart: gates: a result the server or device cannot open is absent AI setup is found by name where the server shares its setup, and absent where its row is
-00:32 +87: /home/eslam/wt/oc-app-schedule-clockqa/test/search_index_test.dart: gates: a result the server or device cannot open is absent the AI setup result opens the AI setup page
-00:36 +88: /home/eslam/wt/oc-app-schedule-clockqa/test/scheduled_prompt_screens_test.dart: empty list creates a saved weekday schedule after prompt validation
-00:36 +89: /home/eslam/wt/oc-app-schedule-clockqa/test/scheduled_prompt_screens_test.dart: empty list creates a saved weekday schedule after prompt validation
-00:36 +90: /home/eslam/wt/oc-app-schedule-clockqa/test/scheduled_prompt_screens_test.dart: empty list creates a saved weekday schedule after prompt validation
-00:37 +91: /home/eslam/wt/oc-app-schedule-clockqa/test/scheduled_prompt_screens_test.dart: empty list creates a saved weekday schedule after prompt validation
-00:37 +92: /home/eslam/wt/oc-app-schedule-clockqa/test/scheduled_prompt_screens_test.dart: empty list creates a saved weekday schedule after prompt validation
-00:37 +93: /home/eslam/wt/oc-app-schedule-clockqa/test/scheduled_prompt_screens_test.dart: empty list creates a saved weekday schedule after prompt validation
-00:37 +94: /home/eslam/wt/oc-app-schedule-clockqa/test/scheduled_prompt_screens_test.dart: empty list creates a saved weekday schedule after prompt validation
-00:41 +95: /home/eslam/wt/oc-app-schedule-clockqa/test/search_index_test.dart: Settings search finds a setting inside a screen and opens it at that section
-00:43 +96: /home/eslam/wt/oc-app-schedule-clockqa/test/scheduled_prompt_screens_test.dart: editing interval validates bounds and persists revision
-00:44 +97: /home/eslam/wt/oc-app-schedule-clockqa/test/search_index_test.dart: Settings search language and theme open Appearance
-00:47 +98: /home/eslam/wt/oc-app-schedule-clockqa/test/search_index_test.dart: Settings search language and theme open Appearance
-00:47 +99: /home/eslam/wt/oc-app-schedule-clockqa/test/search_index_test.dart: Settings search language and theme open Appearance
-00:48 +100: /home/eslam/wt/oc-app-schedule-clockqa/test/search_index_test.dart: Settings search language and theme open Appearance
-00:48 +101: /home/eslam/wt/oc-app-schedule-clockqa/test/scheduled_prompt_screens_test.dart: one-time editor shows the scheduled instant and rejects past time
-00:48 +102: /home/eslam/wt/oc-app-schedule-clockqa/test/scheduled_prompt_screens_test.dart: one-time editor shows the scheduled instant and rejects past time
-00:48 +103: /home/eslam/wt/oc-app-schedule-clockqa/test/search_index_test.dart: Settings search budget and always allowed are found
-00:49 +104: /home/eslam/wt/oc-app-schedule-clockqa/test/scheduled_prompt_screens_test.dart: unsupported platform explains unavailability without create action
-00:49 +105: /home/eslam/wt/oc-app-schedule-clockqa/test/search_index_test.dart: Settings search Keep running, What runs by itself and Plugins lead somewhere sensible
-00:49 +106: /home/eslam/wt/oc-app-schedule-clockqa/test/search_index_test.dart: Settings search a tab result asks the shell for that tab
-00:50 +107: /home/eslam/wt/oc-app-schedule-clockqa/test/search_index_test.dart: Settings search without a shell the tabs are not offered; tools still are
-00:50 +108: /home/eslam/wt/oc-app-schedule-clockqa/test/search_index_test.dart: Settings search Codex: absent results stay absent
-00:50 +109: /home/eslam/wt/oc-app-schedule-clockqa/test/search_index_test.dart: desktop command palette finds a command by a keyword that is not shown
+00:30 +81: /home/owner/wt/oc-app-schedule-clockqa/test/search_index_test.dart: ledger coverage exclusions are real pages, have a reason, and are not indexed
+00:30 +82: /home/owner/wt/oc-app-schedule-clockqa/test/search_index_test.dart: ledger coverage every indexed page id exists in the ledger
+00:30 +83: /home/owner/wt/oc-app-schedule-clockqa/test/search_index_test.dart: ledger coverage ids are unique and every entry can be found by its own title
+00:30 +84: /home/owner/wt/oc-app-schedule-clockqa/test/search_index_test.dart: ledger coverage each result names the page that holds it (reachability audit)
+00:30 +85: /home/owner/wt/oc-app-schedule-clockqa/test/search_index_test.dart: gates: a result the server or device cannot open is absent OpenCode 1 on a phone has everything but desktop and AI Team
+00:31 +86: /home/owner/wt/oc-app-schedule-clockqa/test/search_index_test.dart: gates: a result the server or device cannot open is absent AI setup is found by name where the server shares its setup, and absent where its row is
+00:32 +87: /home/owner/wt/oc-app-schedule-clockqa/test/search_index_test.dart: gates: a result the server or device cannot open is absent the AI setup result opens the AI setup page
+00:36 +88: /home/owner/wt/oc-app-schedule-clockqa/test/scheduled_prompt_screens_test.dart: empty list creates a saved weekday schedule after prompt validation
+00:36 +89: /home/owner/wt/oc-app-schedule-clockqa/test/scheduled_prompt_screens_test.dart: empty list creates a saved weekday schedule after prompt validation
+00:36 +90: /home/owner/wt/oc-app-schedule-clockqa/test/scheduled_prompt_screens_test.dart: empty list creates a saved weekday schedule after prompt validation
+00:37 +91: /home/owner/wt/oc-app-schedule-clockqa/test/scheduled_prompt_screens_test.dart: empty list creates a saved weekday schedule after prompt validation
+00:37 +92: /home/owner/wt/oc-app-schedule-clockqa/test/scheduled_prompt_screens_test.dart: empty list creates a saved weekday schedule after prompt validation
+00:37 +93: /home/owner/wt/oc-app-schedule-clockqa/test/scheduled_prompt_screens_test.dart: empty list creates a saved weekday schedule after prompt validation
+00:37 +94: /home/owner/wt/oc-app-schedule-clockqa/test/scheduled_prompt_screens_test.dart: empty list creates a saved weekday schedule after prompt validation
+00:41 +95: /home/owner/wt/oc-app-schedule-clockqa/test/search_index_test.dart: Settings search finds a setting inside a screen and opens it at that section
+00:43 +96: /home/owner/wt/oc-app-schedule-clockqa/test/scheduled_prompt_screens_test.dart: editing interval validates bounds and persists revision
+00:44 +97: /home/owner/wt/oc-app-schedule-clockqa/test/search_index_test.dart: Settings search language and theme open Appearance
+00:47 +98: /home/owner/wt/oc-app-schedule-clockqa/test/search_index_test.dart: Settings search language and theme open Appearance
+00:47 +99: /home/owner/wt/oc-app-schedule-clockqa/test/search_index_test.dart: Settings search language and theme open Appearance
+00:48 +100: /home/owner/wt/oc-app-schedule-clockqa/test/search_index_test.dart: Settings search language and theme open Appearance
+00:48 +101: /home/owner/wt/oc-app-schedule-clockqa/test/scheduled_prompt_screens_test.dart: one-time editor shows the scheduled instant and rejects past time
+00:48 +102: /home/owner/wt/oc-app-schedule-clockqa/test/scheduled_prompt_screens_test.dart: one-time editor shows the scheduled instant and rejects past time
+00:48 +103: /home/owner/wt/oc-app-schedule-clockqa/test/search_index_test.dart: Settings search budget and always allowed are found
+00:49 +104: /home/owner/wt/oc-app-schedule-clockqa/test/scheduled_prompt_screens_test.dart: unsupported platform explains unavailability without create action
+00:49 +105: /home/owner/wt/oc-app-schedule-clockqa/test/search_index_test.dart: Settings search Keep running, What runs by itself and Plugins lead somewhere sensible
+00:49 +106: /home/owner/wt/oc-app-schedule-clockqa/test/search_index_test.dart: Settings search a tab result asks the shell for that tab
+00:50 +107: /home/owner/wt/oc-app-schedule-clockqa/test/search_index_test.dart: Settings search without a shell the tabs are not offered; tools still are
+00:50 +108: /home/owner/wt/oc-app-schedule-clockqa/test/search_index_test.dart: Settings search Codex: absent results stay absent
+00:50 +109: /home/owner/wt/oc-app-schedule-clockqa/test/search_index_test.dart: desktop command palette finds a command by a keyword that is not shown
 00:52 +110: All tests passed!

@@ -4,7 +4,7 @@ Branch `feat/no-bottom-nav`, from int `c7ff5ec28`. Owner decision: concept 1
 (Conversations is the only home, a Settings gear beside Search) plus concept 9
 (files live where they are needed: the conversation's project chip, the
 changed-file rows under a reply). Concepts:
-`/home/eslam/Storage2/launch-footage/nav-concepts/01-gear-home/concept.png`,
+`/home/owner/Storage2/launch-footage/nav-concepts/01-gear-home/concept.png`,
 `.../09-files-in-chat/concept.png`.
 
 Finish line: on a phone (compact window) the dock (Conversations · Files ·
@@ -127,7 +127,7 @@ rows are absent for agents whose tools do not report edits this way.
 
 ## 6. Visual passes (412x915 dark, against the concepts)
 
-Renders: `/home/eslam/Storage2/launch-footage/no-bottom-nav/` (`after-*.png`;
+Renders: `/home/owner/Storage2/launch-footage/no-bottom-nav/` (`after-*.png`;
 `before-home-*.png` is the shell before this change).
 
 1. Pass 1: the dock gone, gear beside search; pill still one line
@@ -150,7 +150,7 @@ chip rather than the concept's outlined pill.
 
 ## 7. Images (one full phone screen each)
 
-`/home/eslam/Storage2/launch-footage/no-bottom-nav/`:
+`/home/owner/Storage2/launch-footage/no-bottom-nav/`:
 `after-home-dark.png`, `after-home-light.png`, `after-chat-files-dark.png`,
 `after-settings-from-gear-dark.png` (and `-light`),
 `after-files-from-chip-dark.png`, `after-home-pc-1280x800-dark.png` (the PC

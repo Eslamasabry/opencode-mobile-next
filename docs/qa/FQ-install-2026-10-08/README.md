@@ -9,7 +9,7 @@ the emulator to manufacture storage failure.
 
 Branch `sol/ba-install-cert` starts at coordinator `75ac5ae7`. Normal shared APK
 is 2196 (`d777082c`, signer `1DE5BF08…`); only emulator-5554 is authorized.
-Each device session uses `/home/eslam/Storage/tmp/oc-emulator.lock`.
+Each device session uses `/home/owner/Storage/tmp/oc-emulator.lock`.
 
 ## Discovery
 

@@ -1,256 +1,256 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_project_navigation_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_project_navigation_test.dart: Codex project management shows configured folder without unsupported rows
-00:00 +1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_project_navigation_test.dart: Codex ProjectsScreen does not list projects or expose project actions
-00:00 +2: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_transport_test.dart
-00:01 +2: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_transport_test.dart: socket loss fails all pending work and never replays a mutation
-00:01 +3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_transport_test.dart: old epoch cannot answer an approval or event after socket loss
-00:01 +4: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_transport_test.dart: request waits for replacement initialization before sending its frame
-00:01 +5: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/common_file_preview_test.dart
-00:01 +5: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/common_file_preview_test.dart: eligible byte-only text decodes strictly and export keeps original bytes
-00:01 +6: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/common_file_preview_test.dart: invalid UTF-8 data URL keeps Save bytes without replacement text
-00:01 +7: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/common_file_preview_test.dart: CSV cells are literal and Source copy preserves exact source
-00:02 +8: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/common_file_preview_test.dart: partial source refuses table inference and preserves full copy
-00:02 +9: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/common_file_preview_test.dart: focused partial source discloses its prefix and never highlights a different target
-00:02 +10: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/common_file_preview_test.dart: malformed and empty tables have useful fallbacks
-00:02 +11: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/common_file_preview_test.dart: pretty JSON copies original spacing rather than projected formatting
-00:02 +12: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/common_file_preview_test.dart: static SVG renders locally and Source retains the exact document
-00:02 +13: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/common_file_preview_test.dart: active SVG stays in useful Source and inert preview disables switches
-00:02 +14: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/common_file_preview_test.dart: file-sheet clipboard refusal offers an exact retry
-00:03 +15: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/completion_digest_capture_test.dart
-00:03 +15: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/completion_digest_capture_test.dart: captures the production Activity completion digest states
-00:03 +15 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/completion_digest_card_test.dart
-00:04 +15 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/completion_digest_card_test.dart: keeps reported zero distinct from unavailable metadata
-00:05 +16 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/completion_digest_card_test.dart: copy reports success and keeps the digest metadata-only
-00:05 +17 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/completion_digest_card_test.dart: copy reports a failure when the platform clipboard rejects it
-00:05 +18 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/completion_digest_card_test.dart: wraps actions at large text on a narrow RTL surface
-00:05 +19 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/composer_desktop_enter_test.dart
-00:05 +19 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/composer_desktop_enter_test.dart: desktop: Enter sends the draft
-00:06 +20 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/composer_desktop_enter_test.dart: desktop: Shift+Enter does not send (newline stays with the field)
-00:07 +21 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/composer_desktop_enter_test.dart: desktop: Ctrl+Enter still sends
-00:07 +22 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/composer_desktop_enter_test.dart: mobile: plain Enter keeps inserting a newline, never sends
-00:07 +23 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/composer_desktop_enter_test.dart: the Stop tooltip is dismissed when Stop is pressed
-00:07 +24 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart
-00:08 +24 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: typing saves the latest draft before leaving the chat
-00:09 +25 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: typing updates Send and slash suggestions without a server event
-00:09 +26 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: local image attachments show a thumbnail with independent removal
-00:09 +27 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: clearing text can be undone without losing newer typing or attachments
-00:09 +28 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: prompt reuse searches deduplicated history and preserves the draft
-00:10 +29 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: finishing a run preserves the editor state and selection
-00:10 +30 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: prompt history stays usable with large text and the keyboard open
-00:10 +31 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: background capability is cached and refreshed after reconnect
-00:10 +32 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: touch background action handles a no-op without claiming success
-00:10 +33 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: the prompt field stays dominant on a 360dp phone at 2.5x text
-00:11 +34 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: the compact composer keeps a full-width typing area
-00:11 +35 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: composer grows with the draft and returns to idle at 1.0x
-00:11 +36 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: composer grows with the draft and returns to idle at 2.5x
-00:11 +37 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: keyboard resizing preserves the editor and draft selection
-00:11 +38 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: every collapsed tool stays reachable from the tools sheet
-00:11 +39 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: photo actions persist the draft and launch the selected source
-00:11 +40 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: the tools sheet closes Voice while a run is active; Attach stays open for the queued send
-00:12 +41 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: a busy run lights the composer surface instead of a transcript row
-00:12 +42 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: reduced motion keeps a still activity ring while busy
-00:12 +43 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/composer_paste_test.dart
-00:12 +43 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/composer_paste_test.dart: an image committed by the keyboard becomes an attachment
-00:13 +44 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/composer_paste_test.dart: inserted content without bytes is ignored
-00:13 +45 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/composer_paste_test.dart: an oversized inserted image is rejected with the size message
-00:14 +46 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connect_method_order_test.dart
-00:14 +46 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connect_method_order_test.dart: headless comes first, browser last, key in between
-00:14 +47 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connect_method_order_test.dart: hints say where each flow finishes
-00:14 +48 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_codex_test.dart
-00:15 +48 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_codex_test.dart: Codex startup uses a non-null profile scope for sessions and catalog
-00:15 +49 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_codex_test.dart: Codex token rejection reports reentry and never invokes HTTP redetection
-00:15 +50 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_codex_test.dart: an explicit Codex folder wins over a stale persisted location on connect
-00:15 +51 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_codex_test.dart: Codex select-location and lifecycle reconnect preserve backend scope and dispose pairs
-00:15 +52 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_codex_test.dart: an unreadable Codex token refuses the factory and network
-00:15 +53 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_codex_test.dart: Codex item completion stays busy until explicit session idle
-00:15 +54 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_failure_test.dart
-00:16 +54 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_failure_test.dart: loopback offers retry without assuming Termux hosts the endpoint
-00:16 +55 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_failure_test.dart: loopback without Termux support retains generic retry
-00:16 +56 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_failure_test.dart: a bare "Health check failed" on loopback still gets the loopback advice
-00:16 +57 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_failure_test.dart: 401 asks for the password, not a retry
-00:16 +58 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_failure_test.dart: a missing Codex token asks for the token without a connection guess
-00:16 +59 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_failure_test.dart: a rejected Codex token has a token recovery action
-00:16 +60 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_failure_test.dart: Codex local refusal points at its listener or tunnel
-00:16 +61 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_failure_test.dart: remote Codex refusal recommends a wss endpoint
-00:16 +62 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_failure_test.dart: unknown Codex loopback errors stay an honest generic failure
-00:16 +63 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_failure_test.dart: certificate problems name the certificate
-00:16 +64 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_failure_test.dart: remote host refusing is "not reachable" with network checks
-00:16 +65 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_failure_test.dart: timeouts blame the network in between
-00:16 +66 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_failure_test.dart: unhealthy server is a server problem
-00:16 +67 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_failure_test.dart: three attempts adds the "retrying will not start a server" line
-00:16 +68 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_failure_test.dart: the raw error is kept verbatim for the details expander
-00:16 +69 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_interaction_test.dart
-00:16 +69 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_interaction_test.dart: form state form.v2.created adds the form; replied/cancelled settle it
-00:16 +70 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_interaction_test.dart: form state refreshPendingForms hydrates the pending list
-00:16 +71 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_interaction_test.dart: form state replyForm posts the answer and settles the form
-00:16 +72 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_interaction_test.dart: form state an already-settled reply resolves locally and rethrows
-00:16 +73 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_interaction_test.dart: form state a 400 invalid answer keeps the form pending and rethrows
-00:16 +74 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_interaction_test.dart: form state cancelForm posts the cancel and settles the form
-00:16 +75 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_interaction_test.dart: form state deleting a session drops its forms and inbox items
-00:16 +76 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_interaction_test.dart: inbox state enqueued/delivery.changed/delivered project the pending sends
-00:16 +77 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_interaction_test.dart: inbox state refreshInbox reconciles a session from REST
-00:16 +78 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_interaction_test.dart: inbox state cancelInboxItem returns the text for the composer
-00:16 +79 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_interaction_test.dart: inbox state a 409 already-delivered cancel drops the item and rethrows
-00:16 +80 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_interaction_test.dart: inbox state setInboxDelivery flips the mode on the wire and locally
-00:16 +81 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_interaction_test.dart: notification Reply on v2 permissions Reply maps to reject-with-message on the exact request
-00:16 +82 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_interaction_test.dart: notification Reply on v2 permissions a stale requestID refreshes the alert instead of resolving
-00:16 +83 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_interaction_test.dart: notification Reply on v2 permissions an empty reply is not delivered
-00:16 +84 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart
-00:17 +84 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: (setUpAll)
-00:17 +84 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: directory paths compare without their trailing separators
-00:17 +85 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: explicit project B survives a fresh controller with only server cwd in the catalog
-00:17 +86 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: initial discovery cannot replace a saved selection during connect or after restore
-00:17 +87 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: project selection is saved before a slow failed refresh completes
-00:17 +88 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: explicit project choices restore independently for each profile
-00:17 +89 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: remote workspace stays selected when its catalog is missing the entry
-00:17 +90 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: remote workspace stays selected when its catalog is unavailable
-00:17 +91 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: profile deletion drains a delayed location write without resurrecting its selection
-00:17 +92 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: relaunch restores the saved directory
-00:17 +93 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: a trailing slash on the saved directory still restores it
-00:17 +94 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: a trailing slash on the server side still matches the project list
-00:17 +95 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: catalog omission keeps the saved directory with an unverified notice
-00:17 +96 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: an unavailable project list restores optimistically and re-checks later
-00:17 +97 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: a later catalog omission cannot replace the selected directory
-00:17 +98 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: an empty catalog keeps the saved directory with a notice
-00:17 +99 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: a saved home folder is forgotten instead of restored, with a notice
-00:17 +100 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: a home-folder project never replaces a missing directory
-00:17 +101 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: selecting a home folder is refused and leaves the location
-00:17 +102 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: an existing conversation in the home folder can still be opened
-00:17 +103 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: (tearDownAll)
-00:17 +103 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart
-00:18 +103 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: latest overlapping connect owns all commits and transport
-00:18 +104 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: replacement stream ignores obsolete status and events
-00:18 +105 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: global installation stream is isolated from chat state
-00:18 +106 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: disposing EventStream cancels retry and suppresses callbacks
-00:18 +107 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: global event stream unwraps installation payloads
-00:18 +108 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: immediate HTTP 200 closes retain exponential retry backoff
-00:18 +109 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: stream error is reported once with no uncaught zone error
-00:18 +110 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: oversized unterminated data is discarded and parser recovers
-00:18 +111 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: valid event larger than 64 KiB is delivered intact
-00:18 +112 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: stream error cancels a source that does not close
-00:18 +113 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: chunk-split UTF-8 SSE event is decoded without corruption
-00:18 +114 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: location replacement scopes and atomically restarts SSE
-00:18 +115 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: cold connect restores one verified per-server location
-00:18 +116 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: server switching restores only that profile location
-00:18 +117 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: empty project catalog preserves the selected location
-00:18 +118 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: missing workspace retains the selected remote scope
-00:18 +119 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: manual reconnect is coalesced and preserves the selected location
-00:18 +120 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: failed manual reconnect retains stale data and can retry again
-00:18 +121 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: move, warp, and org rebuild the authoritative transport
-00:18 +122 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: v2 requests and PTY lifecycle update reducer signals
-00:19 +123 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: installation events retain exact available and installed versions
-00:19 +124 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: polling runs only while SSE is unavailable
-00:19 +125 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: failed new-location refresh cannot publish old sessions
-00:19 +126 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: keep-live wake reconciliation is shared with foreground actions
-00:19 +127 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: stale keep-live transport is rebuilt before an action
-00:19 +128 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: keep-live wake lock is limited to loopback profiles
-00:19 +129 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: OpenCode API scopes SSE and permission replies to location
-00:19 +130 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_transport_factory_guard_test.dart
-00:19 +130 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_transport_factory_guard_test.dart: only _buildTransportPair constructs the v1 transport
-00:19 +131 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_transport_factory_guard_test.dart: the location rescope path uses the flavor-aware builder
-00:19 +132 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_gateway_test.dart
-00:20 +132 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_gateway_test.dart: reconnect replaces cached selection with current v2 session truth
-00:20 +133 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_gateway_test.dart: a v2 profile builds the v2 pair and gateway event channels
-00:20 +134 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_gateway_test.dart: a mid-session 401 sets passwordRejected until recovery
-00:20 +135 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_gateway_test.dart: a wrong cached flavor re-probes once and retries as v2
-00:20 +136 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_gateway_test.dart: an unhealthy v1 server fails closed without a re-probe
-00:20 +137 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart
-00:20 +137 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: request replies cannot cross scope while waking
-00:21 +138 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: request replies cannot cross contents while waking
-00:21 +139 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: request replies cannot cross resolved then reused while waking
-00:21 +140 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: question answer and reject share a write slot before transport wake
-00:21 +141 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: late question failure after remote resolution does not surface an error
-00:21 +142 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: V2 HTTP hydration envelopes and session-scoped mutations
-00:21 +143 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: loose successful V2 request envelopes remain compatible
-00:21 +144 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: generated V2 request errors retain OpenCode identity
-00:21 +145 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: V2 hydration rejects mismatched and malformed envelopes
-00:21 +146 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: V2-only hydration routes mutations and blocks stale resurrection
-00:21 +147 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: permission and question replies wait for wake transport
-00:21 +148 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: partial V2 hydration failure preserves V2 reply provenance
-00:21 +149 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: QuestionNotFoundError resolves V2 and legacy requests locally
-00:21 +150 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: SSE reconnect refreshes pending questions
-00:21 +151 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: question hydration merges an independent concurrent SSE request
-00:21 +152 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: session snapshots merge around newer per-session events
-00:21 +153 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: connected stream reconciles a missed idle event
-00:21 +154 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: catalog replaces stale saved model and agent
-00:21 +155 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: model shortcuts and chat choices survive location changes and isolate profiles
-00:21 +156 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: fresh catalog follows project chat defaults, not provider order
-00:21 +157 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: connected catalog prunes a model exposed only by the active v2 surface
-00:21 +158 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: connected catalog keeps Z.AI when active v2 only shows Zen
-00:21 +159 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: v1 integration credential does not expose a provider absent from runtime
-00:21 +160 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: Termux profile keeps a valid model returned by OpenCode
-00:21 +161 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: Termux profile keeps an explicit valid OpenCode model
-00:21 +162 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: project default replaces an old automatic provider-order fallback
-00:21 +163 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: health false and active-profile persistence failure fail closed
-00:21 +164 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: lifecycle suspend and concurrent resume recreate one location
-00:21 +165 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: a second suspend invalidates an in-flight lifecycle resume
-00:21 +166 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/context_capsule_chat_test.dart
-00:22 +166 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/context_capsule_chat_test.dart: Apply preserves composer, persists offline and restores after controller restart
-00:23 +167 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/context_capsule_chat_test.dart: Cancel leaves existing composer unchanged
-00:24 +168 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/context_capsule_chat_test.dart: location change while capsule is open refuses apply even after returning
-00:24 +169 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/context_capsule_chat_test.dart: applied bundle shares attachment restoration and profile deletion
-00:24 +170 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/context_capsule_test.dart
-00:25 +170 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/context_capsule_test.dart: appending preserves the exact draft and does not fabricate text for images
-00:25 +171 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/context_capsule_test.dart: review edits labels, removes excerpts and returns only on Apply
-00:26 +172 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/context_capsule_test.dart: Cancel returns no content after editing
-00:26 +173 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/context_capsule_test.dart: scope change during picking rejects late image and stays invalid after return
-00:26 +174 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/context_capsule_test.dart: cancelling while picker runs discards its late result
-00:26 +175 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/context_capsule_test.dart: image removal and nonimage rejection keep the bundle honest
-00:26 +176 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/context_capsule_test.dart: clipboard is read only after explicit Paste and scope checked on return
-00:26 +177 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/delimited_text_test.dart
-00:27 +177 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/delimited_text_test.dart: CSV preserves quoted separators, quotes, multiline fields and trailing cells
-00:27 +178 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/delimited_text_test.dart: TSV retains ragged rows and treats formulas and markup as literal data
-00:27 +179 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/delimited_text_test.dart: blank input and trailing record terminator do not invent rows
-00:27 +180 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/delimited_text_test.dart: malformed quotes fall back without fabricated cells
-00:27 +181 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/delimited_text_test.dart: bounds distinguish row prefix from unavailable table
-00:27 +182 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/delimited_text_test.dart: explicit incompatible MIME cannot become a table from its filename
-00:27 +183 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/demo_isolation_test.dart
-00:27 +183 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/demo_isolation_test.dart: compact demo keeps send and exit reachable with large text and keyboard
-00:29 +184 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/demo_isolation_test.dart: production demo allows its simulated edit without touching real state
-00:29 +185 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/demo_isolation_test.dart: production demo rejects its simulated edit without touching real state
-00:29 +186 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/demo_isolation_test.dart: reset and exit dispose streaming gateways and keep a fresh prompt
-00:30 +187 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/demo_isolation_test.dart: demo treats mobile commands as text and disables external tool surfaces
-00:30 +188 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/demo_isolation_test.dart: demo preferences are independent maps with defensive list copies
-00:30 +189 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_context_menu_test.dart
-00:30 +189 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_context_menu_test.dart: the region itself secondary tap opens the menu and runs the chosen action
-00:31 +190 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_context_menu_test.dart: the region itself android ignores a secondary tap
-00:31 +191 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_context_menu_test.dart: a transcript message offers copy and fork
-00:32 +192 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_context_menu_test.dart: a file row offers open and copy path
-00:32 +193 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_context_menu_test.dart: a session row offers the same actions as its overflow menu
-00:32 +194 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_file_drop_test.dart
-00:33 +194 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_file_drop_test.dart: a dropped file becomes a composer attachment
-00:33 +195 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_file_drop_test.dart: two dropped files both attach
-00:34 +196 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_file_drop_test.dart: an oversized drop is refused by the existing cap
-00:34 +197 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_file_drop_test.dart: the drop stops at the five-attachment cap
-00:34 +198 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_file_drop_test.dart: a dropped file keeps its bytes in the attachment payload
-00:34 +199 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_file_drop_test.dart: android installs no drop target
-00:34 +200 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_packaging_contract_test.dart
-00:35 +200 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_packaging_contract_test.dart: release tag and version conventions the pubspec version carries a build number the checker can read
-00:35 +201 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_packaging_contract_test.dart: release tag and version conventions a release tag for this version parses back to this build
-00:35 +202 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_packaging_contract_test.dart: release tag and version conventions the packaging script labels artifacts with the pubspec version
-00:35 +203 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_packaging_contract_test.dart: release tag and version conventions the packaging script refuses a bundle from another version
-00:35 +204 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_packaging_contract_test.dart: release tag and version conventions the release API target matches the repository CI publishes to
-00:35 +205 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_packaging_contract_test.dart: Linux desktop integration the desktop entry, icons and WM_CLASS all use the app id
-00:35 +206 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_packaging_contract_test.dart: Linux desktop integration packaging never claims the OpenCode server command
-00:35 +207 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_packaging_contract_test.dart: Linux desktop integration public package metadata points at this repository
-00:35 +208 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_packaging_contract_test.dart: Linux desktop integration every icon size the packaging script requires is committed
-00:35 +209 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_packaging_contract_test.dart: CI pins the same Flutter version the release script does
-00:35 +210 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart
-00:36 +210 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart: the first-run welcome offers the Termux path on Android
-00:36 +211 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart: the first-run welcome never mentions Termux on desktop
-00:36 +212 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart: the servers quick-add list offers on-device setup on Android
-00:37 +213 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart: the servers quick-add list offers only the remote path on desktop
-00:37 +214 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart: the setup guide documents both paths on Android
-00:37 +215 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart: the setup guide drops the Termux path on desktop
-00:37 +216 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart: the Termux setup screen says so plainly if it is ever reached on desktop
-00:37 +217 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart: the composer prompt tools offer voice input on Android
-00:37 +218 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart: the composer prompt tools drop voice input on desktop
-00:38 +219 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart: the settings hub shows the background category on Android
-00:38 +220 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart: the settings hub hides the foreground-service category on desktop
-00:38 +221 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart: Ubuntu host management offers the USB port forward on Android
-00:38 +222 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart: Ubuntu host management drops the adb command on desktop
-00:38 +223 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart: the background live controller talks to the service on Android
-00:38 +224 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart: the background live controller never reaches the channel on desktop
-00:38 +225 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart: the home-screen widget snapshot writes and redraws on Android
-00:38 +226 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart: the home-screen widget snapshot writes nothing on desktop, where there is no widget
+00:00 +0: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_project_navigation_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_project_navigation_test.dart: Codex project management shows configured folder without unsupported rows
+00:00 +1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_project_navigation_test.dart: Codex ProjectsScreen does not list projects or expose project actions
+00:00 +2: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_transport_test.dart
+00:01 +2: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_transport_test.dart: socket loss fails all pending work and never replays a mutation
+00:01 +3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_transport_test.dart: old epoch cannot answer an approval or event after socket loss
+00:01 +4: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_transport_test.dart: request waits for replacement initialization before sending its frame
+00:01 +5: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/common_file_preview_test.dart
+00:01 +5: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/common_file_preview_test.dart: eligible byte-only text decodes strictly and export keeps original bytes
+00:01 +6: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/common_file_preview_test.dart: invalid UTF-8 data URL keeps Save bytes without replacement text
+00:01 +7: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/common_file_preview_test.dart: CSV cells are literal and Source copy preserves exact source
+00:02 +8: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/common_file_preview_test.dart: partial source refuses table inference and preserves full copy
+00:02 +9: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/common_file_preview_test.dart: focused partial source discloses its prefix and never highlights a different target
+00:02 +10: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/common_file_preview_test.dart: malformed and empty tables have useful fallbacks
+00:02 +11: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/common_file_preview_test.dart: pretty JSON copies original spacing rather than projected formatting
+00:02 +12: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/common_file_preview_test.dart: static SVG renders locally and Source retains the exact document
+00:02 +13: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/common_file_preview_test.dart: active SVG stays in useful Source and inert preview disables switches
+00:02 +14: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/common_file_preview_test.dart: file-sheet clipboard refusal offers an exact retry
+00:03 +15: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/completion_digest_capture_test.dart
+00:03 +15: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/completion_digest_capture_test.dart: captures the production Activity completion digest states
+00:03 +15 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/completion_digest_card_test.dart
+00:04 +15 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/completion_digest_card_test.dart: keeps reported zero distinct from unavailable metadata
+00:05 +16 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/completion_digest_card_test.dart: copy reports success and keeps the digest metadata-only
+00:05 +17 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/completion_digest_card_test.dart: copy reports a failure when the platform clipboard rejects it
+00:05 +18 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/completion_digest_card_test.dart: wraps actions at large text on a narrow RTL surface
+00:05 +19 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/composer_desktop_enter_test.dart
+00:05 +19 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/composer_desktop_enter_test.dart: desktop: Enter sends the draft
+00:06 +20 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/composer_desktop_enter_test.dart: desktop: Shift+Enter does not send (newline stays with the field)
+00:07 +21 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/composer_desktop_enter_test.dart: desktop: Ctrl+Enter still sends
+00:07 +22 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/composer_desktop_enter_test.dart: mobile: plain Enter keeps inserting a newline, never sends
+00:07 +23 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/composer_desktop_enter_test.dart: the Stop tooltip is dismissed when Stop is pressed
+00:07 +24 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart
+00:08 +24 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: typing saves the latest draft before leaving the chat
+00:09 +25 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: typing updates Send and slash suggestions without a server event
+00:09 +26 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: local image attachments show a thumbnail with independent removal
+00:09 +27 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: clearing text can be undone without losing newer typing or attachments
+00:09 +28 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: prompt reuse searches deduplicated history and preserves the draft
+00:10 +29 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: finishing a run preserves the editor state and selection
+00:10 +30 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: prompt history stays usable with large text and the keyboard open
+00:10 +31 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: background capability is cached and refreshed after reconnect
+00:10 +32 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: touch background action handles a no-op without claiming success
+00:10 +33 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: the prompt field stays dominant on a 360dp phone at 2.5x text
+00:11 +34 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: the compact composer keeps a full-width typing area
+00:11 +35 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: composer grows with the draft and returns to idle at 1.0x
+00:11 +36 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: composer grows with the draft and returns to idle at 2.5x
+00:11 +37 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: keyboard resizing preserves the editor and draft selection
+00:11 +38 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: every collapsed tool stays reachable from the tools sheet
+00:11 +39 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: photo actions persist the draft and launch the selected source
+00:11 +40 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: the tools sheet closes Voice while a run is active; Attach stays open for the queued send
+00:12 +41 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: a busy run lights the composer surface instead of a transcript row
+00:12 +42 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/composer_layout_test.dart: reduced motion keeps a still activity ring while busy
+00:12 +43 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/composer_paste_test.dart
+00:12 +43 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/composer_paste_test.dart: an image committed by the keyboard becomes an attachment
+00:13 +44 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/composer_paste_test.dart: inserted content without bytes is ignored
+00:13 +45 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/composer_paste_test.dart: an oversized inserted image is rejected with the size message
+00:14 +46 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connect_method_order_test.dart
+00:14 +46 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connect_method_order_test.dart: headless comes first, browser last, key in between
+00:14 +47 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connect_method_order_test.dart: hints say where each flow finishes
+00:14 +48 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_codex_test.dart
+00:15 +48 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_codex_test.dart: Codex startup uses a non-null profile scope for sessions and catalog
+00:15 +49 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_codex_test.dart: Codex token rejection reports reentry and never invokes HTTP redetection
+00:15 +50 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_codex_test.dart: an explicit Codex folder wins over a stale persisted location on connect
+00:15 +51 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_codex_test.dart: Codex select-location and lifecycle reconnect preserve backend scope and dispose pairs
+00:15 +52 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_codex_test.dart: an unreadable Codex token refuses the factory and network
+00:15 +53 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_codex_test.dart: Codex item completion stays busy until explicit session idle
+00:15 +54 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_failure_test.dart
+00:16 +54 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_failure_test.dart: loopback offers retry without assuming Termux hosts the endpoint
+00:16 +55 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_failure_test.dart: loopback without Termux support retains generic retry
+00:16 +56 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_failure_test.dart: a bare "Health check failed" on loopback still gets the loopback advice
+00:16 +57 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_failure_test.dart: 401 asks for the password, not a retry
+00:16 +58 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_failure_test.dart: a missing Codex token asks for the token without a connection guess
+00:16 +59 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_failure_test.dart: a rejected Codex token has a token recovery action
+00:16 +60 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_failure_test.dart: Codex local refusal points at its listener or tunnel
+00:16 +61 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_failure_test.dart: remote Codex refusal recommends a wss endpoint
+00:16 +62 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_failure_test.dart: unknown Codex loopback errors stay an honest generic failure
+00:16 +63 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_failure_test.dart: certificate problems name the certificate
+00:16 +64 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_failure_test.dart: remote host refusing is "not reachable" with network checks
+00:16 +65 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_failure_test.dart: timeouts blame the network in between
+00:16 +66 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_failure_test.dart: unhealthy server is a server problem
+00:16 +67 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_failure_test.dart: three attempts adds the "retrying will not start a server" line
+00:16 +68 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_failure_test.dart: the raw error is kept verbatim for the details expander
+00:16 +69 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_interaction_test.dart
+00:16 +69 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_interaction_test.dart: form state form.v2.created adds the form; replied/cancelled settle it
+00:16 +70 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_interaction_test.dart: form state refreshPendingForms hydrates the pending list
+00:16 +71 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_interaction_test.dart: form state replyForm posts the answer and settles the form
+00:16 +72 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_interaction_test.dart: form state an already-settled reply resolves locally and rethrows
+00:16 +73 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_interaction_test.dart: form state a 400 invalid answer keeps the form pending and rethrows
+00:16 +74 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_interaction_test.dart: form state cancelForm posts the cancel and settles the form
+00:16 +75 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_interaction_test.dart: form state deleting a session drops its forms and inbox items
+00:16 +76 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_interaction_test.dart: inbox state enqueued/delivery.changed/delivered project the pending sends
+00:16 +77 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_interaction_test.dart: inbox state refreshInbox reconciles a session from REST
+00:16 +78 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_interaction_test.dart: inbox state cancelInboxItem returns the text for the composer
+00:16 +79 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_interaction_test.dart: inbox state a 409 already-delivered cancel drops the item and rethrows
+00:16 +80 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_interaction_test.dart: inbox state setInboxDelivery flips the mode on the wire and locally
+00:16 +81 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_interaction_test.dart: notification Reply on v2 permissions Reply maps to reject-with-message on the exact request
+00:16 +82 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_interaction_test.dart: notification Reply on v2 permissions a stale requestID refreshes the alert instead of resolving
+00:16 +83 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_interaction_test.dart: notification Reply on v2 permissions an empty reply is not delivered
+00:16 +84 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart
+00:17 +84 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: (setUpAll)
+00:17 +84 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: directory paths compare without their trailing separators
+00:17 +85 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: explicit project B survives a fresh controller with only server cwd in the catalog
+00:17 +86 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: initial discovery cannot replace a saved selection during connect or after restore
+00:17 +87 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: project selection is saved before a slow failed refresh completes
+00:17 +88 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: explicit project choices restore independently for each profile
+00:17 +89 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: remote workspace stays selected when its catalog is missing the entry
+00:17 +90 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: remote workspace stays selected when its catalog is unavailable
+00:17 +91 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: profile deletion drains a delayed location write without resurrecting its selection
+00:17 +92 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: relaunch restores the saved directory
+00:17 +93 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: a trailing slash on the saved directory still restores it
+00:17 +94 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: a trailing slash on the server side still matches the project list
+00:17 +95 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: catalog omission keeps the saved directory with an unverified notice
+00:17 +96 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: an unavailable project list restores optimistically and re-checks later
+00:17 +97 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: a later catalog omission cannot replace the selected directory
+00:17 +98 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: an empty catalog keeps the saved directory with a notice
+00:17 +99 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: a saved home folder is forgotten instead of restored, with a notice
+00:17 +100 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: a home-folder project never replaces a missing directory
+00:17 +101 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: selecting a home folder is refused and leaves the location
+00:17 +102 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: an existing conversation in the home folder can still be opened
+00:17 +103 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_location_restore_test.dart: (tearDownAll)
+00:17 +103 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart
+00:18 +103 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: latest overlapping connect owns all commits and transport
+00:18 +104 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: replacement stream ignores obsolete status and events
+00:18 +105 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: global installation stream is isolated from chat state
+00:18 +106 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: disposing EventStream cancels retry and suppresses callbacks
+00:18 +107 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: global event stream unwraps installation payloads
+00:18 +108 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: immediate HTTP 200 closes retain exponential retry backoff
+00:18 +109 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: stream error is reported once with no uncaught zone error
+00:18 +110 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: oversized unterminated data is discarded and parser recovers
+00:18 +111 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: valid event larger than 64 KiB is delivered intact
+00:18 +112 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: stream error cancels a source that does not close
+00:18 +113 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: chunk-split UTF-8 SSE event is decoded without corruption
+00:18 +114 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: location replacement scopes and atomically restarts SSE
+00:18 +115 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: cold connect restores one verified per-server location
+00:18 +116 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: server switching restores only that profile location
+00:18 +117 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: empty project catalog preserves the selected location
+00:18 +118 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: missing workspace retains the selected remote scope
+00:18 +119 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: manual reconnect is coalesced and preserves the selected location
+00:18 +120 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: failed manual reconnect retains stale data and can retry again
+00:18 +121 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: move, warp, and org rebuild the authoritative transport
+00:18 +122 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: v2 requests and PTY lifecycle update reducer signals
+00:19 +123 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: installation events retain exact available and installed versions
+00:19 +124 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: polling runs only while SSE is unavailable
+00:19 +125 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: failed new-location refresh cannot publish old sessions
+00:19 +126 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: keep-live wake reconciliation is shared with foreground actions
+00:19 +127 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: stale keep-live transport is rebuilt before an action
+00:19 +128 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: keep-live wake lock is limited to loopback profiles
+00:19 +129 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_sse_test.dart: OpenCode API scopes SSE and permission replies to location
+00:19 +130 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_transport_factory_guard_test.dart
+00:19 +130 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_transport_factory_guard_test.dart: only _buildTransportPair constructs the v1 transport
+00:19 +131 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_transport_factory_guard_test.dart: the location rescope path uses the flavor-aware builder
+00:19 +132 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_gateway_test.dart
+00:20 +132 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_gateway_test.dart: reconnect replaces cached selection with current v2 session truth
+00:20 +133 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_gateway_test.dart: a v2 profile builds the v2 pair and gateway event channels
+00:20 +134 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_gateway_test.dart: a mid-session 401 sets passwordRejected until recovery
+00:20 +135 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_gateway_test.dart: a wrong cached flavor re-probes once and retries as v2
+00:20 +136 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_gateway_test.dart: an unhealthy v1 server fails closed without a re-probe
+00:20 +137 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart
+00:20 +137 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: request replies cannot cross scope while waking
+00:21 +138 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: request replies cannot cross contents while waking
+00:21 +139 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: request replies cannot cross resolved then reused while waking
+00:21 +140 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: question answer and reject share a write slot before transport wake
+00:21 +141 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: late question failure after remote resolution does not surface an error
+00:21 +142 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: V2 HTTP hydration envelopes and session-scoped mutations
+00:21 +143 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: loose successful V2 request envelopes remain compatible
+00:21 +144 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: generated V2 request errors retain OpenCode identity
+00:21 +145 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: V2 hydration rejects mismatched and malformed envelopes
+00:21 +146 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: V2-only hydration routes mutations and blocks stale resurrection
+00:21 +147 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: permission and question replies wait for wake transport
+00:21 +148 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: partial V2 hydration failure preserves V2 reply provenance
+00:21 +149 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: QuestionNotFoundError resolves V2 and legacy requests locally
+00:21 +150 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: SSE reconnect refreshes pending questions
+00:21 +151 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: question hydration merges an independent concurrent SSE request
+00:21 +152 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: session snapshots merge around newer per-session events
+00:21 +153 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: connected stream reconciles a missed idle event
+00:21 +154 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: catalog replaces stale saved model and agent
+00:21 +155 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: model shortcuts and chat choices survive location changes and isolate profiles
+00:21 +156 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: fresh catalog follows project chat defaults, not provider order
+00:21 +157 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: connected catalog prunes a model exposed only by the active v2 surface
+00:21 +158 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: connected catalog keeps Z.AI when active v2 only shows Zen
+00:21 +159 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: v1 integration credential does not expose a provider absent from runtime
+00:21 +160 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: Termux profile keeps a valid model returned by OpenCode
+00:21 +161 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: Termux profile keeps an explicit valid OpenCode model
+00:21 +162 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: project default replaces an old automatic provider-order fallback
+00:21 +163 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: health false and active-profile persistence failure fail closed
+00:21 +164 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: lifecycle suspend and concurrent resume recreate one location
+00:21 +165 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/connection_v2_test.dart: a second suspend invalidates an in-flight lifecycle resume
+00:21 +166 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/context_capsule_chat_test.dart
+00:22 +166 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/context_capsule_chat_test.dart: Apply preserves composer, persists offline and restores after controller restart
+00:23 +167 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/context_capsule_chat_test.dart: Cancel leaves existing composer unchanged
+00:24 +168 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/context_capsule_chat_test.dart: location change while capsule is open refuses apply even after returning
+00:24 +169 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/context_capsule_chat_test.dart: applied bundle shares attachment restoration and profile deletion
+00:24 +170 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/context_capsule_test.dart
+00:25 +170 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/context_capsule_test.dart: appending preserves the exact draft and does not fabricate text for images
+00:25 +171 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/context_capsule_test.dart: review edits labels, removes excerpts and returns only on Apply
+00:26 +172 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/context_capsule_test.dart: Cancel returns no content after editing
+00:26 +173 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/context_capsule_test.dart: scope change during picking rejects late image and stays invalid after return
+00:26 +174 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/context_capsule_test.dart: cancelling while picker runs discards its late result
+00:26 +175 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/context_capsule_test.dart: image removal and nonimage rejection keep the bundle honest
+00:26 +176 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/context_capsule_test.dart: clipboard is read only after explicit Paste and scope checked on return
+00:26 +177 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/delimited_text_test.dart
+00:27 +177 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/delimited_text_test.dart: CSV preserves quoted separators, quotes, multiline fields and trailing cells
+00:27 +178 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/delimited_text_test.dart: TSV retains ragged rows and treats formulas and markup as literal data
+00:27 +179 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/delimited_text_test.dart: blank input and trailing record terminator do not invent rows
+00:27 +180 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/delimited_text_test.dart: malformed quotes fall back without fabricated cells
+00:27 +181 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/delimited_text_test.dart: bounds distinguish row prefix from unavailable table
+00:27 +182 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/delimited_text_test.dart: explicit incompatible MIME cannot become a table from its filename
+00:27 +183 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/demo_isolation_test.dart
+00:27 +183 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/demo_isolation_test.dart: compact demo keeps send and exit reachable with large text and keyboard
+00:29 +184 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/demo_isolation_test.dart: production demo allows its simulated edit without touching real state
+00:29 +185 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/demo_isolation_test.dart: production demo rejects its simulated edit without touching real state
+00:29 +186 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/demo_isolation_test.dart: reset and exit dispose streaming gateways and keep a fresh prompt
+00:30 +187 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/demo_isolation_test.dart: demo treats mobile commands as text and disables external tool surfaces
+00:30 +188 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/demo_isolation_test.dart: demo preferences are independent maps with defensive list copies
+00:30 +189 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_context_menu_test.dart
+00:30 +189 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_context_menu_test.dart: the region itself secondary tap opens the menu and runs the chosen action
+00:31 +190 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_context_menu_test.dart: the region itself android ignores a secondary tap
+00:31 +191 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_context_menu_test.dart: a transcript message offers copy and fork
+00:32 +192 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_context_menu_test.dart: a file row offers open and copy path
+00:32 +193 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_context_menu_test.dart: a session row offers the same actions as its overflow menu
+00:32 +194 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_file_drop_test.dart
+00:33 +194 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_file_drop_test.dart: a dropped file becomes a composer attachment
+00:33 +195 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_file_drop_test.dart: two dropped files both attach
+00:34 +196 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_file_drop_test.dart: an oversized drop is refused by the existing cap
+00:34 +197 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_file_drop_test.dart: the drop stops at the five-attachment cap
+00:34 +198 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_file_drop_test.dart: a dropped file keeps its bytes in the attachment payload
+00:34 +199 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_file_drop_test.dart: android installs no drop target
+00:34 +200 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_packaging_contract_test.dart
+00:35 +200 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_packaging_contract_test.dart: release tag and version conventions the pubspec version carries a build number the checker can read
+00:35 +201 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_packaging_contract_test.dart: release tag and version conventions a release tag for this version parses back to this build
+00:35 +202 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_packaging_contract_test.dart: release tag and version conventions the packaging script labels artifacts with the pubspec version
+00:35 +203 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_packaging_contract_test.dart: release tag and version conventions the packaging script refuses a bundle from another version
+00:35 +204 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_packaging_contract_test.dart: release tag and version conventions the release API target matches the repository CI publishes to
+00:35 +205 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_packaging_contract_test.dart: Linux desktop integration the desktop entry, icons and WM_CLASS all use the app id
+00:35 +206 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_packaging_contract_test.dart: Linux desktop integration packaging never claims the OpenCode server command
+00:35 +207 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_packaging_contract_test.dart: Linux desktop integration public package metadata points at this repository
+00:35 +208 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_packaging_contract_test.dart: Linux desktop integration every icon size the packaging script requires is committed
+00:35 +209 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_packaging_contract_test.dart: CI pins the same Flutter version the release script does
+00:35 +210 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart
+00:36 +210 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart: the first-run welcome offers the Termux path on Android
+00:36 +211 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart: the first-run welcome never mentions Termux on desktop
+00:36 +212 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart: the servers quick-add list offers on-device setup on Android
+00:37 +213 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart: the servers quick-add list offers only the remote path on desktop
+00:37 +214 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart: the setup guide documents both paths on Android
+00:37 +215 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart: the setup guide drops the Termux path on desktop
+00:37 +216 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart: the Termux setup screen says so plainly if it is ever reached on desktop
+00:37 +217 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart: the composer prompt tools offer voice input on Android
+00:37 +218 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart: the composer prompt tools drop voice input on desktop
+00:38 +219 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart: the settings hub shows the background category on Android
+00:38 +220 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart: the settings hub hides the foreground-service category on desktop
+00:38 +221 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart: Ubuntu host management offers the USB port forward on Android
+00:38 +222 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart: Ubuntu host management drops the adb command on desktop
+00:38 +223 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart: the background live controller talks to the service on Android
+00:38 +224 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart: the background live controller never reaches the channel on desktop
+00:38 +225 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart: the home-screen widget snapshot writes and redraws on Android
+00:38 +226 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/desktop_platform_gating_test.dart: the home-screen widget snapshot writes nothing on desktop, where there is no widget
 00:38 +227 ~1: All tests passed!

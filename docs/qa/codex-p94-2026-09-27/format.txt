@@ -1,7 +1,7 @@
 Warning: Package resolution error when reading "analysis_options.yaml" file for "lib/domain/settings_search.dart":
-Failed to resolve package URI "package:flutter_lints/flutter.yaml" in include at "/home/eslam/Storage/Code/oc_app-codex-p94/analysis_options.yaml".
+Failed to resolve package URI "package:flutter_lints/flutter.yaml" in include at "/home/owner/Storage/Code/oc_app-codex-p94/analysis_options.yaml".
 Formatted lib/domain/settings_search_catalog.dart
 Warning: Package resolution error when reading "analysis_options.yaml" file for "test/settings_search_domain_test.dart":
-Failed to resolve package URI "package:flutter_lints/flutter.yaml" in include at "/home/eslam/Storage/Code/oc_app-codex-p94/analysis_options.yaml".
+Failed to resolve package URI "package:flutter_lints/flutter.yaml" in include at "/home/owner/Storage/Code/oc_app-codex-p94/analysis_options.yaml".
 Formatted test/settings_search_domain_test.dart
 Formatted 3 files (2 changed) in 0.09 seconds.

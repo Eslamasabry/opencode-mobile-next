@@ -2,7 +2,7 @@
   "mode": "dry-run",
   "deviceTouched": false,
   "serial": "emulator-5554",
-  "lock": "/home/eslam/Storage/tmp/oc-emulator.lock",
+  "lock": "/home/owner/Storage/tmp/oc-emulator.lock",
   "lockWaitSeconds": 3600,
   "rows": [
     "fq9-upgrade",

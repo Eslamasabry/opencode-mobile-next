@@ -37,7 +37,7 @@ postinstall scripts had not run. For this check the official
 `@opencode/cli-linux-x64@2.0.29` npm tarball was downloaded and extracted under
 `/tmp`, then its standalone binary was executed directly. OC1 used the existing
 `/tmp/relengine-oc1-1190/opencode` binary. No package manager installation ran and
-no `/home/eslam` package files changed.
+no `/home/owner` package files changed.
 
 OC2 authenticates with Basic user `opencode`; the generated password is parsed
 from a private server log and never included in output. OC1 uses a fresh random

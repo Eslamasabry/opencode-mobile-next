@@ -5,7 +5,7 @@ Branch `perf/native-2026-11-01`. It merges `perf/dart-2026-11-01` (see
 `feat/process-budget-2026-11-01` (see
 [../process-budget-2026-11-01/README.md](../process-budget-2026-11-01/README.md))
 and adds the pieces that need a new release because they are Kotlin. Audit:
-`/home/eslam/Storage2/wt/perf-audit-2026-11-01/REPORT.md`.
+`/home/owner/Storage2/wt/perf-audit-2026-11-01/REPORT.md`.
 
 Finish line: heat and low battery ease the phone's agents (lower priority, then
 new heavy work waits), the phone server's status row stops being re-posted for

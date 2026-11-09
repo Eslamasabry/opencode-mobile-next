@@ -14,7 +14,7 @@ import probe
 IDS = ('codex', 'gemini', 'qwen', 'goose', 'omp-acp', 'fx')
 REPO = Path(__file__).resolve().parents[3]
 DART = Path.home() / '.shorebird/bin/cache/flutter/6e5e949520159b5ceb029598be37520cd433b046/bin/dart'
-LOCK = Path('/home/eslam/Storage/tmp/oc-emulator.lock')
+LOCK = Path(os.path.expanduser('~/Storage/tmp/oc-emulator.lock'))
 
 
 def catalog():

@@ -64,59 +64,59 @@ Downloading packages...
 Got dependencies!
 61 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: sign-in lease acknowledges foreground without changing user preference
-00:00 +1: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: concurrent reservations join one native enable and last release stops it
-00:00 +2: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: borrows existing active service without enabling or disabling it
-00:00 +3: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: unknown or durable paused status never starts foreground work
-00:00 +4: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: notification denial and inactive acknowledgement fail with typed reasons
-00:00 +5: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: cancellation before pause receipt completes readiness promptly and sends no enable
-00:00 +6: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: cancellation during native start ignores and cleans late successful acknowledgement
-00:00 +7: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: explicit user enable during lease preserves service after release
-00:00 +8: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: explicit user enable while acknowledgement is pending joins activation
-00:00 +9: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: explicit disable loses lease immediately and prevents restart
-00:00 +10: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: native timeout loses all leases without automatically restarting
-00:00 +11: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: inactive native status invalidates an active lease
-00:00 +12: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: dispose cancels admission and cleans late native acknowledgement
-00:00 +13: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: active disposal waits for terminal cleanup to release service
-00:00 +14: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: failed owned stop stays eligible for safe cleanup retry
-00:00 +15: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: user disable wins busy native enable and cleans its late receipt
-00:00 +16: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: platform support lost while reading pause fails pending admission
-00:00 +17: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart
-00:00 +17: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: background live mode persists only after Android enables it
-00:00 +18: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: denied notification permission leaves background mode disabled
-00:00 +19: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: restores an enabled preference through the native service
-00:00 +20: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.iOS, isWeb: false) ignores saved null without changing it
-00:00 +21: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.iOS, isWeb: false) ignores saved false without changing it
-00:00 +22: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.iOS, isWeb: false) ignores saved true without changing it
-00:00 +23: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.linux, isWeb: false) ignores saved null without changing it
-00:00 +24: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.linux, isWeb: false) ignores saved false without changing it
-00:00 +25: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.linux, isWeb: false) ignores saved true without changing it
-00:00 +26: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.windows, isWeb: false) ignores saved null without changing it
-00:00 +27: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.windows, isWeb: false) ignores saved false without changing it
-00:00 +28: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.windows, isWeb: false) ignores saved true without changing it
-00:00 +29: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.macOS, isWeb: false) ignores saved null without changing it
-00:00 +30: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.macOS, isWeb: false) ignores saved false without changing it
-00:00 +31: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.macOS, isWeb: false) ignores saved true without changing it
-00:00 +32: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.fuchsia, isWeb: false) ignores saved null without changing it
-00:00 +33: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.fuchsia, isWeb: false) ignores saved false without changing it
-00:00 +34: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.fuchsia, isWeb: false) ignores saved true without changing it
-00:00 +35: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.android, isWeb: true) ignores saved null without changing it
-00:00 +36: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.android, isWeb: true) ignores saved false without changing it
-00:00 +37: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.android, isWeb: true) ignores saved true without changing it
-00:00 +38: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported restore clears a previously active Android state
-00:00 +39: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported enable clears a previously active Android state
-00:00 +40: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: late native enable status cannot undo an unsupported gate
-00:00 +41: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: late native enable failure cannot undo an unsupported gate
-00:00 +42: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: an unavailable Android channel still rejects enable and reports it
-00:00 +43: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: malformed Android status fields do not grant background capabilities
-00:00 +44: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: coding alerts use the exact privacy-safe native contract
-00:00 +45: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: disabled live mode never posts a coding alert
-00:00 +46: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: a test notification ignores the live-mode gate but not the platform answer (P0.6)
-00:00 +47: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: openNotificationSettings calls the platform once and swallows a missing channel (P0.6)
-00:00 +48: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: consumes a typed notification destination once Android provides it
-00:01 +49: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: a widget-tap destination keeps its profile discriminator
-00:01 +50: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: an Android foreground-service timeout turns live mode off
-00:01 +51: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: turning live mode back on clears the timeout notice
-00:01 +52: /home/eslam/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: the timeout method name matches the native contract
+00:00 +0: loading /home/owner/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: sign-in lease acknowledges foreground without changing user preference
+00:00 +1: /home/owner/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: concurrent reservations join one native enable and last release stops it
+00:00 +2: /home/owner/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: borrows existing active service without enabling or disabling it
+00:00 +3: /home/owner/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: unknown or durable paused status never starts foreground work
+00:00 +4: /home/owner/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: notification denial and inactive acknowledgement fail with typed reasons
+00:00 +5: /home/owner/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: cancellation before pause receipt completes readiness promptly and sends no enable
+00:00 +6: /home/owner/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: cancellation during native start ignores and cleans late successful acknowledgement
+00:00 +7: /home/owner/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: explicit user enable during lease preserves service after release
+00:00 +8: /home/owner/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: explicit user enable while acknowledgement is pending joins activation
+00:00 +9: /home/owner/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: explicit disable loses lease immediately and prevents restart
+00:00 +10: /home/owner/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: native timeout loses all leases without automatically restarting
+00:00 +11: /home/owner/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: inactive native status invalidates an active lease
+00:00 +12: /home/owner/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: dispose cancels admission and cleans late native acknowledgement
+00:00 +13: /home/owner/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: active disposal waits for terminal cleanup to release service
+00:00 +14: /home/owner/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: failed owned stop stays eligible for safe cleanup retry
+00:00 +15: /home/owner/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: user disable wins busy native enable and cleans its late receipt
+00:00 +16: /home/owner/Storage/Code/oc_app-sol-ba/test/background_signin_foreground_test.dart: platform support lost while reading pause fails pending admission
+00:00 +17: loading /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart
+00:00 +17: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: background live mode persists only after Android enables it
+00:00 +18: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: denied notification permission leaves background mode disabled
+00:00 +19: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: restores an enabled preference through the native service
+00:00 +20: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.iOS, isWeb: false) ignores saved null without changing it
+00:00 +21: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.iOS, isWeb: false) ignores saved false without changing it
+00:00 +22: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.iOS, isWeb: false) ignores saved true without changing it
+00:00 +23: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.linux, isWeb: false) ignores saved null without changing it
+00:00 +24: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.linux, isWeb: false) ignores saved false without changing it
+00:00 +25: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.linux, isWeb: false) ignores saved true without changing it
+00:00 +26: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.windows, isWeb: false) ignores saved null without changing it
+00:00 +27: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.windows, isWeb: false) ignores saved false without changing it
+00:00 +28: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.windows, isWeb: false) ignores saved true without changing it
+00:00 +29: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.macOS, isWeb: false) ignores saved null without changing it
+00:00 +30: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.macOS, isWeb: false) ignores saved false without changing it
+00:00 +31: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.macOS, isWeb: false) ignores saved true without changing it
+00:00 +32: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.fuchsia, isWeb: false) ignores saved null without changing it
+00:00 +33: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.fuchsia, isWeb: false) ignores saved false without changing it
+00:00 +34: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.fuchsia, isWeb: false) ignores saved true without changing it
+00:00 +35: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.android, isWeb: true) ignores saved null without changing it
+00:00 +36: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.android, isWeb: true) ignores saved false without changing it
+00:00 +37: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.android, isWeb: true) ignores saved true without changing it
+00:00 +38: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported restore clears a previously active Android state
+00:00 +39: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: unsupported enable clears a previously active Android state
+00:00 +40: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: late native enable status cannot undo an unsupported gate
+00:00 +41: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: late native enable failure cannot undo an unsupported gate
+00:00 +42: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: an unavailable Android channel still rejects enable and reports it
+00:00 +43: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: malformed Android status fields do not grant background capabilities
+00:00 +44: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: coding alerts use the exact privacy-safe native contract
+00:00 +45: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: disabled live mode never posts a coding alert
+00:00 +46: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: a test notification ignores the live-mode gate but not the platform answer (P0.6)
+00:00 +47: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: openNotificationSettings calls the platform once and swallows a missing channel (P0.6)
+00:00 +48: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: consumes a typed notification destination once Android provides it
+00:01 +49: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: a widget-tap destination keeps its profile discriminator
+00:01 +50: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: an Android foreground-service timeout turns live mode off
+00:01 +51: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: turning live mode back on clears the timeout notice
+00:01 +52: /home/owner/Storage/Code/oc_app-sol-ba/test/background_live_test.dart: the timeout method name matches the native contract
 00:01 +53: All tests passed!

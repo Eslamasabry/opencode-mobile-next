@@ -32,7 +32,7 @@ import 'fixtures.dart';
 
 const _out = String.fromEnvironment(
   'VISION_OUT',
-  defaultValue: '/home/eslam/Storage2/launch-footage/vision-chat-approval',
+  defaultValue: '/home/owner/Storage2/launch-footage/vision-chat-approval',
 );
 
 const _dir = '/root/projects/neon-breaker';

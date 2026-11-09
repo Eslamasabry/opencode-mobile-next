@@ -962,7 +962,9 @@ def post(url, body):
 
 
 def tracker_url():
-    for host in ('127.0.0.1', '100.126.15.6'):
+    # OC_TRACKER_HOSTS: comma-separated extra hosts to try after loopback (set outside the repo; none by default).
+    extra = [h.strip() for h in os.environ.get('OC_TRACKER_HOSTS', '').split(',') if h.strip()]
+    for host in ['127.0.0.1'] + extra:
         try:
             socket.create_connection((host, 8768), timeout=2).close()
             return f'http://{host}:8768/ui'

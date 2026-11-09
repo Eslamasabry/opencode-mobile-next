@@ -1,4 +1,4 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_test.dart
 00:00 +0: uninstalled Claude remains in setup with Install despite unknown resume
 00:00 +1: unknown or mismatched host facts cannot borrow another agent proof
 00:00 +2: default runtime is unqualified and defaults every capability off

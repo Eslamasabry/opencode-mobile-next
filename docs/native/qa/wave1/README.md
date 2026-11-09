@@ -5,7 +5,7 @@
 - APK tested: `qa/p12-wave1-501d3abf9-preview-debug.apk` (copied from the VPS `~/wt/p12-apks/`)
   - SHA-256 `90f17190bd5945a3080b1ea9c0216447b63d540466414a1c2b375b99d7b8f65d`
   - package `io.github.eslamasabry.opencode_mobile.native`, versionCode 10003, 3.0.0-dev
-- Source: `native/p12-integrate-2026-11-03` at `27a04ad4c` (= `501d3abf9` + one docs-only ledger commit), worktree `/home/eslam/Storage2/wt/apk-qa-wave1`
+- Source: `native/p12-integrate-2026-11-03` at `27a04ad4c` (= `501d3abf9` + one docs-only ledger commit), worktree `/home/owner/Storage2/wt/apk-qa-wave1`
 - Device: emulator AVD `OC_NATIVE_PREVIEW_20261102` (API 35, software GPU), fresh install
 - Backend: OpenCode 2 `v2.2.5` on this PC, port 46400, throwaway project `apk-qa-wave1-server/project`, model **Z.AI Coding Plan · GLM-5.3-Flash**
 - To see what the app sends, a second server entry "QA relay" (port 46401) goes through a small logging relay; it records only request lines and request bodies (`qa/relay.log`), not auth headers.

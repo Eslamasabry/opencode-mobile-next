@@ -50,7 +50,7 @@ the rollback tiers (R0 fix forward, R1 Flutter rollback build, R2 in-app restore
 Kotlin-owned prefs accessor, the versionCode allocation rule, the Room v2 import, the v3 cleanup, the fixture recipe,
 the tests, the work units and the owner decisions M-D1…M-D8.
 
-**Source facts** below were read in `/home/eslam/Storage/Code/wt/oc_app-batch1` at HEAD `65e3f70a3` (app `2.1.0+57`,
+**Source facts** below were read in `/home/owner/Storage/Code/wt/oc_app-batch1` at HEAD `65e3f70a3` (app `2.1.0+57`,
 tag `v2.1.0+57`) and in the plugin sources under `~/.pub-cache` (`flutter_secure_storage` 11.2.0,
 `shared_preferences_android` 2.4.27, `path_provider_android` 2.3.1, `image_picker_android` 0.8.13+22 per
 `pubspec.lock`, P5 §1.6). Tags: **[V]** read

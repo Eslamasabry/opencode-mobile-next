@@ -61,9 +61,9 @@ The requested compile-only gate passed for the complete integrated native source
 From `native/`:
 
 ```bash
-JAVA_HOME=/home/eslam/Storage2/tools/jdk21 ANDROID_HOME="$HOME/Android/Sdk" \
+JAVA_HOME=/home/owner/Storage2/tools/jdk21 ANDROID_HOME="$HOME/Android/Sdk" \
   nice -n 5 flock /tmp/oc-native-gradle.lock \
-  flock /home/eslam/Storage/tmp/oc-build.lock \
+  flock /home/owner/Storage/tmp/oc-build.lock \
   ./gradlew :androidApp:assemblePreviewDebug compileKotlinDesktop \
   -Dorg.gradle.workers.max=2 \
   -Dorg.gradle.daemon.idletimeout=300000 \

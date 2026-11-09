@@ -30,7 +30,7 @@ Ran the focused regression:
 
 ```sh
 tool/qa/machine_lock.sh test -- \
-  /home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter \
+  /home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter \
   test --concurrency=1 test/release_metadata_test.dart \
   --plain-name 'reports a build-number-only mismatch in the release header'
 ```
@@ -42,12 +42,12 @@ before running the complete affected test file.
 ## Validation
 
 ```sh
-/home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/dart \
+/home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/dart \
   format --language-version=3.10 \
   test/release_metadata_test.dart tool/release/release_metadata.dart
 
 tool/qa/machine_lock.sh test -- \
-  /home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter \
+  /home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter \
   test --no-pub --concurrency=1 test/release_metadata_test.dart
 ```
 

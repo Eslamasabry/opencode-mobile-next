@@ -39,7 +39,7 @@ also failed once before removing delivery's draft reset: the field alone owns cu
 Final gate, from `native/` (one Gradle invocation at a time):
 
 ```sh
-JAVA_HOME=/home/eslam/Storage/tools/jdk-21.0.13+9 ANDROID_HOME=/home/eslam/Android/Sdk ./gradlew \
+JAVA_HOME=/home/owner/Storage/tools/jdk-21.0.13+9 ANDROID_HOME=/home/owner/Android/Sdk ./gradlew \
   --no-daemon -Pkotlin.incremental=false --max-workers=2 \
   '-Dorg.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=768m -XX:+UseParallelGC -Dfile.encoding=UTF-8' \
   -I /tmp/chat-gradle.init.gradle \

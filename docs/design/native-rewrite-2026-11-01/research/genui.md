@@ -12,15 +12,15 @@ Labels (same as the sibling research files):
 
 Internal evidence, all read-only:
 
-- Area map `/home/eslam/Storage/Code/wt/native-plan/map/chat-genui.md`. Features CHAT-GENUI-20 (agent blocks in Markdown),
+- Area map `/home/owner/Storage/Code/wt/native-plan/map/chat-genui.md`. Features CHAT-GENUI-20 (agent blocks in Markdown),
   47 (questions), 48 (OpenCode 2 forms) and 70–78 (agent cards).
-- The Flutter source `/home/eslam/Storage/Code/wt/oc_app-batch1`:
+- The Flutter source `/home/owner/Storage/Code/wt/oc_app-batch1`:
   - design docs: `docs/design/genui-plan-2026-10-07.md`, `genui-contract-2026-10-07.md`, `genui-review-astra-2026-10-07.md`
   - wire notes: `docs/opencode2-protocol-notes.md`
   - code: `lib/domain/genui/*`, `lib/ui/widgets/form_renderer.dart`, `lib/api2/models/models_inbox.dart`
   - tests: `test/fixtures/genui/*`
-- The behaviour catalog `/home/eslam/Storage/Code/wt/native-plan/catalog/raw-*.jsonl`.
-- Owner memory files in `/home/eslam/.claude/projects/-home-eslam-Storage-Code-oc-app/memory/`.
+- The behaviour catalog `/home/owner/Storage/Code/wt/native-plan/catalog/raw-*.jsonl`.
+- Owner memory files in `/home/owner/.claude/projects/-home-eslam-Storage-Code-oc-app/memory/`.
 
 ---
 
@@ -759,13 +759,13 @@ Other server-driven UI frameworks:
 
 Internal (read-only):
 
-- `/home/eslam/Storage/Code/wt/native-plan/map/chat-genui.md`
-- `/home/eslam/Storage/Code/wt/oc_app-batch1/docs/design/genui-plan-2026-10-07.md`
-- `/home/eslam/Storage/Code/wt/oc_app-batch1/docs/design/genui-contract-2026-10-07.md`
-- `/home/eslam/Storage/Code/wt/oc_app-batch1/docs/opencode2-protocol-notes.md`
-- `/home/eslam/Storage/Code/wt/oc_app-batch1/lib/api2/models/models_inbox.dart` (the `hidden` gap)
-- `/home/eslam/Storage/Code/wt/oc_app-batch1/lib/termux/bridge.dart` (OpenCode pin 2.1.1)
-- `/home/eslam/Storage/Code/wt/oc_app-batch1/test/fixtures/genui/`
-- `/home/eslam/Storage/Code/wt/native-plan/research/architecture-stacks.md`
-- `/home/eslam/Storage/Code/wt/native-plan/research/kmp-cmp-status.md`
-- `/home/eslam/Storage/Code/wt/native-plan/research/rendering-chat.md`
+- `/home/owner/Storage/Code/wt/native-plan/map/chat-genui.md`
+- `/home/owner/Storage/Code/wt/oc_app-batch1/docs/design/genui-plan-2026-10-07.md`
+- `/home/owner/Storage/Code/wt/oc_app-batch1/docs/design/genui-contract-2026-10-07.md`
+- `/home/owner/Storage/Code/wt/oc_app-batch1/docs/opencode2-protocol-notes.md`
+- `/home/owner/Storage/Code/wt/oc_app-batch1/lib/api2/models/models_inbox.dart` (the `hidden` gap)
+- `/home/owner/Storage/Code/wt/oc_app-batch1/lib/termux/bridge.dart` (OpenCode pin 2.1.1)
+- `/home/owner/Storage/Code/wt/oc_app-batch1/test/fixtures/genui/`
+- `/home/owner/Storage/Code/wt/native-plan/research/architecture-stacks.md`
+- `/home/owner/Storage/Code/wt/native-plan/research/kmp-cmp-status.md`
+- `/home/owner/Storage/Code/wt/native-plan/research/rendering-chat.md`

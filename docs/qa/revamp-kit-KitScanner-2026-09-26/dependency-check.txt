@@ -11,7 +11,7 @@ $ git branch -a --list "revamp/kit-KitSince"
 + revamp/kit-KitSince
 
 $ git worktree list | grep KitSince
-/home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-2  b67e3276 [revamp/kit-KitSince] locked
+/home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-2  b67e3276 [revamp/kit-KitSince] locked
 
 Conclusion: kit-KitSince has its own branch and worktree (a sibling unit in this
 same wave batch) but has not been merged into feat/phone-setup-v2, the branch

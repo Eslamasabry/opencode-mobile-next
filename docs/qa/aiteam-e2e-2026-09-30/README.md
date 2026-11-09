@@ -6,7 +6,7 @@ Tester: Claude (emulator only). Wall time about 65 min (14:18 to 15:22). **Resul
 - AVD Pixel_6, android-34 google_apis x86_64, kernel 6.1.23-android14. Emulator lock held for the whole session, physical phones untouched. The emulator process died once (about 14:29, log shows a clean VkDevice teardown, cause unknown); rebooted.
 - Build: `opencode-mobile-2079.apk` installed with `-r` over an old state (an old Gas City team was On, "my-app" project, old chats).
 - Model: zai-coding-plan key added through the Providers screen with the typing helper (key never shown or logged; the one screenshot that showed the echoed last character was deleted). GLM-5.3 selected as the model. Project used: the emulator's own `my-app`.
-- Because of P0-1 a **re-signed copy** of 2079 was used for everything after 14:40 (same debug certificate, only the three `libaiteam_*.so` per ABI replaced by the unstripped files that match the manifest): `/home/eslam/Storage/tmp/e2e/opencode-2079-hashfix.apk`. No app code was changed.
+- Because of P0-1 a **re-signed copy** of 2079 was used for everything after 14:40 (same debug certificate, only the three `libaiteam_*.so` per ABI replaced by the unstripped files that match the manifest): `/home/owner/Storage/tmp/e2e/opencode-2079-hashfix.apk`. No app code was changed.
 
 ## Results
 

@@ -1,6 +1,6 @@
 # Markdown engine evaluation (native `core/markdown`)
 
-Date 2026-11-06. Scratch: `/home/eslam/Storage2/wt/md-eval/` (harness `harness/Harness.kt`, `compile.sh`, `compare.py`, `cases/`, `probes/`, `scan.py`). Compiled on the VPS with kotlin-compiler-embeddable 2.4.21 straight from the Gradle cache (no Gradle). App code untouched.
+Date 2026-11-06. Scratch: `/home/owner/Storage2/wt/md-eval/` (harness `harness/Harness.kt`, `compile.sh`, `compare.py`, `cases/`, `probes/`, `scan.py`). Compiled on the VPS with kotlin-compiler-embeddable 2.4.21 straight from the Gradle cache (no Gradle). App code untouched.
 
 ## 0. What `markdown = "0.7.18"` is
 `gradle/libs.versions.toml:36` is a version only. It is the JetBrains `org.jetbrains:markdown` parser version. There is no library alias that uses it, and nothing in the repo references it. `core/markdown/build.gradle.kts` says so: the engine is a pure-Kotlin port of Flutter's `kit_markdown.dart`, and its only dependencies are coroutines and collections-immutable. **The catalog entry is dead and can be deleted** (or kept for a future spike).

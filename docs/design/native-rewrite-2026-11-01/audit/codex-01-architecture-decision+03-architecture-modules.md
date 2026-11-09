@@ -4,7 +4,7 @@ This was a read-only audit of sections 01 and 03, supporting research, relevant 
 
 **1. BLOCKER — `WriterLane.drain()` can finish before an admitted writer runs**
 
-**Where:** [03 §17.3](/home/eslam/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:2548); [01 §9.5](/home/eslam/Storage/Code/wt/native-plan/plan/01-architecture-decision.md:611).
+**Where:** [03 §17.3](/home/owner/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:2548); [01 §9.5](/home/owner/Storage/Code/wt/native-plan/plan/01-architecture-decision.md:611).
 
 **Problem:** The supplied implementation does not provide the deletion guarantee it claims.
 
@@ -16,13 +16,13 @@ This was a read-only audit of sections 01 and 03, supporting research, relevant 
 4. Deletion sweeps the profile.
 5. Writer resumes, acquires the mutex and restores deleted data.
 
-Mutex fairness cannot account for a writer that has not reached the lock. This regresses B-STATE-013 and B-CHAT-051. Today’s [ContextUsageMemory.closeProfile](/home/eslam/Storage/Code/wt/oc_app-batch1/lib/state/context_usage_memory.dart:36) returns the already-registered write tail.
+Mutex fairness cannot account for a writer that has not reached the lock. This regresses B-STATE-013 and B-CHAT-051. Today’s [ContextUsageMemory.closeProfile](/home/owner/Storage/Code/wt/oc_app-batch1/lib/state/context_usage_memory.dart:36) returns the already-registered write tail.
 
 **Concrete fix:** Make admission and registration of outstanding work atomic. Close admission atomically, then await every registered operation, including operations waiting for the write mutex. Specify cancellation handling and add a regression scenario that pauses a writer between admission and lock acquisition.
 
 **2. BLOCKER — the default compile SDK contradicts the pinned Compose dependency**
 
-**Where:** [01 §8](/home/eslam/Storage/Code/wt/native-plan/plan/01-architecture-decision.md:479); [03 §6.3](/home/eslam/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:657).
+**Where:** [01 §8](/home/owner/Storage/Code/wt/native-plan/plan/01-architecture-decision.md:479); [03 §6.3](/home/owner/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:657).
 
 **Problem:** `COMPILE = 37` is presented as executable configuration, with 37.1 treated as conditional.
 
@@ -32,7 +32,7 @@ Mutex fairness cannot account for a writer that has not reached the lock. This r
 
 **3. BLOCKER — public signatures require forbidden module dependencies**
 
-**Where:** [01 §6.1](/home/eslam/Storage/Code/wt/native-plan/plan/01-architecture-decision.md:292); [03 §6.6](/home/eslam/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:850), [§10.2](/home/eslam/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:1341), [§12.2](/home/eslam/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:1773).
+**Where:** [01 §6.1](/home/owner/Storage/Code/wt/native-plan/plan/01-architecture-decision.md:292); [03 §6.6](/home/owner/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:850), [§10.2](/home/owner/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:1341), [§12.2](/home/owner/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:1773).
 
 **Problem:** Following the signatures and following the dependency rules produce different implementations.
 
@@ -50,7 +50,7 @@ The first two are concrete type-visibility problems. The third leaves the requir
 
 **4. BLOCKER — there are incompatible definitions of the frozen storage contracts**
 
-**Where:** [03 §10.5](/home/eslam/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:1505), [§22.4](/home/eslam/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:3156); supporting [05 §2.1](/home/eslam/Storage/Code/wt/native-plan/plan/05-data-migration.md:87), [§7.3](/home/eslam/Storage/Code/wt/native-plan/plan/05-data-migration.md:562).
+**Where:** [03 §10.5](/home/owner/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:1505), [§22.4](/home/owner/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:3156); supporting [05 §2.1](/home/owner/Storage/Code/wt/native-plan/plan/05-data-migration.md:87), [§7.3](/home/owner/Storage/Code/wt/native-plan/plan/05-data-migration.md:562).
 
 **Problem:** Storage, migration and scheduler agents cannot implement against one agreed API.
 
@@ -68,11 +68,11 @@ These affect migration recovery and schedule CAS, not merely naming.
 
 **5. MAJOR — the proposed profile model loses existing project and migration state**
 
-**Where:** [03 §10.3](/home/eslam/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:1354).
+**Where:** [03 §10.3](/home/owner/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:1354).
 
 **Problem:** The shown `ServerProfile` is insufficient for day-one parity and byte-compatible profile fingerprints.
 
-**Evidence:** It omits `codexDirectory`, `requiresOpenCode2Migration`, `openCode2HistoryPending`, `serverVersion` and retained orchestration metadata. These are persisted by today’s [profile serializer](/home/eslam/Storage/Code/wt/oc_app-batch1/lib/state/profiles/models.dart:301). Section 05 §2.5 requires those same fields and their ordering when reproducing schedule and widget fingerprints.
+**Evidence:** It omits `codexDirectory`, `requiresOpenCode2Migration`, `openCode2HistoryPending`, `serverVersion` and retained orchestration metadata. These are persisted by today’s [profile serializer](/home/owner/Storage/Code/wt/oc_app-batch1/lib/state/profiles/models.dart:301). Section 05 §2.5 requires those same fields and their ordering when reproducing schedule and widget fingerprints.
 
 Dropping the project directory changes agent scope. Dropping history-pending state loses the distinction between copied history and confirmed import. Reconstructing fingerprints from the reduced model invalidates existing schedules and widget targets.
 
@@ -80,7 +80,7 @@ Dropping the project directory changes agent scope. Dropping history-pending sta
 
 **6. MAJOR — cancellation is treated as a replacement for identity fencing without wiring commands into the cancelled scope**
 
-**Where:** [01 §9.5](/home/eslam/Storage/Code/wt/native-plan/plan/01-architecture-decision.md:613); [03 §11.1](/home/eslam/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:1663), [§17.1–17.5](/home/eslam/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:2528).
+**Where:** [01 §9.5](/home/owner/Storage/Code/wt/native-plan/plan/01-architecture-decision.md:613); [03 §11.1](/home/owner/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:1663), [§17.1–17.5](/home/owner/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:2528).
 
 **Problem:** Cancelling a connection generation does not automatically cancel a command invoked from `viewModelScope`.
 
@@ -88,13 +88,13 @@ Dropping the project directory changes agent scope. Dropping history-pending sta
 
 Also, `limitedParallelism(1)` serializes execution **between suspension points**, not whole operations. Its official documentation explicitly warns that it is not a mutex. [Coroutines API](https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-dispatcher/limited-parallelism.html).
 
-Today’s [selection mutation path](/home/eslam/Storage/Code/wt/oc_app-batch1/lib/state/connection/models.dart:316) combines serialized operations with identity checks before and after remote work.
+Today’s [selection mutation path](/home/owner/Storage/Code/wt/oc_app-batch1/lib/state/connection/models.dart:316) combines serialized operations with identity checks before and after remote work.
 
 **Concrete fix:** Define how commands execute under the owning connection generation, how callers await them, and where mutation admission occurs. Retain endpoint/location/generation checks immediately before dispatch and before publishing results. Require cancellation-and-join where replacement depends on old work stopping.
 
 **7. MAJOR — WorkManager initialization contradicts the migration startup ordering**
 
-**Where:** [03 §13.6](/home/eslam/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:2008), [§21.1](/home/eslam/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:2999); [01 §9.7](/home/eslam/Storage/Code/wt/native-plan/plan/01-architecture-decision.md:647).
+**Where:** [03 §13.6](/home/owner/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:2008), [§21.1](/home/owner/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:2999); [01 §9.7](/home/owner/Storage/Code/wt/native-plan/plan/01-architecture-decision.md:647).
 
 **Problem:** Section 03 keeps the default WorkManager initializer, while migration requires controlled startup before stores and background work.
 
@@ -104,7 +104,7 @@ Today’s [selection mutation path](/home/eslam/Storage/Code/wt/oc_app-batch1/li
 
 **8. MAJOR — first-launch backup can block the very recovery UI intended to handle migration failures**
 
-**Where:** [01 §9.7](/home/eslam/Storage/Code/wt/native-plan/plan/01-architecture-decision.md:649), [§11 P5](/home/eslam/Storage/Code/wt/native-plan/plan/01-architecture-decision.md:802); [03 §21.1](/home/eslam/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:3006).
+**Where:** [01 §9.7](/home/owner/Storage/Code/wt/native-plan/plan/01-architecture-decision.md:649), [§11 P5](/home/owner/Storage/Code/wt/native-plan/plan/01-architecture-decision.md:802); [03 §21.1](/home/owner/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:3006).
 
 **Problem:** Potentially large copies and filesystem synchronization run on the main thread before the graph or first frame exists.
 
@@ -114,7 +114,7 @@ Today’s [selection mutation path](/home/eslam/Storage/Code/wt/oc_app-batch1/li
 
 **9. MAJOR — the language fallback does not work with the chosen activity on API 26–32**
 
-**Where:** [01 §4 row 6](/home/eslam/Storage/Code/wt/native-plan/plan/01-architecture-decision.md:144); [03 §12.1](/home/eslam/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:1746), [§21.1](/home/eslam/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:3031).
+**Where:** [01 §4 row 6](/home/owner/Storage/Code/wt/native-plan/plan/01-architecture-decision.md:144); [03 §12.1](/home/owner/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:1746), [§21.1](/home/owner/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:3031).
 
 **Problem:** `AppCompatLocaleHost` relies on `AppCompatDelegate`, while the activity is `ComponentActivity`.
 
@@ -126,7 +126,7 @@ Section 06 §13.6 already specifies a different implementation using `LocaleMana
 
 **10. MAJOR — the advertised test and portability gates lack required wiring**
 
-**Where:** [03 §6.4](/home/eslam/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:709), [§22.1](/home/eslam/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:3115), [§23](/home/eslam/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:3182).
+**Where:** [03 §6.4](/home/owner/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:709), [§22.1](/home/owner/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:3115), [§23](/home/owner/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:3182).
 
 **Problem:** The “complete” convention and slice-zero inventory cannot deliver all their stated checks.
 
@@ -140,7 +140,7 @@ Section 06 §13.6 already specifies a different implementation using `LocaleMana
 
 **11. MAJOR — the Room replacement has no defined public persistence surface**
 
-**Where:** [03 §0.2 S14](/home/eslam/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:62), [§10.6](/home/eslam/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:1586), [§6.6](/home/eslam/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:910).
+**Where:** [03 §0.2 S14](/home/owner/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:62), [§10.6](/home/owner/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:1586), [§6.6](/home/owner/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:910).
 
 **Problem:** Repository implementations remain in engines, but DAOs are internal to `:core:db`, and engines cannot declare Room dependencies.
 
@@ -150,7 +150,7 @@ Section 06 §13.6 already specifies a different implementation using `LocaleMana
 
 **12. MAJOR — the stability policy can increase transcript cost and hide invalid assumptions**
 
-**Where:** [01 §9.3](/home/eslam/Storage/Code/wt/native-plan/plan/01-architecture-decision.md:565), [§11 P4](/home/eslam/Storage/Code/wt/native-plan/plan/01-architecture-decision.md:801); [03 §19.2](/home/eslam/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:2689).
+**Where:** [01 §9.3](/home/owner/Storage/Code/wt/native-plan/plan/01-architecture-decision.md:565), [§11 P4](/home/owner/Storage/Code/wt/native-plan/plan/01-architecture-decision.md:801); [03 §19.2](/home/owner/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:2689).
 
 **Problem:** Whole packages are declared stable, and success is judged by fewer recompositions.
 
@@ -162,7 +162,7 @@ P4’s fallback to “widen the config” can conceal the underlying problem.
 
 **13. MAJOR — the documented fallback violates the release dependency policy**
 
-**Where:** [01 §8](/home/eslam/Storage/Code/wt/native-plan/plan/01-architecture-decision.md:480), [§12 D12](/home/eslam/Storage/Code/wt/native-plan/plan/01-architecture-decision.md:828); [03 §5](/home/eslam/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:370).
+**Where:** [01 §8](/home/owner/Storage/Code/wt/native-plan/plan/01-architecture-decision.md:480), [§12 D12](/home/owner/Storage/Code/wt/native-plan/plan/01-architecture-decision.md:828); [03 §5](/home/owner/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:370).
 
 **Problem:** The release policy permits beta only for Material 3, but the default toolkit is beta and the documented fallback contains alpha Material 3.
 
@@ -172,7 +172,7 @@ P4’s fallback to “widen the config” can conceal the underlying problem.
 
 **14. MINOR — Flutter removal has two different dates**
 
-**Where:** [03 §1.1](/home/eslam/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:75).
+**Where:** [03 §1.1](/home/owner/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:75).
 
 **Problem:** The repository recipe directs conflicting cleanup actions.
 

@@ -1,81 +1,81 @@
 Waiting for another flutter command to release the startup lock...
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: answers false unless confirmed cancel
-00:00 +1: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: answers false unless confirmed back
-00:00 +2: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: answers false unless confirmed swipe down
-00:00 +3: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: answers false unless confirmed a tap outside
-00:01 +4: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: answers false unless confirmed confirm answers true
-00:01 +5: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: the cancel word follows the kind
-00:01 +6: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: error tone only for stop, destructive and discard; never ?
-00:01 +7: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: the typed name enables the confirm only on an exact match
-00:01 +8: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: commit haptic neutral: none
-00:01 +9: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: commit haptic stop: one tick
-00:01 +10: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: commit haptic destructive: one tick
-00:01 +11: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: commit haptic discard: one tick
-00:01 +12: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: commit haptic never with Vibration off
-00:01 +13: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: commit haptic showConfirmSheet obeys Vibration off too
-00:02 +14: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: a confirm raised from a KitSheet adds no route
-00:02 +15: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: a pinned action's confirm also swaps in place
-00:02 +16: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: a failed act keeps the question open with Try again
-00:02 +17: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: the alternative closes the question and runs
-00:02 +18: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: details fold open, left to right
-00:02 +19: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: adapts to the window (§8.2) 412x915
-00:02 +20: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: adapts to the window (§8.2) 700x1000
-00:02 +21: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: adapts to the window (§8.2) 1280x800
-00:02 +22: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: adapts to the window (§8.2) 915x412
-00:02 +23: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: showConfirmSheet maps onto the kit confirmation
-00:02 +24: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/saved_permissions_screen_test.dart
-00:04 +24: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/saved_permissions_screen_test.dart: lists and revokes one exact always allowed action
-00:05 +25: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/saved_permissions_screen_test.dart: failed revocation keeps the grant visible and retryable
-00:05 +26: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/saved_permissions_screen_test.dart: waits for the post-wake repository before loading
-00:05 +27: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/saved_permissions_screen_test.dart: late list results cannot cross a location change
-00:05 +28: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/saved_permissions_screen_test.dart: replacement controller refreshes the saved permission scope
-00:05 +29: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/saved_permissions_screen_test.dart: late revocation is cancelled after route disposal
-00:06 +30: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/saved_permissions_screen_test.dart: unsupported servers show a scoped retryable error
-00:06 +31: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/saved_permissions_screen_test.dart: revocation confirmation fits a compact large-text phone
-00:06 +32: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/saved_permissions_screen_test.dart: empty state fits a compact large-text phone
-00:06 +33: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/e7_session_approvals_layout_test.dart
-00:10 +33: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/e7_session_approvals_layout_test.dart: 320dp 2.5x TextDirection.rtl approvals sheet, indicator and auto-approval record
-00:12 +34: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/e7_session_approvals_layout_test.dart: 320dp 2.5x TextDirection.rtl child session shows inheritance and can override
-00:12 +35: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/e7_session_approvals_layout_test.dart: 320dp 2.5x TextDirection.ltr approvals sheet, indicator and auto-approval record
-00:13 +36: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/e7_session_approvals_layout_test.dart: 320dp 2.5x TextDirection.ltr child session shows inheritance and can override
-00:13 +37: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/e7_session_approvals_layout_test.dart: disconnecting pauses the indicator without hiding it
-00:14 +38: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/e7_session_approvals_layout_test.dart: a failed automatic reply shows the request with the reason
-00:14 +39: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/e7_session_approvals_layout_test.dart: approve everything is confirmed, saved, and can be declined
-00:14 +40: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_consequences_test.dart
-00:15 +40: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_consequences_test.dart: KitConsequences (MOT-7) default settles at once under system
-00:16 +41: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_consequences_test.dart: KitConsequences (MOT-7) default settles at once under effectsOff
-00:16 +42: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_consequences_test.dart: lost is danger, kept is a text2 check, info is a text2 info glyph
-00:16 +43: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_consequences_test.dart: the separator is one physical pixel, inset to the text start
-00:16 +44: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_consequences_test.dart: the glyphs carry no semantics of their own (STATE-9)
-00:16 +45: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_consequences_test.dart: an icon override replaces the mark's own glyph
-00:16 +46: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart
-00:16 +46: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: the frame: title, subtitle, close, body and pinned actions
-00:17 +47: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: the header icon tile (§5 Sheets) with icon, the tile sits above the title, at the start, and is excluded from semantics
-00:17 +48: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: the header icon tile (§5 Sheets) without icon, no tile is drawn
-00:17 +49: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: the header icon tile (§5 Sheets) tone: attention paints the glyph in attention, neutral in text1
-00:18 +50: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: close and back dismiss a sheet with nothing to lose
-00:18 +51: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: unsaved input without a draft back asks in place; Keep editing keeps the text
-00:18 +52: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: unsaved input without a draft the close button asks; Discard changes closes
-00:18 +53: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: unsaved input without a draft a swipe down on the header asks instead of closing
-00:18 +54: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: unsaved input without a draft a tap outside asks instead of closing
-00:18 +55: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: unsaved input without a draft clean input closes without asking
-00:18 +56: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: not dismissible while an irreversible step runs
-00:18 +57: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: loading shows the one bar under the header
-00:18 +58: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: adapts to the window (§8.2) 360x800 content: bottom
-00:18 +59: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: adapts to the window (§8.2) 412x915 content: bottom
-00:18 +60: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: adapts to the window (§8.2) 800x1280 content: bottom
-00:18 +61: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: adapts to the window (§8.2) 1280x800 content: panel
-00:19 +62: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: adapts to the window (§8.2) 1280x800 full: side
-00:19 +63: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: adapts to the window (§8.2) 1600x1000 content: panel
-00:19 +64: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: adapts to the window (§8.2) 1600x1000 full: side
-00:19 +65: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: adapts to the window (§8.2) 915x412 content: bottom
-00:19 +66: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: adapts to the window (§8.2) the side sheet opens from the start edge in Arabic
-00:19 +67: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: window classes (§8.1)
-00:19 +68: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: the close button is a 48 dp target with its label
-00:19 +69: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: the grabber exposes the "Dismiss" action when dismissible
-00:19 +70: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: pinned actions stay visible with the keyboard open (KIT-17)
-00:19 +71: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: stacked actions (§5 Sheets) actions stack full width on a phone (§8.2)
-00:19 +72: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: routes: closes itself when its request is answered elsewhere flipping isPending to false while open removes the route after one frame, and the future completes with null
-00:19 +73: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: routes: closes itself when its request is answered elsewhere a non-pending routes at call time pushes no route
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: answers false unless confirmed cancel
+00:00 +1: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: answers false unless confirmed back
+00:00 +2: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: answers false unless confirmed swipe down
+00:00 +3: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: answers false unless confirmed a tap outside
+00:01 +4: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: answers false unless confirmed confirm answers true
+00:01 +5: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: the cancel word follows the kind
+00:01 +6: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: error tone only for stop, destructive and discard; never ?
+00:01 +7: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: the typed name enables the confirm only on an exact match
+00:01 +8: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: commit haptic neutral: none
+00:01 +9: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: commit haptic stop: one tick
+00:01 +10: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: commit haptic destructive: one tick
+00:01 +11: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: commit haptic discard: one tick
+00:01 +12: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: commit haptic never with Vibration off
+00:01 +13: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: commit haptic showConfirmSheet obeys Vibration off too
+00:02 +14: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: a confirm raised from a KitSheet adds no route
+00:02 +15: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: a pinned action's confirm also swaps in place
+00:02 +16: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: a failed act keeps the question open with Try again
+00:02 +17: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: the alternative closes the question and runs
+00:02 +18: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: details fold open, left to right
+00:02 +19: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: adapts to the window (§8.2) 412x915
+00:02 +20: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: adapts to the window (§8.2) 700x1000
+00:02 +21: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: adapts to the window (§8.2) 1280x800
+00:02 +22: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: adapts to the window (§8.2) 915x412
+00:02 +23: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: showConfirmSheet maps onto the kit confirmation
+00:02 +24: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/saved_permissions_screen_test.dart
+00:04 +24: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/saved_permissions_screen_test.dart: lists and revokes one exact always allowed action
+00:05 +25: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/saved_permissions_screen_test.dart: failed revocation keeps the grant visible and retryable
+00:05 +26: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/saved_permissions_screen_test.dart: waits for the post-wake repository before loading
+00:05 +27: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/saved_permissions_screen_test.dart: late list results cannot cross a location change
+00:05 +28: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/saved_permissions_screen_test.dart: replacement controller refreshes the saved permission scope
+00:05 +29: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/saved_permissions_screen_test.dart: late revocation is cancelled after route disposal
+00:06 +30: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/saved_permissions_screen_test.dart: unsupported servers show a scoped retryable error
+00:06 +31: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/saved_permissions_screen_test.dart: revocation confirmation fits a compact large-text phone
+00:06 +32: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/saved_permissions_screen_test.dart: empty state fits a compact large-text phone
+00:06 +33: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/e7_session_approvals_layout_test.dart
+00:10 +33: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/e7_session_approvals_layout_test.dart: 320dp 2.5x TextDirection.rtl approvals sheet, indicator and auto-approval record
+00:12 +34: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/e7_session_approvals_layout_test.dart: 320dp 2.5x TextDirection.rtl child session shows inheritance and can override
+00:12 +35: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/e7_session_approvals_layout_test.dart: 320dp 2.5x TextDirection.ltr approvals sheet, indicator and auto-approval record
+00:13 +36: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/e7_session_approvals_layout_test.dart: 320dp 2.5x TextDirection.ltr child session shows inheritance and can override
+00:13 +37: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/e7_session_approvals_layout_test.dart: disconnecting pauses the indicator without hiding it
+00:14 +38: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/e7_session_approvals_layout_test.dart: a failed automatic reply shows the request with the reason
+00:14 +39: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/e7_session_approvals_layout_test.dart: approve everything is confirmed, saved, and can be declined
+00:14 +40: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_consequences_test.dart
+00:15 +40: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_consequences_test.dart: KitConsequences (MOT-7) default settles at once under system
+00:16 +41: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_consequences_test.dart: KitConsequences (MOT-7) default settles at once under effectsOff
+00:16 +42: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_consequences_test.dart: lost is danger, kept is a text2 check, info is a text2 info glyph
+00:16 +43: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_consequences_test.dart: the separator is one physical pixel, inset to the text start
+00:16 +44: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_consequences_test.dart: the glyphs carry no semantics of their own (STATE-9)
+00:16 +45: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_consequences_test.dart: an icon override replaces the mark's own glyph
+00:16 +46: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart
+00:16 +46: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: the frame: title, subtitle, close, body and pinned actions
+00:17 +47: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: the header icon tile (§5 Sheets) with icon, the tile sits above the title, at the start, and is excluded from semantics
+00:17 +48: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: the header icon tile (§5 Sheets) without icon, no tile is drawn
+00:17 +49: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: the header icon tile (§5 Sheets) tone: attention paints the glyph in attention, neutral in text1
+00:18 +50: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: close and back dismiss a sheet with nothing to lose
+00:18 +51: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: unsaved input without a draft back asks in place; Keep editing keeps the text
+00:18 +52: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: unsaved input without a draft the close button asks; Discard changes closes
+00:18 +53: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: unsaved input without a draft a swipe down on the header asks instead of closing
+00:18 +54: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: unsaved input without a draft a tap outside asks instead of closing
+00:18 +55: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: unsaved input without a draft clean input closes without asking
+00:18 +56: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: not dismissible while an irreversible step runs
+00:18 +57: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: loading shows the one bar under the header
+00:18 +58: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: adapts to the window (§8.2) 360x800 content: bottom
+00:18 +59: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: adapts to the window (§8.2) 412x915 content: bottom
+00:18 +60: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: adapts to the window (§8.2) 800x1280 content: bottom
+00:18 +61: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: adapts to the window (§8.2) 1280x800 content: panel
+00:19 +62: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: adapts to the window (§8.2) 1280x800 full: side
+00:19 +63: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: adapts to the window (§8.2) 1600x1000 content: panel
+00:19 +64: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: adapts to the window (§8.2) 1600x1000 full: side
+00:19 +65: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: adapts to the window (§8.2) 915x412 content: bottom
+00:19 +66: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: adapts to the window (§8.2) the side sheet opens from the start edge in Arabic
+00:19 +67: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: window classes (§8.1)
+00:19 +68: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: the close button is a 48 dp target with its label
+00:19 +69: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: the grabber exposes the "Dismiss" action when dismissible
+00:19 +70: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: pinned actions stay visible with the keyboard open (KIT-17)
+00:19 +71: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: stacked actions (§5 Sheets) actions stack full width on a phone (§8.2)
+00:19 +72: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: routes: closes itself when its request is answered elsewhere flipping isPending to false while open removes the route after one frame, and the future completes with null
+00:19 +73: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_sheet_test.dart: routes: closes itself when its request is answered elsewhere a non-pending routes at call time pushes no route
 00:19 +74: All tests passed!

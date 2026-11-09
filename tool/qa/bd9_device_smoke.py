@@ -149,7 +149,7 @@ def run_device(args, *, restore=None):
     try:
         verify_apk(args.apk, args.expected_signer)
         verify_apk(args.test_apk, args.expected_signer, is_test=True)
-        lock = Path(os.environ.get('OC_EMULATOR_LOCK', '/home/eslam/Storage/tmp/oc-emulator.lock'))
+        lock = Path(os.environ.get('OC_EMULATOR_LOCK', os.path.expanduser('~/Storage/tmp/oc-emulator.lock')))
         lock.parent.mkdir(parents=True, exist_ok=True)
         with lock.open('a') as handle:
             fcntl.flock(handle, fcntl.LOCK_EX)

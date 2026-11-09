@@ -1,4 +1,4 @@
 {"type": "text", "text": "read @lib/server.dart"}
-{"type": "text", "text": "Called the Read tool with the following input: {\"filePath\":\"/home/eslam/Storage/tmp/mentions-proof/project/lib/server.dart\"}", "synthetic": true}
+{"type": "text", "text": "Called the Read tool with the following input: {\"filePath\":\"/home/owner/Storage/tmp/mentions-proof/project/lib/server.dart\"}", "synthetic": true}
 {"type": "text", "text": "<file>\n00001| // Starts the demo server.\n00002| void main() => print('server up');\n00003| \n\n(End of file - total 3 lines)\n</file>", "synthetic": true}
-{"type": "file", "mime": "text/plain", "filename": "server.dart", "url": "file:///home/eslam/Storage/tmp/mentions-proof/project/lib/server.dart", "source": {"text": {"value": "@lib/server.dart", "start": 5, "end": 21}, "type": "file", "path": "lib/server.dart"}}
+{"type": "file", "mime": "text/plain", "filename": "server.dart", "url": "file:///home/owner/Storage/tmp/mentions-proof/project/lib/server.dart", "source": {"text": {"value": "@lib/server.dart", "start": 5, "end": 21}, "type": "file", "path": "lib/server.dart"}}

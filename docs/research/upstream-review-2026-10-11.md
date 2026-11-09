@@ -1,6 +1,6 @@
 # Upstream review, 2026-10-11
 
-Scope: what changed upstream since the versions this app pins, and what must change here to move each to its latest stable version. Research only: no app code, build or test was run. Sources: GitHub releases (`gh`), npm registry, nodejs.org, pub.dev, the Flutter release feed, the local Paseo checkout at `/home/eslam/Storage/Code/paseo-spike/paseo-src` (tags v0.9.2 and v0.11.2, diffed), and the published `@opencode/protocol` / `@opencode/schema` packages (2.0.10 vs 2.0.26, diffed). Anything not checked is marked **unverified**.
+Scope: what changed upstream since the versions this app pins, and what must change here to move each to its latest stable version. Research only: no app code, build or test was run. Sources: GitHub releases (`gh`), npm registry, nodejs.org, pub.dev, the Flutter release feed, the local Paseo checkout at `/home/owner/Storage/Code/paseo-spike/paseo-src` (tags v0.9.2 and v0.11.2, diffed), and the published `@opencode/protocol` / `@opencode/schema` packages (2.0.10 vs 2.0.26, diffed). Anything not checked is marked **unverified**.
 
 Shipping rule used below: **Patch** = Dart-only, can go as `scripts/release.sh patch` against the exact released version. **Release** = changes assets, native code, `pubspec.yaml` or `jniLibs`, so it needs a new Shorebird release. Pins that live in Dart constants and are downloaded at runtime (agent versions, Node, Paseo, OpenCode) are Dart-only and patchable, but each needs fresh SHA-256 values and a device proof.
 

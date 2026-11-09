@@ -36,10 +36,10 @@ Verify the coordinator-posted APK's package/build and known same signer before u
 The focused five-phase rerun uses the existing standalone phase interface. Choose a new run ID, frozen source revision and unique attempt for each run; pass the same source/attempt across these five calls:
 
 ```sh
-DART=/home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/cache/dart-sdk/bin/dart
+DART=/home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/cache/dart-sdk/bin/dart
 # FQ3_RUN, FQ3_REVISION and FQ3_ATTEMPT are recorded per-run identifiers.
 for FQ3_CASE in model allow deny image cards; do
-  flock /home/eslam/Storage/tmp/oc-emulator.lock "$DART" tool/qa/fq3_certify.dart \
+  flock /home/owner/Storage/tmp/oc-emulator.lock "$DART" tool/qa/fq3_certify.dart \
     --phase --engine opencode2 --case "$FQ3_CASE" \
     --run-id "$FQ3_RUN" --revision "$FQ3_REVISION" --attempt "$FQ3_ATTEMPT" \
     --model opencode/big-pickle || break

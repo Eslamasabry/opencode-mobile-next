@@ -30,7 +30,7 @@ import javax.imageio.ImageIO
  */
 @OptIn(ExperimentalTestApi::class)
 internal object Looks {
-    private val out = File(System.getProperty("oc.looks.dir") ?: "/home/eslam/wt/lane-looks/looks-out/screens").also { it.mkdirs() }
+    private val out = File(System.getProperty("oc.looks.dir") ?: "${System.getProperty("java.io.tmpdir")}/oc-looks-out/screens").also { it.mkdirs() }
 
     fun shoot(name: String, advanceMs: Long = 1_000, fontScale: Float = 1f, setup: ComposeUiTest.() -> Unit = {}, content: @Composable (dark: Boolean) -> Unit) {
         Locale.setDefault(Locale.forLanguageTag("en"))

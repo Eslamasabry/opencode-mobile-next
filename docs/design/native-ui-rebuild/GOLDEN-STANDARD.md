@@ -66,7 +66,7 @@ if the goldens agree; otherwise you put Flutter's look back.
 
 **Check:** every number in your diff cites a Flutter line (§9.2 rule L1-L3).
 
-### 2.2 References and where they live (VPS `eslam@169.58.71.211`)
+### 2.2 References and where they live (VPS `<build-vps-login>`)
 
 | Name | Value | Where |
 |---|---|---|
@@ -84,7 +84,7 @@ is three weeks stale and has the old type scale.
 
 ## 3. Environment and machine rules
 
-1. All work happens in your worktree on the VPS. You never create, move or delete a worktree. **Check:** `git rev-parse --show-toplevel` prints `/home/eslam/wt/rb-<NN>`.
+1. All work happens in your worktree on the VPS. You never create, move or delete a worktree. **Check:** `git rev-parse --show-toplevel` prints `/home/owner/wt/rb-<NN>`.
 2. Gradle runs on the VPS only, and only through `native/tool/design/gate_order.sh <NN>` or the exact task
    `cd native && ./gradlew <module>:desktopTest --tests '*.rb.o<NN>.*'` taken under the same lock (gate_order.sh holds one
    of two slots, `~/.oc-rb-gradle.{1,2}.lock`). Never `./gradlew build`, never `assemble*`, never `--no-daemon` loops, never
@@ -568,20 +568,20 @@ Two channels; both never fail the caller.
 
 - On the VPS or the PC: `~/.local/bin/oc-update '<agent>' '<one line>' working|done|failed|blocked <DONE>/<TOTAL>`.
   Agent name: `rb-<NN>-<engine>`; DONE/TOTAL counts your order's parts (screens for screen orders).
-- Anywhere else: `POST http://100.126.15.6:8768/u` (from the VPS: `http://127.0.0.1:8768/u`, the tunnel), JSON body
+- Anywhere else: `POST http://<tailnet-host>:8768/u` (from the VPS: `http://127.0.0.1:8768/u`, the tunnel), JSON body
   `{"agent": "rb-05-codex", "msg": "part-kit_field: gate pass", "state": "working", "done": 7, "total": 10}`.
-  The tracker (`/home/eslam/Storage/Code/parity-tracker/server.py`) requires the keys `agent` and `msg`; `state` is one of
+  The tracker (`/home/owner/Storage/Code/parity-tracker/server.py`) requires the keys `agent` and `msg`; `state` is one of
   `working|waiting|blocked|done|failed|idle`; `done`/`total` are integers.
 
 **Visual tracker** (per part, school or screen; gate_order.sh posts parts and schools for you):
 
-- `POST http://100.126.15.6:8768/ui` (VPS: `http://127.0.0.1:8768/ui`), JSON
+- `POST http://<tailnet-host>:8768/ui` (VPS: `http://127.0.0.1:8768/ui`), JSON
   `{"id": "<tracker id>", "state": "todo|working|gate-fail|gate-pass|done|blocked", "diff": 1.4, "agent": "rb-05-codex",
   "engine": "sonnet|codex|commandcode", "note": "<one line>", "images": {"flutter": "rb-05/<shot>-flutter.png",
   "native": "rb-05/<shot>-native.png", "diff": "rb-05/<shot>-diff.png"}}`. On the PC: `~/.local/bin/oc-ui <id> <state> …`.
 - You post `working` when you start a part, `blocked` with the reason when you stop on it, and `done` for each part
   after the order's final gate passed. Screen orders post each `screen-<row>` id themselves.
-- Image paths are relative to `/home/eslam/Storage2/wt/looks/gate/` on the PC; the tracker's puller copies
+- Image paths are relative to `/home/owner/Storage2/wt/looks/gate/` on the PC; the tracker's puller copies
   `~/wt/rb-<NN>/looks-out/gate/` there as `rb-<NN>/` (lead prerequisite).
 
 ---

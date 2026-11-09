@@ -57,46 +57,46 @@ Downloading packages...
 Got dependencies!
 54 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/design_standard_setup_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/design_standard_setup_test.dart: start screen: Open says it is starting, with no button standing in for it (§2)
-00:00 +1: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/goldens/phone_setup_golden_test.dart: setup_start · dark
-00:00 +2: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/design_standard_setup_test.dart: "This phone": Start shows Starting, with no disabled Start and no extra bar (§2, §4)
-00:01 +3: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/design_standard_setup_test.dart: "This phone": Start shows Starting, with no disabled Start and no extra bar (§2, §4)
-00:01 +4: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/goldens/phone_setup_golden_test.dart: setup_start_stopped · dark
-00:01 +5: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/design_standard_setup_test.dart: progress: a interrupted setup is not titled "Setting up" (§3)
-00:01 +6: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/goldens/phone_setup_golden_test.dart: setup_start_ready · dark
-00:01 +7: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/design_standard_setup_test.dart: progress: a cancelled setup is not titled "Setting up" (§3)
-00:01 +8: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/goldens/phone_setup_golden_test.dart: setup_start_termux · dark
-00:01 +9: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/goldens/phone_setup_golden_test.dart: setup_start_termux · dark
-00:01 +10: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/design_standard_setup_test.dart: ready: Create stacks full width under the name (§2)
-00:01 +11: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/goldens/phone_setup_golden_test.dart: setup_customize · dark
-00:01 +12: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/goldens/phone_setup_golden_test.dart: setup_progress_running · dark
-00:01 +13: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/goldens/phone_setup_golden_test.dart: setup_progress_failed · dark
-00:01 +14: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/goldens/phone_setup_golden_test.dart: setup_progress_log · dark
-00:02 +15: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/goldens/phone_setup_golden_test.dart: setup_ready · dark
-00:02 +16: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/goldens/phone_setup_golden_test.dart: setup_welcome_entry · dark
-00:02 +17: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation a team-home task row opens its conversation, not RunScreen
-00:02 +18: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation a team-home task row opens its conversation, not RunScreen
-00:02 +19: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation a team-home task row opens its conversation, not RunScreen
-00:02 +20: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation a team-home task row opens its conversation, not RunScreen
-00:02 +21: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation a team-home task row opens its conversation, not RunScreen
-00:02 +22: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation a team-home task row opens its conversation, not RunScreen
-00:02 +23: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation a team-home task row opens its conversation, not RunScreen
-00:02 +24: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation a team-home task row opens its conversation, not RunScreen
-00:02 +25: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation a team-home task row opens its conversation, not RunScreen
-00:02 +26: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation a team-home task row opens its conversation, not RunScreen
-00:03 +27: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation a team-home task row opens its conversation, not RunScreen
-00:03 +28: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation a team-home task row opens its conversation, not RunScreen
-00:03 +29: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation a team-home task row opens its conversation, not RunScreen
-00:03 +30: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation a team-home task row opens its conversation, not RunScreen
-00:03 +31: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation a team-home task row opens its conversation, not RunScreen
-00:03 +32: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/goldens/phone_setup_golden_test.dart: phone_card_running · light
-00:03 +33: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation team-home opened from a conversation comes back to the same task instead of stacking a second copy
-00:03 +34: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation team-home opened from a conversation comes back to the same task instead of stacking a second copy
-00:03 +35: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation team-home opened from a conversation comes back to the same task instead of stacking a second copy
-00:03 +36: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation "Give the team a task" on team-home lands on the new task's conversation
-00:03 +37: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.4: Stop task from the conversation Stop asks first, cancels the task and shows the receipt
-00:04 +38: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.4: Stop task from the conversation a refusal reads as the host's own words
-00:04 +39: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.4: Stop task from the conversation no Stop on a finished task
-00:04 +40: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.4: Stop task from the conversation no Stop where the host takes no cancel control
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/design_standard_setup_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/design_standard_setup_test.dart: start screen: Open says it is starting, with no button standing in for it (§2)
+00:00 +1: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/goldens/phone_setup_golden_test.dart: setup_start · dark
+00:00 +2: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/design_standard_setup_test.dart: "This phone": Start shows Starting, with no disabled Start and no extra bar (§2, §4)
+00:01 +3: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/design_standard_setup_test.dart: "This phone": Start shows Starting, with no disabled Start and no extra bar (§2, §4)
+00:01 +4: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/goldens/phone_setup_golden_test.dart: setup_start_stopped · dark
+00:01 +5: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/design_standard_setup_test.dart: progress: a interrupted setup is not titled "Setting up" (§3)
+00:01 +6: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/goldens/phone_setup_golden_test.dart: setup_start_ready · dark
+00:01 +7: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/design_standard_setup_test.dart: progress: a cancelled setup is not titled "Setting up" (§3)
+00:01 +8: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/goldens/phone_setup_golden_test.dart: setup_start_termux · dark
+00:01 +9: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/goldens/phone_setup_golden_test.dart: setup_start_termux · dark
+00:01 +10: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/design_standard_setup_test.dart: ready: Create stacks full width under the name (§2)
+00:01 +11: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/goldens/phone_setup_golden_test.dart: setup_customize · dark
+00:01 +12: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/goldens/phone_setup_golden_test.dart: setup_progress_running · dark
+00:01 +13: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/goldens/phone_setup_golden_test.dart: setup_progress_failed · dark
+00:01 +14: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/goldens/phone_setup_golden_test.dart: setup_progress_log · dark
+00:02 +15: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/goldens/phone_setup_golden_test.dart: setup_ready · dark
+00:02 +16: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/goldens/phone_setup_golden_test.dart: setup_welcome_entry · dark
+00:02 +17: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation a team-home task row opens its conversation, not RunScreen
+00:02 +18: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation a team-home task row opens its conversation, not RunScreen
+00:02 +19: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation a team-home task row opens its conversation, not RunScreen
+00:02 +20: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation a team-home task row opens its conversation, not RunScreen
+00:02 +21: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation a team-home task row opens its conversation, not RunScreen
+00:02 +22: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation a team-home task row opens its conversation, not RunScreen
+00:02 +23: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation a team-home task row opens its conversation, not RunScreen
+00:02 +24: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation a team-home task row opens its conversation, not RunScreen
+00:02 +25: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation a team-home task row opens its conversation, not RunScreen
+00:02 +26: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation a team-home task row opens its conversation, not RunScreen
+00:03 +27: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation a team-home task row opens its conversation, not RunScreen
+00:03 +28: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation a team-home task row opens its conversation, not RunScreen
+00:03 +29: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation a team-home task row opens its conversation, not RunScreen
+00:03 +30: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation a team-home task row opens its conversation, not RunScreen
+00:03 +31: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation a team-home task row opens its conversation, not RunScreen
+00:03 +32: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/goldens/phone_setup_golden_test.dart: phone_card_running · light
+00:03 +33: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation team-home opened from a conversation comes back to the same task instead of stacking a second copy
+00:03 +34: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation team-home opened from a conversation comes back to the same task instead of stacking a second copy
+00:03 +35: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation team-home opened from a conversation comes back to the same task instead of stacking a second copy
+00:03 +36: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.3: every door lands on the conversation "Give the team a task" on team-home lands on the new task's conversation
+00:03 +37: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.4: Stop task from the conversation Stop asks first, cancels the task and shows the receipt
+00:04 +38: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.4: Stop task from the conversation a refusal reads as the host's own words
+00:04 +39: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.4: Stop task from the conversation no Stop on a finished task
+00:04 +40: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_one_page_test.dart: P0.4: Stop task from the conversation no Stop where the host takes no cancel control
 00:04 +41: All tests passed!

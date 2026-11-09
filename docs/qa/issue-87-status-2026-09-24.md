@@ -17,7 +17,7 @@ Issue: https://github.com/Eslamasabry/opencode-mobile-next/issues/87. The report
 
 1. Merge agent A (team runtime) and the Work tab cleanup, then build one APK.
 2. **Integrated emulator run, Android 15, fresh install, recorded.** `OCTRACE` timings for cold start to the Work tab, opening a project, opening Settings, and sending a message to its first token. `adb shell dumpsys gfxinfo` jank figures while a reply streams, compared with 1.0.44+50 on the same emulator. Ask the agent "where are you running?".
-3. **A real arm64 phone.** On the owner's phone this needs about 5 GB free, wireless debugging paired, and his OK. His Termux projects are backed up (`/home/eslam/phone-backups/termux-2026-09-24/`). Setup, AI Team, one task, and the same timings.
+3. **A real arm64 phone.** On the owner's phone this needs about 5 GB free, wireless debugging paired, and his OK. His Termux projects are backed up (`/home/owner/phone-backups/termux-2026-09-24/`). Setup, AI Team, one task, and the same timings.
 4. **Decide the Termux AI Team path:** publish `aiteam-assets-1`, or point Termux users to the built-in setup.
 5. Owner's call: push, release, and reply on #87 with the numbers.
 

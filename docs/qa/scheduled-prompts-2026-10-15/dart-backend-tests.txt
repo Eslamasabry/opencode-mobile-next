@@ -68,57 +68,57 @@ Downloading packages...
 Got dependencies!
 65 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
-00:00 +0: loading /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_models_test.dart
-00:00 +0: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_models_test.dart: schedule roundtrip retains private target and explicit agent/model
-00:00 +1: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_models_test.dart: invalid recurrence and malformed stored schedules are rejected
-00:00 +2: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_models_test.dart: once has no future occurrence after its scheduled instant
-00:00 +3: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_models_test.dart: intervals remain anchored after days of missed occurrences
-00:00 +4: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_models_test.dart: weekday calendar skips weekend and exact current occurrence
-00:00 +5: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_models_test.dart: catch-up collapses missed runs and marks only beyond grace late
-00:00 +6: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_models_test.dart: skip missed does not suppress on-time or within-grace occurrences
-00:00 +7: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_models_test.dart: occurrence identity includes revision and instant
-00:00 +8: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_models_test.dart: run error only accepts a fixed code and preserves late marker
-00:00 +9: loading /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_store_test.dart
-00:04 +9: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_store_test.dart: restart preserves schedules, paused state, history and opt-in digest
-00:04 +10: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_store_test.dart: concurrent CAS writers preserve unrelated schedule edits
-00:04 +11: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_store_test.dart: refused persistence and deleted-profile fence never report success
-00:04 +12: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_store_test.dart: corrupt or foreign-profile state is not silently overwritten
-00:04 +13: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_store_test.dart: delete removes visible history and profile-scoped envelope is sweepable
-00:04 +14: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_store_test.dart: stale schedule edits and terminal run rewrites are rejected
-00:04 +15: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_store_test.dart: schema drift and duplicate ids fail closed; lists are immutable
-00:04 +16: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_store_test.dart: advance cannot resurrect deleted or overwrite edited schedules
-00:04 +17: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_store_test.dart: resuming skips paused occurrences and past once requires editing
-00:04 +18: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_store_test.dart: same revision edits cannot overwrite a concurrent save
-00:04 +19: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_store_test.dart: digest claims are once per cutoff and respect concurrent disabling
-00:04 +20: loading /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_runner_test.dart
-00:12 +20: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_runner_test.dart: route change refuses before creating a transport
-00:12 +21: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_runner_test.dart: unqualified gateway cannot create or send scheduled work
-00:12 +22: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_runner_test.dart: cold socket status is hydrated before busy admission
-00:12 +23: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_runner_test.dart: target deletion during read prevents mutation and closes connection
-00:12 +24: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_runner_test.dart: existing conversation in another project is refused
-00:12 +25: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_runner_test.dart: new conversation is created once and accepted remote run is recorded
-00:12 +26: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_runner_test.dart: ambiguous delivery is never retried and does not expose response text
-00:12 +27: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_runner_test.dart: phone lease waits for fresh output before closing owned runtime
-00:12 +28: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_runner_test.dart: old assistant output cannot qualify phone completion
-00:12 +29: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_runner_test.dart: phone permission wait is needs-you without approval
-00:12 +30: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_runner_test.dart: profile rename preserves fingerprint but endpoint edits invalidate it
-00:12 +31: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_runner_test.dart: cold connection rejects transient phone-agent routing
-00:12 +32: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_runner_test.dart: cold connection refuses missing Codex credential before opening socket
-00:12 +33: loading /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_controller_test.dart
-00:14 +33: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_controller_test.dart: controller create edit pause resume delete updates native schedule
-00:14 +34: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_controller_test.dart: unsupported platform and cross-profile save reject admission
-00:14 +35: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_controller_test.dart: mutation errors retain actionable code and notify listeners
-00:14 +36: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_controller_test.dart: native timeout receipt creates failed history and advances once
-00:14 +37: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_controller_test.dart: native receipt recovers running history preserving original start
-00:14 +38: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_controller_test.dart: old native receipt cannot advance edited schedule or recreate deleted one
-00:14 +39: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_controller_test.dart: digest calendar selects next local morning including next day
-00:14 +40: loading /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_entrypoint_test.dart
-00:17 +40: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_entrypoint_test.dart: accepted run records normal session and advances without repeating
-00:17 +41: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_entrypoint_test.dart: missed skip policy advances once and never calls runner
-00:17 +42: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_entrypoint_test.dart: terminal duplicate receipt never sends and preserves original result
-00:17 +43: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_entrypoint_test.dart: running occurrence is uncertain and cannot be dispatched twice
-00:17 +44: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_entrypoint_test.dart: native interrupted recovery writes terminal history without dispatch
-00:17 +45: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_entrypoint_test.dart: future and stale revision triggers never send
-00:17 +46: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_entrypoint_test.dart: digest off performs no claim or notification summary
-00:17 +47: /home/eslam/wt/oc_app-codex-schedule/test/scheduled_prompt_entrypoint_test.dart: digest counts only completed runs in window and claims cutoff once
+00:00 +0: loading /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_models_test.dart
+00:00 +0: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_models_test.dart: schedule roundtrip retains private target and explicit agent/model
+00:00 +1: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_models_test.dart: invalid recurrence and malformed stored schedules are rejected
+00:00 +2: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_models_test.dart: once has no future occurrence after its scheduled instant
+00:00 +3: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_models_test.dart: intervals remain anchored after days of missed occurrences
+00:00 +4: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_models_test.dart: weekday calendar skips weekend and exact current occurrence
+00:00 +5: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_models_test.dart: catch-up collapses missed runs and marks only beyond grace late
+00:00 +6: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_models_test.dart: skip missed does not suppress on-time or within-grace occurrences
+00:00 +7: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_models_test.dart: occurrence identity includes revision and instant
+00:00 +8: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_models_test.dart: run error only accepts a fixed code and preserves late marker
+00:00 +9: loading /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_store_test.dart
+00:04 +9: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_store_test.dart: restart preserves schedules, paused state, history and opt-in digest
+00:04 +10: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_store_test.dart: concurrent CAS writers preserve unrelated schedule edits
+00:04 +11: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_store_test.dart: refused persistence and deleted-profile fence never report success
+00:04 +12: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_store_test.dart: corrupt or foreign-profile state is not silently overwritten
+00:04 +13: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_store_test.dart: delete removes visible history and profile-scoped envelope is sweepable
+00:04 +14: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_store_test.dart: stale schedule edits and terminal run rewrites are rejected
+00:04 +15: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_store_test.dart: schema drift and duplicate ids fail closed; lists are immutable
+00:04 +16: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_store_test.dart: advance cannot resurrect deleted or overwrite edited schedules
+00:04 +17: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_store_test.dart: resuming skips paused occurrences and past once requires editing
+00:04 +18: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_store_test.dart: same revision edits cannot overwrite a concurrent save
+00:04 +19: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_store_test.dart: digest claims are once per cutoff and respect concurrent disabling
+00:04 +20: loading /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_runner_test.dart
+00:12 +20: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_runner_test.dart: route change refuses before creating a transport
+00:12 +21: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_runner_test.dart: unqualified gateway cannot create or send scheduled work
+00:12 +22: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_runner_test.dart: cold socket status is hydrated before busy admission
+00:12 +23: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_runner_test.dart: target deletion during read prevents mutation and closes connection
+00:12 +24: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_runner_test.dart: existing conversation in another project is refused
+00:12 +25: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_runner_test.dart: new conversation is created once and accepted remote run is recorded
+00:12 +26: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_runner_test.dart: ambiguous delivery is never retried and does not expose response text
+00:12 +27: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_runner_test.dart: phone lease waits for fresh output before closing owned runtime
+00:12 +28: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_runner_test.dart: old assistant output cannot qualify phone completion
+00:12 +29: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_runner_test.dart: phone permission wait is needs-you without approval
+00:12 +30: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_runner_test.dart: profile rename preserves fingerprint but endpoint edits invalidate it
+00:12 +31: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_runner_test.dart: cold connection rejects transient phone-agent routing
+00:12 +32: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_runner_test.dart: cold connection refuses missing Codex credential before opening socket
+00:12 +33: loading /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_controller_test.dart
+00:14 +33: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_controller_test.dart: controller create edit pause resume delete updates native schedule
+00:14 +34: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_controller_test.dart: unsupported platform and cross-profile save reject admission
+00:14 +35: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_controller_test.dart: mutation errors retain actionable code and notify listeners
+00:14 +36: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_controller_test.dart: native timeout receipt creates failed history and advances once
+00:14 +37: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_controller_test.dart: native receipt recovers running history preserving original start
+00:14 +38: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_controller_test.dart: old native receipt cannot advance edited schedule or recreate deleted one
+00:14 +39: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_controller_test.dart: digest calendar selects next local morning including next day
+00:14 +40: loading /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_entrypoint_test.dart
+00:17 +40: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_entrypoint_test.dart: accepted run records normal session and advances without repeating
+00:17 +41: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_entrypoint_test.dart: missed skip policy advances once and never calls runner
+00:17 +42: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_entrypoint_test.dart: terminal duplicate receipt never sends and preserves original result
+00:17 +43: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_entrypoint_test.dart: running occurrence is uncertain and cannot be dispatched twice
+00:17 +44: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_entrypoint_test.dart: native interrupted recovery writes terminal history without dispatch
+00:17 +45: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_entrypoint_test.dart: future and stale revision triggers never send
+00:17 +46: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_entrypoint_test.dart: digest off performs no claim or notification summary
+00:17 +47: /home/owner/wt/oc_app-codex-schedule/test/scheduled_prompt_entrypoint_test.dart: digest counts only completed runs in window and claims cutoff once
 00:17 +48: All tests passed!

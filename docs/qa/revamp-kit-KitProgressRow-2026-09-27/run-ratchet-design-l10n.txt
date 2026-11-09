@@ -57,10 +57,10 @@ Downloading packages...
 Got dependencies!
 54 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G1: modal and toast entry points live in the kit
-00:00 +1: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G15: no width literals outside the kit
-00:00 +2: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G16: every UI component comes from the kit
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G1: modal and toast entry points live in the kit
+00:00 +1: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G15: no width literals outside the kit
+00:00 +2: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G16: every UI component comes from the kit
 Shell: G16: 7 baseline entries dropped — commit the smaller numbers with KIT_RATCHET_WRITE=1 KIT_RATCHET_GATES=G16:
 Shell:   lib/ui/app_iconography.dart "Icon" 2 -> 0
 Shell:   lib/ui/app_iconography.dart "Opacity" 1 -> 0
@@ -69,22 +69,22 @@ Shell:   lib/ui/widgets/terminal_view.dart "SelectableText" 1 -> 0
 Shell:   lib/ui/widgets/terminal_view.dart "SingleChildScrollView" 1 -> 0
 Shell:   lib/ui/widgets/terminal_view.dart "Text" 2 -> 0
 Shell:   lib/ui/widgets/terminal_view.dart "TextButton" 2 -> 0
-00:00 +3: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G2: copy, haptics, links and motion go through the kit
+00:00 +3: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G2: copy, haptics, links and motion go through the kit
 Shell: G2: 1 baseline entries dropped — commit the smaller numbers with KIT_RATCHET_WRITE=1 KIT_RATCHET_GATES=G2:
 Shell:   lib/ui/kit/terminal_key_bar.dart "HapticFeedback. in kit" 1 -> 0
-00:00 +4: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G7: layout is directional and bidi marks come from KitBidi
-00:00 +5: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G15 inside the kit: only kit_layout.dart owns widths
+00:00 +4: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G7: layout is directional and bidi marks come from KitBidi
+00:00 +5: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G15 inside the kit: only kit_layout.dart owns widths
 Shell: G15x: 2 baseline entries dropped — commit the smaller numbers with KIT_RATCHET_WRITE=1 KIT_RATCHET_GATES=G15x:
 Shell:   lib/ui/kit/kit_buttons.dart "width-literal" 1 -> 0
 Shell:   lib/ui/kit/kit_skeleton_transcript.dart "numeric maxWidth:" 1 -> 0
-00:00 +6: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G17 colour: every colour comes from a ThemeRoles role
+00:00 +6: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G17 colour: every colour comes from a ThemeRoles role
 Shell: G17: 5 baseline entries dropped — commit the smaller numbers with KIT_RATCHET_WRITE=1 KIT_RATCHET_GATES=G17:
 Shell:   lib/ui/app_iconography.dart ".colorScheme" 1 -> 0
 Shell:   lib/ui/widgets/terminal_view.dart ".colorScheme" 2 -> 0
 Shell:   lib/ui/widgets/terminal_view.dart ".textTheme" 1 -> 0
 Shell:   lib/ui/widgets/terminal_view.dart "Colors.*" 2 -> 0
 Shell:   lib/ui/widgets/terminal_view.dart "attention roles" 1 -> 0
-00:00 +7: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G21 look and motion: numbers and effects come from the kit
+00:00 +7: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G21 look and motion: numbers and effects come from the kit
 Shell: G21: 20 baseline entries dropped — commit the smaller numbers with KIT_RATCHET_WRITE=1 KIT_RATCHET_GATES=G21:
 Shell:   lib/ui/kit/kit_action_stack.dart "SizedBox numeric" 2 -> 0
 Shell:   lib/ui/kit/kit_ask_line.dart "EdgeInsets numeric" 3 -> 0
@@ -106,47 +106,47 @@ Shell:   lib/ui/kit/kit_status_mark.dart "stroke width not KitTokens in kit" 1 -
 Shell:   lib/ui/widgets/terminal_view.dart "BorderRadius.circular(<n>" 1 -> 0
 Shell:   lib/ui/widgets/terminal_view.dart "EdgeInsets numeric" 2 -> 0
 Shell:   lib/ui/widgets/terminal_view.dart "TextStyle(" 13 -> 0
-00:00 +8: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G48 drafts: multiline input in a kit sheet keeps a draft
-00:00 +9: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: allowlists never grow (KIT-5)
-00:00 +10: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: allowlist keys are exact paths or folders under lib/
-00:00 +11: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: every G2/G7/G15x/G17/G21/G48 row is named once and has a reason
-00:00 +12: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: every allowlist entry gives a real reason
-00:00 +13: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: the Flutter widget catalogue exists and is non-trivial
-00:00 +14: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G1 matches showDialog<T>( but not showKitDialog( or a comment
-00:00 +15: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) SnackBar( does not count showSnackBar( or KitSnackBar(
-00:00 +16: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G16 counts real widget constructions, not static members or app classes
-00:00 +17: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) KIT-7: a new MaterialPageRoute( in a file with no baseline entry fails G16, in lib/ui and in UI code elsewhere under lib/
-00:00 +18: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G15 counts a width compared to a literal, not BoxConstraints(maxWidth: n)
-00:00 +19: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G2 counts uses of an old API, not its declaration
-00:00 +20: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G2 counts motion literals and seams, not KitMotion names
-00:00 +21: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings SEC-1: launchUrl in the kit is absolute with no allowlist
-00:00 +22: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G7 counts left/right layout, not the directional forms
-00:00 +23: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G7 is absolute in the kit, forced-LTR parts may align left
-00:00 +24: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G15x counts breakpoints and layout widths, not guards or gaps
-00:00 +25: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G17 counts literal colours and theme reads, not transparent
-00:00 +26: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G21 counts look literals the way the rulebook writes them
-00:00 +27: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G21 LOOK-21 in the kit: every stroke width comes from KitTokens
-00:00 +28: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G21 metal/chrome reads identifiers and file names
-00:00 +29: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G48 flags a sheet with a multiline field and no draft
-00:00 +30: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G17 and G21 also scan Flutter UI code outside lib/ui/
-00:00 +31: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings theme files, allowlist keys and scopes resolve as documented
-00:00 +32: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings KIT-5: an allowlist key the committed set lacks fails
-00:00 +33: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/design_standard_test.dart
-00:00 +33: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/design_standard_test.dart: G3x: migrated screens hold every forbidden pattern at zero (or below their baseline)
-00:00 +34: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/design_standard_test.dart: G3x: migrated classes in mixed files use the kit
-00:00 +35: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/design_standard_test.dart: G3x: the baseline only shrinks and names only migrated entries
-00:00 +36: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/design_standard_test.dart: G3x: a screen migrated on or after 2026-09-26 has an _ar_dark golden
-00:00 +37: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/design_standard_test.dart: raw parts a migrated screen gave up do not come back
-00:00 +38: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/design_standard_test.dart: every allowlist entry names a migrated file and gives a reason
-00:00 +39: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/design_standard_test.dart: each migrated screen has dark and light goldens at 412x915
-00:00 +40: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/design_standard_test.dart: scenes take their time only from KitIllustration (§10)
-00:00 +41: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/design_standard_test.dart: the kit is the one place raw progress and filled buttons live
-00:00 +42: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) every G1, G2, G7, G17 and G21 pattern is forbidden
-00:00 +43: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) a screen that breaks one rule of each gate fails each
-00:00 +44: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) scopes: the kit and the theme files are judged by their own rules
-00:00 +45: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) directional and themed forms pass
-00:00 +46: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) bidi literals count outside the kit, as characters or escapes
-00:00 +47: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) an argument list is read to its closing parenthesis
+00:00 +8: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G48 drafts: multiline input in a kit sheet keeps a draft
+00:00 +9: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: allowlists never grow (KIT-5)
+00:00 +10: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: allowlist keys are exact paths or folders under lib/
+00:00 +11: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: every G2/G7/G15x/G17/G21/G48 row is named once and has a reason
+00:00 +12: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: every allowlist entry gives a real reason
+00:00 +13: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: the Flutter widget catalogue exists and is non-trivial
+00:00 +14: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G1 matches showDialog<T>( but not showKitDialog( or a comment
+00:00 +15: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) SnackBar( does not count showSnackBar( or KitSnackBar(
+00:00 +16: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G16 counts real widget constructions, not static members or app classes
+00:00 +17: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) KIT-7: a new MaterialPageRoute( in a file with no baseline entry fails G16, in lib/ui and in UI code elsewhere under lib/
+00:00 +18: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G15 counts a width compared to a literal, not BoxConstraints(maxWidth: n)
+00:00 +19: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G2 counts uses of an old API, not its declaration
+00:00 +20: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G2 counts motion literals and seams, not KitMotion names
+00:00 +21: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings SEC-1: launchUrl in the kit is absolute with no allowlist
+00:00 +22: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G7 counts left/right layout, not the directional forms
+00:00 +23: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G7 is absolute in the kit, forced-LTR parts may align left
+00:00 +24: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G15x counts breakpoints and layout widths, not guards or gaps
+00:00 +25: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G17 counts literal colours and theme reads, not transparent
+00:00 +26: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G21 counts look literals the way the rulebook writes them
+00:00 +27: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G21 LOOK-21 in the kit: every stroke width comes from KitTokens
+00:00 +28: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G21 metal/chrome reads identifiers and file names
+00:00 +29: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G48 flags a sheet with a multiline field and no draft
+00:00 +30: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G17 and G21 also scan Flutter UI code outside lib/ui/
+00:00 +31: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings theme files, allowlist keys and scopes resolve as documented
+00:00 +32: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings KIT-5: an allowlist key the committed set lacks fails
+00:00 +33: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/design_standard_test.dart
+00:00 +33: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/design_standard_test.dart: G3x: migrated screens hold every forbidden pattern at zero (or below their baseline)
+00:00 +34: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/design_standard_test.dart: G3x: migrated classes in mixed files use the kit
+00:00 +35: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/design_standard_test.dart: G3x: the baseline only shrinks and names only migrated entries
+00:00 +36: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/design_standard_test.dart: G3x: a screen migrated on or after 2026-09-26 has an _ar_dark golden
+00:00 +37: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/design_standard_test.dart: raw parts a migrated screen gave up do not come back
+00:00 +38: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/design_standard_test.dart: every allowlist entry names a migrated file and gives a reason
+00:00 +39: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/design_standard_test.dart: each migrated screen has dark and light goldens at 412x915
+00:00 +40: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/design_standard_test.dart: scenes take their time only from KitIllustration (§10)
+00:00 +41: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/design_standard_test.dart: the kit is the one place raw progress and filled buttons live
+00:00 +42: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) every G1, G2, G7, G17 and G21 pattern is forbidden
+00:00 +43: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) a screen that breaks one rule of each gate fails each
+00:00 +44: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) scopes: the kit and the theme files are judged by their own rules
+00:00 +45: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) directional and themed forms pass
+00:00 +46: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) bidi literals count outside the kit, as characters or escapes
+00:00 +47: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) an argument list is read to its closing parenthesis
 00:00 +48: All tests passed!
 Resolving dependencies...
 Downloading packages...
@@ -207,7 +207,7 @@ Downloading packages...
 Got dependencies!
 54 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/l10n_coverage_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/l10n_coverage_test.dart
 00:00 +0: hardcoded string detector
 00:00 +1: no file gained hardcoded UI strings
 l10n: these files improved; lower their baseline in test/l10n_coverage_test.dart:

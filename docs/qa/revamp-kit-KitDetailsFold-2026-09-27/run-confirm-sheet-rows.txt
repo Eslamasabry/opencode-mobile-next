@@ -57,62 +57,62 @@ Downloading packages...
 Got dependencies!
 54 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: rows 1-2: the mark is the header tile (LOOK-5, LOOK-6) neutral: a surface3 tile, text1 glyph, no accent, no red
-00:00 +1: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: rows 1-2: the mark is the header tile (LOOK-5, LOOK-6) stop, destructive, discard: the danger tint and dangerFill
-00:00 +2: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: rows 1-2: the mark is the header tile (LOOK-5, LOOK-6) the tile is out of semantics
-00:00 +3: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: row 3: consequences through KitConsequences (D22) destructive: the first fact is lost, the rest info
-00:01 +4: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: row 3: consequences through KitConsequences (D22) neutral: every fact is info
-00:01 +5: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: row 3: consequences through KitConsequences (D22) separators are one physical pixel
-00:01 +6: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: row 3: consequences through KitConsequences (D22) consequenceItems draw as given, with the kept mark
-00:01 +7: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: row 3: consequences through KitConsequences (D22) passing both consequences and consequenceItems asserts
-00:01 +8: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: row 3: consequences through KitConsequences (D22) showKitConfirm asserts on both too
-00:01 +9: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: row 4: details through the public KitDetailsFold collapsed first; the toggle opens it; a value shows once
-00:01 +10: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: row 4: details through the public KitDetailsFold values are left to right and selectable
-00:01 +11: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: row 4: details through the public KitDetailsFold a value the redactor matches is refused
-00:01 +12: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: row 5: the typed name (COPY-30) the label isolates the name with KitBidi.ltr
-00:01 +13: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: row 5: the typed name (COPY-30) no literal isolate in kit_confirm_sheet.dart
-00:01 +14: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: row 6 and 200 % text (A11Y-8) (setUpAll)
-00:01 +14: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: row 6 and 200 % text (A11Y-8) at 2.0 and 320.0 wide: wraps, nothing cut or overflowed
-00:01 +15: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: row 6 and 200 % text (A11Y-8) at 2.0 and 360.0 wide: wraps, nothing cut or overflowed
-00:01 +16: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: row 6 and 200 % text (A11Y-8) at 2.0 and 412.0 wide: wraps, nothing cut or overflowed
-00:01 +17: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: row 6 and 200 % text (A11Y-8) (tearDownAll)
-00:01 +17: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: routes: answered elsewhere closes the question, false
-00:01 +18: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: reduced motion settles in one pump (G8) the failed state
-00:01 +19: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: reduced motion settles in one pump (G8) the in-place swap inside a sheet
-00:01 +20: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart
-00:02 +20: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: answers false unless confirmed cancel
-00:03 +21: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: answers false unless confirmed back
-00:03 +22: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: answers false unless confirmed swipe down
-00:03 +23: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: answers false unless confirmed a tap outside
-00:03 +24: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: answers false unless confirmed confirm answers true
-00:03 +25: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: the cancel word follows the kind
-00:03 +26: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: error tone only for stop, destructive and discard; never ?
-00:04 +27: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: the typed name enables the confirm only on an exact match
-00:04 +28: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: commit haptic neutral: none
-00:04 +29: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: commit haptic stop: one tick
-00:04 +30: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: commit haptic destructive: one tick
-00:04 +31: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: commit haptic discard: one tick
-00:04 +32: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: commit haptic never with Vibration off
-00:04 +33: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: commit haptic showConfirmSheet obeys Vibration off too
-00:04 +34: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: a confirm raised from a KitSheet adds no route
-00:04 +35: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: a pinned action's confirm also swaps in place
-00:04 +36: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: a failed act keeps the question open with Try again
-00:05 +37: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: the alternative closes the question and runs
-00:05 +38: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: details fold open, left to right
-00:05 +39: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: adapts to the window (§8.2) 412x915
-00:05 +40: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: adapts to the window (§8.2) 700x1000
-00:05 +41: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: adapts to the window (§8.2) 1280x800
-00:05 +42: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: adapts to the window (§8.2) 915x412
-00:05 +43: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: showConfirmSheet maps onto the kit confirmation
-00:05 +44: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_keyboard_test.dart
-00:06 +44: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_keyboard_test.dart: showKitConfirm Esc cancels
-00:07 +45: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_keyboard_test.dart: showKitConfirm Enter confirms a neutral question
-00:07 +46: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_keyboard_test.dart: showKitConfirm Enter does not confirm destructive; Tab to it does
-00:07 +47: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_keyboard_test.dart: showKitConfirm Enter does not confirm stop; Tab to it does
-00:07 +48: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_keyboard_test.dart: showKitConfirm Enter does not confirm discard; Tab to it does
-00:07 +49: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_keyboard_test.dart: showKitSheet Esc closes a sheet with nothing to lose
-00:07 +50: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_keyboard_test.dart: showKitSheet Esc with unsaved input asks in place; Esc again goes back
-00:07 +51: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_keyboard_test.dart: showKitSheet Esc from inside a text field still closes
-00:07 +52: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_keyboard_test.dart: showKitSheet Tab reaches the close button and every action
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: rows 1-2: the mark is the header tile (LOOK-5, LOOK-6) neutral: a surface3 tile, text1 glyph, no accent, no red
+00:00 +1: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: rows 1-2: the mark is the header tile (LOOK-5, LOOK-6) stop, destructive, discard: the danger tint and dangerFill
+00:00 +2: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: rows 1-2: the mark is the header tile (LOOK-5, LOOK-6) the tile is out of semantics
+00:00 +3: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: row 3: consequences through KitConsequences (D22) destructive: the first fact is lost, the rest info
+00:01 +4: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: row 3: consequences through KitConsequences (D22) neutral: every fact is info
+00:01 +5: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: row 3: consequences through KitConsequences (D22) separators are one physical pixel
+00:01 +6: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: row 3: consequences through KitConsequences (D22) consequenceItems draw as given, with the kept mark
+00:01 +7: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: row 3: consequences through KitConsequences (D22) passing both consequences and consequenceItems asserts
+00:01 +8: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: row 3: consequences through KitConsequences (D22) showKitConfirm asserts on both too
+00:01 +9: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: row 4: details through the public KitDetailsFold collapsed first; the toggle opens it; a value shows once
+00:01 +10: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: row 4: details through the public KitDetailsFold values are left to right and selectable
+00:01 +11: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: row 4: details through the public KitDetailsFold a value the redactor matches is refused
+00:01 +12: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: row 5: the typed name (COPY-30) the label isolates the name with KitBidi.ltr
+00:01 +13: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: row 5: the typed name (COPY-30) no literal isolate in kit_confirm_sheet.dart
+00:01 +14: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: row 6 and 200 % text (A11Y-8) (setUpAll)
+00:01 +14: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: row 6 and 200 % text (A11Y-8) at 2.0 and 320.0 wide: wraps, nothing cut or overflowed
+00:01 +15: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: row 6 and 200 % text (A11Y-8) at 2.0 and 360.0 wide: wraps, nothing cut or overflowed
+00:01 +16: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: row 6 and 200 % text (A11Y-8) at 2.0 and 412.0 wide: wraps, nothing cut or overflowed
+00:01 +17: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: row 6 and 200 % text (A11Y-8) (tearDownAll)
+00:01 +17: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: routes: answered elsewhere closes the question, false
+00:01 +18: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: reduced motion settles in one pump (G8) the failed state
+00:01 +19: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_look_test.dart: reduced motion settles in one pump (G8) the in-place swap inside a sheet
+00:01 +20: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart
+00:02 +20: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: answers false unless confirmed cancel
+00:03 +21: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: answers false unless confirmed back
+00:03 +22: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: answers false unless confirmed swipe down
+00:03 +23: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: answers false unless confirmed a tap outside
+00:03 +24: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: answers false unless confirmed confirm answers true
+00:03 +25: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: the cancel word follows the kind
+00:03 +26: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: error tone only for stop, destructive and discard; never ?
+00:04 +27: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: the typed name enables the confirm only on an exact match
+00:04 +28: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: commit haptic neutral: none
+00:04 +29: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: commit haptic stop: one tick
+00:04 +30: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: commit haptic destructive: one tick
+00:04 +31: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: commit haptic discard: one tick
+00:04 +32: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: commit haptic never with Vibration off
+00:04 +33: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: commit haptic showConfirmSheet obeys Vibration off too
+00:04 +34: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: a confirm raised from a KitSheet adds no route
+00:04 +35: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: a pinned action's confirm also swaps in place
+00:04 +36: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: a failed act keeps the question open with Try again
+00:05 +37: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: the alternative closes the question and runs
+00:05 +38: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: details fold open, left to right
+00:05 +39: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: adapts to the window (§8.2) 412x915
+00:05 +40: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: adapts to the window (§8.2) 700x1000
+00:05 +41: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: adapts to the window (§8.2) 1280x800
+00:05 +42: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: adapts to the window (§8.2) 915x412
+00:05 +43: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_confirm_sheet_test.dart: showConfirmSheet maps onto the kit confirmation
+00:05 +44: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_keyboard_test.dart
+00:06 +44: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_keyboard_test.dart: showKitConfirm Esc cancels
+00:07 +45: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_keyboard_test.dart: showKitConfirm Enter confirms a neutral question
+00:07 +46: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_keyboard_test.dart: showKitConfirm Enter does not confirm destructive; Tab to it does
+00:07 +47: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_keyboard_test.dart: showKitConfirm Enter does not confirm stop; Tab to it does
+00:07 +48: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_keyboard_test.dart: showKitConfirm Enter does not confirm discard; Tab to it does
+00:07 +49: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_keyboard_test.dart: showKitSheet Esc closes a sheet with nothing to lose
+00:07 +50: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_keyboard_test.dart: showKitSheet Esc with unsaved input asks in place; Esc again goes back
+00:07 +51: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_keyboard_test.dart: showKitSheet Esc from inside a text field still closes
+00:07 +52: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_keyboard_test.dart: showKitSheet Tab reaches the close button and every action
 00:08 +53: All tests passed!

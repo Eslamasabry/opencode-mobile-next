@@ -59,10 +59,10 @@ the maps `screens-nav.md` (112 features, the main source), `chat-genui.md`, `and
 `agents-backends.md`, `desktop-web-cross.md`, `ui-kit.md`, `media-voice.md`, `protocols.md`, `state-data.md`, the
 research files `motion-native.md`, `kmp-cmp-status.md`, `architecture-stacks.md`, `android-surfaces.md`,
 `testing-perf.md`, the catalog, and the owner memory files listed in §15. The Flutter source at
-`/home/eslam/Storage/Code/wt/oc_app-batch1` (HEAD `65e3f70a3`, app 2.1.0+57) was read to confirm entry points,
+`/home/owner/Storage/Code/wt/oc_app-batch1` (HEAD `65e3f70a3`, app 2.1.0+57) was read to confirm entry points,
 extras and dead code. The 23 UI files the freeze branch adds (`git diff --diff-filter=A 65e3f70a3 fc5c1e78f -- lib/ui`)
 were read on 2026-11-01 for the freeze-tip rows (02 §3.5, S02-3); until `flutter-final` is tagged the source for those
-rows is the read-only worktree `/home/eslam/Storage/Code/wt/oc_app-freeze`.
+rows is the read-only worktree `/home/owner/Storage/Code/wt/oc_app-freeze`.
 
 Inventory basis [R, counted today]: 143 Flutter classes named `*Screen`, `*Page` or `*View` (some are parts, not pages)
 and 78 public `show*` sheet/dialog functions, plus private sheets inside the chat library.
@@ -2152,7 +2152,7 @@ and backups ported from their branches).
 - Research: `motion-native.md` §3–§4, `kmp-cmp-status.md` §4, §12.3, `architecture-stacks.md` §5, §12,
   `android-surfaces.md` §0, §9–§12, §15, §17, `testing-perf.md` §4.2, §6.
 - Catalog: `BEHAVIORS.md` NAV area (82 rows) and the ANDR rows named above; `e2e-flows.md` E2E-01, 21–27, 36, 38, 39.
-- Flutter source read 2026-11-01 (`/home/eslam/Storage/Code/wt/oc_app-batch1`): `lib/ui/capability_flows.dart`,
+- Flutter source read 2026-11-01 (`/home/owner/Storage/Code/wt/oc_app-batch1`): `lib/ui/capability_flows.dart`,
   `lib/ui/screens/settings/settings_group_page.dart`, `lib/ui/screens/home_screen.dart`,
   `lib/ui/screens/chats/chats_host.dart`, `lib/ui/screens/inbox/inbox_screen.dart`,
   `lib/ui/screens/capabilities_screen.dart`, `lib/ui/screens/local_agent_screen.dart`,

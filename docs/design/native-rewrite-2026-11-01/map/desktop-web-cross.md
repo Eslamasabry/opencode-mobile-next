@@ -1,7 +1,7 @@
 # desktop-web-cross: desktop and web paths, accessibility, security invariants, privacy, diagnostics, crash handling, analytics
 
 Area map for the native rewrite (Android first, KMP-ready). Written 2026-11-01 from
-`/home/eslam/Storage/Code/wt/oc_app-batch1` (branch `int/batch1-2026-11-01`, HEAD `65e3f70a3`,
+`/home/owner/Storage/Code/wt/oc_app-batch1` (branch `int/batch1-2026-11-01`, HEAD `65e3f70a3`,
 app version 2.1.0+57). Read-only study; nothing in the repo was changed.
 
 Scope covered here: the Linux and Windows desktop runners and packaging, the iOS scaffold, the web
@@ -55,7 +55,7 @@ fact from them it is because the fact is a cross-cutting invariant.
 - Test and rule ids quoted below (`A11Y-8`, `G2`, `STATE-5`, `LOOK-21`, `SEC-1`, ...) come from
   `docs/ux-system/revamp/STANDARDS.md` and code comments. Test names are Flutter test files; the owner
   said the 7,967 widget tests come later and the 6,663 logic tests are catalogued in
-  `/home/eslam/Storage/Code/wt/native-plan/catalog` (areas `security-privacy` 188 rows and
+  `/home/owner/Storage/Code/wt/native-plan/catalog` (areas `security-privacy` 188 rows and
   `desktop-web-cross` 16 rows are the ones for this file; section 10).
 
 ## 1. Ten things a rewrite must know first
@@ -1598,7 +1598,7 @@ Commit ids are from `git -C .../oc_app-batch1 log` on the files named.
 
 ## 10. Test-first map
 
-Catalog rows (`/home/eslam/Storage/Code/wt/native-plan/catalog`, `raw-*.jsonl`): area `desktop-web-cross` = 16
+Catalog rows (`/home/owner/Storage/Code/wt/native-plan/catalog`, `raw-*.jsonl`): area `desktop-web-cross` = 16
 rows; area `security-privacy` = 188 rows. Highest-leverage Flutter test files for this file (rows in catalog):
 `crash_report_test` 11, `private_network_cleartext_test` 7, `byo_host/ssh_runner_test` 6, `git/github_device_flow_test`
 5, `problem_report_test` 4, `product_error_text_test` 4, `crash_diagnostics_test` 3, `external_link_test` 2,

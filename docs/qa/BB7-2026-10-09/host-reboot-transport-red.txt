@@ -3,7 +3,7 @@
 FAIL: test_non_root_transport_refuses_private_observation (test_bb7_runtime_acceptance.RebootTransportTest.test_non_root_transport_refuses_private_observation)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 330, in test_non_root_transport_refuses_private_observation
+  File "/home/owner/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 330, in test_non_root_transport_refuses_private_observation
     with self.assertRaises(B.H.Q.Refused):
 AssertionError: Refused not raised
 
@@ -11,7 +11,7 @@ AssertionError: Refused not raised
 FAIL: test_reestablishes_root_before_private_observation_without_app_dispatch (test_bb7_runtime_acceptance.RebootTransportTest.test_reestablishes_root_before_private_observation_without_app_dispatch)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 321, in test_reestablishes_root_before_private_observation_without_app_dispatch
+  File "/home/owner/Storage/Code/oc_app-sol-bb/tool/qa/test_bb7_runtime_acceptance.py", line 321, in test_reestablishes_root_before_private_observation_without_app_dispatch
     self.assertEqual([call[0] for call in device.calls],
 AssertionError: Lists differ: [] != [('root',), ('wait-for-device',), ('shell', 'id', '-u')]
 

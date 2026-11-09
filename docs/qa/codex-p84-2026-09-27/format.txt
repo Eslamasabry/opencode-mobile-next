@@ -1,8 +1,8 @@
 Warning: Package resolution error when reading "analysis_options.yaml" file for "lib/diagnostics/failed_job_report.dart":
-Failed to resolve package URI "package:flutter_lints/flutter.yaml" in include at "/home/eslam/Storage/Code/oc_app-codex-p84/analysis_options.yaml".
+Failed to resolve package URI "package:flutter_lints/flutter.yaml" in include at "/home/owner/Storage/Code/oc_app-codex-p84/analysis_options.yaml".
 Warning: Package resolution error when reading "analysis_options.yaml" file for "lib/state/development_services.dart":
-Failed to resolve package URI "package:flutter_lints/flutter.yaml" in include at "/home/eslam/Storage/Code/oc_app-codex-p84/analysis_options.yaml".
+Failed to resolve package URI "package:flutter_lints/flutter.yaml" in include at "/home/owner/Storage/Code/oc_app-codex-p84/analysis_options.yaml".
 Warning: Package resolution error when reading "analysis_options.yaml" file for "test/failed_job_report_test.dart":
-Failed to resolve package URI "package:flutter_lints/flutter.yaml" in include at "/home/eslam/Storage/Code/oc_app-codex-p84/analysis_options.yaml".
+Failed to resolve package URI "package:flutter_lints/flutter.yaml" in include at "/home/owner/Storage/Code/oc_app-codex-p84/analysis_options.yaml".
 Formatted test/development_services_failed_report_test.dart
 Formatted 4 files (1 changed) in 0.02 seconds.

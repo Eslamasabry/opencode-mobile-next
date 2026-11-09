@@ -2,7 +2,7 @@
   "artifacts": [
     {
       "kind": "target",
-      "path": "/home/eslam/Storage/Code/oc_app-sol-bb/build/app/outputs/flutter-apk/app-release.apk",
+      "path": "/home/owner/Storage/Code/oc_app-sol-bb/build/app/outputs/flutter-apk/app-release.apk",
       "sha256": "10298cae3bb57790cae51d9a48d10672b7d3b7ad7ee8018479bc8286e0266ff2",
       "bytes": 65639585,
       "package": "io.github.eslamasabry.opencode_mobile",
@@ -12,7 +12,7 @@
     },
     {
       "kind": "runner",
-      "path": "/home/eslam/Storage/Code/oc_app-sol-bb/build/app/outputs/apk/androidTest/release/app-release-androidTest.apk",
+      "path": "/home/owner/Storage/Code/oc_app-sol-bb/build/app/outputs/apk/androidTest/release/app-release-androidTest.apk",
       "sha256": "db8929895e1b40d33aabe3bb9e13de9db38774e1c7be91833ae761720d92e6b0",
       "bytes": 194758,
       "package": "io.github.eslamasabry.opencode_mobile.test",

@@ -94,7 +94,7 @@ collision and the incomplete test doubles (13 failed Gradle tasks, 1228 actionab
 Compile command, from `native/`, under `/tmp/oc-native-gradle.lock` and the machine build lock:
 
 ```bash
-export JAVA_HOME=/home/eslam/Storage2/tools/jdk21 ANDROID_HOME="$HOME/Android/Sdk"
+export JAVA_HOME=/home/owner/Storage2/tools/jdk21 ANDROID_HOME="$HOME/Android/Sdk"
 nice -n 5 ./gradlew --console=plain --continue \
   -Dorg.gradle.workers.max=2 -Dorg.gradle.daemon.idletimeout=300000 \
   -Dorg.gradle.jvmargs='-Xmx2g -XX:MaxMetaspaceSize=768m' \

@@ -1,5 +1,5 @@
 # Run 8b: the same case on the base notice (kit_notice.dart and nudge_card.dart from b67e3276, temporarily, then restored)
 Waiting for another flutter command to release the startup lock...
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/termux_setup_screen_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/termux_setup_screen_test.dart
 00:00 +0: missing prior profile refuses switch without mutating setup
 00:01 +1: All tests passed!

@@ -1,4 +1,4 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/chat_states_standard_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app-sol-ba/test/chat_states_standard_test.dart
 00:00 +0: first load: one loading bar and placeholder turns, no text
 00:01 +1: a conversation that could not load says so plainly, with Try again, and the raw error only under Details
 00:01 +2: a Claude history failure names its helper and can retry
@@ -11,7 +11,7 @@ Expected: exactly one matching candidate
    Which: means none were found but one was expected
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/chat_states_standard_test.dart:311:5)
+#4      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/chat_states_standard_test.dart:311:5)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -21,7 +21,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/chat_states_standard_test.dart line 311
+  file:///home/owner/Storage/Code/oc_app-sol-ba/test/chat_states_standard_test.dart line 311
 The test description was:
   reconnecting: progress at once, "isn't answering" after 8 s, and no stale progress once connected
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -37,7 +37,7 @@ Expected: exactly one matching candidate
    Which: means none were found but one was expected
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/chat_states_standard_test.dart:359:5)
+#4      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/chat_states_standard_test.dart:359:5)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -47,7 +47,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/chat_states_standard_test.dart line 359
+  file:///home/owner/Storage/Code/oc_app-sol-ba/test/chat_states_standard_test.dart line 359
 The test description was:
   one status line: a lost connection outranks a prompt error, which comes back when the connection
   does
@@ -60,5 +60,5 @@ The test description was:
 00:04 +5 -2: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/chat_states_standard_test.dart: one status line: a lost connection outranks a prompt error, which comes back when the connection does
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/chat_states_standard_test.dart: reconnecting: progress at once, "isn't answering" after 8 s, and no stale progress once connected
+  /home/owner/Storage/Code/oc_app-sol-ba/test/chat_states_standard_test.dart: one status line: a lost connection outranks a prompt error, which comes back when the connection does
+  /home/owner/Storage/Code/oc_app-sol-ba/test/chat_states_standard_test.dart: reconnecting: progress at once, "isn't answering" after 8 s, and no stale progress once connected

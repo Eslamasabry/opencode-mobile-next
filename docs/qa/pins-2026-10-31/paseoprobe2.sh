@@ -5,7 +5,7 @@ RUN=$D/pas/run_$TAG; rm -rf $RUN; mkdir -p $RUN/home $RUN/bin $RUN/proj; cp $D/a
 (cd $RUN/proj; git init -q .; echo hi > README.md)
 umask 077; head -c 24 /dev/urandom | od -An -tx1 | tr -d ' \n' > $RUN/secret
 PASEO=$D/pas/$N/node_modules/.bin/paseo
-export REALHOME=/home/eslam; export HOME=$RUN/fakehome; mkdir -p $HOME
+export REALHOME=$HOME; export HOME=$RUN/fakehome; mkdir -p $HOME
 for kv in "daemon.listen 127.0.0.1:$PORT" "daemon.relay.enabled false" "daemon.mcp.injectIntoAgents false" "features.webUi.enabled false"; do set -- $kv; $PASEO daemon config set $1 $2 --home $RUN/home 2>&1 | head -2 | cut -c1-150; done
 PASEO_PASSWORD=$(cat $RUN/secret) PASEO_DICTATION_ENABLED=false PASEO_VOICE_MODE_ENABLED=false DISABLE_AUTOUPDATER=1 CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1 PATH=$RUN/bin:$PATH \
   setsid nohup $PASEO daemon run --home $RUN/home > $RUN/daemon.log 2>&1 < /dev/null &

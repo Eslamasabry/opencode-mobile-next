@@ -1,59 +1,59 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_controller_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_controller_test.dart: redacted read strips arbitrary environment credentials and server errors
-00:00 +1: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_controller_test.dart: propose requires review and apply verifies outcome then undo restores
-00:00 +2: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_controller_test.dart: unsupported production writes never call transport
-00:00 +3: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_controller_test.dart: changed server configuration prevents apply and undo overwrites
-00:00 +4: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_controller_test.dart: offline cannot dispatch writes; proposals remain reviewable
-00:00 +5: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_controller_test.dart: secret inputs and overlapping patches fail validation
-00:00 +6: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_controller_test.dart: new keys and removals are proposals only without reversible deletion
-00:00 +7: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_controller_test.dart: unknown write outcome records uncertainty and prevents blind retry
-00:00 +8: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_controller_test.dart: profile deletion sweep includes audit and preserves another profile
-00:00 +9: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_controller_test.dart: controller serializes concurrent actions and exposes loading stream
-00:00 +10: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_controller_test.dart: offline transition during refresh cannot publish ready state
-00:00 +11: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_controller_test.dart: layered source config cannot masquerade as an effective diff
-00:00 +12: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_controller_test.dart: basic shape validation rejects malformed scalar and MCP inputs
-00:00 +13: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_controller_test.dart: setup mutation capabilities default off for unknown servers
-00:00 +14: loading /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart
-00:02 +14: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 1 setup reads config in selected location using existing auth
-00:02 +15: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 1 setup write refusal performs no transport request
-00:02 +16: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 1 setup inventory preserves statuses without raw server errors
-00:02 +17: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 1 setup HTTP 401 failure never exposes response details
-00:02 +18: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 1 setup HTTP 403 failure never exposes response details
-00:02 +19: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 1 setup HTTP 500 failure never exposes response details
-00:02 +20: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 1 setup network failure maps to offline with safe copy
-00:02 +21: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 1 setup malformed config cannot masquerade as empty config
-00:02 +22: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 1 setup malformed inventory cannot masquerade as no servers
-00:02 +23: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 2 setup reads config in selected location using existing auth
-00:02 +24: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 2 setup write refusal performs no transport request
-00:02 +25: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 2 setup inventory preserves statuses without raw server errors
-00:02 +26: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 2 setup HTTP 401 failure never exposes response details
-00:02 +27: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 2 setup HTTP 403 failure never exposes response details
-00:02 +28: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 2 setup HTTP 500 failure never exposes response details
-00:02 +29: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 2 setup network failure maps to offline with safe copy
-00:02 +30: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 2 setup malformed config cannot masquerade as empty config
-00:02 +31: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 2 setup malformed inventory cannot masquerade as no servers
-00:02 +32: loading /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_planner_test.dart
-00:03 +32: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_planner_test.dart: guided mode requests structured values and never interprets question
-00:03 +33: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_planner_test.dart: model and default agent become proposals without applying
-00:03 +34: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_planner_test.dart: continuation collects inputs and makes remote MCP disabled
-00:03 +35: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_planner_test.dart: local command is copied and disabled; removal is typed
-00:03 +36: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_planner_test.dart: permission allows only explicit tools and explicit effects
-00:03 +37: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_planner_test.dart: credential-shaped URLs and cleartext external URLs never propose
-00:03 +38: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_planner_test.dart: secret or unknown inputs are rejected and never retained
-00:03 +39: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_planner_test.dart: split secret CLI arguments and invalid command shapes are rejected
-00:03 +40: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_planner_test.dart: unsupported sensitive or unimplemented workflows state the gap
-00:03 +41: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_planner_test.dart: closed, disposed and evicted sessions cannot resume
-00:03 +42: loading /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart
-00:03 +42: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: opt-out is persisted after a refresh write already in flight
-00:03 +43: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: clear waits for a pending refresh write then removes it
-00:03 +44: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: awaiting dispose drains writes before profile deletion
-00:03 +45: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: default load, refresh and offline mode never access the internet
-00:03 +46: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: explicit refresh uses fixed unauthenticated origin and caches safely
-00:03 +47: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: restart preserves consent and cache; opt-out and offline do not fetch
-00:03 +48: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: profile cache is isolated and existing deletion sweep removes it
-00:03 +49: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: clear forgets consent and cache without changing other preferences
-00:03 +50: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: offline transition cancels an in-flight refresh and keeps cached state
-00:03 +50 -1: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: offline transition cancels an in-flight refresh and keeps cached state [E]
+00:00 +0: loading /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_controller_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_controller_test.dart: redacted read strips arbitrary environment credentials and server errors
+00:00 +1: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_controller_test.dart: propose requires review and apply verifies outcome then undo restores
+00:00 +2: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_controller_test.dart: unsupported production writes never call transport
+00:00 +3: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_controller_test.dart: changed server configuration prevents apply and undo overwrites
+00:00 +4: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_controller_test.dart: offline cannot dispatch writes; proposals remain reviewable
+00:00 +5: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_controller_test.dart: secret inputs and overlapping patches fail validation
+00:00 +6: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_controller_test.dart: new keys and removals are proposals only without reversible deletion
+00:00 +7: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_controller_test.dart: unknown write outcome records uncertainty and prevents blind retry
+00:00 +8: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_controller_test.dart: profile deletion sweep includes audit and preserves another profile
+00:00 +9: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_controller_test.dart: controller serializes concurrent actions and exposes loading stream
+00:00 +10: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_controller_test.dart: offline transition during refresh cannot publish ready state
+00:00 +11: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_controller_test.dart: layered source config cannot masquerade as an effective diff
+00:00 +12: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_controller_test.dart: basic shape validation rejects malformed scalar and MCP inputs
+00:00 +13: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_controller_test.dart: setup mutation capabilities default off for unknown servers
+00:00 +14: loading /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart
+00:02 +14: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 1 setup reads config in selected location using existing auth
+00:02 +15: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 1 setup write refusal performs no transport request
+00:02 +16: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 1 setup inventory preserves statuses without raw server errors
+00:02 +17: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 1 setup HTTP 401 failure never exposes response details
+00:02 +18: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 1 setup HTTP 403 failure never exposes response details
+00:02 +19: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 1 setup HTTP 500 failure never exposes response details
+00:02 +20: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 1 setup network failure maps to offline with safe copy
+00:02 +21: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 1 setup malformed config cannot masquerade as empty config
+00:02 +22: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 1 setup malformed inventory cannot masquerade as no servers
+00:02 +23: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 2 setup reads config in selected location using existing auth
+00:02 +24: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 2 setup write refusal performs no transport request
+00:02 +25: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 2 setup inventory preserves statuses without raw server errors
+00:02 +26: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 2 setup HTTP 401 failure never exposes response details
+00:02 +27: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 2 setup HTTP 403 failure never exposes response details
+00:02 +28: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 2 setup HTTP 500 failure never exposes response details
+00:02 +29: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 2 setup network failure maps to offline with safe copy
+00:02 +30: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 2 setup malformed config cannot masquerade as empty config
+00:02 +31: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_config_adapter_test.dart: OpenCode 2 setup malformed inventory cannot masquerade as no servers
+00:02 +32: loading /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_planner_test.dart
+00:03 +32: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_planner_test.dart: guided mode requests structured values and never interprets question
+00:03 +33: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_planner_test.dart: model and default agent become proposals without applying
+00:03 +34: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_planner_test.dart: continuation collects inputs and makes remote MCP disabled
+00:03 +35: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_planner_test.dart: local command is copied and disabled; removal is typed
+00:03 +36: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_planner_test.dart: permission allows only explicit tools and explicit effects
+00:03 +37: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_planner_test.dart: credential-shaped URLs and cleartext external URLs never propose
+00:03 +38: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_planner_test.dart: secret or unknown inputs are rejected and never retained
+00:03 +39: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_planner_test.dart: split secret CLI arguments and invalid command shapes are rejected
+00:03 +40: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_planner_test.dart: unsupported sensitive or unimplemented workflows state the gap
+00:03 +41: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_planner_test.dart: closed, disposed and evicted sessions cannot resume
+00:03 +42: loading /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart
+00:03 +42: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: opt-out is persisted after a refresh write already in flight
+00:03 +43: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: clear waits for a pending refresh write then removes it
+00:03 +44: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: awaiting dispose drains writes before profile deletion
+00:03 +45: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: default load, refresh and offline mode never access the internet
+00:03 +46: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: explicit refresh uses fixed unauthenticated origin and caches safely
+00:03 +47: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: restart preserves consent and cache; opt-out and offline do not fetch
+00:03 +48: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: profile cache is isolated and existing deletion sweep removes it
+00:03 +49: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: clear forgets consent and cache without changing other preferences
+00:03 +50: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: offline transition cancels an in-flight refresh and keeps cached state
+00:03 +50 -1: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: offline transition cancels an in-flight refresh and keeps cached state [E]
   Expected: an object with length of <2>
     Actual: [Instance of 'RequestOptions']
      Which: has length of <1>
@@ -62,14 +62,14 @@
   package:flutter_test/src/widget_tester.dart 473:18  expect
   test/setup_registry_test.dart 289:7                 main.<fn>
 
-00:03 +50 -1: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: opt-out during refresh cannot resurrect entries or consent
-00:03 +51 -1: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: deletion during refresh cannot recreate a profile preference
-00:03 +52 -1: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: redirects, oversized data and invalid JSON fail with safe copy
-00:03 +53 -1: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: failed refresh keeps cached entries and hides raw exceptions
-00:03 +54 -1: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: metadata redaction drops credentials, unsafe URLs, and executable arguments
-00:03 +55 -1: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: package-only listings explain the unsupported installation path
-00:03 +56 -1: /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: deleted listings are excluded and server response count is bounded
+00:03 +50 -1: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: opt-out during refresh cannot resurrect entries or consent
+00:03 +51 -1: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: deletion during refresh cannot recreate a profile preference
+00:03 +52 -1: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: redirects, oversized data and invalid JSON fail with safe copy
+00:03 +53 -1: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: failed refresh keeps cached entries and hides raw exceptions
+00:03 +54 -1: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: metadata redaction drops credentials, unsafe URLs, and executable arguments
+00:03 +55 -1: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: package-only listings explain the unsupported installation path
+00:03 +56 -1: /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: deleted listings are excluded and server response count is bounded
 00:03 +57 -1: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: offline transition cancels an in-flight refresh and keeps cached state
+  /home/owner/Storage/Code/oc_app-codex-aiset/test/setup_registry_test.dart: offline transition cancels an in-flight refresh and keeps cached state

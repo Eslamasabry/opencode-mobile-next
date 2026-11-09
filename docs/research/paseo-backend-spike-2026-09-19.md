@@ -35,7 +35,7 @@ exists.
 
 ## What was run
 
-Workspace: `/home/eslam/Storage/Code/paseo-spike` (outside this repo).
+Workspace: `/home/owner/Storage/Code/paseo-spike` (outside this repo).
 `@getpaseo/cli` 0.8.0, daemon home inside the spike folder, port 6790,
 `--no-relay --no-inject-mcp --no-web-ui`. A logging WebSocket proxy on 6791
 recorded every frame while the Paseo CLI drove the daemon: 163 frames in

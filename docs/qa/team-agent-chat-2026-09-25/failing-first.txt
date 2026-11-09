@@ -1,13 +1,13 @@
 # A: new tests, lib/ as at c799e2af (HEAD 0f4927bb)
 $ git checkout c799e2af -- lib; rm the files this branch added under lib/
-00:00 +0 -1: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/agent-aba33a7c96cf4bb13/test/team_agent_sessions_test.dart [E]
-00:00 +0 -2: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/agent-aba33a7c96cf4bb13/test/team_session_state_test.dart [E]
-00:00 +0 -2: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/agent-aba33a7c96cf4bb13/test/team_agent_sessions_test.dart [E]
-00:00 +0 -3: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/agent-aba33a7c96cf4bb13/test/team_conversation_lead_test.dart [E]
-00:00 +0 -3: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/agent-aba33a7c96cf4bb13/test/team_agent_sessions_test.dart [E]
-00:00 +0 -4: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/agent-aba33a7c96cf4bb13/test/team_agent_chat_test.dart [E]
-00:00 +0 -4: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/agent-aba33a7c96cf4bb13/test/team_agent_sessions_test.dart [E]
-00:00 +0 -5: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/agent-aba33a7c96cf4bb13/test/team_conversation_screen_test.dart [E]
+00:00 +0 -1: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/agent-aba33a7c96cf4bb13/test/team_agent_sessions_test.dart [E]
+00:00 +0 -2: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/agent-aba33a7c96cf4bb13/test/team_session_state_test.dart [E]
+00:00 +0 -2: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/agent-aba33a7c96cf4bb13/test/team_agent_sessions_test.dart [E]
+00:00 +0 -3: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/agent-aba33a7c96cf4bb13/test/team_conversation_lead_test.dart [E]
+00:00 +0 -3: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/agent-aba33a7c96cf4bb13/test/team_agent_sessions_test.dart [E]
+00:00 +0 -4: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/agent-aba33a7c96cf4bb13/test/team_agent_chat_test.dart [E]
+00:00 +0 -4: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/agent-aba33a7c96cf4bb13/test/team_agent_sessions_test.dart [E]
+00:00 +0 -5: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/agent-aba33a7c96cf4bb13/test/team_conversation_screen_test.dart [E]
 00:00 +0 -5: Some tests failed.
 
 # B: new tests, lib/ at HEAD but lib/state/team_conversation.dart without the
@@ -25,8 +25,8 @@ Expected: 'furiosa is starting · can take a few minutes on a phone · 3 min'
           Expected: furiosa is ...
             Actual: Waiting fo ...
 00:06 +48 -4: Some tests failed.
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/agent-aba33a7c96cf4bb13/test/team_conversation_lead_test.dart: teamLeadLines a worker session made for a routed step says a worker started
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/agent-aba33a7c96cf4bb13/test/team_conversation_lead_test.dart: teamNow a running session overrides "the host has not started an agent"
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/agent-aba33a7c96cf4bb13/test/team_conversation_lead_test.dart: teamNow a step queued behind the one in flight does not speak
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/agent-aba33a7c96cf4bb13/test/team_conversation_screen_test.dart: the task reads as a conversation from the team's real data
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/agent-aba33a7c96cf4bb13/test/team_conversation_lead_test.dart: teamLeadLines a worker session made for a routed step says a worker started
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/agent-aba33a7c96cf4bb13/test/team_conversation_lead_test.dart: teamNow a running session overrides "the host has not started an agent"
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/agent-aba33a7c96cf4bb13/test/team_conversation_lead_test.dart: teamNow a step queued behind the one in flight does not speak
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/agent-aba33a7c96cf4bb13/test/team_conversation_screen_test.dart: the task reads as a conversation from the team's real data
 done

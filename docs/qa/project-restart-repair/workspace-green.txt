@@ -1,38 +1,38 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-project-restart-repair/test/workspace_hierarchy_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/workspace_hierarchy_test.dart: empty Workspace has one New session action that opens a session
-00:00 +1: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/workspace_hierarchy_test.dart: a two-line session name remains readable and opens that session
-00:00 +2: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/workspace_hierarchy_test.dart: an unlisted selected folder is not labelled as another project
-00:00 +3: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/workspace_hierarchy_test.dart: project path is compact and its complete value can be inspected
-00:01 +4: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/workspace_hierarchy_test.dart: 320px, 1.0x text, light: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
-00:01 +5: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/workspace_hierarchy_test.dart: 320px, 1.0x text, dark: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
-00:01 +6: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/workspace_hierarchy_test.dart: 320px, 2.0x text, light: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
-00:01 +7: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/workspace_hierarchy_test.dart: 320px, 2.0x text, dark: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
-00:01 +8: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/workspace_hierarchy_test.dart: 390px, 1.0x text, light: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
-00:01 +9: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/workspace_hierarchy_test.dart: 390px, 1.0x text, dark: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
-00:01 +10: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/workspace_hierarchy_test.dart: 390px, 2.0x text, light: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
-00:02 +11: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/workspace_hierarchy_test.dart: 390px, 2.0x text, dark: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
-00:02 +12: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/workspace_hierarchy_test.dart: one session with every blocker shows permission, then question, then form as each is answered
-00:02 +13: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/workspace_hierarchy_test.dart: answering the request returns a pinned session to Pinned in pin order and a busy one to Active
-00:02 +14: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/workspace_hierarchy_test.dart: the section menu reloads sessions and omits Terminal when the server has none
-00:02 +15: loading /home/eslam/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart
-00:03 +15: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: archived pager remains reachable through an empty filtered first page
-00:04 +16: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: project browser and rename dialog fit compact large text
-00:04 +17: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: project search and reset-name use server project truth
-00:04 +18: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: selecting a project opens its exact local directory
-00:04 +19: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: workspace groups projects behind one compact context entry
-00:05 +20: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: workspace puts sessions above the one management route
-00:05 +21: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: the quick-ask pill stays reachable without scrolling
-00:05 +22: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: recent session end-swipe archives with an undo window
-00:05 +23: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: delete stays in the session menu behind a confirm
-00:05 +24: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: project discovery does not block already loaded conversations
-00:05 +25: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: failed project discovery still finds and opens a previous chat
-00:05 +26: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: retrying the project catalog keeps loaded conversations visible
-00:05 +27: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: a fresh server with zero projects asks for a project folder
-00:05 +28: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: a home-folder project is never opened automatically
-00:05 +29: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: an empty project catalog does not hide existing sessions
-00:05 +30: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: zero projects still allows finding and opening an older chat
-00:06 +31: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: zero projects keeps session errors and older pages reachable
-00:06 +32: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: a first session starts only after a project folder is opened by path
-00:06 +33: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: creating a folder on the managed server opens it
-00:06 +34: /home/eslam/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: remote servers offer open by path but not create
+00:00 +0: loading /home/owner/Storage/Code/oc_app-project-restart-repair/test/workspace_hierarchy_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app-project-restart-repair/test/workspace_hierarchy_test.dart: empty Workspace has one New session action that opens a session
+00:00 +1: /home/owner/Storage/Code/oc_app-project-restart-repair/test/workspace_hierarchy_test.dart: a two-line session name remains readable and opens that session
+00:00 +2: /home/owner/Storage/Code/oc_app-project-restart-repair/test/workspace_hierarchy_test.dart: an unlisted selected folder is not labelled as another project
+00:00 +3: /home/owner/Storage/Code/oc_app-project-restart-repair/test/workspace_hierarchy_test.dart: project path is compact and its complete value can be inspected
+00:01 +4: /home/owner/Storage/Code/oc_app-project-restart-repair/test/workspace_hierarchy_test.dart: 320px, 1.0x text, light: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
+00:01 +5: /home/owner/Storage/Code/oc_app-project-restart-repair/test/workspace_hierarchy_test.dart: 320px, 1.0x text, dark: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
+00:01 +6: /home/owner/Storage/Code/oc_app-project-restart-repair/test/workspace_hierarchy_test.dart: 320px, 2.0x text, light: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
+00:01 +7: /home/owner/Storage/Code/oc_app-project-restart-repair/test/workspace_hierarchy_test.dart: 320px, 2.0x text, dark: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
+00:01 +8: /home/owner/Storage/Code/oc_app-project-restart-repair/test/workspace_hierarchy_test.dart: 390px, 1.0x text, light: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
+00:01 +9: /home/owner/Storage/Code/oc_app-project-restart-repair/test/workspace_hierarchy_test.dart: 390px, 1.0x text, dark: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
+00:01 +10: /home/owner/Storage/Code/oc_app-project-restart-repair/test/workspace_hierarchy_test.dart: 390px, 2.0x text, light: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
+00:02 +11: /home/owner/Storage/Code/oc_app-project-restart-repair/test/workspace_hierarchy_test.dart: 390px, 2.0x text, dark: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
+00:02 +12: /home/owner/Storage/Code/oc_app-project-restart-repair/test/workspace_hierarchy_test.dart: one session with every blocker shows permission, then question, then form as each is answered
+00:02 +13: /home/owner/Storage/Code/oc_app-project-restart-repair/test/workspace_hierarchy_test.dart: answering the request returns a pinned session to Pinned in pin order and a busy one to Active
+00:02 +14: /home/owner/Storage/Code/oc_app-project-restart-repair/test/workspace_hierarchy_test.dart: the section menu reloads sessions and omits Terminal when the server has none
+00:02 +15: loading /home/owner/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart
+00:03 +15: /home/owner/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: archived pager remains reachable through an empty filtered first page
+00:04 +16: /home/owner/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: project browser and rename dialog fit compact large text
+00:04 +17: /home/owner/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: project search and reset-name use server project truth
+00:04 +18: /home/owner/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: selecting a project opens its exact local directory
+00:04 +19: /home/owner/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: workspace groups projects behind one compact context entry
+00:05 +20: /home/owner/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: workspace puts sessions above the one management route
+00:05 +21: /home/owner/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: the quick-ask pill stays reachable without scrolling
+00:05 +22: /home/owner/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: recent session end-swipe archives with an undo window
+00:05 +23: /home/owner/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: delete stays in the session menu behind a confirm
+00:05 +24: /home/owner/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: project discovery does not block already loaded conversations
+00:05 +25: /home/owner/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: failed project discovery still finds and opens a previous chat
+00:05 +26: /home/owner/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: retrying the project catalog keeps loaded conversations visible
+00:05 +27: /home/owner/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: a fresh server with zero projects asks for a project folder
+00:05 +28: /home/owner/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: a home-folder project is never opened automatically
+00:05 +29: /home/owner/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: an empty project catalog does not hide existing sessions
+00:05 +30: /home/owner/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: zero projects still allows finding and opening an older chat
+00:06 +31: /home/owner/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: zero projects keeps session errors and older pages reachable
+00:06 +32: /home/owner/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: a first session starts only after a project folder is opened by path
+00:06 +33: /home/owner/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: creating a folder on the managed server opens it
+00:06 +34: /home/owner/Storage/Code/oc_app-project-restart-repair/test/projects_screen_test.dart: remote servers offer open by path but not create
 00:06 +35: All tests passed!

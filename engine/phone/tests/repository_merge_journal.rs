@@ -47,7 +47,7 @@ impl Fixture {
     fn new() -> Self {
         let scratch = std::env::var_os("OC_ENGINE_TEST_ROOT")
             .map(std::path::PathBuf::from)
-            .unwrap_or_else(|| "/home/eslam/Storage/tmp/aiteam-phone-engine-tests".into());
+            .unwrap_or_else(|| "/home/owner/Storage/tmp/aiteam-phone-engine-tests".into());
         assert!(scratch.is_absolute() && !scratch.starts_with("/tmp"));
         fs::create_dir_all(&scratch).unwrap();
         let temp = tempfile::tempdir_in(scratch).unwrap();

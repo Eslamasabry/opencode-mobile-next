@@ -76,7 +76,7 @@ the raw artifact size on Maven today [V raw], which is an upper bound before R8 
 
 ## 1. The registry: every direct pubspec dependency (Table A)
 
-Source: `/home/eslam/Storage/Code/wt/oc_app-batch1/pubspec.yaml` (app `2.1.0+57`) and `pubspec.lock` resolved
+Source: `/home/owner/Storage/Code/wt/oc_app-batch1/pubspec.yaml` (app `2.1.0+57`) and `pubspec.lock` resolved
 versions [R]. 36 runtime + 7 dev = 43 direct dependencies (the packages-build map counts the same 43). "Used for" gives
 lib/test file counts from the map's import grep. **A/I/D** = Android / iOS / desktop (JVM): ✓ supported now,
 `later` = a named later path, – = not applicable.
@@ -1418,7 +1418,7 @@ Checked against the sibling files as they stood at about 16:30 on 2026-11-01 (se
 
 ## 15. Sources and verification log (2026-11-01)
 
-- Repo (read-only): `/home/eslam/Storage/Code/wt/oc_app-batch1/pubspec.yaml`, `THIRD_PARTY_NOTICES.md`, `LICENSES/`,
+- Repo (read-only): `/home/owner/Storage/Code/wt/oc_app-batch1/pubspec.yaml`, `THIRD_PARTY_NOTICES.md`, `LICENSES/`,
   `android/app/src/main/res/values/styles.xml` (AppCompat parents), `lib/domain/static_svg.dart`,
   `lib/domain/office_text.dart`, `lib/platform/wifi_file_share.dart`, `tool/builtin_linux/fetch_proot.sh`, the Kotlin
   import inventory under `android/app/src/main/kotlin` (56 `org.json` imports).

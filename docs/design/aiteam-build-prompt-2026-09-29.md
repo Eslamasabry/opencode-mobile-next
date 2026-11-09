@@ -4,7 +4,7 @@ Copy everything below the line into the building AI.
 
 ---
 
-You are building the **AI Team** feature of **OpenCode Mobile**, a Flutter Android client (also tablet/PC/web) for OpenCode 1 and 2, Codex, and Claude Code/Pi. Repo: `/home/eslam/Storage/Code/oc_app`, integration branch `feat/phone-setup-v2` (local only, never push). You work in your own git worktree and branch per slice; the owner's coordinator reviews and merges.
+You are building the **AI Team** feature of **OpenCode Mobile**, a Flutter Android client (also tablet/PC/web) for OpenCode 1 and 2, Codex, and Claude Code/Pi. Repo: `/home/owner/Storage/Code/oc_app`, integration branch `feat/phone-setup-v2` (local only, never push). You work in your own git worktree and branch per slice; the owner's coordinator reviews and merges.
 
 AI Team lets a person run a **whole software project** with several AI agents, across days, repos, servers and branches, from their phone. The phone is the remote control and can also be an engine. The person steers, reviews and approves. The agents plan, build, check and merge.
 

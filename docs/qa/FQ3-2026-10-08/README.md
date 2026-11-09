@@ -2,18 +2,18 @@
 
 Candidate branch: `sol/bc-fq3`, based on integration `8644d15d`.
 
-Shared-device baseline update (coordinator, 2026-10-08): normal app is now **2196**, integration `d777082c`, existing APK `/home/eslam/Storage/tmp/oc-apk-share/oc-2196.apk`, known local signer prefix `1DE5BF08`. After future device runs, restore2196 with `adb install -r -d` while holding `/home/eslam/Storage/tmp/oc-emulator.lock`. The completed evidence below remains bound to2195; it does not qualify2196. A future certification run needs an explicit new candidate/build pin and new evidence. Coordinator reports the emulator currently uses OC1, with21% free on `/data` after removing the stale fixture; its full PC backup is `/home/eslam/Storage/tmp/emulator-p16a-installer-fix-backup-20261008.tar.gz`.
+Shared-device baseline update (coordinator, 2026-10-08): normal app is now **2196**, integration `d777082c`, existing APK `/home/owner/Storage/tmp/oc-apk-share/oc-2196.apk`, known local signer prefix `1DE5BF08`. After future device runs, restore2196 with `adb install -r -d` while holding `/home/owner/Storage/tmp/oc-emulator.lock`. The completed evidence below remains bound to2195; it does not qualify2196. A future certification run needs an explicit new candidate/build pin and new evidence. Coordinator reports the emulator currently uses OC1, with21% free on `/data` after removing the stale fixture; its full PC backup is `/home/owner/Storage/tmp/emulator-p16a-installer-fix-backup-20261008.tar.gz`.
 Target: emulator-5554, installed app build **2195**, OC1 **1.18.32**, OC2 **2.0.10**. This is emulator protocol evidence; existing matrix UI/install evidence stays separate. No app installation, data clearing, credential enrollment, readiness promotion or network upload is part of this runner.
 
 Run from the repository root with the pinned Dart:
 
 ```sh
-/home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/dart \
+/home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/dart \
   tool/qa/fq3_certify.dart --run-id fq3-20261008-settled \
   --oc1-model zai-coding-plan/glm-5.3
 ```
 
-The runner acquires `/home/eslam/Storage/tmp/oc-emulator.lock` for each scenario and releases it between scenarios. It uses ephemeral `adb forward tcp:0`, attests the installed build and Android application UID, and reads only the runtime's launch password configuration under that UID. The release app has no `run-as`; no Keystore/secure-storage extraction is attempted. Passwords travel in memory and Authorization headers, never in command arguments, URLs, committed artifacts or output. Errors export fixed codes and numeric/boolean facts only; responses, transcripts, logs and provider configuration are not saved.
+The runner acquires `/home/owner/Storage/tmp/oc-emulator.lock` for each scenario and releases it between scenarios. It uses ephemeral `adb forward tcp:0`, attests the installed build and Android application UID, and reads only the runtime's launch password configuration under that UID. The release app has no `run-as`; no Keystore/secure-storage extraction is attempted. Passwords travel in memory and Authorization headers, never in command arguments, URLs, committed artifacts or output. Errors export fixed codes and numeric/boolean facts only; responses, transcripts, logs and provider configuration are not saved.
 
 If the app-managed port 4097 already serves the requested exact engine, the runner reuses it. Otherwise it starts an owned loopback server using the installed native PRoot, Android app UID, app-private Ubuntu, project bind and installed CLI. OC2 keeps the app's isolated XDG/config/database paths. These auxiliary processes exercise the same installed runtime and histories; they do not certify Android service lifecycle/confinement, foreground-service restarts or UI selection. All prompts/permissions use owned disposable sessions and a separate project. Cleanup signals only captured owned PIDs whose kernel start times still match, then removes only its own forwards and empty scratch/project directories. No shared service is stopped or reloaded.
 
@@ -47,15 +47,15 @@ Final harness checkpoint: all 94 focused Flutter tests passed serially under mac
 
 Interrupted-run recovery: the settled run kept the adapter/device candidate at `d0c007fb6a275da18798f747cf804813a106664d`. Another lane replaced build2195 with2202 before OC2 Deny/Image/Cards and history ran. Those unexecuted phases were resumed under the same run ID, revision and attempt token after restoring the existing signed2195 APK. Completed scenarios, including genuine failures, were retained. `fq3-20261008-settled-before-resume.json` archives the interrupted report; it is not the final matrix input.
 
-A subsequent restore initially failed for insufficient Android storage. Inspection found an inactive September28 QA fixture outside app private data at `/data/local/tmp/p16a-installer-fix`. Only its disposable apt package-cache binaries and downloaded apt-list metadata were backed up to `/home/eslam/Storage/tmp/fq3-20261008-stale-apt-cache.tar.gz` (private mode0600, gzip verified), then reclaimed; installed packages and app data were preserved. The matching-signature2195 update then succeeded. This host backup is not a repository artifact.
+A subsequent restore initially failed for insufficient Android storage. Inspection found an inactive September28 QA fixture outside app private data at `/data/local/tmp/p16a-installer-fix`. Only its disposable apt package-cache binaries and downloaded apt-list metadata were backed up to `/home/owner/Storage/tmp/fq3-20261008-stale-apt-cache.tar.gz` (private mode0600, gzip verified), then reclaimed; installed packages and app data were preserved. The matching-signature2195 update then succeeded. This host backup is not a repository artifact.
 
 Resumption tooling admits all16 phases only when build2195, UID, both version witnesses, revision, run ID, attempt token and cleanup match. A SHA256 manifest binds the fresh history envelope to ordered public phase identity and exact owned session IDs; it contains no transcript or transcript digest. Dirty adapter/device source or a changed HEAD is refused. The canonical report is validated before replacement. After running only the interrupted phases with the original driver, capture new history under the shared lock and then regenerate the matrix:
 
 ```sh
-flock /home/eslam/Storage/tmp/oc-emulator.lock \
-  /home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/dart \
+flock /home/owner/Storage/tmp/oc-emulator.lock \
+  /home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/dart \
   tool/qa/fq3/reconcile_run.dart --capture-history fq3-20261008-settled
-/home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/dart \
+/home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/dart \
   tool/qa/fq3/reconcile_run.dart fq3-20261008-settled
 python3 tool/agents/generate_certification.py
 ```

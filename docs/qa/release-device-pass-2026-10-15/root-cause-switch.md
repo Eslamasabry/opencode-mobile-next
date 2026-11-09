@@ -134,7 +134,7 @@ provider credentials nor the device databases are included in these artifacts.
 
 No Flutter command was run. No Kotlin or Rust implementation changed, so no
 native test/build or engine `.so` restaging was necessary. No package files in
-`/home/eslam` were changed. Nothing was pushed, signed, deployed, or released.
+`/home/owner` were changed. Nothing was pushed, signed, deployed, or released.
 
 Migration checks completed without Flutter:
 

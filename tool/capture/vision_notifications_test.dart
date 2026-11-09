@@ -8,7 +8,7 @@
 //   flutter test --concurrency=1 --dart-define=VISION_PASS=pass1 \
 //     tool/capture/vision_notifications_test.dart
 //
-// Output: /home/eslam/vision-assets/out/vision-notifications/<pass>/
+// Output: /home/owner/vision-assets/out/vision-notifications/<pass>/
 // <scene>.png (without a pass, straight into the folder).
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -25,7 +25,7 @@ import '../../test/support/setup_capture_preferences.dart';
 import 'fixtures.dart';
 
 const _pass = String.fromEnvironment('VISION_PASS', defaultValue: '');
-const _root = '/home/eslam/vision-assets/out/vision-notifications';
+const _root = '/home/owner/vision-assets/out/vision-notifications';
 String get _dir => _pass.isEmpty ? _root : '$_root/$_pass';
 
 enum _Scene {

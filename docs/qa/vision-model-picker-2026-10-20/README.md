@@ -78,7 +78,7 @@ Not changed: chat screen, new-chat screen, `lib/state/connection*`, `lib/paseo/`
 ## 3. Visual passes (against concept-c, 412x915 dark)
 
 Captures: `tool/capture/vision_model_picker_test.dart` (the real sheet over the real ChatScreen).
-Iterations are kept in `/home/eslam/Storage2/launch-footage/vision-model-picker/pass1..pass4/`.
+Iterations are kept in `/home/owner/Storage2/launch-footage/vision-model-picker/pass1..pass4/`.
 
 1. **Pass 1 → 2.** The scope line was a long sentence ("Applies to this conversation's next
    turns.") → "For this conversation". Unselected tiles had a hairline the concept does not →
@@ -100,7 +100,7 @@ Iterations are kept in `/home/eslam/Storage2/launch-footage/vision-model-picker/
 
 ## 4. Final renders
 
-`/home/eslam/Storage2/launch-footage/vision-model-picker/`: `oc2-costs-dark.png`,
+`/home/owner/Storage2/launch-footage/vision-model-picker/`: `oc2-costs-dark.png`,
 `oc2-costs-light.png`, `free-only.png`, `phone-agent-claude-code.png`, `all-models.png`,
 `narrow-320-2x.png`, `arabic-rtl.png`. All sample data in them is fixture data. The phone-agent
 render uses a Paseo-shaped catalog (agent-marked default, no prices) over an OpenCode chat; no

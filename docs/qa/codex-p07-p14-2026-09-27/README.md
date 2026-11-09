@@ -83,4 +83,4 @@ F="$HOME/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/b
 
 ## State
 
-Implemented: P1.4 backend API; P0.7 blocked. Enabled: no UI wiring. Verified: formatting/diff only, behavior and analyzer blocked by environment. Committed: no. `git add` failed because `/home/eslam/Storage/Code/oc_app/.git/worktrees/oc_app-codex-p07-p14/index.lock` is on a read-only filesystem. Changes remain in this working tree; the requested commit message and attribution trailers are in root `COMMIT_MSG.txt`. Deployed/released: no. No pushes.
+Implemented: P1.4 backend API; P0.7 blocked. Enabled: no UI wiring. Verified: formatting/diff only, behavior and analyzer blocked by environment. Committed: no. `git add` failed because `/home/owner/Storage/Code/oc_app/.git/worktrees/oc_app-codex-p07-p14/index.lock` is on a read-only filesystem. Changes remain in this working tree; the requested commit message and attribution trailers are in root `COMMIT_MSG.txt`. Deployed/released: no. No pushes.

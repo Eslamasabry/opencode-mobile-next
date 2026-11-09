@@ -160,7 +160,7 @@ class AuthSmokeTest(unittest.TestCase):
                  contextlib.redirect_stdout(io.StringIO()) as captured:
                 code = smoke.run_device(args)
             prepare.assert_called_once_with(
-                Path('/home/eslam/Storage/tmp/oc-apk-share/oc-2196.apk'),
+                Path('/home/owner/Storage/tmp/oc-apk-share/oc-2196.apk'),
                 args.expected_signer, args.output / 'normal-restore.json')
             self.assertEqual(restored, [True])
             report = json.loads((args.output / 'report.json').read_text())

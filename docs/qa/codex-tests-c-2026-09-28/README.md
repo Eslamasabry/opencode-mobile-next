@@ -21,7 +21,7 @@ Tests-only repairs follow the intentional September 27 changes. Genuine product 
 
 **Totals:** before **346 pass / 154 fail / 3 existing skips**; after **710 pass / 24 fail / 3 existing skips**. The original 503 cases now have 17 product failures (137 previously failing cases repaired). Expanded overflow coverage adds 234 cases, including seven more product failures. Counts are per-file focused evidence, not a full repository run.
 
-The host crash lost the original `/tmp` baseline logs, but completed before counts survived. Interrupted work was rerun; no interrupted result is counted as a pass. Raw JSON logs and the serial runner are on the persistent volume at `/home/eslam/Storage/tmp/codex-tests-c-20260928/`. Before counts for the previously in-flight overflow matrix come from its completed `recovered-before` rerun. Counts exclude hidden setup/loading events; skip counts are separate.
+The host crash lost the original `/tmp` baseline logs, but completed before counts survived. Interrupted work was rerun; no interrupted result is counted as a pass. Raw JSON logs and the serial runner are on the persistent volume at `/home/owner/Storage/tmp/codex-tests-c-20260928/`. Before counts for the previously in-flight overflow matrix come from its completed `recovered-before` rerun. Counts exclude hidden setup/loading events; skip counts are separate.
 
 | File (`test/`) | Before pass / fail / skip | After pass / fail / skip | Evidence phase | Repair / retained behavior |
 |---|---:|---:|---|---|
@@ -119,7 +119,7 @@ Merged `feat/phone-setup-v2` at `90db3565` into `codex/tests-b` at `b6fcc8ba`. R
 - Nudges use the incoming `KitNotice.offer` while preserving prior reachability checks.
 - Both overflow scene sets remain. Incoming additions use `tests-d-` state IDs to avoid collisions; builders, hosts and KIT-24 flags are unchanged. Deleted product-state wrappers (`LoadingList`, `ProductEmptyState`, `ProductErrorState`, `ProductInlineEmpty`, `SectionLabel`) and the retired `KitSecretField` have no scenes. Strict manifest inheritance and typed generic KIT-24 detection remain.
 
-Only conflicted test files and the four requested gates were run, serially with pinned Flutter, `--no-pub --concurrency=1`. The conflicted scene registry is exercised through the overflow test, not as a standalone test entrypoint. Persistent logs: `/home/eslam/Storage/tmp/codex-tests-c-20260928/merge2-*.jsonl`.
+Only conflicted test files and the four requested gates were run, serially with pinned Flutter, `--no-pub --concurrency=1`. The conflicted scene registry is exercised through the overflow test, not as a standalone test entrypoint. Persistent logs: `/home/owner/Storage/tmp/codex-tests-c-20260928/merge2-*.jsonl`.
 
 | Test | Pass | Fail |
 |---|---:|---:|

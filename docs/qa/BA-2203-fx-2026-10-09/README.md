@@ -13,7 +13,7 @@ Removal had two observer races: physical deletion could precede the UI completio
 
 ## Verification
 
-All device operations use only emulator-5554, under one `flock -w 3600 /home/eslam/Storage/tmp/oc-emulator.lock` reservation through final APK identity verification. The approved [artifact receipt](artifact.json) records normal 2203, SHA-256 `82877732e8bb362722f49e3193b8ffe2a91aacbaf37954769e244a1de37462c7`, source `ec778efa3de1730402f096fc126e16fd2e83264e`, and no QA defines. APK signer and installed hash/build are checked by the existing driver. No build, app uninstall/data clear, credential action, owner-phone operation or capability/matrix change.
+All device operations use only emulator-5554, under one `flock -w 3600 /home/owner/Storage/tmp/oc-emulator.lock` reservation through final APK identity verification. The approved [artifact receipt](artifact.json) records normal 2203, SHA-256 `82877732e8bb362722f49e3193b8ffe2a91aacbaf37954769e244a1de37462c7`, source `ec778efa3de1730402f096fc126e16fd2e83264e`, and no QA defines. APK signer and installed hash/build are checked by the existing driver. No build, app uninstall/data clear, credential action, owner-phone operation or capability/matrix change.
 
 The device exercised `device_install.run_case('fx', ...)` under the held lock, using the production `make_ports`, `install_if_absent`, `run_launch`, `run_uninstall`, retention, restoration and continuation checks. The first observation is retained in [initial-picker-observation](initial-picker-observation/fx-device.json); it proves install/removal but correctly remains an unclassified picker observation. Final driver hashes are in [driver-sources.json](driver-sources.json); the branch base is [base.txt](base.txt).
 

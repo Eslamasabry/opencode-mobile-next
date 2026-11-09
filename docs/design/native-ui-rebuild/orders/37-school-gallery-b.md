@@ -12,7 +12,7 @@ This order is binding together with `docs/design/native-ui-rebuild/GOLDEN-STANDA
 ## 1. Identity
 
 - Engine: Claude Sonnet 5.5 (`sonnet`). Time limit: 300 minutes.
-- Worktree (created by the lead; never create one): `eslam@169.58.71.211:~/wt/rb-37`, branch `native/rb-37-school-gallery-b`.
+- Worktree (created by the lead; never create one): `<build-vps-login>:~/wt/rb-37`, branch `native/rb-37-school-gallery-b`.
 - Flutter source of truth: `~/wt/flutter-ref` at FLUTTER_REF `8302de53773adef45eaaad016df2bd3cd51d1ebe`.
 - Gate manifest: `docs/design/native-ui-rebuild/orders/37.gate.tsv` (64 goldens). Gate command: `native/tool/design/gate_order.sh 37`.
 - Depends on: order 05, order 06, order 07, order 08, order 09, order 10, order 11, order 12, order 13, order 14, order 22. Do not start until each is merged into `native/looks-pass-2026-11-04` (the lead dispatches only then).

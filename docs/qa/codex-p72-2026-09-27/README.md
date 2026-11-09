@@ -131,7 +131,7 @@ explicitly excluded connection/UI owner hooks above; do not mark P7.2 delivered
 from this backend unit alone.
 
 Commit attempt: `git add` failed creating the worktree `index.lock` because
-`/home/eslam/Storage/Code/oc_app/.git/worktrees/oc_app-codex-p72` is read-only.
+`/home/owner/Storage/Code/oc_app/.git/worktrees/oc_app-codex-p72` is read-only.
 Nothing was staged or committed. The exact requested message and trailers are
 in repository-root `COMMIT_MSG.txt`. Working files remain available for the
 coordinator. No push attempted.

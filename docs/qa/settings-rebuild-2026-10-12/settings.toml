@@ -11,7 +11,7 @@ ram_mb = 2560
 
 [[builds]]
 name = "after"
-apk = "/home/eslam/Storage2/wt/oc_app-settings-ui/build/app/outputs/flutter-apk/app-release.apk"
+apk = "/home/owner/Storage2/wt/oc_app-settings-ui/build/app/outputs/flutter-apk/app-release.apk"
 avd = "shots_settings"
 
 [env]

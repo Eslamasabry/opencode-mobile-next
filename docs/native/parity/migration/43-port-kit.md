@@ -104,8 +104,8 @@ Batch 8 (viewer/diff, final nine rows): both compile targets passed for the comp
 The final compile command ran in `native/`, under the shared PC build lock:
 
 ```bash
-JAVA_HOME=/home/eslam/Storage2/tools/jdk21 ANDROID_HOME=$HOME/Android/Sdk \
-  nice -n 5 flock -w 60 /home/eslam/Storage/tmp/oc-build.lock \
+JAVA_HOME=/home/owner/Storage2/tools/jdk21 ANDROID_HOME=$HOME/Android/Sdk \
+  nice -n 5 flock -w 60 /home/owner/Storage/tmp/oc-build.lock \
   ./gradlew :androidApp:compilePreviewDebugKotlin compileKotlinDesktop \
   -Dorg.gradle.workers.max=2 -Dorg.gradle.daemon.idletimeout=300000 \
   '-Dorg.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=768m' --console=plain

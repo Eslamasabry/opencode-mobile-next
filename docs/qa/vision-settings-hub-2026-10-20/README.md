@@ -72,7 +72,7 @@ Every setting stays reachable: the 21 hub rows of `hub_rows.dart` are the rows o
 
 Captures: `tool/capture/vision_settings_hub_test.dart` (the real shell on its Settings tab, the
 live background painted still, real fonts, 2x pixels). Passes in
-`/home/eslam/Storage2/launch-footage/vision-settings-hub/pass1..3/`, before in `before/`.
+`/home/owner/Storage2/launch-footage/vision-settings-hub/pass1..3/`, before in `before/`.
 
 | Pass | Less polished than the concept | Change |
 |---|---|---|
@@ -85,7 +85,7 @@ Kept different from the concept on purpose: the title stays the kit's large titl
 use the same size), the panel radius stays the kit's 18 dp, the aurora and the dock are the shell's.
 The group pages keep the kit's icon tiles, like every inner settings page.
 
-Final renders (one full phone screen each) in `/home/eslam/Storage2/launch-footage/vision-settings-hub/`:
+Final renders (one full phone screen each) in `/home/owner/Storage2/launch-footage/vision-settings-hub/`:
 `main-dark`, `main-light`, `several-servers-dark`, `offline-dark`, `no-server-dark`, `search-dark`,
 `search-no-match-dark`, `agent-page-dark`, `conversations-page-dark`, `server-page-several-dark`,
 `small-320-text2-dark`, `arabic-rtl-dark`.

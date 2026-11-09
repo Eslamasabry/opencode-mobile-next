@@ -12,7 +12,7 @@ import re
 import time
 
 SERIAL = 'emulator-5554'
-LOCK = '/home/eslam/Storage/tmp/oc-emulator.lock'
+LOCK = '/home/owner/Storage/tmp/oc-emulator.lock'
 SIGNER = '1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C'
 TARGETS = {
     'codex': ('Codex', '0.160.0'), 'gemini': ('Gemini CLI', '0.62.0'),

@@ -1,46 +1,46 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_test.dart: voice model setup sheet names the model it downloads and sends the download
-00:00 +1: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_test.dart: voice model setup sheet choosing another model renames the pinned action
-00:01 +2: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_test.dart: voice model setup sheet Use <model> closes the sheet with the model ready
-00:01 +3: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_test.dart: voice model setup sheet Not now closes the sheet without a model
-00:01 +4: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_test.dart: voice model setup sheet delete asks with the model name, and Keep keeps it
-00:01 +5: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_test.dart: voice model setup sheet download again names the model and is sent
-00:01 +6: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_test.dart: voice model setup sheet a running download shows its progress and its Cancel
-00:02 +7: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_test.dart: voice model setup sheet language is one tap and is saved on the manager
-00:02 +8: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_test.dart: voice model setup sheet a failed setup explains and keeps the details folded
-00:02 +9: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_test.dart: voice model setup sheet fits a phone and a PC window with no overflow
-00:02 +10: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_test.dart: voice input sheet listen, stop, review and insert the transcript
-00:02 +11: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_test.dart: voice input sheet a blocked microphone explains and offers app settings
-00:02 +12: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_test.dart: voice input sheet Cancel stops the recorder and closes
-00:03 +13: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_test.dart: voice licenses page lists each part with its maker and license
-00:03 +14: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_test.dart: voice licenses page a part opens its license text and its website action
-00:03 +15: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart
-00:04 +15: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: (setUpAll)
-00:04 +15: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: setup not installed 412.0 · dark
-00:05 +16: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: setup not installed 1280.0 · dark
-00:05 +17: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: setup installed · dark
-00:06 +18: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: setup downloading · dark
-00:06 +19: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: setup failed · dark
-00:06 +20: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: delete confirmation · dark
-00:06 +21: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: composer listening 412.0 · dark
-00:06 +22: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: composer listening 1280.0 · dark
-00:06 +23: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: composer draft · dark
-00:06 +24: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: composer microphone blocked · dark
-00:07 +25: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: notices 412.0 · dark
-00:07 +26: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: notices 1280.0 · dark
-00:07 +27: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: notices license open · dark
-00:07 +28: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: setup not installed 412.0 · light
-00:07 +29: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: setup not installed 1280.0 · light
-00:07 +30: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: setup installed · light
-00:08 +31: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: setup downloading · light
-00:08 +32: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: setup failed · light
-00:08 +33: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: delete confirmation · light
-00:08 +34: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: composer listening 412.0 · light
-00:08 +35: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: composer listening 1280.0 · light
-00:08 +36: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: composer draft · light
-00:08 +37: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: composer microphone blocked · light
-00:08 +38: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: notices 412.0 · light
-00:08 +39: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: notices 1280.0 · light
-00:08 +40: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: notices license open · light
-00:09 +41: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: (tearDownAll)
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_test.dart: voice model setup sheet names the model it downloads and sends the download
+00:00 +1: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_test.dart: voice model setup sheet choosing another model renames the pinned action
+00:01 +2: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_test.dart: voice model setup sheet Use <model> closes the sheet with the model ready
+00:01 +3: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_test.dart: voice model setup sheet Not now closes the sheet without a model
+00:01 +4: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_test.dart: voice model setup sheet delete asks with the model name, and Keep keeps it
+00:01 +5: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_test.dart: voice model setup sheet download again names the model and is sent
+00:01 +6: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_test.dart: voice model setup sheet a running download shows its progress and its Cancel
+00:02 +7: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_test.dart: voice model setup sheet language is one tap and is saved on the manager
+00:02 +8: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_test.dart: voice model setup sheet a failed setup explains and keeps the details folded
+00:02 +9: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_test.dart: voice model setup sheet fits a phone and a PC window with no overflow
+00:02 +10: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_test.dart: voice input sheet listen, stop, review and insert the transcript
+00:02 +11: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_test.dart: voice input sheet a blocked microphone explains and offers app settings
+00:02 +12: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_test.dart: voice input sheet Cancel stops the recorder and closes
+00:03 +13: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_test.dart: voice licenses page lists each part with its maker and license
+00:03 +14: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_test.dart: voice licenses page a part opens its license text and its website action
+00:03 +15: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart
+00:04 +15: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: (setUpAll)
+00:04 +15: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: setup not installed 412.0 · dark
+00:05 +16: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: setup not installed 1280.0 · dark
+00:05 +17: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: setup installed · dark
+00:06 +18: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: setup downloading · dark
+00:06 +19: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: setup failed · dark
+00:06 +20: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: delete confirmation · dark
+00:06 +21: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: composer listening 412.0 · dark
+00:06 +22: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: composer listening 1280.0 · dark
+00:06 +23: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: composer draft · dark
+00:06 +24: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: composer microphone blocked · dark
+00:07 +25: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: notices 412.0 · dark
+00:07 +26: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: notices 1280.0 · dark
+00:07 +27: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: notices license open · dark
+00:07 +28: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: setup not installed 412.0 · light
+00:07 +29: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: setup not installed 1280.0 · light
+00:07 +30: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: setup installed · light
+00:08 +31: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: setup downloading · light
+00:08 +32: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: setup failed · light
+00:08 +33: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: delete confirmation · light
+00:08 +34: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: composer listening 412.0 · light
+00:08 +35: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: composer listening 1280.0 · light
+00:08 +36: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: composer draft · light
+00:08 +37: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: composer microphone blocked · light
+00:08 +38: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: notices 412.0 · light
+00:08 +39: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: notices 1280.0 · light
+00:08 +40: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: notices license open · light
+00:09 +41: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-4/test/revamp/screen_voice_1_golden_test.dart: (tearDownAll)
 00:09 +41: All tests passed!

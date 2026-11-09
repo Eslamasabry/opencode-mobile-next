@@ -24,7 +24,7 @@ Lens values: index 1.28, a bend band as wide as the corner (14–26 dp), dispers
 - **Emulator** `emulator-5584` (host GPU, `-gpu host`, Impeller **OpenGLES** through ANGLE, not SwiftShader), APKs 2590–2592. It showed **real refraction**: the server pill bends the aurora streak round its cap, where Glass blurs the same spot (`pass1-pill-zoom-crystal-dark.png` and `pass1-pill-zoom-glass-dark.png`). No crash, and no mirrored refraction.
 - **Desktop shader path:** `flutter test --enable-impeller` renders the lens (`tool/capture/crystal_screens_test.dart`, `tool/capture/crystal_demo_test.dart`). The view's pixel ratio must equal the capture's, or the lens draws nothing.
 - **Package demo comparison:** `pass*-demo-package-*.png` (the documented lens example) against `pass*-demo-crystal-*.png` (Crystal's mapping), over the same aurora.
-- Images: `/home/eslam/Storage2/launch-footage/progress/crystal/` (passes 1–3, each pass logged in `LOG.md`).
+- Images: `/home/owner/Storage2/launch-footage/progress/crystal/` (passes 1–3, each pass logged in `LOG.md`).
 - **Phone proof: pending.** The coordinator installs a build on the owner's phone.
 
 ## Frame timing (emulator, SurfaceFlinger present intervals, 3×3 swipes on Conversations, dark)

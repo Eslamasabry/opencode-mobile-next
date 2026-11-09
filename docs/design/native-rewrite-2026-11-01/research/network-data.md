@@ -5,8 +5,8 @@ Research for the OpenCode Mobile native rewrite, topic **network-data**. Written
 Tags: **[V]** means verified today, either by reading the library source (pub cache or a Maven sources jar) or by fetching the official page or Maven metadata. **[U]** means unverified: it is an inference, it comes from a third party, or it needs a spike.
 
 Inputs:
-- Flutter app, read-only: `/home/eslam/Storage/Code/wt/oc_app-batch1`.
-- Demo: `/home/eslam/Storage/Code/kmp-demo`.
+- Flutter app, read-only: `/home/owner/Storage/Code/wt/oc_app-batch1`.
+- Demo: `/home/owner/Storage/Code/kmp-demo`.
 - Area maps: `../map/protocols.md` and `../map/state-data.md`. This file adds library-level facts and corrects or extends those maps where needed.
 
 ---
@@ -687,6 +687,6 @@ This complements `state-data.md` §3, which has the full per-key recipe.
   - `flutter_secure_storage_linux-3.0.2`
 
 **Repo (read-only):**
-- From `/home/eslam/Storage/Code/wt/oc_app-batch1`: `pubspec.yaml`, `pubspec.lock`, `lib/api2/{sse2,events,transport}.dart`, `docs/opencode2-protocol-notes.md`, `contracts/*.json`, `android/app/src/main/{AndroidManifest.xml,res/xml/network_security_config.xml}` and the Kotlin readers of `FlutterSharedPreferences`.
-- Demo: `/home/eslam/Storage/Code/kmp-demo/gradle/libs.versions.toml` and `shared/.../api/{OcClient,JsonX}.kt`.
+- From `/home/owner/Storage/Code/wt/oc_app-batch1`: `pubspec.yaml`, `pubspec.lock`, `lib/api2/{sse2,events,transport}.dart`, `docs/opencode2-protocol-notes.md`, `contracts/*.json`, `android/app/src/main/{AndroidManifest.xml,res/xml/network_security_config.xml}` and the Kotlin readers of `FlutterSharedPreferences`.
+- Demo: `/home/owner/Storage/Code/kmp-demo/gradle/libs.versions.toml` and `shared/.../api/{OcClient,JsonX}.kt`.
 - Area maps: `../map/protocols.md` and `../map/state-data.md`.

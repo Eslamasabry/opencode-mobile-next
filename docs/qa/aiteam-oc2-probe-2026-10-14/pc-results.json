@@ -3,7 +3,7 @@
   "version": "2.0.29",
   "host": "local PC",
   "port": 4193,
-  "scratchRoot": "/home/eslam/Storage/tmp/oc2-probe-aiteam-pc/run-20261014-qr4XrD",
+  "scratchRoot": "/home/owner/Storage/tmp/oc2-probe-aiteam-pc/run-20261014-qr4XrD",
   "listenerPid": 4187939,
   "zenConnectStatus": 204,
   "scratchLocationReloadStatus": 204,
@@ -140,33 +140,33 @@
   },
   "setupIncident": {
     "cause": "initial npm install resolved ancestor package because scratch manifest was missing",
-    "ancestorPrefix": "/home/eslam",
-    "affectedManifest": "/home/eslam/package.json",
-    "affectedLockfile": "/home/eslam/package-lock.json",
+    "ancestorPrefix": "/home/owner",
+    "affectedManifest": "/home/owner/package.json",
+    "affectedLockfile": "/home/owner/package-lock.json",
     "loggedPackageChanges": [
       {
         "operation": "ADD",
-        "path": "/home/eslam/node_modules/@opencode/cli-linux-x64-musl"
+        "path": "/home/owner/node_modules/@opencode/cli-linux-x64-musl"
       },
       {
         "operation": "ADD",
-        "path": "/home/eslam/node_modules/@opencode/cli-linux-x64-baseline-musl"
+        "path": "/home/owner/node_modules/@opencode/cli-linux-x64-baseline-musl"
       },
       {
         "operation": "ADD",
-        "path": "/home/eslam/node_modules/@opencode/cli-linux-x64-baseline"
+        "path": "/home/owner/node_modules/@opencode/cli-linux-x64-baseline"
       },
       {
         "operation": "ADD",
-        "path": "/home/eslam/node_modules/@opencode/cli-linux-x64"
+        "path": "/home/owner/node_modules/@opencode/cli-linux-x64"
       },
       {
         "operation": "ADD",
-        "path": "/home/eslam/node_modules/@opencode/cli"
+        "path": "/home/owner/node_modules/@opencode/cli"
       },
       {
         "operation": "CHANGE",
-        "path": "/home/eslam/node_modules/@code-yeongyu/comment-checker"
+        "path": "/home/owner/node_modules/@code-yeongyu/comment-checker"
       }
     ],
     "correctedScratchInstall": "created private package.json and used explicit npm --prefix",

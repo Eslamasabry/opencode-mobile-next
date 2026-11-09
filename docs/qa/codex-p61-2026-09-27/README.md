@@ -73,6 +73,6 @@ Verifier: resolve packages using the pinned SDK in a writable environment, run t
 
 Implemented: local policy/controller and tests. Enabled: not wired into runtime or UI. Verified: formatter processed sources; tests/analyzer blocked by environment. Deletion key and quiesce flow have behaviour tests awaiting execution. Deployed/released/pushed: no.
 
-Committed: no. `git add` failed because `/home/eslam/Storage/Code/oc_app/.git/worktrees/oc_app-codex-p61/index.lock` is on a read-only filesystem. The exact commit message, including both requested trailers and `[skip ci]`, is saved at the repository root in `COMMIT_MSG.txt`. All implementation changes remain in this worktree.
+Committed: no. `git add` failed because `/home/owner/Storage/Code/oc_app/.git/worktrees/oc_app-codex-p61/index.lock` is on a read-only filesystem. The exact commit message, including both requested trailers and `[skip ci]`, is saved at the repository root in `COMMIT_MSG.txt`. All implementation changes remain in this worktree.
 
 Whitespace validation: `git diff --check` and `git diff --no-index --check /dev/null <file>` for every added file passed. No existing tracked file was modified.

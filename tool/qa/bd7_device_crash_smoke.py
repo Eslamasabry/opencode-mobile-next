@@ -25,9 +25,9 @@ from tool.qa.bd7_exit_proof import parse_exit_history, parse_crash_ring, ProofFa
 from tool.qa.bd7_device_ui import Bd7Ui, Bd7UiFailure
 
 PACKAGE = shared.PACKAGE
-NORMAL_APK = Path('/home/eslam/Storage/tmp/oc-apk-share/oc-2196.apk')
+NORMAL_APK = Path('/home/owner/Storage/tmp/oc-apk-share/oc-2196.apk')
 FILES = f'/data/user/0/{PACKAGE}/files'
-LOCK_PATH = Path('/home/eslam/Storage/tmp/oc-emulator.lock')
+LOCK_PATH = Path('/home/owner/Storage/tmp/oc-emulator.lock')
 ARTIFACTS = (
     'crash-diagnostics-consent', 'crash-diagnostics.json',
     'crash-diagnostics.pending', 'native-last-crash.properties',
@@ -355,7 +355,7 @@ def run(args):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--apk', type=Path, default=Path('/home/eslam/Storage/tmp/oc-apk-share/oc-2197.apk'))
+    parser.add_argument('--apk', type=Path, default=Path('/home/owner/Storage/tmp/oc-apk-share/oc-2197.apk'))
     parser.add_argument('--expected-signer', required=True)
     parser.add_argument('--output', type=Path, default=Path('build/bd7-device-proof'))
     parser.add_argument('--adb', default='adb')

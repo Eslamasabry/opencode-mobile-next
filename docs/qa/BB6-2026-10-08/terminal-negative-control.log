@@ -1,4 +1,4 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart
 00:00 +0: missing foreground binding refuses sign-in before native PTY start
 00:00 +0 -1: missing foreground binding refuses sign-in before native PTY start [E]
   Expected: empty
@@ -65,7 +65,7 @@
 00:00 +0 -4: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: disposing a pending sign-in drains late native ID without reopening URL
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: ending pending native start drains its late exact ID before releasing foreground
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: missing foreground binding refuses sign-in before native PTY start
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: reserves synchronously and waits for active foreground before PTY start
+  /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: disposing a pending sign-in drains late native ID without reopening URL
+  /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: ending pending native start drains its late exact ID before releasing foreground
+  /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: missing foreground binding refuses sign-in before native PTY start
+  /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: reserves synchronously and waits for active foreground before PTY start

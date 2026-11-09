@@ -1,6 +1,6 @@
 # Run 3: the gate's own tests (test/goldens/kit/kit_gallery_g5_test.dart) with a temporary print of each caught G5 message (print removed afterwards).
 Waiting for another flutter command to release the startup lock...
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart
 00:00 +0: a clean tree passes
 00:00 +1: androidTapTarget: a 20 dp tall button fails
 --- G5 message for zz_g5_fixture_light:

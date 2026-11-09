@@ -76,7 +76,7 @@ rebase in `ScheduledPromptCalendar`). Nothing else in the run engine changed.
 
 ## Visual passes against the concept
 
-Concepts: `/home/eslam/Storage2/launch-footage/screen-concepts/b2-scheduled-prompts/concept-a.png`
+Concepts: `/home/owner/Storage2/launch-footage/screen-concepts/b2-scheduled-prompts/concept-a.png`
 (list) and `concept-b.png` (sheet). Renders:
 `tool/capture/vision_scheduled_test.dart`, dark at 412x915, 2x pixels, blurred
 shadows, frozen aurora.
@@ -108,7 +108,7 @@ recorded), "It will wake it" (not guaranteed), Weekly (the engine has no
 day-of-week rule; Custom is every few hours).
 
 Images, one full phone screen each, in
-`/home/eslam/Storage2/launch-footage/vision-scheduled/`:
+`/home/owner/Storage2/launch-footage/vision-scheduled/`:
 `main-dark.png`, `main-light.png`, `empty-dark.png`, `exact-timing-off-dark.png`,
 `sheet-new-dark.png`, `sheet-new-light.png`, `sheet-once-dark.png`,
 `sheet-custom-dark.png`, `sheet-edit-last-run-dark.png`,

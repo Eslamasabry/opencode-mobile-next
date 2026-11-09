@@ -53,7 +53,7 @@ Android had lost the log.
 
 ### Emulator evidence and limits
 
-Held `/home/eslam/Storage/tmp/oc-emulator.lock` throughout. Started Pixel_6 as
+Held `/home/owner/Storage/tmp/oc-emulator.lock` throughout. Started Pixel_6 as
 PID `540139`, used only `adb -s emulator-5554`, and stopped that exact PID before
 releasing the lock. Used APK 2324's existing data; no replacement APK installed.
 Read the failed job with emulator adb root, then ran the extracted scripts

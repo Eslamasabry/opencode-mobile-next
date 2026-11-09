@@ -1,9 +1,9 @@
 # Protocols map (for the native Kotlin rewrite)
 
 Area: `lib/api2`, `lib/domain`, `contracts/`, `docs/opencode2-protocol-notes.md`, and the pieces of `lib/state`
-that drive reconnect/refetch. Source of truth read: `/home/eslam/Storage/Code/wt/oc_app-batch1`
+that drive reconnect/refetch. Source of truth read: `/home/owner/Storage/Code/wt/oc_app-batch1`
 (HEAD `65e3f70a3`, app version `2.1.0+57`, 2026-11-01). Test catalog rows for this area: 127 in area
-`protocols` (`/home/eslam/Storage/Code/wt/native-plan/catalog/raw-*.jsonl`), plus the protocol-flavoured rows in
+`protocols` (`/home/owner/Storage/Code/wt/native-plan/catalog/raw-*.jsonl`), plus the protocol-flavoured rows in
 other areas. Feature ids are `PROTOCOLS-NN`.
 
 ---------------------------------------------------------------------------------------------------

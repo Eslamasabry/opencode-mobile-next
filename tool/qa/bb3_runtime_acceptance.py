@@ -613,7 +613,7 @@ def restore_person(device, original, evidence, baseline=None):
 
 
 @contextmanager
-def emulator_session_lock(inherited_fd=None, path="/home/eslam/Storage/tmp/oc-emulator.lock"):
+def emulator_session_lock(inherited_fd=None, path=os.path.expanduser('~/Storage/tmp/oc-emulator.lock')):
     # A batch bootstrap may inherit flock's open-file description. Lock that
     # same description so installation, observation and restore remain atomic
     # with respect to other lanes, without deadlocking on a second open.

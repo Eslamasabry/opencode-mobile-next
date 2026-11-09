@@ -12,7 +12,7 @@ This order is binding together with `docs/design/native-ui-rebuild/GOLDEN-STANDA
 ## 1. Identity
 
 - Engine: Codex gpt-6.1-sol (`codex`). Time limit: 240 minutes.
-- Worktree (created by the lead; never create one): `eslam@169.58.71.211:~/wt/rb-06`, branch `native/rb-06-controls-b`.
+- Worktree (created by the lead; never create one): `<build-vps-login>:~/wt/rb-06`, branch `native/rb-06-controls-b`.
 - Flutter source of truth: `~/wt/flutter-ref` at FLUTTER_REF `8302de53773adef45eaaad016df2bd3cd51d1ebe`.
 - Gate manifest: `docs/design/native-ui-rebuild/orders/06.gate.tsv` (131 goldens). Gate command: `native/tool/design/gate_order.sh 06`.
 - Depends on: order 04. Do not start until each is merged into `native/looks-pass-2026-11-04` (the lead dispatches only then).

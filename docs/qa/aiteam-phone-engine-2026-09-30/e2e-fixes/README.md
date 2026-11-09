@@ -48,7 +48,7 @@ migration, or fresh model latency fix is claimed.
   Preview-only keep rules retain the Kotlin/app ABI used by instrumentation;
   stable release R8 behavior is unchanged.
 - Pixel_6/API 34 and OC_API35/API 35, x86_64, both passed the no-model device
-  regression under `/home/eslam/Storage/tmp/oc-emulator.lock`, serial
+  regression under `/home/owner/Storage/tmp/oc-emulator.lock`, serial
   `emulator-5554` only. See [API 34](api34-controls.log) and
   [API 35](api35-controls.log). Both report launcher `kernelExit=78`, typed
   `boundary_unsupported`, daemon stopped, no boundary/execution authority,

@@ -39,7 +39,7 @@ None. No emulator, no phone (not allowed for this slice).
 | 2 | Same file with the two-minute wait removed (`>= Duration.zero`) | The hysteresis tests fail | 3 failures: "resumes only after two cool minutes…", "CRITICAL stops it…", "a pause survives the app dying…" (`fails-without-hysteresis.txt`) | PASS (fails without the change) |
 | 3 | Affected tests: app_exit_recovery, l10n_coverage, design_standard, ui_glossary, accessibility_guidelines, app_lifecycle, home_navigation, release_blockers, settings_hub, server_switcher, first_run_landing, codex_navigation, team_home, project_hub, text_scale_overflow, safety_confirms, work_tab_cleanup, desktop_shortcuts, search_index, product_ui_regression; goldens work_tab, work_parts, team_discover (`-j 2`) | Pass | 358 tests (with run 1's file), all pass | PASS |
 | 4 | `flutter analyze lib test` | Clean | No issues | PASS |
-| 5 | `flutter build apk --release --target-platform android-arm64` under `/home/eslam/Storage/tmp/oc-build.lock` | Kotlin and Dart compile | Dart AOT and `compileReleaseKotlin` done (`build/app/intermediates/built_in_kotlinc/release/compileReleaseKotlin/classes/…/ThermalMonitor.class` written); the build then stops at `validateSigningRelease` (no `android/key.properties` here), as AGENTS.md expects | PASS (compiles; not signed) |
+| 5 | `flutter build apk --release --target-platform android-arm64` under `/home/owner/Storage/tmp/oc-build.lock` | Kotlin and Dart compile | Dart AOT and `compileReleaseKotlin` done (`build/app/intermediates/built_in_kotlinc/release/compileReleaseKotlin/classes/…/ThermalMonitor.class` written); the build then stops at `validateSigningRelease` (no `android/key.properties` here), as AGENTS.md expects | PASS (compiles; not signed) |
 
 ## Evidence
 
@@ -57,7 +57,7 @@ F=~/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/fl
 $F pub get
 $F test test/thermal_guard_test.dart
 $F test --concurrency=1 tool/capture/thermal_guard_test.dart   # renders
-flock /home/eslam/Storage/tmp/oc-build.lock $F build apk --release --target-platform android-arm64
+flock /home/owner/Storage/tmp/oc-build.lock $F build apk --release --target-platform android-arm64
 ```
 
 On-device steps for the coordinator (a test phone on Android 10+, the in-app

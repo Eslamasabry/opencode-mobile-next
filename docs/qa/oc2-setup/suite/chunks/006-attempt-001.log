@@ -1,387 +1,387 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_path_link_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_path_link_test.dart: looksLikeFilePath accepts anchored and extensioned paths
-00:00 +1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_path_link_test.dart: looksLikeFilePath rejects non-paths
-00:00 +2: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_path_link_test.dart: stripPathLineSuffix trims only trailing line numbers
-00:00 +3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_path_link_test.dart: validated path becomes tappable and reports the raw span
-00:00 +4: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_path_link_test.dart: unreadable path stays a plain code chip
-00:00 +5: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_path_link_test.dart: a path that appears later lights up on retry
-00:00 +6: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_path_link_test.dart: pending validation renders plain until it resolves
-00:00 +7: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_path_link_test.dart: non-path code spans never consult the scope
-00:00 +8: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_path_link_test.dart: without a scope, path-like spans render as plain chips
-00:00 +9: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart
-00:01 +9: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: short code keeps a single toolbar row at 1.0x
-00:02 +10: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: short code keeps a single toolbar row at 2.5x
-00:02 +11: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: RTL code starts at the beginning of its horizontal viewport
-00:02 +12: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: open reader retires controls when source becomes inert
-00:02 +13: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: reader stays local and retires after source row is removed
-00:02 +14: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: fence delimiter case 0 preserves body and streaming state
-00:02 +15: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: fence delimiter case 1 preserves body and streaming state
-00:02 +16: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: fence delimiter case 2 preserves body and streaming state
-00:02 +17: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: fence delimiter case 3 preserves body and streaming state
-00:02 +18: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: fence delimiter case 4 preserves body and streaming state
-00:02 +19: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: fence delimiter case 5 preserves body and streaming state
-00:02 +20: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: fence delimiter case 6 preserves body and streaming state
-00:02 +21: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: invalid backtick info and four-space opening are not fences
-00:02 +22: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: Copy preserves original CRLF, indent and trailing newline after wrap
-00:02 +23: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: clipboard failure is recoverable and retries the exact snapshot
-00:02 +24: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: inert code has selection and actions disabled
-00:02 +25: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: table aligns center/right and grows inline-code headers and long cells at 2x
-00:02 +26: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: inline code and validated path chips grow once at large text scale
-00:03 +27: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: table escaped pipes retain literal cells and mismatched delimiters are prose
-00:03 +28: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: unchanged parse cache and leading code widget survive later streaming
-00:03 +29: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: reader retains snapshot and selection across parent streaming then returns
-00:03 +30: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: wrap and reader preserve parent scroll offset and 48dp controls
-00:03 +31: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/mcp_oauth_test.dart
-00:03 +31: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/mcp_oauth_test.dart: discovers only explicit HTTP loopback OAuth redirects
-00:03 +32: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/mcp_oauth_test.dart: manual callback parsing validates state before exposing the code
-00:03 +33: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/mcp_oauth_test.dart: loopback listener rejects a mismatched state then captures one code
-00:03 +34: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/mcp_setup_screen_test.dart
-00:04 +34: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/mcp_setup_screen_test.dart: v2 shows its location and adds without configuration reload
-00:05 +35: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/mcp_setup_screen_test.dart: connection change during wake retains draft without writing
-00:06 +36: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/mcp_setup_screen_test.dart: saves a project remote MCP with exact advanced fields
-00:06 +37: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/mcp_setup_screen_test.dart: saves a global local MCP on a compact large-text phone
-00:06 +38: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/mcp_setup_screen_test.dart: keeps validation and server errors inline without saving
-00:06 +39: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/mcp_setup_screen_test.dart: retries reconnect without duplicating a saved MCP server
-00:07 +40: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/mcp_setup_screen_test.dart: keeps reconnect disabled after the saved profile changes
-00:07 +41: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/message_delete_transport_test.dart
-00:07 +41: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/message_delete_transport_test.dart: message delete uses the generated location-scoped contract
-00:07 +42: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/message_delete_transport_test.dart: declared message delete errors retain product details
-00:07 +43: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/message_delete_transport_test.dart: a repository without message deletion stays a bounded error
-00:07 +44: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/message_page_transport_test.dart
-00:08 +44: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/message_page_transport_test.dart: scoped v2 inventory opens newest first and retains cursor-only continuation
-00:08 +45: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/message_page_transport_test.dart: v1 message pages retain opaque continuation (false)
-00:08 +46: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/message_page_transport_test.dart: v1 message pages retain opaque continuation (true)
-00:08 +47: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/message_page_transport_test.dart: v2 opens beyond old history cap with one newest-first page
-00:08 +48: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/mobile_task_view_test.dart
-00:09 +48: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/mobile_task_view_test.dart: only bundled schema and bounded known statuses render
-00:09 +49: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/mobile_task_view_test.dart: priority is optional, reviewed values only, never coerced
-00:09 +50: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/mobile_task_view_test.dart: progress counts completed out of tracked, ignoring cancelled
-00:09 +51: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/mobile_task_view_test.dart: toPlainText is deterministic, ordered and preserves task text
-00:09 +52: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/mobile_task_view_test.dart: fallback preserves unknown status and priority as bounded text
-00:09 +53: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/mobile_task_view_test.dart: filter changes presentation without mutating reported tasks
-00:09 +54: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/mobile_task_view_test.dart: filter label wraps in full instead of fading at 320 px / 2x
-00:09 +55: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/mobile_task_view_test.dart: priority caption and accessible progress render
-00:09 +56: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/mobile_task_view_test.dart: progress is hidden when nothing is tracked
-00:09 +57: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/mobile_task_view_test.dart: copy sends the full parsed list even while filtered
-00:10 +58: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/mobile_task_view_test.dart: clipboard failure is reported in place
-00:10 +59: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/mobile_task_view_test.dart: plain text remains inert with RTL, large type and narrow width
-00:10 +60: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_library_test.dart
-00:10 +60: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_library_test.dart: recents normalize, deduplicate and retain the eight newest choices
-00:10 +61: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_library_test.dart: favorites preserve backend identity and toggle normalized refs
-00:10 +62: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_library_test.dart: corrupt entries are ignored and oversized history is bounded on read
-00:10 +63: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_library_test.dart: persistence is isolated by profile and safely reads malformed JSON
-00:10 +64: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_library_test.dart: pruning removes unavailable models from both lists
-00:10 +65: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_library_test.dart: cycling skips unavailable models and wraps in both directions
-00:10 +66: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_library_test.dart: repeated cycles visit every recent model without changing other chats
-00:10 +67: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_library_test.dart: favoriting never selects a model and unavailable choices are rejected
-00:10 +68: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart
-00:11 +68: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: (setUpAll)
-00:11 +68: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: model presentation leads with current model and provider family
-00:11 +69: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: model selector searches and persists a new selection
-00:12 +70: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: "Use for this session" leaves every other session alone
-00:12 +71: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: a signed-in provider the server has not loaded is called out
-00:12 +72: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: unloaded-provider notice reads naturally for one or many providers
-00:12 +73: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: current model and provider family lead the unfiltered catalog
-00:12 +74: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: explicit fast thinking mode is selected and persisted
-00:13 +75: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: open options keep variant edits bound to the displayed model
-00:13 +76: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: direct agent intent survives loading and opens only once
-00:13 +77: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: direct agent entry opens agent choice without saving
-00:13 +78: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: agent and mode are staged until apply: false
-00:14 +79: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: agent and mode are staged until apply: true
-00:14 +80: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: session apply changes agent only in its target session
-00:14 +81: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: dismissing after Apply still completes the authorized agent choice
-00:14 +82: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: partial apply names saved model and allows agent retry
-00:15 +83: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: primary agent picker excludes subagents
-00:15 +84: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: session picker labels and restores its own current model and mode
-00:15 +85: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: favorites have a dedicated list and stage a session choice
-00:15 +86: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: an empty search offers a working clear-filters action
-00:15 +87: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: Z.AI aliases share a filter but retain exact backend routes
-00:15 +88: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: search and apply are usable at 320.0dp with 2.0x text
-00:16 +89: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: search and apply are usable at 360.0dp with 2.5x text
-00:16 +90: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: opening the keyboard preserves search focus and continued input
-00:16 +91: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: keyboard leaves the apply action above its inset
-00:16 +92: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: apply bar stays pinned while browsing models
-00:16 +93: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: a failed save keeps the picker open and allows retry
-00:16 +94: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: (tearDownAll)
-00:16 +94: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_ref_normalization_test.dart
-00:17 +94: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_ref_normalization_test.dart: bareModelID strips only this provider's prefix
-00:17 +95: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_ref_normalization_test.dart: ModelRef.normalized returns itself when already bare
-00:17 +96: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_ref_normalization_test.dart: a v2 model with a composite id and no modelID gets a bare modelID
-00:17 +97: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_ref_normalization_test.dart: a v2 model ref with a composite id is sent bare
-00:17 +98: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_ref_normalization_test.dart: error headline drops the class name and the stack trace
-00:17 +99: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_shortcuts_test.dart
-00:17 +99: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_shortcuts_test.dart: Ctrl+B preserves typing and only runs an available background action
-00:18 +100: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_shortcuts_test.dart: F2 cycles from a focused composer without changing its draft
-00:18 +101: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_shortcuts_test.dart: a dialog above the chat prevents model shortcuts
-00:18 +102: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/model_shortcuts_test.dart: touch menu offers recent and favorite cycling
-00:18 +103: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/oc2_server_discovery_test.dart
-00:19 +103: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/oc2_server_discovery_test.dart: saved labels distinguish confirmed generation from legacy default
-00:20 +104: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/oc2_server_discovery_test.dart: OpenCode 2 entry preserves actual ServerFlavor.v1 autodetection
-00:21 +105: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/oc2_server_discovery_test.dart: OpenCode 2 entry preserves actual ServerFlavor.v2 autodetection
-00:21 +106: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/oc2_server_discovery_test.dart: mixed-local connection routes runtime choices only when needed
-00:21 +107: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/oc2_server_discovery_test.dart: single-local connection routes runtime choices only when needed
-00:21 +108: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/oc2_server_discovery_test.dart: mixed-remote connection routes runtime choices only when needed
-00:21 +109: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/oc2_server_discovery_test.dart: editing endpoint clears cached generation evidence
-00:21 +110: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/oc2_server_discovery_test.dart: editing endpoint retains cached generation evidence
-00:22 +111: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/oc2_server_discovery_test.dart: known OC1 user reaches phone setup with no runtime forced
-00:22 +112: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart
-00:23 +112: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: queued prompts persist and reload with attachments intact
-00:23 +113: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: corrupt persisted queue fails closed until explicitly cleared
-00:23 +114: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: wrongly typed persisted queue fails closed until explicitly cleared
-00:23 +115: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: queue save snapshots caller attachments and mentions
-00:23 +116: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: queue remove follows an in-flight stale save
-00:23 +117: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: oversized drafts are rejected instead of queued
-00:23 +118: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: failed queue writes preserve the existing queued prompts
-00:23 +119: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: a queued send rechecks its location after transport preparation
-00:23 +120: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: a draft discarded while transport wakes is never sent
-00:23 +121: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: flush sends queued prompts oldest first
-00:23 +122: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: failures after dispatch park the entry for review — a declared error lets the batch continue, a connectivity loss stops it, and only an explicit resend delivers
-00:23 +123: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: a flush cycle reports how many drafts it sent
-00:23 +124: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: drafts for other profiles stay queued and are counted
-00:23 +125: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: a completed flush surfaces a sent confirmation
-00:24 +126: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: the offline banner counts drafts waiting for other servers
-00:24 +127: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: sending while disconnected queues a visible draft
-00:24 +128: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: selection failure restores an undispatched draft without queuing
-00:24 +129: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: a failed dispatched prompt queues its captured selection
-00:24 +130: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: a queued draft can be edited back into the composer
-00:25 +131: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: discarding a queued draft confirms first
-00:25 +132: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends the dispatch marker survives snapshots, errors, and disk
-00:25 +133: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends the marker reaches disk before the prompt leaves, and the accepted entry is removed from disk on its own
-00:25 +134: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends storage refusing the dispatch marker keeps the prompt unsent
-00:25 +135: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends an accepted send whose removal is refused stays marked, stops the batch, and is never resent after a restart
-00:25 +136: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends an accepted send the device could not record explains itself and offers no resend
-00:25 +137: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends a process death between acceptance and the queue commit leaves an entry the next start shows for review instead of resending
-00:25 +138: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends transport uncertainty after dispatch keeps the marker and is never retried on its own
-00:25 +139: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends a status-bearing uncertain failure lets the batch continue
-00:25 +140: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends a failure before dispatch leaves the entry unmarked and retryable
-00:25 +141: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends a resend whose marker clear is refused sends nothing
-00:25 +142: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends an unconfirmed send is shown for review, not resent
-00:25 +143: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends an unconfirmed send with a failure shows the failure
-00:25 +144: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends resending asks first and only sends on confirmation
-00:25 +145: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends a refused resend keeps the entry in review
-00:25 +146: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends editing an unconfirmed send restores text and attachments to the composer without sending
-00:25 +147: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends editing a never-sent draft carries no duplicate warning
-00:26 +148: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends editing an unconfirmed send whose removal is refused leaves it queued and the composer untouched
-00:26 +149: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends discarding an unconfirmed send honors a refused deletion
-00:26 +150: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends a send in flight shows as sending with actions disabled
-00:26 +151: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends under concurrency removing another server while the marker write is pending keeps the marker and never resurrects the removed entries
-00:26 +152: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends under concurrency the sending guard holds until the accepted removal is persisted
-00:26 +153: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends under concurrency the sending guard holds until a post-dispatch failure is recorded
-00:26 +154: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends under concurrency an entry on the wire cannot be removed or resent
-00:26 +155: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends under concurrency an accepted send stays "Sending…" until its removal is recorded, even when the screen rebuilds
-00:26 +156: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends under concurrency a discard confirmed after a reconnect put the draft on the wire is refused, and the draft is delivered once
-00:26 +157: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: queue limits entries past the TTL are dropped with a notice
-00:26 +158: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: queue limits an unreadable timestamp is kept rather than deleted
-00:26 +159: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: queue limits the entry cap evicts the oldest first
-00:26 +160: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: queue limits the byte quota evicts the oldest until it fits
-00:26 +161: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: queue limits a single oversized entry is never evicted into nothing
-00:26 +162: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: queue limits queuing past the entry cap evicts and reports it
-00:27 +163: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: queue limits a stale queue is trimmed and rewritten on first read
-00:27 +164: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: queue limits bulk clears drop everything and report the sizes
-00:27 +165: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart
-00:27 +165: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — the real payload parses the exact shape opencode2 pair emits
-00:27 +166: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — the real payload keeps several addresses in the order the server reported them
-00:27 +167: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — the real payload trims and de-duplicates addresses
-00:27 +168: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — the real payload surrounding whitespace from a clipboard round-trip is tolerated
-00:27 +169: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — the real payload a payload without username still means opencode
-00:27 +170: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — the real payload a blank username falls back rather than authenticating as ""
-00:27 +171: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — the real payload a non-default username is carried through, not assumed away
-00:27 +172: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — every failure is honest, none crash empty and whitespace-only input
-00:27 +173: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — every failure is honest, none crash malformed JSON
-00:27 +174: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — every failure is honest, none crash JSON that is not an object
-00:27 +175: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — every failure is honest, none crash missing or wrongly-typed urls
-00:27 +176: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — every failure is honest, none crash an empty urls array — a shape the server really can emit
-00:27 +177: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — every failure is honest, none crash a urls array of nothing but blanks reads as empty
-00:27 +178: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — every failure is honest, none crash too many addresses
-00:27 +179: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — every failure is honest, none crash missing or wrongly-typed password
-00:27 +180: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — every failure is honest, none crash wrongly-typed username
-00:27 +181: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — every failure is honest, none crash enormous input is refused without being parsed
-00:27 +182: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — every failure is honest, none crash a single enormous address inside an otherwise valid payload
-00:27 +183: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — every failure is honest, none crash deeply nested JSON does not blow the stack
-00:27 +184: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — every failure is honest, none crash no failure message ever echoes the input back
-00:27 +185: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: PairingPayload holds the credential carefully toString redacts the password
-00:27 +186: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: PairingPayload holds the credential carefully consume drops the reference and toString says so
-00:27 +187: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: PairingPayload holds the credential carefully toString strips credentials and query secrets from URLs
-00:27 +188: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: PairingPayload holds the credential carefully toString does not echo an untrusted non-default username
-00:27 +189: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: PairingPayload holds the credential carefully urls cannot be mutated by a caller
-00:27 +190: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: looksLikePairingPayload recognises a real payload
-00:27 +191: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: looksLikePairingPayload recognises a malformed payload so we can explain it
-00:27 +192: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: looksLikePairingPayload ignores what people actually type into these fields
-00:27 +193: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: looksLikePairingPayload ignores anything over the size cap
-00:27 +194: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: selectPairingUrl — which address this device should dial a phone prefers a routable address over the server loopback
-00:27 +195: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: selectPairingUrl — which address this device should dial a desktop prefers loopback — the server is this machine
-00:27 +196: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: selectPairingUrl — which address this device should dial the platform seam picks the default preference
-00:27 +197: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: selectPairingUrl — which address this device should dial falls through to the next address when the first is refused
-00:27 +198: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: selectPairingUrl — which address this device should dial a cleartext LAN address is refused before any request is made
-00:27 +199: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: selectPairingUrl — which address this device should dial a malformed address in the payload is reported, not dialed
-00:27 +200: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: selectPairingUrl — which address this device should dial when nothing answers, the reason is given per address
-00:27 +201: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: selectPairingUrl — which address this device should dial failure detail strips URL secrets and arbitrary probe text
-00:27 +202: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: selectPairingUrl — which address this device should dial failure detail keeps a safe bracketed IPv6 origin readable
-00:27 +203: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: selectPairingUrl — which address this device should dial a thrown probe is isolated and the next address is tried
-00:27 +204: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: selectPairingUrl — which address this device should dial an address that answers 401 is still the right host
-00:27 +205: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: selectPairingUrl — which address this device should dial a working address beats one that merely answers
-00:27 +206: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: selectPairingUrl — which address this device should dial the payload credentials reach the probe unchanged
-00:27 +207: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: selectPairingUrl — which address this device should dial a bare host from the payload is normalized before use
-00:27 +208: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: selectPairingUrl — which address this device should dial every address rejected up front still yields per-address reasons
-00:27 +209: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: orderPairingCandidates splits loopback from routable and honours the preference
-00:27 +210: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: orderPairingCandidates is stable within each group
-00:27 +211: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: orderPairingCandidates an unparseable address is treated as routable, not dropped
-00:27 +212: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_scanner_test.dart
-00:28 +212: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_scanner_test.dart: permission denial a refusable denial explains and offers paste instead
-00:28 +213: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_scanner_test.dart: permission denial retrying asks the platform again and can succeed
-00:28 +214: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_scanner_test.dart: permission denial a permanent denial deep-links to app settings
-00:29 +215: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_scanner_test.dart: permission denial paste instead closes the scanner with no payload
-00:29 +216: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_scanner_test.dart: hardware no camera says so and never asks for permission
-00:29 +217: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_scanner_test.dart: hardware desktop reaches no camera code even if routed here
-00:29 +218: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_scanner_test.dart: the scan affordance is gated by platform Android offers scanning
-00:29 +219: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_scanner_test.dart: the scan affordance is gated by platform desktop renders no scan affordance at all
-00:29 +220: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_scanner_test.dart: the camera seam refuses to invent answers off Android it reports no camera and denies permission
-00:29 +221: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_scanner_test.dart: the camera seam refuses to invent answers a missing native handler reports no camera, not a false yes
-00:29 +222: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_scanner_test.dart: a scanned payload takes the same path as a pasted one a QR carrying a pairing code parses identically
-00:29 +223: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pairing_scanner_test.dart: a scanned payload takes the same path as a pasted one a QR that is not a pairing code is rejected with a reason
-00:29 +224: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pending_sends_strip_test.dart
-00:30 +224: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pending_sends_strip_test.dart: the strip shows offline drafts and server inbox items in one list
-00:31 +225: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pending_sends_strip_test.dart: cancelling an inbox item returns its text to the composer
-00:31 +226: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pending_sends_strip_test.dart: the bubble offers only the inline flip that changes the mode
-00:31 +227: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pending_sends_strip_test.dart: a 409 flip toasts Already delivered and drops the bubble
-00:31 +228: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pending_sends_strip_test.dart: non-user inbox items are informational only
-00:32 +229: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pending_sends_strip_test.dart: while busy on v2 Stop and Send sit side by side; the toggle queues
-00:32 +230: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pending_sends_strip_test.dart: v1 keeps Send live while busy and queues after the run
-00:32 +231: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pending_sends_strip_test.dart: the delivery control is absent until a run is active
-00:32 +232: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pending_sends_strip_test.dart: choosing Queue in the visible control sends with queue delivery
-00:33 +233: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pending_sends_strip_test.dart: the busy v2 composer with the delivery control survives 2.5x text on a 360dp phone
-00:33 +234: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/pending_sends_strip_test.dart: the toggle is the only control and remembers its choice
-00:33 +235: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/permission_migration_test.dart
-00:33 +235: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/permission_migration_test.dart: permission request parses the current contract
-00:33 +236: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/permission_migration_test.dart: tool states expose pending raw input and error text
-00:33 +237: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/permission_migration_test.dart: permission API lists and replies through current endpoints
-00:33 +238: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/permission_migration_test.dart: successful loose legacy permission data remains compatible
-00:33 +239: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/permission_migration_test.dart: permission API falls back only for an unavailable current endpoint
-00:33 +240: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/permission_migration_test.dart: controller tracks concurrent requests and current session statuses
-00:34 +241: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/permission_migration_test.dart: controller accepts legacy permission events without losing identity
-00:34 +242: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/permission_migration_test.dart: pending permission hydration retries transient failures
-00:34 +243: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/permission_migration_test.dart: answering an externally resolved permission is idempotent
-00:34 +244: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/permission_sheet_test.dart
-00:34 +244: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/permission_sheet_test.dart: bash asks render the command in a highlighted mono block
-00:35 +245: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/permission_sheet_test.dart: edit asks show the file path and a bounded diff preview
-00:35 +246: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/permission_sheet_test.dart: read asks without a diff show only the path row
-00:35 +247: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/permission_sheet_test.dart: ordinary permission decisions precede persistent access at 1.0x
-00:35 +248: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/permission_sheet_test.dart: ordinary permission decisions precede persistent access at 2.5x
-00:35 +249: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/permission_sheet_test.dart: a pending permission keeps its action label and prevents duplicate submission
-00:35 +250: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/permission_sheet_test.dart: renders the triad, resources card, and context line
-00:35 +251: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/permission_sheet_test.dart: Reject expands inline and sends the typed message
-00:36 +252: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/permission_sheet_test.dart: an empty reject reason is valid and Back restores the triad
-00:36 +253: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/permission_sheet_test.dart: v1 fallback: Reject submits directly with no message field
-00:36 +254: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/permission_sheet_test.dart: Always allow keeps the two-step confirmation
-00:36 +255: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/permission_sheet_test.dart: the source chip appears only for tool-sourced requests
-00:36 +256: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/permission_sheet_test.dart: a failed reply keeps the sheet open with the error inline
-00:36 +257: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/phone_termux_discovery_test.dart
-00:37 +257: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/phone_termux_discovery_test.dart: More exposes phone Termux above server tools at 1.0x
-00:37 +258: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/phone_termux_discovery_test.dart: More exposes phone Termux above server tools at 2.5x
-00:38 +259: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/phone_termux_discovery_test.dart: remote-profile Termux entry opens honest not installed recovery without switching profile
-00:38 +260: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/phone_termux_discovery_test.dart: remote-profile Termux entry opens honest permission needed recovery without switching profile
-00:38 +261: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/phone_termux_discovery_test.dart: remote-profile Termux entry opens honest unsupported version recovery without switching profile
-00:38 +262: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/phone_termux_discovery_test.dart: saved remote Servers has a direct Termux route without expansion
-00:38 +263: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/phone_termux_discovery_test.dart: TargetPlatform.linux does not offer Termux on More or Servers
-00:38 +264: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/phone_termux_discovery_test.dart: TargetPlatform.iOS does not offer Termux on More or Servers
-00:38 +265: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/platform_capabilities_test.dart
-00:39 +265: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/platform_capabilities_test.dart: Android has every platform feature this app ships
-00:39 +266: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/platform_capabilities_test.dart: Linux desktop has none of the Android-only features
-00:39 +267: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/platform_capabilities_test.dart: iOS leaves every unsupported platform feature off
-00:39 +268: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/platform_capabilities_test.dart: the ambient iOS target matches the explicit capability seam
-00:39 +269: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/platform_capabilities_test.dart: every capability is claimed by exactly one update channel
-00:39 +270: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/platform_capabilities_test.dart: macOS is desktop but has no release artifact to check
-00:39 +271: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/platform_capabilities_test.dart: web is neither Android nor desktop
-00:39 +272: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/platform_capabilities_test.dart: the ambient value defaults to Android under flutter_test
-00:39 +273: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/platform_capabilities_test.dart: the ambient value is overridable and restorable
-00:39 +274: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/plugin_command_mappings_test.dart
-00:40 +274: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/plugin_command_mappings_test.dart: save restart restore and profile deletion sweep
-00:40 +275: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/plugin_command_mappings_test.dart: clear reclaims full history across locations and survives restart
-00:40 +276: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/plugin_command_mappings_test.dart: clear waits for previous writes and reports refused removal
-00:40 +277: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/plugin_command_mappings_test.dart: endpoint account and location changes never inherit links
-00:40 +278: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/plugin_command_mappings_test.dart: overlapping stores preserve unrelated mappings
-00:40 +279: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/plugin_command_mappings_test.dart: failed platform save is not represented as durable
-00:40 +280: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/plugin_command_mappings_test.dart: failed mutations restore the prior value across restart
-00:40 +281: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/plugin_command_mappings_test.dart: deletion during rollback reload does not resurrect the prior mapping
-00:40 +282: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/plugin_command_mappings_test.dart: deletion during dispatched write cannot resurrect profile data
-00:40 +283: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/plugin_command_mappings_test.dart: untrusted oversized or unsupported stored schemas fall back empty
-00:40 +284: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/plugin_inventory_test.dart
-00:40 +284: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/plugin_inventory_test.dart: plugin metadata keeps declared source and never exposes raw diagnostics
-00:40 +285: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/plugin_inventory_test.dart: plugin GET pins location and preserves failure/unknown metadata
-00:40 +286: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/plugin_inventory_test.dart: invalid inventories and server failures never become empty success or raw errors
-00:40 +287: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/plugin_inventory_test.dart: plugin events only forward an inventory refresh hint
-00:40 +288: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/plugins_screen_test.dart
-00:41 +288: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/plugins_screen_test.dart: personal command links persist and open review without running
-00:42 +289: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/plugins_screen_test.dart: command removed after review is checked again before Run
-00:42 +290: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/plugins_screen_test.dart: clearing personal links requires confirmation
-00:42 +291: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/plugins_screen_test.dart: removed command never opens a stale mapped action
-00:43 +292: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/plugins_screen_test.dart: unsupported servers make no plugin request
-00:43 +293: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/plugins_screen_test.dart: empty, failure and retry states are distinct and hide raw errors
-00:43 +294: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/plugins_screen_test.dart: late previous-location inventory is discarded
-00:43 +295: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/plugins_screen_test.dart: late inventory after disposal is ignored
-00:43 +296: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/plugins_screen_test.dart: late review validation cannot open a prior-location dialog
-00:43 +297: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/plugins_screen_test.dart: plugin events and reconnect refetch current inventory
-00:43 +298: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/plugins_screen_test.dart: flat plugin rows fit a narrow phone with large text
-00:43 +299: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_error_text_test.dart
-00:44 +299: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_error_text_test.dart: productErrorText passes a ProductException message through unchanged
-00:44 +300: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_error_text_test.dart: productErrorText passes an ApiException message through unchanged
-00:44 +301: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_error_text_test.dart: productErrorText treats a plain string as already-composed product copy
-00:44 +302: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_error_text_test.dart: productErrorText collapses a StateError to the generic connectivity line
-00:44 +303: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_error_text_test.dart: productErrorText collapses a SocketException to the generic connectivity line
-00:44 +304: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_error_text_test.dart: productErrorText names the missing keyring instead of blaming the server
-00:44 +305: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_error_text_test.dart: productErrorText shows a PlatformException message rather than "unreachable"
-00:44 +306: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_error_text_test.dart: productErrorText collapses unknown objects to the generic connectivity line
-00:44 +307: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_error_text_test.dart: OpenCodeApi.errorBodyDetail extracts the message field from a JSON error body string
-00:44 +308: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_error_text_test.dart: OpenCodeApi.errorBodyDetail extracts the nested data.message field from a decoded map
-00:44 +309: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_error_text_test.dart: OpenCodeApi.errorBodyDetail truncates a non-JSON (HTML) body to about 120 characters
-00:44 +310: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_error_text_test.dart: OpenCodeApi.errorBodyDetail collapses whitespace runs in the extracted detail
-00:44 +311: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_error_text_test.dart: OpenCodeApi.errorBodyDetail returns null for missing or empty bodies
-00:44 +312: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart
-00:44 +312: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: configured providers retain OpenCode model variant metadata
-00:44 +313: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: provider list keeps only connected providers in connection order
-00:44 +314: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: explicit empty connected list does not expose catalog-only models
-00:44 +315: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: chat defaults use the exact generated project config contract
-00:44 +316: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: project reference uses the upstream directory file-part contract
-00:44 +317: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: project reference preserves a remote Windows server path
-00:44 +318: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: shell request serializes the selected thinking variant
-00:44 +319: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: binary file content preserves metadata and decodes bytes
-00:44 +320: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: session parsing retains project and workspace ownership
-00:44 +321: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: current OpenCode diff shape preserves patch and server counts
-00:44 +322: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: generated project response maps to app model with location
-00:44 +323: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: project rename uses generated project-root patch contract
-00:44 +324: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: saved-location validation uses generated current-project truth
-00:44 +325: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: worktree lifecycle uses the primary project context and exact bodies
-00:44 +326: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: stale project directory metadata cannot resurrect a worktree
-00:44 +327: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: worktree errors surface the typed OpenCode message
-00:44 +328: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: global session finder uses generated server search and cursor contract
-00:44 +329: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: subagent navigation uses exact generated session contracts
-00:44 +330: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: saved permissions use the current project and exact generated routes
-00:44 +331: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: generated API failures become product-facing errors
-00:44 +332: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: project MCP setup persists one exact config patch
-00:44 +333: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: global MCP setup persists local command configuration
-00:44 +334: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: MCP OAuth preserves state and completes through generated routes
-00:44 +335: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: persistent MCP setup rejects duplicate names before patching
-00:44 +336: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: MCP drafts fail closed on unsafe transport data
-00:44 +337: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: VCS diff scopes use generated API modes and preserve patches
-00:44 +338: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: provider key connection synchronizes runtime auth and refreshes instances
-00:44 +339: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: provider disconnect removes exact legacy and v2 credentials then refreshes
-00:44 +340: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: integration listing retains exact credential and environment identities
-00:44 +341: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: provider disconnect preserves visible v2 connection when legacy removal fails
-00:44 +342: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: provider disconnect refreshes runtime and reports a retained v2 credential
-00:45 +343: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: coding health uses generated VCS, file, LSP, and formatter contracts
-00:45 +344: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: project Git setup is detected and initialized through generated APIs
-00:45 +345: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: provider code OAuth writes the legacy auth store used by v1 chat
-00:45 +346: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: provider automatic OAuth completes through the legacy callback
-00:45 +347: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: session destinations and Console orgs use exact generated contracts
-00:45 +348: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: workspace listing survives an older server without status
-00:45 +349: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: managed workspace lifecycle uses generated project-root contracts
-00:45 +350: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: catalog uses generated v2 transport and capability response shape
-00:45 +351: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: tool inventory uses exact generated model and location contracts
-00:45 +352: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: fork session sends the selected OpenCode message point
-00:45 +353: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: shell settings use generated config and server shell contracts
-00:45 +354: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: shell update fails closed when global config does not retain it
-00:45 +355: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: terminal connection requests a guarded ticket before WebSocket
-00:45 +356: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: server upgrade accepts only exact semantic versions
-00:45 +357: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: remote upgrade uses the generated exact-version contract
-00:45 +358: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: client diagnostics use the generated redacted log contract
+00:00 +0: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_path_link_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_path_link_test.dart: looksLikeFilePath accepts anchored and extensioned paths
+00:00 +1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_path_link_test.dart: looksLikeFilePath rejects non-paths
+00:00 +2: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_path_link_test.dart: stripPathLineSuffix trims only trailing line numbers
+00:00 +3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_path_link_test.dart: validated path becomes tappable and reports the raw span
+00:00 +4: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_path_link_test.dart: unreadable path stays a plain code chip
+00:00 +5: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_path_link_test.dart: a path that appears later lights up on retry
+00:00 +6: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_path_link_test.dart: pending validation renders plain until it resolves
+00:00 +7: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_path_link_test.dart: non-path code spans never consult the scope
+00:00 +8: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_path_link_test.dart: without a scope, path-like spans render as plain chips
+00:00 +9: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart
+00:01 +9: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: short code keeps a single toolbar row at 1.0x
+00:02 +10: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: short code keeps a single toolbar row at 2.5x
+00:02 +11: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: RTL code starts at the beginning of its horizontal viewport
+00:02 +12: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: open reader retires controls when source becomes inert
+00:02 +13: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: reader stays local and retires after source row is removed
+00:02 +14: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: fence delimiter case 0 preserves body and streaming state
+00:02 +15: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: fence delimiter case 1 preserves body and streaming state
+00:02 +16: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: fence delimiter case 2 preserves body and streaming state
+00:02 +17: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: fence delimiter case 3 preserves body and streaming state
+00:02 +18: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: fence delimiter case 4 preserves body and streaming state
+00:02 +19: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: fence delimiter case 5 preserves body and streaming state
+00:02 +20: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: fence delimiter case 6 preserves body and streaming state
+00:02 +21: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: invalid backtick info and four-space opening are not fences
+00:02 +22: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: Copy preserves original CRLF, indent and trailing newline after wrap
+00:02 +23: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: clipboard failure is recoverable and retries the exact snapshot
+00:02 +24: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: inert code has selection and actions disabled
+00:02 +25: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: table aligns center/right and grows inline-code headers and long cells at 2x
+00:02 +26: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: inline code and validated path chips grow once at large text scale
+00:03 +27: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: table escaped pipes retain literal cells and mismatched delimiters are prose
+00:03 +28: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: unchanged parse cache and leading code widget survive later streaming
+00:03 +29: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: reader retains snapshot and selection across parent streaming then returns
+00:03 +30: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_reading_test.dart: wrap and reader preserve parent scroll offset and 48dp controls
+00:03 +31: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/mcp_oauth_test.dart
+00:03 +31: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/mcp_oauth_test.dart: discovers only explicit HTTP loopback OAuth redirects
+00:03 +32: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/mcp_oauth_test.dart: manual callback parsing validates state before exposing the code
+00:03 +33: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/mcp_oauth_test.dart: loopback listener rejects a mismatched state then captures one code
+00:03 +34: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/mcp_setup_screen_test.dart
+00:04 +34: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/mcp_setup_screen_test.dart: v2 shows its location and adds without configuration reload
+00:05 +35: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/mcp_setup_screen_test.dart: connection change during wake retains draft without writing
+00:06 +36: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/mcp_setup_screen_test.dart: saves a project remote MCP with exact advanced fields
+00:06 +37: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/mcp_setup_screen_test.dart: saves a global local MCP on a compact large-text phone
+00:06 +38: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/mcp_setup_screen_test.dart: keeps validation and server errors inline without saving
+00:06 +39: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/mcp_setup_screen_test.dart: retries reconnect without duplicating a saved MCP server
+00:07 +40: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/mcp_setup_screen_test.dart: keeps reconnect disabled after the saved profile changes
+00:07 +41: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/message_delete_transport_test.dart
+00:07 +41: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/message_delete_transport_test.dart: message delete uses the generated location-scoped contract
+00:07 +42: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/message_delete_transport_test.dart: declared message delete errors retain product details
+00:07 +43: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/message_delete_transport_test.dart: a repository without message deletion stays a bounded error
+00:07 +44: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/message_page_transport_test.dart
+00:08 +44: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/message_page_transport_test.dart: scoped v2 inventory opens newest first and retains cursor-only continuation
+00:08 +45: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/message_page_transport_test.dart: v1 message pages retain opaque continuation (false)
+00:08 +46: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/message_page_transport_test.dart: v1 message pages retain opaque continuation (true)
+00:08 +47: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/message_page_transport_test.dart: v2 opens beyond old history cap with one newest-first page
+00:08 +48: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/mobile_task_view_test.dart
+00:09 +48: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/mobile_task_view_test.dart: only bundled schema and bounded known statuses render
+00:09 +49: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/mobile_task_view_test.dart: priority is optional, reviewed values only, never coerced
+00:09 +50: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/mobile_task_view_test.dart: progress counts completed out of tracked, ignoring cancelled
+00:09 +51: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/mobile_task_view_test.dart: toPlainText is deterministic, ordered and preserves task text
+00:09 +52: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/mobile_task_view_test.dart: fallback preserves unknown status and priority as bounded text
+00:09 +53: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/mobile_task_view_test.dart: filter changes presentation without mutating reported tasks
+00:09 +54: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/mobile_task_view_test.dart: filter label wraps in full instead of fading at 320 px / 2x
+00:09 +55: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/mobile_task_view_test.dart: priority caption and accessible progress render
+00:09 +56: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/mobile_task_view_test.dart: progress is hidden when nothing is tracked
+00:09 +57: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/mobile_task_view_test.dart: copy sends the full parsed list even while filtered
+00:10 +58: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/mobile_task_view_test.dart: clipboard failure is reported in place
+00:10 +59: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/mobile_task_view_test.dart: plain text remains inert with RTL, large type and narrow width
+00:10 +60: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_library_test.dart
+00:10 +60: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_library_test.dart: recents normalize, deduplicate and retain the eight newest choices
+00:10 +61: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_library_test.dart: favorites preserve backend identity and toggle normalized refs
+00:10 +62: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_library_test.dart: corrupt entries are ignored and oversized history is bounded on read
+00:10 +63: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_library_test.dart: persistence is isolated by profile and safely reads malformed JSON
+00:10 +64: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_library_test.dart: pruning removes unavailable models from both lists
+00:10 +65: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_library_test.dart: cycling skips unavailable models and wraps in both directions
+00:10 +66: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_library_test.dart: repeated cycles visit every recent model without changing other chats
+00:10 +67: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_library_test.dart: favoriting never selects a model and unavailable choices are rejected
+00:10 +68: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart
+00:11 +68: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: (setUpAll)
+00:11 +68: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: model presentation leads with current model and provider family
+00:11 +69: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: model selector searches and persists a new selection
+00:12 +70: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: "Use for this session" leaves every other session alone
+00:12 +71: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: a signed-in provider the server has not loaded is called out
+00:12 +72: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: unloaded-provider notice reads naturally for one or many providers
+00:12 +73: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: current model and provider family lead the unfiltered catalog
+00:12 +74: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: explicit fast thinking mode is selected and persisted
+00:13 +75: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: open options keep variant edits bound to the displayed model
+00:13 +76: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: direct agent intent survives loading and opens only once
+00:13 +77: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: direct agent entry opens agent choice without saving
+00:13 +78: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: agent and mode are staged until apply: false
+00:14 +79: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: agent and mode are staged until apply: true
+00:14 +80: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: session apply changes agent only in its target session
+00:14 +81: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: dismissing after Apply still completes the authorized agent choice
+00:14 +82: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: partial apply names saved model and allows agent retry
+00:15 +83: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: primary agent picker excludes subagents
+00:15 +84: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: session picker labels and restores its own current model and mode
+00:15 +85: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: favorites have a dedicated list and stage a session choice
+00:15 +86: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: an empty search offers a working clear-filters action
+00:15 +87: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: Z.AI aliases share a filter but retain exact backend routes
+00:15 +88: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: search and apply are usable at 320.0dp with 2.0x text
+00:16 +89: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: search and apply are usable at 360.0dp with 2.5x text
+00:16 +90: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: opening the keyboard preserves search focus and continued input
+00:16 +91: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: keyboard leaves the apply action above its inset
+00:16 +92: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: apply bar stays pinned while browsing models
+00:16 +93: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: a failed save keeps the picker open and allows retry
+00:16 +94: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_picker_test.dart: (tearDownAll)
+00:16 +94: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_ref_normalization_test.dart
+00:17 +94: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_ref_normalization_test.dart: bareModelID strips only this provider's prefix
+00:17 +95: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_ref_normalization_test.dart: ModelRef.normalized returns itself when already bare
+00:17 +96: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_ref_normalization_test.dart: a v2 model with a composite id and no modelID gets a bare modelID
+00:17 +97: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_ref_normalization_test.dart: a v2 model ref with a composite id is sent bare
+00:17 +98: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_ref_normalization_test.dart: error headline drops the class name and the stack trace
+00:17 +99: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_shortcuts_test.dart
+00:17 +99: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_shortcuts_test.dart: Ctrl+B preserves typing and only runs an available background action
+00:18 +100: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_shortcuts_test.dart: F2 cycles from a focused composer without changing its draft
+00:18 +101: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_shortcuts_test.dart: a dialog above the chat prevents model shortcuts
+00:18 +102: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/model_shortcuts_test.dart: touch menu offers recent and favorite cycling
+00:18 +103: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/oc2_server_discovery_test.dart
+00:19 +103: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/oc2_server_discovery_test.dart: saved labels distinguish confirmed generation from legacy default
+00:20 +104: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/oc2_server_discovery_test.dart: OpenCode 2 entry preserves actual ServerFlavor.v1 autodetection
+00:21 +105: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/oc2_server_discovery_test.dart: OpenCode 2 entry preserves actual ServerFlavor.v2 autodetection
+00:21 +106: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/oc2_server_discovery_test.dart: mixed-local connection routes runtime choices only when needed
+00:21 +107: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/oc2_server_discovery_test.dart: single-local connection routes runtime choices only when needed
+00:21 +108: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/oc2_server_discovery_test.dart: mixed-remote connection routes runtime choices only when needed
+00:21 +109: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/oc2_server_discovery_test.dart: editing endpoint clears cached generation evidence
+00:21 +110: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/oc2_server_discovery_test.dart: editing endpoint retains cached generation evidence
+00:22 +111: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/oc2_server_discovery_test.dart: known OC1 user reaches phone setup with no runtime forced
+00:22 +112: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart
+00:23 +112: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: queued prompts persist and reload with attachments intact
+00:23 +113: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: corrupt persisted queue fails closed until explicitly cleared
+00:23 +114: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: wrongly typed persisted queue fails closed until explicitly cleared
+00:23 +115: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: queue save snapshots caller attachments and mentions
+00:23 +116: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: queue remove follows an in-flight stale save
+00:23 +117: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: oversized drafts are rejected instead of queued
+00:23 +118: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: failed queue writes preserve the existing queued prompts
+00:23 +119: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: a queued send rechecks its location after transport preparation
+00:23 +120: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: a draft discarded while transport wakes is never sent
+00:23 +121: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: flush sends queued prompts oldest first
+00:23 +122: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: failures after dispatch park the entry for review — a declared error lets the batch continue, a connectivity loss stops it, and only an explicit resend delivers
+00:23 +123: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: a flush cycle reports how many drafts it sent
+00:23 +124: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: drafts for other profiles stay queued and are counted
+00:23 +125: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: a completed flush surfaces a sent confirmation
+00:24 +126: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: the offline banner counts drafts waiting for other servers
+00:24 +127: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: sending while disconnected queues a visible draft
+00:24 +128: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: selection failure restores an undispatched draft without queuing
+00:24 +129: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: a failed dispatched prompt queues its captured selection
+00:24 +130: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: a queued draft can be edited back into the composer
+00:25 +131: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: discarding a queued draft confirms first
+00:25 +132: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends the dispatch marker survives snapshots, errors, and disk
+00:25 +133: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends the marker reaches disk before the prompt leaves, and the accepted entry is removed from disk on its own
+00:25 +134: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends storage refusing the dispatch marker keeps the prompt unsent
+00:25 +135: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends an accepted send whose removal is refused stays marked, stops the batch, and is never resent after a restart
+00:25 +136: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends an accepted send the device could not record explains itself and offers no resend
+00:25 +137: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends a process death between acceptance and the queue commit leaves an entry the next start shows for review instead of resending
+00:25 +138: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends transport uncertainty after dispatch keeps the marker and is never retried on its own
+00:25 +139: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends a status-bearing uncertain failure lets the batch continue
+00:25 +140: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends a failure before dispatch leaves the entry unmarked and retryable
+00:25 +141: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends a resend whose marker clear is refused sends nothing
+00:25 +142: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends an unconfirmed send is shown for review, not resent
+00:25 +143: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends an unconfirmed send with a failure shows the failure
+00:25 +144: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends resending asks first and only sends on confirmation
+00:25 +145: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends a refused resend keeps the entry in review
+00:25 +146: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends editing an unconfirmed send restores text and attachments to the composer without sending
+00:25 +147: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends editing a never-sent draft carries no duplicate warning
+00:26 +148: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends editing an unconfirmed send whose removal is refused leaves it queued and the composer untouched
+00:26 +149: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends discarding an unconfirmed send honors a refused deletion
+00:26 +150: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends a send in flight shows as sending with actions disabled
+00:26 +151: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends under concurrency removing another server while the marker write is pending keeps the marker and never resurrects the removed entries
+00:26 +152: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends under concurrency the sending guard holds until the accepted removal is persisted
+00:26 +153: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends under concurrency the sending guard holds until a post-dispatch failure is recorded
+00:26 +154: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends under concurrency an entry on the wire cannot be removed or resent
+00:26 +155: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends under concurrency an accepted send stays "Sending…" until its removal is recorded, even when the screen rebuilds
+00:26 +156: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: unconfirmed sends under concurrency a discard confirmed after a reconnect put the draft on the wire is refused, and the draft is delivered once
+00:26 +157: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: queue limits entries past the TTL are dropped with a notice
+00:26 +158: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: queue limits an unreadable timestamp is kept rather than deleted
+00:26 +159: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: queue limits the entry cap evicts the oldest first
+00:26 +160: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: queue limits the byte quota evicts the oldest until it fits
+00:26 +161: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: queue limits a single oversized entry is never evicted into nothing
+00:26 +162: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: queue limits queuing past the entry cap evicts and reports it
+00:27 +163: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: queue limits a stale queue is trimmed and rewritten on first read
+00:27 +164: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/offline_queue_test.dart: queue limits bulk clears drop everything and report the sizes
+00:27 +165: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart
+00:27 +165: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — the real payload parses the exact shape opencode2 pair emits
+00:27 +166: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — the real payload keeps several addresses in the order the server reported them
+00:27 +167: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — the real payload trims and de-duplicates addresses
+00:27 +168: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — the real payload surrounding whitespace from a clipboard round-trip is tolerated
+00:27 +169: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — the real payload a payload without username still means opencode
+00:27 +170: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — the real payload a blank username falls back rather than authenticating as ""
+00:27 +171: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — the real payload a non-default username is carried through, not assumed away
+00:27 +172: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — every failure is honest, none crash empty and whitespace-only input
+00:27 +173: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — every failure is honest, none crash malformed JSON
+00:27 +174: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — every failure is honest, none crash JSON that is not an object
+00:27 +175: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — every failure is honest, none crash missing or wrongly-typed urls
+00:27 +176: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — every failure is honest, none crash an empty urls array — a shape the server really can emit
+00:27 +177: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — every failure is honest, none crash a urls array of nothing but blanks reads as empty
+00:27 +178: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — every failure is honest, none crash too many addresses
+00:27 +179: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — every failure is honest, none crash missing or wrongly-typed password
+00:27 +180: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — every failure is honest, none crash wrongly-typed username
+00:27 +181: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — every failure is honest, none crash enormous input is refused without being parsed
+00:27 +182: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — every failure is honest, none crash a single enormous address inside an otherwise valid payload
+00:27 +183: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — every failure is honest, none crash deeply nested JSON does not blow the stack
+00:27 +184: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: parsePairingPayload — every failure is honest, none crash no failure message ever echoes the input back
+00:27 +185: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: PairingPayload holds the credential carefully toString redacts the password
+00:27 +186: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: PairingPayload holds the credential carefully consume drops the reference and toString says so
+00:27 +187: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: PairingPayload holds the credential carefully toString strips credentials and query secrets from URLs
+00:27 +188: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: PairingPayload holds the credential carefully toString does not echo an untrusted non-default username
+00:27 +189: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: PairingPayload holds the credential carefully urls cannot be mutated by a caller
+00:27 +190: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: looksLikePairingPayload recognises a real payload
+00:27 +191: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: looksLikePairingPayload recognises a malformed payload so we can explain it
+00:27 +192: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: looksLikePairingPayload ignores what people actually type into these fields
+00:27 +193: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: looksLikePairingPayload ignores anything over the size cap
+00:27 +194: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: selectPairingUrl — which address this device should dial a phone prefers a routable address over the server loopback
+00:27 +195: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: selectPairingUrl — which address this device should dial a desktop prefers loopback — the server is this machine
+00:27 +196: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: selectPairingUrl — which address this device should dial the platform seam picks the default preference
+00:27 +197: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: selectPairingUrl — which address this device should dial falls through to the next address when the first is refused
+00:27 +198: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: selectPairingUrl — which address this device should dial a cleartext LAN address is refused before any request is made
+00:27 +199: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: selectPairingUrl — which address this device should dial a malformed address in the payload is reported, not dialed
+00:27 +200: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: selectPairingUrl — which address this device should dial when nothing answers, the reason is given per address
+00:27 +201: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: selectPairingUrl — which address this device should dial failure detail strips URL secrets and arbitrary probe text
+00:27 +202: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: selectPairingUrl — which address this device should dial failure detail keeps a safe bracketed IPv6 origin readable
+00:27 +203: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: selectPairingUrl — which address this device should dial a thrown probe is isolated and the next address is tried
+00:27 +204: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: selectPairingUrl — which address this device should dial an address that answers 401 is still the right host
+00:27 +205: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: selectPairingUrl — which address this device should dial a working address beats one that merely answers
+00:27 +206: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: selectPairingUrl — which address this device should dial the payload credentials reach the probe unchanged
+00:27 +207: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: selectPairingUrl — which address this device should dial a bare host from the payload is normalized before use
+00:27 +208: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: selectPairingUrl — which address this device should dial every address rejected up front still yields per-address reasons
+00:27 +209: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: orderPairingCandidates splits loopback from routable and honours the preference
+00:27 +210: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: orderPairingCandidates is stable within each group
+00:27 +211: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_payload_test.dart: orderPairingCandidates an unparseable address is treated as routable, not dropped
+00:27 +212: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_scanner_test.dart
+00:28 +212: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_scanner_test.dart: permission denial a refusable denial explains and offers paste instead
+00:28 +213: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_scanner_test.dart: permission denial retrying asks the platform again and can succeed
+00:28 +214: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_scanner_test.dart: permission denial a permanent denial deep-links to app settings
+00:29 +215: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_scanner_test.dart: permission denial paste instead closes the scanner with no payload
+00:29 +216: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_scanner_test.dart: hardware no camera says so and never asks for permission
+00:29 +217: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_scanner_test.dart: hardware desktop reaches no camera code even if routed here
+00:29 +218: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_scanner_test.dart: the scan affordance is gated by platform Android offers scanning
+00:29 +219: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_scanner_test.dart: the scan affordance is gated by platform desktop renders no scan affordance at all
+00:29 +220: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_scanner_test.dart: the camera seam refuses to invent answers off Android it reports no camera and denies permission
+00:29 +221: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_scanner_test.dart: the camera seam refuses to invent answers a missing native handler reports no camera, not a false yes
+00:29 +222: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_scanner_test.dart: a scanned payload takes the same path as a pasted one a QR carrying a pairing code parses identically
+00:29 +223: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pairing_scanner_test.dart: a scanned payload takes the same path as a pasted one a QR that is not a pairing code is rejected with a reason
+00:29 +224: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pending_sends_strip_test.dart
+00:30 +224: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pending_sends_strip_test.dart: the strip shows offline drafts and server inbox items in one list
+00:31 +225: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pending_sends_strip_test.dart: cancelling an inbox item returns its text to the composer
+00:31 +226: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pending_sends_strip_test.dart: the bubble offers only the inline flip that changes the mode
+00:31 +227: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pending_sends_strip_test.dart: a 409 flip toasts Already delivered and drops the bubble
+00:31 +228: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pending_sends_strip_test.dart: non-user inbox items are informational only
+00:32 +229: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pending_sends_strip_test.dart: while busy on v2 Stop and Send sit side by side; the toggle queues
+00:32 +230: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pending_sends_strip_test.dart: v1 keeps Send live while busy and queues after the run
+00:32 +231: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pending_sends_strip_test.dart: the delivery control is absent until a run is active
+00:32 +232: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pending_sends_strip_test.dart: choosing Queue in the visible control sends with queue delivery
+00:33 +233: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pending_sends_strip_test.dart: the busy v2 composer with the delivery control survives 2.5x text on a 360dp phone
+00:33 +234: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/pending_sends_strip_test.dart: the toggle is the only control and remembers its choice
+00:33 +235: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/permission_migration_test.dart
+00:33 +235: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/permission_migration_test.dart: permission request parses the current contract
+00:33 +236: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/permission_migration_test.dart: tool states expose pending raw input and error text
+00:33 +237: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/permission_migration_test.dart: permission API lists and replies through current endpoints
+00:33 +238: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/permission_migration_test.dart: successful loose legacy permission data remains compatible
+00:33 +239: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/permission_migration_test.dart: permission API falls back only for an unavailable current endpoint
+00:33 +240: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/permission_migration_test.dart: controller tracks concurrent requests and current session statuses
+00:34 +241: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/permission_migration_test.dart: controller accepts legacy permission events without losing identity
+00:34 +242: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/permission_migration_test.dart: pending permission hydration retries transient failures
+00:34 +243: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/permission_migration_test.dart: answering an externally resolved permission is idempotent
+00:34 +244: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/permission_sheet_test.dart
+00:34 +244: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/permission_sheet_test.dart: bash asks render the command in a highlighted mono block
+00:35 +245: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/permission_sheet_test.dart: edit asks show the file path and a bounded diff preview
+00:35 +246: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/permission_sheet_test.dart: read asks without a diff show only the path row
+00:35 +247: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/permission_sheet_test.dart: ordinary permission decisions precede persistent access at 1.0x
+00:35 +248: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/permission_sheet_test.dart: ordinary permission decisions precede persistent access at 2.5x
+00:35 +249: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/permission_sheet_test.dart: a pending permission keeps its action label and prevents duplicate submission
+00:35 +250: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/permission_sheet_test.dart: renders the triad, resources card, and context line
+00:35 +251: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/permission_sheet_test.dart: Reject expands inline and sends the typed message
+00:36 +252: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/permission_sheet_test.dart: an empty reject reason is valid and Back restores the triad
+00:36 +253: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/permission_sheet_test.dart: v1 fallback: Reject submits directly with no message field
+00:36 +254: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/permission_sheet_test.dart: Always allow keeps the two-step confirmation
+00:36 +255: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/permission_sheet_test.dart: the source chip appears only for tool-sourced requests
+00:36 +256: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/permission_sheet_test.dart: a failed reply keeps the sheet open with the error inline
+00:36 +257: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/phone_termux_discovery_test.dart
+00:37 +257: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/phone_termux_discovery_test.dart: More exposes phone Termux above server tools at 1.0x
+00:37 +258: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/phone_termux_discovery_test.dart: More exposes phone Termux above server tools at 2.5x
+00:38 +259: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/phone_termux_discovery_test.dart: remote-profile Termux entry opens honest not installed recovery without switching profile
+00:38 +260: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/phone_termux_discovery_test.dart: remote-profile Termux entry opens honest permission needed recovery without switching profile
+00:38 +261: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/phone_termux_discovery_test.dart: remote-profile Termux entry opens honest unsupported version recovery without switching profile
+00:38 +262: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/phone_termux_discovery_test.dart: saved remote Servers has a direct Termux route without expansion
+00:38 +263: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/phone_termux_discovery_test.dart: TargetPlatform.linux does not offer Termux on More or Servers
+00:38 +264: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/phone_termux_discovery_test.dart: TargetPlatform.iOS does not offer Termux on More or Servers
+00:38 +265: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/platform_capabilities_test.dart
+00:39 +265: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/platform_capabilities_test.dart: Android has every platform feature this app ships
+00:39 +266: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/platform_capabilities_test.dart: Linux desktop has none of the Android-only features
+00:39 +267: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/platform_capabilities_test.dart: iOS leaves every unsupported platform feature off
+00:39 +268: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/platform_capabilities_test.dart: the ambient iOS target matches the explicit capability seam
+00:39 +269: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/platform_capabilities_test.dart: every capability is claimed by exactly one update channel
+00:39 +270: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/platform_capabilities_test.dart: macOS is desktop but has no release artifact to check
+00:39 +271: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/platform_capabilities_test.dart: web is neither Android nor desktop
+00:39 +272: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/platform_capabilities_test.dart: the ambient value defaults to Android under flutter_test
+00:39 +273: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/platform_capabilities_test.dart: the ambient value is overridable and restorable
+00:39 +274: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/plugin_command_mappings_test.dart
+00:40 +274: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/plugin_command_mappings_test.dart: save restart restore and profile deletion sweep
+00:40 +275: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/plugin_command_mappings_test.dart: clear reclaims full history across locations and survives restart
+00:40 +276: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/plugin_command_mappings_test.dart: clear waits for previous writes and reports refused removal
+00:40 +277: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/plugin_command_mappings_test.dart: endpoint account and location changes never inherit links
+00:40 +278: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/plugin_command_mappings_test.dart: overlapping stores preserve unrelated mappings
+00:40 +279: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/plugin_command_mappings_test.dart: failed platform save is not represented as durable
+00:40 +280: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/plugin_command_mappings_test.dart: failed mutations restore the prior value across restart
+00:40 +281: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/plugin_command_mappings_test.dart: deletion during rollback reload does not resurrect the prior mapping
+00:40 +282: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/plugin_command_mappings_test.dart: deletion during dispatched write cannot resurrect profile data
+00:40 +283: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/plugin_command_mappings_test.dart: untrusted oversized or unsupported stored schemas fall back empty
+00:40 +284: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/plugin_inventory_test.dart
+00:40 +284: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/plugin_inventory_test.dart: plugin metadata keeps declared source and never exposes raw diagnostics
+00:40 +285: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/plugin_inventory_test.dart: plugin GET pins location and preserves failure/unknown metadata
+00:40 +286: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/plugin_inventory_test.dart: invalid inventories and server failures never become empty success or raw errors
+00:40 +287: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/plugin_inventory_test.dart: plugin events only forward an inventory refresh hint
+00:40 +288: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/plugins_screen_test.dart
+00:41 +288: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/plugins_screen_test.dart: personal command links persist and open review without running
+00:42 +289: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/plugins_screen_test.dart: command removed after review is checked again before Run
+00:42 +290: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/plugins_screen_test.dart: clearing personal links requires confirmation
+00:42 +291: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/plugins_screen_test.dart: removed command never opens a stale mapped action
+00:43 +292: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/plugins_screen_test.dart: unsupported servers make no plugin request
+00:43 +293: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/plugins_screen_test.dart: empty, failure and retry states are distinct and hide raw errors
+00:43 +294: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/plugins_screen_test.dart: late previous-location inventory is discarded
+00:43 +295: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/plugins_screen_test.dart: late inventory after disposal is ignored
+00:43 +296: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/plugins_screen_test.dart: late review validation cannot open a prior-location dialog
+00:43 +297: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/plugins_screen_test.dart: plugin events and reconnect refetch current inventory
+00:43 +298: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/plugins_screen_test.dart: flat plugin rows fit a narrow phone with large text
+00:43 +299: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_error_text_test.dart
+00:44 +299: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_error_text_test.dart: productErrorText passes a ProductException message through unchanged
+00:44 +300: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_error_text_test.dart: productErrorText passes an ApiException message through unchanged
+00:44 +301: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_error_text_test.dart: productErrorText treats a plain string as already-composed product copy
+00:44 +302: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_error_text_test.dart: productErrorText collapses a StateError to the generic connectivity line
+00:44 +303: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_error_text_test.dart: productErrorText collapses a SocketException to the generic connectivity line
+00:44 +304: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_error_text_test.dart: productErrorText names the missing keyring instead of blaming the server
+00:44 +305: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_error_text_test.dart: productErrorText shows a PlatformException message rather than "unreachable"
+00:44 +306: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_error_text_test.dart: productErrorText collapses unknown objects to the generic connectivity line
+00:44 +307: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_error_text_test.dart: OpenCodeApi.errorBodyDetail extracts the message field from a JSON error body string
+00:44 +308: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_error_text_test.dart: OpenCodeApi.errorBodyDetail extracts the nested data.message field from a decoded map
+00:44 +309: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_error_text_test.dart: OpenCodeApi.errorBodyDetail truncates a non-JSON (HTML) body to about 120 characters
+00:44 +310: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_error_text_test.dart: OpenCodeApi.errorBodyDetail collapses whitespace runs in the extracted detail
+00:44 +311: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_error_text_test.dart: OpenCodeApi.errorBodyDetail returns null for missing or empty bodies
+00:44 +312: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart
+00:44 +312: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: configured providers retain OpenCode model variant metadata
+00:44 +313: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: provider list keeps only connected providers in connection order
+00:44 +314: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: explicit empty connected list does not expose catalog-only models
+00:44 +315: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: chat defaults use the exact generated project config contract
+00:44 +316: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: project reference uses the upstream directory file-part contract
+00:44 +317: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: project reference preserves a remote Windows server path
+00:44 +318: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: shell request serializes the selected thinking variant
+00:44 +319: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: binary file content preserves metadata and decodes bytes
+00:44 +320: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: session parsing retains project and workspace ownership
+00:44 +321: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: current OpenCode diff shape preserves patch and server counts
+00:44 +322: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: generated project response maps to app model with location
+00:44 +323: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: project rename uses generated project-root patch contract
+00:44 +324: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: saved-location validation uses generated current-project truth
+00:44 +325: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: worktree lifecycle uses the primary project context and exact bodies
+00:44 +326: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: stale project directory metadata cannot resurrect a worktree
+00:44 +327: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: worktree errors surface the typed OpenCode message
+00:44 +328: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: global session finder uses generated server search and cursor contract
+00:44 +329: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: subagent navigation uses exact generated session contracts
+00:44 +330: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: saved permissions use the current project and exact generated routes
+00:44 +331: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: generated API failures become product-facing errors
+00:44 +332: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: project MCP setup persists one exact config patch
+00:44 +333: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: global MCP setup persists local command configuration
+00:44 +334: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: MCP OAuth preserves state and completes through generated routes
+00:44 +335: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: persistent MCP setup rejects duplicate names before patching
+00:44 +336: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: MCP drafts fail closed on unsafe transport data
+00:44 +337: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: VCS diff scopes use generated API modes and preserve patches
+00:44 +338: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: provider key connection synchronizes runtime auth and refreshes instances
+00:44 +339: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: provider disconnect removes exact legacy and v2 credentials then refreshes
+00:44 +340: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: integration listing retains exact credential and environment identities
+00:44 +341: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: provider disconnect preserves visible v2 connection when legacy removal fails
+00:44 +342: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: provider disconnect refreshes runtime and reports a retained v2 credential
+00:45 +343: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: coding health uses generated VCS, file, LSP, and formatter contracts
+00:45 +344: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: project Git setup is detected and initialized through generated APIs
+00:45 +345: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: provider code OAuth writes the legacy auth store used by v1 chat
+00:45 +346: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: provider automatic OAuth completes through the legacy callback
+00:45 +347: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: session destinations and Console orgs use exact generated contracts
+00:45 +348: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: workspace listing survives an older server without status
+00:45 +349: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: managed workspace lifecycle uses generated project-root contracts
+00:45 +350: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: catalog uses generated v2 transport and capability response shape
+00:45 +351: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: tool inventory uses exact generated model and location contracts
+00:45 +352: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: fork session sends the selected OpenCode message point
+00:45 +353: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: shell settings use generated config and server shell contracts
+00:45 +354: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: shell update fails closed when global config does not retain it
+00:45 +355: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: terminal connection requests a guarded ticket before WebSocket
+00:45 +356: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: server upgrade accepts only exact semantic versions
+00:45 +357: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: remote upgrade uses the generated exact-version contract
+00:45 +358: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_repository_test.dart: client diagnostics use the generated redacted log contract
 00:45 +359: All tests passed!

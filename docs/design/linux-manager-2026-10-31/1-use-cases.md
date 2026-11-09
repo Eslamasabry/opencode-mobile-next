@@ -2,7 +2,7 @@
 
 The owner asked for use cases, then architecture, then UI, each approved before any code. This is the first. Part 2 is [2-architecture.md](2-architecture.md); part 3 is [3-ui.md](3-ui.md).
 
-**Inputs:** the old-phones research, "Better Linux management UI" section (`/home/eslam/Storage2/wt/research-old-phones-2026-10-31/REPORT.md`), and today's code on `int/ui-batch-2026-10-14` at `998e4563f`. Paths below are from the repo root. `K/` means `android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/`.
+**Inputs:** the old-phones research, "Better Linux management UI" section (`/home/owner/Storage2/wt/research-old-phones-2026-10-31/REPORT.md`), and today's code on `int/ui-batch-2026-10-14` at `998e4563f`. Paths below are from the repo root. `K/` means `android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/`.
 
 **Finish line for the whole plan:** a person keeps their own programs running in the phone's Linux, sees how the phone is coping, finds and installs packages by what they do, and can undo a broken Linux from a backup. All of this works without a terminal.
 

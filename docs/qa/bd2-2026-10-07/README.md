@@ -46,7 +46,7 @@ and coordinator handoff are recorded in the scratch `sol/BD-status.md` under
 ## Qualification commands and device safety
 
 Use only Flutter 3.47.1 from:
-`/home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter`.
+`/home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter`.
 Run `flutter pub get` once in this worktree first. Format changed Dart files
 with its sibling `dart format --language-version=3.10`.
 
@@ -77,7 +77,7 @@ ignored plugin registrant.
 
 Use the existing `tool.qa.bd9_device_smoke.run_device` host with the callback
 returned by `tool.qa.bd9_normal_restore.prepare_restore`. The host acquires
-`/home/eslam/Storage/tmp/oc-emulator.lock` itself and keeps it through installation,
+`/home/owner/Storage/tmp/oc-emulator.lock` itself and keeps it through installation,
 instrumentation, evidence and restoration on every outcome. Do not wrap an
 additional independently opened flock around that helper. Only emulator-5554
 is accepted. Preflight both candidate APKs and the owner normal APK against the
@@ -85,7 +85,7 @@ unchanged local certificate:
 `1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C`.
 
 Before releasing the same lock, the restoration callback installs
-`/home/eslam/Storage/tmp/oc-apk-share/oc-2195.apk` with
+`/home/owner/Storage/tmp/oc-apk-share/oc-2195.apk` with
 `adb -s emulator-5554 install -r -d`, then checks installed version 2195, a live
 process, resumed MainActivity and first-frame marker. Failed restoration makes
 the whole receipt fail. Never uninstall, clear application data, change signers
@@ -196,7 +196,7 @@ identities and commands are in [build.json](build.json).
 
 Command: `python3 /tmp/bd2-qualify-and-restore.py`. The driver explicitly calls
 `prepare_restore` before any device access, then passes that callback to
-`run_device`. One `/home/eslam/Storage/tmp/oc-emulator.lock` covers install-r,
+`run_device`. One `/home/owner/Storage/tmp/oc-emulator.lock` covers install-r,
 instrumentation, screenshot collection and the `finally` restoration. The native command is:
 
 ```sh

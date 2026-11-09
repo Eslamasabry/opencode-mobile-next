@@ -51,7 +51,7 @@ Everything ran in one lock hold of 40 s.
 Tests: "SIGTERM (the notification's Stop) turns every service off" and "a restart for a newer script marks itself so choices are kept". Each one fails when its fix is removed (mutation runs M9 and M10).
 
 ## S1 integrated (S1a + S1b), real UI, APK 4372, no debug hooks
-The flow was recorded with `screenrecord` on emulator-5584 and edited with Remotion on the build server: `/home/eslam/Storage2/wt/shots-2026-10-31/linux-s1-device/services-demo.mp4` (1080×1920, 51 s, no sound). The raw segments are next to it: the video uses `svc-1`, `svc-3` and `svc-7`; the other segments are retakes.
+The flow was recorded with `screenrecord` on emulator-5584 and edited with Remotion on the build server: `/home/owner/Storage2/wt/shots-2026-10-31/linux-s1-device/services-demo.mp4` (1080×1920, 51 s, no sound). The raw segments are next to it: the video uses `svc-1`, `svc-3` and `svc-7`; the other segments are retakes.
 
 | Step | Seen in the footage |
 |---|---|

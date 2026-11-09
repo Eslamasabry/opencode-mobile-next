@@ -36,7 +36,7 @@ allowlist entry; G16/G21 ratchet did not go up.
 
 ## Evidence
 
-Images in `/home/eslam/Storage2/launch-footage/vision-start/` (golden renders at
+Images in `/home/owner/Storage2/launch-footage/vision-start/` (golden renders at
 412x915, one screen each, dark and light): `before-` / `after-work-tab`,
 `before-` / `after-new-conversation`, `after-options-sheet`,
 `before-new-conversation-with-copy-option`, `before-` / `after-agent-sheet(-list)`.
@@ -73,13 +73,13 @@ was not run (owner rule).
   are left out. With fewer than two cards (a remote OpenCode 2 server) the quiet
   `KitAgentLine` shows instead, and its tap opens the project picker.
 - The "How this starts" sheet is gone; nothing is left behind it.
-- Images: `/home/eslam/Storage2/launch-footage/vision-start/round2/` (cards, typed,
+- Images: `/home/owner/Storage2/launch-footage/vision-start/round2/` (cards, typed,
   single, text2 = 320x640 at 2x text, rtl; dark and light).
 
 ## Round 3: concept A's look (Opus, same day)
 
 Finish line: the screen sits beside concept A
-(`/home/eslam/Storage2/launch-footage/screen-concepts/b1-new-conversation/concept-a.png`)
+(`/home/owner/Storage2/launch-footage/screen-concepts/b1-new-conversation/concept-a.png`)
 with the decided question field on top. Non-goals: Solo / Team / Separate copy /
 Cloud strip (Team and Cloud have no backend), any change to the live background.
 
@@ -110,7 +110,7 @@ Cloud strip (Team and Cloud have no backend), any change to the live background.
   like all other text (Arabic button goldens re-rendered).
 
 Images (one full phone screen each, 412x915 at 2x unless named):
-`/home/eslam/Storage2/launch-footage/vision-start/opus/` — four-agents-dark,
+`/home/owner/Storage2/launch-footage/vision-start/opus/` — four-agents-dark,
 four-agents-light, three-agents-dark, typed-dark, single-agent-server-dark,
 small-320-text2-dark, arabic-rtl-dark, plus today-claude-ready-dark and
 today-fresh-phone-dark (this build's real agent sets). Capture:

@@ -123,7 +123,7 @@ the conversation opens at its top rather than at the waiting question. All three
 library's (composer kit, `team_conversation_parts.dart`, the transcript's scroll), out of this
 slice's ownership; see the report.
 
-Final renders (`/home/eslam/Storage2/launch-footage/vision-team-task/`): `merge-dark.png`,
+Final renders (`/home/owner/Storage2/launch-footage/vision-team-task/`): `merge-dark.png`,
 `merge-light.png` (main state), `approve-first-dark.png`, `working-dark.png`,
 `working-light.png`, `question-dark.png`, `taking-longer-dark.png`, `merged-dark.png`,
 `small-320-text2-dark.png`, `arabic-rtl-dark.png`; earlier passes in `before/`, `pass1/`–`pass4/`.

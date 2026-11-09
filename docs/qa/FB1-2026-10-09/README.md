@@ -15,9 +15,9 @@ tests do not qualify it.
 
 Crash-recovery read-only inventory at 2026-10-09 02:29 UTC confirms the
 existing SDK image `system-images;android-35;google_apis;x86_64` under
-`/home/eslam/Android/Sdk`. Reuse the SDK/image in place. All **new mutable AVD
+`/home/owner/Android/Sdk`. Reuse the SDK/image in place. All **new mutable AVD
 files**, index, preferences, temporary files and logs live under
-`/home/eslam/Storage/android-qa-fb1-20261009`; that directory is absent.
+`/home/owner/Storage/android-qa-fb1-20261009`; that directory is absent.
 
 The [host receipt](host-verification.json) records the fresh disk/RAM readings:
 Storage has about 17.5 GiB free and `/` about 4.3 GiB. Available RAM fluctuates
@@ -58,10 +58,10 @@ run directory refuses the run; never delete/reuse one to manufacture freshness.
 ```bash
 set -euo pipefail
 : "${FB1_APPROVED_SHA256:?Set the coordinator-approved APK 2202 SHA-256 first}"
-export FB1_ROOT=/home/eslam/Storage/android-qa-fb1-20261009
+export FB1_ROOT=/home/owner/Storage/android-qa-fb1-20261009
 export FB1_AVD=fb1-20261009-api35
-export FB1_APK=/home/eslam/Storage/tmp/oc-apk-share/oc-2202.apk
-export ANDROID_HOME=/home/eslam/Android/Sdk
+export FB1_APK=/home/owner/Storage/tmp/oc-apk-share/oc-2202.apk
+export ANDROID_HOME=/home/owner/Android/Sdk
 export ANDROID_SDK_ROOT="$ANDROID_HOME"
 export ANDROID_USER_HOME="$FB1_ROOT/user"
 export ANDROID_EMULATOR_HOME="$ANDROID_USER_HOME"
@@ -75,7 +75,7 @@ export JAVA_TOOL_OPTIONS="-Djava.io.tmpdir=$TMPDIR -Duser.home=$ANDROID_USER_HOM
 export PATH="$ANDROID_HOME/platform-tools:$PATH"
 
 # One reservation covers resource checks, creation, boot, driver and shutdown.
-exec 9>/home/eslam/Storage/tmp/oc-emulator.lock
+exec 9>/home/owner/Storage/tmp/oc-emulator.lock
 flock -w 3600 9
 python3 - <<'PREFLIGHT'
 import os, re, shutil, socket
@@ -83,7 +83,7 @@ from pathlib import Path
 assert re.fullmatch(r'[0-9a-f]{64}', os.environ['FB1_APPROVED_SHA256'])
 root = Path(os.environ['FB1_ROOT'])
 assert not root.exists(), 'Run directory exists; obtain a new approved run name.'
-assert shutil.disk_usage('/home/eslam/Storage').free >= 16 * 1024**3, 'Need 16 GiB free on Storage.'
+assert shutil.disk_usage('/home/owner/Storage').free >= 16 * 1024**3, 'Need 16 GiB free on Storage.'
 mem = dict(line.split(':', 1) for line in Path('/proc/meminfo').read_text().splitlines())
 assert int(mem['MemAvailable'].split()[0]) >= 6 * 1024**2, 'Need 6 GiB available host RAM.'
 assert os.access('/dev/kvm', os.R_OK | os.W_OK), 'KVM access required.'

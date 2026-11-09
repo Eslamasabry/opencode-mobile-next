@@ -12,7 +12,7 @@ This order is binding together with `docs/design/native-ui-rebuild/GOLDEN-STANDA
 ## 1. Identity
 
 - Engine: Command Code (GLM) (`commandcode`). Time limit: 360 minutes.
-- Worktree (created by the lead; never create one): `eslam@169.58.71.211:~/wt/rb-51`, branch `native/rb-51-about-diagnostics-misc`.
+- Worktree (created by the lead; never create one): `<build-vps-login>:~/wt/rb-51`, branch `native/rb-51-about-diagnostics-misc`.
 - Flutter source of truth: `~/wt/flutter-ref` at FLUTTER_REF `8302de53773adef45eaaad016df2bd3cd51d1ebe`.
 - Gate manifest: `docs/design/native-ui-rebuild/orders/51.gate.tsv` (108 goldens). Gate command: `native/tool/design/gate_order.sh 51`.
 - Depends on: order 13. Do not start until each is merged into `native/looks-pass-2026-11-04` (the lead dispatches only then).

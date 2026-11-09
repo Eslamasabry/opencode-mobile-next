@@ -39,7 +39,7 @@ event applies (the job runs before any server exists). Paseo and phone agents
 
 Captures: `tool/capture/vision_phone_setup_test.dart` (live aurora still,
 blurred shadows, real registry titles). Final images in
-`/home/eslam/vision-assets/out/vision-phone-setup/`, earlier passes in its
+`/home/owner/vision-assets/out/vision-phone-setup/`, earlier passes in its
 `pass1/`, `pass2/`, `pass3/`.
 
 1. Pass 1 → 2: the page had no Back (opened as a root route in the

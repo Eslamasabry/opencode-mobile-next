@@ -1,4 +1,4 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/pending_sends_strip_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app-sol-ba/test/pending_sends_strip_test.dart
 00:00 +0: the strip shows offline drafts and server inbox items in one list
 00:01 +1: a queued message the server refused says why in plain words and offers Try again, which sends it
 00:01 +2: a queued message the server refused its menu has Try again first, then Edit and Discard

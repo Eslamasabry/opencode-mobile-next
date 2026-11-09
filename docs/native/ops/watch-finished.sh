@@ -1,6 +1,6 @@
 #!/bin/bash
 # watch-finished.sh: exits listing native/* branches whose tip has a report under docs/native/units/ or docs/native/slice0/ that m0 lacks, and that are not merged
-cd /home/eslam/Storage/Code/cloud-launch || exit 1
+cd $HOME/Storage/Code/cloud-launch || exit 1
 known="$1"   # file listing branch@sha already handled
 for i in $(seq 1 240); do
   git fetch -q origin '+refs/heads/native/*:refs/remotes/origin/native/*' 2>/dev/null

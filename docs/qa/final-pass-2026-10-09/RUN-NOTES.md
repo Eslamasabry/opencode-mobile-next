@@ -1,7 +1,7 @@
 # APK 2203 final-pass scope
 
 Coordinator GO: candidate `ec778efa3de1730402f096fc126e16fd2e83264e`,
-APK `/home/eslam/Storage/tmp/oc-apk-share/oc-2203.apk`, SHA256
+APK `/home/owner/Storage/tmp/oc-apk-share/oc-2203.apk`, SHA256
 `82877732e8bb362722f49e3193b8ffe2a91aacbaf37954769e244a1de37462c7`,
 local signer `1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C`.
 The full suite at the candidate is the coordinator's evidence in
@@ -40,10 +40,10 @@ Executed once from this checkout (private stdout/stderr retained outside Git):
 
 ```bash
 python3 tool/qa/final_pass.py --execute \
-  --candidate-apk /home/eslam/Storage/tmp/oc-apk-share/oc-2203.apk \
+  --candidate-apk /home/owner/Storage/tmp/oc-apk-share/oc-2203.apk \
   --candidate-build 2203 \
-  --normal-apk /home/eslam/Storage/tmp/oc-apk-share/oc-2203.apk \
-  --inputs /home/eslam/Storage/tmp/fq9-final-inputs-2203/rows-merged.json \
+  --normal-apk /home/owner/Storage/tmp/oc-apk-share/oc-2203.apk \
+  --inputs /home/owner/Storage/tmp/fq9-final-inputs-2203/rows-merged.json \
   --output docs/qa/final-pass-2026-10-09
 ```
 

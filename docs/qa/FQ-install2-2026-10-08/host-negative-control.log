@@ -1,4 +1,4 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart
 00:00 +0: removal uses fixed agent view and preserves account and gate metadata
 00:00 +0 -1: removal uses fixed agent view and preserves account and gate metadata [E]
   AgentHostException(unavailable)
@@ -83,8 +83,8 @@
 00:30 +2 -5: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart: QA requirement reaches the native target only
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart: live target refusal is busy without leaking child output
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart: removal serializes installs and releases exclusion after completion
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart: removal uses fixed agent view and preserves account and gate metadata
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart: running foreign native setup prevents removal
+  /home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart: QA requirement reaches the native target only
+  /home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart: live target refusal is busy without leaking child output
+  /home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart: removal serializes installs and releases exclusion after completion
+  /home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart: removal uses fixed agent view and preserves account and gate metadata
+  /home/owner/Storage/Code/oc_app-sol-ba/test/phone_agents_removal_host_test.dart: running foreign native setup prevents removal

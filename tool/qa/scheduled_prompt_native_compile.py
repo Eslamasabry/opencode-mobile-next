@@ -7,13 +7,13 @@ No Gradle, network, signing, emulator, or host connection is used.
 from pathlib import Path
 import os,subprocess,tempfile,zipfile
 root=Path(__file__).resolve().parents[2]
-cache=Path('/home/eslam/.gradle/caches/modules-2/files-2.1')
+cache=Path(os.path.expanduser('~/.gradle/caches/modules-2/files-2.1'))
 with tempfile.TemporaryDirectory(prefix='schedule-android-') as d:
  d=Path(d)
  aar=next((cache/'androidx.work/work-runtime/2.10.5').glob('*/*.aar'))
  with zipfile.ZipFile(aar) as z:(d/'work.jar').write_bytes(z.read('classes.jar'))
- flutter=Path('/home/eslam/.shorebird/bin/cache/flutter/6e5e949520159b5ceb029598be37520cd433b046/bin/cache/artifacts/engine/android-arm64-release/flutter.jar')
- cp=[Path('/home/eslam/Android/Sdk/platforms/android-37.0/android.jar'),flutter,d/'work.jar',next((cache/'com.google.guava/listenablefuture/1.0').glob('*/*.jar'))]
+ flutter=Path(os.path.expanduser('~/.shorebird/bin/cache/flutter/6e5e949520159b5ceb029598be37520cd433b046/bin/cache/artifacts/engine/android-arm64-release/flutter.jar'))
+ cp=[Path(os.path.expanduser('~/Android/Sdk/platforms/android-37.0/android.jar')),flutter,d/'work.jar',next((cache/'com.google.guava/listenablefuture/1.0').glob('*/*.jar'))]
  stub=d/'Boundaries.kt'
  stub.write_text('''package io.github.eslamasabry.opencode_mobile
 import android.content.Context
@@ -33,5 +33,5 @@ const val native_schedule_why_agent=12; const val native_schedule_why_timeout=13
 }}
 ''')
  files=list((root/'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile').glob('ScheduledPrompt*.kt'))
- subprocess.run(['/home/eslam/.sdkman/candidates/kotlin/2.3.20/bin/kotlinc','-J-Xmx256m','-J-XX:MaxMetaspaceSize=192m','-jvm-target','17','-cp',os.pathsep.join(map(str,cp)),'-d',str(d/'out.jar'),str(stub),*map(str,files)],check=True)
+ subprocess.run([os.path.expanduser('~/.sdkman/candidates/kotlin/2.3.20/bin/kotlinc'),'-J-Xmx256m','-J-XX:MaxMetaspaceSize=192m','-jvm-target','17','-cp',os.pathsep.join(map(str,cp)),'-d',str(d/'out.jar'),str(stub),*map(str,files)],check=True)
  print('Scheduled Android source compile passed (existing app boundaries stubbed).')

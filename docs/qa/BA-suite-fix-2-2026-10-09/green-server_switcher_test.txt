@@ -1,4 +1,4 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/server_switcher_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app-sol-ba/test/server_switcher_test.dart
 00:00 +0: (setUpAll)
 00:00 +0: the app bar server name opens the switcher; no overflow menu
 00:01 +1: a renamed profile shows at once renamed in place and saved, as setup does

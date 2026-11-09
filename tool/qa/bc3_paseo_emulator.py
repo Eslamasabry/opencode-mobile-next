@@ -20,7 +20,7 @@ import uuid
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
 SDK = pathlib.Path.home() / "Android/Sdk"
-LOCK = "/home/eslam/Storage/tmp/oc-emulator.lock"
+LOCK = "/home/owner/Storage/tmp/oc-emulator.lock"
 DART = (pathlib.Path.home() / ".shorebird/bin/cache/flutter/"
         "6e5e949520159b5ceb029598be37520cd433b046/bin/dart")
 PACKAGE = "io.github.eslamasabry.opencode_mobile"

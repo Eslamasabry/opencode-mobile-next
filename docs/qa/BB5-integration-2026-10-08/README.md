@@ -146,8 +146,8 @@ is adding a narrow `releaseImplementation` dependency for the existing
 `ocBuiltinRuntimeQa` flag; the one-runner guard remains intact. Rebuilding and
 native compilation on the merged candidate remain pending.
 
-Future whole device sessions hold `/home/eslam/Storage/tmp/oc-emulator.lock`.
-Normal APK is `/home/eslam/Storage/tmp/oc-apk-share/oc-2198.apk`, verified against
+Future whole device sessions hold `/home/owner/Storage/tmp/oc-emulator.lock`.
+Normal APK is `/home/owner/Storage/tmp/oc-apk-share/oc-2198.apk`, verified against
 its `.sha256`, same `1DE5BF08...` signer. QA target uses versionCode2198 so normal
 restoration uses `adb -s emulator-5554 install -r` without downgrade/uninstall/
 data clearing. Restore in the same lock. If insufficient storage prevents it,

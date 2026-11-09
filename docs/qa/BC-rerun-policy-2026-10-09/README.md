@@ -77,7 +77,7 @@ OC_TEST_SLOTS=2 tool/qa/machine_lock.sh test -- \
   test/fq3_oc1_test.dart test/fq3_evidence_test.dart
 ```
 
-The device wrapper owned `/home/eslam/Storage/tmp/oc-emulator.lock` on fd 9,
+The device wrapper owned `/home/owner/Storage/tmp/oc-emulator.lock` on fd 9,
 verified installed 2203, ran `RuntimeTransaction(device).begin()`, and in a
 `finally` block ran `restore()` and compared the complete installed identity.
 Between those calls it ran the pinned Dart executable with:

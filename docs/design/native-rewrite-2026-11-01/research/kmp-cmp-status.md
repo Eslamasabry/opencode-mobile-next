@@ -74,7 +74,7 @@ Labels used in this file:
 | Koin / Metro (DI) | 4.2.2 / 1.5.1 | - | Maven Central [V] |
 | Roborazzi (incl. Compose Desktop) | 1.77.0 | - | Maven Central [V] |
 
-What the demo (`/home/eslam/Storage/Code/kmp-demo`) pinned: AGP 9.3.2, Kotlin 2.4.0, CMP 1.12.2, material3 1.12.0-alpha03, navigation-compose 2.10.0, navigationevent 1.1.0, lifecycle 2.11.0, Ktor 3.6.1 and Gradle 9.5.0.
+What the demo (`/home/owner/Storage/Code/kmp-demo`) pinned: AGP 9.3.2, Kotlin 2.4.0, CMP 1.12.2, material3 1.12.0-alpha03, navigation-compose 2.10.0, navigationevent 1.1.0, lifecycle 2.11.0, Ktor 3.6.1 and Gradle 9.5.0.
 
 - Kotlin 2.4.0's tested AGP range ends at 9.1.0. The demo built fine with AGP 9.3.2, but that combination is untested.
 - The Flutter app's `android/` uses the same AGP 9.3.2, Kotlin 2.4.0 and Gradle 9.5.0.

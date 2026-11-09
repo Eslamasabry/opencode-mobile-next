@@ -41,7 +41,7 @@ The test file contains 14 focused proofs for independent clone metadata/objects;
 When authorized, run serially from `engine/phone`:
 
 ```sh
-OC_ENGINE_TEST_ROOT=/home/eslam/Storage/Code/oc_app-phone-engine-test-artifacts \
+OC_ENGINE_TEST_ROOT=/home/owner/Storage/Code/oc_app-phone-engine-test-artifacts \
   cargo test --test repository_authority -- --test-threads=1
 ```
 

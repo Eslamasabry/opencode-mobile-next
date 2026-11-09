@@ -83,10 +83,10 @@ Known gaps left for a follow-up (not blockers): the leftover notice's Stop/dismi
 
 Native source-input SHA-256: `c2e64ccf16cafb1396d158c83719ca9fc3bc76a7eaa11ceb1f0efd58e4e44809`.
 
-Every local batch uses the same complete, formatted source candidate. Both owner-requested target groups pass before each commit: `:androidApp:compilePreviewDebugKotlin` and `compileKotlinDesktop`. Commands run from `native/` under `/home/eslam/Storage/tmp/oc-build.lock`:
+Every local batch uses the same complete, formatted source candidate. Both owner-requested target groups pass before each commit: `:androidApp:compilePreviewDebugKotlin` and `compileKotlinDesktop`. Commands run from `native/` under `/home/owner/Storage/tmp/oc-build.lock`:
 
 ```sh
-JAVA_HOME=/home/eslam/Storage2/tools/jdk21 ANDROID_HOME=$HOME/Android/Sdk \
+JAVA_HOME=/home/owner/Storage2/tools/jdk21 ANDROID_HOME=$HOME/Android/Sdk \
 nice -n 5 ./gradlew :androidApp:compilePreviewDebugKotlin compileKotlinDesktop \
   -Dorg.gradle.workers.max=2 -Dorg.gradle.daemon.idletimeout=300000 \
   -Dorg.gradle.jvmargs='-Xmx2g -XX:MaxMetaspaceSize=768m' --console=plain

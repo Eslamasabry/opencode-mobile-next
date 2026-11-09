@@ -39,11 +39,11 @@ assertions: the duplicate-id join, latest-brief dismissal, unknown-state renderi
 list action. A further failing-first gate test exposed rapid Ready → Failed conflation, which led to the atomic
 bootstrap generation contract. Every listed test passes on the final files.
 
-Final command, from `native/`, under the PC's shared build lock (`/home/eslam/Storage/tmp/oc-build.lock`):
+Final command, from `native/`, under the PC's shared build lock (`/home/owner/Storage/tmp/oc-build.lock`):
 
 ```bash
-JAVA_HOME=/home/eslam/Storage/tools/jdk-21.0.13+9 \
-ANDROID_HOME=/home/eslam/Android/Sdk \
+JAVA_HOME=/home/owner/Storage/tools/jdk-21.0.13+9 \
+ANDROID_HOME=/home/owner/Android/Sdk \
 ./gradlew --no-daemon -Pkotlin.incremental=false \
   '-Dorg.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=768m -XX:+UseParallelGC -Dfile.encoding=UTF-8' \
   --max-workers=2 -I /tmp/chats-test-environment.gradle \
@@ -77,7 +77,7 @@ warning-free build. No APK, emulator, live-server or iOS validation was performe
 ## Local commits and sandbox limitation
 
 Ordinary staging and committing were attempted but the sandbox denies the shared worktree metadata at
-`/home/eslam/Storage/Code/cloud-launch/.git/worktrees/codexfix-chats/index.lock` as read-only. The checkout branch
+`/home/owner/Storage/Code/cloud-launch/.git/worktrees/codexfix-chats/index.lock` as read-only. The checkout branch
 therefore remains at `066a00be`, with the fixes present in its working tree.
 
 To preserve the requested small commits without changing protected metadata, a separate local Git artifact repository

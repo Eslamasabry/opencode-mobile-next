@@ -1,195 +1,195 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/appearance_picker_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/appearance_picker_test.dart: appearance picker applies and persists a native theme
-00:00 +1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/appearance_picker_test.dart: appearance choices remain reachable on a compact large-text phone
-00:00 +2: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_action_test.dart
-00:01 +2: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_action_test.dart: notification Allow and in-app Deny share the in-flight request
-00:01 +3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_action_test.dart: notification Allow once resolves the exact pending permission
-00:01 +4: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_action_test.dart: notification Deny rejects without a durable grant option
-00:01 +5: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_action_test.dart: notification quick reply answers a single custom question
-00:01 +6: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_action_test.dart: choice-only questions never advertise quick reply
-00:01 +7: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_action_test.dart: a failed reply reports unhandled and keeps the request
-00:01 +8: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_action_test.dart: an empty quick reply is refused before any network call
-00:01 +9: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_action_test.dart: a stale request ID never resolves a different pending request
-00:01 +10: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_coding_alert_test.dart
-00:01 +10: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_coding_alert_test.dart: background permission and question requests share one session alert
-00:01 +11: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_coding_alert_test.dart: a request already visible is alerted when the app backgrounds
-00:01 +12: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_coding_alert_test.dart: assistant completion survives message-done ordering and deduplicates
-00:01 +13: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_coding_alert_test.dart: background session errors replace completion and child alerts stay quiet
-00:01 +14: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_coding_alert_test.dart: foreground resume dismisses outstanding coding alerts
-00:01 +15: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_discoverability_test.dart
-00:02 +15: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_discoverability_test.dart: an empty inbox points at background updates when they are off
-00:03 +16: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_discoverability_test.dart: the hint disappears once background updates are on
-00:03 +17: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_discoverability_test.dart: the settings hub summarises the background state
-00:03 +18: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart
-00:04 +18: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: background live mode persists only after Android enables it
-00:04 +19: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: denied notification permission leaves background mode disabled
-00:04 +20: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: restores an enabled preference through the native service
-00:04 +21: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.iOS, isWeb: false) ignores saved null without changing it
-00:04 +22: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.iOS, isWeb: false) ignores saved false without changing it
-00:04 +23: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.iOS, isWeb: false) ignores saved true without changing it
-00:04 +24: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.linux, isWeb: false) ignores saved null without changing it
-00:04 +25: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.linux, isWeb: false) ignores saved false without changing it
-00:04 +26: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.linux, isWeb: false) ignores saved true without changing it
-00:04 +27: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.windows, isWeb: false) ignores saved null without changing it
-00:04 +28: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.windows, isWeb: false) ignores saved false without changing it
-00:04 +29: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.windows, isWeb: false) ignores saved true without changing it
-00:04 +30: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.macOS, isWeb: false) ignores saved null without changing it
-00:04 +31: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.macOS, isWeb: false) ignores saved false without changing it
-00:04 +32: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.macOS, isWeb: false) ignores saved true without changing it
-00:04 +33: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.fuchsia, isWeb: false) ignores saved null without changing it
-00:04 +34: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.fuchsia, isWeb: false) ignores saved false without changing it
-00:04 +35: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.fuchsia, isWeb: false) ignores saved true without changing it
-00:04 +36: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.android, isWeb: true) ignores saved null without changing it
-00:04 +37: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.android, isWeb: true) ignores saved false without changing it
-00:04 +38: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.android, isWeb: true) ignores saved true without changing it
-00:04 +39: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported restore clears a previously active Android state
-00:04 +40: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported enable clears a previously active Android state
-00:04 +41: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: late native enable status cannot undo an unsupported gate
-00:04 +42: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: late native enable failure cannot undo an unsupported gate
-00:04 +43: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: an unavailable Android channel still rejects enable and reports it
-00:04 +44: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: malformed Android status fields do not grant background capabilities
-00:04 +45: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: coding alerts use the exact privacy-safe native contract
-00:04 +46: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: disabled live mode never posts a coding alert
-00:04 +47: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: consumes a typed notification destination once Android provides it
-00:04 +48: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: a widget-tap destination keeps its profile discriminator
-00:04 +49: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: an Android foreground-service timeout turns live mode off
-00:04 +50: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: turning live mode back on clears the timeout notice
-00:04 +51: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: the timeout method name matches the native contract
-00:04 +52: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_notification_navigation_test.dart
-00:05 +52: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_notification_navigation_test.dart: permission notification opens its exact chat and request
-00:06 +53: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_notification_navigation_test.dart: question notification opens the exact answer sheet
-00:07 +54: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_notification_navigation_test.dart: widget row tap on the active profile opens its exact chat
-00:07 +55: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_notification_navigation_test.dart: widget row tap from another profile opens the app normally
-00:07 +56: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_work_test.dart
-00:08 +56: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_work_test.dart: only supported foreground work is eligible
-00:08 +57: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_work_test.dart: native v2 foreground progress is eligible without treating progress as detachment
-00:08 +58: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_work_test.dart: v1 capability and promotion use the scoped experimental API, including false
-00:08 +59: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/background_work_test.dart: v2 204 acknowledges a request without claiming promotion
-00:08 +60: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/bug_report_test.dart
-00:09 +60: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/bug_report_test.dart: bug report URL prefills the template, version, and platform, and nothing else
-00:09 +61: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/bug_report_test.dart: bug report URL falls back to an unknown version when the plugin never answers
-00:09 +62: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/bug_report_test.dart: bug report URL labels every platform the seam can report
-00:09 +63: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/bug_report_test.dart: openBugReport fallback a failed launch copies the link and explains in one pump
-00:09 +64: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/bug_report_test.dart: the failure surface carries the report affordance ProductErrorState offers Report a bug next to Try again
-00:09 +65: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/bug_report_test.dart: l10n localizations still load alongside the feedback imports
-00:09 +66: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_attachment_reader_test.dart
-00:10 +66: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_attachment_reader_test.dart: prompt attachment MIME normalizes Markdown and HTML to text/plain
-00:10 +67: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_attachment_reader_test.dart: prompt attachment MIME keeps Unicode source and configuration attachments readable
-00:10 +68: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_attachment_reader_test.dart: prompt attachment MIME detects generic textual bytes and rejects unknown binary bytes
-00:10 +69: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_attachment_reader_test.dart: prompt attachment MIME preserves supported images and PDFs
-00:10 +70: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_attachment_reader_test.dart: reads a streamed attachment at the exact byte limit
-00:10 +71: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_attachment_reader_test.dart: stops a growing stream after the overflow detection byte
-00:10 +72: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_attachment_reader_test.dart: does not trust stale metadata when reading a file path
-00:10 +73: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_attachment_reader_test.dart: rejects oversized in-memory picker data without copying it
-00:10 +74: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_form_test.dart
-00:11 +74: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_form_test.dart: a form for the open session shows the inline card without auto-presenting the renderer
-00:12 +75: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_form_test.dart: answering the form replies through the gateway and clears the card
-00:12 +76: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_form_test.dart: a 400 invalid answer keeps the form open with the banner
-00:12 +77: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_form_test.dart: a 409 already-settled reply toasts and closes
-00:12 +78: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_form_test.dart: dismissing the form cancels it after confirmation
-00:12 +79: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_form_test.dart: a form for another session shows no card in this chat
-00:13 +80: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart
-00:14 +80: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: UXCHAT uncached child Open rejects a project change during fetch
-00:15 +81: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: UXCHAT child Open rejects a superseded location selection
-00:15 +82: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: UXCHAT every parent inbox delivery loads canonical server result without sending
-00:15 +83: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: UXCHAT server-returned child result appears in parent without a client prompt
-00:15 +84: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: UXCHAT v2 subagent tools are summarized as delegated tasks
-00:15 +85: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: UXCHAT single foreground Stop preserves draft and targets this session
-00:16 +86: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: staged revert skips hidden pages when reopening older boundary
-00:16 +87: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: staged revert commit never reveals removed cached messages on refresh failure
-00:16 +88: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: staged revert keeps a composer draft until explicitly resolved
-00:16 +89: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: staged revert clear restores the hidden conversation
-00:16 +90: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: paged history preserves newest rows through older and duplicate pages
-00:16 +91: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: paged history retry keeps the cursor and transcript
-00:16 +92: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: paged history does not resurrect a message removed during loading
-00:16 +93: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: paged history preserves deltas newer than an older snapshot
-00:16 +94: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: paged history anchors the reader while older rows and live messages arrive
-00:17 +95: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: paged history retains older prefix on overlapping head refresh
-00:17 +96: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: paged history reconnect invalidates pending older page and updates open timeline
-00:17 +97: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: unloaded part edits wait for history and retain updates newer than its page
-00:17 +98: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: provisional session with an empty page and cursor is not discarded
-00:17 +99: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: message errors surface nested data.message
-00:17 +100: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: back discards only the exact verified empty mobile session
-00:18 +101: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: back preserves a newly created session after server messages
-00:18 +102: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: failed empty-session verification keeps server state
-00:18 +103: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: leaving with a typed draft keeps it silently
-00:18 +104: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: leaving an empty conversation keeps its pending photo destination
-00:18 +105: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: mobile new command stays when an attachment cannot persist
-00:18 +106: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: a running sibling agent appears in the switch strip
-00:18 +107: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: child chat exposes parent and sibling navigation
-00:18 +108: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: offline chat keeps its transcript and shows recovery actions
-00:19 +109: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: rehydrate never flashes a skeleton over existing messages
-00:19 +110: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: renders current OpenCode unified patches and server counts
-00:19 +111: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: stages a selected diff comment as a composer reference
-00:19 +112: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: foreground data refresh rehydrates messages missed while away
-00:20 +113: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: composer keeps focus when the Android keyboard opens
-00:20 +114: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: send waits for the wake-time replacement transport
-00:20 +115: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: stop waits for the wake-time replacement transport
-00:20 +116: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: stop failure remains visible instead of being swallowed
-00:20 +117: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: session mutations wait for the wake-time replacement transport
-00:20 +118: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: renders a generated image from a tool output filePath
-00:20 +119: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: tool output previews wait for the wake-time transport
-00:20 +120: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: opens non-image tool files in the shared preview
-00:20 +121: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: generated CSV opens as a literal table without sending a prompt
-00:21 +122: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: groups a tool chain until assistant text appears
-00:21 +123: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: renders grouped tool failures as flat inline results
-00:21 +124: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: keeps a tool chain growing across assistant records
-00:21 +125: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: shows model changes and aggregates usage once per turn
-00:21 +126: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: applies split text, reasoning, and tool input deltas
-00:21 +127: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: merges consecutive reasoning and assistant text blocks
-00:21 +128: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: transcript controls update old messages and persist state
-00:21 +129: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: the transcript-wide reasoning toggle replaces per-part choices instead of stamping over them
-00:22 +130: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: command launcher maps diff to the native session viewer
-00:22 +131: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: command launcher maps context to the native usage surface
-00:22 +132: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: debug command opens native app diagnostics
-00:22 +133: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: health command opens native project health
-00:22 +134: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: sessions command opens the all-project native finder
-00:23 +135: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: themes command opens the native appearance picker
-00:23 +136: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: session todo view shows server status and priority
-00:23 +137: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: todos sheet failure offers retry instead of raw exception
-00:23 +138: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: todos sheet explains an empty todo list
-00:23 +139: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: launcher combines mobile actions with server commands
-00:23 +140: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: /files attaches a project artifact back to the chat
-00:24 +141: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: move, warp, and org commands preserve their server semantics
-00:24 +142: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: move fails closed when working changes cannot be inspected
-00:25 +143: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: prompt editor preserves selection, attachments, and cancel
-00:25 +144: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: timeline finds a stable anchor with reduced motion
-00:25 +145: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: fork from prompt restores text and file in the new composer
-00:25 +146: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: session repository actions wait for the wake-time replacement
-00:26 +147: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: /fork lists prompts and forks the selected message point
-00:26 +148: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: timeline remains usable at 320dp with 2x text
-00:26 +149: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: project reference screen adds an upstream directory prompt part
-00:26 +150: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: typing slash opens filtered inline command suggestions
-00:26 +151: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: inline command suggestion rows meet 44dp targets
-00:26 +152: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: nested code scrolling does not change follow latest and new events respect reading position
-00:27 +153: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: floating transcript pills meet tap-target minimums
-00:27 +154: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: searchable sheets keep drag handles and dismiss the keyboard on drag
-00:27 +155: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: composer tools delegates only to visible server subagents
-00:27 +156: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: typed agent autocomplete sends exact OpenCode agent parts
-00:27 +157: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: removes individual parts and complete messages
-00:27 +158: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: newer deltas survive an older hydration response
-00:27 +159: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: canonical user event replaces the optimistic bubble
-00:27 +160: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: out-of-order canonical users reconcile by prompt instead of timestamp
-00:27 +161: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: failed send removes optimism, restores input, and blocks repeats
-00:28 +162: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: session errors stop thinking and remain visible in chat
-00:28 +163: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: a model-not-found session error shows one line and Choose model
-00:28 +164: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: renders attachment-only and mixed user prompts accessibly
-00:28 +165: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: retry preserves mixed and attachment-only file parts
-00:28 +166: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: typed server command passes arguments and selected model
-00:28 +167: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: session rename and delete failures preserve the session
-00:28 +168: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: session row end-swipe runs the existing delete confirm flow
-00:28 +169: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: attachment count limit is enforced before opening the picker
-00:28 +170: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: attachment remove action is accessible and at least 48dp
-00:28 +171: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: empty transcript suggestions fill the composer
-00:28 +172: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: empty transcript chips are seeded from the active project
-00:28 +173: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: long-pressing a user message offers copy and fork actions
-00:29 +174: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: deleting a message confirms, calls the server, and prunes it
-00:29 +175: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: a failed message delete keeps the transcript intact
-00:29 +176: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: composer shows known context usage at 25 percent
-00:29 +177: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: composer shows known context usage at 75 percent
-00:29 +178: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: composer hides the context meter without a known limit
-00:29 +179: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: Ctrl+Enter sends the drafted prompt
-00:29 +180: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: session sheets fit a 320dp phone at 2x text
+00:00 +0: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/appearance_picker_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/appearance_picker_test.dart: appearance picker applies and persists a native theme
+00:00 +1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/appearance_picker_test.dart: appearance choices remain reachable on a compact large-text phone
+00:00 +2: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_action_test.dart
+00:01 +2: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_action_test.dart: notification Allow and in-app Deny share the in-flight request
+00:01 +3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_action_test.dart: notification Allow once resolves the exact pending permission
+00:01 +4: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_action_test.dart: notification Deny rejects without a durable grant option
+00:01 +5: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_action_test.dart: notification quick reply answers a single custom question
+00:01 +6: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_action_test.dart: choice-only questions never advertise quick reply
+00:01 +7: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_action_test.dart: a failed reply reports unhandled and keeps the request
+00:01 +8: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_action_test.dart: an empty quick reply is refused before any network call
+00:01 +9: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_action_test.dart: a stale request ID never resolves a different pending request
+00:01 +10: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_coding_alert_test.dart
+00:01 +10: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_coding_alert_test.dart: background permission and question requests share one session alert
+00:01 +11: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_coding_alert_test.dart: a request already visible is alerted when the app backgrounds
+00:01 +12: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_coding_alert_test.dart: assistant completion survives message-done ordering and deduplicates
+00:01 +13: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_coding_alert_test.dart: background session errors replace completion and child alerts stay quiet
+00:01 +14: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_coding_alert_test.dart: foreground resume dismisses outstanding coding alerts
+00:01 +15: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_discoverability_test.dart
+00:02 +15: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_discoverability_test.dart: an empty inbox points at background updates when they are off
+00:03 +16: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_discoverability_test.dart: the hint disappears once background updates are on
+00:03 +17: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_discoverability_test.dart: the settings hub summarises the background state
+00:03 +18: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart
+00:04 +18: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: background live mode persists only after Android enables it
+00:04 +19: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: denied notification permission leaves background mode disabled
+00:04 +20: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: restores an enabled preference through the native service
+00:04 +21: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.iOS, isWeb: false) ignores saved null without changing it
+00:04 +22: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.iOS, isWeb: false) ignores saved false without changing it
+00:04 +23: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.iOS, isWeb: false) ignores saved true without changing it
+00:04 +24: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.linux, isWeb: false) ignores saved null without changing it
+00:04 +25: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.linux, isWeb: false) ignores saved false without changing it
+00:04 +26: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.linux, isWeb: false) ignores saved true without changing it
+00:04 +27: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.windows, isWeb: false) ignores saved null without changing it
+00:04 +28: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.windows, isWeb: false) ignores saved false without changing it
+00:04 +29: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.windows, isWeb: false) ignores saved true without changing it
+00:04 +30: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.macOS, isWeb: false) ignores saved null without changing it
+00:04 +31: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.macOS, isWeb: false) ignores saved false without changing it
+00:04 +32: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.macOS, isWeb: false) ignores saved true without changing it
+00:04 +33: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.fuchsia, isWeb: false) ignores saved null without changing it
+00:04 +34: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.fuchsia, isWeb: false) ignores saved false without changing it
+00:04 +35: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.fuchsia, isWeb: false) ignores saved true without changing it
+00:04 +36: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.android, isWeb: true) ignores saved null without changing it
+00:04 +37: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.android, isWeb: true) ignores saved false without changing it
+00:04 +38: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported PlatformCapabilities(TargetPlatform.android, isWeb: true) ignores saved true without changing it
+00:04 +39: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported restore clears a previously active Android state
+00:04 +40: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: unsupported enable clears a previously active Android state
+00:04 +41: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: late native enable status cannot undo an unsupported gate
+00:04 +42: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: late native enable failure cannot undo an unsupported gate
+00:04 +43: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: an unavailable Android channel still rejects enable and reports it
+00:04 +44: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: malformed Android status fields do not grant background capabilities
+00:04 +45: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: coding alerts use the exact privacy-safe native contract
+00:04 +46: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: disabled live mode never posts a coding alert
+00:04 +47: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: consumes a typed notification destination once Android provides it
+00:04 +48: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: a widget-tap destination keeps its profile discriminator
+00:04 +49: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: an Android foreground-service timeout turns live mode off
+00:04 +50: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: turning live mode back on clears the timeout notice
+00:04 +51: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_live_test.dart: the timeout method name matches the native contract
+00:04 +52: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_notification_navigation_test.dart
+00:05 +52: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_notification_navigation_test.dart: permission notification opens its exact chat and request
+00:06 +53: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_notification_navigation_test.dart: question notification opens the exact answer sheet
+00:07 +54: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_notification_navigation_test.dart: widget row tap on the active profile opens its exact chat
+00:07 +55: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_notification_navigation_test.dart: widget row tap from another profile opens the app normally
+00:07 +56: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_work_test.dart
+00:08 +56: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_work_test.dart: only supported foreground work is eligible
+00:08 +57: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_work_test.dart: native v2 foreground progress is eligible without treating progress as detachment
+00:08 +58: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_work_test.dart: v1 capability and promotion use the scoped experimental API, including false
+00:08 +59: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/background_work_test.dart: v2 204 acknowledges a request without claiming promotion
+00:08 +60: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/bug_report_test.dart
+00:09 +60: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/bug_report_test.dart: bug report URL prefills the template, version, and platform, and nothing else
+00:09 +61: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/bug_report_test.dart: bug report URL falls back to an unknown version when the plugin never answers
+00:09 +62: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/bug_report_test.dart: bug report URL labels every platform the seam can report
+00:09 +63: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/bug_report_test.dart: openBugReport fallback a failed launch copies the link and explains in one pump
+00:09 +64: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/bug_report_test.dart: the failure surface carries the report affordance ProductErrorState offers Report a bug next to Try again
+00:09 +65: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/bug_report_test.dart: l10n localizations still load alongside the feedback imports
+00:09 +66: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_attachment_reader_test.dart
+00:10 +66: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_attachment_reader_test.dart: prompt attachment MIME normalizes Markdown and HTML to text/plain
+00:10 +67: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_attachment_reader_test.dart: prompt attachment MIME keeps Unicode source and configuration attachments readable
+00:10 +68: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_attachment_reader_test.dart: prompt attachment MIME detects generic textual bytes and rejects unknown binary bytes
+00:10 +69: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_attachment_reader_test.dart: prompt attachment MIME preserves supported images and PDFs
+00:10 +70: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_attachment_reader_test.dart: reads a streamed attachment at the exact byte limit
+00:10 +71: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_attachment_reader_test.dart: stops a growing stream after the overflow detection byte
+00:10 +72: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_attachment_reader_test.dart: does not trust stale metadata when reading a file path
+00:10 +73: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_attachment_reader_test.dart: rejects oversized in-memory picker data without copying it
+00:10 +74: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_form_test.dart
+00:11 +74: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_form_test.dart: a form for the open session shows the inline card without auto-presenting the renderer
+00:12 +75: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_form_test.dart: answering the form replies through the gateway and clears the card
+00:12 +76: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_form_test.dart: a 400 invalid answer keeps the form open with the banner
+00:12 +77: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_form_test.dart: a 409 already-settled reply toasts and closes
+00:12 +78: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_form_test.dart: dismissing the form cancels it after confirmation
+00:12 +79: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_form_test.dart: a form for another session shows no card in this chat
+00:13 +80: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart
+00:14 +80: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: UXCHAT uncached child Open rejects a project change during fetch
+00:15 +81: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: UXCHAT child Open rejects a superseded location selection
+00:15 +82: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: UXCHAT every parent inbox delivery loads canonical server result without sending
+00:15 +83: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: UXCHAT server-returned child result appears in parent without a client prompt
+00:15 +84: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: UXCHAT v2 subagent tools are summarized as delegated tasks
+00:15 +85: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: UXCHAT single foreground Stop preserves draft and targets this session
+00:16 +86: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: staged revert skips hidden pages when reopening older boundary
+00:16 +87: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: staged revert commit never reveals removed cached messages on refresh failure
+00:16 +88: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: staged revert keeps a composer draft until explicitly resolved
+00:16 +89: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: staged revert clear restores the hidden conversation
+00:16 +90: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: paged history preserves newest rows through older and duplicate pages
+00:16 +91: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: paged history retry keeps the cursor and transcript
+00:16 +92: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: paged history does not resurrect a message removed during loading
+00:16 +93: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: paged history preserves deltas newer than an older snapshot
+00:16 +94: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: paged history anchors the reader while older rows and live messages arrive
+00:17 +95: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: paged history retains older prefix on overlapping head refresh
+00:17 +96: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: paged history reconnect invalidates pending older page and updates open timeline
+00:17 +97: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: unloaded part edits wait for history and retain updates newer than its page
+00:17 +98: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: provisional session with an empty page and cursor is not discarded
+00:17 +99: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: message errors surface nested data.message
+00:17 +100: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: back discards only the exact verified empty mobile session
+00:18 +101: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: back preserves a newly created session after server messages
+00:18 +102: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: failed empty-session verification keeps server state
+00:18 +103: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: leaving with a typed draft keeps it silently
+00:18 +104: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: leaving an empty conversation keeps its pending photo destination
+00:18 +105: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: mobile new command stays when an attachment cannot persist
+00:18 +106: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: a running sibling agent appears in the switch strip
+00:18 +107: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: child chat exposes parent and sibling navigation
+00:18 +108: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: offline chat keeps its transcript and shows recovery actions
+00:19 +109: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: rehydrate never flashes a skeleton over existing messages
+00:19 +110: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: renders current OpenCode unified patches and server counts
+00:19 +111: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: stages a selected diff comment as a composer reference
+00:19 +112: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: foreground data refresh rehydrates messages missed while away
+00:20 +113: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: composer keeps focus when the Android keyboard opens
+00:20 +114: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: send waits for the wake-time replacement transport
+00:20 +115: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: stop waits for the wake-time replacement transport
+00:20 +116: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: stop failure remains visible instead of being swallowed
+00:20 +117: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: session mutations wait for the wake-time replacement transport
+00:20 +118: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: renders a generated image from a tool output filePath
+00:20 +119: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: tool output previews wait for the wake-time transport
+00:20 +120: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: opens non-image tool files in the shared preview
+00:20 +121: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: generated CSV opens as a literal table without sending a prompt
+00:21 +122: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: groups a tool chain until assistant text appears
+00:21 +123: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: renders grouped tool failures as flat inline results
+00:21 +124: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: keeps a tool chain growing across assistant records
+00:21 +125: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: shows model changes and aggregates usage once per turn
+00:21 +126: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: applies split text, reasoning, and tool input deltas
+00:21 +127: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: merges consecutive reasoning and assistant text blocks
+00:21 +128: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: transcript controls update old messages and persist state
+00:21 +129: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: the transcript-wide reasoning toggle replaces per-part choices instead of stamping over them
+00:22 +130: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: command launcher maps diff to the native session viewer
+00:22 +131: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: command launcher maps context to the native usage surface
+00:22 +132: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: debug command opens native app diagnostics
+00:22 +133: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: health command opens native project health
+00:22 +134: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: sessions command opens the all-project native finder
+00:23 +135: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: themes command opens the native appearance picker
+00:23 +136: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: session todo view shows server status and priority
+00:23 +137: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: todos sheet failure offers retry instead of raw exception
+00:23 +138: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: todos sheet explains an empty todo list
+00:23 +139: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: launcher combines mobile actions with server commands
+00:23 +140: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: /files attaches a project artifact back to the chat
+00:24 +141: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: move, warp, and org commands preserve their server semantics
+00:24 +142: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: move fails closed when working changes cannot be inspected
+00:25 +143: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: prompt editor preserves selection, attachments, and cancel
+00:25 +144: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: timeline finds a stable anchor with reduced motion
+00:25 +145: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: fork from prompt restores text and file in the new composer
+00:25 +146: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: session repository actions wait for the wake-time replacement
+00:26 +147: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: /fork lists prompts and forks the selected message point
+00:26 +148: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: timeline remains usable at 320dp with 2x text
+00:26 +149: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: project reference screen adds an upstream directory prompt part
+00:26 +150: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: typing slash opens filtered inline command suggestions
+00:26 +151: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: inline command suggestion rows meet 44dp targets
+00:26 +152: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: nested code scrolling does not change follow latest and new events respect reading position
+00:27 +153: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: floating transcript pills meet tap-target minimums
+00:27 +154: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: searchable sheets keep drag handles and dismiss the keyboard on drag
+00:27 +155: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: composer tools delegates only to visible server subagents
+00:27 +156: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: typed agent autocomplete sends exact OpenCode agent parts
+00:27 +157: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: removes individual parts and complete messages
+00:27 +158: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: newer deltas survive an older hydration response
+00:27 +159: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: canonical user event replaces the optimistic bubble
+00:27 +160: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: out-of-order canonical users reconcile by prompt instead of timestamp
+00:27 +161: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: failed send removes optimism, restores input, and blocks repeats
+00:28 +162: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: session errors stop thinking and remain visible in chat
+00:28 +163: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: a model-not-found session error shows one line and Choose model
+00:28 +164: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: renders attachment-only and mixed user prompts accessibly
+00:28 +165: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: retry preserves mixed and attachment-only file parts
+00:28 +166: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: typed server command passes arguments and selected model
+00:28 +167: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: session rename and delete failures preserve the session
+00:28 +168: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: session row end-swipe runs the existing delete confirm flow
+00:28 +169: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: attachment count limit is enforced before opening the picker
+00:28 +170: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: attachment remove action is accessible and at least 48dp
+00:28 +171: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: empty transcript suggestions fill the composer
+00:28 +172: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: empty transcript chips are seeded from the active project
+00:28 +173: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: long-pressing a user message offers copy and fork actions
+00:29 +174: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: deleting a message confirms, calls the server, and prunes it
+00:29 +175: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: a failed message delete keeps the transcript intact
+00:29 +176: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: composer shows known context usage at 25 percent
+00:29 +177: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: composer shows known context usage at 75 percent
+00:29 +178: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: composer hides the context meter without a known limit
+00:29 +179: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: Ctrl+Enter sends the drafted prompt
+00:29 +180: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart: session sheets fit a 320dp phone at 2x text
 
 Warning: A call to drag() with finder "Found 1 widget with text "Retry last prompt": [
   Text("Retry last prompt", overflow: ellipsis, maxLines: 1, dependencies: [DefaultSelectionStyle, DefaultTextStyle, MediaQuery]),
@@ -201,7 +201,7 @@ The hit test result at that offset is: HitTestResult(HitTestEntry<HitTestTarget>
 #0      WidgetController._getElementPoint (package:flutter_test/src/controller.dart:2165:25)
 #1      WidgetController.getCenter (package:flutter_test/src/controller.dart:1947:12)
 #2      WidgetController.drag (package:flutter_test/src/controller.dart:1604:7)
-#3      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart:4888:18)
+#3      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_live_events_test.dart:4888:18)
 <asynchronous suspension>
 #4      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -212,131 +212,131 @@ The hit test result at that offset is: HitTestResult(HitTestEntry<HitTestTarget>
 To silence this warning, pass "warnIfMissed: false" to "drag()".
 To make this warning fatal, set WidgetController.hitTestWarningShouldBeFatal to true.
 
-00:29 +181: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_permission_test.dart
-00:30 +181: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_permission_test.dart: chat queues concurrent permissions and replies by request ID
-00:31 +182: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_permission_test.dart: chat distinguishes requested patterns from always-allow scope
-00:31 +183: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_permission_test.dart: chat keeps failed permission open and shows the failure
-00:32 +184: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_permission_test.dart: external resolution dismisses the active dialog and advances the queue
-00:32 +185: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_permission_test.dart: permission-not-found reply race dismisses and advances the queue
-00:32 +186: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_permission_test.dart: long permission content keeps actions accessible on mobile
-00:32 +187: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_permission_test.dart: hydration dismisses an active permission removed remotely
-00:32 +188: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_permission_test.dart: the attention card keeps the composer focus and Review opens a dismissible sheet
-00:33 +189: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_question_card_test.dart
-00:33 +189: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_question_card_test.dart: a pending question renders inline with its choices
-00:34 +190: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_question_card_test.dart: tapping a single-select choice answers immediately
-00:34 +191: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_question_card_test.dart: a typed custom answer sends through the Send button
-00:35 +192: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_question_card_test.dart: multi-select collects choices behind Send
-00:35 +193: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_question_card_test.dart: a long description collapses the card to an Answer button that opens the sheet
-00:35 +194: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_question_card_test.dart: more than two prompts also collapse to the Answer button
-00:35 +195: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_question_card_test.dart: More opens the full sheet
-00:35 +196: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_question_card_test.dart: a pending permission outranks the question card
-00:35 +197: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_question_card_test.dart: a failed answer keeps the card and reports the error
-00:36 +198: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_question_card_test.dart: transcript tool card reads "Answered: <label>" once the server has the answer
-00:36 +199: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_question_card_test.dart: transcript tool card still reads "No answer" while the question is open
-00:36 +200: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_reference_send_test.dart
-00:36 +200: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_reference_send_test.dart: a staged reference does not turn a slash command into a prompt
-00:37 +201: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_reference_send_test.dart: the composer says staged references are not saved
-00:37 +202: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_reference_send_test.dart: references still ride along on an ordinary prompt
-00:38 +203: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_reference_send_test.dart: a failed send gives the reference text back to the composer
-00:38 +204: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_reference_send_test.dart: composing offline queues the prompt with its references
-00:38 +205: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_reference_send_test.dart: a transport failure queues the reference text for retry
-00:38 +206: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_server_state_ui_test.dart
-00:39 +206: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_server_state_ui_test.dart: retry banner headline names the attempt and counts down to next
-00:39 +207: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_server_state_ui_test.dart: retry banner appears with a live countdown and Stop, then clears
-00:40 +208: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_server_state_ui_test.dart: retry banner sessions tab marks a retrying session
-00:40 +209: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_server_state_ui_test.dart: session row usage chips show cost, diff summary and compaction when reported
-00:40 +210: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_server_state_ui_test.dart: session row usage chips hide zero cost and empty summaries
-00:40 +211: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_server_state_ui_test.dart: session row usage chips drop usage chips at 2x text scale, keep state chips
-00:40 +212: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_server_state_ui_test.dart: assistant error cards context overflow offers Compact session
-00:40 +213: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_server_state_ui_test.dart: assistant error cards provider auth opens the providers screen
-00:41 +214: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_server_state_ui_test.dart: assistant error cards output length offers Continue, which sends "Continue"
-00:41 +215: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_server_state_ui_test.dart: assistant error cards aborted turns read as a muted Stopped row
-00:41 +216: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_server_state_ui_test.dart: assistant error cards model not found shows one line, Details, and Choose model
-00:41 +217: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_server_state_ui_test.dart: assistant error cards unknown errors keep the plain red row; length finish adds a footer
-00:41 +218: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_transcript_lens_test.dart
-00:42 +218: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_transcript_lens_test.dart: a burst of streaming deltas rebuilds the transcript once
-00:43 +219: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_transcript_lens_test.dart: tool card expansion survives list recycling via the store
-00:43 +220: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_transcript_lens_test.dart: collapsing a running tool group is not undone by new tools
-00:43 +221: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_transcript_lens_test.dart: assistant prose is selectable; the ⋯ button opens the actions menu
-00:43 +222: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_transcript_lens_test.dart: the meta-row affordance opens the same actions menu
-00:43 +223: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_transcript_lens_test.dart: copy complete reply includes its fragments but no other turn
-00:43 +224: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_transcript_lens_test.dart: complete-reply copy leaves delete scoped to the chosen message
-00:43 +225: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_transcript_lens_test.dart: a reply split by the loaded boundary is not labeled complete
-00:44 +226: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_transcript_lens_test.dart: an unfinished assistant reply does not promise a complete copy
-00:44 +227: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_transcript_lens_test.dart: tool groups report skipped steps without a false running state
-00:44 +228: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_transcript_lens_test.dart: earlier-messages pill gates on scroll and excludes visible messages; new turns defer while reading history
-00:44 +229: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_transcript_placement_test.dart
-00:45 +229: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_transcript_placement_test.dart: a busy session shows working on the composer, not as a transcript row
-00:46 +230: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_transcript_placement_test.dart: an idle session shows no working indicator
-00:46 +231: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/chat_transcript_placement_test.dart: step-finish, patch and snapshot parts leave no stray row
-00:46 +232: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/code_highlight_test.dart
-00:46 +232: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/code_highlight_test.dart: fenced Dart code renders emphasized keyword spans
-00:47 +233: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/code_highlight_test.dart: an unknown fence language stays plain text
-00:47 +234: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/code_highlight_test.dart: diff fences color additions and deletions apart
-00:47 +235: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart
-00:48 +235: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart: pinned account read never refreshes provider tokens; start/cancel owns only returned handle
-00:48 +236: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart: unsupported runtime does not dispatch account operations
-00:48 +237: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart: second start cannot replace outstanding login
-00:48 +238: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart: malformed account cannot be treated as a signed-out preflight
-00:48 +239: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart: missing-method error stays fixed and never exposes remote detail
-00:48 +240: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart: wrong version handshake disables account API without affecting connection
-00:48 +241: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart: old epoch cancel cannot reopen transport or mutate replacement
-00:48 +242: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart: foreign completion ignored; matching completion accepted once
-00:48 +243: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart: early owned completion settles flow before late start response can show code
-00:48 +244: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart: late start after cancel cancels only on original scope
-00:48 +245: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart: late start after close cancels only on original scope
-00:48 +246: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart: scope loss during held start cannot cancel a different scope
-00:48 +247: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart: account update during preflight stops login dispatch
-00:48 +248: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart: unconfirmed cancellation retains ownership for explicit retry
-00:48 +249: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart: lost start receipt cannot become confirmed cancellation or replay
-00:48 +250: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart: lookalike URL is never exposed and owned login is canceled
-00:48 +251: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart: reported null stays unavailable and reported zero stays zero
-00:48 +252: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_chat_capabilities_test.dart
-00:48 +252: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_chat_capabilities_test.dart: Codex prompt tools hide attachment transports
-00:49 +253: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_chat_capabilities_test.dart: restored attachments stay visible and explain the send guard
-00:50 +254: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_chat_capabilities_test.dart: offline Codex send keeps draft and does not enqueue a turn
-00:50 +255: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_chat_capabilities_test.dart: Codex session menu hides unsupported session actions
-00:50 +256: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_chat_capabilities_test.dart: Codex command launcher hides unsupported server catalogs
-00:50 +257: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_chat_capabilities_test.dart: Codex timeline keeps message navigation without fork actions
-00:50 +258: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_chat_capabilities_test.dart: Codex prompt editor can edit text and remove restored files
-00:51 +259: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_chat_capabilities_test.dart: Codex approval sheet has no persistent grant action
-00:51 +260: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_connection_banner_test.dart
-00:51 +260: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_connection_banner_test.dart: rejected Codex token offers the token editor action
-00:52 +261: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_connection_banner_test.dart: Codex reconnect keeps the review draft without auto-resend
-00:52 +262: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_connection_probe_test.dart
-00:53 +262: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_connection_probe_test.dart: successful probe checks health and scope then closes the gateway
-00:53 +263: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_connection_probe_test.dart: a failed scoped read is not reported as verified
-00:53 +264: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_connection_probe_test.dart: unhealthy probe is not reported as verified
-00:53 +265: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_connection_probe_test.dart: failed gateway probe still closes the gateway
-00:53 +266: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_connection_probe_test.dart: invalid input returns before calling the gateway factory
-00:53 +267: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_connection_probe_test.dart: unexpected failures use fixed sanitized copy
-00:53 +268: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart
-00:53 +268: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: Codex capabilities hide unsupported product operations
-00:53 +269: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: endpoint policy rejects remote cleartext and URL credentials
-00:53 +270: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: bearer upgrade refuses redirects without forwarding credentials
-00:53 +271: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: real local upgrade sends one frame and receives a bound reply
-00:53 +272: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: lost mutation response is uncertain and never retried
-00:53 +273: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: server errors never expose a remote body
-00:53 +274: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: foreign project threads cannot enter a scoped list or send path
-00:53 +275: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: resume preserves item IDs, timestamps and cancelled outcome
-00:53 +276: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: approval requires matching scope and permits only one-shot decisions
-00:53 +277: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: location changes invalidate a previously displayed approval
-00:53 +278: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: socket loss invalidates a previously displayed approval
-00:53 +279: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: streamed assistant item uses the same IDs as authoritative history
-00:53 +280: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: partial reconnect remains degraded when a tracked thread cannot resume
-00:54 +281: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: generic thread/read failure keeps reconnect degraded
-00:55 +282: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: generic thread/resume failure keeps reconnect degraded
-00:56 +283: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: read to resume never crosses a location generation
-00:56 +284: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: a never-dispatched empty thread retires before automatic recovery RPCs
-00:58 +285: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: an unavailable uncertain first turn still blocks reconnect recovery
-00:59 +286: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: read to delete never crosses a location generation
-00:59 +287: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: read to rename never crosses a location generation
-00:59 +288: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: read to abort never crosses a location generation
-00:59 +289: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: reconnect authentication failure reaches the event error channel
-01:00 +290: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: uncertain first turn on a new thread requires history recovery without resend
-01:00 +291: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_journey_test.dart
-01:00 +291: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_journey_test.dart: connects, sends existing and new prompts, streams, approves, aborts, and recovers authoritatively
-01:02 +292: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_navigation_test.dart
-01:02 +292: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_navigation_test.dart: Codex hides unsupported destinations while keeping logical tab IDs
-01:03 +293: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/codex_navigation_test.dart: OpenCode keeps server catalogs even without credential writes
+00:29 +181: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_permission_test.dart
+00:30 +181: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_permission_test.dart: chat queues concurrent permissions and replies by request ID
+00:31 +182: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_permission_test.dart: chat distinguishes requested patterns from always-allow scope
+00:31 +183: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_permission_test.dart: chat keeps failed permission open and shows the failure
+00:32 +184: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_permission_test.dart: external resolution dismisses the active dialog and advances the queue
+00:32 +185: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_permission_test.dart: permission-not-found reply race dismisses and advances the queue
+00:32 +186: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_permission_test.dart: long permission content keeps actions accessible on mobile
+00:32 +187: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_permission_test.dart: hydration dismisses an active permission removed remotely
+00:32 +188: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_permission_test.dart: the attention card keeps the composer focus and Review opens a dismissible sheet
+00:33 +189: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_question_card_test.dart
+00:33 +189: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_question_card_test.dart: a pending question renders inline with its choices
+00:34 +190: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_question_card_test.dart: tapping a single-select choice answers immediately
+00:34 +191: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_question_card_test.dart: a typed custom answer sends through the Send button
+00:35 +192: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_question_card_test.dart: multi-select collects choices behind Send
+00:35 +193: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_question_card_test.dart: a long description collapses the card to an Answer button that opens the sheet
+00:35 +194: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_question_card_test.dart: more than two prompts also collapse to the Answer button
+00:35 +195: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_question_card_test.dart: More opens the full sheet
+00:35 +196: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_question_card_test.dart: a pending permission outranks the question card
+00:35 +197: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_question_card_test.dart: a failed answer keeps the card and reports the error
+00:36 +198: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_question_card_test.dart: transcript tool card reads "Answered: <label>" once the server has the answer
+00:36 +199: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_question_card_test.dart: transcript tool card still reads "No answer" while the question is open
+00:36 +200: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_reference_send_test.dart
+00:36 +200: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_reference_send_test.dart: a staged reference does not turn a slash command into a prompt
+00:37 +201: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_reference_send_test.dart: the composer says staged references are not saved
+00:37 +202: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_reference_send_test.dart: references still ride along on an ordinary prompt
+00:38 +203: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_reference_send_test.dart: a failed send gives the reference text back to the composer
+00:38 +204: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_reference_send_test.dart: composing offline queues the prompt with its references
+00:38 +205: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_reference_send_test.dart: a transport failure queues the reference text for retry
+00:38 +206: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_server_state_ui_test.dart
+00:39 +206: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_server_state_ui_test.dart: retry banner headline names the attempt and counts down to next
+00:39 +207: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_server_state_ui_test.dart: retry banner appears with a live countdown and Stop, then clears
+00:40 +208: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_server_state_ui_test.dart: retry banner sessions tab marks a retrying session
+00:40 +209: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_server_state_ui_test.dart: session row usage chips show cost, diff summary and compaction when reported
+00:40 +210: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_server_state_ui_test.dart: session row usage chips hide zero cost and empty summaries
+00:40 +211: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_server_state_ui_test.dart: session row usage chips drop usage chips at 2x text scale, keep state chips
+00:40 +212: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_server_state_ui_test.dart: assistant error cards context overflow offers Compact session
+00:40 +213: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_server_state_ui_test.dart: assistant error cards provider auth opens the providers screen
+00:41 +214: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_server_state_ui_test.dart: assistant error cards output length offers Continue, which sends "Continue"
+00:41 +215: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_server_state_ui_test.dart: assistant error cards aborted turns read as a muted Stopped row
+00:41 +216: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_server_state_ui_test.dart: assistant error cards model not found shows one line, Details, and Choose model
+00:41 +217: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_server_state_ui_test.dart: assistant error cards unknown errors keep the plain red row; length finish adds a footer
+00:41 +218: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_transcript_lens_test.dart
+00:42 +218: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_transcript_lens_test.dart: a burst of streaming deltas rebuilds the transcript once
+00:43 +219: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_transcript_lens_test.dart: tool card expansion survives list recycling via the store
+00:43 +220: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_transcript_lens_test.dart: collapsing a running tool group is not undone by new tools
+00:43 +221: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_transcript_lens_test.dart: assistant prose is selectable; the ⋯ button opens the actions menu
+00:43 +222: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_transcript_lens_test.dart: the meta-row affordance opens the same actions menu
+00:43 +223: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_transcript_lens_test.dart: copy complete reply includes its fragments but no other turn
+00:43 +224: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_transcript_lens_test.dart: complete-reply copy leaves delete scoped to the chosen message
+00:43 +225: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_transcript_lens_test.dart: a reply split by the loaded boundary is not labeled complete
+00:44 +226: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_transcript_lens_test.dart: an unfinished assistant reply does not promise a complete copy
+00:44 +227: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_transcript_lens_test.dart: tool groups report skipped steps without a false running state
+00:44 +228: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_transcript_lens_test.dart: earlier-messages pill gates on scroll and excludes visible messages; new turns defer while reading history
+00:44 +229: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_transcript_placement_test.dart
+00:45 +229: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_transcript_placement_test.dart: a busy session shows working on the composer, not as a transcript row
+00:46 +230: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_transcript_placement_test.dart: an idle session shows no working indicator
+00:46 +231: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/chat_transcript_placement_test.dart: step-finish, patch and snapshot parts leave no stray row
+00:46 +232: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/code_highlight_test.dart
+00:46 +232: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/code_highlight_test.dart: fenced Dart code renders emphasized keyword spans
+00:47 +233: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/code_highlight_test.dart: an unknown fence language stays plain text
+00:47 +234: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/code_highlight_test.dart: diff fences color additions and deletions apart
+00:47 +235: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart
+00:48 +235: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart: pinned account read never refreshes provider tokens; start/cancel owns only returned handle
+00:48 +236: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart: unsupported runtime does not dispatch account operations
+00:48 +237: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart: second start cannot replace outstanding login
+00:48 +238: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart: malformed account cannot be treated as a signed-out preflight
+00:48 +239: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart: missing-method error stays fixed and never exposes remote detail
+00:48 +240: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart: wrong version handshake disables account API without affecting connection
+00:48 +241: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart: old epoch cancel cannot reopen transport or mutate replacement
+00:48 +242: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart: foreign completion ignored; matching completion accepted once
+00:48 +243: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart: early owned completion settles flow before late start response can show code
+00:48 +244: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart: late start after cancel cancels only on original scope
+00:48 +245: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart: late start after close cancels only on original scope
+00:48 +246: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart: scope loss during held start cannot cancel a different scope
+00:48 +247: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart: account update during preflight stops login dispatch
+00:48 +248: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart: unconfirmed cancellation retains ownership for explicit retry
+00:48 +249: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart: lost start receipt cannot become confirmed cancellation or replay
+00:48 +250: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart: lookalike URL is never exposed and owned login is canceled
+00:48 +251: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_account_session_test.dart: reported null stays unavailable and reported zero stays zero
+00:48 +252: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_chat_capabilities_test.dart
+00:48 +252: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_chat_capabilities_test.dart: Codex prompt tools hide attachment transports
+00:49 +253: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_chat_capabilities_test.dart: restored attachments stay visible and explain the send guard
+00:50 +254: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_chat_capabilities_test.dart: offline Codex send keeps draft and does not enqueue a turn
+00:50 +255: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_chat_capabilities_test.dart: Codex session menu hides unsupported session actions
+00:50 +256: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_chat_capabilities_test.dart: Codex command launcher hides unsupported server catalogs
+00:50 +257: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_chat_capabilities_test.dart: Codex timeline keeps message navigation without fork actions
+00:50 +258: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_chat_capabilities_test.dart: Codex prompt editor can edit text and remove restored files
+00:51 +259: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_chat_capabilities_test.dart: Codex approval sheet has no persistent grant action
+00:51 +260: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_connection_banner_test.dart
+00:51 +260: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_connection_banner_test.dart: rejected Codex token offers the token editor action
+00:52 +261: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_connection_banner_test.dart: Codex reconnect keeps the review draft without auto-resend
+00:52 +262: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_connection_probe_test.dart
+00:53 +262: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_connection_probe_test.dart: successful probe checks health and scope then closes the gateway
+00:53 +263: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_connection_probe_test.dart: a failed scoped read is not reported as verified
+00:53 +264: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_connection_probe_test.dart: unhealthy probe is not reported as verified
+00:53 +265: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_connection_probe_test.dart: failed gateway probe still closes the gateway
+00:53 +266: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_connection_probe_test.dart: invalid input returns before calling the gateway factory
+00:53 +267: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_connection_probe_test.dart: unexpected failures use fixed sanitized copy
+00:53 +268: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart
+00:53 +268: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: Codex capabilities hide unsupported product operations
+00:53 +269: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: endpoint policy rejects remote cleartext and URL credentials
+00:53 +270: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: bearer upgrade refuses redirects without forwarding credentials
+00:53 +271: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: real local upgrade sends one frame and receives a bound reply
+00:53 +272: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: lost mutation response is uncertain and never retried
+00:53 +273: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: server errors never expose a remote body
+00:53 +274: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: foreign project threads cannot enter a scoped list or send path
+00:53 +275: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: resume preserves item IDs, timestamps and cancelled outcome
+00:53 +276: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: approval requires matching scope and permits only one-shot decisions
+00:53 +277: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: location changes invalidate a previously displayed approval
+00:53 +278: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: socket loss invalidates a previously displayed approval
+00:53 +279: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: streamed assistant item uses the same IDs as authoritative history
+00:53 +280: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: partial reconnect remains degraded when a tracked thread cannot resume
+00:54 +281: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: generic thread/read failure keeps reconnect degraded
+00:55 +282: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: generic thread/resume failure keeps reconnect degraded
+00:56 +283: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: read to resume never crosses a location generation
+00:56 +284: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: a never-dispatched empty thread retires before automatic recovery RPCs
+00:58 +285: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: an unavailable uncertain first turn still blocks reconnect recovery
+00:59 +286: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: read to delete never crosses a location generation
+00:59 +287: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: read to rename never crosses a location generation
+00:59 +288: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: read to abort never crosses a location generation
+00:59 +289: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: reconnect authentication failure reaches the event error channel
+01:00 +290: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_gateway_test.dart: uncertain first turn on a new thread requires history recovery without resend
+01:00 +291: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_journey_test.dart
+01:00 +291: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_journey_test.dart: connects, sends existing and new prompts, streams, approves, aborts, and recovers authoritatively
+01:02 +292: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_navigation_test.dart
+01:02 +292: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_navigation_test.dart: Codex hides unsupported destinations while keeping logical tab IDs
+01:03 +293: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/codex_navigation_test.dart: OpenCode keeps server catalogs even without credential writes
 01:04 +294: All tests passed!

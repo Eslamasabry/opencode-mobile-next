@@ -2148,13 +2148,13 @@ E2E-28 and E2E-32 wait for D6.
   `../research/testing-perf.md`.
 - Catalog: `../catalog/BEHAVIORS.md`, `behaviors.jsonl` (B-ANDR-001..121, B-LINUX-001..251, B-MIGR-013, B-SEC, B-STATE,
   B-AGENT, B-NAV rows cited), `e2e-flows.md` (E2E-07..09, -16..20, -25..27, -39).
-- Repo (read-only): `/home/eslam/Storage/Code/wt/oc_app-batch1/android/app/src/main/AndroidManifest.xml`, `K/*.kt`
+- Repo (read-only): `/home/owner/Storage/Code/wt/oc_app-batch1/android/app/src/main/AndroidManifest.xml`, `K/*.kt`
   (168 files; `BuiltinLinux.kt` structure by line), `src/test` (46 classes), `src/androidTest` (13 classes),
   `res/{layout,xml,values*}`, `jniLibs` (sizes); freeze tip `int/freeze-2026-11-01` (`git diff --stat 65e3f70a3`:
   `AgentPriority`, `ChildProcessLimit`, `ServiceNoticeGate`, `AppUpdateChannel`, FileProvider, `lib/builtin/
   process_budget.dart`, `heat_tier.dart`, `agents/phone_budget.dart`); branch `feat/appfunctions-2026-10-30`
   (`AppFunctionsService.kt`, manifest and Gradle diff).
-- Demo: `/home/eslam/Storage/Code/kmp-demo/androidApp/src/main/kotlin/…/ReplyService.kt` (`dataSync` reply service).
+- Demo: `/home/owner/Storage/Code/kmp-demo/androidApp/src/main/kotlin/…/ReplyService.kt` (`dataSync` reply service).
 - Checked for this revision [V], 2026-11-01: developer.android.com `TileService.requestListeningState` ("only
   applicable to tiles that have `META_DATA_ACTIVE_TILE` … and will do nothing otherwise"); Android 16 behavior changes
   for all apps, "JobScheduler quota optimizations" (top-started and FGS-concurrent jobs adhere to the runtime quota;

@@ -38,8 +38,8 @@ version could still be consumed on the second flush. It was reproduced red befor
 Commands run from `native/`, serialized with `flock /tmp/oc-native-gradle.lock`:
 
 ```sh
-JAVA_HOME=/home/eslam/Storage/tools/jdk-21.0.13+9 \
-ANDROID_HOME=/home/eslam/Android/Sdk \
+JAVA_HOME=/home/owner/Storage/tools/jdk-21.0.13+9 \
+ANDROID_HOME=/home/owner/Android/Sdk \
 ./gradlew --no-daemon \
   -Dorg.gradle.jvmargs='-Xmx2g -XX:MaxMetaspaceSize=768m -XX:+UseParallelGC -Dfile.encoding=UTF-8' \
   --max-workers=2 -Pkotlin.incremental=false \

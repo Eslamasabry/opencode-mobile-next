@@ -94,11 +94,11 @@ The four diagnostic phases used this command from the branch; the shell held
 one reservation across all four phases. Each phase records its harness revision.
 
 ```bash
-exec 9>/home/eslam/Storage/tmp/oc-emulator.lock
+exec 9>/home/owner/Storage/tmp/oc-emulator.lock
 flock -w 3600 9
 export OC_TEST_SLOTS=2
 for phase in model allow deny cards; do
-  /home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/dart \
+  /home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/dart \
     run tool/qa/fq3_certify.dart --phase --engine opencode --case "$phase" \
     --run-id fq3-bc2203-diagnosis-a --model opencode/big-pickle \
     --inherited-emulator-lock-fd 9

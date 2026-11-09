@@ -57,89 +57,89 @@ Downloading packages...
 Got dependencies!
 54 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_test.dart: terminal list one list, running first, each state in words
-00:00 +1: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_test.dart: terminal list an empty list offers New terminal once, in its state
-00:00 +2: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_test.dart: terminal list the row menu names the terminal it acts on
-00:00 +3: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_test.dart: terminal list removing the ended terminals asks once, keeps running ones
-00:01 +4: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_test.dart: terminal list a stop that fails keeps the question open with the reason
-00:01 +5: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_test.dart: terminal list a rename that fails stays in the dialog with the name kept
-00:01 +6: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_test.dart: the gate explains itself a server with no terminals says why and offers this phone
-00:01 +7: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_test.dart: terminal page connected: no status line; the menu names the terminal
-00:01 +8: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_test.dart: terminal page details hold the command, folder and process id
-00:01 +9: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_test.dart: terminal page a closed connection says so with Reconnect
-00:02 +10: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_test.dart: terminal page a rename here renames the page at once
-00:02 +11: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_test.dart: default shell one shell: the row says so and opens nothing
-00:02 +12: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_test.dart: default shell choosing a shell saves it; a failed save shows in the row
-00:02 +13: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart
-00:03 +13: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: (setUpAll)
-00:03 +13: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: list · dark
-00:04 +14: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: list wide · dark
-00:04 +15: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: list empty · dark
-00:04 +16: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: list row menu · dark
-00:04 +17: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: stop question · dark
-00:04 +18: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: rename dialog · dark
-00:04 +19: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: server without terminals · dark
-00:04 +20: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: this phone without Linux · dark
-00:05 +21: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: surface connected · dark
-00:05 +22: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: surface connected wide · dark
-00:05 +23: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: surface closed · dark
-00:05 +24: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: surface menu · dark
-00:05 +25: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: default shell sheet · dark
-00:05 +26: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: list · light
-00:05 +27: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: list wide · light
-00:05 +28: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: list empty · light
-00:05 +29: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: list row menu · light
-00:05 +30: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: stop question · light
-00:06 +31: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: rename dialog · light
-00:06 +32: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: server without terminals · light
-00:06 +33: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: this phone without Linux · light
-00:06 +34: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: surface connected · light
-00:06 +35: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: surface connected wide · light
-00:06 +36: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: surface closed · light
-00:06 +37: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: surface menu · light
-00:06 +38: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: default shell sheet · light
-00:06 +39: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: (tearDownAll)
-00:06 +39: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/local_terminal_screen_test.dart
-00:07 +39: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/local_terminal_screen_test.dart: states Linux not installed: one state with Set up
-00:08 +40: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/local_terminal_screen_test.dart: states installed: a shell opens at once, with the key bar
-00:08 +41: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/local_terminal_screen_test.dart: states the shell ended: its output stays, with Restart
-00:08 +42: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/local_terminal_screen_test.dart: states a shell that cannot start says so, with Try again
-00:08 +43: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/local_terminal_screen_test.dart: states AI Team on: the line says what a shell costs
-00:08 +44: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/local_terminal_screen_test.dart: states AI Team off: no cost line
-00:08 +45: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/local_terminal_screen_test.dart: keys sticky Ctrl, then c from the phone keyboard, sends 0x03
-00:08 +46: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/local_terminal_screen_test.dart: keys the arrow keys and Esc reach the shell
-00:08 +47: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/local_terminal_screen_test.dart: shells the menu lists shells and opens a new one
-00:08 +48: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/local_terminal_screen_test.dart: shells Stop asks first, then stops the shell
-00:09 +49: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/local_terminal_screen_test.dart: shells leaving and coming back finds the shell and its output
-00:09 +50: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/local_terminal_screen_test.dart: source choice This phone is the default once Linux is installed
-00:09 +51: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/local_terminal_screen_test.dart: source choice without Linux the server is the default
-00:09 +52: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/local_terminal_screen_test.dart: source choice the choice switches between the two
-00:09 +53: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/local_terminal_screen_test.dart: source choice landscape with the keyboard up: no choice, one row of keys
-00:09 +54: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/local_terminal_screen_test.dart: source choice off Android there is no choice, only the server
-00:09 +55: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/terminal_accessibility_test.dart
-00:10 +55: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/terminal_accessibility_test.dart: terminal controls and LTR input remain usable at 320dp 2.5x RTL
-00:11 +56: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/terminal_accessibility_test.dart: accessible transcript strips terminal and transport controls
-00:12 +57: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/terminal_accessibility_test.dart: terminal reconnect resumes from its cursor without replaying transcript
-00:12 +58: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/terminal_accessibility_test.dart: terminal keys keep 48dp targets on phones
-00:12 +59: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/terminal_accessibility_test.dart: closed terminal disables writes and announces why
-00:12 +60: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/terminal_accessibility_test.dart: terminal lifecycle closes once and resumes with one replacement channel
-00:12 +61: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/terminal_accessibility_test.dart: opted-in terminal remains connected while backgrounded
-00:12 +62: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/terminal_accessibility_test.dart: lifecycle invalidates a pending terminal connection
-00:13 +63: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/terminal_accessibility_test.dart: terminal reconnects through the replacement repository after resume
-00:13 +64: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/terminal_accessibility_test.dart: terminal reconnects when a retained surface changes process
-00:13 +65: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/terminal_input_queue_test.dart
-00:14 +65: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/terminal_input_queue_test.dart: queued keystrokes leave as one ordered write, none repeated
-00:14 +66: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/terminal_input_queue_test.dart: a channel that goes away drops what was never sent
-00:14 +67: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/terminal_input_queue_test.dart: fast desktop typing reaches the PTY in order, once
-00:14 +68: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/library_refresh_test.dart
-00:16 +68: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/library_refresh_test.dart: commands retains loaded content after failed refresh and retries
-00:16 +69: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/library_refresh_test.dart: commands retains empty content after failed refresh and retries
-00:17 +70: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/library_refresh_test.dart: skills retains loaded content after failed refresh and retries
-00:17 +71: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/library_refresh_test.dart: skills retains empty content after failed refresh and retries
-00:17 +72: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/library_refresh_test.dart: references retains loaded content after failed refresh and retries
-00:17 +73: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/library_refresh_test.dart: references retains empty content after failed refresh and retries
-00:17 +74: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/library_refresh_test.dart: terminals retains loaded content after failed refresh and retries
-00:17 +75: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/library_refresh_test.dart: terminals retains empty content after failed refresh and retries
-00:17 +76: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/library_refresh_test.dart: older command refresh cannot clear a newer refresh error
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_test.dart: terminal list one list, running first, each state in words
+00:00 +1: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_test.dart: terminal list an empty list offers New terminal once, in its state
+00:00 +2: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_test.dart: terminal list the row menu names the terminal it acts on
+00:00 +3: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_test.dart: terminal list removing the ended terminals asks once, keeps running ones
+00:01 +4: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_test.dart: terminal list a stop that fails keeps the question open with the reason
+00:01 +5: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_test.dart: terminal list a rename that fails stays in the dialog with the name kept
+00:01 +6: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_test.dart: the gate explains itself a server with no terminals says why and offers this phone
+00:01 +7: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_test.dart: terminal page connected: no status line; the menu names the terminal
+00:01 +8: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_test.dart: terminal page details hold the command, folder and process id
+00:01 +9: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_test.dart: terminal page a closed connection says so with Reconnect
+00:02 +10: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_test.dart: terminal page a rename here renames the page at once
+00:02 +11: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_test.dart: default shell one shell: the row says so and opens nothing
+00:02 +12: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_test.dart: default shell choosing a shell saves it; a failed save shows in the row
+00:02 +13: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart
+00:03 +13: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: (setUpAll)
+00:03 +13: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: list · dark
+00:04 +14: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: list wide · dark
+00:04 +15: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: list empty · dark
+00:04 +16: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: list row menu · dark
+00:04 +17: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: stop question · dark
+00:04 +18: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: rename dialog · dark
+00:04 +19: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: server without terminals · dark
+00:04 +20: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: this phone without Linux · dark
+00:05 +21: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: surface connected · dark
+00:05 +22: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: surface connected wide · dark
+00:05 +23: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: surface closed · dark
+00:05 +24: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: surface menu · dark
+00:05 +25: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: default shell sheet · dark
+00:05 +26: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: list · light
+00:05 +27: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: list wide · light
+00:05 +28: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: list empty · light
+00:05 +29: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: list row menu · light
+00:05 +30: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: stop question · light
+00:06 +31: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: rename dialog · light
+00:06 +32: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: server without terminals · light
+00:06 +33: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: this phone without Linux · light
+00:06 +34: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: surface connected · light
+00:06 +35: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: surface connected wide · light
+00:06 +36: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: surface closed · light
+00:06 +37: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: surface menu · light
+00:06 +38: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: default shell sheet · light
+00:06 +39: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/revamp/screen_terminal_1_golden_test.dart: (tearDownAll)
+00:06 +39: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/local_terminal_screen_test.dart
+00:07 +39: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/local_terminal_screen_test.dart: states Linux not installed: one state with Set up
+00:08 +40: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/local_terminal_screen_test.dart: states installed: a shell opens at once, with the key bar
+00:08 +41: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/local_terminal_screen_test.dart: states the shell ended: its output stays, with Restart
+00:08 +42: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/local_terminal_screen_test.dart: states a shell that cannot start says so, with Try again
+00:08 +43: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/local_terminal_screen_test.dart: states AI Team on: the line says what a shell costs
+00:08 +44: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/local_terminal_screen_test.dart: states AI Team off: no cost line
+00:08 +45: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/local_terminal_screen_test.dart: keys sticky Ctrl, then c from the phone keyboard, sends 0x03
+00:08 +46: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/local_terminal_screen_test.dart: keys the arrow keys and Esc reach the shell
+00:08 +47: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/local_terminal_screen_test.dart: shells the menu lists shells and opens a new one
+00:08 +48: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/local_terminal_screen_test.dart: shells Stop asks first, then stops the shell
+00:09 +49: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/local_terminal_screen_test.dart: shells leaving and coming back finds the shell and its output
+00:09 +50: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/local_terminal_screen_test.dart: source choice This phone is the default once Linux is installed
+00:09 +51: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/local_terminal_screen_test.dart: source choice without Linux the server is the default
+00:09 +52: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/local_terminal_screen_test.dart: source choice the choice switches between the two
+00:09 +53: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/local_terminal_screen_test.dart: source choice landscape with the keyboard up: no choice, one row of keys
+00:09 +54: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/local_terminal_screen_test.dart: source choice off Android there is no choice, only the server
+00:09 +55: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/terminal_accessibility_test.dart
+00:10 +55: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/terminal_accessibility_test.dart: terminal controls and LTR input remain usable at 320dp 2.5x RTL
+00:11 +56: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/terminal_accessibility_test.dart: accessible transcript strips terminal and transport controls
+00:12 +57: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/terminal_accessibility_test.dart: terminal reconnect resumes from its cursor without replaying transcript
+00:12 +58: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/terminal_accessibility_test.dart: terminal keys keep 48dp targets on phones
+00:12 +59: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/terminal_accessibility_test.dart: closed terminal disables writes and announces why
+00:12 +60: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/terminal_accessibility_test.dart: terminal lifecycle closes once and resumes with one replacement channel
+00:12 +61: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/terminal_accessibility_test.dart: opted-in terminal remains connected while backgrounded
+00:12 +62: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/terminal_accessibility_test.dart: lifecycle invalidates a pending terminal connection
+00:13 +63: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/terminal_accessibility_test.dart: terminal reconnects through the replacement repository after resume
+00:13 +64: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/terminal_accessibility_test.dart: terminal reconnects when a retained surface changes process
+00:13 +65: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/terminal_input_queue_test.dart
+00:14 +65: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/terminal_input_queue_test.dart: queued keystrokes leave as one ordered write, none repeated
+00:14 +66: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/terminal_input_queue_test.dart: a channel that goes away drops what was never sent
+00:14 +67: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/terminal_input_queue_test.dart: fast desktop typing reaches the PTY in order, once
+00:14 +68: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/library_refresh_test.dart
+00:16 +68: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/library_refresh_test.dart: commands retains loaded content after failed refresh and retries
+00:16 +69: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/library_refresh_test.dart: commands retains empty content after failed refresh and retries
+00:17 +70: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/library_refresh_test.dart: skills retains loaded content after failed refresh and retries
+00:17 +71: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/library_refresh_test.dart: skills retains empty content after failed refresh and retries
+00:17 +72: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/library_refresh_test.dart: references retains loaded content after failed refresh and retries
+00:17 +73: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/library_refresh_test.dart: references retains empty content after failed refresh and retries
+00:17 +74: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/library_refresh_test.dart: terminals retains loaded content after failed refresh and retries
+00:17 +75: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/library_refresh_test.dart: terminals retains empty content after failed refresh and retries
+00:17 +76: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-6/test/library_refresh_test.dart: older command refresh cannot clear a newer refresh error
 00:17 +77: All tests passed!

@@ -4,7 +4,7 @@ Finish line: status names only phone agents plus the connection's own OpenCode
 runtime. Non-goal: changing the all-runtime installation/removal request.
 
 Coordinator screenshot reviewed:
-`/home/eslam/Storage/tmp/claude-tmp/claude-1000/-home-eslam-Storage-Code-oc-app/87a8d964-900c-48f3-a841-cd593d87ac4c/scratchpad/e2e/ba5-oc1-agents.png`
+`/home/owner/Storage/tmp/claude-tmp/claude-1000/-home-eslam-Storage-Code-oc-app/87a8d964-900c-48f3-a841-cd593d87ac4c/scratchpad/e2e/ba5-oc1-agents.png`
 It shows fx Phone check needed and the Cards partial line naming generic OpenCode
 both as ready and unchecked on OpenCode 1. The installer stages both runtimes;
 the controller formerly forwarded its global result unchanged. The fallback

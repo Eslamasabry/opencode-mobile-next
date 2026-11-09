@@ -1,22 +1,22 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: choosing Arabic persists; closing leaves choice unchanged
-00:00 +1: /home/eslam/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: save refusal stays on sheet with old selection and retry copy
-00:00 +2: /home/eslam/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: 320dp 2.5x en all choices reachable
-00:01 +3: /home/eslam/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: 320dp 2.5x ar all choices reachable
-00:01 +4: /home/eslam/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: technical content isolates direction without changing sibling prose
-00:01 +5: loading /home/eslam/Storage/Code/oc_app-e7-locale/test/desktop_shortcuts_test.dart
-00:06 +5: /home/eslam/Storage/Code/oc_app-e7-locale/test/desktop_shortcuts_test.dart: desktop the binding table carries no plain-letter accelerator
-00:06 +6: /home/eslam/Storage/Code/oc_app-e7-locale/test/desktop_shortcuts_test.dart: desktop Ctrl+K opens the command launcher and Enter runs a command
-00:06 +7: /home/eslam/Storage/Code/oc_app-e7-locale/test/desktop_shortcuts_test.dart: desktop Ctrl+N asks the shell for a new session
-00:06 +8: /home/eslam/Storage/Code/oc_app-e7-locale/test/desktop_shortcuts_test.dart: desktop Ctrl+N inside the composer still reaches the shell
-00:06 +9: /home/eslam/Storage/Code/oc_app-e7-locale/test/desktop_shortcuts_test.dart: desktop Ctrl+, opens settings
-00:06 +10: /home/eslam/Storage/Code/oc_app-e7-locale/test/desktop_shortcuts_test.dart: desktop Ctrl+/ lists every shortcut
-00:06 +11: /home/eslam/Storage/Code/oc_app-e7-locale/test/desktop_shortcuts_test.dart: desktop Ctrl+W closes the current route
-00:07 +12: /home/eslam/Storage/Code/oc_app-e7-locale/test/desktop_shortcuts_test.dart: desktop Ctrl+W honours a PopScope veto
-00:07 +13: /home/eslam/Storage/Code/oc_app-e7-locale/test/desktop_shortcuts_test.dart: desktop Ctrl+1..4 switch the shell destinations
-00:07 +14: /home/eslam/Storage/Code/oc_app-e7-locale/test/desktop_shortcuts_test.dart: desktop Ctrl+1..4 and Ctrl+` return to the shell from a pushed route
-00:08 +15: /home/eslam/Storage/Code/oc_app-e7-locale/test/desktop_shortcuts_test.dart: desktop Ctrl+F focuses the Files find field, and only there
-00:08 +16: /home/eslam/Storage/Code/oc_app-e7-locale/test/desktop_shortcuts_test.dart: desktop Escape already closes a modal sheet
-00:08 +17: /home/eslam/Storage/Code/oc_app-e7-locale/test/desktop_shortcuts_test.dart: android no shortcut layer is installed
-00:08 +18: /home/eslam/Storage/Code/oc_app-e7-locale/test/desktop_shortcuts_test.dart: android the More menu hides the shortcuts entry
+00:00 +0: loading /home/owner/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: choosing Arabic persists; closing leaves choice unchanged
+00:00 +1: /home/owner/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: save refusal stays on sheet with old selection and retry copy
+00:00 +2: /home/owner/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: 320dp 2.5x en all choices reachable
+00:01 +3: /home/owner/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: 320dp 2.5x ar all choices reachable
+00:01 +4: /home/owner/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: technical content isolates direction without changing sibling prose
+00:01 +5: loading /home/owner/Storage/Code/oc_app-e7-locale/test/desktop_shortcuts_test.dart
+00:06 +5: /home/owner/Storage/Code/oc_app-e7-locale/test/desktop_shortcuts_test.dart: desktop the binding table carries no plain-letter accelerator
+00:06 +6: /home/owner/Storage/Code/oc_app-e7-locale/test/desktop_shortcuts_test.dart: desktop Ctrl+K opens the command launcher and Enter runs a command
+00:06 +7: /home/owner/Storage/Code/oc_app-e7-locale/test/desktop_shortcuts_test.dart: desktop Ctrl+N asks the shell for a new session
+00:06 +8: /home/owner/Storage/Code/oc_app-e7-locale/test/desktop_shortcuts_test.dart: desktop Ctrl+N inside the composer still reaches the shell
+00:06 +9: /home/owner/Storage/Code/oc_app-e7-locale/test/desktop_shortcuts_test.dart: desktop Ctrl+, opens settings
+00:06 +10: /home/owner/Storage/Code/oc_app-e7-locale/test/desktop_shortcuts_test.dart: desktop Ctrl+/ lists every shortcut
+00:06 +11: /home/owner/Storage/Code/oc_app-e7-locale/test/desktop_shortcuts_test.dart: desktop Ctrl+W closes the current route
+00:07 +12: /home/owner/Storage/Code/oc_app-e7-locale/test/desktop_shortcuts_test.dart: desktop Ctrl+W honours a PopScope veto
+00:07 +13: /home/owner/Storage/Code/oc_app-e7-locale/test/desktop_shortcuts_test.dart: desktop Ctrl+1..4 switch the shell destinations
+00:07 +14: /home/owner/Storage/Code/oc_app-e7-locale/test/desktop_shortcuts_test.dart: desktop Ctrl+1..4 and Ctrl+` return to the shell from a pushed route
+00:08 +15: /home/owner/Storage/Code/oc_app-e7-locale/test/desktop_shortcuts_test.dart: desktop Ctrl+F focuses the Files find field, and only there
+00:08 +16: /home/owner/Storage/Code/oc_app-e7-locale/test/desktop_shortcuts_test.dart: desktop Escape already closes a modal sheet
+00:08 +17: /home/owner/Storage/Code/oc_app-e7-locale/test/desktop_shortcuts_test.dart: android no shortcut layer is installed
+00:08 +18: /home/owner/Storage/Code/oc_app-e7-locale/test/desktop_shortcuts_test.dart: android the More menu hides the shortcuts entry
 00:08 +19: All tests passed!

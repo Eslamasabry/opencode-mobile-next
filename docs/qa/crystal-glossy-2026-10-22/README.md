@@ -2,7 +2,7 @@
 
 Owner (2026-10-22), about Glass and Crystal: "the glass doesn't look glass enough, no glossy vs frosted variant, we [have] something in between." The two must be clearly different, each pushed to its extreme. Glass becomes **frosted** (a separate branch: `kit_style_glass.dart` and the blur policy in `kit_surface_look.dart`). This branch makes Crystal **glossy**.
 
-Branch `feat/style-glossy` (from `1fa1f40bb`). Concepts: `/home/eslam/Storage2/launch-footage/glass-variants/glossy-{dark,light}/concept.png`. The look was taken from them, not the data.
+Branch `feat/style-glossy` (from `1fa1f40bb`). Concepts: `/home/owner/Storage2/launch-footage/glass-variants/glossy-{dark,light}/concept.png`. The look was taken from them, not the data.
 
 ## What changed
 
@@ -22,7 +22,7 @@ The boost lifts the look in both modes alike. A light-only lift needs a hook fro
 
 ## Proof
 
-Emulator `emulator-5584` (host GPU, Impeller OpenGLES through ANGLE), release APKs 2610–2613. Images are in `/home/eslam/Storage2/launch-footage/progress/glossy/`, as `passN-<screen>-<default|midnight>-<light|dark>.png`, and each pass is logged in `LOG.md`.
+Emulator `emulator-5584` (host GPU, Impeller OpenGLES through ANGLE), release APKs 2610–2613. Images are in `/home/owner/Storage2/launch-footage/progress/glossy/`, as `passN-<screen>-<default|midnight>-<light|dark>.png`, and each pass is logged in `LOG.md`.
 - `default` is Graphite over the aurora.
 - `midnight` is Midnight with the Blue accent over Light rays.
 

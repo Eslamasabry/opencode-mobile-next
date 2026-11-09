@@ -233,7 +233,7 @@ sweep: `docs/ai-team-host.md`, `scripts/host/ubuntu-opencode.sh`), and
 output failed: the old script has no checksum constants and pipes the
 installer). With this slice, all pass.
 
-Commands run in `/home/eslam/Storage/Code/oc_app-slice-script-pins` through
+Commands run in `/home/owner/Storage/Code/oc_app-slice-script-pins` through
 `tool/qa/machine_lock.sh`, pinned Flutter 3.47.1:
 
 - `flutter test --no-pub --concurrency=1 test/host_script_pin_test.dart test/host_script_install_test.dart`:

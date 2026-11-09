@@ -30,7 +30,7 @@ struct Fixture {
 fn fixture(aliased: bool) -> Fixture {
     let base = std::env::var_os("OC_ENGINE_TEST_ROOT")
         .map(PathBuf::from)
-        .unwrap_or_else(|| PathBuf::from("/home/eslam/Storage/tmp/oc-phone-engine-tests"));
+        .unwrap_or_else(|| PathBuf::from("/home/owner/Storage/tmp/oc-phone-engine-tests"));
     fs::create_dir_all(&base).unwrap();
     let root = tempfile::Builder::new()
         .prefix("daemon-startup-")

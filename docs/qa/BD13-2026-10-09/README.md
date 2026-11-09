@@ -179,7 +179,7 @@ OC_TEST_SLOTS=1 tool/qa/machine_lock.sh test -- <pinned-flutter> test --concurre
 OC_TEST_SLOTS=1 tool/qa/machine_lock.sh analyze -- <pinned-flutter> analyze
 ```
 
-`<pinned-flutter>` is `/home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter`.
+`<pinned-flutter>` is `/home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter`.
 The initial focused run waited 261 seconds for the shared slot; no overlapping
 check was started. The four unchanged `app_exit_history_test` JVM scenarios reused
 cache `e29dcd14ebd9d62cd6f42105b8cf6734b95a59572eef07f23e1f8e8a54b6d290.jar`,

@@ -1,15 +1,15 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart
 test/gen_ui_connector_test.dart:35:16: Error: Method not found: 'ToolState'.
     toolState: ToolState(status: status, executed: executed, input: input),
                ^^^^^^^^^
-00:00 +0 -1: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart [E]
-  Failed to load "/home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart":
-  Compilation failed for testPath=/home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart: test/gen_ui_connector_test.dart:35:16: Error: Method not found: 'ToolState'.
+00:00 +0 -1: loading /home/owner/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart [E]
+  Failed to load "/home/owner/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart":
+  Compilation failed for testPath=/home/owner/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart: test/gen_ui_connector_test.dart:35:16: Error: Method not found: 'ToolState'.
       toolState: ToolState(status: status, executed: executed, input: input),
                  ^^^^^^^^^
   .
-00:00 +0 -1: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_capabilities_test.dart
-00:00 +0 -1: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart [E]
+00:00 +0 -1: loading /home/owner/Storage/Code/oc_app-sol-bd/test/mcp_chat_capabilities_test.dart
+00:00 +0 -1: loading /home/owner/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart [E]
   Error: The Dart compiler exited unexpectedly.
   package:flutter_tools/src/base/common.dart 34:3  throwToolExit
   package:flutter_tools/src/compile.dart 1024:11   DefaultResidentCompiler._compile.<fn>
@@ -86,9 +86,9 @@ test/mcp_chat_capabilities_test.dart:29:25: Error: The getter 'mcpChatToolRefres
 Try correcting the name to the name of an existing getter, or defining a getter or field named 'mcpChatToolRefresh'.
     expect(capabilities.mcpChatToolRefresh, isTrue);
                         ^^^^^^^^^^^^^^^^^^
-00:00 +0 -2: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_capabilities_test.dart [E]
-  Failed to load "/home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_capabilities_test.dart":
-  Compilation failed for testPath=/home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_capabilities_test.dart: test/mcp_chat_capabilities_test.dart:34:7: Error: No named parameter with the name 'mcpChatConnect'.
+00:00 +0 -2: loading /home/owner/Storage/Code/oc_app-sol-bd/test/mcp_chat_capabilities_test.dart [E]
+  Failed to load "/home/owner/Storage/Code/oc_app-sol-bd/test/mcp_chat_capabilities_test.dart":
+  Compilation failed for testPath=/home/owner/Storage/Code/oc_app-sol-bd/test/mcp_chat_capabilities_test.dart: test/mcp_chat_capabilities_test.dart:34:7: Error: No named parameter with the name 'mcpChatConnect'.
         mcpChatConnect: true,
         ^^^^^^^^^^^^^^
   lib/domain/server_gateway/capabilities.dart:162:9: Context: Found this candidate, but the arguments don't match.
@@ -149,5 +149,5 @@ Try correcting the name to the name of an existing getter, or defining a getter 
 00:00 +0 -2: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart
-  /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_capabilities_test.dart: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_capabilities_test.dart
+  /home/owner/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart: loading /home/owner/Storage/Code/oc_app-sol-bd/test/gen_ui_connector_test.dart
+  /home/owner/Storage/Code/oc_app-sol-bd/test/mcp_chat_capabilities_test.dart: loading /home/owner/Storage/Code/oc_app-sol-bd/test/mcp_chat_capabilities_test.dart

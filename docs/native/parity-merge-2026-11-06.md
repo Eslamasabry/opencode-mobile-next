@@ -1,6 +1,6 @@
 # Native parity integration and first-send recovery
 
-Worktree: `/home/eslam/Storage2/wt/scr-merge`; branch: `native/screens-merge`.
+Worktree: `/home/owner/Storage2/wt/scr-merge`; branch: `native/screens-merge`.
 Starting revision: `27bc42b60`. Implementation candidate: `a9ca8b33e`.
 
 Finish line: integrate the four parity branches in order, reconcile slow first-send receipts without resending, and keep the real conversation's composer available.
@@ -64,6 +64,6 @@ Regression sources were added/updated in `GatewaySendLinkTest`, `ReceiptsTest` a
 4. Verify late cleanup while a replacement draft exists, plus profile/project changes during a read. Ambiguous legacy first-send bindings intentionally remain blocked for review.
 5. Verify Send later and repeat receive the composer text, retain subsequent schedule edits after recreation, and stay in chat on a refused draft write.
 6. The existing `feature/chat/build.gradle.kts` capture-only filter excludes most `*Test.kt`, including `ChatRulesTest` and the merged `ErrorRecoveryTest`. Added source is not an executed regression gate; the coordinator must account for that exclusion when scheduling checks.
-7. This integrates the supplied branch work; it does not qualify or close every remaining item in `/home/eslam/Storage2/wt/native-parity/PARITY.md`. No new parity census or device screenshots were produced.
+7. This integrates the supplied branch work; it does not qualify or close every remaining item in `/home/owner/Storage2/wt/native-parity/PARITY.md`. No new parity census or device screenshots were produced.
 
 All new commits have subjects ending `[skip ci]`, a body, `Order: screens`, `Engine: codex`, and `Co-Authored-By: Codex <noreply@openai.com>`.

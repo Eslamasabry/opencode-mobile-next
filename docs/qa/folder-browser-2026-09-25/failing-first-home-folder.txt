@@ -1,5 +1,5 @@
 Waiting for another flutter command to release the startup lock...
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/agent-af446b7b74cef745c/test/folder_browser_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/agent-af446b7b74cef745c/test/folder_browser_test.dart
 00:00 +0: the home folder and / are never offered as a project
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following TestFailure was thrown running a test:
@@ -8,7 +8,7 @@ Expected: empty
 the home folder never opens
 When the exception was thrown, this was the stack:
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/agent-af446b7b74cef745c/test/folder_browser_test.dart line 313
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/agent-af446b7b74cef745c/test/folder_browser_test.dart line 313
 The test description was:
   the home folder and / are never offered as a project
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -17,4 +17,4 @@ The test description was:
   The test description was: the home folder and / are never offered as a project
 00:02 +0 -1: Some tests failed.
 Failing tests:
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/agent-af446b7b74cef745c/test/folder_browser_test.dart: the home folder and / are never offered as a project
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/agent-af446b7b74cef745c/test/folder_browser_test.dart: the home folder and / are never offered as a project

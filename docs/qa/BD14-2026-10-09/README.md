@@ -63,7 +63,7 @@ Executed serially through the shared test lock:
 ```sh
 OC_TEST_SLOTS=1 tool/qa/machine_lock.sh test -- node \
   docs/qa/BD14-2026-10-09/probe.mjs \
-  /home/eslam/Storage/tmp/claude-tmp/oc-paseo-lock-4pyx6dwm/node_modules
+  /home/owner/Storage/tmp/claude-tmp/oc-paseo-lock-4pyx6dwm/node_modules
 ```
 
 Result: exit 0; [probe-result.txt](probe-result.txt). This is an offline

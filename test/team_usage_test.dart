@@ -302,7 +302,7 @@ void main() {
       provider: 'opencode',
       currentWorkId: 'w2',
       contextPercent: context,
-      workDir: '/home/eslam/city/.gc/worktrees/ocproof/polecats/fox',
+      workDir: '/home/owner/city/.gc/worktrees/ocproof/polecats/fox',
       branch: 'polecat/oc-cq6',
       sessionStartedAt: clock.subtract(const Duration(hours: 3)),
       raw: const {'id': 'bl-5qc'},

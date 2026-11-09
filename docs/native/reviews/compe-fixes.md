@@ -29,11 +29,11 @@ Test names below omit the runner's `[desktop]` suffix.
 
 ## Verification
 
-Every Gradle invocation ran from `native/`, under the shared `/home/eslam/Storage/tmp/oc-build.lock`, one build at a time:
+Every Gradle invocation ran from `native/`, under the shared `/home/owner/Storage/tmp/oc-build.lock`, one build at a time:
 
 ```bash
-JAVA_HOME=/home/eslam/Storage/tools/jdk-21.0.13+9 \
-ANDROID_HOME=/home/eslam/Android/Sdk \
+JAVA_HOME=/home/owner/Storage/tools/jdk-21.0.13+9 \
+ANDROID_HOME=/home/owner/Android/Sdk \
 ./gradlew --no-daemon -Pkotlin.incremental=false \
   -Dorg.gradle.jvmargs='-Xmx2g -XX:MaxMetaspaceSize=768m -XX:+UseParallelGC -Dfile.encoding=UTF-8' \
   --max-workers=2 \

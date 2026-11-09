@@ -17,7 +17,7 @@ python3 tool/qa/bc2_disk_emulator.py
 The harness extracts the production object without rewriting it, compiles that
 object and a small Kotlin proof under `tool/qa/machine_lock.sh build`, converts
 the temporary JAR with Android D8, then pushes only the resulting temporary dex.
-Every ADB session uses `flock /home/eslam/Storage/tmp/oc-emulator.lock` and targets
+Every ADB session uses `flock /home/owner/Storage/tmp/oc-emulator.lock` and targets
 only `emulator-5554`. The proof uses a disposable directory under
 `/data/local/tmp/oc-bc2-<uuid>`, which is removed in `finally`.
 

@@ -2444,7 +2444,7 @@ The chat is done for the switch when every line below is true on the release bui
   (§0), `../research/testing-perf.md` (§0–§1), `../research/media.md` (§0, read aloud).
 - Catalog: `../catalog/BEHAVIORS.md` (CHAT 124 rows; STATE, PROTO, AGENT, MEDIA, SEC, KIT rows named above),
   `../catalog/e2e-flows.md` (E2E-05…37).
-- Flutter source (read-only, `/home/eslam/Storage/Code/wt/oc_app-batch1`, 2.1.0+57): `lib/ui/screens/chat/*`,
+- Flutter source (read-only, `/home/owner/Storage/Code/wt/oc_app-batch1`, 2.1.0+57): `lib/ui/screens/chat/*`,
   `lib/ui/kit/chat/*`, `lib/domain/models/models_messages.dart`, `lib/domain/transcript_settle.dart`,
   `lib/domain/turn_stall.dart`, `lib/domain/genui/*`, `test/perf_chat_test.dart`, `test/chat_rebuild_budget_test.dart`,
   `docs/design/steering-contract.md`, `docs/ux-system/kit-api/{KitTurn,KitComposer,KitRequestCard,KitWorkLine,KitQueuedMessage}.md`,

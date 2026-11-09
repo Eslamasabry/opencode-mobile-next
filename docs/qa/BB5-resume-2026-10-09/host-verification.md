@@ -72,10 +72,10 @@ git diff --check -- tool/qa/bb5_runtime_acceptance.py tool/qa/test_bb5_runtime_a
 The following commands inspected the existing normal APK without copying it:
 
 ```sh
-cat /home/eslam/Storage/tmp/oc-apk-share/oc-2202.apk.sha256
-sha256sum /home/eslam/Storage/tmp/oc-apk-share/oc-2202.apk
-/home/eslam/Android/Sdk/build-tools/36.1.0/apksigner verify --print-certs /home/eslam/Storage/tmp/oc-apk-share/oc-2202.apk
-/home/eslam/Android/Sdk/build-tools/36.1.0/aapt dump badging /home/eslam/Storage/tmp/oc-apk-share/oc-2202.apk
+cat /home/owner/Storage/tmp/oc-apk-share/oc-2202.apk.sha256
+sha256sum /home/owner/Storage/tmp/oc-apk-share/oc-2202.apk
+/home/owner/Android/Sdk/build-tools/36.1.0/apksigner verify --print-certs /home/owner/Storage/tmp/oc-apk-share/oc-2202.apk
+/home/owner/Android/Sdk/build-tools/36.1.0/aapt dump badging /home/owner/Storage/tmp/oc-apk-share/oc-2202.apk
 ```
 
 Observed metadata:

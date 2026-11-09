@@ -11,7 +11,7 @@ Spec and frozen channel contract: docs/design/app-updates-2026-10-31.md.
   server on :4301 so the app had a home screen to show the notice on.
 - Signer refusal: the same 4291 APK re-signed with a throwaway key (never committed).
 
-## Flow shown (one screen per PNG, /home/eslam/Storage2/wt/shots-2026-10-31/appupdate/)
+## Flow shown (one screen per PNG, /home/owner/Storage2/wt/shots-2026-10-31/appupdate/)
 
 1. 01-found-notice-and-badge: "Version 2.2.0 is ready", Update and Not now, dot on the gear.
 2. 02-gear-sheet: gear tap asks Update now or Open Settings.

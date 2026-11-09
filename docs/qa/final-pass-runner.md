@@ -1,13 +1,13 @@
 # Final-pass runner
 
 `tool/qa/final_pass.py` runs the device drivers under one exclusive
-`/home/eslam/Storage/tmp/oc-emulator.lock` reservation (up to 3600 seconds to acquire).
+`/home/owner/Storage/tmp/oc-emulator.lock` reservation (up to 3600 seconds to acquire).
 The default is an inert plan: no manifest reads, subprocesses, output files or adb.
 
 ```bash
 python3 tool/qa/final_pass.py --dry-run --fast
 python3 tool/qa/final_pass.py --execute --fast \
-  --candidate-apk /home/eslam/Storage/tmp/oc-apk-share/oc-2203.apk \
+  --candidate-apk /home/owner/Storage/tmp/oc-apk-share/oc-2203.apk \
   --candidate-build 2203 --inputs /absolute/private/final-pass-inputs.json \
   --output docs/qa/final-pass-2203
 ```

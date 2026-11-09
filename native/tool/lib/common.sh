@@ -262,7 +262,7 @@ oc_check_jdk() {
 # The one build slot on the PC (plan 02 §7.8: the same lock Flutter fixers use, never a separate native lock).
 # Elsewhere (VPS, cloud) a local lock file. OC_LOCK_WAIT seconds (default 1800) before giving up with exit 2.
 oc_build_lock_file() {
-  local f="${OC_BUILD_LOCK_FILE:-/home/eslam/Storage/tmp/oc-build.lock}"
+  local f="${OC_BUILD_LOCK_FILE:-$HOME/Storage/tmp/oc-build.lock}"
   if [[ -d "$(dirname "$f")" ]]; then echo "$f"; else echo "${TMPDIR:-/tmp}/oc-build.lock"; fi
 }
 

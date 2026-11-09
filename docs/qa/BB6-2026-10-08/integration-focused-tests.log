@@ -64,58 +64,58 @@ Downloading packages...
 Got dependencies!
 61 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart: profileScopedPreferenceKeys finds every shape and nothing else
-00:00 +1: /home/eslam/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart: deleting a profile leaves nothing keyed to it behind
-00:00 +2: /home/eslam/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart: deletion forgets the shared phone owner and sweeps its recovery budget
-00:00 +3: /home/eslam/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart: nothing deleted comes back after a restart
-00:00 +4: /home/eslam/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart: deleting the other profile leaves the first one whole
-00:00 +5: /home/eslam/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart: the AI Team plugin data of the deleted profile is swept
-00:00 +6: /home/eslam/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart: queued prompts awaiting delivery review are swept with the profile and counted in the disclosure
-00:00 +7: /home/eslam/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart: queued prompts awaiting delivery review stay on the device, marker intact, when the sweep is refused
-00:00 +8: /home/eslam/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart: a widget snapshot with no owner is cleared rather than left
-00:00 +9: /home/eslam/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart: a store that refuses writes keeps the server when its queued prompts cannot be deleted
-00:00 +10: /home/eslam/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart: a store that refuses writes keeps the server when a draft write is refused
-00:00 +11: /home/eslam/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart: a store that refuses writes keeps the server when a scoped setting will not go
-00:00 +12: /home/eslam/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart: a store that refuses writes keeps the server when the widget snapshot will not clear
-00:00 +13: /home/eslam/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart: a store that refuses writes keeps the server when the launcher shortcut record or the tile count will not clear
-00:00 +14: /home/eslam/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart: a store that refuses writes reports every refusal, not just the first
-00:00 +15: /home/eslam/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart: a store that refuses writes a clean run still reports a complete deletion
-00:00 +16: /home/eslam/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart: drafts record the profile that owns them
-00:00 +17: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart
-00:01 +17: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: (setUpAll)
-00:01 +17: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the Settings row says Signed in only after the status check a confirmed sign-in reads Signed in, not Ready
-00:02 +18: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the Settings row says Signed in only after the status check the account name is one plain line
-00:02 +19: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the Settings row says Signed in only after the status check the account name sits above the quiet reopen line
-00:02 +20: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the Settings row says Signed in only after the status check a name with line breaks stays on one line
-00:02 +21: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the Settings row says Signed in only after the status check a very long name wraps without overflowing the row
-00:02 +22: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the Settings row says Signed in only after the status check an install and a passed phone check do not make a row Signed in
-00:02 +23: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the Settings row says Signed in only after the status check signed out reads Sign in needed with a Sign in chip
-00:02 +24: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the Settings row says Signed in only after the status check a check that ends in probeUnsupported keeps the existing wording and claims nothing
-00:02 +25: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the Settings row says Signed in only after the status check a check that ends in timedOut keeps the existing wording and claims nothing
-00:02 +26: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the Settings row says Signed in only after the status check a check that ends in invalidResponse keeps the existing wording and claims nothing
-00:02 +27: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the Settings row says Signed in only after the status check a check that ends in hostUnavailable keeps the existing wording and claims nothing
-00:02 +28: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the Settings row says Signed in only after the status check other agents keep their wording beside a signed-in one
-00:02 +29: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the Settings row says Signed in only after the status check a source without status checks keeps Ready
-00:02 +30: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the download size reads in order a not-installed row isolates its size left to right, in English and in Arabic
-00:02 +31: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the download size reads in order the install question isolates it too
-00:03 +32: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: Sign out in the agent sheet a confirmed sign-in offers Sign out of the agent
-00:03 +33: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: Sign out in the agent sheet the sign-out question uses the danger fill and a neutral Cancel
-00:03 +34: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: Sign out in the agent sheet it asks first: names the agent, says conversations stay, and Cancel changes nothing
-00:03 +35: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: Sign out in the agent sheet confirming runs the agent logout; the sheet then offers Sign in
-00:03 +36: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: Sign out in the agent sheet the row behind turns to Sign in after the sign-out
-00:03 +37: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: Sign out in the agent sheet while it runs the other actions wait and the layout holds
-00:03 +38: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: Sign out in the agent sheet an unconfirmed sign-out says so in plain words and reads the real state again
-00:03 +39: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: Sign out in the agent sheet a failed sign-out never flashes the signed-out layout while the real state is read again
-00:03 +40: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: Sign out in the agent sheet a retry after a failure signs out
-00:04 +41: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: Sign out in the agent sheet an agent whose logout is not qualified has no Sign out
-00:04 +42: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: Sign out in the agent sheet a source without status checks has no Sign out
-00:04 +43: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: Sign out in the agent sheet a signed-out agent has no Sign out
-00:04 +44: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the Signed in page names the account as its own line under the body, when the check gave one
-00:04 +45: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the Signed in page names the account without an account the page is unchanged
-00:04 +46: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the Signed in page names the account a long name stays on one line and is cut with an ellipsis
-00:04 +47: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the Signed in page names the account it stays while the sign-out runs
-00:04 +48: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: a finished sign-in terminal a clean exit is not a sign-in until the status check says so
+00:00 +0: loading /home/owner/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart: profileScopedPreferenceKeys finds every shape and nothing else
+00:00 +1: /home/owner/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart: deleting a profile leaves nothing keyed to it behind
+00:00 +2: /home/owner/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart: deletion forgets the shared phone owner and sweeps its recovery budget
+00:00 +3: /home/owner/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart: nothing deleted comes back after a restart
+00:00 +4: /home/owner/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart: deleting the other profile leaves the first one whole
+00:00 +5: /home/owner/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart: the AI Team plugin data of the deleted profile is swept
+00:00 +6: /home/owner/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart: queued prompts awaiting delivery review are swept with the profile and counted in the disclosure
+00:00 +7: /home/owner/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart: queued prompts awaiting delivery review stay on the device, marker intact, when the sweep is refused
+00:00 +8: /home/owner/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart: a widget snapshot with no owner is cleared rather than left
+00:00 +9: /home/owner/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart: a store that refuses writes keeps the server when its queued prompts cannot be deleted
+00:00 +10: /home/owner/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart: a store that refuses writes keeps the server when a draft write is refused
+00:00 +11: /home/owner/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart: a store that refuses writes keeps the server when a scoped setting will not go
+00:00 +12: /home/owner/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart: a store that refuses writes keeps the server when the widget snapshot will not clear
+00:00 +13: /home/owner/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart: a store that refuses writes keeps the server when the launcher shortcut record or the tile count will not clear
+00:00 +14: /home/owner/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart: a store that refuses writes reports every refusal, not just the first
+00:00 +15: /home/owner/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart: a store that refuses writes a clean run still reports a complete deletion
+00:00 +16: /home/owner/Storage/Code/oc_app-sol-ba/test/profile_deletion_test.dart: drafts record the profile that owns them
+00:00 +17: loading /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart
+00:01 +17: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: (setUpAll)
+00:01 +17: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the Settings row says Signed in only after the status check a confirmed sign-in reads Signed in, not Ready
+00:02 +18: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the Settings row says Signed in only after the status check the account name is one plain line
+00:02 +19: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the Settings row says Signed in only after the status check the account name sits above the quiet reopen line
+00:02 +20: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the Settings row says Signed in only after the status check a name with line breaks stays on one line
+00:02 +21: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the Settings row says Signed in only after the status check a very long name wraps without overflowing the row
+00:02 +22: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the Settings row says Signed in only after the status check an install and a passed phone check do not make a row Signed in
+00:02 +23: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the Settings row says Signed in only after the status check signed out reads Sign in needed with a Sign in chip
+00:02 +24: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the Settings row says Signed in only after the status check a check that ends in probeUnsupported keeps the existing wording and claims nothing
+00:02 +25: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the Settings row says Signed in only after the status check a check that ends in timedOut keeps the existing wording and claims nothing
+00:02 +26: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the Settings row says Signed in only after the status check a check that ends in invalidResponse keeps the existing wording and claims nothing
+00:02 +27: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the Settings row says Signed in only after the status check a check that ends in hostUnavailable keeps the existing wording and claims nothing
+00:02 +28: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the Settings row says Signed in only after the status check other agents keep their wording beside a signed-in one
+00:02 +29: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the Settings row says Signed in only after the status check a source without status checks keeps Ready
+00:02 +30: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the download size reads in order a not-installed row isolates its size left to right, in English and in Arabic
+00:02 +31: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the download size reads in order the install question isolates it too
+00:03 +32: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: Sign out in the agent sheet a confirmed sign-in offers Sign out of the agent
+00:03 +33: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: Sign out in the agent sheet the sign-out question uses the danger fill and a neutral Cancel
+00:03 +34: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: Sign out in the agent sheet it asks first: names the agent, says conversations stay, and Cancel changes nothing
+00:03 +35: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: Sign out in the agent sheet confirming runs the agent logout; the sheet then offers Sign in
+00:03 +36: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: Sign out in the agent sheet the row behind turns to Sign in after the sign-out
+00:03 +37: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: Sign out in the agent sheet while it runs the other actions wait and the layout holds
+00:03 +38: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: Sign out in the agent sheet an unconfirmed sign-out says so in plain words and reads the real state again
+00:03 +39: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: Sign out in the agent sheet a failed sign-out never flashes the signed-out layout while the real state is read again
+00:03 +40: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: Sign out in the agent sheet a retry after a failure signs out
+00:04 +41: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: Sign out in the agent sheet an agent whose logout is not qualified has no Sign out
+00:04 +42: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: Sign out in the agent sheet a source without status checks has no Sign out
+00:04 +43: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: Sign out in the agent sheet a signed-out agent has no Sign out
+00:04 +44: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the Signed in page names the account as its own line under the body, when the check gave one
+00:04 +45: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the Signed in page names the account without an account the page is unchanged
+00:04 +46: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the Signed in page names the account a long name stays on one line and is cut with an ellipsis
+00:04 +47: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: the Signed in page names the account it stays while the sign-out runs
+00:04 +48: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: a finished sign-in terminal a clean exit is not a sign-in until the status check says so
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following TestFailure was thrown running a test:
 Expected: contains 'confirm:claude'
@@ -123,7 +123,7 @@ Expected: contains 'confirm:claude'
    Which: does not contain 'confirm:claude'
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart:582:7)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart:582:7)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -133,15 +133,15 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart line 582
+  file:///home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart line 582
 The test description was:
   a clean exit is not a sign-in until the status check says so
 ════════════════════════════════════════════════════════════════════════════════════════════════════
-00:04 +48 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: a finished sign-in terminal a clean exit is not a sign-in until the status check says so [E]
+00:04 +48 -1: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: a finished sign-in terminal a clean exit is not a sign-in until the status check says so [E]
   Test failed. See exception logs above.
   The test description was: a clean exit is not a sign-in until the status check says so
   
-00:04 +48 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: a finished sign-in terminal it ends once the status check says signed in
+00:04 +48 -1: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: a finished sign-in terminal it ends once the status check says signed in
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following TestFailure was thrown running a test:
 Expected: contains 'confirm:claude'
@@ -149,7 +149,7 @@ Expected: contains 'confirm:claude'
    Which: does not contain 'confirm:claude'
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart:597:7)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart:597:7)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -159,26 +159,26 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart line 597
+  file:///home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart line 597
 The test description was:
   it ends once the status check says signed in
 ════════════════════════════════════════════════════════════════════════════════════════════════════
-00:05 +48 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: a finished sign-in terminal it ends once the status check says signed in [E]
+00:05 +48 -2: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: a finished sign-in terminal it ends once the status check says signed in [E]
   Test failed. See exception logs above.
   The test description was: it ends once the status check says signed in
   
-00:05 +48 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: (tearDownAll)
-00:05 +48 -2: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart
-00:06 +48 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: (setUpAll)
-00:06 +48 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent chip is hidden without phone agents
-00:07 +49 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent chip is hidden while phoneAgentsAvailable is false
-00:07 +50 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent chip shows OpenCode beside the project when available
-00:07 +51 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent chip send starts the conversation with the chosen agent
-00:07 +52 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent model chip lists the chosen agent's own models, not OpenCode's
-00:07 +53 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent model chip OpenCode keeps the server model chip
-00:07 +54 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet lists agents with one line of state each
-00:07 +55 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet choosing a ready agent selects it and closes
-00:07 +56 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet certified ready agents come first; the rest are dimmed and say why, with a way forward where there is one
+00:05 +48 -2: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: (tearDownAll)
+00:05 +48 -2: loading /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart
+00:06 +48 -2: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: (setUpAll)
+00:06 +48 -2: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent chip is hidden without phone agents
+00:07 +49 -2: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent chip is hidden while phoneAgentsAvailable is false
+00:07 +50 -2: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent chip shows OpenCode beside the project when available
+00:07 +51 -2: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent chip send starts the conversation with the chosen agent
+00:07 +52 -2: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent model chip lists the chosen agent's own models, not OpenCode's
+00:07 +53 -2: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent model chip OpenCode keeps the server model chip
+00:07 +54 -2: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet lists agents with one line of state each
+00:07 +55 -2: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet choosing a ready agent selects it and closes
+00:07 +56 -2: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet certified ready agents come first; the rest are dimmed and say why, with a way forward where there is one
 
 Warning: A call to tap() with finder "Found 1 widget with key [<'agents-choice-gemini'>]: [
   KitRow-[<'agents-choice-gemini'>](dependencies: [InheritedCupertinoTheme, MediaQuery, _InheritedTheme, _LocalizationsScope-[GlobalKey#8028c]]),
@@ -189,7 +189,7 @@ The hit test result at that offset is: HitTestResult(_RenderInkFeatures#87cfb@Of
 #0      WidgetController._getElementPoint (package:flutter_test/src/controller.dart:2165:25)
 #1      WidgetController.getCenter (package:flutter_test/src/controller.dart:1947:12)
 #2      WidgetController.tap (package:flutter_test/src/controller.dart:1080:7)
-#3      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart:213:20)
+#3      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart:213:20)
 <asynchronous suspension>
 #4      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -200,8 +200,8 @@ The hit test result at that offset is: HitTestResult(_RenderInkFeatures#87cfb@Of
 To silence this warning, pass "warnIfMissed: false" to "tap()".
 To make this warning fatal, set WidgetController.hitTestWarningShouldBeFatal to true.
 
-00:08 +57 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet an agent that is not installed shows its state
-00:08 +58 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet install, cancel, then sign in happen in the same sheet
+00:08 +57 -2: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet an agent that is not installed shows its state
+00:08 +58 -2: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet install, cancel, then sign in happen in the same sheet
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following TestFailure was thrown running a test:
 Expected: contains 'sign-in local 24 x 80'
@@ -209,7 +209,7 @@ Expected: contains 'sign-in local 24 x 80'
    Which: does not contain 'sign-in local 24 x 80'
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart:286:7)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart:286:7)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -219,19 +219,19 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart line 286
+  file:///home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart line 286
 The test description was:
   install, cancel, then sign in happen in the same sheet
 ════════════════════════════════════════════════════════════════════════════════════════════════════
-00:08 +58 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet install, cancel, then sign in happen in the same sheet [E]
+00:08 +58 -3: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet install, cancel, then sign in happen in the same sheet [E]
   Test failed. See exception logs above.
   The test description was: install, cancel, then sign in happen in the same sheet
   
-00:08 +58 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet a finished install that cannot move on reads rows once
-00:09 +59 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet a failed phone check says which step and what to do
-00:09 +60 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet as a shortcut to install a not-installed row shows its size and an Install chip
-00:09 +61 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet as a shortcut to install tapping it runs install, phone check and sign-in in place
-00:09 +62 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet as a shortcut to install a real blocker says exactly why, not "not available yet"
+00:08 +58 -3: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet a finished install that cannot move on reads rows once
+00:09 +59 -3: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet a failed phone check says which step and what to do
+00:09 +60 -3: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet as a shortcut to install a not-installed row shows its size and an Install chip
+00:09 +61 -3: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet as a shortcut to install tapping it runs install, phone check and sign-in in place
+00:09 +62 -3: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet as a shortcut to install a real blocker says exactly why, not "not available yet"
 
 Warning: A call to tap() with finder "Found 1 widget with key [<'agents-choice-arm-only'>]: [
   KitRow-[<'agents-choice-arm-only'>](dependencies: [InheritedCupertinoTheme, MediaQuery, _InheritedTheme, _LocalizationsScope-[GlobalKey#d349b]]),
@@ -242,7 +242,7 @@ The hit test result at that offset is: HitTestResult(_RenderInkFeatures#c705e@Of
 #0      WidgetController._getElementPoint (package:flutter_test/src/controller.dart:2165:25)
 #1      WidgetController.getCenter (package:flutter_test/src/controller.dart:1947:12)
 #2      WidgetController.tap (package:flutter_test/src/controller.dart:1080:7)
-#3      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart:441:20)
+#3      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart:441:20)
 <asynchronous suspension>
 #4      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -253,9 +253,9 @@ The hit test result at that offset is: HitTestResult(_RenderInkFeatures#c705e@Of
 To silence this warning, pass "warnIfMissed: false" to "tap()".
 To make this warning fatal, set WidgetController.hitTestWarningShouldBeFatal to true.
 
-00:09 +63 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet as a shortcut to install server types are not listed as agents
-00:09 +64 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet as a shortcut to install a failed step says it in words and Details show the text
-00:09 +65 -3: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal runs Claude's own sign-in; its page opens through the safe opener and no code passes through the app
+00:09 +63 -3: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet as a shortcut to install server types are not listed as agents
+00:09 +64 -3: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet as a shortcut to install a failed step says it in words and Details show the text
+00:09 +65 -3: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal runs Claude's own sign-in; its page opens through the safe opener and no code passes through the app
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following TestFailure was thrown running a test:
 Expected: contains 'sign-in local 24 x 80'
@@ -263,7 +263,7 @@ Expected: contains 'sign-in local 24 x 80'
    Which: does not contain 'sign-in local 24 x 80'
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart:527:7)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart:527:7)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -273,23 +273,23 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart line 527
+  file:///home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart line 527
 The test description was:
   runs Claude's own sign-in; its page opens through the safe opener and no code passes through the
   app
 ════════════════════════════════════════════════════════════════════════════════════════════════════
-00:10 +65 -4: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal runs Claude's own sign-in; its page opens through the safe opener and no code passes through the app [E]
+00:10 +65 -4: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal runs Claude's own sign-in; its page opens through the safe opener and no code passes through the app [E]
   Test failed. See exception logs above.
   The test description was: runs Claude's own sign-in; its page opens through the safe opener and no code passes through the app
   
-00:10 +65 -4: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal signed in, it still offers to sign in again
+00:10 +65 -4: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal signed in, it still offers to sign in again
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following StateError was thrown running a test:
 Bad state: No element
 
 When the exception was thrown, this was the stack:
 #0      List.single (dart:core-patch/growable_array.dart:362:22)
-#1      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart:569:32)
+#1      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart:569:32)
 <asynchronous suspension>
 #2      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -301,18 +301,18 @@ When the exception was thrown, this was the stack:
 The test description was:
   signed in, it still offers to sign in again
 ════════════════════════════════════════════════════════════════════════════════════════════════════
-00:10 +65 -5: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal signed in, it still offers to sign in again [E]
+00:10 +65 -5: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal signed in, it still offers to sign in again [E]
   Test failed. See exception logs above.
   The test description was: signed in, it still offers to sign in again
   
-00:10 +65 -5: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal each agent signs in with its own login command
+00:10 +65 -5: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal each agent signs in with its own login command
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following StateError was thrown running a test:
 Bad state: No element
 
 When the exception was thrown, this was the stack:
 #0      List.single (dart:core-patch/growable_array.dart:362:22)
-#1      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart:585:30)
+#1      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart:585:30)
 <asynchronous suspension>
 #2      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -324,18 +324,18 @@ When the exception was thrown, this was the stack:
 The test description was:
   each agent signs in with its own login command
 ════════════════════════════════════════════════════════════════════════════════════════════════════
-00:10 +65 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal each agent signs in with its own login command [E]
+00:10 +65 -6: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal each agent signs in with its own login command [E]
   Test failed. See exception logs above.
   The test description was: each agent signs in with its own login command
   
-00:10 +65 -6: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal Codex runs its device sign-in, in words that are not Claude's
+00:10 +65 -6: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal Codex runs its device sign-in, in words that are not Claude's
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following StateError was thrown running a test:
 Bad state: No element
 
 When the exception was thrown, this was the stack:
 #0      List.single (dart:core-patch/growable_array.dart:362:22)
-#1      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart:607:34)
+#1      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart:607:34)
 <asynchronous suspension>
 #2      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -347,11 +347,11 @@ When the exception was thrown, this was the stack:
 The test description was:
   Codex runs its device sign-in, in words that are not Claude's
 ════════════════════════════════════════════════════════════════════════════════════════════════════
-00:10 +65 -7: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal Codex runs its device sign-in, in words that are not Claude's [E]
+00:10 +65 -7: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal Codex runs its device sign-in, in words that are not Claude's [E]
   Test failed. See exception logs above.
   The test description was: Codex runs its device sign-in, in words that are not Claude's
   
-00:10 +65 -7: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal ending without signing in says so and starts again
+00:10 +65 -7: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal ending without signing in says so and starts again
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following TestFailure was thrown running a test:
 Expected: exactly one matching candidate
@@ -359,7 +359,7 @@ Expected: exactly one matching candidate
    Which: means none were found but one was expected
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart:621:7)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart:621:7)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -369,15 +369,15 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart line 621
+  file:///home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart line 621
 The test description was:
   ending without signing in says so and starts again
 ════════════════════════════════════════════════════════════════════════════════════════════════════
-00:11 +65 -8: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal ending without signing in says so and starts again [E]
+00:11 +65 -8: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal ending without signing in says so and starts again [E]
   Test failed. See exception logs above.
   The test description was: ending without signing in says so and starts again
   
-00:11 +65 -8: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal leaving the terminal ends Claude's sign-in
+00:11 +65 -8: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal leaving the terminal ends Claude's sign-in
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following TestFailure was thrown running a test:
 Expected: contains 'remove 1'
@@ -385,7 +385,7 @@ Expected: contains 'remove 1'
    Which: does not contain 'remove 1'
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart:641:7)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart:641:7)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -395,45 +395,45 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart line 641
+  file:///home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart line 641
 The test description was:
   leaving the terminal ends Claude's sign-in
 ════════════════════════════════════════════════════════════════════════════════════════════════════
-00:11 +65 -9: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal leaving the terminal ends Claude's sign-in [E]
+00:11 +65 -9: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal leaving the terminal ends Claude's sign-in [E]
   Test failed. See exception logs above.
   The test description was: leaving the terminal ends Claude's sign-in
   
-00:11 +65 -9: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Conversations a plan limit is one quiet line with its reset time
-00:11 +66 -9: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Conversations a limit without a time says try again later
-00:11 +67 -9: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Conversations Signed out opens the setup sheet at sign-in
-00:11 +68 -9: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Conversations Stopped in the background resumes the host
-00:11 +69 -9: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Conversations one restart offer closes the app
-00:11 +70 -9: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Conversations a row that cannot reopen asks before starting a new one
-00:11 +71 -9: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Conversations a row that can reopen opens straight away
-00:11 +72 -9: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Settings › This phone › Agents a ready agent opens its sign-in step, with Sign in again
-00:11 +73 -9: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Settings › This phone › Agents draws nothing without phone agents
-00:11 +74 -9: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Settings › This phone › Agents lists each agent with the act it needs
-00:11 +75 -9: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Settings › This phone › Agents each act is a short chip, all starting at one edge
-00:11 +76 -9: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Settings › This phone › Agents Check this phone shows each step in plain words
-00:12 +77 -9: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Settings › This phone › Agents a passed check says the agent is ready
-00:12 +78 -9: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Settings › This phone › Agents a fix action opens the sheet at its step
-00:12 +79 -9: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: (tearDownAll)
-00:12 +79 -9: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_settings_placement_test.dart
-00:14 +79 -9: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_settings_placement_test.dart: (setUpAll)
-00:14 +79 -9: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_settings_placement_test.dart: on the built-in server Settings has an Agents row that opens the section with Check this phone
+00:11 +65 -9: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Conversations a plan limit is one quiet line with its reset time
+00:11 +66 -9: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Conversations a limit without a time says try again later
+00:11 +67 -9: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Conversations Signed out opens the setup sheet at sign-in
+00:11 +68 -9: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Conversations Stopped in the background resumes the host
+00:11 +69 -9: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Conversations one restart offer closes the app
+00:11 +70 -9: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Conversations a row that cannot reopen asks before starting a new one
+00:11 +71 -9: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Conversations a row that can reopen opens straight away
+00:11 +72 -9: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Settings › This phone › Agents a ready agent opens its sign-in step, with Sign in again
+00:11 +73 -9: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Settings › This phone › Agents draws nothing without phone agents
+00:11 +74 -9: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Settings › This phone › Agents lists each agent with the act it needs
+00:11 +75 -9: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Settings › This phone › Agents each act is a short chip, all starting at one edge
+00:11 +76 -9: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Settings › This phone › Agents Check this phone shows each step in plain words
+00:12 +77 -9: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Settings › This phone › Agents a passed check says the agent is ready
+00:12 +78 -9: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: Settings › This phone › Agents a fix action opens the sheet at its step
+00:12 +79 -9: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: (tearDownAll)
+00:12 +79 -9: loading /home/owner/Storage/Code/oc_app-sol-ba/test/agents_settings_placement_test.dart
+00:14 +79 -9: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_settings_placement_test.dart: (setUpAll)
+00:14 +79 -9: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_settings_placement_test.dart: on the built-in server Settings has an Agents row that opens the section with Check this phone
 setup: status read took over 10 s
-00:15 +80 -9: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_settings_placement_test.dart: on a remote server the row stays, says why, and offers no switch without a built-in server
-00:15 +81 -9: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_settings_placement_test.dart: with a built-in server saved, the page offers the switch
-00:16 +82 -9: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_settings_placement_test.dart: off a phone, with no agents, there is no Agents row
-00:16 +83 -9: /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_settings_placement_test.dart: (tearDownAll)
-00:16 +83 -9: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/file_size_ratchet_test.dart
-00:16 +83 -9: /home/eslam/Storage/Code/oc_app-sol-ba/test/file_size_ratchet_test.dart: no lib file grows past its line budget
-00:17 +84 -9: /home/eslam/Storage/Code/oc_app-sol-ba/test/file_size_ratchet_test.dart: the baseline only lists files over the limit
+00:15 +80 -9: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_settings_placement_test.dart: on a remote server the row stays, says why, and offers no switch without a built-in server
+00:15 +81 -9: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_settings_placement_test.dart: with a built-in server saved, the page offers the switch
+00:16 +82 -9: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_settings_placement_test.dart: off a phone, with no agents, there is no Agents row
+00:16 +83 -9: /home/owner/Storage/Code/oc_app-sol-ba/test/agents_settings_placement_test.dart: (tearDownAll)
+00:16 +83 -9: loading /home/owner/Storage/Code/oc_app-sol-ba/test/file_size_ratchet_test.dart
+00:16 +83 -9: /home/owner/Storage/Code/oc_app-sol-ba/test/file_size_ratchet_test.dart: no lib file grows past its line budget
+00:17 +84 -9: /home/owner/Storage/Code/oc_app-sol-ba/test/file_size_ratchet_test.dart: the baseline only lists files over the limit
 00:17 +85 -9: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: a finished sign-in terminal a clean exit is not a sign-in until the status check says so
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: a finished sign-in terminal it ends once the status check says signed in
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet install, cancel, then sign in happen in the same sheet
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal Codex runs its device sign-in, in words that are not Claude's
+  /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: a finished sign-in terminal a clean exit is not a sign-in until the status check says so
+  /home/owner/Storage/Code/oc_app-sol-ba/test/agents_account_ui_test.dart: a finished sign-in terminal it ends once the status check says signed in
+  /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the agent sheet install, cancel, then sign in happen in the same sheet
+  /home/owner/Storage/Code/oc_app-sol-ba/test/agents_ui_test.dart: the sign-in terminal Codex runs its device sign-in, in words that are not Claude's
   ... and 5 more

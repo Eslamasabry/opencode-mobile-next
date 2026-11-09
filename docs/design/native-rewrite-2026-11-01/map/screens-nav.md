@@ -1,7 +1,7 @@
 # screens-nav: screens, navigation, deep links, adaptive layout, shortcuts
 
 Area map for the native rewrite (Android first, KMP-ready). Written 2026-11-01 from
-`/home/eslam/Storage/Code/wt/oc_app-batch1` (branch `int/batch1-2026-11-01`, HEAD `65e3f70a3`,
+`/home/owner/Storage/Code/wt/oc_app-batch1` (branch `int/batch1-2026-11-01`, HEAD `65e3f70a3`,
 app version 2.1.0+57). Read-only study; nothing in the repo was changed.
 
 Scope: `lib/ui/screens` (301 files, ~125k lines), `lib/ui/widgets` (108 files, ~36k lines),

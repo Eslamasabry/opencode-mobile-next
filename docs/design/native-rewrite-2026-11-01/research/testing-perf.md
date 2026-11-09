@@ -126,7 +126,7 @@ What the repo already uses: Robolectric 4.17 in the Flutter Android module (`and
 
 ### 2.1 Where the catalog rows go
 
-The catalog `/home/eslam/Storage/Code/wt/native-plan/catalog/raw-*.jsonl` has 1,574 behaviour rows condensed from the
+The catalog `/home/owner/Storage/Code/wt/native-plan/catalog/raw-*.jsonl` has 1,574 behaviour rows condensed from the
 6,663 logic tests. Of these, 215 are marked `portable_e2e`. [R]
 
 | `native_level` | Rows | Native home | Runs on | Typical tool |
@@ -1000,7 +1000,7 @@ Other notes:
 - Secondary sources: Kotlin Slack (v2 `runComposeUiTest` desktop issue fixed in Compose 1.11 beta02); search
   snippets on Compose Desktop headless CI. These are marked [S]/[U] where used.
 - Repo and machine facts:
-  - `/home/eslam/Storage/Code/wt/oc_app-batch1`: `android/app/build.gradle.kts`, `contracts/`,
+  - `/home/owner/Storage/Code/wt/oc_app-batch1`: `android/app/build.gradle.kts`, `contracts/`,
     `test/fixtures/api2/`, `tool/qa/issue87/mock_llm.py`, `tool/qa/codex_fixture/fixture_server.py`,
     `tool/qa/bd7_device_ui.py`, `tool/release/cold_start.py`, `tool/release/check_apk_size.py`;
   - `native-plan/map/*.md`, `native-plan/catalog/raw-*.jsonl`;

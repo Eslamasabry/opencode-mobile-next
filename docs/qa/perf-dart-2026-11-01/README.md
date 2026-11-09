@@ -1,6 +1,6 @@
 # Perf slices that ship as a Dart patch (2026-11-01)
 
-Branch `perf/dart-2026-11-01`, from `patch/2.1.0-p1`. Audit: `/home/eslam/Storage2/wt/perf-audit-2026-11-01/REPORT.md`.
+Branch `perf/dart-2026-11-01`, from `patch/2.1.0-p1`. Audit: `/home/owner/Storage2/wt/perf-audit-2026-11-01/REPORT.md`.
 
 | Slice | What now works | Proof |
 |---|---|---|

@@ -1,5 +1,5 @@
 Expected regression failure before the corresponding harness repair; base f0e33d96d407ff68782b49702e88269d197ae96e.
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bc/test/fq3_oc2_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app-sol-bc/test/fq3_oc2_test.dart
 00:00 +0: completed local MCP card with provider executed false passes
 Shell: version: pass (verified)
 Shell: create: pass (verified)
@@ -21,4 +21,4 @@ Shell: cards: fail (cards_tool_call_missing)
 00:00 +0 -1: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app-sol-bc/test/fq3_oc2_test.dart: completed local MCP card with provider executed false passes
+  /home/owner/Storage/Code/oc_app-sol-bc/test/fq3_oc2_test.dart: completed local MCP card with provider executed false passes

@@ -25,7 +25,7 @@ B-KIT-060 -> blocked: this row is an overflow screenshot/scene-inventory test ga
 
 ## Compile evidence, first batch (11 rows)
 
-With the remaining seven rows parked locally, both requested selectors passed on this exact first-batch source candidate: `:androidApp:compilePreviewDebugKotlin compileKotlinDesktop` (`BUILD SUCCESSFUL`, 3m 19s, 693 actionable tasks). Gradle ran in `native/` under the shared build lock, `nice -n 5`, JDK `/home/eslam/Storage2/tools/jdk21`, `ANDROID_HOME=$HOME/Android/Sdk`, 2 workers, 300000 ms daemon idle timeout and `-Xmx2g -XX:MaxMetaspaceSize=768m`. Compilation emitted warnings; no zero-warning or runtime claim is made.
+With the remaining seven rows parked locally, both requested selectors passed on this exact first-batch source candidate: `:androidApp:compilePreviewDebugKotlin compileKotlinDesktop` (`BUILD SUCCESSFUL`, 3m 19s, 693 actionable tasks). Gradle ran in `native/` under the shared build lock, `nice -n 5`, JDK `/home/owner/Storage2/tools/jdk21`, `ANDROID_HOME=$HOME/Android/Sdk`, 2 workers, 300000 ms daemon idle timeout and `-Xmx2g -XX:MaxMetaspaceSize=768m`. Compilation emitted warnings; no zero-warning or runtime claim is made.
 
 The checkout lacked its ignored vendored Sherpa AAR. A local copy was restored only after matching checked-in `native/third_party/SHA256SUMS`: `a8d09d1d32f3eb8520482c6d3d43fae674681c5b050385967c70a3c2c9bf0ee7`. No dependency version or manifest was changed.
 

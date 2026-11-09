@@ -1,6 +1,6 @@
 # Style coherence re-check (2026-10-21)
 
-*Auditor only: no app code changed. This re-checks [style-coherence-2026-10-21.md](style-coherence-2026-10-21.md) after the cleanup merged on `int/ui-batch-2026-10-14` at `58d89faa9`: slices S0–S9, the Brutal, Paper and Soft polish, and Brutal and Paper in the Style picker. Branch `audit/style-recheck`. Renders: `/home/eslam/Storage2/launch-footage/audit-styles-2/<screen>/<style>-<mode>.png`, one full phone screen (412×915 dp at 2×) per image. The earlier renders are in `audit-styles/`, and a fresh Solid baseline from the pre-cleanup commit `1adad8012` is in `audit-styles-base/`.*
+*Auditor only: no app code changed. This re-checks [style-coherence-2026-10-21.md](style-coherence-2026-10-21.md) after the cleanup merged on `int/ui-batch-2026-10-14` at `58d89faa9`: slices S0–S9, the Brutal, Paper and Soft polish, and Brutal and Paper in the Style picker. Branch `audit/style-recheck`. Renders: `/home/owner/Storage2/launch-footage/audit-styles-2/<screen>/<style>-<mode>.png`, one full phone screen (412×915 dp at 2×) per image. The earlier renders are in `audit-styles/`, and a fresh Solid baseline from the pre-cleanup commit `1adad8012` is in `audit-styles-base/`.*
 
 ## 1. Verdict
 
@@ -200,17 +200,17 @@ No two groups share a file, so they can run in parallel.
 
 One screen per image. Before is `audit-styles/`, after is `audit-styles-2/`.
 
-1. **Brutal Conversations, V1 fixed.** Before: `/home/eslam/Storage2/launch-footage/audit-styles/conversations/brutal-light.png`. After: `/home/eslam/Storage2/launch-footage/audit-styles-2/conversations/brutal-light.png`. The hard shadows are back on the groups, chips, pill and +.
-2. **New conversation in Brutal, V2 fixed.** Before: `/home/eslam/Storage2/launch-footage/audit-styles/new-conversation/brutal-light.png`. After: `/home/eslam/Storage2/launch-footage/audit-styles-2/new-conversation/brutal-light.png`. The agent cards are now Brutal.
-3. **Question card in Soft, V3 fixed.** Before: `/home/eslam/Storage2/launch-footage/audit-styles/chat-question-card/soft-light.png`. After: `/home/eslam/Storage2/launch-footage/audit-styles-2/chat-question-card/soft-light.png`. There is no second raised pane inside the card.
-4. **Git sheet in Brutal, V4 fixed.** Before: `/home/eslam/Storage2/launch-footage/audit-styles/git-sheet/brutal-light.png`. After: `/home/eslam/Storage2/launch-footage/audit-styles-2/git-sheet/brutal-light.png`. An ink sheet instead of the Material slab.
-5. **Report a problem in Paper, V7 fixed.** Before: `/home/eslam/Storage2/launch-footage/audit-styles/report-problem/paper-light.png`. After: `/home/eslam/Storage2/launch-footage/audit-styles-2/report-problem/paper-light.png`. The text box has an ink box at rest.
-6. **Model picker in Paper, regression N1.** Before: `/home/eslam/Storage2/launch-footage/audit-styles/model-picker-sheet/paper-light.png`. After: `/home/eslam/Storage2/launch-footage/audit-styles-2/model-picker-sheet/paper-light.png`. The chosen tile is an ink block with its title gone.
-7. **New conversation in Glass, regression N2.** Before: `/home/eslam/Storage2/launch-footage/audit-styles/new-conversation/glass-dark.png`. After: `/home/eslam/Storage2/launch-footage/audit-styles-2/new-conversation/glass-dark.png`. The chosen card lost its mint ring.
+1. **Brutal Conversations, V1 fixed.** Before: `/home/owner/Storage2/launch-footage/audit-styles/conversations/brutal-light.png`. After: `/home/owner/Storage2/launch-footage/audit-styles-2/conversations/brutal-light.png`. The hard shadows are back on the groups, chips, pill and +.
+2. **New conversation in Brutal, V2 fixed.** Before: `/home/owner/Storage2/launch-footage/audit-styles/new-conversation/brutal-light.png`. After: `/home/owner/Storage2/launch-footage/audit-styles-2/new-conversation/brutal-light.png`. The agent cards are now Brutal.
+3. **Question card in Soft, V3 fixed.** Before: `/home/owner/Storage2/launch-footage/audit-styles/chat-question-card/soft-light.png`. After: `/home/owner/Storage2/launch-footage/audit-styles-2/chat-question-card/soft-light.png`. There is no second raised pane inside the card.
+4. **Git sheet in Brutal, V4 fixed.** Before: `/home/owner/Storage2/launch-footage/audit-styles/git-sheet/brutal-light.png`. After: `/home/owner/Storage2/launch-footage/audit-styles-2/git-sheet/brutal-light.png`. An ink sheet instead of the Material slab.
+5. **Report a problem in Paper, V7 fixed.** Before: `/home/owner/Storage2/launch-footage/audit-styles/report-problem/paper-light.png`. After: `/home/owner/Storage2/launch-footage/audit-styles-2/report-problem/paper-light.png`. The text box has an ink box at rest.
+6. **Model picker in Paper, regression N1.** Before: `/home/owner/Storage2/launch-footage/audit-styles/model-picker-sheet/paper-light.png`. After: `/home/owner/Storage2/launch-footage/audit-styles-2/model-picker-sheet/paper-light.png`. The chosen tile is an ink block with its title gone.
+7. **New conversation in Glass, regression N2.** Before: `/home/owner/Storage2/launch-footage/audit-styles/new-conversation/glass-dark.png`. After: `/home/owner/Storage2/launch-footage/audit-styles-2/new-conversation/glass-dark.png`. The chosen card lost its mint ring.
 
 ### Glass samples for the owner
 
-Live background on, one full screen each, in `/home/eslam/Storage2/launch-footage/glass-samples/`:
+Live background on, one full screen each, in `/home/owner/Storage2/launch-footage/glass-samples/`:
 
 - **Conversations:** `conversations-glass-dark.png`, `conversations-glass-light.png`.
 - **Chat with a question card:** `chat-question-card-glass-dark.png`, `chat-question-card-glass-light.png`.

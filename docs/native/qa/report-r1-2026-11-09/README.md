@@ -1,7 +1,7 @@
 # R1 Report a problem: desktop renders, 2026-11-09
 
 Branch `native/report-r1` (from `native/telemetry` + `native/screens-merge41`, landed on `native/next`). The owner's
-pick R1 (mockups in `/home/eslam/Storage2/mockups/2026-11-09/R1-*-glass-RECOMMENDED.png`): one flow for the old
+pick R1 (mockups in `/home/owner/Storage2/mockups/2026-11-09/R1-*-glass-RECOMMENDED.png`): one flow for the old
 Report a problem and Settings › Help › Send a problem report.
 
 Drawn by `ReportProblemR1Test` (`:feature:settings:desktopTest -Poc.r1Renders=true`) on the desktop Skiko raster at

@@ -4,7 +4,7 @@
 - Branch: `feat/claude-agent-trial-2026-11-01`, based on `patch/2.1.0-p1`.
 - Commit: 51462fa01.
 
-**Plan.** `/home/eslam/Storage2/wt/paseo-exit-plan-2026-11-01/`.
+**Plan.** `/home/owner/Storage2/wt/paseo-exit-plan-2026-11-01/`.
 
 ## What was proven, and how
 
@@ -22,7 +22,7 @@
 
 ## Emulator proof, build 4460 (emulator-5584, 2026-11-01 04:30–04:44)
 
-Videos and stills are in `/home/eslam/Storage2/wt/claude-agent-trial-2026-11-01-video/`:
+Videos and stills are in `/home/owner/Storage2/wt/claude-agent-trial-2026-11-01-video/`:
 - `ca1-needs-sign-in.mp4`
 - `ca2-turn.mp4`
 - `ca_*.png`

@@ -3,7 +3,7 @@
 You are one of 13 agents building a UI ledger of a Flutter app (package
 `opencode_mobile`). Repository root (a git worktree, use absolute paths):
 
-    /home/eslam/Storage/Code/oc_app/.claude/worktrees/agent-ae9d46939f3782892
+    /home/owner/Storage/Code/oc_app/.claude/worktrees/agent-ae9d46939f3782892
 
 This is static analysis and documentation. Do NOT change any Dart code, do NOT
 run flutter/dart builds or tests, do NOT commit, do NOT touch any file other
@@ -116,7 +116,7 @@ local helper such as `_l10n(context).someKey` or `lookupAppLocalizations(...)`).
 Look keys up, e.g.:
 
     python3 - <<'EOF'
-    import json; d=json.load(open('/home/eslam/Storage/Code/oc_app/.claude/worktrees/agent-ae9d46939f3782892/lib/l10n/app_en.arb'))
+    import json; d=json.load(open('/home/owner/Storage/Code/oc_app/.claude/worktrees/agent-ae9d46939f3782892/lib/l10n/app_en.arb'))
     for k in ['e7WorkspaceFiles','globalSessionsRefresh']: print(k,'=>',d.get(k))
     EOF
 

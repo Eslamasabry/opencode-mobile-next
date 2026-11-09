@@ -68,65 +68,65 @@ Downloading packages...
 Got dependencies!
 65 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
-00:00 +0: loading /home/eslam/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart
-00:00 +0: /home/eslam/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: route change refuses before creating a transport
-00:00 +1: /home/eslam/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: persists new conversation before prompt exactly once
-00:00 +2: /home/eslam/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: persists existing conversation before prompt exactly once
-00:00 +3: /home/eslam/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: failure persisting created conversation prevents prompt dispatch
-00:00 +4: /home/eslam/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: persistent-selection servers create with captured agent and model
-00:00 +5: /home/eslam/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: existing session changes captured agent without resetting uncaptured model
-00:00 +6: /home/eslam/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: matching captured selection preserves existing variant without writes
-00:00 +7: /home/eslam/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: captured model changes only the model of an idle existing session
-00:00 +8: /home/eslam/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: uncertain selection is not retried or followed by a prompt
-00:00 +9: /home/eslam/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: turn starting during selection skips prompt without undoing edits
-00:00 +10: /home/eslam/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: unqualified gateway cannot create or send scheduled work
-00:00 +11: /home/eslam/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: cold socket status is hydrated before busy admission
-00:00 +12: /home/eslam/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: target deletion during read prevents mutation and closes connection
-00:00 +13: /home/eslam/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: existing conversation in another project is refused
-00:00 +14: /home/eslam/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: new conversation is created once and accepted remote run is recorded
-00:00 +15: /home/eslam/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: ambiguous delivery is never retried and does not expose response text
-00:00 +16: /home/eslam/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: phone lease waits for fresh output before closing owned runtime
-00:00 +17: /home/eslam/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: old assistant output cannot qualify phone completion
-00:00 +18: /home/eslam/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: phone permission wait is needs-you without approval
-00:00 +19: /home/eslam/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: profile rename preserves fingerprint but endpoint edits invalidate it
-00:00 +20: /home/eslam/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: cold connection rejects transient phone-agent routing
-00:00 +21: /home/eslam/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: cold connection refuses missing Codex credential before opening socket
-00:00 +22: loading /home/eslam/wt/oc-app-schedule-fullqa/test/scheduled_prompt_entrypoint_test.dart
-00:05 +22: /home/eslam/wt/oc-app-schedule-fullqa/test/scheduled_prompt_entrypoint_test.dart: engine loss retains the created conversation without resending
-00:05 +23: /home/eslam/wt/oc-app-schedule-fullqa/test/scheduled_prompt_entrypoint_test.dart: accepted run records normal session and advances without repeating
-00:06 +24: /home/eslam/wt/oc-app-schedule-fullqa/test/scheduled_prompt_entrypoint_test.dart: missed skip policy advances once and never calls runner
-00:06 +25: /home/eslam/wt/oc-app-schedule-fullqa/test/scheduled_prompt_entrypoint_test.dart: terminal duplicate receipt never sends and preserves original result
-00:06 +26: /home/eslam/wt/oc-app-schedule-fullqa/test/scheduled_prompt_entrypoint_test.dart: running occurrence is uncertain and cannot be dispatched twice
-00:06 +27: /home/eslam/wt/oc-app-schedule-fullqa/test/scheduled_prompt_entrypoint_test.dart: native interrupted recovery writes terminal history without dispatch
-00:06 +28: /home/eslam/wt/oc-app-schedule-fullqa/test/scheduled_prompt_entrypoint_test.dart: future and stale revision triggers never send
-00:06 +29: /home/eslam/wt/oc-app-schedule-fullqa/test/scheduled_prompt_entrypoint_test.dart: digest off performs no claim or notification summary
-00:06 +30: /home/eslam/wt/oc-app-schedule-fullqa/test/scheduled_prompt_entrypoint_test.dart: digest counts only completed runs in window and claims cutoff once
-00:06 +31: loading /home/eslam/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart
-00:14 +31: /home/eslam/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: the label rule separates labels from sentences
-00:14 +32: /home/eslam/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: action labels use the glossary word, not a banned synonym
-00:14 +33: /home/eslam/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: every allow-listed key still needs its exemption
-00:14 +34: /home/eslam/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: the noun rule matches standalone words only
-00:14 +35: /home/eslam/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: labels say conversation, not session or chat
-00:15 +36: /home/eslam/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: the engine-word rule catches Gas City terms, not plain words
-00:15 +37: /home/eslam/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: AI Team rows and cards use the person's words, not the engine's
-00:15 +38: /home/eslam/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: every allow-listed engine key is still there and still needs it
-00:15 +39: /home/eslam/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: every allow-listed noun key still needs its exemption
-00:15 +40: /home/eslam/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: G11 ICU messages expand to their plain wordings
-00:15 +41: /home/eslam/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: G11 confirm titles and labels are checked through wrappers
-00:15 +42: /home/eslam/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: G11 confirmation titles ask and labels name the act (COPY-9)
-00:15 +43: /home/eslam/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: G11 the contradiction rule finds both halves of a pair
-00:15 +44: /home/eslam/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: G11 the contradiction scan skips text that is never rendered
-00:15 +45: /home/eslam/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: G11 no text says two contradicting states at once (COPY-17)
-00:16 +46: /home/eslam/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: G11 every allow-listed contradiction key still needs it
-00:16 +47: /home/eslam/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: G11 the technical-word rule finds engine words, ports, paths and versions
-00:16 +48: /home/eslam/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: G11 technical words only in keys described as Technical: or Field example: (COPY-11)
-00:16 +49: /home/eslam/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: G28 the glossary extension finds each pattern
-00:16 +50: /home/eslam/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: G28 every allow-listed product key still needs it
-00:16 +51: /home/eslam/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: G28 labels and copy follow the glossary (COPY-6–8, COPY-10, COPY-12, COPY-21, LOOK-15)
-00:17 +52: loading /home/eslam/wt/oc-app-schedule-fullqa/test/coverage/settings_preferences_coverage_test.dart
-00:36 +52: /home/eslam/wt/oc-app-schedule-fullqa/test/coverage/settings_preferences_coverage_test.dart: every stored key in the app is classified, none is stale
-00:36 +53: /home/eslam/wt/oc-app-schedule-fullqa/test/coverage/settings_preferences_coverage_test.dart: the sweep takes every per-server key shape of the ledger
-00:36 +54: /home/eslam/wt/oc-app-schedule-fullqa/test/coverage/settings_preferences_coverage_test.dart: every setting reads back after a restart app-wide display settings
-00:36 +55: /home/eslam/wt/oc-app-schedule-fullqa/test/coverage/settings_preferences_coverage_test.dart: every setting reads back after a restart the shared notification choices
-00:36 +56: /home/eslam/wt/oc-app-schedule-fullqa/test/coverage/settings_preferences_coverage_test.dart: every setting reads back after a restart per-server choices read back and leave with the server
+00:00 +0: loading /home/owner/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart
+00:00 +0: /home/owner/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: route change refuses before creating a transport
+00:00 +1: /home/owner/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: persists new conversation before prompt exactly once
+00:00 +2: /home/owner/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: persists existing conversation before prompt exactly once
+00:00 +3: /home/owner/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: failure persisting created conversation prevents prompt dispatch
+00:00 +4: /home/owner/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: persistent-selection servers create with captured agent and model
+00:00 +5: /home/owner/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: existing session changes captured agent without resetting uncaptured model
+00:00 +6: /home/owner/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: matching captured selection preserves existing variant without writes
+00:00 +7: /home/owner/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: captured model changes only the model of an idle existing session
+00:00 +8: /home/owner/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: uncertain selection is not retried or followed by a prompt
+00:00 +9: /home/owner/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: turn starting during selection skips prompt without undoing edits
+00:00 +10: /home/owner/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: unqualified gateway cannot create or send scheduled work
+00:00 +11: /home/owner/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: cold socket status is hydrated before busy admission
+00:00 +12: /home/owner/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: target deletion during read prevents mutation and closes connection
+00:00 +13: /home/owner/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: existing conversation in another project is refused
+00:00 +14: /home/owner/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: new conversation is created once and accepted remote run is recorded
+00:00 +15: /home/owner/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: ambiguous delivery is never retried and does not expose response text
+00:00 +16: /home/owner/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: phone lease waits for fresh output before closing owned runtime
+00:00 +17: /home/owner/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: old assistant output cannot qualify phone completion
+00:00 +18: /home/owner/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: phone permission wait is needs-you without approval
+00:00 +19: /home/owner/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: profile rename preserves fingerprint but endpoint edits invalidate it
+00:00 +20: /home/owner/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: cold connection rejects transient phone-agent routing
+00:00 +21: /home/owner/wt/oc-app-schedule-fullqa/test/scheduled_prompt_runner_test.dart: cold connection refuses missing Codex credential before opening socket
+00:00 +22: loading /home/owner/wt/oc-app-schedule-fullqa/test/scheduled_prompt_entrypoint_test.dart
+00:05 +22: /home/owner/wt/oc-app-schedule-fullqa/test/scheduled_prompt_entrypoint_test.dart: engine loss retains the created conversation without resending
+00:05 +23: /home/owner/wt/oc-app-schedule-fullqa/test/scheduled_prompt_entrypoint_test.dart: accepted run records normal session and advances without repeating
+00:06 +24: /home/owner/wt/oc-app-schedule-fullqa/test/scheduled_prompt_entrypoint_test.dart: missed skip policy advances once and never calls runner
+00:06 +25: /home/owner/wt/oc-app-schedule-fullqa/test/scheduled_prompt_entrypoint_test.dart: terminal duplicate receipt never sends and preserves original result
+00:06 +26: /home/owner/wt/oc-app-schedule-fullqa/test/scheduled_prompt_entrypoint_test.dart: running occurrence is uncertain and cannot be dispatched twice
+00:06 +27: /home/owner/wt/oc-app-schedule-fullqa/test/scheduled_prompt_entrypoint_test.dart: native interrupted recovery writes terminal history without dispatch
+00:06 +28: /home/owner/wt/oc-app-schedule-fullqa/test/scheduled_prompt_entrypoint_test.dart: future and stale revision triggers never send
+00:06 +29: /home/owner/wt/oc-app-schedule-fullqa/test/scheduled_prompt_entrypoint_test.dart: digest off performs no claim or notification summary
+00:06 +30: /home/owner/wt/oc-app-schedule-fullqa/test/scheduled_prompt_entrypoint_test.dart: digest counts only completed runs in window and claims cutoff once
+00:06 +31: loading /home/owner/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart
+00:14 +31: /home/owner/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: the label rule separates labels from sentences
+00:14 +32: /home/owner/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: action labels use the glossary word, not a banned synonym
+00:14 +33: /home/owner/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: every allow-listed key still needs its exemption
+00:14 +34: /home/owner/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: the noun rule matches standalone words only
+00:14 +35: /home/owner/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: labels say conversation, not session or chat
+00:15 +36: /home/owner/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: the engine-word rule catches Gas City terms, not plain words
+00:15 +37: /home/owner/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: AI Team rows and cards use the person's words, not the engine's
+00:15 +38: /home/owner/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: every allow-listed engine key is still there and still needs it
+00:15 +39: /home/owner/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: every allow-listed noun key still needs its exemption
+00:15 +40: /home/owner/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: G11 ICU messages expand to their plain wordings
+00:15 +41: /home/owner/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: G11 confirm titles and labels are checked through wrappers
+00:15 +42: /home/owner/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: G11 confirmation titles ask and labels name the act (COPY-9)
+00:15 +43: /home/owner/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: G11 the contradiction rule finds both halves of a pair
+00:15 +44: /home/owner/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: G11 the contradiction scan skips text that is never rendered
+00:15 +45: /home/owner/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: G11 no text says two contradicting states at once (COPY-17)
+00:16 +46: /home/owner/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: G11 every allow-listed contradiction key still needs it
+00:16 +47: /home/owner/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: G11 the technical-word rule finds engine words, ports, paths and versions
+00:16 +48: /home/owner/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: G11 technical words only in keys described as Technical: or Field example: (COPY-11)
+00:16 +49: /home/owner/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: G28 the glossary extension finds each pattern
+00:16 +50: /home/owner/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: G28 every allow-listed product key still needs it
+00:16 +51: /home/owner/wt/oc-app-schedule-fullqa/test/ui_glossary_test.dart: G28 labels and copy follow the glossary (COPY-6–8, COPY-10, COPY-12, COPY-21, LOOK-15)
+00:17 +52: loading /home/owner/wt/oc-app-schedule-fullqa/test/coverage/settings_preferences_coverage_test.dart
+00:36 +52: /home/owner/wt/oc-app-schedule-fullqa/test/coverage/settings_preferences_coverage_test.dart: every stored key in the app is classified, none is stale
+00:36 +53: /home/owner/wt/oc-app-schedule-fullqa/test/coverage/settings_preferences_coverage_test.dart: the sweep takes every per-server key shape of the ledger
+00:36 +54: /home/owner/wt/oc-app-schedule-fullqa/test/coverage/settings_preferences_coverage_test.dart: every setting reads back after a restart app-wide display settings
+00:36 +55: /home/owner/wt/oc-app-schedule-fullqa/test/coverage/settings_preferences_coverage_test.dart: every setting reads back after a restart the shared notification choices
+00:36 +56: /home/owner/wt/oc-app-schedule-fullqa/test/coverage/settings_preferences_coverage_test.dart: every setting reads back after a restart per-server choices read back and leave with the server
 00:36 +57: All tests passed!
