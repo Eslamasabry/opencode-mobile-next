@@ -103,7 +103,12 @@ class KitMarkdownTest {
         runComposeUiTest {
             val blocks =
                 (KitMdSource.blocks("a", "```checklist\n[x] built\n[ ] shipped\n```", false) +
+<<<<<<< HEAD
                     KitMdSource.blocks("b", "```command\nls -la\n```", false)).toImmutableList()
+=======
+                        KitMdSource.blocks("b", "```command\nls -la\n```", false))
+                    .toImmutableList()
+>>>>>>> mobile-next/native/next
             setContent {
                 ChatTestTheme {
                     KitMarkdown(blocks, KitMarkdownActions(onLink = {}, runOnComputerLabel = "Run on your computer"))

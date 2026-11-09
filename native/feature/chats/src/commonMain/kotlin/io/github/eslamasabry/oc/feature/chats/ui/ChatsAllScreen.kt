@@ -221,7 +221,7 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
         }
         LazyColumn(state = list, verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
             if (state.incomplete.isNotEmpty()) {
-                item(key = "incomplete") {
+                item(key = "incomplete", contentType = "incomplete") {
                     KitNotice(
                         stringResource(
                             Res.string.chatsHomeIncompleteNamed,
@@ -231,7 +231,7 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
                 }
             }
             state.problem?.let { problem ->
-                item(key = "problem") {
+                item(key = "problem", contentType = "problem") {
                     KitErrorNotice(
                         message =
                             stringResource(
@@ -249,9 +249,9 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
                 }
             }
             when (state.phase) {
-                AllPhase.Opening -> item(key = "opening") { KitSkeletonRows(count = 7) } // F: lib/ui/screens/global_sessions_screen.dart:814
+                AllPhase.Opening -> item(key = "opening", contentType = "opening") { KitSkeletonRows(count = 7) } // F: lib/ui/screens/global_sessions_screen.dart:814
                 AllPhase.NoServer ->
-                    item(key = "no-server") {
+                    item(key = "no-server", contentType = "no-server") {
                         KitStateView(
                             kind = KitStateKind.Calm,
                             title = stringResource(Res.string.p12NoServerTitle),
@@ -264,7 +264,7 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
                         )
                     }
                 AllPhase.Failed ->
-                    item(key = "failed") {
+                    item(key = "failed", contentType = "failed") {
                         KitStateView(
                             kind = KitStateKind.Error,
                             title = stringResource(Res.string.globalSessionsLoadFailedTitle),
@@ -274,7 +274,7 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
                         )
                     }
                 AllPhase.Empty ->
-                    item(key = "empty") {
+                    item(key = "empty", contentType = "empty") {
                         KitStateView(
                             kind = KitStateKind.Empty,
                             title = stringResource(if (state.archived) Res.string.globalSessionsArchivedEmptyTitle else Res.string.globalSessionsEmptyTitle),
@@ -285,7 +285,7 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
                         )
                     }
                 AllPhase.NoMatch ->
-                    item(key = "no-match") {
+                    item(key = "no-match", contentType = "no-match") {
                         if (state.query.isNotBlank()) KitStateView(
                             kind = KitStateKind.Empty,
                             title = stringResource(Res.string.globalSessionsNoMatchTitle),
@@ -307,14 +307,14 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
                         )
                     }
                 AllPhase.List ->
-                    items(state.rows, key = { it.key }) { row ->
+                    items(state.rows, key = { it.key }, contentType = { "conversation" }) { row ->
                         AllRow(row, state.selecting, actions)
                     }
             }
             // Under a filter with no loaded match, older pages may still hold one: Load more and
             // its Try again stay.
             if (listed && (state.canLoadMore || state.loadMoreFailure != null)) {
-                item(key = "more") {
+                item(key = "more", contentType = "more") {
                     AllConversationsPagingTail(state, actions::loadMore)
                 }
             }

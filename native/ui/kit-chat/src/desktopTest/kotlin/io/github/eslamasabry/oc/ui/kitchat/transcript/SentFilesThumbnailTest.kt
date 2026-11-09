@@ -25,7 +25,7 @@ class SentFilesThumbnailTest {
                 seen.value = rememberKitSentFiles(listOf(file, KitSentFile("notes.txt", "text/plain", "file:///x")))
             }
         }
-        waitUntil(timeoutMillis = 5_000) { seen.value?.photos?.singleOrNull()?.image != null }
+        waitUntil(timeoutMillis = 5_000L) { seen.value?.photos?.singleOrNull()?.image != null }
         assertEquals("shot.png", seen.value!!.photos.single().label)
         assertEquals(listOf("notes.txt"), seen.value!!.attachments.map { it.label })
     }
@@ -41,7 +41,7 @@ class SentFilesThumbnailTest {
                 else rememberKitSentFiles(listOf(file)).also { if (firstFrame == null) firstFrame = it }
             }
         }
-        waitUntil(timeoutMillis = 5_000) { bubble.value?.photos?.singleOrNull()?.image != null }
+        waitUntil(timeoutMillis = 5_000L) { bubble.value?.photos?.singleOrNull()?.image != null }
         val shown = bubble.value!!.photos.single().image
         assertNotNull(shown)
         // The echoed prompt row is a new composition: it has the picture on its very first frame.

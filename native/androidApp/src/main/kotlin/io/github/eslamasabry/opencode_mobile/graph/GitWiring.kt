@@ -35,6 +35,7 @@ import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.git.GitHost
 import io.github.eslamasabry.oc.engine.git.GitHubDeviceFlow
 import io.github.eslamasabry.oc.engine.git.GitHubTokenStore
+import io.github.eslamasabry.oc.engine.git.GitLastKnown
 import io.github.eslamasabry.oc.engine.git.GitServices
 import io.github.eslamasabry.oc.engine.git.GitUnavailableReason
 import io.github.eslamasabry.oc.engine.git.GitWorkspace
@@ -72,6 +73,7 @@ object GitWiring {
         appScope: AppCoroutineScope,
         dispatchers: AppDispatchers,
         clock: Clock,
+        kept: Set<GitLastKnown>,
     ): GitServices {
         val github =
             http.create(
@@ -110,6 +112,7 @@ object GitWiring {
                 opener = AndroidLinkOpener(application),
                 scope = appScope,
                 nowMs = now,
+                kept = kept.firstOrNull(),
             )
         // A removed server's GitHub sign-in goes with it (B-SEC-085). Only after the profile list
         // is really loaded:
