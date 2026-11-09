@@ -14,6 +14,8 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import org.jetbrains.skia.Bitmap
 import org.jetbrains.skia.ColorAlphaType
 import org.jetbrains.skia.ColorType
+import org.jetbrains.skia.FilterTileMode
+import org.jetbrains.skia.ImageFilter
 import org.jetbrains.skia.ImageInfo
 import org.jetbrains.skia.Paint
 import org.jetbrains.skia.Rect
@@ -61,13 +63,22 @@ internal class SkiaLiveLook(val look: LiveLook) {
     /** One moment of the clock at an intensity and pixels per dp. */
     data class Moment(val time: Float, val strength: Float = 1f, val density: Float = 1f)
 
-    /** One frame, [w]×[h] pixels, as packed RGB (alpha dropped: every look is opaque). */
-    fun pixels(w: Int, h: Int, palette: LivePalette, at: Moment): IntArray {
+    /**
+     * One frame, [w]×[h] pixels, as packed RGB (alpha dropped: every look is opaque). With [blurSigma] > 0 (pixels) the
+     * frame is then blurred as a Glass pane blurs what lies behind it (Gaussian, edges clamped).
+     */
+    fun pixels(w: Int, h: Int, palette: LivePalette, at: Moment, blurSigma: Float = 0f): IntArray {
         set.clear()
         sink.setSize(w.toFloat(), h.toFloat(), at.density)
         sink.setFrame(look, at.time, at.strength, palette)
-        val surface = Surface.makeRasterN32Premul(w, h)
+        var surface = Surface.makeRasterN32Premul(w, h)
         surface.canvas.drawRect(Rect.makeWH(w.toFloat(), h.toFloat()), Paint().apply { shader = builder.makeShader() })
+        if (blurSigma > 0f) {
+            val frame = surface.makeImageSnapshot()
+            surface = Surface.makeRasterN32Premul(w, h)
+            val blur = ImageFilter.makeBlur(blurSigma, blurSigma, FilterTileMode.CLAMP)
+            surface.canvas.drawImage(frame, 0f, 0f, Paint().apply { imageFilter = blur })
+        }
         val bmp = Bitmap()
         bmp.allocPixels(ImageInfo(w, h, ColorType.RGBA_8888, ColorAlphaType.PREMUL))
         surface.readPixels(bmp, 0, 0)

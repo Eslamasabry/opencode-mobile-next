@@ -364,6 +364,7 @@ private fun failureLine(line: SetupFailureLine): String =
                 SetupError.OpenCodeNoStart -> stringResource(Res.string.phoneSetupErrorOpenCodeNoStart)
                 SetupError.NodeCannotRun -> stringResource(Res.string.phoneSetupErrorNodeCannotRun)
                 SetupError.Interrupted -> stringResource(Res.string.phoneSetupErrorInterrupted)
+                is SetupError.StepTimedOut -> stringResource(Res.string.setupStepTimedOut, e.title)
                 SetupError.NoInternet -> stringResource(Res.string.phoneSetupErrorNoInternet)
                 is SetupError.NoSpace -> stringResource(Res.string.phoneSetupErrorNoSpace, e.title)
                 is SetupError.Offline -> stringResource(Res.string.phoneSetupErrorOffline, e.title)

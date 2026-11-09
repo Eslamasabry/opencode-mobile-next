@@ -125,6 +125,9 @@ internal class P3Bridge(private val sessionId: String) {
             toolStatus = p.tool?.status?.let(::tool),
             synthetic = p.synthetic,
             ended = p.ended,
+            mime = p.mime,
+            filename = p.filename,
+            url = if (p.type == CorePartType.File) p.url else null,
             searchText =
                 listOfNotNull(
                         p.toolName,

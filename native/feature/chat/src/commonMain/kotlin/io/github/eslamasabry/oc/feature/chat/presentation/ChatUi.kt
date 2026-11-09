@@ -182,6 +182,9 @@ public enum class ChatStatusKind {
 
     /** S28 story 3: turns were undone at once; "Put back" restores them. */
     Undone,
+
+    /** This conversation was delegated by another one: the way back to it (Flutter `_subagentStatus`). */
+    Subagent,
 }
 
 /**
@@ -498,6 +501,18 @@ public interface ChatActions {
     public fun restartPhoneServer() {}
 
     public fun confirmRestartPhoneServer() {}
+
+    /** Flutter "Update password / Update token" on the connection line: opens this server's editor. */
+    public fun editServer() {}
+
+    /** Flutter "Open parent conversation" on a subagent's conversation. */
+    public fun openParent() {}
+
+    /** Flutter "Show all subagent conversations": the linked-conversations page. */
+    public fun showSubagents() {}
+
+    /** Flutter "Switch server" on the connection line: opens the Servers page. */
+    public fun openServers() {}
 
     /**
      * From a prompt (tap or long-press) or a reply's footer; the ViewModel resolves the message.

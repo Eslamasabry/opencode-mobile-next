@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -45,7 +46,11 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
+import io.github.eslamasabry.oc.ui.design.style.Corners
+import io.github.eslamasabry.oc.ui.design.style.StyleResolver
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.design.text.TextScalePolicy
 import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
@@ -77,6 +82,35 @@ public data class KitSegment<T>(
     val enabled: KitEnabled = KitEnabled.Enabled,
     val count: Int? = null,
 )
+
+/**
+ * The geometry of a segmented control's track and its chosen thumb (owner 2026-11-09: the thumb touched the track's
+ * edge and its corners did not follow the track's). The thumb sits [INSET] inside the track on every side and its
+ * corner is concentric with the track's: inner radius = outer radius - [INSET]. Both come from the Corners knob, so
+ * Round is a pill inside a pill, Soft a softer box, Sharp (and Brutal) a square-ish one that is still inset.
+ */
+public object SegmentedGeometry {
+    /** The space between the track's edge and the thumb, on all four sides. */
+    public const val INSET: Float = Space.S1.toFloat()
+
+    /** The track's radius token: half the 48 dp target, so Round is a stadium at the control's usual height. */
+    public const val TRACK_TOKEN_DP: Float = FlutterKitTokens.MIN_TARGET / 2f
+
+    /** The track's corner under [corners] (Soft takes about 60 %, Sharp the style's [sharpDp]). */
+    public fun trackRadiusDp(corners: Corners, sharpDp: Float): Float = StyleResolver.corner(TRACK_TOKEN_DP, corners, sharpDp)
+
+    /** The thumb's corner: the track's, less the inset, never below square. */
+    public fun thumbRadiusDp(corners: Corners, sharpDp: Float): Float = maxOf(0f, trackRadiusDp(corners, sharpDp) - INSET)
+}
+
+/** The track's and the thumb's corner radii under the style in force (see [SegmentedGeometry]). */
+@Composable
+internal fun segmentedRadii(): Pair<Dp, Dp> {
+    val style = LocalKitStyle.current
+    val sharp = style.spec.tokens.sharpRadius
+    return SegmentedGeometry.trackRadiusDp(style.knobs.corners, sharp).dp to
+        SegmentedGeometry.thumbRadiusDp(style.knobs.corners, sharp).dp
+}
 
 /** Pure rules of [KitSegmented] (B-KIT-031). */
 public object SegmentedRules {
@@ -198,21 +232,23 @@ private fun <T> RowSegments(segments: List<KitSegment<T>>, selected: T, enabled:
     val specs = KitMotion.specs
     val solid = LocalKitStyle.current.style == Style.Solid
     val hairline = kitHairline()
-    val inset = (Space.S1 / 2f).dp // F: lib/ui/kit/kit_segmented.dart:629
+    val inset = SegmentedGeometry.INSET.dp // owner 2026-11-09: the thumb sits inset in the track
     val density = LocalDensity.current
     val captionLine = with(density) { LocalKitTypography.current.style(TypeRole.Caption).fontSize.toDp() } * 1.3f * density.fontScale // F: lib/ui/kit/kit_segmented.dart:781
     val tallHeight = maxOf(tokens.minTarget.dp, (tokens.smallIcon * 1.2f).dp + Space.S1.dp + captionLine + (Space.S2 * 2).dp) // F: lib/ui/kit/kit_segmented.dart:783-786
     val selectedIndex = segments.indexOfFirst { it.value == selected }
     val step = if (colors.dark) colors.surface3 else colors.surface2
+    val (trackRadius, thumbRadius) = segmentedRadii()
     val track =
-        kitSurfaceLook(KitSurfaceInput(SurfaceRole.Track, KitShapeId.Button, SurfaceLevel.Surface1, ownFill = colors.surface1))
+        kitSurfaceLook(
+            KitSurfaceInput(SurfaceRole.Track, KitShapeId.Button, SurfaceLevel.Surface1, ownFill = colors.surface1, exactRadius = trackRadius),
+        )
     Row(
         Modifier.fillMaxWidth()
             .then(track.modifier)
-            // One physical pixel inside the track's edge (F: lib/ui/kit/kit_segmented.dart:672-675), never rounded up
-            // to a whole picture pixel.
             .then(if (solid) Modifier.kitHairlineBorder(hairline, colors.hairline, track.shape) else Modifier)
-            .padding(hairline)
+            .clip(track.shape) // a segment's press never leaves the track's rounded edge
+            .testTag("kit-segmented-track")
             .selectableGroup(),
     ) {
         segments.forEachIndexed { i, s ->
@@ -230,6 +266,7 @@ private fun <T> RowSegments(segments: List<KitSegment<T>>, selected: T, enabled:
                     KitSurfaceInput(
                         role = SurfaceRole.Control,
                         shape = KitShapeId.Tile,
+                        exactRadius = thumbRadius,
                         level = SurfaceLevel.Surface3,
                         ownFill = fill,
                         color = if (chosen) step else null,
@@ -265,12 +302,17 @@ private fun <T> RowSegments(segments: List<KitSegment<T>>, selected: T, enabled:
                             haptics(KitHaptic.Select)
                             onChange(it)
                         }
-                    }
-                    .padding(inset)
-                    .then(if (chosen) thumb.modifier else Modifier)
-                    .padding(horizontal = (Space.S2.toFloat() - Space.S1 / 2f).dp), // F: lib/ui/kit/kit_segmented.dart:629
+                    },
                 contentAlignment = Alignment.Center,
             ) {
+                // The chosen thumb: its own layer, inset from the track's edge on every side (never the label's box).
+                if (chosen) {
+                    Box(Modifier.matchParentSize().padding(inset)) {
+                        Box(Modifier.fillMaxSize().testTag("kit-segmented-thumb").then(thumb.modifier))
+                    }
+                }
+                // The words keep their space2 from the segment's edge, as before the thumb moved to its own layer.
+                Box(Modifier.padding(horizontal = Space.S2.dp, vertical = inset), contentAlignment = Alignment.Center) {
                 CompositionLocalProvider(LocalKitColors provides inkColors) {
                     val count = s.count?.let { Numbers.format(it) }
                     if (tall) {
@@ -295,6 +337,7 @@ private fun <T> RowSegments(segments: List<KitSegment<T>>, selected: T, enabled:
                             }
                         }
                     }
+                }
                 }
             }
         }

@@ -81,6 +81,12 @@ public sealed interface LiveNoticeUi {
      * name (null when the call names none), [runningMs] how long it has run.
      */
     public data class StuckCommand(val command: String?, val runningMs: Long) : LiveNoticeUi
+
+    /**
+     * Phase 0 (first reply): a read, search, fetch or pending call has waited [waitedMs] (3 minutes or more) with no
+     * word from it. [toolName] is the server's name for it; the line says "Still waiting for <tool>" with Stop.
+     */
+    public data class ToolWait(val toolName: String, val waitedMs: Long) : LiveNoticeUi
 }
 
 /**
@@ -230,6 +236,9 @@ public class TurnFactsPresenter(private val clock: Clock) {
         }
         if (compacting) return LiveNoticeUi.Compacting
         StuckCommandRules.of(work, nowMs)?.let { return it }
+        io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolWaitStallRules.of(work, nowMs)?.let {
+            return LiveNoticeUi.ToolWait(it.toolName, it.waitedMs)
+        }
         // B-CHAT-118: silence per turn, reset by progress, suppressed while a request waits or a
         // step runs.
         stall.begin(sessionKey, feed.runStartedAtMs ?: nowMs)

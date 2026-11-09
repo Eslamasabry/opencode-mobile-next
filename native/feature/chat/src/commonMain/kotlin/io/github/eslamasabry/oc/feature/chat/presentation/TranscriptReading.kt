@@ -36,7 +36,33 @@ public enum class TurnEndNote {
     Silent,
     Stopped,
     Failed,
+
+    /** The server paused the reply after an hour with no new work; Continue picks it up (Flutter `inactivity`). */
+    PausedInactive,
+
+    /** The server restarted, so the reply stopped; Continue picks it up (Flutter `shutdown`). */
+    StoppedServerRestart,
+
+    /** A newer run took the reply's place. */
+    Superseded;
+
+    /** The server's own stop, which says why in its own words instead of the generic "Stopped". */
+    public val isServerStop: Boolean
+        get() = this == PausedInactive || this == StoppedServerRestart || this == Superseded
+
+    /** Whether the person can carry the reply on from where it stopped. */
+    public val canContinue: Boolean
+        get() = this == PausedInactive || this == StoppedServerRestart
 }
+
+/** How an interrupted run reads on the newest turn: a server stop names its reason; anything else stays "Stopped". */
+internal fun stopNote(reason: io.github.eslamasabry.oc.core.domain.events.InterruptReason): TurnEndNote =
+    when (reason) {
+        io.github.eslamasabry.oc.core.domain.events.InterruptReason.Inactivity -> TurnEndNote.PausedInactive
+        io.github.eslamasabry.oc.core.domain.events.InterruptReason.Shutdown -> TurnEndNote.StoppedServerRestart
+        io.github.eslamasabry.oc.core.domain.events.InterruptReason.Superseded -> TurnEndNote.Superseded
+        else -> TurnEndNote.Stopped
+    }
 
 public data class TranscriptReadingUi(
     val details: Map<String, TranscriptDetailUi> = emptyMap(),
@@ -86,13 +112,20 @@ internal fun transcriptReading(
             }
             val tools = assistants.any { m -> m.parts.any { it.type == PartType.Tool } }
             val compact = turn.messages.any { m -> m.parts.any { it.type == PartType.Compaction } }
+            // A server stop (paused, restarted, replaced) is said and offers Continue even after the reply began.
+            val serverStop =
+                (outcome as? io.github.eslamasabry.oc.core.domain.events.RunOutcome.Interrupted)
+                    ?.let { stopNote(it.reason) }
+                    ?.takeIf { it.isServerStop }
+            if (prompt != null && !command && !compact && serverStop != null && said)
+                endNotes[turn.turnId] = serverStop
             if (prompt != null && !command && !compact && !said) {
                 val last = assistants.lastOrNull()?.info
                 val end =
                     when {
                         outcome is
                             io.github.eslamasabry.oc.core.domain.events.RunOutcome.Interrupted ->
-                            TurnEndNote.Stopped
+                            stopNote(outcome.reason)
                         last?.errorText != null -> null // the failed footer already explains it
                         assistants.isEmpty() &&
                             outcome is

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.input
 
+import io.github.eslamasabry.oc.ui.kit.platform.KitSecureEffect
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicText
@@ -36,6 +37,7 @@ public fun KitOneTimeCode(
     modifier: Modifier = Modifier,
     label: String? = null,
 ) {
+    KitSecureEffect() // a sign-in code is a credential until it is used (B-SEC-156)
     val colors = LocalKitColors.current
     val typography = LocalKitTypography.current
     val style =

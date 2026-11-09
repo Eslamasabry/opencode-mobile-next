@@ -60,6 +60,7 @@ public fun KitTappable(
     haptic: KitHaptic? = null,
     shape: KitShapeId = KitShapeId.Button,
     ink: TextTone = TextTone.Primary,
+    pressClip: Shape? = null,
     content: @Composable BoxScope.() -> Unit,
 ) {
     Box(
@@ -67,7 +68,7 @@ public fun KitTappable(
             modifier.kitTappable(
                 onClick = onClick, enabled = enabled, disabledReason = disabledReason, role = role,
                 onClickLabel = onClickLabel, onLongClick = onLongClick, onLongClickLabel = onLongClickLabel,
-                haptic = haptic, shape = shape, ink = ink,
+                haptic = haptic, shape = shape, ink = ink, pressClip = pressClip,
             ),
         contentAlignment = Alignment.Center,
         content = content,
@@ -90,6 +91,7 @@ internal fun Modifier.kitTappable(
     ink: TextTone = TextTone.Primary,
     interactionSource: MutableInteractionSource? = null,
     focusFill: Boolean = true,
+    pressClip: Shape? = null,
 ): Modifier {
     val platform = LocalKitPlatform.current
     val appearance = LocalKitAppearance.current
@@ -121,7 +123,7 @@ internal fun Modifier.kitTappable(
     return this
         .onPlaced { placed.coordinates = it }
         .sizeIn(minWidth = tokens.minTarget.dp, minHeight = tokens.minTarget.dp)
-        .clip(shape.shape())
+        .clip(pressClip ?: shape.shape())
         .then(role.edgeMark())
         .semantics { if (!enabled && disabledReason != null) stateDescription = disabledReason }
         .then(if (focusFill) Modifier else Modifier.indication(drawn, indication))
