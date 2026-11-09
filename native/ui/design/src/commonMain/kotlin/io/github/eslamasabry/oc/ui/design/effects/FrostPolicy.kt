@@ -1,5 +1,8 @@
 package io.github.eslamasabry.oc.ui.design.effects
 
+import io.github.eslamasabry.oc.ui.design.style.GlassLookId
+import io.github.eslamasabry.oc.ui.design.style.GlassLooks
+
 /**
  * Exactly two places frost under the strength choice (owner rule R3, D10): the composer and the chat header. The Glass
  * style (owner, 2026-11-05) blurs its own panes through the same platform effect (`KitSurfaceGlass`, order 34).
@@ -45,22 +48,8 @@ public data class FrostConditions(
 )
 
 /**
- * Glass's floating edges (Fine-tune under Glass, "Glass edges", `oc.glassEdges`): liquid glass that bends the content at
- * its rim (the default), or today's frost. Stored by [storageName]; a missing or unknown value reads [Liquid].
- */
-public enum class GlassEdges(public val storageName: String) {
-    Liquid("liquid"),
-    Frosted("frosted"),
-    ;
-
-    public companion object {
-        public fun fromStorage(name: String?): GlassEdges = entries.firstOrNull { it.storageName == name } ?: Liquid
-    }
-}
-
-/**
  * Why Glass's floating parts are frosted rather than liquid (Settings says why). The first four are frost's own holds
- * ([FrostHold]); [Off] is frost strength Off, [Frosted] the person's "Glass edges" choice, [Platform] no runtime shaders
+ * ([FrostHold]); [Off] is frost strength Off, [Frosted] a glass look without a lens (Frosted), [Platform] no runtime shaders
  * ("Needs Android 13").
  */
 public enum class EdgeHold { Saver, Motion, Contrast, Style, Off, Frosted, Platform }
@@ -92,9 +81,10 @@ public object FrostPolicy {
 
     /**
      * The first reason Glass's floating parts are not liquid glass, or null when they are: frost's own holds first (in
-     * [heldBy]'s order), then frost strength Off, then the person's Frosted choice, then the platform.
+     * [heldBy]'s order), then frost strength Off, then a glass look without a lens ([GlassLookId.Frosted]), then the
+     * platform.
      */
-    public fun edgesHeldBy(c: FrostConditions, strength: FrostStrength, edges: GlassEdges): EdgeHold? =
+    public fun edgesHeldBy(c: FrostConditions, strength: FrostStrength, look: GlassLookId): EdgeHold? =
         when (heldBy(c)) {
             FrostHold.Saver -> EdgeHold.Saver
             FrostHold.Motion -> EdgeHold.Motion
@@ -103,25 +93,26 @@ public object FrostPolicy {
             null ->
                 when {
                     strength == FrostStrength.Off -> EdgeHold.Off
-                    edges == GlassEdges.Frosted -> EdgeHold.Frosted
+                    !GlassLooks.of(look).lens -> EdgeHold.Frosted
                     !c.lensSupported -> EdgeHold.Platform
                     else -> null
                 }
         }
 
     /** Whether Glass's floating parts are liquid glass under [c]; every hold keeps today's frost, solid or own face. */
-    public fun liquidEdges(c: FrostConditions, strength: FrostStrength, edges: GlassEdges): Boolean =
-        edgesHeldBy(c, strength, edges) == null
+    public fun liquidEdges(c: FrostConditions, strength: FrostStrength, look: GlassLookId): Boolean =
+        edgesHeldBy(c, strength, look) == null
 
     /**
      * Whether Glass's in-flow panes (cards, row groups, chips, fields) are clear frosted glass (owner 2026-11-08: much
      * lighter, the background's colour showing through) rather than today's thick panes. They need only the blur, not
      * the lens, so the platform's missing lens does not hold them; every other hold keeps today's panes (Saver, reduced
-     * motion, high contrast, another style, frost Off and "Glass edges: Frosted"). The kit also needs the pane to blur a
-     * picture there.
+     * motion, high contrast, another style and frost Off). Every glass look keeps them clear: the Frosted look draws its
+     * own lighter clear panes ([io.github.eslamasabry.oc.ui.design.style.GlassLook.Frosted]), no longer the old thick
+     * ones (glass looks D7, 2026-11-09). The kit also needs the pane to blur a picture there.
      */
-    public fun clearPanes(c: FrostConditions, strength: FrostStrength, edges: GlassEdges): Boolean =
-        edgesHeldBy(c, strength, edges).let { it == null || it == EdgeHold.Platform }
+    public fun clearPanes(c: FrostConditions, strength: FrostStrength, look: GlassLookId): Boolean =
+        edgesHeldBy(c, strength, look).let { it == null || it == EdgeHold.Platform || it == EdgeHold.Frosted }
 
     /** The spec to draw at full strength, or null for a solid surface (Dart `strengthFor` + `_backdrop` at t = 1). */
     public fun spec(role: FrostRole, strength: FrostStrength, dark: Boolean, c: FrostConditions): FrostSpec? {
