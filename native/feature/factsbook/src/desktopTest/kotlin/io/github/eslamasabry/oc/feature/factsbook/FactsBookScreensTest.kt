@@ -166,10 +166,12 @@ class FactsBookScreensTest {
         override fun cancelShare() { calls += "cancelShare" }
         override fun rules(on: Boolean) { calls += "rules $on" }
         override fun seeRules() { calls += "seeRules" }
+        override fun seeNeedsYou() { calls += "seeNeedsYou" }
         override fun remind(on: Boolean) { calls += "remind $on" }
         override fun startNode() { calls += "startNode" }
         override fun export(entry: CouldNotSaveEntry) { calls += "export ${entry.id}" }
         override fun closeExport() { calls += "closeExport" }
+        override fun refresh() { calls += "refresh" }
     }
 
     private val sara =
@@ -243,6 +245,45 @@ class FactsBookScreensTest {
         val actions = Recorder()
         setContent { Themed { CaptureScreen(CaptureUi(notice = CaptureNotice.KeptOnPhone), actions) } }
         onNodeWithText("It could not be saved yet. It is kept on this phone.").assertExists()
+    }
+
+    @Test
+    fun `B-FB-046b Not saved yet says when a try is still not saved and shows the note offline`() = runComposeUiTest {
+        val entry = CouldNotSaveEntry("out_1", CouldNotSaveReason.NodeUnreachable, t0, text = "Old note", onPhone = true)
+        setContent {
+            Themed {
+                NotSavedScreen(
+                    NotSavedUi(
+                        entries = persistentListOf(entry),
+                        notice = io.github.eslamasabry.oc.feature.factsbook.presentation.NotSavedNotice.Still,
+                        load = FactsBookLoad.Failed,
+                        loadError = io.github.eslamasabry.oc.engine.factsbook.FactsBookError(io.github.eslamasabry.oc.engine.factsbook.FactsBookError.UNREACHABLE),
+                        nowMs = t0.toEpochMilliseconds(),
+                    ),
+                    Recorder(),
+                )
+            }
+        }
+        onNodeWithText("Still not saved. It stays here.").assertExists()
+        onNodeWithText("Old note", useUnmergedTree = true).assertExists()
+    }
+
+    @Test
+    fun `B-FB-046c Not saved yet with nothing readable offers Retry`() = runComposeUiTest {
+        val actions = Recorder()
+        setContent {
+            Themed {
+                NotSavedScreen(
+                    NotSavedUi(
+                        load = FactsBookLoad.Failed,
+                        loadError = io.github.eslamasabry.oc.engine.factsbook.FactsBookError(io.github.eslamasabry.oc.engine.factsbook.FactsBookError.UNREACHABLE),
+                    ),
+                    actions,
+                )
+            }
+        }
+        onNodeWithText("Try again").performClick()
+        assertEquals(listOf("refresh"), actions.calls)
     }
 
     @Test
@@ -541,6 +582,19 @@ class FactsBookScreensTest {
     }
 
     @Test
+    fun `B-FB-072 Connect waits for the address and the code before it asks the node`() = runComposeUiTest {
+        val calls = mutableListOf<String>()
+        val actions =
+            object : io.github.eslamasabry.oc.feature.factsbook.presentation.ConnectActions {
+                override fun back() { calls += "back" }
+                override fun connect(address: String, code: String, ownerDeviceId: String) { calls += "connect $address" }
+            }
+        setContent { Themed { io.github.eslamasabry.oc.feature.factsbook.ui.ConnectScreen(io.github.eslamasabry.oc.feature.factsbook.presentation.ConnectUi(), actions) } }
+        onNodeWithText("Connect").performClick()
+        assertEquals(emptyList(), calls)
+    }
+
+    @Test
     fun `B-FB-071 the rule editor shows a saved rule and deletes it only after asking`() = runComposeUiTest {
         val actions = Rules()
         setContent {
@@ -642,5 +696,39 @@ class FactsBookScreensTest {
         onNodeWithText("Export this note").assertExists()
         onNodeWithText("It does not unlock the locked folder", substring = true).assertExists()
         onNodeWithText("Copy export").assertExists()
+    }
+
+    private class ThingRecorder : io.github.eslamasabry.oc.feature.factsbook.presentation.ThingActions {
+        val calls = mutableListOf<String>()
+
+        override fun back() { calls += "back" }
+        override fun reload() { calls += "reload" }
+        override fun addFact(text: String) { calls += "add $text" }
+        override fun editFact(fact: Fact, text: String) { calls += "edit $text" }
+        override fun remind() { calls += "remind" }
+        override fun seeNeedsYou() { calls += "needsYou" }
+        override fun dismiss() { calls += "dismiss" }
+    }
+
+    @Test
+    fun `B-FB-A04 the thing page offers Add a fact and Remind me only where the node allows, and a tap on a fact explains it first`() = runComposeUiTest {
+        val actions = ThingRecorder()
+        val ui = io.github.eslamasabry.oc.feature.factsbook.presentation.ThingUi(thing = sara, canWrite = true, canRemind = true)
+        setContent { Themed { io.github.eslamasabry.oc.feature.factsbook.ui.ThingScreen(ui, actions) } }
+        onNodeWithText("Add a fact to Sara").assertExists()
+        onNodeWithText("Remind me about Sara").performClick()
+        assertEquals(listOf("remind"), actions.calls)
+        onNodeWithText("Likes tea").performClick()
+        onNodeWithText("You told Memory this", substring = true).assertExists()
+        onNodeWithText("Change this fact").assertExists()
+    }
+
+    @Test
+    fun `B-FB-A05 the thing page hides Add a fact and Remind me when the node offers neither`() = runComposeUiTest {
+        val ui = io.github.eslamasabry.oc.feature.factsbook.presentation.ThingUi(thing = sara)
+        setContent { Themed { io.github.eslamasabry.oc.feature.factsbook.ui.ThingScreen(ui, ThingRecorder()) } }
+        onNodeWithText("Add a fact to Sara").assertDoesNotExist()
+        onNodeWithText("Remind me about Sara").assertDoesNotExist()
+        onNodeWithText("Likes tea").assertExists()
     }
 }

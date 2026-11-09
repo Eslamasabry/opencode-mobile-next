@@ -362,6 +362,61 @@ class ChatFeelScreenTest {
         }
 
     @Test
+    fun `B-AGENT-189 a lapsed Claude Code sign-in says sign in again and opens its sign-in page`() =
+        runComposeUiTest {
+            val (p, _) =
+                screen(
+                    prompt("u1", "go"),
+                    io.github.eslamasabry.oc.engine.transcript.state.FooterRow(
+                        "footer:u1", "u1", failed = true,
+                        reason = "Failed to authenticate: OAuth session expired and could not be refreshed",
+                        providerId = "claude",
+                    ),
+                )
+            val opened = mutableListOf<String>()
+            val actions =
+                object : io.github.eslamasabry.oc.feature.chat.presentation.ChatActions by p {
+                    override fun phoneAgentSignIn() = true
+
+                    override fun openAgentSignIn(providerId: String) {
+                        opened += providerId
+                    }
+                }
+            val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+            val states = p.states(scope, Dispatchers.Unconfined, SharingStarted.Eagerly)
+            setContent {
+                val state by states.collectAsState()
+                Root { ChatScreen(state, actions, composer) }
+            }
+            onNodeWithText("Claude Code needs you to sign in again").assertExists()
+            onNodeWithTag("error-action-sign-in-again").performClick()
+            waitForIdle()
+            assertEquals(listOf("claude"), opened)
+        }
+
+    @Test
+    fun `B-AGENT-189 the lapsed sign-in line stays plain when the agent is not on this phone`() =
+        runComposeUiTest {
+            val (p, _) =
+                screen(
+                    prompt("u1", "go"),
+                    io.github.eslamasabry.oc.engine.transcript.state.FooterRow(
+                        "footer:u1", "u1", failed = true,
+                        reason = "Failed to authenticate: OAuth session expired",
+                        providerId = "claude",
+                    ),
+                )
+            val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+            val states = p.states(scope, Dispatchers.Unconfined, SharingStarted.Eagerly)
+            setContent {
+                val state by states.collectAsState()
+                Root { ChatScreen(state, p, composer) }
+            }
+            onAllNodesWithText("sign in again", substring = true).assertCountEquals(0)
+            onAllNodesWithTag("error-action-sign-in-again").assertCountEquals(0)
+        }
+
+    @Test
     fun `B-AGENT-024 no credit reads as no credit, not busy, and offers no Continue`() =
         runComposeUiTest {
             val (p, _) =

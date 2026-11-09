@@ -580,7 +580,13 @@ public class PairResult(
 }
 
 /** What the node's milestone supports (`api/capabilities.json`). A disabled capability is never faked. */
-public data class FactsBookCapabilities(val milestone: String, val supported: Set<String>, val disabled: Map<String, String>) {
+public data class FactsBookCapabilities(
+    val milestone: String,
+    val supported: Set<String>,
+    val disabled: Map<String, String>,
+    /** The template ids rules may use (`trigger_templates_v1`); empty when the node does not list its own. */
+    val triggerTemplates: Set<String> = emptySet(),
+) {
     public fun supports(capability: String): Boolean = capability in supported
 
     public fun isDisabled(capability: String): Boolean = capability in disabled
@@ -624,6 +630,11 @@ public data class FactsBookCapabilities(val milestone: String, val supported: Se
                     json.obj("supported")?.filterValues { (it as? JsonPrimitive)?.booleanOrNull == true }?.keys.orEmpty(),
                 disabled =
                     json.obj("disabled")?.mapValues { (_, v) -> (v as? JsonPrimitive)?.contentOrNull.orEmpty() }.orEmpty(),
+                triggerTemplates =
+                    (json["trigger_templates_v1"] as? kotlinx.serialization.json.JsonArray)
+                        ?.mapNotNull { (it as? JsonPrimitive)?.contentOrNull }
+                        ?.toSet()
+                        .orEmpty(),
             )
     }
 }

@@ -29,6 +29,10 @@ class S24ConnectionLineTest {
 
     private class LinkWorld : FakeChatWorld() {
         val retryAt = MutableStateFlow<Long?>(null)
+        val stopped = MutableStateFlow<Failure?>(null)
+        val parentRef = MutableStateFlow<io.github.eslamasabry.oc.core.common.ids.ConversationRef?>(null)
+        override val parent: StateFlow<io.github.eslamasabry.oc.core.common.ids.ConversationRef?> = parentRef
+        override val linkStopped: StateFlow<Failure?> = stopped
         override val linkRetryAtMs: StateFlow<Long?> = retryAt
         var onPhone = false
         override val serverOnThisPhone: Boolean
@@ -102,5 +106,26 @@ class S24ConnectionLineTest {
         presenter.restartPhoneServer()
         presenter.confirmRestartPhoneServer()
         assertEquals(ChatStatusKind.ActionFailed, presenter.current().status?.kind)
+    }
+
+    @Test
+    fun `B-CHAT-S24-06 a link stopped by a rejected password or token carries why, so the line can offer Update`() {
+        world.link.value = ChatLink.Offline
+        assertNull(presenter.current().status?.failure, "an ordinary drop has no sign-in reason")
+        val why = Failure.SignIn(io.github.eslamasabry.oc.core.common.SignInWhy.TokenRejected)
+        world.stopped.value = why
+        val line = assertNotNull(presenter.current().status)
+        assertEquals(ChatStatusKind.Offline, line.kind)
+        assertEquals(why, line.failure)
+    }
+
+    @Test
+    fun `B-CHAT-110 a delegated conversation says so on the status line, and a top level one does not`() {
+        world.link.value = ChatLink.Live
+        assertNull(presenter.current().status)
+        world.parentRef.value = world.ref.copy(sessionId = io.github.eslamasabry.oc.core.common.ids.SessionId("parent"))
+        assertEquals(ChatStatusKind.Subagent, presenter.current().status?.kind)
+        world.link.value = ChatLink.Offline
+        assertEquals(ChatStatusKind.Offline, presenter.current().status?.kind, "a dropped link outranks it")
     }
 }

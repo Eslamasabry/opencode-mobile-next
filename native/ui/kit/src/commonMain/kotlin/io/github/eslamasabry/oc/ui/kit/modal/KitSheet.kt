@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.modal
 
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.platform.LocalLayoutDirection
 import io.github.eslamasabry.oc.ui.kit.foundation.kitPaneInset
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
@@ -8,7 +10,6 @@ import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
@@ -462,12 +463,11 @@ private fun SheetLayer(state: KitSheetHostState) {
                     Modifier.fillMaxSize().padding(Space.S6.dp),
                     contentAlignment = Alignment.Center,
                 ) {
+                    // MOT-2: a modal never scales in; it fades and rises 8 dp at Full (KitModalMotion).
+                    val rise = KitModalMotion.dialogEnter()
                     AnimatedVisibility(
                         state.shown,
-                        enter =
-                            still.enter {
-                                fadeIn(specs.enter()) + scaleIn(specs.enter(), initialScale = 0.96f)
-                            },
+                        enter = still.enter { rise },
                         exit = still.exit { fadeOut(specs.exit()) },
                     ) {
                         SheetPanel(
@@ -487,25 +487,28 @@ private fun SheetLayer(state: KitSheetHostState) {
                         )
                     }
                 }
-            KitSheetPlacement.End ->
+            KitSheetPlacement.End -> {
+                // The end edge is the left one in Arabic: the panel comes in from, and leaves by, its own edge.
+                val endSign = if (LocalLayoutDirection.current == LayoutDirection.Rtl) -1 else 1
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.CenterEnd) {
                     AnimatedVisibility(
                         state.shown,
                         enter =
-                            still.enter { slideInHorizontally(specs.spatial<IntOffset>()) { it } },
-                        exit = still.exit { slideOutHorizontally(specs.exit<IntOffset>()) { it } },
+                            still.enter { slideInHorizontally(specs.spatial<IntOffset>()) { endSign * it } },
+                        exit = still.exit { slideOutHorizontally(specs.exit<IntOffset>()) { endSign * it } },
                     ) {
                         SheetPanel(
                             entry,
                             Modifier.width(SheetLayout.END_WIDTH_DP.dp)
                                 .fillMaxHeight()
-                                .predictiveShrink(back, TransformOrigin(1f, 0.5f)),
+                                .predictiveShrink(back, TransformOrigin(if (endSign > 0) 1f else 0f, 0.5f)),
                             handle = false,
                             shape = KitShapeId.Square,
                             shrink = { LiquidMotion.shrinkFraction(back.value()) },
                         )
                     }
                 }
+            }
         }
     }
 }

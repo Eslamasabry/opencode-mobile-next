@@ -139,7 +139,7 @@ class FactsBookViewModelsTest {
             """{"id":"per_01","title":"Sara","kind":"person","rev":3,"updated_at":"2026-10-10T08:00:00Z","facts":[]}""",
         )
         access.node.on("POST /v1/things/per_01/facts", """{"status":"proposed","id":"f_9","review_id":"rvw_9"}""")
-        val vm = ThingViewModel(FactsBookRoute.Thing("per_01"), access, nav)
+        val vm = ThingViewModel(FactsBookRoute.Thing("per_01"), access, nav, checks)
         vm.state.first { it.thing != null }
         vm.addFact("  Likes   green tea ")
         assertEquals(ThingNotice.FactProposed, vm.state.first { it.notice != null }.notice)
@@ -172,6 +172,41 @@ class FactsBookViewModelsTest {
         vm.discard()
         assertFalse(access.secrets.values.containsKey("oc.factsbookOutbox.p1"))
         assertTrue(vm.state.first { !it.working }.entries.isEmpty())
+    }
+
+    private val keptNote =
+        """[{"id":"out_1_0","key":"cap-abcdefghijklmnopqrstuvwx","request":{"kind":"note","text":"Old note","trust":"user_authored"},"created_at":"2026-10-01T09:00:00Z","retries":0}]"""
+
+    @Test
+    fun `B-FB-028b Try now with the node away says still not saved and keeps the note`() = runTest {
+        val access = FakeAccess(secrets = MemorySecrets(mapOf("oc.factsbook.p1" to "t", "oc.factsbookOutbox.p1" to keptNote)))
+        access.node.unreachable = true
+        val vm = NotSavedViewModel(access, nav, FixedClock())
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val entry = vm.state.first { it.entries.isNotEmpty() }.entries.single()
+        vm.retry(entry)
+        val state = vm.state.first { !it.working && it.notice != null }
+        assertEquals(io.github.eslamasabry.oc.feature.factsbook.presentation.NotSavedNotice.Still, state.notice)
+        assertNull(state.error)
+        assertEquals(1, state.entries.size)
+        vm.dismiss()
+        assertNull(vm.state.value.notice)
+    }
+
+    @Test
+    fun `B-FB-028c Try now that goes through says saved and the note leaves the page`() = runTest {
+        val access = FakeAccess(secrets = MemorySecrets(mapOf("oc.factsbook.p1" to "t", "oc.factsbookOutbox.p1" to keptNote)))
+        access.node.unreachable = true
+        val vm = NotSavedViewModel(access, nav, FixedClock())
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val entry = vm.state.first { it.entries.isNotEmpty() }.entries.single()
+        access.node.unreachable = false
+        access.node.healthy()
+        access.node.on("POST /v1/outbox", """{"receipts":[{"key":"cap-abcdefghijklmnopqrstuvwx","status":"accepted"}]}""")
+        vm.retry(entry)
+        val state = vm.state.first { !it.working && it.notice != null }
+        assertEquals(io.github.eslamasabry.oc.feature.factsbook.presentation.NotSavedNotice.Saved, state.notice)
+        assertTrue(state.entries.isEmpty())
     }
 
     private val preview =
@@ -536,5 +571,88 @@ class FactsBookViewModelsTest {
         needs.state.first { it.notice == CareNotice.ProposalEdited }
         assertTrue(access.node.bodies[access.node.asked.indexOf("POST /v1/reminder-proposals/rpr_1/decision")]!!.contains("\"edit\""))
         assertEquals(1, nav.backs)
+    }
+
+    @Test
+    fun `B-FB-A01 Remind me about a thing checks the reminder with its name and area, then makes it and says so`() = runTest {
+        val access = FakeAccess().apply { node.healthy() }
+        access.node.on(
+            "GET /v1/things/per_01",
+            """{"id":"per_01","title":"Sara","kind":"person","area":"family","rev":3,"updated_at":"2026-10-10T08:00:00Z","facts":[]}""",
+        )
+        access.node.on("POST /v1/reminders", """{"status":"ok","id":"rem_9"}""")
+        val vm = ThingViewModel(FactsBookRoute.Thing("per_01"), access, nav, checks)
+        val ready = vm.state.first { it.thing != null && !it.loading }
+        assertTrue(ready.canWrite)
+        assertTrue(ready.canRemind)
+        vm.remind()
+        assertEquals(FactsBookRoute.ReminderEdit(null, fromText = "Sara", area = "family", exact = true), nav.opened.last())
+        val once = kotlinx.serialization.json.Json.parseToJsonElement("""{"at":"2026-11-10T09:00"}""") as kotlinx.serialization.json.JsonObject
+        val checked =
+            io.github.eslamasabry.oc.engine.factsbook.ReminderPreview(
+                what = "Sara", zone = "vault", locale = "en", ambiguities = emptyList(), adjustments = emptyList(), digest = "dg",
+                raw = kotlinx.serialization.json.JsonObject(emptyMap()),
+                schedule = io.github.eslamasabry.oc.engine.factsbook.ReminderSchedule("sch_0", io.github.eslamasabry.oc.engine.factsbook.ScheduleWhen(once), "vault", once),
+            )
+        checks.tell(ReminderCheckResult.Checked(checked))
+        assertEquals(ThingNotice.ReminderMade, vm.state.first { it.notice != null }.notice)
+        assertTrue(access.node.asked.contains("POST /v1/reminders"))
+    }
+
+    @Test
+    fun `B-FB-A02 Remind me about a thing makes nothing when the check is cancelled`() = runTest {
+        val access = FakeAccess().apply { node.healthy() }
+        access.node.on(
+            "GET /v1/things/per_01",
+            """{"id":"per_01","title":"Sara","kind":"person","rev":3,"updated_at":"2026-10-10T08:00:00Z","facts":[]}""",
+        )
+        val vm = ThingViewModel(FactsBookRoute.Thing("per_01"), access, nav, checks)
+        vm.state.first { it.thing != null }
+        vm.remind()
+        assertEquals(FactsBookRoute.ReminderEdit(null, fromText = "Sara", area = "general", exact = true), nav.opened.last())
+        checks.tell(ReminderCheckResult.Cancelled)
+        assertNull(vm.state.value.notice)
+        assertTrue(access.node.asked.none { it.startsWith("POST") })
+    }
+
+    @Test
+    fun `B-FB-A03 a fact or note that waits for the OK offers See Needs you`() = runTest {
+        val access = FakeAccess().apply { node.healthy() }
+        val thing = ThingViewModel(FactsBookRoute.Thing("per_01"), access, nav, checks)
+        assertTrue(ThingNotice.FactProposed.waitsForOk)
+        assertTrue(ThingNotice.ChangeProposed.waitsForOk)
+        assertFalse(ThingNotice.FactAdded.waitsForOk)
+        thing.seeNeedsYou()
+        CaptureViewModel(access, nav, checks).seeNeedsYou()
+        assertEquals(listOf<Any>(FactsBookRoute.NeedsYou, FactsBookRoute.NeedsYou), nav.opened.takeLast(2))
+    }
+
+    @Test
+    fun `B-FB-A06 a fact change based on an old copy reads the thing again`() = runTest {
+        val access = FakeAccess().apply { node.healthy() }
+        access.node.on(
+            "GET /v1/things/per_01",
+            """{"id":"per_01","title":"Sara","kind":"person","rev":3,"updated_at":"2026-10-10T08:00:00Z","facts":[{"id":"f_1","thing_id":"per_01","text":"Likes tea","provenance":"told","observed_at":"2026-10-10T08:00:00Z","source":"you","rev":2}]}""",
+        )
+        access.node.on("PATCH /v1/facts/f_1", """{"error":{"code":"stale_approval"}}""", status = 409)
+        val vm = ThingViewModel(FactsBookRoute.Thing("per_01"), access, nav, checks)
+        val fact = vm.state.first { it.thing != null && !it.loading }.thing!!.facts.first()
+        val before = access.node.asked.count { it == "GET /v1/things/per_01" }
+        vm.editFact(fact, "Likes coffee")
+        vm.state.first { it.writeError != null }
+        vm.state.first { !it.loading && access.node.asked.count { a -> a == "GET /v1/things/per_01" } > before }
+        assertTrue(access.node.asked.count { it == "GET /v1/things/per_01" } > before)
+    }
+
+    @Test
+    fun `B-FB-A07 a new reminder starts in the app language once the screen says it`() = runTest {
+        val access = FakeAccess().apply { node.healthy() }
+        val vm = ReminderEditViewModel(FactsBookRoute.ReminderEdit(null), access, nav, FixedClock(), checks)
+        vm.state.first { it.draft != null }
+        vm.appLanguage("ar-EG")
+        assertEquals("ar", vm.state.value.draft!!.locale)
+        vm.edit(vm.state.value.draft!!.copy(what = "x"))
+        vm.appLanguage("en")
+        assertEquals("ar", vm.state.value.draft!!.locale)
     }
 }

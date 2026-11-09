@@ -302,7 +302,7 @@ internal fun KitChoiceBusyMark(size: Dp, inset: Dp, modifier: Modifier = Modifie
     val colors = LocalKitColors.current
     val motion = KitMotion.state
     val turn =
-        if (motion.reduced) {
+        if (!motion.ambientLoops) {
             null
         } else {
             rememberInfiniteTransition(label = "kit-choice-busy").animateFloat(

@@ -18,6 +18,8 @@ public data class MessageInfo(
     val finish: String? = null,
     val errorText: String? = null,
     val errorKind: io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind? = null,
+    /** The provider (agent) that wrote the message; names whom a lapsed sign-in belongs to. */
+    val providerId: String? = null,
 )
 
 /** Switch/Notice/Compaction = the Dart "v2:*" tags (plan 09 §2.2, trap T9). */
@@ -50,6 +52,10 @@ public data class Part(
     val synthetic: Boolean = false,
     val ended: Boolean = false,
     val searchText: String = "",
+    /** File parts: the kind, the name and the address (a `data:` address for a picture the phone sent). */
+    val mime: String? = null,
+    val filename: String? = null,
+    val url: String? = null,
 ) {
     /** Dart Part.isRenderable (plan 09 §2.2). */
     public val isRenderable: Boolean

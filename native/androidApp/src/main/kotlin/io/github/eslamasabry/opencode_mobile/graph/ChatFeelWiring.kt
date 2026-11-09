@@ -67,6 +67,9 @@ class AndroidChatOutside(
     private val redactor: Redactor,
 ) : ChatOutside {
 
+    override fun isPhoneServer(ref: ConversationRef): Boolean =
+        connections.graphFor(ref)?.profile?.origin?.host?.let(AddressRules::isLoopback) == true
+
     override fun fileLinkPath(url: String): String? =
         try {
             val uri = URI(url.trim())
