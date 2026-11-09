@@ -297,6 +297,8 @@ private fun Running(state: SignInTerminalUi, actions: SignInTerminalActions, mod
                     { clipboard.getText()?.text?.let(actions::paste) },
                     icon = KitIcons.paste,
                 )
+            // The code is a credential for the next minute: keep it out of recents and screenshots.
+            if (state.code != null) io.github.eslamasabry.oc.ui.kit.platform.KitSecureEffect()
             val copy =
                 state.code?.let {
                     KitAction(

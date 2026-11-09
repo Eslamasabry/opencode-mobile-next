@@ -16,7 +16,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performSemanticsAction
-import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.integrations.usage.ApiKeyAccount
 import io.github.eslamasabry.oc.engine.integrations.usage.SubscriptionState
@@ -80,7 +80,7 @@ class LimitsScreenTest {
 
     @Test
     fun `B-159 each window reads as percent left with its countdown, several limits in a window sit compactly`() =
-        runComposeUiTest {
+        runDesktopComposeUiTest(412, 2600) {
             setContent { Screen(LimitsFixtures.state(), Actions()) }
             onNodeWithText("Claude · Home server", ignoreCase = true).assertExists()
             onNodeWithText("Max plan").assertExists()
@@ -97,20 +97,20 @@ class LimitsScreenTest {
         }
 
     @Test
-    fun `B-159 a provider without limits says so plainly and no number is invented`() = runComposeUiTest {
+    fun `B-159 a provider without limits says so plainly and no number is invented`() = runDesktopComposeUiTest(412, 2600) {
         setContent { Screen(LimitsFixtures.state(), Actions()) }
         onNodeWithText("This provider doesn't report limits.").assertExists()
         onNodeWithText("API key. Keys have no plan limits to show.").assertExists()
     }
 
     @Test
-    fun `B-159 old numbers show their age`() = runComposeUiTest {
+    fun `B-159 old numbers show their age`() = runDesktopComposeUiTest(412, 2600) {
         setContent { Screen(LimitsFixtures.state(), Actions()) }
         onNodeWithText("Read 2h ago").assertExists()
     }
 
     @Test
-    fun `B-159 pulling down, or the accessibility action, reads the limits again`() = runComposeUiTest {
+    fun `B-159 pulling down, or the accessibility action, reads the limits again`() = runDesktopComposeUiTest(412, 2600) {
         val actions = Actions()
         setContent { Screen(LimitsFixtures.state(), actions) }
         val refresh =
@@ -122,7 +122,7 @@ class LimitsScreenTest {
     }
 
     @Test
-    fun `B-159 exact reset times wait under Details`() = runComposeUiTest {
+    fun `B-159 exact reset times wait under Details`() = runDesktopComposeUiTest(412, 2600) {
         setContent { Screen(LimitsFixtures.state(), Actions()) }
         // Codex comes first (least left); its five hours reset at 15:00 on the device's clock.
         onNodeWithText("5-hour window resets at 2026-11-07 15:00").assertDoesNotExist()
@@ -146,7 +146,7 @@ class LimitsScreenTest {
     }
 
     @Test
-    fun `B-183 Details names the signed-in account email and copies it`() = runComposeUiTest {
+    fun `B-183 Details names the signed-in account email and copies it`() = runDesktopComposeUiTest(412, 2600) {
         setContent { Screen(withAccount("altaf.alu@gmail.com"), Actions()) }
         onNodeWithText("altaf.alu@gmail.com", useUnmergedTree = true).assertDoesNotExist()
         onNodeWithText("Details").performClick()
@@ -156,7 +156,7 @@ class LimitsScreenTest {
     }
 
     @Test
-    fun `B-183 an opaque account hash still reads as Yes, and no account as No`() = runComposeUiTest {
+    fun `B-183 an opaque account hash still reads as Yes, and no account as No`() = runDesktopComposeUiTest(412, 2600) {
         var state by mutableStateOf(withAccount("a".repeat(64)))
         setContent { Screen(state, Actions()) }
         onNodeWithText("Details").performClick()
@@ -171,7 +171,7 @@ class LimitsScreenTest {
     }
 
     @Test
-    fun `B-L10N-010 the limits read in Arabic`() = runComposeUiTest {
+    fun `B-L10N-010 the limits read in Arabic`() = runDesktopComposeUiTest(412, 2600) {
         Locale.setDefault(Locale.forLanguageTag("ar"))
         setContent { Screen(LimitsFixtures.state(), Actions(), "ar") }
         onNodeWithText("متبقٍّ 60%").assertExists()

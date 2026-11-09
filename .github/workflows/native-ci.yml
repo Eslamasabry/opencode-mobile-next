@@ -181,7 +181,7 @@ jobs:
         run: |
           set -o pipefail
           extra=""; [ "$LANE" = full ] && extra="compileAllTests"
-          ./gradlew :androidApp:compilePreviewBenchmarkKotlin $extra $GRADLE_FLAGS 2>&1 | tee "$RUNNER_TEMP/compile.log"
+          tool/ci/gradle_retry.sh "$RUNNER_TEMP/compile.log" :androidApp:compilePreviewBenchmarkKotlin $extra $GRADLE_FLAGS
       - name: Compile report
         if: always()
         env:
@@ -192,7 +192,8 @@ jobs:
           log = open(os.environ['RUNNER_TEMP'] + '/compile.log', errors='replace').read().splitlines() if os.path.exists(os.environ['RUNNER_TEMP'] + '/compile.log') else []
           errs = [l.split('/native/', 1)[-1] for l in log if l.startswith('e: ') or 'FAILURE: Build failed' in l or 'Execution failed for task' in l]
           os.makedirs('reports', exist_ok=True)
-          json.dump({'errors': sum(1 for l in log if l.startswith('e: ')), 'first_errors': errs[:15], 'failed': os.environ.get('JOB_STATUS') == 'failure'}, open('reports/compile.json', 'w'))
+          ran = any(l.startswith('> Task :') or l.startswith('BUILD ') for l in log)
+          json.dump({'errors': sum(1 for l in log if l.startswith('e: ')), 'first_errors': errs[:15], 'failed': os.environ.get('JOB_STATUS') == 'failure', 'gradle_ran': ran}, open('reports/compile.json', 'w'))
           PY
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
@@ -262,11 +263,27 @@ jobs:
         if: ${{ steps.pick.outputs.tasks != '' }}
         shell: bash
         run: |
+          set -o pipefail
           flags=""; [ "$LANE" = fast ] && flags="-PskipGoldens=true"
-          ./gradlew ${{ steps.pick.outputs.tasks }} $flags $GRADLE_FLAGS 2>&1 | tee "$RUNNER_TEMP/gradle.log"
+          tool/ci/gradle_retry.sh "$RUNNER_TEMP/gradle.log" ${{ steps.pick.outputs.tasks }} $flags $GRADLE_FLAGS
+      - name: Gradle must have run
+        # The step above never fails the job (the summary is the gate for test failures), so an infrastructure failure -
+        # Gradle never started, e.g. a 504 on the distribution - would look like a pass. Fail here when no task ran.
+        if: ${{ steps.pick.outputs.tasks != '' }}
+        shell: bash
+        run: |
+          log="$RUNNER_TEMP/gradle.log"
+          if ! grep -Eq '^(> Task :|BUILD (SUCCESSFUL|FAILED))' "$log" 2>/dev/null; then
+            echo "::error::Gradle did not run for this shard (no task and no BUILD line in the log)"; tail -n 20 "$log" 2>/dev/null; exit 1
+          fi
+          if [ "${{ steps.gradle.outcome }}" = success ] && ! find . -path '*/build/test-results/*' -name 'TEST-*.xml' -size +0 2>/dev/null | grep -q .; then
+            echo "::error::Gradle succeeded but left no test result XML"; exit 1
+          fi
       - name: Summarise results
         if: always()
         env:
+          JOB_STATUS: ${{ job.status }}
+          PICK_OUTCOME: ${{ steps.pick.outcome }}
           GRADLE_OUTCOME: ${{ steps.gradle.outcome }}
           GRADLE_LOG: ${{ runner.temp }}/gradle.log
           TASKS: ${{ steps.pick.outputs.tasks }}
@@ -315,7 +332,7 @@ jobs:
         run: |
           tasks="$(grep -l recordGoldens */*/build.gradle.kts | sed 's|/build.gradle.kts||; s|^|:|; s|/|:|g; s|$|:desktopTest|' | tr '\n' ' ')"
           echo "recording: $tasks"
-          ./gradlew $tasks -Poc.recordGoldens=true -PonlyGoldens=true -PrunQuarantined=true $GRADLE_FLAGS
+          tool/ci/gradle_retry.sh "$RUNNER_TEMP/record.log" $tasks -Poc.recordGoldens=true -PonlyGoldens=true -PrunQuarantined=true $GRADLE_FLAGS
       - name: Pack the recorded images
         if: always()
         working-directory: ${{ github.workspace }}
@@ -379,7 +396,8 @@ jobs:
           cat > "$RUNNER_TEMP/no-lint-vital.init.gradle" <<'EOT'
           allprojects { tasks.configureEach { if (name.startsWith("lintVital")) enabled = false } }
           EOT
-          ./gradlew :androidApp:assemblePreviewBenchmark :benchmark:assembleBenchmark -I "$RUNNER_TEMP/no-lint-vital.init.gradle" $GRADLE_FLAGS
+          set -o pipefail
+          tool/ci/gradle_retry.sh "$RUNNER_TEMP/apk.log" :androidApp:assemblePreviewBenchmark :benchmark:assembleBenchmark -I "$RUNNER_TEMP/no-lint-vital.init.gradle" $GRADLE_FLAGS
       - name: Check the APK signer
         env:
           HAS_KEY: ${{ secrets.NATIVE_PREVIEW_KEYSTORE_B64 != '' }}
@@ -417,10 +435,11 @@ jobs:
         run: |
           mkdir -p reports
           failed=false; [ "$JOB_STATUS" = failure ] && failed=true
+          ran=false; grep -Eq '^(> Task :|BUILD )' "$RUNNER_TEMP/apk.log" 2>/dev/null && ran=true
           apk=$(ls androidApp/build/outputs/apk/preview/benchmark/*.apk 2>/dev/null | head -1 || true)
           if [ -n "$apk" ]; then
-            printf '{"artifact":"native-previewBenchmark-apk","file":"%s","mb":%s,"failed":%s}' "$(basename "$apk")" "$(du -m "$apk" | cut -f1)" "$failed" > reports/apk.json
-          else echo "{\"failed\":$failed}" > reports/apk.json; fi
+            printf '{"artifact":"native-previewBenchmark-apk","file":"%s","mb":%s,"failed":%s,"gradle_ran":%s}' "$(basename "$apk")" "$(du -m "$apk" | cut -f1)" "$failed" "$ran" > reports/apk.json
+          else echo "{\"failed\":$failed,\"gradle_ran\":$ran}" > reports/apk.json; fi
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
@@ -450,7 +469,11 @@ jobs:
           for p in $(pgrep -f GradleDaemon || true); do
             if ls -l "/proc/$p/fd" 2>/dev/null | grep -q "$GITHUB_WORKSPACE/native/"; then kill -9 "$p" 2>/dev/null || true; fi
           done
-      - run: ./gradlew ${{ inputs.tasks }} $GRADLE_FLAGS
+      - name: Run the custom tasks
+        shell: bash
+        run: |
+          set -o pipefail
+          tool/ci/gradle_retry.sh "$RUNNER_TEMP/custom.log" ${{ inputs.tasks }} $GRADLE_FLAGS
       - name: Custom report
         if: always()
         env:
@@ -458,7 +481,8 @@ jobs:
         run: |
           mkdir -p reports
           failed=false; [ "$JOB_STATUS" = failure ] && failed=true
-          echo "{\"failed\":$failed}" > reports/custom.json
+          ran=false; grep -Eq '^(> Task :|BUILD )' "$RUNNER_TEMP/custom.log" 2>/dev/null && ran=true
+          echo "{\"failed\":$failed,\"gradle_ran\":$ran}" > reports/custom.json
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
@@ -471,8 +495,8 @@ jobs:
     name: summary
     needs: [where, plan, compile, test, apk, record, custom]
     if: ${{ always() }}
-    # Work branches never fail the run (no failure emails to the owner); results stay in the summary table and job conclusions.
-    continue-on-error: ${{ github.ref_name != 'native/next' && !startsWith(github.ref_name, 'native/screens-merge') && github.ref_name != 'master' }}
+    # No job-level continue-on-error: the step below keeps the "work branches never fail the run" policy for ordinary
+    # failures (summary.py exit 1) but an integrity failure (exit 2: Gradle never ran, a shard left no report) always reds the run.
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -485,6 +509,8 @@ jobs:
       RESULT_APK: ${{ needs.apk.result }}
       RESULT_RECORD: ${{ needs.record.result }}
       RESULT_CUSTOM: ${{ needs.custom.result }}
+      PLANNED_SHARDS: ${{ join(fromJSON(needs.plan.outputs.shards || '[]'), ',') }}
+      WORK_BRANCH: ${{ github.ref_name != 'native/next' && !startsWith(github.ref_name, 'native/screens-merge') && github.ref_name != 'master' }}
     defaults:
       run:
         working-directory: .
@@ -509,4 +535,7 @@ jobs:
       - name: Summary table
         run: |
           lane="${{ inputs.lane || 'full (push)' }}"; [ -n "${{ inputs.tasks }}" ] && lane="custom tasks"; [ "${{ inputs.apk_only }}" = true ] && lane="apk only"
-          python3 -I native/tool/ci/summary.py reports base "$lane" >> "$GITHUB_STEP_SUMMARY"
+          rc=0; python3 -I native/tool/ci/summary.py reports base "$lane" >> "$GITHUB_STEP_SUMMARY" || rc=$?
+          if [ "$rc" = 2 ]; then echo "::error::Native CI integrity failure: Gradle did not run or reports are missing (see the summary)"; exit 1; fi
+          if [ "$rc" != 0 ] && [ "$WORK_BRANCH" != true ]; then exit "$rc"; fi
+          exit 0

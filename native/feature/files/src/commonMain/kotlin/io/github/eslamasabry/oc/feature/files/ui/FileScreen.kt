@@ -58,6 +58,7 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
+import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
@@ -92,6 +93,7 @@ import io.github.eslamasabry.oc.ui.words.res.filesLinkRefused
 import io.github.eslamasabry.oc.ui.words.res.filesMentionFailed
 import io.github.eslamasabry.oc.ui.words.res.filesMoreActions
 import io.github.eslamasabry.oc.ui.words.res.filesNotConnected
+import io.github.eslamasabry.oc.ui.words.res.filesShowingSaved
 import io.github.eslamasabry.oc.ui.words.res.filesOpenFailed
 import io.github.eslamasabry.oc.ui.words.res.filesOpenLink
 import io.github.eslamasabry.oc.ui.words.res.filesOpenLinkBody
@@ -149,7 +151,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 @OptIn(ExperimentalLayoutApi::class)
 public fun FileScreen(state: FileUi, actions: FileActions) {
-    var more by remember { mutableStateOf(false) }
+    var more by rememberSaveable { mutableStateOf(false) }
     KitClipboardEffect(state.clipId, state.clipText, actions::clipDone)
     LifecycleResumeEffect(actions) {
         actions.onResume()
@@ -187,6 +189,14 @@ public fun FileScreen(state: FileUi, actions: FileActions) {
                 ) {
                     Body(state, actions)
                 }
+                if (state.offline)
+                    KitNotice(
+                        stringResource(Res.string.filesShowingSaved),
+                        Modifier.padding(horizontal = Space.S4.dp),
+                        tone = StatusTone.Attention,
+                        actions = listOf(KitLineAction(stringResource(Res.string.kitTryAgain), actions::retry)),
+                        liveRegion = false,
+                    )
                 state.notice?.let { notice ->
                     KitNotice(
                         noticeWords(notice, state.name),

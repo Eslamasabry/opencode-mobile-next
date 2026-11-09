@@ -84,9 +84,9 @@ class ProjectSheetTest {
             }
         }
         // F: chats_project_sheet.dart:96-107: one pill (alpha is git, beta is not), and the chosen row keeps its check.
-        onAllNodesWithContentDescription("Git", useUnmergedTree = true).assertCountEquals(1)
+        onAllNodesWithText("Git", useUnmergedTree = true).assertCountEquals(1)
         onAllNodesWithTag("kit-row-check", useUnmergedTree = true).assertCountEquals(1)
-        val pill = onNodeWithContentDescription("Git", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        val pill = onNodeWithText("Git", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
         val check = onNodeWithTag("kit-row-check", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
         assertTrue(check.left > pill.right, "the check closes the row after the pill")
     }

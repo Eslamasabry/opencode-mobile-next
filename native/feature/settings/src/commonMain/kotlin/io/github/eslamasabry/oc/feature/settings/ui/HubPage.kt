@@ -18,6 +18,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
@@ -334,7 +335,7 @@ private fun ColumnScope.GroupBody(
     actions: SettingsActions,
     page: SettingsPage.Group,
 ) {
-    var languageOpen by remember(page.id) { mutableStateOf(false) }
+    var languageOpen by rememberSaveable(page.id) { mutableStateOf(false) }
     if (languageOpen) {
         KitSheet(
             visible = true,

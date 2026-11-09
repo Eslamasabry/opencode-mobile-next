@@ -134,7 +134,7 @@
     <ID>CyclomaticComplexMethod:BackgroundShellStatus.kt$BackgroundShellStatus$@Composable override fun status(): KitStatus?</ID>
     <ID>CyclomaticComplexMethod:CapabilityFlowsWiring.kt$CapabilityFlowsWiring$@Provides @SingleIn(AppScope::class) fun flows( nav: AppNavigator, registry: ConnectionRegistry, stores: PreviewStores, app: Application, dispatchers: AppDispatchers, ): CapabilityFlows</ID>
     <ID>CyclomaticComplexMethod:ChatFeelWiring.kt$AndroidChatOutside$override suspend fun openPhoneFile(ref: ConversationRef, path: String): Outcome&lt;PhoneFileOpen&gt;</ID>
-    <ID>CyclomaticComplexMethod:ChatsHomeWiring.kt$AppChatsHome$private fun readInventory(owner: LoadedProfile): List&lt;ChatsOpeningRow&gt;</ID>
+    <ID>CyclomaticComplexMethod:ChatsHomeWiring.kt$AppChatsHome$private fun readInventory(owner: LoadedProfile): List&lt;ChatFeedItem&gt;</ID>
     <ID>CyclomaticComplexMethod:ChatsHomeWiring.kt$AppChatsHome$private suspend fun saveCurrentInventory()</ID>
     <ID>CyclomaticComplexMethod:ChatsMonitorWiring.kt$AppChatsMonitor$private fun publish()</ID>
     <ID>CyclomaticComplexMethod:CodexFrames.kt$BoundedCodexFrames$private suspend fun readFrames()</ID>
@@ -1446,7 +1446,7 @@
     <ID>ReturnCount:ChatFeelWiring.kt$AndroidChatOutside$override suspend fun openPhoneFile(ref: ConversationRef, path: String): Outcome&lt;PhoneFileOpen&gt;</ID>
     <ID>ReturnCount:ChatFeelWiring.kt$AndroidChatOutside$override suspend fun phoneFileKind(ref: ConversationRef, path: String): PhoneFileKind</ID>
     <ID>ReturnCount:ChatsHomeWiring.kt$AppChatsHome$private fun location(owner: LoadedProfile): ServerLocation</ID>
-    <ID>ReturnCount:ChatsHomeWiring.kt$AppChatsHome$private fun readInventory(owner: LoadedProfile): List&lt;ChatsOpeningRow&gt;</ID>
+    <ID>ReturnCount:ChatsHomeWiring.kt$AppChatsHome$private fun readInventory(owner: LoadedProfile): List&lt;ChatFeedItem&gt;</ID>
     <ID>ReturnCount:ChatsHomeWiring.kt$AppChatsHome$private suspend fun saveCurrentInventory()</ID>
     <ID>ReturnCount:CodexReadWiring.kt$AppCodexReads$private suspend fun readUsage(context: UsageReadContext): Outcome&lt;UsageSourceResult&gt;</ID>
     <ID>ReturnCount:CodexWiring.kt$AppAgentAccounts$override suspend fun openSignIn(url: String): Outcome&lt;Unit&gt;</ID>

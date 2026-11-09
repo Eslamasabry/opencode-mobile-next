@@ -35,7 +35,17 @@ class StoredConversationPreviews(
     private val registry: ConnectionRegistry,
     private val redactor: Redactor,
     private val clock: Clock,
+    private val inventory: NativeSessionInventory,
 ) : ConversationPreviews {
+    /** Cache-first: a shown server not connected yet; its saved place decides whether the kept rows still apply. */
+    override fun read(profile: io.github.eslamasabry.oc.core.common.ids.ProfileId): List<Session> {
+        if (registry.live.value[profile] != null) return emptyList()
+        if (!stores.lanes.forProfile(profile).isAdmitting) return emptyList()
+        val saved = stores.profiles.profile(profile) ?: return emptyList()
+        if (saved.cleartextUnconfirmed || saved.reentry.password || saved.reentry.agentToken) return emptyList()
+        return inventory.read(saved.profile)
+    }
+
     private val writes = Mutex()
 
     private class Decoded(val raw: String, val scope: String, val rows: List<Session>)
@@ -96,14 +106,19 @@ class StoredConversationPreviews(
         // Capture primitive labels before suspending; no deferred read of another connection's
         // inventory.
         val rows = mutableListOf<Map<String, Any>>()
+        val rich =
+            NativeSessionInventory.richRows((stores.prefs.get(key(server)) as? PrefValue.Str)?.value, scope)
         var size = 0
         for (session in sessions.take(MAX_ROWS)) {
             if (session.id.raw.isEmpty() || session.id.raw.length > 512) continue
             val row =
-                linkedMapOf<String, Any>(
-                    "id" to session.id.raw,
-                    "title" to redactor.redact(session.title.orEmpty()).take(256),
-                    "updated" to (session.time?.updatedMs ?: session.time?.createdMs ?: 0L),
+                NativeSessionInventory.withRich(
+                    rich,
+                    linkedMapOf<String, Any>(
+                        "id" to session.id.raw,
+                        "title" to redactor.redact(session.title.orEmpty()).take(256),
+                        "updated" to (session.time?.updatedMs ?: session.time?.createdMs ?: 0L),
+                    ),
                 )
             val bytes = DartJson.encode(row).encodeToByteArray().size
             if (size + bytes > MAX_BYTES - 512) break

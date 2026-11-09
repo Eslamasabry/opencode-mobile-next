@@ -200,7 +200,7 @@ private fun ConversationBody(row: KitConversation, liveText: String?) {
             }
             MetaLine(row, large)
         }
-        row.agent?.let { KitProviderLogo(it.id, it.name, agent = true, Modifier.size(20.dp), markSize = 16.dp) }
+        row.agent?.let { KitProviderLogo(it.id, it.name, agent = true, Modifier.size(28.dp), markSize = 28.dp) }
     }
 }
 

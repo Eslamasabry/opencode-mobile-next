@@ -150,10 +150,11 @@ public class ChatWorkModel(
                     world.reload()
                     load(quiet = true)
                 }
-                is Outcome.Failed ->
-                    mutable.update {
-                        it.copy(backgrounding = false, canBackground = offersBackground(), actionFailed = true)
-                    }
+                is Outcome.Failed -> {
+                    // offersBackground() refuses while the request is on its way, so clear that first: the offer stays.
+                    mutable.update { it.copy(backgrounding = false) }
+                    mutable.update { it.copy(canBackground = offersBackground(), actionFailed = true) }
+                }
             }
         }
     }

@@ -39,7 +39,7 @@ public data class StoreLedger(val flutterCommit: String, val rows: List<LedgerRo
 
     public companion object {
         public const val PATH: String = "docs/native/migration/store-ledger.json"
-        public const val SNAPSHOT_PATH: String = "docs/native/migration/flutter-2.1.4-names.json"
+        public const val SNAPSHOT_PATH: String = "docs/native/migration/flutter-2.1.5-names.json"
 
         public fun load(repoRoot: File): StoreLedger = parse(File(repoRoot, PATH).readText())
 
@@ -66,7 +66,7 @@ public data class StoreLedger(val flutterCommit: String, val rows: List<LedgerRo
     }
 }
 
-/** The committed scanner output for the released tree (`docs/native/migration/flutter-2.1.4-names.json`). */
+/** The committed scanner output for the released tree (`docs/native/migration/flutter-2.1.5-names.json`). */
 public data class NamesSnapshot(val release: String, val commit: String, val names: List<ScannedName>) {
     public companion object {
         public fun load(repoRoot: File): NamesSnapshot = parse(File(repoRoot, StoreLedger.SNAPSHOT_PATH).readText())

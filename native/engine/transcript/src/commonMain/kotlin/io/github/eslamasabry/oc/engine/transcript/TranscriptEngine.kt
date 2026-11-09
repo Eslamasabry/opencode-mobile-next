@@ -59,6 +59,24 @@ public class TranscriptEngine(
         )
 }
 
+/**
+ * Cache-first (owner rule, 2026-11-09): a transcript with no server behind it. It reduces a kept page
+ * ([KeptTranscript]) with the same reducer as a live handle, so a conversation opened again draws its real rows at
+ * once, before (or without) its server. Close it when the live transcript takes over.
+ */
+public fun detachedTranscript(
+    sessionId: String,
+    dispatchers: AppDispatchers,
+    clock: Clock,
+    parent: CoroutineScope,
+): TranscriptHandle =
+    TranscriptHandle(
+        sessionId = sessionId,
+        lane = dispatchers.serial("transcript-kept:$sessionId"),
+        parent = parent,
+        nowMs = { clock.now().toEpochMilliseconds() },
+    )
+
 /** Unit-level counters (plan 09 §3.11 / §14.2). Per handle, so tests never share them. */
 public class TranscriptCounters {
     public var publishes: Int = 0
@@ -125,6 +143,10 @@ internal constructor(
 
     /** Admission snapshots the reducer, including events not yet flushed to the display. */
     public suspend fun messageIds(): Set<String> = withContext(lane) { model.messageIds }
+
+    /** Cache-first: the newest [limit] messages as they read now, oldest first (see [KeptTranscript]). */
+    public suspend fun keptMessages(limit: Int = KeptTranscript.MAX_MESSAGES): List<MessageWithParts> =
+        withContext(lane) { model.kept(limit) }
 
     init {
         // Nobody watching [new, §3.5]: keep applying, skip derivation; the first subscriber gets

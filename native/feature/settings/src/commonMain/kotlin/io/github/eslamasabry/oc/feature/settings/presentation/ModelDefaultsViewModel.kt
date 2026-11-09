@@ -33,6 +33,14 @@ public interface ModelDefaultsHost {
     ): Outcome<ModelDefaultsData>
 
     public suspend fun choose(model: ModelRef?): Outcome<Unit>
+
+    /**
+     * Cache-first: what the last successful [read] for [profile] (null = the active one) showed, kept per server, so
+     * the page opens on its real rows while the live read refreshes them. Null when nothing was kept.
+     */
+    public suspend fun kept(
+        profile: io.github.eslamasabry.oc.core.common.ids.ProfileId? = null
+    ): ModelDefaultsData? = null
 }
 
 public data class ModelDefaultsRow(
@@ -74,7 +82,16 @@ public class ModelDefaultsViewModel(
     public val state: StateFlow<ModelDefaultsUi> = mutable.asStateFlow()
 
     init {
-        refresh()
+        // Cache-first: the kept rows draw first (no skeleton), the live read replaces them in place.
+        viewModelScope.launch {
+            host.kept(route.profile)?.let { kept ->
+                if (state.value.models.isEmpty()) mutable.value = ui(kept).copy(loading = true)
+            }
+            if (!state.value.saving) {
+                mutable.value = state.value.copy(loading = true, failure = null)
+                load()
+            }
+        }
     }
 
     override fun back() = nav.back()
@@ -90,49 +107,48 @@ public class ModelDefaultsViewModel(
             is Outcome.Failed ->
                 mutable.value =
                     state.value.copy(loading = false, saving = false, failure = read.failure)
-            is Outcome.Ok -> {
-                val data = read.value
-                fun row(model: CatalogModel, reason: ModelReason? = null, free: Boolean = false) =
-                    ModelDefaultsRow(
-                        model.ref,
-                        model.name,
-                        reason,
-                        free,
-                        model.cost?.inputPerMillion,
-                        model.cost?.outputPerMillion,
-                        data.current?.sameModel(model.ref) == true,
-                    )
-                val recommended =
-                    recommendModels(
-                            data.models,
-                            data.current,
-                            data.defaults,
-                            data.library.recent,
-                            data.library.favorites,
-                        )
-                        .map { row(it.model, it.reason, it.free) }
-                mutable.value =
-                    ModelDefaultsUi(
-                        data.serverName,
-                        data.thisPhone,
-                        loading = false,
-                        recommended = recommended,
-                        models =
-                            data.models
-                                .filter { it.enabled }
-                                .map {
-                                    row(
-                                        it,
-                                        free =
-                                            it.cost?.let { cost ->
-                                                cost.inputPerMillion == 0.0 &&
-                                                    cost.outputPerMillion == 0.0
-                                            } == true,
-                                    )
-                                },
-                    )
-            }
+            is Outcome.Ok -> mutable.value = ui(read.value)
         }
+    }
+
+    private fun ui(data: ModelDefaultsData): ModelDefaultsUi {
+        fun row(model: CatalogModel, reason: ModelReason? = null, free: Boolean = false) =
+            ModelDefaultsRow(
+                model.ref,
+                model.name,
+                reason,
+                free,
+                model.cost?.inputPerMillion,
+                model.cost?.outputPerMillion,
+                data.current?.sameModel(model.ref) == true,
+            )
+        val recommended =
+            recommendModels(
+                    data.models,
+                    data.current,
+                    data.defaults,
+                    data.library.recent,
+                    data.library.favorites,
+                )
+                .map { row(it.model, it.reason, it.free) }
+        return ModelDefaultsUi(
+            data.serverName,
+            data.thisPhone,
+            loading = false,
+            recommended = recommended,
+            models =
+                data.models
+                    .filter { it.enabled }
+                    .map {
+                        row(
+                            it,
+                            free =
+                                it.cost?.let { cost ->
+                                    cost.inputPerMillion == 0.0 && cost.outputPerMillion == 0.0
+                                } == true,
+                        )
+                    },
+        )
     }
 
     override fun choose(model: ModelRef?) {

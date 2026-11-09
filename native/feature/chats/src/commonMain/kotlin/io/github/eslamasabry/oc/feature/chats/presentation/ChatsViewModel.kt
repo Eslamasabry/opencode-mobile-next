@@ -113,9 +113,19 @@ public class ChatsViewModel(
     private val previews =
         HomePreviews(viewModelScope, { connections.servers.value }, { clock.now().toEpochMilliseconds() })
 
+    /**
+     * The feed the home draws. While the opening server has not answered, the rows saved last time stand in as the
+     * same feed rows, so the layout is the connected one and live rows replace them in place (same identity).
+     */
+    private val shownFeed =
+        combine(feed.snapshot, home.snapshot) { snapshot, extra -> HomeCachedRows.merge(snapshot, extra.opening) }
+
+    /** A row tapped while its server was still answering: it opens the moment the server does. */
+    private var pendingOpen: ConversationRef? = null
+
     public val state: StateFlow<ChatsUi> =
         combine(
-                combine(feed.snapshot, briefs.brief, filters, updates.ready, archiving) {
+                combine(shownFeed, briefs.brief, filters, updates.ready, archiving) {
                     snapshot,
                     brief,
                     chosen,
@@ -243,6 +253,17 @@ public class ChatsViewModel(
 
     init {
         viewModelScope.launch { pins.changes.collect { pinTick.update { it + 1 } } }
+        viewModelScope.launch {
+            home.snapshot.collect { extra ->
+                extra.opening?.rows?.let { previews.seed(it) }
+                val ref = pendingOpen
+                if (ref != null && extra.opening == null) {
+                    pendingOpen = null
+                    openConversation(ref)
+                }
+            }
+        }
+        viewModelScope.launch { previews.texts.collect { if (it.isNotEmpty()) home.rememberPreviews(it) } }
         // B-161: the branch port reads the folders the list shows, and only those.
         viewModelScope.launch {
             combine(feed.snapshot, briefs.brief, filters) { snapshot, brief, chosen -> HomeRows.places(build(snapshot, brief, chosen)) }
@@ -332,7 +353,10 @@ public class ChatsViewModel(
     }
 
     override fun openConversation(ref: ConversationRef) {
-        if (state.value.home.opening != null) return
+        if (state.value.home.opening != null) {
+            pendingOpen = ref
+            return
+        }
         // A row whose conversation cannot be reopened yet (its workspace is still connecting) stays shut.
         if (feed.snapshot.value.items.none { it.ref == ref && it.canReopen }) return
         sheet.value = null

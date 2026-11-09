@@ -22,7 +22,7 @@ def junit(root, module, cls, failing=()):
         fh.write(f'<testsuite name="{cls}">{cases}</testsuite>')
 
 
-def run_gate(files_log, tasks, xml=(), results=None):
+def run_gate(files_log, tasks, xml=(), results=None, report_env=None, planned='0', jobs=None):
     """Plants a shard (log + XML), runs test_report.py then summary.py. -> (exit code, markdown)."""
     with tempfile.TemporaryDirectory() as tmp:
         work, reports = os.path.join(tmp, 'native'), os.path.join(tmp, 'reports')
@@ -32,10 +32,14 @@ def run_gate(files_log, tasks, xml=(), results=None):
         log = os.path.join(tmp, 'gradle.log')
         with open(log, 'w') as fh:
             fh.write(files_log)
-        env = dict(os.environ, GRADLE_LOG=log, TASKS=tasks, GRADLE_OUTCOME='failure' if 'FAILED' in files_log else 'success')
+        env = dict(os.environ, GRADLE_LOG=log, TASKS=tasks, GRADLE_OUTCOME='failure' if 'FAILED' in files_log else 'success',
+                   JOB_STATUS='success', PICK_OUTCOME='success')
+        env.update(report_env or {})
         subprocess.run([sys.executable, '-I', os.path.join(HERE, 'test_report.py'), 'fast-0', reports], cwd=work, env=env,
                        check=True, stdout=subprocess.DEVNULL)
-        env = dict(os.environ, RESULT_TEST='success', RESULT_COMPILE='success', RESULT_APK='success')
+        for name, body in (jobs if jobs is not None else {'compile': {'failed': False, 'gradle_ran': True}, 'apk': {'failed': False, 'gradle_ran': True}}).items():
+            json.dump(body, open(os.path.join(reports, f'{name}.json'), 'w'))
+        env = dict(os.environ, RESULT_TEST='success', RESULT_COMPILE='success', RESULT_APK='success', PLANNED_SHARDS=planned)
         env.update(results or {})
         p = subprocess.run([sys.executable, '-I', os.path.join(HERE, 'summary.py'), reports, os.path.join(tmp, 'nobase'), 'fast'],
                            env=env, capture_output=True, text=True)
@@ -116,6 +120,42 @@ class Gate(unittest.TestCase):
                             results={'RESULT_COMPILE': 'failure'})
         self.assertEqual(code, 1, md)
         self.assertIn('compile job failed', md)
+
+
+class Integrity(unittest.TestCase):
+    """A run must not look green when Gradle never ran (exit 2, not 1)."""
+    T = ':feature:chats:desktopTest'
+
+    def test_gradle_never_ran_is_integrity_fail(self):
+        code, md = run_gate('Exception in thread "main" java.io.IOException: Server returned HTTP response code: 504\n', self.T)
+        self.assertEqual(code, 2, md)
+        self.assertIn('INTEGRITY', md)
+        self.assertIn('Gradle never ran', md)
+
+    def test_shard_job_that_died_in_setup_is_integrity_fail(self):
+        code, md = run_gate('', '', report_env={'JOB_STATUS': 'failure', 'PICK_OUTCOME': 'skipped'})
+        self.assertEqual(code, 2, md)
+        self.assertIn('did not get as far as running Gradle', md)
+
+    def test_missing_planned_shard_is_integrity_fail(self):
+        code, md = run_gate('> Task :feature:chats:desktopTest\n', self.T, [('feature/chats', f'{PKG}.feature.chats.XTest', ())], planned='0,1')
+        self.assertEqual(code, 2, md)
+        self.assertIn('1 of 2 planned test shard(s) left no report (shard 1)', md)
+
+    def test_compile_job_without_report_is_integrity_fail(self):
+        code, md = run_gate('> Task :feature:chats:desktopTest\n', self.T, [('feature/chats', f'{PKG}.feature.chats.XTest', ())],
+                            jobs={'apk': {'failed': False, 'gradle_ran': True}})
+        self.assertEqual(code, 2, md)
+        self.assertIn('compile: the job left no report', md)
+
+    def test_apk_failed_before_gradle_is_integrity_fail(self):
+        code, md = run_gate('> Task :feature:chats:desktopTest\n', self.T, [('feature/chats', f'{PKG}.feature.chats.XTest', ())],
+                            jobs={'compile': {'failed': False, 'gradle_ran': True}, 'apk': {'failed': True, 'gradle_ran': False}})
+        self.assertEqual(code, 2, md)
+
+    def test_all_shards_present_and_ran_passes(self):
+        code, md = run_gate('> Task :feature:chats:desktopTest\n', self.T, [('feature/chats', f'{PKG}.feature.chats.XTest', ())], planned='0')
+        self.assertEqual(code, 0, md)
 
 
 if __name__ == '__main__':

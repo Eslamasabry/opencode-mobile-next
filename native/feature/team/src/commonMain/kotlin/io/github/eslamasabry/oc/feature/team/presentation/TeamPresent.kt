@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.team.presentation
 
 import io.github.eslamasabry.oc.engine.team.TeamEngine
+import io.github.eslamasabry.oc.engine.team.TeamPhonePresentation
 import io.github.eslamasabry.oc.engine.team.TeamCapabilities
 import io.github.eslamasabry.oc.engine.team.TeamProject
 import io.github.eslamasabry.oc.engine.team.TeamProjectPhase
@@ -241,7 +242,7 @@ public object TeamPresent {
                         canRetry = p.status == "planFailed",
                         resumable =
                             p.planningState?.stage == "interrupted" &&
-                                (code == "restartNeedsReconciliation" || code == "pauseNeedsReconciliation") && can.resume,
+                                TeamPhonePresentation.resumableInterruption(code) && can.resume,
                         needsModel = TeamReasons.needsModel(code),
                     )
                 } else null,

@@ -6,6 +6,8 @@ import io.github.eslamasabry.oc.ui.design.color.lerp
 import io.github.eslamasabry.oc.ui.design.color.over
 import io.github.eslamasabry.oc.ui.design.color.wcagContrast
 import io.github.eslamasabry.oc.ui.design.style.GlassFinish
+import io.github.eslamasabry.oc.ui.design.style.GlassLookPreset
+import io.github.eslamasabry.oc.ui.design.style.GlassLooks
 import io.github.eslamasabry.oc.ui.design.style.GlassSpec
 import io.github.eslamasabry.oc.ui.design.style.Knobs
 import io.github.eslamasabry.oc.ui.design.style.Radii
@@ -98,9 +100,17 @@ public object LiquidEdge {
     /**
      * The recipe for [role] in a [dark] or light theme. The panes are clear glass (a thin tint: 0.18–0.34), bent hard in
      * a wide rim so the content visibly curves at the edges; the + is a drop (depth, lens to the middle), the pills calm.
-     * The words read on the face itself: [face] thickens the tint only as far as they need ([faceTint]).
+     * The words read on the face itself: [face] thickens the tint only as far as they need ([faceTint]). A [look] scales
+     * the starting tint ([GlassLookPreset.tintFactor]); Smoked starts at least at its smoke ([GlassLookPreset.smokeTint]).
      */
-    public fun recipe(role: LiquidRole, dark: Boolean): LiquidRecipe {
+    public fun recipe(role: LiquidRole, dark: Boolean, look: GlassLookPreset = GlassLooks.Glossy): LiquidRecipe {
+        val base = baseRecipe(role, dark)
+        if (role == LiquidRole.Action) return base
+        val tint = (base.tint * look.tintFactor).let { if (look.smoked) maxOf(it, look.smokeTint) else it }.coerceIn(0f, 1f)
+        return if (tint == base.tint) base else base.copy(tint = tint)
+    }
+
+    private fun baseRecipe(role: LiquidRole, dark: Boolean): LiquidRecipe {
         val lift = if (dark) -PRESS_LIFT_DARK else PRESS_LIFT_LIGHT
         // Crisp edges (owner 2026-11-09, "crisper glossy glass"): no soft shadow halo under any pane; the 1 dp rim light
         // and the specular set it off what lies behind it.
@@ -179,8 +189,16 @@ public object LiquidEdge {
      * [SurfaceDecoration.sheen]; no rims and no top glow (the rim light replaces them). The + is its accent at the
      * recipe's tint. A pane whose words flip to the other theme's ink draws the other theme's face with them.
      */
-    public fun face(roles: Roles, role: LiquidRole, radii: Radii = Radii.Zero): SurfaceDecoration {
-        val recipe = recipe(role, roles.dark)
+    public fun face(
+        roles: Roles,
+        role: LiquidRole,
+        radii: Radii = Radii.Zero,
+        picture: List<Argb>? = null,
+        look: GlassLookPreset = GlassLooks.Glossy,
+        /** The page the pane floats over, when its face is another theme's (Smoked's dark face over a light page). */
+        page: Roles = roles,
+    ): SurfaceDecoration {
+        val recipe = recipe(role, roles.dark, look)
         if (role == LiquidRole.Action) {
             // The + is accent glass, as thin as its glyph allows: 3:1 over either end of any backdrop.
             val accent = roles.accent.opaqueArgb()
@@ -191,7 +209,7 @@ public object LiquidEdge {
             while (a < 1f && !reads(a)) a = minOf(1f, a + .02f)
             return SurfaceDecoration(radii = radii, circle = true, fill = accent.withAlpha(a), wordsPlate = Argb(0))
         }
-        val t = faceTint(roles, role)
+        val t = faceTint(roles, role, picture, look, page)
         return SurfaceDecoration(radii = radii, fill = t.fill, fillStart = t.fillStart, sheen = t.sheen)
     }
 
@@ -206,27 +224,33 @@ public object LiquidEdge {
     private const val SHEEN_SHARE: Float = .85f
 
     /** A liquid face's top sheen (owner 2026-11-08, "more glossy"): the theme's near-white, fading over the top 30 %. */
-    public fun sheenOf(roles: Roles): Argb = GlassSpec.sheenOf(roles).let { it.withAlpha(it.alpha / 255f * SHEEN_SHARE) }
+    public fun sheenOf(roles: Roles, look: GlassLookPreset = GlassLooks.Glossy): Argb = GlassSpec.sheenOf(roles, look.spec).let { it.withAlpha(it.alpha / 255f * SHEEN_SHARE) }
 
     /**
      * A liquid [role] face's tint: the least alpha, from the recipe's thin tint up, at which text1, text2 and text3 reach
      * their targets ([inks]) on the face over what it floats over ([themeSpots]), with and without the sheen. As GlassFinish does for a pane: where Glass's own tint cannot carry them its lit corner goes, then the Solid
      * surface the pane stands for takes its place ([solidOf]), and last the sheen goes. Quieter, never less legible.
      */
-    public fun faceTint(roles: Roles, role: LiquidRole): FaceTint {
-        val recipe = recipe(role, roles.dark)
+    public fun faceTint(
+        roles: Roles,
+        role: LiquidRole,
+        picture: List<Argb>? = null,
+        look: GlassLookPreset = GlassLooks.Glossy,
+        page: Roles = roles,
+    ): FaceTint {
+        val recipe = recipe(role, roles.dark, look)
         val (base, lit) = tintOf(roles, role)
         val thin =
             SurfaceDecoration(
                 fill = base.withAlpha(recipe.tint),
                 fillStart = lit.withAlpha(minOf(1f, recipe.tint + LIT)),
-                sheen = sheenOf(roles),
+                sheen = sheenOf(roles, look),
                 // Marks a face that carries its own words (GlassFinish thickens only such faces); never drawn.
                 wordsPlate = base,
             )
         // The same measure as Glass's in-flow panes: a dark face deepens with the ground's smoke, a light one with its
         // own milk, the gloss goes first where it costs, then the Solid surface itself.
-        val d = GlassFinish.thickened(thin, roles, solidOf(roles, role), themeSpots(roles, recipe), inks(roles, role))
+        val d = GlassFinish.thickened(thin, roles, solidOf(roles, role), themeSpots(page, recipe, picture), inks(roles, role))
         val fill = d.fill ?: base
         return FaceTint(fill, d.fillStart ?: fill, d.sheen)
     }
@@ -247,21 +271,33 @@ public object LiquidEdge {
      * (a photo, a white page in a screenshot) flips the words and the face to the other theme's ([LiquidInkRule]), whose
      * face is measured the same way. Not every colour a picture can hold: that would need a plate, and the owner removed
      * the plate (2026-11-08); the strictly worst case is reported by [bandContrast].
+     *
+     * [picture] is what the page's live background can put behind the content, when the kit knows it (glass-live
+     * 2026-11-09): nothing over the flat ground, the frosted aurora's spots, or a shader look's own spots under the lens
+     * ([LiveSpots.forLook]). Null (not known) measures every picture the app draws: the frosted aurora and the farthest
+     * any shader look reaches under the lens ([LiveReach.most]).
      */
-    public fun themeSpots(roles: Roles, recipe: LiquidRecipe): List<Argb> {
+    public fun themeSpots(roles: Roles, recipe: LiquidRecipe, picture: List<Argb>? = null): List<Argb> {
         val ground = roles.ground.opaqueArgb()
+        val pictured =
+            picture
+                ?: (AuroraImage.spotsOf(roles.ground, roles.accent, roles.dark, frosted = true).toList() +
+                    // A shader look behind the content (owner 2026-11-09: the glass now shows it): the farthest any
+                    // look reaches under the lens (LiveReach, measured).
+                    LiveSpots.of(roles, LiveReach.most(roles.dark, lens = true)))
         val content =
             listOf(ground, roles.surface1.over(ground), roles.surface2.over(ground), roles.surface3.over(ground)) +
-                AuroraImage.spotsOf(roles.ground, roles.accent, roles.dark, frosted = true).toList() +
-                // A shader look behind the content (owner 2026-11-09: the glass now shows it).
-                LiveSpots.of(roles) +
+                pictured +
                 listOf(lerp(ground, roles.text1.opaqueArgb(), BLURRED_INK), lerp(ground, roles.accent.opaqueArgb(), ACCENT_WASH))
         return content.map { filtered(it, recipe) }
     }
 
-    /** How much of the ink a line of words keeps once the glass has blurred it (7 dp over 14 sp words: ink covers a
-     * fifth of a line's box). */
-    public const val BLURRED_INK: Float = .20f
+    /**
+     * How much of the ink a line of words keeps once the glass has blurred it. Measured (ChatEdgeATest, 2026-11-09):
+     * a paragraph of the transcript's Body text under the bar's 7 dp blur keeps .28 at its densest; the transcript now
+     * scrolls on under the bar (chat edge A), so the bar's words are held over that, with a little room.
+     */
+    public const val BLURRED_INK: Float = .30f
 
     /** An accent-filled part (a chip, a link run) behind the glass, blurred into the ground. */
     public const val ACCENT_WASH: Float = .25f
