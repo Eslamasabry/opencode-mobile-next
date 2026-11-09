@@ -32,16 +32,16 @@ term	\bSettings\b	Настройки
 term	\bServers?\b	сервер
 term	\bProjects?\b	проект
 term	\bAgents?\b	агент
-term	\bFiles\b	файл
-term	\bCancel\b	Отмена|Отменить
-term	\bOffline\b	Не в сети|без сети|офлайн
-term	\bDisconnect\b	Отключить
-term	\bAllow\b	Разрешить
-term	\bDeny\b	Запретить|Отклонить
-term	\bDelete\b	Удалить
-term	\bSearch\b	Поиск|Найти|поиск
-term	\bRefresh\b	Обновить
-term	\bModel\b	модел
+term	^Files$	файл
+term	^Cancel$	Отмена|Отменить
+term	^Offline$	Не в сети|без сети|офлайн
+term	^Disconnect$	Отключить
+term	^Allow$	Разрешить
+term	^Deny$	Запретить|Отклонить
+term	^Delete$	Удалить
+term	^Search$	Поиск|Найти|поиск
+term	^Refresh$	Обновить
+term	^Model$	модел
 forbid	\bсессии?\b|\bсессию\b|\bсессий\b	say чат or разговор, not сессия
 allow	OK
 allow	Wi-Fi

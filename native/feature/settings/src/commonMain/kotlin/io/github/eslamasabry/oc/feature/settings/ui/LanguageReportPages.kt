@@ -26,7 +26,10 @@ import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiEnglish
 import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiJapanese
 import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiLanguage
 import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiPortuguese
+import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiFrench
+import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiIndonesian
 import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiRussian
+import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiVietnamese
 import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiSpanish
 import io.github.eslamasabry.oc.ui.words.res.e7LocaleUiSystem
 import io.github.eslamasabry.oc.ui.words.res.languagePickerPartlyTranslated
@@ -78,6 +81,9 @@ internal fun languageWords(language: AppLanguage): String =
             AppLanguage.Japanese -> Res.string.e7LocaleUiJapanese
             AppLanguage.Portuguese -> Res.string.e7LocaleUiPortuguese
             AppLanguage.Russian -> Res.string.e7LocaleUiRussian
+            AppLanguage.Vietnamese -> Res.string.e7LocaleUiVietnamese
+            AppLanguage.Indonesian -> Res.string.e7LocaleUiIndonesian
+            AppLanguage.French -> Res.string.e7LocaleUiFrench
             AppLanguage.Chinese -> Res.string.e7LocaleUiChinese
         }
     )

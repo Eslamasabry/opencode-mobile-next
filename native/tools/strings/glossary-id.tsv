@@ -32,16 +32,16 @@ term	\bSettings\b	Pengaturan
 term	\bServers?\b	server
 term	\bProjects?\b	proyek
 term	\bAgents?\b	agen
-term	\bFiles\b	file|berkas
-term	\bCancel\b	Batal
-term	\bOffline\b	Offline|Luring
-term	\bDisconnect\b	Putuskan
-term	\bAllow\b	Izinkan
-term	\bDeny\b	Tolak
-term	\bDelete\b	Hapus
-term	\bSearch\b	Cari|pencarian
-term	\bRefresh\b	Muat ulang|Segarkan
-term	\bModel\b	model
+term	^Files$	file|berkas
+term	^Cancel$	Batal
+term	^Offline$	Offline|Luring
+term	^Disconnect$	Putuskan
+term	^Allow$	Izinkan
+term	^Deny$	Tolak
+term	^Delete$	Hapus
+term	^Search$	Cari|pencarian
+term	^Refresh$	Muat ulang|Segarkan
+term	^Model$	model
 forbid	\bsesi\b	say percakapan, not sesi
 forbid	\bchat\b	say percakapan, not chat
 allow	OK

@@ -72,7 +72,7 @@ class P12FixSettingsUiTest {
             show(choices)
             presenter.onOpen(SettingsPage.Language); waitForIdle()
             val names =
-                mapOf("en" to "English", "ar" to "العربية", "es" to "Español", "ja" to "日本語", "pt" to "Português (Brasil)", "ru" to "Русский", "zh" to "简体中文")
+                mapOf("en" to "English", "ar" to "العربية", "es" to "Español", "ja" to "日本語", "pt" to "Português (Brasil)", "ru" to "Русский", "vi" to "Tiếng Việt", "id" to "Bahasa Indonesia", "fr" to "Français", "zh" to "简体中文")
             onNodeWithText("Use system language").performScrollTo().assertExists()
             names.forEach { (tag, name) ->
                 if (tag in io.github.eslamasabry.oc.ui.words.LanguageCoverage.offered) {

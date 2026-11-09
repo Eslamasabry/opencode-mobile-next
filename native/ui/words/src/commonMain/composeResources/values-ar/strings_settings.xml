@@ -555,6 +555,9 @@
     <string name="e7LocaleUiSpanish">Español</string>
     <string name="e7LocaleUiPortuguese">Português (Brasil)</string>
     <string name="e7LocaleUiRussian">Русский</string>
+    <string name="e7LocaleUiVietnamese">Tiếng Việt</string>
+    <string name="e7LocaleUiIndonesian">Bahasa Indonesia</string>
+    <string name="e7LocaleUiFrench">Français</string>
     <string name="serverSettingsRemoveTitle">إزالة %1$s</string>
     <string name="serverSettingsRecheckAgents">التحقق من الوكلاء مجددا</string>
     <string name="serverSettingsRecheckAgentsDetail">استخدمه بعد تسجيل الدخول إلى وكيل على ذلك الحاسوب.</string>

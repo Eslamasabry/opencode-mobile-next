@@ -32,16 +32,16 @@ term	\bSettings\b	Paramètres
 term	\bServers?\b	serveur
 term	\bProjects?\b	projet
 term	\bAgents?\b	agent
-term	\bFiles\b	fichiers
-term	\bCancel\b	Annuler
-term	\bOffline\b	Hors ligne
-term	\bDisconnect\b	Déconnecter
-term	\bAllow\b	Autoriser
-term	\bDeny\b	Refuser
-term	\bDelete\b	Supprimer
-term	\bSearch\b	Rechercher|Recherche
-term	\bRefresh\b	Actualiser
-term	\bModel\b	modèle
+term	^Files$	fichiers
+term	^Cancel$	Annuler
+term	^Offline$	Hors ligne
+term	^Disconnect$	Déconnecter
+term	^Allow$	Autoriser
+term	^Deny$	Refuser
+term	^Delete$	Supprimer
+term	^Search$	Rechercher|Recherche
+term	^Refresh$	Actualiser
+term	^Model$	modèle
 forbid	\bsessions?\b	say conversation, not session
 forbid	\bchats?\b	say conversation, not chat
 allow	OK

@@ -32,16 +32,16 @@ term	\bSettings\b	Cài đặt
 term	\bServers?\b	máy chủ
 term	\bProjects?\b	dự án
 term	\bAgents?\b	tác nhân
-term	\bFiles\b	tệp
-term	\bCancel\b	Hủy
-term	\bOffline\b	Ngoại tuyến
-term	\bDisconnect\b	Ngắt kết nối
-term	\bAllow\b	Cho phép
-term	\bDeny\b	Từ chối
-term	\bDelete\b	Xóa
-term	\bSearch\b	Tìm kiếm|Tìm
-term	\bRefresh\b	Làm mới
-term	\bModel\b	mô hình
+term	^Files$	tệp
+term	^Cancel$	Hủy
+term	^Offline$	Ngoại tuyến
+term	^Disconnect$	Ngắt kết nối
+term	^Allow$	Cho phép
+term	^Deny$	Từ chối
+term	^Delete$	Xóa
+term	^Search$	Tìm kiếm|Tìm
+term	^Refresh$	Làm mới
+term	^Model$	mô hình
 forbid	\bphiên\b	say cuộc trò chuyện, not phiên
 forbid	\bchat\b	say cuộc trò chuyện, not chat
 allow	OK

@@ -29,7 +29,7 @@ public enum class ThemePack(override val wire: String) : WireNamed {
 
 /** The app language (`oc.appLocale`): [System] removes the key. Unsupported stored codes read as [System]. */
 public enum class LocaleChoice(public val code: String?) {
-    System(null), En("en"), Ar("ar"), Zh("zh"), Es("es"), Pt("pt"), Ja("ja"), Ru("ru");
+    System(null), En("en"), Ar("ar"), Zh("zh"), Es("es"), Pt("pt"), Ja("ja"), Ru("ru"), Vi("vi"), Id("id"), Fr("fr");
 
     public companion object {
         /** The language part of [tag] (`ar-EG` → [Ar]); null when unsupported. Null [tag] → [System]. */

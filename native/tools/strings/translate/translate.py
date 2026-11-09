@@ -4,14 +4,14 @@
   translate.py status   [--locales es pt]
   translate.py baseline --locales ru            adopt today's translations as in sync with today's English
   translate.py plan     --locales es --out DIR [--files strings_chat.xml ...] [--max-files N] [--batch-size 60]
-  translate.py apply    BATCH.out.json ...      write finished batches into the XML, update the state
+  translate.py apply    BATCH.json ...          read BATCH.out.json ({key: translation}), write it into the XML, update the state
 
 Standard library only. English (values/) is the source of truth. A key is "open" for a locale when it is
 missing there, or when the English text changed since the locale was translated (state file, one TSV per
 locale in translation-state/: key<TAB>sha1-of-English). Everything is read and written as plain text: the
 batch holds the person-readable string (real newlines, real apostrophes); this tool applies the XML escaping.
 """
-import argparse, glob, hashlib, json, os, re, sys
+import argparse, fcntl, glob, hashlib, json, os, re, sys
 import xml.etree.ElementTree as ET
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -108,7 +108,7 @@ def read_file(path):
         if not name: continue
         body = m.group("body") or ""
         before = text[:m.start()]
-        cm = re.search(r"<!--(.*?)-->\s*$", before, re.S)
+        cm = re.search(r"<!--((?:(?!<!--).)*?)-->\s*$", before[-600:], re.S)
         comment = re.sub(r"\s+", " ", cm.group(1)).strip() if cm else ""
         if m.group("tag") == "string":
             out.append((name.group(1), "string", comment, xml_text(body), m.group("attrs")))
@@ -144,6 +144,11 @@ def write_state(loc, st):
         for k in sorted(st): f.write("%s\t%s\n" % (k, st[k]))
 
 
+def skey(root, key):
+    """State key: the plain key in the words root, root:key elsewhere (Android modules can reuse a name)."""
+    return key if root == "words" else root + ":" + key
+
+
 def priority_rank(fname):
     pat = os.path.join(STRINGS, "translation-priority.tsv")
     rules = [l.split("\t")[0] for l in open(pat) if l.strip() and not l.startswith("#")] if os.path.exists(pat) else []
@@ -166,7 +171,7 @@ def analyse(loc):
                 have = next((tr[f][key] for f in ([fname] if fname in tr else []) + [x for x in tr if x != fname] if key in tr[f]), None)
                 h = digest(typ, val)
                 if have is None: work.append((root, kind, fname, key, typ, comment, val, None, "missing"))
-                elif key in st and st[key] != h: work.append((root, kind, fname, key, typ, comment, val, have[2], "changed"))
+                elif skey(root, key) in st and st[skey(root, key)] != h: work.append((root, kind, fname, key, typ, comment, val, have[2], "changed"))
                 else: done += 1
     return work, total, done
 
@@ -201,7 +206,7 @@ def cmd_baseline(a):
             have = {k for f in tr.values() for k in f}
             for ents in en.values():
                 for key, (typ, _, val) in ents.items():
-                    if key in have and key not in st: st[key] = digest(typ, val); n += 1
+                    if key in have and skey(root, key) not in st: st[skey(root, key)] = digest(typ, val); n += 1
         write_state(loc, st)
         print("%s: adopted %d existing translations" % (loc, n))
 
@@ -209,7 +214,7 @@ def cmd_baseline(a):
 def cmd_plan(a):
     glossary = os.path.relpath(os.path.join(STRINGS, "glossary-%s.tsv" % a.locale), NATIVE)
     work, _, _ = analyse(a.locale)
-    if a.files: work = [w for w in work if w[2] in a.files]
+    if a.files: work = [w for w in work if w[2] in a.files or w[0] + ":" + w[2] in a.files]
     files = sorted({(w[0], w[2]) for w in work}, key=lambda rf: (priority_rank(rf[1]), rf[0], rf[1]))
     if a.max_files: files = files[: a.max_files]
     os.makedirs(a.out, exist_ok=True)
@@ -233,7 +238,10 @@ def cmd_plan(a):
                 doc["items"].append(it)
             n += 1
             path = os.path.join(a.out, "%s-%03d-%s.json" % (a.locale, n, fname.replace(".xml", "")))
-            json.dump(doc, open(path, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+            head = {k: v for k, v in doc.items() if k != "items"}
+            with open(path, "w", encoding="utf-8") as f:   # one item per line: cheap to read, easy to diff
+                f.write(json.dumps(head, ensure_ascii=False)[:-1] + ', "items": [\n')
+                f.write(",\n".join(json.dumps(i, ensure_ascii=False) for i in doc["items"]) + "\n]}\n")
             print(path, len(chunk))
 
 
@@ -278,14 +286,23 @@ def check_item(loc, it, tr):
         used = {m for v in tr.values() for m in PH.findall(v) if m != "%%"}
         if used != union: raise Reject("forms use %s, English uses %s" % (sorted(used), sorted(union)))
     for v in ([tr] if typ == "string" else tr.values()):
-        if re.search(r"\\[ntu]|&(?:amp|lt|gt);|<(?!/?(?:b|i|u)>)", v) and not re.search(r"\\[ntu]|&(?:amp|lt|gt);", en):
+        en_text = en if isinstance(en, str) else " ".join(en.values())
+        if re.search(r"\\[ntu]|&(?:amp|lt|gt);", v) and not re.search(r"\\[ntu]|&(?:amp|lt|gt);", en_text):
             raise Reject("plain text only: no \\n, \\u or XML entities (write real characters)")
 
 
 def cmd_apply(a):
+    os.makedirs(STATE_DIR, exist_ok=True)
+    with open(os.path.join(STATE_DIR, ".lock"), "w") as lock:   # agents apply batches of one locale side by side
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        _apply(a)
+
+
+def _apply(a):
     for path in a.batches:
         doc = json.load(open(path, encoding="utf-8"))
-        tr = doc.get("tr") or {}
+        out = path[:-5] + ".out.json" if path.endswith(".json") and not path.endswith(".out.json") else path
+        tr = doc.get("tr") or (json.load(open(out, encoding="utf-8")) if os.path.exists(out) and out != path else {})
         loc, root = doc["locale"], doc["root"]
         base, kind = next((b, k) for r, b, k in ROOTS if r == root)
         st, entries, bad = read_state(loc), [], []
@@ -295,7 +312,7 @@ def cmd_apply(a):
             try: check_item(loc, it, tr[key])
             except Reject as e: bad.append("%s: %s" % (key, e)); continue
             entries.append((key, it["kind"], tr[key]))
-            st[key] = digest(it["kind"], it["en"])
+            st[skey(root, key)] = digest(it["kind"], it["en"])
         if bad:
             print("%s: %d rejected" % (path, len(bad)), *bad[:40], sep="\n  ")
             if not a.partial: sys.exit(1)

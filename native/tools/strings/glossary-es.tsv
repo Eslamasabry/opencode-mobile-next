@@ -32,17 +32,17 @@ term	\bSettings\b	Ajustes
 term	\bServers?\b	servidor
 term	\bProjects?\b	proyecto
 term	\bAgents?\b	agente
-term	\bFiles\b	archivos
-term	\bCancel\b	Cancelar
-term	\bOffline\b	Sin conexi[oó]n
-term	\bDisconnect\b	Desconectar
-term	\bAllow\b	Permitir
-term	\bDeny\b	Denegar|Rechazar
-term	\bDelete\b	Eliminar|Borrar
-term	\bSearch\b	Buscar|b[uú]squeda
-term	\bRefresh\b	Actualizar
-term	\bModel\b	modelo
-forbid	\bsesi[oó]n(es)?\b	say conversación, not sesión
+term	^Files$	archivos
+term	^Cancel$	Cancelar
+term	^Offline$	Sin conexi[oó]n
+term	^Disconnect$	Desconectar
+term	^Allow$	Permitir
+term	^Deny$	Denegar|Rechazar
+term	^Delete$	Eliminar|Borrar
+term	^Search$	Buscar|b[uú]squeda
+term	^Refresh$	Actualizar
+term	^Model$	modelo
+forbid	(?<!iniciar )(?<!inicio de )(?<!cerrar )(?<!cierre de )(?<!inicia )(?<!cierra )\bsesi[oó]n(es)?\b	say conversación, not sesión (iniciar/cerrar sesión is fine)
 forbid	\bchats?\b	say conversación, not chat
 allow	OK
 allow	Wi-Fi
