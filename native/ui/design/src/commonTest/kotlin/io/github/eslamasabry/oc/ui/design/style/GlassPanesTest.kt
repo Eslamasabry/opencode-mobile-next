@@ -286,7 +286,7 @@ class GlassPanesTest {
         val earns = modePasses.values.all { it }
         assertEquals(earns, GlassLooks.clearEarnsItsPlace, "the measured gate says Clear ${if (earns) "earns" else "does not earn"} its place")
         assertEquals(earns, GlassLookId.Clear in GlassLooks.offered)
-        assertEquals(if (earns) 4 else 3, GlassLooks.offered.size)
+        assertEquals(if (earns) 3 else 2, GlassLooks.offered.size)
         assertEquals(GlassLookId.Glossy, GlassLooks.offered.first { it != GlassLookId.Clear }, "Glossy leads the looks it is offered with")
     }
 

@@ -40,23 +40,23 @@ public data class GlassLook(
     val backdropLightBandDp: Float,
 ) {
     public companion object {
-        /** Glass as it ships: clear and glossy. */
+        /** Glass as it ships: clear and glossy, a bright Apple-like rim and specular (owner 2026-11-09, "more bright like apple"). */
         public val Default: GlassLook =
             GlassLook(
                 contentFrostDp = 6f,
                 paneFrostDp = 6f,
                 frostSaturation = 1.7f,
-                sheenDark = .12f,
-                sheenLight = .24f,
+                sheenDark = .16f,
+                sheenLight = .30f,
                 litLiftDark = .04f,
                 litLiftLight = .06f,
                 specularDark = .80f,
                 specularLight = .96f,
                 glintShare = .75f,
-                liquidRimDark = .46f,
-                liquidRimLight = .62f,
-                liquidSpecularDark = .80f,
-                liquidSpecularLight = .95f,
+                liquidRimDark = .72f,
+                liquidRimLight = .90f,
+                liquidSpecularDark = .95f,
+                liquidSpecularLight = 1f,
                 backdropLightGain = 3.2f,
                 backdropLightMax = .85f,
                 backdropLightBandDp = 1.5f,

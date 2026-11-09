@@ -2,8 +2,15 @@
 
 package io.github.eslamasabry.oc.ui.kit.choice
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onRoot
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -153,6 +160,50 @@ class KitGlassLookPickerTest {
         assertTrue(KitHaptic.Select in platform.haptics, "the select tick")
     }
 
+    // ---- the field and the grid (owner 2026-11-09, phone screenshots against mockup 02-picker-B-grid)
+
+    @Test
+    fun `B-KIT-018 the field fills its whole panel, not one corner of it`() = runComposeUiTest {
+        val field = KitLookFieldState()
+        mainClock.autoAdvance = false
+        setContent {
+            KitTheme(appearance = KitAppearance(style = Style.Glass), platform = FakeKitPlatform(frost = true), localeTag = "en", stillFrame = true) {
+                Box(Modifier.size(400.dp, 400.dp).background(Magenta)) {
+                    KitLookField(field, Modifier.size(400.dp, 400.dp)) {}
+                }
+            }
+        }
+        mainClock.advanceTimeBy(300)
+        val px = onRoot().captureToImage().toPixelMap()
+        // Before the fix the recording was scaled down twice: the field covered the top-left quarter and the rest showed
+        // what lay behind it.
+        val uncovered =
+            listOf(.1f, .3f, .5f, .7f, .9f).flatMap { fx -> listOf(.1f, .3f, .5f, .7f, .9f).map { fy -> fx to fy } }
+                .filter { (fx, fy) -> px[(px.width * fx).toInt(), (px.height * fy).toInt()] == Magenta }
+        assertTrue(uncovered.isEmpty(), "the field leaves these spots bare: $uncovered")
+    }
+
+    @Test
+    fun `B-KIT-018 three looks lay out two on top and the last across the whole row, with one filled check`() = runComposeUiTest {
+        mainClock.autoAdvance = false
+        setContent {
+            KitTheme(appearance = KitAppearance(style = Style.Glass), platform = FakeKitPlatform(frost = true), localeTag = "en", stillFrame = true) {
+                Box(Modifier.size(412.dp, 800.dp)) { KitGlassLookPicker(options, GlassLookId.Frosted, {}, "Bright on purpose.") }
+            }
+        }
+        mainClock.advanceTimeBy(300)
+        assertEquals(2, GlassLooks.offered.size, "Clear and Smoked are cut: two looks ship")
+        val glossy = onNodeWithTag("kit-glass-look-glossy", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        val frosted = onNodeWithTag("kit-glass-look-frosted", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        val smoked = onNodeWithTag("kit-glass-look-smoked", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        assertEquals(glossy.top, frosted.top, .5f, "Glossy and Frosted share the top row")
+        assertEquals(glossy.width, frosted.width, .5f)
+        assertTrue(smoked.top > glossy.bottom, "Smoked sits below them")
+        assertEquals(glossy.left, smoked.left, .5f, "Smoked starts where the row starts")
+        assertEquals(frosted.right, smoked.right, .5f, "and ends where it ends: no empty cell beside it")
+        assertEquals(1, onAllNodesWithTag("kit-glass-look-check", useUnmergedTree = true).fetchSemanticsNodes().size, "one check, on the chosen look")
+    }
+
     // ---- each look applies to the kit
 
     @Test
@@ -181,5 +232,9 @@ class KitGlassLookPickerTest {
             waitForIdle()
         }
         assertEquals(GlassLooks.Glossy, default)
+    }
+
+    private companion object {
+        val Magenta = Color(0xFFFF00FF)
     }
 }

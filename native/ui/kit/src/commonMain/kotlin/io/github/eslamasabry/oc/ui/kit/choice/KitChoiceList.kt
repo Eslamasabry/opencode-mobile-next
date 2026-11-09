@@ -241,14 +241,18 @@ public fun KitChoiceRow(
     // P-008: on a sheet's rail the row's box reaches past the rail to the sheet's edges (its band and tap area run edge
     // to edge, as a page row's do on the window), and its words start back on the rail, the sheet title's edge.
     val bleed = ChoiceRowGeometry.bleed(LocalKitOnRail.current).dp
+    // The plate wraps the words with room on both sides: it reaches back past the rail by space3 (never past the sheet).
+    val glassChosen = io.github.eslamasabry.oc.ui.kit.effects.kitGlassChosenRow((bleed - Space.S3.dp).coerceAtLeast(0.dp))
     Row(
         modifier
             .fillMaxWidth()
             .bleedSideways(bleed)
             // C04: the chosen wash is the row group's own plate on a flat list (as KitRow's), a band elsewhere.
+            // Never a square band (owner 2026-11-09, "ugly tint": a flat slab that ignored the card's corners): Glass
+            // draws the chosen row's own glass face, concentric with its group; every other style a rounded plate.
             .then(
-                if (LocalKitStyle.current.spec.tokens.flatLists) Modifier.kitChosenPlate(fill, bleed)
-                else Modifier.background(fill),
+                glassChosen?.takeIf { selected && on }
+                    ?: Modifier.kitChosenPlate(fill, bleed),
             )
             // Flutter floors a choice row at the two-line row height (64, 56 compact): F: lib/ui/kit/kit_choice_list.dart:635-637.
             .heightIn(min = tokens.rowHeightTwo.dp)

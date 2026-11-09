@@ -20,7 +20,9 @@ public enum class GlassLookId(public val storageName: String) {
     ;
 
     public companion object {
-        public fun fromStorage(name: String?): GlassLookId = entries.firstOrNull { it.storageName == name } ?: Glossy
+        /** A stored Smoked reads as Glossy: Smoked is no longer offered (owner 2026-11-09, "get rid of dark ... not needed"). */
+        public fun fromStorage(name: String?): GlassLookId =
+            entries.firstOrNull { it.storageName == name }?.takeIf { it != Smoked } ?: Glossy
     }
 }
 
@@ -100,6 +102,7 @@ public object GlassLooks {
 
     /** The looks the picker offers, in its order. A stored Clear still reads (and draws) as Clear. */
     public val offered: List<GlassLookId> =
-        if (clearEarnsItsPlace) listOf(GlassLookId.Clear, GlassLookId.Glossy, GlassLookId.Frosted, GlassLookId.Smoked)
-        else listOf(GlassLookId.Glossy, GlassLookId.Frosted, GlassLookId.Smoked)
+        // Smoked was dropped (owner 2026-11-09): two looks, clear Glossy and milky Frosted.
+        if (clearEarnsItsPlace) listOf(GlassLookId.Clear, GlassLookId.Glossy, GlassLookId.Frosted)
+        else listOf(GlassLookId.Glossy, GlassLookId.Frosted)
 }

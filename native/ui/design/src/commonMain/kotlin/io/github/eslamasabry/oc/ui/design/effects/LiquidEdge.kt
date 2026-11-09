@@ -84,7 +84,7 @@ public object LiquidEdge {
     public const val MODAL_BUDGET: Int = 3
 
     /** How much colour the glass lifts from what lies behind it (vibrancy; the library's own is 1.5). */
-    public const val SATURATION: Float = 1.45f
+    public const val SATURATION: Float = 1.6f
 
     /** How far the glass presses the backdrop's contrast together (1 keeps it): lightly, so the content shows. */
     public const val PRESS: Float = .86f
@@ -122,8 +122,8 @@ public object LiquidEdge {
             // (never readable text behind words), while the rim still bends it.
             LiquidRole.Bar -> r(7f, 34f, .14f, .18f, .30f)
             LiquidRole.Composer -> r(7f, 34f, .16f, .20f, .32f)
-            LiquidRole.Sheet -> r(if (dark) 6f else 8f, 44f, 0f, .30f, .40f, rimMax = 30f)
-            LiquidRole.Menu -> r(if (dark) 4f else 6f, 36f, .18f, .28f, .38f, rimMax = 26f)
+            LiquidRole.Sheet -> r(if (dark) 16f else 18f, 44f, 0f, .30f, .40f, rimMax = 30f)
+            LiquidRole.Menu -> r(if (dark) 12f else 14f, 36f, .18f, .28f, .38f, rimMax = 26f)
             // Small pills (the jump pill, the chips over the message box) are calm glass: a narrow rim and a light bend,
             // no lens to the middle (owner 2026-11-08: the jump pill's lens read swirly over text).
             LiquidRole.Pill, LiquidRole.Status -> r(2f, 12f, .16f, .18f, .28f, rimMax = 12f, share = .28f)
@@ -213,6 +213,20 @@ public object LiquidEdge {
         return SurfaceDecoration(radii = radii, fill = t.fill, fillStart = t.fillStart, sheen = t.sheen)
     }
 
+    /**
+     * The most a liquid [role] face holds (owner 2026-11-09, "glass, not frosty plastic"): sheets and menus blur their
+     * backdrop to soft colour (18/16 dp, 14/12 dp) and stay under .70/.66 and .72/.68; the bars and the message box,
+     * over the transcript behind the edge fade, under .62/.58; the small pills under .55.
+     */
+    public fun faceCap(role: LiquidRole, dark: Boolean): Float =
+        when (role) {
+            LiquidRole.Sheet -> if (dark) .66f else .70f
+            LiquidRole.Menu -> if (dark) .68f else .72f
+            LiquidRole.Bar, LiquidRole.Composer -> if (dark) .58f else .62f
+            LiquidRole.Pill, LiquidRole.Status -> .55f
+            LiquidRole.Action -> 1f
+        }
+
     /** A liquid face's tint, its lit top-start corner and its sheen. */
     public data class FaceTint(val fill: Argb, val fillStart: Argb, val sheen: Argb)
 
@@ -251,8 +265,12 @@ public object LiquidEdge {
         // The same measure as Glass's in-flow panes: a dark face deepens with the ground's smoke, a light one with its
         // own milk, the gloss goes first where it costs, then the Solid surface itself.
         val d = GlassFinish.thickened(thin, roles, solidOf(roles, role), themeSpots(page, recipe, picture), inks(roles, role))
-        val fill = d.fill ?: base
-        return FaceTint(fill, d.fillStart ?: fill, d.sheen)
+        // Glass, never a plate (owner 2026-11-09 retune, Apple's regular material): the face may thicken for its words
+        // only up to its role's cap; the backdrop's blur, not paint, does the rest.
+        val cap = faceCap(role, roles.dark)
+        fun Argb.capped(): Argb = if (alpha / 255f > cap) withAlpha(cap) else this
+        val fill = (d.fill ?: base).capped()
+        return FaceTint(fill, (d.fillStart ?: fill).capped().let { if (it.alpha / 255f > cap + LIT) it.withAlpha(cap + LIT) else it }, d.sheen)
     }
 
     /** Today's Glass tint for [role]'s pane and its lit top-start corner, opaque. */
