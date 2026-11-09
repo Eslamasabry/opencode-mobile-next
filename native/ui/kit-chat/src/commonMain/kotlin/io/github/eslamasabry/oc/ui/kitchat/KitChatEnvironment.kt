@@ -5,6 +5,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import dev.zacsweers.metro.Inject
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.security.Redactor
+import io.github.eslamasabry.oc.ui.kit.image.LocalKitImageWork
 import io.github.eslamasabry.oc.ui.kit.input.KitSecretSink
 import io.github.eslamasabry.oc.ui.kit.input.LocalKitSecretSink
 import kotlin.coroutines.CoroutineContext
@@ -32,6 +33,7 @@ private constructor(private val redactor: Redactor, private val work: CoroutineC
         CompositionLocalProvider(
             LocalKitRedactor provides redactor,
             LocalKitChatWork provides work,
+            LocalKitImageWork provides work,
             LocalKitSecretSink provides KitSecretSink(redactor::registerSecret),
             content = content,
         )
