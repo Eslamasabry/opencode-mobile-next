@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.ui.kit.platform
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.staticCompositionLocalOf
 
 /**
@@ -14,7 +15,7 @@ public fun interface KitSecureWindow {
     public fun hold(): () -> Unit
 }
 
-public val LocalKitSecureWindow = staticCompositionLocalOf { KitSecureWindow { {} } }
+public val LocalKitSecureWindow: ProvidableCompositionLocal<KitSecureWindow> = staticCompositionLocalOf { KitSecureWindow { {} } }
 
 /**
  * Counts holds and tells [apply] `true` on the first and `false` after the last, so two secret fields on one screen
