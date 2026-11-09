@@ -51,8 +51,8 @@ this branch with a test; "home-connecting" means fixed by that branch (owner of 
 
 | # | Screen | Where (commonMain) | Shows now | Data it needs kept | State |
 |---|---|---|---|---|---|
-| 1 | Conversations home | `chats/ui/ChatsScreen.kt:275-282`, `ChatsHomeSheets.kt:367-433` (`OpeningStatus`, `OpeningRow`) | The whole body replaced by a notice plus plain title rows with a bubble glyph (the owner's screenshot); skeleton when nothing saved | Feed rows: title, project, status, time, agent mark, preview, folder | home-connecting (d32c88ea7) |
-| 2 | Conversations home | `ChatsScreen.kt:330-333` (`ChatsPhase.Opening`) | Skeleton rows instead of sections | Same as 1 | home-connecting |
+| 1 | Conversations home | `chats/ui/ChatsScreen.kt:275-282`, `ChatsHomeSheets.kt:367-433` (`OpeningStatus`, `OpeningRow`) | The whole body replaced by a notice plus plain title rows with a bubble glyph (the owner's screenshot); skeleton when nothing saved | Feed rows: title, project, status, time, agent mark, preview, folder | **Fixed** by home-connecting (d32c88ea7, landed); `OpeningRow` deleted |
+| 2 | Conversations home | `ChatsScreen.kt:330-333` (`ChatsPhase.Opening`) | Skeleton rows instead of sections | Same as 1 | **Fixed** by home-connecting |
 | 3 | All conversations | `chats/ui/ChatsAllScreen.kt:252` (`AllPhase.Opening`), `:266` (`AllPhase.Failed`) | 7 skeleton rows; full-body error when every source failed | `AllRowUi`: title, project, server, running, archived, pinned | Pending (after home-connecting lands: feed from the saved inventory) |
 | 4 | Chat transcript | `chat/ui/ChatScreen.kt:838` → `ChatStates.kt:73` (`KitSkeletonTranscript`) | Two-turn skeleton, no title, until the history read | The newest page of messages and the title | **Fixed** (CF-10…14) |
 | 5 | Chat transcript, server away | `GraphChatWorld.kt` `bind(null)` → `ChatLoadError` | Full-page cable error, composer hidden | Same as 4 | **Fixed**: kept rows + Offline status line |
@@ -85,8 +85,8 @@ connection forms, permission settings.
 ## The guard
 
 - **Source gate** `quality/…/CacheFirstGate.kt` (`CF-GATE-1…3`):
-  - no feature composable named like an offline, cached, fallback or saved-titles layout (`OpeningRow` is the one left,
-    listed until home-connecting removes it);
+  - no feature composable named like an offline, cached, fallback or saved-titles layout (the list of old ones is empty: `OpeningRow`
+    went with home-connecting);
   - every loading branch in a feature that replaces a body (skeleton, loading state view, blank) is reviewed as
     Local, Cold (cache-first; named first-frame test) or Pending; Pending screens have a ceiling (38 at the start) that only goes down.
 - **First-frame tests per screen**: the frame with kept data has the same structure as the live frame (same phase,
