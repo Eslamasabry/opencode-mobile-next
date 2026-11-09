@@ -71,7 +71,7 @@ class KitSegmentedInsetTest {
                 }
                 waitForIdle()
                 val track = onNodeWithTag("kit-segmented-track").getBoundsInRoot()
-                val thumb = onNodeWithTag("kit-segmented-thumb").getBoundsInRoot()
+                val thumb = onNodeWithTag("kit-segmented-thumb", useUnmergedTree = true).getBoundsInRoot()
                 val inset = SegmentedGeometry.INSET
                 val what = "$style/$corners"
                 assertNear(inset, (thumb.left - track.left).value, "$what left")
@@ -91,7 +91,7 @@ class KitSegmentedInsetTest {
         }
         waitForIdle()
         val track = onNodeWithTag("kit-segmented-track").getBoundsInRoot()
-        val thumb = onNodeWithTag("kit-segmented-thumb").getBoundsInRoot()
+        val thumb = onNodeWithTag("kit-segmented-thumb", useUnmergedTree = true).getBoundsInRoot()
         assertNear(SegmentedGeometry.INSET, (track.right - thumb.right).value, "end")
     }
 
@@ -123,7 +123,7 @@ class KitSegmentedInsetTest {
             }
             waitForIdle()
             image = onNodeWithTag("host").captureToImage().toPixelMap()
-            val b = onNodeWithTag("kit-segmented-thumb").getBoundsInRoot()
+            val b = onNodeWithTag("kit-segmented-thumb", useUnmergedTree = true).getBoundsInRoot()
             thumbBox = androidx.compose.ui.geometry.Rect(b.left.value, b.top.value, b.right.value, b.bottom.value)
         }
         val midY = ((thumbBox.top + thumbBox.bottom) / 2).toInt()

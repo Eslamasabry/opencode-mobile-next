@@ -66,12 +66,12 @@ class S17KitAParityTest {
     }
 
     @Test
-    fun `B-KIT-031 the segmented track is the 48 dp target plus its two hairlines, as Flutter's`() =
+    fun `B-KIT-031 the segmented track is the 48 dp target; its hairline is drawn on the edge, not added to the height`() =
         runDesktopComposeUiTest(412, 300) {
             var expected = 0f
             setContent {
                 Themed {
-                    expected = LocalKitTokens.current.minTarget + 2 * kitHairline().value
+                    expected = LocalKitTokens.current.minTarget // owner 2026-11-09 (d352b241c): the thumb sits inset in the track; the hairline no longer pads it
                     KitSegmented(
                         segments = listOf(KitSegment("today", "Today"), KitSegment("week", "Week"), KitSegment("month", "Month")),
                         selected = "week",
@@ -82,7 +82,7 @@ class S17KitAParityTest {
             }
             val h = onNodeWithContentDescription("Time range").fetchSemanticsNode().boundsInRoot.height
             // Before: the 48 dp target sat inside the 2 dp indicator inset, so the track was 4 dp taller.
-            assertTrue(abs(h - expected) < 0.75f, "track height $h, Flutter ${expected}")
+            assertTrue(abs(h - expected) < 0.75f, "track height $h, the 48 dp target $expected")
         }
 
     @Test
