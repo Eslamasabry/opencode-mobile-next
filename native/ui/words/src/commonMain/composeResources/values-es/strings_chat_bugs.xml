@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatReplyFailedSignIn">El proveedor del modelo no aceptó el inicio de sesión. Vuelve a iniciar sesión en ese proveedor o elige otro modelo.</string>
+    <string name="chatReplyFailedModel">Este modelo no está disponible. Elige otro modelo y envía de nuevo.</string>
+    <string name="chatReplyFailedBusy">El proveedor del modelo está ocupado en este momento. Espera un poco o elige otro modelo.</string>
+    <string name="chatReplyFailedOther">La respuesta se detuvo con un error. Envía de nuevo o elige otro modelo.</string>
+    <string name="chatReplyFailedDetails">Detalles</string>
+    <string name="chatReplyFailedCopy">Copiar detalles</string>
+    <string name="chatSendFailedOffline">No se puede conectar con el servidor en este momento.</string>
+    <string name="chatSendFailedChanged">La conexión cambió mientras se enviaba. No se envió nada.</string>
+    <string name="chatSendFailedRefused">El servidor no aceptó el mensaje. No se envió nada.</string>
+    <string name="chatModelsSearch">Buscar un modelo</string>
+    <string name="chatModelsRecent">Recientes</string>
+    <string name="chatModelsCurrent">Actual</string>
+    <string name="chatModelsNoMatch">Ningún modelo coincide</string>
+    <string name="chatsHomeNewShort">Nueva</string>
+</resources>

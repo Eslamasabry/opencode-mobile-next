@@ -74,4 +74,27 @@
     <string name="agentErrorUnknown">La solicitud no pudo terminar.</string>
     <string name="agentErrorUnknownHint">Revisa la conversación antes de enviar de nuevo. Los detalles pueden ayudar a explicar qué pasó.</string>
     <string name="openCode1UnsupportedTitle">Actualiza este servidor</string>
+    <string name="agentErrorUsageLimit">Por ahora se alcanzó el límite de uso de este modelo.</string>
+    <string name="agentErrorUsageLimitHint">Elige otro modelo para seguir, o continúa cuando se restablezca el límite.</string>
+    <string name="recentErrorScreen">No se pudo mostrar una pantalla</string>
+    <string name="recentErrorConnection">Se perdió la conexión en vivo con el servidor</string>
+    <string name="recentErrorAndroidExit">Android cerró la app</string>
+    <string name="recentErrorTemperature">Cambió la temperatura del teléfono</string>
+    <string name="recentErrorStartup">La app tuvo problemas para iniciar</string>
+    <string name="recentErrorReportStore">No se pudieron abrir los informes de problemas guardados</string>
+    <string name="recentErrorGeneric">Algo salió mal</string>
+    <string name="chatSendFailureLostConnectionTo">%1$s perdió la conexión con %2$s</string>
+    <string name="chatSendFailureLostConnection">%1$s perdió la conexión con su proveedor de modelos</string>
+    <string name="chatSendFailureSignIn">%1$s necesita que inicies sesión</string>
+    <string name="chatSendFailureSignInAgain">%1$s necesita que vuelvas a iniciar sesión</string>
+    <string name="chatSendFailureNoCredit">%1$s no tiene créditos para este modelo</string>
+    <string name="chatSendFailureModelUnavailable">Este modelo no está disponible</string>
+    <string name="chatSendFailureBusy">%1$s está ocupado</string>
+    <string name="chatSendFailureAgentFallback">El agente</string>
+    <string name="chatSendFailureDetailsAgent">Agente</string>
+    <string name="chatSendFailureDetailsModel">Modelo</string>
+    <string name="chatSendFailureDetailsCode">Código de error</string>
+    <string name="chatSendFailureNeedsAccount">Este modelo necesita una cuenta de %1$s</string>
+    <string name="agentErrorFreeTier">Los modelos gratuitos de OpenCode detuvieron esta respuesta.</string>
+    <string name="agentErrorFreeTierHint">En el nivel gratuito suelen rechazarse las conversaciones largas, aunque hoy hayas usado poco. Acortar esta o empezar una nueva suele ayudar.</string>
 </resources>

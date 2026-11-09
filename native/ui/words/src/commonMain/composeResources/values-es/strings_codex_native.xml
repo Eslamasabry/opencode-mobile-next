@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="codexNativeTitle">Comprobación de la conexión de Codex</string>
+    <string name="codexNativeIntro">Ejecuta este comando de una sola línea en tu computadora. Ingresa su dirección, una ruta absoluta de carpeta y el token de capacidad para comprobar la conexión autenticada.</string>
+    <string name="codexNativeCopy">Copiar comando de inicio</string>
+    <string name="codexNativeTokenHelp">Usa la ruta absoluta de tu propio archivo de token. Mantén el token en privado. El WebSocket sin cifrar solo se permite en este dispositivo; para otra computadora usa un WebSocket seguro.</string>
+    <string name="codexNativeAddress">Dirección WebSocket</string>
+    <string name="codexNativeDirectory">Ruta absoluta de la carpeta</string>
+    <string name="codexNativeToken">Token de capacidad</string>
+    <string name="codexNativeWorking">Comprobando la conexión…</string>
+    <string name="codexNativeProbe">Comprobar conexión</string>
+    <string name="codexNativeProbed">La conexión autenticada respondió a una lectura limitada a la carpeta. Un resultado vacío no confirma que la carpeta exista.</string>
+    <string name="codexNativeFailed">Falló la comprobación de la conexión. Verifica que Codex esté en ejecución e inténtalo de nuevo.</string>
+    <string name="codexNativeAuthFailed">Codex rechazó el token de capacidad. Revísalo e inténtalo de nuevo.</string>
+    <string name="codexNativeScopeFailed">Revisa la dirección, la ruta absoluta de la carpeta y el alcance de conexión permitido.</string>
+    <string name="codexNativeVersion">Esta conexión no puede proporcionar el uso de la cuenta. Leer la cuenta requiere el protocolo calificado de Codex 0.153.4.</string>
+    <string name="codexNativeOpen">Abrir lector de cuenta</string>
+    <string name="codexNativeReaderOpen">El lector de cuenta está abierto. Abre Planes para actualizar los límites de la cuenta. Ciérralo aquí cuando termines.</string>
+    <string name="codexNativePlans">Abrir Planes</string>
+    <string name="codexNativeClose">Cerrar lector de cuenta</string>
+    <string name="codexNativeReadOnly">Esta página comprueba la conexión y lee el uso de la cuenta. No inicia una conversación, no inicia sesión por ti ni envía un mensaje.</string>
+</resources>

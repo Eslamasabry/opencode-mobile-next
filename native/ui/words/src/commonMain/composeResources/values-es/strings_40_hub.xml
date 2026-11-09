@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="hub40Changed">Esa entrada de uso cambió. Actualiza Planes para ver las cuentas actuales.</string>
+    <string name="hub40ContinueOn">¿Continuar en %1$s?</string>
+    <string name="hub40ContinueBody">Este acceso directo pide abrir la conexión guardada para iniciar sesión en el proveedor. No se envía nada hasta que continúes.</string>
+    <string name="hub40Continue">Continuar</string>
+</resources>

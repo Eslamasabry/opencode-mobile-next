@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxGitRepairAction">Reparar archivos de Git vinculados</string>
+    <string name="linuxGitRepairWorking">Reparando archivos de Git…</string>
+    <string name="linuxGitRepairHealthy">Git puede leer este proyecto. Ningún archivo de objetos necesitó reparación.</string>
+    <plurals name="linuxGitRepairRestored">
+        <item quantity="one">Se restauró 1 archivo de objetos de Git. Git puede leer el proyecto de nuevo.</item>
+        <item quantity="many">Se restauraron %1$d de archivos de objetos de Git. Git puede leer el proyecto de nuevo.</item>
+        <item quantity="other">Se restauraron %1$d archivos de objetos de Git. Git puede leer el proyecto de nuevo.</item>
+    </plurals>
+    <string name="linuxGitRepairMissing">No se pudieron recuperar o verificar algunos objetos de Git. Clona el proyecto de nuevo o restaura una copia.</string>
+    <string name="linuxGitRepairNotProject">Aquí solo se pueden reparar proyectos de Git que estén en la carpeta de proyectos de este teléfono.</string>
+    <string name="linuxGitRepairFailed">El teléfono no pudo terminar de reparar los archivos de Git. Inténtalo de nuevo.</string>
+    <string name="linuxGitRepairDetailLocal">Restaura objetos de Git verificados desde copias dentro de este proyecto. Los archivos del proyecto se conservan.</string>
+</resources>

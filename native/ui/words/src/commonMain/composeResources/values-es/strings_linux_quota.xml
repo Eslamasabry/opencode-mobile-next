@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxQuotaTitle">Uso del plan en este teléfono</string>
+    <string name="linuxQuotaSetup">Configurar el uso del plan</string>
+    <string name="linuxQuotaEnabled">El uso del plan está configurado</string>
+    <string name="linuxQuotaBody">Lee los límites de Codex, GLM y MiniMax a partir de los inicios de sesión que ya hay en este teléfono. El ayudante se ejecuta solo mientras se lee el uso.</string>
+    <string name="linuxQuotaTurnOff">Desactivar el uso del plan</string>
+    <string name="linuxQuotaLinuxNotReady">Primero configura Linux en Este teléfono.</string>
+    <string name="linuxQuotaNoNode">Instala Node desde los componentes de Linux e inténtalo de nuevo.</string>
+    <string name="linuxQuotaOldNode">Actualiza Node a la versión 20 o posterior e inténtalo de nuevo.</string>
+    <string name="linuxQuotaPrepareFailed">No se pudieron preparar los archivos de uso. Inténtalo de nuevo.</string>
+    <string name="linuxQuotaStartFailed">El ayudante de uso no respondió. Inténtalo de nuevo.</string>
+    <string name="linuxQuotaRemoveFailed">No se pudo quitar el ayudante de uso. Inténtalo de nuevo.</string>
+</resources>

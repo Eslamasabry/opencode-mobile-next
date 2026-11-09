@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="andrMonitorExplanation">Revisa otros servidores guardados mientras esta app está abierta o mientras tu conexión en segundo plano está activa. Cada servidor necesita tu permiso. La supervisión nunca activa la conexión en segundo plano.</string>
+    <string name="andrMonitorEnabled">Revisar este servidor</string>
+    <string name="andrMonitorOff">Desactivado. Sin revisiones en segundo plano.</string>
+    <string name="andrMonitorWaiting">Esperando la próxima revisión. La información anterior puede estar desactualizada.</string>
+    <string name="andrMonitorChecking">Revisando ahora. La información anterior puede estar desactualizada.</string>
+    <string name="andrMonitorCurrent">Al día tras la última revisión.</string>
+    <string name="andrMonitorUnavailable">No se pudo revisar. Abre este servidor para ver su actividad más reciente.</string>
+    <string name="andrMonitorWifi">Esperando una red Wi-Fi.</string>
+    <string name="andrMonitorPaused">En pausa mientras la app y la conexión en segundo plano están detenidas.</string>
+    <string name="andrMonitorSaveFailed">No se pudo guardar esta opción. Inténtalo de nuevo.</string>
+    <string name="andrMonitorCheckIn">Recordarme las respuestas largas</string>
+    <string name="andrMonitorCheckInDetail">Un recordatorio cuando una conversación lleve trabajando tanto tiempo. Las revisiones fallidas no cuentan como trabajo.</string>
+    <string name="andrMonitorMinutes">%1$s minutos</string>
+</resources>

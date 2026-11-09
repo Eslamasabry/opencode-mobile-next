@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatFeelShare">Compartir</string>
+    <string name="chatFeelSelectText">Seleccionar texto</string>
+    <string name="chatFeelEditAndResend">Editar y reenviar</string>
+    <string name="chatFeelOpenLinkTitle">¿Abrir el enlace?</string>
+    <string name="chatFeelOpenLinkBody">Esto abre %1$s fuera de la app.</string>
+    <string name="chatFeelOpenLinkAction">Abrir</string>
+    <string name="chatFeelLinkRefused">Este enlace no se puede abrir desde aquí.</string>
+    <string name="chatFeelUndoTitle">¿Deshacer desde aquí?</string>
+    <string name="chatFeelUndoBody">Este mensaje y todo lo que sigue se deshacen en el servidor.</string>
+    <string name="chatFeelUndoAction">Deshacer</string>
+    <string name="chatFeelPicture">Imagen</string>
+    <string name="chatFeelPictureOnServer">Imagen en el servidor: %1$s</string>
+    <string name="chatFeelPictureOnWeb">Imagen de %1$s. Toca para abrirla fuera de la app.</string>
+    <string name="chatFeelDone">Listo</string>
+    <string name="chatFeelPictureLoading">Abriendo la imagen…</string>
+    <string name="chatFeelPictureFailed">Esta imagen no se puede mostrar aquí.</string>
+</resources>

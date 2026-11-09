@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="settings40_style_default">Estilo predeterminado</string>
+    <string name="settings40_reset_question">¿Restablecer la apariencia?</string>
+    <string name="settings40_reset_body">Restablece los colores, el estilo, la forma, el efecto cristal, el tamaño del texto, el movimiento y el brillo de las respuestas. Tus conversaciones, el idioma y las notificaciones se quedan como están.</string>
+    <string name="settings40_local_work">Trabajo sin enviar en este teléfono</string>
+    <string name="settings40_queue_title">Mensajes en cola</string>
+    <string name="settings40_drafts_title">Borradores de conversaciones</string>
+    <plurals name="settings40_storage_size">
+        <item quantity="one">1 elemento · %2$s</item>
+        <item quantity="many">%1$d de elementos · %2$s</item>
+        <item quantity="other">%1$d elementos · %2$s</item>
+    </plurals>
+    <string name="settings40_storage_unknown">No se puede leer este almacenamiento. Todo se conserva.</string>
+    <string name="settings40_storage_reading">Leyendo el almacenamiento local…</string>
+    <string name="settings40_discard_queue">Eliminar mensajes en cola sin enviar</string>
+    <string name="settings40_discard_drafts">Eliminar borradores de conversaciones</string>
+    <string name="settings40_queue_keeps">Elimina los mensajes que nunca se han enviado. Los que tienen marca de envío o recibo de comando se quedan para revisarlos.</string>
+    <string name="settings40_queue_empty">No hay mensajes en cola que eliminar.</string>
+    <string name="settings40_drafts_empty">No hay borradores guardados que eliminar.</string>
+    <string name="settings40_discard_working">Eliminando contenido local…</string>
+    <string name="settings40_queue_question">¿Eliminar los mensajes en cola sin enviar?</string>
+    <string name="settings40_drafts_question">¿Eliminar los borradores de conversaciones?</string>
+    <string name="settings40_drafts_body">Elimina el texto guardado y los adjuntos de los borradores en este teléfono. Las conversaciones abiertas también se actualizan. Si algo aún se está enviando o comprobando, no se elimina. Esta acción no se puede deshacer.</string>
+    <string name="settings40_discard_failed">No se pudo terminar de eliminar. Lo que se está enviando, lo incierto, un almacenamiento ilegible o un cambio durante el guardado pueden impedir la eliminación. Revisa los totales e inténtalo de nuevo.</string>
+    <plurals name="settings40_discard_done">
+        <item quantity="one">Se eliminó 1 elemento.</item>
+        <item quantity="many">Se eliminaron %1$d de elementos.</item>
+        <item quantity="other">Se eliminaron %1$d elementos.</item>
+    </plurals>
+    <plurals name="settings40_discard_kept">
+        <item quantity="one">Se eliminó 1 elemento. Mensajes conservados para revisar: %2$d.</item>
+        <item quantity="many">Se eliminaron %1$d de elementos. Mensajes conservados para revisar: %2$d.</item>
+        <item quantity="other">Se eliminaron %1$d elementos. Mensajes conservados para revisar: %2$d.</item>
+    </plurals>
+    <plurals name="settings40_discard_cleanup">
+        <item quantity="one">Se eliminó 1 borrador. Algunos archivos adjuntos no se pudieron quitar. Vuelve a eliminar los borradores para terminar.</item>
+        <item quantity="many">Se eliminaron %1$d de borradores. Algunos archivos adjuntos no se pudieron quitar. Vuelve a eliminar los borradores para terminar.</item>
+        <item quantity="other">Se eliminaron %1$d borradores. Algunos archivos adjuntos no se pudieron quitar. Vuelve a eliminar los borradores para terminar.</item>
+    </plurals>
+    <string name="settings40_no_answers">Ninguna pregunta de este servidor necesita respuesta todavía.</string>
+    <string name="settings40_answer_failed">Este paso no se completó. Es posible que tu respuesta guardada y los ajustes de Android no coincidan. Revisa Notificaciones o Mantener en ejecución e inténtalo de nuevo.</string>
+    <string name="settings40_held_action">Eliminar también estos</string>
+    <string name="settings40_held_question">¿Eliminar los mensajes conservados para revisar?</string>
+    <string name="settings40_held_body">Puede que ya hayan llegado al servidor. Esto solo los quita de este teléfono y no se envía nada más.</string>
+    <plurals name="settings40_queue_held_body">
+        <item quantity="one">1 de ellos puede que ya haya llegado al servidor. Eliminar solo lo quita de este teléfono y no se envía nada más.</item>
+        <item quantity="many">%1$d de ellos puede que ya hayan llegado al servidor. Eliminar solo los quita de este teléfono y no se envía nada más.</item>
+        <item quantity="other">%1$d de ellos puede que ya hayan llegado al servidor. Eliminar solo los quita de este teléfono y no se envía nada más.</item>
+    </plurals>
+</resources>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="approvalToolLabel">Herramienta: %1$s</string>
+    <string name="approvalToolTerminal">Comando de terminal</string>
+    <string name="approvalToolEdit">Cambio en un archivo</string>
+    <string name="approvalToolRead">Lectura de un archivo</string>
+    <string name="approvalToolWeb">Solicitud web</string>
+    <string name="approvalToolOutside">Fuera de este proyecto</string>
+    <string name="approvalToolOther">Otra herramienta</string>
+    <string name="approvalCopyAsk">Copiar lo que pide ejecutar</string>
+    <string name="approvalCopied">Copiado</string>
+    <string name="approvalAllow">Permitir</string>
+    <string name="approvalAlwaysAllowExact">Permitir siempre %1$s</string>
+    <string name="approvalDeny">Denegar</string>
+    <string name="approvalReplyLabel">Dile qué hacer en su lugar</string>
+    <string name="approvalReplySend">Denegar y enviar</string>
+    <string name="approvalReplyJustDeny">Solo denegar</string>
+    <string name="approvalReplyBack">Atrás</string>
+    <string name="approvalReplyEmpty">Escribe qué debe hacer en su lugar, o elige Solo denegar.</string>
+    <string name="approvalAllowedWhat">Permitido: %1$s</string>
+    <string name="approvalAlwaysAllowedWhat">Siempre permitido: %1$s</string>
+    <string name="approvalDenied">Denegado</string>
+    <string name="approvalDeniedInstead">Denegado; se le pidió hacer esto en su lugar: %1$s</string>
+</resources>

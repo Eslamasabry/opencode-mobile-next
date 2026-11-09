@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="webSourcesDuplicateNative">Esta URL ya está en tu lista de revisión.</string>
+    <string name="webSourcesFullNative">Puedes revisar hasta 10 fuentes. Quita una antes de agregar otra.</string>
+    <string name="webSourcesChooseNative">Elige al menos una fuente revisada.</string>
+</resources>
