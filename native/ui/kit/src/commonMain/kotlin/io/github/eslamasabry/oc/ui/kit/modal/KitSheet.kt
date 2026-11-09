@@ -264,6 +264,8 @@ public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -
     val page = rememberKitLiquidSource()
     // One budget per window: the floating parts that may be liquid at once, and which drop to frost first.
     val budget = remember { KitLiquidBudget() }
+    // Menus open in this window, above the page, its sheet and its dialog (smoothness round 2: no popup window per menu).
+    val menus = remember { KitMenuLayerState() }
     // The page's live picture, for the sheets' and menus' liquid faces (they follow its every frame).
     val livePicture = remember { io.github.eslamasabry.oc.ui.kit.foundation.KitLivePicture() }
     Box(modifier) {
@@ -271,6 +273,7 @@ public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -
             LocalKitSheetHost provides state,
             LocalKitLiquidPage provides page,
             LocalKitLiquidBudget provides budget,
+            LocalKitMenuLayer provides menus,
             io.github.eslamasabry.oc.ui.kit.foundation.LocalKitLivePicture provides livePicture,
         ) {
             // The in-window modal is a sibling of the page, never a descendant of its
@@ -292,6 +295,7 @@ public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -
             Box(Modifier.zIndex(2f)) {
                 CompositionLocalProvider(LocalKitGrowTitle provides null, LocalKitLiquidOverModal provides true) { DialogLayer(state) }
             }
+            Box(Modifier.zIndex(3f)) { MenuLayer(menus) }
         }
     }
 }
