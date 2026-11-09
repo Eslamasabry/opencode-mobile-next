@@ -577,6 +577,10 @@ public interface ChatActions {
     /** A server image thumbnail uses the same bounded, identity-fenced read as the viewer. */
     public suspend fun readPicture(path: String): ByteArray? = null
 
+    /** The profile that owns [readPicture]'s pictures: the kit keeps their thumbnails under it. Null: memory only. */
+    public val pictureScope: String?
+        get() = null
+
     /**
      * B-CHAT-064 / B-CHAT-114: a file a reply names (a confirmed path) or a step produced: a
      * picture opens in the viewer, any other file in the file viewer (which offers Open with and

@@ -52,13 +52,13 @@ internal fun ChatsInboxScreen(state: ChatsUi, actions: ChatsActions) {
     ) {
         LazyColumn(Modifier.fillMaxSize().testTag("inbox-scroll")) {
             state.answerFailure?.let { failure ->
-                item("answer-failure") { KitErrorNotice(stringResource(Res.string.chatHomeAnswerFailed), failure = failure) }
+                item("answer-failure", contentType = "answer-failure") { KitErrorNotice(stringResource(Res.string.chatHomeAnswerFailed), failure = failure) }
             }
             watched.failure?.let { failure ->
-                item("watched-failure") { KitErrorNotice(stringResource(Res.string.homeWatchedOpenFailed), failure = failure) }
+                item("watched-failure", contentType = "watched-failure") { KitErrorNotice(stringResource(Res.string.homeWatchedOpenFailed), failure = failure) }
             }
             if (hasRequests) {
-                item("requests") {
+                item("requests", contentType = "requests") {
                     val primary = state.inbox.indexOfFirst { it.permission != null }
                     Column(Modifier.padding(top = Space.S2.dp)) {
                         state.inbox.forEachIndexed { index, row ->
@@ -86,7 +86,7 @@ internal fun ChatsInboxScreen(state: ChatsUi, actions: ChatsActions) {
                     }
                 }
             } else {
-                item("empty") {
+                item("empty", contentType = "empty") {
                     Box(
                         Modifier.fillParentMaxHeight(if (state.finished.isEmpty()) 1f else .4f), // F: lib/ui/screens/inbox/inbox_screen.dart:244
                         contentAlignment = Alignment.Center,
@@ -110,7 +110,7 @@ internal fun ChatsInboxScreen(state: ChatsUi, actions: ChatsActions) {
                         )
                     }
                 }
-                if (state.finished.isNotEmpty()) item("finished") {
+                if (state.finished.isNotEmpty()) item("finished", contentType = "finished") {
                     KitRowGroup(label = stringResource(Res.string.inboxFinishedLabel)) {
                         state.finished.take(5).forEach { row -> // F: lib/ui/screens/inbox/inbox_screen.dart:247
                             KitFeedItem(
@@ -126,11 +126,11 @@ internal fun ChatsInboxScreen(state: ChatsUi, actions: ChatsActions) {
                     }
                 }
             }
-            if (watched.sources.any { it.enabled } || watched.requests.isNotEmpty() || watched.failure != null) item("refresh-watched") {
+            if (watched.sources.any { it.enabled } || watched.requests.isNotEmpty() || watched.failure != null) item("refresh-watched", contentType = "refresh-watched") {
                 KitButton(stringResource(Res.string.homeRefreshWatched), actions::refreshWatched,
                     role = KitButtonRole.Tertiary, working = watched.refreshing)
             }
-            item("end") { Spacer(Modifier.height(Space.S4.dp)) }
+            item("end", contentType = "end") { Spacer(Modifier.height(Space.S4.dp)) }
         }
     }
 }

@@ -76,12 +76,19 @@ def analyse(lines, mods, expected):
     return real
 
 
+def gradle_ran(lines):
+    return any(re.match(r'^(\S+Z\s+)?(\x1b\[[0-9;]*m)*(> Task :|BUILD (SUCCESSFUL|FAILED))', l) for l in lines)
+
+
 real_failures = analyse(log_lines(), mods, os.environ.get('TASKS', '').split())
 if os.environ.get('GRADLE_OUTCOME') == 'failure' and not failures and not real_failures:
     real_failures.append('the Gradle run failed and left no failing test and no readable task failure')
 tests = sum(v[0] for v in mods.values())
 report = {'name': name, 'tests': tests, 'failed': len(failures), 'skipped': skipped, 'failures': failures, 'modules': mods,
-          'build_failed': os.environ.get('GRADLE_OUTCOME') == 'failure', 'real_failures': real_failures}
+          'build_failed': os.environ.get('GRADLE_OUTCOME') == 'failure', 'real_failures': real_failures,
+          # integrity facts for summary.py: did this shard plan work, and did Gradle really start?
+          'planned': os.environ.get('TASKS', '').split(), 'gradle_ran': gradle_ran(log_lines()),
+          'job_status': os.environ.get('JOB_STATUS', ''), 'pick_outcome': os.environ.get('PICK_OUTCOME', '')}
 os.makedirs(out, exist_ok=True)
 json.dump(report, open(os.path.join(out, f'report-{name}.json'), 'w'))
 print(f'**{name}**: {tests} tests, {len(failures)} failed, {skipped} skipped\n')

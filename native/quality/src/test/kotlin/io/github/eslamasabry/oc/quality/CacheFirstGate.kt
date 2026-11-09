@@ -55,7 +55,7 @@ internal object CacheFirstGate {
     }
 
     /** Pending screens (not cache-first yet). Lower it with every screen made cache-first; never raise it. */
-    const val PENDING_CEILING: Int = 35
+    const val PENDING_CEILING: Int = 33
 
     private fun f(module: String, rest: String): String =
         "feature/$module/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/${module.replace("-", "")}/$rest"
@@ -71,7 +71,7 @@ internal object CacheFirstGate {
             f("chat", "ui/ChatStates.kt") to Review(1, Cold("CF-12")),
             f("chats", "attention/AttentionScreen.kt") to Review(1, Pending),
             f("chats", "ui/ChatsAllScreen.kt") to Review(1, Pending),
-            f("chats", "ui/ChatsScreen.kt") to Review(2, Pending),
+            f("chats", "ui/ChatsScreen.kt") to Review(1, Cold("B-HOME-CACHE-001")),
             f("chats", "ui/NewConversationScreen.kt") to Review(1, Pending),
             f("factsbook", "ui/AboutYouScreen.kt") to Review(1, Pending),
             f("factsbook", "ui/MemorySection.kt") to Review(1, Pending),
@@ -106,7 +106,7 @@ internal object CacheFirstGate {
             f("servers", "account/ui/AgentAccountScreen.kt") to Review(2, Pending),
             f("settings", "ui/LibraryRegistrySheet.kt") to Review(2, Pending),
             f("settings", "ui/LibraryScreen.kt") to Review(1, Pending),
-            f("settings", "ui/ModelDefaultsScreen.kt") to Review(1, Pending),
+            f("settings", "ui/ModelDefaultsScreen.kt") to Review(1, Cold("CF-15")),
             f("settings", "ui/PermissionSettingsScreen.kt") to Review(1, Local),
             f("settings", "ui/VoiceLicensesView.kt") to Review(1, Local),
             f("setup", "ui/SetupScreen.kt") to Review(1, Local),
@@ -123,11 +123,8 @@ internal object CacheFirstGate {
         )
 
     /**
-     * Alternate layouts still in the code (path → why). Shrinks only. The home's saved-titles list goes when the
-     * home draws its real rows from the saved feed (native/home-connecting).
+     * Alternate layouts still in the code (path → why). Empty since the home's saved-titles list (OpeningRow) went
+     * with native/home-connecting (d32c88ea7); it stays empty.
      */
-    val ALTERNATE_LAYOUTS: Map<String, String> =
-        mapOf(
-            f("chats", "ui/ChatsHomeSheets.kt") to "OpeningRow: the home's saved-titles list (removed by home-connecting)",
-        )
+    val ALTERNATE_LAYOUTS: Map<String, String> = emptyMap()
 }

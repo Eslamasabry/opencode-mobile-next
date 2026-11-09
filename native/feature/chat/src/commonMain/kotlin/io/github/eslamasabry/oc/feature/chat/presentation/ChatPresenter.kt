@@ -1199,6 +1199,8 @@ public class ChatPresenter(
         local.update { it.copy(select = null) }
     }
 
+    override val pictureScope: String get() = world.ref.profileId.raw
+
     override suspend fun readPicture(path: String): ByteArray? =
         (world.readPicture(path) as? Outcome.Ok)?.value
 
