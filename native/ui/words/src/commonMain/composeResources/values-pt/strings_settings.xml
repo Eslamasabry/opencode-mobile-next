@@ -14,4 +14,20 @@
     <string name="e7LocaleUiSpanish">Español</string>
     <string name="e7LocaleUiPortuguese">Português (Brasil)</string>
     <string name="e7LocaleUiRussian">Русский</string>
+    <string name="appearanceGlassLook">Aparência do vidro</string>
+    <string name="appearanceGlassLookPick">Escolha a aparência do vidro</string>
+    <string name="appearanceGlassLookGlossy">Brilhante</string>
+    <string name="appearanceGlassLookGlossyLine">Brilho forte, curva nas bordas</string>
+    <string name="appearanceGlassLookClear">Transparente</string>
+    <string name="appearanceGlassLookClearLine">Dá para ver através, brilho leve</string>
+    <string name="appearanceGlassLookFrosted">Fosco</string>
+    <string name="appearanceGlassLookFrostedLine">Desfoque suave, o mais fácil de ler</string>
+    <string name="appearanceGlassLookSmoked">Fumê</string>
+    <string name="appearanceGlassLookSmokedLine">Vidro escuro nas barras e botões</string>
+    <string name="appearanceGlassLookDisclosure">As prévias usam cores vivas para mostrar as diferenças. A página atrás mostra o seu fundo real.</string>
+    <string name="appearanceGlassLookFrostedLighter">Fosco agora usa cartões mais claros, então mais do seu fundo aparece.</string>
+    <string name="appearanceGlassLookHeldMotion">As aparências do vidro pausam enquanto o movimento está desligado. Ligue o movimento para escolher uma.</string>
+    <string name="appearanceGlassLookNeedsAndroid13">Bordas curvas precisam do Android 13. Este telefone as mostra desfocadas em todas as aparências.</string>
+    <string name="appearanceGlassCardHint">Toque em Vidro de novo para escolher a aparência.</string>
+    <string name="appearanceGlassCardLook">Vidro · %1$s</string>
 </resources>

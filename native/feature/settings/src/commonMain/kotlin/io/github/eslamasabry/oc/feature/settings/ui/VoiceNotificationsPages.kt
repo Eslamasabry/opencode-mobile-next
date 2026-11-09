@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
@@ -124,7 +125,7 @@ internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: Settin
     // Flutter's KitSwitchRow is a KitRow: 64 dp with two lines (lib/ui/kit/kit_row.dart:502-506). The kit's icon
     // switch row asks for the one-line 56, so the two-line minimum is asked here (kit change reported).
     val twoLine = Modifier.heightIn(min = LocalKitTokens.current.rowHeightTwo.dp)
-    var checkInOpen by remember { mutableStateOf(false) }
+    var checkInOpen by rememberSaveable { mutableStateOf(false) }
     val defaultCheckIn = 30 // F: lib/domain/profile_monitor.dart:31
     if (checkInOpen)
         KitSheet(

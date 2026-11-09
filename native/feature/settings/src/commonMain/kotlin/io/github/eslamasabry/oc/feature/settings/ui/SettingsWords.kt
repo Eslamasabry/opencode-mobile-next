@@ -38,8 +38,15 @@ import io.github.eslamasabry.oc.ui.words.res.appearanceAccentSilver
 import io.github.eslamasabry.oc.ui.words.res.appearanceAccentTeal
 import io.github.eslamasabry.oc.ui.words.res.appearanceAccentViolet
 import io.github.eslamasabry.oc.ui.words.res.appearanceFineTuneCornersRound
-import io.github.eslamasabry.oc.ui.words.res.appearanceGlassEdgesFrosted
-import io.github.eslamasabry.oc.ui.words.res.appearanceGlassEdgesLiquid
+import io.github.eslamasabry.oc.ui.design.style.GlassLookId
+import io.github.eslamasabry.oc.ui.words.res.appearanceGlassLookClear
+import io.github.eslamasabry.oc.ui.words.res.appearanceGlassLookClearLine
+import io.github.eslamasabry.oc.ui.words.res.appearanceGlassLookFrosted
+import io.github.eslamasabry.oc.ui.words.res.appearanceGlassLookFrostedLine
+import io.github.eslamasabry.oc.ui.words.res.appearanceGlassLookGlossy
+import io.github.eslamasabry.oc.ui.words.res.appearanceGlassLookGlossyLine
+import io.github.eslamasabry.oc.ui.words.res.appearanceGlassLookSmoked
+import io.github.eslamasabry.oc.ui.words.res.appearanceGlassLookSmokedLine
 import io.github.eslamasabry.oc.ui.words.res.appearanceFineTuneCornersSharp
 import io.github.eslamasabry.oc.ui.words.res.appearanceFineTuneCornersSoft
 import io.github.eslamasabry.oc.ui.words.res.appearanceGroupBackground
@@ -464,11 +471,24 @@ internal fun cornersWords(corners: Corners): String =
     )
 
 @Composable
-internal fun glassEdgesWords(edges: io.github.eslamasabry.oc.ui.design.effects.GlassEdges): String =
+internal fun glassLookWords(look: GlassLookId): String =
     stringResource(
-        when (edges) {
-            io.github.eslamasabry.oc.ui.design.effects.GlassEdges.Liquid -> Res.string.appearanceGlassEdgesLiquid
-            io.github.eslamasabry.oc.ui.design.effects.GlassEdges.Frosted -> Res.string.appearanceGlassEdgesFrosted
+        when (look) {
+            GlassLookId.Glossy -> Res.string.appearanceGlassLookGlossy
+            GlassLookId.Clear -> Res.string.appearanceGlassLookClear
+            GlassLookId.Frosted -> Res.string.appearanceGlassLookFrosted
+            GlassLookId.Smoked -> Res.string.appearanceGlassLookSmoked
+        }
+    )
+
+@Composable
+internal fun glassLookLine(look: GlassLookId): String =
+    stringResource(
+        when (look) {
+            GlassLookId.Glossy -> Res.string.appearanceGlassLookGlossyLine
+            GlassLookId.Clear -> Res.string.appearanceGlassLookClearLine
+            GlassLookId.Frosted -> Res.string.appearanceGlassLookFrostedLine
+            GlassLookId.Smoked -> Res.string.appearanceGlassLookSmokedLine
         }
     )
 

@@ -151,7 +151,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 @OptIn(ExperimentalLayoutApi::class)
 public fun FileScreen(state: FileUi, actions: FileActions) {
-    var more by remember { mutableStateOf(false) }
+    var more by rememberSaveable { mutableStateOf(false) }
     KitClipboardEffect(state.clipId, state.clipText, actions::clipDone)
     LifecycleResumeEffect(actions) {
         actions.onResume()

@@ -117,10 +117,10 @@ public object GlassSpec : StyleSpec {
         }
 
     /** The blur behind a clear [role] pane. */
-    public fun clearFrostSigma(role: SurfaceRole): Float =
+    public fun clearFrostSigma(role: SurfaceRole, look: GlassLook = GlassLook.Default): Float =
         when (role) {
-            SurfaceRole.Content -> CLEAR_CONTENT_FROST
-            SurfaceRole.Control, SurfaceRole.Track, SurfaceRole.Field -> CLEAR_PANE_FROST
+            SurfaceRole.Content -> look.contentFrostDp
+            SurfaceRole.Control, SurfaceRole.Track, SurfaceRole.Field -> look.paneFrostDp
             else -> frostSigma(role)
         }
 
@@ -241,7 +241,7 @@ public object GlassSpec : StyleSpec {
             val base = if (chosen) chosenTintOf(roles, plain) else plain
             fill = base.withAlpha(alpha)
             // A clear pane's lit corner is GlassLook's (less milk in a light theme); the held, thick panes keep Flutter's.
-            val lit = if (!clear) (if (dark) .04f else .12f) else if (dark) GlassLook.Default.litLiftDark else GlassLook.Default.litLiftLight // FG: lib/ui/kit/style/kit_style_glass.dart:188,189
+            val lit = if (!clear) (if (dark) .04f else .12f) else if (dark) r.look.litLiftDark else r.look.litLiftLight // FG: lib/ui/kit/style/kit_style_glass.dart:188,189
             val toWhite = if (clear || dark) SHEEN else SHEEN * 2
             fillStart = lerp(base, white, toWhite).withAlpha(minOf(1f, alpha + lit))
         }
@@ -279,10 +279,11 @@ public object GlassSpec : StyleSpec {
             edgeWidthDp = if (chosen) CHOSEN_RIM else r.edgeWidthDp,
             shadows = if (clear) emptyList() else shadows,
             wordsPlate = if (plain) plateFor(roles, role) else none,
-            frost = if (own == null || own.withAlpha(1f) != own) (if (clear) clearFrostSigma(role) else frostSigma(role)) else 0f,
+            frost = if (own == null || own.withAlpha(1f) != own) (if (clear) clearFrostSigma(role, r.look) else frostSigma(role)) else 0f,
             innerGlow = if (plain && !crisp) innerGlowOf(roles) else none,
-            sheen = if (clear && plain) sheenOf(roles) else none,
-            specular = if (crisp) specularOf(roles) else none,
+            sheen = if (clear && plain) sheenOf(roles, r.look) else none,
+            specular = if (crisp) specularOf(roles, r.look) else none,
+            glint = r.look.glintShare,
         )
     }
 
@@ -322,7 +323,7 @@ public object GlassSpec : StyleSpec {
                     edgeEnd = own ?: edge,
                     edgeWidthDp = r.edgeWidthDp,
                     wordsPlate = if (own == null) plateFor(roles, r.role) else clear,
-                    frost = if (thin) clearFrostSigma(r.role) else frostSigma(r.role),
+                    frost = if (thin) clearFrostSigma(r.role, r.look) else frostSigma(r.role),
                 )
             }
             SurfaceRole.Content, SurfaceRole.Control, SurfaceRole.Track, SurfaceRole.Floating, SurfaceRole.Sheet -> null

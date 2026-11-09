@@ -78,6 +78,24 @@ public class ShellNavigator : AppNavigator {
         }
     }
 
+    /**
+     * The whole back stack, bottom first, as the activity keeps it across a process death (the shell's own saveable
+     * stack is composed behind the update gate and can come back as home). Empty while no stack is attached.
+     */
+    public fun snapshot(): List<AppRoute> = stack.orEmpty().filterIsInstance<AppRoute>()
+
+    /**
+     * Puts a [snapshot] back as the whole stack, without the row-transform gate (nothing is tapped). An empty list
+     * changes nothing. Called once the shell is up after a process death.
+     */
+    public fun restoreStack(routes: List<AppRoute>) {
+        if (routes.isEmpty()) return
+        mutate { s ->
+            s.clear()
+            s.addAll(routes)
+        }
+    }
+
     /** NavDisplay's onBack: the shell has already told the gate whether a gesture or a key/button committed it. */
     internal fun systemBack(): Unit = mutate { s -> if (s.size > 1) s.removeAt(s.lastIndex) }
 

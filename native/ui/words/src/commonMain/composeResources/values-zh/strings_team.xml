@@ -1589,4 +1589,8 @@
     <string name="teamRefusalCheckerUnreadableNext">恢复会再次读取该结果，而不再询问模型。如果工作通过，它会合并到 dev，其后等待的任务即可开始。</string>
     <string name="teamProjectInterruptedResumeNote">恢复会再次读取已完成的检查，而不再询问模型。如果工作通过，它会合并到 dev，其后等待的任务即可开始。</string>
     <string name="teamProjectInterruptedResume">恢复</string>
+    <string name="teamRefusalServerRestarted">此步骤运行时 OpenCode 重启了，因此被中断。</string>
+    <string name="teamRefusalServerRestartedNext">请继续以重新发送此步骤。它会从已完成的工作接着做。</string>
+    <string name="teamRefusalRestartResend">此步骤运行时 OpenCode 重启了。团队正在重新发送它。</string>
+    <string name="teamRefusalRestartResendNext">无需操作。已完成的工作会保留。</string>
 </resources>

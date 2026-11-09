@@ -4,7 +4,7 @@ import io.github.eslamasabry.oc.ui.design.effects.EdgeHold
 import io.github.eslamasabry.oc.ui.design.effects.FrostConditions
 import io.github.eslamasabry.oc.ui.design.effects.FrostPolicy
 import io.github.eslamasabry.oc.ui.design.effects.FrostStrength
-import io.github.eslamasabry.oc.ui.design.effects.GlassEdges
+import io.github.eslamasabry.oc.ui.design.style.GlassLookId
 import io.github.eslamasabry.oc.engine.analytics.Reporting
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.map
@@ -365,14 +365,14 @@ public class SettingsPresenter(
             styles = f.surfaceStyles,
             heldBySaver = p.saver,
             systemMotionOff = f.systemMotionOff,
-            glassEdges = p.glassEdges,
-            glassEdgesHold = glassEdgesHold(p, f),
+            glassLook = p.glassLook,
+            glassLookHold = glassLookHold(p, f),
             questions = appearanceQuestions(f),
         )
     }
 
-    /** Why Glass's edges are frosted whatever the choice says: the platform, or motion (Saver has its own note). */
-    private fun glassEdgesHold(p: PersonalPrefs, f: SettingsFacts): EdgeHold? =
+    /** What holds the Glass looks: motion, or the platform's missing lens (Saver has its own note). */
+    private fun glassLookHold(p: PersonalPrefs, f: SettingsFacts): EdgeHold? =
         FrostPolicy.edgesHeldBy(
             FrostConditions(
                 saver = p.saver,
@@ -381,7 +381,7 @@ public class SettingsPresenter(
                 lensSupported = f.liquidGlass,
             ),
             FrostStrength.Balanced,
-            GlassEdges.Liquid,
+            GlassLookId.Glossy,
         ).takeIf { it == EdgeHold.Platform || it == EdgeHold.Motion }
 
     private fun appearanceQuestions(f: SettingsFacts): List<AppearanceQuestion> = buildList {
@@ -740,10 +740,12 @@ public class SettingsPresenter(
         write(PersonalChange.Corner(corners), SettingsNote.AppearanceNotSaved)
     }
 
-    override fun onGlassEdges(edges: GlassEdges) {
+    override fun onGlassLook(look: GlassLookId) {
         val p = prefs.value
-        if (p.saver || p.glassEdges == edges) return
-        write(PersonalChange.Edges(edges), SettingsNote.AppearanceNotSaved)
+        if (p.saver || p.glassLook == look) return
+        // Applies at once: the page behind the picker is the real result. A refused write keeps the old look (the
+        // acknowledged value) and says so.
+        write(PersonalChange.Look(look), SettingsNote.AppearanceNotSaved)
     }
 
     override fun onSpacing(spacing: Density) {

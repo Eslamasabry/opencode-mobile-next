@@ -18,8 +18,8 @@ import io.github.eslamasabry.oc.engine.settings.prefs.ThemePack
 import io.github.eslamasabry.oc.ui.design.color.PackId
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.FrostStrength as KitFrost
-import io.github.eslamasabry.oc.ui.design.effects.GlassEdges as KitEdges
-import io.github.eslamasabry.oc.engine.settings.prefs.GlassEdges as StoredEdges
+import io.github.eslamasabry.oc.ui.design.style.GlassLookId as KitLook
+import io.github.eslamasabry.oc.engine.settings.prefs.GlassLookChoice as StoredLook
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel as KitMotion
 import io.github.eslamasabry.oc.ui.design.text.AppTextSize
@@ -85,7 +85,7 @@ public object PreferenceMapping {
             liveBackground = p.effects.liveBackground,
             liveStyle = p.effects.liveStyle,
             liveStrength = strength(p.effects.liveIntensity),
-            glassEdges = KitEdges.entries.first { it.name == p.glassEdges.name },
+            glassLook = KitLook.entries.first { it.name == p.glassLook.name },
         )
 
     /**
@@ -139,7 +139,7 @@ public object PreferenceMapping {
                         fineTune = current.effects.fineTune.copy(density = change.spacing?.let { d -> StoredDensity.entries.first { it.name == d.name } }),
                     ),
                 )
-            is PersonalChange.Edges -> PreferenceChange.Edges(StoredEdges.entries.first { it.name == change.edges.name })
+            is PersonalChange.Look -> PreferenceChange.Look(StoredLook.entries.first { it.name == change.look.name })
             is PersonalChange.Accent -> PreferenceChange.Accent(change.id)
             is PersonalChange.Reasoning -> PreferenceChange.ReasoningExpanded(change.on)
             is PersonalChange.Timestamps -> PreferenceChange.TimestampsVisible(change.on)
@@ -171,7 +171,7 @@ public object PreferenceMapping {
                     density = p.effects.fineTune.density?.let { d -> Density.entries.first { it.name == d.name } },
                 ),
             frost = KitFrost.fromStorage(p.frost.wire),
-            glassEdges = KitEdges.entries.first { it.name == p.glassEdges.name },
+            glassLook = KitLook.entries.first { it.name == p.glassLook.name },
             activityGlow = p.effects.activityGlow,
             softGlow =
                 p.effects.glowStyle ==

@@ -283,4 +283,20 @@
     <string name="textSizeDefault">Predeterminado</string>
     <string name="textSizeLarge">Grande</string>
     <string name="privacyPagesSummary">Servidores, proveedores, voz, archivos y actualizaciones</string>
+    <string name="appearanceGlassLook">Aspecto del cristal</string>
+    <string name="appearanceGlassLookPick">Elige un aspecto del cristal</string>
+    <string name="appearanceGlassLookGlossy">Brillante</string>
+    <string name="appearanceGlassLookGlossyLine">Brillo intenso, se curva en los bordes</string>
+    <string name="appearanceGlassLookClear">Transparente</string>
+    <string name="appearanceGlassLookClearLine">Se ve a través, brillo suave</string>
+    <string name="appearanceGlassLookFrosted">Esmerilado</string>
+    <string name="appearanceGlassLookFrostedLine">Desenfoque suave, el más fácil de leer</string>
+    <string name="appearanceGlassLookSmoked">Ahumado</string>
+    <string name="appearanceGlassLookSmokedLine">Cristal oscuro en barras y botones</string>
+    <string name="appearanceGlassLookDisclosure">Las vistas previas usan colores vivos para que se noten las diferencias. La página de detrás muestra tu fondo real.</string>
+    <string name="appearanceGlassLookFrostedLighter">Esmerilado ahora usa tarjetas más claras, así se ve más tu fondo.</string>
+    <string name="appearanceGlassLookHeldMotion">Los aspectos del cristal se pausan mientras el movimiento está desactivado. Actívalo para elegir uno.</string>
+    <string name="appearanceGlassLookNeedsAndroid13">Los bordes curvos necesitan Android 13. Este teléfono los muestra desenfocados en todos los aspectos.</string>
+    <string name="appearanceGlassCardHint">Toca Cristal otra vez para elegir su aspecto.</string>
+    <string name="appearanceGlassCardLook">Cristal · %1$s</string>
 </resources>
