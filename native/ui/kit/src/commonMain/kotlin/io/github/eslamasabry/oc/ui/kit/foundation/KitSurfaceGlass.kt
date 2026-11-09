@@ -5,6 +5,7 @@ import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -93,7 +94,31 @@ internal class KitGlassBackdrop {
      * Made by the panes in the source's window, released with the source ([kitGlassBackdropSource]).
      */
     internal val frosted: MutableMap<Float, SharedFrost> = HashMap()
+
+    /**
+     * Bumped whenever the picture's paint changes (another look, a theme, the strength) or its layer is made again
+     * (glass-live 2026-11-09, owner: "the render is fixed with the previous background render").
+     */
+    internal var paintVersion: Int by mutableIntStateOf(0)
+
+    /** Reads the state the picture steps with (its time), set by the live background; null while it does not step. */
+    internal var stepping: () -> Any? = NotStepping
+
+    /**
+     * What the picture shows now, as a key. Read it in every draw block that shows the picture through anything but
+     * the page's own layer (a pane's frost, a liquid face, a rim): the block then runs again, in the same frame, on
+     * every picture step and every look or theme change. A layer that only references the picture's recording is not
+     * enough: a recording drawn under several parents (the page and every pane) is not re-rendered under all of them
+     * when it changes, so a pane kept showing an old frame until something else redrew it.
+     */
+    internal fun frame(): Any? {
+        val v = paintVersion
+        val s = stepping()
+        return if (s == null) v else v to s
+    }
 }
+
+private val NotStepping: () -> Any? = { null }
 
 /**
  * One blurred copy of the backdrop's picture at [FROST_SCALE] of its size (the blur hides the lower resolution; a
@@ -102,14 +127,31 @@ internal class KitGlassBackdrop {
  */
 internal class SharedFrost(val layer: GraphicsLayer) {
     var from: GraphicsLayer? = null
+
+    /** The picture's [KitGlassBackdrop.frame] this copy was recorded at: a new frame records it again. */
+    var frame: Any? = Unset
     var size: androidx.compose.ui.unit.IntSize = androidx.compose.ui.unit.IntSize.Zero
 }
+
+private object Unset
 
 /** The scale the shared frost blurs the picture at. */
 internal const val FROST_SCALE: Float = .5f
 
 @Composable
 internal fun rememberKitGlassBackdrop(): KitGlassBackdrop = remember { KitGlassBackdrop() }
+
+/**
+ * The live picture of the page under a window's sheets and menus (provided by `KitSheetHost`, set by the page's live
+ * background): a sheet's or a menu's liquid face lies outside the page's [LocalKitGlassBackdrop], yet must follow every
+ * frame of the picture the page shows through it (glass-live 2026-11-09).
+ */
+@Stable
+internal class KitLivePicture {
+    internal var backdrop: KitGlassBackdrop? by mutableStateOf(null)
+}
+
+internal val LocalKitLivePicture: ProvidableCompositionLocal<KitLivePicture?> = staticCompositionLocalOf { null }
 
 /** The backdrop of the page being drawn, or null where no live background hosts the page. */
 internal val LocalKitGlassBackdrop: ProvidableCompositionLocal<KitGlassBackdrop?> = staticCompositionLocalOf { null }
@@ -390,6 +432,8 @@ private data class BackdropSourceElement(
         node.backdrop = backdrop
         node.paint = paint
         node.invalidateDraw()
+        // Another paint (a look, a theme, the strength): every pane showing the picture draws again.
+        backdrop.paintVersion++
     }
 
     override fun InspectorInfo.inspectableProperties() {
@@ -413,13 +457,18 @@ private class BackdropSourceNode(
         own?.let { requireGraphicsContext().releaseGraphicsLayer(it) }
         if (backdrop.layer === own) backdrop.layer = null
         own = null
+        backdrop.paintVersion++
         backdrop.frosted.values.forEach { requireGraphicsContext().releaseGraphicsLayer(it.layer) }
         backdrop.frosted.clear()
     }
 
     override fun ContentDrawScope.draw() {
         val layer = own ?: requireGraphicsContext().createGraphicsLayer().also { own = it }
-        backdrop.layer = layer
+        if (backdrop.layer !== layer) {
+            backdrop.layer = layer
+            // A new layer: every pane showing the old one draws again (outside this draw's own reads).
+            androidx.compose.runtime.snapshots.Snapshot.withoutReadObservation { backdrop.paintVersion++ }
+        }
         // Recorded in the layer's own scope, never through this node's: the picture cannot draw into, or ask for its
         // density from, the scope that is drawing it (N-29, a sample's paint reading toPx() recursed for ever).
         recordDetached(layer, paint)
@@ -488,9 +537,11 @@ private class GlassFrostNode(
         val frost = bd.frosted.getOrPut(sigma) { SharedFrost(requireGraphicsContext().createGraphicsLayer()) }
         val layer = frost.layer
         val full = picture.size
-        if (frost.from !== picture || frost.size != full || layer.renderEffect == null) {
+        val now = bd.frame()
+        if (frost.from !== picture || frost.size != full || layer.renderEffect == null || frost.frame != now) {
             frost.from = picture
             frost.size = full
+            frost.frame = now
             val small = androidx.compose.ui.unit.IntSize(
                 (full.width * FROST_SCALE).toInt().coerceAtLeast(1),
                 (full.height * FROST_SCALE).toInt().coerceAtLeast(1),
@@ -520,6 +571,8 @@ private class GlassFrostNode(
         val bd = backdrop
         val fx = effect
         val c = coordinates
+        // Subscribes this draw to the picture: a new frame of it, or another look, draws this pane again.
+        if (fx != null) bd?.frame()
         val picture = bd?.layer
         if (fx != null && bd != null && picture != null && bd.painted && c != null && c.isAttached &&
             bd.root === c.findRootCoordinates()
@@ -676,6 +729,7 @@ private class RimLightNode(var backdrop: KitGlassBackdrop, var shape: Shape, var
     override fun ContentDrawScope.draw() {
         drawContent()
         val bd = backdrop
+        bd.frame()
         val c = coordinates?.takeIf { it.isAttached } ?: return
         val picture = bd.layer ?: return
         if (!bd.painted || bd.root !== c.findRootCoordinates()) return

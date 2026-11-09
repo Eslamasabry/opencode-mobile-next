@@ -137,7 +137,9 @@ public class KitLiquidSource internal constructor(internal val layer: GraphicsLa
     /** Each liquid role's ink flip over this content (see `KitFrostState.liquidFlips`). */
     internal val liquidFlips: MutableMap<Any, LiquidFlip> = HashMap()
     internal var users: Int by mutableIntStateOf(0)
-    internal var version: Int = 0
+
+    /** Counts the recordings; snapshot state read by the panes' draws (see `KitFrostState.version`). */
+    internal var version: Int by mutableIntStateOf(0)
 }
 
 @Composable
@@ -229,7 +231,8 @@ public fun kitLiquidFace(
 internal fun kitLiquidFace(role: LiquidRole, source: KitLiquidSource?, shape: Shape, transform: () -> Float = NoTransform): Modifier? {
     val ground = LocalKitColors.current.ground.copy(alpha = 1f)
     val picture = LocalKitGlassBackdrop.current
-    val backdrop = remember(source, ground, picture) { source?.let { liquidSourceBackdrop(it, ground, picture) } }
+    val live = io.github.eslamasabry.oc.ui.kit.foundation.LocalKitLivePicture.current?.backdrop
+    val backdrop = remember(source, ground, picture, live) { source?.let { liquidSourceBackdrop(it, ground, picture, live) } }
     return liquidFace(role, source, backdrop, shape, transform)
 }
 
@@ -632,6 +635,8 @@ internal fun Modifier.kitRunUnderBar(barPx: () -> Int): Modifier =
 private fun DrawScope.drawGroundUnder(ground: Color, picture: KitGlassBackdrop?, at: LayoutCoordinates) {
     drawRect(ground, Offset(-size.width, -size.height), Size(size.width * 3f, size.height * 3f))
     val bd = picture ?: return
+    // The pane draws again on every new frame of the picture or another look (glass-live: never a stale picture).
+    bd.frame()
     val layer = bd.layer ?: return
     if (!bd.painted || bd.root !== at.findRootCoordinates()) return
     val shift = bd.origin - at.positionInRoot()
@@ -641,6 +646,8 @@ private fun DrawScope.drawGroundUnder(ground: Color, picture: KitGlassBackdrop?,
 /** A feature's [KitFrostState] (its content recorded by [kitFrostSource]) seen from a pane in the same window. */
 private fun frostStateBackdrop(state: KitFrostState, ground: Color, picture: KitGlassBackdrop?): KitLiquidBackdrop =
     KitLiquidBackdrop({ state.version }) { c ->
+        // Read here so the pane draws again when the content behind it records again (a scroll under the bar).
+        state.version
         drawGroundUnder(ground, picture, c)
         val shift = state.sourceOrigin - c.positionInRoot()
         translate(shift.x, shift.y) { drawLayer(state.layer) }
@@ -650,8 +657,11 @@ private fun frostStateBackdrop(state: KitFrostState, ground: Color, picture: Kit
  * A [KitLiquidSource] seen from a pane: in its own window by the layout's own mapping, from a popup's window (a menu) by
  * screen position, which both windows share.
  */
-private fun liquidSourceBackdrop(source: KitLiquidSource, ground: Color, picture: KitGlassBackdrop?): KitLiquidBackdrop =
+private fun liquidSourceBackdrop(source: KitLiquidSource, ground: Color, picture: KitGlassBackdrop?, live: KitGlassBackdrop? = null): KitLiquidBackdrop =
     KitLiquidBackdrop({ source.version }) { c ->
+        source.version
+        // A sheet or a menu outside the page's live background still follows the picture the page shows.
+        if (picture == null) live?.frame()
         drawGroundUnder(ground, picture, c)
         val s = source.coordinates?.takeIf { it.isAttached } ?: return@KitLiquidBackdrop
         val shift =
@@ -688,7 +698,7 @@ private class LiquidSourceNode(var source: KitLiquidSource) : Modifier.Node(), D
         // Read in the draw phase: a pane arriving or leaving redraws this once, to start or stop recording.
         if (source.users > 0) {
             source.layer.record { this@draw.drawContent() }
-            source.version++
+            androidx.compose.runtime.snapshots.Snapshot.withoutReadObservation { source.version++ }
             drawLayer(source.layer)
         } else {
             drawContent()

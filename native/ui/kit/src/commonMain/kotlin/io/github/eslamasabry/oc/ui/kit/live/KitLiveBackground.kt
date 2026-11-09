@@ -84,7 +84,18 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, content: @Composable
     val shaderPicture =
         if (glassBlurs && look != null && render == LiveRender.Shader) rememberLiveShaderBackdrop(look, strength, pictureTime) else null
     val painted = plate != null || shaderPicture != null
+    // Six steps a second for the painted picture (its drift moves under a pixel a second): Glass panes re-blur it on
+    // every step.
+    val drift = remember(clock) { derivedStateOf { floor(clock.seconds * AuroraImage.FRAMES_PER_SECOND) / AuroraImage.FRAMES_PER_SECOND } }
     SideEffect {
+        // What the picture steps with, so every pane over it draws again on the same frame as the picture (glass-live).
+        backdrop.stepping =
+            when {
+                !animates -> NoSteps
+                plate != null -> drift::value
+                shaderPicture != null -> pictureTime
+                else -> NoSteps
+            }
         backdrop.painted = painted
         backdrop.frostedSpots =
             when {
@@ -94,6 +105,14 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, content: @Composable
                 shaderPicture != null -> LiveSpots.forLook(roles, appearance.liveStyle, lens = false)
                 else -> emptyList<Argb>()
             }
+    }
+    // The window's sheets and menus follow this page's picture (glass-live: their glass is never a stale frame).
+    val livePicture = io.github.eslamasabry.oc.ui.kit.foundation.LocalKitLivePicture.current
+    if (livePicture != null) {
+        DisposableEffect(livePicture, backdrop) {
+            livePicture.backdrop = backdrop
+            onDispose { if (livePicture.backdrop === backdrop) livePicture.backdrop = null }
+        }
     }
     if (animates) {
         DisposableEffect(clock) {
@@ -108,9 +127,6 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, content: @Composable
         when {
             plate != null -> {
                 val (image, filter) = plate
-                // Six steps a second for the picture: Glass panes re-blur it on every step.
-                val steps = AuroraImage.FRAMES_PER_SECOND
-                val drift = remember(clock) { derivedStateOf { floor(clock.seconds * steps) / steps } }
                 Modifier.kitGlassBackdropSource(backdrop) {
                     drawRect(ground)
                     val at = if (animates) drift.value.toDouble() else 0.0
@@ -173,3 +189,5 @@ internal fun kitLivePictureSpots(): List<Argb> {
         }
     }
 }
+
+private val NoSteps: () -> Any? = { null }
