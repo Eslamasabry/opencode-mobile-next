@@ -54,6 +54,12 @@ public data class SetupJourneyUi(
     val transport: SetupTransport = SetupTransport.Unknown,
     /** Notifications are allowed: "Safe to leave. We'll let you know when it's ready." */
     val canNotify: Boolean = false,
+    /** The phone closed the app while the setup ran (#138); the page says so instead of "not answering". */
+    val systemKill: SystemKill? = null,
+    /** The battery steps for this phone's maker, while the phone is likely to close the app. */
+    val batteryCard: BatteryCard? = null,
+    /** The battery button found nothing to open: the steps on the card are the way on. */
+    val batteryOpenFailed: Boolean = false,
 ) {
     val install: List<io.github.eslamasabry.oc.engine.runtime.setup.SetupComponent>
         get() = options?.let { SetupSelection.install(it, chosen, adding) }.orEmpty()
@@ -112,6 +118,9 @@ public interface SetupJourneyActions {
     /** Node.js cannot run on this phone (#117): send the failure as a problem report. */
     public fun reportFailure() {}
 
+    /** The battery card's button: the app's own page, or the maker's screen when it resolves. */
+    public fun openBatterySettings(open: BatteryOpen) {}
+
     /** The Ready step's name field changed. */
     public fun projectName(name: String) {}
 
@@ -133,6 +142,7 @@ public class SetupJourneyViewModel(
     private val nav: AppNavigator,
     private val firstProject: FirstProject = NoFirstProject(),
     private val ringFacts: SetupRingFacts = NoSetupRingFacts(),
+    private val keepAlive: SetupKeepAlive = NoSetupKeepAlive(),
 ) : ViewModel(), SetupJourneyActions {
     private val customizing = route is PhoneSetupRoute.Customize
     private val adding = (route as? PhoneSetupRoute.Customize)?.adding == true
@@ -143,11 +153,13 @@ public class SetupJourneyViewModel(
     public val state: StateFlow<SetupJourneyUi> = mutable.asStateFlow()
     private var reads = 0
     private var loadedOnce = false
+    private var judged: Pair<SetupState, String?>? = null
 
     init {
         viewModelScope.launch {
             source.progress.collect { progress ->
                 mutable.update { it.copy(progress = progress, details = source.details(progress), canNotify = ringFacts.canNotify()) }
+                judgeKeepAlive(progress)
                 // Flutter `_readNetwork`: what Android answers now, read again as the setup moves on.
                 val transport = ringFacts.transport()
                 mutable.update { it.copy(transport = transport) }
@@ -160,6 +172,27 @@ public class SetupJourneyViewModel(
         }
         viewModelScope.launch { source.toolsChanged.drop(1).collect { retry() } }
         retry()
+    }
+
+    /**
+     * Once per state of a job: a stopped job asks whether the phone killed the app, and the battery card is decided
+     * for a setup not yet started or stopped. A running or finished setup shows neither.
+     */
+    private suspend fun judgeKeepAlive(progress: SetupProgress) {
+        val key = progress.state to progress.jobId
+        if (key == judged) return
+        judged = key
+        val stopped = progress.state == SetupState.Failed || progress.state == SetupState.Interrupted
+        val waiting = stopped || progress.state == SetupState.Idle
+        val kill = if (stopped) keepAlive.interruption() else null
+        val card = if (waiting) keepAlive.facts()?.let { BatteryCard.decide(it, afterKill = kill != null) } else null
+        mutable.update { it.copy(systemKill = kill, batteryCard = card, batteryOpenFailed = false) }
+    }
+
+    override fun openBatterySettings(open: BatteryOpen) {
+        val maker = state.value.batteryCard?.maker ?: return
+        val opened = SettingsOpener.open(BatteryGuide.targets(maker, open), keepAlive::tryOpen)
+        mutable.update { it.copy(batteryOpenFailed = !opened) }
     }
 
     override fun retry() {

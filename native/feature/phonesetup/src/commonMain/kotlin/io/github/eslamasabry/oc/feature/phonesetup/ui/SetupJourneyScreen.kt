@@ -27,7 +27,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import io.github.eslamasabry.oc.feature.phonesetup.presentation.BatteryOpen
+import io.github.eslamasabry.oc.feature.phonesetup.presentation.BatteryStep
 import io.github.eslamasabry.oc.feature.phonesetup.presentation.RingCostPart
+import io.github.eslamasabry.oc.feature.phonesetup.presentation.SetupMaker
+import io.github.eslamasabry.oc.feature.phonesetup.presentation.SystemKill
+import io.github.eslamasabry.oc.feature.phonesetup.presentation.SystemKillMessage
 import io.github.eslamasabry.oc.feature.phonesetup.presentation.SetupRingCost
 import androidx.compose.foundation.layout.Arrangement
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
@@ -247,6 +252,7 @@ private fun StartHero(state: SetupJourneyUi, actions: SetupJourneyActions) {
                 if (state.storageUnopened) KitErrorNotice(stringResource(Res.string.r40SetupStorageUnopened))
                 if (state.failure != null) KitErrorNotice(stringResource(Res.string.r40SetupCouldNotCheck),
                     retry = KitLineAction(stringResource(Res.string.r40SetupRetry), actions::retry))
+                BatteryCardNotice(state, actions)
             }
         },
         footer = { OtherWays(actions) },
@@ -586,8 +592,11 @@ private fun Job(state: SetupJourneyUi, actions: SetupJourneyActions) {
                 stringResource(
                     if (state.canNotify) Res.string.phoneSetupRingSafeToLeave else Res.string.phoneSetupRingSafeToLeaveQuiet
                 )
-            SetupState.Failed -> journeyFailure(state)
-            SetupState.Interrupted,
+            SetupState.Failed,
+            SetupState.Interrupted ->
+                state.systemKill?.let { killWords(it) }
+                    ?: if (progress.state == SetupState.Failed) journeyFailure(state)
+                    else stringResource(Res.string.phoneSetupRingStoppedNote)
             SetupState.Cancelled -> stringResource(Res.string.phoneSetupRingStoppedNote)
             SetupState.Done -> null
         }
@@ -720,6 +729,7 @@ private fun Job(state: SetupJourneyUi, actions: SetupJourneyActions) {
                         { detailsOpen = true },
                         role = KitButtonRole.Tertiary,
                     )
+                    BatteryCardNotice(state, actions)
                     if (
                         state.failure != null &&
                             state.confirmStop == null &&
@@ -1010,6 +1020,53 @@ private fun journeyFailure(state: SetupJourneyUi): String {
             stringResource(Res.string.phoneSetupEssentialsShort)
         else itemTitle(current, component?.shortTitle ?: current)
     return stringResource(Res.string.setupProgressViewFailedAt, title)
+}
+
+@Composable
+private fun killWords(kill: SystemKill): String =
+    stringResource(
+        when (kill.message) {
+            SystemKillMessage.Closed -> Res.string.setupKilled
+            SystemKillMessage.OutOfMemory -> Res.string.setupKilledMemory
+        }
+    )
+
+/**
+ * Issue #138: the steps that stop this phone's battery manager closing the app, for the maker's own wording. One card;
+ * the buttons open the app's settings page and, where this maker has one, its Autostart or battery screen.
+ */
+@Composable
+private fun BatteryCardNotice(state: SetupJourneyUi, actions: SetupJourneyActions) {
+    val card = state.batteryCard ?: return
+    val steps =
+        card.steps.map {
+            stringResource(
+                when (it) {
+                    BatteryStep.Unrestricted -> Res.string.setupBatteryStepUnrestricted
+                    BatteryStep.Autostart -> Res.string.setupBatteryStepAutostart
+                    BatteryStep.NeverSleeping -> Res.string.setupBatteryStepNeverSleeping
+                }
+            )
+        }
+    val failed = if (state.batteryOpenFailed) listOf(stringResource(Res.string.setupBatteryOpenFailed)) else emptyList()
+    val app = KitLineAction(stringResource(Res.string.setupBatteryOpenApp)) { actions.openBatterySettings(BatteryOpen.App) }
+    val maker =
+        if (!card.hasMakerScreen) null
+        else
+            KitLineAction(
+                stringResource(
+                    if (card.maker == SetupMaker.Samsung) Res.string.setupBatteryOpenSamsung
+                    else Res.string.setupBatteryOpenAutostart
+                )
+            ) { actions.openBatterySettings(BatteryOpen.Maker) }
+    KitNotice(
+        message = stringResource(Res.string.setupBatteryBody),
+        modifier = Modifier.testTag("setup-battery-card"),
+        title = stringResource(Res.string.setupBatteryTitle),
+        tone = StatusTone.Attention,
+        notes = steps + failed,
+        actions = listOfNotNull(app, maker),
+    )
 }
 
 @Composable

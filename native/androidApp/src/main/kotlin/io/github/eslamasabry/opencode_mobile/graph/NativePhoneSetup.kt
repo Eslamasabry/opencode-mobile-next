@@ -28,6 +28,7 @@ import io.github.eslamasabry.oc.feature.linux.presentation.LinuxLifecycle
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxSetupSource
 import io.github.eslamasabry.oc.feature.phone.presentation.KeepAliveSetting
 import io.github.eslamasabry.oc.feature.phone.presentation.KeepAliveSettings
+import io.github.eslamasabry.oc.feature.phonesetup.presentation.SetupKeepAlive
 import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
 import io.github.eslamasabry.opencode_mobile.SetupRunner
@@ -64,6 +65,7 @@ class NativePhoneSetup(
     private val payloadGuard: PhonePayloadGuard,
     private val voice: NativeVoiceSetup,
     private val reporting: Reporting,
+    private val keepAlive: SetupKeepAlive,
 ) : LinuxSetupSource {
     private val serial = dispatchers.serial("phone-setup")
     private val scope = CoroutineScope(appScope.coroutineContext + serial)
@@ -397,7 +399,10 @@ class NativePhoneSetup(
                     var reportedJob: String? = null
                     value.progress.collect {
                         shown.value = it
-                        if (it.state == SetupState.Failed && it.jobId != reportedJob) {
+                        if (
+                            (it.state == SetupState.Failed || it.state == SetupState.Interrupted) &&
+                                it.jobId != reportedJob
+                        ) {
                             reportedJob = it.jobId
                             reportStepFailed(it)
                         }
@@ -408,15 +413,18 @@ class NativePhoneSetup(
     }
 
     /** A non-fatal for the developer: which component and which kind of error, never the log or any text. */
-    private fun reportStepFailed(progress: SetupProgress) {
+    private suspend fun reportStepFailed(progress: SetupProgress) {
         val failed = progress.components.firstOrNull { it.error != null } ?: progress.components.firstOrNull { it.state == ComponentState.Failed }
         val kind = (failed?.error ?: progress.error)?.let { it::class.simpleName } ?: "unknown"
+        // Issue #138: when the phone closed the app, the closed kind (system_kill_other, low_memory, ...) goes with it.
+        val kill = keepAlive.interruption()
         reporting.reportFailure(
             "setup_step_failed",
-            mapOf(
-                "step" to (failed?.id ?: "unknown").lowercase().replace(Regex("[^a-z0-9_]"), "_"),
-                "error" to kind.replace(Regex("([a-z0-9])([A-Z])"), "$1_$2").lowercase(),
-            ),
+            buildMap {
+                put("step", (failed?.id ?: "unknown").lowercase().replace(Regex("[^a-z0-9_]"), "_"))
+                put("error", kind.replace(Regex("([a-z0-9])([A-Z])"), "$1_$2").lowercase())
+                kill?.let { put("kill", it.kind) }
+            },
         )
     }
 
