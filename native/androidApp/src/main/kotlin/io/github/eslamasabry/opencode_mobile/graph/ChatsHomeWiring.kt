@@ -15,19 +15,21 @@ import io.github.eslamasabry.oc.core.data.kv.string
 import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.core.model.ServerLocation
 import io.github.eslamasabry.oc.core.security.Redactor
+import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedItem
+import io.github.eslamasabry.oc.engine.agents.feed.ChatStatus
+import io.github.eslamasabry.oc.engine.agents.feed.HomeFeedCache
+import io.github.eslamasabry.oc.engine.agents.feed.OPENCODE_AGENT_ID
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.profiles.LoadedProfile
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsHomeExtraState
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsHomeExtras
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsListSourceUi
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningPhase
-import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningRow
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningUi
 import io.github.eslamasabry.oc.feature.chats.presentation.NoChatsHomeExtras
 import io.github.eslamasabry.oc.feature.chats.presentation.OpeningRules
 import io.github.eslamasabry.oc.feature.chats.presentation.PhoneStartWatch
-import io.github.eslamasabry.oc.feature.chats.presentation.SessionTitles
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.collections.immutable.toImmutableList
@@ -43,6 +45,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /** How often home quietly tries this phone's server again while it starts (E05-S20). */
+private fun optional(key: String, value: String?): Map<String, Any> = if (value == null) emptyMap() else mapOf(key to value)
+
 private val QUIET_RETRY_EVERY = 3.seconds
 
 /**
@@ -62,7 +66,7 @@ class AppChatsHome(
     private val phone: BuiltinRuntime,
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
-) : ChatsHomeExtras {
+) : ChatsHomeExtras, HomeFeedCache {
     private val lane = dispatchers.serial("chats-home")
     private val scope = CoroutineScope(appScope.coroutineContext + lane)
     private val mutable = MutableStateFlow(ChatsHomeExtraState())
@@ -120,7 +124,7 @@ class AppChatsHome(
                             clock.now(),
                         ),
                     serverName = owner.profile.name,
-                    rows = readInventory(owner).toImmutableList(),
+                    rows = cachedRows(owner.id).toImmutableList(),
                     failure = failure,
                     profile = active,
                 )
@@ -246,7 +250,20 @@ class AppChatsHome(
         )
     }
 
-    private fun readInventory(owner: LoadedProfile): List<ChatsOpeningRow> {
+    private val previewLines = mutableMapOf<String, String>()
+
+    override fun cachedRows(profile: ProfileId): List<ChatFeedItem> {
+        val owner = runtime.profiles.profile(profile) ?: return emptyList()
+        return readInventory(owner)
+    }
+
+    override fun rememberPreviews(lines: Map<String, String>) {
+        var changed = false
+        for ((identity, text) in lines) if (previewLines.put(identity, text) != text) changed = true
+        if (changed) scope.launch { saveCurrentInventory() }
+    }
+
+    private fun readInventory(owner: LoadedProfile): List<ChatFeedItem> {
         if (owner.cleartextUnconfirmed || owner.reentry.password || owner.reentry.agentToken)
             return emptyList()
         val raw = stores.prefs.string("oc.sessionInventory.${owner.id.raw}") ?: return emptyList()
@@ -262,9 +279,24 @@ class AppChatsHome(
                 val id = row["id"] as? String ?: return@mapNotNull null
                 val title = row["title"] as? String ?: return@mapNotNull null
                 if (id.isEmpty() || id.length > 512 || title.length > 1024) return@mapNotNull null
-                ChatsOpeningRow(id, SessionTitles.present(redactor.redact(title)))
+                val dir = (row["dir"] as? String)?.take(1024)
+                ChatFeedItem(
+                    sourceId = row["src"] as? String ?: "",
+                    profileId = owner.id,
+                    sessionId = SessionId(id),
+                    title = redactor.redact(title),
+                    directory = dir,
+                    projectName = row["project"] as? String ?: "",
+                    status = ChatStatus.Idle,
+                    lastActivityMs = (row["updated"] as? Number)?.toLong() ?: 0L,
+                    preview = redactor.redact((row["preview"] as? String).orEmpty()).take(256),
+                    agentId = row["agent"] as? String ?: OPENCODE_AGENT_ID,
+                    agentLabel = row["agentLabel"] as? String,
+                    sourceLabel = row["srcLabel"] as? String,
+                    locationKey = row["loc"] as? String,
+                )
             }
-            .distinctBy { it.key }
+            .distinctBy { it.identity }
     }
 
     private suspend fun saveCurrentInventory() {
@@ -278,7 +310,8 @@ class AppChatsHome(
                 .filter { it.profileId == id }
                 .sortedByDescending { it.lastActivityMs }
                 .take(100)
-        if (cachedRevisions[id] == (signature to items)) return
+        val withLines = items.map { it.copy(preview = previewLines[it.identity] ?: it.preview) }
+        if (cachedRevisions[id] == (signature to withLines)) return
         val rows = mutableListOf<Map<String, Any>>()
         var bytes = 0
         for (item in items) {
@@ -288,7 +321,20 @@ class AppChatsHome(
                     "id" to item.sessionId.raw,
                     "title" to redactor.redact(item.title.orEmpty()).take(256),
                     "updated" to item.lastActivityMs,
+                    "src" to item.sourceId,
+                    "project" to item.projectName.take(256),
+                    "agent" to item.agentId,
                 )
+                    .plus(optional("dir", item.directory?.take(1024)))
+                    .plus(optional("loc", item.locationKey))
+                    .plus(optional("agentLabel", item.agentLabel?.take(128)))
+                    .plus(optional("srcLabel", item.sourceLabel?.take(128)))
+                    .plus(
+                        optional(
+                            "preview",
+                            (previewLines[item.identity] ?: item.preview).takeIf { it.isNotBlank() }?.let { redactor.redact(it).take(256) },
+                        )
+                    )
             bytes += DartJson.encode(row).encodeToByteArray().size + 1
             if (bytes > 65_024) break
             rows += row
@@ -312,6 +358,6 @@ class AppChatsHome(
                     putString("oc.sessionInventory.${id.raw}", encoded)
                 }
             }
-        if (result is Outcome.Ok) cachedRevisions[id] = signature to items
+        if (result is Outcome.Ok) cachedRevisions[id] = signature to withLines
     }
 }
