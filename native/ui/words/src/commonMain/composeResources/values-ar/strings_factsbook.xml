@@ -33,7 +33,7 @@
         <item quantity="other">%1$d تغيير للمراجعة</item>
     </plurals>
     <string name="fbMemoryReview__eq1">تغيير واحد للمراجعة</string>
-    <string name="fbMemoryReview__eq2">%1$d تغييرات للمراجعة</string>
+    <string name="fbMemoryReview__eq2">تغييران للمراجعة</string>
     <plurals name="fbMemoryNotSaved">
         <item quantity="zero">%1$d ملاحظة لم تُحفظ بعد</item>
         <item quantity="one">ملاحظة واحدة لم تُحفظ بعد</item>
@@ -43,7 +43,7 @@
         <item quantity="other">%1$d ملاحظة لم تُحفظ بعد</item>
     </plurals>
     <string name="fbMemoryNotSaved__eq1">ملاحظة واحدة لم تُحفظ بعد</string>
-    <string name="fbMemoryNotSaved__eq2">%1$d ملاحظات لم تُحفظ بعد</string>
+    <string name="fbMemoryNotSaved__eq2">ملاحظتان لم تُحفظا بعد</string>
     <string name="fbMemoryNotSavedDetail">محفوظة على هذا الهاتف</string>
     <string name="fbMemoryReviewDetail">بانتظار موافقتك</string>
     <string name="fbMemoryRecent">أُضيف مؤخرًا إلى الذاكرة</string>
@@ -82,7 +82,7 @@
     </plurals>
     <string name="fbSearchMatches__eq0">لا نتائج لـ «%2$s»</string>
     <string name="fbSearchMatches__eq1">نتيجة واحدة لـ «%2$s»</string>
-    <string name="fbSearchMatches__eq2">%1$d نتائج لـ «%2$s»</string>
+    <string name="fbSearchMatches__eq2">نتيجتان لـ «%2$s»</string>
     <string name="fbSearchWordsOnly">يطابق الكلمات في ملاحظاتك. لا يبحث بالمعنى.</string>
     <string name="fbSearchEachHit">تُظهر كل نتيجة مصدرها ووقتها. وقد يكون المصدر مخطئًا.</string>
     <string name="fbSearchLocked">لا يُبحث في الملاحظات المقفلة حتى تفتحها.</string>
@@ -140,7 +140,7 @@
         <item quantity="other">%1$d عنصر محفوظ على هذا الهاتف</item>
     </plurals>
     <string name="fbNotSavedCount__eq1">عنصر واحد محفوظ على هذا الهاتف</string>
-    <string name="fbNotSavedCount__eq2">%1$d عناصر محفوظة على هذا الهاتف</string>
+    <string name="fbNotSavedCount__eq2">عنصران محفوظان على هذا الهاتف</string>
     <string name="fbNotSavedIntro">محفوظة حتى تتجاهلها: على هذا الهاتف أو لدى FactsBook. لا شيء منها في سحابتك بعد.</string>
     <string name="fbNotSavedFooter">تبقى هنا حتى تتجاهلها. بعد 30 يومًا يسألك FactsBook: إعادة المحاولة أو التصدير أو التجاهل.</string>
     <string name="fbNotSavedEmptyTitle">كل شيء محفوظ</string>
@@ -194,7 +194,7 @@
         <item quantity="other">%1$d بانتظار موافقتك</item>
     </plurals>
     <string name="fbCareWaiting__eq1">واحد بانتظار موافقتك</string>
-    <string name="fbCareWaiting__eq2">%1$d بانتظار موافقتك</string>
+    <string name="fbCareWaiting__eq2">اثنان بانتظار موافقتك</string>
     <string name="fbCareApprove">موافقة</string>
     <string name="fbCareReject">رفض</string>
     <string name="fbCareApproved">تمت الموافقة.</string>
@@ -334,7 +334,7 @@
         <item quantity="other">%1$d عنصر</item>
     </plurals>
     <string name="fbSettingsBriefItems__eq1">عنصر واحد</string>
-    <string name="fbSettingsBriefItems__eq2">%1$d عناصر</string>
+    <string name="fbSettingsBriefItems__eq2">عنصران</string>
     <string name="fbSettingsBriefTime">وقت الموجز</string>
     <string name="fbSettingsQuietHours">ساعات الهدوء</string>
     <string name="fbSettingsPrivacy">الخصوصية</string>
@@ -348,7 +348,7 @@
         <item quantity="other">%1$d دقيقة</item>
     </plurals>
     <string name="fbSettingsMinutes__eq1">دقيقة واحدة</string>
-    <string name="fbSettingsMinutes__eq2">%1$d دقائق</string>
+    <string name="fbSettingsMinutes__eq2">دقيقتان</string>
     <string name="fbSettingsAreasDetail">من يمكنه قراءة كل منطقة غيرك</string>
     <string name="fbSettingsThisNode">هذه العقدة</string>
     <string name="fbSettingsHomeZone">المنطقة الزمنية للمنزل</string>
@@ -396,7 +396,7 @@
         <item quantity="other">نص تشاركه · %1$d قاعدة</item>
     </plurals>
     <string name="fbTriggersGroupShare__eq1">نص تشاركه · قاعدة واحدة</string>
-    <string name="fbTriggersGroupShare__eq2">نص تشاركه · %1$d قواعد</string>
+    <string name="fbTriggersGroupShare__eq2">نص تشاركه · قاعدتان</string>
     <plurals name="fbTriggersGroupChat">
         <item quantity="zero">محادثات تحفظها · %1$d قاعدة</item>
         <item quantity="one">محادثات تحفظها · قاعدة واحدة</item>
@@ -406,7 +406,7 @@
         <item quantity="other">محادثات تحفظها · %1$d قاعدة</item>
     </plurals>
     <string name="fbTriggersGroupChat__eq1">محادثات تحفظها · قاعدة واحدة</string>
-    <string name="fbTriggersGroupChat__eq2">محادثات تحفظها · %1$d قواعد</string>
+    <string name="fbTriggersGroupChat__eq2">محادثات تحفظها · قاعدتان</string>
     <plurals name="fbTriggersGroupNote">
         <item quantity="zero">ملاحظات تكتبها · %1$d قاعدة</item>
         <item quantity="one">ملاحظات تكتبها · قاعدة واحدة</item>
@@ -416,7 +416,7 @@
         <item quantity="other">ملاحظات تكتبها · %1$d قاعدة</item>
     </plurals>
     <string name="fbTriggersGroupNote__eq1">ملاحظات تكتبها · قاعدة واحدة</string>
-    <string name="fbTriggersGroupNote__eq2">ملاحظات تكتبها · %1$d قواعد</string>
+    <string name="fbTriggersGroupNote__eq2">ملاحظات تكتبها · قاعدتان</string>
     <string name="fbTriggersRecent">رسائل حديثة</string>
     <string name="fbTriggersFootnote">القاعدة تقترح فقط. لا يُحفظ شيء ولا يُرسل قبل موافقتك. العناصر المتجاهلة تُعدّ ولا تُحفظ.</string>
     <string name="fbRuleFinds">يبحث عن %1$s ← %2$s</string>
@@ -438,7 +438,7 @@
         <item quantity="other">هذا الأسبوع: %1$d مقترح، %2$d متجاهل، %3$d عرض</item>
     </plurals>
     <string name="fbRuleWeekOffers__eq1">هذا الأسبوع: %1$d مقترح، %2$d متجاهل، عرض واحد</string>
-    <string name="fbRuleWeekOffers__eq2">هذا الأسبوع: %1$d مقترح، %2$d متجاهل، %3$d عروض</string>
+    <string name="fbRuleWeekOffers__eq2">هذا الأسبوع: %1$d مقترح، %2$d متجاهل، عرضان</string>
     <string name="fbRulePaused">متوقفة مؤقتًا</string>
     <string name="fbRulePause">إيقاف «%1$s» مؤقتًا</string>
     <string name="fbRuleResume">استئناف «%1$s»</string>
@@ -494,7 +494,7 @@
         <item quantity="other">%1$d في اليوم</item>
     </plurals>
     <string name="fbRuleLimitValue__eq1">1 في اليوم</string>
-    <string name="fbRuleLimitValue__eq2">%1$d في اليوم</string>
+    <string name="fbRuleLimitValue__eq2">2 في اليوم</string>
     <string name="fbRuleTest">جرّبها على عيّنة</string>
     <string name="fbRuleSampleLabel">رسالة تجريبية</string>
     <string name="fbRuleSampleExample">استخدم مثالًا</string>
@@ -535,7 +535,7 @@
         <item quantity="other">دُمجت %1$d رسالة متشابهة أخرى في هذه.</item>
     </plurals>
     <string name="fbEventCollapsed__eq1">دُمجت رسالة متشابهة واحدة أخرى في هذه.</string>
-    <string name="fbEventCollapsed__eq2">دُمجت %1$d رسائل متشابهة أخرى في هذه.</string>
+    <string name="fbEventCollapsed__eq2">دُمجت رسالتان متشابهتان أخريان في هذه.</string>
     <string name="fbEventUnverified">مرسل غير موثّق. لا يستطيع FactsBook التحقق ممن أرسل هذا النص فعلًا، لذا لن يغيّر معلومة مالية دون موافقتك.</string>
     <string name="fbEventProposed">ما اقترحته</string>
     <string name="fbEventFootnote">لا يُعرض النص الأصلي هنا ولا يُتبع أبدًا كتعليمات.</string>
@@ -551,7 +551,7 @@
         <item quantity="other">%1$d عرض من محفّزات</item>
     </plurals>
     <string name="fbNeedsYouOffers__eq1">عرض واحد من محفّز</string>
-    <string name="fbNeedsYouOffers__eq2">%1$d عروض من محفّزين</string>
+    <string name="fbNeedsYouOffers__eq2">عرضان من محفّزين</string>
     <string name="fbOfferTitle">هل تريد الحديث عن هذا مع وكيلك؟</string>
     <string name="fbOfferFromRule">عرض · %1$s</string>
     <string name="fbOfferSource">من %1$s · %2$s</string>

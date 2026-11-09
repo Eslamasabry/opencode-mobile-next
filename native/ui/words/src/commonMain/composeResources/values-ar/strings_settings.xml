@@ -135,9 +135,9 @@
         <item quantity="many">%1$d طلبًا في قائمة الانتظار</item>
         <item quantity="other">%1$d طلب في قائمة الانتظار</item>
     </plurals>
-    <string name="e7SettingsStorageSummary__queued__eq0">%1$d طلبات في قائمة الانتظار</string>
+    <string name="e7SettingsStorageSummary__queued__eq0">لا طلبات في قائمة الانتظار</string>
     <string name="e7SettingsStorageSummary__queued__eq1">طلب واحد في قائمة الانتظار</string>
-    <string name="e7SettingsStorageSummary__queued__eq2">%1$d طلبات في قائمة الانتظار</string>
+    <string name="e7SettingsStorageSummary__queued__eq2">طلبان في قائمة الانتظار</string>
     <plurals name="e7SettingsStorageSummary__drafts">
         <item quantity="zero">لا مسودات</item>
         <item quantity="one">مسودة واحدة</item>
@@ -146,9 +146,9 @@
         <item quantity="many">%1$d مسودة</item>
         <item quantity="other">%1$d مسودة</item>
     </plurals>
-    <string name="e7SettingsStorageSummary__drafts__eq0">%1$d مسودات</string>
+    <string name="e7SettingsStorageSummary__drafts__eq0">لا مسودات</string>
     <string name="e7SettingsStorageSummary__drafts__eq1">مسودة واحدة</string>
-    <string name="e7SettingsStorageSummary__drafts__eq2">%1$d مسودات</string>
+    <string name="e7SettingsStorageSummary__drafts__eq2">مسودتان</string>
     <plurals name="e7SettingsQueueDeleteSummary">
         <item quantity="zero">يحذف كل الطلبات غير المرسلة وعددها %1$d ومرفقاتها، لكل الخوادم</item>
         <item quantity="one">يحذف الطلب غير المرسل ومرفقاته، لكل الخوادم</item>
@@ -158,7 +158,7 @@
         <item quantity="other">يحذف كل الطلبات غير المرسلة وعددها %1$d ومرفقاتها، لكل الخوادم</item>
     </plurals>
     <string name="e7SettingsQueueDeleteSummary__eq1">يحذف الطلب غير المرسل ومرفقاته، لكل الخوادم</string>
-    <string name="e7SettingsQueueDeleteSummary__eq2">يحذف كل الطلبات غير المرسلة وعددها %1$d ومرفقاتها، لكل الخوادم</string>
+    <string name="e7SettingsQueueDeleteSummary__eq2">يحذف الطلبين غير المرسلين ومرفقاتهما، لكل الخوادم</string>
     <plurals name="e7SettingsQueueDeleteBody">
         <item quantity="zero">يحذف هذا الإجراء الطلبات غير المرسلة وعددها %1$d ومرفقاتها، لكل الخوادم. لن تُرسل أبدًا. لا يتأثر أي شيء على الخادم.</item>
         <item quantity="one">يحذف هذا الإجراء الطلب غير المرسل ومرفقاته، لكل الخوادم. لن يُرسل أبدًا. لا يتأثر أي شيء على الخادم.</item>
@@ -168,7 +168,7 @@
         <item quantity="other">يحذف هذا الإجراء الطلبات غير المرسلة وعددها %1$d ومرفقاتها، لكل الخوادم. لن تُرسل أبدًا. لا يتأثر أي شيء على الخادم.</item>
     </plurals>
     <string name="e7SettingsQueueDeleteBody__eq1">يحذف هذا الإجراء الطلب غير المرسل ومرفقاته، لكل الخوادم. لن يُرسل أبدًا. لا يتأثر أي شيء على الخادم.</string>
-    <string name="e7SettingsQueueDeleteBody__eq2">يحذف هذا الإجراء %1$d طلبات غير مرسلة ومرفقاتها، لكل الخوادم. لن تُرسل أبدًا. لا يتأثر أي شيء على الخادم.</string>
+    <string name="e7SettingsQueueDeleteBody__eq2">يحذف هذا الإجراء الطلبين غير المرسلين ومرفقاتهما، لكل الخوادم. لن يُرسلا أبدًا. لا يتأثر أي شيء على الخادم.</string>
     <plurals name="e7SettingsDraftDeleteSummary">
         <item quantity="zero">يحذف نص محرّر الرسائل المحفوظ في %1$d محادثة</item>
         <item quantity="one">يحذف نص محرّر الرسائل المحفوظ في محادثة واحدة</item>
@@ -178,7 +178,7 @@
         <item quantity="other">يحذف نص محرّر الرسائل المحفوظ في %1$d محادثة</item>
     </plurals>
     <string name="e7SettingsDraftDeleteSummary__eq1">يحذف نص محرّر الرسائل المحفوظ في محادثة واحدة</string>
-    <string name="e7SettingsDraftDeleteSummary__eq2">يحذف نص محرّر الرسائل المحفوظ في %1$d محادثات</string>
+    <string name="e7SettingsDraftDeleteSummary__eq2">يحذف نص محرّر الرسائل المحفوظ في محادثتين</string>
     <plurals name="e7SettingsDraftDeleteBody">
         <item quantity="zero">يحذف هذا الإجراء نص محرّر الرسائل المحفوظ في %1$d محادثة. لا يتأثر أي شيء على الخادم.</item>
         <item quantity="one">يحذف هذا الإجراء نص محرّر الرسائل المحفوظ في محادثة واحدة. لا يتأثر أي شيء على الخادم.</item>
@@ -188,7 +188,7 @@
         <item quantity="other">يحذف هذا الإجراء نص محرّر الرسائل المحفوظ في %1$d محادثة. لا يتأثر أي شيء على الخادم.</item>
     </plurals>
     <string name="e7SettingsDraftDeleteBody__eq1">يحذف هذا الإجراء نص محرّر الرسائل المحفوظ في محادثة واحدة. لا يتأثر أي شيء على الخادم.</string>
-    <string name="e7SettingsDraftDeleteBody__eq2">يحذف هذا الإجراء نص محرّر الرسائل المحفوظ في %1$d محادثات. لا يتأثر أي شيء على الخادم.</string>
+    <string name="e7SettingsDraftDeleteBody__eq2">يحذف هذا الإجراء نص محرّر الرسائل المحفوظ في محادثتين. لا يتأثر أي شيء على الخادم.</string>
     <string name="e7SettingsRestartBody">تم تثبيت OpenCode %1$s، لكن عملية الخادم هذه ما زالت تشغّل %2$s. أعد تشغيل العملية على الجهاز المضيف؛ سيعيد التطبيق الاتصال ويتحقق من الإصدار الجاري تشغيله.</string>
     <string name="e7SettingsInstallVersion">تثبيت %1$s</string>
     <string name="e7SettingsInstalledVersion">تم تثبيت OpenCode %1$s. أعد تشغيل عملية الخادم لاستخدامه.</string>
@@ -593,7 +593,7 @@
         <item quantity="other">%1$d عبارة مخفية</item>
     </plurals>
     <string name="settingsPhraseChipsHiddenCount__eq1">عبارة مخفية واحدة</string>
-    <string name="settingsPhraseChipsHiddenCount__eq2">%1$d عبارات مخفية</string>
+    <string name="settingsPhraseChipsHiddenCount__eq2">عبارتان مخفيتان</string>
     <string name="settingsV3ByServer">حسب الخادم</string>
     <string name="settingsV3On">مفعّل</string>
     <string name="settingsV3Off">متوقف</string>
@@ -630,7 +630,7 @@
         <item quantity="other">%1$d خادم</item>
     </plurals>
     <string name="settingsV3ServersCount__eq1">خادم واحد</string>
-    <string name="settingsV3ServersCount__eq2">%1$d خوادم</string>
+    <string name="settingsV3ServersCount__eq2">خادمان</string>
     <plurals name="settingsV3DifferentOn">
         <item quantity="zero">مختلف على %1$d خادم</item>
         <item quantity="one">مختلف على خادم واحد</item>
@@ -640,7 +640,7 @@
         <item quantity="other">مختلف على %1$d خادم</item>
     </plurals>
     <string name="settingsV3DifferentOn__eq1">مختلف على خادم واحد</string>
-    <string name="settingsV3DifferentOn__eq2">مختلف على %1$d خوادم</string>
+    <string name="settingsV3DifferentOn__eq2">مختلف على خادمين</string>
     <string name="settingsV3UseMyDefaultDetail">تعود إشعارات %1$s والنموذج للمحادثات الجديدة ومشاركة حالة القراءة إلى اختياراتك.</string>
     <string name="settingsV3ShellAutomatic">تلقائي</string>
     <string name="settingsV3ReadStateByServerNote">يُسأل كل خادم على حدة. لا يُشارك شيء مع خادم حتى تفعّله لهذا الخادم.</string>

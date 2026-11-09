@@ -29,7 +29,7 @@
         <item quantity="many">تولّد %1$d محادثة ردودًا. ستقاطعها إعادة التشغيل.</item>
         <item quantity="other">تولّد %1$d محادثة ردودًا. ستقاطعها إعادة التشغيل.</item>
     </plurals>
-    <string name="termuxRestartBusyMessage__eq0">%1$d محادثات تولّد ردودًا. ستقاطعها إعادة التشغيل.</string>
+    <string name="termuxRestartBusyMessage__eq0">لا توجد محادثات تولّد ردودًا.</string>
     <string name="termuxRestartBusyMessage__eq1">تولّد محادثة واحدة ردًا. ستقاطعها إعادة التشغيل.</string>
     <string name="termuxRestartConfirm">إعادة التشغيل</string>
     <string name="commandDestination">المحادثة</string>
@@ -684,7 +684,7 @@
     </plurals>
     <string name="goToNeedsYouHint__eq0">لا شيء ينتظر</string>
     <string name="goToNeedsYouHint__eq1">ينتظر واحد</string>
-    <string name="goToNeedsYouHint__eq2">%1$d بانتظارك</string>
+    <string name="goToNeedsYouHint__eq2">ينتظر اثنان</string>
     <string name="kitTourNext">التالي</string>
     <string name="kitTourSkip">تخطٍّ</string>
     <string name="kitTourStep">الخطوة %1$d من %2$d</string>

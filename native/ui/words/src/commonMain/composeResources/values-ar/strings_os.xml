@@ -39,7 +39,7 @@
         <item quantity="other">%1$d طلب ينتظرك</item>
     </plurals>
     <string name="notifStatusNeedsYou__eq1">طلب واحد ينتظرك</string>
-    <string name="notifStatusNeedsYou__eq2">%1$d طلبات تنتظرك</string>
+    <string name="notifStatusNeedsYou__eq2">طلبان ينتظرانك</string>
     <string name="notifStatusStillWorking">%1$d ما زالت تعمل</string>
     <string name="notifStatusChatsWorking">%1$d محادثات تعمل</string>
     <string name="notifStatusMore">+%1$d أخرى</string>
