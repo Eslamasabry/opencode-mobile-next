@@ -73,7 +73,6 @@ import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
-import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
@@ -455,7 +454,8 @@ internal fun TabStrip(
                             .padding(horizontal = Space.S3.dp),
                         contentAlignment = Alignment.Center,
                     ) {
-                        TabFace(tab, resting, resting, rtl)
+                        // A count stays in the first ink beside its quieter word, as it always has.
+                        TabFace(tab, resting, colors.text1, rtl)
                     }
                 }
                 // 3. The same words in the pill's ink: picture only, shown inside the pill's outline.

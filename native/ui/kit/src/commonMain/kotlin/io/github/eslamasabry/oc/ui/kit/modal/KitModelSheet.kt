@@ -30,8 +30,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
@@ -266,8 +269,8 @@ public object KitModelPages {
  * row's star adds or removes a favourite. Server default leads every page. Typing in the search field turns the pages
  * into one list of what was found across every provider; clearing it brings the pages back where they were. One
  * provider with no picks shows no tab row. [current] is the chosen model's key, null for Server default. [above]
- * holds the caller's notices before the list (the list itself draws once [options] is not empty), [below] the caller's
- * further choices (thinking, agent) after each list. [morphFrom] is the key of the control the sheet grows out of
+ * holds the caller's notices: they lead each list and scroll with it (the list itself draws once [options] is not
+ * empty), [below] the caller's further choices (thinking, agent) after each list. [morphFrom] is the key of the control the sheet grows out of
  * (`kitMorphSource`), if any.
  */
 @Composable
@@ -344,19 +347,16 @@ private fun ColumnScope.ModelSheetBody(
     }
     val search = rememberTextFieldState()
     var query by remember(resetKey) { mutableStateOf("") }
-    KitStackScope {
-        Column(Modifier.fillMaxWidth().padding(horizontal = rail), verticalArrangement = gap) {
-            above()
-            if (options.size >= KIT_MODEL_SEARCH_FROM)
-                KitSearchField(
-                    label = stringResource(Res.string.chatModelsSearch),
-                    onSearch = { query = it },
-                    state = search,
-                    // P-008: a step (8 dp) between the field and what follows it.
-                    modifier = Modifier.fillMaxWidth().padding(bottom = Space.S2.dp).testTag("chat-model-search"),
-                )
-        }
-    }
+    // The search field stands directly under the title; the caller's notices lead each list instead (they scroll
+    // with it), so the sheet's head is always the same three things: title, search, tabs.
+    if (options.size >= KIT_MODEL_SEARCH_FROM)
+        KitSearchField(
+            label = stringResource(Res.string.chatModelsSearch),
+            onSearch = { query = it },
+            state = search,
+            // P-008: a step (8 dp) between the field and what follows it.
+            modifier = Modifier.fillMaxWidth().padding(start = rail, end = rail, bottom = Space.S2.dp).testTag("chat-model-search"),
+        )
     val canFavorite = onToggleFavorite != null
     val pages = remember(options, favorites, recent, current, canFavorite) { KitModelPages.pages(options, favorites, recent, current, canFavorite) }
     val twins = remember(options) { KitModelPages.twins(options) }
@@ -374,7 +374,7 @@ private fun ColumnScope.ModelSheetBody(
     val entrance = rememberRowEntrance()
     val entrancePage = remember(resetKey) { pages.getOrNull(index)?.key }
     val list: @Composable (List<ModelItem>, RowEntrance?) -> Unit = { items, rising ->
-        ModelList(items, current, favoriteKeys, onChoose, onToggleFavorite, suggestedLabel, rising, below)
+        ModelList(items, current, favoriteKeys, onChoose, onToggleFavorite, suggestedLabel, rising, above, below)
     }
     // While the results fade out after a clear, they keep showing what was last found, not every model.
     var lastQuery by remember(resetKey) { mutableStateOf("") }
@@ -427,10 +427,11 @@ private fun ColumnScope.ModelSheetBody(
     }
 }
 
-/** A page's tab: the picks under their own word, a provider under its short name with its mark before it. */
+/** A page's tab: the picks under their own word with a star, a provider under its short name with its mark before it. */
 @Composable
 private fun modelTab(page: KitModelPage, label: String): KitTab {
-    val id = page.providerId ?: return remember(label) { KitTab(label) }
+    // The picks carry the rows' own star, so every tab reads mark, then word.
+    val id = page.providerId ?: return remember(label) { KitTab(label, icon = KitIcons.starFilled) }
     return remember(id, label) {
         KitTab(label, mark = { tint -> KitProviderLogo(id, label, markSize = TAB_MARK.dp, tint = tint, slot = TAB_MARK.dp) })
     }
@@ -512,6 +513,7 @@ private fun ModelList(
     onToggleFavorite: ((KitModelOption) -> Unit)?,
     suggestedLabel: String,
     entrance: RowEntrance?,
+    above: @Composable ColumnScope.() -> Unit,
     below: @Composable ColumnScope.() -> Unit,
 ) {
     val tokens = LocalKitTokens.current
@@ -521,6 +523,7 @@ private fun ModelList(
     val list = rememberLazyListState()
     // Rows that have scrolled up melt away under the tabs instead of being cut by them. The fade (and its layer) is
     // there only while the list is away from its top, so a page being dragged sideways at rest pays nothing for it.
+    val noticesHeight = remember { IntArray(1) }
     val scrolled by remember(list) { derivedStateOf { list.firstVisibleItemIndex > 0 || list.firstVisibleItemScrollOffset > 0 } }
     val topFade =
         if (!scrolled) Modifier
@@ -530,13 +533,24 @@ private fun ModelList(
                 topReach = LIST_TOP_FADE.dp,
                 fadeFromBottom = null,
                 bottomReach = 0.dp,
-                strength = { if (list.firstVisibleItemIndex > 0) 1f else list.firstVisibleItemScrollOffset / (LIST_TOP_FADE * density) },
+                // It eases in over the first few dp of scroll. The notices' slot is the first item and is usually
+                // empty: the list is then already "on its second item" at its very top.
+                strength = {
+                    val first = list.firstVisibleItemIndex
+                    if (first == 0 || (first == 1 && noticesHeight[0] == 0)) list.firstVisibleItemScrollOffset / (LIST_TOP_FADE * density) else 1f
+                },
             )
     LazyColumn(
         Modifier.fillMaxSize().then(topFade).testTag("chat-model-list"),
         state = list,
         contentPadding = PaddingValues(start = rail, end = rail, bottom = rail),
     ) {
+        item(key = "above", contentType = "above") {
+            // The caller's notices, with a step under them only when there are any.
+            KitStackScope {
+                Column(Modifier.fillMaxWidth().onSizeChanged { noticesHeight[0] = it.height }.stepUnder(Space.S2.dp), verticalArrangement = Arrangement.spacedBy(tokens.labelGap.dp)) { above() }
+            }
+        }
         items(count = items.size, key = { items[it].key }, contentType = { items[it]::class }) { i ->
             val item = items[i]
             val row = entrance.rise(i).rowRule(item.rule, hairline)
@@ -591,6 +605,14 @@ private fun ModelList(
         }
     }
 }
+
+/** Adds [step] under this box when it has any height: an empty slot takes no room at all. */
+private fun Modifier.stepUnder(step: Dp): Modifier =
+    layout { measurable, constraints ->
+        val placeable = measurable.measure(constraints)
+        val more = if (placeable.height > 0) step.roundToPx() else 0
+        layout(placeable.width, placeable.height + more) { placeable.place(0, 0) }
+    }
 
 /** How far down from the tabs a scrolled list fades in, in dp. */
 private const val LIST_TOP_FADE: Int = Space.S4
