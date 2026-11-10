@@ -1,7 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.frame
 
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
@@ -69,41 +69,53 @@ internal fun Modifier.kitScrollEdges(
 ): Modifier {
     if (clearAbove == null && fadeFromBottom == null) return this
     return graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
-        .drawWithContent {
-            drawContent()
-            val w = size.width
-            if (clearAbove != null) {
-                val k = strength().coerceIn(0f, 1f)
-                if (k > 0f) {
-                    val edge = clearAbove().coerceIn(0f, size.height)
-                    val t = wholePx(edge)
-                    val r = wholePx(edge + (topReachPx?.invoke() ?: topReach.toPx())) - t
-                    if (t > 0f) {
-                        drawRect(Color.Black.copy(alpha = k), Offset.Zero, Size(w, t), blendMode = BlendMode.DstOut)
+        .drawWithCache {
+            // The two fades' brushes are kept between frames and built again only when their own numbers change:
+            // this runs on every frame the transcript scrolls or a reply streams, and each frame built two gradients
+            // and their colour lists (jank pass 2026-11-10).
+            val top = EdgeBrush()
+            val bottom = EdgeBrush()
+            onDrawWithContent {
+                drawContent()
+                val w = size.width
+                if (clearAbove != null) {
+                    val k = strength().coerceIn(0f, 1f)
+                    if (k > 0f) {
+                        val edge = clearAbove().coerceIn(0f, size.height)
+                        val t = wholePx(edge)
+                        val r = wholePx(edge + (topReachPx?.invoke() ?: topReach.toPx())) - t
+                        if (t > 0f) {
+                            drawRect(Color.Black.copy(alpha = k), Offset.Zero, Size(w, t), blendMode = BlendMode.DstOut)
+                        }
+                        if (r > 0f) drawRect(top.of(1f, 0f, k, t, t + r), Offset(0f, t), Size(w, r), blendMode = BlendMode.DstOut)
                     }
-                    if (r > 0f)
-                        drawRect(
-                            Brush.verticalGradient(clearing(1f, 0f, k), startY = t, endY = t + r),
-                            Offset(0f, t),
-                            Size(w, r),
-                            blendMode = BlendMode.DstOut,
-                        )
+                }
+                if (fadeFromBottom != null) {
+                    val from = (size.height - fadeFromBottom()).coerceIn(0f, size.height)
+                    val y0 = wholePx(from)
+                    val r = wholePx(from + bottomReach.toPx()) - y0
+                    if (r > 0f) drawRect(bottom.of(0f, 1f, 1f, y0, y0 + r), Offset(0f, y0), Size(w, r), blendMode = BlendMode.DstOut)
+                    val below = y0 + r
+                    if (below < size.height)
+                        drawRect(Color.Black, Offset(0f, below), Size(w, size.height - below), blendMode = BlendMode.DstOut)
                 }
             }
-            if (fadeFromBottom != null) {
-                val from = (size.height - fadeFromBottom()).coerceIn(0f, size.height)
-                val y0 = wholePx(from)
-                val r = wholePx(from + bottomReach.toPx()) - y0
-                if (r > 0f)
-                    drawRect(
-                        Brush.verticalGradient(clearing(0f, 1f, 1f), startY = y0, endY = y0 + r),
-                        Offset(0f, y0),
-                        Size(w, r),
-                        blendMode = BlendMode.DstOut,
-                    )
-                val below = y0 + r
-                if (below < size.height)
-                    drawRect(Color.Black, Offset(0f, below), Size(w, size.height - below), blendMode = BlendMode.DstOut)
-            }
         }
+}
+
+/** One edge's clearing gradient, kept until its strength or its span changes. */
+private class EdgeBrush {
+    private var k = Float.NaN
+    private var start = Float.NaN
+    private var end = Float.NaN
+    private var brush: Brush? = null
+
+    fun of(from: Float, to: Float, strength: Float, startY: Float, endY: Float): Brush {
+        val kept = brush
+        if (kept != null && k == strength && start == startY && end == endY) return kept
+        k = strength
+        start = startY
+        end = endY
+        return Brush.verticalGradient(clearing(from, to, strength), startY = startY, endY = endY).also { brush = it }
+    }
 }
