@@ -287,10 +287,14 @@ public fun KitScreen(
     val topPart: (@Composable () -> Unit)? = topBar?.let { movableTop }
     val bottomPart: (@Composable () -> Unit)? = bottom?.let { movableBottom }
     val bodyPart: @Composable () -> Unit = movableBody
-    val inner: @Composable (line: KitStatus?, ownsLine: Boolean) -> Unit = { line, ownsLine ->
+    // [holdsLine]: the page has a status line that is only folded away while the person types. The frame then stays in
+    // the layout that line stands in: moving the bottom block to the other layout as the keyboard opened dropped the
+    // message box's focus, so the keyboard closed again at once (emulator 2026-11-10: the demo chat, and any chat
+    // showing an update or information line, could not be typed in).
+    val inner: @Composable (line: KitStatus?, ownsLine: Boolean, holdsLine: Boolean) -> Unit = { line, ownsLine, holdsLine ->
         val insets =
             LocalKitScreenInsets.current ?: WindowInsets.safeDrawing.union(WindowInsets.ime)
-        if (overlayChrome && line == null && search == null && header == null && !loading) {
+        if (overlayChrome && line == null && !holdsLine && search == null && header == null && !loading) {
             var topPx by remember { mutableIntStateOf(0) }
             var bottomPx by remember { mutableIntStateOf(0) }
             val density = LocalDensity.current
@@ -610,7 +614,7 @@ public fun KitScreen(
     val content: @Composable () -> Unit = {
         if (kitStatusSlotAbove()) {
             KitStatusContribution(status)
-            inner(null, false)
+            inner(null, false, false)
         } else {
             KitStatusSlot(status) { shown ->
                 // Fold optional information while typing; connection, recovery and failures stay
@@ -619,10 +623,8 @@ public fun KitScreen(
                     shown?.kind in setOf(KitStatusKind.Update, KitStatusKind.Info) &&
                         shown?.tone != StatusTone.Failure &&
                         shown?.tone != StatusTone.Attention
-                inner(
-                    if (hideStatusWhenTyping && kitKeyboardVisible() && optional) null else shown,
-                    true,
-                )
+                val folded = hideStatusWhenTyping && kitKeyboardVisible() && optional
+                inner(if (folded) null else shown, true, folded)
             }
         }
     }
