@@ -5,11 +5,13 @@
     <string name="stateDemoTitle">Демо без сети</string>
     <string name="stateDemoDisclosure">Имитация чата. Сервер, файлы и сохранённые настройки не меняются. При выходе демо забывается.</string>
     <string name="stateDemoPrompt">Сделай приветствие дружелюбнее.</string>
-    <string name="stateDemoReply">Это имитация ответа. Пример приветствия может измениться с «Hello» на «Welcome aboard!». Разрешите имитацию правки ниже или запретите её. Настоящий файл записан не будет.</string>
-    <string name="stateDemoAllowed">Вы разрешили имитацию правки. Теперь в примере «Welcome aboard!». Настоящие файлы не изменены.</string>
-    <string name="stateDemoDenied">Вы запретили имитацию правки. В примере по-прежнему «Hello». Настоящие файлы не изменены.</string>
-    <string name="stateDemoAllow">Разрешить имитацию правки</string>
-    <string name="stateDemoDeny">Запретить имитацию правки</string>
+    <string name="stateDemoReply">Я изменю приветствие в welcome.txt с «%1$s» на «%2$s».</string>
+    <string name="stateDemoAllowed">Готово. Теперь в welcome.txt написано «%1$s».</string>
+    <string name="stateDemoDenied">Хорошо, welcome.txt остался без изменений.</string>
+    <string name="stateDemoBefore">Hello</string>
+    <string name="stateDemoAfter">Welcome aboard!</string>
+    <string name="stateDemoMore">На этом демо заканчивается. Подключите сервер, чтобы работать над своими проектами.</string>
+    <string name="stateDemoModel">Пример модели</string>
     <string name="stateDemoReset">Сбросить демо</string>
     <string name="stateDemoLeave">Выйти из демо</string>
 </resources>

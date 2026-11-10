@@ -6,8 +6,10 @@ import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.MessageId
+import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
+import io.github.eslamasabry.oc.core.model.PermissionRequest
 import io.github.eslamasabry.oc.engine.connection.demo.DemoProfileStore
 import io.github.eslamasabry.oc.engine.transcript.state.BlockRow
 import io.github.eslamasabry.oc.engine.transcript.state.NewestFirst
@@ -30,6 +32,8 @@ import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 public enum class DemoStage {
     Ready,
@@ -37,13 +41,22 @@ public enum class DemoStage {
     Finished,
 }
 
-/** Localized sample content is supplied by the UI, never copied into presentation code. */
+/**
+ * Localized sample content is supplied by the UI, never copied into presentation code. [reply] is what the agent says
+ * before it asks; [before] and [after] the sample file's line as it is and as the agent would make it; [allowed] and
+ * [denied] what it says after the answer; [more] its answer to anything asked once the sample is over.
+ */
 public data class DemoWords(
     val title: String,
     val prompt: String,
     val reply: String,
     val allowed: String,
     val denied: String,
+    val before: String = "",
+    val after: String = "",
+    val more: String = "",
+    /** The sample model's name on the message box's model chip. */
+    val model: String = "",
 )
 
 /**
@@ -90,8 +103,19 @@ public class DemoWorld(dispatchers: AppDispatchers) : ChatWorld {
         MutableStateFlow(persistentListOf())
     override val draft: MutableStateFlow<DraftFacts> = MutableStateFlow(DraftFacts())
 
+    /**
+     * The edit the sample agent asks to make, while it waits for an answer: the same request a server sends, so the
+     * demo shows the app's own request card (owner 2026-11-10: two "simulated edit" buttons in place of the message
+     * box "feels slop"). Nothing answers it but [decide].
+     */
+    public val request: MutableStateFlow<PermissionRequest?> = MutableStateFlow(null)
+
+    /** The sample model's name, once the words are known. */
+    public val model: MutableStateFlow<String> = MutableStateFlow("")
+
     public fun configure(content: DemoWords) {
         words = content
+        model.value = content.model
         title.value = content.title
         if (stage.value == DemoStage.Ready && draft.value.text.isEmpty()) {
             draft.value = DraftFacts(restoreRevision = draft.value.restoreRevision + 1)
@@ -100,7 +124,7 @@ public class DemoWorld(dispatchers: AppDispatchers) : ChatWorld {
     }
 
     override fun draftChanged(text: String) {
-        if (closed || stage.value != DemoStage.Ready) return
+        if (closed || stage.value == DemoStage.Review) return
         owner.prefs.setString(DRAFT, text)
         // Demo drafts never autosave to the application's draft store and are never guarded as
         // durable work.
@@ -114,18 +138,42 @@ public class DemoWorld(dispatchers: AppDispatchers) : ChatWorld {
 
     override suspend fun send(text: String): Outcome<Unit> = lock.withLock {
         val content = words ?: return@withLock unavailable()
-        if (closed || text.isBlank() || stage.value != DemoStage.Ready)
+        if (closed || text.isBlank() || stage.value == DemoStage.Review)
             return@withLock unavailable()
         append(text, prompt = true)
-        append(content.reply, prompt = false)
-        stage.value = DemoStage.Review
+        if (stage.value == DemoStage.Finished) {
+            // The sample is one ask and one answer; anything after it gets one honest line.
+            append(content.more, prompt = false)
+        } else {
+            append(content.reply, prompt = false)
+            request.value = editRequest(content)
+            stage.value = DemoStage.Review
+        }
         draft.value = DraftFacts(restoreRevision = draft.value.restoreRevision + 1)
         Outcome.Ok(Unit)
     }
 
+    private fun editRequest(content: DemoWords): PermissionRequest =
+        PermissionRequest(
+            id = RequestId("demo-request"),
+            sessionId = ref.sessionId,
+            permission = "edit",
+            patterns = persistentListOf(SAMPLE_FILE),
+            metadata =
+                buildJsonObject {
+                    put("filePath", SAMPLE_FILE)
+                    put("diff", "--- a/$SAMPLE_FILE\n+++ b/$SAMPLE_FILE\n@@ -1 +1 @@\n-${content.before}\n+${content.after}\n")
+                },
+            always = persistentListOf(),
+            tool = null,
+            canAlwaysAllow = false,
+            message = null,
+        )
+
     public suspend fun decide(allow: Boolean): Outcome<Unit> = lock.withLock {
         val content = words ?: return@withLock unavailable()
         if (closed || stage.value != DemoStage.Review) return@withLock unavailable()
+        request.value = null
         owner.prefs.setBoolean(DECISION, allow)
         append(
             if (owner.prefs.boolean(DECISION) == true) content.allowed else content.denied,
@@ -168,6 +216,7 @@ public class DemoWorld(dispatchers: AppDispatchers) : ChatWorld {
     public suspend fun reset() = lock.withLock {
         if (closed) return@withLock
         owner.prefs.clear()
+        request.value = null
         stage.value = DemoStage.Ready
         transcript.value = TranscriptState.Empty.copy(revision = ++sequence)
         draft.value = DraftFacts(restoreRevision = draft.value.restoreRevision + 1)
@@ -176,6 +225,7 @@ public class DemoWorld(dispatchers: AppDispatchers) : ChatWorld {
 
     public fun close() {
         closed = true
+        request.value = null
         owner.prefs.clear()
     }
 
@@ -185,7 +235,8 @@ public class DemoWorld(dispatchers: AppDispatchers) : ChatWorld {
 
     override suspend fun retrySend(localId: Long): Outcome<Unit> = unavailable()
 
-    override suspend fun stop(): Outcome<Unit> = unavailable()
+    /** Stop while the sample agent waits for an answer: it stops, and the file stays as it is. */
+    override suspend fun stop(): Outcome<Unit> = decide(false)
 
     override suspend fun reload(): Outcome<Unit> = Outcome.Ok(Unit)
 
@@ -201,6 +252,8 @@ public class DemoWorld(dispatchers: AppDispatchers) : ChatWorld {
         Outcome.Failed(Failure.Unavailable(FeatureId("offlineDemo")))
 
     private companion object {
+        /** The sample project's one file. A file name, not copy: it reads the same in every language. */
+        const val SAMPLE_FILE = "welcome.txt"
         const val DRAFT = "oc.demoDraft.offline-demo"
         const val HISTORY = "oc.demoHistory.offline-demo"
         const val DECISION = "oc.demoDecision.offline-demo"

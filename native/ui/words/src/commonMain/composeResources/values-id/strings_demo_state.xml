@@ -5,11 +5,13 @@
     <string name="stateDemoTitle">Demo offline</string>
     <string name="stateDemoDisclosure">Percakapan simulasi. Tidak ada server, file, atau pengaturan tersimpan yang diubah. Keluar akan menghapus demo ini.</string>
     <string name="stateDemoPrompt">Buat pesan sambutan lebih ramah.</string>
-    <string name="stateDemoReply">Ini balasan simulasi. Pesan sambutan contoh bisa berubah dari “Hello” menjadi “Welcome aboard!”. Izinkan atau tolak suntingan simulasi di bawah. Tidak ada file asli yang ditulis.</string>
-    <string name="stateDemoAllowed">Anda mengizinkan suntingan simulasi. Contohnya kini berbunyi “Welcome aboard!”. Tidak ada file asli yang diubah.</string>
-    <string name="stateDemoDenied">Anda menolak suntingan simulasi. Contohnya tetap berbunyi “Hello”. Tidak ada file asli yang diubah.</string>
-    <string name="stateDemoAllow">Izinkan suntingan simulasi</string>
-    <string name="stateDemoDeny">Tolak suntingan simulasi</string>
+    <string name="stateDemoReply">Saya akan mengubah sapaan di welcome.txt dari “%1$s” menjadi “%2$s”.</string>
+    <string name="stateDemoAllowed">Selesai. welcome.txt sekarang berbunyi “%1$s”.</string>
+    <string name="stateDemoDenied">Baik, welcome.txt saya biarkan seperti semula.</string>
+    <string name="stateDemoBefore">Hello</string>
+    <string name="stateDemoAfter">Welcome aboard!</string>
+    <string name="stateDemoMore">Demo berakhir di sini. Hubungkan server untuk mengerjakan proyek Anda sendiri.</string>
+    <string name="stateDemoModel">Model contoh</string>
     <string name="stateDemoReset">Atur ulang demo</string>
     <string name="stateDemoLeave">Keluar dari demo</string>
 </resources>

@@ -5,11 +5,13 @@
     <string name="stateDemoTitle">Demostración sin conexión</string>
     <string name="stateDemoDisclosure">Simulación. No se cambia ningún servidor, archivo ni ajuste guardado. Al salir se olvida esta demostración.</string>
     <string name="stateDemoPrompt">Haz que el mensaje de bienvenida sea más amistoso.</string>
-    <string name="stateDemoReply">Esta es una respuesta simulada. El mensaje de bienvenida de ejemplo puede cambiar de “Hola” a “¡Bienvenido a bordo!”. Permite la edición simulada de abajo o recházala. No se escribirá ningún archivo real.</string>
-    <string name="stateDemoAllowed">Permitiste la edición simulada. El ejemplo ahora dice “¡Bienvenido a bordo!”. No se cambió ningún archivo real.</string>
-    <string name="stateDemoDenied">Rechazaste la edición simulada. El ejemplo sigue diciendo “Hola”. No se cambió ningún archivo real.</string>
-    <string name="stateDemoAllow">Permitir edición simulada</string>
-    <string name="stateDemoDeny">Rechazar edición simulada</string>
+    <string name="stateDemoReply">Voy a cambiar el saludo de welcome.txt de “%1$s” a “%2$s”.</string>
+    <string name="stateDemoAllowed">Listo. welcome.txt ahora dice “%1$s”.</string>
+    <string name="stateDemoDenied">De acuerdo, dejé welcome.txt como estaba.</string>
+    <string name="stateDemoBefore">Hola</string>
+    <string name="stateDemoAfter">¡Bienvenido a bordo!</string>
+    <string name="stateDemoMore">Aquí termina la demostración. Conecta un servidor para trabajar en tus propios proyectos.</string>
+    <string name="stateDemoModel">Modelo de ejemplo</string>
     <string name="stateDemoReset">Reiniciar demostración</string>
     <string name="stateDemoLeave">Salir de la demostración</string>
 </resources>

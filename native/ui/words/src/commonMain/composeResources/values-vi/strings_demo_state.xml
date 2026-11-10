@@ -5,11 +5,13 @@
     <string name="stateDemoTitle">Bản demo ngoại tuyến</string>
     <string name="stateDemoDisclosure">Cuộc trò chuyện giả lập. Không có máy chủ, tệp hay cài đặt đã lưu nào bị thay đổi. Thoát ra sẽ quên bản demo này.</string>
     <string name="stateDemoPrompt">Làm lời chào thân thiện hơn.</string>
-    <string name="stateDemoReply">Đây là phản hồi giả lập. Lời chào mẫu có thể đổi từ “Hello” thành “Welcome aboard!”. Hãy cho phép hoặc từ chối chỉnh sửa giả lập bên dưới. Không có tệp thật nào được ghi.</string>
-    <string name="stateDemoAllowed">Bạn đã cho phép chỉnh sửa giả lập. Lời chào mẫu giờ là “Welcome aboard!”. Không có tệp thật nào bị thay đổi.</string>
-    <string name="stateDemoDenied">Bạn đã từ chối chỉnh sửa giả lập. Lời chào mẫu vẫn là “Hello”. Không có tệp thật nào bị thay đổi.</string>
-    <string name="stateDemoAllow">Cho phép chỉnh sửa giả lập</string>
-    <string name="stateDemoDeny">Từ chối chỉnh sửa giả lập</string>
+    <string name="stateDemoReply">Tôi sẽ đổi lời chào trong welcome.txt từ “%1$s” thành “%2$s”.</string>
+    <string name="stateDemoAllowed">Xong. welcome.txt giờ ghi “%1$s”.</string>
+    <string name="stateDemoDenied">Được, tôi giữ nguyên welcome.txt.</string>
+    <string name="stateDemoBefore">Hello</string>
+    <string name="stateDemoAfter">Welcome aboard!</string>
+    <string name="stateDemoMore">Bản demo kết thúc ở đây. Hãy kết nối máy chủ để làm việc với dự án của bạn.</string>
+    <string name="stateDemoModel">Mô hình mẫu</string>
     <string name="stateDemoReset">Đặt lại bản demo</string>
     <string name="stateDemoLeave">Thoát bản demo</string>
 </resources>
