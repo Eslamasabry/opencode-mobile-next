@@ -33,7 +33,7 @@ class CacheFirstWorkspaceTest {
         gateway.capabilities.value = ServerCapabilities(worktreeBrowsing = true)
         val ops =
             object : FakeOperationsGateway() {
-                override suspend fun listWorktrees(directory: String) = list()
+                override suspend fun listWorktrees(projectDirectory: String, projectId: String?) = list()
             }
         return ProjectServer(ProfileId("p"), "srv", gateway, ops)
     }

@@ -26,7 +26,7 @@ class FakeShareProvider : ContentProvider() {
     override fun query(uri: Uri, p: Array<String>?, s: String?, a: Array<String>?, o: String?): Cursor {
         val id = uri.lastPathSegment.orEmpty()
         val cursor = MatrixCursor(arrayOf(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE))
-        cursor.addRow(arrayOf(files[id]?.first ?: id, if (id == "huge") 999_999_999L else files[id]?.second?.size?.toLong()))
+        cursor.addRow(arrayOf<Any?>(files[id]?.first ?: id, if (id == "huge") 999_999_999L else files[id]?.second?.size?.toLong()))
         return cursor
     }
 
