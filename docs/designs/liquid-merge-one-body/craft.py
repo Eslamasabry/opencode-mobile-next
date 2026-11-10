@@ -34,18 +34,29 @@ def px(box):
     return tuple(v * DP for v in box)
 
 
+SEAM = os.environ.get("SEAM", "ramp")  # "line": each side its own settings (the first drawing); "ramp": one frost, settings eased
+
+
 def glass(page, bloom, a, b, field_b, sa, sb, reach_dp, cubic):
     """One joined body: a and b in dp; field_b is b as the field sees it."""
-    softs = (m.blur(page, sa["blur"] * DP), m.blur(page, sb["blur"] * DP))
     d, gx, gy, w, da, db = shape.join(XX, YY, px(a), px(field_b), reach_dp * DP, cubic)
     ra = m.rim_of(2 * min(a[2], a[3]), sa["rim"], sa["share"])
     rb = m.rim_of(2 * min(b[2], b[3]), sb["rim"], sb["share"])
-    mine = da <= db
-    share_b = np.where(mine, w, 1 - w)
+    if SEAM == "line":
+        mine = da <= db
+        share_b = np.where(mine, w, 1 - w)
+    else:
+        # One body, one frost (the body pane's). Rim, bend and tint ease from one pane's to the other's over a wide
+        # band (24 dp each side of the line where the two are equally near), never at a line.
+        share_b = shape.smoothstep(-24 * DP, 24 * DP, da - db)
     rimw = ra * (1 - share_b) + rb * share_b
     bend = (sa["bend"] * (1 - share_b) + sb["bend"] * share_b) * DP
     tint = sa["tint"] * (1 - share_b) + sb["tint"] * share_b
-    col = np.where(mine[..., None], rim.lens(softs[0], bloom, d, gx, gy, rimw, bend, tint, MAT), rim.lens(softs[1], bloom, d, gx, gy, rimw, bend, tint, MAT))
+    if SEAM == "line":
+        softs = (m.blur(page, sa["blur"] * DP), m.blur(page, sb["blur"] * DP))
+        col = np.where((da <= db)[..., None], rim.lens(softs[0], bloom, d, gx, gy, rimw, bend, tint, MAT), rim.lens(softs[1], bloom, d, gx, gy, rimw, bend, tint, MAT))
+    else:
+        col = rim.lens(m.blur(page, sa["blur"] * DP), bloom, d, gx, gy, rimw, bend, tint, MAT)
     cover = np.clip(0.5 - d / np.maximum(np.hypot(gx, gy), 0.05), 0, 1)[..., None]
     return page * (1 - cover) + col * cover
 

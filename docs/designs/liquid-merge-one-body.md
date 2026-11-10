@@ -115,7 +115,7 @@ node does not clip to the pane's shape):
 1. **Backdrop and bend**, at the pane's liquid resolution (half on Android for panes frosted 4 dp or more, as today):
    the pane's own backdrop source, its colour controls and its blur, then a runtime-shader effect that samples it at
    `p + bend * g`, where `bend = circleMap(1 - depth / rim) * refraction` is the library's formula with
-   `depth = -d / max(length(g), 0.05)`, and `rim` and `refraction` are `mix(own, partner's, w)`.
+   `depth = -d / max(length(g), 0.05)`, and `rim` and `refraction` are `mix(own, partner's, t)` (see below).
 2. **Cover**, at full resolution: the result of 1 is kept only where `d < 0` and `da <= db` (this pane's side). The
    partner draws the other side from its own node. The two sides meet on the line `da = db`, where every mixed value
    is the same from both sides.
@@ -127,9 +127,16 @@ node does not clip to the pane's shape):
 The pane's touch light and picture rim light, which are drawn in the pane's own shape, are multiplied by `1 - 2w`, so
 they fade out towards the junction and never draw the pane's old outline inside the body.
 
-**The blur is not mixed.** A bar frosts 6 dp and a menu 12 dp (6 dp in light themes); the message box 4 dp and the
-pill 2 dp. Each side keeps its own. Whether the change of frost across the junction line shows is the first thing the
-spike must answer (open question 1).
+**One body, one frost.** The owner circled a line across the first drawing where the bar met the menu ("they have
+different settings?"). They did: each side kept its own blur (3 dp against 6 dp), and rim, bend and tint switched
+on the line where the two panes are equally near. So:
+
+- while joined, the drop takes the body pane's blur (a menu on the bar frosts as the bar does);
+- rim, bend and tint are mixed by `t = smoothstep(-24 dp, 24 dp, da - db)`, a band 48 dp wide, and no longer by
+  the kernel's `w`, which is a step deep inside the body. `w` is used only for the direction `g`.
+
+The drop's words rely on its tint (still its own, eased in) and on the ink flip. A second blurred input is not
+needed.
 
 **No hand-over animation.** A drop appears inside its body, where `facing` is 0 and the body's outline is unchanged,
 so switching the body from the library's pane to the joined pane at that moment changes no pixel, provided the two
@@ -222,8 +229,8 @@ bridge.
 
 ## Open questions
 
-1. Does the change of frost across the junction line show (bar 6 dp, menu 12 dp)? If it does, the drop's blur ramps
-   to the body's inside the junction with a second blurred input.
+1. A menu joined to the bar frosts as the bar does (3 dp after the cut). Do its rows still read over a busy
+   transcript on the phone, or does the tint need to rise for a joined menu?
 2. With the pill nearly clear (0.5 dp), "Jump to latest" sits on readable text. Is 1 dp the floor for a pane that
    carries a label?
 3. The pill lies inside the transcript recording that the message box's glass reads (design review, finding 1), so
