@@ -38,14 +38,45 @@ class BuiltinServerService : Service() {
     }
 
     private fun refuseStart(intent: Intent?, startId: Int) {
+        // A start made with startForegroundService is a promise. Stopping before the notification was shown makes
+        // Android end the whole app ("did not then call Service.startForeground()"), which is what a failed start
+        // here did: the first open after an update could crash (owner's phone, 3.0.0+10020).
+        val shownBefore = foregroundShown
+        keepPromise()
         // Event dispatch denial must not turn saved wanted intent into user Stop.
         if (intent?.action == ACTION_RESTORE) {
             cancelPendingRestore(applicationContext)
             try { BuiltinLinux.get(applicationContext).settleServerEventService() } catch (_: Throwable) { }
-            if (!foregroundShown) try { stopSelf(startId) } catch (_: Throwable) { }
+            if (!shownBefore) {
+                releaseStatus()
+                try { stopSelf(startId) } catch (_: Throwable) { }
+            }
         } else {
             // Policy rejection cannot throw through the caller's channel guard.
             stopRuntime(startId)
+        }
+    }
+
+    /**
+     * Shows the plainest possible notification when the normal one could not be shown, so the promise is kept and the
+     * service may stop. If Android refuses even this, it has already dropped the promise itself.
+     */
+    private fun keepPromise() {
+        if (!promised || foregroundShown) return
+        try {
+            StatusNotification.ensureChannel(this)
+            val bare =
+                android.app.Notification.Builder(this, StatusNotification.CHANNEL_ID)
+                    .setSmallIcon(LinuxR.mipmap.ic_launcher)
+                    .build()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                startForeground(StatusNotification.ID, bare, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+            } else {
+                startForeground(StatusNotification.ID, bare)
+            }
+            foregroundShown = true
+        } catch (_: Throwable) {
+            // Refused: nothing is owed any more.
         }
     }
 
