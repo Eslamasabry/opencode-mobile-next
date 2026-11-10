@@ -1,6 +1,8 @@
 package io.github.eslamasabry.oc.feature.git.presentation
 
 import io.github.eslamasabry.oc.core.common.Redacted
+import io.github.eslamasabry.oc.engine.analytics.health.AppTelemetry
+import io.github.eslamasabry.oc.engine.analytics.product.ProductFeature
 import io.github.eslamasabry.oc.engine.git.GitFailure
 import io.github.eslamasabry.oc.engine.git.GitHubSignIn
 import io.github.eslamasabry.oc.engine.git.GitHubSignInControl
@@ -99,12 +101,23 @@ public class GitPresenter(
 
     public fun pull() {
         if (current().working) return
-        launch { page.pull() }
+        launch { counted { page.pull() } }
     }
 
     public fun push() {
         if (current().working) return
-        launch { page.push() }
+        launch { counted { page.push() } }
+    }
+
+    /**
+     * Runs one of the person's Git actions (pull, push, save, save and send) and counts it once as the Git feature,
+     * only when it worked: a failed try, a second tap while it runs and a plain refresh count nothing.
+     */
+    private suspend fun counted(action: suspend () -> Unit) {
+        val before = page.state.value.generation
+        action()
+        val after = page.state.value
+        if (after.generation != before && after.result?.ok == true) AppTelemetry.current.feature(ProductFeature.GitAction)
     }
 
     public fun toggleFile(path: String) {
@@ -131,7 +144,7 @@ public class GitPresenter(
         val renamed = renamedFrom(now)
         launch {
             val before = page.state.value.generation
-            page.commit(paths, message, renamed)
+            counted { page.commit(paths, message, renamed) }
             clearTicksIfSaved(before)
         }
     }
@@ -143,7 +156,7 @@ public class GitPresenter(
         val renamed = renamedFrom(now)
         launch {
             val before = page.state.value.generation
-            page.commitAndPush(paths, message, renamed)
+            counted { page.commitAndPush(paths, message, renamed) }
             clearTicksIfSaved(before)
         }
     }

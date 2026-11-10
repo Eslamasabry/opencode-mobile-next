@@ -5,6 +5,7 @@ import io.github.eslamasabry.oc.engine.analytics.ReportRedactor
 import io.github.eslamasabry.oc.engine.analytics.Reporting
 import io.github.eslamasabry.oc.engine.analytics.product.ProductEvent
 import io.github.eslamasabry.oc.engine.analytics.product.ProductFeature
+import io.github.eslamasabry.oc.engine.analytics.product.ProductStarter
 import io.github.eslamasabry.oc.engine.analytics.product.ProductUseFor
 import io.github.eslamasabry.oc.engine.analytics.product.cleanProductProps
 import kotlin.concurrent.atomics.AtomicInt
@@ -95,6 +96,11 @@ public interface Telemetry : Reporting {
      */
     public fun useFor(answer: ProductUseFor, previous: String? = null) {
         if (ProductUseFor.changed(previous, answer)) track(ProductEvent.UseFor, mapOf("kind" to answer))
+    }
+
+    /** A starter chip was tapped; [kindName] is the starter kind's enum name, reduced to a listed word. */
+    public fun starterUsed(kindName: String) {
+        track(ProductEvent.StarterUsed, mapOf("starter" to ProductStarter.of(kindName)))
     }
 
     /**

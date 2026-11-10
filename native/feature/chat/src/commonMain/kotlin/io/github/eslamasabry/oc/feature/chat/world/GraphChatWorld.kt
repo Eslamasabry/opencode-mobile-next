@@ -34,6 +34,8 @@ import io.github.eslamasabry.oc.core.model.transcript.Role
 import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.core.model.SessionStatus
 import io.github.eslamasabry.oc.core.model.StreamStatus
+import io.github.eslamasabry.oc.engine.analytics.health.AppTelemetry
+import io.github.eslamasabry.oc.engine.analytics.product.ProductFeature
 import io.github.eslamasabry.oc.engine.composer.drafts.ConversationDrafts
 import io.github.eslamasabry.oc.engine.composer.drafts.DraftSession
 import io.github.eslamasabry.oc.engine.composer.drafts.DraftSubmission
@@ -1586,9 +1588,11 @@ internal class GraphChatWorld(
     override suspend fun selectModel(choice: ComposerModel?, variant: String): Outcome<Unit> {
         if (readOnlyNow()) return readOnlyFailure()
         val delivery = (currentAttached()?.graph as? ChatGraphAccessors)?.chatDelivery
+        val before = mutableModels.value.selected to mutableModels.value.variant
         val result =
             if (delivery == null) applyModel(choice, variant)
             else delivery.withSelection(ref) { applyModel(choice, variant) }
+        countSwitch(result, ProductFeature.ModelSwitch) { before != (mutableModels.value.selected to mutableModels.value.variant) }
         if (result is Outcome.Failed && result.failure != STALE)
             mutableModels.value = mutableModels.value.copy(failure = result.failure)
         return result
@@ -1618,7 +1622,9 @@ internal class GraphChatWorld(
             return applyModel(ring[next], "", recordRecent = false)
         }
         val delivery = (currentAttached()?.graph as? ChatGraphAccessors)?.chatDelivery
+        val before = mutableModels.value.selected
         val result = if (delivery == null) cycle() else delivery.withSelection(ref) { cycle() }
+        countSwitch(result, ProductFeature.ModelSwitch) { before != mutableModels.value.selected }
         if (result is Outcome.Failed && result.failure != STALE)
             mutableModels.value = mutableModels.value.copy(failure = result.failure)
         return result
@@ -1726,8 +1732,19 @@ internal class GraphChatWorld(
     override suspend fun selectAgent(agent: String): Outcome<Unit> {
         if (readOnlyNow()) return readOnlyFailure()
         val delivery = (currentAttached()?.graph as? ChatGraphAccessors)?.chatDelivery
-        return if (delivery == null) applyAgent(agent)
-        else delivery.withSelection(ref) { applyAgent(agent) }
+        val before = mutableModels.value.agent
+        val result =
+            if (delivery == null) applyAgent(agent) else delivery.withSelection(ref) { applyAgent(agent) }
+        countSwitch(result, ProductFeature.AgentSwitch) { before != mutableModels.value.agent }
+        return result
+    }
+
+    /**
+     * The person's own switch, counted once and only when it took effect: a refused or superseded attempt, a pick
+     * of what was already chosen, and a model restored at start (which never comes through here) count nothing.
+     */
+    private inline fun countSwitch(result: Outcome<Unit>, feature: ProductFeature, changed: () -> Boolean) {
+        if (result is Outcome.Ok && changed()) AppTelemetry.current.feature(feature)
     }
 
     private suspend fun applyAgent(agent: String): Outcome<Unit> {

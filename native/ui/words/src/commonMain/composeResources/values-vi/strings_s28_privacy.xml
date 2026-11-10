@@ -23,6 +23,8 @@
     <string name="collectBackground">Lý do dịch vụ nền dừng</string>
     <string name="collectUpdates">Bản cập nhật có cài được không, và loại lỗi</string>
     <string name="collectPages">Bạn dùng loại trang và tính năng nào, các bước thiết lập, phản hồi đầu tiên, mỗi lần dùng kéo dài bao lâu và bạn gửi bao nhiêu tin nhắn trong đó</string>
+    <string name="collectJourney">Bạn đã đi đến đâu trong các bước đầu (mở ứng dụng, thiết lập, kết nối, gửi tin nhắn, nhận phản hồi đầu tiên) và khoảng bao lâu sau khi bạn đồng ý. Mỗi bước chỉ được đếm một lần</string>
+    <string name="collectStarters">Loại gợi ý bạn đã chạm trong cuộc trò chuyện mới, không bao giờ gồm lời của nó hay điều nó yêu cầu</string>
     <string name="collectStart">Ứng dụng khởi động nhanh thế nào</string>
     <string name="collectSmooth">Các trang mượt thế nào (tỷ lệ khung hình chậm và bị đứng), và tốc độ làm mới của màn hình</string>
     <string name="collectMemory">Cảnh báo bộ nhớ từ Android</string>

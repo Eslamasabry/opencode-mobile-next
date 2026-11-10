@@ -427,6 +427,46 @@ class WorldComposerFilesModelsTest {
         }
 
     @Test
+    fun `B-NEXT-040 a model or agent the person switched is counted once, a refused or repeated pick is not`() =
+        runTest {
+            val rec = FeatureRecorder(this)
+            try {
+                val f = Fixture(this, selection = ModelRef("prov", "m1"))
+                f.gateway.appliedAgent = "build"
+                f.operations.catalog =
+                    Outcome.Ok(
+                        snapshot(catalogModel("m1"), catalogModel("m2")).copy(
+                            agents = persistentListOf(
+                                io.github.eslamasabry.oc.core.model.CatalogAgent("build", "primary", null, false, null, null, null),
+                                io.github.eslamasabry.oc.core.model.CatalogAgent("plan", "primary", null, false, null, null, null),
+                            ),
+                        ),
+                    )
+                f.operations.defaults = Outcome.Ok(ChatDefaults(ModelRef("prov", "m1"), null))
+                f.switchesModels()
+                f.open()
+                f.world.loadModels()
+                assertEquals(emptyList(), rec.features(), "loading what was chosen before is not a switch")
+
+                val m2 = f.world.models.value.choices.single { it.modelId == "m2" }
+                f.gateway.acknowledge = false
+                assertIs<Outcome.Failed>(f.world.selectModel(m2))
+                assertEquals(emptyList(), rec.features(), "a refused switch counts nothing")
+
+                f.gateway.acknowledge = true
+                assertIs<Outcome.Ok<Unit>>(f.world.selectModel(m2))
+                assertIs<Outcome.Ok<Unit>>(f.world.selectModel(m2))
+                assertEquals(listOf("model_switch"), rec.features(), "the same pick again is not a second switch")
+
+                assertIs<Outcome.Ok<Unit>>(f.world.selectAgent("plan"))
+                assertIs<Outcome.Ok<Unit>>(f.world.selectAgent("plan"))
+                assertEquals(listOf("model_switch", "agent_switch"), rec.features())
+            } finally {
+                rec.stop()
+            }
+        }
+
+    @Test
     fun `B-CHAT-105 a choice outside the loaded catalog fails closed without a server call`() =
         runTest {
             val f = Fixture(this, selection = ModelRef("prov", "m1"))

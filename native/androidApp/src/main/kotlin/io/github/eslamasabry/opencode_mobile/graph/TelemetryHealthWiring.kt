@@ -35,6 +35,7 @@ import io.github.eslamasabry.oc.engine.analytics.health.HealthExitMarks
 import io.github.eslamasabry.oc.engine.analytics.health.HealthPlatform
 import io.github.eslamasabry.oc.engine.analytics.health.HealthTelemetry
 import io.github.eslamasabry.oc.engine.analytics.product.ProductEvent
+import io.github.eslamasabry.oc.engine.analytics.product.ProductFeature
 import io.github.eslamasabry.oc.engine.analytics.product.ProductLifecycle
 import io.github.eslamasabry.oc.engine.analytics.product.ProductScreen
 import io.github.eslamasabry.oc.engine.analytics.product.TelemetryAnswers
@@ -186,6 +187,8 @@ class AppTelemetryHealth(
                     telemetry.breadcrumb("nav.open:${screen.wire}")
                     health.jank.screen(screen)
                     telemetry.track(ProductEvent.ScreenView, mapOf("screen" to screen))
+                    // Opening the review page is the review_open feature (a page change, not a recomposition).
+                    ProductFeature.openedBy(screen)?.let(telemetry::feature)
                 }
         }
     }

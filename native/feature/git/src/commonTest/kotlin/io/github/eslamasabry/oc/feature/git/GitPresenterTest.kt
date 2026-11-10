@@ -102,6 +102,40 @@ private class FakeAccount : GitHubSignInControl {
     }
 }
 
+/** The app's telemetry with usage on, remembering the `feature` of each `feature_used` event it was sent. */
+private class GitFeatureRecorder(scope: kotlinx.coroutines.CoroutineScope) {
+    val features = mutableListOf<String>()
+
+    init {
+        val vendor =
+            object : io.github.eslamasabry.oc.engine.analytics.health.TelemetryVendor {
+                override fun setCollection(usage: Boolean, crashes: Boolean) = Unit
+                override fun crash(category: String, frames: List<String>, fatal: Boolean) = Unit
+                override fun failure(name: String, keys: Map<String, String>) = Unit
+                override fun breadcrumb(name: String) = Unit
+                override fun event(name: String, props: Map<String, String>) {
+                    if (name == "feature_used") features += props.getValue("feature")
+                }
+                override fun setKeys(keys: Map<String, String>) = Unit
+                override fun setUserProperties(properties: Map<String, String>) = Unit
+                override fun perfTrace(name: String, attributes: Map<String, String>, durationMs: Long) = Unit
+                override suspend fun problemReport(text: String, collecting: Boolean) = Unit
+                override suspend fun appInstanceId(): String? = null
+            }
+        val service = io.github.eslamasabry.oc.engine.analytics.health.TelemetryService(vendor, available = true, scope = scope)
+        service.start(
+            io.github.eslamasabry.oc.engine.analytics.health.TelemetryConsent(usage = true),
+            object : io.github.eslamasabry.oc.engine.analytics.health.TelemetryConsentStore {
+                override suspend fun write(consent: io.github.eslamasabry.oc.engine.analytics.health.TelemetryConsent) = true
+            },
+            io.github.eslamasabry.oc.engine.analytics.health.MemoryTelemetryReportStore(),
+        )
+        io.github.eslamasabry.oc.engine.analytics.health.AppTelemetry.install(service)
+    }
+
+    fun stop() = io.github.eslamasabry.oc.engine.analytics.health.AppTelemetry.reset()
+}
+
 class GitPresenterTest {
     private val ref = ConversationRef(ProfileId("p"), SessionId("s"))
     private val opened = mutableListOf<String>()
@@ -150,6 +184,31 @@ class GitPresenterTest {
         assertFalse("notes.md" in commit)
         assertFalse("clash.kt" in commit)
         assertEquals("abc1234", p.initial().result?.commit)
+    }
+
+    @Test
+    fun `B-NEXT-050 a Git action that worked is counted once, a failed save and a refresh are not`() = runTest {
+        val rec = GitFeatureRecorder(this)
+        try {
+            val failing = Repo().apply { commitErr = "*** Please tell me who you are." }
+            val bad = presenter(failing)
+            bad.start()
+            advanceUntilIdle()
+            bad.refresh()
+            advanceUntilIdle()
+            bad.commit("m")
+            advanceUntilIdle()
+            assertEquals(emptyList(), rec.features)
+
+            val good = presenter(Repo())
+            good.start()
+            advanceUntilIdle()
+            good.commit("Update app")
+            advanceUntilIdle()
+            assertEquals(listOf("git_action"), rec.features)
+        } finally {
+            rec.stop()
+        }
     }
 
     @Test
