@@ -40,6 +40,7 @@ import io.github.eslamasabry.oc.engine.runtime.host.RuntimePhase
 import io.github.eslamasabry.oc.engine.runtime.host.RuntimeStatus
 import io.github.eslamasabry.oc.engine.runtime.server.AppOpenStart
 import io.github.eslamasabry.oc.engine.runtime.server.LocalServerGate
+import io.github.eslamasabry.oc.engine.runtime.server.OpenCodeVersions
 import io.github.eslamasabry.oc.engine.runtime.server.LocalServerWait
 import io.github.eslamasabry.oc.engine.runtime.server.LaunchMode
 import io.github.eslamasabry.oc.engine.runtime.server.PhoneServerPort
@@ -821,9 +822,13 @@ internal constructor(
     private suspend fun publish() {
         val status = (runtimeStatus() as? Outcome.Ok)?.value
         val stopped = withContext(io) { runCatchingBlocking { stoppedByPerson() } ?: true }
+        val owner = ownerId()?.let { profiles.profile(it) }?.profile
+        val versions = OpenCodeVersions.of(status, owner?.serverVersion, owner?.requiresOpenCode2Migration != true)
         facts.update {
             it.copy(
                 status = status,
+                installedVersion = versions.installed,
+                pinnedVersion = versions.pinned,
                 stoppedByPerson = stopped,
                 replyRunning = ownerId()?.raw?.let { owner -> leases.busy.value[owner] } == true,
                 // This phone offers the OpenCode 2 move while its saved server still needs it.
@@ -1569,6 +1574,16 @@ internal constructor(
     suspend fun stopServer(): Outcome<Unit> = stopNow()
 
     suspend fun refreshServer() = refreshNow()
+
+    /** The setup engine's OpenCode job, as This phone's Update row shows it (running or failed last time). */
+    fun noteUpdateJob(running: Boolean, failed: Boolean) =
+        facts.update { it.copy(updateRunning = running, updateFailed = failed) }
+
+    /** The saved server still needs the OpenCode 2 move (a half-finished switch). */
+    fun switchPending(): Boolean = facts.value.needsOpenCode2Move
+
+    /** Known idle: no reply or work on the owner's server (an unknown reading counts as busy, as in Flutter). */
+    fun workKnownIdle(): Boolean = ownerId()?.raw?.let { owner -> leases.busy.value[owner] } == false
 
     fun serverSource(update: suspend () -> Outcome<Unit>): PhoneServerSource =
         object : PhoneServerSource {

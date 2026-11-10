@@ -119,6 +119,11 @@ class OcApplication : Application(), GraphOwner {
                     step("builtinRuntime") {
                         appGraph.builtinRuntime // P12-FIX-LINUX-VOICE: the built-in Linux follows the activity; phone server comes back
                     }
+                    step("phoneOpenCodeAutoUpdate") {
+                        (appGraph as io.github.eslamasabry.opencode_mobile.graph.PhoneOpenCodeAutoUpdateAccessors)
+                            .phoneOpenCodeAutoUpdate
+                            .start() // keep the phone server on the pinned OpenCode (B-LINUX-079)
+                    }
                     step("nativePhoneHealing") { (appGraph as NativeHealingAccessors).nativePhoneHealing.start() }
                     step("agentWidgets") {
                         (appGraph as io.github.eslamasabry.opencode_mobile.graph.AgentWidgetAccessors).agentWidgets.start()
