@@ -15,7 +15,6 @@ import io.github.eslamasabry.oc.engine.runtime.server.openCodeAutoUpdateLooks
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupState
 import android.os.SystemClock
 import io.github.eslamasabry.oc.engine.runtime.server.OpenCodeIdleSettle
-import io.github.eslamasabry.oc.engine.runtime.setup.SetupComponentIds
 import kotlinx.coroutines.flow.MutableSharedFlow
 import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Failure
@@ -109,8 +108,9 @@ class PhoneOpenCodeAutoUpdate(
         appScope.launch {
             var last: SetupState? = null
             setup.progress.collect {
-                // Only the OpenCode update job (a job of the OpenCode component alone) shows on the Update row.
-                val update = it.components.map { c -> c.id } == listOf(SetupComponentIds.OPENCODE)
+                // Only the job the update itself started shows on the Update row. Every setup job lists all the
+                // required components, so the list cannot tell the update from Repair.
+                val update = setup.updateJob.owns(it.jobId)
                 if (update && it.state != last) log.i { "update job ${it.state}" }
                 if (update) last = it.state
                 runtime.noteUpdateJob(
