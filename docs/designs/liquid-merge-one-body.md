@@ -108,8 +108,9 @@ The owner asked for the joined outline to be crafted geometry, not whatever a bl
   behind it, a soft knee on luminance inside the lens pass (dark themes: above 0.36 the excess is kept at 0.22 of
   itself; light themes lift the dark end the same way), so a bright photo stays its colour but deeper. The second
   line's ink on glass is brighter than on the page. This sits beside the existing ink flip, and would replace
-  `LiquidEdge.faceTint`'s thickening where it applies. Prototype: `rim.py` (`press`), stills `read-*.png`. To be
-  judged on the phone.
+  `LiquidEdge.faceTint`'s thickening where it applies. Prototype: `rim.py` (`press`), stills `read-*.png`. The
+  owner on the still, 2026-11-11: "Yeah bright content held back is readable." Accepted as the direction; the
+  values are still to be judged on the phone.
 
 ## 2. The joined pane
 
