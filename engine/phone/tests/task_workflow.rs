@@ -46,7 +46,7 @@ fn command(store: &Store, id: &str, action: &str, extra: Value) -> Value {
 fn checked_clone_merges_only_to_dev_then_expected_promotion_receipt_survives_restart() {
     let scratch = std::env::var_os("OC_ENGINE_TEST_ROOT")
         .map(std::path::PathBuf::from)
-        .unwrap_or_else(|| "/home/owner/Storage/tmp/aiteam-phone-engine-tests".into());
+        .unwrap_or_else(|| "/home/eslam/Storage/tmp/aiteam-phone-engine-tests".into());
     assert!(scratch.is_absolute() && !scratch.starts_with("/tmp"));
     std::fs::create_dir_all(&scratch).unwrap();
     let temporary = tempfile::tempdir_in(scratch).unwrap();

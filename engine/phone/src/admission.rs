@@ -245,7 +245,7 @@ mod tests {
         let root = std::env::var_os("OC_ENGINE_TEST_ROOT")
             .map(std::path::PathBuf::from)
             .unwrap_or_else(|| {
-                std::path::PathBuf::from("/home/owner/Storage/tmp/aiteam-phone-engine-tests")
+                std::path::PathBuf::from("/home/eslam/Storage/tmp/aiteam-phone-engine-tests")
             })
             .join(format!("admission-{}", uuid::Uuid::new_v4()));
         fs::create_dir_all(&root).unwrap();
