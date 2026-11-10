@@ -228,7 +228,7 @@ internal fun Modifier.kitLiquidJoinClip(part: KitLiquidJoinPart): Modifier =
             val r = g.right - rest.left
             val b = g.bottom - rest.top
             if (r <= l || b <= t) return@drawWithContent
-            clipRect(l, t, r, b) { drawContent() }
+            clipRect(l, t, r, b) { this@drawWithContent.drawContent() }
             val ease = LiquidJoin.ROW_EASE_DP.dp.toPx()
             if (l > .5f) {
                 drawRect(Brush.horizontalGradient(0f to Color.Transparent, 1f to Color.Black, startX = l, endX = l + ease), blendMode = BlendMode.DstIn)
