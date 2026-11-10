@@ -262,8 +262,11 @@ androidComponents.onVariants(androidComponents.selector().withFlavor("channel" t
     if (dev != null) {
         variant.signingConfig.setConfig(dev)
     } else {
+        // One task for every dev variant (debug and benchmark): registering it per variant failed the build on every
+        // machine without the dev key, CI included.
         val refuse =
-            tasks.register("refuseDevWithoutDevKey") {
+            tasks.findByName("refuseDevWithoutDevKey")?.let { tasks.named("refuseDevWithoutDevKey") }
+                ?: tasks.register("refuseDevWithoutDevKey") {
                 doLast {
                     throw GradleException(
                         "No dev keystore: set oc.devSigning in native/local.properties (tool/dev/README.md). The dev " +
