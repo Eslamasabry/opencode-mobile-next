@@ -18,6 +18,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
@@ -284,19 +285,25 @@ internal fun DrawScope.drawStatusEdge(
  * the bar), ending in a soft [GROUND_BAND_FADE_DP] fade, at [under] strength (0 at rest: no band over a live background).
  */
 @Composable
-internal fun BoxScope.KitGroundBand(bandPx: Int, under: () -> Float) {
-    if (bandPx <= 0) return
+internal fun BoxScope.KitGroundBand(bandPx: () -> Int, under: () -> Float) {
     val ground = LocalKitColors.current.ground
-    val height = with(LocalDensity.current) { bandPx.toDp() + GROUND_BAND_FADE_DP.dp }
+    val fadePx = with(LocalDensity.current) { GROUND_BAND_FADE_DP.dp.roundToPx() }
     Box(
         Modifier.align(Alignment.TopCenter)
             .fillMaxWidth()
-            .height(height)
+            // The band's height is read while it is laid out and drawn, never while the page is composed: the bar and
+            // the status line under it change height (a line folds in), and that must not recompose the page.
+            .layout { measurable, constraints ->
+                val band = bandPx()
+                val h = if (band <= 0) 0 else (band + fadePx).coerceAtMost(constraints.maxHeight)
+                val placeable = measurable.measure(constraints.copy(minHeight = h, maxHeight = h))
+                layout(placeable.width, h) { placeable.place(0, 0) }
+            }
             .drawBehind {
                 val k = under().coerceIn(0f, 1f)
-                val band = bandPx.toFloat()
+                val band = bandPx().toFloat()
                 if (k <= 0f || band <= 0f) return@drawBehind
-                val fade = GROUND_BAND_FADE_DP.dp.toPx()
+                val fade = fadePx.toFloat()
                 drawRect(ground, Offset.Zero, Size(size.width, band), alpha = k)
                 drawRect(
                     Brush.verticalGradient(easedStops(ground, 1f, 0f), startY = band, endY = band + fade),

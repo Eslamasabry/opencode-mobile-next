@@ -89,4 +89,58 @@ class KitScreenTypingFoldTest {
         onNodeWithText("Simulated session.").assertExists()
         runOnIdle { assertEquals("hello", words.text.toString()) }
     }
+
+    /**
+     * A line that arrives, or leaves, while the person types (reconnecting, a notice) is drawn inside the same layout,
+     * under the bar: the bottom block does not move, so the message box keeps its focus and the words keep going in
+     * (owner 2026-11-10, a new install's first chat: "steals focus from composer whenever there's a tool tip below the
+     * top bar").
+     */
+    @Test
+    fun `the message box keeps its focus when a status line arrives and when it leaves`() = runComposeUiTest {
+        var line by mutableStateOf<KitStatus?>(null)
+        val words = TextFieldState()
+        setContent {
+            KitTheme(KitAppearance(motion = MotionLevel.Off), FakeKitPlatform(), "en") {
+                // The keyboard is up, as it is while the person types.
+                CompositionLocalProvider(LocalKitKeyboardShown provides true) {
+                Box(Modifier.size(412.dp, 720.dp)) {
+                    KitScreen(
+                        page = true,
+                        overlayChrome = true,
+                        hideStatusWhenTyping = true,
+                        status = line,
+                        bottom = {
+                            KitField(
+                                state = words,
+                                label = "Message",
+                                kind = KitFieldKind.Multiline,
+                                labelShown = false,
+                                framed = false,
+                                composer = true,
+                                multilineLines = 1..5,
+                            )
+                        },
+                    ) {
+                        Box(Modifier.fillMaxSize())
+                    }
+                }
+                }
+            }
+        }
+        onNode(hasSetTextAction()).performTouchInput { click() }
+        onNode(hasSetTextAction()).assertIsFocused()
+        onNode(hasSetTextAction()).performTextInput("he")
+
+        line = KitStatus(KitStatusKind.Connection, "Reconnecting…", id = "link")
+        waitForIdle()
+        onNodeWithText("Reconnecting…").assertExists()
+        onNode(hasSetTextAction()).assertIsFocused()
+        onNode(hasSetTextAction()).performTextInput("llo")
+
+        line = null
+        waitForIdle()
+        onNode(hasSetTextAction()).assertIsFocused()
+        runOnIdle { assertEquals("hello", words.text.toString()) }
+    }
 }

@@ -44,6 +44,9 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.Dp
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.isTraversalGroup
@@ -287,15 +290,18 @@ public fun KitScreen(
     val topPart: (@Composable () -> Unit)? = topBar?.let { movableTop }
     val bottomPart: (@Composable () -> Unit)? = bottom?.let { movableBottom }
     val bodyPart: @Composable () -> Unit = movableBody
-    // [holdsLine]: the page has a status line that is only folded away while the person types. The frame then stays in
-    // the layout that line stands in: moving the bottom block to the other layout as the keyboard opened dropped the
-    // message box's focus, so the keyboard closed again at once (emulator 2026-11-10: the demo chat, and any chat
-    // showing an update or information line, could not be typed in).
-    val inner: @Composable (line: KitStatus?, ownsLine: Boolean, holdsLine: Boolean) -> Unit = { line, ownsLine, holdsLine ->
+    // A status line never decides the layout. It used to: a line arriving, leaving or folding away for typing moved the
+    // bar, body and bottom block to the other layout, which made the transcript jump and dropped the message box's
+    // focus, so the keyboard closed (emulator 2026-11-10, the demo chat; owner, a new install's first chat: "steals
+    // focus from composer whenever there's a tool tip below the top bar"). The overlaid layout now draws the line
+    // itself, under the bar; only Find's own slot, a scrolling header or the loading line use the stacked layout.
+    val inner: @Composable (line: KitStatus?, ownsLine: Boolean) -> Unit = { line, ownsLine ->
         val insets =
             LocalKitScreenInsets.current ?: WindowInsets.safeDrawing.union(WindowInsets.ime)
-        if (overlayChrome && line == null && !holdsLine && search == null && header == null && !loading) {
+        if (overlayChrome && search == null && header == null && !loading) {
             var topPx by remember { mutableIntStateOf(0) }
+            // The status line's own height while it shows (and while it folds in or out); 0 with no line.
+            var linePx by remember { mutableIntStateOf(0) }
             var bottomPx by remember { mutableIntStateOf(0) }
             val density = LocalDensity.current
             // Owner 2026-11-09 ("a rough line just below Jump to latest", "that dark gradient below the notifications
@@ -327,22 +333,39 @@ public fun KitScreen(
             val merge = mergeState.takeIf { mergeProgram != null }
             val scroll = remember { KitScreenScroll() }
             val under = kitUnderTop(scroll)
-            val insetTop = if (framed) insets.getTop(density) else 0
-            val insetBottom = if (framed) insets.getBottom(density) else 0
+            // The window's insets include the keyboard, which moves every frame while it opens: each side is read
+            // through a derived value, so the page is composed again only when that side's own size changes (the top
+            // never does while typing), and the bottom is read only by a page that draws a ground under its bottom block.
+            val insetTop by remember(insets, density, framed) { derivedStateOf { if (framed) insets.getTop(density) else 0 } }
+            val insetBottom =
+                if (framed && !edgesFade) remember(insets, density) { derivedStateOf { insets.getBottom(density) } }.value else 0
             // The status bar the body runs under (0 for a page that keeps the old frame).
             val statusPx = if (edgesFade) insetTop else 0
+            // The room the chrome takes from the body. Its sizes are read where the padding is used (a list measures
+            // with it), not while the page is composed: the message box growing a line, or a status line folding in,
+            // then lays the body out again without composing the whole page again.
+            val hasTop = topPart != null
+            val hasBottom = bottomPart != null
             val padding =
-                with(density) {
-                    PaddingValues(
+                remember(density, edgesFade, faded, hasTop, hasBottom, statusPx) {
+                    object : PaddingValues {
                         // A: the body's content rests below the status bar and the bar. E20-S13: a page that records
                         // nothing keeps its content clear of the bar, fading in over 12 dp under it.
-                        top =
-                            if (edgesFade) (statusPx + topPx).toDp()
-                            else topPx.toDp() + if (topPart != null) HEADER_FADE_DP.dp else 0.dp,
+                        override fun calculateTopPadding(): Dp =
+                            with(density) {
+                                if (edgesFade) (statusPx + topPx).toDp()
+                                else topPx.toDp() + if (hasTop) HEADER_FADE_DP.dp else 0.dp
+                            }
+
                         // E20-S30: a chat's newest line rests on the list's own padding, right above the bottom block;
                         // the content fades out from 8 dp above the block over its top 16 dp.
-                        bottom = bottomPx.toDp() + if (faded && bottomPart != null) COMPOSER_FADE_DP.dp else 0.dp,
-                    )
+                        override fun calculateBottomPadding(): Dp =
+                            with(density) { bottomPx.toDp() } + if (faded && hasBottom) COMPOSER_FADE_DP.dp else 0.dp
+
+                        override fun calculateLeftPadding(layoutDirection: LayoutDirection): Dp = 0.dp
+
+                        override fun calculateRightPadding(layoutDirection: LayoutDirection): Dp = 0.dp
+                    }
                 }
             // Glass dissolves the body into the status edge's blur along the same curve the edge draws it with.
             val reach = with(density) { STATUS_EDGE_REACH_DP.dp.toPx() }
@@ -365,7 +388,12 @@ public fun KitScreen(
                                 if (!edgesFade) Modifier
                                 else
                                     Modifier.kitScrollEdges(
-                                        clearAbove = if (glassTop) ({ statusEdgeSolid(statusPx.toFloat()) }) else null,
+                                        // With a status line under the bar nothing scrolls behind either: the
+                                        // body is cleared down to the line's foot and fades in under it, so the
+                                        // line's words stand on the page's ground.
+                                        clearAbove =
+                                            if (glassTop) ({ if (linePx > 0) (statusPx + topPx).toFloat() else statusEdgeSolid(statusPx.toFloat()) })
+                                            else null,
                                         topReach = HEADER_FADE_DP.dp,
                                         // From 8 dp above the block (inside the list's own 16 dp padding, so the
                                         // newest line at rest and the jump pill stay whole) over its top 16 dp.
@@ -378,7 +406,10 @@ public fun KitScreen(
                                                 else -> ({ bottomPx + with(density) { EDGE_LEAD_DP.dp.toPx() } })
                                             },
                                         bottomReach = if (slab) SLAB_UNDER_FADE_DP.dp else (EDGE_LEAD_DP + COMPOSER_FADE_DP).dp,
-                                        topReachPx = { statusPx + reach - statusEdgeSolid(statusPx.toFloat()) },
+                                        topReachPx = {
+                                            if (linePx > 0) with(density) { HEADER_FADE_DP.dp.toPx() }
+                                            else statusPx + reach - statusEdgeSolid(statusPx.toFloat())
+                                        },
                                     )
                             )
                             .kitMaxWidth(cap)
@@ -386,29 +417,40 @@ public fun KitScreen(
                 }
                 if (frost != null && merge != null && mergeProgram != null) KitLiquidMergeLayer(merge, frost, mergeProgram, kitLiquidMergeBlur())
                 if (edgesFade && topPart != null && frost != null) {
-                    if (look == KitTopEdgeLook.Ground) KitGroundBand(bandPx = statusPx + topPx, under = under)
+                    if (look == KitTopEdgeLook.Ground) KitGroundBand(bandPx = { statusPx + topPx }, under = under)
                     else KitStatusEdge(frost, statusPx, under = under, blur = statusBlur)
                 }
-                topPart?.let {
-                    Box(
+                // The bar, and under it the one status line: one block whose height is the body's top room, so a line
+                // folding in or out eases the transcript down or up and nothing else moves.
+                if (topPart != null || ownsLine) {
+                    Column(
                         Modifier.align(Alignment.TopCenter)
                             .fillMaxWidth()
                             .then(if (statusPx > 0) Modifier.padding(top = with(density) { statusPx.toDp() }) else Modifier)
                             .onSizeChanged { topPx = it.height }
-                            .kitLiquidTouchWatch(barTouch)
-                            .then(
-                                when {
-                                    barFace != null -> kitLiquidWordsHost(LiquidRole.Bar, frost)
-                                    edgesFade -> Modifier
-                                    else -> Modifier.kitChromeGround(FrostRole.ChatHeader, frost, reach = insetTop)
-                                }
-                            )
+                            .then(if (edgesFade || barFace != null) Modifier else Modifier.kitChromeGround(FrostRole.ChatHeader, frost, reach = insetTop))
                     ) {
-                        CompositionLocalProvider(LocalKitLiquidMerge provides merge) {
-                            if (barFace != null) KitLiquidBarPane(barFace.kitLiquidTouchLight(barTouch, LiquidBarShape, barInset))
-                            else if (frostedFace != null) KitLiquidBarPane(frostedFace)
-                            it()
+                        topPart?.let {
+                            Box(
+                                Modifier.fillMaxWidth()
+                                    .kitLiquidTouchWatch(barTouch)
+                                    .then(if (barFace != null) kitLiquidWordsHost(LiquidRole.Bar, frost) else Modifier)
+                            ) {
+                                CompositionLocalProvider(LocalKitLiquidMerge provides merge) {
+                                    if (barFace != null) KitLiquidBarPane(barFace.kitLiquidTouchLight(barTouch, LiquidBarShape, barInset))
+                                    else if (frostedFace != null) KitLiquidBarPane(frostedFace)
+                                    it()
+                                }
+                            }
                         }
+                        if (ownsLine)
+                            KitStatusLineFold(
+                                line,
+                                Modifier.onSizeChanged { linePx = it.height }
+                                    .kitStatusRoom()
+                                    .verticalScroll(rememberScrollState())
+                                    .testTag("kit-screen-status"),
+                            )
                     }
                 }
                 bottomPart?.let {
@@ -449,7 +491,7 @@ public fun KitScreen(
             var barPx by remember { mutableIntStateOf(0) }
             // Chat edge A, kept consistent on every page that scrolls under its bar (owner 2026-11-09): the body runs
             // on up under the status bar too, where it dissolves into a blur of itself (KitTopEdge.kt).
-            val statusRun = if (runs && framed) insets.getTop(density) else 0
+            val statusRun by remember(insets, density, runs, framed) { derivedStateOf { if (runs && framed) insets.getTop(density) else 0 } }
             val runTarget = if (runs && line == null && search == null) barPx + statusRun else 0
             val headerState = remember { KitScrollingHeaderState() }
             val topScroll = remember(headerState) { KitScreenScroll().also { it.reporter = { headerState.offset < 0f } } }
@@ -614,7 +656,7 @@ public fun KitScreen(
     val content: @Composable () -> Unit = {
         if (kitStatusSlotAbove()) {
             KitStatusContribution(status)
-            inner(null, false, false)
+            inner(null, false)
         } else {
             KitStatusSlot(status) { shown ->
                 // Fold optional information while typing; connection, recovery and failures stay
@@ -623,8 +665,7 @@ public fun KitScreen(
                     shown?.kind in setOf(KitStatusKind.Update, KitStatusKind.Info) &&
                         shown?.tone != StatusTone.Failure &&
                         shown?.tone != StatusTone.Attention
-                val folded = hideStatusWhenTyping && kitKeyboardVisible() && optional
-                inner(if (folded) null else shown, true, folded)
+                inner(if (hideStatusWhenTyping && kitKeyboardVisible() && optional) null else shown, true)
             }
         }
     }
