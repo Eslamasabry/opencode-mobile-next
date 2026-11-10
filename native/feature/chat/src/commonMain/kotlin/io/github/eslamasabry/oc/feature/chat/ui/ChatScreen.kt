@@ -361,22 +361,52 @@ public fun ChatScreen(
     val factsState by rememberUpdatedState(facts)
     val words = rememberChatWords()
     val stopNote = stringResource(Res.string.chatStopAfterStepPrompt)
+    // One instance while the words are the same: a new instance every pass kept the transcript list from skipping.
+    val messageActions = stringResource(Res.string.kitMessageActions)
+    val working = stringResource(Res.string.kitTurnLiveWorking)
+    val stopping = stringResource(Res.string.phoneServerCardStopping)
+    val stoppingAfterStep = stringResource(Res.string.chatStopAfterStepPending)
+    val sending = stringResource(Res.string.kitTurnLiveSending)
+    val notSent = stringResource(Res.string.chatSendFailed)
+    val unconfirmed = stringResource(Res.string.queuedDiscardUnconfirmedMessage)
+    val tryAgain = stringResource(Res.string.commonRetry)
+    val replyFailed = rememberReplyFailedWords()
+    val messageError = rememberMessageErrorWords()
+    val details = stringResource(Res.string.chatReplyFailedDetails)
+    val copyDetails = stringResource(Res.string.chatReplyFailedCopy)
+    val sendFailure = rememberSendFailureWords()
     val listWords =
-        ChatListWords(
-            messageActions = stringResource(Res.string.kitMessageActions),
-            working = stringResource(Res.string.kitTurnLiveWorking),
-            stopping = stringResource(Res.string.phoneServerCardStopping),
-            stoppingAfterStep = stringResource(Res.string.chatStopAfterStepPending),
-            sending = stringResource(Res.string.kitTurnLiveSending),
-            notSent = stringResource(Res.string.chatSendFailed),
-            unconfirmed = stringResource(Res.string.queuedDiscardUnconfirmedMessage),
-            tryAgain = stringResource(Res.string.commonRetry),
-            replyFailed = rememberReplyFailedWords(),
-            messageError = rememberMessageErrorWords(),
-            details = stringResource(Res.string.chatReplyFailedDetails),
-            copyDetails = stringResource(Res.string.chatReplyFailedCopy),
-            sendFailure = rememberSendFailureWords(),
-        )
+        remember(
+            messageActions,
+            working,
+            stopping,
+            stoppingAfterStep,
+            sending,
+            notSent,
+            unconfirmed,
+            tryAgain,
+            replyFailed,
+            messageError,
+            details,
+            copyDetails,
+            sendFailure,
+        ) {
+            ChatListWords(
+                messageActions = messageActions,
+                working = working,
+                stopping = stopping,
+                stoppingAfterStep = stoppingAfterStep,
+                sending = sending,
+                notSent = notSent,
+                unconfirmed = unconfirmed,
+                tryAgain = tryAgain,
+                replyFailed = replyFailed,
+                messageError = messageError,
+                details = details,
+                copyDetails = copyDetails,
+                sendFailure = sendFailure,
+            )
+        }
     val list = rememberTranscriptListState()
     val reveal = rememberRevealRegistry()
     val motion = kitChatMotion()
