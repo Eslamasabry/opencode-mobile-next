@@ -65,13 +65,8 @@ import io.github.eslamasabry.oc.ui.design.effects.FrostRole
 import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
 import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidBarPane
 import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidJoin
-import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidMerge
 import io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidJoin
 import io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidJoinBody
-import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidMergeLayer
-import io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidMerge
-import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidMergeBlur
-import io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidMergeProgram
 import io.github.eslamasabry.oc.ui.kit.effects.LIQUID_BAR_INSET_X
 import io.github.eslamasabry.oc.ui.kit.effects.LIQUID_BAR_INSET_Y
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidTouchLight
@@ -334,11 +329,6 @@ public fun KitScreen(
             val statusBlur = if (edgesFade && look != KitTopEdgeLook.Ground) kitStatusEdgeBlur() else null
             // A bottom block that is one pane of glass (KitReportBottomSlab): the body stays sharp under it.
             val slab = bottomState.slab && bottomPart != null
-            // Fluid glass (KitLiquidMerge.kt): a drop leaving or joining the bar's capsule or the bottom slab is bridged
-            // to it here, over the body and under the chrome. Only where the body is recorded and shaders run.
-            val mergeProgram = if (edgesFade && kitChromeIsGlass() && !KitMotion.state.reduced) rememberKitLiquidMergeProgram() else null
-            val mergeState = remember { KitLiquidMerge() }
-            val merge = mergeState.takeIf { mergeProgram != null }
             val scroll = remember { KitScreenScroll() }
             val under = kitUnderTop(scroll)
             // The window's insets include the keyboard, which moves every frame while it opens: each side is read
@@ -389,7 +379,7 @@ public fun KitScreen(
                     )
                     .testTag("kit-screen")
             ) {
-                CompositionLocalProvider(LocalChromePadding provides padding, LocalKitScreenScroll provides scroll, LocalKitScreenBottom provides bottomState, LocalKitLiquidMerge provides merge, LocalKitLiquidJoin provides join) {
+                CompositionLocalProvider(LocalChromePadding provides padding, LocalKitScreenScroll provides scroll, LocalKitScreenBottom provides bottomState, LocalKitLiquidJoin provides join) {
                     Box(
                         Modifier.fillMaxSize()
                             .then(
@@ -423,7 +413,6 @@ public fun KitScreen(
                             .kitMaxWidth(cap)
                     ) { KitScreenBody(edges) { bodyPart() } }
                 }
-                if (frost != null && merge != null && mergeProgram != null) KitLiquidMergeLayer(merge, frost, mergeProgram, kitLiquidMergeBlur())
                 if (edgesFade && topPart != null && frost != null) {
                     if (look == KitTopEdgeLook.Ground) KitGroundBand(bandPx = { statusPx + topPx }, under = under)
                     else KitStatusEdge(frost, statusPx, under = under, blur = statusBlur)
@@ -444,7 +433,7 @@ public fun KitScreen(
                                     .kitLiquidTouchWatch(barTouch)
                                     .then(if (barFace != null) kitLiquidWordsHost(LiquidRole.Bar, frost) else Modifier)
                             ) {
-                                CompositionLocalProvider(LocalKitLiquidMerge provides merge, LocalKitLiquidJoin provides join) {
+                                CompositionLocalProvider(LocalKitLiquidJoin provides join) {
                                     if (barFace != null) KitLiquidBarPane(barFace.kitLiquidTouchLight(barTouch, LiquidBarShape, barInset), barBody)
                                     else if (frostedFace != null) KitLiquidBarPane(frostedFace)
                                     it()
@@ -477,7 +466,7 @@ public fun KitScreen(
                             )
                             .testTag("kit-screen-bottom")
                     ) {
-                        CompositionLocalProvider(LocalKitLiquidChrome provides frost, LocalKitScreenBottom provides bottomState, LocalKitLiquidMerge provides merge, LocalKitLiquidJoin provides join) { it() }
+                        CompositionLocalProvider(LocalKitLiquidChrome provides frost, LocalKitScreenBottom provides bottomState, LocalKitLiquidJoin provides join) { it() }
                     }
                 }
             }

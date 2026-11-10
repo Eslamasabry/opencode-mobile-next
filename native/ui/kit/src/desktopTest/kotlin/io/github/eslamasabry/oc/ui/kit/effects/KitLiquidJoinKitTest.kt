@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.style.GlassLookId
@@ -128,5 +129,74 @@ class KitLiquidJoinKitTest {
         mainClock.advanceTimeBy(1_000)
         waitForIdle()
         onAllNodes(joinedPane, useUnmergedTree = true).assertCountEquals(0)
+    }
+
+    /** A chat-like page whose bottom block is one liquid slab (the body "bottom"), and the jump pill over the body. */
+    @Composable
+    private fun PillScene(pill: Boolean) {
+        val source = rememberKitFrostState()
+        KitScreen(
+            page = true,
+            overlayChrome = true,
+            frost = source,
+            topBar = { Box(Modifier.fillMaxWidth().height(56.dp)) },
+            bottom = {
+                io.github.eslamasabry.oc.ui.kit.frame.KitReportBottomSlab(true)
+                val shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp)
+                val body = rememberKitLiquidJoinBody("bottom")
+                val face = kitLiquidFace(io.github.eslamasabry.oc.ui.design.effects.LiquidRole.Composer, LocalKitLiquidChrome.current, shape, join = body)
+                Box(Modifier.fillMaxWidth().height(104.dp).kitLiquidJoinRest(body, shape).then(face ?: Modifier.background(Color.Gray)))
+            },
+            edges = KitScreenEdges.Bleed,
+        ) {
+            Box(Modifier.fillMaxSize()) {
+                Column(Modifier.fillMaxSize().kitFrostSource(source)) {
+                    repeat(24) { i -> Box(Modifier.fillMaxWidth().height(30.dp).background(if (i % 2 == 0) Color(0xFF3355FF) else Color(0xFFFFCC22))) }
+                }
+                io.github.eslamasabry.oc.ui.kit.frame.KitJumpPill(
+                    "Jump to latest",
+                    {},
+                    visible = pill,
+                    modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 140.dp),
+                    backdrop = source,
+                )
+            }
+        }
+    }
+
+    private fun pillPanes(appearance: KitAppearance, joins: Boolean, pill: Boolean): Int {
+        var count = -1
+        runDesktopComposeUiTest(412, 800) {
+            setContent { KitTheme(appearance = appearance, platform = platform(joins), localeTag = "en") { PillScene(pill) } }
+            waitForIdle()
+            mainClock.advanceTimeBy(1_000)
+            waitForIdle()
+            count = onAllNodes(joinedPane, useUnmergedTree = true).fetchSemanticsNodes().size
+        }
+        return count
+    }
+
+    @Test
+    fun `liquid join - the jump pill and the message box are one body of glass`() {
+        kotlin.test.assertEquals(2, pillPanes(glass, joins = true, pill = true), "the box's side and the pill's side")
+    }
+
+    @Test
+    fun `liquid join - with no pill shown, or no lens pass, the box is the library's pane`() {
+        kotlin.test.assertEquals(0, pillPanes(glass, joins = true, pill = false), "no pill")
+        kotlin.test.assertEquals(0, pillPanes(glass, joins = false, pill = true), "no lens pass")
+        kotlin.test.assertEquals(0, pillPanes(glass.copy(glassLook = GlassLookId.Frosted), joins = true, pill = true), "the Frosted look")
+    }
+
+    @Test
+    fun `liquid join - the joined pill rests sunk a quarter of its height into the box`() = runDesktopComposeUiTest(412, 800) {
+        setContent { KitTheme(appearance = glass, platform = platform(true), localeTag = "en") { PillScene(true) } }
+        waitForIdle()
+        mainClock.advanceTimeBy(1_000)
+        waitForIdle()
+        val pill = onNodeWithTag("kit-jump-pill-veiled", useUnmergedTree = true).fetchSemanticsNode().boundsInWindow
+        val box = onAllNodes(joinedPane, useUnmergedTree = true).fetchSemanticsNodes().map { it.boundsInWindow }.maxBy { it.height }
+        val sink = io.github.eslamasabry.oc.ui.design.effects.LiquidJoin.PILL_SINK_DP * density.density
+        kotlin.test.assertEquals(box.top + sink, pill.bottom, 1.5f, "the pill's foot ${pill.bottom} vs the box's top ${box.top}")
     }
 }

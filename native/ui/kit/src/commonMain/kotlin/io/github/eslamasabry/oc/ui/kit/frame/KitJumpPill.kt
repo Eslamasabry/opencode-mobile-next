@@ -1,11 +1,13 @@
 package io.github.eslamasabry.oc.ui.kit.frame
 
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.runtime.getValue
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.unit.toSize
+import androidx.compose.foundation.layout.offset
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidJoinRest
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.remember
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidPressLight
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidSwell
@@ -136,45 +138,117 @@ public fun KitJumpPill(
         return
     }
     val specs = KitMotion.specs
-    // Fluid glass (KitLiquidMerge.kt): over a glass slab the bottom pill is a drop of it. It rises out of the slab's
-    // top edge on the release spring, its neck thinning until it lets go, and sinks back into it when it leaves.
-    val merged =
-        backdrop != null && edge == KitJumpEdge.Bottom && state.travels && kitScreenBottomIsSlab() &&
-            io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidMerge.current != null
-    val risePx =
-        with(LocalDensity.current) { (if (merged) PILL_DROP_RISE_DP else JumpPillRules.riseDp(edge, state)).dp.roundToPx() }
+    // Joined glass (KitLiquidJoin.kt): over a liquid message box the bottom pill is a drop of it, one body of glass with
+    // it. It rests sunk a quarter of its height into the box; it rises out of the box narrow, passes its rest, turns and
+    // widens, its words showing once it is 70 % wide; leaving, it narrows and sinks back in.
+    val joinBody = io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidJoin.current?.bodies?.get("bottom")
+    val joinable = backdrop != null && edge == KitJumpEdge.Bottom && state.travels && kitScreenBottomIsSlab() && joinBody?.granted == true
+    if (joinable && joinBody != null) {
+        AnimatedVisibility(
+            visible,
+            modifier,
+            enter = EnterTransition.None,
+            exit = fadeOut(specs.hold(io.github.eslamasabry.oc.ui.design.effects.LiquidJoin.CLOSE_MS)),
+            label = "kit.jump",
+        ) {
+            val leaving = transition.targetState == EnterExitState.PostExit
+            val drop = io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidJoinDrop("bottom")
+            val motion = if (drop != null) kitJumpJoinMotion(drop, leaving) else null
+            val outer = remember { androidx.compose.runtime.mutableStateOf(androidx.compose.ui.geometry.Rect.Zero) }
+            val sinkPx = with(LocalDensity.current) { io.github.eslamasabry.oc.ui.design.effects.LiquidJoin.PILL_SINK_DP.dp.toPx() }
+            // It shows once its glass is joined (a frame after it is composed), so the lone pane never flashes at full
+            // width; if the join does not come it shows anyway.
+            val waited = remember { androidx.compose.runtime.mutableStateOf(false) }
+            androidx.compose.runtime.LaunchedEffect(Unit) {
+                kotlinx.coroutines.delay(JOIN_WAIT_MS)
+                waited.value = true
+            }
+            PillFace(
+                label,
+                onClick,
+                Modifier.kitLeaving(leaving)
+                    .graphicsLayer { alpha = if (drop == null || drop.owner.partnerOf(drop) != null || waited.value) 1f else 0f }
+                    .onGloballyPositioned { outer.value = androidx.compose.ui.geometry.Rect(it.positionInWindow(), it.size.toSize()) }
+                    .offset {
+                        // Rest sunk into the box (shape rule 4): the face's bottom edge PILL_SINK_DP below the box's top.
+                        val box = joinBody.rest
+                        val face = drop?.rest?.height ?: 0f
+                        val o = outer.value
+                        if (box.height <= 0f || o.height <= 0f || face <= 0f) IntOffset.Zero
+                        else IntOffset(0, kotlin.math.round(box.top + sinkPx - (o.center.y + face / 2f)).toInt())
+                    },
+                edge,
+                backdrop,
+                drop,
+                labelAlpha = motion?.label ?: { 1f },
+            )
+        }
+        return
+    }
+    val risePx = with(LocalDensity.current) { JumpPillRules.riseDp(edge, state).dp.roundToPx() }
     // The veiled pill also grows from 90 % on the kit's fast spring while it may travel (Calm only fades).
-    val grows = backdrop != null && state.travels && !merged
+    val grows = backdrop != null && state.travels
     val enter: EnterTransition =
-        fadeIn(specs.pace(if (merged) KitPace.Quick else KitPace.Standard)) +
-            (if (risePx != 0) slideInVertically(if (merged) specs.release() else specs.pace<IntOffset>(KitPace.Standard)) { risePx } else EnterTransition.None) +
+        fadeIn(specs.pace(KitPace.Standard)) +
+            (if (risePx != 0) slideInVertically(specs.pace<IntOffset>(KitPace.Standard)) { risePx } else EnterTransition.None) +
             if (grows) scaleIn(specs.spatialFast(), initialScale = PILL_ENTER_SCALE) else EnterTransition.None
     val exit: ExitTransition =
-        fadeOut(specs.pace(if (merged) KitPace.Standard else KitPace.Quick)) +
-            (if (risePx != 0) slideOutVertically(specs.pace<IntOffset>(if (merged) KitPace.Standard else KitPace.Quick)) { risePx } else ExitTransition.None) +
+        fadeOut(specs.pace(KitPace.Quick)) +
+            (if (risePx != 0) slideOutVertically(specs.pace<IntOffset>(KitPace.Quick)) { risePx } else ExitTransition.None) +
             if (grows) scaleOut(specs.spatialFast(), targetScale = PILL_ENTER_SCALE) else ExitTransition.None
     AnimatedVisibility(visible, modifier, enter = enter, exit = exit, label = "kit.jump") {
-        // The drop lives while the pill is composed (arriving, resting, leaving), so nothing is bridged once it is gone.
-        val drop = io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidDrop("bottom", on = merged)
-        val pull by transition.animateFloat(
-            transitionSpec = { if (targetState == EnterExitState.Visible) specs.effectsSlow() else specs.effectsFast() },
-            label = "kit.jump.pull",
-        ) { if (it == EnterExitState.Visible) 0f else 1f }
-        PillFace(
-            label,
-            onClick,
-            Modifier.kitLeaving(transition.targetState == EnterExitState.PostExit)
-                // Written while the layer updates, so the pill is not recomposed for each frame of the pull.
-                .then(if (drop == null) Modifier else Modifier.graphicsLayer { drop.pull = pull }),
-            edge,
-            backdrop,
-            drop,
-        )
+        PillFace(label, onClick, Modifier.kitLeaving(transition.targetState == EnterExitState.PostExit), edge, backdrop)
     }
 }
 
-/** How far below its rest the drop starts, in dp: its face (32) and its gap to the slab (8), so it starts inside it. */
-private const val PILL_DROP_RISE_DP = 44
+/** How long a joined pill waits for its glass to join before it shows as a lone pane, ms. */
+private const val JOIN_WAIT_MS: Long = 120
+
+/** A joined pill's motion now: its words' alpha (they show once it is 70 % wide). */
+private class JumpJoinMotion(val label: () -> Float)
+
+/**
+ * The joined pill's motion (`LiquidJoin`, the note's "Drop, rebound, fill" upwards): it rises [LiquidJoin.PILL_RISE_DP]
+ * out of the box, half [LiquidJoin.PILL_HALF_DP] wide, on (0.62, 800), passes its rest and turns; 20 ms after the turn it
+ * widens on (0.92, 900). Leaving, it narrows (2400), then sinks back in 60 ms later (2000). Written to [drop].
+ */
+@Composable
+private fun kitJumpJoinMotion(drop: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidJoinDrop, leaving: Boolean): JumpJoinMotion {
+    val specs = KitMotion.specs
+    val density = LocalDensity.current
+    val j = io.github.eslamasabry.oc.ui.design.effects.LiquidJoin
+    val length = remember { androidx.compose.animation.core.Animatable(0f) }
+    val fill = remember { androidx.compose.animation.core.Animatable(0f) }
+    val calm = remember { androidx.compose.animation.core.Animatable(0f) }
+    val risePx = with(density) { j.PILL_RISE_DP.dp.toPx() }
+    val halfPx = with(density) { j.PILL_HALF_DP.dp.toPx() }
+    val reachPx = with(density) { j.REACH_PILL_DP.dp.toPx() }
+    drop.reachesCentre = false
+    drop.reach = { reachPx * (1f + j.PILL_REACH_SWELL * (1f - calm.value.coerceIn(0f, 1f))) }
+    drop.shape = { rest ->
+        val cy = rest.center.y + (1f - length.value) * risePx
+        val half = halfPx + (rest.width / 2f - halfPx) * fill.value.coerceIn(0f, 1f)
+        androidx.compose.ui.geometry.Rect(rest.center.x - half, cy - rest.height / 2f, rest.center.x + half, cy + rest.height / 2f)
+    }
+    androidx.compose.runtime.LaunchedEffect(leaving) {
+        if (!leaving) {
+            launch { length.animateTo(1f, specs.liquid(j.DROP_ZETA, j.PILL_RISE_K)) }
+            launch { calm.animateTo(1f, specs.liquid(1f, j.PILL_RISE_K)) }
+            launch {
+                kotlinx.coroutines.delay(specs.delayMs(j.turnMs(j.DROP_ZETA, j.PILL_RISE_K) + j.FILL_AFTER_TURN_MS))
+                fill.animateTo(1f, specs.liquid(j.FILL_ZETA, j.FILL_K))
+            }
+        } else {
+            launch { fill.animateTo(0f, specs.liquid(1f, j.EMPTY_K)) }
+            launch {
+                kotlinx.coroutines.delay(specs.delayMs(j.PILL_DRAW_UP_AFTER_MS.toFloat()))
+                launch { calm.animateTo(0f, specs.liquid(1f, j.DRAW_UP_K)) }
+                length.animateTo(0f, specs.liquid(1f, j.DRAW_UP_K))
+            }
+        }
+    }
+    return remember { JumpJoinMotion { ((fill.value - j.LABEL_FROM) / .25f).coerceIn(0f, 1f) } }
+}
 
 /** E20-S30: the veiled pill's visible face height (inside its 48 dp target). */
 public const val JUMP_PILL_FACE_DP: Int = 32
@@ -189,13 +263,14 @@ private fun PillFace(
     modifier: Modifier,
     edge: KitJumpEdge,
     backdrop: KitFrostState?,
-    drop: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidDrop? = null,
+    drop: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidJoinDrop? = null,
+    labelAlpha: () -> Float = { 1f },
 ) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     val shape = KitShapeId.Pill.shape()
     if (backdrop != null) {
-        VeiledPillFace(label, onClick, modifier, edge, backdrop, drop)
+        VeiledPillFace(label, onClick, modifier, edge, backdrop, drop, labelAlpha)
         return
     }
     // A small floating pill (36 dp face) inside its 48 dp target: it points the way without covering the reading
@@ -230,7 +305,8 @@ private fun VeiledPillFace(
     modifier: Modifier,
     edge: KitJumpEdge,
     backdrop: KitFrostState,
-    drop: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidDrop? = null,
+    drop: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidJoinDrop? = null,
+    labelAlpha: () -> Float = { 1f },
 ) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
@@ -238,7 +314,7 @@ private fun VeiledPillFace(
     val veil = rememberKitChromeVeil()
     val interactions = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     // Glass: a drop of liquid glass over the transcript (Android 13+, not held); else the veil.
-    val liquid = kitLiquidFace(LiquidRole.Pill, backdrop, shape)
+    val liquid = kitLiquidFace(LiquidRole.Pill, backdrop, shape, join = drop)
     // The drop answers the finger: it swells a little and its edge catches light (KitLiquidTouch.kt).
     val liquidPress = rememberKitLiquidPress(interactions, on = liquid != null)
     Box(
@@ -251,26 +327,26 @@ private fun VeiledPillFace(
     ) {
         Row(
             Modifier.heightIn(min = JUMP_PILL_FACE_DP.dp)
+                .kitLiquidJoinRest(drop, shape)
                 .then(
                     liquid
                         ?: Modifier.kitBackdropVeil(backdrop, veil, colors.surface3, shape).border(1.dp, colors.hairline, shape)
                 )
                 .kitLiquidPressLight(liquidPress, shape)
-                .then(
-                    if (drop == null) Modifier
-                    else
-                        Modifier.onGloballyPositioned {
-                            drop.rect = it.boundsInWindow()
-                            drop.radius = it.size.height / 2f
-                        }
-                )
                 .padding(horizontal = Space.S3.dp)
                 .testTag("kit-jump-pill-veiled"),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            KitGlyph(if (edge == KitJumpEdge.Bottom) KitIcons.down else KitIcons.send, colors.text2, 14.dp)
-            KitText(label, role = TypeRole.Label, tone = TextTone.Primary, kind = KitTextKind.Frame, maxLines = 1)
+            // A joined pill's words show once its glass is wide enough to hold them.
+            Row(
+                Modifier.graphicsLayer { alpha = labelAlpha() },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                KitGlyph(if (edge == KitJumpEdge.Bottom) KitIcons.down else KitIcons.send, colors.text2, 14.dp)
+                KitText(label, role = TypeRole.Label, tone = TextTone.Primary, kind = KitTextKind.Frame, maxLines = 1)
+            }
         }
     }
 }

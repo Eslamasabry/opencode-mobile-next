@@ -3,7 +3,8 @@ package io.github.eslamasabry.oc.ui.kitchat.composer
 import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
 import io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidChrome
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidFace
-import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidMergeBody
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidJoinRest
+import io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidJoinBody
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidTouchLight
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidTouchWatch
 import androidx.compose.foundation.layout.widthIn
@@ -181,7 +182,9 @@ public fun KitComposerBox(
         val hairline = io.github.eslamasabry.oc.ui.kit.foundation.kitHairline()
         // Glass: on the chat's overlaid bottom block the box is liquid glass over the transcript scrolling behind it
         // (Android 13+, where not held); null keeps the style's own face.
-        val liquid = kitLiquidFace(LiquidRole.Composer, LocalKitLiquidChrome.current, look.shape)
+        // Joined glass: the box is the body the jump pill joins ("bottom"), one body of glass while both are liquid.
+        val joinBody = rememberKitLiquidJoinBody("bottom")
+        val liquid = kitLiquidFace(LiquidRole.Composer, LocalKitLiquidChrome.current, look.shape, join = joinBody)
         val slab = kitComposerSlab()
         // Nothing inside the box is glass of its own: its chips and Stop are parts of this one pane.
         CompositionLocalProvider(LocalKitLiquidChrome provides null, LocalKitComposerSlab provides slab) {
@@ -191,7 +194,7 @@ public fun KitComposerBox(
             Modifier.fillMaxWidth()
                 .then(shadow)
                 .kitLiquidTouchWatch(touch)
-                .then(if (liquid != null) Modifier.kitLiquidMergeBody("bottom", corner, LiquidRole.Composer) else Modifier)
+                .then(if (liquid != null) Modifier.kitLiquidJoinRest(joinBody, look.shape) else Modifier)
                 .then(liquid ?: look.modifier)
                 .kitLiquidTouchLight(touch, look.shape)
                 .then(
