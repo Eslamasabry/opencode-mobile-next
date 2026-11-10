@@ -614,6 +614,9 @@ public fun KitMenuPanel(
     Column(
         modifier
             .widthIn(min = MENU_MIN_WIDTH_DP.dp, max = MENU_MAX_WIDTH_DP.dp)
+            // As wide as its widest row needs (owner 2026-11-11: "size should be determined based on the content"),
+            // within the limits; the rows fill that width. A joined menu's rest box, column and fill follow it.
+            .width(androidx.compose.foundation.layout.IntrinsicSize.Max)
             .then(if (joined) Modifier else Modifier.clip(shape))
             .kitLiquidTouchWatch(touch)
             .kitLiquidJoinRest(join, shape)
