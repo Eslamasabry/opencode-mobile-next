@@ -86,7 +86,7 @@ def screen_menu(scroll, crafted, grow=1.0):
     img = Image.fromarray((np.clip(out, 0, 1) * 255).astype(np.uint8))
     d = ImageDraw.Draw(img)
     d.text((96, 66), "Sunset palette for the light theme", font=m.font(28), fill=(240, 241, 244))
-    d.text((96, 104), "project · This phone · Git", font=m.font(20), fill=(170, 174, 184))
+    d.text((96, 104), "project · This phone · Git", font=m.font(20), fill=SECOND)
     d.text((44, 84), "←", font=m.font(30), fill=(240, 241, 244))
     d.text((640, 78), "···", font=m.font(30), fill=(240, 241, 244))
     if grow > 0.9:
@@ -111,17 +111,18 @@ def screen_pill(scroll, crafted, rise=1.0):
     img = Image.fromarray((np.clip(out, 0, 1) * 255).astype(np.uint8))
     d = ImageDraw.Draw(img)
     d.text((96, 66), "Sunset palette for the light theme", font=m.font(28), fill=(240, 241, 244))
-    d.text((96, 104), "project · This phone · Git", font=m.font(20), fill=(170, 174, 184))
+    d.text((96, 104), "project · This phone · Git", font=m.font(20), fill=SECOND)
     d.text((44, 84), "←", font=m.font(30), fill=(240, 241, 244))
     d.text((640, 78), "···", font=m.font(30), fill=(240, 241, 244))
     if rise > 0.6:
         d.text((262, label_y * DP - 14), "↓ Jump to latest", font=m.font(22), fill=(240, 241, 244))
-    d.text((60, 590), "Ask OpenCode…", font=m.font(26), fill=(170, 174, 184))
+    d.text((60, 590), "Ask OpenCode…", font=m.font(26), fill=SECOND)
     d.text((56, 676), "+", font=m.font(34), fill=(240, 241, 244))
     d.ellipse((618, 664, 678, 724), fill=(52, 199, 120))
     return img
 
 
+SECOND = (170, 174, 184)  # the second line's ink on glass
 REACH_MENU = float(os.environ.get("REACH_MENU", "134"))
 REACH_PILL = float(os.environ.get("REACH_PILL", "56"))
 

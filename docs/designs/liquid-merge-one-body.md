@@ -102,6 +102,14 @@ The owner asked for the joined outline to be crafted geometry, not whatever a bl
 - The rim that picks up passing content (the reference's edge reflection) is liked as an idea and is its own later
   step: it needs the page outside the pane as an input to the rim pass.
 - No colour fringe.
+- **Words over bright content** (owner 2026-11-11: the bar's second line "wasn't readable on the orange
+  background"). With less blur and a thin tint, the answer must not be more blur, a thicker tint (the washed look)
+  or a plate behind the words (banned 2026-11-08). Proposed: the glass holds back only the light of bright content
+  behind it, a soft knee on luminance inside the lens pass (dark themes: above 0.36 the excess is kept at 0.22 of
+  itself; light themes lift the dark end the same way), so a bright photo stays its colour but deeper. The second
+  line's ink on glass is brighter than on the page. This sits beside the existing ink flip, and would replace
+  `LiquidEdge.faceTint`'s thickening where it applies. Prototype: `rim.py` (`press`), stills `read-*.png`. To be
+  judged on the phone.
 
 ## 2. The joined pane
 

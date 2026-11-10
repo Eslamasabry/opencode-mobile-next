@@ -73,6 +73,14 @@ def lens(soft, bloom, d, gx, gy, rim, bend, tint, mat):
         col = m.sample(soft, XX - gx * amount, YY - gy * amount)
     luma = (col * LUMA).sum(-1, keepdims=True)
     col = np.clip(luma + (col - luma) * mat["sat"] + mat["lift"], 0, 1)
+    if mat.get("press"):
+        # Words on the glass must read over bright content without more blur, more tint or a plate behind them:
+        # the glass holds back only the LIGHT of what is bright behind it (a soft knee on luminance), keeping its
+        # colour. Dark themes; a light theme lifts the dark end the same way.
+        knee, slope = mat["press"]
+        lum = (col * LUMA).sum(-1, keepdims=True)
+        held = np.where(lum > knee, knee + (lum - knee) * slope, lum)
+        col = col * (held / np.maximum(lum, 1e-4))
     t = (tint * mat["tint_scale"])[..., None]
     col = col * (1 - t) + m.INK * t
     if mat["gloss"] > 0:  # a soft gloss inside the rim where the edge faces the top start
