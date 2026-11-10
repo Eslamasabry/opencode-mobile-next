@@ -16,9 +16,11 @@ outline, one rim light. They do not let go of each other.
 full. Its method is used; its text is not copied (ShaderToy code is non-commercial share-alike unless stated, the app
 is MIT).
 
-**Moving prototype (a spike, not app code):** `liquid-merge-one-body/merge-menu-stay.mp4` and `merge-pill-stay.mp4`,
-drawn by `liquid-merge-one-body/proto.py`. Left half: today. Right half: the joined body. It shows the shape and the
-outline. It does not yet show the kit's real motion curves or the calmer bend of section 2; see "Prototype, next".
+**Moving prototype (a spike, not app code):** `liquid-merge-one-body/joined-menu.mp4` and `joined-pill.mp4`, drawn by
+`liquid-merge-one-body/proto.py` (numpy; 2 px = 1 dp; four times slower than real). Left half: today's kit. Right
+half: this design: the field of section 1, each pane drawing its own side with its own frost, rim, bend and tint mixed
+per pixel, the pieces moving on the kit's release spring. The page behind is a stand-in and the lens is a close copy
+of the library's, so it shows the shape, the outline and the motion, not the final look of the glass.
 
 ## What v2 changes from v1, and why
 
@@ -202,12 +204,6 @@ bridge.
 3. The swell is judged by the owner on the phone, next to the reference clip, in light and dark, over a moving
    transcript.
 4. The benchmark check in section 5.
-
-## Prototype, next
-
-`proto.py` still draws v1's lens (normalised direction, one recipe) and its own timing. Before the owner's approval
-it is updated to this document: exact mixed directions, the per-pixel recipe mix, the kit's real menu and pill
-motion, and no letting go.
 
 ## Later
 
