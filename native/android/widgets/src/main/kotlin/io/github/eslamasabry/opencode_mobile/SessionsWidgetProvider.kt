@@ -16,10 +16,12 @@ import org.json.JSONObject
 open class SessionsWidgetProvider : AppWidgetProvider() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
         ids.forEach {
-            manager.updateAppWidget(
-                it,
-                buildViews(context, it, manager.getAppWidgetOptions(it), javaClass),
-            )
+            widgetSafely {
+                manager.updateAppWidget(
+                    it,
+                    buildViews(context, it, manager.getAppWidgetOptions(it), javaClass),
+                )
+            }
         }
     }
 
@@ -29,11 +31,11 @@ open class SessionsWidgetProvider : AppWidgetProvider() {
         id: Int,
         options: Bundle,
     ) {
-        manager.updateAppWidget(id, buildViews(context, id, options, javaClass))
+        widgetSafely { manager.updateAppWidget(id, buildViews(context, id, options, javaClass)) }
     }
 
     override fun onDeleted(context: Context, ids: IntArray) {
-        WidgetV2Bridge.deleteWidgets(context, ids)
+        widgetSafely { WidgetV2Bridge.deleteWidgets(context, ids) }
     }
 
     companion object {

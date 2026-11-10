@@ -1,5 +1,18 @@
 package io.github.eslamasabry.opencode_mobile
 
+/**
+ * A widget refresh runs inside the app's own process, on Android's schedule, possibly before the app has finished
+ * starting. Whatever goes wrong there, the launcher keeps the picture it has and the app stays up: an error that
+ * escaped a provider ended the whole app on the first open after an update (owner's phone, 3.0.0+10020).
+ */
+internal inline fun widgetSafely(block: () -> Unit) {
+    try {
+        block()
+    } catch (_: RuntimeException) {
+        // The next refresh draws it; nothing to tell the person.
+    }
+}
+
 /** Every widget receiver. The picker offers two entries (owner, 2026-10-29): Conversations
  * (4x2, [SessionsWideWidgetProvider]) and Status (2x2, [StatusWidgetProvider]). The older
  * entries are hidden from the picker but stay registered, so widgets already on a home screen

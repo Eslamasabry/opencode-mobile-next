@@ -27,10 +27,12 @@ open class UsageWidgetProvider : AppWidgetProvider() {
         appWidgetIds: IntArray
     ) {
         for (id in appWidgetIds) {
-            appWidgetManager.updateAppWidget(
-                id,
-                responsiveViews(context, id, appWidgetManager.getAppWidgetOptions(id))
-            )
+            widgetSafely {
+                appWidgetManager.updateAppWidget(
+                    id,
+                    responsiveViews(context, id, appWidgetManager.getAppWidgetOptions(id))
+                )
+            }
         }
     }
 
@@ -40,11 +42,11 @@ open class UsageWidgetProvider : AppWidgetProvider() {
         appWidgetId: Int,
         newOptions: Bundle
     ) {
-        appWidgetManager.updateAppWidget(appWidgetId, responsiveViews(context, appWidgetId, newOptions))
+        widgetSafely { appWidgetManager.updateAppWidget(appWidgetId, responsiveViews(context, appWidgetId, newOptions)) }
     }
 
     override fun onDeleted(context: Context, ids: IntArray) {
-        WidgetV2Bridge.deleteWidgets(context, ids)
+        widgetSafely { WidgetV2Bridge.deleteWidgets(context, ids) }
     }
 
     companion object {

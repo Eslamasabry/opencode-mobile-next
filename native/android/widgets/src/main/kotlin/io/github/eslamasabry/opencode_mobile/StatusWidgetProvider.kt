@@ -28,15 +28,15 @@ import io.github.eslamasabry.oc.android.widgets.NativeStrings
  */
 open class StatusWidgetProvider : AppWidgetProvider() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
-        ids.forEach { manager.updateAppWidget(it, buildViews(context, it, manager.getAppWidgetOptions(it))) }
+        ids.forEach { widgetSafely { manager.updateAppWidget(it, buildViews(context, it, manager.getAppWidgetOptions(it))) } }
     }
 
     override fun onAppWidgetOptionsChanged(context: Context, manager: AppWidgetManager, id: Int, options: Bundle) {
-        manager.updateAppWidget(id, buildViews(context, id, options))
+        widgetSafely { manager.updateAppWidget(id, buildViews(context, id, options)) }
     }
 
     override fun onDeleted(context: Context, ids: IntArray) {
-        WidgetV2Bridge.deleteWidgets(context, ids)
+        widgetSafely { WidgetV2Bridge.deleteWidgets(context, ids) }
     }
 
     companion object {

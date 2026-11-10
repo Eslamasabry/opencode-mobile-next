@@ -37,8 +37,10 @@ class PreviewStores(
     redactor: Redactor,
     private val gate: MigrationGate,
     migration: MigrationWiring,
+    build: AppBuildInfo,
 ) {
-    val prefs = AndroidDataStores.flutterPrefs(application, gate, dispatchers.io)
+    val prefs =
+        AndroidDataStores.flutterPrefs(application, gate, dispatchers.io, EarlyReads.policy(build.debuggable))
     val secrets =
         migration.ledgered(AndroidDataStores.secrets(application, gate, redactor, dispatchers.io))
     val lanes = DefaultWriterLanes()
