@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Process-death restore gate (foundations audit gap 2): what comes back after Android kills the app in the background.
 #
-#   PC_HEAVY_EMULATOR=1 /home/eslam/Storage2/tools/pc-heavy.sh process-death -- \
+#   PC_HEAVY_EMULATOR=1 $HOME/Storage2/tools/pc-heavy.sh process-death -- \
 #       native/tool/qa/process_death_e2e.sh --serial emulator-5584 [--package <id>] [--out <dir>]
 #
 # EMULATOR ONLY. The script refuses any serial that is not a running emulator (ro.kernel.qemu), never touches a phone,

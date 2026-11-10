@@ -46,8 +46,12 @@ class NativeShipGateTest {
     fun `the Linux seams and the speech port are bound to the real runtime`() {
         val wiring = File(appMain, "kotlin/io/github/eslamasabry/opencode_mobile/graph/LinuxVoiceWiring.kt").readText()
         assertTrue("fun linuxHost(runtime: BuiltinRuntime): LinuxHost = runtime.host" in wiring)
-        assertTrue("fun linuxLifecycle(runtime: BuiltinRuntime): LinuxLifecycle = runtime.lifecycle" in wiring)
-        assertTrue("fun phoneServerSource(runtime: BuiltinRuntime): PhoneServerSource = runtime.server" in wiring)
+        // The lifecycle and the phone server go through NativePhoneSetup (a726ffb33f: one durable job owns setup and
+        // recovery), which itself drives the real runtime, never a stand-in.
+        assertTrue("fun linuxLifecycle(setup: NativePhoneSetup): LinuxLifecycle = setup.lifecycle" in wiring)
+        assertTrue("runtime.serverSource(setup::update)" in wiring, "the phone server comes from the real runtime")
+        val setup = File(appMain, "kotlin/io/github/eslamasabry/opencode_mobile/graph/NativePhoneSetup.kt").readText()
+        assertTrue("private val runtime: BuiltinRuntime," in setup, "NativePhoneSetup must drive the real BuiltinRuntime")
         assertTrue("BuiltinLinux.get(app)" in wiring, "BuiltinRuntime must drive :android:linux's BuiltinLinux")
         assertTrue("SherpaOnnx.whisper(" in wiring && "SherpaOnnx.kokoro(" in wiring)
         val voice = File(appMain, "kotlin/io/github/eslamasabry/opencode_mobile/graph/VoiceWiring.kt").readText()

@@ -106,9 +106,7 @@
 :feature:agenttools	F	27-build-AGENT-2	parity-p12
 :feature:widgetactions	F	27-build-AGENT-2	parity-p12
 :feature:monitor	F	27-build-AGENT-2	parity-p12
-:android:terminal	F	27-build-AGENT-2	parity-p12
 :core:net-okhttp	F	27-build-AGENT-2	parity-p12
-:protocol:codex	F	27-build-AGENT-2	parity-p12
 :feature:codexprobe	F	27-build-AGENT-2	parity-p12
 :feature:handoff	F	27-build-AGENT-2	parity-p12
 :feature:desktopupdates	F	50-blocked-5-NAV-STATE-BUILD	parity-p12
@@ -120,3 +118,5 @@
 
 :engine:factsbook	F	s23-factsbook	parity-p12
 :feature:factsbook	F	s23-factsbook	parity-p12
+:engine:team	F	ai-team	parity-p12
+:feature:team	F	ai-team	parity-p12

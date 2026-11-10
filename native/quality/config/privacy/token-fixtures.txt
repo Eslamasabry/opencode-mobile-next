@@ -24,7 +24,6 @@ test/failed_job_report_test.dart
 test/kit/kit_code_block_test.dart
 test/kit/kit_diff_view_test.dart
 test/kit/kit_notice_test.dart
-test/kit/kit_redact_memo_test.dart
 test/kit/kit_redact_test.dart
 test/kit/kit_state_view_test.dart
 test/kit/kit_terminal_view_test.dart

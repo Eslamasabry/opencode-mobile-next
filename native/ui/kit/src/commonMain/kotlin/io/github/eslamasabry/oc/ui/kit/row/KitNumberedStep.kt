@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -31,6 +32,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 
 /**
  * One numbered step of a short how-to (Dart `KitRow.number` with `leadingAtTop` and `below`,
@@ -99,11 +101,21 @@ public fun KitNumberedStep(
     }
 }
 
-/** One point of a short list (Dart `Bullet`, guide_screen.dart): a quiet dot and the words; the dot is not read. */
+/**
+ * One point of a short list (Dart `Bullet`, guide_screen.dart): a quiet dot and the words; the dot is not read.
+ * The dot is drawn, not a "•" character (B-KIT-GLYPH-001), and sits in the middle of the first line of the words.
+ */
 @Composable
 public fun KitBulletLine(text: String, modifier: Modifier = Modifier) {
-    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-        KitText("•", Modifier.clearAndSetSemantics {}, tone = TextTone.Secondary, maxLines = 1)
+    val colors = LocalKitColors.current
+    val scale = minOf(kitTextScale(), TextScalePolicy.ICON_CAP)
+    val firstLine = with(LocalDensity.current) { LocalKitTypography.current.style(TypeRole.Body).lineHeight.toDp() } * kitTextScale()
+    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Space.S2.dp), verticalAlignment = Alignment.Top) {
+        Box(Modifier.height(firstLine).clearAndSetSemantics {}, contentAlignment = Alignment.Center) {
+            Box(Modifier.size((BULLET_DOT_DP * scale).dp).background(colors.text2, CircleShape))
+        }
         KitText(text, Modifier.weight(1f))
     }
 }
+
+private const val BULLET_DOT_DP = 5f

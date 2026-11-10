@@ -1,12 +1,12 @@
 #!/bin/bash
 # testlab-bench.sh <startup|frames|profile|all> <service-account.json|-> <out-dir> [device model] [android version]
 # Runs the same Macrobenchmark classes on a real Firebase Test Lab device (free daily quota; billing stays off).
-# Project id: /home/eslam/Storage2/tools/testlab-project-id.txt. Pass "-" as the key to use the gcloud login already on this machine.
+# Project id: $HOME/Storage2/tools/testlab-project-id.txt. Pass "-" as the key to use the gcloud login already on this machine.
 set -euo pipefail
 what=${1:-startup}; key=${2:--}; out=${3:?out dir}; model=${4:-SC-51E}; ver=${5:-36}
 cd "$(dirname "$0")/../.."
-gcloud=${GCLOUD:-gcloud}; [ -x /home/eslam/Storage2/tools/google-cloud-sdk/bin/gcloud ] && gcloud=/home/eslam/Storage2/tools/google-cloud-sdk/bin/gcloud
-proj=${TESTLAB_PROJECT:-$(cat /home/eslam/Storage2/tools/testlab-project-id.txt 2>/dev/null || echo oc-mobile-testlab-8699)}
+gcloud=${GCLOUD:-gcloud}; [ -x $HOME/Storage2/tools/google-cloud-sdk/bin/gcloud ] && gcloud=$HOME/Storage2/tools/google-cloud-sdk/bin/gcloud
+proj=${TESTLAB_PROJECT:-$(cat $HOME/Storage2/tools/testlab-project-id.txt 2>/dev/null || echo oc-mobile-testlab-8699)}
 [ "$key" != "-" ] && "$gcloud" auth activate-service-account --key-file "$key" >/dev/null
 T=io.github.eslamasabry.oc.benchmark
 classes=()

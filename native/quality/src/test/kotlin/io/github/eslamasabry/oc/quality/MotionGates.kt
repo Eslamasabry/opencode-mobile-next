@@ -56,6 +56,8 @@ internal object MotionGates {
                 "the Style surface cross-fade on Pulse, its length 0 under reduced motion",
             "ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/foundation/KitFrost.kt" to
                 "the frost fade, snapped under reduced motion",
+            "ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/frame/KitTopEdge.kt" to
+                "the top edge's glass coming in under scrolled content: KitFrost's own 180 ms fade, snapped under reduced motion",
             "ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/effects/KitLiquidGlass.kt" to
                 "the liquid ink flip (owned by the glass work), a still frame under reduced motion",
             "ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/choice/KitModeSegmented.kt" to
