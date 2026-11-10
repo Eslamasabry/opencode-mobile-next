@@ -140,6 +140,9 @@ public interface AgentsActions {
 
     public fun cancelPhoneInstall() {}
 
+    /** "Update the agent helper" when the helper is missing or older than the app can run. */
+    public fun updatePhoneHelper() {}
+
     public fun refreshPhone()
 
     public fun requestPreviousVersion(id: String) {}

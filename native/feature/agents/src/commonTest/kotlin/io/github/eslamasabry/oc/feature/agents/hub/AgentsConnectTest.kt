@@ -49,6 +49,13 @@ class AgentsConnectTest {
 
         override suspend fun refresh(): Outcome<Unit> = Unit.ok()
 
+        val installs = mutableListOf<String>()
+
+        override suspend fun install(id: String): Outcome<PhoneAgentInstallResult> {
+            installs += id
+            return PhoneAgentInstallResult.Started.ok()
+        }
+
         fun set(vararg agents: PhoneAgentRow) {
             state.value = state.value.copy(agents = persistentListOf(*agents))
         }
@@ -123,6 +130,32 @@ class AgentsConnectTest {
         assertFalse(presenter.state.value.helperConnectFailed)
         assertNull(presenter.state.value.helperConnectFailure)
         assertTrue(presenter.state.value.helperConnected)
+    }
+
+    @Test
+    fun `a helper that is too old says so and its update runs the install of an agent that is there`() = runTest {
+        val failure = Failure.Runtime(RuntimeProblem.HelperUpdateRequired)
+        val phone = Phone(listOf(claudeReady, geminiMissing))
+        val presenter = presenter(this, phone, Host(Outcome.Failed(failure)))
+        assertEquals(failure, presenter.state.value.helperConnectFailure)
+        presenter.updatePhoneHelper()
+        assertEquals(listOf("claude"), phone.installs)
+    }
+
+    @Test
+    fun `a failed start replaces the old stopped-by-Android notice, which is only history`() = runTest {
+        val phone = Phone(listOf(claudeReady))
+        phone.state.value =
+            phone.state.value.copy(helperStoppedUnexpectedly = true, helperMayHaveBeenStoppedByAndroid = true)
+        val host = Host(Outcome.Failed(Failure.Runtime(RuntimeProblem.HelperUpdateRequired)))
+        val presenter = presenter(this, phone, host)
+        assertTrue(presenter.state.value.helperConnectFailed)
+        assertFalse(presenter.state.value.phone.helperStoppedUnexpectedly)
+        assertFalse(presenter.state.value.phone.helperMayHaveBeenStoppedByAndroid)
+        // Without a failed attempt after it, the recorded stop is still shown.
+        val quiet = Phone(listOf(claudeReady))
+        quiet.state.value = quiet.state.value.copy(helperStoppedUnexpectedly = true)
+        assertTrue(presenter(this, quiet, Host(Unit.ok())).state.value.phone.helperStoppedUnexpectedly)
     }
 
     @Test

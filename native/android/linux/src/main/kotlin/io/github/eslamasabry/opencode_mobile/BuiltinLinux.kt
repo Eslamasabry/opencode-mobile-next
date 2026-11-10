@@ -3115,6 +3115,7 @@ class BuiltinLinux(private val context: Context) {
         config: String,
         port: Int = 4099,
         expectedHelperVersion: String? = null,
+        testedHelperVersions: Set<String> = emptySet(),
     ): Map<String, Any?> {
         val ticket = captureAgentHostStart(profile, false, null) ?: error("agent_host_unavailable")
         return withAgentHostStart(ticket) {
@@ -3124,7 +3125,10 @@ class BuiltinLinux(private val context: Context) {
                     password,
                     port,
                     config,
-                    PhoneAgentHost.HelperPolicy(expectedVersion = expectedHelperVersion),
+                    PhoneAgentHost.HelperPolicy(
+                        expectedVersion = expectedHelperVersion,
+                        testedVersions = testedHelperVersions,
+                    ),
                 )
             )
         }

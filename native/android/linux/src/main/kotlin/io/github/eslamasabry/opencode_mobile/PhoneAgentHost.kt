@@ -35,6 +35,11 @@ class PhoneAgentHost(private val linux: BuiltinLinux) {
         val expectedVersion: String? = null,
         val restartIfVersionChanged: Boolean = false,
         val forceRestart: Boolean = false,
+        /**
+         * Other helper versions that may run as they are (the older pin the Flutter app installed). A start never
+         * refuses one of these; the pinned [expectedVersion] is what an update installs.
+         */
+        val testedVersions: Set<String> = emptySet(),
     )
 
     companion object {
@@ -138,7 +143,9 @@ class PhoneAgentHost(private val linux: BuiltinLinux) {
     private fun restartWanted(request: StartRequest, current: Process): Boolean {
         val profile = request.profile
         val expected = request.helper.expectedVersion
-        val changed = expected != null && helperVersions[profile] != expected
+        val changed =
+            expected != null &&
+                !HelperVersion.runs(helperVersions[profile], expected, request.helper.testedVersions)
         val policy = request.helper
         if (!policy.forceRestart && !changed) return false
         if (!policy.forceRestart && !policy.restartIfVersionChanged)
@@ -157,8 +164,9 @@ class PhoneAgentHost(private val linux: BuiltinLinux) {
         // A changed symlink alone says nothing about its loaded version.
         val installedVersion =
             request.helper.expectedVersion?.let { expected ->
-                checks.runVersion(profile, PASEO_PATH)?.trim().also {
-                    if (it != expected) throw Failure("helper_update_required")
+                HelperVersion.parse(checks.runVersion(profile, PASEO_PATH)).also {
+                    if (!HelperVersion.runs(it, expected, request.helper.testedVersions))
+                        throw Failure("helper_update_required")
                 }
             }
         admission.previous?.let { retire(profile, it) }

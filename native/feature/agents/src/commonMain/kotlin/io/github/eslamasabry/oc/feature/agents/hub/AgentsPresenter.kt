@@ -122,13 +122,22 @@ public class AgentsPresenter(
 
     public val state: StateFlow<AgentsUi> =
         combine(local, computers.computers, phone.state) { own, saved, phoneState ->
-                own.copy(computers = saved, phone = phoneState)
+                own.copy(computers = saved, phone = phoneState.withoutStaleStop(own.helperConnectFailed))
             }
             .stateIn(
                 scope,
                 SharingStarted.Eagerly,
                 local.value.copy(computers = computers.computers.value, phone = phone.state.value),
             )
+
+    /**
+     * "The helper stopped" is a saved record of an earlier exit. Once a start after it failed, the page names that
+     * failure instead (Flutter showed the record only while no helper ran and nothing newer had happened).
+     */
+    private fun PhoneAgentsState.withoutStaleStop(startFailed: Boolean): PhoneAgentsState =
+        if (startFailed && (helperStoppedUnexpectedly || helperMayHaveBeenStoppedByAndroid))
+            copy(helperStoppedUnexpectedly = false, helperMayHaveBeenStoppedByAndroid = false)
+        else this
 
     private var accountController: AgentAccountController? = null
     private var accountCollection: Job? = null
@@ -447,6 +456,20 @@ public class AgentsPresenter(
                     if (answer == PhoneAgentInstallResult.Started) null else it.installingAgent,
             )
         }
+    }
+
+    /**
+     * "Update the agent helper": the install that sets up the helper again, run for an agent that is already there (its
+     * own steps are skipped when they are in place).
+     */
+    override fun updatePhoneHelper(): Unit = operation {
+        val id = phoneInstalledAgents(phone.state.value).sorted().firstOrNull() ?: return@operation
+        val answer =
+            when (val started = phone.install(id)) {
+                is Outcome.Ok -> started.value
+                is Outcome.Failed -> PhoneAgentInstallResult.Refused(PhoneAgentInstallIssue.Unavailable)
+            }
+        local.update { it.copy(installIssue = (answer as? PhoneAgentInstallResult.Refused)?.issue) }
     }
 
     override fun cancelPhoneInstall(): Unit = operation {

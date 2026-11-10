@@ -8,6 +8,8 @@
     <string name="agentsHelperKeyRefused">Phone agents are not connected: the agent helper did not accept this app’s key.</string>
     <string name="agentsHelperKeyUnreadable">Phone agents are not connected: this phone could not read the agent helper’s key.</string>
     <string name="agentsHelperNoLinux">Phone agents are not connected: this phone’s built-in Linux is not set up.</string>
+    <string name="agentsHelperUpdateRequired">Phone agents are not connected: the agent helper is missing or too old to run.</string>
+    <string name="agentsHelperUpdateAction">Update the agent helper</string>
     <string name="agentsTabsLabel">Where agents run</string>
     <string name="agentsTabComputers">On computers</string>
     <string name="agentsPhoneReady">This phone is ready</string>

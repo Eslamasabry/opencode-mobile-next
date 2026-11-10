@@ -40,6 +40,8 @@ import io.github.eslamasabry.oc.ui.words.res.agentsHelperNoAnswer
 import io.github.eslamasabry.oc.ui.words.res.agentsHelperNoLinux
 import io.github.eslamasabry.oc.ui.words.res.agentsHelperNotConnected
 import io.github.eslamasabry.oc.ui.words.res.agentsHelperNotStarted
+import io.github.eslamasabry.oc.ui.words.res.agentsHelperUpdateAction
+import io.github.eslamasabry.oc.ui.words.res.agentsHelperUpdateRequired
 import io.github.eslamasabry.oc.ui.words.res.agentsInstallAction
 import io.github.eslamasabry.oc.ui.words.res.agentsInstallHint
 import io.github.eslamasabry.oc.ui.words.res.agentsNewChat
@@ -197,11 +199,16 @@ internal fun tileWords(tile: AgentTileModel): String {
 internal fun PhoneAgentConnectLine(state: AgentsUi, actions: AgentsActions, modifier: Modifier = Modifier) {
     if (!state.helperConnectFailed || state.helperConnecting) return
     if (phoneInstalledAgents(state.phone).isEmpty() || state.phone.needsRestart) return
+    // A helper that is missing or too old cannot start by trying again: its way forward is the update.
+    val needsUpdate = (state.helperConnectFailure as? Failure.Runtime)?.problem == RuntimeProblem.HelperUpdateRequired
     KitStatusLine(
         connectFailureWords(state.helperConnectFailure),
         modifier,
         tone = StatusTone.Attention,
-        action = KitLineAction(stringResource(Res.string.kitTryAgain), actions::connectPhoneHelper),
+        action =
+            if (needsUpdate)
+                KitLineAction(stringResource(Res.string.agentsHelperUpdateAction), actions::updatePhoneHelper)
+            else KitLineAction(stringResource(Res.string.kitTryAgain), actions::connectPhoneHelper),
         quiet = true,
     )
 }
@@ -218,8 +225,11 @@ private fun connectFailureWords(failure: Failure?): String =
             is Failure.SecretUnavailable,
             is Failure.StorageRefused -> Res.string.agentsHelperKeyUnreadable
             is Failure.Runtime ->
-                if (failure.problem == RuntimeProblem.NotInstalled) Res.string.agentsHelperNoLinux
-                else Res.string.agentsHelperNotStarted
+                when (failure.problem) {
+                    RuntimeProblem.NotInstalled -> Res.string.agentsHelperNoLinux
+                    RuntimeProblem.HelperUpdateRequired -> Res.string.agentsHelperUpdateRequired
+                    else -> Res.string.agentsHelperNotStarted
+                }
             else -> Res.string.agentsHelperNotConnected
         }
     )
