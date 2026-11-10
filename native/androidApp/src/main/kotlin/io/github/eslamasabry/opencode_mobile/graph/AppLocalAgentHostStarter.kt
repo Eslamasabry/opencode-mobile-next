@@ -119,7 +119,16 @@ class AppLocalAgentHostStarter(
             }
         if (started is Outcome.Failed) return@withLock started
         // A live authenticated wire check, rather than a process handle, admits the connection.
-        when (val checked = factory.paseo.checkConnection(ADDRESS, password, FOLDER)) {
+        // The helper may still be starting (20 s or more on a slow phone): ask again as the Flutter app did.
+        val answer =
+            HelperAnswerWait.until(
+                now = { android.os.SystemClock.elapsedRealtime() },
+                pause = { kotlinx.coroutines.delay(it) },
+                done = { it !is PaseoProbeResult.Refused || !HelperAnswerWait.stillStarting(it.failure) },
+            ) {
+                factory.paseo.checkConnection(ADDRESS, password, FOLDER)
+            }
+        when (val checked = answer) {
             is PaseoProbeResult.Refused -> return@withLock Outcome.Failed(checked.failure)
             is PaseoProbeResult.InvalidInput -> return@withLock unavailable()
             is PaseoProbeResult.Verified -> Unit
