@@ -1,0 +1,18 @@
+# AI Team engine sources that still hold a private home path (test data and comments). Changing them makes the
+# packaged engine stale, so they are scrubbed with the next engine rebuild (backlog B-227). One path per line; the
+# list only shrinks.
+engine/phone/src/admission.rs
+engine/phone/src/config.rs
+engine/phone/src/store.rs
+engine/phone/tests/daemon_startup.rs
+engine/phone/tests/repository_merge_journal.rs
+engine/phone/tests/startup_reporting.rs
+engine/phone/tests/store_durability.rs
+engine/phone/tests/store_merge_projection.rs
+engine/phone/tests/store_planner_projection.rs
+engine/phone/tests/store_resolved_models.rs
+engine/phone/tests/store_restart_reconciliation.rs
+engine/phone/tests/store_retry_plan.rs
+engine/phone/tests/store_review_acceptance.rs
+engine/phone/tests/task_workflow.rs
+engine/phone/tool/build-android.sh

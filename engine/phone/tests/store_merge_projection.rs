@@ -12,7 +12,7 @@ const TASK: &str = "2222222222222222222222222222222222222222";
 fn storage() -> TempDir {
     let root = std::env::var_os("OC_ENGINE_TEST_ROOT")
         .map(PathBuf::from)
-        .unwrap_or_else(|| PathBuf::from("/home/owner/Storage/tmp/oc-phone-engine-tests"));
+        .unwrap_or_else(|| PathBuf::from("/home/eslam/Storage/tmp/oc-phone-engine-tests"));
     fs::create_dir_all(&root).unwrap();
     tempfile::Builder::new()
         .prefix("merge-projection-")

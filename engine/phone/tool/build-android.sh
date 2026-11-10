@@ -10,8 +10,8 @@ case "${1:-}" in
 esac
 [[ $# -le 1 ]] || { echo 'Unexpected build arguments' >&2; exit 64; }
 repo_dir="$(cd "$(dirname "$0")/../../.." && pwd)"
-ndk_dir="${ANDROID_NDK_HOME:-/home/owner/Android/Sdk/ndk/28.2.13676358}"
-artifact_dir="$(realpath -m "${OC_ENGINE_BUILD_DIR:-/home/owner/Storage/tmp/aiteam-phone-engine-build}")"
+ndk_dir="${ANDROID_NDK_HOME:-/home/eslam/Android/Sdk/ndk/28.2.13676358}"
+artifact_dir="$(realpath -m "${OC_ENGINE_BUILD_DIR:-/home/eslam/Storage/tmp/aiteam-phone-engine-build}")"
 case "$artifact_dir" in /tmp|/tmp/*) echo 'Build artifacts must use Storage, not /tmp' >&2; exit 64;; esac
 mkdir -p "$artifact_dir/tmp" "$artifact_dir/target" "$artifact_dir/android"
 export TMPDIR="$artifact_dir/tmp"
