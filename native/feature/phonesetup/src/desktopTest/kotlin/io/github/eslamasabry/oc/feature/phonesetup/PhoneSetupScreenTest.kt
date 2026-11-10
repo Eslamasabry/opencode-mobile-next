@@ -3,12 +3,14 @@ package io.github.eslamasabry.oc.feature.phonesetup
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import kotlin.test.assertTrue
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.unit.dp
@@ -96,20 +98,26 @@ class PhoneSetupScreenTest {
     private val items =
         persistentListOf(SetupItemUi("linux", "Linux base"), SetupItemUi("node", "Node.js"), SetupItemUi("opencode", "OpenCode"))
 
-    private fun show(state: PhoneSetupUi, actions: PhoneSetupActions, locale: String = "en") =
-        runComposeUiTest {
-            setContent {
-                KitTheme(
-                    platform = DesktopKitPlatform(),
-                    appearance = KitAppearance(motion = MotionLevel.Off),
-                    localeTag = locale,
-                    stillFrame = true,
-                ) {
-                    Box(Modifier.width(412.dp)) { PhoneSetupScreen(state, actions) }
-                }
+    private fun ComposeUiTest.render(state: PhoneSetupUi, actions: PhoneSetupActions, locale: String) {
+        setContent {
+            KitTheme(
+                platform = DesktopKitPlatform(),
+                appearance = KitAppearance(motion = MotionLevel.Off),
+                localeTag = locale,
+                stillFrame = true,
+            ) {
+                Box(Modifier.width(412.dp)) { PhoneSetupScreen(state, actions) }
             }
-            check(this)
         }
+        check(this)
+    }
+
+    private fun show(state: PhoneSetupUi, actions: PhoneSetupActions, locale: String = "en") =
+        runComposeUiTest { render(state, actions, locale) }
+
+    /** The window itself is phone-sized (412 dp), so the kit lays out in its compact window class. */
+    private fun showInPhoneWindow(state: PhoneSetupUi, actions: PhoneSetupActions) =
+        runDesktopComposeUiTest(412, 900) { render(state, actions, "en") }
 
     private var check: androidx.compose.ui.test.ComposeUiTest.() -> Unit = {}
 
@@ -264,7 +272,7 @@ class PhoneSetupScreenTest {
             // edge as wide as its word.
             assertTrue(open.right >= 412.dp - 32.dp, "Open at $open")
         }
-        show(PhoneSetupUi(checking = false, items = items, progress = done), actions)
+        showInPhoneWindow(PhoneSetupUi(checking = false, items = items, progress = done), actions)
     }
 
     @Test
