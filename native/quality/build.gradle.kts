@@ -29,6 +29,9 @@ dependencies {
 }
 
 tasks.test {
+    // Konsist parses every production file into one test worker; the default 512 MB heap ran out as the tree grew
+    // (OutOfMemoryError in the Kotlin parser, release gates 2026-11-10).
+    maxHeapSize = "2g"
     // Konsist and ModuleOwnersTest read the source tree; make them rerun when it changes.
     inputs.files(fileTree(rootDir) { include("**/src/**/*.kt", "**/build.gradle.kts", "MODULE_OWNERS"); exclude("**/build/**", "build-logic/**") })
         .withPropertyName("sources").withPathSensitivity(PathSensitivity.RELATIVE)
