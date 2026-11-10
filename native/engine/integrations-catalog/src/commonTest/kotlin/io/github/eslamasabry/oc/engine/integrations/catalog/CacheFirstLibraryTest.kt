@@ -23,6 +23,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 
@@ -44,7 +45,9 @@ class CacheFirstLibraryTest {
             override val profile = this@CacheFirstLibraryTest.profile
             override val origin = "https://srv"
             override val location = ServerLocation.Default
-            override val capabilities = ServerCapabilities(slashCommands = true)
+            // Commands only: the library keeps a read when every section it asked for answered, and the fake
+            // operations gateway answers no catalog, skills, references, providers or MCP lists.
+            override val capabilities = ServerCapabilities(slashCommands = true, serverCatalog = false)
             override val server: ServerGateway = FakeServerGateway()
             override val operations: ServerOperationsGateway =
                 object : FakeOperationsGateway() {
@@ -70,6 +73,8 @@ class CacheFirstLibraryTest {
         val live = session(source { Outcome.Ok(persistentListOf(command)) }, shelf)
         live.refresh()
         advanceUntilIdle()
+        // The keep runs in the session's background scope, which advanceUntilIdle leaves alone; runCurrent runs it.
+        runCurrent()
         val reopened = session(source { Outcome.Ok(persistentListOf(command)) }, shelf).state.value
         assertEquals(live.state.value.commands, reopened.commands)
         assertTrue(reopened.loading)

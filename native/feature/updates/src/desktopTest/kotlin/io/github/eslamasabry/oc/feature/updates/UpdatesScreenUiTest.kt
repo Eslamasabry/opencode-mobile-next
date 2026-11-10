@@ -10,6 +10,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertContentDescriptionContains
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -215,7 +216,8 @@ class UpdatesScreenUiTest {
         setContent { Themed { UpdateNotice(NoticeUi.Ready("2.2.0"), actions) } }
         waitForIdle()
         onNodeWithText("Version 2.2.0 is ready").assertExists()
-        onNodeWithText("Not now").performClick()
+        // The status line's dismiss is the kit's close mark, read aloud as "Not now" (a content description, not text).
+        onNodeWithContentDescription("Not now").performClick()
         onNodeWithText("Update").performClick()
         assertEquals(listOf("notNow", "update"), actions.calls)
     }

@@ -3,6 +3,9 @@
 package io.github.eslamasabry.oc.feature.phone
 
 import androidx.compose.foundation.Indication
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.Modifier
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -141,7 +144,8 @@ class PhoneScreensTest {
                             hadServices = true,
                         ),
                 )
-            setContent { Themed { ThisPhoneScreen(ui, calls) } }
+            // A phone-wide column: in a wide window the kit centres the notice in its reading width.
+            setContent { Themed { Box(Modifier.width(412.dp)) { ThisPhoneScreen(ui, calls) } } }
             onNodeWithText("Android stopped the app while OpenCode was running").assertExists()
             // The recovery line repeated the exit notice ("Android stopped the app. OpenCode is stopped.").
             onAllNodesWithText("Android stopped the app. OpenCode is stopped.").assertCountEquals(0)

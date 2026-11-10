@@ -258,6 +258,8 @@ public class Drafts(
         permit: () -> Boolean = { true },
     ): Outcome<Unit> = lane.withLock {
         if (!permit()) return@withLock Failure.Refused(RefusalReason.ProfileDeleted).failed()
+        // B-144: blank words never replace the stored draft while its file is held back.
+        if (text.isBlank()) return@withLock Unit.ok()
         saveLocked(profileId, sessionId, text, null, null)
     }
 

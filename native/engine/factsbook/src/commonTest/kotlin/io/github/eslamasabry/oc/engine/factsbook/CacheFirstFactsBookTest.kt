@@ -106,6 +106,8 @@ class CacheFirstFactsBookTest {
         val kept = MemoryKept()
         val first = engine(FakeHttp().apply { healthy(); on("GET /v1/things/per_01", 200, """{"id":"per_01","title":"Sara","kind":"person","updated_at":"2026-10-10T08:00:00Z","facts":[]}""") }, kept)
         first.open("p1")
+        // The pages' own reads go to the node once, live; only those answers are kept (open sends nothing).
+        first.node!!.things()
         first.node!!.thing("per_01")
         val reopened = engine(FakeHttp().apply { unreachable = true }, kept)
         reopened.open("p1")

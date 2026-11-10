@@ -4,13 +4,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
-import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.connection.SavedServer
+import io.github.eslamasabry.oc.engine.lifecycle.PhoneOwnServers
 import io.github.eslamasabry.oc.feature.servers.presentation.ServersActions
 import io.github.eslamasabry.oc.feature.servers.presentation.ServersUi
 import io.github.eslamasabry.oc.feature.servers.ui.ServersScreen
@@ -57,6 +59,8 @@ class PhoneOwnServerMarkTest {
             override fun remove(id: ProfileId) {}
         }
 
+    private val markedThisPhone = SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "This phone")
+
     private fun server(name: String, address: String) = SavedServer(ProfileId(name), name, address, connected = false)
 
     @Test
@@ -74,7 +78,9 @@ class PhoneOwnServerMarkTest {
                             ServersUi(
                                 servers =
                                     persistentListOf(
-                                        server("in-app", "http://127.0.0.1:4097"),
+                                        // The app's own server has its own port (isolated from Termux's 4097).
+                                        server("in-app", PhoneOwnServers.IN_APP_URL),
+                                        server("termux", "http://127.0.0.1:4097"),
                                         server("forwarded", "http://127.0.0.1:4123"),
                                         server("local", "http://localhost:4096"),
                                         server("lan", "https://laptop.example"),
@@ -87,8 +93,8 @@ class PhoneOwnServerMarkTest {
                 }
             }
         }
-        // One "This phone" is the row that opens the page; exactly one more marks the in-app server.
-        onAllNodesWithText("This phone").assertCountEquals(2)
+        // The phone glyph is decorative; the row of the phone's own server is the one that says "This phone".
+        onAllNodes(markedThisPhone).assertCountEquals(1)
     }
 
     @Test
@@ -103,13 +109,13 @@ class PhoneOwnServerMarkTest {
                 ) {
                     Box(Modifier.width(412.dp)) {
                         ServersScreen(
-                            ServersUi(servers = persistentListOf(server("in-app", "http://127.0.0.1:4097"))),
+                            ServersUi(servers = persistentListOf(server("in-app", PhoneOwnServers.IN_APP_URL))),
                             actions,
                         )
                     }
                 }
             }
         }
-        onAllNodesWithText("This phone").assertCountEquals(0)
+        onAllNodes(markedThisPhone).assertCountEquals(0)
     }
 }

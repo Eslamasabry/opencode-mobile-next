@@ -3,6 +3,8 @@ package io.github.eslamasabry.oc.feature.servers.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -42,6 +44,7 @@ internal fun ServerSavedRows(
     val names = distinctServerNames(state.servers.map { it.id to it.name })
     val showKind = kindsDiffer(state.servers.map { state.rows.facts[it.id]?.backend })
     val flat = LocalKitStyle.current.spec.tokens.flatLists
+    val thisPhone = stringResource(Res.string.settingsV3ThisPhone)
     KitRowGroup(leadingTiles = true) {
         ordered.forEach { server ->
             val facts = state.rows.facts[server.id]
@@ -134,6 +137,8 @@ internal fun ServerSavedRows(
                 )
             }
             KitRow(
+                // The phone glyph is decorative, so a screen reader hears that this server is the phone's own.
+                modifier = if (phone) Modifier.semantics { stateDescription = thisPhone } else Modifier,
                 title = name,
                 supporting = withoutTrailingSeparator(supporting),
                 supportingMaxLines =

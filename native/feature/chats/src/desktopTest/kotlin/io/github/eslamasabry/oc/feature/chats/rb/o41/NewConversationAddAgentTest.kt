@@ -41,6 +41,8 @@ class NewConversationAddAgentTest {
     private fun ui(agents: List<String>) =
         NewConversationUi(
             profile = ProfileId("p1"),
+            // The form (and its field) shows once a server is saved; without one the page offers to add a server.
+            servers = listOf(NewConversationServer(ProfileId("p1"), "OpenCode", connected = true)),
             setup =
                 NewConversationSetup(
                     directory = "/root/projects/shop",
@@ -102,7 +104,9 @@ class NewConversationAddAgentTest {
     fun `B-098 coming back with the agent sheet open does not raise the keyboard over it`() = runComposeUiTest {
         show(ui(listOf("claude")), Actions())
         waitForIdle()
-        onNode(hasSetTextAction()).assertIsNotFocused()
+        // The open sheet hides the page behind it from the merged tree (a screen reader reads only the sheet), so the
+        // field is looked up in the unmerged tree.
+        onNode(hasSetTextAction(), useUnmergedTree = true).assertIsNotFocused()
     }
 
     @Test
