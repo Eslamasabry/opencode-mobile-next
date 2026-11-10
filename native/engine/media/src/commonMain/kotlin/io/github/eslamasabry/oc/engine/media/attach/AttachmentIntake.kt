@@ -190,6 +190,56 @@ public class AttachmentIntake(
         return Outcome.Ok(IntakeResult(persistentListOf(attachment), note))
     }
 
+    /**
+     * Files other apps shared in (Share > OpenCode). Each [SharedInput.Ready] is already inside the app's private
+     * storage and bounded; pictures go through the same codec as the gallery pick, everything else through
+     * [fromBytes]. Limits are the composer's: the first item that does not fit ends the run ([ShareInProblem.OverLimit])
+     * and the rest are counted as left out. Nothing here keeps a name, URI or byte of the input.
+     */
+    public suspend fun fromShared(current: List<PromptAttachment>, inputs: List<SharedInput>): ShareInResult {
+        val added = ArrayList<PromptAttachment>()
+        var problem: ShareInProblem? = null
+        for (input in inputs) {
+            val ready =
+                when (input) {
+                    is SharedInput.Refused -> {
+                        problem = if (input.problem == ShareInProblem.OverLimit) input.problem else problem ?: input.problem
+                        continue
+                    }
+                    is SharedInput.Ready -> input
+                }
+            val all = current + added
+            if (AttachmentLimits.roomFor(all)?.problem == MediaProblem.DraftFull) {
+                problem = ShareInProblem.OverLimit
+                break
+            }
+            val isPicture = ready.mime?.startsWith("image/") == true || MagicBytes.imageMime(ready.bytes) != null
+            if (isPicture) {
+                val name = AttachmentName.clean(ready.name)
+                val result = addPictures(all, listOf(PictureInput.Bytes(name, ready.mime ?: "image/png", ready.bytes)))
+                added += result.added
+                if (result.note == IntakeNote.DraftFilled) {
+                    problem = ShareInProblem.OverLimit
+                    break
+                }
+                result.skipped?.let { problem = problem ?: ShareInProblem.of(it) }
+            } else {
+                when (val one = fromBytes(all, ready.name, ready.mime, ready.bytes)) {
+                    is Outcome.Ok -> added += one.value.added
+                    is Outcome.Failed -> {
+                        val why = ShareInProblem.of(one.failure)
+                        if (why == ShareInProblem.OverLimit) {
+                            problem = why
+                            break
+                        }
+                        problem = problem ?: why
+                    }
+                }
+            }
+        }
+        return ShareInResult(added.toImmutableList(), inputs.size, problem)
+    }
+
     /** "Paste image from clipboard" (plan 10 §10.8). */
     public suspend fun fromClipboard(current: List<PromptAttachment>): Outcome<IntakeResult> {
         AttachmentLimits.roomFor(current)?.let { return Outcome.Failed(it) }

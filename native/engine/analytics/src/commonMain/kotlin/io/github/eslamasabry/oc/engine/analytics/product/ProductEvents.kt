@@ -116,6 +116,9 @@ public enum class ProductEvent(public val wire: String) {
      * [ProductUseFor]. Sent once, and again only if the person changes the answer.
      */
     UseFor("use_for"),
+
+    /** Pictures or files were shared into the app: `count` (a range), `kind` image or file. Never a name or address. */
+    ShareIn("share_in"),
 }
 
 /** A value with a fixed wire word. */
@@ -239,6 +242,12 @@ public enum class ProductScreen(override val wire: String) : ProductValue {
             }
         }
     }
+}
+
+/** What a share-in carried: pictures only, or anything else (or a mix). */
+public enum class ProductShareKind(override val wire: String) : ProductValue {
+    Image("image"),
+    File("file"),
 }
 
 /** Features whose use is counted, once per use. */
@@ -378,6 +387,11 @@ public val productSchema: Map<String, Map<String, Set<String>>> =
             ProductEvent.StarPromptShown.wire to emptyMap(),
             ProductEvent.StarPromptTapped.wire to emptyMap(),
             ProductEvent.StarPromptDismissed.wire to emptyMap(),
+            ProductEvent.ShareIn.wire to
+                mapOf(
+                    "count" to HealthRanges.counts.toSet(),
+                    "kind" to ProductShareKind.entries.map { it.wire }.toSet(),
+                ),
         ) + healthSchema()
     }
 

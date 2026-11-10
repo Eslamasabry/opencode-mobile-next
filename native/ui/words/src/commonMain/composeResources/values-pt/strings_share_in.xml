@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="shareInPartial">
+        <item quantity="one">Adicionado %1$d de %2$d arquivos. %3$s</item>
+        <item quantity="many">Adicionados %1$d de %2$d arquivos. %3$s</item>
+        <item quantity="other">Adicionados %1$d de %2$d arquivos. %3$s</item>
+    </plurals>
+    <string name="shareInReasonLimit">Um rascunho comporta até 5 arquivos e 20 MB.</string>
+    <string name="shareInReasonTooLarge">O restante é grande demais para anexar (10 MB cada).</string>
+    <string name="shareInReasonUnsupported">O restante é um tipo de arquivo que não pode ser anexado.</string>
+    <string name="shareInReasonUnreadable">Não foi possível ler o restante. Tente compartilhar de novo.</string>
+    <string name="shareInNoneTooLarge">Nada foi adicionado. É grande demais para anexar (10 MB cada, 20 MB no total).</string>
+    <string name="shareInNoneUnsupported">Nada foi adicionado. Este tipo de arquivo não pode ser anexado.</string>
+    <string name="shareInNoneUnreadable">Nada foi adicionado. Não foi possível ler o arquivo. Tente compartilhar de novo.</string>
+    <string name="shareInGotIt">Entendi</string>
+</resources>

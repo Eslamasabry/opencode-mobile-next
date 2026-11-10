@@ -333,6 +333,7 @@ class PlatformHub(
     private val appVisibility: AppVisibility,
     // s28-app: what a link that cannot complete says (F: link_routes.dart).
     private val linkNotices: AppLinkNotices,
+    private val composerFiles: AndroidComposerFiles,
 ) {
     private val mainDispatcher = dispatchers.main
     private val appScope = CoroutineScope(appScope.coroutineContext + mainDispatcher)
@@ -377,6 +378,18 @@ class PlatformHub(
             runtime,
             draftOwners,
             navigator,
+            io.github.eslamasabry.oc.android.tiles.SharedStash(
+                application.contentResolver,
+                java.io.File(application.filesDir, "share-in"),
+            ),
+            { composerFiles.intake() },
+            { count, kind ->
+                // share_in: a count range and image/file. No name, address or type; inert unless usage analytics is on.
+                io.github.eslamasabry.opencode_mobile.telemetry.Telemetry.service.track(
+                    io.github.eslamasabry.oc.engine.analytics.product.ProductEvent.ShareIn,
+                    mapOf("count" to count, "kind" to kind),
+                )
+            },
         )
     private var widgetModel: WidgetModel? = null
     private var widgetBaseModel: WidgetModel? = null
@@ -539,6 +552,13 @@ class PlatformHub(
                 is ParsedLink.TeamRun -> navigator.open(TeamRoute.Home(link.profileId))
                 null -> Unit
             }
+            return
+        }
+        // Pictures and files first: a text/plain file arrives with a stream and must not be read as shared words.
+        val streams =
+            io.github.eslamasabry.oc.android.tiles.SharedStreamsIntake.consume(intent, application.packageName)
+        if (streams != null) {
+            incomingShare.arrivedStreams(streams)
             return
         }
         val share = SharedTextIntake.consume(intent)
