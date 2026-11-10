@@ -100,7 +100,8 @@ class LimitsScreenTest {
     fun `B-159 a provider without limits says so plainly and no number is invented`() = runDesktopComposeUiTest(412, 2600) {
         setContent { Screen(LimitsFixtures.state(), Actions()) }
         onNodeWithText("This provider doesn't report limits.").assertExists()
-        onNodeWithText("API key. Keys have no plan limits to show.").assertExists()
+        // A key row says where the key lives first (the kit row prefixes its server), then why it has no numbers.
+        onNodeWithText("This phone · API key. Keys have no plan limits to show.").assertExists()
     }
 
     @Test
