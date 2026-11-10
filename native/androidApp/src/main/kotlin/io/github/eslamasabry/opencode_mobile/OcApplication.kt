@@ -82,6 +82,7 @@ class OcApplication : Application(), GraphOwner {
                     debuggable = applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0,
                     base = listOf(DiagnosticsLogSink, io.github.eslamasabry.opencode_mobile.telemetry.TelemetryRingSink),
                     logcat = LogcatLogSink(),
+                    asked = ::logTagAsked,
                 ),
             ), // P12: warnings/errors feed Report a problem
             Severity.Info,

@@ -107,9 +107,12 @@ class PhoneOpenCodeAutoUpdate(
             log = { log.i { it } },
         )
         appScope.launch {
+            var last: SetupState? = null
             setup.progress.collect {
                 // Only the OpenCode update job (a job of the OpenCode component alone) shows on the Update row.
                 val update = it.components.map { c -> c.id } == listOf(SetupComponentIds.OPENCODE)
+                if (update && it.state != last) log.i { "update job ${it.state}" }
+                if (update) last = it.state
                 runtime.noteUpdateJob(
                     update && it.state == SetupState.Running,
                     update && it.state == SetupState.Failed,
