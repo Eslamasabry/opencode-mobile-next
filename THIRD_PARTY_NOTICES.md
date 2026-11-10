@@ -252,6 +252,20 @@ The application verifies every downloaded file against the byte length and
 SHA-256 digest pinned in `lib/voice/model_manifest.dart`. Neither Hugging Face,
 OpenAI, nor the sherpa-onnx project endorses this application.
 
+### Kokoro natural reading voice (optional download)
+
+The optional "Natural voice" for read-aloud downloads Kokoro-82M v1.0
+(hexgrad, Apache-2.0), packaged for sherpa-onnx as an int8 ONNX model with its
+voices, tokens and an English pronunciation lexicon derived from the misaki
+dictionaries (Apache-2.0). The notice and license text are in
+`LICENSES/Apache-2.0-Kokoro.txt`. The application does not modify or
+redistribute the bytes; they are fetched from the immutable revision
+`csukuangfj/kokoro-int8-multi-lang-v1_0` at
+`57adb37fc0e8d4bd430cfc1b8f8c2294945b9af2` and verified against the byte length
+and SHA-256 digest pinned in the application source (`ModelCatalog.kt` in the native app). Arabic is not
+offered: sherpa-onnx 2.0 removed espeak-ng, which the published Arabic
+Kokoro-runtime models (Nabra-82M, Apache-2.0) need for pronunciation.
+
 ## Package inventory
 
 Every hosted package resolved in `pubspec.lock`, at the exact version
