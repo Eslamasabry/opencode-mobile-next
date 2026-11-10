@@ -81,18 +81,18 @@ internal class M1Census(
         counts["pendingWrites"] = PENDING_WRITES.associateWith { p -> File(paths.files, p).takeIf { it.isFile }?.length() }
 
         // Deferred and dropped features (plan 02 §3.7): does any of their data exist? (S2-GATEUI's one-time notice.)
-        val deferred = deferredFeatures(prefs)
+        val deferred = deferredFeatures()
         counts["deferred"] = deferred.map { it.name }.sorted()
         counts["a2aPrefsKeys"] = prefs.map.keys.count { it.startsWith("oc.a2aTasks.") || it == "oc.externalAgents" }.toLong()
         return Result.Done(counts, deferred)
     }
 
-    private fun deferredFeatures(prefs: LogicalPrefs): Set<DeferredFeature> {
+    /**
+     * Only the on-phone model is still deferred. AI Team and Memory (FactsBook) are in the native app and read the
+     * Flutter-era data in place, so their data is no longer a reason for the notice ([DeferredFeature.stillDeferred]).
+     */
+    private fun deferredFeatures(): Set<DeferredFeature> {
         val out = LinkedHashSet<DeferredFeature>()
-        val teamFiles = paths.files.listFiles()?.any { it.name.startsWith("oc.teamEngine") } == true
-        if (teamFiles || prefs.map.keys.any { it.startsWith("oc.orchestration.") || it.startsWith("oc.team") }) out += DeferredFeature.AiTeam
-        val factsbookDir = paths.externalFilesDir?.let { File(it, "factsbook") }?.exists() == true
-        if (factsbookDir || prefs.map.keys.any { it.startsWith("oc.factsbook") }) out += DeferredFeature.Memory
         if (File(paths.files, "local_llm_models").list()?.isNotEmpty() == true) out += DeferredFeature.Gemma
         return out
     }

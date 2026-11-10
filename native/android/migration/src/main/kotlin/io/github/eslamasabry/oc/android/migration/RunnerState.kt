@@ -32,7 +32,20 @@ public enum class ReentryKind { Password, Token, GitHubSignIn, ByoSetup }
 public data class ReentryNotice(val profileId: String, val kind: ReentryKind)
 
 /** Feature data the census found that the switch release does not open (plan 02 §3.7 item 4; S2-GATEUI's notice). */
-public enum class DeferredFeature { AiTeam, Memory, Gemma }
+public enum class DeferredFeature {
+    AiTeam,
+    Memory,
+    Gemma,
+    ;
+
+    public companion object {
+        /**
+         * What the native app still does not open. AI Team and Memory are built and read the Flutter-era data in
+         * place, so a result saved by an earlier build that names them is read without them (no re-run needed).
+         */
+        public val stillDeferred: Set<DeferredFeature> = setOf(Gemma)
+    }
+}
 
 public data class MigrationNoticeSet(
     val reenter: List<ReentryNotice> = emptyList(),
