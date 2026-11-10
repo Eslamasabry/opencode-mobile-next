@@ -67,7 +67,7 @@ class PhoneSetupRegistryTest {
         assertTrue(opencode.installScript.contains("x86_64|amd64)"))
         assertFalse(opencode.installScript.contains("npm install -g") || opencode.installScript.contains("OC_PROOT_SETUP"), "never npm in the app's own Ubuntu")
         assertTrue(opencode.checkScript.contains("= '/opt/opencode2/bin/opencode2' ]"))
-        assertTrue(opencode.checkScript.contains("[ \"\$installed\" = '2.2.5' ]"))
+        assertTrue(opencode.checkScript.contains("[ \"\$installed\" = '2.2.6' ]"))
         // An unpinned or malformed version is refused by the install, never a crash of the registry.
         val other = registry.components(mapOf("opencode" to mapOf("version" to "9.9.9"))).single { it.id == "opencode" }
         assertTrue(other.installScript.contains("This app can only install its own pinned OpenCode"))

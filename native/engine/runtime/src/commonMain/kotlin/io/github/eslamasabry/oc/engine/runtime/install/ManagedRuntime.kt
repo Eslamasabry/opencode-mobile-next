@@ -6,7 +6,7 @@ package io.github.eslamasabry.oc.engine.runtime.install
  */
 public enum class ManagedRuntime(public val wireName: String, public val pinnedVersion: String) {
     OpenCode1("opencode1", ""),
-    OpenCode2("opencode2", "2.2.5"),
+    OpenCode2("opencode2", "2.2.6"),
     ;
 
     /** Whether this runtime can be installed or started (Flutter `requireSupported`, code `opencode1_migration_required`). */

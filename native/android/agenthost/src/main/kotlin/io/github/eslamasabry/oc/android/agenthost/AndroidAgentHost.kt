@@ -305,7 +305,7 @@ data class HelperStartRequest(
     val password: HelperPassword,
     /** Paseo `config.json`, rendered by the agents engine (`PaseoConfig.render`). */
     val config: String,
-    /** "0.11.2" from the pins resource. */
+    /** "0.15.3" from the pins resource. */
     val expectedHelperVersion: String,
     val restartIfVersionChanged: Boolean,
     val forceRestart: Boolean = false,

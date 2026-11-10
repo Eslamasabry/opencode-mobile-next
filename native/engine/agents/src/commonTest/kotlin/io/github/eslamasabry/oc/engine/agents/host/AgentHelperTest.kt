@@ -39,7 +39,7 @@ class AgentHelperTest {
         assertFalse(password in start.config.json)
         assertFalse(password in start.toString())
         assertFalse(password in host.calls.joinToString())
-        assertEquals("0.11.2", start.expectedHelperVersion)
+        assertEquals("0.15.3", start.expectedHelperVersion)
         // The same password is reused on the next start.
         helper.ensureRunning(owner)
         assertEquals(password, host.lastStart!!.password.value)

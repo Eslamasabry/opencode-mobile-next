@@ -5,7 +5,7 @@
 [versions]
 # Toolchain (move together; ADR §8)
 kotlin = "2.4.21"
-agp = "9.3.3"
+agp = "9.5.1"
 ksp = "2.3.13"
 metro = "1.5.1"
 # Compose Multiplatform (fallback 1.12.2, ADR §11 P1)

@@ -23,10 +23,10 @@ class OpenCodeNativeInstallTest {
         assertNull(Regex("^[^#\\n]*\\bnpm\\s", RegexOption.MULTILINE).find(script), "no npm command at all")
         assertNull(Regex("curl[^\\n]*\\|\\s*(ba)?sh").find(script))
         // The pins scripts/host/ubuntu-opencode.sh carries, and baseline x64.
-        assertEquals("f8c5a82075fede9b5b044ed6c8a6d13ad807a7e62caea1cd0a878adef49eb053", OpenCodePins.v2Arm64.sha256)
-        assertEquals("873856acbaa71c5ed8df6433e312dfa0c82a86e2cddfb9d80f0a31123a917a08", OpenCodePins.v2X64.sha256)
-        assertTrue("cli-linux-x64-baseline-2.2.5.tgz" in OpenCodePins.v2X64.url)
-        assertTrue("cli-linux-arm64-2.2.5.tgz" in OpenCodePins.v2Arm64.url)
+        assertEquals("22352e200630ec61a48a65b9f5c2b627328ae5002658d81c067f67c5fb689898", OpenCodePins.v2Arm64.sha256)
+        assertEquals("00d8b036689fc35927d8f20f57000d5c091fe7a5a3345fef5326f330bfe6d0ce", OpenCodePins.v2X64.sha256)
+        assertTrue("cli-linux-x64-baseline-2.2.6.tgz" in OpenCodePins.v2X64.url)
+        assertTrue("cli-linux-arm64-2.2.6.tgz" in OpenCodePins.v2Arm64.url)
         // Another version is not installed from an unpinned file.
         val other = OpenCodeInstallScripts.nativeInstall(version = "1.18.30")
         assertTrue(OpenCodeInstallFailure.Unpinned.line in other && "exit 64" in other)

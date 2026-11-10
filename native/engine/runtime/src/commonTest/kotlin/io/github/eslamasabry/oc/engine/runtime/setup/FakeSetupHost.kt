@@ -176,7 +176,7 @@ class StepClock(private var millis: Long = 1_790_000_000_000L) : Clock {
 /** The real registry's shape (ids, order, dependencies, required, weights, sizes) with marker scripts. */
 object FixtureRegistry : SetupRegistry {
     const val PRELUDE = "# oc setup prelude\n"
-    const val OPENCODE2_PIN = "f8c5a82075fede9b5b044ed6c8a6d13ad807a7e62caea1cd0a878adef49eb053"
+    const val OPENCODE2_PIN = "22352e200630ec61a48a65b9f5c2b627328ae5002658d81c067f67c5fb689898"
 
     fun openCodeInstall(runtime: String): String =
         if (runtime == "opencode2") "install opencode2 sha=$OPENCODE2_PIN\n" else "npm install opencode-ai@1\n"

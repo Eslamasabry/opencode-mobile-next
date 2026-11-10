@@ -30,7 +30,7 @@ public object HostScripts {
     public const val REPOSITORY: String = "Eslamasabry/opencode-mobile-next"
 
     /** The OpenCode 2 package a computer installs (the version built-in Linux pins too). */
-    public const val OPENCODE2_VERSION: String = "2.2.5"
+    public const val OPENCODE2_VERSION: String = "2.2.6"
 
     /** The commit of release [RELEASE] (tag `v1.0.44+50`), published on GitHub. */
     public const val COMMIT: String = "c62f159ae3c1741cb4ec0ef92b4941c0ddfc0a18"

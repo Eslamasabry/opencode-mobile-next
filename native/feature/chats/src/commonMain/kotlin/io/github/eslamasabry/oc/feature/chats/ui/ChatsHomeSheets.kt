@@ -10,6 +10,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.platform.testTag
@@ -81,6 +85,8 @@ internal fun HomeFilterChips(state: ChatsUi, actions: ChatsActions) {
 @Composable
 internal fun ChatsHomeSheets(state: ChatsUi, actions: ChatsActions) {
     val sheet = state.sheet
+    // The in-use server the person asked to disconnect from, waiting for their yes.
+    var askDisconnect by remember { mutableStateOf<Pair<io.github.eslamasabry.oc.core.common.ids.ProfileId, String>?>(null) }
     KitSheet(
         visible = sheet != null && sheet != ChatsHomeSheet.OpenProject && sheet != ChatsHomeSheet.Inbox,
         onDismissRequest = actions::closeHomeSheet,
@@ -103,7 +109,7 @@ internal fun ChatsHomeSheets(state: ChatsUi, actions: ChatsActions) {
                 ChatsHomeSheet.Sources -> SourceChoices(state, actions)
                 ChatsHomeSheet.Inbox -> Unit
                 ChatsHomeSheet.Monitoring -> MonitoringSettings(state, actions)
-                ChatsHomeSheet.Servers -> ServerSwitcher(state, actions)
+                ChatsHomeSheet.Servers -> ServerSwitcher(state, actions) { profile, name -> askDisconnect = profile to name }
                 ChatsHomeSheet.OpenProject,
                 null -> Unit
             }
@@ -124,6 +130,22 @@ internal fun ChatsHomeSheets(state: ChatsUi, actions: ChatsActions) {
             },
         onConfirm = actions::confirmWatched,
         onCancel = actions::dismissWatched,
+    )
+    KitConfirm(
+        spec =
+            askDisconnect?.let { (_, name) ->
+                KitConfirmSpec(
+                    title = stringResource(Res.string.server40DisconnectConfirm, name),
+                    body = stringResource(Res.string.server40DisconnectBody),
+                    confirmLabel = stringResource(Res.string.server40Disconnect),
+                    kind = KitConfirmKind.Neutral,
+                )
+            },
+        onConfirm = {
+            askDisconnect?.let { (profile, _) -> actions.disconnectServer(profile) }
+            askDisconnect = null
+        },
+        onCancel = { askDisconnect = null },
     )
 }
 
@@ -191,7 +213,11 @@ private fun ProjectChoices(state: ChatsUi, actions: ChatsActions) {
  * panel under them. The in-use row's own menu leads to its settings and the full Servers page.
  */
 @Composable
-private fun ServerSwitcher(state: ChatsUi, actions: ChatsActions) {
+private fun ServerSwitcher(
+    state: ChatsUi,
+    actions: ChatsActions,
+    onAskDisconnect: (io.github.eslamasabry.oc.core.common.ids.ProfileId, String) -> Unit,
+) {
     val switcher = state.switcher
     switcher.failure?.let { problem ->
         io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice(
@@ -249,7 +275,17 @@ private fun ServerSwitcher(state: ChatsUi, actions: ChatsActions) {
                                             actions::openServers,
                                             icon = KitIcons.server,
                                         ),
-                                    ),
+                                    ) +
+                                        // Named for the server it closes, and only while there is a connection to close.
+                                        if (server.state == SwitcherServerState.Connected || server.state == SwitcherServerState.Connecting)
+                                            listOf(
+                                                io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem(
+                                                    stringResource(Res.string.serverDisconnectFrom, server.name),
+                                                    { onAskDisconnect(server.profile, server.name) },
+                                                    icon = KitIcons.unlink,
+                                                )
+                                            )
+                                        else emptyList(),
                             )
                         server.state == SwitcherServerState.NotAnswering && !busy ->
                             KitRowTrailing.Action(
@@ -369,6 +405,7 @@ private fun MonitoringSettings(state: ChatsUi, actions: ChatsActions) {
 @Composable
 internal fun OpeningStatus(opening: ChatsOpeningUi, actions: ChatsActions) {
     // Connecting and starting live in the server pill; only a failure needs its own card.
+    var askRestart by remember { mutableStateOf(false) }
     KitStateView(
         kind = KitStateKind.Error,
         title = stringResource(Res.string.homeOpeningFailed, opening.serverName),
@@ -400,8 +437,31 @@ internal fun OpeningStatus(opening: ChatsOpeningUi, actions: ChatsActions) {
             } else null,
         tertiary =
             if (opening.phase == ChatsOpeningPhase.Failed)
-                listOf(KitAction(stringResource(Res.string.openingChangeServer), actions::openServers))
+                listOfNotNull(
+                    // This phone's own OpenCode can be restarted from here (Flutter root-connecting Restart).
+                    if (opening.onThisPhone)
+                        KitAction(stringResource(Res.string.connectionRestartPhoneServer), { askRestart = true })
+                    else null,
+                    KitAction(stringResource(Res.string.openingChangeServer), actions::openServers),
+                )
             else emptyList(),
+    )
+    KitConfirm(
+        spec =
+            if (askRestart)
+                KitConfirmSpec(
+                    title = stringResource(Res.string.workServerRestartTitle),
+                    confirmLabel = stringResource(Res.string.workServerRestart),
+                    kind = KitConfirmKind.Stop,
+                    icon = KitIcons.restart,
+                    body = stringResource(Res.string.workServerRestartBody),
+                )
+            else null,
+        onConfirm = {
+            askRestart = false
+            actions.restartOpeningPhoneServer()
+        },
+        onCancel = { askRestart = false },
     )
 }
 
