@@ -1,136 +1,215 @@
-# Fluid glass merges as one body of glass
+# Joined glass: a menu and its bar, a pill and its box, as one body
 
-**Status:** v1 draft, 2026-11-11. Not approved. Nothing in the kit has changed.
+**Status:** v2 draft, 2026-11-11. Not approved. Nothing in the kit has changed. v1 is in git history (b22b4ccf68).
 
-**Why now:** on 2026-11-10 the owner called the first fluid merges (the menu out of the bar, the jump pill out of the
-message box) a first pass whose neck "needs more work". On 2026-11-11 they called the split-and-merge demo in
-Kyant0/AndroidLiquidGlass issue #104 "amazing" and said "Do it".
+**The owner's words:**
+- 2026-11-10: the first fluid merges are a first pass; the neck "needs more work".
+- 2026-11-11, on the split-and-merge demo in Kyant0/AndroidLiquidGlass issue #104: "that's amazing", then "Do it".
+- 2026-11-11, after the first prototype clips: "Don't separate them keep them as one glossy glass body maybe with a
+  buldge?"
 
-**Reference:** the 5 s clip in that issue (a round button melts into a capsule and the two become one longer capsule,
-over scrolling text), and its stated method: a smooth minimum of the shapes' distance fields whose strength falls as
-the two shapes' edge directions line up, with both shapes drawn as one glass.
+**Goal:** while a menu is open from a control on a piece of glass, or the jump pill is shown on the message box, the
+two are one body of glossy glass: one outline with a soft swell where they meet, the content bent along that one
+outline, one rim light. They do not let go of each other.
 
-**Goal:** while a piece of glass leaves or joins another, the two are one body of glass on screen: one outline, one
-bend of the content along that outline, one rim light. When they part, the liquid thins to a neck at the place the
-piece came from and lets go there.
+**Reference:** the clip in issue #104 and the ShaderToy behind it (s3XSzM, by @preyneyv), which the owner pasted in
+full. Its method is used; its text is not copied (ShaderToy code is non-commercial share-alike unless stated, the app
+is MIT).
 
-**Moving prototype (a spike, not app code):** `docs/designs/liquid-merge-one-body/merge-menu.mp4` and
-`merge-pill.mp4`. Left half: today's method. Right half: this proposal. Both are drawn by
-`docs/designs/liquid-merge-one-body/proto.py`, which holds the formulas below in numpy so they can be judged in motion
-before any kit work. It is not the app: the page behind is a stand-in, and the lens is a close copy of the library's.
+**Moving prototype (a spike, not app code):** `liquid-merge-one-body/merge-menu-stay.mp4` and `merge-pill-stay.mp4`,
+drawn by `liquid-merge-one-body/proto.py`. Left half: today. Right half: the joined body. It shows the shape and the
+outline. It does not yet show the kit's real motion curves or the calmer bend of section 2; see "Prototype, next".
+
+## What v2 changes from v1, and why
+
+Three reviews (scope, design, build-readiness) and the owner's direction changed the design:
+
+| v1 | v2 | Why |
+|---|---|---|
+| The pieces let go through a neck | They stay joined while shown | The owner's direction. It also removes the pull spring, the hold function and both cross-fades, which the reviews found unbuildable as written. |
+| One merge layer under the chrome draws the whole body | Each pane draws its own side of the body, in its own node | The pill's words are under that layer, a menu is drawn in a layer above the page, and the two read different pictures of the page. One layer cannot be the face of both. |
+| Panes "stop drawing their faces" | A joined pane is drawn by a kit lens that knows its partner | The library's node always draws its backdrop, clips to its own shape and lights its own outline. There is nothing to switch off. |
+| The body's recipe for both shapes | Rim, bend and tint are mixed per pixel between the two panes' own | A 22 dp rim on a 32 dp pill would lens to its middle, which the owner rejected on 2026-11-08. |
+| Direction of the edge by differences | Exact directions, mixed, not normalised | Cheaper, no seams, and the bend fades in the junction by itself (the reference does this). |
 
 ## Non-goals
 
-- New places that merge. The same two stay: a menu opened from a control on the bar, and the jump pill on the message
-  box.
-- Any change to glass at rest. A pane that is not leaving or joining draws exactly as today.
-- A general "glass container" for any number of shapes (the reference issue's larger idea). Two shapes at a time.
+- Glass at rest. A pane with no partner is drawn by the library exactly as today.
+- New places that join. The three that exist stay: a menu from a control on the bar, a menu from a chip on the message
+  box, the jump pill on the message box.
+- More than two drops on one body, or drops joining each other.
+- Menus drawn in a separate popup window (outside a `KitSheetHost`): they stay unjoined.
 - Changes to the vendored `backdrop` library.
-- Desktop parity of the look. Desktop keeps drawing the same shader so tests can render it, but only Android is judged.
+- The reference's colour fringe (the owner's glass has no dispersion) and its edge reflection (see "Later").
 
-## What is wrong today
+## 1. The field
 
-`KitLiquidMerge.kt` draws a bridge between two panes that keep drawing themselves:
+Pure maths, in `:ui:design` as `LiquidJoin`, with the shader text built from the same constants.
 
-1. **Three pieces, not one.** Each pane keeps its own lens and its own rim light, so during a merge the bar's rim
-   crosses the menu and the menu's outline shows inside the bar. The bridge between them is blurred and tinted but has
-   no lens, so the content bends in the panes and not in the neck.
-2. **The blend has one strength everywhere.** The smooth union uses a constant reach (40 dp at full pull). It swells
-   the outline wherever the two shapes are near, including where one is still inside the other.
-3. **Flat edges part as a film.** The bar's bottom edge and the menu's top edge are parallel. A smooth union between
-   parallel edges is a film as wide as the menu, which thins evenly and then vanishes in one frame. There is no neck.
-
-## The proposal
-
-### 1. One distance field
-
-For a pixel `p`, `da` and `db` are the signed distances to the body and to the drop (rounded boxes, as today), and
-`ga`, `gb` their outward directions.
+For a pixel `p`: `a` is the pane drawing, `b` its partner. Each shape gives its signed distance and its outward
+direction together (a rounded box; the direction is the library's softened one, corner radius × 1.5, so a pane alone
+bends exactly as the library bends it).
 
 ```
-facing = clamp(0.5 - 0.5 * dot(ga, gb), 0, 1)     // 1 where the shapes face each other, 0 where they point the same way
-k      = reach * pull * facing * hold(p)
-h      = max(k - abs(da - db), 0) / k
-d      = min(da, db) - h * h * k / 4               // the one body: inside where d < 0
+facing = (1 - dot(ga, gb)) / 2                       // 1 where the shapes face each other, 0 where they point the same way
+inside = s(da) * s(db)                               // fades the blend out deep inside either shape
+         where s(d) = 1 - smoothstep(0.5 m, m, -d),  m = min(corner radius, half the short side)
+k      = max(reach * facing * inside, 0.001)
+h      = max(k - abs(da - db), 0) / (2 k)            // 0 far from the junction, 0.5 on the line da = db
+d      = min(da, db) - h * h * k                     // the joined body: inside where d < 0
+w      = (da <= db) ? h : 1 - h                      // the partner's share at p
+g      = mix(ga, gb, w)                              // the body's direction, NOT normalised
 ```
 
-`facing` is the reference's idea. A drop still inside its body no longer swells the body's outline, and the concave
-corners where the two outlines cross get a fillet.
+- `facing` is the reference's trick: a drop still inside its body does not swell the body's outline.
+- `inside` removes the step the direction makes on a shape's centre line (design review, finding 5).
+- `g` shrinks where the two directions oppose. Cover and rim light use `d / max(length(g), 0.05)`; the bend uses `g`
+  as it is, so the bend vanishes on the junction line instead of tearing there (finding 4, and the reference).
+- `reach` is 48 dp for a menu on the bar and 32 dp for the pill, tuned on the phone. With no partner, or `reach` 0,
+  `d = da` and `g = ga`: the library's own shape.
 
-### 2. The liquid lets go at one place
+## 2. The joined pane
 
-`hold(p)` is 1 everywhere at full pull and closes in on the point the drop came from as the pull falls:
+A new kit node, `kitLiquidJoinedPane` (in `effects/KitLiquidJoin.kt`), draws a pane's face while it has a partner.
+`kitLiquidFace` returns it instead of the library's pane when the pane is registered as a join body or drop, its
+partner is present, and both faces are granted liquid. Otherwise nothing changes.
 
-```
-r    = holdRadius * pull / (1 - pull)
-hold = exp(-distance(p, origin)^2 / r^2)
-```
+What it draws, in the pane's own node, behind the pane's content, over an area grown by `reach` on each side (the
+node does not clip to the pane's shape):
 
-The origin is known in both cases: the centre of the control that opened the menu, and the point on the message box's
-top edge under the pill's centre. With it, two flat edges part as a curtain that draws back to one neck, which thins
-and breaks at the origin. `holdRadius` starts at 24 dp.
+1. **Backdrop and bend**, at the pane's liquid resolution (half on Android for panes frosted 4 dp or more, as today):
+   the pane's own backdrop source, its colour controls and its blur, then a runtime-shader effect that samples it at
+   `p + bend * g`, where `bend = circleMap(1 - depth / rim) * refraction` is the library's formula with
+   `depth = -d / max(length(g), 0.05)`, and `rim` and `refraction` are `mix(own, partner's, w)`.
+2. **Cover**, at full resolution: the result of 1 is kept only where `d < 0` and `da <= db` (this pane's side). The
+   partner draws the other side from its own node. The two sides meet on the line `da = db`, where every mixed value
+   is the same from both sides.
+3. **Tint**, at full resolution: the pane's own face tint (`spec.fill`, `fillStart`, sheen, with its ink flip) mixed
+   to the partner's by `w`.
+4. **Rim light**, at full resolution: one line along `d = 0` on this pane's side, with the library's highlight
+   formula on the direction `g`, its colour mixed by `w`.
 
-### 3. One lens, one tint, one rim light
+The pane's touch light and picture rim light, which are drawn in the pane's own shape, are multiplied by `1 - 2w`, so
+they fade out towards the junction and never draw the pane's old outline inside the body.
 
-While a drop's pull is above 0, the merge layer draws the whole body `d < 0`, not only the bridge:
+**The blur is not mixed.** A bar frosts 6 dp and a menu 12 dp (6 dp in light themes); the message box 4 dp and the
+pill 2 dp. Each side keeps its own. Whether the change of frost across the junction line shows is the first thing the
+spike must answer (open question 1).
 
-- the page behind it through the body pane's colour controls and blur, then bent inside the rim with the library's own
-  formula (`circleMap(1 - depth / rim) * refraction` along the direction of `d`), where the direction is the gradient
-  of the one field `d`;
-- the body pane's tint over it;
-- one rim light along `d = 0`, brightest where the edge faces the top start and the bottom end, as the library's
-  highlight.
+**No hand-over animation.** A drop appears inside its body, where `facing` is 0 and the body's outline is unchanged,
+so switching the body from the library's pane to the joined pane at that moment changes no pixel, provided the two
+draw a lone pane the same. That is acceptance check 1.
 
-For that time the two panes do not draw their own faces (backdrop, tint, rim light). They keep drawing their content:
-words, icons, the message field.
+### Who draws what, and from which picture
 
-### 4. Hand-over at rest
+| Pane | Its node (unchanged) | Backdrop source (unchanged) | Draws |
+|---|---|---|---|
+| Bar | `KitScreen`'s top block | the transcript recording | its side, under the bar's content, above the status edge as today |
+| Menu from the bar | the host's menu layer | the page recording | its side, under the menu's rows |
+| Message box | `KitScreen`'s bottom block | the transcript recording | its side, under the field and chips |
+| Jump pill | inside the body, over the list | the transcript recording | its side, under its label |
+| Menu from a chip | the host's menu layer | the page recording | its side |
 
-At pull 0 the field is exactly `min(da, db)`: two separate shapes. The merged drawing and the panes' own faces must
-look the same at that moment, or the glass pops when a merge starts or ends.
+`KitLiquidMergeLayer`, its bridge and its blur layer are deleted.
 
-- The rim, refraction, blur, colour controls and tint are read from the same `LiquidRecipe` the pane uses.
-- The merged face cross-fades with the panes' own faces over the first and last 80 ms of the pull.
-- The two panes can have different recipes (the bar 6 dp blur, a menu 12 dp; the message box 4 dp, the pill 2 dp).
-  The merged body uses the body pane's recipe for both and eases to each pane's own during the cross-fade.
+### Wiring
 
-## How it is built
+- `KitLiquidMergeBody` and `KitLiquidDrop` (kept, renamed `KitLiquidJoinBody` / `KitLiquidJoinDrop`) each carry,
+  as snapshot state written in the layout or draw phase and read in draw: `rect` (window px), `radius` (px), the
+  pane's `LiquidRecipe`, and its current face tint and rim colour. `pull` and `origin` are removed.
+- A body holds at most two drops; a third is not joined.
+- `kitLiquidFace(role, source, shape, transform, chosen)` gains `join: KitLiquidJoinPart? = null`. Call sites that
+  pass it: the bar (`KitScreen`), `KitMenuPanel` (`KitMenu`), the pill (`KitJumpPill`), and the message box
+  (`KitComposerBox`, in `:ui:kit-chat`).
+- `KitPlatform` gains `liquidJoinEffect(program: LiveShaderProgram): RenderEffect?`, called in the draw phase after
+  the uniforms are set; it builds a new effect each frame (Android `RenderEffect.createRuntimeShaderEffect`, desktop
+  `ImageFilter.makeRuntimeShader`), content input named `content`. Null (below Android 13) means no joined pane.
+- One shader source with a `mode` uniform: 0 bend (used through the effect), 1 cover, 2 rim light (both as a brush).
 
-| Piece | Change |
-|---|---|
-| `KitLiquidMerge.kt` | `KitLiquidDrop` gains `origin` (window px). `MERGE_SHADER` becomes the one-body shader: the field above, and three outputs (cover, lens offset, rim light). `KitLiquidMergeLayer` draws the body through a runtime-shader render effect with the blurred page as its content. |
-| `KitPlatform` | One new call, `liquidBodyEffect(program)`: the compiled program as a render effect with a `content` input. Android: `RenderEffect.createRuntimeShaderEffect` (13+). Desktop: `ImageFilter.makeRuntimeShader`. Same pattern as today's `liveFinish`. |
-| `KitLiquidGlass.kt` (`kitLiquidFace`) | A pane that is a merge body or a drop reads "merging" and hands its face to the merge layer for that time (the cross-fade above). |
-| `KitMenu.kt`, `KitJumpPill.kt` | Set the drop's `origin`. No change to their motion. |
-| Tests | `KitLiquidGlassTest`-style desktop tests: the field is `min(da, db)` at pull 0; a drop inside its body leaves the body's outline unchanged; the cover is one connected region while the neck holds and two after it breaks; panes draw no face while merging and their own face at rest. A golden of three moments of each merge. |
+### Motion
 
-Module: `:ui:kit` only (plus the two-line origin in `KitMenu` and `KitJumpPill`, same module). One owner.
+The kit's motion for the menu (grow from 55 % about the control, fade, 8 dp slide) and the pill (rise on the release
+spring) is unchanged, with two exceptions:
 
-## Cost
+- the menu's rest position: its top edge overlaps the bar's bottom edge by 4 dp, and for a chip menu the message
+  box's top edge, so the join is a filleted corner and not a film across a gap;
+- the pill's rest position: it overlaps the message box's top edge by 4 dp (today it rests 8 dp above it).
 
-Today's bridge draws a box around the two shapes once per frame while pull > 0. The proposal draws the same box with a
-heavier shader (two box distances, four more for the gradient, one content sample) and removes two pane faces for that
-time. It runs only during the roughly 300 to 450 ms of a merge. The check is the existing `GlassBenchmark` menu path on
-the Galaxy S24: the share of frames more than one vsync late must not rise against today's build. If it does, the body
-is drawn at half resolution like the frosted panes.
+The menu's own "frost while it grows" transform no longer applies to a joined menu: the field follows the growing
+box each frame, so the lens is never misaligned.
 
-## Fallbacks (unchanged)
+## 3. Build order
 
-No runtime shaders (below Android 13), reduced motion, battery saver, the Frosted look, or a style other than Glass:
-no merge is drawn and the pieces move as they do today.
+Each phase ends with a recording for the owner, on the emulator and then the phone.
+
+| Phase | What | Gate to go on |
+|---|---|---|
+| 0. Spike (labelled, may be thrown away) | The joined pane drawing the bar alone, no partner | Acceptance check 1: it matches the library's bar |
+| 1. Pill and message box | The field, the node, both panes, the pill's rest position | The owner's eye on the recording; the benchmark |
+| 2. Menu and bar | The menu layer side, the menu's rest position | Same |
+| 3. Chip menu and message box | The second drop on one body | Same |
+
+Modules: `:ui:design` (the maths), `:ui:kit` (node, platform call, menu, pill, screen), `:ui:kit-chat`
+(`KitComposerBox`, one argument), `:androidApp` benchmark source set and `:benchmark` (proof scenes). One owner.
+
+## 4. Tests
+
+- `LiquidJoinTest` (`:ui:design`, common): `d = min(da, db)` at reach 0; a drop inside its body leaves the body's
+  outline unchanged; `d` has no step anywhere across both boxes (sampled on a 1 px grid); the cover is one connected
+  region for the three rest layouts; every mixed value is equal from both sides on `da = db`.
+- `KitLiquidJoinShaderTest` (`:ui:kit`, desktop): the compiled shader's cover agrees with `LiquidJoin` at 200 sample
+  points (desktop compiles the same text through `DesktopLiveShader`; the test platform is given `liveShaders`).
+- `GlassShots` (Android, Test Lab and emulator): the bar drawn by the library and by the joined pane with no partner,
+  same build (`--es liquid join`); the two PNGs differ by at most 2/255 per channel on 99.5 % of the bar's pixels.
+- Kit tests: a pane with a partner that is frost, veil or beyond the budget stays the library's pane.
+
+## 5. Cost
+
+A joined pane replaces the library's pane one for one: one backdrop layer at the same resolution, one lens pass, two
+small brush passes for cover and rim light. The pill is shown for as long as the reader is scrolled up, so this cost
+is steady, not a short burst.
+
+The check, on the Galaxy S24 in Test Lab, same method as the smoothness rounds:
+- two new scenes in `GlassProofActivity`: `join-pill` (the chat scrolling with the pill shown) and `join-menu` (the
+  bar's menu opened and closed eight times);
+- baseline first, on the commit before phase 1; `FrameTimingMetric`, 5 iterations each;
+- pass: the median run's share of frames more than one vsync late rises by no more than 1 point, and frame overrun
+  P90 by no more than 0.5 ms.
+
+If it fails, the cover and rim passes are folded into one, then `reach` is cut.
+
+## 6. Fallbacks
+
+Joined only when both panes are granted liquid faces: Glass style, a look with a lens, Android 13 or newer, motion
+not reduced, not battery saver, within the window's liquid budget. In every other case (the Frosted look, a veiled
+pill, a budget-held pane, a popup-window menu) the pieces are drawn and moved exactly as today, without today's
+bridge.
 
 ## Open questions
 
-1. Does the cross-fade at the start and end hide the hand-over on the phone, or is a closer match of the lens needed?
-2. A menu is much larger than the bar. Should the merged body take the bar's recipe (clearer) or the menu's (more
-   frosted) while they are joined?
-3. Is 24 dp the right `holdRadius`, and should the neck break earlier than the menu settles?
+1. Does the change of frost across the junction line show (bar 6 dp, menu 12 dp)? If it does, the drop's blur ramps
+   to the body's inside the junction with a second blurred input.
+2. Is 4 dp of overlap the right rest position for the pill, or does the owner want it higher with a longer swell?
+3. The pill lies inside the transcript recording that the message box's glass reads (design review, finding 1), so
+   the box's side could show the pill's own label bent in it. To be checked in phase 1; if so, the pill is drawn
+   outside that recording.
 
 ## Acceptance
 
-- Recorded on the emulator and on the owner's phone, next to the reference clip: the menu out of the bar and back, the
-  pill out of the message box and back, light and dark, over a moving transcript.
-- No pane outline is visible inside the merged body at any frame.
-- The neck breaks at the origin; no film, no line left behind.
-- No visible pop at the start or the end of a merge.
-- The benchmark check above.
+1. A lone bar drawn by the joined pane matches the library's bar (the `GlassShots` check above).
+2. On a recording stepped frame by frame: no outline of either pane inside the body, no line along the junction,
+   no change of the body pane at the frame a drop appears or goes.
+3. The swell is judged by the owner on the phone, next to the reference clip, in light and dark, over a moving
+   transcript.
+4. The benchmark check in section 5.
+
+## Prototype, next
+
+`proto.py` still draws v1's lens (normalised direction, one recipe) and its own timing. Before the owner's approval
+it is updated to this document: exact mixed directions, the per-pixel recipe mix, the kit's real menu and pill
+motion, and no letting go.
+
+## Later
+
+The reference lights its rim with bright content from just outside the glass (a bloom of the page sampled along the
+outward direction). The kit tints its rim from the picture behind. Worth a side-by-side once the joined body is in.
