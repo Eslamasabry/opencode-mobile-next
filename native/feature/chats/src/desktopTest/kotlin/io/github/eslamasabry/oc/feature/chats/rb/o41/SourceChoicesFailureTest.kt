@@ -6,9 +6,11 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.Failure
-import io.github.eslamasabry.oc.core.common.Redacted
+import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.feature.chats.RecordingChatsActions
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsHomeExtraState
@@ -46,7 +48,7 @@ class SourceChoicesFailureTest {
     }
 
     @Test fun `a failure to save is one compact notice with its details folded and one copy action`() = runComposeUiTest {
-        val failure = Failure.StorageRefused(Redacted("OpenGateway · Storage · Refused"))
+        val failure = Failure.StorageRefused(Redactor().details("OpenGateway · Storage · Refused"))
         setContent {
             KitTheme(platform = DesktopKitPlatform()) {
                 KitSheetHost {
@@ -63,7 +65,7 @@ class SourceChoicesFailureTest {
         onNodeWithText("OpenGateway · Storage · Refused").assertDoesNotExist()
         onAllNodesWithText("Copy details").assertCountEquals(0)
         onNodeWithTag("kit-notice-copy-details").assertDoesNotExist()
-        onNodeWithText("Details").performClick()
+        onNodeWithTag("kit-details-toggle").performSemanticsAction(SemanticsActions.Expand)
         waitForIdle()
         onNodeWithText("OpenGateway · Storage · Refused").assertExists()
         onAllNodesWithText("Copy details").assertCountEquals(1)
