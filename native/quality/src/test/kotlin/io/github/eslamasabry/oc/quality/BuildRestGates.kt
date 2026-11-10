@@ -62,6 +62,10 @@ internal object BuildRestGates {
         mapOf(
             "feature/servers/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/servers/ui/ServerEditorScreen.kt" to
                 "the add-server page: the person chooses the kind here, so its steps, words and icons follow that choice (move the per-kind facts into the editor's state: backlog B-222)",
+            "feature/servers/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/servers/ui/ComputerCommands.kt" to
+                "the add-server page's commands to run on the computer, which differ for the kind the person chose (B-222)",
+            "feature/servers/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/servers/ui/ServerSavedRows.kt" to
+                "a saved server's row names its kind and says token or password for it, facts fixed when it was added (B-222)",
         )
 
     /** A feature or UI file that imports a protocol client or branches on the server flavour. */
