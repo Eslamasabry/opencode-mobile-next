@@ -1301,6 +1301,7 @@ internal constructor(
     }
 
     private suspend fun refreshNow() = lane.withLock {
+        adoptNativeAddressLocked()
         val target = target()
         if (target != null && target.profile.raw !in closedProfiles) reconcileRecovery(target)
         publish()
@@ -1312,6 +1313,24 @@ internal constructor(
             )
         facts.update { it.copy(probe = answer) }
     }
+
+    /**
+     * The phone server's own profile still says the Flutter app's address (127.0.0.1:4097) after the update from
+     * 2.x, while this app's server listens on its own port. Only a start through [launch] rewrote it, so a server
+     * that Android brought back after the update (the package-replaced restore) or that was already running stayed
+     * unreachable and was not even recognised as this phone's server until the person tapped Restart (owner's phone,
+     * 3.0.0+10020). Every refresh and the first resume now put the address right; nothing else about the profile
+     * changes. Call with [lane] held.
+     */
+    private suspend fun adoptNativeAddressLocked() {
+        val owner = ownerId()?.takeIf { it.raw !in closedProfiles } ?: return
+        val loaded = profiles.profile(owner) ?: return
+        if (loaded.profile.usesAgentSocket) return
+        val address = PhoneProfileAddress.adopted(loaded.profile.baseUrl, PhoneServerScripts.PORT) ?: return
+        profiles.upsert(loaded.profile.copy(baseUrl = address), SecretEdit.Keep)
+    }
+
+    private suspend fun adoptNativeAddress() = lane.withLock { adoptNativeAddressLocked() }
 
     /**
      * Historical confirmations drain even after Stop; a fresh health proof never dispatches a
@@ -1644,6 +1663,7 @@ internal constructor(
         }
         if (on)
             scope.launch {
+                adoptNativeAddress()
                 if (!openStartDone) {
                     val state = (runtimeStatus() as? Outcome.Ok)?.value
                     if (
