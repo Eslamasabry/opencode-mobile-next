@@ -479,6 +479,64 @@ class Oc2LiveGatewayTest {
         }
 
     @Test
+    fun `B-242 a followed session page asks for the same size, so a long list is read to its end`() =
+        runTest {
+            // What OpenCode 2.1.1 and 2.2.6 do (measured 2026-11-10): the first page honours `limit`; a page asked
+            // for by cursor alone comes back as 50 rows, and a cursor is offered until an empty page.
+            val total = 235
+            val asked = mutableListOf<String?>()
+            val engine = MockEngine { request ->
+                val from = request.url.parameters["cursor"]?.removePrefix("o")?.toInt() ?: 0
+                asked += request.url.parameters["limit"]
+                val size = request.url.parameters["limit"]?.toInt() ?: 50
+                val rows = (from until minOf(from + size, total)).joinToString(",") { """{"id":"s$it"}""" }
+                respond("""{"data":[$rows],"cursor":{"next":"o${from + size}"}}""", HttpStatusCode.OK)
+            }
+            val gateway = gateway(engine)
+            val seen = mutableListOf<String>()
+            var page = (gateway.sessionPage(limit = 100) as Outcome.Ok).value
+            seen += page.items.map { it.id.raw }
+            var guard = 0
+            while (page.nextCursor != null && guard++ < 10) {
+                page = (gateway.sessionPage(page.nextCursor, limit = 100) as Outcome.Ok).value
+                seen += page.items.map { it.id.raw }
+            }
+            assertEquals(total, seen.distinct().size)
+            assertEquals(listOf<String?>("100", "100", "100"), asked)
+            gateway.close()
+        }
+
+    @Test
+    fun `B-242 a followed message page asks for the same size, so a long conversation is read to its start`() =
+        runTest {
+            // Same server behaviour as the conversation list (measured 2026-11-10 on 2.1.1 and 2.2.6).
+            val total = 420
+            val asked = mutableListOf<String?>()
+            val engine = MockEngine { request ->
+                val from = request.url.parameters["cursor"]?.removePrefix("o")?.toInt() ?: 0
+                asked += request.url.parameters["limit"]
+                val size = request.url.parameters["limit"]?.toInt() ?: 50
+                val rows =
+                    (from until minOf(from + size, total)).joinToString(",") {
+                        """{"id":"m$it","type":"user","text":"t$it"}"""
+                    }
+                respond("""{"data":[$rows],"cursor":{"next":"o${from + size}"}}""", HttpStatusCode.OK)
+            }
+            val gateway = gateway(engine)
+            val seen = mutableListOf<String>()
+            var page = (gateway.messagePage(SessionId("s"), limit = 100) as Outcome.Ok).value
+            seen += page.items.map { it.info.id }
+            var guard = 0
+            while (page.nextCursor != null && guard++ < 10) {
+                page = (gateway.messagePage(SessionId("s"), page.nextCursor, limit = 100) as Outcome.Ok).value
+                seen += page.items.map { it.info.id }
+            }
+            assertEquals(total, seen.distinct().size)
+            assertEquals(List<String?>(5) { "100" }, asked)
+            gateway.close()
+        }
+
+    @Test
     fun `B-PROTO-027 nullable session strings and cursor stay absent rather than literal null`() =
         runTest {
             val engine = MockEngine {

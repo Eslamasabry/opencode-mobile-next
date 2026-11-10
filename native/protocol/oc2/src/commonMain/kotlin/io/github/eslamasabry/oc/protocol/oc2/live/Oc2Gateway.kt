@@ -880,7 +880,9 @@ internal class Oc2Gateway(
         read(
             "/session",
             query =
-                if (cursor != null) mapOf("cursor" to cursor)
+                // B-242: the size goes with every cursor. A page asked for by cursor alone comes back as 50 rows
+                // (OpenCode 2.1.1 and 2.2.6), which the short-page rule below read as the end of the list.
+                if (cursor != null) mapOf("cursor" to cursor, "limit" to limit.toString())
                 else
                     mapOf(
                         "limit" to limit.toString(),
@@ -1187,7 +1189,9 @@ internal class Oc2Gateway(
         read(
             "/session/${sid(id)}/message",
             query =
-                if (cursor != null) mapOf("cursor" to cursor)
+                // B-242: as for conversations, a cursor alone brings a 50-row page, which the short-page rule
+                // below read as the start of the conversation: a long one stopped at its newest 150 messages.
+                if (cursor != null) mapOf("cursor" to cursor, "limit" to limit.toString())
                 else mapOf("limit" to limit.toString(), "order" to "desc"),
         ) { root ->
             val rows = pageEntries(root) ?: return@read null
