@@ -177,7 +177,7 @@ public fun ChatsScreen(
     actions: ChatsActions,
     appStatus: KitStatus? = null,
     replyOffer: (@Composable () -> Unit)? = null,
-    root: Boolean = false,
+    root: () -> Boolean = { false },
     /**
      * s23-factsbook: sections another feature places under the home's notes (FactsBook's Memory section while its
      * developer switch is on; F: chats_home_screen.dart:682, 856). Each draws nothing when it has nothing to say.

@@ -23,6 +23,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ConversationRowUi
 import io.github.eslamasabry.oc.feature.chats.presentation.RowStatus
 import io.github.eslamasabry.oc.feature.chats.presentation.RowTitle
 import io.github.eslamasabry.oc.feature.chats.ui.ChatsScreen
+import io.github.eslamasabry.oc.feature.chats.ui.homeBackExitStatus
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.KitText
@@ -81,7 +82,7 @@ class HomeBackExitScreenTest {
                     localeTag = "en",
                 ) {
                     KitSheetHost {
-                        ChatsScreen(state, RecordingChatsActions(), root = root)
+                        ChatsScreen(state, RecordingChatsActions(), root = { root })
                         overlay()
                     }
                 }
@@ -145,6 +146,35 @@ class HomeBackExitScreenTest {
         assertEquals(1, fellThrough, "covered by a page, Back belongs to the page stack, not the exit guard")
         assertFalse(hintShows())
     }
+
+    @Test
+    fun `JANK-HOME-2 pushing a page over the list does not recompose what hosts the guard, and Back is released`() =
+        runComposeUiTest {
+            var onTop by mutableStateOf(true)
+            var hostPasses = 0
+            setContent {
+                CompositionLocalProvider(LocalNavigationEventDispatcherOwner provides owner) {
+                    ChatEnvironment {
+                        KitTheme(
+                            appearance = KitAppearance(motion = MotionLevel.Off),
+                            platform = DesktopKitPlatform(),
+                            localeTag = "en",
+                        ) {
+                            hostPasses++
+                            homeBackExitStatus { onTop }
+                        }
+                    }
+                }
+            }
+            waitForIdle()
+            val before = hostPasses
+            runOnIdle { onTop = false }
+            waitForIdle()
+            assertEquals(before, hostPasses, "the flag is read inside the guard, not by the screen that calls it")
+            runOnIdle { back.press() }
+            waitForIdle()
+            assertEquals(1, fellThrough, "covered by a page, Back is no longer held")
+        }
 
     private companion object {
         const val HINT = "Press back again to exit"
