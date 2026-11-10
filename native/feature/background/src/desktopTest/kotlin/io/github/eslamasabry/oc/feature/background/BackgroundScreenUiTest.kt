@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
@@ -137,7 +138,8 @@ class BackgroundScreenUiTest {
         val actions = page(BackgroundLiveFacts(supported = true, pause = pause))
         onNodeWithText("Background connection paused at 13:10 to save battery.").assertExists()
         onNodeWithText("Resume").performClick()
-        onNodeWithText("Dismiss").performClick()
+        // The status line's dismiss is the kit's close mark, read aloud as "Dismiss" (a content description, not text).
+        onNodeWithContentDescription("Dismiss").performClick()
         waitForIdle()
         assertEquals(listOf("resume", "dismiss"), actions.calls)
     }
