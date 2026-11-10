@@ -31,6 +31,9 @@ public object TelemetryKeys {
     /** The setup funnel's memory across restarts: last step, attempts, start time (words and numbers only). */
     public const val SETUP_JOURNEY: String = "oc.telemetry.setupJourney"
 
+    /** The install-to-first-reply funnel's memory: when it began and which milestones were reached (words and one number). */
+    public const val JOURNEY: String = "oc.telemetry.journey"
+
     /** The time (epoch ms) of the newest crash already offered, so each crash is offered at most once. */
     public const val CRASH_LAST_OFFERED: String = "oc.crashReports.lastOffered"
 }
@@ -62,6 +65,11 @@ public class TelemetryAnswers(private val store: KeyValueStore, private val lane
 
     public suspend fun saveSetupJourney(encoded: String?): Outcome<Unit> =
         store.commit(lane) { if (encoded == null) remove(TelemetryKeys.SETUP_JOURNEY) else putString(TelemetryKeys.SETUP_JOURNEY, encoded) }
+
+    public fun journey(): String? = store.string(TelemetryKeys.JOURNEY)
+
+    public suspend fun saveJourney(encoded: String): Outcome<Unit> =
+        store.commit(lane) { putString(TelemetryKeys.JOURNEY, encoded) }
 
     public fun crashOfferEnabled(): Boolean = store.bool(TelemetryKeys.CRASH_OFFER) ?: true
 

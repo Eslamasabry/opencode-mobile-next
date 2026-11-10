@@ -41,7 +41,13 @@ public class ProductLifecycle(private val analytics: Telemetry, private val cloc
         analytics.breadcrumb("app.background")
         jank?.endSession()
         val elapsed = (clock.now().toEpochMilliseconds() - since.load()).coerceAtLeast(0).milliseconds
-        analytics.track(ProductEvent.SessionLength, mapOf("minutes_range" to HealthRanges.sessionMinutesOf(elapsed.inWholeMilliseconds)))
+        analytics.track(
+            ProductEvent.SessionLength,
+            mapOf(
+                "minutes_range" to HealthRanges.sessionMinutesOf(elapsed.inWholeMilliseconds),
+                "turns_range" to HealthRanges.countOf(analytics.takeSessionTurns()),
+            ),
+        )
     }
 
     public fun onForeground() {

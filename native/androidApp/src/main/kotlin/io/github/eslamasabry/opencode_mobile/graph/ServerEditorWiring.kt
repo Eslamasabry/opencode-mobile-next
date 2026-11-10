@@ -19,6 +19,8 @@ import io.github.eslamasabry.oc.core.security.ExternalLinkPolicy
 import io.github.eslamasabry.oc.core.security.LinkDecision
 import io.github.eslamasabry.oc.core.security.LinkOrigin
 import io.github.eslamasabry.oc.core.security.Redactor
+import io.github.eslamasabry.oc.engine.analytics.health.AppTelemetry
+import io.github.eslamasabry.oc.engine.analytics.product.ProductFeature
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.profiles.*
 import io.github.eslamasabry.oc.feature.servers.presentation.*
@@ -301,6 +303,8 @@ class NativeServerEditor(
                 ) {
                     is Outcome.Failed -> stored
                     is Outcome.Ok -> {
+                        // A server added for the first time counts as a used feature (an edit does not).
+                        if (previous == null) AppTelemetry.current.feature(ProductFeature.ServerAdd)
                         val guide = stores.profiles.setTailscaleGuidance(id, input.tailscale)
                         if (guide is Outcome.Failed) guide else id.ok()
                     }

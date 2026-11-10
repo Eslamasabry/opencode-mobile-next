@@ -106,7 +106,7 @@ public fun majorMinorOf(version: String?): String? {
  * counts only while [running] (it follows `usage`); with the switch off nothing is measured and nothing is kept.
  */
 public class JankMeter(
-    private val report: (screen: ProductScreen, pctRange: String, hz: String) -> Unit,
+    private val report: (screen: ProductScreen, pctRange: String, frozenRange: String, hz: String) -> Unit,
     private val refreshRate: () -> Double = { 60.0 },
     private val minFrames: Int = 30,
 ) {
@@ -116,6 +116,7 @@ public class JankMeter(
     private var screen = ProductScreen.Other
     private val frames = HashMap<ProductScreen, Int>()
     private val janky = HashMap<ProductScreen, Int>()
+    private val frozen = HashMap<ProductScreen, Int>()
     private val sent = HashSet<ProductScreen>()
 
     public fun start() {
@@ -126,6 +127,7 @@ public class JankMeter(
         running = false
         frames.clear()
         janky.clear()
+        frozen.clear()
     }
 
     /** A page of this kind came into view. */
@@ -134,11 +136,12 @@ public class JankMeter(
         screen = next
     }
 
-    /** The newest frames: [total] drawn, [slow] over one refresh period. */
-    public fun onFrames(total: Int, slow: Int) {
+    /** The newest frames: [total] drawn, [slow] over one refresh period, [frozen] of 700 ms or more (also in [slow]). */
+    public fun onFrames(total: Int, slow: Int, frozen: Int = 0) {
         if (!running) return
         frames[screen] = (frames[screen] ?: 0) + total
         janky[screen] = (janky[screen] ?: 0) + slow
+        this.frozen[screen] = (this.frozen[screen] ?: 0) + frozen
     }
 
     /** The app went to the background: report what was measured; the next time in front is a new session. */
@@ -149,6 +152,7 @@ public class JankMeter(
         sent.clear()
         frames.clear()
         janky.clear()
+        frozen.clear()
     }
 
     private fun flush(kind: ProductScreen) {
@@ -156,7 +160,7 @@ public class JankMeter(
         if (count < minFrames || kind in sent) return
         sent += kind
         val pct = (janky[kind] ?: 0) * 100.0 / count
-        report(kind, HealthRanges.jankPctOf(pct), HealthRanges.refreshHzOf(refreshRate()))
+        report(kind, HealthRanges.jankPctOf(pct), HealthRanges.frozenOf(frozen[kind] ?: 0), HealthRanges.refreshHzOf(refreshRate()))
     }
 }
 
@@ -175,10 +179,10 @@ public class HealthTelemetry(
 ) {
     public val jank: JankMeter =
         JankMeter(
-            report = { screen, pct, hz ->
+            report = { screen, pct, frozen, hz ->
                 telemetry.track(
                     ProductEvent.Jank,
-                    mapOf("screen" to screen, "janky_pct_range" to pct, "refresh_hz" to hz),
+                    mapOf("screen" to screen, "janky_pct_range" to pct, "frozen_range" to frozen, "refresh_hz" to hz),
                 )
             },
             refreshRate = refreshRate,

@@ -164,6 +164,7 @@ internal fun collectWords(item: CollectItem): StringResource =
         CollectItem.Background -> Res.string.collectBackground
         CollectItem.Updates -> Res.string.collectUpdates
         CollectItem.Pages -> Res.string.collectPages
+        CollectItem.Journey -> Res.string.collectJourney
         CollectItem.Start -> Res.string.collectStart
         CollectItem.Smooth -> Res.string.collectSmooth
         CollectItem.Memory -> Res.string.collectMemory

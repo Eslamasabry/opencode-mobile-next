@@ -32,6 +32,7 @@ class JourneyEventsTest {
             ProductEvent.SetupStepReached, ProductEvent.LinuxSetupStep, ProductEvent.SetupDone,
             ProductEvent.SetupAbandoned, ProductEvent.SetupResumed, ProductEvent.FirstReply, ProductEvent.SendResult,
             ProductEvent.ChatTurn, ProductEvent.TurnStall, ProductEvent.Approval, ProductEvent.SessionLength,
+            ProductEvent.JourneyMilestone, ProductEvent.UseFor, ProductEvent.Jank,
         )
 
     /** GA custom dimensions registered on the property today (event scope). */
@@ -43,7 +44,8 @@ class JourneyEventsTest {
         )
 
     /** The ones the owner is asked to add. */
-    private val proposed = setOf("attempt", "outcome", "input", "tools_range", "follow_up")
+    private val proposed =
+        setOf("attempt", "outcome", "input", "tools_range", "follow_up", "after_range", "turns_range", "frozen_range")
 
     @Test
     fun `B-JOURNEY-001 every journey parameter is a closed set of safe words and fits a GA dimension`() {

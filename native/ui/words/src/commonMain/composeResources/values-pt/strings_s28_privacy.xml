@@ -22,9 +22,9 @@
     <string name="collectAgents">Se um agente iniciou e o tipo de falha</string>
     <string name="collectBackground">Por que o serviço em segundo plano parou</string>
     <string name="collectUpdates">Se uma atualização foi instalada e o tipo de falha</string>
-    <string name="collectPages">Que tipos de página e recursos você usa, etapas de configuração, a primeira resposta e quanto dura uma visita</string>
+    <string name="collectPages">Que tipos de página e recursos você usa, etapas de configuração, a primeira resposta, quanto dura uma visita e quantas mensagens você enviou nela</string>
     <string name="collectStart">A rapidez com que o app inicia</string>
-    <string name="collectSmooth">A fluidez das páginas e a taxa de atualização da tela</string>
+    <string name="collectSmooth">A fluidez das páginas (a parcela de quadros lentos e congelados) e a taxa de atualização da tela</string>
     <string name="collectMemory">Avisos de memória do Android</string>
     <string name="collectDevice">Faixas de memória e de armazenamento livre do seu celular, o tipo de processador e a versão do WebView, se as notificações estão permitidas e o tipo e a versão do servidor que você usa</string>
     <string name="collectCrashKind">O tipo de erro e onde no código do app ele ocorreu, nunca a mensagem</string>

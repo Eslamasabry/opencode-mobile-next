@@ -56,10 +56,37 @@ public object HealthRanges {
     public fun appStartMsOf(elapsedMs: Long): String =
         pick(elapsedMs.toDouble(), listOf(500.0, 1000.0, 2000.0, 5000.0), appStartMs)
 
-    /** `jank.janky_pct_range`. */
-    public val jankPct: List<String> = listOf("<1", "1-5", "5-15", ">15")
+    /**
+     * `jank.janky_pct_range`. Flutter 2.1.5 ended at `>15`, and 54 percent of its events sat in that last bucket, so a
+     * page at 16 percent read the same as one at 80. Native splits it: `15-30` and `>30` together are Flutter's `>15`.
+     */
+    public val jankPct: List<String> = listOf("<1", "1-5", "5-15", "15-30", ">30")
 
-    public fun jankPctOf(percent: Double): String = pick(percent, listOf(1.0, 5.0, 15.0), jankPct)
+    public fun jankPctOf(percent: Double): String = pick(percent, listOf(1.0, 5.0, 15.0, 30.0), jankPct)
+
+    /** `jank.frozen_range`: frames that took 700 ms or more (Android vitals' "frozen frame") on one kind of page. */
+    public val frozen: List<String> = listOf("0", "1-2", "3-10", ">10")
+
+    public fun frozenOf(count: Int): String =
+        when {
+            count <= 0 -> "0"
+            count <= 2 -> "1-2"
+            count <= 10 -> "3-10"
+            else -> ">10"
+        }
+
+    /**
+     * `journey_milestone.after_range`: how long after the first time the app was open with usage on. The clock starts
+     * when the person agrees, so it never reaches back before that.
+     */
+    public val sinceStart: List<String> = listOf("under_5m", "5_to_30m", "30m_to_2h", "2h_to_1d", "1_to_3d", "over_3d")
+
+    public fun sinceStartOf(elapsedMs: Long): String =
+        pick(
+            elapsedMs.coerceAtLeast(0) / 60_000.0,
+            listOf(5.0, 30.0, 120.0, 1440.0, 4320.0),
+            sinceStart,
+        )
 
     /** `jank.refresh_hz`. */
     public val refreshHz: List<String> = listOf("60", "90", "120", "other")
@@ -246,6 +273,7 @@ public val healthKeyPatterns: Map<String, Regex> =
 /** The user properties (section D). */
 public val healthPropertyWords: Map<String, Set<String>> =
     mapOf(
+        "journey_stage" to Milestone.entries.map { it.wire }.toSet(),
         "ram_range" to HealthRanges.ram.toSet(),
         "free_storage_range" to HealthRanges.storage.toSet(),
         "abi" to HealthWords.abis,

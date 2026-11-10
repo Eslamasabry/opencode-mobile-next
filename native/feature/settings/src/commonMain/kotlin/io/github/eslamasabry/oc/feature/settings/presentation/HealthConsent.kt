@@ -69,6 +69,7 @@ public enum class CollectItem {
     Background,
     Updates,
     Pages,
+    Journey,
     Start,
     Smooth,
     Memory,
@@ -107,6 +108,7 @@ public object HealthContract {
                     CollectItem.Background,
                     CollectItem.Updates,
                     CollectItem.Pages,
+                    CollectItem.Journey,
                     CollectItem.Start,
                     CollectItem.Smooth,
                     CollectItem.Memory,
@@ -130,6 +132,7 @@ public object HealthContract {
             CollectItem.Updates to listOf("update_result", "update_offered", "update_installed"),
             CollectItem.Pages to
                 listOf("app_open", "setup_step_*", "first_reply", "screen_view", "feature_used", "session_length"),
+            CollectItem.Journey to listOf("journey_milestone", "journey_stage"),
             CollectItem.Start to listOf("app_start"),
             CollectItem.Smooth to listOf("jank"),
             CollectItem.Memory to listOf("memory_pressure"),

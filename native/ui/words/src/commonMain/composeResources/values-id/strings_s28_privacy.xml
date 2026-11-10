@@ -22,9 +22,9 @@
     <string name="collectAgents">Apakah agen berhasil dimulai, dan jenis kegagalan</string>
     <string name="collectBackground">Mengapa layanan latar belakang berhenti</string>
     <string name="collectUpdates">Apakah pembaruan berhasil terpasang, dan jenis kegagalan</string>
-    <string name="collectPages">Jenis halaman dan fitur yang Anda gunakan, langkah penyiapan, balasan pertama, dan lama kunjungan</string>
+    <string name="collectPages">Jenis halaman dan fitur yang Anda gunakan, langkah penyiapan, balasan pertama, lama kunjungan, dan jumlah pesan yang Anda kirim saat itu</string>
     <string name="collectStart">Seberapa cepat aplikasi dimulai</string>
-    <string name="collectSmooth">Seberapa lancar halaman, dan kecepatan refresh layar</string>
+    <string name="collectSmooth">Seberapa lancar halaman (porsi frame yang lambat dan macet), dan kecepatan refresh layar</string>
     <string name="collectMemory">Peringatan memori dari Android</string>
     <string name="collectDevice">Rentang memori dan penyimpanan kosong ponsel Anda, jenis prosesor dan versi WebView, apakah notifikasi diizinkan, serta jenis dan versi server yang Anda gunakan</string>
     <string name="collectCrashKind">Jenis kesalahan dan lokasinya di kode aplikasi, tanpa pesannya</string>

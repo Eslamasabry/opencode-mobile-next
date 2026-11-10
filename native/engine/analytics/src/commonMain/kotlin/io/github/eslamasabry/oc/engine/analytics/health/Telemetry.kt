@@ -5,8 +5,14 @@ import io.github.eslamasabry.oc.engine.analytics.ReportRedactor
 import io.github.eslamasabry.oc.engine.analytics.Reporting
 import io.github.eslamasabry.oc.engine.analytics.product.ProductEvent
 import io.github.eslamasabry.oc.engine.analytics.product.ProductFeature
+import io.github.eslamasabry.oc.engine.analytics.product.ProductUseFor
 import io.github.eslamasabry.oc.engine.analytics.product.cleanProductProps
+import kotlin.concurrent.atomics.AtomicInt
+import kotlin.concurrent.atomics.AtomicReference
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import kotlin.concurrent.atomics.incrementAndFetch
 import kotlin.random.Random
+import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -82,6 +88,20 @@ public interface Telemetry : Reporting {
     public fun feature(feature: ProductFeature) {
         track(ProductEvent.FeatureUsed, mapOf("feature" to feature))
     }
+
+    /**
+     * The use-case answer as its one coarse word ([ProductUseFor.of]). Sent only when it is the first answer or a
+     * different one; [previous] is the word last sent (stored by the caller with the answer).
+     */
+    public fun useFor(answer: ProductUseFor, previous: String? = null) {
+        if (ProductUseFor.changed(previous, answer)) track(ProductEvent.UseFor, mapOf("kind" to answer))
+    }
+
+    /**
+     * Messages answered since the last call, then back to zero: the number `session_length` reports as `turns_range`
+     * when the app goes to the background. Counted only while `usage` is on.
+     */
+    public fun takeSessionTurns(): Int = 0
 }
 
 /**
@@ -186,6 +206,7 @@ public class MemoryTelemetryReportStore : TelemetryReportStore {
  * once the stored answers are readable: it adopts them and applies them to the vendor, as Flutter's `start()` does.
  * Until then the vendor keeps its own last setting (off in the manifest on a first run).
  */
+@OptIn(ExperimentalAtomicApi::class)
 public class TelemetryService(
     private val vendor: TelemetryVendor,
     override val available: Boolean,
@@ -195,10 +216,13 @@ public class TelemetryService(
     private var reports: TelemetryReportStore = MemoryTelemetryReportStore(),
     override val ring: AppLogRing = AppLogRing(),
     private val random: Random = Random.Default,
+    private val wallClockMs: () -> Long = { Clock.System.now().toEpochMilliseconds() },
 ) : Telemetry {
     private val usageFlow = MutableStateFlow(early.usage)
     private val crashesFlow = MutableStateFlow(early.crashes)
     private val keys = LinkedHashMap<String, String>()
+    private val turns = AtomicInt(0)
+    private val journeyRef = AtomicReference<JourneyMilestones?>(null)
 
     override val usage: StateFlow<Boolean> = usageFlow.asStateFlow()
     override val crashes: StateFlow<Boolean> = crashesFlow.asStateFlow()
@@ -303,6 +327,31 @@ public class TelemetryService(
         val safe = cleanProductProps(event, props) ?: return
         ring.add("event ${event.wire}" + safe.entries.joinToString("") { " ${it.key}=${it.value}" })
         safely { vendor.event(event.wire, safe) }
+        if (event == ProductEvent.SendResult && safe["result"] == "ok") turns.incrementAndFetch()
+        safely { journeyRef.load()?.observe(event, safe) }
+    }
+
+    override fun takeSessionTurns(): Int = turns.exchange(0)
+
+    /**
+     * Starts the install-to-first-reply funnel ([JourneyMilestones]), remembering it in [memory]. Call once the stored
+     * answers are readable and before the first events of the run; the app being open now is the first milestone.
+     */
+    public fun attachJourney(memory: JourneyMemory) {
+        val journey =
+            JourneyMilestones(
+                now = wallClockMs,
+                memory = memory,
+                emit = { milestone, after ->
+                    track(ProductEvent.JourneyMilestone, mapOf("step" to milestone.wire, "after_range" to after))
+                },
+                stage = { word -> setUserProperties(mapOf("journey_stage" to word)) },
+            )
+        journeyRef.store(journey)
+        if (usageLive) {
+            journey.reach(Milestone.Opened)
+            journey.publishStage()
+        }
     }
 
     override fun performanceTrace(name: String, elapsedMs: Long, attributes: Map<String, Any?>) {

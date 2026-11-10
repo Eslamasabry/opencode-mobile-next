@@ -22,9 +22,9 @@
     <string name="collectAgents">Запустился ли агент и вид сбоя</string>
     <string name="collectBackground">Почему остановилась фоновая служба</string>
     <string name="collectUpdates">Установилось ли обновление и вид сбоя</string>
-    <string name="collectPages">Какие виды страниц и функций вы используете, шаги настройки, первый ответ и сколько длится посещение</string>
+    <string name="collectPages">Какие виды страниц и функций вы используете, шаги настройки, первый ответ, сколько длится посещение и сколько сообщений вы в нём отправили</string>
     <string name="collectStart">Как быстро запускается приложение</string>
-    <string name="collectSmooth">Как плавно работают страницы и частота обновления экрана</string>
+    <string name="collectSmooth">Как плавно работают страницы (доля медленных и зависших кадров) и частота обновления экрана</string>
     <string name="collectMemory">Предупреждения о памяти от Android</string>
     <string name="collectDevice">Диапазоны памяти и свободного места вашего телефона, тип процессора и версия WebView, разрешены ли уведомления, а также вид и версия вашего сервера</string>
     <string name="collectCrashKind">Вид ошибки и место в коде приложения, где она произошла, но не её сообщение</string>

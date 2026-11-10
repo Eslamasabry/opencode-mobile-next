@@ -21,9 +21,10 @@
     <string name="collectAgents">Whether an agent started, and the kind of failure</string>
     <string name="collectBackground">Why the background service stopped</string>
     <string name="collectUpdates">Whether an update installed, and the kind of failure</string>
-    <string name="collectPages">Which kinds of pages and features you use, setup steps, the first reply and how long a visit lasts</string>
+    <string name="collectPages">Which kinds of pages and features you use, setup steps, the first reply, how long a visit lasts and how many messages you sent in it</string>
+    <string name="collectJourney">How far you got in your first steps (opened the app, set up, connected, sent a message, got a first reply) and roughly how long after you agreed. Each step is counted once</string>
     <string name="collectStart">How fast the app starts</string>
-    <string name="collectSmooth">How smooth pages are, and the screen’s refresh rate</string>
+    <string name="collectSmooth">How smooth pages are (the share of slow and frozen frames), and the screen’s refresh rate</string>
     <string name="collectMemory">Memory warnings from Android</string>
     <string name="collectDevice">Ranges for your phone’s memory and free storage, its processor type and WebView version, whether notifications are allowed, and the kind and version of server you use</string>
     <string name="collectCrashKind">The kind of error and where in the app’s code it happened, never its message</string>
