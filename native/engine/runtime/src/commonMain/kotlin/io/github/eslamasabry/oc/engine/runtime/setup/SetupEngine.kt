@@ -708,7 +708,11 @@ public class SetupEngine(
                 is Outcome.Failed -> return answer
                 is Outcome.Ok -> answer.value
             }
-        val parsed = SetupJobRecord.parse(text)
+        // B-251: the Flutter app's phone-agent install saved its owner as a group of its own in this file. It is that
+        // job's, never a setup parameter: it is dropped here so it neither refuses every later job (the OpenCode
+        // update, Repair, Add tools) nor travels into one.
+        val parsed =
+            SetupJobRecord.parse(text)?.let { it.copy(params = it.params - SetupPlanning.FLUTTER_AGENT_OWNER_GROUP) }
         if (text != null && text.isNotBlank() && parsed == null)
             return Failure.Runtime(RuntimeProblem.Generic).failed()
         if (parsed != null) {
