@@ -120,6 +120,19 @@ class NativeChatLeases(
 
     // The same rule as the gateway's requireDispatchAdmission, so the hook exists wherever it is
     // required (bracketed IPv6 and any letter case included).
+    /**
+     * A status read of the connected server for [profile], made on its own: whether it has running work. True busy,
+     * false idle, null when there is no live connection to it or the read failed. The lease [busy] map only has an
+     * entry once [follow] has read a connected server; the phone update asks this when that has not happened yet.
+     */
+    suspend fun readNow(profile: String): Boolean? {
+        val graph = registry.live.value[ProfileId(profile)] ?: return null
+        if (!readableGraph(graph) || !local(graph)) return null
+        val read = graph.session.server.sessionStatuses()
+        if (read !is Outcome.Ok) return null
+        return read.value.values.any { it == SessionStatus.Busy || it == SessionStatus.Retry }
+    }
+
     private fun readableGraph(graph: ConnectionGraph): Boolean {
         val raw = graph.profile.id.raw
         if (profiles.profile(graph.profile.id) != null) return true

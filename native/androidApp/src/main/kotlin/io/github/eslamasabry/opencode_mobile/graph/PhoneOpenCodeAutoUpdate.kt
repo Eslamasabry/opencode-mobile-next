@@ -16,7 +16,14 @@ import android.os.SystemClock
 import io.github.eslamasabry.oc.engine.runtime.server.OpenCodeIdleSettle
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupComponentIds
 import kotlinx.coroutines.flow.MutableSharedFlow
+import io.github.eslamasabry.oc.core.common.AppLog
+import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.RuntimeProblem
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 
@@ -34,6 +41,7 @@ class PhoneOpenCodeAutoUpdate(
     private val appScope: AppCoroutineScope,
 ) {
     private var started = false
+    private val log = AppLog.tagged("OcAutoUpdate")
 
     fun start() {
         if (started) return
@@ -54,24 +62,55 @@ class PhoneOpenCodeAutoUpdate(
                 override val running: Boolean get() = setup.progress.value.state == SetupState.Running
                 override val failed: Boolean get() = setup.progress.value.state == SetupState.Failed
 
-                // Left to the manual row on failure; the setup job reports its own.
-                override suspend fun updateOpenCode(runtime: String) {
-                    setup.update()
+                // Refused before it started (not known idle, a job running): the try is not spent. A job that
+                // started and failed is left to the manual row; the setup job reports its own failure.
+                override suspend fun updateOpenCode(runtime: String): Boolean {
+                    val result = setup.update()
+                    val refused =
+                        (result as? Outcome.Failed)?.failure.let {
+                            it is Failure.Runtime && it.problem == RuntimeProblem.SlotBusy
+                        }
+                    if (refused) log.i { "update refused before it started (work running or not known idle)" }
+                    return !refused
                 }
             }
         val settled = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
         // `leases.busy` reads false only after a real status read of a connected server (NativeChatLeases `known`), and
         // goes back to unknown when that read fails; the 30 s settle on top is Flutter's `inAppAutoUpdateSettle`.
         val settle = OpenCodeIdleSettle(appScope, { SystemClock.elapsedRealtime() }) { settled.tryEmit(Unit) }
+        // The newest idle reading. The chat-lease map has no entry for the phone server until a chat watch has read it,
+        // so a read of its own is made here (while the server is behind the pin), not only when a lease says so.
+        val idle =
+            java.util.concurrent.atomic.AtomicReference(
+                BuiltinRuntime.WorkIdle(idle = false, lease = null, direct = null, agent = false)
+            )
         val updater =
-            OpenCodeAutoUpdater(host, jobs) {
+            OpenCodeAutoUpdater(
+                host,
+                jobs,
+                log = { log.i { it } },
+            ) {
                 // Flutter also refuses while `localPhoneAgentWorkBusy`: the agent's `<owner>.agents` reading.
-                settle.busy(runtime.workKnownIdle()) || runtime.agentWorkBusy()
+                val reading = idle.get()
+                val busy = settle.busy(reading.idle)
+                busy
             }
+        val reads = flow {
+            while (true) {
+                val behind = host.installedVersion?.trim()?.removePrefix("v")?.let { it.isNotEmpty() && it != host.pinnedVersion } == true
+                if (behind) {
+                    val now = runtime.readWorkIdle()
+                    if (now != idle.get()) log.i { "work idle=${now.idle} lease=${now.lease} direct=${now.direct} agent=${now.agent}" }
+                    idle.set(now)
+                }
+                emit(Unit)
+                delay(30.seconds)
+            }
+        }
         appScope.launchOpenCodeAutoUpdate(
             updater,
             host,
-            merge(combine(runtime.serverFacts, setup.progress, leases.busy) { _, _, _ -> }, settled),
+            merge(combine(runtime.serverFacts, setup.progress, leases.busy) { _, _, _ -> }, settled, reads),
         )
         appScope.launch {
             setup.progress.collect {

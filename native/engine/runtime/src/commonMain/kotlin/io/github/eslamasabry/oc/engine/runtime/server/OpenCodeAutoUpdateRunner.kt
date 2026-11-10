@@ -37,3 +37,14 @@ public fun CoroutineScope.launchOpenCodeAutoUpdate(
     updater.changed()
     changes.collect { updater.changed() }
 }
+
+/** Whether the phone server's work is known to be idle (the update restarts the server, so unknown counts as busy). */
+public object PhoneWorkIdle {
+    /**
+     * [leaseBusy] is the chat-lease reading of the owner's server (null: none yet, e.g. no chat watch started);
+     * [directBusy] is a status read of the connected server made on its own (null: could not be read);
+     * [agentBusy] is the phone agent's own chat working. A lease reading wins, else the direct one.
+     */
+    public fun knownIdle(leaseBusy: Boolean?, directBusy: Boolean?, agentBusy: Boolean): Boolean =
+        !agentBusy && (leaseBusy ?: directBusy) == false
+}

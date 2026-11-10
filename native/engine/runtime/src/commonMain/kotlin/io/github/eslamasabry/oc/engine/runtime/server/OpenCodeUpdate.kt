@@ -51,8 +51,11 @@ public interface OpenCodeUpdateJobs {
     public val running: Boolean
     public val failed: Boolean
 
-    /** Runs the `opencode` component job for [runtime]. */
-    public suspend fun updateOpenCode(runtime: String)
+    /**
+     * Runs the `opencode` component job for [runtime]. True when the job started; false when it was refused before
+     * it started (work running, server not known idle), which leaves the automatic try unspent.
+     */
+    public suspend fun updateOpenCode(runtime: String): Boolean
 }
 
 /**
@@ -63,8 +66,12 @@ public interface OpenCodeUpdateJobs {
 public class OpenCodeAutoUpdater(
     private val host: OpenCodeHostFacts,
     private val jobs: OpenCodeUpdateJobs,
+    /** One line per change of what the updater sees: which condition holds it back (no personal data). */
+    private val log: ((String) -> Unit)? = null,
     private val workBusy: () -> Boolean,
 ) {
+    private var lastLine: String? = null
+
     private val attempted = mutableSetOf<String>()
     private val checking = Mutex()
 
@@ -72,26 +79,49 @@ public class OpenCodeAutoUpdater(
         if (!checking.tryLock()) return
         try {
             val key = "${host.runtime}:${host.pinnedVersion}"
-            if (!decide(key)) return
+            if (!decide(key, explain = true)) return
             host.refresh()
             if (!decide(key)) return
-            attempted += key
-            jobs.updateOpenCode(host.runtime)
+            // A try refused before the job started is not spent: the next look tries again.
+            if (jobs.updateOpenCode(host.runtime)) attempted += key
+            else note("refused before it started; will try again")
         } finally {
             checking.unlock()
         }
     }
 
-    private fun decide(key: String): Boolean =
-        OpenCodeAutoUpdateRule.shouldUpdate(
-            installedVersion = host.installedVersion,
-            pinnedVersion = host.pinnedVersion,
-            busy = workBusy(),
-            engineRunning = jobs.running,
-            switchPending = host.switchPending,
-            installProblem = host.installProblem || jobs.failed,
-            attemptedThisRun = key in attempted,
-        )
+    private fun note(line: String) {
+        if (line == lastLine) return
+        lastLine = line
+        log?.invoke(line)
+    }
+
+    private fun decide(key: String, explain: Boolean = false): Boolean {
+        val installed = host.installedVersion
+        val busy = workBusy()
+        val running = jobs.running
+        val switchPending = host.switchPending
+        val problem = host.installProblem || jobs.failed
+        val tried = key in attempted
+        val go =
+            OpenCodeAutoUpdateRule.shouldUpdate(
+                installedVersion = installed,
+                pinnedVersion = host.pinnedVersion,
+                busy = busy,
+                engineRunning = running,
+                switchPending = switchPending,
+                installProblem = problem,
+                attemptedThisRun = tried,
+            )
+        if (explain) {
+            note(
+                "installed=${installed ?: "unknown"} pinned=${host.pinnedVersion} busy=$busy engineRunning=$running " +
+                    "switchPending=$switchPending installProblem=$problem attempted=$tried -> " +
+                    if (go) "update" else "hold",
+            )
+        }
+        return go
+    }
 }
 
 /** The OpenCode component journal inside Ubuntu (setup's activation step). */

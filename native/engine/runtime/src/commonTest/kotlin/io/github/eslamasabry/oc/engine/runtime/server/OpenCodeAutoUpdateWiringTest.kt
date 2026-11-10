@@ -44,9 +44,11 @@ class OpenCodeAutoUpdateWiringTest {
         override var running = false
         override var failed = false
         var runs = 0
+        var starts = true
 
-        override suspend fun updateOpenCode(runtime: String) {
+        override suspend fun updateOpenCode(runtime: String): Boolean {
             runs++
+            return starts
         }
     }
 
@@ -88,5 +90,40 @@ class OpenCodeAutoUpdateWiringTest {
         advanceUntilIdle()
         assertEquals(0, jobs.runs)
         job.cancel()
+    }
+
+    @Test
+    fun `an attempt refused before the job started does not use up the attempt for this run`() = runTest {
+        val jobs = Jobs()
+        jobs.starts = false
+        val host = Host("2.1.1")
+        val updater = OpenCodeAutoUpdater(host, jobs) { false }
+        updater.changed()
+        assertEquals(1, jobs.runs)
+        jobs.starts = true
+        updater.changed()
+        assertEquals(2, jobs.runs)
+        updater.changed()
+        assertEquals(2, jobs.runs)
+    }
+
+    @Test
+    fun `idle is known from a direct read when the lease reading has no entry yet, and unknown stays busy`() {
+        assertEquals(true, PhoneWorkIdle.knownIdle(leaseBusy = null, directBusy = false, agentBusy = false))
+        assertEquals(false, PhoneWorkIdle.knownIdle(leaseBusy = null, directBusy = null, agentBusy = false))
+        assertEquals(false, PhoneWorkIdle.knownIdle(leaseBusy = null, directBusy = true, agentBusy = false))
+        assertEquals(false, PhoneWorkIdle.knownIdle(leaseBusy = true, directBusy = false, agentBusy = false))
+        assertEquals(true, PhoneWorkIdle.knownIdle(leaseBusy = false, directBusy = null, agentBusy = false))
+        assertEquals(false, PhoneWorkIdle.knownIdle(leaseBusy = false, directBusy = false, agentBusy = true))
+    }
+
+    @Test
+    fun `each decision says what held it back, once per change`() = runTest {
+        val lines = mutableListOf<String>()
+        val updater = OpenCodeAutoUpdater(Host("2.1.1"), Jobs(), lines::add) { true }
+        updater.changed()
+        updater.changed()
+        assertEquals(1, lines.size)
+        assertEquals(true, "busy=true" in lines.single() && "installed=2.1.1" in lines.single() && "pinned=2.2.6" in lines.single())
     }
 }

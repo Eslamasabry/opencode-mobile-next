@@ -28,8 +28,9 @@ class OpenCodeIdleSettleTest {
         override var failed = false
         var runs = 0
 
-        override suspend fun updateOpenCode(runtime: String) {
+        override suspend fun updateOpenCode(runtime: String): Boolean {
             runs++
+            return true
         }
     }
 

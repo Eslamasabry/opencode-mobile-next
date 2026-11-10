@@ -2,6 +2,9 @@
 
 package io.github.eslamasabry.oc.feature.phone
 
+import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import io.github.eslamasabry.oc.engine.runtime.host.RuntimePhase
 import io.github.eslamasabry.oc.engine.runtime.host.RuntimeStatus
 import io.github.eslamasabry.oc.engine.runtime.server.ProbeAnswer
@@ -162,6 +165,18 @@ class ThisPhoneModelTest {
             assertEquals(ThisPhoneNotice.UpdateBusy, rig.model.state.value.notice)
             runCurrent()
             assertEquals(emptyList(), rig.server.calls)
+        }
+
+    @Test
+    fun `an update that could not start because work is running says so, never silence`() =
+        runTest {
+            val rig = rig(runningFacts.copy(installedVersion = "1.3.9"))
+            rig.server.answer = Outcome.Failed(Failure.Runtime(RuntimeProblem.SlotBusy))
+            rig.model.askUpdate()
+            runCurrent()
+            rig.model.confirm()
+            runCurrent()
+            assertEquals(ThisPhoneNotice.UpdateBusy, rig.model.state.value.notice)
         }
 
     @Test
