@@ -330,6 +330,7 @@ class PaseoUsageSource implements UsageSource {
       }
       for (final reading in list) {
         final provider = reading.providerId;
+        final accountRef = reading.accountRef;
         if (reading.needsSignIn && reading.windows.isEmpty) {
           readings.add(
             UsageReading(
@@ -338,6 +339,7 @@ class PaseoUsageSource implements UsageSource {
               connectionId: id,
               status: UsageReadingStatus.notSignedIn,
               fetchedAt: reading.fetchedAt,
+              accountRef: accountRef,
               method: SignInMethod.plan,
             ),
           );
@@ -352,6 +354,8 @@ class PaseoUsageSource implements UsageSource {
                 ? UsageReadingStatus.noLimits
                 : UsageReadingStatus.ok,
             fetchedAt: reading.fetchedAt,
+            plan: reading.planLabel,
+            accountRef: accountRef,
             method: SignInMethod.plan,
             windows: [
               for (final w in reading.windows)

@@ -12,7 +12,8 @@ import '../l10n/app_localizations.dart';
 import '../state/profiles.dart';
 import 'builtin_linux.dart';
 import 'deliberate_stop.dart';
-import 'linux_services/rootfs_linux_services.dart';
+import 'quota_collector_host.dart';
+import 'setup/node_compat.dart';
 import 'setup/setup_engine.dart' show ChannelSetupEngine;
 import 'team/builtin_team.dart';
 
@@ -214,6 +215,9 @@ class BuiltinServerStartFailure {
 ///
 /// The single start path: the setup screen and the opening card both call
 /// it, so the two can never start the server differently.
+///
+/// [nodeCompat] reads this phone's Node.js safe mode (issue #117); the
+/// server starts with its environment.
 Future<BuiltinServerStartFailure?> startBuiltinServer({
   required BuiltinLinux linux,
   required ServerProfile profile,
@@ -221,9 +225,9 @@ Future<BuiltinServerStartFailure?> startBuiltinServer({
   Duration pollInterval = const Duration(seconds: 2),
   bool Function()? stillWanted,
   int? recoveryGeneration,
-  int? launchGeneration,
   bool migrateLegacyHistory = false,
   Future<void> Function(ServerProfile profile)? saveRenewedPassword,
+  Future<NodeCompatState?> Function() nodeCompat = NodeCompatStore.load,
 }) async {
   const cancelled = BuiltinServerStartFailure.detail(
     'The server start was not confirmed.',
@@ -266,10 +270,7 @@ Future<BuiltinServerStartFailure?> startBuiltinServer({
         );
       }
     }
-    final written = await linux.run(
-      BuiltinLinux.writePasswordScript(profile.password),
-      timeout: const Duration(seconds: 60),
-    );
+    final written = await linux.writeServerPassword(profile.password);
     if (!written.ok) {
       return const BuiltinServerStartFailure.detail(
         'The server password could not be saved.',
@@ -279,26 +280,18 @@ Future<BuiltinServerStartFailure?> startBuiltinServer({
     if (!wanted()) return cancelled;
     final script = BuiltinLinux.serverScript(
       runtime: BuiltinLinux.runtimeFor(profile.flavor),
+      // This phone's Node.js safe mode, if it needs one (issue #117).
+      nodeCompat: await nodeCompat(),
     );
     step = 'start';
-    final restoreRecipe = BuiltinServerRestoreRecipe(
-      profileId: profile.id,
-      runtime: BuiltinLinux.runtimeFor(profile.flavor),
-    );
-    if (launchGeneration != null) {
-      // Opening the app may replace a stale or stopped server, but only while
-      // the native intent it observed still stands: Stop wins.
-      await linux.startServerForLaunch(
-        script,
-        port: BuiltinLinux.serverPort,
-        expectedGeneration: launchGeneration,
-        restoreRecipe: restoreRecipe,
-      );
-    } else if (recoveryGeneration == null) {
+    if (recoveryGeneration == null) {
       await linux.startServer(
         script,
         port: BuiltinLinux.serverPort,
-        restoreRecipe: restoreRecipe,
+        restoreRecipe: BuiltinServerRestoreRecipe(
+          profileId: profile.id,
+          runtime: BuiltinLinux.runtimeFor(profile.flavor),
+        ),
       );
     } else {
       await linux.restartServer(
@@ -371,11 +364,6 @@ String couldNotStartReason(Object error, String step) {
   final details = error is BuiltinLinuxException ? error.details : null;
   final why = details != null && details.isNotEmpty ? '; $details' : '';
   return 'The phone server could not start ($step: $kind$why)';
-}
-
-/// The app's opening start found the person's Stop (or another owner) first.
-class _LaunchWithdrawn implements Exception {
-  const _LaunchWithdrawn();
 }
 
 /// Starts the in-app server for the app shell: once on its own when the app
@@ -537,17 +525,11 @@ class BuiltinServerStarter extends ChangeNotifier {
   }
 
   /// Starts (or restarts) the server for [profile] and waits for it.
-  ///
-  /// [launchAdmission] is the app's opening start: it answers the native
-  /// intent generation still wanted, or null when the person's Stop (or a
-  /// different owner) came first. It is asked after the owner claim, and the
-  /// native start refuses a generation Stop has since changed.
   Future<BuiltinServerStartFailure?> start(
     ServerProfile profile, {
     bool automatic = false,
     bool Function()? stillWanted,
     int? recoveryGeneration,
-    Future<int?> Function()? launchAdmission,
     bool migrateLegacyHistory = false,
   }) async {
     if (_starting) {
@@ -566,12 +548,6 @@ class BuiltinServerStarter extends ChangeNotifier {
     BuiltinServerStartFailure? failure;
     try {
       if (!automatic) await beforeManualStart?.call(profile);
-      // Opening the app: the native intent is read after the claim, so Stop
-      // pressed while claiming or saving the password is still seen.
-      final launchGeneration = await launchAdmission?.call();
-      if (launchAdmission != null && launchGeneration == null) {
-        throw const _LaunchWithdrawn();
-      }
       failure = await startBuiltinServer(
         linux: linux,
         profile: profile,
@@ -579,14 +555,8 @@ class BuiltinServerStarter extends ChangeNotifier {
         pollInterval: pollInterval,
         stillWanted: () => !_disposed && (stillWanted?.call() ?? true),
         recoveryGeneration: recoveryGeneration,
-        launchGeneration: launchGeneration,
         migrateLegacyHistory: migrateLegacyHistory,
         saveRenewedPassword: saveRenewedPassword,
-      );
-    } on _LaunchWithdrawn {
-      failure = const BuiltinServerStartFailure.detail(
-        'The server start was not confirmed.',
-        problem: BuiltinStartProblem.interrupted,
       );
     } catch (error) {
       failure = BuiltinServerStartFailure.detail(
@@ -607,15 +577,8 @@ class BuiltinServerStarter extends ChangeNotifier {
         _handoverProfile = profile;
         _handoverUntil = clock.now().add(handover);
       }
-      // Usage on In-app Ubuntu is not started with it any more: the
-      // collector runs only while something reads usage
-      // (QuotaCollectorDemand), two programs fewer toward Android's limit.
-      // Services the person keeps on come back with Linux.
-      unawaited(
-        RootfsLinuxServices(
-          linux: linux,
-        ).ensureSupervisor().catchError((Object _) {}),
-      );
+      // Usage on In-app Ubuntu comes back with it unless it was turned off.
+      unawaited(InAppQuotaCollector.restartIfSetUp(profile, linux: linux));
       // A team the person turned on comes back with OpenCode: Android
       // stops both when it reclaims the app.
       if ((!automatic || recoveryGeneration == null) &&
@@ -679,7 +642,14 @@ class BuiltinProjectFolders {
 
   /// Makes [path] a git project unless it already is a folder. `created` is
   /// false for a folder that was already there.
+  ///
+  /// A folder right in /root/projects is made by the app, not by `git init`
+  /// in Ubuntu, so it works the same before and after AI Team is on.
   Future<({String path, bool created})> create(String path) async {
+    if (BuiltinLinux.managedProjectName(path) != null) {
+      final answer = await linux.createProjectFolder(path);
+      return (path: path, created: answer == 'created');
+    }
     final result = await linux.run(
       BuiltinLinux.createFolderScript(path),
       timeout: const Duration(seconds: 60),

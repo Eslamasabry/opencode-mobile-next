@@ -12,9 +12,7 @@ and label it `good first issue`) so two people do not do the same work.
 ## 1. Reconcile the Flutter pin in AGENTS.md
 
 - **Where:** `AGENTS.md` line 9 says Flutter **3.47.1**. `CONTRIBUTING.md`,
-  `pubspec.yaml`, `docs/desktop.md` and the desktop and SDK workflows
-  (`.github/workflows/desktop-linux.yml`, `desktop-windows.yml`,
-  `sdk-regenerate.yml`) say **3.47.2**.
+  `pubspec.yaml` and the SDK workflow (`sdk-regenerate.yml`) say **3.47.2**.
 - **Task:** run the pinned Flutter from the Shorebird cache with
   `flutter --version`, decide which number is true, and fix the document
   that is wrong. If the cache path hash in `AGENTS.md` is also stale, fix it.

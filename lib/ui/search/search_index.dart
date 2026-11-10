@@ -10,19 +10,15 @@ import '../../domain/settings_search.dart';
 import '../../domain/settings_search_catalog.dart';
 import '../../l10n/app_localizations.dart';
 import '../../platform/platform_capabilities.dart';
-import '../../platform/share_intent.dart';
 import '../../state/connection.dart';
-import '../../state/phone_host.dart' show PhoneHostKind;
-import '../../termux/bridge.dart' show TermuxBridge;
-import '../../local_llm/local_llm_controller.dart';
-import '../../local_llm/local_llm_ui.dart';
 import '../../voice/model_manager.dart';
 import '../../voice/voice_ui.dart';
 import '../app_iconography.dart';
 import '../desktop/desktop_interaction.dart';
 import '../desktop/shortcuts.dart';
 import '../screens/about_screen.dart';
-import '../screens/settings/updates_screen.dart';
+import '../screens/send_problem_report.dart';
+import '../../telemetry/telemetry_provider.dart' show AppTelemetry;
 import '../screens/agent_account_screen.dart';
 import '../screens/app_diagnostics_screen.dart';
 import '../screens/automation_settings_screen.dart';
@@ -33,14 +29,11 @@ import '../screens/global_sessions_screen.dart';
 import '../screens/guide_screen.dart';
 import '../screens/keep_running_screen.dart';
 import '../screens/library_screen.dart';
-import '../screens/linux_manager/linux_backups_page.dart';
 import '../screens/linux_manager/linux_manager_screen.dart'
     show openLinuxManager;
 import '../screens/linux_manager/linux_packages_page.dart';
 import '../screens/linux_manager/linux_ports_page.dart';
 import '../screens/linux_manager/linux_processes_page.dart';
-import '../screens/linux_manager/linux_service_add_page.dart';
-import '../screens/linux_manager/linux_services_page.dart';
 import '../screens/linux_manager/linux_storage_page.dart';
 import '../screens/local_agent_screen.dart';
 import '../screens/project_hub_screen.dart';
@@ -48,7 +41,6 @@ import '../screens/saved_permissions_screen.dart';
 import '../screens/server_capabilities_screen.dart';
 import '../screens/session_import_screen.dart';
 import '../screens/settings/ai_setup_screen.dart';
-import '../screens/settings/browser_mode_screen.dart';
 import '../screens/settings/tips_screen.dart';
 import '../screens/settings_screen.dart';
 import '../screens/servers_screen.dart' show ServersRouteRequest;
@@ -57,9 +49,7 @@ import '../screens/team/team_agents_screen.dart';
 import '../screens/team/team_page.dart';
 import '../screens/team/project_demo_screen.dart';
 import '../screens/team/projects/team_project_editors.dart';
-import '../screens/termux_processes_screen.dart';
 import '../screens/phone_setup/phone_setup_routes.dart';
-import '../screens/termux_storage_screen.dart';
 import '../screens/this_phone_screen.dart' show ThisPhoneScreen, openThisPhone;
 import '../screens/usage/usage_alerts_screen.dart';
 import '../screens/usage_hub_screen.dart';
@@ -267,14 +257,6 @@ Map<String, String> _otherLanguagesWords(AppLocalizations l10n) =>
 
 final _otherWordsByLanguage = <String, Map<String, String>>{};
 
-/// The phone's own OpenCode runs in Termux under a saved server, so it can
-/// be restarted after a crash (This phone's recovery row).
-bool _managedRecovery(SearchScope scope) =>
-    scope.platform.supportsTermux &&
-    scope.controller.store.profiles.any(
-      (profile) => TermuxBridge.managesServerUrl(profile.baseUrl),
-    );
-
 /// [searchIndex] narrowed to [query] by the shared settings matcher
 /// (lib/domain/settings_search.dart): every word must match by word, prefix
 /// or one typo; a whole title first, then exact words, prefixes and typos.
@@ -292,7 +274,6 @@ List<SearchEntry> searchEntries(
       existing: [for (final entry in entries) entry.document],
       supportsBackgroundService: scope.platform.supportsBackgroundService,
       thermalGuardAvailable: scope.thermalGuard,
-      managedRecoveryAvailable: _managedRecovery(scope),
     ),
   );
   return [for (final document in index.search(query)) ?byId[document.id]];
@@ -327,11 +308,7 @@ SearchOpen _arrive(SettingsSearchTarget target) => (context, scope) {
       initialSection: 'keep-running',
       page: NotificationsPage.background,
     ),
-    // Termux's server is the one with a crash restart; the row is there
-    // only while a saved server is managed by it, rechecked by the page.
-    'termux-setup-installed' => const ThisPhoneScreen(
-      kind: PhoneHostKind.termux,
-    ),
+    'termux-setup-installed' => const ThisPhoneScreen(),
     'app-diagnostics' => AppDiagnosticsScreen(controller: scope.controller),
     _ => null,
   };
@@ -352,14 +329,13 @@ bool _hasProjectTool(SearchScope scope, ProjectTool tool) =>
 
 bool _catalog(SearchScope scope) => scope.capabilities.serverCatalog;
 
-/// OpenCode is saved on this phone, in the app or in Termux.
-bool _phoneSetUp(SearchScope scope) => scope.controller.store.profiles.any(
-  (p) => looksLikeInAppServer(p) || TermuxBridge.managesServerUrl(p.baseUrl),
-);
+/// OpenCode is saved on this phone, in the app.
+bool _phoneSetUp(SearchScope scope) =>
+    scope.controller.store.profiles.any(looksLikeInAppServer);
 
 /// The app's own Linux is saved on this phone (what the Linux manager manages).
 bool _inAppLinux(SearchScope scope) =>
-    scope.platform.supportsTermux &&
+    scope.platform.supportsThisPhone &&
     scope.controller.store.profiles.any(looksLikeInAppServer);
 
 bool _account(SearchScope scope) =>
@@ -377,7 +353,8 @@ SearchOpen _hubAt(SettingsGroup group, String rowId) => _screen(
 
 /// Why Claude Code on this phone is not offered here, instead of a search
 /// that finds nothing (P7.4 "explain instead of vanish"): it runs on the
-/// phone only through the Termux bridge; on a computer it is a Paseo server.
+/// phone only in the app's own Linux (Android); on a computer it is a Paseo
+/// server.
 Future<void> _explainClaudeCodeGate(BuildContext context, SearchScope scope) {
   final l10n = AppLocalizations.of(context);
   final navigator = Navigator.of(context);
@@ -411,27 +388,6 @@ Future<void> _openVoice(BuildContext context, SearchScope scope) async {
     await pushKitPage<void>(
       context,
       (_) => VoiceSettingsScreen(manager: models),
-    );
-  } catch (error) {
-    if (context.mounted) showProductError(context, error);
-  }
-}
-
-/// Where Settings › Assistant on this phone gets its controller; a test swaps it.
-@visibleForTesting
-Future<LocalAssistantController> Function() localAssistantLoader =
-    LocalAssistantController.shared;
-
-Future<void> _openLocalAssistant(
-  BuildContext context,
-  SearchScope scope,
-) async {
-  try {
-    final controller = await localAssistantLoader();
-    if (!context.mounted) return;
-    await pushKitPage<void>(
-      context,
-      (_) => LocalAssistantSettingsScreen(controller: controller),
     );
   } catch (error) {
     if (context.mounted) showProductError(context, error);
@@ -480,7 +436,6 @@ class _IndexBuild {
           l10n,
           supportsBackgroundService: true,
           thermalGuardAvailable: true,
-          managedRecoveryAvailable: true,
         ))
           row.id: row,
       };

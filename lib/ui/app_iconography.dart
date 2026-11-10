@@ -366,11 +366,6 @@ abstract final class AppIconography {
     fontFamily: 'AppPhosphorRegular',
     matchTextDirection: false,
   );
-  static const shareNetwork = IconData(
-    0xe408,
-    fontFamily: 'AppPhosphorRegular',
-    matchTextDirection: false,
-  );
   static const starFilled = IconData(
     0xe46a,
     fontFamily: 'AppPhosphorFill',

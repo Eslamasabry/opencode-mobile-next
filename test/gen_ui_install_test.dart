@@ -45,6 +45,7 @@ final class _Linux extends BuiltinLinux {
   Future<BuiltinLinuxRunResult> run(
     String script, {
     Duration timeout = const Duration(minutes: 2),
+    String? input,
   }) async {
     users.add(AgentRunUser.root);
     return BuiltinLinuxRunResult(exitCode: exitCode, output: '');
@@ -335,7 +336,7 @@ def check(*args, **kwargs):
         return subprocess.CompletedProcess(args, 1, b'')
     output = b'{"jsonrpc":"2.0","id":1,"result":{}}\\n'
     if argv == [data['cli'], '--version']:
-        output = ('${wrongVersion ? '0.0.0' : '2.1.316'} (Claude Code)\\n').encode()
+        output = ('${wrongVersion ? '0.0.0' : '2.1.319'} (Claude Code)\\n').encode()
     elif argv == [data['node'], '--version']:
         output = (data['nodeVersion']+'\\n').encode()
     elif argv == [data['cli'], 'mcp', 'list']:

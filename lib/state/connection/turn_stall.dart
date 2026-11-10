@@ -22,6 +22,32 @@ extension _ConnectionTurnStalls on ConnectionController {
     _resetTurnStalls();
     _turnStallSessions.clear();
     _turnStallTools.clear();
+    _longWaits.clear();
+  }
+
+  /// How long a turn waits on a tool or an approval before `turn_stall`
+  /// reports it, once per wait.
+  static const _longWait = Duration(minutes: 5);
+
+  /// Reports a turn that has waited on a tool or an approval for
+  /// [_longWait]. A wait is one stage held without a break.
+  void _noteLongWaits() {
+    final now = DateTime.now();
+    for (final id in _turnStallSessions) {
+      final stage = _turnWaiting(id)
+          ? 'waiting_approval'
+          : (_turnStallTools[id]?.isNotEmpty == true ? 'waiting_tool' : null);
+      final known = _longWaits[id];
+      if (stage == null) {
+        _longWaits.remove(id);
+      } else if (known == null || known.stage != stage) {
+        _longWaits[id] = (stage: stage, since: now, reported: false);
+      } else if (!known.reported && now.difference(known.since) >= _longWait) {
+        _longWaits[id] = (stage: stage, since: known.since, reported: true);
+        HealthFlow.turnStall(stage: stage, waited: now.difference(known.since));
+      }
+    }
+    _longWaits.removeWhere((id, _) => !_turnStallSessions.contains(id));
   }
 
   void _cancelTurnStallProbe() {
@@ -197,6 +223,7 @@ extension _ConnectionTurnStalls on ConnectionController {
       return;
     }
     _syncTurnStalls();
+    _noteLongWaits();
     _turnStallRereadRequests();
     if (_turnStallProbeCancellation != null) return;
     final probes = [
@@ -223,7 +250,11 @@ extension _ConnectionTurnStalls on ConnectionController {
       }
       var changed = false;
       for (final probe in probes) {
-        if (_turnStalls.completeProbe(probe, evidence) != null) changed = true;
+        final diagnosis = _turnStalls.completeProbe(probe, evidence);
+        if (diagnosis != null) {
+          changed = true;
+          HealthFlow.turnStall(stage: 'streaming', waited: diagnosis.silentFor);
+        }
       }
       if (changed) _notifyListeners();
     } finally {

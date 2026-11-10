@@ -186,7 +186,7 @@ OrchestrationAgent fox({AgentState state = AgentState.working}) =>
       harness: 'OpenCode',
       currentWorkId: 'w2',
       contextPercent: 63,
-      workDir: '/home/owner/city/.gc/worktrees/ocproof/polecats/fox',
+      workDir: '/home/eslam/city/.gc/worktrees/ocproof/polecats/fox',
       branch: 'polecat/oc-cq6',
       sessionStartedAt: clock.subtract(const Duration(hours: 3)),
     );

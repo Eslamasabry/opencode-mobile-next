@@ -398,8 +398,7 @@
    "server.any"
   ],
   "whenMissing": {
-   "server.any": "explains (this page is the missing-server state; no saved profile routes to servers-welcome)",
-   "phone.termux": "hidden (Termux actions only with supportsTermux, loopback host, no token)"
+   "server.any": "explains (this page is the missing-server state; no saved profile routes to servers-welcome)"
   },
   "personas": [
    "phone-only",
@@ -2304,7 +2303,6 @@
   ],
   "whenMissing": {
    "server.any": "hidden (only opened from the connected shell)",
-   "phone.termux": "hidden (phone card only with supportsTermux or the in-app server and an observed managed server)",
    "server.paseo": "hidden (daemon row only when found on the phone)"
   },
   "personas": [
@@ -3713,7 +3711,6 @@
   ],
   "whenMissing": {
    "server.any": "explains (status line above)",
-   "phone.termux": "hidden (Create a new folder only with canCreate: Termux-managed or in-app server)",
    "phone.builtin": "hidden (same gate)"
   },
   "personas": [
@@ -5558,11 +5555,9 @@
   "module": "work",
   "chrome": "dialog",
   "needs": [
-   "phone.termux",
    "phone.builtin"
   ],
   "whenMissing": {
-   "phone.termux": "hidden (canCreate false on remote servers)",
    "phone.builtin": "hidden"
   },
   "personas": [
@@ -5755,12 +5750,10 @@
   "module": "work",
   "chrome": "sheet",
   "needs": [
-   "phone.builtin",
-   "phone.termux"
+   "phone.builtin"
   ],
   "whenMissing": {
-   "phone.builtin": "hidden (remote servers go straight to the path dialog)",
-   "phone.termux": "hidden (Termux bridge missing/denied → path dialog)"
+   "phone.builtin": "hidden (remote servers go straight to the path dialog)"
   },
   "personas": [
    "phone-only",
@@ -6134,9 +6127,7 @@
   "needs": [
    "server.oc2"
   ],
-  "whenMissing": {
-   "phone.termux": "hidden (Create a new folder row)"
-  },
+  "whenMissing": {},
   "personas": [
    "remote-lead",
    "tinkerer",

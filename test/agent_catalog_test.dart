@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/agent_catalog.dart';
+import 'package:opencode_mobile/domain/agent_tools/agent_certification.dart';
 
 void main() {
   AgentArtifact artifact({
@@ -164,6 +165,7 @@ void main() {
         'opencode2',
         'claude',
         'codex',
+        'antigravity',
         'gemini',
         'qwen',
         'kilo',
@@ -190,31 +192,96 @@ void main() {
         catalog.byId('gemini')!.artifactFor(AgentArchitecture.arm64)!.format,
         AgentArtifactFormat.npmTarGz,
       );
-      expect(catalog.byId('claude')!.recipe!.version, '2.1.316');
+      expect(catalog.byId('claude')!.recipe!.version, '2.1.319');
     },
   );
+
+  test('Antigravity uses official pinned Linux archives and ACP sign-in', () {
+    final entry = AgentCatalog.builtIn.byId('antigravity')!;
+    expect(entry.name, 'Antigravity');
+    expect(entry.iconKey, 'antigravity');
+    expect(entry.providerId, 'antigravity');
+    expect(entry.route, AgentRoute.acpPaseo);
+    expect(entry.signInMethod, AgentSignInMethod.browserOAuthHost);
+    expect(entry.recipe!.version, '1.5.3');
+    expect(entry.recipe!.executable, 'agy');
+    expect(entry.recipe!.launchArgs, ['acp', '--disable-telemetry']);
+    expect(entry.recipe!.signInArgs, ['acp', '--login']);
+    const pins = {
+      AgentArchitecture.arm64: (
+        path: 'linux-arm/cli_linux_arm64.tar.gz',
+        sha256:
+            '2d50060c7b1327995e5c81ec58829c91c2564ebb9fec165d3f9f1325ec188675',
+        bytes: 69843447,
+        installedBytes: 235622776,
+      ),
+      AgentArchitecture.x64: (
+        path: 'linux-x64/cli_linux_x64.tar.gz',
+        sha256:
+            '1b4850599cce73a17f94ffb422df3bf9531531b77dbddc40c1a435e0c2c16807',
+        bytes: 73694700,
+        installedBytes: 246837648,
+      ),
+    };
+    for (final MapEntry(key: architecture, value: pin) in pins.entries) {
+      final artifact = entry.artifactFor(architecture)!;
+      expect(
+        artifact.url.toString(),
+        'https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/${pin.path}',
+      );
+      expect(artifact.sha256, pin.sha256);
+      expect(artifact.format, AgentArtifactFormat.tarGz);
+      expect(artifact.archiveMember, 'antigravity');
+      expect(artifact.downloadBytes, pin.bytes);
+      expect(artifact.installedBytes, pin.installedBytes);
+    }
+    expect(entry.availability, AgentAvailability.limited);
+    expect(entry.capabilities.resumeVerified, isFalse);
+    expect(entry.capabilities.modelList, isFalse);
+    expect(entry.capabilities.permissions, isFalse);
+    expect(entry.capabilities.images, isFalse);
+    expect(entry.capabilities.cancel, isFalse);
+  });
+
+  test('Antigravity has no bundled runtime qualification', () {
+    final entry = AgentCatalog.builtIn.byId('antigravity')!;
+    final matrix = AgentCertificationMatrix.bundled;
+    expect(matrix.certifiedForChat(entry.id), isFalse);
+    for (final architecture in AgentArchitecture.values) {
+      final capabilities = matrix.capabilitiesFor(
+        descriptor: entry,
+        architecture: architecture,
+        helperVersion: '0.11.2',
+      );
+      expect(capabilities.resumeVerified, isFalse);
+      expect(capabilities.modelList, isFalse);
+      expect(capabilities.permissions, isFalse);
+      expect(capabilities.images, isFalse);
+      expect(capabilities.cancel, isFalse);
+    }
+  });
 
   test('Kilo and Cline are pinned ACP agents with exact launch args', () {
     final catalog = AgentCatalog.builtIn;
     const pins = {
       'kilo': (
-        version: '7.8.18',
+        version: '7.8.3',
         member: 'package/bin/kilo',
         args: ['acp'],
         signIn: ['auth', 'login'],
         arm64:
-            '0f1bd0fb983f67ec1edf53c185e9521268f8f133af2a4cec2f1967e5d60e45ef',
-        x64: 'bde638d0a493155088e4454fbe4a9697571443665e2a22d5a78cad645b96b554',
+            'bd61f03eb14053fdcaf5245eb1740455b0447fe9d6d48b4adaeea6bb4ae53a90',
+        x64: '03b963726d8002ea6bee21d8db6121201e6ed8230a0e1fce8857f4c8d091333c',
         path: '@kilocode/cli-linux-',
       ),
       'cline': (
-        version: '3.0.74',
+        version: '3.0.68',
         member: 'package/bin/cline',
         args: ['--acp'],
         signIn: ['auth'],
         arm64:
-            '10c1f63c143b6f7eba3320543df2f6081232d79fb1830c293cf006115dce9049',
-        x64: '52502438a8d78a451156c38df2eb31116d658c94d1d5461b4e29761d06211bfc',
+            '5e0ad56ba4c494c437f6dcdc2557c165478e05e1800e1fe6f7d476e4fd4c84f2',
+        x64: 'a979929090eb9a934b3907e2cf519368964d6a35e96079d6db4fc89caad98ab1',
         path: '@cline/cli-linux-',
       ),
     };
@@ -249,11 +316,11 @@ void main() {
     final preferred = catalog.agents.first;
     expect(preferred.id, 'opencode2');
     expect(preferred.route, AgentRoute.opencode2);
-    expect(preferred.recipe!.version, '2.2.5');
+    expect(preferred.recipe!.version, '2.1.1');
     for (final architecture in AgentArchitecture.values) {
       expect(
         preferred.artifactFor(architecture)!.url.path,
-        endsWith('-2.2.5.tgz'),
+        endsWith('-2.1.1.tgz'),
       );
     }
     expect(catalog.byId('opencode'), isNull);

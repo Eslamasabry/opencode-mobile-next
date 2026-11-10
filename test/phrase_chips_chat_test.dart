@@ -263,7 +263,7 @@ void main() {
         _user('u1'),
         _assistant(
           'a1',
-          errorText: 'Go usage limit exceeded for this model.',
+          errorText: 'Free usage limit reached for this model.',
           errorKind: MessageErrorKind.unknown,
         ),
       ];

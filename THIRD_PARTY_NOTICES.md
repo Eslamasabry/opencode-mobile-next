@@ -153,33 +153,38 @@ referenced above. The same text ships in every `record_*` platform package.
 This package supplies stable indexed scrolling for long, mixed-height message
 timelines.
 
-### mobile_scanner, and the Android libraries it pulls in
+### camera and zxing2 (the pairing QR scanner)
 
-- Component: `mobile_scanner` Flutter package
-- Version: 7.4.2
-- Project: https://github.com/juliansteenbakker/mobile_scanner
-- Copyright: 2022 Julian Steenbakker
-- License: BSD 3-Clause; see `LICENSES/BSD-3-Clause.txt`
+- Components: `camera` Flutter package (0.12.2) with `camera_android_camerax`,
+  and `zxing2` (0.2.4)
+- Projects: https://github.com/flutter/packages and https://github.com/xvrh/zxing-dart
+- Licenses: `camera*` BSD-3-Clause (`LICENSES/BSD-3-Clause.txt`); `zxing2`
+  Apache-2.0 (`LICENSES/Apache-2.0.txt`), a Dart port of ZXing
 
-This package reads the QR code that `opencode2 pair` prints. It is listed
-here as well as in the inventory table because, unlike the other Dart
-packages, it causes Google-authored native libraries to be compiled into the
-Android APK. Its Gradle module declares:
+These read the QR code that `opencode2 pair` prints. `camera` drives the
+preview through AndroidX CameraX (`androidx.camera:*`, Apache-2.0); `zxing2`
+decodes the frames in plain Dart. Nothing from Google Play services or ML Kit
+is involved. They replaced `mobile_scanner` and its bundled ML Kit barcode
+model (2026-10-31), which cost about 3 MB in the arm64 APK. The camera is
+opened only by the pairing scanner, only while that screen is on top, and no
+frame is stored.
 
-- `com.google.mlkit:barcode-scanning` 17.3.0 — the barcode decoder, **with
-  the detection model bundled into the APK**. This is the package's default;
-  the alternative (`play-services-mlkit-barcode-scanning`, model downloaded
-  on demand via Google Play Services) is not used, so scanning works on a
-  device with no Play Services and with no first-run download. The cost is a
-  larger APK, stated here rather than left to be discovered.
-- `androidx.camera:camera-lifecycle` and `androidx.camera:camera-camera2`
-  1.6.1 — CameraX, which drives the preview.
-- `org.jetbrains.kotlinx:kotlinx-coroutines-android` 1.11.0.
+### Firebase Crashlytics, Google Analytics for Firebase and Firebase Performance Monitoring (opt-in)
 
-All of the above are Apache License 2.0; see `LICENSES/Apache-2.0.txt`.
-ML Kit is additionally covered by Google's ML Kit terms of service. None of
-these are used anywhere else in the app: the camera is opened only by the
-pairing scanner, only while that screen is on top, and no frame is stored.
+- Components: `firebase_core`, `firebase_crashlytics`, `firebase_analytics` and
+  `firebase_performance`
+  Flutter packages (BSD 3-Clause, in the inventory below)
+- Android libraries they pull in: the Firebase Android BoM 35.1.0
+  (`firebase-common`, `firebase-crashlytics`, `firebase-analytics`, `firebase-perf`), Apache
+  License 2.0 (see `LICENSES/Apache-2.0.txt`), with the measurement libraries
+  under Google's Firebase and Google Analytics terms of service.
+
+They are compiled into every APK, but they run only in builds that contain the
+maintainer's private Firebase configuration, and only after the person turns on
+Settings > Privacy and data > "Send reports to developer". Without the configuration they never start.
+Collection is off in the manifest until consent; the advertising-ID permission
+is removed; advertising ID, SSAID, ad personalisation and automatic screen
+reporting are off. What is sent is listed in PRIVACY.md.
 
 ### Termux terminal-emulator (the local terminal's PTY)
 
@@ -282,11 +287,18 @@ lives in `packages/opencode_sdk/`, and is covered by this project's
 
 | Package | Version | License | Copyright line in the package's LICENSE | Role |
 |---|---|---|---|---|
+| `_flutterfire_internals` | 1.3.79 | BSD-3-Clause | Copyright 2017, the Chromium project authors. All rights reserved | runtime |
 | `android_file_picker` | 1.1.0 | MIT | Copyright (c) 2018 Miguel Ruivo | runtime |
 | `args` | 2.7.0 | BSD-3-Clause | Copyright 2013, the Dart project authors | runtime |
 | `async` | 2.13.1 | BSD-3-Clause | Copyright 2015, the Dart project authors | runtime |
 | `boolean_selector` | 2.1.2 | BSD-3-Clause | Copyright 2016, the Dart project authors | runtime |
+| `camera` | 0.12.2 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `camera_android_camerax` | 0.7.6+1 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `camera_avfoundation` | 0.11.1 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `camera_platform_interface` | 2.15.0 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `camera_web` | 0.3.5+7 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
 | `characters` | 1.4.1 | BSD-3-Clause | Copyright 2019, the Dart project authors | runtime |
+| `charcode` | 1.4.0 | BSD-3-Clause | Copyright 2014, the Dart project authors. All rights reserved | runtime |
 | `clock` | 1.1.2 | Apache-2.0 | — | runtime |
 | `code_assets` | 2.0.0 | BSD-3-Clause | Copyright 2025, the Dart project authors | runtime |
 | `collection` | 1.19.1 | BSD-3-Clause | Copyright 2015, the Dart project authors | runtime |
@@ -314,6 +326,17 @@ lives in `packages/opencode_sdk/`, and is covered by this project's
 | `file_selector_macos` | 0.9.5+1 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
 | `file_selector_platform_interface` | 2.7.0 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
 | `file_selector_windows` | 0.9.3+6 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `firebase_analytics` | 13.0.1 | BSD-3-Clause | Copyright 2017, the Chromium project authors. All rights reserved | runtime |
+| `firebase_analytics_platform_interface` | 6.0.9 | BSD-3-Clause | Copyright 2017, the Chromium project authors. All rights reserved | runtime |
+| `firebase_analytics_web` | 0.6.3+15 | BSD-3-Clause | Copyright 2017, the Chromium project authors. All rights reserved | runtime |
+| `firebase_core` | 5.1.0 | BSD-3-Clause | Copyright 2017 The Chromium Authors. All rights reserved | runtime |
+| `firebase_core_platform_interface` | 8.1.1 | BSD-3-Clause | Copyright 2017 The Chromium Authors. All rights reserved | runtime |
+| `firebase_core_web` | 4.1.0 | BSD-3-Clause | Copyright 2020 The Chromium Authors. All rights reserved | runtime |
+| `firebase_crashlytics` | 6.0.1 | BSD-3-Clause | Copyright 2019 The Chromium Authors. All rights reserved | runtime |
+| `firebase_crashlytics_platform_interface` | 3.9.2 | BSD-3-Clause | Copyright 2020, the Chromium project authors. All rights reserved | runtime |
+| `firebase_performance` | 0.12.1 | BSD-3-Clause | Copyright 2018 The Chromium Authors. All rights reserved | runtime |
+| `firebase_performance_platform_interface` | 0.2.2+9 | BSD-3-Clause | Copyright 2018 The Chromium Authors. All rights reserved | runtime |
+| `firebase_performance_web` | 0.1.10+15 | BSD-3-Clause | Copyright 2017-2020 The Chromium Authors. All rights reserved | runtime |
 | `fixnum` | 1.1.1 | BSD-3-Clause | Copyright 2014, the Dart project authors | runtime |
 | `flutter_lints` | 6.0.0 | BSD-3-Clause | Copyright 2013 The Flutter Authors. All rights reserved | test-only |
 | `flutter_plugin_android_lifecycle` | 2.0.35 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
@@ -358,7 +381,6 @@ lives in `packages/opencode_sdk/`, and is covered by this project's
 | `material_color_utilities` | 0.13.0 | Apache-2.0 | — | runtime |
 | `meta` | 1.19.0 | BSD-3-Clause | Copyright 2016, the Dart project authors | runtime |
 | `mime` | 2.0.0 | BSD-3-Clause | Copyright 2015, the Dart project authors | runtime |
-| `mobile_scanner` | 7.4.2 | BSD-3-Clause | Copyright (c) 2022, Julian Steenbakker | runtime |
 | `objective_c` | 9.6.0 | BSD-3-Clause | Copyright 2024, the Dart project authors | runtime |
 | `package_config` | 2.2.0 | BSD-3-Clause | Copyright 2019, the Dart project authors | runtime |
 | `package_info_plus` | 10.2.1 | BSD-3-Clause | Copyright 2017 The Chromium Authors. All rights reserved | runtime |
@@ -416,6 +438,7 @@ lives in `packages/opencode_sdk/`, and is covered by this project's
 | `stack_trace` | 1.12.1 | BSD-3-Clause | Copyright 2014, the Dart project authors | runtime |
 | `state_notifier` | 1.0.0 | MIT | Copyright (c) 2020 Remi Rousselet | runtime |
 | `stream_channel` | 2.1.4 | BSD-3-Clause | Copyright 2015, the Dart project authors | runtime |
+| `stream_transform` | 2.1.2 | BSD-3-Clause | Copyright 2017, the Dart project authors | runtime |
 | `string_scanner` | 1.4.1 | BSD-3-Clause | Copyright 2014, the Dart project authors | runtime |
 | `sync_http` | 0.3.1 | BSD-3-Clause | Copyright 2017, the Dart project authors | test-only |
 | `term_glyph` | 1.2.2 | BSD-3-Clause | Copyright 2017, the Dart project authors | runtime |
@@ -449,11 +472,13 @@ lives in `packages/opencode_sdk/`, and is covered by this project's
 | `xml` | 7.0.1 | MIT | Copyright (c) 2006-2026 Lukas Renggli | runtime |
 | `yaml` | 3.1.3 | MIT | Copyright (c) 2014, the Dart project authors | runtime |
 | `zmodem` | 0.0.6 | MIT | Copyright (c) 2023 xuty | test-only |
+| `zxing2` | 0.2.4 | BSD-3-Clause | Copyright (c) 2023, zxing-dart | runtime |
 
 ### Notes on individual entries
 
 - **`dbus` (MPL-2.0)** is reached only through `flutter_secure_storage_linux`
-  and is therefore present in the Linux desktop build, not the Android APK.
+  and was present only in the Linux desktop build (dropped in 2.1.4), not the
+  Android APK.
   It is used unmodified; MPL-2.0 source for it is available from the package
   on pub.dev. Its `LICENSE` is reproduced in full at `LICENSES/MPL-2.0.txt`.
 - **`record` and every `record_*` package** ship the openapi4j-attributed

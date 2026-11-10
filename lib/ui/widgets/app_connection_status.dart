@@ -9,20 +9,18 @@ import '../../builtin/app_exit_recovery.dart';
 import '../../builtin/builtin_server.dart';
 import '../../builtin/setup/phone_setup.dart';
 import '../../builtin/setup/setup_contract.dart';
-import '../../builtin/process_budget.dart';
 import '../../builtin/thermal_guard.dart';
 import '../../builtin/thermal_guard_teams.dart';
 import '../../state/background_pause_notice.dart';
 import '../../state/connection.dart';
-import '../../termux/bridge.dart' show TermuxBridge;
+import '../../platform/app_info.dart';
 import '../kit/kit.dart';
-import '../screens/running_on_phone_screen.dart';
 import '../screens/servers_screen.dart' show ServersRouteRequest;
 import 'app_exit_notice.dart';
 import 'background_pause_notice.dart';
 import 'connection_status_banner.dart';
+import 'crash_offer_notice.dart';
 import 'phone_server_restart.dart';
-import 'process_budget_status.dart';
 import 'runtime_switch_status.dart';
 import 'thermal_notice.dart';
 
@@ -54,9 +52,9 @@ class AppConnectionStatusScope extends ConsumerWidget {
         listenable: Listenable.merge([
           controller,
           recovery,
+          recovery.crashOffer,
           builtin,
           pause,
-          ProcessBudgetGuard.instance,
           ?guard,
         ]),
         builder: (context, _) {
@@ -80,7 +78,7 @@ class AppConnectionStatusScope extends ConsumerWidget {
                 onRecoverOwnership:
                     builtin.failureFor(controller.profile)?.problem ==
                         BuiltinStartProblem.componentRecovery
-                    ? () => unawaited(TermuxBridge.openAppSettings())
+                    ? () => unawaited(AppInfoPlatform.openAppSettings())
                     : null,
                 actionContext: actionContext,
                 switchingTo: phoneRuntimeSwitchTarget(controller, builtin),
@@ -117,19 +115,12 @@ class AppConnectionStatusScope extends ConsumerWidget {
                 serverBack: serverBack,
               ),
               thermalKitStatus(context, guard),
-              processBudgetKitStatus(
+              // After the exit line (same kind, ties keep the first): one
+              // calm notice at a time, the crash offer once that is gone.
+              crashOfferKitStatus(
                 context,
-                ProcessBudgetGuard.instance,
-                onOpen: () {
-                  final current = actionContext();
-                  if (current == null || !current.mounted) return;
-                  unawaited(
-                    pushKitPage<void>(
-                      current,
-                      (_) => const RunningOnPhoneScreen(),
-                    ),
-                  );
-                },
+                recovery.crashOffer,
+                actionContext: actionContext,
               ),
             ],
             child: AppExitFoldOnPageChange(

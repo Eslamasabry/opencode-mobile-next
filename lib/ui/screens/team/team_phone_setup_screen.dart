@@ -18,7 +18,7 @@ import '../../../builtin/builtin_server.dart'
 import '../../../l10n/app_localizations.dart';
 import '../../../state/connection.dart';
 import '../../../state/phone_team_setup.dart';
-import '../../../termux/bridge.dart' show TermuxBridge;
+import '../../../platform/app_info.dart';
 import '../../app_theme.dart';
 import '../../kit/kit.dart';
 import '../../kit/scenes/team_scenes.dart';
@@ -108,21 +108,50 @@ String? phoneTeamProtectionText(AppLocalizations l, String tier) =>
       _ => null,
     };
 
+/// The plain line naming where a failed safety check stopped (issue #111),
+/// or null when the failure did not come from the check.
+String? phoneTeamProofStepText(AppLocalizations l, String? details) {
+  final step = PhoneProofStep.parse(details);
+  if (step == null) return null;
+  final check = step.check ?? step.code;
+  return switch (step.kind) {
+    PhoneProofStepKind.signal => l.phoneTeamProofSignal(step.signal ?? 0),
+    PhoneProofStepKind.checkSignal => l.phoneTeamProofCheckSignal(
+      check,
+      step.signal ?? 0,
+    ),
+    PhoneProofStepKind.notBlocked => l.phoneTeamProofNotBlocked(check),
+    PhoneProofStepKind.sandbox => l.phoneTeamProofSandbox,
+    PhoneProofStepKind.ubuntu => l.phoneTeamProofUbuntu(check),
+    PhoneProofStepKind.fixture => l.phoneTeamProofFixture,
+    PhoneProofStepKind.noAnswer => l.phoneTeamProofNoAnswer,
+    PhoneProofStepKind.proot => l.phoneTeamProofProot(check),
+    PhoneProofStepKind.other => l.phoneTeamProofOther(check),
+  };
+}
+
+/// Details: the plain sentence, the step a failed safety check stopped at
+/// (when it did), then the technical code.
 String? phoneTeamDetailsText(
   AppLocalizations l,
   PhoneTeamSetupProblem problem,
   String? code,
 ) {
   if (code == null || code.isEmpty) return null;
-  final sentence = switch (problem) {
-    PhoneTeamSetupProblem.unsafe => l.phoneTeamWhyUnsafe,
-    PhoneTeamSetupProblem.engine => l.phoneTeamWhyEngine,
-    PhoneTeamSetupProblem.stopFailed => l.phoneTeamWhyStop,
-    PhoneTeamSetupProblem.serverStart => l.phoneTeamWhyServer,
-    PhoneTeamSetupProblem.notReady => l.phoneTeamWhyNotReady,
-    PhoneTeamSetupProblem.declined || PhoneTeamSetupProblem.noServer => null,
-  };
-  return sentence == null ? code : '$sentence\n$code';
+  final proof = phoneTeamProofStepText(l, code);
+  // A failed safety check is not an engine crash: say which it was.
+  final sentence = proof != null
+      ? l.phoneTeamWhyUnsafe
+      : switch (problem) {
+          PhoneTeamSetupProblem.unsafe => l.phoneTeamWhyUnsafe,
+          PhoneTeamSetupProblem.engine => l.phoneTeamWhyEngine,
+          PhoneTeamSetupProblem.stopFailed => l.phoneTeamWhyStop,
+          PhoneTeamSetupProblem.serverStart => l.phoneTeamWhyServer,
+          PhoneTeamSetupProblem.notReady => l.phoneTeamWhyNotReady,
+          PhoneTeamSetupProblem.declined ||
+          PhoneTeamSetupProblem.noServer => null,
+        };
+  return [?sentence, ?proof, code].join('\n');
 }
 
 ({String title, String body}) _problemCopy(
@@ -375,7 +404,7 @@ class _TeamPhoneSetupScreenState extends State<TeamPhoneSetupScreen> {
               ? KitAction(
                   key: const ValueKey('phone-team-recover-ownership'),
                   label: l.e7SetupOpenAppSettings,
-                  onPressed: () => unawaited(TermuxBridge.openAppSettings()),
+                  onPressed: () => unawaited(AppInfoPlatform.openAppSettings()),
                 )
               : KitAction(
                   key: const ValueKey('phone-team-start-again'),

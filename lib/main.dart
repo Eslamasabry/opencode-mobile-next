@@ -8,10 +8,7 @@ import 'ui/screens/scheduling/schedule_routes.dart';
 export 'background/widget_action_entrypoint.dart' show widgetActionMain;
 import 'ui/search/search_index.dart';
 import 'ui/screens/profile_monitor_screen.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'state/paseo_usage_monitor.dart';
-import 'state/whats_new.dart';
-import 'ui/screens/whats_new_sheet.dart';
 import 'state/usage_signin_destination.dart';
 import 'ui/screens/library_screen.dart'
     show IntegrationsMode, IntegrationsScreen;
@@ -29,18 +26,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'background/live_background.dart';
+import 'telemetry/app_log_ring.dart';
+import 'telemetry/firebase_analytics_adapter.dart';
+import 'telemetry/firebase_crashlytics_adapter.dart';
+import 'telemetry/firebase_performance_adapter.dart';
+import 'telemetry/health_probe.dart' show AppStartClock;
+import 'telemetry/telemetry.dart';
+import 'telemetry/telemetry_provider.dart';
+import 'ui/widgets/telemetry_consent.dart';
 import 'builtin/app_exit_recovery.dart';
+import 'builtin/builtin_linux.dart' show BuiltinLinux;
 import 'builtin/builtin_server.dart';
 import 'builtin/linux_manager/linux_reset_flow.dart';
-import 'builtin/linux_services/rootfs_linux_services.dart';
 import 'builtin/phone_server_healing.dart';
 import 'builtin/reply_watch.dart';
 import 'builtin/setup/phone_setup.dart';
 import 'builtin/setup/setup_engine.dart' show ChannelSetupEngine;
-import 'builtin/process_budget.dart';
-import 'builtin/quota_collector_host.dart' show QuotaCollectorDemand;
 import 'builtin/setup/setup_finish.dart';
-import 'builtin/setup/termux_setup_finish.dart';
 import 'builtin/team/builtin_team.dart' show BuiltinTeam;
 import 'builtin/thermal_guard.dart' show ThermalNoticeKind;
 import 'builtin/thermal_guard_teams.dart';
@@ -54,7 +56,6 @@ import 'domain/chat_feed.dart' show isTemporaryProjectDirectory;
 import 'domain/connection_status.dart';
 import 'domain/server_gateway.dart' show ProductException;
 import 'l10n/app_localizations.dart';
-import 'platform/child_process_limit.dart' show childProcessLimitLifted;
 import 'platform/launch_shortcut.dart';
 import 'platform/session_link.dart';
 import 'state/session_address_controller.dart'
@@ -67,14 +68,11 @@ import 'domain/team_link.dart';
 import 'state/app_locale.dart' show resolveAppLocales;
 import 'state/connection.dart';
 import 'state/in_app_auto_update.dart';
-import 'update/app_update_controller.dart';
-import 'update/app_update_notice.dart';
 import 'state/managed_move.dart';
 import 'state/automation_policy.dart';
-import 'state/local_server_controls.dart';
-import 'termux/bridge.dart';
 import 'state/profiles.dart';
 import 'update/desktop_release_check.dart';
+import 'update/in_app_update_notice.dart';
 import 'update/shorebird_update_notice.dart';
 import 'ui/app_theme.dart';
 import 'ui/screens/chats/chats_host.dart' show ConnectionChatsHost;
@@ -92,6 +90,9 @@ import 'ui/screens/settings_screen.dart';
 import 'ui/widgets/product_states.dart'
     show productErrorText, productErrorDetails, ProductErrorLocale;
 import 'ui/widgets/saved_server_connection_card.dart';
+import 'ui/widgets/termux_retired_notice.dart';
+import 'state/termux_retired.dart';
+import 'platform/app_info.dart';
 import 'ui/widgets/session_address_sheets.dart';
 import 'ui/widgets/app_connection_status.dart';
 import 'ui/widgets/managed_move_view.dart';
@@ -107,10 +108,6 @@ import 'ui/screens/team/project_destination.dart';
 import 'ui/screens/team_conversation/team_conversation.dart'
     show TeamConversation;
 import 'ui/screens/this_phone_screen.dart';
-import 'state/phone_host.dart' show PhoneHostKind;
-import 'state/termux_host_setup.dart' show TermuxHostJob;
-import 'ui/screens/phone_setup/phone_setup_termux_screen.dart'
-    show openPhoneSetupTermux;
 import 'ui/screens/linux_manager/linux_reset.dart' show linuxResetSelection;
 import 'ui/screens/phone_setup/phone_setup_routes.dart'
     show
@@ -143,11 +140,9 @@ Future<void> main() async {
   // First thing: starts the trace clock, so every later OCTRACE `at=` reads
   // as time since launch.
   PerfTrace.markOnce('app.main');
+  AppStartClock.begin();
+  AppLogRing.captureDebugPrint();
   WidgetsFlutterBinding.ensureInitialized();
-  // The app's own budget for heavy work (Android stops an app's child
-  // programs past 32), and the usage collector that runs only on demand.
-  ProcessBudgetGuard.install(limitLifted: childProcessLimitLifted);
-  QuotaCollectorDemand.install();
   if (!kIsWeb && (Platform.isLinux || Platform.isWindows || Platform.isMacOS)) {
     // Restores the remembered size, position and maximized state, clamped to
     // a display that still exists, and saves it again on close. Android never
@@ -168,12 +163,22 @@ Future<void> main() async {
   final diagnostics = AppDiagnosticsController();
   installAppErrorCapture(
     diagnostics,
-    crashCapture: (error, stack, source) =>
-        CrashDiagnosticsStartup.capture(diagnostics, error, stack, source),
+    crashCapture: (error, stack, source) {
+      CrashDiagnosticsStartup.capture(diagnostics, error, stack, source);
+      AppLogRing.instance.add('error ${appErrorCategory(error)} ($source)');
+      // Opt-in vendor reporting: inert unless the person turned it on; only
+      // the error's category and code locations are passed on.
+      AppTelemetry.current.recordCrash(
+        appErrorCategory(error),
+        stack,
+        fatal: source == 'platform',
+      );
+    },
   );
   runApp(AppBootstrapGate(diagnostics: diagnostics));
   WidgetsBinding.instance.addPostFrameCallback((_) {
     PerfTrace.markOnce('app.first_frame');
+    AppStartClock.firstFrameDone();
     // Crash storage cannot delay the opening frame. Launch waits at most the
     // launch budget; a slow store keeps opening in the background and capture
     // starts when it arrives (a hung channel leaves it off this run).
@@ -182,6 +187,17 @@ Future<void> main() async {
     // Capture imports buffered errors/timings when the store attaches, so
     // installing in-memory error capture above still protects early failures.
     unawaited(ReportProblemStartup.start(diagnostics));
+    unawaited(
+      TelemetryStartup.start(
+        !kIsWeb && Platform.isAndroid
+            ? CombinedTelemetryAdapter([
+                FirebaseCrashlyticsAdapter(),
+                FirebaseAnalyticsAdapter(),
+                FirebasePerformanceAdapter(),
+              ])
+            : const NoOpTelemetryAdapter(),
+      ),
+    );
   });
 }
 
@@ -299,33 +315,7 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(_controller.restoreBackgroundLiveMode());
       unawaited(_consumeScheduledPromptOpen());
-      unawaited(_showWhatsNewAfterUpdate());
     });
-  }
-
-  /// The first launch on a new build opens "What's new" once; a fresh
-  /// install (no saved servers yet) never does.
-  Future<void> _showWhatsNewAfterUpdate() async {
-    try {
-      final info = await PackageInfo.fromPlatform();
-      if (!mounted) return;
-      final due = WhatsNew.takeDue(
-        _controller.store.prefs,
-        version: info.version,
-        build: info.buildNumber,
-        existingInstall: _controller.store.profiles.isNotEmpty,
-      );
-      if (!due) return;
-      final context = _navigatorKey.currentState?.overlay?.context;
-      if (context == null || !context.mounted) return;
-      await showWhatsNewSheet(
-        context,
-        version: info.version,
-        controller: _controller,
-      );
-    } catch (_) {
-      // A missing sheet must never disturb start-up.
-    }
   }
 
   @override
@@ -456,7 +446,11 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
           final saver = appearance == AppAppearance.saver;
           return MaterialApp(
             navigatorKey: _navigatorKey,
-            navigatorObservers: [_routeTracker, _routeTiming],
+            navigatorObservers: [
+              _routeTracker,
+              _routeTiming,
+              AnalyticsNavigatorObserver(),
+            ],
             builder: (context, child) {
               // Global text-scale safety net: only the extreme top end is
               // capped (KitText.appScaler).
@@ -478,32 +472,29 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
                         valueListenable: _notice,
                         builder: (context, notice, notices) =>
                             UpdateStatusScope(status: notice, child: notices!),
-                        child: AppUpdateNotice(
-                          controller: ref.read(appUpdateProvider),
-                          child: ShorebirdUpdateNotice(
-                            service: _updateService,
-                            updates: ref.read(appUpdateProvider),
-                            currentProfileId: () => _controller.profile?.id,
-                            allowsAutomaticUpdate: (id) =>
-                                AutomationPolicyController.forProfile(
-                                  _controller.store.prefs,
-                                  id,
-                                ).value.allows(
-                                  AutomationBehavior.applyCodePush,
-                                ),
-                            onDownloaded:
-                                ({
-                                  required profileId,
-                                  required eventId,
-                                  required at,
-                                }) async {
-                                  await _controller.recordServerAct(
-                                    profileId: profileId,
-                                    kind: AutomaticActKind.update,
-                                    eventId: eventId,
-                                    at: at,
-                                  );
-                                },
+                        child: ShorebirdUpdateNotice(
+                          service: _updateService,
+                          currentProfileId: () => _controller.profile?.id,
+                          allowsAutomaticUpdate: (id) =>
+                              AutomationPolicyController.forProfile(
+                                _controller.store.prefs,
+                                id,
+                              ).value.allows(AutomationBehavior.applyCodePush),
+                          onDownloaded:
+                              ({
+                                required profileId,
+                                required eventId,
+                                required at,
+                              }) async {
+                                await _controller.recordServerAct(
+                                  profileId: profileId,
+                                  kind: AutomaticActKind.update,
+                                  eventId: eventId,
+                                  at: at,
+                                );
+                              },
+                          child: InAppUpdateNotice(
+                            navigatorKey: _navigatorKey,
                             child: DesktopReleaseNotice(
                               navigatorKey: _navigatorKey,
                               // Desktop only. On Android this returns its child
@@ -570,15 +561,11 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
               '/home': (_) => const HomeScreen(),
               '/guide': (_) => GuideScreen(embedded: false),
               '/about': (_) => const AboutScreen(),
-              // This phone (in the app or in Termux) exists only on
-              // Android: a desktop deep link, or any leftover push, must not
-              // land on a page with no phone behind it.
-              if (platformCapabilities.supportsTermux)
-                thisPhoneRoute: (context) => ThisPhoneScreen(
-                  kind:
-                      ModalRoute.of(context)?.settings.arguments
-                          as PhoneHostKind?,
-                ),
+              // This phone exists only on Android: a desktop deep link, or
+              // any leftover push, must not land on a page with no phone
+              // behind it.
+              if (platformCapabilities.supportsThisPhone)
+                thisPhoneRoute: (_) => const ThisPhoneScreen(),
               '/debug': (_) => AppDiagnosticsScreen(controller: _controller),
             },
             onGenerateRoute: (settings) {

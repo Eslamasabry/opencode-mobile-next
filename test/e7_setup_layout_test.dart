@@ -96,7 +96,6 @@ void main() {
             profileName: 'Workstation',
             baseUrl: 'https://server.example',
             error: null,
-            supportsTermux: true,
             attempts: 1,
             onChangeServer: () {},
             onRetry: () {},

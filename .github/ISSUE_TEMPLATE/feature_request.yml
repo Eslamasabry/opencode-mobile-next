@@ -64,7 +64,6 @@ body:
         - Connecting to a server (including Termux)
         - Voice input
         - Notifications and background
-        - Linux desktop build
         - Something else / across the app
     validations:
       required: true

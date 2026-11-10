@@ -21,6 +21,9 @@ abstract interface class ProviderUsageGateway {
 }
 
 class ProviderUsageWindowReading {
+  /// Explicit window identifier (e.g. `weekly`, `5h`, `gemini`).
+  final String? windowId;
+
   /// The window's length when its id names one (`five_hour`, `weekly`).
   final int? durationSeconds;
 
@@ -29,6 +32,7 @@ class ProviderUsageWindowReading {
   final int remainingPercent;
   final DateTime? resetsAt;
   const ProviderUsageWindowReading({
+    this.windowId,
     required this.durationSeconds,
     required this.label,
     required this.remainingPercent,
@@ -46,12 +50,16 @@ class ProviderUsageReading {
   /// The daemon reported this provider as not signed in: no numbers, only the
   /// way in (the widget offers "Sign in").
   final bool needsSignIn;
+  final String? planLabel;
+  final String? accountRef;
   const ProviderUsageReading({
     required this.providerId,
     required this.displayName,
     required this.fetchedAt,
     required this.windows,
     this.needsSignIn = false,
+    this.planLabel,
+    this.accountRef,
   });
 }
 
@@ -106,7 +114,7 @@ DateTime? _time(Object? value) {
 bool _daemonNeedsSignIn(String id, Object? status) =>
     _daemonSignInProviders.contains(id) && status == 'unavailable';
 
-const _daemonSignInProviders = {'claude'};
+const _daemonSignInProviders = {'claude', 'antigravity'};
 
 /// Tolerant parse of a `provider.usage.list.response` payload. Unknown
 /// providers, statuses and fields are ignored; a provider that is not
@@ -140,6 +148,10 @@ List<ProviderUsageReading> parseProviderUsageList(
           fetchedAt: _time(raw['fetchedAt']) ?? listFetched ?? now,
           windows: const [],
           needsSignIn: true,
+          accountRef: cleanUsageText(
+            raw['account'] ?? raw['email'] ?? raw['accountRef'],
+            64,
+          ),
         ),
       );
       continue;
@@ -163,6 +175,7 @@ List<ProviderUsageReading> parseProviderUsageList(
       if (seconds == null && label == null) continue;
       windows.add(
         ProviderUsageWindowReading(
+          windowId: windowId,
           durationSeconds: seconds,
           label: label ?? '',
           remainingPercent: left.clamp(0, 100).round(),
@@ -182,6 +195,11 @@ List<ProviderUsageReading> parseProviderUsageList(
         displayName: cleanUsageText(raw['displayName'], 24) ?? id,
         fetchedAt: fetched,
         windows: windows.take(maxWindows).toList(growable: false),
+        planLabel: cleanUsageText(raw['planLabel'], 32),
+        accountRef: cleanUsageText(
+          raw['account'] ?? raw['email'] ?? raw['accountRef'],
+          64,
+        ),
       ),
     );
     if (readings.length >= maxProviders) break;

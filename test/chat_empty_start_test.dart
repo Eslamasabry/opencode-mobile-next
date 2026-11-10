@@ -484,16 +484,8 @@ void main() {
 
     await _pumpChat(tester, await _controller(api), textScale: 3.2);
     expect(tester.takeException(), isNull);
-    // The frame holds at 1.3x text (KitChrome), so the composer stays whole
-    // at any system scale, and the row sits above it where it fits.
+    expect(find.byKey(const ValueKey('chat-starters')), findsNothing);
     expect(tester.getRect(_composerField).bottom, lessThanOrEqualTo(320));
-    final capped = find.byKey(const ValueKey('chat-starters'));
-    if (capped.evaluate().isNotEmpty) {
-      expect(
-        tester.getRect(capped).bottom,
-        lessThanOrEqualTo(tester.getRect(_composerField).top),
-      );
-    }
   });
 
   testWidgets('Arabic reads right to left with Arabic starters', (

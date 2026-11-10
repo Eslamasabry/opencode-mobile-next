@@ -467,18 +467,6 @@ final kitOverflowScenes = <KitOverflowScene>[
       build: (_, c) => _OverflowStatusFrame(copy: c),
     ),
     KitOverflowScene(
-      const ['KitChrome'],
-      'default',
-      build: (_, c) => KitChrome(
-        child: KitText(
-          c.t(
-            'Words in the frame stop growing at 1.3x and wrap inside the box.',
-            'الكلمات داخل الإطار تتوقف عن التكبّر عند 1.3 وتلتف داخل الصندوق.',
-          ),
-        ),
-      ),
-    ),
-    KitOverflowScene(
       const ['KitTabStrip'],
       'counts-and-attention',
       build: (_, c) => KitTabStrip(
@@ -1099,6 +1087,16 @@ final kitOverflowScenes = <KitOverflowScene>[
           'وجّهه أثناء عمله على اختبارات حلقة التركيز',
         ),
       ),
+    ),
+  ),
+  // kit_add_agent_card.dart (issue #116, 2026-11-05): the plus card that
+  // leads the New conversation agent row.
+  KitOverflowScene(
+    const ['KitAddAgentCard'],
+    'default',
+    build: (_, c) => KitAddAgentCard(
+      label: c.t('Add an agent', 'أضف وكيلًا'),
+      onPressed: () {},
     ),
   ),
 ];

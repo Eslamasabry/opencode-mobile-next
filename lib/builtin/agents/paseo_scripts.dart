@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:crypto/crypto.dart';
 
 import '../setup/component_updates.dart';
+import '../setup/node_compat.dart' show NodeCompat;
 
 /// Pinned dependencies for the phone's private agent host.
 ///
@@ -71,6 +72,7 @@ umask 077
       '''
 set -eu
 $_requireAgentUser
+${NodeCompat.wrapPrelude}
 case "\$(uname -m)" in
   aarch64|arm64) node_arch=arm64; node_sha=$nodeArm64Sha256 ;;
   x86_64|amd64) node_arch=x64; node_sha=$nodeX64Sha256 ;;
@@ -88,7 +90,9 @@ oc_download "https://nodejs.org/dist/$nodeVersion/node-$nodeVersion-linux-\$node
 oc_stage 'Preparing Node.js'
 rm -rf "\$node_dir.new"
 mkdir -p "\$node_dir.new"
-tar -xzf "\$node_part" -C "\$node_dir.new" --strip-components=1
+oc_untar "\$node_part" "\$node_dir.new" 1
+# This phone's Node.js safe mode, when setup found it needs one (issue #117).
+oc_nc_wrap "\$node_dir.new/bin/node"
 [ "\$("\$node_dir.new/bin/node" --version)" = '$nodeVersion' ]
 rm -rf "\$node_dir.old"
 if [ -d "\$node_dir" ]; then mv "\$node_dir" "\$node_dir.old"; fi
@@ -96,6 +100,8 @@ if ! mv "\$node_dir.new" "\$node_dir"; then
   [ ! -d "\$node_dir.old" ] || mv "\$node_dir.old" "\$node_dir"
   exit 1
 fi
+# The wrapper names the program by its final path now.
+oc_nc_wrap "\$node_dir/bin/node"
 for node_tool in node npm npx; do
   ln -sf "\$node_dir/bin/\$node_tool" "/home/oc/.local/bin/\$node_tool"
 done
@@ -104,9 +110,12 @@ rm -f "\$node_part"
 oc_version '$nodeVersion'
 ''';
 
+  /// Fails while this phone has a Node.js safe mode on file (issue #117)
+  /// that the agents' Node does not apply yet, so setup wraps it.
   static const nodeCheck =
       '''set -eu
 [ "\$(/home/oc/.local/node/bin/node --version)" = '$nodeVersion' ]
+[ ! -s ${NodeCompat.envFile} ] || [ -e /home/oc/.local/node/bin/node.real ]
 printf '%s\\n' '$nodeVersion'
 ''';
 

@@ -11,8 +11,6 @@ import 'audio.dart';
 import 'device.dart';
 import 'model_manager.dart';
 import 'model_manifest.dart';
-import 'natural_voice_ui.dart';
-import 'voice_settings_parts.dart';
 import '../ui/app_theme.dart';
 import '../ui/kit/kit.dart';
 import '../platform/platform_capabilities.dart';
@@ -123,7 +121,6 @@ class VoiceSettingsScreen extends StatelessWidget {
               ),
               SizedBox(height: tokens.space4),
               _VoiceModelSetupBody(manager: manager),
-              const NaturalVoiceSection(),
             ],
           ),
         );
@@ -259,13 +256,24 @@ class _VoiceModelSetupBody extends StatelessWidget {
             ),
           ],
           SizedBox(height: tokens.space4),
-          VoiceLanguageRow(
-            manager: manager,
-            strings: strings,
-            enabled: !busy,
+          KitText(strings.e7VoiceUiLanguage, role: KitTextRole.label),
+          SizedBox(height: tokens.space2),
+          KitSegmented<VoiceLanguage>(
+            key: const Key('voice-model-language'),
+            semanticsLabel: strings.e7VoiceUiLanguage,
+            selected: manager.language,
+            onChanged: busy
+                ? null
+                : (language) => unawaited(manager.setLanguage(language)),
             disabledReason: busy ? strings.voiceSetupBusyReason : null,
+            segments: [
+              for (final language in VoiceLanguage.values)
+                KitSegment(
+                  value: language,
+                  label: voiceLanguageLabel(language, strings),
+                ),
+            ],
           ),
-          VoiceAutoSendRow(manager: manager, strings: strings),
         ],
       );
     },
@@ -561,6 +569,7 @@ class _VoiceAutomaticSetupBodyState extends State<_VoiceAutomaticSetupBody>
           final pack = _setup.pack!;
           final size = voiceSizeText(strings, _setup.downloadBytes);
           final unmetered = _setup.network == VoiceSetupNetwork.unmetered;
+          final metered = _setup.network == VoiceSetupNetwork.metered;
           children.addAll([
             KitText(strings.voiceAutoSetupOffer, role: KitTextRole.body),
             SizedBox(height: tokens.space2),
@@ -575,9 +584,9 @@ class _VoiceAutomaticSetupBodyState extends State<_VoiceAutomaticSetupBody>
               KitNotice(
                 key: const Key('voice-auto-setup-metered'),
                 icon: AppIconography.warning,
-                message: _setup.network == VoiceSetupNetwork.metered
+                message: metered
                     ? strings.voiceAutoSetupMobileData
-                    : strings.voiceAutoSetupMaybeMetered,
+                    : strings.voiceAutoSetupUnknownNetwork,
               ),
             ],
             SizedBox(height: tokens.space3),
@@ -585,9 +594,9 @@ class _VoiceAutomaticSetupBodyState extends State<_VoiceAutomaticSetupBody>
           ]);
           primary = KitAction(
             key: const Key('voice-auto-setup-download'),
-            label: unmetered
-                ? strings.voiceAutoSetupDownload(size)
-                : strings.voiceAutoSetupDownloadMobile(size),
+            label: metered
+                ? strings.voiceAutoSetupDownloadMobile(size)
+                : strings.voiceAutoSetupDownload(size),
             icon: AppIconography.download,
             onPressed: () =>
                 unawaited(_setup.confirmDownload(allowMetered: !unmetered)),

@@ -1,11 +1,7 @@
 // Shared set-up for screen-phone-1's behaviour tests and goldens: the phone
-// setup screens behind a fake engine, a stood-in in-app Linux, and the
-// `oc/termux` channel answering the storage tools by verb.
-import 'dart:convert';
-
+// setup screens behind a fake engine and a stood-in in-app Linux.
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
@@ -16,7 +12,6 @@ import 'package:opencode_mobile/builtin/setup/setup_contract.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
-import 'package:opencode_mobile/state/termux_running_server.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/kit/kit_undo.dart';
 import 'package:opencode_mobile/ui/screens/phone_setup/phone_setup_start_screen.dart';
@@ -71,6 +66,7 @@ class PhoneLinux extends BuiltinLinux {
   Future<BuiltinLinuxRunResult> run(
     String script, {
     Duration timeout = const Duration(minutes: 2),
+    String? input,
   }) async => openCode
       ? const BuiltinLinuxRunResult(exitCode: 0, output: '1.18.29\n')
       : const BuiltinLinuxRunResult(exitCode: 1, output: '');
@@ -144,22 +140,11 @@ final inAppProfile = ServerProfile(
 );
 
 /// Screen A with every probe answered at once.
-Widget startScreen({TermuxRunningServer? termux, bool inApp = false}) =>
-    PhoneSetupStartScreen(
-      termuxProbe: () async => termux ?? const TermuxRunningServer.absent(),
-      inAppProbe: () async => inApp,
-      deviceProbe: () async => okDevice,
-      openProgress: (_) async {},
-    );
-
-/// No Termux job on the phone: phone setup's start screen also reads
-/// Termux's setup engine (320269a2, P1.7), which must not reach the
-/// platform channel in a test. Call from `setUp`.
-void useNoTermuxJob() {
-  final previous = PhoneSetup.termux;
-  PhoneSetup.termux = FakeSetupEngine();
-  addTearDown(() => PhoneSetup.termux = previous);
-}
+Widget startScreen({bool inApp = false}) => PhoneSetupStartScreen(
+  inAppProbe: () async => inApp,
+  deviceProbe: () async => okDevice,
+  openProgress: (_) async {},
+);
 
 /// Mounts [home] as the app would, with the providers the phone screens
 /// read, at [size]. Returns the fake engine behind `PhoneSetup.engine`.
@@ -266,106 +251,4 @@ Future<void> unmountPhone(WidgetTester tester) async {
   await tester.pumpWidget(const SizedBox.shrink());
   connection?.dispose();
   debugDefaultTargetPlatformOverride = null;
-}
-
-String _rootfs(String path) =>
-    '/data/data/com.termux/files/usr/var/lib/proot-distro/containers/opencode-ubuntu/rootfs$path';
-
-/// A finished storage scan: one cache that can be cleaned, the rest listed.
-String storageReport({bool stale = false}) => jsonEncode({
-  'scanned_at': 1788800000,
-  'cleanup_policy': 2,
-  'stale': stale,
-  'total_bytes': 46 * 1024 * 1024 * 1024,
-  'categories': [
-    {
-      'key': 'build_caches',
-      'bytes': 8700000000,
-      'deletable': true,
-      'paths': [
-        {'path': _rootfs('/root/.gradle/caches'), 'bytes': 8000000000},
-        {
-          'path': '/data/data/com.termux/files/home/.npm/_cacache',
-          'bytes': 700000000,
-        },
-      ],
-    },
-    {
-      'key': 'agent_scratch',
-      'bytes': 11000000000,
-      'deletable': false,
-      'paths': [
-        {'path': _rootfs('/tmp/opencode/abc'), 'bytes': 11000000000},
-      ],
-    },
-    {
-      'key': 'opencode',
-      'bytes': 400000000,
-      'deletable': false,
-      'paths': [
-        {'path': _rootfs('/usr/local/lib/node_modules'), 'bytes': 400000000},
-      ],
-    },
-  ],
-  'projects': [
-    {
-      'name': 'IPTV_King',
-      'path': _rootfs('/root/projects/IPTV_King'),
-      'bytes': 3600000000,
-      'build_bytes': 3000000000,
-    },
-  ],
-});
-
-/// The `oc/termux` channel as a phone whose storage tools answer by verb.
-class StorageChannel {
-  StorageChannel({this.state = 'idle', this.log = '', this.report});
-
-  String state;
-  String log;
-  String? report;
-  int scanStarts = 0;
-  final cleans = <String>[];
-
-  Map<String, Object> _result(String stdout) => {
-    'stdout': stdout,
-    'stderr': '',
-    'exitCode': 0,
-    'err': -1,
-    'errorMessage': '',
-  };
-
-  Future<Object?> _handle(MethodCall call) async {
-    if (call.method != 'runInTermux') return true;
-    final script = (call.arguments as Map)['script'] as String;
-    if (script.contains('nohup "\$TOOLS" storage-scan')) {
-      scanStarts++;
-      return _result('tools-started:4242\n');
-    }
-    final verb = RegExp(
-      r'''exec "\$TOOLS" ([a-z-]+)(?: '([^']*)')?\n$''',
-    ).firstMatch(script);
-    switch (verb?.group(1)) {
-      case 'storage-status':
-        return _result(
-          'state=$state\n__OC_TOOLS_LOG__\n$log\n__OC_TOOLS_JSON__\n${report ?? ''}\n',
-        );
-      case 'storage-cancel':
-        return _result('{"cancelled":true}\n');
-      case 'storage-clean':
-        cleans.add(verb!.group(2)!);
-        return _result('{"freed_bytes":0,"removed":[],"refused":[]}\n');
-    }
-    return _result('');
-  }
-
-  void install() {
-    const channel = MethodChannel('oc/termux');
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(channel, _handle);
-    addTearDown(() {
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(channel, null);
-    });
-  }
 }

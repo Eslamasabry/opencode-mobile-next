@@ -22,14 +22,7 @@ extension _QuietReconnect on ConnectionController {
       _resetQuietReconnect();
       _notifyListeners();
     });
-    if (isAgentBackend) {
-      unawaited(readConnectionHelperExit());
-      // The helper's exit can reach the native record a moment after the
-      // link drops: read again, so a stop by Android is named as such.
-      Timer(const Duration(seconds: 3), () {
-        if (!_disposed) unawaited(readConnectionHelperExit());
-      });
-    }
+    if (isAgentBackend) unawaited(readConnectionHelperExit());
   }
 
   void _resetQuietReconnect() {
@@ -46,7 +39,6 @@ extension _QuietReconnect on ConnectionController {
   ) async {
     final token = _quietReconnectToken;
     final location = locationRevision;
-    if (isAgentBackend) unawaited(readConnectionHelperExit());
     await refreshSessions();
     if (!_isCurrent(generation, currentApi) ||
         status != StreamStatus.connected ||
@@ -86,8 +78,6 @@ extension _QuietReconnect on ConnectionController {
         observed?.lastStopRequested == false &&
         (previous == null || !at.isBefore(previous))) {
       _lastConnectionHelperExit = observed;
-      // A new stop changes the conversation's line (Android stopped it).
-      if (previous == null || at.isAfter(previous)) _notifyListeners();
     }
     return _lastConnectionHelperExit;
   }

@@ -294,10 +294,7 @@ void main() {
     }
 
     await open('running');
-    // A restarted task whose newest kept line is still "finished": the top
-    // bar follows the task, not the stale line.
-    expect(find.textContaining('Developer is working'), findsOneWidget);
-    expect(find.textContaining('Merged into dev'), findsOneWidget);
+    expect(find.text('Work so far'), findsOneWidget);
     expect(find.text('Work completed'), findsNothing);
   });
 }

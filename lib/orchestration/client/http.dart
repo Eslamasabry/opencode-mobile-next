@@ -11,8 +11,6 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 
-import '../../network/platform_dio.dart';
-import '../../network/transport_failure.dart';
 import '../adapters/gascity/dto/json_read.dart';
 import '../adapters/gascity/dto/problem.dart';
 import '../../diagnostics/perf_trace.dart';
@@ -131,26 +129,20 @@ class OrchestrationHttpClient {
   }) : baseUrl = normalizeBaseUrl(baseUrl),
        defaultQuery = Map.unmodifiable(defaultQuery),
        _onRequest = onRequest {
-    if (dio != null) {
-      _dio = dio;
-    } else {
-      _dio = Dio(
-        BaseOptions(
-          baseUrl: this.baseUrl,
-          connectTimeout: connectTimeout,
-          receiveTimeout: receiveTimeout,
-          responseType: ResponseType.json,
-          headers: const {'Accept': 'application/json'},
-          // Every status is delivered to us so problem+json bodies can be
-          // decoded instead of thrown away by Dio.
-          validateStatus: (_) => true,
-        ),
-      );
-      // Browser builds read the event stream through Fetch so frames arrive
-      // as they are sent; native keeps dart:io. An injected Dio is the
-      // caller's to configure.
-      configurePlatformDio(_dio);
-    }
+    _dio =
+        dio ??
+        Dio(
+          BaseOptions(
+            baseUrl: this.baseUrl,
+            connectTimeout: connectTimeout,
+            receiveTimeout: receiveTimeout,
+            responseType: ResponseType.json,
+            headers: const {'Accept': 'application/json'},
+            // Every status is delivered to us so problem+json bodies can be
+            // decoded instead of thrown away by Dio.
+            validateStatus: (_) => true,
+          ),
+        );
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
@@ -400,13 +392,8 @@ class OrchestrationHttpClient {
           e.type == DioExceptionType.connectionTimeout ||
           e.type == DioExceptionType.receiveTimeout ||
           e.type == DioExceptionType.sendTimeout;
-      final cancelled = e.type == DioExceptionType.cancel;
       throw OrchestrationTransportException(
-        // A browser cannot say whether the host was down, the origin was
-        // refused (CORS) or the page is https over an http host.
-        message: platformDioUsesBrowserTransport && !timedOut && !cancelled
-            ? browserNetworkFailureMessage()
-            : e.message ?? e.type.name,
+        message: e.message ?? e.type.name,
         method: method,
         path: path,
         cause: e.error ?? e,

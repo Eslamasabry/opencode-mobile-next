@@ -7,12 +7,36 @@ import 'package:opencode_mobile/domain/git/github_device_flow.dart';
 
 import 'git_test_support.dart';
 
-/// Answers GitHub's three endpoints from queues; records what was sent.
+/// Answers GitHub's endpoints from queues; records what was sent.
 class _GitHub implements HttpClientAdapter {
   final codeAnswers = <Object>[];
   final tokenAnswers = <Object>[];
   Object userAnswer = {'login': 'octocat'};
+  Object createRepoAnswer = {
+    'full_name': 'octocat/alpha',
+    'html_url': 'https://github.com/octocat/alpha',
+    'clone_url': 'https://github.com/octocat/alpha.git',
+    'private': true,
+    'default_branch': 'main',
+  };
+  List<Object> reposAnswer = const [
+    {
+      'full_name': 'octocat/alpha',
+      'html_url': 'https://github.com/octocat/alpha',
+      'clone_url': 'https://github.com/octocat/alpha.git',
+      'private': false,
+      'default_branch': 'main',
+    },
+    {
+      'full_name': 'octocat/beta',
+      'html_url': 'https://github.com/octocat/beta',
+      'clone_url': 'https://github.com/octocat/beta.git',
+      'private': true,
+      'default_branch': 'dev',
+    },
+  ];
   int userStatus = 200;
+  int createRepoStatus = 201;
   final requests = <({String method, String url, String body, Map headers})>[];
 
   @override
@@ -32,7 +56,8 @@ class _GitHub implements HttpClientAdapter {
     ));
     Object answer;
     var status = 200;
-    switch (options.uri.toString()) {
+    // The repo list adds query parameters; match on the address without them.
+    switch ('${options.uri.origin}${options.uri.path}') {
       case gitHubDeviceCodeUrl:
         answer = codeAnswers.removeAt(0);
       case gitHubAccessTokenUrl:
@@ -40,6 +65,13 @@ class _GitHub implements HttpClientAdapter {
       case gitHubUserUrl:
         answer = userAnswer;
         status = userStatus;
+      case gitHubUserReposUrl:
+        if (options.method == 'POST') {
+          answer = createRepoAnswer;
+          status = createRepoStatus;
+        } else {
+          answer = reposAnswer;
+        }
       default:
         throw StateError('unexpected ${options.uri}');
     }
@@ -138,6 +170,105 @@ void main() {
     );
     final user = github.requests.last;
     expect(user.headers['Authorization'], 'Bearer $fakeGitHubToken');
+  });
+
+  test(
+    'user repos are listed with remote URLs ready for a Git remote',
+    () async {
+      final repos = await flow().fetchUserRepositories(fakeGitHubToken);
+      expect(repos.map((r) => r.fullName), ['octocat/alpha', 'octocat/beta']);
+      expect(repos.first.remoteUrl, 'https://github.com/octocat/alpha.git');
+      expect(repos.last.remoteUrl, 'https://github.com/octocat/beta.git');
+      final request = github.requests.last;
+      expect(request.method, 'GET');
+      expect(request.url, contains(gitHubUserReposUrl));
+      expect(request.headers['Authorization'], 'Bearer $fakeGitHubToken');
+    },
+  );
+
+  test(
+    'creates a private repository without asking for its remote URL',
+    () async {
+      final repo = await flow().createUserRepository(
+        fakeGitHubToken,
+        name: 'alpha',
+        isPrivate: true,
+      );
+      expect(repo.fullName, 'octocat/alpha');
+      expect(repo.isPrivate, isTrue);
+      expect(repo.remoteUrl, 'https://github.com/octocat/alpha.git');
+      final request = github.requests.single;
+      expect(request.method, 'POST');
+      expect(request.url, gitHubUserReposUrl);
+      expect(request.headers['Authorization'], 'Bearer $fakeGitHubToken');
+      expect(jsonDecode(request.body), {'name': 'alpha', 'private': true});
+    },
+  );
+
+  test('rejects invalid names before contacting GitHub', () async {
+    await expectLater(
+      flow().createUserRepository(
+        fakeGitHubToken,
+        name: '../alpha',
+        isPrivate: false,
+      ),
+      throwsA(
+        isA<GitHubRepositoryException>().having(
+          (e) => e.problem,
+          'problem',
+          GitHubRepositoryProblem.invalidName,
+        ),
+      ),
+    );
+    expect(github.requests, isEmpty);
+  });
+
+  test('a repository name already in use is typed', () async {
+    github.createRepoStatus = 422;
+    github.createRepoAnswer = {
+      'message': 'Repository creation failed.',
+      'errors': [
+        {'resource': 'Repository', 'code': 'already_exists', 'field': 'name'},
+      ],
+    };
+    await expectLater(
+      flow().createUserRepository(
+        fakeGitHubToken,
+        name: 'alpha',
+        isPrivate: false,
+      ),
+      throwsA(
+        isA<GitHubRepositoryException>().having(
+          (e) => e.problem,
+          'problem',
+          GitHubRepositoryProblem.nameUnavailable,
+        ),
+      ),
+    );
+  });
+
+  test('any other refused field is not called a taken name', () async {
+    github.createRepoStatus = 422;
+    github.createRepoAnswer = {
+      'message': 'Validation Failed',
+      'errors': [
+        {'resource': 'Repository', 'code': 'custom', 'field': 'name'},
+      ],
+    };
+    await expectLater(
+      flow().createUserRepository(
+        fakeGitHubToken,
+        name: 'alpha',
+        isPrivate: false,
+      ),
+      throwsA(
+        isA<GitHubRepositoryException>().having(
+          (e) => e.problem,
+          'problem',
+          GitHubRepositoryProblem.invalidName,
+        ),
+      ),
+    );
   });
 
   test('slow_down without an interval adds five seconds', () async {

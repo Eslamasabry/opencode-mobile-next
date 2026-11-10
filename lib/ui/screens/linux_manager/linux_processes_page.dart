@@ -23,7 +23,7 @@ import '../../../builtin/linux_manager/linux_processes.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../app_theme.dart';
 import '../../kit/kit.dart';
-import '../termux_processes_screen.dart' show formatTermuxDuration;
+import '../../widgets/process_format.dart';
 import 'linux_manager_common.dart';
 
 class LinuxProcessesPage extends ConsumerStatefulWidget {
@@ -107,7 +107,7 @@ class _State extends ConsumerState<LinuxProcessesPage> {
       if (memory > 0) l10n.termuxProcsMemoryMb(memory),
       if (g.elapsedSeconds > 0)
         l10n.termuxProcsRunningFor(
-          formatTermuxDuration(l10n, g.elapsedSeconds),
+          formatProcessDuration(l10n, g.elapsedSeconds),
         ),
     ].join(' · ');
   }
@@ -446,7 +446,7 @@ class _Details extends StatelessWidget {
             KitTechnicalValue(l10n.termuxProcsParentId, '${process.ppid}'),
             KitTechnicalValue(
               l10n.termuxProcsCpuTime,
-              formatTermuxDuration(l10n, process.cpuSeconds),
+              formatProcessDuration(l10n, process.cpuSeconds),
             ),
           ],
         ),

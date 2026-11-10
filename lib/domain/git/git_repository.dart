@@ -16,6 +16,7 @@ import 'git_shell.dart';
 /// Every action the page offers; also the page's busy state.
 enum GitAction {
   refresh,
+  initialize,
   pull,
   push,
   commit,
@@ -25,6 +26,7 @@ enum GitAction {
   setIdentity,
   addRemote,
   clone,
+  publish,
 }
 
 /// Something worth saying about an action that worked.
@@ -47,12 +49,14 @@ enum GitActionNote {
   created,
   discarded,
   identitySaved,
+  initialized,
 
   /// A remote was added.
   remoteAdded,
 
   /// A repository was cloned ([GitActionResult.clonedTo] is its folder).
   cloned,
+  githubRepositoryCreated,
 }
 
 class GitActionResult {
@@ -775,6 +779,16 @@ class GitRepository {
       );
     });
   }
+
+  /// Initializes Git in the current project without changing its files. The
+  /// first branch is `main`, as on a new GitHub repository, whatever the
+  /// server's own git defaults to.
+  Future<GitActionResult> initialize() => _single(GitAction.initialize, [
+    ..._git,
+    'init',
+    '-b',
+    'main',
+  ], GitActionNote.initialized);
 
   /// `git remote add <name> <url>`. The address is checked first and never
   /// may carry a password.

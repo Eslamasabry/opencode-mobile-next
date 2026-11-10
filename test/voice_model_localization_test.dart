@@ -50,10 +50,7 @@ void main() {
       final strings = E7VoiceModelArabicFixture();
       final pack = voiceModelPack('base');
       expect(voicePackLabel(pack, strings), 'متوازن');
-      expect(
-        voiceLanguageLabel(VoiceLanguage.detect, strings),
-        'اكتشاف تلقائي',
-      );
+      expect(voiceLanguageLabel(VoiceLanguage.auto, strings), 'اكتشاف تلقائي');
       expect(pack.encoder.name, 'base-encoder.int8.onnx');
       expect(pack.repository, 'csukuangfj/sherpa-onnx-whisper-base');
       expect(

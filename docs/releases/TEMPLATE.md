@@ -45,6 +45,9 @@ from the commits since the last tag; then trim and group it.
 ### Upgrading
 - Installs over the previous public release (same signing key). Saved
   servers, sign-ins and settings are kept.
+- New versions arrive as a GitHub pre-release first and become the latest
+  release after a few quiet days. Obtainium users who want them early can
+  turn on "Include prereleases" for this app.
 
 ## Release checklist
 

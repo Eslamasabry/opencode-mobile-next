@@ -1,7 +1,7 @@
 name: opencode_mobile
 description: "OpenCode client for Android - connect to a remote opencode server or one running on-device via Termux."
 publish_to: "none"
-version: 2.1.0+57
+version: 2.1.5+63
 
 environment:
   sdk: ^3.10.0
@@ -47,32 +47,16 @@ dependencies:
   crypto: 3.0.7
   cryptography: 2.9.0
   local_auth: 3.0.2
-  http: 1.6.0
-  web: 1.1.1
   image_picker: 1.2.3
-  # Scanning the QR that `opencode2 pair` prints. Pinned exactly, because it
-  # registers a platform plugin and ships native camera code.
-  # 7.4.2 passes a clean Android release build on the pinned Flutter/AGP
-  # toolchain and no longer triggers Flutter's mobile_scanner KGP warning.
-  # Reproduction evidence: docs/qa/codex-net-2026-09-27/README.md.
-  #
-  # Why this package: it is the maintained Flutter barcode scanner (160/160
-  # pub points, ~1.3M downloads a month, publisher steenbakker.dev), it is
-  # BSD-3-Clause, and on Android it wraps CameraX + ML Kit rather than a
-  # bundled decoder of its own. The alternatives are unmaintained forks of
-  # long-dead qr_code_scanner.
-  #
-  # Known costs, stated rather than hidden:
-  #  * It defaults to the *bundled* ML Kit barcode model
-  #    (com.google.mlkit:barcode-scanning), not the Play-Services download.
-  #    That grows the APK, and buys scanning that works with no Play Services
-  #    and no first-run download. See THIRD_PARTY_NOTICES.md.
-  #  * It declares iOS, macOS and web implementations we never build, and no
-  #    Linux one at all. Harmless because the scanner is gated behind
-  #    `platformCapabilities.supportsQrPairing` (Android only) and desktop
-  #    never constructs a controller — but the Linux bundle does resolve a
-  #    package it cannot use, exactly as record and file_picker already do.
-  mobile_scanner: 7.4.2
+  # Scanning the QR that `opencode2 pair` prints: the camera frames come from
+  # the Flutter team's `camera` (androidx CameraX on Android, BSD-3-Clause,
+  # no Google Play services) and are decoded by `zxing2`, a pure-Dart port of
+  # ZXing (Apache-2.0). This replaced mobile_scanner 7.4.2 (2026-10-31): that
+  # package bundles the Google ML Kit barcode model, which cost about 3 MB in
+  # the arm64 APK and which F-Droid cannot ship. The decoder is
+  # lib/ui/kit/kit_qr_decoder.dart. Both pinned exactly.
+  camera: 0.12.2
+  zxing2: 0.2.4
   path_provider: 2.1.6
   # Encoding the session handoff QR (backlog F4-S2). Pure Dart, no platform
   # plugin, no native code and no transitive dependencies; the modules are
@@ -82,7 +66,7 @@ dependencies:
   qr: 3.0.2
   record: 7.1.1
   scrollable_positioned_list: 0.3.8
-  sherpa_onnx: 2.0.1
+  sherpa_onnx: 1.13.7
   shared_preferences: ^2.3.3
   shorebird_code_push: 2.0.7
   url_launcher: ^6.3.1
@@ -103,9 +87,11 @@ dependencies:
   screen_retriever: ^0.2.0
 
   path: ^1.9.1
+  firebase_core: ^5.1.0
+  firebase_crashlytics: ^6.0.1
+  firebase_analytics: ^13.0.1
+  firebase_performance: ^0.12.1
 dev_dependencies:
-  flutter_secure_storage_web: 2.1.1
-  flutter_secure_storage_platform_interface: 2.1.1
   cross_file: 0.3.5+5
   local_auth_platform_interface: 1.1.0
   webview_flutter_platform_interface: ^2.10.0
@@ -134,11 +120,6 @@ flutter:
     - assets/branding/open-portal/mark.svg
     # Agent and provider marks (lobe-icons, MIT): THIRD_PARTY_NOTICES.md.
     - assets/marks/
-    # AI Team on this phone (TEAM-301): the pinned download manifest for the
-    # Android-built gc/bd/dolt and the opencode wrapper; a copy of
-    # tool/host/aiteam-manifest-<date>.json.
-    - assets/aiteam/manifest.json
-    - assets/aiteam/manifest-x86_64.json
     - assets/agents/paseo-package-lock.json
     # The optional quota collector the app runs in In-app Ubuntu
     # (lib/builtin/quota_collector_host.dart). One file, no npm install.

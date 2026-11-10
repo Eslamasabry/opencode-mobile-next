@@ -29,18 +29,15 @@ import '../../../state/profiles.dart' show OrchestrationProvider;
 import '../../../state/orchestration.dart';
 import '../../../state/team_model.dart';
 import '../../../state/team_roles.dart';
-import '../../../termux/team_runtime.dart';
 import '../../app_theme.dart';
 import '../../kit/kit.dart';
 import '../../widgets/team_discovery_card.dart'
     show teamHostDisclaimer, teamHostKindFor;
 import '../../widgets/team_host_form.dart'
     show TeamHostProbe, showTeamTurnOffSheet;
-import '../../widgets/team_phone_section.dart' show TeamPhoneSection;
 import '../../widgets/team_switch.dart';
 import '../../widgets/team_technical_details.dart';
 import '../../widgets/team_vocabulary.dart';
-import '../settings/plugins_screen.dart' show teamPhoneProfile;
 import 'team_agents_screen.dart';
 import 'team_model_sheet.dart';
 import 'team_phone_setup_screen.dart';
@@ -55,7 +52,6 @@ Future<void> openTeamSettings(
   ConnectionController? connection,
   ValueListenable<ThermalGuard?>? thermalGuard,
   TeamHostProbe? probe,
-  TermuxTeamRuntime? teamRuntime,
   DateTime Function()? now,
   ValueChanged<OrchestrationAgent>? onOpenAgent,
   VoidCallback? onTeamChanged,
@@ -66,7 +62,6 @@ Future<void> openTeamSettings(
       connection: connection,
       thermalGuard: thermalGuard,
       probe: probe,
-      teamRuntime: teamRuntime,
       now: now,
       onOpenAgent: onOpenAgent,
       onTeamChanged: onTeamChanged,
@@ -81,7 +76,6 @@ class TeamSettingsScreen extends StatefulWidget {
     this.connection,
     this.thermalGuard,
     this.probe,
-    this.teamRuntime,
     this.now,
     this.onOpenAgent,
     this.onTeamChanged,
@@ -99,8 +93,6 @@ class TeamSettingsScreen extends StatefulWidget {
   /// The Gas City probe of the address form; tests pass a fake.
   final TeamHostProbe? probe;
 
-  /// The Termux team runtime; tests pass a fake.
-  final TermuxTeamRuntime? teamRuntime;
   final DateTime Function()? now;
   final ValueChanged<OrchestrationAgent>? onOpenAgent;
 
@@ -273,23 +265,6 @@ class _TeamSettingsScreenState extends State<TeamSettingsScreen> {
     }
   }
 
-  Future<void> _openPhoneControls() {
-    final connection = _owner!;
-    final l10n = _copy(context);
-    return showKitSheet<void>(
-      context,
-      title: l10n.teamUiPhoneSectionTitle,
-      icon: AppIconography.phone,
-      sheetKey: const ValueKey('team-home-phone-sheet'),
-      body: (sheetContext) => TeamPhoneSection(
-        connection: connection,
-        profile: connection.profile!,
-        runtime: widget.teamRuntime,
-        onRemoved: () => Navigator.of(sheetContext).pop(),
-      ),
-    );
-  }
-
   void _openAgents() {
     Navigator.of(context).push(
       KitPageRoute<void>(
@@ -428,14 +403,6 @@ class _TeamSettingsScreenState extends State<TeamSettingsScreen> {
                         openPhoneTeamSetup(context, widget.connection!),
                       ),
                     ),
-                  if (owner != null && teamPhoneProfile(owner.profile))
-                    KitRow(
-                      key: const ValueKey('team-home-phone-controls'),
-                      leading: KitRow.icon(context, AppIconography.phone),
-                      title: l10n.teamHomePhoneControls,
-                      trailing: const KitChevron(),
-                      onTap: () => unawaited(_openPhoneControls()),
-                    ),
                   if (owner != null && !builtin)
                     KitRow(
                       key: const ValueKey('team-home-change-address'),
@@ -504,10 +471,8 @@ class _TeamSettingsScreenState extends State<TeamSettingsScreen> {
         : (input ?? 0) + (output ?? 0);
     if ((cost ?? 0) == 0 && (tokens ?? 0) == 0) return null;
     final figures = [
-      if (cost != null)
-        l10n.teamUiUsageCostEstimated(teamCurrencyLabel(cost, l10n.localeName)),
-      if (tokens != null)
-        l10n.teamUiUsageTokens(teamCompactCount(tokens, l10n.localeName)),
+      if (cost != null) l10n.teamUiUsageCostEstimated(teamCurrencyLabel(cost)),
+      if (tokens != null) l10n.teamUiUsageTokens(teamCompactCount(tokens)),
     ];
     final lines = [
       l10n.teamHomeSpentHint,

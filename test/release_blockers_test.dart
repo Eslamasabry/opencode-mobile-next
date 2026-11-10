@@ -440,8 +440,11 @@ void main() {
     expect(wrapper, contains('gradle-9.5.0-all.zip'));
     expect(example, contains('storeFile=/absolute/path/'));
     expect(example, contains('keyAlias=upload'));
-    expect(workflow, contains('Create draft stable GitHub release'));
-    expect(workflow, contains('--draft --prerelease=false'));
+    // E02-S90: CI publishes a pre-release; only `release.sh promote` makes
+    // it latest.
+    expect(workflow, contains('Publish GitHub pre-release'));
+    expect(workflow, contains('--verify-tag --prerelease --latest=false'));
+    expect(workflow, isNot(contains('--prerelease=false')));
     expect(workflow, contains('dist/SHA256SUMS'));
     expect(workflow, contains('Signer SHA-256'));
   });
@@ -451,11 +454,8 @@ void main() {
       'android/app/src/main/kotlin/io/github/eslamasabry/'
       'opencode_mobile/MainActivity.kt',
     ).readAsStringSync();
-    final termux = File(
-      'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/TermuxActivityBridge.kt',
-    ).readAsStringSync();
-    final environment = File(
-      'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/TermuxActivityEnvironment.kt',
+    final appInfo = File(
+      'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/AppInfoChannel.kt',
     ).readAsStringSync();
     final background = File(
       'android/app/src/main/kotlin/io/github/eslamasabry/'
@@ -463,14 +463,14 @@ void main() {
     ).readAsStringSync();
     final about = File('lib/ui/screens/about_screen.dart').readAsStringSync();
 
-    expect(activity, contains('termux.handle(call, result)'));
+    expect(activity, contains('AppInfoChannel.register(this, messenger)'));
     expect(
-      termux,
+      appInfo,
       contains(
-        '"getSigningCertificateSha256" -> result.success(environment.signingCertificateSha256())',
+        '"getSigningCertificateSha256" -> result.success(signingCertificateSha256(activity))',
       ),
     );
-    expect(environment, contains('MessageDigest.getInstance("SHA-256")'));
+    expect(appInfo, contains('MessageDigest.getInstance("SHA-256")'));
     expect(about, contains('l10n.aboutSigningCertificate'));
     expect(background, contains('setAuthenticationRequired(true)'));
   });

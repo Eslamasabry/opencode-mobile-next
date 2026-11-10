@@ -27,6 +27,7 @@ class _InventoryLinux extends BuiltinLinux {
   Future<BuiltinLinuxRunResult> run(
     String script, {
     Duration timeout = const Duration(minutes: 2),
+    String? input,
   }) async {
     scripts.add(script);
     // A probe reports the inventory it observed before an install/removal,

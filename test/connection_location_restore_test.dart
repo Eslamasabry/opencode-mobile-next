@@ -737,7 +737,7 @@ void main() {
       _ServerScript(
         projects: [
           _project('global', '/root', updatedAt: 99),
-          _project('home', '/home/owner', updatedAt: 98),
+          _project('home', '/home/eslam', updatedAt: 98),
         ],
       ),
     );

@@ -68,7 +68,7 @@ lib/domain/       shared models, capability flags and backend-neutral gateways
 lib/codex/        direct Codex app-server adapter
 lib/paseo/        Paseo agent adapter
 lib/state/        profiles (Keystore secrets), ConnectionController, offline queue
-lib/termux/       Dart side of the Termux RUN_COMMAND bridge
+lib/builtin/      built-in Linux: the phone's own Ubuntu, setup engine, agents
 lib/background/   foreground service, live-session notifications, home widget
 lib/voice/        sherpa-onnx Whisper: model manager, downloader, recognizer
 lib/ui/           screens and widgets

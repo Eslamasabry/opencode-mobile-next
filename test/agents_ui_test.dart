@@ -98,8 +98,10 @@ void main() {
         tester,
         _host(agents: FakePhoneAgentsSource(rows: const [])),
       );
-      // One agent never shows one lonely card: the quiet line instead.
-      expect(find.byType(KitAgentChoice), findsNothing);
+      // OpenCode alone: its card sits beside the Add an agent card, which
+      // leads the row so the way to more agents is always in view.
+      expect(find.byType(KitAgentChoice), findsOneWidget);
+      expect(find.byType(KitAddAgentCard), findsOneWidget);
       expect(find.textContaining('OpenCode'), findsWidgets);
       expect(find.textContaining('alpha'), findsWidgets);
     });
@@ -112,8 +114,8 @@ void main() {
       );
       await _newChat(tester, _host(agents: agents));
       expect(find.byType(KitAgentChoice), findsNWidgets(2));
-      expect(find.text('Careful with big changes'), findsOneWidget);
-      expect(find.text('Any model, free ones too'), findsOneWidget);
+      expect(find.text('Understands your codebase'), findsOneWidget);
+      expect(find.text('The open source coding agent'), findsOneWidget);
       expect(find.text('Start with Claude Code'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('chats-new-agent-opencode')));
       await tester.pumpAndSettle();
@@ -884,6 +886,72 @@ void main() {
         expect(terminal.programs.single, ['codex', 'login', '--device-auth']);
         expect(find.textContaining('Claude account'), findsNothing);
         await tester.pump(const Duration(milliseconds: 200));
+      },
+    );
+
+    testWidgets(
+      'Antigravity explains Google browser sign-in and opens its own terminal',
+      (tester) async {
+        final agents = FakePhoneAgentsSource(
+          rows: [agentRowFor('antigravity', FakeAgentStage.signedOut)],
+        );
+        final terminal = FakeLocalTerminalBackend();
+        await _newChat(
+          tester,
+          _host(agents: agents),
+          terminal: LocalTerminalSessions(
+            backend: terminal,
+            signInForeground: FakeSignInForeground(),
+          ),
+        );
+        unawaited(
+          showAgentSheet(
+            tester.element(find.byType(NewChatScreen)),
+            agentId: 'antigravity',
+            step: AgentSheetStep.signIn,
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.textContaining('sign in with Google'), findsOneWidget);
+        expect(find.textContaining('Claude account'), findsNothing);
+        await tester.tap(find.byKey(const ValueKey('agents-sign-in-start')));
+        await tester.pumpAndSettle();
+        expect(terminal.programs.single, ['agy', 'acp', '--login']);
+        await tester.pump(const Duration(milliseconds: 200));
+      },
+    );
+
+    testWidgets(
+      'Gemini sign-in explains how to follow an upstream Antigravity request',
+      (tester) async {
+        await _newChat(
+          tester,
+          _host(
+            agents: FakePhoneAgentsSource(
+              rows: [agentRowFor('gemini', FakeAgentStage.signedOut)],
+            ),
+          ),
+        );
+        unawaited(
+          showAgentSheet(
+            tester.element(find.byType(NewChatScreen)),
+            agentId: 'gemini',
+            step: AgentSheetStep.signIn,
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(
+          find.textContaining('install Antigravity (agy)'),
+          findsOneWidget,
+        );
+        expect(
+          find.textContaining('Your Gemini conversations stay here.'),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const ValueKey('agents-sign-in-start')),
+          findsOneWidget,
+        );
       },
     );
 

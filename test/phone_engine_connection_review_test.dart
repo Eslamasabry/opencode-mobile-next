@@ -132,7 +132,6 @@ void main() {
               gateway: v2Api,
               operations: Api2OperationsGateway(client: v2Api.client),
             ),
-      localWakeLockEnsurer: () async {},
       draftAttachmentVault: StashMemoryVault(),
       stashAttachmentVault: StashMemoryVault(),
     );
@@ -263,7 +262,7 @@ void main() {
           ),
         ),
       );
-      api.healthGate.complete(Health(healthy: true, version: '2.2.5'));
+      api.healthGate.complete(Health(healthy: true, version: '2.1.1'));
       await connecting;
     },
   );
@@ -317,7 +316,7 @@ void main() {
       );
       expect(bridge.calls, ['stop:alias', 'stop:alias']);
       await controller.disconnect();
-      api.healthGate.complete(Health(healthy: true, version: '2.2.5'));
+      api.healthGate.complete(Health(healthy: true, version: '2.1.1'));
       await connecting;
     },
   );

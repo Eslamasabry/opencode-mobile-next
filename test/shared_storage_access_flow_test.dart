@@ -7,7 +7,6 @@ import 'package:opencode_mobile/platform/platform_capabilities.dart';
 import 'package:opencode_mobile/platform/storage_access.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/state/shared_project_roots.dart';
-import 'package:opencode_mobile/state/shared_storage_gate.dart';
 import 'package:opencode_mobile/ui/screens/shared_storage_access_flow.dart';
 
 final _inApp = ServerProfile(
@@ -53,7 +52,6 @@ void main() {
       opened++;
       if (grantOnOpen) access = StorageAccess.granted;
     };
-    SharedStorageGate.termuxStorageOverride = () async => false;
     SharedStorageAccessFlow.confinedRunningOverride = (_) async => false;
   });
 
@@ -61,7 +59,6 @@ void main() {
     debugPlatformCapabilities = null;
     StorageAccessBridge.statusOverride = null;
     StorageAccessBridge.openOverride = null;
-    SharedStorageGate.termuxStorageOverride = null;
     SharedStorageAccessFlow.confinedRunningOverride = null;
     SharedStorageAccessFlow.restartOverride = null;
     SharedProjectRoots.pushOverride = null;
@@ -163,19 +160,10 @@ void main() {
     },
   );
 
-  testWidgets('a Termux server needs Termux storage, not the app\'s', (
-    tester,
-  ) async {
+  testWidgets('a server at Termux\'s old address is not asked about '
+      'storage: the app runs nothing there', (tester) async {
     await pump(tester, _termux, '/sdcard/CodeAnything');
-    expect(find.text('Allow Termux storage?'), findsOneWidget);
     expect(find.text('Allow access to files?'), findsNothing);
-    await tester.tap(find.text('Not now'));
-    await tester.pumpAndSettle();
-    expect(outcome, SharedStorageOutcome.declined);
-
-    SharedStorageGate.termuxStorageOverride = () async => true;
-    await pump(tester, _termux, '/sdcard/CodeAnything');
-    expect(find.text('Allow Termux storage?'), findsNothing);
     expect(outcome, SharedStorageOutcome.proceed);
   });
 

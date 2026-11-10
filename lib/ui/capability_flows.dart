@@ -9,7 +9,6 @@ import 'package:flutter/widgets.dart';
 import '../platform/camera.dart';
 import '../platform/platform_capabilities.dart';
 import '../state/connection.dart';
-import '../state/phone_host.dart' show PhoneHostKind;
 import '../state/profiles.dart' show ServerBackend;
 import '../voice/device.dart';
 import '../voice/model_manager.dart';
@@ -21,7 +20,6 @@ import 'screens/keep_running_screen.dart';
 import 'screens/library_screen.dart';
 import 'screens/local_agent_screen.dart';
 import 'screens/phone_setup/phone_setup_routes.dart';
-import 'screens/phone_setup/phone_setup_termux_screen.dart';
 import 'screens/project_hub_screen.dart';
 import 'screens/projects_screen.dart';
 import 'screens/servers_screen.dart' show ServersRouteRequest;
@@ -63,7 +61,7 @@ Map<String, KitEnableFlowHandler> capabilityFlowHandlers(
   ConnectionController controller, {
   required PlatformCapabilities platform,
 }) {
-  final phone = platform.supportsTermux;
+  final phone = platform.supportsThisPhone;
   return {
     KitEnableFlows.addServer: _addServer,
     // These entry points already chose the kind; Back can change it.
@@ -107,15 +105,8 @@ Map<String, KitEnableFlowHandler> capabilityFlowHandlers(
         openExternalAgents(context, controller),
     if (phone) ...{
       KitEnableFlows.phoneSetup: (context, _) => openPhoneSetupStart(context),
-      KitEnableFlows.phoneSetupTermux: (context, _) =>
-          openPhoneSetupTermux(context, firstSetup: true),
-      KitEnableFlows.addToolClaude: (context, _) => pushKitPage<void>(
-        context,
-        (page) => LocalAgentScreen(
-          onConnected: () =>
-              Navigator.of(page).pushNamedAndRemoveUntil('/home', (_) => false),
-        ),
-      ),
+      KitEnableFlows.addToolClaude: (context, _) =>
+          pushKitPage<void>(context, (page) => const LocalAgentScreen()),
     },
     if (platform.supportsVoice) ...{
       KitEnableFlows.voiceModelSetup: _voiceModel,
@@ -157,12 +148,9 @@ Future<void> _openOpenCodeSetup(
   KitEnableRequest request, {
   required bool phone,
 }) {
-  final kind = switch (request.host) {
-    KitHost.thisPhone => PhoneHostKind.inApp,
-    KitHost.termux => PhoneHostKind.termux,
-    _ => null,
-  };
-  if (phone && kind != null) return openThisPhone(context, kind: kind);
+  if (phone && request.host == KitHost.thisPhone) {
+    return openThisPhone(context);
+  }
   return _addServer(context, request);
 }
 

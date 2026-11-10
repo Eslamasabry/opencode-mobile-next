@@ -396,7 +396,6 @@ Future<void> showFilePreviewSheet(
   int? initialLine,
   VoidCallback? onOpenInFiles,
   VoidCallback? onOpenInReview,
-  Future<void> Function()? onShare,
 }) {
   final l10n = AppLocalizations.of(context);
   final error = data.error;
@@ -436,7 +435,6 @@ Future<void> showFilePreviewSheet(
     onDownload: onDownload,
     onOpenInFiles: onOpenInFiles,
     onOpenInReview: onOpenInReview,
-    onShare: onShare,
   ).whenComplete(() => pages?.dispose());
 }
 
@@ -507,7 +505,6 @@ Future<void> _openFileViewer(
   Future<void> Function()? onDownload,
   VoidCallback? onOpenInFiles,
   VoidCallback? onOpenInReview,
-  Future<void> Function()? onShare,
 }) {
   final l10n = AppLocalizations.of(context);
   final navigator = Navigator.of(context);
@@ -647,16 +644,6 @@ Future<void> _openFileViewer(
             label: l10n.readerUiAttachPrompt,
             icon: AppIconography.attach,
             onPressed: () => unawaited(attach()),
-          ),
-    // Share on Wi-Fi is a visible action, so it uses the reader's bar.
-    reader: onShare != null,
-    secondary: onShare == null
-        ? null
-        : KitAction(
-            key: const ValueKey('file-preview-share-wifi'),
-            label: l10n.fileShareAction,
-            icon: AppIconography.network,
-            onPressed: () => unawaited(onShare()),
           ),
     more: more,
     wrap: store?.value.wrapCode,

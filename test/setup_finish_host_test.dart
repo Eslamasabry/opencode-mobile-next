@@ -10,7 +10,6 @@ import 'package:opencode_mobile/builtin/team/builtin_team.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/domain/server_probe.dart';
-import 'package:opencode_mobile/termux/bridge.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _OwnershipLinux extends BuiltinLinux {
@@ -24,6 +23,7 @@ class _OwnershipLinux extends BuiltinLinux {
   Future<BuiltinLinuxRunResult> run(
     String script, {
     Duration timeout = const Duration(minutes: 2),
+    String? input,
   }) async => const BuiltinLinuxRunResult(exitCode: 0, output: '');
   @override
   Future<void> startServer(
@@ -48,65 +48,8 @@ class _ReadyLinux extends _OwnershipLinux {
   }
 }
 
-class _RunningLinux extends _ReadyLinux {
-  final calls = <String>[];
-  @override
-  Future<BuiltinLinuxStatus> status() async => const BuiltinLinuxStatus(
-    installed: true,
-    phase: BuiltinLinuxPhase.ready,
-    serverRunning: true,
-  );
-  @override
-  Future<void> stopServer() async => calls.add('stop');
-  @override
-  Future<void> startServer(
-    String script, {
-    int port = 4097,
-    BuiltinServerRestoreRecipe? restoreRecipe,
-  }) async {
-    calls.add('start');
-    // Ends the finish here: the stop-before-start order is what is checked.
-    throw const BuiltinLinuxException('stop here');
-  }
-}
-
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-
-  for (final changed in [true, false]) {
-    test(
-      'finish ${changed ? 'stops' : 'keeps'} the running server when OpenCode '
-      '${changed ? 'was' : 'was not'} replaced',
-      () async {
-        SharedPreferences.setMockInitialValues({});
-        const secure = MethodChannel(
-          'plugins.it_nomads.com/flutter_secure_storage',
-        );
-        final messenger =
-            TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
-        messenger.setMockMethodCallHandler(secure, (_) async => null);
-        addTearDown(() => messenger.setMockMethodCallHandler(secure, null));
-        final linux = _RunningLinux();
-        final starter = BuiltinServerStarter(linux: linux);
-        addTearDown(starter.dispose);
-        final finisher = BuiltinSetupFinisher(
-          store: ProfileStore(prefs: await SharedPreferences.getInstance()),
-          starter: starter,
-          connect: (_) async => null,
-          isConnectedTo: (_) => true,
-          strings: () => lookupAppLocalizations(const Locale('en')),
-        );
-        await finisher.call(
-          SetupFinishRequest(
-            host: SetupHostKind.builtin,
-            runtime: TermuxRuntime.openCode2,
-            openCodeChanged: changed,
-          ),
-        );
-        expect(linux.calls, changed ? ['stop', 'start'] : isEmpty);
-      },
-    );
-  }
 
   test(
     'ownership failure keeps its stable recovery code through setup finish',
@@ -135,64 +78,13 @@ void main() {
       expect(
         await finisher.call(
           const SetupFinishRequest(
-            host: SetupHostKind.builtin,
-            runtime: TermuxRuntime.openCode2,
+            runtime: OpenCodeRuntime.openCode2,
             openCodeChanged: true,
           ),
         ),
         'runtime_ownership_unknown',
       );
       expect(connected, isFalse);
-    },
-  );
-
-  test(
-    'built-in finisher refuses Termux before accessing profiles or native',
-    () async {
-      SharedPreferences.setMockInitialValues({});
-      final prefs = await SharedPreferences.getInstance();
-      final starter = BuiltinServerStarter(linux: BuiltinLinux());
-      addTearDown(starter.dispose);
-      final calls = <String>[];
-      const secure = MethodChannel(
-        'plugins.it_nomads.com/flutter_secure_storage',
-      );
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(secure, (call) async {
-            calls.add(call.method);
-            return null;
-          });
-      addTearDown(() {
-        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-            .setMockMethodCallHandler(secure, null);
-      });
-      final strings = lookupAppLocalizations(const Locale('en'));
-      final finisher = BuiltinSetupFinisher(
-        store: ProfileStore(prefs: prefs),
-        starter: starter,
-        connect: (_) async {
-          calls.add('connect');
-          return null;
-        },
-        isConnectedTo: (_) {
-          calls.add('isConnected');
-          return false;
-        },
-        strings: () => strings,
-      );
-
-      expect(
-        await finisher.call(
-          const SetupFinishRequest(
-            host: SetupHostKind.termux,
-            runtime: TermuxRuntime.openCode2,
-            openCodeChanged: true,
-          ),
-        ),
-        strings.phoneSetupErrorCannotStart,
-      );
-      expect(calls, isEmpty);
-      expect(prefs.getKeys(), isEmpty);
     },
   );
 
@@ -226,8 +118,7 @@ void main() {
       );
       await finisher.call(
         const SetupFinishRequest(
-          host: SetupHostKind.builtin,
-          runtime: TermuxRuntime.openCode2,
+          runtime: OpenCodeRuntime.openCode2,
           openCodeChanged: true,
         ),
       );
@@ -280,7 +171,7 @@ void main() {
         addTearDown(starter.dispose);
         final originalProbe = serverProbe;
         serverProbe = ({required baseUrl, username, password}) async =>
-            const ServerProbeResult.success('2.2.5');
+            const ServerProbeResult.success('2.1.1');
         addTearDown(() => serverProbe = originalProbe);
         ServerProfile? connected;
         final finisher = BuiltinSetupFinisher(
@@ -296,7 +187,7 @@ void main() {
         expect(
           await finisher.call(
             const SetupFinishRequest(
-              runtime: TermuxRuntime.openCode2,
+              runtime: OpenCodeRuntime.openCode2,
               openCodeChanged: true,
             ),
           ),

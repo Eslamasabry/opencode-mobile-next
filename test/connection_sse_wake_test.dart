@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/models.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart';
 import 'package:opencode_mobile/background/live_background.dart';
-import 'package:opencode_mobile/builtin/builtin_linux.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -252,11 +251,9 @@ void main() {
       );
       final apis = <ControlledApi>[];
       final streams = <FakeEventStream>[];
-      var wakeLockCalls = 0;
       final controller = ConnectionController(
         store,
         backgroundLive: backgroundLive,
-        localWakeLockEnsurer: () async => wakeLockCalls += 1,
         apiFactory: (profile) {
           final api = ControlledApi(profile.id);
           apis.add(api);
@@ -271,7 +268,6 @@ void main() {
       apis.single.healthResult.complete(Health(healthy: true, version: '1'));
       await connect;
       await tester.pump();
-      expect(wakeLockCalls, 1);
       final api = apis.single;
       final healthCallsBeforeWake = api.healthCalls;
 
@@ -283,7 +279,6 @@ void main() {
       await resume;
       expect(await actionApi, same(api));
       expect(api.healthCalls, healthCallsBeforeWake + 1);
-      expect(wakeLockCalls, 2);
 
       expect(await controller.prepareActionTransport(), same(api));
       expect(api.healthCalls, healthCallsBeforeWake + 1);
@@ -321,11 +316,9 @@ void main() {
     );
     final apis = <ControlledApi>[];
     final streams = <FakeEventStream>[];
-    var wakeLockCalls = 0;
     final controller = ConnectionController(
       store,
       backgroundLive: backgroundLive,
-      localWakeLockEnsurer: () async => wakeLockCalls += 1,
       apiFactory: (profile) {
         final api = ControlledApi('${profile.id}-${apis.length}');
         apis.add(api);
@@ -352,137 +345,6 @@ void main() {
     apis.last.healthResult.complete(Health(healthy: true, version: '2'));
     expect(await actionApi, same(apis.last));
     expect(controller.version, '2');
-    expect(wakeLockCalls, 3);
-    controller.dispose();
-  });
-
-  // Issue #87: a phone-hosted server felt 20 seconds slow to every screen.
-  testWidgets('a slow Termux wake lock does not hold up the health check', (
-    tester,
-  ) async {
-    SharedPreferences.setMockInitialValues({
-      BackgroundLiveController.preferenceKey: true,
-    });
-    final store = ProfileStore(prefs: await SharedPreferences.getInstance());
-    final backgroundLive = BackgroundLiveController(
-      preferences: store.prefs,
-      invoke: (method, [arguments]) async {
-        if (method == 'getBackgroundPause') {
-          return const {
-            'supported': true,
-            'active': false,
-            'paused': false,
-            'reason': 'none',
-            'at': null,
-            'canResume': false,
-          };
-        }
-        return const {
-          'enabled': true,
-          'active': true,
-          'notificationGranted': true,
-          'batteryOptimizationIgnored': false,
-        };
-      },
-    );
-    final apis = <ControlledApi>[];
-    // Termux answers RUN_COMMAND slowly, or only at its 10-second timeout.
-    final wakeLock = Completer<void>();
-    var wakeLockCalls = 0;
-    final controller = ConnectionController(
-      store,
-      backgroundLive: backgroundLive,
-      localWakeLockEnsurer: () {
-        wakeLockCalls += 1;
-        return wakeLock.future;
-      },
-      apiFactory: (profile) {
-        final api = ControlledApi('${profile.id}-${apis.length}');
-        apis.add(api);
-        return api;
-      },
-      repositoryFactory: testRepositoryFactory,
-      eventStreamFactory: streamFactory([]),
-    );
-
-    final connect = controller.connect(testProfile('server'));
-    await tester.pump();
-    expect(wakeLockCalls, 1);
-    expect(apis.single.healthCalls, 1);
-    apis.single.healthResult.complete(Health(healthy: true, version: '1'));
-    await connect;
-    expect(controller.version, '1');
-
-    // Waking the app asks for the lock again but acts without it.
-    controller.suspendForLifecycle();
-    final action = controller.prepareActionTransport();
-    await tester.pump();
-    expect(wakeLockCalls, 2);
-    expect(apis.single.healthCalls, 2);
-    expect(await action, same(apis.single));
-    controller.dispose();
-  });
-
-  // The built-in Linux server runs inside this app, not in Termux: asking
-  // Termux for a wake lock would launch Termux for nothing.
-  testWidgets('the built-in Linux server never asks Termux for a wake lock', (
-    tester,
-  ) async {
-    SharedPreferences.setMockInitialValues({
-      BackgroundLiveController.preferenceKey: true,
-    });
-    final store = ProfileStore(prefs: await SharedPreferences.getInstance());
-    final backgroundLive = BackgroundLiveController(
-      preferences: store.prefs,
-      invoke: (method, [arguments]) async {
-        if (method == 'getBackgroundPause') {
-          return const {
-            'supported': true,
-            'active': false,
-            'paused': false,
-            'reason': 'none',
-            'at': null,
-            'canResume': false,
-          };
-        }
-        return const {
-          'enabled': true,
-          'active': true,
-          'notificationGranted': true,
-          'batteryOptimizationIgnored': false,
-        };
-      },
-    );
-    final apis = <ControlledApi>[];
-    var wakeLockCalls = 0;
-    final controller = ConnectionController(
-      store,
-      backgroundLive: backgroundLive,
-      localWakeLockEnsurer: () async => wakeLockCalls += 1,
-      apiFactory: (profile) {
-        final api = ControlledApi('${profile.id}-${apis.length}');
-        apis.add(api);
-        return api;
-      },
-      repositoryFactory: testRepositoryFactory,
-      eventStreamFactory: streamFactory([]),
-    );
-
-    final connect = controller.connect(
-      ServerProfile(
-        id: 'builtin',
-        name: 'builtin',
-        baseUrl: BuiltinLinux.serverUrl,
-      ),
-    );
-    await tester.pump();
-    apis.single.healthResult.complete(Health(healthy: true, version: '1'));
-    await connect;
-    controller.suspendForLifecycle();
-    final action = controller.prepareActionTransport();
-    await tester.pump();
-    expect(await action, same(apis.single));
-    expect(wakeLockCalls, 0);
     controller.dispose();
   });
 
@@ -676,61 +538,6 @@ void main() {
     woken.providersResult!.complete(ProvidersResponse(providers: const []));
     await tester.pump();
     expect(controller.catalogLoading, isFalse);
-    controller.dispose();
-  });
-
-  testWidgets('keep-live wake lock is limited to loopback profiles', (
-    tester,
-  ) async {
-    SharedPreferences.setMockInitialValues({
-      BackgroundLiveController.preferenceKey: true,
-    });
-    final store = ProfileStore(prefs: await SharedPreferences.getInstance());
-    final backgroundLive = BackgroundLiveController(
-      preferences: store.prefs,
-      invoke: (method, [arguments]) async {
-        if (method == 'getBackgroundPause') {
-          return const {
-            'supported': true,
-            'active': false,
-            'paused': false,
-            'reason': 'none',
-            'at': null,
-            'canResume': false,
-          };
-        }
-        return const {
-          'enabled': true,
-          'active': true,
-          'notificationGranted': true,
-          'batteryOptimizationIgnored': false,
-        };
-      },
-    );
-    final api = ControlledApi('remote');
-    var wakeLockCalls = 0;
-    final controller = ConnectionController(
-      store,
-      backgroundLive: backgroundLive,
-      localWakeLockEnsurer: () async => wakeLockCalls += 1,
-      apiFactory: (_) => api,
-      repositoryFactory: testRepositoryFactory,
-      eventStreamFactory: streamFactory([]),
-    );
-    final profile = ServerProfile(
-      id: 'remote',
-      name: 'remote',
-      baseUrl: 'https://opencode.example.test',
-    );
-
-    final connect = controller.connect(profile);
-    await tester.pump();
-    api.healthResult.complete(Health(healthy: true, version: '1'));
-    await connect;
-
-    controller.suspendForLifecycle();
-    await controller.resumeFromLifecycle();
-    expect(wakeLockCalls, 0);
     controller.dispose();
   });
 }

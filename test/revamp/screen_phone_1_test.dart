@@ -5,13 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/builtin/setup/phone_setup.dart';
-import 'package:opencode_mobile/state/termux_running_server.dart';
-import 'package:opencode_mobile/termux/bridge.dart' show TermuxRuntime;
 import 'package:opencode_mobile/ui/kit/kit_buttons.dart';
 import 'package:opencode_mobile/ui/kit/kit_field.dart';
 import 'package:opencode_mobile/ui/screens/phone_setup/phone_setup_customize_sheet.dart';
 import 'package:opencode_mobile/ui/screens/phone_setup/phone_setup_ready_screen.dart';
-import 'package:opencode_mobile/ui/screens/termux_storage_screen.dart';
 
 import 'screen_phone_1_fixtures.dart';
 
@@ -48,71 +45,22 @@ void main() {
           if (call.method == 'getDeviceInfo') return <String, Object?>{};
           return null;
         });
-    useNoTermuxJob();
   });
 
   group('phone-setup-start', () {
-    testWidgets('Termux there but not allowed says so under Use Termux', (
-      tester,
-    ) async {
-      await pumpPhone(
-        tester,
-        home: startScreen(termux: const TermuxRunningServer.denied()),
-      );
-      await tester.pumpAndSettle();
-      await _openOtherWays(tester);
-      expect(find.text('Use Termux instead'), findsOneWidget);
-      expect(
-        find.text(
-          "Termux is installed but hasn't let this app in yet. Finish its "
-          'setup.',
-        ),
-        findsOneWidget,
-      );
-      await unmountPhone(tester);
-    });
-
-    testWidgets('in-app and Termux both there: the Termux one is a row', (
-      tester,
-    ) async {
-      await pumpPhone(
-        tester,
-        home: startScreen(
-          inApp: true,
-          termux: TermuxRunningServer.running(
-            runtime: TermuxRuntime.openCode1,
-            version: '1.18.29',
-            observedAt: DateTime(2026, 9, 24),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(find.text('OpenCode is ready on this phone'), findsOneWidget);
-      await _openOtherWays(tester);
-      expect(
-        find.byKey(const ValueKey('phone-setup-start-connect-termux')),
-        findsOneWidget,
-      );
-      expect(find.text('Use the one in Termux'), findsOneWidget);
-      expect(
-        find.byKey(const ValueKey('phone-setup-start-use-termux')),
-        findsNothing,
-      );
-      await unmountPhone(tester);
-    });
-
     testWidgets('a fresh phone keeps one primary and folds the other ways', (
       tester,
     ) async {
       await pumpPhone(tester, home: startScreen());
       await tester.pumpAndSettle();
       expect(find.text('Run a coding agent right here'), findsOneWidget);
-      expect(find.text('Use Termux instead'), findsNothing);
-      await _openOtherWays(tester);
-      expect(find.text('Use Termux instead'), findsOneWidget);
-      // What Termux costs is said before anything installs (P1.5).
       expect(
-        find.text("About 10–15 minutes the first time, in Termux's storage"),
+        find.byKey(const ValueKey('phone-setup-start-by-address')),
+        findsNothing,
+      );
+      await _openOtherWays(tester);
+      expect(
+        find.byKey(const ValueKey('phone-setup-start-by-address')),
         findsOneWidget,
       );
       expect(tester.takeException(), isNull);
@@ -200,67 +148,6 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('root'), findsOneWidget);
       expect(find.text('OpenCode is ready'), findsNothing);
-      await unmountPhone(tester);
-    });
-  });
-
-  group('termux-storage', () {
-    testWidgets('a failed scan says so, and Scan starts it again', (
-      tester,
-    ) async {
-      final channel = StorageChannel(state: 'failed')..install();
-      await pumpPhone(
-        tester,
-        home: TermuxStorageScreen(
-          now: () => DateTime.fromMillisecondsSinceEpoch(1788800120000),
-          pollInterval: const Duration(milliseconds: 50),
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(find.text('The scan did not finish. Try again.'), findsOneWidget);
-      // Nothing was measured yet, so the intro's Scan is the one way on.
-      expect(find.text('Scan again'), findsNothing);
-      await tester.tap(find.byKey(const Key('termux-storage-scan')));
-      await tester.pump();
-      expect(channel.scanStarts, 1);
-      channel.state = 'running';
-      channel.log = '[oc] Build caches';
-      await tester.pump(const Duration(milliseconds: 60));
-      expect(find.byKey(const Key('termux-storage-scanning')), findsOneWidget);
-      channel.state = 'done';
-      channel.report = storageReport();
-      await tester.pump(const Duration(milliseconds: 60));
-      await tester.pump(const Duration(milliseconds: 60));
-      expect(find.byKey(const Key('termux-storage-total')), findsOneWidget);
-      await unmountPhone(tester);
-    });
-
-    testWidgets('the clean question lists the exact paths under Details', (
-      tester,
-    ) async {
-      StorageChannel(state: 'done', report: storageReport()).install();
-      await pumpPhone(
-        tester,
-        home: TermuxStorageScreen(
-          now: () => DateTime.fromMillisecondsSinceEpoch(1788800120000),
-        ),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(
-        find.byKey(const Key('termux-storage-cat-build_caches')),
-      );
-      await tester.pumpAndSettle();
-      final clean = find.byKey(const Key('termux-storage-clean-build_caches'));
-      await tester.ensureVisible(clean);
-      await tester.pumpAndSettle();
-      await tester.tap(clean);
-      await tester.pumpAndSettle();
-      expect(find.byKey(const Key('termux-storage-confirm')), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey('kit-details-toggle')).last);
-      await tester.pumpAndSettle();
-      expect(find.text('ubuntu:/root/.gradle/caches'), findsWidgets);
-      await tester.tap(find.text('Keep'));
-      await tester.pumpAndSettle();
       await unmountPhone(tester);
     });
   });

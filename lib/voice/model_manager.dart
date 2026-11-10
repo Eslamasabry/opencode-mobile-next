@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../telemetry/telemetry_provider.dart';
 import 'model_download.dart';
 import 'device.dart';
 import 'model_manifest.dart';
@@ -59,7 +60,6 @@ class VoiceModelManager extends ChangeNotifier {
 
   static const _selectedPackKey = 'voice.selected_pack';
   static const _languageKey = 'voice.language';
-  static const _autoSendKey = 'voice.auto_send';
 
   final String root;
   final SharedPreferences preferences;
@@ -69,11 +69,6 @@ class VoiceModelManager extends ChangeNotifier {
   VoiceModelState state = VoiceModelState.checking;
   VoiceModelPack selectedPack = voiceModelPacks.first;
   VoiceLanguage language = VoiceLanguage.auto;
-
-  /// Opt-in (off until the person turns it on): a recording ends when they
-  /// stop talking, and the words are sent after a short, cancellable
-  /// countdown.
-  bool autoSend = false;
   VoiceDownloadProgress? progress;
   VoiceDeviceInfo deviceInfo = const VoiceDeviceInfo.unknown();
   Object? error;
@@ -131,7 +126,6 @@ class VoiceModelManager extends ChangeNotifier {
       preferences.getString(_selectedPackKey) ?? 'base',
     );
     language = VoiceLanguage.fromID(preferences.getString(_languageKey));
-    autoSend = preferences.getBool(_autoSendKey) ?? false;
     notifyListeners();
     try {
       final probedDeviceInfo = await devicePlatform.getDeviceInfo();
@@ -219,14 +213,6 @@ class VoiceModelManager extends ChangeNotifier {
     if (_disposed) return;
     language = value;
     await preferences.setString(_languageKey, value.name);
-    if (_disposed) return;
-    _notify();
-  }
-
-  Future<void> setAutoSend(bool value) async {
-    if (_disposed) return;
-    autoSend = value;
-    await preferences.setBool(_autoSendKey, value);
     if (_disposed) return;
     _notify();
   }
@@ -324,6 +310,10 @@ class VoiceModelManager extends ChangeNotifier {
       progress = null;
     } catch (exception) {
       if (!_isCurrent(generation)) return;
+      AppTelemetry.failure('voice_model_download_failed', {
+        'pack': pack.id,
+        'error': exception.runtimeType.toString(),
+      });
       error = exception;
       state = VoiceModelState.error;
     } finally {

@@ -16,7 +16,6 @@ import 'kit_surface_look.dart';
 import 'kit_tappable.dart';
 import 'kit_text.dart';
 import 'kit_tokens.dart';
-import 'kit_update_dot.dart';
 
 /// One destination. The same list builds the rail and the sidebar
 /// (docs/ux-system/kit-api/KitNav.md).
@@ -27,7 +26,6 @@ class KitNavDestination {
     required this.icon,
     this.selectedIcon,
     this.needsYou = 0,
-    this.updateAvailable = false,
     this.pane,
     this.key,
   });
@@ -43,10 +41,6 @@ class KitNavDestination {
 
   /// The [KitNeedsYou.badge] count (Inbox). KitNav never counts (AUTO-11).
   final int needsYou;
-
-  /// Settings while an app update waits: a dot on the glyph and the label
-  /// "Settings, update available" (KitUpdateDot).
-  final bool updateAvailable;
 
   /// Expanded and wider: this destination's list, shown in the sidebar.
   final WidgetBuilder? pane;
@@ -1010,9 +1004,7 @@ class _KitNavItemState extends State<_KitNavItem> {
     final selected = widget.selected;
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     final count = destination.needsYou;
-    final semanticsLabel = destination.updateAvailable
-        ? l10n.appUpdateSettingsBadgeLabel
-        : count > 0
+    final semanticsLabel = count > 0
         ? '${destination.label}${l10n.kitNeedsYouBadgeSuffix(count)}'
         : destination.label;
     final strong = selected || (_hovered && KitLayout.finePointer(context));
@@ -1039,12 +1031,9 @@ class _KitNavItemState extends State<_KitNavItem> {
         ),
         child: Row(
           children: [
-            KitUpdateDot(
-              show: destination.updateAvailable,
-              child: KitNeedsYou.badge(
-                count: count,
-                child: glyphOf(destination.icon, size: KitIconSize.medium),
-              ),
+            KitNeedsYou.badge(
+              count: count,
+              child: glyphOf(destination.icon, size: KitIconSize.medium),
             ),
             SizedBox(width: tokens.space3),
             Expanded(
@@ -1091,10 +1080,7 @@ class _KitNavItemState extends State<_KitNavItem> {
           SizedBox(
             height: _lensHeight(),
             child: Center(
-              child: KitUpdateDot(
-                show: destination.updateAvailable,
-                child: KitNeedsYou.badge(count: count, child: glyphOf(glyph)),
-              ),
+              child: KitNeedsYou.badge(count: count, child: glyphOf(glyph)),
             ),
           ),
           Padding(

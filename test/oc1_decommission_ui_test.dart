@@ -40,6 +40,7 @@ class _BlockedHistoryLinux extends BuiltinLinux {
   Future<BuiltinLinuxRunResult> run(
     String script, {
     Duration timeout = const Duration(minutes: 2),
+    String? input,
   }) async {
     final isCheck = script.contains(openCode1HistorySwitchCheckScript);
     if (isCheck) historyChecks++;
@@ -69,7 +70,6 @@ void main() {
             baseUrl: 'https://work.example.test',
             error: unsupportedOpenCode1Message,
             attempts: 1,
-            supportsTermux: false,
             onChangeServer: () {},
             onRetry: () {},
           ),

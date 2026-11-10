@@ -49,6 +49,7 @@ import java.io.File
 import java.util.concurrent.TimeUnit
 enum class InstallerOperation { CHECK, INSTALL }
 enum class InstallerTarget { OPENCODE1, OPENCODE2, PASEO, CLAUDE, LEGACY_CLAUDE }
+data class InstallerOptions(val agentUser: Boolean = false, val stdin: String? = null, val compat: Boolean = false)
 class BuiltinLinux(private val process: RunProcess) {
     data class Result(val exitCode: Int, val output: String)
     private var installerProcess: Process? = null
@@ -56,9 +57,9 @@ class BuiltinLinux(private val process: RunProcess) {
     private fun reclaimDeadInstaller(): Boolean = false
     fun start(script: String, log: File?, agentUser: Boolean): Process = process
     fun startInstaller(script: String, targets: Set<InstallerTarget>, operation: InstallerOperation,
-                       agentUser: Boolean): Process {
+                       options: InstallerOptions = InstallerOptions()): Process {
         installerProcess = process
-        return start(script, null, agentUser)
+        return start(script, null, options.agentUser)
     }
     fun stopInstaller(process: Process) { stopTree(process) }
     fun finishInstaller(process: Process) { if (installerProcess === process) installerProcess = null }

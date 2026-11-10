@@ -2,13 +2,14 @@ import '../abi_shim.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../platform/platform_capabilities.dart';
-import '../../termux/bridge.dart' show TermuxBridge, TermuxRuntime;
-import '../../termux/opencode_ubuntu_setup.dart';
+import '../opencode_runtime.dart';
+import 'node_pins.dart';
 import '../../voice/model_manifest.dart';
 import '../../state/download_size.dart';
 import '../builtin_linux.dart';
 import 'aiteam_scripts.dart';
 import 'component_updates.dart';
+import 'node_compat.dart';
 import 'setup_contract.dart';
 import 'voice_component.dart';
 
@@ -29,20 +30,14 @@ import 'voice_component.dart';
 /// phone, where proot makes apt and npm several times slower. They weigh the
 /// bar and the ETA against each other, and the ETA rescales them by the
 /// pace it measures, so being off by a factor only shows in the first 10 s.
-///
-/// [host] is where the job runs. On Termux an older build installed Node
-/// from Ubuntu's own packages; that Node already runs OpenCode there, so
-/// the Termux check accepts it rather than replacing it under a working
-/// server (an existing Termux install is recognised as done).
 List<SetupComponent> setupComponents(
   AppLocalizations l10n, {
   Map<String, Map<String, String>> params = const {},
-  SetupHostKind host = SetupHostKind.builtin,
 }) {
   final openCode = params[SetupComponentIds.openCode] ?? const {};
   final runtime = openCode['runtime'] == null
-      ? TermuxRuntime.defaultForNewInstall
-      : TermuxRuntime.parse(openCode['runtime']);
+      ? OpenCodeRuntime.defaultForNewInstall
+      : OpenCodeRuntime.parse(openCode['runtime']);
   final version = openCode['version'];
   return [
     SetupComponent(
@@ -96,9 +91,7 @@ List<SetupComponent> setupComponents(
       required: true,
       estimatedSeconds: 20,
       downloadBytes: 58 * _mb,
-      checkScript: host == SetupHostKind.termux
-          ? SetupScripts.termuxNodeCheck
-          : SetupScripts.nodeCheck,
+      checkScript: SetupScripts.nodeCheck,
       presenceScript:
           '[ -e /opt/node ] || [ -L /opt/node ] || '
           'command -v node >/dev/null 2>&1',
@@ -113,21 +106,19 @@ List<SetupComponent> setupComponents(
       required: true,
       estimatedSeconds: 100,
       downloadBytes: 50 * _mb,
-      // In the app's own Ubuntu: the pinned native program, never npm (its
-      // wrapper and install scripts failed on the owner's phone, build
-      // 2062). Termux keeps the shared text its own manager also runs.
-      checkScript: host == SetupHostKind.builtin
-          ? SetupScripts.openCodeNativeCheck(runtime, version: version)
-          : SetupScripts.openCodeCheck(runtime, version: version),
+      // The pinned native program, never npm (its wrapper and install
+      // scripts failed on the owner's phone, build 2062).
+      checkScript: SetupScripts.openCodeNativeCheck(runtime, version: version),
       presenceScript:
           'command -v opencode >/dev/null 2>&1 || '
           'command -v opencode2 >/dev/null 2>&1 || '
           '[ -e /opt/opencode ] || [ -e /opt/opencode2 ] || '
           '[ -e /usr/local/lib/node_modules/opencode-ai ] || '
           '[ -e /usr/local/lib/node_modules/opencode ]',
-      installScript: host == SetupHostKind.builtin
-          ? SetupScripts.openCodeNativeInstall(runtime, version: version)
-          : SetupScripts.openCodeInstall(runtime, version: version),
+      installScript: SetupScripts.openCodeNativeInstall(
+        runtime,
+        version: version,
+      ),
     ),
     // Several agents sharing the work on one project. Opt-in and install
     // only: a team belongs to a project, which the first setup does not
@@ -237,38 +228,39 @@ typedef OpenCodeAsset = ({String url, String sha256, String member});
 /// unpacked or run. No npm: its wrapper package and install scripts are what
 /// failed on the owner's ARM64 phone (build 2062, npm 11.19 `allowScripts`).
 ///
-/// - OpenCode 2 (`@opencode/cli` 2.2.5) has no GitHub release. Its official
+/// - OpenCode 2 (`@opencode/cli` 2.1.1) has no GitHub release. Its official
 ///   per-platform npm packages hold only the program and a package.json,
 ///   with no install script; their tarballs' SHA-512 matched the registry's
 ///   published `integrity` on 2026-10-21, and these are those files'
 ///   SHA-256s.
 ///
 /// Moving to a newer OpenCode means new pins here, next to
-/// [TermuxRuntime.pinnedVersion].
+/// [OpenCodeRuntime.pinnedVersion].
 abstract final class OpenCodePins {
   static const v2Arm64 = (
     url:
         'https://registry.npmjs.org/@opencode/cli-linux-arm64/-/'
-        'cli-linux-arm64-2.2.5.tgz',
-    sha256: 'f8c5a82075fede9b5b044ed6c8a6d13ad807a7e62caea1cd0a878adef49eb053',
+        'cli-linux-arm64-2.1.1.tgz',
+    sha256: 'cfa3ae6363fc3082f03072297069d81f53559a761371fdb4b56fe6bfa01ca066',
     member: 'package/bin/opencode',
   );
   static const v2X64 = (
     url:
         'https://registry.npmjs.org/@opencode/cli-linux-x64-baseline/-/'
-        'cli-linux-x64-baseline-2.2.5.tgz',
-    sha256: '873856acbaa71c5ed8df6433e312dfa0c82a86e2cddfb9d80f0a31123a917a08',
+        'cli-linux-x64-baseline-2.1.1.tgz',
+    sha256: '216d3861d0a167adad5850282439bae13483203f4b110f0510f260118bba2858',
     member: 'package/bin/opencode',
   );
 
   /// The pinned downloads of [runtime], by CPU.
-  static ({OpenCodeAsset arm64, OpenCodeAsset x64}) of(TermuxRuntime runtime) =>
-      (arm64: v2Arm64, x64: v2X64);
+  static ({OpenCodeAsset arm64, OpenCodeAsset x64}) of(
+    OpenCodeRuntime runtime,
+  ) => (arm64: v2Arm64, x64: v2X64);
 
   /// Where the program lives in Ubuntu; `/usr/local/bin/<command>` links it.
-  static String dir(TermuxRuntime runtime) => '/opt/opencode2';
+  static String dir(OpenCodeRuntime runtime) => '/opt/opencode2';
 
-  static String command(TermuxRuntime runtime) => 'opencode2';
+  static String command(OpenCodeRuntime runtime) => 'opencode2';
 }
 
 /// The reasons [SetupScripts.openCodeNativeInstall] ends a failed run with
@@ -340,8 +332,7 @@ packages=$(dpkg-query -W -f='${Package} ${Status}\n') || exit 2
 printf '%s\n' "$packages" | grep -Eq '^python3-(pip|venv) install ok installed$'
 ''';
 
-  static String get _nodeVersion =>
-      TermuxBridge.localAgentsPins['node_version']!;
+  static String get _nodeVersion => builtinNodePins['node_version']!;
 
   /// Only the pinned Node counts: an older one from Ubuntu's own packages or
   /// an earlier app would leave OpenCode on a Node it was not tested with.
@@ -353,23 +344,16 @@ command -v npm >/dev/null
 node --version | sed 's/^v//'
 ''';
 
-  /// The Termux host: the pinned Node, or the Node an older build put in
-  /// Termux's Ubuntu from its own packages, as long as it and npm run.
-  static const termuxNodeCheck = '''set -e
-node --version >/dev/null
-command -v npm >/dev/null
-node --version | sed 's/^v//'
-''';
-
   /// Node from its official pinned download instead of Ubuntu's `npm`
   /// package, which drags in hundreds of packages (ten minutes under proot on
   /// the emulator). The download sits outside /tmp so a force-stopped run
   /// resumes it, and is deleted once unpacked. npm's global folder is
   /// /usr/local, so `opencode` lands on the PATH the server starts with.
   static String get nodeInstall {
-    final pins = TermuxBridge.localAgentsPins;
+    final pins = builtinNodePins;
     final plain = _nodeVersion.replaceFirst('v', '');
     return '''set -eu
+${NodeCompat.prelude}
 case "\$(uname -m)" in
   aarch64|arm64) node_arch=arm64; node_sha=${pins['node_sha256_arm64']} ;;
   x86_64|amd64) node_arch=x64; node_sha=${pins['node_sha256_x64']} ;;
@@ -377,49 +361,30 @@ case "\$(uname -m)" in
 esac
 node_version=$_nodeVersion
 node_file=/var/cache/oc-setup/node-\$node_version-linux-\$node_arch.tar.gz
+# Issue #117: a phone that crashes threaded and OpenSSL programs is found
+# before the 58 MB download.
+oc_stage 'Checking this phone'
+oc_node_phone_check || exit \$?
 oc_stage 'Downloading Node.js $plain'
 oc_download "${pins['node_base_url']}/\$node_version/node-\$node_version-linux-\$node_arch.tar.gz" \\
   "\$node_file" "\$node_sha"
 oc_stage 'Unpacking Node.js'
 rm -rf /opt/node.new
 mkdir -p /opt/node.new
-tar -xzf "\$node_file" -C /opt/node.new --strip-components=1
+oc_untar "\$node_file" /opt/node.new 1
+oc_stage 'Setting up Node.js'
 rm -rf /opt/node
 mv /opt/node.new /opt/node
 for tool in node npm npx; do ln -sf /opt/node/bin/\$tool /usr/local/bin/\$tool; done
+oc_stage 'Checking that Node.js starts'
+# Starts Node and npm; after a crash, finds the safe mode this phone needs
+# (or ends the step, node_compat.dart).
+oc_node_adapt || exit \$?
+node --version
 npm config set prefix /usr/local
 rm -f "\$node_file"
 oc_version "\$(node --version | sed 's/^v//')"
 ''';
-  }
-
-  /// Passes only for [runtime] at the requested version, so "Update
-  /// OpenCode" (a new version) and "Switch to OpenCode 2" (the other runtime)
-  /// both find something to do, while a plain continue skips it.
-  static String openCodeCheck(TermuxRuntime runtime, {String? version}) {
-    final selected = _version(runtime, version);
-    return 'set -e\n'
-        'installed=\$(${BuiltinLinux.versionScript(runtime)})\n'
-        'installed=\${installed##* v}\n'
-        '[ "\$installed" = \'$selected\' ]\n'
-        'echo "\$installed"\n';
-  }
-
-  /// The shared text the Termux manager also runs
-  /// ([openCodeUbuntuSetupScript]); it finds Node, Git and curl in place and
-  /// goes straight to `npm install -g --foreground-scripts` (npm crashes
-  /// under proot without it).
-  static String openCodeInstall(TermuxRuntime runtime, {String? version}) {
-    final selected = _version(runtime, version);
-    const binary = 'opencode2';
-    return 'set -eu\n'
-        "oc_stage 'Installing OpenCode $selected'\n"
-        "export OC_REQUESTED_VERSION='$selected'\n"
-        "export OC_RUNTIME='${runtime.wireName}'\n"
-        "bash -s <<'OC_PROOT_SETUP'\n"
-        '${openCodeUbuntuSetupScript}OC_PROOT_SETUP\n'
-        'installed=\$($binary --version)\n'
-        'oc_version "\${installed##* v}"\n';
   }
 
   /// Passes only when [runtime]'s command is the pinned native program this
@@ -430,7 +395,7 @@ oc_version "\$(node --version | sed 's/^v//')"
   ///
   /// [root] prefixes every path; it exists for the script tests only.
   static String openCodeNativeCheck(
-    TermuxRuntime runtime, {
+    OpenCodeRuntime runtime, {
     String? version,
     String root = '',
   }) {
@@ -468,7 +433,7 @@ oc_version "\$(node --version | sed 's/^v//')"
   ///
   /// [assets], [root] and [probeSeconds] exist for the script tests only.
   static String openCodeNativeInstall(
-    TermuxRuntime runtime, {
+    OpenCodeRuntime runtime, {
     String? version,
     ({OpenCodeAsset arm64, OpenCodeAsset x64})? assets,
     String root = '',
@@ -509,7 +474,7 @@ oc_download "\$oc_url" "\$oc_file" "\$oc_sha"
 oc_stage 'Unpacking OpenCode'
 rm -rf "\$oc_new"
 mkdir -p "\$oc_new/bin"
-if ! tar -xzf "\$oc_file" -C "\$oc_new" "\$oc_member" ||
+if ! oc_untar "\$oc_file" "\$oc_new" 0 "\$oc_member" ||
   [ ! -f "\$oc_new/\$oc_member" ] || [ -L "\$oc_new/\$oc_member" ]; then
   rm -rf "\$oc_new" "\$oc_file"
   oc_fail "${OpenCodeInstallFailure.noProgram}"
@@ -556,8 +521,10 @@ oc_started=
 oc_i=0
 while [ "\$oc_i" -lt $probeSeconds ]; do
   for oc_path in $health; do
-    oc_code=\$(curl -s --max-time 3 -o /dev/null -w '%{http_code}' \\
-      -u "opencode:\$oc_pw" "http://127.0.0.1:\$oc_port\$oc_path" 2>/dev/null) || true
+    # The credential reaches curl as config on stdin (printf is a builtin),
+    # never as an argument another process could read.
+    oc_code=\$(printf 'user = "opencode:%s"\\n' "\$oc_pw" | curl -K - -s --max-time 3 -o /dev/null \\
+      -w '%{http_code}' "http://127.0.0.1:\$oc_port\$oc_path" 2>/dev/null) || true
     # The probe supplies its own fresh credential. A 401 may be another
     # listener on this port, and cannot prove this candidate started.
     case "\$oc_code" in 200) oc_alive && oc_started=1 ;; esac
@@ -614,7 +581,7 @@ rm -f "\$oc_file"
 
   static final _versionPattern = RegExp(r'^[A-Za-z0-9._+-]+$');
 
-  static String _version(TermuxRuntime runtime, String? version) {
+  static String _version(OpenCodeRuntime runtime, String? version) {
     runtime.requireSupported();
     final selected = version ?? runtime.pinnedVersion;
     if (!_versionPattern.hasMatch(selected)) {

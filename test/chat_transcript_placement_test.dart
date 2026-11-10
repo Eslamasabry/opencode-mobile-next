@@ -633,11 +633,11 @@ void main() {
       compaction('c2', 'failed', 4),
     ]);
     // One button, on the newest failure.
-    expect(find.text('Shorten again'), findsOneWidget);
+    expect(find.text('Compact again'), findsOneWidget);
     expect(
       find.descendant(
         of: find.byKey(const ValueKey('compaction-failed-c2')),
-        matching: find.text('Shorten again'),
+        matching: find.text('Compact again'),
       ),
       findsOneWidget,
     );
@@ -646,7 +646,7 @@ void main() {
     controller.busySessions.add('session-1');
     controller.notifyListeners();
     await tester.pump();
-    expect(find.text('Shorten again'), findsNothing);
+    expect(find.text('Compact again'), findsNothing);
   });
 
   testWidgets('a long step title never runs over its detail, however nested', (

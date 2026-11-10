@@ -121,6 +121,7 @@ class _Linux extends BuiltinLinux {
   Future<BuiltinLinuxRunResult> run(
     String script, {
     Duration timeout = const Duration(minutes: 2),
+    String? input,
   }) async {
     if (script == openCode1HistorySwitchCheckScript) {
       historyChecks.add(script);

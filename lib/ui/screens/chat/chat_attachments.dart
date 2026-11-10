@@ -106,6 +106,7 @@ extension _ChatAttachments on _ChatScreenState {
 
   Future<void> _pickAttachment() async {
     if (_conn.isIsolated) return;
+    AppTelemetry.feature(AnalyticsFeature.fileAttach);
     if (!_supportsPromptAttachments) {
       _showComposerNote(_chatL10n(context).codexTextOnlyPrompt);
       return;
@@ -158,6 +159,9 @@ extension _ChatAttachments on _ChatScreenState {
       return;
     }
     if (_promptShelfBusy || !platformCapabilities.supportsPromptPhotos) return;
+    if (source == ImageSource.camera) {
+      AppTelemetry.feature(AnalyticsFeature.camera);
+    }
     if (_attachments.length >= _maxAttachmentCount ||
         _attachments.fold<int>(
               0,
@@ -359,42 +363,6 @@ extension _ChatAttachments on _ChatScreenState {
         mimeType: mime,
         data: FilePreviewData(name: name, mimeType: mime, bytes: bytes),
       );
-    } catch (error) {
-      if (mounted) _showActionError(error);
-    }
-  }
-
-  /// Attaches the picture on the clipboard. Runs only when the person asks
-  /// ("Paste image" in the field's menu or the + sheet), the one moment the
-  /// clipboard is read. Goes through [_handleInsertedContent], so a text-only
-  /// agent, an isolated chat and the size limits answer as for a keyboard
-  /// paste.
-  Future<void> _pasteClipboardImage() async {
-    if (_conn.isIsolated) return;
-    if (!_supportsPromptAttachments) {
-      _showComposerNote(_chatL10n(context).codexTextOnlyPrompt);
-      return;
-    }
-    try {
-      final image = await clipboardImages.read();
-      if (!mounted) return;
-      if (image == null) {
-        _showComposerNote(_chatL10n(context).composerPasteImageEmpty);
-        return;
-      }
-      await _handleInsertedContent(
-        KeyboardInsertedContent(
-          mimeType: image.mime,
-          uri: '',
-          data: image.bytes,
-        ),
-      );
-    } on ClipboardImageTooLarge {
-      if (mounted) {
-        _showActionError(
-          ProductException(_chatL10n(context).chatUiEachAttachmentMustBe10MBOr),
-        );
-      }
     } catch (error) {
       if (mounted) _showActionError(error);
     }

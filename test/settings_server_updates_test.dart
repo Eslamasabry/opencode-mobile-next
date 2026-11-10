@@ -243,29 +243,6 @@ void main() {
     expect(find.byType(AppDiagnosticsScreen), findsOneWidget);
   });
 
-  testWidgets('managed local profile opens the in-app updater', (tester) async {
-    final controller = await _controllerFor('http://127.0.0.1:4096');
-    addTearDown(controller.dispose);
-
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: SettingsScreen(controller: controller),
-        routes: {
-          '/this-phone': (_) => const Scaffold(body: Text('Managed updater')),
-        },
-      ),
-    );
-    await tester.pumpAndSettle();
-    await _openCategory(tester, 'settings-category-server');
-
-    expect(find.text('Update managed OpenCode'), findsOneWidget);
-    await _tapVisible(tester, find.byKey(const Key('server-updates-tile')));
-    await tester.pumpAndSettle();
-    expect(find.text('Managed updater'), findsOneWidget);
-  });
-
   testWidgets('remote profile clearly remains externally managed', (
     tester,
   ) async {
@@ -853,17 +830,31 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(controller.totalQueuedPromptCount, 0);
+    // The result notice heads the page, above the rows scrolled to.
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('privacy-clear-result')),
+      -200,
+      scrollable: _verticalScroll,
+    );
     expect(find.text('Queued prompts deleted'), findsOneWidget);
+    await tester.scrollUntilVisible(usage, 200, scrollable: _verticalScroll);
     expect(find.textContaining('Nothing is waiting to send'), findsOneWidget);
 
     await tester.pump(const Duration(seconds: 5));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('clear-session-drafts')));
+    final drafts = find.byKey(const ValueKey('clear-session-drafts'));
+    await tester.scrollUntilVisible(drafts, 200, scrollable: _verticalScroll);
+    await tester.tap(drafts);
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, 'Delete 1 draft'));
     await tester.pumpAndSettle();
 
     expect(controller.totalSessionDraftCount, 0);
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('privacy-clear-result')),
+      -200,
+      scrollable: _verticalScroll,
+    );
     expect(find.text('Drafts deleted'), findsOneWidget);
   });
 

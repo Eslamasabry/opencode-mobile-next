@@ -109,6 +109,12 @@
         "Scan the code instead": "ellipsis:2"
       }
     },
+    "KitAddAgentCard": {
+      "role": "reading",
+      "text": {
+        "Add an agent": "wrap"
+      }
+    },
     "KitAgentCard": {
       "lists": {
         "body": {
@@ -132,12 +138,12 @@
     "KitAgentChoice": {
       "role": "reading",
       "text": {
-        "Careful with big changes": "clip:3",
         "Claude Code": "ellipsis:2",
         "Codex": "ellipsis:2",
-        "Fast edits and reviews": "clip:3, ellipsis:3",
+        "Lightweight terminal agent": "clip:3, ellipsis:3",
         "OpenCode": "ellipsis:2",
-        "Set up": "clip:3, ellipsis:3"
+        "Set up": "clip:3, ellipsis:3",
+        "Understands your codebase": "clip:3"
       }
     },
     "KitAgentGrid": {
@@ -2532,30 +2538,6 @@
         "application/octet-stream · ## KB": "wrap",
         "notes.txt": "wrap",
         "release-notes.md": "wrap"
-      }
-    },
-    "KitVitalsStrip": {
-      "lists": {
-        "vitals": {
-          "beyond": "fixed",
-          "shows": 4
-        }
-      },
-      "role": "reading",
-      "text": {
-        "## °C": "ellipsis:1",
-        "###%": "ellipsis:1",
-        "##.# GB": "ellipsis:1",
-        "#%": "ellipsis:1",
-        "Battery temperature": "ellipsis:1",
-        "Hot. node is using ###% CPU.": "ellipsis:3",
-        "Linux CPU": "ellipsis:1",
-        "Memory free": "ellipsis:1",
-        "One sentence under the readings.": "ellipsis:3",
-        "Phone heat": "ellipsis:1",
-        "Reading #": "ellipsis:1",
-        "Too hot": "ellipsis:1",
-        "—": "ellipsis:1"
       }
     },
     "KitWebPreview": {

@@ -29,13 +29,11 @@ String voiceSizeText(AppLocalizations strings, int bytes) {
   );
 }
 
-/// A language's name for the picker: the two automatic choices in the app's
-/// words, every named language in its own.
 String voiceLanguageLabel(VoiceLanguage language, AppLocalizations strings) =>
     switch (language) {
-      VoiceLanguage.auto => strings.vpttLanguageFollowApp,
-      VoiceLanguage.detect => strings.e7VoiceUiAuto,
-      _ => language.label,
+      VoiceLanguage.auto => strings.e7VoiceUiAuto,
+      VoiceLanguage.english => strings.e7VoiceUiEnglish,
+      VoiceLanguage.arabic => strings.e7VoiceUiArabic,
     };
 
 /// Labels in our bundled manifest are authored UI, not provider/model names.
@@ -143,28 +141,4 @@ String voiceErrorText(
     }
   }
   return strings.e7VoiceUiInputFailed;
-}
-
-/// A plain line under the language choice when what will be listened for is
-/// not what the person might expect, or will not work well on this phone; null
-/// when nothing needs saying. Everything runs on the phone, so "not available"
-/// means the offline model, never the network.
-String? voiceLanguageNote(
-  AppLocalizations strings, {
-  required VoiceLanguage chosen,
-  required VoiceModelPack pack,
-  required String appLanguageCode,
-}) {
-  final effective = resolveVoiceLanguage(chosen, appLanguageCode);
-  if (chosen == VoiceLanguage.auto &&
-      effective == VoiceLanguage.detect &&
-      appLanguageCode.isNotEmpty) {
-    return strings.vpttLanguageUnavailableOffline(appLanguageCode);
-  }
-  if (pack.id == 'tiny' && effective.isNamed && effective.whisperCode != 'en') {
-    return strings.vpttLanguageCompactRough(
-      voiceLanguageLabel(effective, strings),
-    );
-  }
-  return null;
 }

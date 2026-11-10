@@ -8,6 +8,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
+import '../telemetry/telemetry_provider.dart';
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:flutter/foundation.dart' show ValueListenable, ValueNotifier;
 
@@ -76,11 +77,6 @@ class PaseoGateway extends _PaseoWorkspace
   final PaseoTransport transport;
   final Future<void> Function()? _beforePayloadUse;
   final void Function()? _afterPayloadUse;
-
-  /// Awaited before the helper starts an agent process (a new conversation,
-  /// or loading a saved one): on this phone, the process budget holds it
-  /// until there is room (process_budget.dart). Throws to refuse.
-  final Future<void> Function()? beforeAgentStart;
   BrowserClaudeLaunchRegistry? _browserLaunches;
   String? _browserProfileId, _browserSourceId;
   String Function(String directory)? _browserSourceForDirectory;
@@ -337,7 +333,6 @@ class PaseoGateway extends _PaseoWorkspace
     Map<String, String> defaultProviderModes = const {},
     Future<void> Function()? beforePayloadUse,
     void Function()? afterPayloadUse,
-    this.beforeAgentStart,
   }) : _trackLocalWork = trackLocalWork,
        defaultProviderModes = Map.unmodifiable(defaultProviderModes),
        _beforePayloadUse = beforePayloadUse,
@@ -1159,8 +1154,6 @@ class PaseoGateway extends _PaseoWorkspace
         throw PaseoFailure(PaseoFailureKind.unavailable);
       }
       final browserRequested = _browserRequestedFor(sessionId);
-      await beforeAgentStart?.call();
-      _checkLocation(scope, epoch);
       await _revokeBrowserSession(sessionId);
       final browserRevision = _browserRevision(sessionId);
       _checkLocation(scope, epoch);

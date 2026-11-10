@@ -174,9 +174,6 @@ class PhoneProcessWatch {
     : _processes = processes ?? PhoneProcesses(),
       _clock = clock ?? DateTime.now;
 
-  /// The app's one watch, outside widgets too (the process budget).
-  static final shared = PhoneProcessWatch();
-
   /// Over this share of one core counts toward "heavy".
   static const heavyCpu = 80.0;
 
@@ -402,7 +399,6 @@ List<PhoneProcessGroup> groupPhoneProcesses(
 
 /// The app's one watch: This phone and Running on this phone share its
 /// history. Tests override it with a watch over a fake [PhoneProcesses].
-/// The process budget (process_budget.dart) reads the same one.
 final phoneProcessWatchProvider = Provider<PhoneProcessWatch>(
-  (ref) => PhoneProcessWatch.shared,
+  (ref) => PhoneProcessWatch(),
 );

@@ -6,6 +6,7 @@ abstract final class AgentRemovalScripts {
   static const _executables = {
     'codex': 'codex',
     'gemini': 'gemini',
+    'antigravity': 'agy',
     'qwen': 'qwen',
     'kilo': 'kilo',
     'cline': 'cline',
@@ -65,7 +66,7 @@ OC_AGENT_REMOVAL_RECEIPT
   static const _remove = r'''
 import json, os, pathlib, re, shutil, stat, sys
 agent, executable, version, receipt_id = sys.argv[1:]
-allowed = {'codex': 'codex', 'gemini': 'gemini', 'qwen': 'qwen',
+allowed = {'codex': 'codex', 'gemini': 'gemini', 'antigravity': 'agy', 'qwen': 'qwen',
            'kilo': 'kilo', 'cline': 'cline', 'goose': 'goose', 'omp-acp': 'omp', 'fx': 'fx'}
 if (allowed.get(agent) != executable or
     not re.fullmatch(r'[0-9A-Za-z][0-9A-Za-z._+-]{0,79}', version) or

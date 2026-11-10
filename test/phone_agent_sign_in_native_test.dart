@@ -35,7 +35,7 @@ void main() {
     );
     expect(
       phoneAgents.map((agent) => agent.id),
-      containsAll(['kilo', 'cline']),
+      containsAll(['kilo', 'cline', 'antigravity']),
     );
     for (final agent in phoneAgents) {
       expect(

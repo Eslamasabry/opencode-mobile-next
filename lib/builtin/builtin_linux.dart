@@ -6,12 +6,15 @@ import '../domain/opencode_history_copy.dart';
 import '../domain/phone_agent_context.dart';
 import '../platform/platform_capabilities.dart';
 import '../state/profiles.dart' show ServerProfile;
-import '../termux/bridge.dart' show TermuxBridge, TermuxRuntime;
-import '../termux/opencode_ubuntu_setup.dart';
-import 'builtin_server_restore.dart';
+import 'opencode_runtime.dart';
+import 'setup/node_compat.dart' show NodeCompat, NodeCompatState;
+import 'setup/node_pins.dart';
+import 'setup/opencode_ubuntu_setup.dart';
 import 'setup/setup_contract.dart' show setupToolsChanged;
 
-export 'builtin_server_restore.dart';
+export 'opencode_runtime.dart';
+
+part 'builtin_linux_types.dart';
 
 /// Where the built-in Ubuntu is in its life, as the Android side reports it.
 enum BuiltinLinuxPhase {
@@ -25,6 +28,60 @@ enum BuiltinLinuxPhase {
     'ready' => ready,
     'failed' => failed,
     _ => idle,
+  };
+}
+
+/// Native restoration after OS process reclamation; force-stop stays stopped.
+enum BuiltinServerRestorePhase {
+  idle,
+  waiting,
+  restoring,
+  unavailable;
+
+  static BuiltinServerRestorePhase parse(Object? value) => switch (value) {
+    null || 'idle' => idle,
+    'waiting' => waiting,
+    'restoring' => restoring,
+    _ => unavailable,
+  };
+}
+
+/// Fixed reasons only; native process identity and errors stay private.
+enum BuiltinServerRestoreReason {
+  stopped,
+  policyDisabled,
+  budgetExhausted,
+  ownershipUnknown,
+  storageUnavailable,
+  componentRecoveryRequired,
+  systemTimeout;
+
+  static BuiltinServerRestoreReason? parse(Object? value) => switch (value) {
+    null => null,
+    'stopped' => stopped,
+    'policyDisabled' => policyDisabled,
+    'budgetExhausted' => budgetExhausted,
+    'storageUnavailable' => storageUnavailable,
+    'componentRecoveryRequired' => componentRecoveryRequired,
+    'systemTimeout' => systemTimeout,
+    _ => ownershipUnknown,
+  };
+}
+
+/// Selects a canonical native command. Contains no script or account data.
+class BuiltinServerRestoreRecipe {
+  const BuiltinServerRestoreRecipe({
+    required this.profileId,
+    required this.runtime,
+  });
+
+  final String profileId;
+  final OpenCodeRuntime runtime;
+
+  Map<String, Object> toMap() => {
+    'version': 1,
+    'profileId': profileId,
+    'runtime': runtime.name,
   };
 }
 
@@ -186,307 +243,6 @@ class BuiltinLinuxStatus {
   bool serviceRunning(String name) => services.contains(name);
 }
 
-/// How proot runs the in-app server, as `/proc` shows it (BuiltinLinux.kt
-/// `performance`).
-enum BuiltinProotMode {
-  /// proot's seccomp filter is in place: most system calls run without
-  /// stopping in proot. What Termux's proot does too.
-  seccomp,
-
-  /// Every system call stops in proot: several times slower.
-  ptrace,
-
-  /// No server runs, or the kernel does not say.
-  unknown;
-
-  static BuiltinProotMode parse(Object? value) => switch (value) {
-    'seccomp' => seccomp,
-    'ptrace' => ptrace,
-    _ => unknown,
-  };
-}
-
-/// Classification of an exit, without inferring a confirmed memory shortage.
-enum BuiltinServiceExitReason {
-  /// Exit 137 may be a memory or Android phantom-process kill. The exit code
-  /// alone cannot distinguish those from another SIGKILL.
-  memoryOrPhantomKill,
-  exited,
-  unknown;
-
-  static BuiltinServiceExitReason parse(Object? value) => switch (value) {
-    'memory_or_phantom_kill' => memoryOrPhantomKill,
-    'exited' => exited,
-    _ => unknown,
-  };
-}
-
-/// One app-owned service's lifetime diagnostics, without command or log text.
-class BuiltinServiceDiagnostics {
-  const BuiltinServiceDiagnostics({
-    this.running = false,
-    this.lastExitCode,
-    this.lastUptimeMs,
-    this.lastExitAtMs,
-    this.lastStopRequested,
-    this.uptimeMs,
-    this.restartCount = 0,
-    this.exitReason = BuiltinServiceExitReason.unknown,
-  });
-
-  factory BuiltinServiceDiagnostics.fromMap(Map<Object?, Object?> map) {
-    // Native counters are integers. Do not truncate fractional or non-finite
-    // values into apparently valid diagnostics.
-    int? asInt(Object? value) => value is int ? value : null;
-    int? nonNegativeInt(Object? value) => switch (asInt(value)) {
-      final int number when number >= 0 => number,
-      _ => null,
-    };
-    return BuiltinServiceDiagnostics(
-      running: map['running'] == true,
-      lastExitCode: asInt(map['lastExitCode']),
-      lastUptimeMs: nonNegativeInt(map['lastUptimeMs']),
-      lastExitAtMs: switch (map['lastExitAtMs']) {
-        final int at when at > 0 && at <= 8640000000000000 => at,
-        _ => null,
-      },
-      lastStopRequested: map['lastStopRequested'] is bool
-          ? map['lastStopRequested'] as bool
-          : null,
-      uptimeMs: nonNegativeInt(map['uptimeMs']),
-      restartCount: nonNegativeInt(map['restartCount']) ?? 0,
-      exitReason: BuiltinServiceExitReason.parse(map['exitReason']),
-    );
-  }
-
-  final bool running;
-  final int? lastExitCode;
-
-  /// Completed run duration. Null means no valid observation is available.
-  final int? lastUptimeMs;
-
-  /// Wall-clock time of the observed exit, never fabricated after app death.
-  final int? lastExitAtMs;
-
-  /// Null on older APKs. True when our runtime deliberately stopped the child.
-  final bool? lastStopRequested;
-
-  /// Current run duration. Null means no run or no valid observation.
-  final int? uptimeMs;
-  final int restartCount;
-  final BuiltinServiceExitReason exitReason;
-}
-
-/// Admission of one named chat lease, independent of other work's wake lock.
-class BuiltinWorkLeaseStatus {
-  const BuiltinWorkLeaseStatus({this.held = false, this.capped = false});
-
-  factory BuiltinWorkLeaseStatus.fromMap(Map<Object?, Object?> map) {
-    if (map['held'] is! bool ||
-        map['capped'] is! bool ||
-        map['held'] == true && map['capped'] == true) {
-      return const BuiltinWorkLeaseStatus();
-    }
-    return BuiltinWorkLeaseStatus(
-      held: map['held'] == true,
-      capped: map['capped'] == true,
-    );
-  }
-
-  /// This lease has an admitted CPU hold; never the aggregate work-lock state.
-  final bool held;
-
-  /// Native monotonic lifetime expired or exhausted this logical chat lease.
-  final bool capped;
-}
-
-/// One reading of `performance`: what the Performance details show.
-class BuiltinPerformance {
-  const BuiltinPerformance({
-    this.serverRunning = false,
-    this.prootMode = BuiltinProotMode.unknown,
-    this.prootFilters,
-    this.serverFilters,
-    this.workHeld = false,
-    this.services = const {},
-  });
-
-  factory BuiltinPerformance.fromMap(Map<Object?, Object?> map) {
-    int? asInt(Object? value) => value is int ? value : null;
-    return BuiltinPerformance(
-      serverRunning: map['serverRunning'] == true,
-      prootMode: BuiltinProotMode.parse(map['prootMode']),
-      prootFilters: asInt(map['prootFilters']),
-      serverFilters: asInt(map['serverFilters']),
-      workHeld: map['workHeld'] == true,
-      services: Map.unmodifiable({
-        if (map['services'] case final Map services)
-          for (final entry in services.entries)
-            if (entry.key case final String name when name.isNotEmpty)
-              if (entry.value case final Map<Object?, Object?> diagnostics)
-                name: BuiltinServiceDiagnostics.fromMap(diagnostics),
-      }),
-    );
-  }
-
-  final bool serverRunning;
-  final BuiltinProotMode prootMode;
-
-  /// Seccomp filters on proot itself (Android's own app filter) and on the
-  /// server under it; the server has one more when proot's is in place.
-  final int? prootFilters;
-  final int? serverFilters;
-
-  /// Whether the phone is kept awake for a running reply now.
-  final bool workHeld;
-
-  /// Current and previously launched services keyed by native service name.
-  /// Empty on older APKs. These snapshots contain no credentials or log text.
-  final Map<String, BuiltinServiceDiagnostics> services;
-}
-
-/// The answer of one `run`.
-class BuiltinLinuxRunResult {
-  const BuiltinLinuxRunResult({required this.exitCode, required this.output});
-
-  final int exitCode;
-
-  /// The last 64 KB of stdout and stderr together.
-  final String output;
-
-  bool get ok => exitCode == 0;
-}
-
-class BuiltinLinuxException implements Exception {
-  const BuiltinLinuxException(this.message, {this.code, this.details});
-
-  final String message;
-  final String? code;
-
-  /// The phone's own description of the failure, when it sent one: kept for
-  /// Details, never shown as the message.
-  final String? details;
-
-  @override
-  String toString() => message;
-}
-
-/// Native lifetime and prerequisites, without authentication material.
-class BuiltinPhoneEngineStatus {
-  const BuiltinPhoneEngineStatus({
-    required this.profileId,
-    this.running = false,
-    this.port,
-    this.boundary = false,
-    this.execution = false,
-    this.restartRequired = false,
-    this.boundaryReason = 'boundary_unverified',
-    this.boundaryTier = 'none',
-    this.boundaryGeneration,
-    this.protectionRequired = false,
-    this.unconfinedChildren = false,
-  });
-
-  factory BuiltinPhoneEngineStatus.fromMap(Map<Object?, Object?> map) {
-    final tier = map['boundaryTier'];
-    if (map.containsKey('boundaryTier') &&
-        !{'none', 'landlock', 'proot'}.contains(tier)) {
-      throw const BuiltinLinuxException(
-        'Phone engine status is unavailable.',
-        code: 'engine_status_invalid',
-      );
-    }
-    return BuiltinPhoneEngineStatus(
-      profileId: map['profileId'] is String ? map['profileId'] as String : '',
-      running: map['running'] == true,
-      port: map['port'] is num ? (map['port'] as num).toInt() : null,
-      boundary: map['boundary'] == true,
-      boundaryTier: tier as String? ?? 'none',
-      execution: map['execution'] == true,
-      restartRequired: map['restartRequired'] == true,
-      boundaryReason: map['boundaryReason'] is String
-          ? map['boundaryReason'] as String
-          : 'boundary_unverified',
-      boundaryGeneration: map['boundaryGeneration'] is String
-          ? map['boundaryGeneration'] as String
-          : null,
-      protectionRequired: map['protectionRequired'] == true,
-      unconfinedChildren: map['unconfinedChildren'] == true,
-    );
-  }
-
-  final String profileId;
-  final bool running;
-  final int? port;
-  final bool boundary;
-  final bool execution;
-  final bool restartRequired;
-  final String boundaryReason;
-
-  /// `none`, `landlock`, or `proot`; no tier is inferred from flags in a
-  /// status response from an older native bridge.
-  final String boundaryTier;
-  final String? boundaryGeneration;
-  final bool protectionRequired;
-
-  /// App-wide live old server/terminal prerequisite, independent of daemon life.
-  final bool unconfinedChildren;
-}
-
-/// Ephemeral channel handoff. Never persist this object or include it in logs.
-class BuiltinPhoneEngineCredentials {
-  const BuiltinPhoneEngineCredentials({
-    required this.baseUrl,
-    required this.bearerToken,
-  });
-
-  final String baseUrl;
-  final String bearerToken;
-
-  @override
-  String toString() => 'BuiltinPhoneEngineCredentials(<redacted>)';
-}
-
-/// Fresh logical file sizes, not the cached status estimate or filesystem
-/// allocation. Values can change while programs write; refresh after removal.
-class BuiltinProjectStorage {
-  const BuiltinProjectStorage({
-    required this.runtimeBytes,
-    required this.projectsBytes,
-    required this.measuredAtMilliseconds,
-  });
-
-  factory BuiltinProjectStorage.fromMap(Map<Object?, Object?> map) {
-    int read(String key) {
-      final value = map[key];
-      if (value is! int || value < 0) {
-        throw const BuiltinLinuxException(
-          'Project storage could not be measured.',
-          code: 'storage_unavailable',
-        );
-      }
-      return value;
-    }
-
-    return BuiltinProjectStorage(
-      runtimeBytes: read('runtimeBytes'),
-      projectsBytes: read('projectsBytes'),
-      measuredAtMilliseconds: read('measuredAtMilliseconds'),
-    );
-  }
-
-  /// Ubuntu, tools, runtime settings/logs and any downloaded Ubuntu archive.
-  final int runtimeBytes;
-
-  /// Files beneath /root/projects, including hidden files and repositories.
-  /// Symlinks are not followed; data elsewhere in Ubuntu is not preserved.
-  final int projectsBytes;
-  final int measuredAtMilliseconds;
-
-  int get keepProjectsFreedBytes => runtimeBytes;
-  int get deleteEverythingFreedBytes => runtimeBytes + projectsBytes;
-}
-
 /// Ubuntu shipped inside the app, with no Termux (GitHub issue #87).
 ///
 /// The Android side (BuiltinLinux.kt) owns the download, proot and the
@@ -501,10 +257,9 @@ class BuiltinLinux {
   static const channelName =
       'io.github.eslamasabry.opencode_mobile/builtin_linux';
 
-  /// Not Termux's 4096. [TermuxBridge.managesServerUrl] treats
-  /// 127.0.0.1:4096 as the Termux server and would try Termux restarts and
-  /// Termux wake locks on it; a separate port keeps the two apart, and both
-  /// can even run at once.
+  /// Not 4096: older builds gave that to the server they ran in Termux, and
+  /// a saved connection there is recognised as that setup
+  /// (`isTermuxRetiredProfile`).
   static const serverPort = 4097;
   static const serverUrl = 'http://127.0.0.1:$serverPort';
   static const serverUsername = 'opencode';
@@ -645,19 +400,50 @@ class BuiltinLinux {
   /// Starts the download and unpack; returns at once. Poll [status].
   Future<void> installUbuntu() => _invoke<void>('installUbuntu');
 
+  /// Runs [script] with `/bin/sh -c` inside Ubuntu. The script is a process
+  /// argument there, so it must never hold a secret: pass one as [input],
+  /// which reaches the script on stdin.
   Future<BuiltinLinuxRunResult> run(
     String script, {
     Duration timeout = const Duration(minutes: 2),
+    String? input,
   }) async {
     final raw = await _invoke<Map<Object?, Object?>>('run', {
       'script': script,
       'timeoutSeconds': timeout.inSeconds,
+      'stdin': ?input,
     });
     final exitCode = raw?['exitCode'];
     return BuiltinLinuxRunResult(
       exitCode: exitCode is num ? exitCode.toInt() : -1,
       output: (raw?['output'] ?? '').toString(),
     );
+  }
+
+  /// Makes `/root/projects/<name>` a new git project from the app itself,
+  /// never through a shell inside Ubuntu: once AI Team is on, the sandbox
+  /// denies the chmod `git init` needs (issue #111). Answers `created` or
+  /// `exists`. Only for a direct child of [projectsDir] ([managedProjectName]).
+  Future<String> createProjectFolder(String path) async {
+    final answer = await _invoke<String>('createProject', {'path': path});
+    if (answer == 'created' || answer == 'exists') return answer!;
+    throw const BuiltinLinuxException(
+      'The folder could not be created.',
+      code: 'create_project',
+    );
+  }
+
+  /// The folder name when [path] is a direct child of [projectsDir]: the
+  /// folders [createProjectFolder] makes. Null for any other path.
+  static String? managedProjectName(String path) {
+    const prefix = '$projectsDir/';
+    if (!path.startsWith(prefix)) return null;
+    final name = path.substring(prefix.length);
+    if (name.isEmpty || name == '.' || name == '..' || name.length > 255) {
+      return null;
+    }
+    if (RegExp('[/\x00\n\r]').hasMatch(name)) return null;
+    return name;
   }
 
   /// Setup checks in the fixed oc view. Never use for credentials or sign-in.
@@ -682,38 +468,14 @@ class BuiltinLinux {
     String script, {
     int port = serverPort,
     BuiltinServerRestoreRecipe? restoreRecipe,
-  }) => _startServer('startServer', script, port, restoreRecipe);
-
-  /// The app's opening start: [startServer], but only while the native intent
-  /// generation the caller saw still stands. A Stop that came first wins.
-  Future<void> startServerForLaunch(
-    String script, {
-    int port = serverPort,
-    required int expectedGeneration,
-    BuiltinServerRestoreRecipe? restoreRecipe,
-  }) => _startServer(
-    'startServerForLaunch',
-    script,
-    port,
-    restoreRecipe,
-    expectedGeneration: expectedGeneration,
-  );
-
-  Future<void> _startServer(
-    String method,
-    String script,
-    int port,
-    BuiltinServerRestoreRecipe? restoreRecipe, {
-    int? expectedGeneration,
   }) async {
     final arguments = {
       'script': script,
       'port': port,
-      'expectedGeneration': ?expectedGeneration,
       if (restoreRecipe != null) 'restoreRecipe': restoreRecipe.toMap(),
     };
     try {
-      await _invoke<void>(method, arguments);
+      await _invoke<void>('startServer', arguments);
     } on BuiltinLinuxException catch (error) {
       if (restoreRecipe == null) rethrow;
       throw BuiltinLinuxException(
@@ -1239,17 +1001,17 @@ class BuiltinLinux {
   static String _quote(String value) => "'${value.replaceAll("'", "'\"'\"'")}'";
 
   /// The runtime a saved in-app profile was set up with.
-  static TermuxRuntime runtimeFor(ServerFlavor flavor) =>
-      TermuxRuntime.openCode2;
+  static OpenCodeRuntime runtimeFor(ServerFlavor flavor) =>
+      OpenCodeRuntime.openCode2;
 
   /// Legacy identity is retained only for automatic history migration.
-  static TermuxRuntime runtimeForProfile(ServerProfile profile) =>
+  static OpenCodeRuntime runtimeForProfile(ServerProfile profile) =>
       profile.requiresOpenCode2Migration
-      ? TermuxRuntime.openCode1
-      : TermuxRuntime.openCode2;
+      ? OpenCodeRuntime.openCode1
+      : OpenCodeRuntime.openCode2;
 
-  static TermuxRuntime? knownRuntimeFor(ServerFlavor flavor) =>
-      flavor == ServerFlavor.unknown ? null : TermuxRuntime.openCode2;
+  static OpenCodeRuntime? knownRuntimeFor(ServerFlavor flavor) =>
+      flavor == ServerFlavor.unknown ? null : OpenCodeRuntime.openCode2;
 
   static final _versionPattern = RegExp(r'^[A-Za-z0-9._+-]+$');
 
@@ -1258,7 +1020,7 @@ class BuiltinLinux {
   /// caller asks for another on purpose.
   ///
   static String installOpenCodeScript({
-    TermuxRuntime runtime = TermuxRuntime.defaultForNewInstall,
+    OpenCodeRuntime runtime = OpenCodeRuntime.defaultForNewInstall,
     String? version,
   }) {
     runtime.requireSupported();
@@ -1293,14 +1055,14 @@ if ! command -v curl >/dev/null 2>&1 || ! command -v git >/dev/null 2>&1 ||
 fi
 if ! command -v node >/dev/null 2>&1 || ! command -v npm >/dev/null 2>&1; then
   case "\$(uname -m)" in
-    aarch64|arm64) node_arch=arm64; node_sha=${TermuxBridge.localAgentsPins['node_sha256_arm64']} ;;
-    x86_64|amd64) node_arch=x64; node_sha=${TermuxBridge.localAgentsPins['node_sha256_x64']} ;;
+    aarch64|arm64) node_arch=arm64; node_sha=${builtinNodePins['node_sha256_arm64']} ;;
+    x86_64|amd64) node_arch=x64; node_sha=${builtinNodePins['node_sha256_x64']} ;;
     *) echo "[oc] Unsupported CPU: \$(uname -m)" >&2; exit 64 ;;
   esac
-  node_version=${TermuxBridge.localAgentsPins['node_version']}
+  node_version=${builtinNodePins['node_version']}
   echo "[oc] Installing Node.js \$node_version"
   curl -fsSL --retry 5 -o /tmp/node.tar.gz \\
-    "${TermuxBridge.localAgentsPins['node_base_url']}/\$node_version/node-\$node_version-linux-\$node_arch.tar.gz"
+    "${builtinNodePins['node_base_url']}/\$node_version/node-\$node_version-linux-\$node_arch.tar.gz"
   echo "\$node_sha  /tmp/node.tar.gz" | sha256sum -c --quiet -
   rm -rf /opt/node && mkdir -p /opt/node
   tar -xzf /tmp/node.tar.gz -C /opt/node --strip-components=1
@@ -1311,8 +1073,8 @@ fi
 ''';
 
   /// Prints the installed version of [runtime], or fails when it is missing.
-  static String versionScript(TermuxRuntime runtime) =>
-      runtime == TermuxRuntime.openCode2
+  static String versionScript(OpenCodeRuntime runtime) =>
+      runtime == OpenCodeRuntime.openCode2
       ? 'command -v opencode2 >/dev/null 2>&1 && opencode2 --version'
       : 'command -v opencode >/dev/null 2>&1 && opencode --version';
 
@@ -1406,15 +1168,29 @@ fi
   }
 
   /// Saves the server password inside Ubuntu, readable by its root only.
-  static String writePasswordScript(String password) {
+  /// The password travels on stdin: the script is a `/bin/sh -c` argument,
+  /// which every process of this app's user could read.
+  Future<BuiltinLinuxRunResult> writeServerPassword(
+    String password, {
+    Duration timeout = const Duration(seconds: 60),
+  }) {
     if (password.isEmpty) {
       throw ArgumentError.value(password, 'password', 'Must not be empty.');
     }
+    return run(writePasswordScript, timeout: timeout, input: password);
+  }
+
+  /// Writes stdin to [passwordFile] (0600 in a 0700 folder); an empty
+  /// stdin fails and leaves the old file alone. No chmod: the protected
+  /// sandbox denies chmod for every process, and umask 077 already creates
+  /// the folder 0700 and the file 0600.
+  static String get writePasswordScript {
     final dir = passwordFile.substring(0, passwordFile.lastIndexOf('/'));
     return 'set -eu\n'
         'umask 077\n'
         'mkdir -p $dir\n'
-        "printf '%s' ${_quote(password)} > $passwordFile.tmp\n"
+        'cat > $passwordFile.tmp\n'
+        '[ -s $passwordFile.tmp ] || { rm -f $passwordFile.tmp; exit 78; }\n'
         'mv $passwordFile.tmp $passwordFile\n';
   }
 
@@ -1424,9 +1200,14 @@ fi
   ///
   /// OpenCode 2 gets the Termux runner's isolated XDG folders, so its data and
   /// config never mix with OpenCode 1 installed in the same Ubuntu.
+  ///
+  /// [nodeCompat] is this phone's Node.js safe mode, when it needs one
+  /// (issue #117, node_compat.dart): the server, and the agents it starts,
+  /// get the same environment Node gets.
   static String serverScript({
-    TermuxRuntime runtime = TermuxRuntime.defaultForNewInstall,
+    OpenCodeRuntime runtime = OpenCodeRuntime.defaultForNewInstall,
     int port = serverPort,
+    NodeCompatState? nodeCompat,
   }) {
     if (port < 1024 || port > 65535) {
       throw ArgumentError.value(
@@ -1462,6 +1243,7 @@ fi
         'export OPENCODE_SERVER_PASSWORD="\$password"\n'
         'export OPENCODE_PASSWORD="\$password"\n'
         'unset password\n'
+        '${NodeCompat.serverExports(nodeCompat)}'
         'exec $binary serve --hostname 127.0.0.1 --port $port\n';
   }
 }

@@ -34,7 +34,7 @@ void main() {
             'my-app/polecats/gastown.furiosa',
         '/data/data/com.termux/files/home/.oc/aiteam/city',
         // A city on a PC.
-        '/home/owner/gascity/city2/.gc/worktrees/oc-bg-proof/refinery',
+        '/home/eslam/gascity/city2/.gc/worktrees/oc-bg-proof/refinery',
       ]) {
         expect(isAiTeamDirectory(path), isTrue, reason: path);
       }
@@ -48,7 +48,7 @@ void main() {
         '/root/projects',
         '/root/aiteam-notes',
         '/root/aiteamwork/app',
-        '/home/owner/Storage/Code/oc_app',
+        '/home/eslam/Storage/Code/oc_app',
         '/root/projects/gc-notes',
         null,
         '',

@@ -1,11 +1,8 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../../state/connection.dart';
 import '../kit/kit.dart';
-import '../screens/running_on_phone_screen.dart';
 import 'connection_status_banner.dart';
 
 /// The connection line of a conversation that runs on its own connection (an
@@ -61,25 +58,7 @@ class _ConversationStatusScopeState extends State<ConversationStatusScope> {
 
   void _merge() {
     if (!mounted) return;
-    final connection = widget.connection;
-    final own = connectionKitStatus(
-      context,
-      connection,
-      // After Android stopped the agent: where the person sees what runs,
-      // and (Android 14+) how to let agents run more programs at once.
-      onSeeRunning: () {
-        final killedAt = connection.agentHelperKilledAt;
-        unawaited(
-          pushKitPage<void>(
-            context,
-            (_) => RunningOnPhoneScreen(
-              recentKill: killedAt != null,
-              lastKillAt: killedAt,
-            ),
-          ),
-        );
-      },
-    );
+    final own = connectionKitStatus(context, widget.connection);
     _conditions.value = [
       for (final status in _outer?.value ?? const <KitStatus>[])
         if (status.kind != KitStatusKind.connection) status,

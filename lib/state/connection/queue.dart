@@ -79,17 +79,13 @@ mixin _ConnectionControllerQueue on ChangeNotifier {
   /// Set when the queue dropped entries on its own — expiry or a limit —
   /// and cleared once a screen has shown it. A prompt the user asked to send
   /// never disappears silently.
-  OfflineQueueEviction? _queueEviction;
+  String? _queueEvictionNotice;
 
   /// Reads and clears the pending eviction notice.
-  String? takeQueueEvictionNotice() => takeQueueEviction()?.notice;
-
-  /// Reads and clears the pending eviction with its counts, so a screen can
-  /// word it in the app language.
-  OfflineQueueEviction? takeQueueEviction() {
-    final eviction = _queueEviction;
-    _queueEviction = null;
-    return eviction;
+  String? takeQueueEvictionNotice() {
+    final notice = _queueEvictionNotice;
+    _queueEvictionNotice = null;
+    return notice;
   }
 
   /// Bytes this device is holding for unsent work, for the settings readout.
@@ -363,7 +359,7 @@ extension _ConnectionControllerQueueImpl on ConnectionController {
     final eviction = OfflineQueueStore.enforceLimits(_queueStore.load());
     _offlineQueue = eviction.kept;
     if (eviction.removed > 0) {
-      _queueEviction = eviction;
+      _queueEvictionNotice = eviction.notice;
       unawaited(_queueStore.save(eviction.kept));
     }
     return eviction.kept;
@@ -629,7 +625,7 @@ extension _ConnectionControllerQueueImpl on ConnectionController {
           throw const OfflineQueueWriteException();
         }
         _offlineQueue = eviction.kept;
-        if (eviction.removed > 0) _queueEviction = eviction;
+        if (eviction.removed > 0) _queueEvictionNotice = eviction.notice;
         _notifyListeners();
         return true;
       });
@@ -743,6 +739,7 @@ extension _ConnectionControllerQueueImpl on ConnectionController {
             automationPolicy.allows(AutomationBehavior.reconcileQueuedSends));
     _flushingOfflineQueue = true;
     var sent = 0;
+    var failed = 0;
     var touched = false;
     try {
       await _reconcileQueuedCommandReceipts();
@@ -981,6 +978,7 @@ extension _ConnectionControllerQueueImpl on ConnectionController {
             stop = true;
           }
         }
+        if (!delivered && (dispatched || stop || markerRefused)) failed += 1;
         if (delivered && !recorded) {
           // The server has this prompt; the device could not record that.
           // Say so — a plain "unconfirmed" would invite a resend that is a
@@ -1028,6 +1026,7 @@ extension _ConnectionControllerQueueImpl on ConnectionController {
         offlineFlushRevision += 1;
       }
       if (touched && !_disposed) _notifyListeners();
+      if (touched) HealthFlow.queueFlush(sent: sent, failed: failed);
       if (_flushOfflineQueueAgain) {
         _flushOfflineQueueAgain = false;
         if (!_disposed) unawaited(flushOfflineQueue());

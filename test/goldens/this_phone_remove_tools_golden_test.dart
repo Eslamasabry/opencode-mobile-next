@@ -12,7 +12,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/builtin/setup/component_removal.dart';
-import 'package:opencode_mobile/state/phone_host.dart';
 import 'package:opencode_mobile/ui/screens/this_phone_screen.dart';
 
 import '../../tool/capture/fixtures.dart' show loadCaptureFonts;
@@ -40,7 +39,6 @@ Future<void> _shot(
     await pumpPhone(
       tester,
       home: ThisPhoneScreen(
-        kind: PhoneHostKind.inApp,
         removal: ComponentRemovalService(
           linux: linux,
           registry: toolsRegistry,

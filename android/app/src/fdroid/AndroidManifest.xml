@@ -1,0 +1,8 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!-- F-Droid build only (-PocFdroid=true): F-Droid installs updates; the app
+         must not install its own (Inclusion Policy). Merged over main, so it
+         also holds if the in-app update lands in the main manifest. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"
+        tools:node="remove" />
+</manifest>

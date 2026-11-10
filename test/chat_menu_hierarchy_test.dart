@@ -18,7 +18,7 @@ const _destinations = ['Changes', 'Timeline', 'Find', 'Subagents', 'Details'];
 
 const _acts = [
   'Share conversation',
-  'Shorten conversation',
+  'Compact context',
   'Fork conversation',
   'Rename conversation',
   'Continue on computer',

@@ -51,6 +51,8 @@ abstract final class UsageText {
     'codex' => 'openai',
     'glm' => 'zai',
     'claude' => 'anthropic',
+    'antigravity_claude' || 'antigravity_3p' => 'anthropic',
+    'antigravity' => 'google',
     'copilot' => 'github-copilot',
     'kimi' => 'moonshotai',
     'grok' => 'xai',

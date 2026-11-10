@@ -656,7 +656,6 @@ void main() {
                   ),
               genUiInstaller: installer,
               phoneEngineBridge: _EngineBridge(),
-              localWakeLockEnsurer: () async {},
             )
             ..api = mainApi
             ..repository = _SideRepo(mainApi)
@@ -753,7 +752,7 @@ class _EngineBridge implements PhoneProjectEngineBridge {
 
 class _SideApi extends _Api {
   @override
-  Future<Health> health() async => Health(healthy: true, version: '2.2.5');
+  Future<Health> health() async => Health(healthy: true, version: '2.1.1');
   @override
   Future<List<Session>> sessions() async => const [];
   @override

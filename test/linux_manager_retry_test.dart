@@ -26,6 +26,7 @@ class _Linux extends BuiltinLinux {
   Future<BuiltinLinuxRunResult> run(
     String script, {
     Duration timeout = const Duration(minutes: 2),
+    String? input,
   }) async {
     runs++;
     if (failures.isNotEmpty) throw failures.removeAt(0);

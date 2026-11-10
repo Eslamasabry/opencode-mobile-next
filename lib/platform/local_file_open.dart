@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/services.dart';
 
+import '../domain/phone_file.dart';
+
 /// How a hand-off to Android went.
 enum LocalFileOpenResult {
   /// Android's chooser or installer is showing.
@@ -49,9 +51,13 @@ class LocalFileOpener {
   }
 
   Future<LocalFileOpenResult> open(String path, {required bool install}) async {
+    // Only a file inside the phone's shared storage folders, never a path
+    // that climbs out of them (see [canonicalPhoneFile]).
+    final canonical = canonicalPhoneFile(path);
+    if (canonical == null) return LocalFileOpenResult.unavailable;
     try {
       final ok = await _channel.invokeMethod<bool>('openLocalFile', {
-        'path': path,
+        'path': canonical,
         'install': install,
       });
       return ok == true

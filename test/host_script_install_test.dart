@@ -11,7 +11,7 @@ import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:opencode_mobile/termux/bridge.dart';
+import 'package:opencode_mobile/builtin/opencode_runtime.dart';
 
 const _script = 'scripts/host/ubuntu-opencode.sh';
 
@@ -98,8 +98,8 @@ void main() {
 
   String pinnedAsset() =>
       switch (Process.runSync('uname', ['-m']).stdout.toString().trim()) {
-        'x86_64' || 'amd64' => 'cli-linux-x64-baseline-2.2.5.tgz',
-        'aarch64' || 'arm64' => 'cli-linux-arm64-2.2.5.tgz',
+        'x86_64' || 'amd64' => 'cli-linux-x64-baseline-2.1.1.tgz',
+        'aarch64' || 'arm64' => 'cli-linux-arm64-2.1.1.tgz',
         final other => throw StateError('no OpenCode build for $other'),
       };
 
@@ -130,7 +130,7 @@ cp "$FAKE_ROOT/release.tar.gz" "$out"
       '${bin.path}/curl',
       '${bin.path}/systemctl',
     ]);
-    buildArchive(TermuxRuntime.openCode2.pinnedVersion);
+    buildArchive(OpenCodeRuntime.openCode2.pinnedVersion);
   });
 
   tearDown(() => root.deleteSync(recursive: true));
@@ -154,7 +154,7 @@ cp "$FAKE_ROOT/release.tar.gz" "$out"
         expect(
           read('curl.log').trim(),
           'https://registry.npmjs.org/@opencode/'
-          '${pinnedAsset().replaceFirst('-2.2.5.tgz', '')}/-/${pinnedAsset()}',
+          '${pinnedAsset().replaceFirst('-2.1.1.tgz', '')}/-/${pinnedAsset()}',
         );
         expect(
           File('${home.path}/.opencode/bin/opencode').existsSync(),
@@ -173,7 +173,7 @@ cp "$FAKE_ROOT/release.tar.gz" "$out"
         expect(
           result.stderr,
           contains(
-            '==> Installed OpenCode ${TermuxRuntime.openCode2.pinnedVersion} '
+            '==> Installed OpenCode ${OpenCodeRuntime.openCode2.pinnedVersion} '
             'to $binary',
           ),
         );
@@ -228,7 +228,7 @@ cp "$FAKE_ROOT/release.tar.gz" "$out"
           result.stdout,
           contains(
             'Moving OpenCode 2.0.28 to the pinned '
-            '${TermuxRuntime.openCode2.pinnedVersion}',
+            '${OpenCodeRuntime.openCode2.pinnedVersion}',
           ),
         );
         expect(

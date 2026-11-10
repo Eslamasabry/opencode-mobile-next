@@ -176,6 +176,7 @@ class _NativeLinux extends BuiltinLinux {
   Future<BuiltinLinuxRunResult> run(
     String script, {
     Duration timeout = const Duration(minutes: 2),
+    String? input,
   }) async {
     calls.add('password-write');
     writeEntered?.complete();

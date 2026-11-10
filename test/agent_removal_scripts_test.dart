@@ -7,6 +7,7 @@ import 'package:opencode_mobile/domain/agent_catalog.dart';
 const _ids = [
   'codex',
   'gemini',
+  'antigravity',
   'qwen',
   'kilo',
   'cline',
@@ -30,17 +31,18 @@ String _asHostOwner(String script) => script
 /// Isolated authored-script fixture: rewrite only fixed guest paths and proc
 /// in test input. Production exposes no prefix, UID or proc override.
 class _Guest {
-  _Guest(this.temp);
+  _Guest(this.temp, {this.agentId = 'codex'});
   final Directory temp;
-  final agent = AgentCatalog.builtIn.byId('codex')!;
+  final String agentId;
+  late final agent = AgentCatalog.builtIn.byId(agentId)!;
   String get home => '${temp.path}/home';
   String get bin => '$home/.local/bin';
   String get parent => '$home/.local/share/oc-agents';
-  String get base => '$parent/codex';
+  String get base => '$parent/$agentId';
   String get version => agent.recipe!.version;
   String get launch => '$base/$version/launch';
-  String get link => '$bin/codex';
-  String get lock => '$parent/.lock-codex';
+  String get link => '$bin/${agent.recipe!.executable}';
+  String get lock => '$parent/.lock-${agent.recipe!.executable}';
   String get proc => '${temp.path}/proc';
   String get receiptId => 'a' * 32;
   String get receiptPath => '$home/.local/share/oc-agent-removal-$receiptId';
@@ -52,11 +54,14 @@ class _Guest {
     await Directory(bin).create(recursive: true);
     await Directory(proc).create();
     await File(launch).writeAsString('authored launcher');
-    await File('$base/$version/payload/codex').writeAsString('payload');
+    await File(
+      '$base/$version/payload/${agent.recipe!.executable}',
+    ).writeAsString('payload');
     await Link(link).create(launch);
     for (final path in [
       '$home/.oc-profiles/owner/claude/account',
       '$home/.oc-profiles/owner/codex/history',
+      '$home/.oc-profiles/owner/.gemini/antigravity-cli/settings.json',
       '$parent/claude/payload',
       '$home/.local/node/bin/node',
       '$home/.local/share/paseo/daemon',
@@ -112,6 +117,7 @@ class _Guest {
     for (final path in [
       '$home/.oc-profiles/owner/claude/account',
       '$home/.oc-profiles/owner/codex/history',
+      '$home/.oc-profiles/owner/.gemini/antigravity-cli/settings.json',
       '$parent/claude/payload',
       '$home/.local/node/bin/node',
       '$home/.local/share/paseo/daemon',
@@ -133,11 +139,11 @@ class _Guest {
   }
 }
 
-void _receipt(ProcessResult result, int code) {
+void _receipt(ProcessResult result, int code, {String agentId = 'codex'}) {
   expect(result.exitCode, code);
   expect(
     result.stdout,
-    '::oc-check-begin agent-codex\n::oc-check-end agent-codex $code\n',
+    '::oc-check-begin agent-$agentId\n::oc-check-end agent-$agentId $code\n',
   );
   expect(result.stderr, isEmpty);
 }
@@ -155,7 +161,7 @@ void main() {
   });
 
   test(
-    'all six authored recipes are valid shell; Claude and OpenCode are excluded',
+    'all authored recipes are valid shell; Claude and OpenCode are excluded',
     () async {
       for (final id in _ids) {
         final script = AgentRemovalScripts.remove(
@@ -221,6 +227,32 @@ void main() {
       _receipt(await guest.run(), 0);
       expect(await Directory(guest.lock).exists(), isFalse);
       await guest.expectKept();
+    },
+  );
+
+  test(
+    'Antigravity removal targets agy and retains accounts and other agents',
+    () async {
+      final agy = _Guest(
+        await Directory('${temp.path}/antigravity').create(),
+        agentId: 'antigravity',
+      );
+      await agy.prepare();
+      await Directory('${agy.proc}/123').create();
+      await File(
+        '${agy.proc}/123/cmdline',
+      ).writeAsString('${agy.base}/${agy.version}/payload/agy\u0000');
+      _receipt(await agy.run(), 16, agentId: 'antigravity');
+      expect(await File(agy.launch).exists(), isTrue);
+      await Directory('${agy.proc}/123').delete(recursive: true);
+      final expected = await agy.allocated([agy.base, agy.link]);
+      _receipt(await agy.run(), 0, agentId: 'antigravity');
+      expect(agy.freedBytes, expected);
+      expect(await Directory(agy.base).exists(), isFalse);
+      expect(await Link(agy.link).exists(), isFalse);
+      expect(await Directory(agy.lock).exists(), isFalse);
+      await agy.expectKept();
+      expect(await File(guest.launch).exists(), isTrue);
     },
   );
 

@@ -3,8 +3,11 @@ import 'package:flutter/foundation.dart';
 import '../domain/git/git_models.dart';
 import '../domain/git/git_problem.dart';
 import '../domain/git/git_repository.dart';
+import '../domain/git/github_device_flow.dart';
 import 'git_workspace.dart';
 import 'github_account.dart';
+import '../telemetry/analytics_events.dart';
+import '../telemetry/telemetry_provider.dart';
 
 /// What the Git page body shows.
 sealed class GitPageView {
@@ -298,6 +301,71 @@ class GitPageController extends ChangeNotifier {
     (repo) => repo.setIdentity(name: name, email: email),
   );
 
+  Future<GitActionResult?> initialize() =>
+      _act(GitAction.initialize, (repo) => repo.initialize());
+
+  /// Creates a repository in the signed-in GitHub account and connects it as
+  /// `origin`. It deliberately does not commit or push project files.
+  Future<GitActionResult?> createGitHubRepository({
+    required String name,
+    required bool isPrivate,
+  }) => _act(GitAction.publish, (repo) async {
+    final controller = account;
+    if (!(workspace?.offersGitHubSignIn ?? false) || controller == null) {
+      return const GitActionResult.failure(
+        GitAction.publish,
+        GitFailure(GitProblem.authRequired),
+      );
+    }
+    if (snapshot?.hasRemote ?? false) {
+      return const GitActionResult.failure(
+        GitAction.publish,
+        GitFailure(GitProblem.remoteExists),
+      );
+    }
+    try {
+      final githubRepo = await controller.createRepository(
+        name: name,
+        isPrivate: isPrivate,
+      );
+      final added = await repo.addRemote(
+        name: 'origin',
+        url: githubRepo.remoteUrl,
+      );
+      if (!added.ok) {
+        return GitActionResult.failure(
+          GitAction.publish,
+          GitFailure(
+            added.problem ?? GitProblem.unknown,
+            details:
+                'GitHub created ${githubRepo.fullName}, but the project '
+                'could not be connected as origin. ${added.failure?.details}',
+          ),
+        );
+      }
+      return GitActionResult.success(
+        GitAction.publish,
+        GitActionNote.githubRepositoryCreated,
+        target: githubRepo.fullName,
+      );
+    } on GitHubRepositoryException catch (error) {
+      final problem = switch (error.problem) {
+        GitHubRepositoryProblem.invalidName =>
+          GitProblem.invalidGitHubRepositoryName,
+        GitHubRepositoryProblem.nameUnavailable =>
+          GitProblem.githubRepositoryNameUnavailable,
+        GitHubRepositoryProblem.tokenRejected => GitProblem.gitHubTokenRejected,
+        GitHubRepositoryProblem.permissionDenied => GitProblem.noPermission,
+        GitHubRepositoryProblem.network => GitProblem.network,
+        GitHubRepositoryProblem.unexpected => GitProblem.unknown,
+      };
+      return GitActionResult.failure(
+        GitAction.publish,
+        GitFailure(problem, details: error.details),
+      );
+    }
+  });
+
   /// Adds the remote [name] pointing at [url].
   Future<GitActionResult?> addRemote(String name, String url) =>
       _act(GitAction.addRemote, (repo) => repo.addRemote(name: name, url: url));
@@ -333,6 +401,7 @@ class GitPageController extends ChangeNotifier {
   ) async {
     final repo = _repository;
     if (repo == null || _busy != null) return null;
+    AppTelemetry.feature(AnalyticsFeature.gitAction);
     _busy = action;
     _lastResult = null;
     _savedBeforeSend = false;

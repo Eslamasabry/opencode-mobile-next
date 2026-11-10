@@ -529,7 +529,9 @@ TeamProject _presentPhoneProject(
       'resuming' => 'running',
       'failed' => 'failed',
       'interrupted' => switch (planning?.reason) {
-        'restartNeedsReconciliation' || 'pauseNeedsReconciliation'
+        'restartNeedsReconciliation' ||
+        'pauseNeedsReconciliation' ||
+        'serverRestarted'
             when commandActions.contains(TeamProjectAction.resumeProject) =>
           'paused',
         _ => 'failed',
@@ -682,6 +684,7 @@ bool _resumableTaskInterruption(String reason) =>
 bool _resumableInterruption(String reason) => const [
   'restartNeedsReconciliation',
   'pauseNeedsReconciliation',
+  'serverRestarted',
 ].contains(reason);
 
 // Exact static admission codes from the native scheduler. Dynamic native/model
@@ -716,6 +719,8 @@ String _taskCheckpointSummary(TeamTask task, {required bool canResume}) {
     'structuredOutputInvalid' => 'checkerAnswerUnreadable',
     'restartNeedsReconciliation' ||
     'pauseNeedsReconciliation' ||
+    'serverRestarted' ||
+    'restartResend' ||
     'recoveryNeedsReview' ||
     'sessionUnknown' ||
     'sessionFailed' ||
@@ -761,6 +766,8 @@ String _planningCheckpointSummary(
     'recoveryNeedsReview' => planning.reason,
     'restartNeedsReconciliation' => 'restartNeedsReconciliation',
     'pauseNeedsReconciliation' => 'pauseNeedsReconciliation',
+    'serverRestarted' => 'serverRestarted',
+    'restartResend' => 'restartResend',
     _ when _phoneAdmissionReasons.contains(planning.reason) => planning.reason,
     _ => '',
   };

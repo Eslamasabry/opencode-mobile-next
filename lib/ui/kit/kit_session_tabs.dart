@@ -6,7 +6,6 @@ import 'kit_motion.dart';
 import 'kit_surface_look.dart';
 import 'kit_tappable.dart';
 import 'kit_text.dart';
-import 'kit_chrome.dart';
 import 'kit_tokens.dart';
 
 /// One tab of [KitSessionTabs]: a session's name, whether it is the one
@@ -64,10 +63,7 @@ class KitSessionTabs extends StatelessWidget {
   final String? endedLabel;
 
   @override
-  Widget build(BuildContext context) =>
-      KitChrome.builder(builder: _buildContent);
-
-  Widget _buildContent(BuildContext context) {
+  Widget build(BuildContext context) {
     final tokens = KitTokens.of(context);
     // The strip's bed: nothing under Solid, a well under Soft (the chosen
     // pill sits in it), an ink box under Brutal

@@ -23,6 +23,10 @@ plugins {
     // Built-in Kotlin remains enabled; this declaration only upgrades AGP's
     // runtime KGP above Flutter 3.47's minimum and is not applied to the app.
     id("org.jetbrains.kotlin.android") version "2.4.0" apply false
+    // Crash reporting vendor (opt-in at run time). Declared here, applied by
+    // app/build.gradle.kts only when the private Firebase config exists.
+    id("com.google.gms.google-services") version "4.4.4" apply false
+    id("com.google.firebase.crashlytics") version "3.0.6" apply false
 }
 
 include(":app")

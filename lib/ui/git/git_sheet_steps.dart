@@ -413,7 +413,148 @@ extension _GitSheetSteps on _GitSheetState {
     _update(() => _step = _GitStep.home);
   }
 
+  // ------------------------------------------------------------ Publish
+
+  void _openPublish() {
+    _repositoryName.text = _suggestRepositoryName(
+      page.workspace?.directory ?? 'project',
+    );
+    _repositoryPrivate = true;
+    _go(_GitStep.publish);
+  }
+
+  String _suggestRepositoryName(String directory) {
+    final parts = directory.split('/')..removeWhere((part) => part.isEmpty);
+    final folder = parts.isEmpty ? 'project' : parts.last;
+    final normalized = folder
+        .replaceAll(RegExp(r'[^A-Za-z0-9._-]+'), '-')
+        .replaceAll(RegExp(r'^[.-]+|[.-]+$'), '');
+    final name = normalized.isEmpty ? 'project' : normalized;
+    return name.length > 100 ? name.substring(0, 100) : name;
+  }
+
+  Widget _publishStep(AppLocalizations l10n) {
+    final name = _repositoryName.text.trim();
+    final invalid = name.isNotEmpty && !isValidGitHubRepositoryName(name);
+    final ready = name.isNotEmpty && !invalid && !_busy;
+    final disabledReason = name.isEmpty
+        ? l10n.gitPublishNameHint
+        : invalid
+        ? gitProblemText(GitProblem.invalidGitHubRepositoryName, l10n)
+        : null;
+    return KitSheet(
+      key: const Key('git-publish'),
+      step: 'publish',
+      title: l10n.gitPublishTitle,
+      handle: false,
+      loading: _busy,
+      leading: _back(l10n),
+      onClose: _close,
+      primary: KitAction(
+        key: const Key('git-publish-button'),
+        label: l10n.gitPublishButton,
+        icon: AppIconography.github,
+        working: page.busy == GitAction.publish,
+        disabledReason: disabledReason,
+        onPressed: ready
+            ? () => unawaited(_createGitHubRepository(name))
+            : null,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ?_busyNotice(l10n),
+          ?_resultNotice(l10n),
+          KitField(
+            fieldKey: const Key('git-publish-name'),
+            label: l10n.gitPublishName,
+            controller: _repositoryName,
+            error: invalid
+                ? gitProblemText(GitProblem.invalidGitHubRepositoryName, l10n)
+                : null,
+            autofocus: true,
+            onChanged: (_) => _update(() {}),
+          ),
+          SizedBox(height: KitTokens.of(context).space3),
+          KitSectionLabel.inline(l10n.gitPublishVisibility),
+          KitSegmented<bool>(
+            key: const Key('git-publish-visibility'),
+            semanticsLabel: l10n.gitPublishVisibility,
+            selected: _repositoryPrivate,
+            segments: [
+              KitSegment<bool>(
+                value: true,
+                label: l10n.gitPublishPrivate,
+              ),
+              KitSegment<bool>(
+                value: false,
+                label: l10n.gitPublishPublic,
+              ),
+            ],
+            onChanged: (value) => _update(() => _repositoryPrivate = value),
+          ),
+          SizedBox(height: KitTokens.of(context).space2),
+          KitText(
+            _repositoryPrivate
+                ? l10n.gitPublishPrivateHint
+                : l10n.gitPublishPublicHint,
+            role: KitTextRole.secondary,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _createGitHubRepository(String name) async {
+    final result = await page.createGitHubRepository(
+      name: name,
+      isPrivate: _repositoryPrivate,
+    );
+    if (!mounted || result?.ok != true) return;
+    _update(() => _step = _GitStep.home);
+  }
+
   // ------------------------------------------------------------ Remotes
+
+  /// Fills the remote address from one of the signed-in account's GitHub
+  /// repositories, so nobody has to type or paste the URL.
+  Future<void> _pickRemoteFromGitHub(AppLocalizations l10n) async {
+    final controller = account;
+    if (controller == null || controller.state is! GitHubSignedIn) return;
+    _update(() {
+      _reposLoading = true;
+      _reposNone = false;
+    });
+    try {
+      final repos = await controller.fetchRepositories();
+      if (!mounted) return;
+      if (repos.isEmpty) {
+        _update(() => _reposNone = true);
+        return;
+      }
+      final selected = await showKitChoiceSheet<GitHubRepository>(
+        context,
+        title: l10n.gitRemotePickGitHubTitle,
+        sheetKey: const Key('git-remote-github-repos'),
+        choices: [
+          for (final repo in repos)
+            KitChoice<GitHubRepository>(
+              value: repo,
+              title: KitBidi.ltr(repo.fullName),
+              supporting: repo.isPrivate ? l10n.gitRemoteRepoPrivate : null,
+            ),
+        ],
+      );
+      if (selected == null || !mounted) return;
+      _update(() {
+        if (_remoteName.text.trim().isEmpty) _remoteName.text = 'origin';
+        _remoteUrl.text = selected.remoteUrl;
+      });
+    } finally {
+      if (mounted) _update(() => _reposLoading = false);
+    }
+  }
 
   Widget _remotesStep(AppLocalizations l10n) {
     final tokens = KitTokens.of(context);
@@ -433,6 +574,7 @@ extension _GitSheetSteps on _GitSheetState {
     final sshOverHttps =
         page.abilities.offersGitHubSignIn &&
         remotes.any((r) => r.kind == GitRemoteKind.gitHubSsh);
+    final repoPickerVisible = account?.state is GitHubSignedIn;
     return KitSheet(
       key: const Key('git-remotes'),
       step: 'remotes',
@@ -487,6 +629,27 @@ extension _GitSheetSteps on _GitSheetState {
                 role: KitTextRole.secondary,
               ),
             ),
+          if (repoPickerVisible) ...[
+            Padding(
+              padding: EdgeInsetsDirectional.only(top: tokens.space3),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: KitButton.tertiary(
+                  key: const Key('git-remote-pick-github'),
+                  icon: AppIconography.github,
+                  label: l10n.gitRemotePickGitHub,
+                  onPressed: _reposLoading
+                      ? null
+                      : () => _pickRemoteFromGitHub(l10n),
+                ),
+              ),
+            ),
+            if (_reposNone)
+              KitText(
+                l10n.gitRemotePickGitHubNone,
+                role: KitTextRole.secondary,
+              ),
+          ],
           SizedBox(height: tokens.space4),
           KitSectionLabel.inline(l10n.gitRemoteAddTitle),
           KitField(

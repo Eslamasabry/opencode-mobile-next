@@ -9,7 +9,7 @@ import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:opencode_mobile/termux/bridge.dart';
+import 'package:opencode_mobile/builtin/opencode_runtime.dart';
 import 'package:opencode_mobile/ui/setup_commands.dart';
 
 const _scripts = {'front': HostScripts.front};
@@ -102,7 +102,7 @@ void main() {
     final command = HostScripts.install(4747);
     expect(
       command,
-      'npm install -g @opencode/cli@2.2.5 &&\n'
+      'npm install -g @opencode/cli@2.1.1 &&\n'
       'opencode2 serve --hostname 127.0.0.1 --port 4747',
     );
     expect(command, isNot(contains('ubuntu-opencode.sh')));
@@ -138,7 +138,7 @@ void main() {
       text,
       contains(
         'readonly OPENCODE_VERSION="'
-        '${TermuxRuntime.openCode2.pinnedVersion}"',
+        '${OpenCodeRuntime.openCode2.pinnedVersion}"',
       ),
     );
     expect(text, contains('https://registry.npmjs.org/@opencode'));

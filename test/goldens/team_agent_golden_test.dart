@@ -88,7 +88,7 @@ class _Gateway extends FixtureOrchestrationGateway {
       currentWorkId: 'w2',
       lastActivity: _clock.subtract(const Duration(minutes: 12)),
       contextPercent: 63,
-      workDir: '/home/owner/city/.gc/worktrees/ocproof/polecats/fox',
+      workDir: '/home/eslam/city/.gc/worktrees/ocproof/polecats/fox',
       branch: 'polecat/oc-cq6',
       sessionStartedAt: _clock.subtract(const Duration(hours: 3, minutes: 14)),
     ),

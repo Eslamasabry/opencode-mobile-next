@@ -1,9 +1,9 @@
-import 'package:opencode_mobile/termux/bridge.dart';
 // The setup prelude and component scripts, run in real shells on this
 // machine: oc_download against a local HTTP server (127.0.0.1 only) that
 // honours Range and sends slowly enough to watch, oc_apt_install against a
 // fake apt-get, and a syntax check of every script. Skipped with a message
 // when python3, curl or dash are missing.
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -11,7 +11,6 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/builtin/setup/components.dart';
-import 'package:opencode_mobile/builtin/setup/setup_contract.dart';
 import 'package:opencode_mobile/builtin/setup/setup_scripts.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 
@@ -278,6 +277,318 @@ void main() {
       expect(result.exitCode, 22, reason: 'curl -f on a 404');
       expect(result.stderr, contains('Download failed (curl exit 22)'));
     }, skip: skip);
+
+    // Issue #117: curl under proot died with SIGSEGV (exit 139) on one ROM.
+    group('when curl crashes with a signal', () {
+      late String bin;
+      late String realCurl;
+
+      Future<void> fakeCurl({required bool http1Works}) async {
+        File('$bin/curl').writeAsStringSync(
+          '#!/bin/sh\n'
+          '${http1Works ? 'case " \$* " in *" --http1.1 "*) exec $realCurl "\$@" ;; esac\n' : ''}'
+          'exit 139\n',
+        );
+        await Process.run('chmod', ['+x', '$bin/curl']);
+      }
+
+      setUp(() {
+        bin = Directory('${dir.path}/fakebin').path;
+        Directory(bin).createSync();
+        realCurl = Process.runSync('sh', [
+          '-c',
+          'command -v curl',
+        ]).stdout.toString().trim();
+      });
+
+      /// Runs oc_download with the fake curl first on PATH. [app] plays the
+      /// app: it answers each `::oc fetch` line, or never answers when null.
+      Future<(int, String, String, List<String>)> run(
+        String target,
+        String expectSha, {
+        Future<void> Function(List<String> fetch)? app,
+        Map<String, String> env = const {},
+      }) async {
+        final process = await Process.start(
+          'dash',
+          [
+            '-c',
+            'set -eu\n${withSetupPrelude('oc_download http://127.0.0.1:$port/blob.bin $target $expectSha')}',
+          ],
+          environment: {
+            'PATH': '$bin:${Platform.environment['PATH']}',
+            'OC_POLL_SECONDS': '0.05',
+            'OC_RETRY_SECONDS': '0',
+            ...env,
+          },
+        );
+        final fetches = <String>[];
+        final out = StringBuffer();
+        final lines = process.stdout
+            .transform(utf8.decoder)
+            .transform(const LineSplitter());
+        final answered = <Future<void>>[];
+        final drained = Completer<void>();
+        lines.listen((line) {
+          out.writeln(line);
+          if (line.startsWith('::oc fetch ') && app != null) {
+            final parts = line.split(' ');
+            fetches.add(line);
+            answered.add(app([parts[2], parts[3], parts[4]]));
+          }
+        }, onDone: drained.complete);
+        final err = process.stderr.transform(utf8.decoder).join();
+        final code = await process.exitCode;
+        await drained.future;
+        await Future.wait(answered);
+        return (code, out.toString(), await err, fetches);
+      }
+
+      /// The app's side of the handshake with [bytes] as the downloaded file.
+      Future<void> Function(List<String>) appWriting(List<int> bytes) =>
+          (request) async {
+            final dest = request[1];
+            File('$dest.oc-fetch-ack').writeAsStringSync('1');
+            File(dest).writeAsBytesSync(bytes);
+            File('$dest.oc-fetch-done').writeAsStringSync('ok');
+          };
+
+      test('the app downloads it, and the checksum is still checked', () async {
+        await fakeCurl(http1Works: false);
+        final target = '${dir.path}/out/blob.bin';
+        final (code, out, err, fetches) = await run(
+          target,
+          sha,
+          app: appWriting(blob.readAsBytesSync()),
+        );
+        expect(code, 0, reason: err);
+        expect(fetches, [
+          '::oc fetch http://127.0.0.1:$port/blob.bin $target $sha',
+        ]);
+        expect(out, contains('The download tool crashed (signal 11)'));
+        expect(sha256.convert(File(target).readAsBytesSync()).toString(), sha);
+        expect(File('$target.oc-fetch-done').existsSync(), isFalse);
+      }, skip: skip);
+
+      test('a wrong file from the app still fails the checksum', () async {
+        await fakeCurl(http1Works: false);
+        final target = '${dir.path}/out/blob.bin';
+        final (code, _, err, _) = await run(
+          target,
+          sha,
+          app: appWriting(List.filled(1200000, 1)),
+        );
+        expect(code, 1);
+        expect(err, contains('did not match its checksum'));
+        expect(File(target).existsSync(), isFalse);
+      }, skip: skip);
+
+      test('an app that says it failed leads to curl --http1.1', () async {
+        await fakeCurl(http1Works: true);
+        final target = '${dir.path}/out/blob.bin';
+        final (code, out, err, _) = await run(
+          target,
+          sha,
+          app: (request) async {
+            File('${request[1]}.oc-fetch-ack').writeAsStringSync('1');
+            File(
+              '${request[1]}.oc-fetch-done',
+            ).writeAsStringSync('fail the connection failed');
+          },
+        );
+        expect(code, 0, reason: err);
+        expect(out, contains('The app could not download it'));
+        expect(sha256.convert(File(target).readAsBytesSync()).toString(), sha);
+      }, skip: skip);
+
+      test('no app at all: --http1.1 takes over after the wait', () async {
+        await fakeCurl(http1Works: true);
+        final target = '${dir.path}/out/blob.bin';
+        final (code, out, err, _) = await run(
+          target,
+          sha,
+          env: {'OC_ACK_POLLS': '3'},
+        );
+        expect(code, 0, reason: err);
+        expect(out, contains('The app did not take over'));
+        expect(sha256.convert(File(target).readAsBytesSync()).toString(), sha);
+      }, skip: skip);
+
+      test('every way crashing says so in plain words', () async {
+        await fakeCurl(http1Works: false);
+        File('$bin/wget').writeAsStringSync('#!/bin/sh\nexit 139\n');
+        await Process.run('chmod', ['+x', '$bin/wget']);
+        final (code, _, err, _) = await run(
+          '${dir.path}/out/blob.bin',
+          sha,
+          env: {'OC_ACK_POLLS': '2'},
+        );
+        expect(code, 139);
+        expect(err, contains('the download tool crashed (signal 11)'));
+      }, skip: skip);
+    });
+  });
+
+  // Issue #117: tar under proot died with SIGSEGV (exit 139) on one ROM.
+  group('oc_untar', () {
+    late String bin;
+    late String archive;
+    late String realTar;
+
+    setUp(() {
+      bin = Directory('${dir.path}/tarbin').path;
+      Directory(bin).createSync();
+      realTar = Process.runSync('sh', [
+        '-c',
+        'command -v tar',
+      ]).stdout.toString().trim();
+      final src = Directory('${dir.path}/src/pkg-1/bin')
+        ..createSync(recursive: true);
+      File('${src.path}/tool').writeAsStringSync('hello');
+      File('${dir.path}/src/pkg-1/other').writeAsStringSync('x');
+      archive = '${dir.path}/pkg.tar.gz';
+      Process.runSync('tar', ['-czf', archive, '-C', '${dir.path}/src', '.']);
+      Process.runSync('tar', [
+        '-czf',
+        archive,
+        '-C',
+        '${dir.path}/src',
+        'pkg-1',
+      ]);
+    });
+
+    Future<(int, String, String, List<String>)> run(
+      String script, {
+      required String tarBody,
+      bool app = true,
+      Map<String, String> env = const {},
+    }) async {
+      File('$bin/tar').writeAsStringSync('#!/bin/sh\n$tarBody\n');
+      Process.runSync('chmod', ['+x', '$bin/tar']);
+      final process = await Process.start(
+        'dash',
+        ['-c', 'set -eu\n${withSetupPrelude(script)}'],
+        environment: {
+          'PATH': '$bin:${Platform.environment['PATH']}',
+          'OC_POLL_SECONDS': '0.05',
+          'OC_ACK_POLLS': '4',
+          ...env,
+        },
+      );
+      final requests = <String>[];
+      final out = StringBuffer();
+      final answered = <Future<void>>[];
+      final drained = Completer<void>();
+      process.stdout
+          .transform(utf8.decoder)
+          .transform(const LineSplitter())
+          .listen((line) {
+            out.writeln(line);
+            if (line.startsWith('::oc unpack ')) {
+              requests.add(line);
+              if (app) {
+                final p = line.split(' ');
+                answered.add(() async {
+                  // The app side: unpack with the real tar, then answer.
+                  final strip = p[4];
+                  Directory(p[3]).createSync(recursive: true);
+                  final extra = p[5] == '-' ? <String>[] : [p[5]];
+                  final r = Process.runSync(realTar, [
+                    '-xzf',
+                    p[2],
+                    '-C',
+                    p[3],
+                    '--strip-components=$strip',
+                    ...extra,
+                  ]);
+                  File('${p[2]}.oc-unpack-ack').writeAsStringSync('1');
+                  File(
+                    '${p[2]}.oc-unpack-done',
+                  ).writeAsStringSync(r.exitCode == 0 ? 'ok' : 'fail bad');
+                }());
+              }
+            }
+          }, onDone: drained.complete);
+      final err = process.stderr.transform(utf8.decoder).join();
+      final code = await process.exitCode;
+      await drained.future;
+      await Future.wait(answered);
+      return (code, out.toString(), await err, requests);
+    }
+
+    test('a healthy tar is used and the app is not asked', () async {
+      final dest = '${dir.path}/ok';
+      Directory(dest).createSync();
+      final (code, _, err, requests) = await run(
+        'oc_untar $archive $dest 1',
+        tarBody: 'exec $realTar "\$@"',
+      );
+      expect(code, 0, reason: err);
+      expect(requests, isEmpty);
+      expect(File('$dest/bin/tool').readAsStringSync(), 'hello');
+    }, skip: skip);
+
+    test('a crashing tar hands the unpacking to the app', () async {
+      final dest = '${dir.path}/crash';
+      Directory(dest).createSync();
+      final (code, out, err, requests) = await run(
+        'oc_untar $archive $dest 1',
+        tarBody: 'exit 139',
+      );
+      expect(code, 0, reason: err);
+      expect(requests, ['::oc unpack $archive $dest 1 -']);
+      expect(out, contains('The unpacking tool crashed (signal 11)'));
+      expect(File('$dest/bin/tool').readAsStringSync(), 'hello');
+      expect(File('$archive.oc-unpack-done').existsSync(), isFalse);
+    }, skip: skip);
+
+    test('a member is passed on to the app', () async {
+      final dest = '${dir.path}/member';
+      Directory(dest).createSync();
+      final (code, _, err, requests) = await run(
+        'oc_untar $archive $dest 2 pkg-1/bin/tool',
+        tarBody: 'exit 139',
+      );
+      expect(code, 0, reason: err);
+      expect(requests, ['::oc unpack $archive $dest 2 pkg-1/bin/tool']);
+      expect(File('$dest/tool').readAsStringSync(), 'hello');
+      expect(File('$dest/other').existsSync(), isFalse);
+    }, skip: skip);
+
+    test('no app: the failure keeps tar crash status', () async {
+      final dest = '${dir.path}/noapp';
+      Directory(dest).createSync();
+      final (code, _, err, _) = await run(
+        'oc_untar $archive $dest 1',
+        tarBody: 'exit 139',
+        app: false,
+      );
+      expect(code, 139);
+      expect(err, contains('the unpacking tool crashed'));
+    }, skip: skip);
+
+    test('a plain tar failure is not handed to the app', () async {
+      final dest = '${dir.path}/plain';
+      Directory(dest).createSync();
+      final (code, _, _, requests) = await run(
+        'oc_untar $archive $dest 1',
+        tarBody: 'exit 2',
+      );
+      expect(code, 2);
+      expect(requests, isEmpty);
+    }, skip: skip);
+
+    test('an app that fails ends the step with the crash status', () async {
+      final dest = '${dir.path}/badapp';
+      Directory(dest).createSync();
+      File(archive).writeAsStringSync('not an archive');
+      final (code, out, _, _) = await run(
+        'oc_untar $archive $dest 1',
+        tarBody: 'exit 139',
+      );
+      expect(code, 139);
+      expect(out, contains('The app could not unpack it'));
+    }, skip: skip);
   });
 
   group('oc_apt_install', () {
@@ -421,56 +732,6 @@ esac
         'exits': (ok: false, version: null),
         'after': (ok: true, version: '9'),
       });
-    }, skip: skip);
-
-    test('the OpenCode check fails on another version or runtime', () async {
-      final bin = Directory('${dir.path}/bin')..createSync();
-      File(
-        '${bin.path}/opencode',
-      ).writeAsStringSync('#!/bin/sh\necho 1.19.0\n');
-      File(
-        '${bin.path}/opencode2',
-      ).writeAsStringSync('#!/bin/sh\necho "opencode2 v2.0.9"\n');
-      Process.runSync('chmod', [
-        '+x',
-        '${bin.path}/opencode',
-        '${bin.path}/opencode2',
-      ]);
-      Future<ProcessResult> check(Map<String, String> params) {
-        // The Termux host's check; the in-app one wants the pinned native
-        // program (test/opencode_native_install_test.dart).
-        final component = setupComponents(
-          lookupAppLocalizations(const Locale('en')),
-          params: {'opencode': params},
-          host: SetupHostKind.termux,
-        ).firstWhere((c) => c.id == SetupComponentIds.openCode);
-        return Process.run(
-          'dash',
-          ['-c', component.checkScript],
-          environment: {'PATH': '${bin.path}:/usr/bin:/bin'},
-        );
-      }
-
-      expect(
-        (await check({})).exitCode,
-        isNot(0),
-        reason: 'a fresh setup requires pinned OC2, not installed OC1',
-      );
-      expect(
-        () => check({'runtime': 'opencode1'}),
-        throwsA(isA<TermuxBridgeException>()),
-      );
-      expect((await check({'version': '1.18.30'})).exitCode, isNot(0));
-      // OpenCode 2 is there but not at the pinned 2.0.10: an update is due.
-      expect((await check({'runtime': 'opencode2'})).exitCode, isNot(0));
-      final two = await check({'runtime': 'opencode2', 'version': '2.0.9'});
-      expect(two.exitCode, 0);
-      expect((two.stdout as String).trim(), '2.0.9');
-      File('${bin.path}/opencode2').deleteSync();
-      expect(
-        (await check({'runtime': 'opencode2', 'version': '2.0.9'})).exitCode,
-        isNot(0),
-      );
     }, skip: skip);
   });
 

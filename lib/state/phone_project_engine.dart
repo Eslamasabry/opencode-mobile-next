@@ -32,10 +32,7 @@ class BuiltinPhoneProjectEngineBridge implements PhoneProjectEngineBridge {
         profile.password.isEmpty) {
       throw const PhoneEngineException('server_auth_unavailable');
     }
-    final written = await _builtin.run(
-      BuiltinLinux.writePasswordScript(profile.password),
-      timeout: const Duration(seconds: 60),
-    );
+    final written = await _builtin.writeServerPassword(profile.password);
     if (!written.ok) {
       throw const PhoneEngineException('server_credentials_write_failed');
     }

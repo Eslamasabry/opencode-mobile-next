@@ -2,15 +2,6 @@ part of '../servers_screen.dart';
 
 /// The Servers screen's actions, in the state's own library.
 extension _ServersActions on _ServersScreenState {
-  void _observedTermux(TermuxRunningServer server) {
-    final found =
-        server.state != TermuxRunningServerState.unsupported &&
-        server.state != TermuxRunningServerState.absent;
-    if (found != _termuxFound && mounted) {
-      _set(() => _termuxFound = found);
-    }
-  }
-
   Future<void> _handleRouteRequest(ServersRouteRequest request) async {
     ServerProfile? target;
     for (final p in ref.read(bootstrapProvider).store.profiles) {
@@ -26,11 +17,6 @@ extension _ServersActions on _ServersScreenState {
         if (target != null) {
           await _connect(target, detectedRunning: request.detectedRunning);
         }
-      case ServersRouteRequestKind.enterPhoneCredentials:
-        await _enterPhoneCredentials(
-          existing: target,
-          openCode2: request.openCode2,
-        );
       case ServersRouteRequestKind.forget:
         if (target != null) await _delete(target);
       case ServersRouteRequestKind.edit:
@@ -48,179 +34,16 @@ extension _ServersActions on _ServersScreenState {
     });
   }
 
-  /// This phone for the Termux server: its status, versions, tools and log.
-  Future<void> _openTermuxSetup() async {
-    await openThisPhone(context, kind: PhoneHostKind.termux);
-    if (mounted) _set(() => _termuxRevision++);
-  }
-
   /// The one door to running an agent on this phone (phone setup v2,
-  /// screen A). Termux and the in-app setup both live behind it, so the
-  /// welcome and the list never offer two competing phone paths.
+  /// screen A).
   Future<void> _openPhoneSetup() async {
     await openPhoneSetupStart(context);
-    // Termux may have been set up from its "Other ways" row meanwhile.
-    if (mounted) _set(() => _termuxRevision++);
-  }
-
-  /// The detected running-server entry for [profiles]: it decides on its own
-  /// whether anything is shown, so both the welcome and the list embed it
-  /// unconditionally and stay platform-gated through it.
-  Widget _runningServerEntry(
-    List<ServerProfile> profiles,
-    ConnectionController connection, {
-    bool dividerAbove = false,
-    bool lead = false,
-  }) {
-    // Both servers this app can run on the phone lead the list and are
-    // controlled in place: OpenCode first, then the Claude Code daemon. Each
-    // entry decides on its own whether it has anything to show.
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _openCodeServerEntry(
-          profiles,
-          connection,
-          dividerAbove: dividerAbove,
-          lead: lead,
-        ),
-        LocalAgentServerEntry(
-          // In a list, a hairline above it whenever a row may precede it.
-          dividerAbove:
-              dividerAbove || savedManagedPhoneProfile(profiles) != null,
-          profiles: profiles,
-          busy: _busy,
-          revision: _termuxRevision,
-          connectedProfileID: connection.api == null
-              ? null
-              : connection.profile?.id,
-          busyConversations: connection.busySessions.length,
-          onDisconnect: () async {
-            if (!await confirmDisconnectServer(context, connection)) return;
-            await connection.disconnect(keepActive: true);
-          },
-          onForget: _delete,
-          onManage: _openTermuxSetup,
-          onConnect: (profile) => _connect(profile, detectedRunning: true),
-          onOpenSaved: (p) =>
-              unawaited(openServerPage(context, connection, p.id)),
-        ),
-      ],
-    );
-  }
-
-  Widget _openCodeServerEntry(
-    List<ServerProfile> profiles,
-    ConnectionController connection, {
-    bool dividerAbove = false,
-    bool lead = false,
-  }) {
-    final entry = TermuxRunningServerEntry(
-      dividerAbove: dividerAbove,
-      lead: lead,
-      onObserved: lead ? _observedTermux : null,
-      profiles: profiles,
-      busy: _busy,
-      revision: _termuxRevision,
-      connectedProfileID: connection.api == null
-          ? null
-          : connection.profile?.id,
-      busyConversations: connection.busySessions.length,
-      actions: () {
-        final controls = LocalServerControls(
-          store: ref.read(bootstrapProvider).store,
-          connection: connection,
-        );
-        return LocalServerCardActions(
-          restart: () async => controls.restart(),
-          stop: controls.stop,
-        );
-      }(),
-      onDisconnect: () async {
-        if (!await confirmDisconnectServer(context, connection)) return;
-        await connection.disconnect(keepActive: true);
-      },
-      onForget: _delete,
-      onManage: _openTermuxSetup,
-      onConnect: (profile) => _connect(profile, detectedRunning: true),
-      onOpenSaved: (p) => unawaited(openServerPage(context, connection, p.id)),
-      onEnterCredentials: (server, existing) =>
-          _enterPhoneCredentials(existing: existing, openCode2: true),
-    );
-    // Under the Termux server's row, once: the move to the in-app server.
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        entry,
-        TermuxMigrationOffer(profiles: profiles, store: connection.store),
-      ],
-    );
-  }
-
-  /// The phone's own server is running but the app has no usable password for
-  /// it. The app wrote that password, so it first restores it from the phone;
-  /// only when that is impossible (or the restored one was already refused)
-  /// does it ask the person to type one.
-  Future<void> _enterPhoneCredentials({
-    required ServerProfile? existing,
-    required bool openCode2,
-  }) async {
-    if (_busy) return;
-    final recovered = await TermuxBridge.managedServerPassword();
-    if (!mounted) return;
-    final alreadyRefused =
-        existing != null &&
-        !existing.requiresPasswordReentry &&
-        existing.password == recovered;
-    if (recovered != null && !alreadyRefused) {
-      final store = ref.read(bootstrapProvider).store;
-      final profile =
-          existing ??
-          ServerProfile(
-            id: DateTime.now().microsecondsSinceEpoch.toString(),
-            name: lookupAppLocalizations(
-              Localizations.localeOf(context),
-            ).e7SetupThisDevice,
-            baseUrl: TermuxBridge.managedServerUrl,
-            flavor: ServerFlavor.v2,
-          );
-      profile
-        ..username = 'opencode'
-        ..password = recovered
-        ..requiresPasswordReentry = false;
-      await store.upsert(profile);
-      if (!mounted) return;
-      _set(() {});
-      await _connect(profile, detectedRunning: true);
-      return;
-    }
-    await _edit(
-      existing: existing,
-      connectOnSave: true,
-      initialUrl: TermuxBridge.managedServerUrl,
-      focusPassword: true,
-      openCode2Intent: openCode2,
-    );
+    if (mounted) _set(() => _phoneRevision++);
   }
 
   /// [detectedRunning] lets saved credential edits reconnect the live server.
   Future<void> _connect(ServerProfile p, {bool detectedRunning = false}) async {
     if (_busy) return;
-    // A Codex or Paseo profile reached the browser's list only by being
-    // saved elsewhere; its transport cannot be built here, so the list says
-    // so instead of starting a connect that fails.
-    if (p.usesAgentSocket &&
-        !platformCapabilities.supportsAgentSocketConnections) {
-      _set(() {
-        _listFailure = lookupAppLocalizations(
-          Localizations.localeOf(context),
-        ).browserAgentSocketUnavailable;
-        _listFailureDetails = null;
-      });
-      return;
-    }
     if (p.requiresPasswordReentry || p.requiresCodexTokenReentry) {
       await _edit(
         existing: p,
@@ -302,7 +125,7 @@ extension _ServersActions on _ServersScreenState {
           openCode2Intent: openCode2Intent,
           // A new server's first step also offers the other ways in, so
           // the list holds no second panel of them (R3).
-          onPhoneSetup: isNew && platformCapabilities.supportsTermux
+          onPhoneSetup: isNew && platformCapabilities.supportsThisPhone
               ? _openPhoneSetup
               : null,
           onExternalAgents: isNew ? _externalAgents : null,

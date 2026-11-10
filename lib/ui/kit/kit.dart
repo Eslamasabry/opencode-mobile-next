@@ -81,6 +81,7 @@
 /// | [KitAgentChoice], [KitAgentChoiceState] | one agent as a large card in a grid: its big mark, name in title size and a calm line from its persona; the chosen one has a mint ring and a filled check badge, one not set up is dimmed and says Set up |
 /// | [KitAgentGridSpan] | lets the one card spanning a grid's row know to lay out sideways |
 /// | [KitAgentGrid] | agent cards in two equal columns, a pair as tall as its taller card; an odd last one spans the row sideways; one column at large text |
+/// | [KitAddAgentCard] | a plus and an action label inside the agent grid; opens setup, never a selectable agent |
 /// | [KitStartBox] | the glowing question field a new conversation starts with (two lines by default, growing as you type), its question as the placeholder |
 /// | [KitSegmented], [KitSegment] | kit v2 §1.6 one choice among 2–4 short, always-visible options |
 /// | [KitMenuItem], [KitMenuGroup], [showKitMenu], [KitMenuPanel] | kit v2 the one popup menu: groups (a named group gets a heading), checks, disabled reasons, destructive last |
@@ -181,7 +182,7 @@ library;
 
 export 'kit_action_stack.dart';
 export 'kit_agent_choice.dart';
-export 'kit_chrome.dart';
+export 'kit_add_agent_card.dart';
 export 'kit_agent_grid.dart';
 export 'kit_agent_grid_span.dart';
 export 'kit_agent_line.dart';
@@ -292,8 +293,6 @@ export 'kit_term.dart';
 export 'kit_terminal_links.dart';
 export 'kit_terminal_view.dart';
 export 'kit_undo.dart';
-export 'kit_update_dot.dart';
-export 'kit_update_sheet.dart';
 export 'kit_group_note.dart';
 export 'kit_guide.dart';
 export 'scenes/portal_scene.dart';
@@ -330,7 +329,6 @@ export 'kit_choice_cards.dart';
 export 'kit_hero_question.dart';
 export 'kit_details_fold.dart';
 export 'kit_field.dart';
-export 'kit_paste_image_menu.dart' show KitPasteImage;
 export 'kit_arrival.dart';
 export 'kit_jump_pill.dart';
 export 'kit_nav.dart';
@@ -346,7 +344,6 @@ export 'kit_mini_table.dart';
 export 'kit_sense_ask.dart';
 export 'kit_search_field.dart';
 export 'kit_tappable.dart';
-export 'kit_vitals_strip.dart';
 export 'kit_ink_layer.dart';
 export 'kit_system_bars.dart';
 export 'kit_tip.dart';

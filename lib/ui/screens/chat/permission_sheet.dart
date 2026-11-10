@@ -8,6 +8,7 @@ import '../../../domain/models.dart';
 import '../../../domain/server_gateway.dart' show PendingQuestion;
 import '../../../l10n/app_localizations.dart';
 import '../../../state/connection.dart';
+import '../../../telemetry/telemetry_provider.dart' show AppTelemetry;
 import '../../../domain/tool_label.dart' show toolIdWords;
 import '../../app_iconography.dart';
 import '../../kit/kit.dart';
@@ -177,6 +178,7 @@ Future<void> _sendPermissionAnswer(
   KitDraft? note,
 }) async {
   if (!controller.isRequestPending(request)) return;
+  AppTelemetry.crumb(reply == 'reject' ? 'chat.deny' : 'chat.approve');
   final answers = PermissionAnswers.of(controller);
   final sent = PermissionAnswerState(
     reply: reply,

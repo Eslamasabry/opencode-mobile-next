@@ -1,3 +1,5 @@
+import 'shared_storage_path.dart';
+
 /// A file the agent named that lives on this phone's shared storage, and what
 /// to do with it. The built-in Linux and Termux write into `/sdcard`, so a
 /// path there is a plain Android file: Android opens it, not a preview that
@@ -15,19 +17,26 @@ enum PhoneFileAction {
 }
 
 /// Android's shared storage, as the agent writes it.
-bool isPhoneSharedStoragePath(String path) {
-  final value = path.trim();
-  return _sharedRoots.any(
-    (root) => value == root || value.startsWith('$root/'),
-  );
-}
+bool isPhoneSharedStoragePath(String path) => canonicalPhoneFile(path) != null;
 
-const _sharedRoots = [
-  '/sdcard',
-  '/storage/emulated/0',
-  '/storage/self/primary',
-  '/mnt/sdcard',
-];
+/// The one spelling of a file this app may hand to Android: a file inside a
+/// folder of the phone's primary shared storage (`/storage/emulated/N/...`,
+/// also written `/sdcard/...`), with `.`/`..` resolved first so a path cannot
+/// climb out of it. Null for everything else: the app's private storage
+/// (the built-in Linux root with the server password file lives there),
+/// another app's `Android/` folders, a whole volume, a bare name, an SD card.
+///
+/// Kotlin repeats this check on the real file system in `LocalFileGate`
+/// (LocalFileGate.kt): keep both in step.
+String? canonicalPhoneFile(String path) {
+  final root = sharedProjectRoot(path);
+  if (root == null) return null;
+  final match = RegExp(r'^/storage/emulated/\d+/(.+)$').firstMatch(root);
+  if (match == null) return null;
+  final inside = match.group(1)!;
+  if (inside == 'Android' || inside.startsWith('Android/')) return null;
+  return root;
+}
 
 /// Kinds a preview cannot show; Android has an app for them.
 const _binaryExtensions = {

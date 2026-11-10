@@ -323,7 +323,8 @@ jobs:
         run: |
           set -euo pipefail
           git fetch --force --tags origin
-          baseline="$(git describe --tags --match 'v*' --abbrev=0 HEAD^)"
+          # The latest published release; a draft tag is never a baseline.
+          baseline="$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name)"
           echo "APK_BASELINE_TAG=$baseline" >> "$GITHUB_ENV"
           gh api "repos/$GITHUB_REPOSITORY/releases/tags/$baseline" > "$RUNNER_TEMP/apk-baseline.json"
 

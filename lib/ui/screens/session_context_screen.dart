@@ -11,7 +11,6 @@ import '../../domain/session_history.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/connection.dart';
 import '../app_iconography.dart';
-import '../locale_format.dart';
 import '../app_theme.dart' show AppStatusTone;
 import '../kit/kit.dart';
 import '../widgets/product_states.dart'
@@ -615,7 +614,7 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
                   ),
                   supporting: TextSpan(
                     text: l10n.e7SharedDetail386(
-                      _formatNumber(l10n.localeName, metrics.contextTokens),
+                      _formatNumber(metrics.contextTokens),
                     ),
                   ),
                 )
@@ -634,8 +633,8 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
                       : null,
                   valueKey: const ValueKey('session-context-token-summary'),
                   valueLabel: l10n.e7SharedDetail385(
-                    _formatNumber(l10n.localeName, metrics.contextTokens),
-                    _formatNumber(l10n.localeName, metrics.contextLimit),
+                    _formatNumber(metrics.contextTokens),
+                    _formatNumber(metrics.contextLimit),
                   ),
                 ),
               if (activeContext)
@@ -693,7 +692,7 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
                   key: const ValueKey('session-context-breakdown'),
                   title: l10n.sessionContextMakeupTitle,
                   valueLabel: l10n.sessionContextTokens(
-                    _formatNumber(l10n.localeName, metrics.tokens.input),
+                    _formatNumber(metrics.tokens.input),
                   ),
                   segments: [
                     for (final segment in metrics.breakdown)
@@ -724,33 +723,33 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
                 KitTechnicalValue(l10n.sessionContextModelId, model.wire),
               KitTechnicalValue(
                 l10n.usageInput,
-                _formatNumber(l10n.localeName, metrics.tokens.input),
+                _formatNumber(metrics.tokens.input),
                 copyable: false,
               ),
               KitTechnicalValue(
                 l10n.usageOutput,
-                _formatNumber(l10n.localeName, metrics.tokens.output),
+                _formatNumber(metrics.tokens.output),
                 copyable: false,
               ),
               KitTechnicalValue(
                 l10n.transcriptFindReasoning,
-                _formatNumber(l10n.localeName, metrics.tokens.reasoning),
+                _formatNumber(metrics.tokens.reasoning),
                 copyable: false,
               ),
               KitTechnicalValue(
                 l10n.usageCacheRead,
-                _formatNumber(l10n.localeName, metrics.tokens.cacheRead),
+                _formatNumber(metrics.tokens.cacheRead),
                 copyable: false,
               ),
               KitTechnicalValue(
                 l10n.usageCacheWrite,
-                _formatNumber(l10n.localeName, metrics.tokens.cacheWrite),
+                _formatNumber(metrics.tokens.cacheWrite),
                 copyable: false,
               ),
               KitTechnicalValue(
                 l10n.e7SharedContextLimit,
                 metrics.contextLimit > 0
-                    ? _formatNumber(l10n.localeName, metrics.contextLimit)
+                    ? _formatNumber(metrics.contextLimit)
                     : l10n.e7SharedUnavailable,
                 copyable: false,
               ),
@@ -783,7 +782,7 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
       if (withCost && cost != null && cost >= 0.005)
         KitTechnicalValue(
           l10n.e7SharedAccumulatedCostReportedByServer,
-          formatUsd(l10n.localeName, cost),
+          '\$${cost.toStringAsFixed(2)}',
           key: const ValueKey('session-context-server-cost'),
           copyable: false,
         ),
@@ -871,11 +870,10 @@ class _SessionTotals extends StatelessWidget {
               trailing: KitRowValue(
                 l10n.sessionContextMessagesSplit(
                   _formatNumber(
-                    l10n.localeName,
                     metrics.userMessages + metrics.assistantMessages,
                   ),
-                  _formatNumber(l10n.localeName, metrics.userMessages),
-                  _formatNumber(l10n.localeName, metrics.assistantMessages),
+                  _formatNumber(metrics.userMessages),
+                  _formatNumber(metrics.assistantMessages),
                 ),
                 chevron: false,
               ),
@@ -889,7 +887,7 @@ class _SessionTotals extends StatelessWidget {
                   : l10n.e7SharedAccumulatedCost,
               titleMaxLines: 2,
               trailing: KitRowValue(
-                formatUsd(l10n.localeName, metrics.totalCost, decimals: 4),
+                '\$${metrics.totalCost.toStringAsFixed(4)}',
                 chevron: false,
               ),
             ),
@@ -899,7 +897,7 @@ class _SessionTotals extends StatelessWidget {
                 title: l10n.e7SharedSessionTokensReportedByServer,
                 titleMaxLines: 2,
                 trailing: KitRowValue(
-                  _formatNumber(l10n.localeName, serverTokens.total),
+                  _formatNumber(serverTokens.total),
                   chevron: false,
                 ),
               ),
@@ -929,7 +927,15 @@ String _breakdownLabel(
   SessionContextBreakdownKind.other => l10n.e7SharedOtherContext,
 };
 
-String _formatNumber(String locale, int value) => formatCount(locale, value);
+String _formatNumber(int value) {
+  final digits = value.abs().toString();
+  final buffer = StringBuffer();
+  for (var index = 0; index < digits.length; index++) {
+    if (index > 0 && (digits.length - index) % 3 == 0) buffer.write(',');
+    buffer.write(digits[index]);
+  }
+  return value < 0 ? '-$buffer' : buffer.toString();
+}
 
 AppLocalizations _sharedCopy(BuildContext context) =>
     lookupAppLocalizations(Localizations.localeOf(context));

@@ -50,17 +50,6 @@ const _app = [
   'app terminal.source',
   'app terminal.local-restart',
   'app shell.choose',
-  'app procs.details',
-  'app procs.stop-one',
-  'app procs.stop-kind',
-  'app procs.stop-orphans',
-  'app procs.retry',
-  'app storage.scan',
-  'app storage.stop-scan',
-  'app storage.clean',
-  'app migration.review-and-copy',
-  'app migration.stop',
-  'app migration.resume',
 ];
 
 final _paths = <String, Future<void> Function(WidgetTester)>{};

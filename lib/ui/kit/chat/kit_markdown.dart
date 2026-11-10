@@ -34,7 +34,6 @@ import '../kit_surface_look.dart';
 import '../kit_tappable.dart';
 import '../kit_text.dart';
 import '../kit_tokens.dart';
-import 'kit_markdown_unfinished.dart';
 import 'kit_stream_caret.dart';
 
 part 'kit_markdown_fresh.dart';
@@ -410,21 +409,14 @@ class _KitMarkdownState extends State<KitMarkdown> {
   }
 
   List<Widget> _blocksFor(BuildContext context) {
-    // A reply still streaming draws its last line with unfinished syntax
-    // closed or hidden (kitMarkdownCloseTail); one that stopped draws its
-    // exact text. Cached by what is drawn, so the end re-parses only when
-    // the tail actually differed.
-    final drawn = widget.streaming && widget.codeLanguage == null
-        ? kitMarkdownCloseTail(widget.data)
-        : widget.data;
     final cached = _blocks;
     if (cached != null &&
-        _parsedData == drawn &&
+        _parsedData == widget.data &&
         _parsedLanguage == widget.codeLanguage) {
       return cached;
     }
     KitMarkdown.debugParseCount++;
-    _parsedData = drawn;
+    _parsedData = widget.data;
     _parsedLanguage = widget.codeLanguage;
     final language = widget.codeLanguage;
     if (language != null) {
@@ -438,7 +430,7 @@ class _KitMarkdownState extends State<KitMarkdown> {
         ),
       ];
     }
-    return _blocks = _splitBlocks(context, drawn);
+    return _blocks = _splitBlocks(context, widget.data);
   }
 
   List<Widget> _splitBlocks(BuildContext context, String src) {

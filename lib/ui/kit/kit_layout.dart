@@ -36,6 +36,10 @@ abstract final class KitLayout {
   /// Forms, settings and a sheet's content.
   static const double readingWidth = 720;
 
+  /// The prominent divider's line: one logical pixel, for lists whose rows
+  /// must read apart on dark OLED screens (KitDivider.prominent).
+  static const double prominentRule = 1;
+
   /// A list on its own.
   static const double listWidth = 960;
 
@@ -92,10 +96,6 @@ abstract final class KitLayout {
   /// The narrowest row that holds a [KitActionBlock] `pair` side by side
   /// ("Send as a GitHub issue" · "Copy"); narrower, the pair stacks.
   static const double pairRowMinWidth = 340;
-
-  /// The narrowest [KitVitalsStrip] that keeps three or four readings on one
-  /// line; narrower, they wrap two by two.
-  static const double vitalsRowMinWidth = 340;
 
   static const double popoverMinWidth = 200;
   static const double popoverMaxWidth = 320;

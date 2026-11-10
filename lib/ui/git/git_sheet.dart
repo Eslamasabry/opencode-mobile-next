@@ -53,7 +53,7 @@ Future<void> showGitSheet(
   );
 }
 
-enum _GitStep { home, save, branches, clone, remotes, signIn, identity }
+enum _GitStep { home, save, branches, clone, publish, remotes, signIn, identity }
 
 class GitSheet extends StatefulWidget {
   const GitSheet({
@@ -104,9 +104,15 @@ class _GitSheetState extends State<GitSheet> {
   final _cloneFolder = TextEditingController();
   bool _folderTouched = false;
 
+  // Create a GitHub repository for this project.
+  final _repositoryName = TextEditingController();
+  bool _repositoryPrivate = true;
+
   // Remotes
   final _remoteName = TextEditingController();
   final _remoteUrl = TextEditingController();
+  bool _reposLoading = false;
+  bool _reposNone = false;
 
   // Identity
   final _identityName = TextEditingController();
@@ -133,6 +139,7 @@ class _GitSheetState extends State<GitSheet> {
       _branchName,
       _cloneUrl,
       _cloneFolder,
+      _repositoryName,
       _remoteName,
       _remoteUrl,
       _identityName,
@@ -177,6 +184,7 @@ class _GitSheetState extends State<GitSheet> {
         _GitStep.save => _saveStep(l10n),
         _GitStep.branches => _branchesStep(l10n),
         _GitStep.clone => _cloneStep(l10n),
+        _GitStep.publish => _publishStep(l10n),
         _GitStep.remotes => _remotesStep(l10n),
         _GitStep.signIn => _signInStep(l10n),
         _GitStep.identity => _identityStep(l10n),

@@ -374,9 +374,20 @@ class SetupRunner private constructor(private val context: Context) {
      */
     private fun runScriptRetrying(spec: Spec, component: SetupComponentStatus): String? {
         var attempt = 1
+        var compatible = false
         while (true) {
             try {
-                val failure = runScript(spec, component)
+                lastExitCode = null
+                val failure = runScript(spec, component, compatible)
+                if (SetupStepRetry.compatibility(lastExitCode, compatible, cancelled)) {
+                    // A program inside Ubuntu segfaulted (issue #117): once more, the careful way.
+                    compatible = true
+                    Log.w(BuiltinLinux.TAG, "setup step ${spec.id} segfaulted; running it again in compatibility mode")
+                    val label = spec.labels["compat"] ?: "Trying again in compatibility mode"
+                    logLine("==> $label")
+                    event(component, SetupProtocol.Event.Stage(label))
+                    continue
+                }
                 if (!SetupStepRetry.again(attempt, cancelled, SetupStepRetry.interrupted(failure))) return failure
             } catch (error: InstallerInterruptedException) {
                 if (!SetupStepRetry.again(attempt, cancelled, interrupted = true)) throw error
@@ -392,13 +403,24 @@ class SetupRunner private constructor(private val context: Context) {
         }
     }
 
-    private fun runScript(spec: Spec, component: SetupComponentStatus): String? {
-        if (!linux.installed) return "The Linux base is not installed"
-        val script = spec.script ?: return "No script for ${spec.id}"
+    /** The exit status of the last script run (the guest's own result when it reported one). */
+    @Volatile private var lastExitCode: Int? = null
+
+    private fun runScript(spec: Spec, component: SetupComponentStatus, compatible: Boolean = false): String? {
+        val script = spec.script
+        return when {
+            !linux.installed -> "The Linux base is not installed"
+            script == null -> "No script for ${spec.id}"
+            else -> runInstallerProcess(spec, component, script, compatible)
+        }
+    }
+
+    private fun runInstallerProcess(spec: Spec, component: SetupComponentStatus, script: String, compatible: Boolean):
+        String? {
         val completion = SetupScriptCompletion()
         val started = linux.startInstaller(
             completion.wrap(script), NativeInstallerOwnership.targetsForComponent(spec.id),
-            InstallerOperation.INSTALL, agentUser = spec.agentUser)
+            InstallerOperation.INSTALL, InstallerOptions(agentUser = spec.agentUser, compat = compatible))
         return try { runInstallerScript(spec, component, started, completion) }
         finally { linux.finishInstaller(started) }
     }
@@ -413,22 +435,11 @@ class SetupRunner private constructor(private val context: Context) {
             linux.stopInstaller(started)
             return "cancelled"
         }
-        var last: String? = null
+        val seen = ScriptOutput()
         try {
             started.outputStream.close()
             started.inputStream.bufferedReader().forEachLine { line ->
-                if (completion.accept(line)) return@forEachLine
-                val parsed = SetupProtocol.parse(line)
-                val event = installerEvent(spec, parsed)
-                if (event == null) {
-                    if (!spec.agentUser) {
-                        logLine(line)
-                        if (line.isNotBlank()) last = line.trim()
-                    }
-                } else {
-                    if (event is SetupProtocol.Event.Stage) logLine("==> ${event.label}")
-                    event(component, event)
-                }
+                handleScriptLine(spec, component, completion, seen, line)
             }
         } catch (error: SetupPersistenceException) {
             linux.stopInstaller(started)
@@ -441,10 +452,67 @@ class SetupRunner private constructor(private val context: Context) {
         val code = try { started.waitFor() } finally {
             synchronized(lock) { process = null }
         }
+        lastExitCode = SetupStepRetry.crashExit(completion.exitCode ?: code, seen.sawSegfault)
         return if (cancelled) "cancelled"
-        else if (code == 0 && completion.exitCode != 0) SetupStepRetry.missingResult(last)
-        else installerFailure(spec, component, code, last)
+        else if (code == 0 && completion.exitCode != 0) SetupStepRetry.missingResult(seen.last)
+        else installerFailure(spec, component, code, seen.last)
     }
+
+    /** What a script's output showed so far: its last plain line, and whether a program segfaulted. */
+    private class ScriptOutput {
+        var last: String? = null
+        var sawSegfault = false
+    }
+
+    private fun handleScriptLine(
+        spec: Spec,
+        component: SetupComponentStatus,
+        completion: SetupScriptCompletion,
+        seen: ScriptOutput,
+        line: String,
+    ) {
+        if (completion.accept(line)) return
+        if (SetupStepRetry.reportsSegfault(line)) seen.sawSegfault = true
+        val parsed = SetupProtocol.parse(line)
+        val event = installerEvent(spec, parsed)
+        when {
+            parsed is SetupProtocol.Event.Fetch -> appFetch(component, parsed, spec.agentUser)
+            parsed is SetupProtocol.Event.Unpack -> appUnpack(parsed, spec.agentUser)
+            event != null -> {
+                if (event is SetupProtocol.Event.Stage) logLine("==> ${event.label}")
+                event(component, event)
+            }
+            !spec.agentUser -> {
+                logLine(line)
+                if (line.isNotBlank()) seen.last = line.trim()
+            }
+        }
+    }
+
+    /**
+     * The script's download tool crashed and it asked us to download instead
+     * (issue #117). Android's own networking fills the file the script then
+     * checks against its pinned checksum.
+     */
+    private fun appFetch(component: SetupComponentStatus, request: SetupProtocol.Event.Fetch, agentUser: Boolean) {
+        logLine("==> The app is downloading this itself")
+        SetupAppFetch(linux.rootfs, allowed = agentFolders(agentUser)).run(request, { cancelled }) { done, total ->
+            event(component, SetupProtocol.Event.Bytes(done, total))
+        }
+    }
+
+    /**
+     * The script's `tar` crashed and it asked us to unpack instead (issue
+     * #117). The script checked the archive's checksum before this point.
+     */
+    private fun appUnpack(request: SetupProtocol.Event.Unpack, agentUser: Boolean) {
+        logLine("==> The app is unpacking this itself")
+        SetupAppUnpack(linux.rootfs, agentFolders(agentUser)).run(request) { cancelled }
+    }
+
+    /** A step running as the agent user may only have the app write where agents install. */
+    private fun agentFolders(agentUser: Boolean): List<String>? =
+        if (agentUser) RootfsPaths.AGENT_USER_FOLDERS else null
 
     private fun installerFailure(spec: Spec, component: SetupComponentStatus, code: Int, last: String?): String? =
         if (code == 0) null else if (spec.agentUser) {

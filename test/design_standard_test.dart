@@ -62,7 +62,6 @@ const _migrated = <String, List<String>>{
     'setup_start_progress',
     'setup_start_stopped',
     'setup_start_ready',
-    'setup_start_termux',
   ],
   'lib/ui/screens/phone_setup/phone_setup_customize_sheet.dart': [
     'setup_customize',
@@ -193,9 +192,6 @@ const _migrated = <String, List<String>>{
   // test/goldens/phone_server_screens_golden_test.dart): the phone's server
   // as one row, its options on On this phone, the server's plugins.
   'lib/ui/widgets/local_server_row.dart': ['servers_phone'],
-  'lib/ui/widgets/termux_running_server_entry.dart': ['servers_phone'],
-  'lib/ui/widgets/managed_server_recovery_option.dart': ['phone_running'],
-  'lib/ui/widgets/termux_phone_tools.dart': ['phone_running'],
   'lib/ui/screens/settings/server_plugins_section.dart': ['plugins_server'],
   // Open a project for OpenCode inside the app: the folder browser
   // (test/goldens/folder_browser_golden_test.dart).
@@ -334,15 +330,12 @@ const _grandfathered = <String>{
   'lib/ui/widgets/connection_status_banner.dart',
   'lib/ui/widgets/folder_browser.dart',
   'lib/ui/widgets/local_server_row.dart',
-  'lib/ui/widgets/managed_server_recovery_option.dart',
   'lib/ui/widgets/phone_server_card.dart',
   'lib/ui/widgets/saved_server_connection_card.dart',
   'lib/ui/widgets/setup_progress_view.dart',
   'lib/ui/widgets/team_agent_row.dart',
   'lib/ui/widgets/team_discover.dart',
   'lib/ui/widgets/team_moments.dart',
-  'lib/ui/widgets/termux_phone_tools.dart',
-  'lib/ui/widgets/termux_running_server_entry.dart',
   'lib/ui/widgets/work_status_line.dart',
 };
 

@@ -358,29 +358,6 @@ extension _IndexInsidePages on _IndexBuild {
           ),
         ),
       ),
-      SearchEntry(
-        id: 'inside-phone-running-now',
-        kind: SearchEntryKind.insideSettings,
-        icon: AppIconography.processor,
-        title: l10n.termuxProcsTitle,
-        parent: onThisPhone,
-        keywords: l10n.discoverRunningNowAliases,
-        pages: const ['termux-processes'],
-        // The in-app Linux has its own Running on this phone (same title).
-        gate: (scope) => scope.platform.supportsTermux && !_inAppLinux(scope),
-        open: _screen((_) => const TermuxProcessesScreen()),
-      ),
-      SearchEntry(
-        id: 'inside-phone-storage',
-        kind: SearchEntryKind.insideSettings,
-        icon: AppIconography.storage,
-        title: l10n.termuxStorageTitle,
-        parent: onThisPhone,
-        keywords: l10n.discoverStorageAliases,
-        pages: const ['termux-storage'],
-        gate: (scope) => scope.platform.supportsTermux,
-        open: _screen((_) => const TermuxStorageScreen()),
-      ),
       // The Linux manager of the in-app host and its four pages. Only where
       // the app's own Linux is saved on this phone.
       SearchEntry(
@@ -393,10 +370,8 @@ extension _IndexInsidePages on _IndexBuild {
         pages: const ['linux-manager'],
         gate: _inAppLinux,
         // Repair is setup's check-and-repair, which lives on This phone.
-        open: (context, _) => openLinuxManager(
-          context,
-          onRepair: () => openThisPhone(context, kind: PhoneHostKind.inApp),
-        ),
+        open: (context, _) =>
+            openLinuxManager(context, onRepair: () => openThisPhone(context)),
       ),
       SearchEntry(
         id: 'inside-phone-running',
@@ -420,40 +395,6 @@ extension _IndexInsidePages on _IndexBuild {
         pages: const ['linux-processes'],
         gate: _inAppLinux,
         open: _screen((_) => const LinuxProcessesPage()),
-      ),
-      SearchEntry(
-        id: 'inside-linux-services',
-        kind: SearchEntryKind.insideSettings,
-        icon: AppIconography.play,
-        title: l10n.linuxSvcTitle,
-        parent: l10n.linuxMgrTitle,
-        keywords: 'linux services keep running command server daemon restart',
-        pages: const ['linux-services', 'linux-service'],
-        gate: _inAppLinux,
-        open: _screen((_) => const LinuxServicesPage()),
-      ),
-      SearchEntry(
-        id: 'inside-linux-service-add',
-        kind: SearchEntryKind.insideSettings,
-        icon: AppIconography.addCircle,
-        title: l10n.linuxSvcAddTitle,
-        parent: l10n.linuxSvcTitle,
-        keywords: 'linux service add new command program keep running',
-        pages: const ['linux-service-add'],
-        gate: _inAppLinux,
-        open: _screen((_) => const LinuxServiceAddPage()),
-      ),
-      SearchEntry(
-        id: 'inside-linux-backups',
-        kind: SearchEntryKind.insideSettings,
-        icon: AppIconography.archive,
-        title: l10n.linuxBackupRow,
-        parent: l10n.linuxMgrTitle,
-        keywords:
-            'linux backup restore export projects zip save copy reset new phone',
-        pages: const ['linux-backups'],
-        gate: _inAppLinux,
-        open: _screen((_) => const LinuxBackupsPage()),
       ),
       SearchEntry(
         id: 'inside-linux-ports',
@@ -488,11 +429,6 @@ extension _IndexInsidePages on _IndexBuild {
         gate: _inAppLinux,
         open: _screen((_) => const LinuxPackagesPage()),
       ),
-      row(
-        'inside-phone-crash-recovery',
-        AppIconography.restart,
-        gate: _managedRecovery,
-      ),
       SearchEntry(
         id: 'inside-phone-claude-code',
         kind: SearchEntryKind.insideSettings,
@@ -501,18 +437,11 @@ extension _IndexInsidePages on _IndexBuild {
         parent: onThisPhone,
         keywords: l10n.localAgentTitle,
         pages: const ['local-agent-page'],
-        gate: (scope) => scope.platform.supportsTermux,
-        open: (context, _) => _push(
-          context,
-          LocalAgentScreen(
-            onConnected: () => Navigator.of(
-              context,
-            ).pushNamedAndRemoveUntil('/home', (_) => false),
-          ),
-        ),
+        gate: (scope) => scope.platform.supportsThisPhone,
+        open: (context, _) => _push(context, const LocalAgentScreen()),
       ),
-      // The same door where the Termux bridge is missing: it explains why
-      // instead of vanishing from search (P7.4).
+      // The same door off Android: it explains why instead of vanishing
+      // from search (P7.4).
       SearchEntry(
         id: 'inside-phone-claude-code-unavailable',
         kind: SearchEntryKind.insideSettings,
@@ -521,7 +450,7 @@ extension _IndexInsidePages on _IndexBuild {
         parent: onThisPhone,
         keywords: l10n.localAgentTitle,
         pages: const ['local-agent-page'],
-        gate: (scope) => !scope.platform.supportsTermux,
+        gate: (scope) => !scope.platform.supportsThisPhone,
         open: _explainClaudeCodeGate,
       ),
       SearchEntry(

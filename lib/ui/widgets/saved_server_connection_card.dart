@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../domain/server_probe.dart' show openCode2UpgradeCommand;
 import '../../l10n/app_localizations.dart';
-import '../../state/profiles.dart' show isLoopbackHost;
 import '../app_theme.dart';
 import '../kit/kit.dart';
 import '../kit/scenes/setup_phone_scene.dart';
@@ -42,12 +41,10 @@ class SavedServerConnectionCard extends StatelessWidget {
     required this.baseUrl,
     required this.error,
     required this.attempts,
-    required this.supportsTermux,
     this.usesConnectionToken = false,
     this.requiresTokenReentry = false,
     required this.onChangeServer,
     required this.onRetry,
-    this.onOpenTermuxSetup,
     this.onUpdatePassword,
     this.onReviewCertificate,
     this.onUpdateToken,
@@ -75,12 +72,10 @@ class SavedServerConnectionCard extends StatelessWidget {
 
   /// How many attempts have failed in a row, including this one.
   final int attempts;
-  final bool supportsTermux;
   final bool usesConnectionToken;
   final bool requiresTokenReentry;
   final VoidCallback onChangeServer;
   final VoidCallback onRetry;
-  final VoidCallback? onOpenTermuxSetup;
   final VoidCallback? onUpdatePassword;
   final VoidCallback? onReviewCertificate;
   final VoidCallback? onUpdateToken;
@@ -92,7 +87,7 @@ class SavedServerConnectionCard extends StatelessWidget {
   final bool startingPhoneServer;
 
   /// The profile is OpenCode running inside this app. Its failures offer
-  /// [onStartPhoneServer] and nothing about Termux or tunnels.
+  /// [onStartPhoneServer] and nothing about tunnels.
   final bool inAppServer;
 
   /// The in-app server is booting.
@@ -291,21 +286,12 @@ class SavedServerConnectionCard extends StatelessWidget {
       l10n: l10n,
       error: error ?? 'Connection token is required',
       baseUrl: baseUrl,
-      supportsTermux: supportsTermux,
       usesConnectionToken: usesConnectionToken,
       requiresTokenReentry: requiresTokenReentry,
       attempts: attempts,
-      managedPhoneServer: onStartPhoneServer != null,
       inAppServer: inAppServer,
       inAppStartFailed: inAppStartFailed,
     );
-    final termuxSetup =
-        !inAppServer &&
-            supportsTermux &&
-            !usesConnectionToken &&
-            isLoopbackHost(Uri.tryParse(baseUrl)?.host ?? '')
-        ? onOpenTermuxSetup
-        : null;
     final retry = KitAction(
       key: const ValueKey('saved-server-retry'),
       label: l10n.isolatedTaskRetryOpen,
@@ -323,14 +309,6 @@ class SavedServerConnectionCard extends StatelessWidget {
           key: const ValueKey('saved-server-start-phone'),
           label: l10n.phoneServerStartAndConnect,
           onPressed: start,
-        ),
-        false,
-      ),
-      ConnectionFailureAction.openTermuxSetup when termuxSetup != null => (
-        KitAction(
-          key: const ValueKey('saved-server-open-termux'),
-          label: l10n.e7SetupCheckTermux,
-          onPressed: termuxSetup,
         ),
         false,
       ),
@@ -454,12 +432,6 @@ class SavedServerConnectionCard extends StatelessWidget {
             key: const ValueKey('saved-server-open-in-app-setup'),
             label: l10n.inAppServerOpenSetup,
             onPressed: onOpenInAppSetup,
-          )
-        else if ((primaryIsRetry || startsServer) && termuxSetup != null)
-          KitAction(
-            key: const ValueKey('saved-server-open-termux'),
-            label: l10n.onboardingTermuxSetup,
-            onPressed: termuxSetup,
           ),
       ],
       detailsChild: error?.contains('This server runs OpenCode 1') == true

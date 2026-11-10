@@ -53,7 +53,7 @@ extension _IndexHubRows on _IndexBuild {
         pages: const ['termux-setup-installed'],
         // Always findable on a phone that can host OpenCode: set up it is
         // the place of its own, otherwise it starts the setup.
-        gate: (scope) => scope.platform.supportsTermux,
+        gate: (scope) => scope.platform.supportsThisPhone,
         open: (context, scope) => _phoneSetUp(scope)
             ? openThisPhone(context)
             : openPhoneSetupStart(context),
@@ -84,7 +84,8 @@ extension _IndexHubRows on _IndexBuild {
         pages: const ['phone-setup-start'],
         // Local Android tools belong to the phone, not the connected server's
         // capability set.
-        gate: (scope) => scope.platform.supportsTermux && !_phoneSetUp(scope),
+        gate: (scope) =>
+            scope.platform.supportsThisPhone && !_phoneSetUp(scope),
         open: (context, _) => openPhoneSetupStart(context),
       ),
       // Agent: the model, who pays for it, what it can use, the AI Team.
@@ -270,17 +271,6 @@ extension _IndexHubRows on _IndexBuild {
         gate: (scope) => scope.platform.supportsVoice,
         open: _openVoice,
       ),
-      SearchEntry(
-        id: 'settings-local-assistant',
-        kind: SearchEntryKind.hubRow,
-        group: SettingsGroup.chat,
-        icon: AppIconography.sparkle,
-        title: l10n.localAssistantTitle,
-        keywords: l10n.localAssistantSearchAliases,
-        // The runtime ships for Android only.
-        gate: (scope) => scope.platform.supportsVoice,
-        open: _openLocalAssistant,
-      ),
       // This app: what notifies, what keeps it running, how it looks, what
       // it keeps, what it has cost.
       SearchEntry(
@@ -428,6 +418,21 @@ extension _IndexHubRows on _IndexBuild {
         target: diagnostics.target,
         open: _arrive(diagnostics.target),
       ),
+      // Send a problem report (health telemetry section E): a redacted log
+      // the person previews and sends to the developer. Only in a build that
+      // can send it.
+      SearchEntry(
+        id: 'settings-send-problem-report',
+        kind: SearchEntryKind.hubRow,
+        group: SettingsGroup.help,
+        icon: AppIconography.upload,
+        title: l10n.sendReportTitle,
+        keywords:
+            '${l10n.settingsHubSearchBugAliases} ${l10n.sendReportRowDetail}',
+        pages: const ['app-diagnostics'],
+        gate: (scope) => AppTelemetry.current.available,
+        open: (context, _) => openSendProblemReport(context),
+      ),
       // The explanation for every row the connected server hides; each
       // group's "Why" opens it too.
       SearchEntry(
@@ -455,20 +460,6 @@ extension _IndexHubRows on _IndexBuild {
         pages: const ['tips-page'],
         open: _screen((scope) => TipsScreen(controller: scope.controller)),
       ),
-      // The browser build has no phone services and a few limits the
-      // browser imposes on the page; one row says which, so nothing has to
-      // be discovered by tapping something that does not work.
-      SearchEntry(
-        id: 'settings-browser-mode',
-        kind: SearchEntryKind.hubRow,
-        group: SettingsGroup.help,
-        icon: AppIconography.browser,
-        title: l10n.browserModeTitle,
-        keywords: l10n.browserModeSubtitle,
-        pages: const ['browser-mode-screen'],
-        gate: (scope) => scope.platform.isWeb,
-        open: _screen((_) => const BrowserModeScreen()),
-      ),
       SearchEntry(
         id: 'settings-about-notices',
         kind: SearchEntryKind.hubRow,
@@ -480,19 +471,6 @@ extension _IndexHubRows on _IndexBuild {
             '${l10n.e7SettingsDetailUi18}',
         pages: const ['about', 'about-open-source-tab'],
         open: _screen((scope) => AboutScreen(controller: scope.controller)),
-      ),
-
-      // The app's own new versions: Android installs them itself.
-      SearchEntry(
-        id: 'settings-updates',
-        kind: SearchEntryKind.hubRow,
-        group: SettingsGroup.thisApp,
-        icon: AppIconography.systemDownload,
-        title: l10n.appUpdatesTitle,
-        keywords: l10n.appUpdatesSearchAliases,
-        pages: const ['updates-settings'],
-        gate: (scope) => scope.platform.isAndroid,
-        open: _screen((_) => const UpdatesScreen()),
       ),
 
       // ---- Inside the hub's pages ----------------------------------------
@@ -692,35 +670,6 @@ extension _IndexHubRows on _IndexBuild {
         open: _screen(
           (scope) => KitArrivalScope(
             rowId: 'settings-voice-notices',
-            child: AboutScreen(controller: scope.controller),
-          ),
-        ),
-      ),
-      SearchEntry(
-        id: 'about-star-github',
-        kind: SearchEntryKind.insideSettings,
-        parent: l10n.aboutTitle,
-        icon: AppIconography.star,
-        title: l10n.starRowTitle,
-        keywords: l10n.starShareSearchAliases,
-        open: _screen(
-          (scope) => KitArrivalScope(
-            rowId: 'about-star-github',
-            child: AboutScreen(controller: scope.controller),
-          ),
-        ),
-      ),
-      SearchEntry(
-        id: 'about-share-app',
-        kind: SearchEntryKind.insideSettings,
-        parent: l10n.aboutTitle,
-        icon: AppIconography.shareNetwork,
-        title: l10n.shareRowTitle,
-        keywords: l10n.starShareSearchAliases,
-        gate: (_) => ShareOut.supported,
-        open: _screen(
-          (scope) => KitArrivalScope(
-            rowId: 'about-share-app',
             child: AboutScreen(controller: scope.controller),
           ),
         ),

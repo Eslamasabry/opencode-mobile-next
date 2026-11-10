@@ -14,9 +14,7 @@ import '../../domain/server_gateway.dart' show ServerCapabilities, StreamStatus;
 import '../../domain/connection_status.dart';
 import '../../state/connection.dart';
 import '../../state/first_run.dart';
-import '../../state/phone_host.dart' show PhoneHostKind;
 import '../../state/profiles.dart' show ServerProfile;
-import '../../update/app_update_controller.dart';
 import '../../l10n/app_localizations.dart';
 import '../app_theme.dart';
 import '../desktop/shortcuts.dart';
@@ -33,10 +31,8 @@ import '../kit/kit_status_line.dart';
 import '../kit/kit_surface.dart';
 import '../kit/kit_text.dart';
 import '../kit/kit_top_bar.dart';
-import '../kit/kit_update_sheet.dart';
 import '../kit/motion/kit_reveal.dart';
 import '../kit/motion/kit_tab_switcher.dart';
-import '../widgets/external_link.dart';
 import '../widgets/phone_server_card.dart';
 import '../widgets/runtime_switch_status.dart';
 import '../widgets/server_switcher_sheet.dart';
@@ -137,8 +133,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     if (initialFilter?.needsYou ?? false) _openInboxAfterFrame();
     _tab = _safeTab(widget.initialTab ?? _chatsTab, conn.capabilities);
     conn.addListener(_onConnChanged);
-    _updates = ref.read(appUpdateProvider)..addListener(_onUpdatesChanged);
-    _hadUpdateDot = _updates.hasPendingRelease;
     _starter = ref.read(builtinServerStarterProvider)
       ..addListener(_onStarterChanged);
     if (widget.opening == null) _answered(conn);
@@ -252,29 +246,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   /// The gear: Settings as a page over the home, so Back (and predictive
   /// back) returns here.
-  Future<void> _openSettingsPage() async {
+  Future<void> _openSettingsPage() {
     _clearBackExit();
-    // While an update waits, the gear asks first: update now, or go on to
-    // Settings (owner, 2026-10-31).
-    final release = _updates.release;
-    if (release != null && _updates.hasPendingRelease) {
-      final choice = await showKitUpdateSheet(
-        context,
-        version: release.version,
-        summary: release.summary,
-        onWhatsNew: release.pageUrl.isEmpty
-            ? null
-            : () => unawaited(openExternalLink(context, release.pageUrl)),
-      );
-      if (!mounted) return;
-      if (choice == KitUpdateChoice.updateNow) {
-        unawaited(_updates.updateNow());
-        return;
-      }
-      if (choice == null) return;
-    }
-    if (!mounted) return;
-    await pushKitPage<void>(
+    return pushKitPage<void>(
       context,
       (_) => SettingsScreen(controller: ref.read(connProvider)),
     );
@@ -361,20 +335,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       ref.read(connProvider).removeListener(_onConnChanged);
     } catch (_) {}
     _starter.removeListener(_onStarterChanged);
-    _updates.removeListener(_onUpdatesChanged);
     _backExitHint?.cancel();
     _findInFiles.dispose();
     _openFiles.dispose();
     super.dispose();
-  }
-
-  late final AppUpdateController _updates;
-  bool _hadUpdateDot = false;
-
-  /// Only the gear's dot lives here; the progress shows in the status line.
-  void _onUpdatesChanged() {
-    final dot = _updates.hasPendingRelease;
-    if (mounted && dot != _hadUpdateDot) setState(() => _hadUpdateDot = dot);
   }
 
   void _onStarterChanged() {
@@ -462,7 +426,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           key: const ValueKey('home-shell-tab-settings'),
           label: l10n.librarySettingsTitle,
           icon: AppIconography.settings,
-          updateAvailable: _hadUpdateDot,
         ),
       ),
     ];
@@ -508,7 +471,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       serverKey: const ValueKey('server-switcher-button'),
       searchKey: const ValueKey('home-shell-search'),
       settingsKey: const ValueKey('home-shell-settings'),
-      updateAvailable: _hadUpdateDot,
     );
 
     final content = KitScreen(
@@ -651,7 +613,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       case ServerSwitcherOpenServers(:final ServersRouteRequest? request):
         unawaited(navigator.pushNamed('/servers', arguments: request));
       case ServerSwitcherOpenPhoneSetup():
-        unawaited(openThisPhone(context, kind: PhoneHostKind.termux));
+        unawaited(openThisPhone(context));
       case ServerSwitcherOpenChat(:final item):
         // The conversation where it waits, opened the way its list row
         // opens it (on another server's own connection when it runs there).

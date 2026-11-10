@@ -11,12 +11,7 @@ import '../builtin/builtin_folders.dart'
 import '../builtin/builtin_linux.dart' show BuiltinLinuxException;
 import 'agent_run_failure.dart' show AgentRunFailure;
 import '../paseo/transport.dart' show PaseoFailure, PaseoFailureKind;
-import '../state/local_server_controls.dart' show LocalServerControlFailure;
-import '../state/draft_attachment_storage.dart'
-    show DraftAttachmentStorageException;
 import '../state/profiles.dart' show SecureStorageUnavailable;
-import '../termux/bridge.dart' show TermuxBridgeException;
-import '../termux/local_agent_runtime.dart' show LocalAgentFailure;
 
 /// Protocol-neutral presentation contract. Only [authoredMessage] may be
 /// displayed as prose. [technicalDetails] is untrusted and MUST be redacted
@@ -54,13 +49,7 @@ String? _authoredMessage(Object error) => switch (error) {
   ProductException(:final message) => message,
   McpOAuthCallbackException(:final message) => message,
   SecureStorageUnavailable(:final message) => message,
-  // A refused draft attachment says what to do next, in app-authored words
-  // free of paths and payload content.
-  DraftAttachmentStorageException(:final message) => message,
   BuiltinLinuxException(:final message) => message.trim(),
-  TermuxBridgeException(:final message) => message.trim(),
-  LocalAgentFailure(:final message) => message.trim(),
-  LocalServerControlFailure(:final message) => message.trim(),
   final String text => text,
   _ => null,
 };
@@ -99,13 +88,6 @@ enum ProductFailureCategory {
   /// The project's Git history can't be read (the agent host's Git refused
   /// it), so the agent could not start there.
   projectGit,
-
-  /// The phone was setting up or updating an agent and could not take new
-  /// agent work at that moment. Nothing is lost; trying again works.
-  agentUpdating,
-
-  /// Termux did not finish a command the app sent it.
-  termux,
 
   /// The agent host answered a file read: the file is over the size it
   /// shows. Not a computer that is off.
@@ -148,16 +130,6 @@ final RegExp _gitReason = RegExp(
   r'|unable to read tree|object file .* is empty|loose object .* corrupt',
   caseSensitive: false,
 );
-
-/// The built-in host refusing new work while agent setup runs
-/// (phone_agents_host.dart `_beginPayloadUse`).
-final RegExp _updatingReason = RegExp(
-  r'phone refused new agent work|agent setup is in progress',
-  caseSensitive: false,
-);
-
-bool _isUpdatingReason(String? reason) =>
-    reason != null && _updatingReason.hasMatch(reason);
 
 bool _isGitReason(String? reason) =>
     reason != null && _gitReason.hasMatch(reason);
@@ -308,30 +280,8 @@ ProductFailureCategory _builtin(BuiltinLinuxException error) {
   return _forText(message) ?? ProductFailureCategory.device;
 }
 
-/// A Termux bridge failure: the app's sentence (a setup check, a folder
-/// name), or Termux's own output and native text.
-ProductFailureCategory _termux(TermuxBridgeException error) {
-  final message = error.message.trim();
-  if (error.code != 'command_failed' && _isSentence(message)) {
-    return ProductFailureCategory.words;
-  }
-  return _forText(message) ?? ProductFailureCategory.termux;
-}
-
 ProductFailureCategory _classify(Object error) {
   if (error is BuiltinLinuxException) return _builtin(error);
-  if (error is TermuxBridgeException) return _termux(error);
-  if (error is LocalServerControlFailure) {
-    final message = error.message.trim();
-    if (message.isEmpty) return ProductFailureCategory.termux;
-    if (_isSentence(message)) return ProductFailureCategory.words;
-    return _forText(message) ?? ProductFailureCategory.termux;
-  }
-  if (error is LocalAgentFailure) {
-    final message = error.message.trim();
-    if (_isSentence(message)) return ProductFailureCategory.words;
-    return _forText(message) ?? ProductFailureCategory.termux;
-  }
   if (error is FolderListException) {
     return switch (error.problem) {
       FolderListProblem.timedOut => ProductFailureCategory.timedOut,
@@ -352,14 +302,10 @@ ProductFailureCategory _classify(Object error) {
     if (cause is PaseoFailure && _isGitReason(cause.reason)) {
       return ProductFailureCategory.projectGit;
     }
-    if (cause is PaseoFailure && _isUpdatingReason(cause.reason)) {
-      return ProductFailureCategory.agentUpdating;
-    }
   }
   if (error is ProductException ||
       error is McpOAuthCallbackException ||
-      error is SecureStorageUnavailable ||
-      error is DraftAttachmentStorageException) {
+      error is SecureStorageUnavailable) {
     return ProductFailureCategory.words;
   }
   if (error is ApiException) {
@@ -369,9 +315,6 @@ ProductFailureCategory _classify(Object error) {
     }
     if (error is PaseoFailure && _isGitReason(error.reason)) {
       return ProductFailureCategory.projectGit;
-    }
-    if (error is PaseoFailure && _isUpdatingReason(error.reason)) {
-      return ProductFailureCategory.agentUpdating;
     }
     if (error is PaseoFailure) {
       final file = _fileReason(error.reason);
@@ -451,23 +394,11 @@ String? _technicalDetails(Object? error) {
     case SecureStorageUnavailable(:final cause):
       if (cause == null) return null;
       raw = '$cause';
-    case DraftAttachmentStorageException(:final cause):
-      if (cause == null) return null;
-      raw = '$cause';
     case McpOAuthCallbackException():
       return null;
     case BuiltinLinuxException(:final message, :final code):
       if (_builtin(error) == ProductFailureCategory.words) return null;
       raw = [message, ?code].join('\n');
-    case TermuxBridgeException(:final message, :final code):
-      if (_termux(error) == ProductFailureCategory.words) return null;
-      raw = '$message\n$code';
-    case LocalServerControlFailure(:final message):
-      if (_classify(error) == ProductFailureCategory.words) return null;
-      raw = message;
-    case LocalAgentFailure(:final message, :final kind):
-      if (_classify(error) == ProductFailureCategory.words) return null;
-      raw = '$message\n${kind.name}';
     case FolderListException(:final problem, :final detail):
       raw = detail.isEmpty ? problem.name : detail;
     case ApiException(:final message, :final statusCode, :final errorTag):

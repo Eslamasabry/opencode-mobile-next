@@ -17,7 +17,6 @@ import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/main.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
-import 'package:opencode_mobile/termux/bridge.dart' show TermuxRuntime;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../setup_engine_test.dart' show FakeLinux;
@@ -70,6 +69,7 @@ class _Linux extends BuiltinLinux {
   Future<BuiltinLinuxRunResult> run(
     String script, {
     Duration timeout = const Duration(minutes: 2),
+    String? input,
   }) async => BuiltinLinuxRunResult(exitCode: admissionExitCode, output: '');
 
   @override
@@ -110,7 +110,7 @@ void main() {
         final starter = BuiltinServerStarter(linux: linux);
         addTearDown(starter.dispose);
         serverProbe = ({required baseUrl, username, password}) async =>
-            const ServerProbeResult.success('2.2.5', flavor: ServerFlavor.v2);
+            const ServerProbeResult.success('2.1.1', flavor: ServerFlavor.v2);
         addTearDown(() => serverProbe = probeServerConnection);
         var connected = false;
         final finish = BuiltinSetupFinisher(
@@ -127,10 +127,9 @@ void main() {
         );
         final result = await finish(
           const SetupFinishRequest(
-            host: SetupHostKind.builtin,
-            runtime: TermuxRuntime.openCode2,
+            runtime: OpenCodeRuntime.openCode2,
             openCodeChanged: true,
-            version: '2.2.5',
+            version: '2.1.1',
           ),
         );
         expect(store.saved.single.id, 'owner');
@@ -184,8 +183,7 @@ void main() {
 
     final error = await finish(
       const SetupFinishRequest(
-        host: SetupHostKind.builtin,
-        runtime: TermuxRuntime.openCode2,
+        runtime: OpenCodeRuntime.openCode2,
         openCodeChanged: false,
         version: null,
       ),

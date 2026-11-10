@@ -2,6 +2,7 @@
 import 'catalog.dart';
 import 'agents/phone_check.dart';
 import 'chat/chats_list.dart';
+import 'chat/new_chat.dart';
 import 'chat/conversation.dart';
 import 'chat/diff_view.dart';
 import 'chat/file_mentions.dart';
@@ -42,6 +43,7 @@ List<CatalogComponent> allComponents() => [
   serverTrustWarning(),
   guideScreen(),
   chatsHome(),
+  newChatScreen(),
   allConversations(),
   conversationScreen(),
   kitTaskChip(),

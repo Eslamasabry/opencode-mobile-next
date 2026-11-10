@@ -55,11 +55,7 @@ void _phoneCheckPublicationTests() {
           completed: AgentPhoneCheckStep.values,
         );
       };
-      // Later than a list refresh reuses the first answers: it asks again.
-      final priorRefresh = withClock(
-        Clock.fixed(DateTime.now().add(const Duration(minutes: 11))),
-        () => w.controller.refreshAgentRows(),
-      );
+      final priorRefresh = w.controller.refreshAgentRows();
       await oldScanAtFx.future;
       final finished = w.controller.runAgentPhoneCheck('claude');
       await Future<void>.delayed(Duration.zero);

@@ -245,8 +245,9 @@ void main() {
             if (call.method == 'run') {
               expect(
                 (call.arguments as Map)['script'],
-                BuiltinLinux.writePasswordScript(profile.password),
+                BuiltinLinux.writePasswordScript,
               );
+              expect((call.arguments as Map)['stdin'], profile.password);
               return {'exitCode': 0, 'output': ''};
             }
             if (call.method == 'startPhoneEngine') {
@@ -301,8 +302,9 @@ void main() {
           if (call.method == 'run') {
             expect(
               (call.arguments as Map)['script'],
-              BuiltinLinux.writePasswordScript(restoredProfile.password),
+              BuiltinLinux.writePasswordScript,
             );
+            expect((call.arguments as Map)['stdin'], restoredProfile.password);
             return {'exitCode': 0, 'output': ''};
           }
           if (call.method == 'startPhoneEngine') {

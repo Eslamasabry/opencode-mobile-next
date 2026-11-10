@@ -6,18 +6,16 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart' show AppLifecycleState, WidgetsBinding;
 
 import '../../diagnostics/perf_trace.dart';
+import '../../telemetry/analytics_events.dart';
+import '../../telemetry/telemetry_provider.dart';
 import '../../l10n/app_localizations.dart';
-import '../../termux/bridge.dart' show TermuxRuntime;
 import '../../ui/kit/kit_redact.dart';
 import '../builtin_linux.dart';
-import '../process_budget.dart';
 import 'components.dart';
+import 'node_compat.dart';
 import 'preflight.dart';
 import 'setup_contract.dart';
 import 'setup_scripts.dart';
-import 'termux_setup_host.dart';
-
-export 'setup_contract.dart' show SetupHostKind;
 
 part 'setup_engine/start.dart';
 part 'setup_engine/poll.dart';
@@ -25,18 +23,16 @@ part 'setup_engine/progress_helpers.dart';
 part 'setup_engine/job_record.dart';
 
 /// What the engine asks of the app once OpenCode is installed: start the
-/// server for [runtime] on [SetupFinishRequest.host] and connect to it.
+/// server for [runtime] in the built-in Linux and connect to it.
 @immutable
 class SetupFinishRequest {
   const SetupFinishRequest({
     required this.runtime,
     required this.openCodeChanged,
     this.version,
-    this.host = SetupHostKind.builtin,
   });
 
-  final SetupHostKind host;
-  final TermuxRuntime runtime;
+  final OpenCodeRuntime runtime;
 
   /// OpenCode was installed or updated by this job, so a server already
   /// running is the old one and must be restarted.
@@ -86,41 +82,6 @@ class ChannelSetupEngine implements SetupEngine {
        _clock = clock ?? DateTime.now {
     _progress = _WatchedProgress(_watchersChanged);
   }
-
-  /// Uses the same component engine inside Termux's proot-distro Ubuntu.
-  /// [finisher] must start and authenticate the Termux server, returning null
-  /// only after connection succeeds. No built-in server fallback is used.
-  factory ChannelSetupEngine.termux({
-    required SetupFinisher finisher,
-    AppLocalizations Function()? strings,
-    List<SetupComponent> Function(
-      AppLocalizations l10n,
-      Map<String, Map<String, String>> params,
-    )?
-    components,
-    Duration pollInterval = const Duration(milliseconds: 500),
-    Duration idlePollInterval = const Duration(seconds: 60),
-    Duration readTimeout = const Duration(seconds: 10),
-    DateTime Function()? clock,
-    bool Function()? foreground,
-  }) => ChannelSetupEngine(
-    linux: TermuxSetupHost(),
-    finisher: finisher,
-    strings: strings,
-    components:
-        components ??
-        ((l10n, params) =>
-            setupComponents(l10n, params: params, host: SetupHostKind.termux)),
-    pollInterval: pollInterval,
-    idlePollInterval: idlePollInterval,
-    readTimeout: readTimeout,
-    clock: clock,
-    foreground: foreground,
-  );
-
-  /// Fixed for this instance, including restoration and the finish request.
-  SetupHostKind get host =>
-      _linux is TermuxSetupHost ? SetupHostKind.termux : SetupHostKind.builtin;
 
   final BuiltinLinux _linux;
 
@@ -227,15 +188,7 @@ class ChannelSetupEngine implements SetupEngine {
   /// The pending [_poll] waits [idlePollInterval], not [pollInterval].
   bool _pollIdle = false;
 
-  /// The last read found no Termux to ask (not installed, or its
-  /// RUN_COMMAND permission not granted) and no job to follow: idle polling
-  /// stops until a page starts watching again or a job starts, instead of
-  /// asking Termux every minute while the app's own setup runs.
-  bool _hostAbsent = false;
   bool _disposed = false;
-
-  /// Completed by [cancel] while a start waits for the process budget.
-  Completer<void>? _budgetCancel;
 
   @override
   List<SetupComponent> get registry => _components(strings(), const {});
@@ -263,7 +216,7 @@ class ChannelSetupEngine implements SetupEngine {
       final selectedParams = params;
       try {
         last = await _read();
-        if (host == SetupHostKind.builtin && last == null) {
+        if (last == null) {
           // An unreadable host must never be mistaken for a fresh setup.
           await _linux.status().timeout(readTimeout);
         }
@@ -288,25 +241,6 @@ class ChannelSetupEngine implements SetupEngine {
         return;
       }
       final effectiveParams = effectiveJobParams(selectedParams, last);
-      if (host == SetupHostKind.termux) {
-        TermuxSetupHost.validateParams(effectiveParams);
-      }
-      if (host == SetupHostKind.builtin && ProcessBudgetGuard.instance.active) {
-        // Held while the phone has no room, is hot or low on battery
-        // (process_budget.dart); Cancel ends the wait.
-        final cancelled = _budgetCancel = Completer<void>();
-        try {
-          await ProcessBudgetGuard.instance.admit(
-            HeavyJob.setupJob,
-            cancelled: cancelled.future,
-          );
-        } on BudgetCancelled {
-          // Cancelled while waiting: _start below sees the flag and says so.
-        } finally {
-          _budgetCancel = null;
-        }
-        if (_disposed) return;
-      }
       try {
         await _start(ids, effectiveParams);
       } catch (error, stack) {
@@ -330,8 +264,6 @@ class ChannelSetupEngine implements SetupEngine {
   @override
   Future<void> cancel() async {
     _cancelRequested = true;
-    final waiting = _budgetCancel;
-    if (waiting != null && !waiting.isCompleted) waiting.complete();
     // Still checking: nothing native runs yet, and _start stops on the flag.
     if (_starting && _handedOver != _progress.value.jobId) return;
     final current = _progress.value;

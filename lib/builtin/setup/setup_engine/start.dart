@@ -59,7 +59,7 @@ extension _SetupEngineStart on ChannelSetupEngine {
     _emitLocal(jobId, _afterChecks(job, checks), startedAt, job: job);
 
     final openCode = params[SetupComponentIds.openCode] ?? const {};
-    final runtime = TermuxRuntime.parse(openCode['runtime']);
+    final runtime = OpenCodeRuntime.parse(openCode['runtime']);
     final openCodeChanged =
         job.any((c) => c.id == SetupComponentIds.openCode) &&
         checks[SetupComponentIds.openCode]?.ok != true;
@@ -89,25 +89,6 @@ extension _SetupEngineStart on ChannelSetupEngine {
         },
       );
     } on BuiltinLinuxException catch (error) {
-      if (host == SetupHostKind.termux) {
-        // Native persists before dispatch. A lost RUN_COMMAND reply is not
-        // proof of a failed install; reconcile without launching another job.
-        _handedOver = jobId;
-        _handoverUncertain = true;
-        _handoverError = _isRuntimeOwnershipFailure(error)
-            ? _runtimeOwnershipUnknown
-            : KitRedact.text(error.message);
-        try {
-          await _refresh();
-        } on BuiltinLinuxException {
-          // Keep the locally running state until durable status is available.
-        } on TimeoutException {
-          // The next poll resolves the handover; never infer failure here.
-        } finally {
-          _ensurePolling();
-        }
-        return;
-      }
       _emitLocal(
         jobId,
         _afterChecks(job, checks),
@@ -164,7 +145,7 @@ extension _SetupEngineStart on ChannelSetupEngine {
     SetupComponent component,
     SetupCheckResult? check,
     AppLocalizations l10n, {
-    required TermuxRuntime runtime,
+    required OpenCodeRuntime runtime,
     required bool openCodeChanged,
   }) {
     final data = <String, String>{
@@ -216,7 +197,10 @@ extension _SetupEngineStart on ChannelSetupEngine {
       'script': withSetupPrelude(component.installScript),
       // An interrupted step runs again by itself (SetupStepRetry.kt); its
       // row says so in the person's language.
-      'labels': {'retry': l10n.phoneSetupStageRetrying},
+      'labels': {
+        'retry': l10n.phoneSetupStageRetrying,
+        'compat': l10n.phoneSetupStageCompat,
+      },
       if (component.agentUser) 'agentUser': true,
     };
   }

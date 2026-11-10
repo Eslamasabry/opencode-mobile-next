@@ -310,9 +310,6 @@ extension _ModelCatalogModels on _ModelCatalogViewState {
         current: draft,
       ),
       title: model.name,
-      titleMark: model.providerID == claudeAgentProviderId
-          ? _claudeAgentTag()
-          : null,
       titleMaxLines: 2,
       supportingMaxLines: 2,
       supporting: TextSpan(
@@ -324,10 +321,7 @@ extension _ModelCatalogModels on _ModelCatalogViewState {
           providerName,
           if (model.contextLimit > 0)
             _strings.e7ModelUiContext(
-              _ModelCatalogViewState._compactNumber(
-                model.contextLimit,
-                _strings.localeName,
-              ),
+              _ModelCatalogViewState._compactNumber(model.contextLimit),
             ),
           if (model.deprecated)
             _strings.e7ModelUiDeprecated

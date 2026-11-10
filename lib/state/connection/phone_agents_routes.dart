@@ -5,6 +5,7 @@ extension _PhoneAgentRoutes on _ConnectionControllerPhoneAgents {
   static const _removableAgents = {
     'codex',
     'gemini',
+    'antigravity',
     'qwen',
     'kilo',
     'cline',
@@ -119,14 +120,11 @@ extension _PhoneAgentRoutes on _ConnectionControllerPhoneAgents {
     _paSyncTimer?.cancel();
     _paSyncTimer = null;
     _paSignInRecheck?.cancel();
-    _paAutoRetry?.cancel();
-    _paAutoRetry = null;
     _paSignInRecheck = null;
     _paRemovalToken = null;
     _paRemovingAgent = null;
     _paLive.clear();
     _paAuthResults.clear();
-    _paAuthReadAt.clear();
     _paAuthRevisions.clear();
     _paChecks.clear();
     _paRows = const [];

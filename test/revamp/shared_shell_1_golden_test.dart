@@ -163,34 +163,6 @@ void main() {
       });
     }
 
-    testWidgets('stop Claude Code ($theme)', (tester) async {
-      await _shot(
-        tester,
-        'phone_stop_local_agents_confirm_sheet_confirming',
-        light: light,
-        open: confirmStopLocalAgents,
-      );
-    });
-
-    testWidgets('restart Claude Code while busy ($theme)', (tester) async {
-      await _shot(
-        tester,
-        'phone_restart_local_agents_sheet_busy',
-        light: light,
-        open: (context) =>
-            confirmRestartLocalAgents(context, busyConversations: 2),
-      );
-    });
-
-    testWidgets('remove Claude Code ($theme)', (tester) async {
-      await _shot(
-        tester,
-        'phone_remove_local_agents_confirm_sheet_confirming',
-        light: light,
-        open: confirmRemoveLocalAgents,
-      );
-    });
-
     for (final size in [_phone, _wide]) {
       testWidgets('connection line lost ($theme, $size)', (tester) async {
         final controller = await _controller()

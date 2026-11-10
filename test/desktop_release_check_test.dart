@@ -118,7 +118,7 @@ void main() {
   test('checker requests the releases API and skips drafts', () async {
     final adapter = _RecordingAdapter(
       '[{"draft":true,"tag_name":"v9.9.9+99"},'
-      '{"draft":false,"tag_name":"v1.0.25+26-preview.5",'
+      '{"draft":false,"prerelease":false,"tag_name":"v1.0.25+26-preview.5",'
       '"html_url":"https://github.com/Eslamasabry/opencode-mobile-next/releases/tag/v1"}]',
     );
     final checker = DesktopReleaseChecker(
@@ -143,15 +143,50 @@ void main() {
     expect(adapter.lastRequest?.sendTimeout, desktopReleaseNetworkTimeout);
   });
 
+  test('checker offers only promoted releases, never a pre-release', () async {
+    // A new version is published as a GitHub pre-release first and promoted
+    // after quiet days (`scripts/release.sh promote`); until then normal
+    // users keep seeing the last promoted release.
+    final adapter = _RecordingAdapter(
+      '[{"draft":false,"prerelease":true,"tag_name":"v1.0.29+30",'
+      '"html_url":"https://github.com/Eslamasabry/opencode-mobile-next/releases/tag/v30"},'
+      '{"draft":false,"tag_name":"v1.0.29+31",'
+      '"html_url":"https://github.com/Eslamasabry/opencode-mobile-next/releases/tag/v31"},'
+      '{"draft":false,"prerelease":false,"tag_name":"v1.0.28+29",'
+      '"html_url":"https://github.com/Eslamasabry/opencode-mobile-next/releases/tag/v29"}]',
+    );
+
+    final release = await DesktopReleaseChecker(
+      dio: Dio()..httpClientAdapter = adapter,
+    ).fetchLatest();
+
+    // The pre-release and the entry that does not say it is a normal release
+    // are both passed over.
+    expect(release?.tag, 'v1.0.28+29');
+  });
+
+  test('checker returns nothing while only a pre-release is newer', () async {
+    final adapter = _RecordingAdapter(
+      '[{"draft":false,"prerelease":true,"tag_name":"v1.0.29+30",'
+      '"html_url":"https://github.com/Eslamasabry/opencode-mobile-next/releases/tag/v30"}]',
+    );
+
+    final release = await DesktopReleaseChecker(
+      dio: Dio()..httpClientAdapter = adapter,
+    ).fetchLatest();
+
+    expect(release, isNull);
+  });
+
   test('checker chooses the highest valid build from unordered entries', () async {
     final adapter = _RecordingAdapter(
-      '[{"draft":false,"tag_name":"latest",'
+      '[{"draft":false,"prerelease":false,"tag_name":"latest",'
       '"html_url":"https://github.com/Eslamasabry/opencode-mobile-next/releases"},'
-      '{"draft":false,"tag_name":"v1.0.25+26-preview.5",'
+      '{"draft":false,"prerelease":false,"tag_name":"v1.0.25+26-preview.5",'
       '"html_url":"https://github.com/Eslamasabry/opencode-mobile-next/releases/tag/v26"},'
-      '{"draft":false,"tag_name":"v1.0.99+999oops",'
+      '{"draft":false,"prerelease":false,"tag_name":"v1.0.99+999oops",'
       '"html_url":"https://github.com/Eslamasabry/opencode-mobile-next/releases/tag/bad"},'
-      '{"draft":false,"tag_name":"v1.0.27+28",'
+      '{"draft":false,"prerelease":false,"tag_name":"v1.0.27+28",'
       '"html_url":"https://github.com/Eslamasabry/opencode-mobile-next/releases/tag/v28"}]',
     );
 
@@ -168,11 +203,11 @@ void main() {
 
   test('unversioned and malformed entries do not hide a valid update', () async {
     final adapter = _RecordingAdapter(
-      '[{"draft":false,"tag_name":"v1.0.28+29oops",'
+      '[{"draft":false,"prerelease":false,"tag_name":"v1.0.28+29oops",'
       '"html_url":"https://github.com/Eslamasabry/opencode-mobile-next/releases"},'
-      '{"draft":false,"tag_name":"v1.0.28",'
+      '{"draft":false,"prerelease":false,"tag_name":"v1.0.28",'
       '"html_url":"https://github.com/Eslamasabry/opencode-mobile-next/releases"},'
-      '{"draft":false,"tag_name":"v1.0.26+27-preview.1",'
+      '{"draft":false,"prerelease":false,"tag_name":"v1.0.26+27-preview.1",'
       '"html_url":"https://github.com/Eslamasabry/opencode-mobile-next/releases/tag/v27"}]',
     );
 
@@ -207,7 +242,7 @@ void main() {
       '',
     ]) {
       final adapter = _RecordingAdapter(
-        '[{"draft":false,"tag_name":"v1.0.25+26-preview.5",'
+        '[{"draft":false,"prerelease":false,"tag_name":"v1.0.25+26-preview.5",'
         '"html_url":"${hostile.replaceAll('"', '')}"}]',
       );
       final checker = DesktopReleaseChecker(

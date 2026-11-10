@@ -50,10 +50,31 @@ class _Account extends GitHubAccountController {
   GitHubSignInState _state;
   var started = 0;
   var cancelled = 0;
+  String? createdRepositoryName;
+  bool? createdRepositoryPrivate;
   @override
   GitHubSignInState get state => _state;
   @override
   Future<String?> tokenForGit() async => null;
+  var repos = const <GitHubRepository>[];
+  @override
+  Future<List<GitHubRepository>> fetchRepositories() async => repos;
+  @override
+  Future<GitHubRepository> createRepository({
+    required String name,
+    required bool isPrivate,
+  }) async {
+    createdRepositoryName = name;
+    createdRepositoryPrivate = isPrivate;
+    return GitHubRepository(
+      fullName: 'octocat/$name',
+      htmlUrl: 'https://github.com/octocat/$name',
+      cloneUrl: 'https://github.com/octocat/$name.git',
+      defaultBranch: 'main',
+      isPrivate: isPrivate,
+    );
+  }
+
   @override
   Future<void> startSignIn() async => started++;
   @override
@@ -134,6 +155,76 @@ Finder _text(String s) => find.byWidgetPredicate(
 );
 
 void main() {
+  testWidgets('a project without Git can start tracking its existing files', (
+    tester,
+  ) async {
+    final notRepo = envelope({
+      'status': failed(fx.notRepositoryError, exit: 128),
+    });
+    final shell = FakeGitShell([notRepo, notRepo]);
+    final page = await _open(tester, shell);
+    expect(find.byKey(const Key('git-row-initialize')), findsOneWidget);
+    expect(find.byKey(const Key('git-row-clone')), findsOneWidget);
+
+    shell.answers
+      ..clear()
+      ..addAll([
+        envelope({'run': ok()}),
+        _snapshot(status: fx.statusNoUpstream, remotes: ''),
+      ]);
+    final initializeRow = find.byKey(const Key('git-row-initialize'));
+    await tester.ensureVisible(initializeRow);
+    await tester.tap(initializeRow);
+    await tester.pumpAndSettle();
+    expect(shell.scripts.join('\n'), contains("'init'"));
+    expect(page.view, isA<GitPageReady>());
+  });
+
+  testWidgets('publishing creates origin without asking for a URL', (
+    tester,
+  ) async {
+    final shell = FakeGitShell([
+      _snapshot(status: fx.statusNoUpstream, remotes: ''),
+      _snapshot(status: fx.statusNoUpstream, remotes: ''),
+    ]);
+    final account = _Account(const GitHubSignedIn('octocat'));
+    final page = await _open(tester, shell, account: account);
+    await tester.tap(find.byKey(const Key('git-row-publish-github')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('git-publish-name')), findsOneWidget);
+    expect(find.byKey(const Key('git-remote-url')), findsNothing);
+    final visibility = tester.widget<KitSegmented<bool>>(
+      find.byKey(const Key('git-publish-visibility')),
+    );
+    expect(visibility.selected, isTrue);
+    await tester.tap(find.text('Public'));
+    await tester.pumpAndSettle();
+
+    shell.answers
+      ..clear()
+      ..addAll([
+        envelope({'run': ok()}),
+        _snapshot(
+          status: fx.statusNoUpstream,
+          remotes: 'remote.origin.url https://github.com/octocat/app.git\n',
+        ),
+      ]);
+    final publishButton = find.byKey(const Key('git-publish-button'));
+    await tester.ensureVisible(publishButton);
+    await tester.tap(publishButton);
+    await tester.pumpAndSettle();
+
+    expect(account.createdRepositoryName, 'app');
+    expect(account.createdRepositoryPrivate, isFalse);
+    expect(
+      shell.scripts.join('\n'),
+      contains("'remote' 'add' 'origin' 'https://github.com/octocat/app.git'"),
+    );
+    expect(page.snapshot?.hasRemote, isTrue);
+    expect(find.byKey(const Key('git-sheet')), findsOneWidget);
+  });
+
   testWidgets('changed files make one named main action: save and send', (
     tester,
   ) async {
@@ -288,7 +379,7 @@ void main() {
     tester,
   ) async {
     final shell = FakeGitShell([_snapshot(), _snapshot()]);
-    await _open(tester, shell, host: GitHost.termux);
+    await _open(tester, shell, host: GitHost.server);
     expect(find.byKey(const Key('git-row-github')), findsNothing);
     await _openMore(tester);
     expect(
@@ -495,6 +586,65 @@ void main() {
     await tester.pumpAndSettle();
     expect(shell.scripts.any((s) => s.contains("'switch' 'feature'")), isTrue);
     expect(_text('Switched branch.'), findsOneWidget);
+  });
+
+  testWidgets('Choose from GitHub fills the remote from the account repos', (
+    tester,
+  ) async {
+    final shell = FakeGitShell([_snapshot(), _snapshot()]);
+    final account = _Account(const GitHubSignedIn('o'))
+      ..repos = const [
+        GitHubRepository(
+          fullName: 'o/alpha',
+          htmlUrl: 'https://github.com/o/alpha',
+          cloneUrl: 'https://github.com/o/alpha.git',
+          defaultBranch: 'main',
+          isPrivate: false,
+        ),
+        GitHubRepository(
+          fullName: 'o/beta',
+          htmlUrl: 'https://github.com/o/beta',
+          cloneUrl: '',
+          defaultBranch: 'dev',
+          isPrivate: true,
+        ),
+      ];
+    await _open(tester, shell, account: account);
+    await _openMore(tester);
+    await tester.tap(find.byKey(const Key('git-row-remotes')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('git-remote-pick-github')));
+    await tester.pumpAndSettle();
+    expect(_text('Private'), findsOneWidget);
+    await tester.tap(_text('o/beta'));
+    await tester.pumpAndSettle();
+    String field(Key key) => tester
+        .widget<EditableText>(
+          find.descendant(
+            of: find.byKey(key),
+            matching: find.byType(EditableText),
+          ),
+        )
+        .controller
+        .text;
+    expect(field(const Key('git-remote-url')), 'https://github.com/o/beta.git');
+    expect(field(const Key('git-remote-name')), 'origin');
+  });
+
+  testWidgets('Choose from GitHub says so when the account has no repos', (
+    tester,
+  ) async {
+    final shell = FakeGitShell([_snapshot(), _snapshot()]);
+    await _open(tester, shell, account: _Account(const GitHubSignedIn('o')));
+    await _openMore(tester);
+    await tester.tap(find.byKey(const Key('git-row-remotes')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('git-remote-pick-github')));
+    await tester.pumpAndSettle();
+    expect(
+      _text('No repositories on this GitHub account yet.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('Remotes shows each address; Add a remote refuses a password', (
@@ -877,7 +1027,7 @@ void main() {
             shells.add(shell);
             return GitWorkspaceResolution.available(
               GitWorkspace(
-                host: GitHost.termux,
+                host: GitHost.server,
                 directory: directory!,
                 shell: shell,
               ),
@@ -905,7 +1055,7 @@ void main() {
         resolve: (profile, gateway, directory) =>
             GitWorkspaceResolution.available(
               GitWorkspace(
-                host: GitHost.termux,
+                host: GitHost.server,
                 directory: directory!,
                 shell: FakeGitShell([_snapshot()]),
               ),

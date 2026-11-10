@@ -4,9 +4,9 @@ import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Intent
+import android.os.Environment
 import android.webkit.MimeTypeMap
 import androidx.core.content.FileProvider
-import java.io.File
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
 
@@ -106,9 +106,9 @@ internal class LaunchShareChannel(private val activity: Activity) {
      * package installer, whose own screen is the confirmation. Never installs silently.
      */
     private fun openLocalFile(path: String?, install: Boolean): Boolean {
-        if (path.isNullOrEmpty()) return false
-        val file = File(path)
-        if (!file.isFile) return false
+        // Only a file in shared storage, judged after symlinks and `..` resolve.
+        val file = LocalFileGate.allowed(Environment.getExternalStorageDirectory(), path)
+            ?: return false
         return try {
             val uri = FileProvider.getUriForFile(activity, "${activity.packageName}.localfiles", file)
             val type = if (install) {

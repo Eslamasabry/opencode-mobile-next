@@ -3,12 +3,11 @@ import 'package:flutter/material.dart';
 import '../../../../domain/relative_age.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../state/team_project_controller.dart';
-import '../../../../state/team_voice.dart';
 import '../../../kit/kit.dart';
 import 'team_execution_gate.dart';
 import 'team_merge_flow.dart';
 import 'team_project_editors.dart';
-import 'team_voice_words.dart';
+import 'team_refusal.dart';
 
 /// Finish line: review, steer, verify and promote a task from its conversation.
 /// Non-goal: choosing or directly calling an execution engine.
@@ -342,121 +341,17 @@ class _TeamProjectConversationState extends State<TeamProjectConversation> {
     }),
   );
 
-  /// One role's turn: a reply under its speaker line, a little apart from
-  /// the turn above.
-  Widget _turn(
-    TeamVoice voice,
-    String words, {
-    String? persona,
-    String at = '',
-  }) => Padding(
-    padding: EdgeInsetsDirectional.only(top: KitTokens.of(context).space3),
-    child: KitMessage.reply(
-      speaker: teamVoiceName(l, voice, persona: persona),
-      speakerIcon: teamVoiceIcon(voice),
-      speakerNote: at.isEmpty ? null : _age(at),
-      body: KitMarkdown(words, selectable: false),
-    ),
-  );
-
-  /// The task's engine lines as role turns: consecutive lines of one role
-  /// are one turn (its last two different sentences). The newest three
-  /// turns stay in view; older ones fold under the work log.
-  List<Widget> _voicedTurns(
-    List<TeamTimelineEvent> events, {
-    String? persona,
-    String? reviewerSays,
-  }) {
-    final turns = <(TeamVoice, List<TeamVoiceSays>, List<String>, String)>[];
-    for (final event in events) {
-      final line = teamVoiceOf(event);
-      final words = teamVoiceSentence(l, line);
-      if (turns.isNotEmpty && turns.last.$1 == line.voice) {
-        final (voice, codes, said, _) = turns.removeLast();
-        turns.add((
-          voice,
-          [...codes, line.says],
-          [...said.where((w) => w != words), words],
-          event.at,
-        ));
-      } else {
-        turns.add((line.voice, [line.says], [words], event.at));
-      }
-    }
-    // The reviewer's result belongs to its own last turn when it spoke
-    // last; otherwise it is a turn of its own.
-    if (reviewerSays != null) {
-      if (turns.isNotEmpty && turns.last.$1 == TeamVoice.reviewer) {
-        final (voice, codes, said, at) = turns.removeLast();
-        // The count comes before "Found problems", which is the news.
-        final found = teamVoiceSentence(
-          l,
-          const TeamVoiceLine(
-            voice: TeamVoice.reviewer,
-            says: TeamVoiceSays.foundProblems,
-            planner: false,
-          ),
-        );
-        turns.add((
-          voice,
-          codes,
-          [
-            ...said.where((w) => w != found),
-            reviewerSays,
-            if (said.contains(found)) found,
-          ],
-          at,
-        ));
-      } else {
-        turns.add((TeamVoice.reviewer, const [], [reviewerSays], ''));
-      }
-    }
-    Widget build((TeamVoice, List<TeamVoiceSays>, List<String>, String) turn) {
-      var said = turn.$3;
-      // "Starting" is old news once the developer is working.
-      if (turn.$2.contains(TeamVoiceSays.working)) {
-        final starting = teamVoiceSentence(
-          l,
-          const TeamVoiceLine(
-            voice: TeamVoice.developer,
-            says: TeamVoiceSays.starting,
-            planner: false,
-          ),
-        );
-        said = said.where((w) => w != starting).toList();
-      }
-      return _turn(
-        turn.$1,
-        said.reversed.take(2).toList().reversed.join('  \n'),
-        persona: turn.$1 == TeamVoice.developer ? persona : null,
-        at: turn.$4,
-      );
-    }
-
-    const shown = 3;
-    final older = turns.length > shown
-        ? turns.sublist(0, turns.length - shown)
-        : const <(TeamVoice, List<TeamVoiceSays>, List<String>, String)>[];
-    final recent = turns.sublist(older.length);
-    return [
-      if (older.isNotEmpty)
-        _fold('work', l.teamProjectTaskWorkLog, [
-          for (final turn in older) build(turn),
-        ]),
-      for (final turn in recent) build(turn),
-    ];
-  }
-
   String _findingsTitle(TeamTask t) {
     final open = t.findings.where((f) => f.status == 'open').toList();
     int n(String s) => open.where((f) => f.severity == s).length;
+    final checker = c.snapshot?.roles.where((r) => r.readOnly).firstOrNull;
     final parts = [
       if (n('critical') > 0) l.teamProjectFindingsCritical(n('critical')),
       if (n('major') > 0) l.teamProjectFindingsMajor(n('major')),
       if (n('minor') > 0) l.teamProjectFindingsMinor(n('minor')),
     ];
-    if (parts.isEmpty) return l.teamProjectTaskFindings;
-    return l.teamProjectFindingsTitle(l.teamVoiceReviewer, parts.join(' · '));
+    if (checker == null || parts.isEmpty) return l.teamProjectTaskFindings;
+    return l.teamProjectFindingsTitle(checker.name, parts.join(' · '));
   }
 
   Widget _planCard(TeamProject p, TeamTask t, TeamPhase? phase) {
@@ -540,14 +435,14 @@ class _TeamProjectConversationState extends State<TeamProjectConversation> {
           ? null
           : _gated(
               TeamExecutionNeed.lanes,
-              l.teamVoiceApprovePlan(p.name),
+              l.teamProjectTaskApprovePlan,
               () => _run(p, TeamProjectAction.approvePlan),
             ),
       actions: [
         if (widget.embedded)
           ?_gated(
             TeamExecutionNeed.lanes,
-            l.teamVoiceApprovePlan(p.name),
+            l.teamProjectTaskApprovePlan,
             () => _run(p, TeamProjectAction.approvePlan),
           ),
         _action(
@@ -646,14 +541,14 @@ class _TeamProjectConversationState extends State<TeamProjectConversation> {
           ? null
           : _gated(
               TeamExecutionNeed.promotion,
-              l.teamVoicePutOnMain(repo.name),
+              l.teamProjectTaskPromote,
               () => _promote(p, repo),
             ),
       actions: [
         if (widget.embedded)
           ?_gated(
             TeamExecutionNeed.promotion,
-            l.teamVoicePutOnMain(repo.name),
+            l.teamProjectTaskPromote,
             () => _promote(p, repo),
           ),
         if (!widget.embedded)
@@ -695,8 +590,6 @@ class _TeamProjectConversationState extends State<TeamProjectConversation> {
       final repo = p.repos.where((r) => r.id == t.repoId).firstOrNull;
       final queue = p.mergeQueue.where((m) => m.taskId == t.id).toList();
       final events = p.timeline.where((e) => e.taskId == t.id).toList();
-      final persona = teamDeveloperPersona(t, c.snapshot?.roles ?? const []);
-      final now = teamVoiceNow(p, t);
       final planning = p.status == 'plan' || p.status == 'planned';
       final canPromote = teamCanPromote(p, repo);
       final selected = _selected.intersection(
@@ -706,13 +599,8 @@ class _TeamProjectConversationState extends State<TeamProjectConversation> {
         width: widget.embedded ? KitScreenWidth.full : KitScreenWidth.reading,
         topBar: KitTopBar(
           title: t.title,
-          // Who is doing what now, in the role's words; the task's role when
-          // the engine has said nothing yet.
           subtitle: [
-            if (now != null)
-              teamVoiceNowPhrase(l, now, persona: persona)
-            else if (role != null)
-              role.name,
+            if (role != null) role.name,
             if (server != null) server.name,
           ].join(' · '),
           menu: [
@@ -785,12 +673,7 @@ class _TeamProjectConversationState extends State<TeamProjectConversation> {
                           }),
                         )
                       else
-                        _turn(
-                          TeamVoice.developer,
-                          m.text,
-                          persona: persona,
-                          at: m.at,
-                        ),
+                        KitMessage.reply(body: KitMarkdown(m.text)),
                     if (planning) _planCard(p, t, phase),
                     if (phase != null &&
                         (t.status == 'failed' ||
@@ -832,7 +715,7 @@ class _TeamProjectConversationState extends State<TeamProjectConversation> {
                                   .where((task) => task.phaseId == phase.id)
                                   .every((task) => task.status == 'merged'))
                             _action(
-                              l.teamVoiceAcceptPhase(phase.title),
+                              l.teamProjectTaskAcceptPhase,
                               () => _run(
                                 p,
                                 TeamProjectAction.acceptPhase,
@@ -851,18 +734,28 @@ class _TeamProjectConversationState extends State<TeamProjectConversation> {
                             : null,
                         actions: _requestActions(p, t, request),
                       ),
-                    ..._voicedTurns(
-                      events,
-                      persona: persona,
-                      reviewerSays: t.criterionResults.isEmpty
-                          ? null
-                          : l.teamVoiceReviewerResult(
-                              t.criterionResults.length,
-                              t.criterionResults
-                                  .where((r) => r.status == 'met')
-                                  .length,
+                    if (events.isNotEmpty)
+                      _fold(
+                        'work',
+                        running
+                            ? l.teamProjectTaskWorkLive
+                            : const [
+                                'done',
+                                'merged',
+                                'accepted',
+                              ].contains(t.status)
+                            ? l.teamProjectTaskWork
+                            : l.teamProjectTaskWorkLog,
+                        [
+                          for (final event
+                              in (running
+                                  ? events.reversed.take(3).toList().reversed
+                                  : events))
+                            KitText(
+                              '${teamTimelineWords(l, event.text)} · ${_age(event.at)}',
                             ),
-                    ),
+                        ],
+                      ),
                     if (t.criterionResults.isNotEmpty)
                       KitPhaseCard(
                         title: l.teamProjectTaskCriteria,

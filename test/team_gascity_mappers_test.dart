@@ -572,7 +572,7 @@ void main() {
       expect(status.agentDetails.where((a) => a.running), hasLength(5));
       final rigs = mapRigs(status);
       expect(rigs.single.id, 'ocproof');
-      expect(rigs.single.directory, '/home/owner/Storage/Code/oc-bg-proof');
+      expect(rigs.single.directory, '/home/eslam/Storage/Code/oc-bg-proof');
       expect(
         mapHostIdentity(
           url: 'u',

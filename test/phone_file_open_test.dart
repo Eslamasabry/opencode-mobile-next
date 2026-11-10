@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -121,6 +123,90 @@ void main() {
     );
   });
 
+  group('only shared-storage files are ever handed to Android', () {
+    test('aliases and ../ resolve to one canonical path', () {
+      expect(
+        canonicalPhoneFile('/sdcard/Download/a.apk'),
+        '/storage/emulated/0/Download/a.apk',
+      );
+      expect(
+        canonicalPhoneFile('/sdcard/proj/../Download/a.apk'),
+        '/storage/emulated/0/Download/a.apk',
+      );
+    });
+
+    test('a path that climbs out of shared storage is refused', () {
+      for (final path in [
+        '/sdcard/../data/data/io.github.eslamasabry.opencode_mobile/files/x',
+        '/storage/emulated/0/../../../data/user/0/app/files/rootfs/pw',
+        '/sdcard/a/../../../etc/hosts',
+      ]) {
+        expect(canonicalPhoneFile(path), isNull, reason: path);
+        expect(isPhoneSharedStoragePath(path), isFalse, reason: path);
+      }
+    });
+
+    test(
+      'the app private storage, other roots and whole volumes are refused',
+      () {
+        for (final path in [
+          '/data/user/0/io.github.eslamasabry.opencode_mobile/files/rootfs/etc/pw',
+          '/data/data/io.github.eslamasabry.opencode_mobile/files/a.apk',
+          '/root/projects/a.apk',
+          '/sdcard',
+          '/storage/emulated/0',
+          '/storage/emulated/0/Android/data/other.app/files/a.apk',
+          '/sdcard/Android/obb/x.obb',
+          '/storage/1A2B-3C4D/a.apk',
+          'Download/a.apk',
+          '',
+        ]) {
+          expect(canonicalPhoneFile(path), isNull, reason: path);
+        }
+      },
+    );
+
+    test(
+      'the file provider paths expose shared storage and nothing private',
+      () {
+        final xml = File('android/app/src/main/res/xml/local_file_paths.xml')
+            .readAsStringSync()
+            .replaceAll(RegExp(r'<!--.*?-->', dotAll: true), '');
+        final tags = RegExp(r'<([a-z-]+-path)\b').allMatches(xml);
+        expect(tags.map((m) => m.group(1)).toList(), ['external-path']);
+        final updater = File(
+          'android/app/src/main/res/xml/file_paths.xml',
+        ).readAsStringSync();
+        expect(updater, contains('path="updates/"'));
+      },
+    );
+
+    test('the opener never calls Android for a refused path', () async {
+      const channel = MethodChannel('oc/share');
+      var calls = 0;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+            calls++;
+            return true;
+          });
+      addTearDown(
+        () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(channel, null),
+      );
+      final opener = LocalFileOpener(channel: channel);
+      expect(
+        await opener.open('/sdcard/../data/x', install: false),
+        LocalFileOpenResult.unavailable,
+      );
+      expect(calls, 0);
+      expect(
+        await opener.open('/sdcard/Download/a.pdf', install: false),
+        LocalFileOpenResult.opened,
+      );
+      expect(calls, 1);
+    });
+  });
+
   group('the hand-off to Android', () {
     const channel = MethodChannel('oc/share');
     tearDown(() {
@@ -177,7 +263,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(calls.single.method, 'openLocalFile');
       expect(calls.single.arguments, {
-        'path': '/sdcard/Download/weather-app-1.2.0.apk',
+        'path': '/storage/emulated/0/Download/weather-app-1.2.0.apk',
         'install': true,
       });
     });

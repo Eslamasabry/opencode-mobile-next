@@ -27,6 +27,7 @@ enum _Scene {
   odd('vision_start_cards3', size: Size(412, 915), also: 1),
   typed('vision_start_typed', size: Size(412, 915), text: true),
   freshPhone('vision_start_fresh', size: Size(412, 915), fresh: true),
+  addAgent('vision_start_add_agent', size: Size(412, 915), ownerFeedback: true),
   single('vision_start_single', size: Size(412, 915), cards: false),
   largeText('vision_start_cards_text2', size: Size(320, 640), scale: 2),
   rtl('vision_start_cards_ar', size: Size(412, 915), locale: Locale('ar'));
@@ -37,6 +38,7 @@ enum _Scene {
     this.text = false,
     this.cards = true,
     this.fresh = false,
+    this.ownerFeedback = false,
     this.also = 2,
     this.scale = 1,
     this.locale = const Locale('en'),
@@ -48,6 +50,10 @@ enum _Scene {
 
   /// Claude Code not installed yet: OpenCode chosen, Claude Code to set up.
   final bool fresh;
+
+  /// Owner feedback: selected Antigravity, Claude to install, OpenCode ready,
+  /// and a visible Add an agent action within the grid's first row.
+  final bool ownerFeedback;
 
   /// How many of Codex and Gemini are offered beside Claude Code.
   final int also;
@@ -81,16 +87,20 @@ void main() {
                       rows: [
                         agentRowFor(
                           'claude',
-                          scene.fresh
+                          scene.fresh || scene.ownerFeedback
                               ? FakeAgentStage.notInstalled
                               : FakeAgentStage.ready,
                         ),
+                        if (scene.ownerFeedback)
+                          agentRowFor('antigravity', FakeAgentStage.ready),
                       ],
-                      selected: scene.cards && !scene.fresh
+                      selected: scene.ownerFeedback
+                          ? 'antigravity'
+                          : scene.cards && !scene.fresh
                           ? 'claude'
                           : 'opencode',
                     )
-                    ..alsoReady = scene.fresh
+                    ..alsoReady = scene.fresh || scene.ownerFeedback
                         ? const []
                         : const [
                             ('codex', 'Codex'),
@@ -129,7 +139,11 @@ void main() {
         expect(tester.takeException(), isNull);
         await expectLater(
           find.byKey(boundary),
-          matchesGoldenFile('${scene.file}_$mode.png'),
+          matchesGoldenFile(
+            scene.ownerFeedback && !light
+                ? '../../docs/qa/issue-116-antigravity/new-conversation-add-agent-dark.png'
+                : '${scene.file}_$mode.png',
+          ),
         );
         await tester.pumpWidget(const SizedBox.shrink());
         debugDefaultTargetPlatformOverride = null;

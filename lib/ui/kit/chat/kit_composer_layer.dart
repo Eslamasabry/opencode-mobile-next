@@ -14,7 +14,6 @@ class _VoiceContent extends StatefulWidget {
 
 class _VoiceContentState extends State<_VoiceContent> {
   Timer? _tick;
-  bool _sentAtZero = false;
 
   @override
   void initState() {
@@ -29,23 +28,12 @@ class _VoiceContentState extends State<_VoiceContent> {
   }
 
   void _syncTimer() {
-    final counting =
-        widget.voice.phase == KitVoicePhase.sendingSoon &&
-        widget.voice.sendAt != null;
-    if (!counting) _sentAtZero = false;
     final ticking =
-        counting ||
-        (widget.voice.phase == KitVoicePhase.listening &&
-            widget.voice.listeningSince != null);
+        widget.voice.phase == KitVoicePhase.listening &&
+        widget.voice.listeningSince != null;
     if (ticking && _tick == null) {
       _tick = Timer.periodic(const Duration(seconds: 1), (_) {
-        if (!mounted) return;
-        setState(() {});
-        // The countdown ran out: the words go, once.
-        if (_secondsLeft() == 0 && !_sentAtZero) {
-          _sentAtZero = true;
-          widget.voice.onSendNow?.call();
-        }
+        if (mounted) setState(() {});
       });
     } else if (!ticking) {
       _tick?.cancel();
@@ -59,25 +47,9 @@ class _VoiceContentState extends State<_VoiceContent> {
     super.dispose();
   }
 
-  /// Whole seconds until the words go (never below 0); null outside the
-  /// countdown.
-  int? _secondsLeft() {
-    final at = widget.voice.sendAt;
-    if (widget.voice.phase != KitVoicePhase.sendingSoon || at == null) {
-      return null;
-    }
-    final ms = at.difference(clock.now()).inMilliseconds;
-    return ms <= 0 ? 0 : (ms / 1000).ceil();
-  }
-
   String _words(AppLocalizations l10n) => switch (widget.voice.phase) {
     KitVoicePhase.starting => l10n.kitVoiceStarting,
-    KitVoicePhase.listening => switch (widget.voice.hold) {
-      KitVoiceHold.none => l10n.kitVoiceListening,
-      KitVoiceHold.holding => l10n.vpttLetGoToFinish,
-      KitVoiceHold.cancelArmed => l10n.vpttLetGoToCancel,
-    },
-    KitVoicePhase.sendingSoon => l10n.vpttSendingIn('${_secondsLeft() ?? 0}'),
+    KitVoicePhase.listening => l10n.kitVoiceListening,
     KitVoicePhase.transcribing => l10n.kitVoiceTranscribing,
     KitVoicePhase.waitingReply => l10n.kitVoiceWaitingReply,
     KitVoicePhase.speakingReply => l10n.kitVoiceSpeaking,
@@ -130,19 +102,6 @@ class _VoiceContentState extends State<_VoiceContent> {
               },
         disabledReason: words,
       ),
-      KitVoicePhase.sendingSoon => _Circle(
-        key: const ValueKey('kit-voice-send-now'),
-        kind: _CircleKind.voiceSend,
-        label: l10n.kitVoiceSend,
-        onTap: voice.onSendNow == null
-            ? null
-            : () {
-                KitHaptics.send(context);
-                _sentAtZero = true;
-                voice.onSendNow!();
-              },
-        disabledReason: words,
-      ),
       KitVoicePhase.speakingReply => _Circle(
         key: const ValueKey('kit-voice-stop-reading'),
         kind: _CircleKind.stop,
@@ -160,12 +119,6 @@ class _VoiceContentState extends State<_VoiceContent> {
     };
 
     final extras = <Widget>[
-      if (phase == KitVoicePhase.sendingSoon && voice.onCancelSend != null)
-        KitButton.tertiary(
-          key: const ValueKey('kit-voice-cancel-send'),
-          label: l10n.vpttDontSend,
-          onPressed: voice.onCancelSend,
-        ),
       if (phase == KitVoicePhase.replyReady && voice.onReadReply != null)
         KitButton.tertiary(
           label: l10n.kitVoiceReadReply,

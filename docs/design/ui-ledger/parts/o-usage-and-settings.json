@@ -303,6 +303,10 @@
       "reason": "Not a page: the wait on an automatic sign-in, part of the Integrations screen."
     },
     {
+      "file": "lib/ui/screens/library/integrations_load_states.dart",
+      "reason": "Not a page: how each Integrations list stands when it is not loaded (waiting, not offered, failed), part of the Integrations screen."
+    },
+    {
       "file": "lib/ui/screens/chat/chat_mentions.dart",
       "reason": "Not a page: the chat's @-mention search state and helpers, drawn in the composer."
     },

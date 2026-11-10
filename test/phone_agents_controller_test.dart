@@ -1,6 +1,5 @@
 import 'support/fake_server_operations.dart';
 import 'dart:async';
-import 'package:clock/clock.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -41,17 +40,12 @@ import 'package:opencode_mobile/domain/phone_agents.dart';
 import 'package:opencode_mobile/domain/phone_agents_source.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
-import 'package:opencode_mobile/l10n/app_localizations_en.dart';
-import 'package:opencode_mobile/ui/screens/agents/agents_text.dart'
-    show agentRowLine;
 import 'package:opencode_mobile/paseo/gateway.dart';
 import 'package:opencode_mobile/ui/navigation/attention_landing.dart';
 import 'package:opencode_mobile/ui/screens/chats/chats_host.dart';
 import 'package:opencode_mobile/platform/platform_capabilities.dart';
 import 'package:opencode_mobile/paseo/transport.dart';
-import 'package:opencode_mobile/platform/network.dart';
 import 'package:opencode_mobile/state/connection.dart';
-import 'package:opencode_mobile/state/phone_agents_auto_update.dart';
 import 'package:opencode_mobile/state/phone_agent_host_port.dart';
 import 'package:opencode_mobile/state/phone_project_engine.dart';
 import 'package:opencode_mobile/state/profiles.dart';
@@ -71,7 +65,6 @@ part 'support/phone_agents_reopen_tests.dart';
 part 'support/phone_agents_photo_card_tests.dart';
 part 'support/phone_agents_stall_tests.dart';
 part 'support/phone_agents_check_publication_tests.dart';
-part 'support/phone_agents_auto_update_tests.dart';
 part 'support/phone_agents_capability_refresh_tests.dart';
 part 'support/phone_agents_removal_tests.dart';
 part 'support/phone_agents_idle_tests.dart';
@@ -310,12 +303,6 @@ class _HostState {
   var newAgentSeq = 0;
   AgentPhoneCheckResult? check;
 
-  /// Automatic updates: how each ended, and whether the last was set aside
-  /// for the person's work.
-  Future<AgentPhoneCheckResult> Function(String)? autoUpdateHandler;
-  bool lastYielded = false;
-  int autoUpdates = 0;
-
   /// What the helper's runtime snapshot lists.
   List<Map<String, dynamic>> providers = [_provider('claude')];
 
@@ -438,8 +425,6 @@ class _FakeHost implements PhoneAgentHostPort, PhoneAgentAuthPort {
           (signIn?.inspected == true ? signIn!.phase : null),
       resetAt: base.resetAt,
       stoppedInBackground: base.stoppedInBackground,
-      checkRequiredReason: base.checkRequiredReason,
-      behindPin: base.behindPin,
     );
   }
 
@@ -747,7 +732,6 @@ Future<_World> _world(
   bool diagnosticsSupported = false,
   bool livenessSupported = false,
   bool healthSupported = false,
-  bool autoUpdateSupported = false,
 }) async {
   final profileJson = {
     'id': 'local',
@@ -793,12 +777,9 @@ Future<_World> _world(
               onStatus: onStatus,
               onError: onError,
             ),
-    localWakeLockEnsurer: () async {},
     phoneEngineBridge: _NoEngineBridge(),
     phoneAgentHostFactory: (profile) {
-      final host = autoUpdateSupported
-          ? _AutoHost(events, profile.id, state)
-          : healthSupported
+      final host = healthSupported
           ? _HealthHost(events, profile.id, state)
           : livenessSupported
           ? _ColdStartHost(events, profile.id, state)
@@ -916,60 +897,6 @@ void main() {
     },
   );
 
-  testWidgets(
-    'Android stopping the helper is named, and once back the line says the '
-    'conversation continues',
-    (tester) async {
-      final w = await _world(tester, diagnosticsSupported: true);
-      try {
-        w.state.runtimes = {'claude': _ready('claude')};
-        w.state.agents = [_agent('c1', _project)];
-        await w.controller.rememberLastUsedProject(_project);
-        await w.controller.refreshAgentRows();
-        await w.controller.refreshChatFeed();
-        final row = w.controller.chatFeed().items.firstWhere(
-          (r) => r.sourceId == 'paseo:$_project',
-        );
-        await w.controller.openChatFeedItem(row);
-        final backend = w.controller.backendForConversation('c1')!;
-        expect(backend.agentHelperKilledByAndroid, isFalse);
-        // A stop the app asked for is not Android's.
-        w.state.readHelperStatus = () async => AgentHelperStatus(
-          running: true,
-          lastExitAt: DateTime.now().toUtc(),
-          lastExitCode: 0,
-          lastStopRequested: true,
-        );
-        await backend.readConnectionHelperExit();
-        expect(backend.agentHelperKilledByAndroid, isFalse);
-        // SIGKILL nobody asked for, a minute ago: Android's.
-        final at = DateTime.now().toUtc().subtract(const Duration(minutes: 1));
-        w.state.readHelperStatus = () async => AgentHelperStatus(
-          running: true,
-          lastExitAt: at,
-          lastExitCode: 137,
-          lastStopRequested: false,
-          possibleResourceKill: true,
-        );
-        await backend.readConnectionHelperExit();
-        expect(backend.agentHelperKilledByAndroid, isTrue);
-        expect(backend.agentHelperKilledAt, at);
-        expect(backend.agentBackAfterKill, backend.isConnected);
-        // Closed: stays closed for that stop.
-        backend.dismissAgentBackAfterKill();
-        expect(backend.agentBackAfterKill, isFalse);
-        expect(backend.agentHelperKilledByAndroid, isTrue);
-        // Old news after five minutes.
-        withClock(
-          Clock.fixed(DateTime.now().add(const Duration(minutes: 6))),
-          () => expect(backend.agentHelperKilledByAndroid, isFalse),
-        );
-      } finally {
-        w.controller.dispose();
-      }
-    },
-  );
-
   _genUiFeedRefreshTests();
   _genUiRecoveryCoverageTests();
   _nativeQuestionControllerTests();
@@ -979,7 +906,6 @@ void main() {
   _photoCardAliasTests();
   _turnStallControllerTests();
   _phoneCheckPublicationTests();
-  _phoneAutoUpdateTests();
   _phoneCapabilityRefreshTests();
   _phoneRemovalTests();
   _phoneIdleTests();
@@ -1890,48 +1816,15 @@ void main() {
         await c.recheckAgentSignIn('claude');
         expect(c.agentAccount('claude')?.state, AgentAuthProbeState.signedIn);
       }
-      // An answer from the agent itself still counts, once the last one
-      // is old enough for a list refresh to ask again.
+      // An answer from the agent itself still counts.
       w.state.auth['claude'] = const AgentAuthProbeResult(
         state: AgentAuthProbeState.signedOut,
       );
-      await withClock(
-        Clock.fixed(DateTime.now().add(const Duration(minutes: 11))),
-        () => c.refreshAgentRows(),
-      );
+      await c.refreshAgentRows();
       expect(claude().fixAction, PhoneAgentFixAction.signIn);
       c.dispose();
     },
   );
-
-  test('a list refresh reuses a recent sign-in answer instead of starting the '
-      'agent again', () async {
-    final w = await ready(null);
-    final c = w.controller;
-    final asked = <String>[];
-    w.state.probeHandler = (id) async {
-      asked.add(id);
-      return const AgentAuthProbeResult(state: AgentAuthProbeState.signedIn);
-    };
-    int claude() => asked.where((id) => id == 'claude').length;
-    // ready() read the rows once already. Rows refresh often (every open
-    // of a list or sheet): no new check, so no new Linux, shell, Python
-    // and Claude Code each time.
-    await c.refreshAgentRows();
-    await c.refreshAgentRows();
-    await c.refreshAgentRows();
-    expect(claude(), 0);
-    // "Check again" always asks.
-    await c.recheckAgentSignIn('claude');
-    expect(claude(), 1);
-    // An old answer is asked again on the next refresh.
-    await withClock(
-      Clock.fixed(DateTime.now().add(const Duration(minutes: 11))),
-      () => c.refreshAgentRows(),
-    );
-    expect(claude(), 2);
-    c.dispose();
-  });
 
   test(
     'BA3 a late older probe cannot complete a newer signed-out attempt',

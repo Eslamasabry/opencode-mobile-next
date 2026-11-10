@@ -80,7 +80,7 @@ fun main(args: Array<String>) {
                 check(!value.toString().contains("private-version-failure"))
             }
             partial("fx", false)
-            for ((id, exe) in mapOf("fx" to "fx", "codex" to "codex", "gemini" to "gemini",
+            for ((id, exe) in mapOf("fx" to "fx", "codex" to "codex", "gemini" to "gemini", "antigravity" to "agy",
                     "qwen" to "qwen", "goose" to "goose", "omp-acp" to "omp")) {
                 val payload = File(parent, "$id/1.2.3.new").apply { mkdirs() }
                 partial(exe, true)

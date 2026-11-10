@@ -2,6 +2,51 @@
 
 This project is in public alpha. Only the newest preview is supported.
 
+## 2.1.5+63 — draft, not released
+
+Spanish, complete (#122, thanks @Lxchoooo). The Termux app integration is
+removed: built-in Linux is the only way to run an agent on the phone, and old
+Termux setups get a notice with a way forward. Node.js setup adapts on phones
+where it crashed (#117, #119) and stops early with a way out. A VPN is no
+longer shown as mobile data for the voice download. The Integrations page
+loads again after a reconnect and explains a list the server doesn't offer
+(#124). Optional usage and app health numbers and
+crash reports, two switches asked once and off unless you agree, a way to send a
+problem report you review first, and a crash report offer after an unexpected
+exit. Full notes:
+[docs/releases/v2.1.5+63.md](docs/releases/v2.1.5+63.md).
+
+## 2.1.4+62 — 2026-11-06
+
+Built-in Linux sets up on phones where its unpacking tool crashes (#117): the
+app unpacks the file itself, a crashing step is retried once in a compatibility
+mode, and proot is updated. Start a Git repository and publish it to a new
+GitHub repository from the Git page (#118, thanks @Ari-Enzo). Desktop builds
+are dropped; the app is Android only. Full notes:
+[docs/releases/v2.1.4+62.md](docs/releases/v2.1.4+62.md).
+
+## 2.1.3+61 — 2026-11-05
+
+Built-in Linux sets up on phones where its download tool crashes (#117): the
+app downloads the file itself and still checks its pinned checksum. Full
+notes: [docs/releases/v2.1.3+61.md](docs/releases/v2.1.3+61.md).
+
+## 2.1.2+60 — 2026-11-05
+
+Antigravity CLI on the phone in place of Gemini CLI (#116), an "Add an agent"
+card on New conversation, and a GitHub repository picker for Git remotes
+(#114). Full notes: [docs/releases/v2.1.2+60.md](docs/releases/v2.1.2+60.md).
+
+## 2.1.1+59 — 2026-11-04
+
+AI Team on Android 16 and newer (#111, #112): the safety check passes, OpenCode
+starts again inside the protection, a team runs on the OpenCode version the
+app installs, and new projects can be made after AI Team is on. Nothing the
+check requires was loosened. Full notes:
+[docs/releases/v2.1.1+59.md](docs/releases/v2.1.1+59.md).
+- Fixed: adding a project to a team on Termux (#112); a team starts before any chat is opened and continues after an OpenCode restart.
+- Security: the phone's local OpenCode server password no longer appears in the process list, and the server refuses to start without it.
+
 ## 2.1.0+57 — 2026-10-31
 
 Two home-screen widgets (Conversations and Status), Git inside the

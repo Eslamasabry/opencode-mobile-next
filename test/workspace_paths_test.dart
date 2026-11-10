@@ -13,8 +13,8 @@ void main() {
         '/root',
         '/root/',
         '/home',
-        '/home/owner',
-        '/home/owner/',
+        '/home/eslam',
+        '/home/eslam/',
         '/Users/eslam',
         '/data/data/com.termux/files/home',
         r'C:\',
@@ -29,12 +29,12 @@ void main() {
       for (final path in [
         '/root/projects',
         '/root/projects/app',
-        '/home/owner/Storage/Code/oc_app',
+        '/home/eslam/Storage/Code/oc_app',
         '/Users/eslam/work/acme',
         '/srv/app',
         '/data/data/com.termux/files/home/projects',
         r'C:\Users\eslam\code',
-        '/home/owner/My Project',
+        '/home/eslam/My Project',
       ]) {
         expect(isProtectedWorkspaceDirectory(path), isFalse, reason: path);
       }
@@ -52,7 +52,7 @@ void main() {
 
     test('accepts real folders', () {
       expect(workspaceDirectoryProblem('/root/projects/app'), isNull);
-      expect(workspaceDirectoryProblem('/home/owner/My Project/'), isNull);
+      expect(workspaceDirectoryProblem('/home/eslam/My Project/'), isNull);
       expect(workspaceDirectoryProblem(r'D:\work\acme'), isNull);
     });
   });

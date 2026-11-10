@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../../domain/provider_usage.dart' show cleanUsageText;
 import '../../../domain/usage_subscriptions.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../state/connection.dart';
@@ -161,6 +162,9 @@ class _UsageSubscriptionScreenState extends State<UsageSubscriptionScreen> {
               c,
         ];
         final levels = {..._levels, s.alertThreshold.round()}.toList()..sort();
+        final accountText = _isDisplayableAccount(s.accountRef)
+            ? cleanUsageText(s.accountRef, 64)
+            : null;
         final others = <UsageConnection>[
           if (several)
             for (final c in usageAddChoices(
@@ -514,11 +518,16 @@ class _UsageSubscriptionScreenState extends State<UsageSubscriptionScreen> {
                           KitTime.moment(context, s.checkedAt!, now: now),
                           copyable: false,
                         ),
-                      if (fetched != null)
+                      if (fetched != null ||
+                          accountText != null ||
+                          s.accountRef != null)
                         KitTechnicalValue(
                           l10n.usageDetailAccount,
-                          s.accountRef == null ? l10n.usageNo : l10n.usageYes,
-                          copyable: false,
+                          accountText ??
+                              (s.accountRef != null
+                                  ? l10n.usageYes
+                                  : l10n.usageNo),
+                          copyable: accountText != null,
                         ),
                       for (final c in computers)
                         if (usage.readerProblemFor(c.id) case final problem?)
@@ -547,4 +556,11 @@ class _UsageSubscriptionScreenState extends State<UsageSubscriptionScreen> {
       },
     );
   }
+}
+
+final _opaqueHashPattern = RegExp(r'^[a-f0-9]{64}$');
+bool _isDisplayableAccount(String? ref) {
+  if (ref == null || ref.isEmpty) return false;
+  if (ref.length <= 2 || _opaqueHashPattern.hasMatch(ref)) return false;
+  return ref.contains('@') || !RegExp(r'^[a-f0-9]+$').hasMatch(ref);
 }

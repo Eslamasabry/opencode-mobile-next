@@ -525,10 +525,7 @@ extension _ConnectionControllerSessionsImpl on ConnectionController {
       final phoneAdmission =
           _connectedProfile != null &&
           _phoneChatEligible(_connectedProfile!.id) &&
-          status == StreamStatus.connected &&
-          !_lifecycleSuspended &&
-          !locationLoading &&
-          directory?.isNotEmpty == true;
+          _phoneChatObservable;
       if (phoneAdmission) {
         // A lost status/page read while idle must not strand admission in
         // UNKNOWN. Read status alone, independently of a slow session page.
@@ -572,10 +569,7 @@ extension _ConnectionControllerSessionsImpl on ConnectionController {
     final phoneAdmission =
         _connectedProfile != null &&
         _phoneChatEligible(_connectedProfile!.id) &&
-        status == StreamStatus.connected &&
-        !_lifecycleSuspended &&
-        !locationLoading &&
-        directory?.isNotEmpty == true;
+        _phoneChatObservable;
     final tracked = {
       for (final id in {...busySessions, ..._phoneChatDispatch.sessionIds})
         id: _sessionStatusRevisions[id] ?? 0,

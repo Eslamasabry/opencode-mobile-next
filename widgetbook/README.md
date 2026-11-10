@@ -169,7 +169,7 @@ and a `.thumb.png`, flags blank pages and "Scene failed" console errors in
 ## Run by hand
 
 ```bash
-FL=~/.shorebird/bin/cache/flutter/6e5e949520159b5ceb029598be37520cd433b046/bin
+FL=~/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin
 cd widgetbook
 $FL/flutter pub get && $FL/flutter analyze
 $FL/dart run tool/coverage_check.dart
@@ -184,10 +184,10 @@ $FL/flutter build web --release --no-web-resources-cdn   # background, ~2 min
   minutes) reads the local refs `preview/fb-usage` (app code) and
   `feat/widgetbook-poc` (this package), exits if neither moved since the last
   attempt, otherwise merges them in the detached worktree
-  `/home/owner/Storage2/wt/oc_app-catalog`, builds the web catalog (one build
+  `/home/eslam/Storage2/wt/oc_app-catalog`, builds the web catalog (one build
   slot of `tool/qa/machine_lock.sh`, `nice -n 15 ionice -c3`), runs the
   coverage check, the map and the sweep, and publishes to
-  `/home/owner/Storage2/catalog/releases/<app12>-<catalog8>/`, switching the
+  `/home/eslam/Storage2/catalog/releases/<app12>-<catalog8>/`, switching the
   `current` symlink atomically. The last 3 releases are kept. A failure keeps
   the previous release serving and records the step in `last_failure.json`
   and in `current/status.json` (`lastFailure`). Log: `catalog/last_build.log`.

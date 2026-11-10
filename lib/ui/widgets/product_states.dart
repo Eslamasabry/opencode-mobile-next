@@ -103,8 +103,6 @@ String productErrorText(Object error, {AppLocalizations? l10n}) {
     ProductFailureCategory.device => copy.productErrorDevice,
     ProductFailureCategory.storage => copy.productErrorStorage,
     ProductFailureCategory.projectGit => copy.productErrorProjectGit,
-    ProductFailureCategory.agentUpdating => copy.productErrorAgentUpdating,
-    ProductFailureCategory.termux => copy.productErrorTermux,
     ProductFailureCategory.fileTooBig => copy.productErrorFileTooBig,
     ProductFailureCategory.fileMissing => copy.productErrorFileMissing,
     ProductFailureCategory.fileDenied => copy.productErrorFileDenied,

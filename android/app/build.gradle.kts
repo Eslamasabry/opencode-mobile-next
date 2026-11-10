@@ -9,6 +9,12 @@ plugins {
 }
 
 val ocPreview = (project.findProperty("ocPreview") as String?) == "true"
+// The F-Droid build (`flutter build apk --android-project-arg=ocFdroid=true
+// --dart-define=OC_FDROID=true`, docs/release/fdroid-2026-10-31.md): no
+// self-install permission and a build that fails if a Google SDK slips in
+// (android/build.gradle.kts). A project property rather than a product flavor
+// so every other build path (release.sh, Shorebird, CI) keeps its output names.
+val ocFdroid = (project.findProperty("ocFdroid") as String?) == "true"
 // Explicit test-build opt-in only; production builds retain normal R8 rules.
 val ocStableEngineQa = (project.findProperty("ocStableEngineQa") as String?) == "true"
 // Test-only release AOT smoke entry point and separate instrumentation runner.
@@ -18,6 +24,27 @@ val ocBuiltinRuntimeQa = (project.findProperty("ocBuiltinRuntimeQa") as String?)
 require(listOf(ocBd9Smoke, ocBb8Smoke, ocBuiltinRuntimeQa).count { it } <= 1) {
     "Choose one instrumentation runner per QA build."
 }
+// Crash reporting (lib/telemetry): the Firebase config is private and never in
+// git. Looked up in OC_GOOGLE_SERVICES_DIR (Gradle property or environment
+// variable; default ~/.config/oc-app/firebase) as
+// google-services-<applicationId>.json and copied to app/google-services.json
+// (git-ignored) at configure time. Without it the plugins are not applied and
+// the app builds with the no-op reporter. The preview build has another
+// package name, so it never gets one.
+val ocGoogleServicesDir = (project.findProperty("OC_GOOGLE_SERVICES_DIR") as String?)
+    ?: System.getenv("OC_GOOGLE_SERVICES_DIR")
+    ?: "${System.getProperty("user.home")}/.config/oc-app/firebase"
+val ocGoogleServicesSource = file("$ocGoogleServicesDir/google-services-io.github.eslamasabry.opencode_mobile.json")
+val ocGoogleServicesTarget = file("google-services.json")
+val ocTelemetryConfig = !ocPreview && ocGoogleServicesSource.isFile
+if (ocTelemetryConfig) {
+    ocGoogleServicesSource.copyTo(ocGoogleServicesTarget, overwrite = true)
+    pluginManager.apply("com.google.gms.google-services")
+    pluginManager.apply("com.google.firebase.crashlytics")
+} else {
+    ocGoogleServicesTarget.delete()
+}
+
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.isFile) {
@@ -84,13 +111,17 @@ android {
         }
     }
 
+    if (ocFdroid) {
+        // F-Droid delivers updates itself and forbids apps from installing
+        // their own: the release manifest takes the permission back out.
+        sourceSets.getByName("release").manifest.srcFile("src/fdroid/AndroidManifest.xml")
+    }
+
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("release")
             proguardFiles("widget-status-release.pro")
             proguardFiles("scheduled-prompts.pro")
-            // LiteRT-LM finds its Java classes by name from native code (JNI).
-            proguardFiles("litert-lm.pro")
             // Release instrumentation shares the target's Kotlin/native ABI.
             // R8 prototype rewrites otherwise break test-APK calls into it.
             if (listOf(ocPreview, ocStableEngineQa, ocBd9Smoke, ocBuiltinRuntimeQa).any { it })
@@ -177,8 +208,6 @@ dependencies {
     // (PinnedSessionShortcuts.kt); same major line the Flutter embedding
     // already pulls in transitively, pinned so the compile classpath is
     // explicit rather than inherited.
-    // On-device assistant runtime (LocalLlmBridge.kt): Google LiteRT-LM, Apache 2.0; arm64-v8a + x86_64 libs.
-    implementation("com.google.ai.edge.litertlm:litertlm-android:0.19.0")
     implementation("androidx.core:core:1.13.1")
     // Reads the Ubuntu Base tarball for the built-in Linux (BuiltinLinux.kt).
     implementation("org.apache.commons:commons-compress:1.27.1")

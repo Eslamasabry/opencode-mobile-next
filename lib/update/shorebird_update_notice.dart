@@ -2,65 +2,20 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:shorebird_code_push/shorebird_code_push.dart';
 
 import '../l10n/app_localizations.dart';
+import '../telemetry/analytics_events.dart';
+import '../telemetry/telemetry_provider.dart';
 import '../ui/app_iconography.dart';
 import '../ui/kit/kit_status_line.dart';
 import '../ui/kit/kit_status_slot.dart';
-import 'app_update_controller.dart';
+import 'app_update_service.dart';
 
-enum AppUpdateState { current, available, restartRequired, unavailable }
-
-abstract interface class AppUpdateService {
-  bool get isAvailable;
-
-  Future<AppUpdateState> checkForUpdate();
-
-  Future<void> downloadUpdate();
-}
-
-class ShorebirdAppUpdateService implements AppUpdateService {
-  ShorebirdAppUpdateService({ShorebirdUpdater? updater})
-    : _updater = updater ?? ShorebirdUpdater();
-
-  final ShorebirdUpdater _updater;
-
-  @override
-  bool get isAvailable => _updater.isAvailable;
-
-  @override
-  Future<AppUpdateState> checkForUpdate() async {
-    return switch (await _updater.checkForUpdate()) {
-      UpdateStatus.upToDate => AppUpdateState.current,
-      UpdateStatus.outdated => AppUpdateState.available,
-      UpdateStatus.restartRequired => AppUpdateState.restartRequired,
-      UpdateStatus.unavailable => AppUpdateState.unavailable,
-    };
-  }
-
-  @override
-  Future<void> downloadUpdate() => _updater.update();
-}
-
-/// The update service for a build Shorebird does not patch.
-///
-/// Desktop bundles are released as GitHub artifacts, not Shorebird patches,
-/// so constructing a `ShorebirdUpdater` there only produces an updater that
-/// reports itself unavailable after doing FFI work. This says so up front,
-/// and keeps the notice from ever entering its check loop.
-class UnavailableAppUpdateService implements AppUpdateService {
-  const UnavailableAppUpdateService();
-
-  @override
-  bool get isAvailable => false;
-
-  @override
-  Future<AppUpdateState> checkForUpdate() async => AppUpdateState.unavailable;
-
-  @override
-  Future<void> downloadUpdate() async {}
-}
+export 'app_update_service.dart';
+// The F-Droid build (--dart-define=OC_FDROID=true) gets an updater that never
+// imports the code-push package; see shorebird_updater_stub.dart.
+export 'shorebird_updater_real.dart'
+    if (OC_FDROID) 'shorebird_updater_stub.dart';
 
 /// Adds one app-wide [status] to the conditions every screen's status line
 /// reads (`KitStatusScope`, kit_status_slot.dart), keeping the conditions of
@@ -154,15 +109,9 @@ class ShorebirdUpdateNotice extends StatefulWidget {
     this.currentProfileId,
     this.allowsAutomaticUpdate,
     this.onDownloaded,
-    this.updates,
   });
 
   final AppUpdateService service;
-
-  /// The app-wide update holder. When given, a downloaded patch is reported
-  /// to it and the status line is drawn from there (`AppUpdateNotice`), so a
-  /// newer release wins over the patch; this widget still downloads.
-  final AppUpdateController? updates;
   final Widget child;
 
   /// The current saved server owns this app-wide automatic act. Returning
@@ -267,6 +216,11 @@ class _ShorebirdUpdateNoticeState extends State<ShorebirdUpdateNotice>
       // Never claims readiness after a failed download; the next resume
       // after the throttle tries again.
       debugPrint('App update could not be completed.');
+      HealthFlow.updateResult(
+        kind: 'patch',
+        result: 'failed',
+        failKind: 'download',
+      );
     } finally {
       _checking = false;
     }
@@ -274,12 +228,13 @@ class _ShorebirdUpdateNoticeState extends State<ShorebirdUpdateNotice>
 
   void _showReady() {
     if (!mounted || _ready) return;
-    widget.updates?.patchReady();
+    AppTelemetry.track(AnalyticsEvent.updateOffered);
+    HealthFlow.updateResult(kind: 'patch', result: 'installed');
     setState(() => _ready = true);
   }
 
   KitStatus? _status(BuildContext context) {
-    if (!_ready || _hidden || widget.updates != null) return null;
+    if (!_ready || _hidden) return null;
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     return KitStatus(
       kind: KitStatusKind.update,

@@ -11,6 +11,8 @@
 /// with [ProbePlainHttpRefused]. Reads carry no credential of any kind.
 library;
 
+import 'dart:io';
+
 import '../../../domain/orchestration_gateway.dart';
 import '../../../domain/loopback_host.dart';
 import '../../client/http.dart';
@@ -27,13 +29,11 @@ bool isTailnetHost(String host) {
   if (h.isEmpty) return false;
   if (isLoopbackHost(h)) return true;
   if (h.endsWith('.ts.net')) return true;
-  final parts = h.split('.');
-  if (parts.length != 4 ||
-      parts.any((part) => !RegExp(r'^(0|[1-9][0-9]{0,2})$').hasMatch(part))) {
+  final address = InternetAddress.tryParse(h);
+  if (address == null || address.type != InternetAddressType.IPv4) {
     return false;
   }
-  final bytes = parts.map(int.parse).toList();
-  if (bytes.any((value) => value > 255)) return false;
+  final bytes = address.rawAddress;
   return bytes.length == 4 && bytes[0] == 100 && (bytes[1] & 0xC0) == 0x40;
 }
 

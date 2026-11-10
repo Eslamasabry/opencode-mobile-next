@@ -7,19 +7,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../platform/app_info.dart';
 import '../../platform/platform_capabilities.dart';
-import '../../platform/share_intent.dart';
 import '../../state/connection.dart';
+import '../../telemetry/telemetry_provider.dart' show telemetryOf;
 import '../../state/factsbook/factsbook_flag.dart';
-import '../../state/whats_new.dart';
 import '../../state/factsbook/factsbook_phone_node.dart';
 import 'factsbook/factsbook_routes.dart';
-import 'whats_new_sheet.dart';
+import '../../update/in_app_update_notice.dart';
+import '../../update/shorebird_update_notice.dart';
 import '../../voice/notices.dart';
 import '../app_theme.dart';
 import '../desktop/desktop_interaction.dart';
 import '../desktop/shortcuts.dart';
-import '../widgets/external_link.dart';
 import '../kit/kit.dart';
 
 /// Upstream OpenCode asks third-party projects that use the OpenCode name to
@@ -30,20 +30,10 @@ const String nonAffiliationDisclaimer =
     'OpenCode Mobile is an independent community project. It is not built, '
     'maintained, endorsed by, or affiliated with the official OpenCode team.';
 
-/// The project page the Star on GitHub row opens.
-const String projectRepositoryUrl =
-    'https://github.com/Eslamasabry/opencode-mobile-next';
-
-/// The website link Share the app sends along.
-const String projectWebsiteUrl =
-    'https://eslamasabry.github.io/opencode-mobile-next/';
-
-/// Build provenance is independent of the Android release channel. Desktop
-/// readiness is still disclosed until those builds have hardware evidence.
+/// Build provenance is independent of the Android release channel.
 const String buildProvenanceBody =
     'This independent app is built heavily with AI assistance. '
-    'Android is the primary supported platform. Desktop builds are '
-    'experimental and have not been hardware-tested. '
+    'It is an Android app. '
     'Report what breaks to help improve the app.';
 
 /// Settings › About (target-ia §1.3 row 22): which build this is, what it
@@ -52,36 +42,50 @@ const String buildProvenanceBody =
 /// (P3.10), so there are no tabs.
 ///
 /// Built from kit parts only (screen-system-1). One scroll: the build's
-/// identity once, with its version copyable in one tap; the package id and signer folded
+/// identity once, with its version copyable in one tap and an update check
+/// on builds that can update themselves; the package id and signer folded
 /// under Details; the non-affiliation statement; the build notice; Show
 /// tips again (with a [controller]) and, on a desktop, the keyboard
 /// shortcuts; then Open source: every bundled package licence in the
 /// [KitViewer], the voice models' licences on Android, and the notices,
 /// reflowed by [KitMarkdown].
 class AboutScreen extends StatefulWidget {
-  const AboutScreen({super.key, this.controller, this.linkLauncher});
-
-  /// Test seam: where [openExternalLink] hands an allowed link. Null: the
-  /// platform launcher.
-  @visibleForTesting
-  final Future<bool> Function(Uri uri)? linkLauncher;
+  const AboutScreen({super.key, this.controller, this.updateService});
 
   /// Where Show tips again puts the one-time tips back. Null (the named
   /// route) leaves that row out.
   final ConnectionController? controller;
 
+  /// Checks for and fetches an update. Null: on Android the app's own
+  /// updater (made on the first check), elsewhere no update row.
+  final AppUpdateService? updateService;
+
   @override
   State<AboutScreen> createState() => _AboutScreenState();
 }
 
-class _AboutScreenState extends State<AboutScreen> {
-  static const _platform = MethodChannel('oc/termux');
+/// What the last update check found.
+enum _UpdateCheck {
+  idle,
+  checking,
+  current,
+  downloading,
+  ready,
+  cannot,
+  failed,
+}
 
+class _AboutScreenState extends State<AboutScreen> {
   Future<String>? _notices;
   late final Future<_BuildData> _build = _loadBuild();
+  _UpdateCheck _update = _UpdateCheck.idle;
+  AppUpdateService? _service;
 
   /// Show tips again ran: the row says so in place of a snackbar (KIT-34).
   bool _tipsReset = false;
+
+  bool get _canCheckUpdates =>
+      widget.updateService != null || platformCapabilities.supportsCodePush;
 
   @override
   void initState() {
@@ -100,28 +104,86 @@ class _AboutScreenState extends State<AboutScreen> {
   }
 
   Future<_BuildData> _loadBuild() async {
+    // The code to quote in a GitHub issue; null in a build that cannot send
+    // reports to the developer.
+    final telemetry = telemetryOf(context);
+    final reportCode = telemetry.reportCode();
     PackageInfo? package;
     try {
       package = await PackageInfo.fromPlatform();
     } catch (_) {
-      return const _BuildData(package: null, signer: null);
+      return _BuildData(
+        package: null,
+        signer: null,
+        reportCode: await reportCode,
+      );
     }
     String? signer;
-    if (platformCapabilities.supportsTermux) {
-      try {
-        signer = await _platform.invokeMethod<String>(
-          'getSigningCertificateSha256',
-        );
-      } catch (_) {
-        // Desktop and older Android builds do not expose a signer.
-      }
+    try {
+      signer = await AppInfoPlatform.signingCertificateSha256();
+    } catch (_) {
+      // Desktop and older Android builds do not expose a signer.
     }
-    return _BuildData(package: package, signer: signer);
+    return _BuildData(
+      package: package,
+      signer: signer,
+      reportCode: await reportCode,
+    );
   }
 
-  Future<void> _share(AppLocalizations l10n) async {
-    await ShareOut.text(l10n.shareAppMessage(projectWebsiteUrl));
+  Future<void> _checkForUpdate() async {
+    if (_update == _UpdateCheck.checking ||
+        _update == _UpdateCheck.downloading) {
+      return;
+    }
+    setState(() => _update = _UpdateCheck.checking);
+    try {
+      // A new release (a new APK) first; when there is none, the patch check
+      // below still runs. An injected update service (tests) skips this.
+      if (platformCapabilities.isAndroid && widget.updateService == null) {
+        final release = await InAppUpdateCoordinator.checkManually(
+          context: context,
+        );
+        if (!mounted) return;
+        if (release != null) {
+          setState(() => _update = _UpdateCheck.ready);
+          return;
+        }
+      }
+      final service = _service ??=
+          widget.updateService ?? ShorebirdAppUpdateService();
+      if (!service.isAvailable) {
+        if (mounted) setState(() => _update = _UpdateCheck.cannot);
+        return;
+      }
+      final state = await service.checkForUpdate();
+      if (!mounted) return;
+      switch (state) {
+        case AppUpdateState.current:
+          setState(() => _update = _UpdateCheck.current);
+        case AppUpdateState.restartRequired:
+          setState(() => _update = _UpdateCheck.ready);
+        case AppUpdateState.unavailable:
+          setState(() => _update = _UpdateCheck.cannot);
+        case AppUpdateState.available:
+          setState(() => _update = _UpdateCheck.downloading);
+          await service.downloadUpdate();
+          if (mounted) setState(() => _update = _UpdateCheck.ready);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _update = _UpdateCheck.failed);
+    }
   }
+
+  String _updateLine(AppLocalizations l10n) => switch (_update) {
+    _UpdateCheck.idle => l10n.aboutUpdateIdle,
+    _UpdateCheck.checking => l10n.aboutUpdateChecking,
+    _UpdateCheck.current => l10n.aboutUpdateCurrent,
+    _UpdateCheck.downloading => l10n.aboutUpdateDownloading,
+    _UpdateCheck.ready => l10n.aboutUpdateReady,
+    _UpdateCheck.cannot => l10n.aboutUpdateCannot,
+    _UpdateCheck.failed => l10n.aboutUpdateFailed,
+  };
 
   Future<String> _licenceText() async {
     final out = StringBuffer();
@@ -166,9 +228,7 @@ class _AboutScreenState extends State<AboutScreen> {
   /// The platform line under the product name. The desktop bundle is the
   /// same app, but promising local voice recognition would describe a
   /// build the reader is not running.
-  String _summary(AppLocalizations l10n) => platformCapabilities.isWeb
-      ? l10n.aboutBrowserSummary
-      : platformCapabilities.supportsVoice
+  String _summary(AppLocalizations l10n) => platformCapabilities.supportsVoice
       ? l10n.e7SettingsDetailUi22
       : platformCapabilities.platform == TargetPlatform.iOS
       ? l10n.iosRemoteSummary
@@ -317,6 +377,8 @@ class _AboutScreenState extends State<AboutScreen> {
     final version = package == null
         ? l10n.appTitle
         : l10n.aboutBuildVersion(package.version, package.buildNumber);
+    final checking =
+        _update == _UpdateCheck.checking || _update == _UpdateCheck.downloading;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -337,60 +399,28 @@ class _AboutScreenState extends State<AboutScreen> {
                       text: () => version,
                     ),
             ),
-            if (package != null && whatsNewVersionFor(package.version) != null)
+            if (d?.reportCode case final code?)
               KitRow(
-                key: const ValueKey('about-whats-new'),
-                leading: KitRow.icon(context, AppIconography.sparkle),
-                title: l10n.whatsNewRowTitle,
-                supporting: TextSpan(text: l10n.whatsNewRowDetail),
-                supportingMaxLines: 2,
-                trailing: const KitChevron(),
-                onTap: () => unawaited(
-                  showWhatsNewSheet(
-                    context,
-                    version: package.version,
-                    controller: widget.controller,
-                  ),
+                key: const ValueKey('about-report-code'),
+                leading: KitRow.icon(context, AppIconography.bug),
+                title: l10n.reportCodeLabel,
+                supporting: TextSpan(text: code),
+                trailing: KitIconButton.copy(
+                  key: const ValueKey('about-copy-report-code'),
+                  tooltip: l10n.reportCodeCopy,
+                  text: () => code,
                 ),
               ),
-          ],
-        ),
-        // Two quiet rows, no prompts: the project page and a share link.
-        SizedBox(height: tokens.sectionGap),
-        KitRowGroup(
-          key: const ValueKey('about-spread'),
-          label: l10n.starShareGroup,
-          children: [
-            KitArrival(
-              id: 'about-star-github',
-              child: KitRow(
-                key: const ValueKey('about-star-github'),
-                leading: KitRow.icon(context, AppIconography.star),
-                title: l10n.starRowTitle,
-                supporting: TextSpan(text: l10n.starRowDetail),
+            if (_canCheckUpdates)
+              KitRow(
+                key: const ValueKey('about-check-updates'),
+                leading: KitRow.icon(context, AppIconography.systemDownload),
+                title: l10n.aboutCheckUpdates,
+                supporting: TextSpan(text: _updateLine(l10n)),
                 supportingMaxLines: 2,
-                onTap: () => unawaited(
-                  openExternalLink(
-                    context,
-                    projectRepositoryUrl,
-                    launcher: widget.linkLauncher,
-                  ),
-                ),
-              ),
-            ),
-            // Needs the system share sheet: absent elsewhere, never a
-            // dead row.
-            if (ShareOut.supported)
-              KitArrival(
-                id: 'about-share-app',
-                child: KitRow(
-                  key: const ValueKey('about-share-app'),
-                  leading: KitRow.icon(context, AppIconography.shareNetwork),
-                  title: l10n.shareRowTitle,
-                  supporting: TextSpan(text: l10n.shareRowDetail),
-                  supportingMaxLines: 2,
-                  onTap: () => unawaited(_share(l10n)),
-                ),
+                enabled: !checking,
+                disabledReason: checking ? _updateLine(l10n) : null,
+                onTap: () => unawaited(_checkForUpdate()),
               ),
           ],
         ),
@@ -457,10 +487,15 @@ String reflowMarkdown(String source) {
 }
 
 class _BuildData {
-  const _BuildData({required this.package, required this.signer});
+  const _BuildData({
+    required this.package,
+    required this.signer,
+    this.reportCode,
+  });
 
   final PackageInfo? package;
   final String? signer;
+  final String? reportCode;
 }
 
 AppLocalizations _screenCopy(BuildContext context) =>

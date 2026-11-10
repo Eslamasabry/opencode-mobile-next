@@ -539,5 +539,38 @@
     <ID>UseCheckOrError:PhoneAgentSignIn.kt$PhoneAgentSignIn$throw IllegalStateException("auth_invalid_profile")</ID>
     <ID>UseCheckOrError:ReadAloudBridge.kt$ReadAloudBridge$throw IllegalStateException()</ID>
     <ID>UseCheckOrError:SetupRunner.kt$SetupRunner$throw IllegalStateException("The phone setup could not start. Try again.")</ID>
+    <ID>ComplexCondition:BuiltinNewProject.kt$BuiltinNewProject$name.any { it == '/' || it == '\u0000' || it == '\n' || it == '\r' }</ID>
+    <ID>ComplexCondition:BuiltinNewProject.kt$BuiltinNewProject$name.isEmpty() || name == "." || name == ".." || name.length &gt; 255</ID>
+    <ID>CyclomaticComplexMethod:BuiltinLinux.kt$BuiltinLinux$fun run(script: String, timeoutSeconds: Long = 600, agentUser: Boolean = false, stdin: String? = null): Result</ID>
+    <ID>CyclomaticComplexMethod:BuiltinNewProject.kt$BuiltinNewProject$internal fun applyConfig(start: Defaults, text: String): Defaults</ID>
+    <ID>CyclomaticComplexMethod:PhoneBoundaryProofSteps.kt$PhoneBoundaryProofSteps$fun native(stdout: List&lt;String&gt;, stderr: List&lt;String&gt;, exitCode: Int?): String?</ID>
+    <ID>LongParameterList:NativeInstallerAdmission.kt$NativeInstallerAdmission$( stored: InstallerTicket?, launchId: String, permitSent: Boolean, drained: Boolean, rootExited: Boolean, slotFree: Boolean, )</ID>
+    <ID>LoopWithTooManyJumpStatements:BuiltinNewProject.kt$BuiltinNewProject$for</ID>
+    <ID>LoopWithTooManyJumpStatements:PhoneBoundaryProofSteps.kt$PhoneBoundaryProofSteps$for</ID>
+    <ID>MagicNumber:BuiltinLinux.kt$BuiltinLinux$160</ID>
+    <ID>MagicNumber:BuiltinNewProject.kt$BuiltinNewProject$0x20</ID>
+    <ID>MagicNumber:BuiltinNewProject.kt$BuiltinNewProject$0x7f</ID>
+    <ID>MagicNumber:BuiltinNewProject.kt$BuiltinNewProject$100</ID>
+    <ID>MagicNumber:BuiltinNewProject.kt$BuiltinNewProject$1024</ID>
+    <ID>MagicNumber:BuiltinNewProject.kt$BuiltinNewProject$128</ID>
+    <ID>MagicNumber:BuiltinNewProject.kt$BuiltinNewProject$16</ID>
+    <ID>MagicNumber:BuiltinNewProject.kt$BuiltinNewProject$24</ID>
+    <ID>MagicNumber:BuiltinNewProject.kt$BuiltinNewProject$255</ID>
+    <ID>MagicNumber:BuiltinNewProject.kt$BuiltinNewProject$4096</ID>
+    <ID>MagicNumber:BuiltinNewProject.kt$BuiltinNewProject$64</ID>
+    <ID>MagicNumber:BuiltinNewProject.kt$BuiltinNewProject$8</ID>
+    <ID>MagicNumber:PhoneBoundaryProofSteps.kt$PhoneBoundaryProofSteps$128</ID>
+    <ID>MagicNumber:PhoneBoundaryProofSteps.kt$PhoneBoundaryProofSteps$3</ID>
+    <ID>MagicNumber:PhoneBoundaryProofSteps.kt$PhoneBoundaryProofSteps$5</ID>
+    <ID>MagicNumber:PhoneBoundaryProofSteps.kt$PhoneBoundaryProofSteps$78</ID>
+    <ID>NestedBlockDepth:PhoneBoundaryProofSteps.kt$PhoneBoundaryProofSteps$fun native(stdout: List&lt;String&gt;, stderr: List&lt;String&gt;, exitCode: Int?): String?</ID>
+    <ID>ReturnCount:BuiltinNewProject.kt$BuiltinNewProject$fun create( projects: File, name: String, stagingRoot: File, defaults: Defaults, epochSeconds: Long, ): Outcome</ID>
+    <ID>ReturnCount:BuiltinNewProject.kt$BuiltinNewProject$fun managedName(path: String): String?</ID>
+    <ID>ReturnCount:BuiltinNewProject.kt$BuiltinNewProject$private fun readPlainFile(rootfs: File, relative: String): String?</ID>
+    <ID>ReturnCount:NativeGateHeader.kt$NativeGateHeader$fun readOutcome(stream: InputStream, prefix: String): Outcome</ID>
+    <ID>ReturnCount:NativeGateHeader.kt$NativeGateHeader$private fun readLine(stream: InputStream): Line</ID>
+    <ID>ReturnCount:PhoneBoundaryProofSteps.kt$PhoneBoundaryProofSteps$fun prootTier(labels: List&lt;String&gt;, controls: Map&lt;String, Any?&gt;, finished: Boolean, exitCode: Int?): String?</ID>
+    <ID>TooGenericExceptionCaught:BuiltinNewProject.kt$BuiltinNewProject$raced: Exception</ID>
+    <ID>TooManyFunctions:BuiltinNewProject.kt$BuiltinNewProject</ID>
   </CurrentIssues>
 </SmellBaseline>

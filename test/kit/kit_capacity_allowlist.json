@@ -2,7 +2,7 @@
   "_about": "The kit capacity ratchet (docs/ux-system/kit-v2.md §8.6, test/kit/kit_capacity_test.dart). Each entry is a scene that breaks the contract in test/kit/kit_capacity.json today, with the measured value: error/cut/target/items count the failing combinations (or nodes, or items drawn), width is dp painted at 1,600 dp. The file only shrinks: a new violation fails, a worse value fails, a better or fixed one fails until this file is tightened (KIT_CAPACITY_WRITE=1 rewrites it, never adding an entry).",
   "cut": {
     "KitAgentChoice/tests-d-default": {
-      "value": 11,
+      "value": 3,
       "note": "280x640 text 1.0 ltr pseudo: cut with no ellipsis (clip:3, \"⟦Çáŕéƒûļ ŵîţĥ ƀîĝ çĥáñĝéš one two th⟧\")"
     },
     "KitAvatar/default": {
@@ -596,7 +596,7 @@
     }
   },
   "rule": {
-    "KitAgentChoice/tests-d-default · Careful with big changes": {
+    "KitAgentChoice/tests-d-default · Understands your codebase": {
       "value": 1,
       "note": "clip:3: set up to cut its words without an ellipsis"
     },

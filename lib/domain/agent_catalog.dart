@@ -255,19 +255,19 @@ AgentCatalog _builtInCatalog() {
 
   const github = 'https://github.com';
   final gemini = archive(
-    'https://registry.npmjs.org/@google/gemini-cli/-/gemini-cli-0.66.0.tgz',
-    '269734d35287fbd8ed2982534258ecf4a95f184b6e06e6732e0d6850c28701d9',
+    'https://registry.npmjs.org/@google/gemini-cli/-/gemini-cli-0.63.0.tgz',
+    '97a6edfc10645463b517f0518d46a8c72efbdc12558a9a948607f726284a0420',
     'package/bundle/gemini.js',
-    bytes: 20889095,
-    installedBytes: 98815455,
+    bytes: 20810043,
+    installedBytes: 98439442,
     format: AgentArtifactFormat.npmTarGz,
   );
   final qwen = archive(
-    'https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.26.4.tgz',
-    'a7640f1c0656b7e54ea5995335ed6cc18ee219b8b4200fe8a6141cff148aaa89',
+    'https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.25.0.tgz',
+    'afeab0c85d682f201101319ce05decf3302d7ed7fb6319baa6a592051ea1a1ba',
     'package/cli-entry.js',
-    bytes: 42796897,
-    installedBytes: 154807157,
+    bytes: 33195960,
+    installedBytes: 116286799,
     format: AgentArtifactFormat.npmTarGz,
   );
   return AgentCatalog(
@@ -279,17 +279,17 @@ AgentCatalog _builtInCatalog() {
         'opencode',
         AgentSignInMethod.apiKeyHost,
         AgentInstallRecipe(
-          version: '2.2.5',
+          version: '2.1.1',
           executable: 'opencode',
           artifacts: {
             AgentArchitecture.arm64: archive(
-              'https://registry.npmjs.org/@opencode/cli-linux-arm64/-/cli-linux-arm64-2.2.5.tgz',
-              'f8c5a82075fede9b5b044ed6c8a6d13ad807a7e62caea1cd0a878adef49eb053',
+              'https://registry.npmjs.org/@opencode/cli-linux-arm64/-/cli-linux-arm64-2.1.1.tgz',
+              'cfa3ae6363fc3082f03072297069d81f53559a761371fdb4b56fe6bfa01ca066',
               'package/bin/opencode',
             ),
             AgentArchitecture.x64: archive(
-              'https://registry.npmjs.org/@opencode/cli-linux-x64-baseline/-/cli-linux-x64-baseline-2.2.5.tgz',
-              '873856acbaa71c5ed8df6433e312dfa0c82a86e2cddfb9d80f0a31123a917a08',
+              'https://registry.npmjs.org/@opencode/cli-linux-x64-baseline/-/cli-linux-x64-baseline-2.1.1.tgz',
+              '216d3861d0a167adad5850282439bae13483203f4b110f0510f260118bba2858',
               'package/bin/opencode',
             ),
           },
@@ -350,13 +350,44 @@ AgentCatalog _builtInCatalog() {
         ),
       ),
       entry(
+        'antigravity',
+        'Antigravity',
+        AgentRoute.acpPaseo,
+        'antigravity',
+        AgentSignInMethod.browserOAuthHost,
+        AgentInstallRecipe(
+          version: '1.5.3',
+          executable: 'agy',
+          artifacts: {
+            AgentArchitecture.arm64: archive(
+              'https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-arm/cli_linux_arm64.tar.gz',
+              '2d50060c7b1327995e5c81ec58829c91c2564ebb9fec165d3f9f1325ec188675',
+              'antigravity',
+              bytes: 69843447,
+              installedBytes: 235622776,
+            ),
+            AgentArchitecture.x64: archive(
+              'https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-x64/cli_linux_x64.tar.gz',
+              '1b4850599cce73a17f94ffb422df3bf9531531b77dbddc40c1a435e0c2c16807',
+              'antigravity',
+              bytes: 73694700,
+              installedBytes: 246837648,
+            ),
+          },
+          launchArgs: ['acp', '--disable-telemetry'],
+          signInArgs: ['acp', '--login'],
+        ),
+        limitation:
+            'Sign in with Google, then check it on your phone. Starts a new chat.',
+      ),
+      entry(
         'gemini',
         'Gemini CLI',
         AgentRoute.acpPaseo,
         'gemini',
         AgentSignInMethod.browserOAuthHost,
         AgentInstallRecipe(
-          version: '0.66.0',
+          version: '0.63.0',
           executable: 'gemini',
           artifacts: {
             AgentArchitecture.arm64: gemini,
@@ -374,7 +405,7 @@ AgentCatalog _builtInCatalog() {
         'qwen',
         AgentSignInMethod.apiKeyHost,
         AgentInstallRecipe(
-          version: '0.26.4',
+          version: '0.25.0',
           executable: 'qwen',
           artifacts: {
             AgentArchitecture.arm64: qwen,
@@ -392,22 +423,22 @@ AgentCatalog _builtInCatalog() {
         'kilo',
         AgentSignInMethod.browserOAuthHost,
         AgentInstallRecipe(
-          version: '7.8.18',
+          version: '7.8.3',
           executable: 'kilo',
           artifacts: {
             AgentArchitecture.arm64: archive(
-              'https://registry.npmjs.org/@kilocode/cli-linux-arm64/-/cli-linux-arm64-7.8.18.tgz',
-              '0f1bd0fb983f67ec1edf53c185e9521268f8f133af2a4cec2f1967e5d60e45ef',
+              'https://registry.npmjs.org/@kilocode/cli-linux-arm64/-/cli-linux-arm64-7.8.3.tgz',
+              'bd61f03eb14053fdcaf5245eb1740455b0447fe9d6d48b4adaeea6bb4ae53a90',
               'package/bin/kilo',
-              bytes: 83529597,
-              installedBytes: 258264056,
+              bytes: 63881791,
+              installedBytes: 169322640,
             ),
             AgentArchitecture.x64: archive(
-              'https://registry.npmjs.org/@kilocode/cli-linux-x64/-/cli-linux-x64-7.8.18.tgz',
-              'bde638d0a493155088e4454fbe4a9697571443665e2a22d5a78cad645b96b554',
+              'https://registry.npmjs.org/@kilocode/cli-linux-x64/-/cli-linux-x64-7.8.3.tgz',
+              '03b963726d8002ea6bee21d8db6121201e6ed8230a0e1fce8857f4c8d091333c',
               'package/bin/kilo',
-              bytes: 84132773,
-              installedBytes: 259213488,
+              bytes: 64190979,
+              installedBytes: 170363008,
             ),
           },
           launchArgs: ['acp'],
@@ -423,22 +454,22 @@ AgentCatalog _builtInCatalog() {
         'cline',
         AgentSignInMethod.browserOAuthHost,
         AgentInstallRecipe(
-          version: '3.0.74',
+          version: '3.0.68',
           executable: 'cline',
           artifacts: {
             AgentArchitecture.arm64: archive(
-              'https://registry.npmjs.org/@cline/cli-linux-arm64/-/cli-linux-arm64-3.0.74.tgz',
-              '10c1f63c143b6f7eba3320543df2f6081232d79fb1830c293cf006115dce9049',
+              'https://registry.npmjs.org/@cline/cli-linux-arm64/-/cli-linux-arm64-3.0.68.tgz',
+              '5e0ad56ba4c494c437f6dcdc2557c165478e05e1800e1fe6f7d476e4fd4c84f2',
               'package/bin/cline',
-              bytes: 54812128,
-              installedBytes: 162253096,
+              bytes: 49689972,
+              installedBytes: 130861352,
             ),
             AgentArchitecture.x64: archive(
-              'https://registry.npmjs.org/@cline/cli-linux-x64/-/cli-linux-x64-3.0.74.tgz',
-              '52502438a8d78a451156c38df2eb31116d658c94d1d5461b4e29761d06211bfc',
+              'https://registry.npmjs.org/@cline/cli-linux-x64/-/cli-linux-x64-3.0.68.tgz',
+              'a979929090eb9a934b3907e2cf519368964d6a35e96079d6db4fc89caad98ab1',
               'package/bin/cline',
-              bytes: 55037574,
-              installedBytes: 161793504,
+              bytes: 49918778,
+              installedBytes: 130434528,
             ),
           },
           launchArgs: ['--acp'],

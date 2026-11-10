@@ -225,12 +225,9 @@ void main() {
     final (store, controller) = await _state();
     addTearDown(controller.dispose);
     final previousEngine = PhoneSetup.engine;
-    final previousTermux = PhoneSetup.termux;
     PhoneSetup.engine = FakeSetupEngine();
-    PhoneSetup.termux = FakeSetupEngine();
     addTearDown(() {
       PhoneSetup.engine = previousEngine;
-      PhoneSetup.termux = previousTermux;
     });
     // Phone setup's own page reads the device for its pre-flight.
     answerVoiceDeviceProbe();
@@ -452,7 +449,7 @@ void main() {
     final probed = <String>[];
     serverProbe = ({required baseUrl, username, password}) async {
       probed.add(baseUrl);
-      return const ServerProbeResult.success('2.2.5');
+      return const ServerProbeResult.success('2.1.1');
     };
 
     final (store, controller) = await _state();
@@ -483,7 +480,7 @@ void main() {
 
     expect(probed, ['https://box.example:4096']);
     expect(find.byKey(const ValueKey('server-test-success')), findsOneWidget);
-    expect(find.text('OpenCode 2 · 2.2.5'), findsOneWidget);
+    expect(find.text('OpenCode 2 · 2.1.1'), findsOneWidget);
     expect(find.text('Connected — save to finish.'), findsOneWidget);
   });
 

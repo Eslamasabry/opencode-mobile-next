@@ -10,7 +10,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../builtin/linux_manager/linux_manager.dart';
 import '../../../builtin/linux_manager/linux_packages.dart';
 import '../../../builtin/linux_manager/linux_processes.dart';
-import '../../../builtin/linux_vitals.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../app_theme.dart';
 import '../../kit/kit.dart';
@@ -34,39 +33,6 @@ String? linuxProblemDetails(Object error) {
     return KitRedact.text(error.details!);
   }
   return null;
-}
-
-/// The heat in the page's word.
-String linuxHeatWord(AppLocalizations l10n, LinuxHeat heat) => switch (heat) {
-  LinuxHeat.cool => l10n.linuxVitalsCool,
-  LinuxHeat.warm => l10n.linuxVitalsWarm,
-  LinuxHeat.hot => l10n.linuxVitalsHot,
-  LinuxHeat.tooHot => l10n.linuxVitalsTooHot,
-};
-
-/// The one sentence under the vitals: what Linux takes, and whether it is
-/// what heats the phone. Nothing is claimed that was not read: without a
-/// heat reading it says only the memory; without Linux's share, nothing.
-String? linuxVitalsSentence(AppLocalizations l10n, LinuxVitals v) {
-  final heat = v.heat;
-  final memory = v.linuxMemoryBytes;
-  if (heat == null || heat == LinuxHeat.cool) {
-    if (memory == null) return null;
-    return heat == null
-        ? l10n.linuxVitalsSummary(linuxSize(memory))
-        : l10n.linuxVitalsSummaryCool(linuxSize(memory));
-  }
-  final word = linuxHeatWord(l10n, heat);
-  if (v.hasHeavyProgram) {
-    return l10n.linuxVitalsHeavy(
-      word,
-      v.heaviestProgram!,
-      '${v.heaviestCpuPercent!.round()}',
-    );
-  }
-  final cpu = v.linuxCpuPercent;
-  if (cpu == null) return null;
-  return l10n.linuxVitalsNotLinux(word, '${cpu.round()}');
 }
 
 /// Sizes as the rest of This phone shows them.
@@ -137,16 +103,12 @@ class _JobBody extends StatelessWidget {
   String _title(AppLocalizations l10n) => switch (state.kind) {
     LinuxJobKind.install => l10n.linuxMgrJobInstalling(_names(state)),
     LinuxJobKind.remove => l10n.linuxMgrJobRemoving(_names(state)),
-    LinuxJobKind.backup => l10n.linuxMgrJobBackingUp,
-    LinuxJobKind.restore => l10n.linuxMgrJobRestoring,
     _ => l10n.linuxMgrJobUpdating,
   };
 
   String _stopLabel(AppLocalizations l10n) => switch (state.kind) {
     LinuxJobKind.install => l10n.linuxMgrJobStopInstall(_names(state)),
     LinuxJobKind.remove => l10n.linuxMgrJobStopRemove(_names(state)),
-    LinuxJobKind.backup => l10n.linuxMgrJobStopBackup,
-    LinuxJobKind.restore => l10n.linuxMgrJobStopRestore,
     _ => l10n.linuxMgrJobStopUpdate,
   };
 
@@ -154,15 +116,17 @@ class _JobBody extends StatelessWidget {
     final names = _names(state);
     final yes = await showKitConfirm(
       context,
-      title: switch (state.kind) {
-        LinuxJobKind.install => l10n.linuxMgrJobStopInstallTitle(names),
-        LinuxJobKind.remove => l10n.linuxMgrJobStopRemoveTitle(names),
-        LinuxJobKind.backup => l10n.linuxMgrJobStopBackupTitle,
-        LinuxJobKind.restore => l10n.linuxMgrJobStopRestoreTitle,
-        _ => l10n.linuxMgrJobStopUpdateTitle,
-      },
+      title: state.kind == LinuxJobKind.install
+          ? l10n.linuxMgrJobStopInstallTitle(names)
+          : state.kind == LinuxJobKind.remove
+          ? l10n.linuxMgrJobStopRemoveTitle(names)
+          : l10n.linuxMgrJobStopUpdateTitle,
       body: l10n.linuxMgrJobStopBody,
-      confirmLabel: _stopLabel(l10n),
+      confirmLabel: state.kind == LinuxJobKind.install
+          ? l10n.linuxMgrJobStopInstall(names)
+          : state.kind == LinuxJobKind.remove
+          ? l10n.linuxMgrJobStopRemove(names)
+          : l10n.linuxMgrJobStopUpdate,
       kind: KitConfirmKind.stop,
       icon: AppIcons.stop,
       sheetKey: const Key('linux-job-stop-sheet'),
@@ -211,8 +175,6 @@ class _JobBody extends StatelessWidget {
       LinuxJobStatus.done => switch (state.kind) {
         LinuxJobKind.install => l10n.linuxMgrJobDoneInstall(_names(state)),
         LinuxJobKind.remove => l10n.linuxMgrJobDoneRemove(_names(state)),
-        LinuxJobKind.backup => l10n.linuxMgrJobDoneBackup,
-        LinuxJobKind.restore => l10n.linuxMgrJobDoneRestore,
         _ => l10n.linuxMgrJobDoneUpdate,
       },
       LinuxJobStatus.timedOut => l10n.linuxMgrJobTimedOut,

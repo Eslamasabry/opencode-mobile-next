@@ -1,10 +1,13 @@
 import 'dart:ui' show Locale;
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../l10n/app_localizations.dart';
 import '../../state/move_to_opencode2.dart';
 import '../../state/profiles.dart';
 import '../builtin_linux.dart';
 import '../builtin_server.dart';
+import 'node_compat.dart';
 import 'setup_engine.dart';
 
 /// The last step of a setup job: start OpenCode inside the app and connect
@@ -33,12 +36,25 @@ class BuiltinSetupFinisher {
 
   BuiltinLinux get linux => starter.linux;
 
+  /// Copies the Node.js safe mode the Node step chose inside Linux (issue
+  /// #117) into the app's preference, which the server start reads. A read
+  /// that fails changes nothing: Linux's own file still reaches the server.
+  Future<void> syncNodeCompat() async {
+    try {
+      final read = await linux.run(
+        'cat ${NodeCompat.stateFile} 2>/dev/null || true',
+        timeout: const Duration(seconds: 30),
+      );
+      if (!read.ok) return;
+      await NodeCompatStore.write(
+        await SharedPreferences.getInstance(),
+        NodeCompat.parseState(read.output),
+      );
+    } catch (_) {}
+  }
+
   Future<String?> call(SetupFinishRequest request) async {
     final l10n = strings();
-    // A Termux job must never create/start the in-app Ubuntu profile.
-    if (request.host != SetupHostKind.builtin) {
-      return l10n.phoneSetupErrorCannotStart;
-    }
     request.runtime.requireSupported();
     final profile = await ensureBuiltinProfile(
       store,
@@ -64,6 +80,7 @@ class BuiltinSetupFinisher {
           p.backend == ServerBackend.openCode &&
           BuiltinLinux.managesServerUrl(p.baseUrl),
     );
+    await syncNodeCompat();
     var running = false;
     try {
       running = (await linux.status()).serverRunning;
@@ -72,18 +89,6 @@ class BuiltinSetupFinisher {
     }
     if (!request.openCodeChanged && running && isConnectedTo(profile)) {
       return null;
-    }
-    // The job just replaced the OpenCode program. A server still running
-    // is the old process, and the native start returns early for a server
-    // already running the same script, so stop it first: otherwise the
-    // phone keeps serving the old version (a 2.1.1 server missed the 2.2.5
-    // Claude Agent integration while the page said "Up to date").
-    if (request.openCodeChanged && running) {
-      try {
-        await linux.stopServer();
-      } on BuiltinLinuxException {
-        // The start below still reports whether a server answers.
-      }
     }
     // Running but not ours to trust (another runtime, or the app is not
     // connected to it): restarting costs seconds and removes the doubt.

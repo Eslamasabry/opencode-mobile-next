@@ -9,7 +9,6 @@ import '../../domain/setup_registry.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/connection.dart';
 import '../../state/mcp_catalog_host.dart';
-import '../../state/phone_host.dart' show PhoneHostKind;
 import '../../state/profiles.dart';
 import '../../state/setup_registry_store.dart';
 import '../app_iconography.dart';
@@ -92,7 +91,7 @@ class McpCatalogScreen extends StatefulWidget {
     super.key,
     required this.controller,
     this.client,
-    this.phoneHostOf = phoneHostOfProfile,
+    this.onThisPhone = isPhoneHostedProfile,
     this.openPhoneTools,
   });
 
@@ -101,12 +100,11 @@ class McpCatalogScreen extends StatefulWidget {
   /// The registry client; tests pass one over a fake transport.
   final SetupRegistryClient? client;
 
-  /// Which phone host serves a profile (null: not this phone).
-  final PhoneHostKind? Function(ServerProfile? profile) phoneHostOf;
+  /// Whether a profile is OpenCode on this phone.
+  final bool Function(ServerProfile? profile) onThisPhone;
 
-  /// Opens phone setup's Add tools for [kind]; This phone by default.
-  final Future<void> Function(BuildContext context, PhoneHostKind kind)?
-  openPhoneTools;
+  /// Opens phone setup's Add tools; This phone by default.
+  final Future<void> Function(BuildContext context)? openPhoneTools;
 
   @override
   State<McpCatalogScreen> createState() => _McpCatalogScreenState();
@@ -294,12 +292,12 @@ class _McpCatalogScreenState extends State<McpCatalogScreen> {
   Future<void> _turnOn(McpCatalogItem item) async {
     final draft = item.draft;
     if (draft == null || _busy.contains(item.serverName)) return;
-    final phone = widget.phoneHostOf(_controller.profile);
-    if (item.runtime == McpCatalogRuntime.node && phone != null) {
+    final phone = widget.onThisPhone(_controller.profile);
+    if (item.runtime == McpCatalogRuntime.node && phone) {
       final choice = await _askNode(item);
       if (!mounted || choice == null) return;
       if (choice == _NodeChoice.addNode) {
-        await (widget.openPhoneTools ?? _openThisPhone)(context, phone);
+        await (widget.openPhoneTools ?? openThisPhone)(context);
         return;
       }
     }
@@ -320,11 +318,6 @@ class _McpCatalogScreenState extends State<McpCatalogScreen> {
       if (mounted) setState(() => _busy.remove(item.serverName));
     }
   }
-
-  static Future<void> _openThisPhone(
-    BuildContext context,
-    PhoneHostKind kind,
-  ) => openThisPhone(context, kind: kind);
 
   Future<_NodeChoice?> _askNode(McpCatalogItem item) {
     final l10n = _l10n;
@@ -604,7 +597,7 @@ class _McpCatalogScreenState extends State<McpCatalogScreen> {
     final on = _installed?.contains(item.serverName) == true;
     final busy = _busy.contains(item.serverName);
     final canRemove = _controller.capabilities.mcpRuntimeRemovals;
-    final phone = widget.phoneHostOf(_controller.profile) != null;
+    final phone = widget.onThisPhone(_controller.profile);
     final String? disabledReason = busy
         ? (on ? l10n.mcpCatalogRemoving : l10n.mcpCatalogAdding)
         : on && !canRemove

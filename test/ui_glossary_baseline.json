@@ -20,8 +20,7 @@
       "label teamUiGateAnswerApprove: fewer than two words": 1
     },
     "lib/ui/widgets/safety_confirms.dart": {
-      "label e7SettingsUi8: fewer than two words": 1,
-      "label termuxRestartConfirm: fewer than two words": 2
+      "label e7SettingsUi8: fewer than two words": 1
     },
     "lib/ui/widgets/work_status_line.dart": {
       "label workServerRestart: fewer than two words": 1
@@ -77,10 +76,6 @@
     },
     "e7SettingsCurrentServer": {
       "ar version \"{version}\"": 1
-    },
-    "e7SettingsHealthVersion": {
-      "ar version \"{version}\"": 1,
-      "en version \"{version}\"": 1
     },
     "e7SettingsInstallVersion": {
       "ar version \"{version}\"": 1,
@@ -147,22 +142,6 @@
       "ar address \"localhost\"": 1,
       "en address \"localhost\"": 1
     },
-    "e7SharedTheChrootSharesTheNetworkStackSo": {
-      "ar address \"127.0.0.1\"": 1,
-      "ar port \":4096\"": 1,
-      "en address \"127.0.0.1\"": 1,
-      "en port \":4096\"": 1
-    },
-    "localAgentFailedPortInUse": {
-      "en port \"Port 6767\"": 1
-    },
-    "localAgentProjectPathInvalid": {
-      "en path \"/root/projects/my-app.\"": 1
-    },
-    "localAgentReadyBody": {
-      "ar address \"127.0.0.1\"": 1,
-      "en address \"127.0.0.1\"": 1
-    },
     "managedHealthVersion": {
       "ar version \"{version}\"": 1
     },
@@ -195,12 +174,6 @@
     },
     "teamUiLabelCity": {
       "en engine word \"City\"": 1
-    },
-    "teamUiPhoneFailedCity": {
-      "en engine word \"city\"": 1
-    },
-    "teamUiPhoneStatusInstalled": {
-      "en engine word \"city\"": 1
     },
     "teamUiPolicyRig": {
       "ar engine word \"rig\"": 1,
@@ -252,9 +225,6 @@
     }
   },
   "G28": {
-    "activityUnknownStatusDetail": {
-      "noun sentence activity": 1
-    },
     "agentAccountConnected": {
       "noun sentence host": 1
     },
@@ -287,12 +257,6 @@
     },
     "agentAccountUsageUnavailable": {
       "noun sentence host": 1
-    },
-    "approvalsUiEverythingTitle": {
-      "title over four words": 1
-    },
-    "approvalsUiRecordTitle": {
-      "title over four words": 1
     },
     "attentionTitle": {
       "noun label attention": 1
@@ -345,9 +309,6 @@
     "e7SettingsUi46": {
       "noun sentence host": 1
     },
-    "e7SettingsUi50": {
-      "product name OpenCode": 1
-    },
     "e7SettingsUi9": {
       "product name OpenCode": 1
     },
@@ -399,9 +360,6 @@
     "e7SetupRestartActiveChanged": {
       "noun sentence local server": 1
     },
-    "e7SetupRestartFailed": {
-      "noun sentence local server": 1
-    },
     "e7SetupRestartReconnectFailed": {
       "noun sentence local server": 1
     },
@@ -419,9 +377,6 @@
     },
     "e7SetupStartingLocal": {
       "noun label local server": 1
-    },
-    "e7SetupStopFailed": {
-      "noun sentence local server": 1
     },
     "e7SetupStopLocal": {
       "noun label local server": 1
@@ -517,23 +472,11 @@
     "launchUiActivityNoServer": {
       "noun sentence attention": 1
     },
-    "localAgentInstalledTitle": {
-      "title over four words": 1
-    },
-    "localAgentReadyTitle": {
-      "title over four words": 1
-    },
     "localAgentRemoveTitle": {
       "title over four words": 1
     },
     "localAgentRestartTitle": {
       "title over four words": 1
-    },
-    "localAgentSignInBody": {
-      "body over two sentences": 1
-    },
-    "localAgentStepPaseo": {
-      "product name Paseo": 1
     },
     "localAgentStopTitle": {
       "title over four words": 1
@@ -577,14 +520,8 @@
     "phoneServerCardVersion": {
       "product name OpenCode": 1
     },
-    "phoneServerStoppedTitle": {
-      "title over four words": 1
-    },
     "phoneSetupNotificationTitle": {
       "title over four words": 1
-    },
-    "phoneSetupOpenWelcomeContinue": {
-      "bare Continue": 1
     },
     "phoneSetupProgressTitle": {
       "title over four words": 1
@@ -642,9 +579,6 @@
     "teamDiscoverBatteryTitle": {
       "title over four words": 1
     },
-    "teamDiscoverComputerChoiceTitle": {
-      "title over four words": 1
-    },
     "teamDiscoverEntryTitle": {
       "title over four words": 1
     },
@@ -678,19 +612,7 @@
     "teamUiControlStopConfirmBody": {
       "noun sentence session": 1
     },
-    "teamUiHomeNeedsYouFallbackTitle": {
-      "title over four words": 1
-    },
     "teamUiHostGuideTitle": {
-      "title over four words": 1
-    },
-    "teamUiPhoneContinue": {
-      "bare Continue": 1
-    },
-    "teamUiPhoneRemoveTitle": {
-      "title over four words": 1
-    },
-    "teamUiPhoneStopTitle": {
       "title over four words": 1
     },
     "teamUiPhoneSuccessTitle": {
@@ -723,26 +645,14 @@
     "teamUiTurnOffTitle": {
       "title over four words": 1
     },
-    "termuxProcsKindOpenCode": {
-      "product name OpenCode": 1
-    },
     "termuxRestartTitle": {
       "noun sentence local server": 1
-    },
-    "termuxStorageCatOpenCode": {
-      "product name OpenCode": 1
-    },
-    "termuxStorageCleanConfirmBody": {
-      "body over two sentences": 1
     },
     "usageDescription": {
       "noun sentence activity": 1
     },
     "usageEmpty": {
       "noun sentence activity": 1
-    },
-    "workNotAnsweringListTitle": {
-      "title over four words": 1
     },
     "workServerRestartTitle": {
       "title over four words": 1

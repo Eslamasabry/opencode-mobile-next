@@ -217,7 +217,7 @@ void main() {
         currentWorkId: 'w2',
         lastActivity: clock.subtract(const Duration(minutes: 12)),
         contextPercent: context,
-        workDir: '/home/owner/city/.gc/worktrees/ocproof/polecats/fox',
+        workDir: '/home/eslam/city/.gc/worktrees/ocproof/polecats/fox',
         branch: 'polecat/oc-cq6',
         sessionStartedAt: clock.subtract(const Duration(hours: 3, minutes: 14)),
         raw: const {
@@ -504,7 +504,7 @@ void main() {
       expect(find.text('openai/gpt-x'), findsOneWidget);
       expect(find.text('OpenCode'), findsOneWidget);
       final workDir = find.text(
-        '/home/owner/city/.gc/worktrees/ocproof/polecats/fox',
+        '/home/eslam/city/.gc/worktrees/ocproof/polecats/fox',
       );
       expect(workDir, findsOneWidget);
       expect(
@@ -586,7 +586,7 @@ void main() {
         final groups = blocks.whereType<AgentStepGroup>().toList();
         expect(groups.length, greaterThanOrEqualTo(5));
         expect(groups.first.steps.length, 5);
-        expect(groups.first.steps.first.command, startsWith('ls /home/owner'));
+        expect(groups.first.steps.first.command, startsWith('ls /home/eslam'));
         expect(groups.first.steps.first.kind, AgentStepKind.command);
         expect(groups.first.steps.first.output, contains('On branch master'));
         expect(
@@ -634,7 +634,7 @@ void main() {
         expect(inside(find.byType(ToolCard)), findsWidgets);
         final command = inside(
           // The tool row shortens a long command in the middle.
-          find.textContaining('ls /home/owner/Storage/C'),
+          find.textContaining('ls /home/eslam/Storage/C'),
         );
         expect(command, findsWidgets);
         final text = tester.widget<Text>(command.first);

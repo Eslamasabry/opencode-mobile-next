@@ -1,12 +1,7 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 
 import '../../l10n/app_localizations.dart';
 import '../../platform/local_file_open.dart';
-import 'link_file_share.dart';
-import '../app_iconography.dart';
 import '../kit/kit.dart';
 
 /// Asks whether to hand a file on this phone to Android, and does it: the
@@ -36,7 +31,7 @@ Future<void> offerPhoneFile(
       action: KitAction(
         key: const ValueKey('phone-file-copy-path'),
         label: l10n.readerUiCopyPath,
-        onPressed: () => Clipboard.setData(ClipboardData(text: path)),
+        onPressed: () => KitCopy.copy(context, path),
       ),
       alertKey: const ValueKey('phone-file-where'),
     );
@@ -52,18 +47,6 @@ Future<void> offerPhoneFile(
     confirmLabel: install
         ? l10n.phoneFileInstallAction
         : l10n.phoneFileOpenAction,
-    alternative: canShareLinkedFile()
-        ? KitAction(
-            key: const ValueKey('phone-file-share-wifi'),
-            label: l10n.fileShareAction,
-            icon: AppIconography.network,
-            onPressed: () {
-              if (context.mounted) {
-                unawaited(shareLinkedFile(context, path: path, onPhone: true));
-              }
-            },
-          )
-        : null,
     sheetKey: const ValueKey('phone-file-sheet'),
     confirmKey: const ValueKey('phone-file-confirm'),
   );

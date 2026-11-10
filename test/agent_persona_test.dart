@@ -26,6 +26,9 @@ void main() {
       'codex': AgentPersonaId.codex,
       'gemini': AgentPersonaId.gemini,
       'gemini-cli': AgentPersonaId.gemini,
+      'antigravity': AgentPersonaId.antigravity,
+      'Antigravity CLI': AgentPersonaId.antigravity,
+      'agy': AgentPersonaId.antigravity,
       'kilo': AgentPersonaId.kilo,
       'kilocode': AgentPersonaId.kilo,
       'cline': AgentPersonaId.cline,
@@ -49,7 +52,7 @@ void main() {
   });
 
   test('every persona has a bundled mark and words in both languages', () {
-    expect(AgentPersona.all.map((p) => p.id).toSet().length, 6);
+    expect(AgentPersona.all.map((p) => p.id).toSet().length, 7);
     for (final l in [AppLocalizationsEn(), AppLocalizationsAr()]) {
       for (final persona in AgentPersona.all) {
         expect(bundledMarkSlugs, contains(persona.markSlug));

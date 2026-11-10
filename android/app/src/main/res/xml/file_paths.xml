@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The in-app updater's downloads only (AppUpdateInstaller): the APK under
+     cacheDir/updates/. Nothing else of the app is ever exposed. -->
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <cache-path name="updates" path="updates/" />
+</paths>

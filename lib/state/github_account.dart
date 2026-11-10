@@ -242,6 +242,35 @@ class GitHubAccountController extends ChangeNotifier {
     }
   }
 
+  /// Repo list for the sign-in account, used by the Git remote sheet.
+  Future<List<GitHubRepository>> fetchRepositories() async {
+    final token = await tokenForGit();
+    if (token == null) return const [];
+    try {
+      return await _flow.fetchUserRepositories(token);
+    } on GitHubSignInException catch (e) {
+      // A rejected token asks for a new sign-in, as a rejected push does.
+      if (e.problem == GitHubSignInProblem.tokenRejected) await tokenRejected();
+      return const [];
+    }
+  }
+
+  /// Creates an empty repository in this signed-in account.
+  Future<GitHubRepository> createRepository({
+    required String name,
+    required bool isPrivate,
+  }) async {
+    final token = await tokenForGit();
+    if (token == null) {
+      // No usable token (signed out, or a refresh GitHub refused): the way
+      // forward is signing in again, not checking the network.
+      throw const GitHubRepositoryException(
+        GitHubRepositoryProblem.tokenRejected,
+      );
+    }
+    return _flow.createUserRepository(token, name: name, isPrivate: isPrivate);
+  }
+
   /// GitHub refused the token during a push or pull: forget it and ask for
   /// a new sign-in (feasibility doc, exact flow step 4).
   Future<void> tokenRejected() => _forget(GitHubSignInProblem.tokenRejected);

@@ -1,7 +1,5 @@
 // Golden renders of shared-phone-1's pages (wave 2a), rebuilt from kit
-// parts: "This phone" in its states, the setup output, the AI team's "On
-// this phone" section (with the re-offer above it), its stop and delete
-// questions and the Keep it running sheet. Phone 412x915 and one wide
+// parts: "This phone" in its states and the setup output. Phone 412x915 and one wide
 // window (1280x800), dark and light (owner decision 2026-09-27: no Arabic),
 // with the app's real fonts at DPR 1.
 //
@@ -21,7 +19,6 @@ import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/ui/kit/kit_tokens.dart';
 import 'package:opencode_mobile/ui/widgets/phone_server_card.dart';
 import 'package:opencode_mobile/ui/widgets/setup_terminal.dart';
-import 'package:opencode_mobile/ui/widgets/team_phone_section.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../tool/capture/fixtures.dart' show captureTheme, loadCaptureFonts;
@@ -134,30 +131,6 @@ void main() {
     );
   }
 
-  Future<void> team(
-    WidgetTester tester,
-    String shot, {
-    required bool light,
-    required Size size,
-    required TeamRuntime runtime,
-    Future<void> Function(WidgetTester tester)? act,
-  }) async {
-    final profile = teamProfile();
-    store.saved.add(profile);
-    await _shot(
-      tester,
-      shot,
-      light: light,
-      size: size,
-      act: act,
-      body: (context) => TeamPhoneSection(
-        connection: connection,
-        profile: profile,
-        runtime: runtime,
-      ),
-    );
-  }
-
   for (final light in [false, true]) {
     final theme = light ? 'light' : 'dark';
     for (final size in [_phone, _wide]) {
@@ -224,70 +197,6 @@ void main() {
               copyTooltip: l10n.e7SetupCopyFailureReport,
             ),
           ]),
-        );
-      });
-
-      testWidgets('On this phone ($theme, $size)', (tester) async {
-        final profile = teamProfile();
-        store.saved.addAll([profile]);
-        await _shot(
-          tester,
-          'team_phone_section_states',
-          light: light,
-          size: size,
-          body: (context) => column(context, [
-            TeamPhoneSection(
-              connection: connection,
-              profile: profile,
-              runtime: TeamRuntime()..current = teamReady(),
-            ),
-            TeamPhoneSection(
-              connection: connection,
-              profile: profile,
-              runtime: TeamRuntime()..current = teamReady(killed: true),
-            ),
-          ]),
-        );
-      });
-
-      testWidgets('Stop the team? ($theme, $size)', (tester) async {
-        await team(
-          tester,
-          'team_phone_stop_sheet',
-          light: light,
-          size: size,
-          runtime: TeamRuntime()..current = teamReady(),
-          act: (tester) async {
-            await tester.tap(find.byKey(const ValueKey('team-phone-stop')));
-          },
-        );
-      });
-
-      testWidgets('Delete the team? ($theme, $size)', (tester) async {
-        await team(
-          tester,
-          'team_phone_remove_sheet',
-          light: light,
-          size: size,
-          runtime: TeamRuntime(totalBytes: 294 * 1024 * 1024)
-            ..current = teamReady(),
-          act: (tester) async {
-            await tester.ensureVisible(
-              find.byKey(const ValueKey('team-phone-remove')),
-            );
-            await tester.tap(find.byKey(const ValueKey('team-phone-remove')));
-          },
-        );
-      });
-
-      testWidgets('Keep it running ($theme, $size)', (tester) async {
-        await _shot(
-          tester,
-          'team_phone_tips_sheet',
-          light: light,
-          size: size,
-          body: (context) => const SizedBox.shrink(),
-          open: showTeamPhoneTipsSheet,
         );
       });
     }

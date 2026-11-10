@@ -2,8 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart'
-    show ValueListenable, VoidCallback, visibleForTesting;
+import 'package:flutter/foundation.dart' show ValueListenable, VoidCallback;
 
 import '../../domain/team_directories.dart' show aiTeamHome;
 import '../../state/team_model.dart' show isValidTeamModel;
@@ -15,7 +14,6 @@ import '../../state/profiles.dart'
         OrchestrationProvider;
 import '../../ui/kit/kit_redact.dart';
 import '../builtin_linux.dart';
-import '../process_budget.dart';
 import '../setup/aiteam_scripts.dart';
 import 'builtin_team_start_progress.dart';
 export 'builtin_team_start_progress.dart';
@@ -340,13 +338,28 @@ exit "$rc"
   /// agents too). The three programs send usage metrics by default; this
   /// app sends nothing about its users' work anywhere, so all of them are
   /// told not to.
-
+  ///
+  /// The agents' `opencode` (AiTeamScripts.agentWrapperScript) is first on
+  /// PATH for every team script: `gc init` makes no store without its
+  /// provider's command on PATH, and OpenCode 2 has only `opencode2` (#112).
   static const _env =
       'export HOME=/root GC_BIN=/usr/local/bin/gc\n'
+      'export PATH=${AiTeamScripts.agentBin}:\$PATH\n'
       'export DO_NOT_TRACK=1 GC_DISABLE_USAGE_METRICS=1 BD_DISABLE_METRICS=1 '
       'DOLT_DISABLE_EVENT_FLUSH=1\n'
       'command -v gc >/dev/null || '
       '{ echo "[oc] AI Team is not installed" >&2; exit 69; }\n';
+
+  /// Dolt's author identity, which `gc init` needs; install sets it but
+  /// silently, so set it here when missing and say so when Dolt cannot.
+  static const _doltIdentity =
+      'for oc_kv in "user.name=OpenCode Mobile" '
+      '"user.email=aiteam@opencode-mobile.local"; do\n'
+      '  oc_k=\${oc_kv%%=*}\n'
+      '  dolt config --global --get "\$oc_k" >/dev/null 2>&1 || '
+      'dolt config --global --add "\$oc_k" "\${oc_kv#*=}" >/dev/null || '
+      '{ echo "[oc] Dolt could not save the team\'s \$oc_k" >&2; exit 70; }\n'
+      'done\n';
 
   /// Makes the team's store once (`gc init`); does nothing when it exists.
   static String get cityScript =>
@@ -382,6 +395,13 @@ exit "$rc"
       // server) are stopped first; the bracket keeps the pattern from
       // matching this script's own command line.
       'cd $home\n'
+      // What gc init needs before it starts, named here: retrying cannot
+      // fix either.
+      'command -v opencode >/dev/null || '
+      '{ echo "[oc] The team\'s opencode is missing '
+      '(${AiTeamScripts.agentBin}/opencode); install AI Team again" >&2; '
+      'exit 70; }\n'
+      '$_doltIdentity'
       'try=1\n'
       'while :; do\n'
       "  pkill -f 'dolt[ ]sql-server --config $cityDir' 2>/dev/null || true\n"
@@ -620,9 +640,8 @@ exit 0
   static String get serviceScript =>
       'set -eu\n'
       '[ ! -e $disabledFile ] || exit 0\n'
+      // _env puts the agents' own `opencode` first on PATH.
       '$_env'
-      // The agents' own `opencode` first (AiTeamScripts.agentWrapperScript).
-      'export PATH=${AiTeamScripts.agentBin}:\$PATH\n'
       'cd $cityDir\n'
       'mkdir -p /root/.gc\n'
       "cat > /root/.gc/supervisor.toml <<'OC_EOF'\n"
@@ -810,9 +829,6 @@ exit 0
       _requireCurrent(gen, BuiltinTeamStage.starting);
       if (!linux.serviceRunning(serviceName) || !await supervisorAnswers()) {
         _requireCurrent(gen, BuiltinTeamStage.starting);
-        // Held while the phone has no room, is hot or low on battery.
-        await _admit();
-        _requireCurrent(gen, BuiltinTeamStage.starting);
         await _linux.startService(
           serviceName,
           serviceScript,
@@ -861,15 +877,6 @@ exit 0
     }
   }
 
-  /// The team is the heaviest thing the app runs: it starts only within
-  /// the process budget (process_budget.dart).
-  Future<void> _admit() =>
-      (admitTeam ?? ProcessBudgetGuard.instance.admit)(HeavyJob.aiTeam);
-
-  /// Test seam for the process budget.
-  @visibleForTesting
-  static Future<void> Function(HeavyJob job)? admitTeam;
-
   /// Starts the supervisor when it is not running, without waiting: for the
   /// app coming back after Android stopped it. The team answers a little
   /// later, and the Team card shows it as reconnecting meanwhile. With
@@ -887,7 +894,6 @@ exit 0
           if (gen != null) _progress.enter(gen, BuiltinTeamStartStep.service);
           if (!already) {
             try {
-              await _admit();
               await _linux.startService(
                 serviceName,
                 serviceScript,

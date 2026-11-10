@@ -1,9 +1,8 @@
 // Coverage ratchet for the file-access questions before a shared folder opens
-// (Android's "All files access", Termux storage, the restart a new folder can
+// (Android's "All files access", the restart a new folder can
 // need): each case is what the phone says, then the real dialogs are driven
 // and read (see paseo_coverage_support.dart for the rules).
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/builtin/builtin_linux.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
@@ -11,7 +10,6 @@ import 'package:opencode_mobile/platform/platform_capabilities.dart';
 import 'package:opencode_mobile/platform/storage_access.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/state/shared_project_roots.dart';
-import 'package:opencode_mobile/state/shared_storage_gate.dart';
 import 'package:opencode_mobile/ui/screens/shared_storage_access_flow.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -25,12 +23,6 @@ final _servers = {
     name: 'This phone',
     baseUrl: BuiltinLinux.serverUrl,
     username: BuiltinLinux.serverUsername,
-  ),
-  'termux': ServerProfile(
-    id: 'termux',
-    name: 'Termux',
-    baseUrl: 'http://127.0.0.1:4096',
-    username: 'opencode',
   ),
   'remote': ServerProfile(
     id: 'remote',
@@ -53,7 +45,6 @@ void main() {
     debugPlatformCapabilities = null;
     StorageAccessBridge.statusOverride = null;
     StorageAccessBridge.openOverride = null;
-    SharedStorageGate.termuxStorageOverride = null;
     SharedStorageAccessFlow.confinedRunningOverride = null;
     SharedStorageAccessFlow.restartOverride = null;
     SharedProjectRoots.pushOverride = null;
@@ -76,23 +67,11 @@ void main() {
       StorageAccessBridge.openOverride = () async {
         if (g['accessAfterAllow'] == true) access = StorageAccess.granted;
       };
-      SharedStorageGate.termuxStorageOverride = () async =>
-          g['termuxCanRead'] == true;
       SharedProjectRoots.pushOverride = (_) async {};
       SharedStorageAccessFlow.confinedRunningOverride = (_) async =>
           g['confinedRunning'] == true;
       SharedStorageAccessFlow.restartOverride = (_) async =>
           g['restartBack'] == true;
-      // Termux's own terminal opens (the person answers there).
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(
-            const MethodChannel('oc/termux'),
-            (call) async => true,
-          );
-      addTearDown(
-        () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-            .setMockMethodCallHandler(const MethodChannel('oc/termux'), null),
-      );
       tester.view
         ..devicePixelRatio = 1
         ..physicalSize = const Size(420, 1400);

@@ -14,14 +14,11 @@ class MainActivity : FlutterFragmentActivity() {
     private var nativeReplies: NativeChannelReplies? = null
     private var readAloud: ReadAloudBridge? = null
     private var localPdf: LocalPdfBridge? = null
-    private var localLlm: LocalLlmBridge? = null
     private var networkMonitor: NetworkMonitor? = null
     private var projectExport: ProjectExportBridge? = null
     private var byoHostSigner: ByoHostSigner? = null
-    private var clipboardImage: ClipboardImageBridge? = null
     private var crashDiagnostics: CrashDiagnosticsBridge? = null
-    private var appUpdate: AppUpdateChannel? = null
-    private val termux by lazy { TermuxActivityBridge(this, handler) }
+    private var appUpdateInstaller: AppUpdateInstaller? = null
     private val launches by lazy { LaunchActivityBridge(this) }
     private val background by lazy { MainActivityBackground(this, handler) }
     private val media by lazy { MainActivityMedia(this) { readAloud?.beforeMicrophoneCapture() == true } }
@@ -33,23 +30,18 @@ class MainActivity : FlutterFragmentActivity() {
         background.cancelBackgroundRequests()
         crashDiagnostics?.dispose()
         crashDiagnostics = CrashDiagnosticsBridge(this, flutterEngine.dartExecutor.binaryMessenger)
+        appUpdateInstaller?.dispose()
+        appUpdateInstaller = AppUpdateInstaller(this, flutterEngine.dartExecutor.binaryMessenger)
         nativeReplies?.detach()
         val replies = NativeChannelReplies { action -> handler.post(action) }
         nativeReplies = replies
         TailscaleHandoff(this, flutterEngine.dartExecutor.binaryMessenger)
         byoHostSigner?.dispose()
         byoHostSigner = ByoHostSigner(this, flutterEngine.dartExecutor.binaryMessenger)
-        clipboardImage?.dispose()
-        clipboardImage = ClipboardImageBridge(this, flutterEngine.dartExecutor.binaryMessenger)
         networkMonitor?.dispose()
         networkMonitor = NetworkMonitor(this, flutterEngine.dartExecutor.binaryMessenger)
-        // The app installs its own new version (oc/app_update).
-        appUpdate?.dispose()
-        appUpdate = AppUpdateChannel(this).also { it.register(flutterEngine.dartExecutor.binaryMessenger) }
         localPdf?.dispose()
         localPdf = LocalPdfBridge(this, flutterEngine.dartExecutor.binaryMessenger)
-        localLlm?.dispose()
-        localLlm = LocalLlmBridge(this, flutterEngine.dartExecutor.binaryMessenger)
         readAloud?.dispose()
         readAloud = ReadAloudBridge(this, flutterEngine.dartExecutor.binaryMessenger)
         // Export projects on This phone (oc/project_export).
@@ -61,10 +53,8 @@ class MainActivity : FlutterFragmentActivity() {
         scheduledPrompts?.close()
         scheduledPrompts = ScheduledPromptChannel(this).also { it.register(messenger) }
         ScheduledPromptScheduler(applicationContext).restore()
-        MethodChannel(messenger, "oc/termux").setMethodCallHandler { call, rawResult ->
-            val result = replies.wrap(rawResult)
-            result.guarded("termux_unavailable") { termux.handle(call, result) }
-        }
+        AppInfoChannel.register(this, messenger)
+        HealthChannel.register(this, messenger)
         MethodChannel(messenger, BUILTIN_LINUX_CHANNEL_NAME).setMethodCallHandler { call, rawResult ->
             val result = replies.wrap(rawResult)
             result.guarded("builtin_linux") { handleBuiltinLinux(call, result) }
@@ -77,16 +67,16 @@ class MainActivity : FlutterFragmentActivity() {
     }
 
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
+        HealthChannel.dispose()
         scheduledPrompts?.close()
         scheduledPrompts = null
         background.cancelBackgroundRequests()
         nativeReplies?.detach()
         nativeReplies = null
-        termux.reset()
         projectExport?.dispose()
         projectExport = null
-        appUpdate?.dispose()
-        appUpdate = null
+        appUpdateInstaller?.dispose()
+        appUpdateInstaller = null
         networkMonitor?.dispose()
         networkMonitor = null
         localPdf?.dispose()
@@ -120,8 +110,6 @@ class MainActivity : FlutterFragmentActivity() {
         crashDiagnostics = null
         nativeReplies?.detach()
         nativeReplies = null
-        clipboardImage?.dispose()
-        clipboardImage = null
         byoHostSigner?.dispose()
         byoHostSigner = null
         networkMonitor?.dispose()
@@ -131,14 +119,7 @@ class MainActivity : FlutterFragmentActivity() {
         localPdf = null
         readAloud?.dispose()
         readAloud = null
-        localLlm?.dispose()
-        localLlm = null
         super.onDestroy()
-    }
-
-    override fun onTrimMemory(level: Int) {
-        super.onTrimMemory(level)
-        localLlm?.onTrimMemory(level)
     }
 
     /**
@@ -187,7 +168,7 @@ class MainActivity : FlutterFragmentActivity() {
                             result.error(SetupPersistenceException.CODE, null, null)
                         } else {
                             result.error("builtin_linux", "The phone operation could not finish. Try again.",
-                                if (call.method in setOf("startServer", "startServerForLaunch", "run", "status")) {
+                                if (call.method in setOf("startServer", "run", "status")) {
                                     serverStartDetail(error)
                                 } else null)
                         }
@@ -340,7 +321,8 @@ class MainActivity : FlutterFragmentActivity() {
                 }
                 val timeout = (call.argument<Int>("timeoutSeconds") ?: 600).toLong()
                 inBackground {
-                    val run = linux.run(script, timeout, agentUser = call.argument<Boolean>("agentUser") == true)
+                    val run = linux.run(script, timeout, agentUser = call.argument<Boolean>("agentUser") == true,
+                        stdin = call.argument<String>("stdin"))
                     mapOf("exitCode" to run.exitCode, "output" to run.output)
                 }
             }
@@ -366,19 +348,6 @@ class MainActivity : FlutterFragmentActivity() {
                 }
                 inBackground {
                     linux.restartServer(script, port, generation)
-                    null
-                }
-            }
-            "startServerForLaunch" -> {
-                val script = call.argument<String>("script")
-                val port = call.argument<Int>("port")
-                val generation = call.argument<Number>("expectedGeneration")?.toLong()
-                if (script == null || port == null || generation == null) {
-                    result.error("builtin_linux", "A server needs a script and a port", null)
-                    return
-                }
-                inBackground {
-                    linux.startServerForLaunch(script, port, generation, call.argument<Map<*, *>>("restoreRecipe"))
                     null
                 }
             }
@@ -513,6 +482,14 @@ class MainActivity : FlutterFragmentActivity() {
                 null
             }
             "projectStorage" -> inBackground { linux.projectStorage() }
+            "createProject" -> {
+                val path = call.argument<String>("path")
+                if (path == null) {
+                    result.error("builtin_linux", "No folder to make", null)
+                    return
+                }
+                inBackground { linux.createProject(path) }
+            }
             "setSharedProjects" -> inBackground {
                 linux.setSharedProjectRoots(call.argument<List<String>>("roots") ?: emptyList())
                 null
@@ -591,7 +568,6 @@ class MainActivity : FlutterFragmentActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (media.onPermissionResult(requestCode, grantResults)) return
         when (requestCode) {
-            TermuxActivityBridge.PERMISSION_REQUEST -> termux.onPermissionResult(grantResults)
             MainActivityBackground.PERMISSION_REQUEST -> background.onPermissionResult(grantResults)
         }
     }

@@ -32,20 +32,16 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../builtin/builtin_linux.dart';
 import '../../builtin/phone_process_watch.dart';
 import '../../builtin/phone_processes.dart';
-import '../../builtin/process_budget.dart';
 import '../../l10n/app_localizations.dart';
-import '../../platform/child_process_limit.dart';
 import '../../state/connection.dart';
 import '../app_theme.dart';
 import '../kit/kit.dart';
-import '../widgets/child_limit_card.dart';
 import '../widgets/phone_server_card.dart' show formatPhoneStorage;
 import '../widgets/product_states.dart' show productErrorDetails;
 import '../widgets/running_on_phone_text.dart';
-import 'termux_processes_screen.dart' show formatTermuxDuration;
+import '../widgets/process_format.dart';
 
 AppLocalizations _copy(BuildContext context) =>
     lookupAppLocalizations(Localizations.localeOf(context));
@@ -55,20 +51,7 @@ class RunningOnPhoneScreen extends ConsumerStatefulWidget {
     super.key,
     this.interval = const Duration(seconds: 5),
     this.conversationTitle,
-    this.recentKill = false,
-    this.queuedOften = false,
-    this.lastKillAt,
   });
-
-  /// Android stopped an agent helper or service lately (the budget guard
-  /// supplies it); with [queuedOften] the only reasons the child-limit card
-  /// may show.
-  final bool recentKill;
-  final bool queuedOften;
-
-  /// When the last kill was; a kill after the person hid the card shows it
-  /// again.
-  final DateTime? lastKillAt;
 
   /// How often the page reads again while it is open.
   final Duration interval;
@@ -98,11 +81,7 @@ class _Failure {
   final String? details;
 }
 
-class _RunningOnPhoneScreenState extends ConsumerState<RunningOnPhoneScreen>
-    with WidgetsBindingObserver {
-  ChildProcessLimitStatus _limit = const ChildProcessLimitStatus();
-  DateTime? _limitHiddenAt;
-
+class _RunningOnPhoneScreenState extends ConsumerState<RunningOnPhoneScreen> {
   PhoneProcessReading? _reading;
   _Failure? _failure;
 
@@ -119,9 +98,7 @@ class _RunningOnPhoneScreenState extends ConsumerState<RunningOnPhoneScreen>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     _reading = _watch.last;
-    unawaited(_readLimit());
     unawaited(_refresh());
     _timer = Timer.periodic(widget.interval, (_) {
       // Only while the page is open and the app is in front.
@@ -132,44 +109,7 @@ class _RunningOnPhoneScreenState extends ConsumerState<RunningOnPhoneScreen>
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Back from Settings: read again so a turned-off limit hides the card.
-    if (state == AppLifecycleState.resumed) unawaited(_readLimit());
-  }
-
-  /// When Android last stopped one of the app's programs by itself, from
-  /// the native records (null when it did not lately, or cannot say).
-  DateTime? _observedKillAt;
-
-  Future<void> _readLimit() async {
-    final status = await ref.read(childProcessLimitPlatformProvider).read();
-    final hidden = await ChildLimitCardHide.read();
-    if (!mounted) return;
-    setState(() {
-      _limit = status;
-      _limitHiddenAt = hidden;
-    });
-    // Apart: the native records may be slow or absent, and the card's
-    // other reasons must not wait on them.
-    DateTime? killedAt;
-    try {
-      killedAt = lastAndroidKill(await BuiltinLinux().performance());
-    } on Object {
-      killedAt = null;
-    }
-    if (!mounted || killedAt == _observedKillAt) return;
-    setState(() => _observedKillAt = killedAt);
-  }
-
-  Future<void> _hideLimitCard() async {
-    final now = DateTime.now();
-    setState(() => _limitHiddenAt = now);
-    await ChildLimitCardHide.write(now);
-  }
-
-  @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     super.dispose();
   }
@@ -435,19 +375,6 @@ class _RunningOnPhoneScreenState extends ConsumerState<RunningOnPhoneScreen>
                   tabular: true,
                 ),
                 SizedBox(height: tokens.space1),
-                // What Android counts, against the app's own ceiling (the
-                // process budget holds new agents near it). Near the limit
-                // the notice below says it instead.
-                if (!reading.nearLimit)
-                  KitText(
-                    l10n.processBudgetCount(
-                      reading.childCount,
-                      ProcessBudgetGuard.instance.lastCeiling,
-                    ),
-                    key: const Key('running-budget-count'),
-                    role: KitTextRole.caption,
-                    tabular: true,
-                  ),
                 KitText(
                   l10n.runningPhoneAutoRefresh,
                   role: KitTextRole.caption,
@@ -455,21 +382,6 @@ class _RunningOnPhoneScreenState extends ConsumerState<RunningOnPhoneScreen>
               ],
             ),
           ),
-        ChildLimitCard(
-          padding: rails,
-          kind: childLimitCard(
-            status: _limit,
-            recentKill: widget.recentKill || _observedKillAt != null,
-            queuedOften:
-                widget.queuedOften || ProcessBudgetGuard.instance.queuesOften,
-            hiddenAt: _limitHiddenAt,
-            lastKillAt: widget.lastKillAt ?? _observedKillAt,
-          ),
-          onOpen: () => unawaited(
-            ref.read(childProcessLimitPlatformProvider).openDeveloperOptions(),
-          ),
-          onHide: () => unawaited(_hideLimitCard()),
-        ),
         // Near Android's limit: said in words, with what to do.
         if (reading.nearLimit)
           Padding(
@@ -678,11 +590,7 @@ class _RunningOnPhoneScreenState extends ConsumerState<RunningOnPhoneScreen>
         ],
       ),
       supportingKey: Key('running-proc-line-${p.pid}'),
-      // The facts wrap whole at large text, deep in the tree too: the
-      // indent leaves little width, and "running 9 m…" says nothing.
-      supportingMaxLines: MediaQuery.textScalerOf(context).scale(1) >= 1.3
-          ? 8
-          : 2,
+      supportingMaxLines: 2,
       below: from == null
           ? null
           : KitText(
@@ -761,11 +669,11 @@ class _Details extends StatelessWidget {
             : l10n.runningPhoneFromChat(conversation!),
       if (heavyFor != null)
         l10n.runningPhoneHeavyFor(
-          formatTermuxDuration(l10n, heavyFor.inSeconds),
+          formatProcessDuration(l10n, heavyFor.inSeconds),
         ),
       if (node.stuck && !node.leftBehind)
         l10n.runningPhoneStuckWhy(
-          formatTermuxDuration(l10n, p.elapsed.inSeconds),
+          formatProcessDuration(l10n, p.elapsed.inSeconds),
         ),
       if (node.root) l10n.runningPhoneServerRoot,
     ];

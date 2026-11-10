@@ -123,10 +123,8 @@ void main() {
     expect(find.textContaining('ubuntu-opencode.sh'), findsNothing);
   });
 
-  testWidgets('the managed loopback profile hides host management', (
-    tester,
-  ) async {
-    final controller = await _controllerFor('http://127.0.0.1:4096');
+  testWidgets('the in-app server hides host management', (tester) async {
+    final controller = await _controllerFor('http://127.0.0.1:4097');
     addTearDown(controller.dispose);
 
     await tester.pumpWidget(
@@ -173,7 +171,7 @@ void main() {
       await tester.tap(copy);
       await tester.pumpAndSettle();
       expect(copiedText, HostScripts.install(4747));
-      expect(copiedText, contains('@opencode/cli@2.2.5'));
+      expect(copiedText, contains('@opencode/cli@2.1.1'));
       expect(
         copiedText,
         contains('opencode2 serve --hostname 127.0.0.1 --port 4747'),

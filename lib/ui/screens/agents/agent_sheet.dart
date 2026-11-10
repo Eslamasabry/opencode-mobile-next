@@ -18,6 +18,8 @@ import 'agent_error_notice.dart';
 import 'agent_sign_in_terminal.dart';
 import 'agents_text.dart';
 import 'phone_check_view.dart';
+import '../../../telemetry/analytics_events.dart';
+import '../../../telemetry/telemetry_provider.dart';
 
 /// Where the agent sheet opens.
 enum AgentSheetStep { list, setup, check, signIn }
@@ -209,6 +211,7 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
 
   Future<void> _choose(String id) async {
     try {
+      AppTelemetry.feature(AnalyticsFeature.agentSwitch);
       await _agents.selectChatAgent(id);
       if (mounted) KitSheet.close(context, true);
     } catch (error) {
@@ -763,6 +766,8 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
             l10n.agentsSetupBody(KitBidi.auto(name)),
             tone: KitTextTone.secondary,
           ),
+          if (id == 'gemini')
+            KitNotice(message: l10n.agentsGeminiMigrationNote),
           if (size != null)
             KitText(
               l10n.agentsSetupSizeNote(size),
@@ -948,9 +953,11 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
     } else if (checking) {
       body = l10n.agentsSignInChecking;
     } else {
-      body = id == 'claude'
-          ? l10n.agentsSignInIntro(name)
-          : l10n.agentsSignInIntroOther(name);
+      body = switch (id) {
+        'claude' => l10n.agentsSignInIntro(name),
+        'antigravity' => l10n.agentsAntigravitySignInIntro,
+        _ => l10n.agentsSignInIntroOther(name),
+      };
     }
 
     return KitSheet(
@@ -989,6 +996,8 @@ class _AgentSheetState extends ConsumerState<AgentSheet> {
             key: const ValueKey('agents-sign-in-words'),
             tone: KitTextTone.secondary,
           ),
+          if (id == 'gemini' && !signedIn)
+            KitNotice(message: l10n.agentsGeminiMigrationNote),
           if (accountName != null && accountName.isNotEmpty)
             KitText(
               agentSignedInLine(l10n, account!),

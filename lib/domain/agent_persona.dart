@@ -12,7 +12,16 @@ library;
 import 'mark_catalog.dart';
 
 /// The agents the app speaks of by name.
-enum AgentPersonaId { claudeCode, codex, gemini, kilo, cline, openCode, other }
+enum AgentPersonaId {
+  claudeCode,
+  codex,
+  gemini,
+  antigravity,
+  kilo,
+  cline,
+  openCode,
+  other,
+}
 
 /// Who makes the agent, for the "by ..." line.
 enum AgentMaker { anthropic, openai, google, openSource, unknown }
@@ -48,6 +57,11 @@ class AgentPersona {
     markSlug: 'gemini',
     maker: AgentMaker.google,
   );
+  static const antigravity = AgentPersona(
+    id: AgentPersonaId.antigravity,
+    markSlug: 'google',
+    maker: AgentMaker.google,
+  );
   static const kilo = AgentPersona(
     id: AgentPersonaId.kilo,
     markSlug: 'kilocode',
@@ -71,11 +85,12 @@ class AgentPersona {
     maker: AgentMaker.unknown,
   );
 
-  /// The six named personas, in the order a picker shows them.
+  /// The named personas, in the order a picker shows them.
   static const List<AgentPersona> all = [
     claudeCode,
     codex,
     gemini,
+    antigravity,
     kilo,
     cline,
     openCode,
@@ -92,6 +107,10 @@ class AgentPersona {
     'gemini': gemini,
     'gemini cli': gemini,
     'gemini-cli': gemini,
+    'antigravity': antigravity,
+    'antigravity cli': antigravity,
+    'antigravity-cli': antigravity,
+    'agy': antigravity,
     'kilo': kilo,
     'kilocode': kilo,
     'kilo-code': kilo,

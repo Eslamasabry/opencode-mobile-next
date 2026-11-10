@@ -475,7 +475,7 @@ void main() {
         message('user', latestQuestion),
         MessageWithParts(
           info: MessageInfo(id: 'compact', sessionID: 'source', role: 'user'),
-          parts: [Part(type: 'v2:compaction', text: 'Conversation shortened.')],
+          parts: [Part(type: 'v2:compaction', text: 'Conversation compacted.')],
         ),
         message('assistant', 'The answer belongs to the latest question.'),
       ], maxBytes: 2200),

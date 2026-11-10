@@ -1,0 +1,15 @@
+{
+  "date": "2026-11-05",
+  "platform": "Linux x64 host, isolated empty HOME, not Android or proot",
+  "version": "1.5.0",
+  "archiveSha512Verified": true,
+  "protocolVersion": 1,
+  "sessionListAdvertised": true,
+  "sessionListSignedOutErrorCode": -32000,
+  "sessionNewSignedOutErrorCode": -32000,
+  "productionAuthProbe": {"state": "signedOut"},
+  "authenticationAttempted": false,
+  "modelPromptSent": false,
+  "phoneAccessed": false,
+  "authenticatedChatQualified": false
+}

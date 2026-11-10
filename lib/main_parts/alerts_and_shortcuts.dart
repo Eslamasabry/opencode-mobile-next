@@ -207,9 +207,7 @@ extension _OcAppAlertsAndShortcuts on _OcAppState {
         label: l10n.e7LocaleUiNewSession,
         icon: Icons.add_rounded,
         hint: l10n.e7LocaleUiNewSessionHint,
-        // Ctrl+N is the browser's own; the binding steps to Alt there and
-        // the launcher prints whichever one is live.
-        keys: newSessionShortcutKeys,
+        keys: '$mod + N',
         onInvoke: () => unawaited(_startNewSession()),
       ),
       DesktopCommand(

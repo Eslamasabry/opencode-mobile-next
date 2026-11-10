@@ -10,9 +10,7 @@ import 'package:opencode_mobile/api2/transport.dart';
 import 'package:opencode_mobile/builtin/builtin_linux.dart';
 import 'package:opencode_mobile/domain/product_failure.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
-import 'package:opencode_mobile/state/draft_attachment_storage.dart';
 import 'package:opencode_mobile/state/profiles.dart';
-import 'package:opencode_mobile/termux/bridge.dart' show TermuxBridgeException;
 import 'package:opencode_mobile/ui/kit/kit.dart'
     show KitAction, KitErrorKind, KitStateView;
 import 'package:opencode_mobile/ui/widgets/product_states.dart';
@@ -42,22 +40,6 @@ void main() {
         contains('upstream answered 502 while reading page 2'),
       );
     });
-
-    test(
-      'storage quota failures explain recovery without blaming the server',
-      () {
-        expect(
-          productErrorText(
-            const DraftAttachmentStorageException(
-              DraftAttachmentStorageFailure.quota,
-              'Browser storage is full. Remove unused attachments and try again.',
-              cause: 'internal database details',
-            ),
-          ),
-          'Browser storage is full. Remove unused attachments and try again.',
-        );
-      },
-    );
 
     test('never passes an ApiException message through', () {
       String words(int? status, [String message = 'Load failed']) =>
@@ -261,7 +243,7 @@ void main() {
       );
     });
 
-    test('native and Termux output is said in words; app sentences stay', () {
+    test('native output is said in words; app sentences stay', () {
       expect(
         productErrorText(
           const BuiltinLinuxException(
@@ -279,24 +261,6 @@ void main() {
           ),
         ),
         'The built-in Linux runs on Android only.',
-      );
-      expect(
-        productErrorText(
-          const TermuxBridgeException(
-            'bash: line 3: opencode: command not found',
-            code: 'command_failed',
-          ),
-        ),
-        startsWith("Termux didn't finish that."),
-      );
-      expect(
-        productErrorText(
-          const TermuxBridgeException(
-            'Use a folder name without slashes.',
-            code: 'invalid_folder_name',
-          ),
-        ),
-        'Use a folder name without slashes.',
       );
     });
 

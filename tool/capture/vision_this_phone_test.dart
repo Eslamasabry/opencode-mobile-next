@@ -25,7 +25,6 @@ import 'package:opencode_mobile/builtin/thermal_guard.dart';
 import 'package:opencode_mobile/builtin/thermal_guard_teams.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart' show StreamStatus;
 import 'package:opencode_mobile/platform/thermal.dart';
-import 'package:opencode_mobile/state/phone_host.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/screens/this_phone_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -116,6 +115,7 @@ class _Linux extends PhoneLinux {
   @override
   Future<BuiltinLinuxRunResult> run(
     String script, {
+    String? input,
     Duration timeout = const Duration(minutes: 2),
   }) async {
     if (!script.contains('oc-linux-scan')) return super.run(script);
@@ -186,7 +186,6 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(loadKitGalleryFonts);
   setUp(() {
-    useNoTermuxJob();
     KitLiveBackground.paintWithoutLoops = true;
     KitMotion.loops = false;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -238,10 +237,7 @@ void main() {
         // Opened the way the app opens it (Settings › Server, Search): a
         // pushed page with Back.
         home: const SizedBox.expand(key: ValueKey('opener')),
-        routes: {
-          thisPhoneRoute: (_) =>
-              const ThisPhoneScreen(kind: PhoneHostKind.inApp),
-        },
+        routes: {thisPhoneRoute: (_) => const ThisPhoneScreen()},
         linux: linux,
         profiles: [inAppProfile],
         light: scene.light,
@@ -270,10 +266,7 @@ void main() {
         },
       );
       unawaited(
-        openThisPhone(
-          tester.element(find.byKey(const ValueKey('opener'))),
-          kind: PhoneHostKind.inApp,
-        ),
+        openThisPhone(tester.element(find.byKey(const ValueKey('opener')))),
       );
       for (var i = 0; i < 10; i++) {
         await tester.pump(const Duration(milliseconds: 100));

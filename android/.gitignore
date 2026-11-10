@@ -12,3 +12,7 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+
+# Private crash-reporting config (copied in by app/build.gradle.kts)
+google-services.json
+**/google-services*.json

@@ -55,7 +55,7 @@ void main() {
     var taps = 0;
     await tester.pumpWidget(_host(_card(onPressed: () => taps++)));
     expect(find.text('Claude Code'), findsOneWidget);
-    expect(find.text('Careful with big changes'), findsOneWidget);
+    expect(find.text('Understands your codebase'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('card')));
     expect(taps, 1);
   });
@@ -77,7 +77,7 @@ void main() {
       _host(_card(state: KitAgentChoiceState.needsSetup)),
     );
     expect(find.text('Set up'), findsOneWidget);
-    expect(find.text('Careful with big changes'), findsNothing);
+    expect(find.text('Understands your codebase'), findsNothing);
   });
 
   testWidgets('is one 48 dp target with name and line as its label', (
@@ -90,7 +90,7 @@ void main() {
       greaterThanOrEqualTo(48),
     );
     expect(
-      find.bySemanticsLabel('Claude Code. Careful with big changes'),
+      find.bySemanticsLabel('Claude Code. Understands your codebase'),
       findsOneWidget,
     );
     handle.dispose();

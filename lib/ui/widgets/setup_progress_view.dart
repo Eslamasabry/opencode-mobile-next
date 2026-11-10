@@ -9,7 +9,7 @@ import '../../builtin/setup/setup_contract.dart';
 import '../../diagnostics/failed_job_report.dart';
 import '../../feedback/bug_report.dart' show failedJobReportAction;
 import '../../l10n/app_localizations.dart';
-import '../../termux/bridge.dart' show TermuxBridge;
+import '../../platform/app_info.dart';
 import '../app_theme.dart';
 import '../kit/kit_buttons.dart';
 import '../kit/kit_checklist.dart';
@@ -77,15 +77,13 @@ class SetupProgressView extends StatefulWidget {
   /// that instead, so the title never contradicts the bar.
   final String? title;
 
-  /// Steps only the person can do, by row id ("Get Termux", "Allow
-  /// Termux" on the Termux host): a pending row with one leads with the
+  /// Steps only the person can do, by row id: a pending row with one leads with the
   /// needs-you mark, says its [ComponentProgress.stage] as the instruction,
   /// and offers this button.
   final Map<String, KitAction> personActions;
 
   /// A failed row's own way forward, by row id, where it is not Continue
-  /// setup ("Get the current Termux" on a too-old Termux): the row's one
-  /// button. Rows named here or in [personActions] are the host's own, and
+  /// setup: the row's one button. Rows named here or in [personActions] are the host's own, and
   /// their error is the host's words; every other row's error is the job's
   /// technical text, which goes under Details.
   final Map<String, KitAction> failureActions;
@@ -130,6 +128,7 @@ class SetupProgressView extends StatefulWidget {
     if (needsOwnershipRecovery(progress)) {
       return l10n.inAppServerOwnershipRecoveryBody;
     }
+    if (progress.phoneUnsupported) return l10n.phoneSetupErrorNodeUnsupported;
     if (_SetupProgressViewState._looksLikeNetwork(progress)) {
       return l10n.setupProgressViewNoInternet;
     }
@@ -469,7 +468,7 @@ class _SetupProgressViewState extends State<SetupProgressView> {
           ? KitAction(
               key: const Key('setup-progress-recover-ownership'),
               label: l10n.e7SetupOpenAppSettings,
-              onPressed: () => unawaited(TermuxBridge.openAppSettings()),
+              onPressed: () => unawaited(AppInfoPlatform.openAppSettings()),
             )
           : progress.canContinue && widget.onContinue != null
           ? KitAction(

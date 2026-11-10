@@ -363,28 +363,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'Images, PDFs, text files, and Excel or Word files (.xlsx, .docx) can be attached.';
 
   @override
-  String get termuxRestartTitle => 'Restart the local server?';
-
-  @override
-  String get termuxRestartMessage =>
-      'OpenCode will be briefly unavailable. The app will keep your current project and reconnect automatically.';
-
-  @override
-  String termuxRestartBusyMessage(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other:
-          '$count conversations are generating. Restarting will interrupt them.',
-      one: '1 conversation is generating. Restarting will interrupt it.',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get termuxRestartConfirm => 'Restart';
-
-  @override
   String get chatCopyCompleteReply => 'Copy complete reply';
 
   @override
@@ -1729,7 +1707,7 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get setupOutputWaiting => 'Waiting for Termux output…';
+  String get setupOutputWaiting => 'Waiting for output…';
 
   @override
   String get uncertainAuthDetail =>
@@ -1798,10 +1776,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get quotaMiniMax => 'MiniMax';
-
-  @override
-  String get managedHealthLifetime =>
-      'Android may stop either app. Keeping the mobile connection alive does not guarantee the Termux server will keep running overnight.';
 
   @override
   String get quotaBudgetOff => 'Off';
@@ -1940,61 +1914,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get monitorCheckInDue => 'Time to check in';
-
-  @override
-  String managedRecoveryAttempts(int attempts) {
-    return 'Attempts used: $attempts of 3. The limit survives app restarts.';
-  }
-
-  @override
-  String get managedRecoveryExhausted =>
-      'Recovery limit reached. Check the server and start it manually before resetting the retry budget.';
-
-  @override
-  String get managedRecoveryBackground =>
-      'Recovery waits while the app is in the background.';
-
-  @override
-  String get managedRecoveryChecking =>
-      'Checking the managed recovery operation…';
-
-  @override
-  String managedRecoveryNext(String time) {
-    return 'Next recovery attempt no earlier than $time.';
-  }
-
-  @override
-  String get managedRecoveryCheck => 'Check recovery status';
-
-  @override
-  String get managedRecoveryReset => 'Reset retry budget';
-
-  @override
-  String get managedRecoverySaveFailed =>
-      'Recovery settings could not be saved. Retry.';
-
-  @override
-  String get managedRecoveryRevokeFailed =>
-      'Could not save or revoke recovery. Keep this server and retry before removing it.';
-
-  @override
-  String get managedRecoverySettingsUnreadable =>
-      'Recovery settings could not be read. Check the server before enabling recovery.';
-
-  @override
-  String get managedRecoveryEnableFailed =>
-      'Could not enable recovery. Start the managed server, then try again.';
-
-  @override
-  String get managedRecoveryOwnershipChanged =>
-      'The managed operation changed. Check the server before enabling recovery again.';
-
-  @override
-  String get managedRecoveryUncertain =>
-      'Recovery paused because Termux did not confirm the result. Refresh to continue.';
-
-  @override
-  String get managedRecoveryRetryDisable => 'Try disabling recovery again';
 
   @override
   String get pluginMappingUnavailable =>
@@ -2201,21 +2120,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get projectConfiguredFolder => 'Configured folder';
-
-  @override
-  String get termuxGuideTitle => 'Conecte o Termux uma vez';
-
-  @override
-  String get termuxGuideOpenFailed =>
-      'The command was copied, but Termux could not open. Open Termux yourself or try Copy & open Termux again.';
-
-  @override
-  String get termuxGuideCopyOpenFailed =>
-      'Could not copy the command or open Termux.';
-
-  @override
-  String get termuxPermissionDenied =>
-      'O Android não permitiu que este app execute comandos no Termux.';
 
   @override
   String get launchShortcutWaiting =>
@@ -2979,31 +2883,8 @@ class AppLocalizationsPt extends AppLocalizations {
   String get oc2DiscoveryEditorTitle => 'OpenCode 2';
 
   @override
-  String get setupSwitchPending =>
-      'The update to OpenCode 2 has not finished. Your saved conversations are kept. Try again.';
-
-  @override
-  String setupSwitchRetry(String runtime) {
-    return 'Try $runtime again';
-  }
-
-  @override
   String get setupSwitchFailed =>
       'Could not finish updating to OpenCode 2. Your saved conversations are kept. Try again.';
-
-  @override
-  String setupSwitchProfileName(String runtime) {
-    return 'This phone · $runtime';
-  }
-
-  @override
-  String get setupSwitchMissingCredential =>
-      'The saved server password could not be read. Your conversations and files are kept. Restore access to the saved password, then try again.';
-
-  @override
-  String setupSwitchProgressTitle(String runtime) {
-    return 'Mudando para $runtime';
-  }
 
   @override
   String e7ConnectionFailure1(int attempts) {
@@ -3086,10 +2967,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get e7ConnectionFailure24 => 'Nothing answered on this phone';
-
-  @override
-  String get e7ConnectionFailure26 =>
-      'Running OpenCode in Termux? Open Termux and check that the server is still running.';
 
   @override
   String get e7ConnectionFailure27 =>
@@ -3261,10 +3138,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get e7SharedAdvanced => 'Advanced';
 
   @override
-  String get e7SharedHTTPSSSHTunnelsOlderServersTermuxInternals =>
-      'HTTPS, SSH tunnels, older servers, Termux internals';
-
-  @override
   String get e7SharedHTTPSSSHTunnelsOlderServers =>
       'HTTPS, SSH tunnels, older servers';
 
@@ -3287,26 +3160,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get e7SharedThenAddTheServerManuallyWithUsername =>
       'Then add the server manually with username opencode and that password.';
-
-  @override
-  String get e7SharedOnDeviceViaTermuxAutomated =>
-      'On-device via Termux (automated)';
-
-  @override
-  String get e7SharedUseTheOnDeviceTermuxCardOn =>
-      'Use the “On-device (Termux)” card on the Servers screen. The app installs Termux, unlocks the bridge, sets up opencode, starts the server and connects — all guided.';
-
-  @override
-  String get e7SharedOnlyTwoTapsNeedYouPersonallyDownloading =>
-      'Only two taps need you personally: downloading the Termux APK and pasting one unlock line inside Termux once — both required by Android’s security model, not by this app.';
-
-  @override
-  String get e7SharedPreferManualInsideTermuxRun =>
-      'Prefer manual? Inside Termux run:';
-
-  @override
-  String get e7SharedTheChrootSharesTheNetworkStackSo =>
-      'The chroot shares the network stack, so http://127.0.0.1:4096 works from this app. Run `termux-wake-lock` to keep it alive.';
 
   @override
   String get e7SharedSecurityNotes => 'Security notes';
@@ -3900,13 +3753,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'The active server changed before the upgrade completed';
 
   @override
-  String get e7SettingsUi50 => 'Update managed OpenCode';
-
-  @override
-  String get e7SettingsUi51 =>
-      'Install the latest stable server, refresh models, restart safely, and reconnect.';
-
-  @override
   String get e7SettingsUi52 => 'the previous version';
 
   @override
@@ -3997,8 +3843,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get e7SettingsUi92 => 'Privacy and data use';
 
   @override
-  String get e7SettingsUi93 =>
-      'Servers, providers, voice, files, Termux, and updates';
+  String get e7SettingsUi93 => 'Servers, providers, voice, files and updates';
 
   @override
   String get e7SettingsUi94 => 'Voice licenses and provenance';
@@ -4160,8 +4005,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get e7SettingsDetailUi27 => 'References';
 
   @override
-  String get e7SettingsAlphaBody =>
-      'Android is the supported platform; desktop builds are experimental.';
+  String get e7SettingsAlphaBody => 'OpenCode Mobile is an Android app.';
 
   @override
   String get e7SettingsNonAffiliation =>
@@ -4547,9 +4391,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get e7WorkspaceStopSharing => 'Stop sharing';
 
   @override
-  String get e7WorkspaceDisconnect => 'Disconnect';
-
-  @override
   String get e7WorkspaceBackExit => 'Toque em voltar novamente para sair';
 
   @override
@@ -4789,10 +4630,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get chatUiCommandMap => 'Command map';
 
   @override
-  String get chatUiCompactContext => 'Shorten conversation';
+  String get chatUiCompactContext => 'Compact context';
 
   @override
-  String get chatUiCompactSession => 'Shorten conversation';
+  String get chatUiCompactSession => 'Compact conversation';
 
   @override
   String get chatUiCompactingConversation => 'Compactando a conversa…';
@@ -4801,7 +4642,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get chatUiCompactionFailed => 'A compactação falhou';
 
   @override
-  String get chatUiCompactionStarted => 'Shortening started';
+  String get chatUiCompactionStarted => 'Compaction started';
 
   @override
   String get chatUiCompose => 'Compose';
@@ -5247,7 +5088,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get chatUiSelectAModelBeforeCompactingThisSession =>
-      'Select a model before shortening this conversation.';
+      'Select a model before compacting this conversation.';
 
   @override
   String get chatUiServerCommands => 'Server commands';
@@ -6544,13 +6385,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'Another app may be holding the camera. Pasting the pairing code works either way.';
 
   @override
-  String get e7SetupTermuxNoAnswer =>
-      'O Termux não respondeu. Toque em “Copiar e abrir o Termux”, cole a linha no Termux, pressione Enter e volte aqui.';
-
-  @override
-  String get e7SetupCopyOpenTermux => 'Copiar e abrir o Termux';
-
-  @override
   String get e7SetupStopTerminalDetail =>
       'The running process and its child processes will be terminated.';
 
@@ -6585,9 +6419,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get e7SetupKeepAfterLogout => 'Keep it running after logout';
 
   @override
-  String get e7SetupGetTermux => 'Baixar o Termux';
-
-  @override
   String get e7SetupRestartServer => 'Restart the server';
 
   @override
@@ -6620,9 +6451,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get e7SetupCheckingInstall => 'Checking installed environment...';
 
   @override
-  String get e7SetupInspectTermuxFailed => 'Android could not inspect Termux.';
-
-  @override
   String get e7SetupUsername => 'Username (optional)';
 
   @override
@@ -6650,10 +6478,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'Shown when the server starts. Leave empty if it has none.';
 
   @override
-  String get e7SetupInstallTermuxDetail =>
-      'Instale a versão atual do Termux do F-Droid e volte aqui.';
-
-  @override
   String get e7SetupStopBeforeUpdate =>
       'Stop active generation before updating OpenCode.';
 
@@ -6677,10 +6501,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get e7SetupUsbAccess => 'Reach it from this phone over USB';
-
-  @override
-  String get e7SetupWaitingTermux =>
-      'Waiting for Termux to respond. This can take a little while.';
 
   @override
   String get e7SetupDiscardChanges => 'Discard server changes?';
@@ -6714,16 +6534,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get e7SetupServers => 'Servers';
-
-  @override
-  String get e7SetupStartingSetup => 'Starting setup in Termux';
-
-  @override
-  String get e7SetupSetupNotStarted =>
-      'O Termux abriu, mas a configuração não começou. Tente mais uma vez; se acontecer de novo, copie o relatório da falha.';
-
-  @override
-  String get e7SetupThisDevice => 'This device (Termux)';
 
   @override
   String get e7SetupTransportReconnecting =>
@@ -6814,10 +6624,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get e7SetupChooseContinue => 'Choose how to continue';
 
   @override
-  String get e7SetupTermuxOutdated =>
-      'Esta versão do Termux é antiga demais para o app. Instale a atual e toque em “Continuar a configuração”.';
-
-  @override
   String get e7SetupCameraNeeded => 'Camera access is needed to scan';
 
   @override
@@ -6831,12 +6637,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get e7SetupTestConnection => 'Test connection';
-
-  @override
-  String get e7SetupCheckingTermux => 'Checking Termux connection';
-
-  @override
-  String get e7SetupCheckingTermuxShort => 'Verificando o Termux…';
 
   @override
   String get e7SetupDefaultServer => 'OpenCode server';
@@ -6855,13 +6655,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get e7SetupAboutNotices => 'Sobre e avisos de código aberto';
 
   @override
-  String get e7SetupSetupLost => 'Lost track of the setup running in Termux';
-
-  @override
   String get e7SetupReportCopied => 'Failure report copied.';
-
-  @override
-  String get e7SetupAppSettings => 'Permitir a permissão nas Configurações';
 
   @override
   String get e7SetupNoCamera => 'This device has no camera';
@@ -6972,9 +6766,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'Android will not ask again, so this has to be changed in app settings: turn on Camera, then come back. Pasting the code needs no permission at all and works right now.';
 
   @override
-  String get e7SetupVerifyTermuxFailed => 'Termux bridge verification failed.';
-
-  @override
   String get e7SetupUbuntuOnly =>
       'Ubuntu is installed. OpenCode is not installed yet.';
 
@@ -7000,10 +6791,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get e7SetupSendCommand => 'Send command to terminal';
-
-  @override
-  String get e7SetupUnsupportedSetup =>
-      'Setting up on the device itself works only on Android phones. On this computer, start OpenCode yourself and add it as a server.';
 
   @override
   String get e7SetupSendKey => 'Sends this key to the terminal';
@@ -7059,31 +6846,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String e7SetupPaired(String host) {
     return 'Paired with $host.';
-  }
-
-  @override
-  String e7SetupStartFailed(String detail) {
-    return 'Could not save or start the local setup: $detail';
-  }
-
-  @override
-  String e7SetupRestartFailed(String detail) {
-    return 'Could not restart the local server: $detail';
-  }
-
-  @override
-  String e7SetupStopFailed(String detail) {
-    return 'Could not stop the local server: $detail';
-  }
-
-  @override
-  String e7SetupElapsedSeconds(int seconds) {
-    return '$seconds s decorridos';
-  }
-
-  @override
-  String e7SetupElapsedMinutes(int minutes, int seconds) {
-    return '$minutes min $seconds s decorridos';
   }
 
   @override
@@ -7205,10 +6967,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get e7SetupUrlScheme => 'Server URLs must use https:// or http://.';
 
   @override
-  String get e7SetupTermuxUrlScheme =>
-      'Server URLs must use https://, or http:// for local Termux.';
-
-  @override
   String get e7SetupUrlCredentials =>
       'Do not put credentials in the URL. Use the fields below.';
 
@@ -7295,18 +7053,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get e7SetupCodexToken => 'Enter a valid Codex connection token.';
-
-  @override
-  String get e7SetupRefreshPackages => 'Refreshing Termux packages';
-
-  @override
-  String get e7SetupRepairPackages => 'Repairing the Termux package set';
-
-  @override
-  String get e7SetupInstallDependencies => 'Installing Termux dependencies';
-
-  @override
-  String get e7SetupPrepareTermux => 'Preparing Termux';
 
   @override
   String get e7SetupInstallUbuntu => 'Installing Ubuntu environment';
@@ -7417,30 +7163,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'Could not read available storage before setup';
 
   @override
-  String get e7SetupRepositoryFailed =>
-      'Could not select the official Termux package repository';
-
-  @override
-  String get e7SetupRepositoryRefreshFailed =>
-      'Could not refresh packages.termux.dev; check the network and retry';
-
-  @override
-  String get e7SetupRepairFailed =>
-      'Could not repair the interrupted Termux package transaction';
-
-  @override
-  String get e7SetupUpgradeFailed =>
-      'Could not complete the safe Termux package upgrade';
-
-  @override
-  String get e7SetupDependenciesFailed =>
-      'Could not install the Termux dependencies';
-
-  @override
-  String get e7SetupDependenciesUnusable =>
-      'Termux dependencies are still unusable after the package repair';
-
-  @override
   String get e7SetupUbuntuUnusable =>
       'An existing Ubuntu container is not usable; setup will not delete it';
 
@@ -7488,21 +7210,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get e7SetupUpdatePassword => 'Update password';
 
   @override
-  String e7SetupLastSetupDetail(String detail) {
-    return 'Last setup output: $detail';
-  }
-
-  @override
-  String e7SetupBridgeDetail(String detail) {
-    return 'Bridge detail: $detail';
-  }
-
-  @override
-  String e7SetupDiagnosticsUnavailable(String detail) {
-    return 'Diagnostics unavailable: $detail';
-  }
-
-  @override
   String e7SetupProbeHttp(String status) {
     return 'The address responded, but not like an OpenCode server (HTTP $status). Check that the URL points at opencode serve.';
   }
@@ -7516,16 +7223,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String e7SetupServerExit(String code) {
     return 'OpenCode server exited (code $code)';
   }
-
-  @override
-  String get e7SetupCheckTermux => 'On this phone';
-
-  @override
-  String get e7SetupCommandFailed => 'Termux command failed.';
-
-  @override
-  String get e7SetupUnexpectedBridge =>
-      'Termux returned an unexpected bridge response.';
 
   @override
   String get e7SetupSetupQueued => 'Setup queued';
@@ -9385,257 +9082,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get teamUiRunLabelRawTitle => 'Provider title';
 
   @override
-  String get termuxStorageTitle => 'Storage on this phone';
-
-  @override
-  String termuxStorageRowUsed(String size) {
-    return '$size used';
-  }
-
-  @override
-  String get termuxStorageRowNotScanned => 'Not scanned yet';
-
-  @override
-  String get termuxStorageRowScanning => 'Measuring…';
-
-  @override
-  String get termuxStorageScanAction => 'Scan storage';
-
-  @override
-  String get termuxStorageRescanAction => 'Scan again';
-
-  @override
-  String get termuxStorageIntro =>
-      'See what Termux uses on this phone. Only caches that rebuild themselves can be cleaned here; your projects, sign-ins and conversations stay.';
-
-  @override
-  String get termuxStorageScanning => 'Measuring storage';
-
-  @override
-  String get termuxStorageScanningDetail =>
-      'Large caches take a minute or two. You can leave this screen; the scan keeps going.';
-
-  @override
-  String get termuxStorageCancel => 'Stop scan';
-
-  @override
-  String get termuxStorageCancelled => 'Scan stopped';
-
-  @override
-  String get termuxStorageFailed => 'The scan did not finish. Try again.';
-
-  @override
-  String termuxStorageTotal(String size) {
-    return '$size measured in Termux';
-  }
-
-  @override
-  String termuxStorageDeletableTotal(String size) {
-    return '$size can be cleaned';
-  }
-
-  @override
-  String get termuxStorageScannedJustNow => 'Scanned just now';
-
-  @override
-  String termuxStorageScannedMinutesAgo(int minutes) {
-    return 'Scanned $minutes min ago';
-  }
-
-  @override
-  String termuxStorageScannedHoursAgo(int hours) {
-    return 'Scanned $hours h ago';
-  }
-
-  @override
-  String get termuxStorageCatBuildCaches => 'Build caches';
-
-  @override
-  String get termuxStorageNoteBuildCaches =>
-      'Gradle caches and npm’s downloaded content cache only. Downloads may be needed again, so offline builds can be affected. Stop builds and package installs before cleaning.';
-
-  @override
-  String get termuxStorageCatAgentScratch => 'Agent scratch';
-
-  @override
-  String get termuxStorageNoteAgentScratch =>
-      'Temporary folders may contain unfinished work or files used by other tools. Their sizes are shown for reference; they cannot be removed here.';
-
-  @override
-  String get termuxStorageCatProjectBuildOutputs =>
-      'Folders with build-related names';
-
-  @override
-  String get termuxStorageNoteProjectBuildOutputs =>
-      'Folders named build, .dart_tool, node_modules or target may also contain your files. Names alone cannot prove they are disposable, so they cannot be removed here.';
-
-  @override
-  String get termuxStorageCatToolchains => 'Toolchains';
-
-  @override
-  String get termuxStorageNoteToolchains =>
-      'Android SDK, Java and Flutter installations. These may support other projects and cannot be removed here.';
-
-  @override
-  String get termuxStorageCatAiTeam => 'AI Team';
-
-  @override
-  String get termuxStorageNoteAiTeam =>
-      'Team folders, databases and tools may contain work you need to keep. They cannot be removed here, even when the team is stopped.';
-
-  @override
-  String get termuxStorageCatOpenCode => 'OpenCode itself';
-
-  @override
-  String get termuxStorageNoteOpenCode =>
-      'The server, its sign-ins and conversation history. Conversations have their own screen.';
-
-  @override
-  String get termuxStorageCatProjects => 'Projects (your files)';
-
-  @override
-  String get termuxStorageNoteProjects =>
-      'Listed so you can see their size. Never removed from here.';
-
-  @override
-  String get termuxStorageWillRemove => 'What Clean removes';
-
-  @override
-  String get termuxStorageNothingHere => 'Nothing here';
-
-  @override
-  String termuxStorageCleanConfirmTitle(String size, String category) {
-    return 'Delete $size of $category?';
-  }
-
-  @override
-  String get termuxStorageCleanConfirmBody =>
-      'Delete only the listed Gradle and npm content caches? Downloads may be needed again and offline builds can be affected. Stop builds and package installs first. Scan again afterward to update the measured sizes.';
-
-  @override
-  String termuxStorageCleanConfirm(String size) {
-    return 'Delete $size';
-  }
-
-  @override
-  String get termuxStorageKeep => 'Keep';
-
-  @override
-  String get termuxStorageCleaning => 'Deleting…';
-
-  @override
-  String termuxStorageFreed(String size) {
-    return 'Removed $size';
-  }
-
-  @override
-  String get termuxStorageFreedNothing => 'Nothing was removed';
-
-  @override
-  String termuxStorageInUse(String process) {
-    return 'In use by $process. Stop it under Running on this phone first.';
-  }
-
-  @override
-  String termuxStorageRefusedCount(int count) {
-    return '$count paths were left in place';
-  }
-
-  @override
-  String termuxStorageProjectBuild(String size, String build) {
-    return '$size · $build in build-related folders';
-  }
-
-  @override
-  String get termuxStorageOpenRunning => 'Open Running on this phone';
-
-  @override
-  String termuxStorageBytesGb(String value) {
-    return '$value GB';
-  }
-
-  @override
-  String termuxStorageBytesMb(String value) {
-    return '$value MB';
-  }
-
-  @override
-  String termuxStorageBytesKb(String value) {
-    return '$value KB';
-  }
-
-  @override
-  String termuxStorageBytesB(String value) {
-    return '$value B';
-  }
-
-  @override
-  String get termuxProcsTitle => 'Running on this phone';
-
-  @override
-  String get termuxProcsRowLoading => 'Checking…';
-
-  @override
   String get termuxProcsAutoRefresh => 'Refreshes every 10 seconds while open';
-
-  @override
-  String termuxProcsStopSemantics(String name) {
-    return 'Stop $name';
-  }
-
-  @override
-  String termuxProcsStopOneTitle(String name) {
-    return 'Stop $name?';
-  }
-
-  @override
-  String get termuxProcsStopOneBody =>
-      'It gets a polite stop, then a forced one after 5 seconds.';
-
-  @override
-  String get termuxProcsProtected => 'Protected · control it from This phone';
-
-  @override
-  String termuxProcsOrphanParentGone(String elapsed) {
-    return 'Its parent is gone · running for $elapsed';
-  }
-
-  @override
-  String termuxProcsOrphanCpu(String cpu) {
-    return '$cpu of CPU with no owner';
-  }
 
   @override
   String get termuxProcsStopping => 'Stopping…';
 
   @override
-  String termuxProcsStopped(int count) {
-    return 'Stopped $count';
-  }
-
-  @override
-  String termuxProcsStoppedForced(int count, int forced) {
-    return 'Stopped $count ($forced needed a forced stop)';
-  }
-
-  @override
-  String termuxProcsRemaining(int count) {
-    return '$count would not stop';
-  }
-
-  @override
-  String termuxProcsRefused(int count) {
-    return '$count protected, not stopped';
-  }
-
-  @override
-  String get termuxProcsEmpty => 'Nothing is running in the phone server';
-
-  @override
   String get termuxProcsCommand => 'Command';
-
-  @override
-  String get termuxProcsFolder => 'Folder';
 
   @override
   String termuxProcsDurationSeconds(int seconds) {
@@ -9658,254 +9111,17 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get teamUiPhoneOptionalTag => 'Optional · experimental';
-
-  @override
   String get teamUiPhoneChooseProjectTitle => 'Choose a project';
-
-  @override
-  String get teamUiPhoneContinue => 'Continue';
 
   @override
   String get teamUiPhoneSuccessTitle => 'AI Team is running on this phone';
 
   @override
-  String get teamUiPhoneRetry => 'Try again';
-
-  @override
-  String teamUiPhoneFailedChecksum(String name) {
-    return 'The downloaded $name did not match the checksum this build pins, so it was not installed. Nothing from it was kept; check the network and try again.';
-  }
-
-  @override
-  String get teamUiPhoneFailedUnsupportedArch =>
-      'This phone\'s processor is not 64-bit ARM, which the team runtime needs.';
-
-  @override
-  String get teamUiPhoneFailedDownload =>
-      'The download did not finish. Check the connection and try again.';
-
-  @override
-  String teamUiPhoneFailedDownloadDns(String host) {
-    return 'The phone could not find the download server $host. Check that the phone is online and that no private DNS or ad blocker is blocking it, then try again.';
-  }
-
-  @override
-  String teamUiPhoneFailedDownloadConnect(String host) {
-    return 'The phone could not reach the download server $host. Check the connection, then try again; the download continues where it stopped.';
-  }
-
-  @override
-  String teamUiPhoneFailedDownloadTimeout(String host) {
-    return 'The download server $host took too long to answer. Try again on a steadier connection; the download continues where it stopped.';
-  }
-
-  @override
-  String teamUiPhoneFailedDownloadTls(String host) {
-    return 'A secure connection to $host could not be made. Check that the phone\'s date and time are right and that no proxy is in the way, then try again.';
-  }
-
-  @override
-  String teamUiPhoneFailedDownloadHttp(String host, String code) {
-    return 'The download server $host refused the file (HTTP $code). Try again later; if it keeps happening, this app version\'s AI Team download is unavailable.';
-  }
-
-  @override
-  String teamUiPhoneFailedDownloadInterrupted(String host) {
-    return 'The connection to $host broke off during the download. Try again; the download continues where it stopped.';
-  }
-
-  @override
-  String get teamUiPhoneFailedDownloadWrite =>
-      'The download could not be saved on this phone. Free some space, then try again.';
-
-  @override
-  String teamUiPhoneFailedDownloadOther(String host, String code) {
-    return 'The download from $host failed (error $code). Check the connection, then try again.';
-  }
-
-  @override
-  String get teamUiPhoneFailedPackages =>
-      'Ubuntu could not install the prerequisites (tmux, jq, lsof, procps). The output below says which.';
-
-  @override
-  String get teamUiPhoneFailedProject =>
-      'The project folder is missing or is not a git repository.';
-
-  @override
-  String get teamUiPhoneFailedCity =>
-      'Gas City could not create the city. The output below says why.';
-
-  @override
-  String get teamUiPhoneFailedSupervisorExited =>
-      'The supervisor stopped right after starting. The output below says why.';
-
-  @override
-  String teamUiPhoneFailedHealth(String url) {
-    return 'The supervisor started but never answered on $url.';
-  }
-
-  @override
-  String get teamUiPhoneFailedInterrupted =>
-      'The setup stopped before it finished. Android may have stopped Termux while the app was away; nothing is lost.';
-
-  @override
-  String teamUiPhoneFailedReason(String reason) {
-    return 'Reason: $reason';
-  }
-
-  @override
-  String get teamUiPhoneDispatchFailed =>
-      'Termux did not start the step. Open Termux once, then try again.';
-
-  @override
-  String get teamUiPhoneSectionTitle => 'On this phone';
-
-  @override
-  String get teamUiPhoneStatusChecking => 'Checking…';
-
-  @override
-  String get teamUiPhoneStatusNotInstalled => 'Not installed';
-
-  @override
-  String get teamUiPhoneStatusInstalled => 'Installed · no city yet';
-
-  @override
-  String get teamUiPhoneStatusStopped => 'Stopped';
-
-  @override
-  String get teamUiPhoneStatusStarting => 'Starting…';
-
-  @override
-  String get teamUiPhoneStatusStopping => 'Stopping…';
-
-  @override
-  String teamUiPhoneStatusWorking(String verb) {
-    return 'Working… ($verb)';
-  }
-
-  @override
-  String teamUiPhoneStatusRunning(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Running · $count agents',
-      one: 'Running · 1 agent',
-      zero: 'Running',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get teamUiPhoneStatusFailed => 'Not running · the last step failed';
-
-  @override
-  String teamUiPhoneStatusUnreachable(String url) {
-    return 'Started, but not answering on $url';
-  }
-
-  @override
-  String get teamUiPhoneStatusUnknown => 'Status could not be read';
-
-  @override
-  String teamUiPhoneVersions(String gc, String bd, String dolt) {
-    return 'gc $gc · bd $bd · dolt $dolt';
-  }
-
-  @override
-  String get teamUiPhoneStopTitle => 'Stop the team on this phone?';
-
-  @override
-  String get teamUiPhoneStopBody =>
-      'Running agents stop where they are. Nothing is lost; runs resume when you start it again.';
-
-  @override
-  String get teamUiPhoneKilled =>
-      'Android stopped the team while the app was away. Nothing is lost.';
-
-  @override
-  String get teamUiPhoneKeepRunningTitle => 'Keep it running';
-
-  @override
-  String get teamUiPhoneKeepRunningSubtitle =>
-      'Stop Android from closing the team in the background';
-
-  @override
-  String get teamUiPhoneTipsIntro =>
-      'Android stops background work it considers excessive, and the team is exactly that: dozens of short gc and bd processes and an agent at full CPU. Three things keep it alive.';
-
-  @override
-  String get teamUiPhoneTipWakeLock =>
-      'Keep Termux in front, or hold its wake lock: run termux-wake-lock in Termux, or tap Acquire wakelock in its notification. Screen off without it ends the run.';
-
-  @override
-  String get teamUiPhoneTipBattery =>
-      'Settings › Apps › Termux › Battery › Unrestricted, and switch off your phone maker\'s auto-clean for Termux.';
-
-  @override
-  String get teamUiPhoneTipPhantom =>
-      'Android 12 and later still kill the child processes of a background app (the phantom process killer). Turn that off once, from Termux itself over Wireless debugging; no computer needed:';
-
-  @override
-  String get teamUiPhoneTipsCopy => 'Copy commands';
-
-  @override
-  String get teamUiPhoneRemoveTitle => 'Delete AI Team from this phone?';
-
-  @override
-  String teamUiPhoneActionFailed(String reason) {
-    return 'That did not work: $reason';
-  }
-
-  @override
-  String get teamUiPhoneNotAvailable =>
-      'Not available on this phone. Running a team needs the 64-bit Linux environment; this device or build can\'t provide it.';
-
-  @override
-  String teamUiPhoneFailedNoSpace(String detail) {
-    return 'Not enough space on this phone. $detail Free some space (Storage on this phone can clean build caches), then try again.';
-  }
-
-  @override
-  String get phoneServerConnect => 'Connect';
-
-  @override
-  String get phoneServerOpen => 'Open';
-
-  @override
   String get phoneServerStart => 'Start';
-
-  @override
-  String get phoneServerStop => 'Stop';
-
-  @override
-  String get phoneServerMore => 'More server actions';
-
-  @override
-  String get phoneServerForget => 'Forget saved sign-in';
-
-  @override
-  String get phoneServerStartFailed =>
-      'The server did not start. Open Manage setup to see why.';
 
   @override
   String get phoneServerRestartFailed =>
       'The server did not restart. Open Manage setup to see why.';
-
-  @override
-  String get phoneServerStopFailed =>
-      'The server could not be stopped. Try again.';
-
-  @override
-  String get termuxStorageCatSharedCaches => 'Other caches and package data';
-
-  @override
-  String get termuxStorageNoteSharedCaches =>
-      'Shared caches, package installs and download folders may support other tools or contain files worth keeping. They cannot be removed here.';
-
-  @override
-  String get termuxStorageRescanRequired =>
-      'Previous scan · Scan again before cleaning more';
 
   @override
   String get safetyStopSharingTitle => 'Stop sharing this conversation?';
@@ -9938,10 +9154,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get safetyMcpDisconnectKeep => 'Stay connected';
-
-  @override
-  String get safetyStopOrphanBody =>
-      'Nothing is waiting on it, but whatever it was still doing is lost. It gets a polite stop, then a forced one after 5 seconds.';
 
   @override
   String get settingsHubGroupNotifications => 'Notifications and background';
@@ -9977,7 +9189,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settingsHubSearchPhoneAliases =>
-      'phone termux local on-device on device android install setup storage services';
+      'phone local on-device on device android install setup storage services linux';
 
   @override
   String get settingsHubSearchAccountsAliases =>
@@ -10228,14 +9440,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'references reference docs sources context';
 
   @override
-  String get discoverRunningNowAliases =>
-      'running now running on this phone processes termux services stop busy memory background';
-
-  @override
-  String get discoverStorageAliases =>
-      'storage on this phone disk space clean termux';
-
-  @override
   String get discoverMonitorAliases =>
       'saved-server attention monitor other servers waiting server attention';
 
@@ -10339,7 +9543,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get capabilitySubagentsDetail => 'Mention an agent with @ in a prompt';
 
   @override
-  String get capabilityCompact => 'Shorten';
+  String get capabilityCompact => 'Compact';
 
   @override
   String get capabilityCompactDetail =>
@@ -10529,7 +9733,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String nudgeCompact(String percent) {
-    return 'The context is $percent% full: shorten the conversation to keep going.';
+    return 'The context is $percent% full: compact to keep going.';
   }
 
   @override
@@ -10595,196 +9799,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get localAgentTitle => 'Claude Code on this phone';
 
   @override
-  String get localAgentOfferBody =>
-      'Run Claude Code here with no computer. The app installs Node.js, the Paseo daemon and Claude Code into the Ubuntu it already manages, and reaches them on this phone only.';
-
-  @override
-  String get localAgentOfferSize =>
-      'About 60 MB to download for Node.js, plus the packages; about 1 GB once installed. Needs 2 GB free.';
-
-  @override
-  String get localAgentOfferWarning =>
-      'Android may stop Termux in the background. The battery settings that keep the OpenCode server alive keep this alive too.';
-
-  @override
-  String get localAgentSetUp => 'Set up Claude Code';
-
-  @override
-  String get localAgentNotNow => 'Not now';
-
-  @override
-  String get localAgentNeedsUbuntuBody =>
-      'Claude Code runs in On this phone. Finish the On this phone setup first, then come back here.';
-
-  @override
-  String get localAgentOpenSetup => 'Open phone setup';
-
-  @override
-  String get localAgentNeedsTermuxBody =>
-      'Claude Code needs Termux for now; On this phone does not run it yet. Set up Termux to use it here.';
-
-  @override
-  String get localAgentSetUpWithTermux => 'Set up with Termux';
-
-  @override
-  String get localAgentStepNode => 'Node.js';
-
-  @override
-  String get localAgentStepPaseo => 'Paseo daemon';
-
-  @override
-  String get localAgentStepClaude => 'Claude Code';
-
-  @override
-  String get localAgentStepSignIn => 'Sign in to Claude';
-
-  @override
-  String get localAgentStepStart => 'Start on this phone';
-
-  @override
-  String get localAgentInstalling => 'Setting up Claude Code';
-
-  @override
-  String get localAgentLeaveNote =>
-      'You can leave this screen. The install keeps going in Termux.';
-
-  @override
-  String get localAgentSignInBody =>
-      'Termux opens and Claude Code shows a link. Approve it in your browser, paste the code back into Termux, then return here. This app never sees or stores your Claude sign-in.';
-
-  @override
-  String get localAgentSignInAlready => 'I already signed in';
-
-  @override
-  String localAgentSignInOpenFailed(String command) {
-    return 'Termux could not be opened. Open Termux yourself and run: $command';
-  }
-
-  @override
-  String get localAgentSignInMissing => 'No Claude sign-in was found yet.';
-
-  @override
-  String get localAgentReadyTitle => 'Claude Code is running on this phone';
-
-  @override
-  String get localAgentReadyBody =>
-      'It listens on this phone only (127.0.0.1), behind a password this app keeps.';
-
-  @override
-  String localAgentVersions(String claude, String paseo, String node) {
-    return 'Claude Code $claude · Paseo $paseo · Node.js $node';
-  }
-
-  @override
-  String get localAgentInstalledTitle => 'Claude Code is installed and stopped';
-
-  @override
-  String get localAgentKilled =>
-      'Android stopped Claude Code while the app was away. Nothing is lost.';
-
-  @override
-  String get localAgentFailedTitle => 'Claude Code setup stopped';
-
-  @override
-  String localAgentFailedNoSpace(String detail) {
-    return 'Not enough space on this phone. $detail Free some space, then try again.';
-  }
-
-  @override
-  String get localAgentFailedDownload =>
-      'Node.js could not be downloaded. Check the network, then try again.';
-
-  @override
-  String get localAgentFailedChecksum =>
-      'The Node.js download did not match its pinned checksum, so nothing was installed. Try again; if it happens twice, something on the network is changing the file.';
-
-  @override
-  String get localAgentFailedNativeBuild =>
-      'A package needs a native module with no ready-made build for this phone. Nothing was compiled; the output below names it.';
-
-  @override
-  String get localAgentFailedPackages =>
-      'The packages could not be installed. Check the network, then try again.';
-
-  @override
-  String get localAgentFailedPortInUse =>
-      'Port 6767 on this phone is already used by another program. Stop that program, then try again.';
-
-  @override
-  String get localAgentFailedTimeout =>
-      'Claude Code did not answer within two minutes. The output below shows what it printed.';
-
-  @override
-  String get localAgentFailedInterrupted =>
-      'Android stopped the step before it finished. Try again; it picks up where it stopped.';
-
-  @override
-  String get localAgentFailedUnsupported => 'Claude Code needs a 64-bit phone.';
-
-  @override
-  String get localAgentFailedDaemon =>
-      'Claude Code stopped or does not answer. Start it again.';
-
-  @override
-  String localAgentFailedReason(String detail) {
-    return 'It stopped: $detail';
-  }
-
-  @override
-  String get localAgentProjectTitle => 'Choose a project folder';
-
-  @override
-  String get localAgentProjectBody =>
-      'Claude Code works inside one project folder on this phone.';
-
-  @override
-  String get localAgentProjectPathLabel => 'Or type a path inside Ubuntu';
-
-  @override
-  String get localAgentProjectPathInvalid =>
-      'Enter a full path, like /root/projects/my-app.';
-
-  @override
-  String localAgentConnectFailed(String detail) {
-    return 'Could not connect to Claude Code on this phone. $detail';
-  }
-
-  @override
-  String localAgentCardActionFailed(String detail) {
-    return 'That did not work. $detail';
-  }
-
-  @override
-  String get localAgentRestartTitle => 'Restart Claude Code on this phone?';
-
-  @override
-  String get localAgentRestartBody =>
-      'Claude Code is briefly unavailable and anything it is doing right now is interrupted. Your conversations stay on the phone.';
-
-  @override
-  String get localAgentStopTitle => 'Stop Claude Code on this phone?';
-
-  @override
-  String get localAgentStopBody =>
-      'Anything Claude Code is doing on this phone is interrupted, and this app disconnects from it. Your projects, conversations and Claude sign-in stay; start it again to continue.';
-
-  @override
-  String get localAgentRemove => 'Remove from this phone';
-
-  @override
-  String get localAgentRemoveTitle => 'Remove Claude Code from this phone?';
-
-  @override
-  String get localAgentRemoveBody =>
-      'Stops it and deletes Node.js, Paseo and Claude Code from Ubuntu, about 1 GB. Your projects and your Claude sign-in stay.';
-
-  @override
-  String get localAgentRemoveKeep => 'Keep it';
-
-  @override
-  String get localAgentMore => 'More Claude Code actions';
-
-  @override
   String get firstRunAgentsSideBySide =>
       'They run side by side on the same computer. Start with one, and add the others any time from the server name at the top.';
 
@@ -10820,7 +9834,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get agentErrorRequestTooLargeHint =>
-      'Send fewer or smaller attachments, or shorten the conversation, then try again.';
+      'Send fewer or smaller attachments, or compact the conversation, then try again.';
 
   @override
   String get agentErrorRateLimited =>
@@ -10985,16 +9999,6 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get localAgentUpdate => 'Update Claude Code';
-
-  @override
-  String get localAgentUpdateAvailable =>
-      'An update adds the newest Claude models, such as Opus 5.5.';
-
-  @override
-  String get localAgentUpdateNow => 'Update';
-
-  @override
   String get modelNewBadge => 'Novo';
 
   @override
@@ -11021,13 +10025,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get setupStoppedByRestart =>
       'The phone restarted, so the local server stopped. Start it again when you need it.';
-
-  @override
-  String get phoneServerStoppedTitle => 'The server on this phone is stopped';
-
-  @override
-  String get phoneServerStoppedBody =>
-      'It stops when the phone restarts or Android closes Termux to save battery. Your conversations are kept; start it again to continue.';
 
   @override
   String get phoneServerStartAndConnect => 'Start and connect';
@@ -11151,19 +10148,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get phoneSetupProgressTitle => 'Configurando o OpenCode neste celular';
-
-  @override
-  String get phoneSetupProgressStopTitle => 'Parar a configuração?';
-
-  @override
-  String get phoneSetupProgressStopMessage =>
-      'O que já foi concluído continua instalado.';
-
-  @override
-  String get phoneSetupProgressStopConfirm => 'Parar a configuração';
-
-  @override
-  String get phoneSetupProgressKeepGoing => 'Continuar';
 
   @override
   String get builtinServerChooseRuntime => 'Which OpenCode';
@@ -11607,14 +10591,8 @@ class AppLocalizationsPt extends AppLocalizations {
   String get phoneSetupStartOtherWays => 'Outras formas';
 
   @override
-  String get phoneSetupStartUseTermux => 'Usar o Termux';
-
-  @override
   String get phoneSetupStartByAddress =>
       'Conectar a um computador por endereço';
-
-  @override
-  String get phoneSetupStartSetUpHere => 'Configurar neste app';
 
   @override
   String phoneSetupStartProgressHeadline(int percent) {
@@ -11641,17 +10619,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get phoneSetupStartOpen => 'Abrir';
-
-  @override
-  String get phoneSetupStartTermuxHeadline =>
-      'O OpenCode já está configurado no Termux';
-
-  @override
-  String get phoneSetupStartTermuxBody =>
-      'Você já o configurou com o Termux. Conecte-se para continuar usando.';
-
-  @override
-  String get phoneSetupStartConnect => 'Conectar';
 
   @override
   String phoneSetupStartFailed(String reason) {
@@ -12030,16 +10997,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'A running agent turn will stop. Your conversations are kept.';
 
   @override
-  String workRunaway(String duration) {
-    return 'OpenCode has been busy for $duration with nothing to do';
-  }
-
-  @override
-  String workRunawayInProject(String project, String duration) {
-    return 'OpenCode has been busy in $project for $duration with nothing to do';
-  }
-
-  @override
   String get connectStartingPhone => 'Iniciando o OpenCode neste celular…';
 
   @override
@@ -12181,34 +11138,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get serverRowConnected => 'Conectado';
 
   @override
-  String phoneServerRowStatus(String runtime, String state) {
-    return '$runtime · $state';
-  }
-
-  @override
-  String get phoneServerRowRestarting => 'Restarting';
-
-  @override
-  String get phoneServerRowNotAnswering => 'Not answering';
-
-  @override
-  String get phoneServerRowNotRunning => 'Not running';
-
-  @override
-  String get phoneServerRowDetails => 'Details';
-
-  @override
-  String get localAgentRowOptional => 'Optional';
-
-  @override
   String get localAgentPageTitle => 'Claude Code';
-
-  @override
-  String get managedRecoveryRowTitle => 'Restart after a crash';
-
-  @override
-  String get managedRecoveryRowDetail =>
-      'Up to 3 tries, only while this app is open. It never installs or updates.';
 
   @override
   String pluginsTeamRowFound(String server) {
@@ -12322,9 +11252,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get localTerminalSemantics =>
       'Terminal on this phone. Tap to type; touch and hold to select text.';
-
-  @override
-  String get phoneServerTermuxTitle => 'Termux';
 
   @override
   String get globalSessionsLoadFailedTitle => 'Couldn\'t load conversations';
@@ -12479,19 +11406,11 @@ class AppLocalizationsPt extends AppLocalizations {
       'Installed once, next to OpenCode on this phone.';
 
   @override
-  String get teamDiscoverTermuxDownloadBody =>
-      'Installed into Termux, next to OpenCode.';
-
-  @override
   String get teamDiscoverBatteryTitle => 'More battery while it works';
 
   @override
   String get teamDiscoverInAppBatteryBody =>
       'Several agents run at once, and Android may stop some if it runs too many.';
-
-  @override
-  String get teamDiscoverTermuxBatteryBody =>
-      'Keep Termux open while it works; Android may stop it in the background. Nothing is lost.';
 
   @override
   String get teamDiscoverProjectTitle => 'You choose the projects';
@@ -14816,19 +13735,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'Run agents right on this phone. Set it up?';
 
   @override
-  String get kitCapPhoneTermuxTitle => 'Server in Termux';
-
-  @override
-  String get kitCapPhoneTermuxWhy => 'Needs Termux on this phone.';
-
-  @override
-  String get kitCapPhoneTermuxEnable => 'Set up with Termux';
-
-  @override
-  String get kitCapPhoneTermuxOffer =>
-      'Run this phone\'s server in Termux instead?';
-
-  @override
   String get kitCapPhoneAnyTitle => 'Server on this phone';
 
   @override
@@ -14886,7 +13792,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get kitCapClaudeLocalWhy =>
-      'Needs Termux on this phone and a Claude subscription.';
+      'Needs built-in Linux on this phone and a Claude subscription.';
 
   @override
   String get kitCapClaudeLocalEnable => 'Add Claude Code';
@@ -15110,9 +14016,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get kitHostThisPhone => 'this phone';
 
   @override
-  String get kitHostTermux => 'Termux';
-
-  @override
   String get kitHostOpenCode2 => 'computers with OpenCode 2';
 
   @override
@@ -15174,11 +14077,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get searchClaudeCodeGateDevice =>
-      'Claude Code runs on a phone only through Termux, which this device doesn\'t have. Run it on a computer with Paseo and add that computer as a server.';
+      'Claude Code runs on a phone only in the app\'s built-in Linux, which this device doesn\'t have. Run it on a computer with Paseo and add that computer as a server.';
 
   @override
   String get searchClaudeCodeGateDesktop =>
-      'Claude Code on this phone is for Android phones with Termux. On a computer, run Claude Code with Paseo and add it as a server.';
+      'Claude Code on this phone is for Android phones with built-in Linux. On a computer, run Claude Code with Paseo and add it as a server.';
 
   @override
   String get searchClaudeCodeGateServers => 'Open servers';
@@ -15724,21 +14627,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get serverSwitcherCurrentMenu => 'Server actions';
 
   @override
-  String get localAgentEntryStillStarting =>
-      'Still starting · this can take a minute';
-
-  @override
-  String get localAgentEntryDidNotStart => 'Didn\'t start';
-
-  @override
-  String get localAgentEntryRemoving => 'Removing';
-
-  @override
-  String localAgentEntrySignedOut(String state) {
-    return '$state · Not signed in to Claude';
-  }
-
-  @override
   String get formRendererSending => 'Sending your answers…';
 
   @override
@@ -15999,17 +14887,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get importEnvironmentId => 'Cloud environment ID';
 
   @override
-  String get phoneSetupStartUseTermuxOne => 'Usar o do Termux';
-
-  @override
-  String get phoneSetupStartUseTermuxOneDetail =>
-      'O OpenCode também está configurado no Termux. Conecte-se a ele.';
-
-  @override
-  String get phoneSetupStartTermuxNotAllowed =>
-      'O Termux está instalado, mas ainda não liberou este app. Conclua a configuração dele.';
-
-  @override
   String get phoneSetupCustomizeAllInstalled =>
       'Todas as ferramentas opcionais já estão neste celular.';
 
@@ -16017,20 +14894,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get phoneSetupCustomizeIncluded => 'Obrigatório';
 
   @override
-  String get termuxProcsLoadFailedTitle => 'Couldn\'t read what\'s running';
-
-  @override
-  String get termuxProcsEmptyBody =>
-      'When OpenCode, the AI Team or a build runs here, it shows up in this list.';
-
-  @override
-  String get termuxProcsNotStoppedTitle => 'Not everything stopped';
-
-  @override
   String get termuxProcsCopyCommand => 'Copy command';
-
-  @override
-  String get termuxProcsOpenControls => 'Open This phone';
 
   @override
   String get termuxProcsProcessId => 'Process ID';
@@ -16039,39 +14903,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get termuxProcsParentId => 'Parent process ID';
 
   @override
-  String get termuxProcsAboutOpenCode =>
-      'Part of the OpenCode server on this phone.';
-
-  @override
-  String get termuxProcsAboutAiTeam =>
-      'Part of the AI Team. Stopping it stops the work the team is doing.';
-
-  @override
-  String get termuxProcsAboutBuild =>
-      'A build helper. The next build starts it again when it needs it.';
-
-  @override
-  String get termuxProcsAboutOrphan =>
-      'Nothing is waiting on it, so stopping it is safe.';
-
-  @override
-  String get termuxProcsAboutOther =>
-      'Started by something else on this phone.';
-
-  @override
   String get termuxProcsNoRestart => 'It can\'t be started again from here.';
-
-  @override
-  String get termuxProcsStopGroupTeamLost =>
-      'Any task the team is working on stops too.';
-
-  @override
-  String get termuxProcsStopGroupTeamRestart =>
-      'You can start the team again from AI Team.';
-
-  @override
-  String get phoneSetupProgressStopContinueLater =>
-      'Você pode continuar quando quiser em “Neste celular”.';
 
   @override
   String get teamMergeFailedNext =>
@@ -16197,38 +15029,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get setupTerminalTitle => 'Setup output';
-
-  @override
-  String get teamPhoneStopTeam => 'Stop the team';
-
-  @override
-  String get teamPhoneStartTeam => 'Start the team';
-
-  @override
-  String get teamPhoneStartTeamAgain => 'Start the team again';
-
-  @override
-  String get teamPhoneDeleteTeam => 'Delete the team from this phone';
-
-  @override
-  String get teamPhoneRemoveBody =>
-      'The team stops, and the AI Team turns off for this server.';
-
-  @override
-  String get teamPhoneRemoveLost =>
-      'The team\'s programs, its files and its task list are deleted';
-
-  @override
-  String get teamPhoneRemoveKept =>
-      'Your project files and their git history stay';
-
-  @override
-  String teamPhoneRemoveFrees(int size) {
-    return 'Frees about $size MB';
-  }
-
-  @override
-  String get teamPhoneRemoveConfirm => 'Delete the team';
 
   @override
   String get productStatesActionFailedTitle => 'Couldn\'t finish that';
@@ -17292,6 +16092,40 @@ class AppLocalizationsPt extends AppLocalizations {
   String get desktopReleaseOpenPage => 'Open release page';
 
   @override
+  String get appUpdatePromptTitle => 'Update available';
+
+  @override
+  String get appUpdateDownloadAndUpdate => 'Download and update';
+
+  @override
+  String get appUpdateLater => 'Later';
+
+  @override
+  String appUpdateSize(String size) {
+    return 'Size: $size';
+  }
+
+  @override
+  String get appUpdateChangelog => 'What\'s new';
+
+  @override
+  String get appUpdateInstall => 'Install';
+
+  @override
+  String get appUpdateDownloading => 'Downloading update…';
+
+  @override
+  String get appUpdateReadyToInstall =>
+      'Ready to install. Tap Install to finish updating.';
+
+  @override
+  String get appUpdateDownloadFailed =>
+      'Failed to download update. Check connection and retry.';
+
+  @override
+  String get appUpdateRetry => 'Try again';
+
+  @override
   String get runningWorkTitle => 'Work in this conversation';
 
   @override
@@ -17515,13 +16349,13 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get sessionContextNearLimitBody =>
-      'Older details may be dropped from what the model sees. Shorten the conversation to keep going, or start a new one.';
+      'Older details may be dropped from what the model sees. Compact the conversation to keep going, or start a new one.';
 
   @override
-  String get sessionContextCompactAction => 'Shorten this conversation';
+  String get sessionContextCompactAction => 'Compact this conversation';
 
   @override
-  String get sessionContextCompactTitle => 'Shorten this conversation?';
+  String get sessionContextCompactTitle => 'Compact this conversation?';
 
   @override
   String get sessionContextCompactBody =>
@@ -17531,11 +16365,11 @@ class AppLocalizationsPt extends AppLocalizations {
   String get sessionContextCompactKept => 'Every message stays in the history.';
 
   @override
-  String get sessionContextCompactConfirm => 'Shorten conversation';
+  String get sessionContextCompactConfirm => 'Compact conversation';
 
   @override
   String get sessionContextCompactStarted =>
-      'Shortening started. The numbers update when it finishes.';
+      'Compacting started. The numbers update when it finishes.';
 
   @override
   String get sessionContextCompactBusy => 'Wait for the reply to finish.';
@@ -18451,12 +17285,6 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get localAgentStopNamed => 'Stop Claude Code';
-
-  @override
-  String get localAgentStartNamed => 'Start Claude Code';
-
-  @override
   String monitorSwitchToTitle(String server) {
     return 'Switch to $server?';
   }
@@ -18645,9 +17473,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get thisPhoneHostInApp => 'In the app';
 
   @override
-  String get thisPhoneHostTermux => 'In Termux';
-
-  @override
   String get thisPhoneSetUp => 'Set up OpenCode';
 
   @override
@@ -18681,27 +17506,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get thisPhoneBusy => 'Wait for the current step to finish';
-
-  @override
-  String get phoneSetupTermuxAllowHow =>
-      'No Termux, cole a linha copiada e pressione Enter.';
-
-  @override
-  String get phoneSetupTermuxUpdatingTitle => 'Atualizando este celular';
-
-  @override
-  String get phoneSetupTermuxStartingTitle => 'Iniciando o servidor';
-
-  @override
-  String get phoneSetupTermuxConnecting => 'Conectando';
-
-  @override
-  String get phoneSetupTermuxLeaveHint =>
-      'Você pode sair do app. O Termux continua trabalhando e esta lista mostra o ponto atual quando você voltar.';
-
-  @override
-  String get phoneSetupTermuxCost =>
-      'Cerca de 10–15 minutos na primeira vez, no armazenamento do Termux';
 
   @override
   String removeFromPhoneKeepBody(String size) {
@@ -18803,52 +17607,6 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get termuxProcsKindParentGone => 'Parent gone';
-
-  @override
-  String get termuxProcsKindNoOwner => 'No owner';
-
-  @override
-  String termuxProcsStopOrphans(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Stop $count orphaned helpers',
-      one: 'Stop 1 orphaned helper',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String termuxProcsStopOrphansTitle(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Stop $count orphaned helpers?',
-      one: 'Stop the orphaned helper?',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get teamPhoneStopTeamRow => 'Stop the team on this phone';
-
-  @override
-  String get teamPhoneStopTeamRowSupporting =>
-      'Agents stop where they are; nothing is lost';
-
-  @override
-  String teamUiPhoneWorkingOn(String name) {
-    return 'Working on $name';
-  }
-
-  @override
-  String get teamUiPhoneVersionsLabel => 'Engine versions';
-
-  @override
-  String get teamUiPhoneProjectLabel => 'Project folder';
-
-  @override
   String get phoneServerNameInSentence => 'this phone';
 
   @override
@@ -18879,18 +17637,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get teamAgentLastCommandLabel => 'Last command';
-
-  @override
-  String get termuxStorageOnlyBuildCaches =>
-      'Only build caches can be cleaned here';
-
-  @override
-  String get termuxStorageWhereItIs => 'Where it is';
-
-  @override
-  String termuxStorageCleanBuildCaches(String size) {
-    return 'Clean build caches ($size)';
-  }
 
   @override
   String get monitorBackgroundChecks => 'Background checks';
@@ -19064,10 +17810,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get thisPhoneAddToolsDetail =>
       'Python, AI Team, voice typing and more';
-
-  @override
-  String get phoneSetupTermuxOtherRuntime =>
-      'O Termux já executa o outro OpenCode. Troque em “Neste celular” e continue a configuração.';
 
   @override
   String get undoFromHereNowAction => 'Undo now';
@@ -19299,11 +18041,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'What the agent may run here without asking you.';
 
   @override
-  String phoneSetupStartTermuxProgressHeadline(int percent) {
-    return 'A configuração no Termux está $percent% concluída';
-  }
-
-  @override
   String get teamPhoneReadyChooseTitle => 'Choose the team\'s project';
 
   @override
@@ -19341,9 +18078,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'Couldn’t stop the team on this phone, so it is still on. Try again.';
 
   @override
-  String get teamHomeHostStopped => 'Stopped';
-
-  @override
   String get teamHomeHostCooling => 'Cooling down';
 
   @override
@@ -19358,9 +18092,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String teamHomeHeatStoppedLine(String time) {
     return 'The phone got very hot at $time, so the team stopped. Its work is kept, and it starts again once the phone has cooled.';
   }
-
-  @override
-  String get teamHomePhoneControls => 'Keep it running, stop it or remove it';
 
   @override
   String teamHomeSpentToday(String usage) {
@@ -19647,10 +18378,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'The app couldn\'t read or save a file on this device.';
 
   @override
-  String get productErrorTermux =>
-      'Termux didn\'t finish that. Check that Termux is installed and open, then try again.';
-
-  @override
   String get productErrorDetailsLabel => 'Error details';
 
   @override
@@ -19729,54 +18456,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'The work waits for review. Nothing is lost.';
 
   @override
-  String termuxProcsBudget(int count, int limit) {
-    return '$count of $limit background processes';
-  }
-
-  @override
-  String termuxProcsBudgetNote(int limit) {
-    return 'Android 12 and later may stop the oldest ones when all apps together run more than $limit.';
-  }
-
-  @override
-  String termuxProcsBudgetOver(int limit) {
-    return 'More than $limit: Android may stop the oldest of these at any time.';
-  }
-
-  @override
-  String get termuxProcsLoadFailedBody =>
-      'Termux did not answer. Open Termux, then try again.';
-
-  @override
-  String get termuxProcsRefreshFailed =>
-      'Couldn\'t read the list again, so it shows the last reading.';
-
-  @override
-  String get termuxProcsStopFailed =>
-      'Couldn\'t stop it. Try again, or stop it from Termux.';
-
-  @override
-  String get termuxProcsKindOpenCode => 'OpenCode server';
-
-  @override
-  String get termuxProcsKindAiTeam => 'AI Team';
-
-  @override
-  String get termuxProcsKindClaudeCode => 'Claude Code';
-
-  @override
-  String get termuxProcsKindDevService => 'Dev service';
-
-  @override
-  String get termuxProcsKindTerminal => 'Terminal';
-
-  @override
-  String get termuxProcsKindHelper => 'Helper';
-
-  @override
-  String get termuxProcsKindHostApp => 'Termux app';
-
-  @override
   String get termuxProcsBusy => 'Busy';
 
   @override
@@ -19786,55 +18465,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String termuxProcsRunningFor(String elapsed) {
     return 'running $elapsed';
   }
-
-  @override
-  String termuxProcsStopKindBody(String names) {
-    return '$names: each gets a polite stop, then a forced one after 5 seconds.';
-  }
-
-  @override
-  String termuxProcsStopKind(int count, String things) {
-    return 'Stop all $count $things';
-  }
-
-  @override
-  String termuxProcsStopKindTitle(int count, String things) {
-    return 'Stop all $count $things?';
-  }
-
-  @override
-  String get termuxProcsKindsAiTeam => 'AI Team processes';
-
-  @override
-  String get termuxProcsKindsClaudeCode => 'Claude Code processes';
-
-  @override
-  String get termuxProcsKindsDevServices => 'dev services';
-
-  @override
-  String get termuxProcsKindsTerminals => 'terminals';
-
-  @override
-  String get termuxProcsKindsHelpers => 'helpers';
-
-  @override
-  String get termuxProcsStopDevRestart =>
-      'The next build starts them again when it needs them.';
-
-  @override
-  String get termuxProcsAboutClaudeCode =>
-      'Claude Code, the coding agent. Stopping it ends the answer it is writing.';
-
-  @override
-  String get termuxProcsAboutTerminal =>
-      'A terminal. Stopping it closes it and whatever runs in it.';
-
-  @override
-  String get termuxProcsAboutHostApp =>
-      'The Termux app itself. It is not stopped from here.';
-
-  @override
-  String get termuxProcsAverageCpu => 'Average processor use';
 
   @override
   String get termuxProcsCpuTime => 'Processor time';
@@ -19999,10 +18629,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get appNewConversationFailed => 'Couldn\'t start a new conversation';
 
   @override
-  String get rootPhoneServerStartFailed =>
-      'OpenCode on this phone didn\'t start';
-
-  @override
   String get connectionFailureLocalCodexBody =>
       'A local Codex listener should answer on this phone, but nothing did.';
 
@@ -20103,10 +18729,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get voiceAutoSetupMobileData =>
       'You\'re on mobile data. This download counts against your data plan.';
-
-  @override
-  String get voiceAutoSetupMaybeMetered =>
-      'This connection may count against a data plan.';
 
   @override
   String voiceAutoSetupDownload(String size) {
@@ -20288,16 +18910,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get teamStartRunKeepInBacklog => 'Keep in backlog';
-
-  @override
-  String workRunawayStopped(String helper) {
-    return 'Stopped $helper';
-  }
-
-  @override
-  String workRunawayStopFailed(String helper) {
-    return 'Couldn\'t stop $helper. Try again, or stop it from Termux.';
-  }
 
   @override
   String get serverSettingsUpdateCommandsDetail =>
@@ -21616,19 +20228,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get addServerTailscaleNext => 'Enter the address';
 
   @override
-  String get phoneSetupTermuxGetCurrent => 'Baixar o Termux atual';
-
-  @override
-  String get phoneSetupUnsupportedTitle => 'Connect a server';
-
-  @override
-  String get phoneSetupUnsupportedBody =>
-      'Setting up on the device itself works only on Android phones. On your computer, run this command, then add the server here with the code it prints.';
-
-  @override
-  String get termuxStorageStageTotal => 'The whole Termux install';
-
-  @override
   String get setupProgressViewFailedStep =>
       'This step didn\'t finish. What went wrong is under Details.';
 
@@ -21638,44 +20237,9 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String workRunawayHelper(String helper, String duration) {
-    return 'A leftover $helper process has been busy for $duration with nothing to do';
-  }
-
-  @override
-  String workRunawayHelperInProject(
-    String helper,
-    String project,
-    String duration,
-  ) {
-    return 'A leftover $helper process in $project has been busy for $duration with nothing to do';
-  }
-
-  @override
-  String get workRunawaySeeRunning => 'See what\'s running';
-
-  @override
   String thisPhoneUpToDate(String version) {
     return 'Up to date · $version';
   }
-
-  @override
-  String thisPhoneUpdateTitle(String runtime) {
-    return 'Update $runtime?';
-  }
-
-  @override
-  String thisPhoneUpdateBody(String version) {
-    return 'Installs version $version, restarts the server on this phone and connects again.';
-  }
-
-  @override
-  String get thisPhoneUpdateKept =>
-      'Your conversations are kept. The server is away for a minute while it restarts.';
-
-  @override
-  String get thisPhoneUpdateBusy =>
-      'A reply is still being written. Stop it or let it finish, then update.';
 
   @override
   String get thisPhoneStartAgain => 'Start again';
@@ -21696,11 +20260,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String thisPhoneCheckFailed(String runtime) {
     return 'This phone couldn\'t check on $runtime. Try again in a moment.';
-  }
-
-  @override
-  String thisPhoneSwitchStopped(String runtime) {
-    return '$runtime didn\'t start after the switch. Your conversations are kept.';
   }
 
   @override
@@ -21793,381 +20352,8 @@ class AppLocalizationsPt extends AppLocalizations {
   String get chatWatchBackToWorker => 'Back to the worker';
 
   @override
-  String get migrationTitle => 'Move from Termux';
-
-  @override
-  String get migrationChecking => 'Checking Termux and phone storage…';
-
-  @override
-  String get migrationReviewIntro =>
-      'Your projects are copied into OpenCode inside this app. Nothing in Termux is changed or removed.';
-
-  @override
-  String get migrationGroupMoves => 'Copied and ready to use';
-
-  @override
-  String get migrationGroupExports => 'Saved privately, not turned on';
-
-  @override
-  String get migrationGroupNotMoved => 'Not moved';
-
-  @override
-  String get migrationItemProjects => 'Projects';
-
-  @override
-  String get migrationItemConfig => 'MCP and agent settings';
-
-  @override
-  String get migrationItemSessions => 'Conversation history (backup copy)';
-
-  @override
-  String get migrationItemGitConfig => 'Git settings';
-
-  @override
-  String get migrationItemShellFiles => 'Shell settings';
-
-  @override
-  String get migrationItemAiTeam => 'AI Team';
-
-  @override
-  String get migrationItemProjectsWhat =>
-      'Into a new folder in On this phone. Nothing there is overwritten.';
-
-  @override
-  String get migrationItemConfigWhat =>
-      'To review before using: commands and paths may only work in Termux.';
-
-  @override
-  String get migrationItemSessionsWhat =>
-      'May contain your sign-ins, and the app doesn\'t open it. Termux keeps your usable history.';
-
-  @override
-  String get migrationItemGitConfigWhat =>
-      'Your Git name, email and options, to review.';
-
-  @override
-  String get migrationItemShellFilesWhat =>
-      'Keeps .bashrc, .zshrc and your other shell start files; they never run.';
-
-  @override
-  String get migrationItemAiTeamWhat =>
-      'The team\'s saved state. Setup installs its tools again.';
-
-  @override
-  String migrationItemSize(String size, int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count files',
-      one: '1 file',
-    );
-    return '$size · $_temp0';
-  }
-
-  @override
-  String get migrationSizeUnknown => 'Size unknown';
-
-  @override
-  String get migrationExportsNote =>
-      'Private copies stay in On this phone. Nothing in them runs or turns on by itself.';
-
-  @override
-  String get migrationNotMovedSignIn =>
-      'Sign-ins to AI providers: sign in again after the move';
-
-  @override
-  String migrationNotMovedSignInNamed(String names) {
-    return 'Sign-ins to $names: sign in again after the move';
-  }
-
-  @override
-  String get migrationNotMovedKeys => 'SSH keys and saved Git passwords';
-
-  @override
-  String get migrationNotMovedTools =>
-      'Installed tools and caches: setup installs them again';
-
-  @override
-  String get migrationTermuxKept =>
-      'Termux stays as it is, and its server keeps working until you remove it';
-
-  @override
-  String get migrationKeepOpen =>
-      'Keep the app open while copying. Android stops it when you leave the app, and it picks up from here when you resume.';
-
-  @override
-  String get migrationStart => 'Copy to On this phone';
-
-  @override
-  String get migrationChooseOne => 'Choose at least one item to copy.';
-
-  @override
-  String get migrationPacking => 'Preparing your files in Termux…';
-
-  @override
-  String get migrationCopying => 'Copying files to this app…';
-
-  @override
-  String get migrationUnpacking => 'Importing your files…';
-
-  @override
-  String get migrationVerifying => 'Checking the copied files…';
-
-  @override
-  String get migrationSwitching => 'Connecting to On this phone…';
-
-  @override
-  String get migrationStepConnect => 'Connect to On this phone';
-
-  @override
-  String get migrationStop => 'Stop copying';
-
-  @override
-  String get migrationStopTitle => 'Stop copying?';
-
-  @override
-  String get migrationStopBody => 'You can resume later from This phone.';
-
-  @override
-  String get migrationStopKept => 'What was copied so far is kept';
-
-  @override
-  String get migrationKeepGoing => 'Keep copying';
-
-  @override
-  String get migrationCancelled => 'Copy stopped. You can resume later.';
-
-  @override
-  String get migrationCancelledBody =>
-      'What was copied is kept, and Termux isn\'t changed.';
-
-  @override
-  String get migrationStoppedLeaving =>
-      'It stopped because the app left the screen: Android doesn\'t let it run in the background. What was copied is kept.';
-
-  @override
-  String get migrationResume => 'Resume copying';
-
-  @override
-  String get migrationNeedsSpace => 'More free space is needed before copying.';
-
-  @override
-  String migrationNeedsSpaceBody(String needed, String free) {
-    return 'Needs about $needed, and $free is free. Free up space on this phone, or copy fewer items.';
-  }
-
-  @override
-  String migrationNeedsSpaceBodyUnknown(String needed) {
-    return 'Needs about $needed, and the free space couldn\'t be read. Free up space on this phone, or copy fewer items.';
-  }
-
-  @override
-  String get migrationChooseFewer => 'Choose fewer items';
-
-  @override
-  String get migrationNeedsBuiltin => 'Set up On this phone first.';
-
-  @override
-  String migrationNeedsBuiltinBody(String runtime) {
-    return 'Your projects move into OpenCode inside this app, so it needs setting up. Setup installs Linux and $runtime, then this continues here.';
-  }
-
-  @override
-  String get migrationSetUpBuiltin => 'Set up On this phone';
-
-  @override
-  String get migrationSetupFailed =>
-      'Setup couldn\'t start. Try again, or set it up from This phone.';
-
-  @override
-  String get migrationTermuxNotAnswering => 'Termux isn\'t answering';
-
-  @override
-  String get migrationTermuxUnavailable => 'Open Termux, then try again.';
-
-  @override
-  String get migrationOpenTermux => 'Open Termux';
-
-  @override
-  String get migrationFailedTitle => 'The move stopped';
-
-  @override
-  String get migrationSourceChanged =>
-      'Files changed during copying. Try again when Termux is idle.';
-
-  @override
-  String get migrationSourceBusy =>
-      'Termux is finishing the previous step. Try again shortly.';
-
-  @override
-  String get migrationUnsupportedFiles =>
-      'This item contains files that cannot be copied safely.';
-
-  @override
-  String get migrationUnsupportedFilesFix =>
-      'Links, sockets and Git worktrees can\'t be copied. Remove them in Termux and try again, or copy that project by hand.';
-
-  @override
-  String get migrationLinkedFileUnreadable =>
-      'Some of this project\'s Git history can\'t be read in Termux, so it can\'t be moved safely.';
-
-  @override
-  String get migrationLinkedFileUnreadableFix =>
-      'Open Termux, run git fsck in that project to see what is missing, then try again. Nothing was changed on your phone.';
-
-  @override
-  String get migrationTooLarge =>
-      'This item exceeds the migration size or file limit.';
-
-  @override
-  String get migrationTooLargeFix =>
-      'Each item can hold up to 512 MB and 20,000 files. Delete build folders such as node_modules in Termux, then try again.';
-
-  @override
-  String get migrationVerificationFailed =>
-      'The copy could not be verified. Your Termux files are unchanged.';
-
-  @override
-  String get migrationDestinationChanged =>
-      'Imported files changed. They will not be overwritten.';
-
-  @override
-  String get migrationDestinationChangedFix =>
-      'The files in On this phone stay as you left them.';
-
-  @override
-  String get migrationStorageFailed =>
-      'The copy could not be saved. Check phone storage and try again.';
-
-  @override
-  String get migrationTimedOut =>
-      'This step took too long. Keep the app open and resume.';
-
-  @override
-  String get migrationSelectionChanged =>
-      'Use the saved migration selection to resume.';
-
-  @override
-  String get migrationConnectionFailed =>
-      'Files are copied, but On this phone could not connect.';
-
-  @override
-  String get migrationFailureCode => 'Reason';
-
-  @override
-  String get migrationFailureItem => 'Item';
-
-  @override
-  String get migrationOpenThisPhone => 'Open This phone';
-
-  @override
-  String get migrationDoneTitle => 'Moved from Termux';
-
-  @override
-  String get migrationDone =>
-      'Files copied. Your Termux server is still available.';
-
-  @override
-  String get migrationSignInAgain => 'Sign in to your AI providers again';
-
-  @override
-  String migrationSignInAgainNamed(String names) {
-    return '$names appear in your Termux settings. Sign in here to use them.';
-  }
-
-  @override
-  String get migrationSignInAgainAny =>
-      'Sign-ins never move from Termux. Until you sign in here, replies use OpenCode\'s free model, which is slower.';
-
-  @override
-  String get migrationProjectsWhere => 'Your projects';
-
-  @override
-  String migrationProjectsWhereBody(String folder) {
-    return 'In the folder $folder in On this phone';
-  }
-
-  @override
-  String get migrationExportsWhere => 'Private copies';
-
-  @override
-  String migrationExportsWhereBody(String items) {
-    return '$items: saved in On this phone, not turned on';
-  }
-
-  @override
-  String get migrationRemoveTermux =>
-      'Remove the Termux server when you\'re ready';
-
-  @override
-  String get migrationRemoveTermuxBody =>
-      'Nothing is removed for you. Until then it keeps working, and you can switch back to it on Servers.';
-
-  @override
-  String get migrationOpenBuiltin => 'Open On this phone';
-
-  @override
-  String get migrationDetailProjects => 'Projects folder';
-
-  @override
-  String get migrationDetailExports => 'Private copies folder';
-
-  @override
-  String get migrationUnfinishedTitle => 'The move didn\'t finish';
-
-  @override
-  String get migrationUnfinishedBody =>
-      'Resume to carry on where it stopped. What was already copied is kept, and Termux isn\'t changed.';
-
-  @override
-  String get migrationUnavailableTitle => 'The move can\'t start';
-
-  @override
-  String get migrationUnavailableBody =>
-      'The app couldn\'t prepare its private storage for the copy. Try again, and if it keeps happening, restart the app.';
-
-  @override
-  String get migrationRowBody =>
-      'Copy your projects to the server on this phone. Termux stays as it is.';
-
-  @override
-  String get migrationRowResume => 'Resume moving to On this phone';
-
-  @override
-  String get migrationRowResumeBody =>
-      'Stopped before it finished. What was copied is kept.';
-
-  @override
-  String get migrationRowRunning => 'Moving to On this phone';
-
-  @override
-  String get migrationRowDoneBody =>
-      'Remove the Termux server when you\'re ready.';
-
-  @override
-  String get migrationOffer =>
-      'Move your Termux projects into this app? Termux stays as it is.';
-
-  @override
-  String get migrationOfferAction => 'Review what moves';
-
-  @override
   String get integrationsSignInUncertainNext =>
       'Check the server before you start again';
-
-  @override
-  String teamHomeLastKnownTasks(String time) {
-    return 'Tasks as of $time';
-  }
-
-  @override
-  String teamHomeLastKnownAgents(String time) {
-    return 'Agents as of $time';
-  }
-
-  @override
-  String get teamHomeStoppedStartFirst =>
-      'Start the team again to give it a task or open one.';
 
   @override
   String get inAppServerStartExitedBody =>
@@ -22208,111 +20394,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String integrationsEnvironmentNote(String name) {
     return 'To connect $name without the app, set this where the server runs, then restart the server.';
   }
-
-  @override
-  String get termuxProblemAccessHeard =>
-      'OpenCode is running in Termux, but this app can\'t reach Termux yet. Allow access and it connects.';
-
-  @override
-  String get termuxProblemAccessNeeded =>
-      'This app can\'t reach Termux yet. Allow access so it can find OpenCode there and connect.';
-
-  @override
-  String get termuxProblemAccessBlocked =>
-      'Android blocked Termux access for this app. In this app\'s permissions, turn on “Run commands in Termux environment”.';
-
-  @override
-  String get termuxProblemOtherAppsOff =>
-      'Termux doesn\'t take commands from other apps yet. One line in Termux allows it.';
-
-  @override
-  String get termuxProblemAsleep =>
-      'Termux didn\'t answer. Android may have put it to sleep. Open Termux to wake it.';
-
-  @override
-  String termuxProblemNotAnswering(String runtime) {
-    return '$runtime is set up in Termux but isn\'t answering. A restart usually brings it back.';
-  }
-
-  @override
-  String get termuxProblemNotInstalled =>
-      'Termux isn\'t on this phone. Install it again, or set up On this phone instead.';
-
-  @override
-  String get termuxProblemOutdated =>
-      'This Termux is too old for the app to use. Install the current Termux from F-Droid.';
-
-  @override
-  String termuxProblemUnknown(String runtime) {
-    return 'This phone couldn\'t check on $runtime in Termux. Try again in a moment.';
-  }
-
-  @override
-  String get termuxFixAllowAccess => 'Allow access to Termux';
-
-  @override
-  String get termuxFixOpenPermissions => 'Open this app\'s permissions';
-
-  @override
-  String get termuxFixAllowOtherApps => 'Allow other apps in Termux';
-
-  @override
-  String get termuxFixOpenTermux => 'Open Termux';
-
-  @override
-  String termuxFixRestart(String runtime) {
-    return 'Restart $runtime in Termux';
-  }
-
-  @override
-  String get termuxFixGetTermux => 'Get Termux';
-
-  @override
-  String get termuxFixGetCurrentTermux => 'Get the current Termux';
-
-  @override
-  String get termuxOtherAppsTitle => 'Allow other apps';
-
-  @override
-  String get termuxOtherAppsBody =>
-      'Paste this line in Termux and press Enter, then come back here. Open Termux copies it for you.';
-
-  @override
-  String get termuxLeadRunning => 'OpenCode is running in Termux';
-
-  @override
-  String get termuxLeadAccessLine =>
-      'This app can\'t reach Termux yet. Allow access and it connects to your conversations.';
-
-  @override
-  String get termuxLeadSetUp => 'OpenCode is set up in Termux';
-
-  @override
-  String get termuxLeadTermuxOnly => 'Termux is on this phone';
-
-  @override
-  String get termuxLeadRunningBody => 'Connect to pick up your conversations.';
-
-  @override
-  String get termuxLeadStoppedBody =>
-      'It\'s stopped. Start it to pick up your conversations.';
-
-  @override
-  String get termuxLeadConnect => 'Connect to the server in Termux';
-
-  @override
-  String get termuxLeadStart => 'Start the server in Termux';
-
-  @override
-  String get termuxInAppInstead => 'Configurar o servidor integrado ao app';
-
-  @override
-  String get termuxInAppInsteadDetail =>
-      'Um novo começo que roda dentro deste app. Não precisa do Termux.';
-
-  @override
-  String get termuxInAppInsteadBlocked =>
-      'A fresh start inside this app. To bring your projects from Termux, fix Termux access first.';
 
   @override
   String get aboutBundledComponents => 'Bundled components';
@@ -22399,7 +20480,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get manageSpaceKeptAll =>
-      'Termux, your computers and anything pushed to git stay';
+      'Your computers and anything pushed to git stay';
 
   @override
   String get manageSpaceWaitForExport => 'Wait for the export to finish';
@@ -22431,9 +20512,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get manageSpaceKeptLabel => 'Stays';
-
-  @override
-  String get manageSpaceKeptTermux => 'Termux and the projects in it';
 
   @override
   String get manageSpaceKeptComputers => 'Your computers and their servers';
@@ -22659,37 +20737,6 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String migrationReviewSpace(String needed, String free) {
-    return 'Needs about $needed · $free free';
-  }
-
-  @override
-  String migrationReviewSpaceUnknown(String needed) {
-    return 'Needs about $needed · Free space unknown';
-  }
-
-  @override
-  String get migrationReviewSpaceShort =>
-      'Not enough free space for this. Choose fewer items, or free up space on this phone.';
-
-  @override
-  String get migrationDiscard => 'Discard saved copy';
-
-  @override
-  String get migrationDiscardTitle => 'Discard this saved copy?';
-
-  @override
-  String get migrationDiscardBody =>
-      'Temporary copy files will be removed. Files already imported and everything in Termux will stay.';
-
-  @override
-  String get migrationDiscardFailed =>
-      'The saved copy couldn\'t be removed. Try again in a moment.';
-
-  @override
-  String get migrationStopping => 'Stopping…';
-
-  @override
   String get pickerConnectProvider => 'Conectar um provedor';
 
   @override
@@ -22732,14 +20779,14 @@ class AppLocalizationsPt extends AppLocalizations {
       'Signed in, but this server can\'t use it';
 
   @override
-  String get chatUiCompactConfirmTitle => 'Shorten this conversation?';
+  String get chatUiCompactConfirmTitle => 'Compact this conversation?';
 
   @override
   String get chatUiCompactConfirmBody =>
-      'Shortening replaces earlier messages with a short summary to save space. It can\'t be undone.';
+      'Compact replaces earlier messages with a short summary to save space. It can\'t be undone.';
 
   @override
-  String get chatUiCompactConfirmAction => 'Shorten conversation';
+  String get chatUiCompactConfirmAction => 'Compact conversation';
 
   @override
   String get kitTurnReconnecting =>
@@ -24979,32 +23026,11 @@ class AppLocalizationsPt extends AppLocalizations {
       'Without access to files this folder’s files cannot be shown, so it was not opened. Allow access, or choose a folder in the app’s project space.';
 
   @override
-  String get storageTermuxTitle => 'Allow Termux storage?';
-
-  @override
-  String get storageTermuxBody =>
-      'Your server runs in Termux, and Termux cannot read your phone’s shared storage yet. Without that, this folder shows only hidden items such as .git.';
-
-  @override
-  String get storageTermuxAllow => 'Open Termux';
-
-  @override
-  String get storageTermuxStillTitle => 'Allow storage in Termux';
-
-  @override
-  String get storageTermuxStillBody =>
-      'In Termux, allow storage when Android asks (the command is termux-setup-storage), then open the folder again.';
-
-  @override
   String get filesAccessNeededTitle => 'Files are hidden';
 
   @override
   String get filesAccessNeededBody =>
       'This folder is in your phone’s shared storage and the app cannot read most of its files yet. Only hidden items show.';
-
-  @override
-  String get filesAccessNeededTermuxBody =>
-      'This folder is in your phone’s shared storage and Termux cannot read most of its files yet. Only hidden items show.';
 
   @override
   String get storageRestartTitle => 'Restart to open folder?';
@@ -25415,61 +23441,61 @@ class AppLocalizationsPt extends AppLocalizations {
   String get chatsNewSeparateCopy => 'In a separate copy';
 
   @override
-  String get agentPersonaClaudeCodeStrength => 'Careful with big changes';
+  String get agentPersonaClaudeCodeStrength => 'Understands your codebase';
 
   @override
   String get agentPersonaClaudeCodeAbout =>
-      'Plans before it edits; good for larger changes across files.';
+      'Anthropic’s coding tool that lives in your terminal and understands your codebase.';
 
   @override
   String get agentPersonaClaudeCodeNeeds => 'A Claude plan or an Anthropic key';
 
   @override
-  String get agentPersonaCodexStrength => 'Fast edits and reviews';
+  String get agentPersonaCodexStrength => 'Lightweight terminal agent';
 
   @override
   String get agentPersonaCodexAbout =>
-      'Quick at focused fixes and reviewing changes.';
+      'OpenAI’s lightweight coding agent that runs in your terminal.';
 
   @override
   String get agentPersonaCodexNeeds => 'A ChatGPT plan or an OpenAI key';
 
   @override
-  String get agentPersonaGeminiStrength => 'Reads a lot at once';
+  String get agentPersonaGeminiStrength => 'Gemini in your terminal';
 
   @override
   String get agentPersonaGeminiAbout =>
-      'Handles long files and wide questions well.';
+      'Google’s open source agent that brings Gemini into your terminal.';
 
   @override
   String get agentPersonaGeminiNeeds => 'A Google account or a Gemini key';
 
   @override
-  String get agentPersonaKiloStrength => 'Your choice of provider';
+  String get agentPersonaKiloStrength => '500+ models, zero markup';
 
   @override
   String get agentPersonaKiloAbout =>
-      'One agent that works with many model providers.';
+      'An open agent with 500+ models at zero markup, or your own keys.';
 
   @override
   String get agentPersonaKiloNeeds => 'A key from any supported provider';
 
   @override
-  String get agentPersonaClineStrength => 'Step by step, asks first';
+  String get agentPersonaClineStrength => 'The open agent';
 
   @override
   String get agentPersonaClineAbout =>
-      'Works in small steps and checks in with you.';
+      'An open source coding agent for your editor or your terminal.';
 
   @override
   String get agentPersonaClineNeeds => 'A key from any supported provider';
 
   @override
-  String get agentPersonaOpenCodeStrength => 'Any model, free ones too';
+  String get agentPersonaOpenCodeStrength => 'The open source coding agent';
 
   @override
   String get agentPersonaOpenCodeAbout =>
-      'Works with any provider, and has free models to start.';
+      'The open source coding agent: free models included, or connect any provider.';
 
   @override
   String get agentPersonaOpenCodeNeeds =>
@@ -25708,7 +23734,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String agentsSignInTerminalIntro(String agent) {
-    return '$agent opens its sign-in page. Sign in there with your Claude account, then come back. If $agent asks for a code, copy it on the page and choose Paste.';
+    return '$agent opens its sign-in page. Sign in there with your Claude account and come back: $agent finishes on its own. Only if the page shows a code, copy it and choose Paste.';
   }
 
   @override
@@ -27817,10 +25843,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get kitContextRingTapHint => 'Show context details';
 
   @override
-  String get kitContextRingCompacting => 'Shortening';
+  String get kitContextRingCompacting => 'Compacting';
 
   @override
-  String get kitContextRingCompactingSemantics => 'Context, shortening';
+  String get kitContextRingCompactingSemantics => 'Context, compacting';
 
   @override
   String get kitContextSheetTitle => 'Context window';
@@ -27858,7 +25884,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get kitContextChartCompacted => 'Compacted here';
 
   @override
-  String get kitContextSheetCompactNow => 'Shorten now';
+  String get kitContextSheetCompactNow => 'Compact now';
 
   @override
   String get phraseChipsRowLabel => 'Quick phrases';
@@ -32845,11 +30871,6 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String gitRepairAskingTermux(int done, int total) {
-    return 'Copying $done of $total Git files from Termux…';
-  }
-
-  @override
   String get gitRepairChecking => 'Checking the project with Git…';
 
   @override
@@ -32878,29 +30899,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get gitRepairStart => 'Start the conversation';
-
-  @override
-  String get gitRepairTermuxNotAllowedTitle => 'Files are in Termux';
-
-  @override
-  String get gitRepairTermuxNotAllowedBody =>
-      'Allow the app to run commands in Termux, and it copies them back.';
-
-  @override
-  String get gitRepairAllow => 'Allow and repair';
-
-  @override
-  String get gitRepairTermuxNoAnswerTitle => 'Termux didn\'t answer';
-
-  @override
-  String get gitRepairTermuxNoAnswerBody =>
-      'Open Termux once so it starts, come back here, and repair again.';
-
-  @override
-  String get gitRepairAgain => 'Repair again';
-
-  @override
-  String get gitRepairOpenTermux => 'Open Termux';
 
   @override
   String gitRepairCannotTitle(String project) {
@@ -33334,6 +31332,14 @@ class AppLocalizationsPt extends AppLocalizations {
       'A remote with that name is already set up. Choose another name.';
 
   @override
+  String get gitProblemInvalidGitHubRepositoryName =>
+      'Use a repository name with up to 100 letters, numbers, dots, dashes or underscores.';
+
+  @override
+  String get gitProblemGitHubRepositoryNameUnavailable =>
+      'That name is already used or unavailable in your GitHub account. Try another.';
+
+  @override
   String get gitProblemInvalidFolderName =>
       'That isn’t a usable folder name. Use letters, numbers, dots, dashes or underscores.';
 
@@ -33348,13 +31354,32 @@ class AppLocalizationsPt extends AppLocalizations {
   String get gitActionClone => 'Clone';
 
   @override
+  String get gitActionInitialize => 'Start tracking';
+
+  @override
+  String get gitActionPublish => 'Create on GitHub';
+
+  @override
   String get gitBusyAddRemote => 'Adding the remote…';
 
   @override
   String get gitBusyClone => 'Cloning…';
 
   @override
+  String get gitBusyInitialize => 'Starting Git in this project…';
+
+  @override
+  String get gitBusyPublish => 'Creating repository on GitHub…';
+
+  @override
   String get gitDoneRemoteAdded => 'Remote added.';
+
+  @override
+  String get gitDoneInitialized => 'Git is ready in this project.';
+
+  @override
+  String get gitDoneGitHubRepositoryCreated =>
+      'GitHub repository created and connected. Your project has not been sent yet.';
 
   @override
   String gitDoneCloned(String path) {
@@ -33454,6 +31479,48 @@ class AppLocalizationsPt extends AppLocalizations {
   String get gitCloneButton => 'Clone';
 
   @override
+  String get gitInitializeProject => 'Start tracking this project';
+
+  @override
+  String get gitInitializeProjectHint =>
+      'Keep these files here and start using Git.';
+
+  @override
+  String get gitPublishToGitHub => 'Create a GitHub repository';
+
+  @override
+  String get gitPublishToGitHubHint => 'Choose a name and who can see it.';
+
+  @override
+  String get gitPublishTitle => 'Create repository';
+
+  @override
+  String get gitPublishName => 'Repository name';
+
+  @override
+  String get gitPublishNameHint =>
+      'Use letters, numbers, dots, dashes or underscores.';
+
+  @override
+  String get gitPublishVisibility => 'Who can see it';
+
+  @override
+  String get gitPublishPrivate => 'Private';
+
+  @override
+  String get gitPublishPublic => 'Public';
+
+  @override
+  String get gitPublishPrivateHint =>
+      'Only you and people you choose can see this repository.';
+
+  @override
+  String get gitPublishPublicHint => 'Anyone can see this repository.';
+
+  @override
+  String get gitPublishButton => 'Create repository';
+
+  @override
   String get gitRemotesRow => 'Remotes';
 
   @override
@@ -33468,6 +31535,19 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get gitRemoteAddTitle => 'Add a remote';
+
+  @override
+  String get gitRemotePickGitHub => 'Choose from GitHub';
+
+  @override
+  String get gitRemotePickGitHubTitle => 'Choose a repository';
+
+  @override
+  String get gitRemotePickGitHubNone =>
+      'No repositories on this GitHub account yet.';
+
+  @override
+  String get gitRemoteRepoPrivate => 'Private';
 
   @override
   String get gitRemoteNameLabel => 'Name';
@@ -33954,12 +32034,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get thisPhoneAnswerStopFailed => 'The server didn\'t stop';
-
-  @override
-  String get thisPhoneAnswerSwitchStopped => 'The switch didn\'t finish';
-
-  @override
-  String get thisPhoneAnswerTermux => 'Can\'t reach Termux';
 
   @override
   String get thisPhoneAnswerRecovery => 'The server can\'t restart safely';
@@ -34456,9 +32530,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get welcomeMoreWays => 'Outras formas de configurar';
-
-  @override
-  String get welcomeDemoLine => 'Uma conversa simulada';
 
   @override
   String kitProgressRingPercent(String percent) {
@@ -35514,7 +33585,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String runningPhoneLimitBody(int count, int limit) {
-    return '$count of $limit background processes: above $limit, Android stops this app\'s oldest processes first, and those are the servers. New agents wait for room. Stop what was left behind or isn\'t needed.';
+    return '$count of $limit background processes: above $limit, Android stops this app\'s oldest processes first, and those are the servers. Stop what was left behind or isn\'t needed, or lift the limit with Developer options › Disable child process restrictions.';
   }
 
   @override
@@ -35857,482 +33928,71 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get vpttLetGoToFinish => 'Let go when you\'re done';
-
-  @override
-  String get vpttLetGoToCancel => 'Let go to cancel';
-
-  @override
-  String vpttSendingIn(String seconds) {
-    return 'Sending in $seconds…';
+  String phoneTeamProofSignal(int signal) {
+    return 'The safety test was closed by Android (signal $signal) before it could finish.';
   }
 
   @override
-  String get vpttDontSend => 'Don\'t send';
-
-  @override
-  String get vpttLanguageFollowApp => 'Same as the app';
-
-  @override
-  String get vpttLanguageFollowAppDetail =>
-      'Listens for the app\'s language when it can, and works out the language from your voice when it can\'t.';
-
-  @override
-  String get vpttLanguageDetectDetail =>
-      'Works out the language from your voice each time.';
-
-  @override
-  String get vpttAutoSendTitle => 'Send when I stop talking';
-
-  @override
-  String get vpttAutoSendDetail =>
-      'After a short pause, your words are sent. You get 3 seconds to cancel. Holding the mic never sends by itself.';
-
-  @override
-  String get tipHoldMic => 'Hold the mic to talk, let go to finish';
-
-  @override
-  String get tipHoldMicTitle => 'Hold to talk';
-
-  @override
-  String vpttLanguageUnavailableOffline(String language) {
-    return 'Your app\'s language ($language) isn\'t one the offline speech model knows, so it works out the language from your voice instead.';
+  String phoneTeamProofCheckSignal(String check, int signal) {
+    return 'The safety check “$check” was closed by Android (signal $signal).';
   }
 
   @override
-  String vpttLanguageCompactRough(String language) {
-    return 'The Compact model is rough outside English. For $language, choose Balanced or High accuracy above.';
+  String phoneTeamProofNotBlocked(String check) {
+    return 'The safety check “$check” failed: this phone did not block it the way the team\'s sandbox needs.';
   }
 
   @override
-  String get connCheckTitle => 'Check connection';
+  String get phoneTeamProofSandbox =>
+      'The team\'s sandbox could not start on this phone.';
 
   @override
-  String get connCheckRowDetail =>
-      'Test the address, sign-in, version, live updates and speed.';
-
-  @override
-  String get connCheckIntro =>
-      'Five quick checks against this server. Nothing is changed or saved.';
-
-  @override
-  String get connCheckRun => 'Check connection';
-
-  @override
-  String get connCheckAgain => 'Check again';
-
-  @override
-  String get connCheckRunning => 'Checking…';
-
-  @override
-  String get connCheckStepAddress => 'Address reachable';
-
-  @override
-  String get connCheckStepSignIn => 'Sign-in accepted';
-
-  @override
-  String get connCheckStepVersion => 'Server version supported';
-
-  @override
-  String get connCheckStepLive => 'Live updates arriving';
-
-  @override
-  String get connCheckStepSpeed => 'Round-trip time';
-
-  @override
-  String get connCheckAddressOk => 'The server answered.';
-
-  @override
-  String get connCheckAddressUnreachable =>
-      'Nothing answered at this address. Check that the server is running and that this phone can reach it, for example over Tailscale.';
-
-  @override
-  String get connCheckAddressNotOpenCode =>
-      'Something answered, but it is not an OpenCode server. Check the address and the port.';
-
-  @override
-  String get connCheckSignInOk => 'The server accepted this sign-in.';
-
-  @override
-  String get connCheckNeedsPassword =>
-      'This server asks for a password. Add it under Name and address.';
-
-  @override
-  String get connCheckPasswordRejected =>
-      'The server did not accept the saved password. Copy the current one from the server and save it again.';
-
-  @override
-  String get connCheckVersionOkUnknown => 'This server works with this app.';
-
-  @override
-  String get connCheckVersionUnsupported =>
-      'This server runs an older OpenCode that this app no longer supports. Update it to OpenCode 2.';
-
-  @override
-  String get connCheckVersionNotReady =>
-      'The server is starting, or reports a problem. Wait a moment and check again.';
-
-  @override
-  String get connCheckLiveOk => 'Updates are arriving as they happen.';
-
-  @override
-  String get connCheckLiveConnecting =>
-      'Still connecting to live updates. Check again in a moment.';
-
-  @override
-  String get connCheckLiveDown =>
-      'Live updates are not arriving. A proxy that buffers or cuts long connections is the usual cause.';
-
-  @override
-  String get connCheckLiveNotChecked =>
-      'Connect to this server to check live updates.';
-
-  @override
-  String get connCheckSpeedSlow =>
-      'That is slow. Try a closer network, or check the route your VPN takes.';
-
-  @override
-  String get connCheckSkipped =>
-      'Not checked, because an earlier step needs fixing first.';
-
-  @override
-  String get connCheckReachHelp => 'How to reach your computer';
-
-  @override
-  String get connCheckReachHelpDetail =>
-      'Tailscale or an SSH tunnel, step by step.';
-
-  @override
-  String get reachTitle => 'How to reach your computer';
-
-  @override
-  String get reachIntro =>
-      'Your computer\'s OpenCode server should stay private. These two ways keep it off the public internet. Try Tailscale first.';
-
-  @override
-  String get reachTailscaleHeading => 'Tailscale (recommended)';
-
-  @override
-  String get reachTailscale1 =>
-      'Install Tailscale on your computer and on this phone, and sign in to the same account on both.';
-
-  @override
-  String get reachTailscale2 =>
-      'On the computer, start the server with a password, for example: opencode serve --port 4096';
-
-  @override
-  String get reachTailscale3 =>
-      'Find the computer\'s Tailscale name or its 100.x.x.x address in the Tailscale app.';
-
-  @override
-  String get reachTailscale4 =>
-      'Here, add a server with that name and port, for example http://100.101.102.103:4096, and enter the password.';
-
-  @override
-  String get reachSshHeading => 'SSH tunnel (if you cannot use Tailscale)';
-
-  @override
-  String get reachSsh1 =>
-      'You need an SSH app on this phone that can forward a port, and SSH access to your computer.';
-
-  @override
-  String get reachSsh2 =>
-      'Start the server on the computer, bound to itself only: opencode serve --port 4096';
-
-  @override
-  String get reachSsh3 =>
-      'In the SSH app, forward local port 4096 to 127.0.0.1:4096 on the computer, and keep it running.';
-
-  @override
-  String get reachSsh4 =>
-      'Here, add a server at http://127.0.0.1:4096 and enter the password. Then use Check connection.';
-
-  @override
-  String get reachSshCommand =>
-      'ssh -N -L 127.0.0.1:4096:127.0.0.1:4096 you@your-computer';
-
-  @override
-  String get reachSafetyHeading => 'Keep it private';
-
-  @override
-  String get reachSafety =>
-      'Never open the server\'s port to the public internet or share it through a public tunnel. Anyone who reaches it can run commands on your computer.';
-
-  @override
-  String connCheckVersionOk(String version) {
-    return 'Version $version works with this app.';
+  String phoneTeamProofUbuntu(String check) {
+    return 'The Ubuntu step “$check” failed inside the team\'s sandbox.';
   }
 
   @override
-  String connCheckSpeedOk(int ms) {
-    return 'About $ms ms for a round trip.';
+  String get phoneTeamProofFixture =>
+      'The safety check\'s private test files changed or could not be set up.';
+
+  @override
+  String get phoneTeamProofNoAnswer =>
+      'The safety test did not answer in time.';
+
+  @override
+  String phoneTeamProofProot(String check) {
+    return 'The proot safety check “$check” did not pass.';
   }
 
   @override
-  String get scheduleRunNow => 'Run now';
-
-  @override
-  String get scheduleRunNowNote =>
-      'Starts one run right away. The next scheduled time stays the same.';
-
-  @override
-  String get shortcutsHelpReview => 'In a review';
-
-  @override
-  String get shortcutsStopReplyKeys => 'Esc while a reply runs';
-
-  @override
-  String get shortcutsStopReply => 'Stop the running reply';
-
-  @override
-  String get shortcutsReviewNextChange => 'Next change';
-
-  @override
-  String get shortcutsReviewPreviousChange => 'Previous change';
-
-  @override
-  String queueEvictedTooOld(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count were too old to send',
-      one: '1 was too old to send',
-    );
-    return '$_temp0';
+  String phoneTeamProofOther(String check) {
+    return 'The safety check stopped at “$check”.';
   }
 
   @override
-  String queueEvictedOverLimit(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count to stay within the queue limit',
-      one: '1 to stay within the queue limit',
-    );
-    return '$_temp0';
-  }
+  String get chatsNewAddAgent => 'Add an agent';
 
   @override
-  String get queueEvictedJoin => ' and ';
+  String get agentPersonaAntigravityStrength => 'Antigravity in your terminal';
 
   @override
-  String queueEvictedSummary(int count, String reasons) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Discarded $count queued drafts: $reasons.',
-      one: 'Discarded 1 queued draft: $reasons.',
-    );
-    return '$_temp0';
-  }
+  String get agentPersonaAntigravityAbout =>
+      'Google’s terminal-first way to work with Antigravity agents.';
 
   @override
-  String get chatUiThinkingLevelDefault =>
-      'Thinking level back to the default.';
+  String get agentPersonaAntigravityNeeds =>
+      'A Google account; sign in in your browser';
 
   @override
-  String chatUiThinkingLevelSet(String level) {
-    return 'Thinking: $level.';
-  }
+  String get agentsAntigravitySignInIntro =>
+      'Antigravity gives you a sign-in link in the terminal. Open it in your browser and sign in with Google, then paste the browser’s code into the terminal.';
 
   @override
-  String get shortcutsThinkingLevel => 'Next / previous thinking level';
+  String get agentsGeminiMigrationNote =>
+      'If Gemini CLI asks you to use Antigravity, go back to Agents and install Antigravity (agy). Your Gemini conversations stay here.';
 
   @override
-  String get shortcutsTranscriptPages => 'Scroll the conversation by a page';
-
-  @override
-  String get shortcutsTranscriptEnds => 'First message / latest message';
-
-  @override
-  String get shortcutsReviewNextFile => 'Next file';
-
-  @override
-  String get shortcutsReviewPreviousFile => 'Previous file';
-
-  @override
-  String get shortcutsNotWhileTyping =>
-      'Single keys such as N, P, [ and ] only work when no text field has focus.';
-
-  @override
-  String get fileShareAction => 'Share on Wi-Fi';
-
-  @override
-  String get fileShareTitle => 'Share on Wi-Fi';
-
-  @override
-  String fileShareQrLabel(String name) {
-    return 'QR code to download $name';
-  }
-
-  @override
-  String get fileShareLinkLabel => 'Link';
-
-  @override
-  String get fileShareCopyLink => 'Copy link';
-
-  @override
-  String get fileShareWarning =>
-      'Anyone on this Wi-Fi with the link can download this file.';
-
-  @override
-  String fileShareDownloads(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Downloaded $count times',
-      one: 'Downloaded 1 time',
-      zero: 'Not downloaded yet',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String fileShareTimeLeft(String time) {
-    return 'Stops sharing in $time';
-  }
-
-  @override
-  String get fileShareStop => 'Stop sharing';
-
-  @override
-  String get fileShareEnded =>
-      'Sharing has stopped. Nobody can download this file now.';
-
-  @override
-  String get fileShareNoWifi =>
-      'This phone is not on Wi-Fi. Connect to Wi-Fi to share this file with a nearby device.';
-
-  @override
-  String get fileSharePrivate =>
-      'This file can\'t be shared because it may hold keys or passwords.';
-
-  @override
-  String get fileShareUnavailable =>
-      'Sharing could not start. Try again in a moment.';
-
-  @override
-  String get readAloudVoiceTitle => 'Read-aloud voice';
-
-  @override
-  String get readAloudVoicePhone => 'Phone\'s voice';
-
-  @override
-  String get readAloudVoicePhoneDetail =>
-      'Uses the speech voices installed on this phone.';
-
-  @override
-  String readAloudVoiceNaturalDownload(String size) {
-    return 'Natural voice (download, about $size)';
-  }
-
-  @override
-  String get readAloudVoiceNatural => 'Natural voice';
-
-  @override
-  String get readAloudVoiceNaturalDetail =>
-      'Sounds more like a person and works offline. English only for now; other languages are read by the phone\'s voice.';
-
-  @override
-  String get naturalVoiceDownloading => 'Downloading the natural voice';
-
-  @override
-  String naturalVoiceRemove(String size) {
-    return 'Remove natural voice ($size)';
-  }
-
-  @override
-  String get naturalVoiceRemoveTitle => 'Remove the natural voice?';
-
-  @override
-  String get naturalVoiceRemoveBody =>
-      'Replies go back to being read by the phone\'s voice. You can download the natural voice again later.';
-
-  @override
-  String get naturalVoiceKeep => 'Keep it';
-
-  @override
-  String get naturalVoiceFallbackNote =>
-      'The natural voice can\'t read this language yet, so the phone\'s voice is reading.';
-
-  @override
-  String naturalVoiceNoSpace(String size) {
-    return 'There isn\'t enough free storage. Free up about $size and try again.';
-  }
-
-  @override
-  String get naturalVoiceFailed =>
-      'The natural voice could not be set up. Check your connection and try again.';
-
-  @override
-  String processBudgetWaitRoom(int ceiling) {
-    return 'Waiting for room: the phone allows about $ceiling programs at once.';
-  }
-
-  @override
-  String processBudgetAgentsRunning(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count agents are running.',
-      one: '1 agent is running.',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get processBudgetWaitWarm =>
-      'Waiting: the phone is warm. It starts by itself when the phone cools down.';
-
-  @override
-  String get processBudgetWaitBattery =>
-      'Waiting: the battery is low. It starts by itself once the phone charges.';
-
-  @override
-  String get processBudgetSeeRunning => 'See what runs';
-
-  @override
-  String processBudgetCount(int count, int ceiling) {
-    return '$count of them count toward the limit of about $ceiling';
-  }
-
-  @override
-  String get agentKilledByAndroid =>
-      'Android stopped the agent because too many programs were running. Starting it again…';
-
-  @override
-  String get agentBackAfterKill =>
-      'Android stopped the agent because too many programs were running. It\'s back; your conversation continues.';
-
-  @override
-  String agentsStateUpdating(String version) {
-    return 'Updating to $version…';
-  }
-
-  @override
-  String get agentsStateUpdatingHelper => 'Updating…';
-
-  @override
-  String get agentsStateUpdateWaiting => 'Will update when nothing is running';
-
-  @override
-  String get agentErrorFreeTier =>
-      'OpenCode\'s free models stopped this reply.';
-
-  @override
-  String get agentErrorFreeTierHint =>
-      'Long conversations are often refused on the free tier, even when you\'ve used little today. Shortening this one or starting a new one usually helps.';
-
-  @override
-  String agentErrorFreeTierSize(String tokens) {
-    return 'This conversation is about $tokens tokens long.';
-  }
-
-  @override
-  String get chatFreeTierShorten => 'Shorten this conversation';
-
-  @override
-  String get chatFreeTierNewConversation => 'Continue in a new conversation';
+  String get phoneSetupStageCompat => 'Trying again in compatibility mode';
 
   @override
   String get productErrorFileTooBig =>
@@ -36360,7 +34020,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'This app file is on this phone. Android asks you to confirm before anything is installed.';
 
   @override
-  String get phoneFileInstallAction => 'Install…';
+  String get phoneFileInstallAction => 'Install app…';
 
   @override
   String phoneFileOpenTitle(String name) {
@@ -36375,7 +34035,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get phoneFileOpenAction => 'Open with…';
 
   @override
-  String get phoneFileFindTitle => 'Open it in Files';
+  String get phoneFileFindTitle => 'Find the file';
 
   @override
   String phoneFileFindBody(String path) {
@@ -36393,1288 +34053,181 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get agentsStateUpdateWifi => 'Will update on Wi-Fi';
+  String get integrationsProvidersLoadFailed => 'Could not load providers';
 
   @override
-  String agentUpdateSendBlocked(String agent, String percent) {
-    return '$agent is updating, $percent%. You can send when it\'s done.';
-  }
-
-  @override
-  String agentUpdateSendBlockedNoPercent(String agent) {
-    return '$agent is updating. You can send when it\'s done.';
-  }
-
-  @override
-  String get productErrorAgentUpdating =>
-      'Your agents are being updated, so this could not start yet. Try again in a moment; your message is kept.';
-
-  @override
-  String get childLimitTitle => 'Let agents run more programs at once';
-
-  @override
-  String get childLimitBody =>
-      'Android stops agents when the app runs more than 32 programs. Turning this off lets bigger jobs finish; the app still pauses work when the phone gets hot or the battery is low.';
-
-  @override
-  String get childLimitStepsOpen =>
-      'In Developer options, turn on “Disable child process restrictions”, then come back.';
-
-  @override
-  String get childLimitOpenDeveloper => 'Open Developer options';
-
-  @override
-  String get childLimitStepsEnable =>
-      'Developer options are off. Turn them on in Settings › About phone: tap Build number seven times.';
-
-  @override
-  String get childLimitOpenAbout => 'Open About phone';
-
-  @override
-  String get childLimitStepsText =>
-      'Open Settings › System › Developer options and turn on “Disable child process restrictions”.';
-
-  @override
-  String get childLimitHide => 'Hide';
-
-  @override
-  String get claudeAgentTrialTag => 'Trial';
-
-  @override
-  String get claudeAgentTryTitle => 'Try Claude Agent';
-
-  @override
-  String get claudeAgentTrySupporting =>
-      'Claude inside OpenCode, with your Claude Code sign-in on this phone. Your Claude Code chats stay as they are.';
-
-  @override
-  String get claudeAgentPreparing => 'Setting up Claude Agent…';
-
-  @override
-  String get claudeAgentNeedsSignInTitle =>
-      'Claude isn\'t signed in on this phone';
-
-  @override
-  String get claudeAgentNeedsSignInBody =>
-      'Claude Agent uses Claude Code\'s sign-in. Sign in to Claude Code in Agents, then check again.';
-
-  @override
-  String get claudeAgentNotInstalledTitle =>
-      'Claude Code isn\'t installed on this phone';
-
-  @override
-  String get claudeAgentNotInstalledBody =>
-      'Claude Agent runs the Claude Code on this phone. Install it in Agents, then check again.';
-
-  @override
-  String get claudeAgentBlockedTitle => 'Claude Agent can\'t be set up here';
-
-  @override
-  String get claudeAgentBlockedBody =>
-      'This phone\'s Linux already has another program called claude in /usr/local/sbin, and the app leaves it alone.';
-
-  @override
-  String get claudeAgentFailedTitle => 'Claude Agent didn\'t start';
-
-  @override
-  String get claudeAgentFailedBody =>
-      'Its models didn\'t arrive. Check again in a moment.';
-
-  @override
-  String get claudeAgentOpenAgents => 'Open Agents';
-
-  @override
-  String get claudeAgentCheckAgain => 'Check again';
-
-  @override
-  String get claudeAgentCheckAgainLabel => 'Check Claude Agent again';
-
-  @override
-  String get claudeAgentReady =>
-      'Claude Agent is ready. Its models are marked Trial.';
-
-  @override
-  String get fullSpeedSetting => 'Always full speed';
-
-  @override
-  String get fullSpeedSettingDetail =>
-      'Off: when the phone is warm, the battery is low or the app is hidden, builds and tests on this phone run slower to save heat and battery. Replies are not slowed.';
-
-  @override
-  String get fullSpeedSettingEasing =>
-      'Builds and tests are running slower right now to save heat and battery. Replies are not slowed.';
-
-  @override
-  String get teamVoiceProductOwner => 'Product owner';
-
-  @override
-  String get teamVoiceArchitect => 'Architect';
-
-  @override
-  String get teamVoiceManager => 'Manager';
-
-  @override
-  String get teamVoiceDeveloper => 'Developer';
-
-  @override
-  String teamVoiceDeveloperAs(String persona) {
-    return 'Developer · $persona';
-  }
-
-  @override
-  String get teamVoiceReviewer => 'Reviewer';
-
-  @override
-  String get teamVoiceSaysPlanning => 'Planning how to build it.';
-
-  @override
-  String get teamVoiceSaysPlanReady => 'The plan is ready for you.';
-
-  @override
-  String get teamVoiceSaysStarting => 'Starting on this task.';
-
-  @override
-  String get teamVoiceSaysWorking => 'Working on this task.';
-
-  @override
-  String get teamVoiceSaysChecking => 'Checking the work against its criteria.';
-
-  @override
-  String get teamVoiceSaysFoundProblems => 'Found problems that need a fix.';
-
-  @override
-  String get teamVoiceSaysMerging => 'Merging the work into dev.';
-
-  @override
-  String get teamVoiceSaysMerged => 'Merged into dev.';
-
-  @override
-  String get teamVoiceSaysPlanQueued => 'The plan is in line to start.';
-
-  @override
-  String get teamVoiceSaysQueued => 'This task is in line to start.';
-
-  @override
-  String get teamVoiceSaysWaitingForLane => 'Waiting for a free lane.';
-
-  @override
-  String get teamVoiceSaysWaitingForTask =>
-      'Waiting for another task to finish.';
-
-  @override
-  String get teamVoiceSaysWaitingForChat => 'Waiting for your chat to finish.';
-
-  @override
-  String get teamVoiceSaysWaitingForCheck =>
-      'Waiting for this phone to be checked.';
-
-  @override
-  String get teamVoiceSaysPaused => 'Paused.';
-
-  @override
-  String get teamVoiceSaysStopped => 'Stopped.';
-
-  @override
-  String get teamVoiceSaysInterrupted =>
-      'Interrupted. Resume it to pick up where it was.';
-
-  @override
-  String get teamVoiceSaysResuming =>
-      'Checking the earlier session before resuming.';
-
-  @override
-  String get teamVoiceNowPlanning => 'Architect is planning';
-
-  @override
-  String teamVoiceNowWorking(String developer) {
-    return '$developer is working';
-  }
-
-  @override
-  String get teamVoiceNowChecking => 'Reviewer is checking';
-
-  @override
-  String get teamVoiceNowNeedsYou => 'Waiting for you';
-
-  @override
-  String get teamVoiceNowMerging => 'Manager is merging into dev';
-
-  @override
-  String get teamVoiceNowMerged => 'Merged into dev';
-
-  @override
-  String get teamVoiceNowWaiting => 'Waiting to start';
-
-  @override
-  String get teamVoiceNowPaused => 'Paused';
-
-  @override
-  String get teamVoiceNowStopped => 'Stopped';
-
-  @override
-  String get teamVoiceNowResuming => 'Resuming';
-
-  @override
-  String get teamVoiceNowManager => 'Manager has an update';
-
-  @override
-  String teamVoiceReviewerResult(int total, int met) {
-    String _temp0 = intl.Intl.pluralLogic(
-      total,
-      locale: localeName,
-      other: 'Checked $total criteria: $met met.',
-      one: 'Checked 1 criterion: $met met.',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String teamVoiceApprovePlan(String name) {
-    return 'Start building $name';
-  }
-
-  @override
-  String teamVoiceAcceptPhase(String phase) {
-    return 'Accept $phase';
-  }
-
-  @override
-  String teamVoicePutOnMain(String repo) {
-    return 'Put $repo on main';
-  }
-
-  @override
-  String get linuxSvcTitle => 'Services';
-
-  @override
-  String get linuxSvcRowDetail => 'Keep your own programs running';
-
-  @override
-  String linuxSvcHubRunning(int count, String names) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count running: $names',
-      one: '1 running: $names',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String linuxSvcHubOff(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count services, all off',
-      one: '1 service, off',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String linuxSvcHubCrashed(String name) {
-    return '$name stopped after crashing';
-  }
-
-  @override
-  String get linuxSvcAdd => 'Add a service';
-
-  @override
-  String get linuxSvcAddDetail =>
-      'Run a command of your own and keep it running';
-
-  @override
-  String get linuxSvcAddTitle => 'Add a service';
-
-  @override
-  String get linuxSvcEmpty =>
-      'Nothing runs on its own yet. Add your own command and it keeps running, even after a crash or when the app restarts.';
-
-  @override
-  String get linuxSvcKeepsRunning =>
-      'A service you start keeps running: it comes back after a crash and when the app restarts, until you stop it.';
-
-  @override
-  String get linuxSvcScreenOff =>
-      'While the screen is off, services may pause unless the phone is charging.';
-
-  @override
-  String get linuxSvcRunning => 'Running';
-
-  @override
-  String linuxSvcRunningFor(String duration) {
-    return 'Running for $duration';
-  }
-
-  @override
-  String linuxSvcPort(String port) {
-    return 'port $port';
-  }
-
-  @override
-  String get linuxSvcOff => 'Off';
-
-  @override
-  String get linuxSvcStarting => 'Starting…';
-
-  @override
-  String get linuxSvcStopping => 'Stopping…';
-
-  @override
-  String get linuxSvcRemoving => 'Removing…';
-
-  @override
-  String linuxSvcRetrying(int code, int seconds) {
-    return 'Crashed (exit $code). Trying again in $seconds s';
-  }
-
-  @override
-  String linuxSvcGaveUp(int count, String time) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Stopped after crashing $count times · $time',
-      one: 'Stopped after crashing once · $time',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String linuxSvcGaveUpNoCount(String time) {
-    return 'Stopped after crashing · $time';
-  }
-
-  @override
-  String linuxSvcExited(int code) {
-    return 'Finished (exit $code)';
-  }
-
-  @override
-  String linuxSvcPortBusy(String port) {
-    return 'Port $port is already in use. Trying again soon';
-  }
-
-  @override
-  String get linuxSvcStart => 'Start';
-
-  @override
-  String get linuxSvcStop => 'Stop';
-
-  @override
-  String linuxSvcStartNamed(String name) {
-    return 'Start $name';
-  }
-
-  @override
-  String linuxSvcStopNamed(String name) {
-    return 'Stop $name';
-  }
-
-  @override
-  String linuxSvcRestartNamed(String name) {
-    return 'Restart $name';
-  }
-
-  @override
-  String linuxSvcRemoveNamed(String name) {
-    return 'Remove $name';
-  }
-
-  @override
-  String linuxSvcOpenNamed(String name) {
-    return 'Open $name';
-  }
-
-  @override
-  String linuxSvcOpenDetail(String port) {
-    return 'Its page on port $port';
-  }
-
-  @override
-  String get linuxSvcStopDetail => 'It stays stopped until you start it again';
-
-  @override
-  String get linuxSvcStartDetail =>
-      'It keeps running, also after a crash or an app restart';
-
-  @override
-  String linuxSvcCameBack(int count, String time) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Came back $count times after a crash, last at $time',
-      one: 'Came back once after a crash, at $time',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String linuxSvcRemoveTitle(String name) {
-    return 'Remove $name?';
-  }
-
-  @override
-  String get linuxSvcRemoveBody =>
-      'It stops now and is no longer kept running.';
-
-  @override
-  String get linuxSvcRemoveGoes => 'Its log and settings are deleted';
-
-  @override
-  String get linuxSvcRemoveStays => 'The program stays installed';
-
-  @override
-  String get linuxSvcLogTitle => 'Log';
-
-  @override
-  String get linuxSvcLogEmpty => 'Nothing written yet';
-
-  @override
-  String get linuxSvcLogStarted => 'Started';
-
-  @override
-  String linuxSvcLogCrashed(int code) {
-    return 'Crashed (exit $code)';
-  }
-
-  @override
-  String linuxSvcLogEnded(int code) {
-    return 'Ended (exit $code)';
-  }
-
-  @override
-  String linuxSvcLogRetry(int seconds) {
-    return 'Trying again in $seconds s';
-  }
-
-  @override
-  String get linuxSvcLogGaveUp => 'Gave up after crashing too many times';
-
-  @override
-  String linuxSvcLogPortBusy(String port) {
-    return 'Port $port is in use';
-  }
-
-  @override
-  String get linuxSvcCouldNotStart => 'Services couldn\'t start.';
-
-  @override
-  String get linuxSvcProblemFailed => 'That didn\'t work. Try again.';
-
-  @override
-  String get linuxSvcProblemMissing =>
-      'Set up Linux from This phone, then come back to add services.';
-
-  @override
-  String get linuxSvcProblemTooMany =>
-      'You can keep up to 16 services. Remove one first.';
-
-  @override
-  String get linuxSvcProblemWrite =>
-      'Couldn\'t save that. The phone may be out of space.';
-
-  @override
-  String get linuxSvcErrNameShape =>
-      'Use 2 to 24 lowercase letters, numbers or dashes, starting with a letter';
-
-  @override
-  String get linuxSvcErrNameReserved =>
-      'That name is kept for the app. Pick another';
-
-  @override
-  String get linuxSvcErrNameTaken => 'That name is already used by a service';
-
-  @override
-  String linuxSvcErrNameUsedBy(String name) {
-    return 'That name is used by $name';
-  }
-
-  @override
-  String get linuxSvcErrCommand => 'Write the command to run';
-
-  @override
-  String get linuxSvcErrFolder =>
-      'Write the folder it runs in, starting with /';
-
-  @override
-  String get linuxSvcErrPortRange => 'Use a port from 1024 to 65535';
-
-  @override
-  String get linuxSvcErrPortLow =>
-      'Ports below 1024 aren\'t allowed on Android';
-
-  @override
-  String linuxSvcErrPortServer(String port) {
-    return 'Port $port belongs to OpenCode';
-  }
-
-  @override
-  String get linuxSvcErrPortReserved =>
-      'That port belongs to OpenCode or another part of this app. Pick another port';
-
-  @override
-  String get linuxSvcErrPortTaken =>
-      'That port is already used by another service. Pick another port';
-
-  @override
-  String linuxSvcErrPortUsedBy(String port, String name) {
-    return 'Port $port is used by $name';
-  }
-
-  @override
-  String get linuxSvcFieldName => 'Name';
-
-  @override
-  String get linuxSvcFieldNameHelper =>
-      '2 to 24 lowercase letters, numbers or dashes';
-
-  @override
-  String get linuxSvcFieldCommand => 'Command';
-
-  @override
-  String get linuxSvcFieldCommandHelper =>
-      'Runs in bash. It should keep running, not finish';
-
-  @override
-  String get linuxSvcFieldFolder => 'Folder';
-
-  @override
-  String get linuxSvcFieldPort => 'Port';
-
-  @override
-  String get linuxSvcFieldPortHelper =>
-      'Lets you open it and stops two programs fighting over one port';
-
-  @override
-  String get linuxSvcRestartSwitch => 'Restart when it crashes';
-
-  @override
-  String get linuxSvcRestartSwitchDetail =>
-      'It comes back by itself, also after a restart of the app';
-
-  @override
-  String get linuxSvcSaveStart => 'Save and start';
-
-  @override
-  String get linuxSvcSaving => 'Saving…';
-
-  @override
-  String get linuxSvcDownBody =>
-      'The part of Linux that keeps services running isn\'t answering. Try again.';
-
-  @override
-  String get linuxSvcPaused =>
-      'Paused: the phone is too hot. Starts again when it cools';
-
-  @override
-  String get linuxVitalsHeat => 'Phone heat';
-
-  @override
-  String get linuxVitalsCool => 'Cool';
-
-  @override
-  String get linuxVitalsWarm => 'Warm';
-
-  @override
-  String get linuxVitalsHot => 'Hot';
-
-  @override
-  String get linuxVitalsTooHot => 'Too hot';
-
-  @override
-  String get linuxVitalsMemoryFree => 'Memory free';
-
-  @override
-  String get linuxVitalsLinuxCpu => 'Linux CPU';
-
-  @override
-  String linuxVitalsHeatLabel(Object heat) {
-    return 'Phone heat: $heat';
-  }
-
-  @override
-  String linuxVitalsMemoryLabel(Object value) {
-    return 'Memory free: $value';
-  }
-
-  @override
-  String linuxVitalsCpuLabel(Object value) {
-    return 'Linux CPU: $value';
-  }
-
-  @override
-  String linuxVitalsSummaryCool(Object memory) {
-    return 'Linux uses $memory of memory. Nothing is heating the phone.';
-  }
-
-  @override
-  String linuxVitalsSummary(Object memory) {
-    return 'Linux uses $memory of memory.';
-  }
-
-  @override
-  String linuxVitalsHeavy(Object heat, Object program, Object percent) {
-    return '$heat. $program is using $percent% CPU.';
-  }
-
-  @override
-  String linuxVitalsNotLinux(Object heat, Object percent) {
-    return '$heat, but not because of Linux: it uses $percent% CPU.';
-  }
-
-  @override
-  String get linuxVitalsOpenRunning => 'Open Running now';
-
-  @override
-  String get starShareGroup => 'Tell others';
-
-  @override
-  String get starRowTitle => 'Star on GitHub';
-
-  @override
-  String get starRowDetail => 'Helps others find the app';
-
-  @override
-  String get shareRowTitle => 'Share the app';
-
-  @override
-  String get shareRowDetail => 'Send a link to a friend';
-
-  @override
-  String shareAppMessage(String url) {
-    return 'OpenCode Mobile: use your OpenCode coding agent from your phone. $url';
-  }
-
-  @override
-  String get starShareSearchAliases =>
-      'star github favorite rate like support project repository share app friend send link recommend invite tell';
-
-  @override
-  String whatsNewTitle(String version) {
-    return 'What\'s new in $version';
-  }
-
-  @override
-  String get whatsNewShare => 'Share';
-
-  @override
-  String get whatsNewClose => 'Close';
-
-  @override
-  String get whatsNewRowTitle => 'What\'s new';
-
-  @override
-  String get whatsNewRowDetail => 'See what changed in this version';
+  String get integrationsMcpServersLoadFailed => 'Could not load MCP servers';
 
   @override
-  String get whatsNew220Updates =>
-      'The app now updates itself. You can check for an update any time in Settings › This app › Updates.';
+  String get integrationsResourcesLoadFailed => 'Could not load MCP resources';
 
   @override
-  String get whatsNew220Agents =>
-      'OpenCode 2.2.5 is built in, and your agents update themselves.';
+  String get integrationsListFailedBody =>
+      'The server didn\'t send this list. Try again.';
 
   @override
-  String get whatsNew220LargeText =>
-      'Large text stays easy to read. Pick your size in Appearance.';
+  String get integrationsFolderMissing =>
+      'This project\'s folder isn\'t on the server any more. Open another project.';
 
   @override
-  String get whatsNew220PasteImages =>
-      'Paste an image into the message box to show it to the agent.';
+  String get integrationsProvidersUnsupported =>
+      'This server doesn\'t list providers';
 
   @override
-  String get whatsNew220Voice =>
-      'Hold the microphone button to talk, then let go.';
+  String get integrationsMcpServersUnsupported =>
+      'This server doesn\'t list MCP servers';
 
   @override
-  String get whatsNewBack => 'Back';
+  String get integrationsResourcesUnsupported =>
+      'This server doesn\'t list MCP resources';
 
   @override
-  String get whatsNewShowMe => 'Show me';
+  String get integrationsListUnsupportedBody =>
+      'Its version doesn\'t offer this list.';
 
   @override
-  String get whatsNewShowUpdates => 'Check for an update here, any time.';
+  String get integrationsWaitingTitle => 'Waiting for the server';
 
   @override
-  String get whatsNewTipsTitle => 'What\'s new in this version';
+  String get integrationsWaitingBody =>
+      'This page loads by itself once the server is connected.';
 
   @override
-  String get whatsNewShowAgents => 'Your agents and their updates are here.';
+  String get crashOfferMessage =>
+      'OpenCode Mobile closed unexpectedly last time. Send a crash report?';
 
   @override
-  String get whatsNewShowPaste =>
-      'Press and hold the message box, or tap +, to paste an image.';
+  String get crashOfferReview => 'Review and send';
 
   @override
-  String get whatsNewShowMic => 'Hold this button and talk, then let go.';
+  String get crashOfferNotNow => 'Not now';
 
   @override
-  String appUpdateReadyTitle(String version) {
-    return 'Version $version is ready';
-  }
-
-  @override
-  String get appUpdateUpdate => 'Update';
-
-  @override
-  String get appUpdateNotNow => 'Not now';
-
-  @override
-  String appUpdateDownloadingTitle(String version) {
-    return 'Downloading version $version';
-  }
-
-  @override
-  String appUpdatePercent(String percent) {
-    return '$percent% done';
-  }
-
-  @override
-  String get appUpdateCancel => 'Cancel';
-
-  @override
-  String get appUpdateVerifying => 'Checking the download…';
-
-  @override
-  String get appUpdateInstalling => 'Installing…';
-
-  @override
-  String appUpdateInstallReadyTitle(String version) {
-    return 'Version $version is downloaded and checked';
-  }
-
-  @override
-  String get appUpdateInstall => 'Install';
-
-  @override
-  String get appUpdatePermissionNeeded =>
-      'To install it, allow this app to install updates, then come back.';
-
-  @override
-  String get appUpdateSettingsBadgeLabel => 'Settings, update available';
-
-  @override
-  String get appUpdateWhatsNew => 'What\'s new';
-
-  @override
-  String get appUpdateNow => 'Update now';
-
-  @override
-  String get appUpdateOpenSettings => 'Open Settings';
-
-  @override
-  String get appUpdatesTitle => 'Updates';
-
-  @override
-  String get appUpdatesSearchAliases =>
-      'update upgrade new version release install github check تحديث ترقية نسخة جديدة إصدار تثبيت';
-
-  @override
-  String get appUpdatesRowSummary => 'Check for and install new versions';
-
-  @override
-  String get appUpdateCheckedJustNow => 'Up to date · checked just now';
-
-  @override
-  String appUpdateUpToDate(String when) {
-    return 'Up to date · checked $when';
-  }
-
-  @override
-  String get appUpdateNeverChecked => 'Not checked yet';
-
-  @override
-  String get appUpdateChecking => 'Checking…';
-
-  @override
-  String appUpdateAvailableLine(String version, String size) {
-    return '$version is ready · $size';
-  }
-
-  @override
-  String appUpdateSizeMb(String mb) {
-    return '$mb MB';
-  }
-
-  @override
-  String get appUpdateCheckingOff =>
-      'Checking is off. Use Check now when you want to look.';
-
-  @override
-  String get appUpdateCheckSwitch => 'Check GitHub for new versions';
-
-  @override
-  String get appUpdateCheckSwitchBody =>
-      'The app asks GitHub for the latest version number and sends nothing about you.';
-
-  @override
-  String get appUpdateCheckNow => 'Check now';
-
-  @override
-  String get appUpdateTryAgain => 'Try again';
-
-  @override
-  String get appUpdateFailNetwork =>
-      'Couldn\'t reach GitHub. Check your connection and try again.';
-
-  @override
-  String get appUpdateFailNoFile =>
-      'This release has no file for your phone yet.';
-
-  @override
-  String get appUpdateFailChecksum =>
-      'The download didn\'t match its checksum, so it wasn\'t installed.';
-
-  @override
-  String get appUpdateFailSigner =>
-      'This download isn\'t signed like your app, so it wasn\'t installed.';
-
-  @override
-  String get appUpdateFailPackage =>
-      'This download is for a different app, so it wasn\'t installed.';
-
-  @override
-  String get appUpdateFailVersion =>
-      'This download isn\'t newer than your app, so it wasn\'t installed.';
-
-  @override
-  String get appUpdateFailStorage => 'There wasn\'t room to save the download.';
-
-  @override
-  String get appUpdateFailInstaller =>
-      'Android couldn\'t finish the install. Try again.';
-
-  @override
-  String appUpdateCurrentVersion(String version) {
-    return 'Version $version';
-  }
-
-  @override
-  String get appUpdateBuildLabel => 'Build';
-
-  @override
-  String get appUpdateOpenRelease => 'Open on GitHub';
-
-  @override
-  String appUpdateNotInstalled(String version) {
-    return '$version couldn\'t be installed';
-  }
-
-  @override
-  String get composerPasteImage => 'Paste image';
-
-  @override
-  String get composerPasteImageFromClipboard => 'Paste image from clipboard';
-
-  @override
-  String get composerPasteImageFromClipboardSupporting =>
-      'Attach the copied picture';
-
-  @override
-  String get composerPasteImageEmpty => 'There is no picture on the clipboard.';
-
-  @override
-  String get removeFromPhoneBackupsKept =>
-      'Backups you saved stay where you put them';
-
-  @override
-  String get linuxBackupRow => 'Backups';
-
-  @override
-  String get linuxBackupRowNever => 'No backup yet';
-
-  @override
-  String linuxBackupRowLast(Object date) {
-    return 'Last backup $date';
-  }
-
-  @override
-  String get linuxBackupWhat => 'What to back up';
-
-  @override
-  String get linuxBackupSetup => 'Setup';
-
-  @override
-  String get linuxBackupSetupDetail =>
-      'Packages, tools, services and settings files';
-
-  @override
-  String get linuxBackupSetupProjects => 'Setup and projects';
-
-  @override
-  String get linuxBackupSetupProjectsDetail =>
-      'Also your projects, without folders they can download again';
-
-  @override
-  String get linuxBackupProjectsOnly => 'Projects only';
-
-  @override
-  String get linuxBackupProjectsOnlyDetail =>
-      'A zip of your projects to keep or move';
-
-  @override
-  String get linuxBackupNowSetup => 'Back up setup';
-
-  @override
-  String get linuxBackupNowSetupProjects => 'Back up setup and projects';
-
-  @override
-  String get linuxBackupNowProjects => 'Back up projects';
-
-  @override
-  String get linuxBackupPrivacy =>
-      'Backups never hold sign-ins, passwords or private SSH keys. You choose where each one is saved.';
+  String get crashOfferReportTitle => 'The app closed unexpectedly';
 
   @override
-  String get linuxRestoreRow => 'Restore from a backup';
+  String get crashOfferSection => 'Crash reports';
 
   @override
-  String get linuxRestoreRowDetail => 'Choose a backup file to put back';
+  String get crashOfferSettingTitle => 'Offer crash reports';
 
   @override
-  String linuxBackupSaving(Object done, Object total) {
-    return 'Saving the backup: $done of $total';
-  }
-
-  @override
-  String linuxBackupSaved(Object size, Object name) {
-    return 'Backup saved: $size, as $name';
-  }
-
-  @override
-  String get linuxBackupFailedTitle => 'The backup didn\'t finish';
-
-  @override
-  String get linuxRestoreFailedTitle => 'The restore didn\'t finish';
-
-  @override
-  String get linuxBackupProblemBusy =>
-      'Another task is using Linux now. Try again when it ends.';
-
-  @override
-  String get linuxBackupProblemMissing => 'Linux isn\'t set up on this phone.';
-
-  @override
-  String get linuxBackupProblemJob => 'Linux couldn\'t make the backup.';
-
-  @override
-  String get linuxBackupProblemSave =>
-      'The backup couldn\'t be saved there. There may not be enough room.';
-
-  @override
-  String get linuxBackupProblemNotBackup =>
-      'That file isn\'t a backup made by this app.';
-
-  @override
-  String get linuxBackupProblemNewer =>
-      'That backup was made by a newer version of the app. Update the app first.';
-
-  @override
-  String get linuxBackupProblemRestore =>
-      'Linux couldn\'t put the backup back.';
-
-  @override
-  String get linuxRestoreChecking => 'Reading the backup…';
-
-  @override
-  String get linuxRestoreTitle => 'Restore this backup?';
-
-  @override
-  String linuxRestoreBody(Object what, Object date) {
-    return '$what, made on $date.';
-  }
-
-  @override
-  String get linuxRestoreConfirm => 'Restore';
-
-  @override
-  String get linuxRestoreKeptProjects =>
-      'Your projects stay. One with the same name comes back as “name (restored)”.';
-
-  @override
-  String get linuxRestoreReplacedSettings =>
-      'Settings files it holds replace yours; yours are kept with “.before-restore” added.';
-
-  @override
-  String get linuxRestoreAddedTools =>
-      'Packages, tools and services it lists are put back.';
-
-  @override
-  String get linuxRestoreDone => 'Linux is restored.';
-
-  @override
-  String linuxRestoreSkipped(Object names) {
-    return 'Ubuntu no longer has: $names';
-  }
-
-  @override
-  String linuxRestoreCounts(
-    Object projects,
-    Object services,
-    Object settings,
-    Object packages,
-  ) {
-    return 'Back: projects $projects, services $services, settings files $settings, packages $packages';
-  }
-
-  @override
-  String get linuxMgrJobBackingUp => 'Backing up Linux';
-
-  @override
-  String get linuxMgrJobRestoring => 'Restoring Linux';
-
-  @override
-  String get linuxMgrJobStopBackup => 'Stop the backup';
-
-  @override
-  String get linuxMgrJobStopRestore => 'Stop restoring';
-
-  @override
-  String get linuxMgrJobStopBackupTitle => 'Stop the backup?';
-
-  @override
-  String get linuxMgrJobStopRestoreTitle => 'Stop restoring?';
-
-  @override
-  String get linuxMgrJobDoneBackup => 'The backup is ready';
-
-  @override
-  String get linuxMgrJobDoneRestore => 'Linux is restored';
-
-  @override
-  String get linuxMgrResetBackUpFirst => 'Back up first';
-
-  @override
-  String get localAssistantTitle => 'Assistant on this phone';
-
-  @override
-  String get localAssistantSubtitle =>
-      'Writes short summaries of your conversations with a model that runs on this phone.';
-
-  @override
-  String get localAssistantSwitchTitle => 'Turn on the assistant';
-
-  @override
-  String get localAssistantSwitchSupporting =>
-      'Adds Summarize on this phone to every conversation.';
-
-  @override
-  String get localAssistantPrivacy =>
-      'The model is downloaded once. After that it works offline and nothing you write leaves the phone.';
-
-  @override
-  String localAssistantNotDownloaded(String size) {
-    return 'Not downloaded · $size';
-  }
-
-  @override
-  String localAssistantOnPhone(String size) {
-    return 'On this phone · $size';
-  }
-
-  @override
-  String get localAssistantBackendGpu => 'Runs on the graphics chip';
+  String get crashOfferSettingDetail =>
+      'After the app closes unexpectedly, offer a report you can review first. Nothing is ever sent by itself.';
 
   @override
-  String get localAssistantBackendCpu => 'Runs on the processor';
+  String get voiceAutoSetupUnknownNetwork =>
+      'This phone can\'t tell whether this connection costs data.';
 
   @override
-  String get localAssistantBackendIdle => 'Loads when you ask for a summary';
+  String get termuxRetiredNotice =>
+      'Termux is no longer supported. Set up built-in Linux on this phone, or connect to your computer. Your projects in Termux are still there; copy them to the phone\'s shared storage or push them with Git to bring them over.';
 
   @override
-  String localAssistantDownload(String size) {
-    return 'Download ($size)';
-  }
+  String get termuxRetiredSetUpLinux => 'Set up built-in Linux';
 
   @override
-  String get localAssistantDownloading => 'Downloading the assistant';
+  String get phoneSetupErrorNodeUnsupported =>
+      'This phone\'s system can\'t run Node.js inside built-in Linux. You can still use OpenCode Mobile by connecting to your computer.';
 
   @override
-  String get localAssistantVerifying => 'Checking the download';
+  String get phoneSetupConnectComputer => 'Connect a computer';
 
   @override
-  String localAssistantProgress(String received, String total) {
-    return '$received of $total';
-  }
+  String get telemetryConsentTitle => 'Help improve OpenCode Mobile?';
 
   @override
-  String get localAssistantCancelDownload => 'Cancel download';
+  String get telemetryConsentBody =>
+      'If you agree, the app sends anonymous usage and app health numbers, and crash reports, through Google Firebase. You can change each in Settings › Privacy and data.';
 
   @override
-  String localAssistantDelete(String size) {
-    return 'Delete from this phone ($size)';
-  }
+  String get telemetryConsentSends =>
+      'Sent: pages and features used, whether connecting, sending and setup work, app speed, memory and storage ranges, crash reports. A random install ID.';
 
   @override
-  String get localAssistantDeleteTitle => 'Delete the assistant?';
+  String get telemetryConsentNever =>
+      'Never sent: your code, conversations, files, server addresses or keys. No advertising ID.';
 
   @override
-  String localAssistantDeleteBody(String size) {
-    return 'This frees $size. You can download it again later.';
-  }
+  String get telemetryConsentShare => 'Share both';
 
   @override
-  String localAssistantNeedsWifi(String size) {
-    return 'You are not on Wi-Fi. The download is $size.';
-  }
+  String get telemetryConsentNotNow => 'Not now';
 
   @override
-  String get localAssistantUseMobileData => 'Download on mobile data';
+  String get telemetryUsageTitle => 'Usage and app health';
 
   @override
-  String localAssistantNoSpace(String size) {
-    return 'Not enough free space. Free about $size and try again.';
-  }
+  String get telemetryUsageDetail =>
+      'Sends anonymous counts to Google Analytics for Firebase: which kinds of pages and features you use, whether connecting, sending, setup, agents, the background service and updates work, how fast the app starts and how smooth pages are, memory warnings, and ranges for your phone\'s memory, free storage, CPU and WebView version. Also sends timings to Firebase Performance Monitoring: how long app start, connecting, the first reply, setup steps and starting an agent take. Only fixed words, ranges and numbers, with a random install ID, your phone model and Android version. No code, conversations, files, addresses, keys or advertising ID.';
 
   @override
-  String get localAssistantUnavailableMemory =>
-      'This phone has too little memory for the assistant. It needs about 6 GB.';
+  String get telemetryCrashesTitle => 'Crash reports';
 
   @override
-  String get localAssistantUnavailableAbi =>
-      'The assistant runs on 64-bit phones only.';
+  String get telemetryCrashesDetail =>
+      'Sends crash reports to Google Firebase Crashlytics: the kind of error and where in the app\'s code it happened, never its message, the last steps you took as short words, and why Android ended the app last time. No code, conversations, files, addresses, keys or advertising ID.';
 
   @override
-  String get localAssistantUnavailablePlatform =>
-      'The assistant is available on Android phones.';
+  String get telemetryConsentChoose => 'Choose';
 
   @override
-  String get localAssistantSetupFailed =>
-      'The assistant could not be set up. Try again.';
+  String get telemetryConsentSave => 'Save my choices';
 
   @override
-  String get localAssistantTryAgain => 'Try again';
+  String get sendReportTitle => 'Send a problem report';
 
   @override
-  String get localAssistantSummarizeMenu => 'Summarize on this phone';
+  String get sendReportRowDetail => 'Review a redacted log, then send it';
 
   @override
-  String get localAssistantSummarizeSupporting =>
-      'Written here, with no network';
+  String get sendReportSubtitle =>
+      'This is everything the report holds. Nothing is sent until you tap Send.';
 
   @override
-  String get localAssistantSheetTitle => 'Summary';
+  String get sendReportSend => 'Send';
 
   @override
-  String get localAssistantSheetSubtitle => 'Written on this phone';
+  String get sendReportCollecting => 'Collecting the report…';
 
   @override
-  String get localAssistantPreparing => 'Getting the assistant ready';
+  String get sendReportSentTitle => 'Report sent';
 
   @override
-  String get localAssistantStop => 'Stop';
+  String get sendReportSentBody =>
+      'Quote this report code if you open an issue on GitHub, so the developer can find your report.';
 
   @override
-  String get localAssistantCopy => 'Copy summary';
+  String get sendReportFailed =>
+      'The report could not be sent. Check your connection and try again.';
 
   @override
-  String get localAssistantDone => 'Done';
+  String get sendReportDone => 'Done';
 
   @override
-  String get localAssistantStopped =>
-      'Stopped. This is what was written so far.';
+  String get reportCodeLabel => 'Report code';
 
   @override
-  String get localAssistantRunFailed =>
-      'The summary could not be finished. Try again.';
+  String get reportCodeCopy => 'Copy report code';
 
   @override
-  String localAssistantStats(String seconds, String rate) {
-    return 'First words after $seconds s · $rate words a second';
+  String chatSendFailureSignInAgain(String agent) {
+    return '$agent needs you to sign in again';
   }
-
-  @override
-  String get localAssistantSearchAliases =>
-      'assistant gemma summarize offline on-device model local ai';
-
-  @override
-  String get browserModeTitle => 'Browser mode';
-
-  @override
-  String get browserModeSubtitle =>
-      'What works in this browser and what needs the phone app';
-
-  @override
-  String get browserModeIntro =>
-      'This is OpenCode Mobile running in a web browser. Remote OpenCode servers work as they do in the phone app. Features that need the phone itself are not offered here.';
-
-  @override
-  String get browserModeAvailableHeading => 'Available in the browser';
-
-  @override
-  String get browserModeAvailableServers =>
-      'Connect to OpenCode servers, chat, approve requests, browse files, and follow activity.';
-
-  @override
-  String get browserModeAvailableKeyboard =>
-      'Keyboard shortcuts, right-click menus, and drag-and-drop attachments on a desktop browser.';
-
-  @override
-  String get browserModeAvailablePaste =>
-      'Pasting into any field with the keyboard.';
-
-  @override
-  String get browserModeUnavailableHeading => 'Needs the phone app';
-
-  @override
-  String get browserModeUnavailableTermux =>
-      'Running a server or AI agents on this device, and the on-device setup.';
-
-  @override
-  String get browserModeUnavailableVoice =>
-      'Voice input, read-aloud, and camera QR pairing.';
-
-  @override
-  String get browserModeUnavailableBackground =>
-      'Background monitoring, notifications, the home-screen widget, launcher shortcuts, and the Quick Settings tile. Keep this tab open to keep following a session.';
-
-  @override
-  String get browserModeUnavailableAgentSocket =>
-      'Codex and Paseo connections. They sign in with a WebSocket header that browsers cannot send, and there is no supported browser sign-in for them yet.';
-
-  @override
-  String get browserModeContextHeading => 'This page';
-
-  @override
-  String get browserModeSecureContextOk =>
-      'Opened from a secure origin. Server passwords can be saved, and the Paste buttons can read the clipboard.';
-
-  @override
-  String get browserModeSecureContextMissing =>
-      'Opened over plain HTTP from a network address, which the browser does not treat as secure. Server passwords cannot be saved here and the Paste buttons cannot read the clipboard. Open the app over HTTPS or from localhost to lift both limits. Servers without a password still work, and you can still paste into fields with the keyboard.';
-
-  @override
-  String get browserModeMixedContent =>
-      'A page opened over HTTPS can only reach HTTPS servers; the browser blocks plain-HTTP connections from it.';
-
-  @override
-  String get browserModeCors =>
-      'The server must allow this page’s origin. If a connection test fails at once here while the same address works from the phone app, the server is refusing browser requests from this origin.';
-
-  @override
-  String get browserEditorInsecureOrigin =>
-      'This page was opened over plain HTTP from a network address, so the browser will not keep a server password. Leave the password empty for a server that has none, or open the app over HTTPS or from localhost to save one.';
-
-  @override
-  String get browserPairingPasteHint =>
-      'Copy the code the pairing command prints and paste it into the server address field with the keyboard. The Paste button needs a secure (HTTPS or localhost) page.';
-
-  @override
-  String get browserAgentSocketUnavailable =>
-      'Codex and Paseo connections are not available in the browser. They sign in with a WebSocket header that browsers cannot send, and no browser sign-in is supported yet. Use the phone or desktop app for them; OpenCode servers work here.';
 
   @override
-  String get browserAgentSocketRowUnavailable => 'Not available in the browser';
+  String get teamRefusalServerRestarted =>
+      'OpenCode restarted while this step was running, so it was cut off.';
 
   @override
-  String get browserTransportFailure =>
-      'The browser could not reach the server. Check the address and that the server is running. A server on a different origin must allow the origin of this page (CORS), and a page loaded over https cannot use an http:// or ws:// server.';
+  String get teamRefusalServerRestartedNext =>
+      'Resume to send that step again. It picks up from the work already done.';
 
   @override
-  String get browserProbeTimeout =>
-      'The connection timed out. Check the address, and that the server is reachable from this browser.';
+  String get teamRefusalRestartResend =>
+      'OpenCode restarted while this step was running. The team is sending it again.';
 
   @override
-  String get aboutBrowserSummary =>
-      'A browser client for the OpenCode server you choose. Voice, background monitoring and servers on this device are not available here.';
+  String get teamRefusalRestartResendNext =>
+      'Nothing to do. Work already done is kept.';
 }

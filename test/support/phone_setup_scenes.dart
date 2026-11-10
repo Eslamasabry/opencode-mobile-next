@@ -11,13 +11,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/builtin/builtin_linux.dart';
 import 'package:opencode_mobile/builtin/builtin_server.dart';
+import 'package:opencode_mobile/builtin/setup/node_compat.dart';
 import 'package:opencode_mobile/builtin/setup/phone_setup.dart';
 import 'package:opencode_mobile/builtin/setup/setup_contract.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
-import 'package:opencode_mobile/state/termux_running_server.dart';
-import 'package:opencode_mobile/termux/bridge.dart' show TermuxRuntime;
 import 'package:opencode_mobile/ui/app_iconography.dart';
 import 'package:opencode_mobile/ui/kit/kit.dart';
 import 'package:opencode_mobile/ui/screens/phone_setup/phone_setup_progress_screen.dart';
@@ -51,6 +50,7 @@ class SceneLinux extends BuiltinLinux {
   Future<BuiltinLinuxRunResult> run(
     String script, {
     Duration timeout = const Duration(minutes: 2),
+    String? input,
   }) async => const BuiltinLinuxRunResult(exitCode: 0, output: '');
 
   @override
@@ -90,7 +90,9 @@ SetupProgress sceneJob({
   ComponentProgress? current,
   String? error,
   String log = '',
+  bool phoneUnsupported = false,
 }) => SetupProgress(
+  phoneUnsupported: phoneUnsupported,
   state: state,
   overall: overall,
   etaSeconds: eta,
@@ -216,13 +218,11 @@ const _sceneDevice = VoiceDeviceInfo(
   hasMicrophone: true,
 );
 
-Widget _start({TermuxRunningServer? termux, bool inApp = false}) =>
-    PhoneSetupStartScreen(
-      termuxProbe: () async => termux ?? const TermuxRunningServer.absent(),
-      inAppProbe: () async => inApp,
-      deviceProbe: () async => _sceneDevice,
-      openProgress: (_) async {},
-    );
+Widget _start({bool inApp = false}) => PhoneSetupStartScreen(
+  inAppProbe: () async => inApp,
+  deviceProbe: () async => _sceneDevice,
+  openProgress: (_) async {},
+);
 
 Widget _progress() => PhoneSetupProgressScreen(
   engine: PhoneSetup.engine,
@@ -343,25 +343,6 @@ final setupScenes = <SetupScene>[
     ),
   ),
   SetupScene('setup_start_ready', home: () => _start(inApp: true)),
-  SetupScene(
-    'setup_start_termux',
-    home: () => _start(
-      termux: TermuxRunningServer.running(
-        runtime: TermuxRuntime.openCode1,
-        version: '1.18.29',
-        observedAt: DateTime(2026, 9, 24),
-      ),
-    ),
-    before: (tester) async {
-      await tester.tap(
-        find.byKey(const ValueKey('phone-setup-start-other-ways')),
-      );
-      // Long enough for the tap's ink to fade.
-      for (var i = 0; i < 12; i++) {
-        await tester.pump(const Duration(milliseconds: 100));
-      }
-    },
-  ),
   SetupScene('setup_customize', home: _start, before: _openCustomize),
   SetupScene(
     'setup_progress_running',
@@ -388,6 +369,28 @@ final setupScenes = <SetupScene>[
         error: 'Exit code 6',
       ),
       log: 'curl: (6) Could not resolve host: nodejs.org\n',
+    ),
+  ),
+  // Issue #117: Node.js crashes on this phone in every safe mode.
+  SetupScene(
+    'setup_progress_node_unsupported',
+    home: _progress,
+    push: true,
+    progress: sceneJob(
+      state: SetupState.failed,
+      overall: .55,
+      done: {'linux', 'essentials', 'python'},
+      phoneUnsupported: true,
+      current: const ComponentProgress(
+        id: 'node',
+        state: ComponentState.failed,
+        stage: 'Checking that Node.js starts',
+        error: NodeCompatFailure.unsupported,
+      ),
+      log:
+          '[oc] probe version 139 # node --version\n'
+          '[oc] probe armcap 139 # OPENSSL_armcap=0 node -e <work>\n'
+          '${NodeCompatFailure.unsupported}\n',
     ),
   ),
   SetupScene(
@@ -458,8 +461,6 @@ Future<void> pumpSetupScene(
   final engine = FakeSetupEngine();
   if (scene.progress case final progress?) engine.emit(progress);
   PhoneSetup.engine = engine;
-  // No Termux job: the start screen also reads Termux's engine (P1.7).
-  PhoneSetup.termux = FakeSetupEngine();
   final linux = scene.linux ?? SceneLinux();
   final navigatorKey = GlobalKey<NavigatorState>();
   await tester.pumpWidget(

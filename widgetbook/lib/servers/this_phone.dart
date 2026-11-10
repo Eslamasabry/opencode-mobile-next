@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:opencode_mobile/builtin/builtin_linux.dart';
 import 'package:opencode_mobile/builtin/builtin_server.dart';
 import 'package:opencode_mobile/state/connection.dart';
-import 'package:opencode_mobile/state/phone_host.dart';
 import 'package:opencode_mobile/ui/screens/this_phone_screen.dart';
 import 'package:widgetbook/widgetbook.dart';
 
@@ -30,6 +29,7 @@ class _FakeLinux extends BuiltinLinux {
   @override
   Future<BuiltinLinuxRunResult> run(
     String script, {
+    String? input,
     Duration timeout = const Duration(minutes: 2),
   }) async => const BuiltinLinuxRunResult(exitCode: 0, output: '2.1.1\n');
 
@@ -83,7 +83,7 @@ Widget _scene({
         connProvider.overrideWithValue(app.connection),
         builtinLinuxProvider.overrideWithValue(linux),
       ],
-      child: const ThisPhoneScreen(kind: PhoneHostKind.inApp),
+      child: const ThisPhoneScreen(),
     );
   },
 );

@@ -744,30 +744,6 @@ abstract class AppLocalizations {
   /// **'Images, PDFs, text files, and Excel or Word files (.xlsx, .docx) can be attached.'**
   String get chatAttachmentUnsupported;
 
-  /// Confirmation title before restarting the managed Termux server
-  ///
-  /// In en, this message translates to:
-  /// **'Restart the local server?'**
-  String get termuxRestartTitle;
-
-  /// Confirmation explanation before restarting the managed Termux server
-  ///
-  /// In en, this message translates to:
-  /// **'OpenCode will be briefly unavailable. The app will keep your current project and reconnect automatically.'**
-  String get termuxRestartMessage;
-
-  /// Additional restart warning when one or more sessions are generating
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{1 conversation is generating. Restarting will interrupt it.} other{{count} conversations are generating. Restarting will interrupt them.}}'**
-  String termuxRestartBusyMessage(int count);
-
-  /// Confirmation button that starts a managed Termux server restart
-  ///
-  /// In en, this message translates to:
-  /// **'Restart'**
-  String get termuxRestartConfirm;
-
   /// No description provided for @chatCopyCompleteReply.
   ///
   /// In en, this message translates to:
@@ -3021,7 +2997,7 @@ abstract class AppLocalizations {
   /// No description provided for @setupOutputWaiting.
   ///
   /// In en, this message translates to:
-  /// **'Waiting for Termux output…'**
+  /// **'Waiting for output…'**
   String get setupOutputWaiting;
 
   /// Sign-in sheet: a start the server may have taken without confirming it.
@@ -3149,12 +3125,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'MiniMax'**
   String get quotaMiniMax;
-
-  /// No description provided for @managedHealthLifetime.
-  ///
-  /// In en, this message translates to:
-  /// **'Android may stop either app. Keeping the mobile connection alive does not guarantee the Termux server will keep running overnight.'**
-  String get managedHealthLifetime;
 
   /// No description provided for @quotaBudgetOff.
   ///
@@ -3382,90 +3352,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Time to check in'**
   String get monitorCheckInDue;
-
-  /// No description provided for @managedRecoveryAttempts.
-  ///
-  /// In en, this message translates to:
-  /// **'Attempts used: {attempts} of 3. The limit survives app restarts.'**
-  String managedRecoveryAttempts(int attempts);
-
-  /// No description provided for @managedRecoveryExhausted.
-  ///
-  /// In en, this message translates to:
-  /// **'Recovery limit reached. Check the server and start it manually before resetting the retry budget.'**
-  String get managedRecoveryExhausted;
-
-  /// No description provided for @managedRecoveryBackground.
-  ///
-  /// In en, this message translates to:
-  /// **'Recovery waits while the app is in the background.'**
-  String get managedRecoveryBackground;
-
-  /// No description provided for @managedRecoveryChecking.
-  ///
-  /// In en, this message translates to:
-  /// **'Checking the managed recovery operation…'**
-  String get managedRecoveryChecking;
-
-  /// No description provided for @managedRecoveryNext.
-  ///
-  /// In en, this message translates to:
-  /// **'Next recovery attempt no earlier than {time}.'**
-  String managedRecoveryNext(String time);
-
-  /// No description provided for @managedRecoveryCheck.
-  ///
-  /// In en, this message translates to:
-  /// **'Check recovery status'**
-  String get managedRecoveryCheck;
-
-  /// No description provided for @managedRecoveryReset.
-  ///
-  /// In en, this message translates to:
-  /// **'Reset retry budget'**
-  String get managedRecoveryReset;
-
-  /// No description provided for @managedRecoverySaveFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Recovery settings could not be saved. Retry.'**
-  String get managedRecoverySaveFailed;
-
-  /// No description provided for @managedRecoveryRevokeFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not save or revoke recovery. Keep this server and retry before removing it.'**
-  String get managedRecoveryRevokeFailed;
-
-  /// No description provided for @managedRecoverySettingsUnreadable.
-  ///
-  /// In en, this message translates to:
-  /// **'Recovery settings could not be read. Check the server before enabling recovery.'**
-  String get managedRecoverySettingsUnreadable;
-
-  /// No description provided for @managedRecoveryEnableFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not enable recovery. Start the managed server, then try again.'**
-  String get managedRecoveryEnableFailed;
-
-  /// No description provided for @managedRecoveryOwnershipChanged.
-  ///
-  /// In en, this message translates to:
-  /// **'The managed operation changed. Check the server before enabling recovery again.'**
-  String get managedRecoveryOwnershipChanged;
-
-  /// No description provided for @managedRecoveryUncertain.
-  ///
-  /// In en, this message translates to:
-  /// **'Recovery paused because Termux did not confirm the result. Refresh to continue.'**
-  String get managedRecoveryUncertain;
-
-  /// No description provided for @managedRecoveryRetryDisable.
-  ///
-  /// In en, this message translates to:
-  /// **'Try disabling recovery again'**
-  String get managedRecoveryRetryDisable;
 
   /// No description provided for @pluginMappingUnavailable.
   ///
@@ -3820,30 +3706,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Configured folder'**
   String get projectConfiguredFolder;
-
-  /// No description provided for @termuxGuideTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Connect Termux once'**
-  String get termuxGuideTitle;
-
-  /// No description provided for @termuxGuideOpenFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'The command was copied, but Termux could not open. Open Termux yourself or try Copy & open Termux again.'**
-  String get termuxGuideOpenFailed;
-
-  /// No description provided for @termuxGuideCopyOpenFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not copy the command or open Termux.'**
-  String get termuxGuideCopyOpenFailed;
-
-  /// No description provided for @termuxPermissionDenied.
-  ///
-  /// In en, this message translates to:
-  /// **'Android didn\'t let this app run commands in Termux.'**
-  String get termuxPermissionDenied;
 
   /// Snackbar shown once when the New task home-screen shortcut arrives while the saved server is still connecting
   ///
@@ -5141,41 +5003,11 @@ abstract class AppLocalizations {
   /// **'OpenCode 2'**
   String get oc2DiscoveryEditorTitle;
 
-  /// No description provided for @setupSwitchPending.
-  ///
-  /// In en, this message translates to:
-  /// **'The update to OpenCode 2 has not finished. Your saved conversations are kept. Try again.'**
-  String get setupSwitchPending;
-
-  /// No description provided for @setupSwitchRetry.
-  ///
-  /// In en, this message translates to:
-  /// **'Try {runtime} again'**
-  String setupSwitchRetry(String runtime);
-
   /// No description provided for @setupSwitchFailed.
   ///
   /// In en, this message translates to:
   /// **'Could not finish updating to OpenCode 2. Your saved conversations are kept. Try again.'**
   String get setupSwitchFailed;
-
-  /// No description provided for @setupSwitchProfileName.
-  ///
-  /// In en, this message translates to:
-  /// **'This phone · {runtime}'**
-  String setupSwitchProfileName(String runtime);
-
-  /// No description provided for @setupSwitchMissingCredential.
-  ///
-  /// In en, this message translates to:
-  /// **'The saved server password could not be read. Your conversations and files are kept. Restore access to the saved password, then try again.'**
-  String get setupSwitchMissingCredential;
-
-  /// No description provided for @setupSwitchProgressTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Switching to {runtime}'**
-  String setupSwitchProgressTitle(String runtime);
 
   /// Connection recovery guidance shown in lib/ui/widgets/connection_failure.dart
   ///
@@ -5308,12 +5140,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Nothing answered on this phone'**
   String get e7ConnectionFailure24;
-
-  /// Connection recovery guidance shown in lib/ui/widgets/connection_failure.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Running OpenCode in Termux? Open Termux and check that the server is still running.'**
-  String get e7ConnectionFailure26;
 
   /// Connection recovery guidance shown in lib/ui/widgets/connection_failure.dart
   ///
@@ -5585,12 +5411,6 @@ abstract class AppLocalizations {
   /// **'Advanced'**
   String get e7SharedAdvanced;
 
-  /// Shared app interface: HTTPS, SSH tunnels, older servers, Termux internals
-  ///
-  /// In en, this message translates to:
-  /// **'HTTPS, SSH tunnels, older servers, Termux internals'**
-  String get e7SharedHTTPSSSHTunnelsOlderServersTermuxInternals;
-
   /// Shared app interface: HTTPS, SSH tunnels, older servers
   ///
   /// In en, this message translates to:
@@ -5626,36 +5446,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Then add the server manually with username opencode and that password.'**
   String get e7SharedThenAddTheServerManuallyWithUsername;
-
-  /// Shared app interface: On-device via Termux (automated)
-  ///
-  /// In en, this message translates to:
-  /// **'On-device via Termux (automated)'**
-  String get e7SharedOnDeviceViaTermuxAutomated;
-
-  /// Shared app interface: Use the “On-device (Termux)” card on the Servers screen. The app installs Termux, unlocks the bridge, sets up opencode, starts the server and connects — all guided.
-  ///
-  /// In en, this message translates to:
-  /// **'Use the “On-device (Termux)” card on the Servers screen. The app installs Termux, unlocks the bridge, sets up opencode, starts the server and connects — all guided.'**
-  String get e7SharedUseTheOnDeviceTermuxCardOn;
-
-  /// Shared app interface: Only two taps need you personally: downloading the Termux APK and pasting one unlock line inside Termux once — both required by Android’s security model, not by this app.
-  ///
-  /// In en, this message translates to:
-  /// **'Only two taps need you personally: downloading the Termux APK and pasting one unlock line inside Termux once — both required by Android’s security model, not by this app.'**
-  String get e7SharedOnlyTwoTapsNeedYouPersonallyDownloading;
-
-  /// Shared app interface: Prefer manual? Inside Termux run:
-  ///
-  /// In en, this message translates to:
-  /// **'Prefer manual? Inside Termux run:'**
-  String get e7SharedPreferManualInsideTermuxRun;
-
-  /// Shared app interface: The chroot shares the network stack, so http://127.0.0.1:4096 works from this app. Run `termux-wake-lock` to keep it alive.
-  ///
-  /// In en, this message translates to:
-  /// **'The chroot shares the network stack, so http://127.0.0.1:4096 works from this app. Run `termux-wake-lock` to keep it alive.'**
-  String get e7SharedTheChrootSharesTheNetworkStackSo;
 
   /// Shared app interface: Security notes
   ///
@@ -6674,18 +6464,6 @@ abstract class AppLocalizations {
   /// Settings and appearance user interface.
   ///
   /// In en, this message translates to:
-  /// **'Update managed OpenCode'**
-  String get e7SettingsUi50;
-
-  /// Settings and appearance user interface.
-  ///
-  /// In en, this message translates to:
-  /// **'Install the latest stable server, refresh models, restart safely, and reconnect.'**
-  String get e7SettingsUi51;
-
-  /// Settings and appearance user interface.
-  ///
-  /// In en, this message translates to:
   /// **'the previous version'**
   String get e7SettingsUi52;
 
@@ -6860,7 +6638,7 @@ abstract class AppLocalizations {
   /// Settings and appearance user interface.
   ///
   /// In en, this message translates to:
-  /// **'Servers, providers, voice, files, Termux, and updates'**
+  /// **'Servers, providers, voice, files and updates'**
   String get e7SettingsUi93;
 
   /// Settings and appearance user interface.
@@ -7041,7 +6819,7 @@ abstract class AppLocalizations {
   /// About screen AI assistance provenance and experimental desktop limitation
   ///
   /// In en, this message translates to:
-  /// **'Android is the supported platform; desktop builds are experimental.'**
+  /// **'OpenCode Mobile is an Android app.'**
   String get e7SettingsAlphaBody;
 
   /// Settings and appearance user interface.
@@ -7668,12 +7446,6 @@ abstract class AppLocalizations {
   /// **'Stop sharing'**
   String get e7WorkspaceStopSharing;
 
-  /// Workspace and activity: Disconnect
-  ///
-  /// In en, this message translates to:
-  /// **'Disconnect'**
-  String get e7WorkspaceDisconnect;
-
   /// Workspace and activity: Press back again to exit
   ///
   /// In en, this message translates to:
@@ -8061,31 +7833,31 @@ abstract class AppLocalizations {
   /// Chat journey: Compact context
   ///
   /// In en, this message translates to:
-  /// **'Shorten conversation'**
+  /// **'Compact context'**
   String get chatUiCompactContext;
 
   /// Chat journey: Compact session
   ///
   /// In en, this message translates to:
-  /// **'Shorten conversation'**
+  /// **'Compact conversation'**
   String get chatUiCompactSession;
 
   /// Chat journey: Compacting conversation…
   ///
   /// In en, this message translates to:
-  /// **'Shortening conversation…'**
+  /// **'Compacting conversation…'**
   String get chatUiCompactingConversation;
 
   /// Chat journey: Compaction failed
   ///
   /// In en, this message translates to:
-  /// **'Shortening failed'**
+  /// **'Compaction failed'**
   String get chatUiCompactionFailed;
 
   /// Chat journey: Compaction started
   ///
   /// In en, this message translates to:
-  /// **'Shortening started'**
+  /// **'Compaction started'**
   String get chatUiCompactionStarted;
 
   /// Chat journey: Compose
@@ -8883,7 +8655,7 @@ abstract class AppLocalizations {
   /// Chat journey: Select a model before compacting this session.
   ///
   /// In en, this message translates to:
-  /// **'Select a model before shortening this conversation.'**
+  /// **'Select a model before compacting this conversation.'**
   String get chatUiSelectAModelBeforeCompactingThisSession;
 
   /// Chat journey: Server commands
@@ -10859,18 +10631,6 @@ abstract class AppLocalizations {
   /// **'Another app may be holding the camera. Pasting the pairing code works either way.'**
   String get e7SetupCameraFailedDetail;
 
-  /// Setup journey: termux no answer.
-  ///
-  /// In en, this message translates to:
-  /// **'Termux didn\'t answer. Tap Copy & open Termux, paste the line in Termux and press Enter, then come back here.'**
-  String get e7SetupTermuxNoAnswer;
-
-  /// Setup journey: copy open termux.
-  ///
-  /// In en, this message translates to:
-  /// **'Copy & open Termux'**
-  String get e7SetupCopyOpenTermux;
-
   /// Setup journey: stop terminal detail.
   ///
   /// In en, this message translates to:
@@ -10930,12 +10690,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Keep it running after logout'**
   String get e7SetupKeepAfterLogout;
-
-  /// Setup journey: get termux.
-  ///
-  /// In en, this message translates to:
-  /// **'Get Termux'**
-  String get e7SetupGetTermux;
 
   /// Setup journey: restart server.
   ///
@@ -10997,12 +10751,6 @@ abstract class AppLocalizations {
   /// **'Checking installed environment...'**
   String get e7SetupCheckingInstall;
 
-  /// Setup journey: inspect termux failed.
-  ///
-  /// In en, this message translates to:
-  /// **'Android could not inspect Termux.'**
-  String get e7SetupInspectTermuxFailed;
-
   /// Setup journey: username.
   ///
   /// In en, this message translates to:
@@ -11051,12 +10799,6 @@ abstract class AppLocalizations {
   /// **'Shown when the server starts. Leave empty if it has none.'**
   String get e7SetupPasswordStartupHint;
 
-  /// Setup journey: install termux detail.
-  ///
-  /// In en, this message translates to:
-  /// **'Install the current F-Droid build of Termux, then return here.'**
-  String get e7SetupInstallTermuxDetail;
-
   /// Setup journey: stop before update.
   ///
   /// In en, this message translates to:
@@ -11104,12 +10846,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reach it from this phone over USB'**
   String get e7SetupUsbAccess;
-
-  /// Setup journey: waiting termux.
-  ///
-  /// In en, this message translates to:
-  /// **'Waiting for Termux to respond. This can take a little while.'**
-  String get e7SetupWaitingTermux;
 
   /// Setup journey: discard changes.
   ///
@@ -11176,24 +10912,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Servers'**
   String get e7SetupServers;
-
-  /// Setup journey: starting setup.
-  ///
-  /// In en, this message translates to:
-  /// **'Starting setup in Termux'**
-  String get e7SetupStartingSetup;
-
-  /// Setup journey: setup not started.
-  ///
-  /// In en, this message translates to:
-  /// **'Termux opened but the setup did not start. Retry once; if it happens again, copy the failure report.'**
-  String get e7SetupSetupNotStarted;
-
-  /// Setup journey: this device.
-  ///
-  /// In en, this message translates to:
-  /// **'This device (Termux)'**
-  String get e7SetupThisDevice;
 
   /// Setup journey: transport reconnecting.
   ///
@@ -11351,12 +11069,6 @@ abstract class AppLocalizations {
   /// **'Choose how to continue'**
   String get e7SetupChooseContinue;
 
-  /// Setup journey: termux outdated.
-  ///
-  /// In en, this message translates to:
-  /// **'This Termux is too old for the app to use. Install the current one, then tap Continue setup.'**
-  String get e7SetupTermuxOutdated;
-
   /// Setup journey: camera needed.
   ///
   /// In en, this message translates to:
@@ -11386,18 +11098,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Test connection'**
   String get e7SetupTestConnection;
-
-  /// Setup journey: checking termux.
-  ///
-  /// In en, this message translates to:
-  /// **'Checking Termux connection'**
-  String get e7SetupCheckingTermux;
-
-  /// Setup journey: checking termux short.
-  ///
-  /// In en, this message translates to:
-  /// **'Checking Termux...'**
-  String get e7SetupCheckingTermuxShort;
 
   /// Setup journey: default server.
   ///
@@ -11429,23 +11129,11 @@ abstract class AppLocalizations {
   /// **'About and open source notices'**
   String get e7SetupAboutNotices;
 
-  /// Setup journey: setup lost.
-  ///
-  /// In en, this message translates to:
-  /// **'Lost track of the setup running in Termux'**
-  String get e7SetupSetupLost;
-
   /// Setup journey: report copied.
   ///
   /// In en, this message translates to:
   /// **'Failure report copied.'**
   String get e7SetupReportCopied;
-
-  /// Setup journey, Allow Termux row after Android denied the permission: opens this app's page in Android Settings, where the person allows running commands in Termux.
-  ///
-  /// In en, this message translates to:
-  /// **'Allow the permission in Settings'**
-  String get e7SetupAppSettings;
 
   /// Setup journey: no camera.
   ///
@@ -11639,12 +11327,6 @@ abstract class AppLocalizations {
   /// **'Android will not ask again, so this has to be changed in app settings: turn on Camera, then come back. Pasting the code needs no permission at all and works right now.'**
   String get e7SetupCameraSettingsDetail;
 
-  /// Setup journey: verify termux failed.
-  ///
-  /// In en, this message translates to:
-  /// **'Termux bridge verification failed.'**
-  String get e7SetupVerifyTermuxFailed;
-
   /// Setup journey: ubuntu only.
   ///
   /// In en, this message translates to:
@@ -11692,12 +11374,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send command to terminal'**
   String get e7SetupSendCommand;
-
-  /// Setup journey: unsupported setup.
-  ///
-  /// In en, this message translates to:
-  /// **'Setting up on the device itself works only on Android phones. On this computer, start OpenCode yourself and add it as a server.'**
-  String get e7SetupUnsupportedSetup;
 
   /// Setup journey: send key.
   ///
@@ -11770,36 +11446,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Paired with {host}.'**
   String e7SetupPaired(String host);
-
-  /// Setup journey: start failed.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not save or start the local setup: {detail}'**
-  String e7SetupStartFailed(String detail);
-
-  /// Setup journey: restart failed.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not restart the local server: {detail}'**
-  String e7SetupRestartFailed(String detail);
-
-  /// Setup journey: stop failed.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not stop the local server: {detail}'**
-  String e7SetupStopFailed(String detail);
-
-  /// Setup journey: elapsed seconds.
-  ///
-  /// In en, this message translates to:
-  /// **'{seconds}s elapsed'**
-  String e7SetupElapsedSeconds(int seconds);
-
-  /// Setup journey: elapsed minutes.
-  ///
-  /// In en, this message translates to:
-  /// **'{minutes}m {seconds}s elapsed'**
-  String e7SetupElapsedMinutes(int minutes, int seconds);
 
   /// Setup journey: delete disclosure.
   ///
@@ -11957,12 +11603,6 @@ abstract class AppLocalizations {
   /// **'Server URLs must use https:// or http://.'**
   String get e7SetupUrlScheme;
 
-  /// Setup journey: termux url scheme.
-  ///
-  /// In en, this message translates to:
-  /// **'Server URLs must use https://, or http:// for local Termux.'**
-  String get e7SetupTermuxUrlScheme;
-
   /// Setup journey: url credentials.
   ///
   /// In en, this message translates to:
@@ -12100,30 +11740,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter a valid Codex connection token.'**
   String get e7SetupCodexToken;
-
-  /// Setup journey: refresh packages.
-  ///
-  /// In en, this message translates to:
-  /// **'Refreshing Termux packages'**
-  String get e7SetupRefreshPackages;
-
-  /// Setup journey: repair packages.
-  ///
-  /// In en, this message translates to:
-  /// **'Repairing the Termux package set'**
-  String get e7SetupRepairPackages;
-
-  /// Setup journey: install dependencies.
-  ///
-  /// In en, this message translates to:
-  /// **'Installing Termux dependencies'**
-  String get e7SetupInstallDependencies;
-
-  /// Setup journey: prepare termux.
-  ///
-  /// In en, this message translates to:
-  /// **'Preparing Termux'**
-  String get e7SetupPrepareTermux;
 
   /// Setup journey: install ubuntu.
   ///
@@ -12311,42 +11927,6 @@ abstract class AppLocalizations {
   /// **'Could not read available storage before setup'**
   String get e7SetupReadStorageFailed;
 
-  /// Setup journey: repository failed.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not select the official Termux package repository'**
-  String get e7SetupRepositoryFailed;
-
-  /// Setup journey: repository refresh failed.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not refresh packages.termux.dev; check the network and retry'**
-  String get e7SetupRepositoryRefreshFailed;
-
-  /// Setup journey: repair failed.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not repair the interrupted Termux package transaction'**
-  String get e7SetupRepairFailed;
-
-  /// Setup journey: upgrade failed.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not complete the safe Termux package upgrade'**
-  String get e7SetupUpgradeFailed;
-
-  /// Setup journey: dependencies failed.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not install the Termux dependencies'**
-  String get e7SetupDependenciesFailed;
-
-  /// Setup journey: dependencies unusable.
-  ///
-  /// In en, this message translates to:
-  /// **'Termux dependencies are still unusable after the package repair'**
-  String get e7SetupDependenciesUnusable;
-
   /// Setup journey: ubuntu unusable.
   ///
   /// In en, this message translates to:
@@ -12419,24 +11999,6 @@ abstract class AppLocalizations {
   /// **'Update password'**
   String get e7SetupUpdatePassword;
 
-  /// Setup journey: LastSetupDetail.
-  ///
-  /// In en, this message translates to:
-  /// **'Last setup output: {detail}'**
-  String e7SetupLastSetupDetail(String detail);
-
-  /// Setup journey: BridgeDetail.
-  ///
-  /// In en, this message translates to:
-  /// **'Bridge detail: {detail}'**
-  String e7SetupBridgeDetail(String detail);
-
-  /// Setup journey: DiagnosticsUnavailable.
-  ///
-  /// In en, this message translates to:
-  /// **'Diagnostics unavailable: {detail}'**
-  String e7SetupDiagnosticsUnavailable(String detail);
-
   /// Setup journey: ProbeHttp.
   ///
   /// In en, this message translates to:
@@ -12454,24 +12016,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'OpenCode server exited (code {code})'**
   String e7SetupServerExit(String code);
-
-  /// Connection recovery action to inspect Termux.
-  ///
-  /// In en, this message translates to:
-  /// **'On this phone'**
-  String get e7SetupCheckTermux;
-
-  /// Localized manager or bridge status: CommandFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Termux command failed.'**
-  String get e7SetupCommandFailed;
-
-  /// Localized manager or bridge status: UnexpectedBridge.
-  ///
-  /// In en, this message translates to:
-  /// **'Termux returned an unexpected bridge response.'**
-  String get e7SetupUnexpectedBridge;
 
   /// Localized manager or bridge status: SetupQueued.
   ///
@@ -15616,347 +15160,11 @@ abstract class AppLocalizations {
   /// **'Provider title'**
   String get teamUiRunLabelRawTitle;
 
-  /// Settings › Termux server › Storage: screen title
-  ///
-  /// In en, this message translates to:
-  /// **'Storage on this phone'**
-  String get termuxStorageTitle;
-
-  /// Settings entry row subtitle: bytes the phone server uses
-  ///
-  /// In en, this message translates to:
-  /// **'{size} used'**
-  String termuxStorageRowUsed(String size);
-
-  /// Settings entry row subtitle before the first scan
-  ///
-  /// In en, this message translates to:
-  /// **'Not scanned yet'**
-  String get termuxStorageRowNotScanned;
-
-  /// Settings entry row subtitle while a scan runs
-  ///
-  /// In en, this message translates to:
-  /// **'Measuring…'**
-  String get termuxStorageRowScanning;
-
-  /// Primary button that starts the first scan
-  ///
-  /// In en, this message translates to:
-  /// **'Scan storage'**
-  String get termuxStorageScanAction;
-
-  /// Button that starts a fresh scan when a report exists
-  ///
-  /// In en, this message translates to:
-  /// **'Scan again'**
-  String get termuxStorageRescanAction;
-
-  /// Storage screen: paragraph before the first scan
-  ///
-  /// In en, this message translates to:
-  /// **'See what Termux uses on this phone. Only caches that rebuild themselves can be cleaned here; your projects, sign-ins and conversations stay.'**
-  String get termuxStorageIntro;
-
-  /// Storage screen: heading while a scan runs
-  ///
-  /// In en, this message translates to:
-  /// **'Measuring storage'**
-  String get termuxStorageScanning;
-
-  /// Storage screen: line under the scanning heading
-  ///
-  /// In en, this message translates to:
-  /// **'Large caches take a minute or two. You can leave this screen; the scan keeps going.'**
-  String get termuxStorageScanningDetail;
-
-  /// Button that cancels a running scan
-  ///
-  /// In en, this message translates to:
-  /// **'Stop scan'**
-  String get termuxStorageCancel;
-
-  /// Status line after a cancelled scan
-  ///
-  /// In en, this message translates to:
-  /// **'Scan stopped'**
-  String get termuxStorageCancelled;
-
-  /// Status line after a failed scan
-  ///
-  /// In en, this message translates to:
-  /// **'The scan did not finish. Try again.'**
-  String get termuxStorageFailed;
-
-  /// Storage report headline
-  ///
-  /// In en, this message translates to:
-  /// **'{size} measured in Termux'**
-  String termuxStorageTotal(String size);
-
-  /// Storage report: sum of the deletable categories
-  ///
-  /// In en, this message translates to:
-  /// **'{size} can be cleaned'**
-  String termuxStorageDeletableTotal(String size);
-
-  /// Storage report: scan age under a minute
-  ///
-  /// In en, this message translates to:
-  /// **'Scanned just now'**
-  String get termuxStorageScannedJustNow;
-
-  /// Storage report: scan age in minutes
-  ///
-  /// In en, this message translates to:
-  /// **'Scanned {minutes} min ago'**
-  String termuxStorageScannedMinutesAgo(int minutes);
-
-  /// Storage report: scan age in hours
-  ///
-  /// In en, this message translates to:
-  /// **'Scanned {hours} h ago'**
-  String termuxStorageScannedHoursAgo(int hours);
-
-  /// Storage category
-  ///
-  /// In en, this message translates to:
-  /// **'Build caches'**
-  String get termuxStorageCatBuildCaches;
-
-  /// Storage category note
-  ///
-  /// In en, this message translates to:
-  /// **'Gradle caches and npm’s downloaded content cache only. Downloads may be needed again, so offline builds can be affected. Stop builds and package installs before cleaning.'**
-  String get termuxStorageNoteBuildCaches;
-
-  /// Storage category
-  ///
-  /// In en, this message translates to:
-  /// **'Agent scratch'**
-  String get termuxStorageCatAgentScratch;
-
-  /// Storage category note
-  ///
-  /// In en, this message translates to:
-  /// **'Temporary folders may contain unfinished work or files used by other tools. Their sizes are shown for reference; they cannot be removed here.'**
-  String get termuxStorageNoteAgentScratch;
-
-  /// Storage category
-  ///
-  /// In en, this message translates to:
-  /// **'Folders with build-related names'**
-  String get termuxStorageCatProjectBuildOutputs;
-
-  /// Storage category note
-  ///
-  /// In en, this message translates to:
-  /// **'Folders named build, .dart_tool, node_modules or target may also contain your files. Names alone cannot prove they are disposable, so they cannot be removed here.'**
-  String get termuxStorageNoteProjectBuildOutputs;
-
-  /// Storage category
-  ///
-  /// In en, this message translates to:
-  /// **'Toolchains'**
-  String get termuxStorageCatToolchains;
-
-  /// Storage category note
-  ///
-  /// In en, this message translates to:
-  /// **'Android SDK, Java and Flutter installations. These may support other projects and cannot be removed here.'**
-  String get termuxStorageNoteToolchains;
-
-  /// Storage category
-  ///
-  /// In en, this message translates to:
-  /// **'AI Team'**
-  String get termuxStorageCatAiTeam;
-
-  /// Storage category note
-  ///
-  /// In en, this message translates to:
-  /// **'Team folders, databases and tools may contain work you need to keep. They cannot be removed here, even when the team is stopped.'**
-  String get termuxStorageNoteAiTeam;
-
-  /// Storage category
-  ///
-  /// In en, this message translates to:
-  /// **'OpenCode itself'**
-  String get termuxStorageCatOpenCode;
-
-  /// Storage on this phone: what the OpenCode category holds (the footnote says once that it is not removed here)
-  ///
-  /// In en, this message translates to:
-  /// **'The server, its sign-ins and conversation history. Conversations have their own screen.'**
-  String get termuxStorageNoteOpenCode;
-
-  /// Storage category
-  ///
-  /// In en, this message translates to:
-  /// **'Projects (your files)'**
-  String get termuxStorageCatProjects;
-
-  /// Storage category note
-  ///
-  /// In en, this message translates to:
-  /// **'Listed so you can see their size. Never removed from here.'**
-  String get termuxStorageNoteProjects;
-
-  /// Storage category: heading over the path list
-  ///
-  /// In en, this message translates to:
-  /// **'What Clean removes'**
-  String get termuxStorageWillRemove;
-
-  /// Storage category with no paths
-  ///
-  /// In en, this message translates to:
-  /// **'Nothing here'**
-  String get termuxStorageNothingHere;
-
-  /// Two-step confirmation title for cleaning over a gigabyte
-  ///
-  /// In en, this message translates to:
-  /// **'Delete {size} of {category}?'**
-  String termuxStorageCleanConfirmTitle(String size, String category);
-
-  /// Two-step confirmation body for cleaning
-  ///
-  /// In en, this message translates to:
-  /// **'Delete only the listed Gradle and npm content caches? Downloads may be needed again and offline builds can be affected. Stop builds and package installs first. Scan again afterward to update the measured sizes.'**
-  String get termuxStorageCleanConfirmBody;
-
-  /// Two-step confirmation button
-  ///
-  /// In en, this message translates to:
-  /// **'Delete {size}'**
-  String termuxStorageCleanConfirm(String size);
-
-  /// Two-step confirmation cancel button
-  ///
-  /// In en, this message translates to:
-  /// **'Keep'**
-  String get termuxStorageKeep;
-
-  /// Status while a clean runs
-  ///
-  /// In en, this message translates to:
-  /// **'Deleting…'**
-  String get termuxStorageCleaning;
-
-  /// Result line after a clean
-  ///
-  /// In en, this message translates to:
-  /// **'Removed {size}'**
-  String termuxStorageFreed(String size);
-
-  /// Result line after a clean that removed nothing
-  ///
-  /// In en, this message translates to:
-  /// **'Nothing was removed'**
-  String get termuxStorageFreedNothing;
-
-  /// Clean refused because a process is using the category
-  ///
-  /// In en, this message translates to:
-  /// **'In use by {process}. Stop it under Running on this phone first.'**
-  String termuxStorageInUse(String process);
-
-  /// Clean result: paths the script refused to remove
-  ///
-  /// In en, this message translates to:
-  /// **'{count} paths were left in place'**
-  String termuxStorageRefusedCount(int count);
-
-  /// Project row subtitle
-  ///
-  /// In en, this message translates to:
-  /// **'{size} · {build} in build-related folders'**
-  String termuxStorageProjectBuild(String size, String build);
-
-  /// Action that opens the process screen
-  ///
-  /// In en, this message translates to:
-  /// **'Open Running on this phone'**
-  String get termuxStorageOpenRunning;
-
-  /// Byte formatting: gigabytes
-  ///
-  /// In en, this message translates to:
-  /// **'{value} GB'**
-  String termuxStorageBytesGb(String value);
-
-  /// Byte formatting: megabytes
-  ///
-  /// In en, this message translates to:
-  /// **'{value} MB'**
-  String termuxStorageBytesMb(String value);
-
-  /// Byte formatting: kilobytes
-  ///
-  /// In en, this message translates to:
-  /// **'{value} KB'**
-  String termuxStorageBytesKb(String value);
-
-  /// Byte formatting: bytes
-  ///
-  /// In en, this message translates to:
-  /// **'{value} B'**
-  String termuxStorageBytesB(String value);
-
-  /// This phone › Running on this phone (P5.3): the processes tool's title and its row on This phone
-  ///
-  /// In en, this message translates to:
-  /// **'Running on this phone'**
-  String get termuxProcsTitle;
-
-  /// Settings entry row subtitle while the list loads
-  ///
-  /// In en, this message translates to:
-  /// **'Checking…'**
-  String get termuxProcsRowLoading;
-
   /// Line under the headline
   ///
   /// In en, this message translates to:
   /// **'Refreshes every 10 seconds while open'**
   String get termuxProcsAutoRefresh;
-
-  /// Accessibility label of a row's Stop button
-  ///
-  /// In en, this message translates to:
-  /// **'Stop {name}'**
-  String termuxProcsStopSemantics(String name);
-
-  /// Two-step confirmation title for one process
-  ///
-  /// In en, this message translates to:
-  /// **'Stop {name}?'**
-  String termuxProcsStopOneTitle(String name);
-
-  /// Two-step confirmation body for one process
-  ///
-  /// In en, this message translates to:
-  /// **'It gets a polite stop, then a forced one after 5 seconds.'**
-  String get termuxProcsStopOneBody;
-
-  /// Running now: a protected process (the OpenCode server, sshd) says so and where it is controlled
-  ///
-  /// In en, this message translates to:
-  /// **'Protected · control it from This phone'**
-  String get termuxProcsProtected;
-
-  /// Orphan reason line
-  ///
-  /// In en, this message translates to:
-  /// **'Its parent is gone · running for {elapsed}'**
-  String termuxProcsOrphanParentGone(String elapsed);
-
-  /// Orphan reason line
-  ///
-  /// In en, this message translates to:
-  /// **'{cpu} of CPU with no owner'**
-  String termuxProcsOrphanCpu(String cpu);
 
   /// Status while a stop runs
   ///
@@ -15964,47 +15172,11 @@ abstract class AppLocalizations {
   /// **'Stopping…'**
   String get termuxProcsStopping;
 
-  /// Result line after a stop
-  ///
-  /// In en, this message translates to:
-  /// **'Stopped {count}'**
-  String termuxProcsStopped(int count);
-
-  /// Result line after a stop with forced kills
-  ///
-  /// In en, this message translates to:
-  /// **'Stopped {count} ({forced} needed a forced stop)'**
-  String termuxProcsStoppedForced(int count, int forced);
-
-  /// Result line: processes that survived KILL
-  ///
-  /// In en, this message translates to:
-  /// **'{count} would not stop'**
-  String termuxProcsRemaining(int count);
-
-  /// Result line: refused protected processes
-  ///
-  /// In en, this message translates to:
-  /// **'{count} protected, not stopped'**
-  String termuxProcsRefused(int count);
-
-  /// Empty state
-  ///
-  /// In en, this message translates to:
-  /// **'Nothing is running in the phone server'**
-  String get termuxProcsEmpty;
-
   /// Process detail sheet: command label
   ///
   /// In en, this message translates to:
   /// **'Command'**
   String get termuxProcsCommand;
-
-  /// Process detail sheet: working directory label
-  ///
-  /// In en, this message translates to:
-  /// **'Folder'**
-  String get termuxProcsFolder;
 
   /// Duration: seconds
   ///
@@ -16030,23 +15202,11 @@ abstract class AppLocalizations {
   /// **'{mb} MB'**
   String termuxProcsMemoryMb(int mb);
 
-  /// On-device AI Team block: eyebrow label
-  ///
-  /// In en, this message translates to:
-  /// **'Optional · experimental'**
-  String get teamUiPhoneOptionalTag;
-
   /// On-device setup: project picker title
   ///
   /// In en, this message translates to:
   /// **'Choose a project'**
   String get teamUiPhoneChooseProjectTitle;
-
-  /// On-device setup: continue with the chosen project
-  ///
-  /// In en, this message translates to:
-  /// **'Continue'**
-  String get teamUiPhoneContinue;
 
   /// On-device setup: success card title
   ///
@@ -16054,359 +15214,17 @@ abstract class AppLocalizations {
   /// **'AI Team is running on this phone'**
   String get teamUiPhoneSuccessTitle;
 
-  /// On-device setup: retry after a failure
-  ///
-  /// In en, this message translates to:
-  /// **'Try again'**
-  String get teamUiPhoneRetry;
-
-  /// On-device setup: checksum mismatch failure
-  ///
-  /// In en, this message translates to:
-  /// **'The downloaded {name} did not match the checksum this build pins, so it was not installed. Nothing from it was kept; check the network and try again.'**
-  String teamUiPhoneFailedChecksum(String name);
-
-  /// On-device setup: unsupported architecture failure
-  ///
-  /// In en, this message translates to:
-  /// **'This phone\'s processor is not 64-bit ARM, which the team runtime needs.'**
-  String get teamUiPhoneFailedUnsupportedArch;
-
-  /// On-device setup: download failure
-  ///
-  /// In en, this message translates to:
-  /// **'The download did not finish. Check the connection and try again.'**
-  String get teamUiPhoneFailedDownload;
-
-  /// On-device setup: download failed because the host name did not resolve
-  ///
-  /// In en, this message translates to:
-  /// **'The phone could not find the download server {host}. Check that the phone is online and that no private DNS or ad blocker is blocking it, then try again.'**
-  String teamUiPhoneFailedDownloadDns(String host);
-
-  /// On-device setup: download failed because the host could not be reached
-  ///
-  /// In en, this message translates to:
-  /// **'The phone could not reach the download server {host}. Check the connection, then try again; the download continues where it stopped.'**
-  String teamUiPhoneFailedDownloadConnect(String host);
-
-  /// On-device setup: download timed out
-  ///
-  /// In en, this message translates to:
-  /// **'The download server {host} took too long to answer. Try again on a steadier connection; the download continues where it stopped.'**
-  String teamUiPhoneFailedDownloadTimeout(String host);
-
-  /// On-device setup: download failed on TLS
-  ///
-  /// In en, this message translates to:
-  /// **'A secure connection to {host} could not be made. Check that the phone\'s date and time are right and that no proxy is in the way, then try again.'**
-  String teamUiPhoneFailedDownloadTls(String host);
-
-  /// On-device setup: download failed with an HTTP error status
-  ///
-  /// In en, this message translates to:
-  /// **'The download server {host} refused the file (HTTP {code}). Try again later; if it keeps happening, this app version\'s AI Team download is unavailable.'**
-  String teamUiPhoneFailedDownloadHttp(String host, String code);
-
-  /// On-device setup: download interrupted mid-file
-  ///
-  /// In en, this message translates to:
-  /// **'The connection to {host} broke off during the download. Try again; the download continues where it stopped.'**
-  String teamUiPhoneFailedDownloadInterrupted(String host);
-
-  /// On-device setup: downloaded file could not be written
-  ///
-  /// In en, this message translates to:
-  /// **'The download could not be saved on this phone. Free some space, then try again.'**
-  String get teamUiPhoneFailedDownloadWrite;
-
-  /// On-device setup: download failed for another reason
-  ///
-  /// In en, this message translates to:
-  /// **'The download from {host} failed (error {code}). Check the connection, then try again.'**
-  String teamUiPhoneFailedDownloadOther(String host, String code);
-
-  /// On-device setup: package install failure
-  ///
-  /// In en, this message translates to:
-  /// **'Ubuntu could not install the prerequisites (tmux, jq, lsof, procps). The output below says which.'**
-  String get teamUiPhoneFailedPackages;
-
-  /// On-device setup: project failure
-  ///
-  /// In en, this message translates to:
-  /// **'The project folder is missing or is not a git repository.'**
-  String get teamUiPhoneFailedProject;
-
-  /// On-device setup: gc init failure
-  ///
-  /// In en, this message translates to:
-  /// **'Gas City could not create the city. The output below says why.'**
-  String get teamUiPhoneFailedCity;
-
-  /// On-device setup: supervisor exited
-  ///
-  /// In en, this message translates to:
-  /// **'The supervisor stopped right after starting. The output below says why.'**
-  String get teamUiPhoneFailedSupervisorExited;
-
-  /// On-device setup: health timeout failure
-  ///
-  /// In en, this message translates to:
-  /// **'The supervisor started but never answered on {url}.'**
-  String teamUiPhoneFailedHealth(String url);
-
-  /// On-device setup: interrupted failure
-  ///
-  /// In en, this message translates to:
-  /// **'The setup stopped before it finished. Android may have stopped Termux while the app was away; nothing is lost.'**
-  String get teamUiPhoneFailedInterrupted;
-
-  /// On-device setup: raw failure reason
-  ///
-  /// In en, this message translates to:
-  /// **'Reason: {reason}'**
-  String teamUiPhoneFailedReason(String reason);
-
-  /// On-device setup: the bridge could not dispatch a verb
-  ///
-  /// In en, this message translates to:
-  /// **'Termux did not start the step. Open Termux once, then try again.'**
-  String get teamUiPhoneDispatchFailed;
-
-  /// Settings › Plugins › AI Team: section title for the phone-hosted team
-  ///
-  /// In en, this message translates to:
-  /// **'On this phone'**
-  String get teamUiPhoneSectionTitle;
-
-  /// On this phone: status while reading
-  ///
-  /// In en, this message translates to:
-  /// **'Checking…'**
-  String get teamUiPhoneStatusChecking;
-
-  /// On this phone: status
-  ///
-  /// In en, this message translates to:
-  /// **'Not installed'**
-  String get teamUiPhoneStatusNotInstalled;
-
-  /// On this phone: status after install, before init
-  ///
-  /// In en, this message translates to:
-  /// **'Installed · no city yet'**
-  String get teamUiPhoneStatusInstalled;
-
-  /// On this phone: status
-  ///
-  /// In en, this message translates to:
-  /// **'Stopped'**
-  String get teamUiPhoneStatusStopped;
-
-  /// On this phone: status
-  ///
-  /// In en, this message translates to:
-  /// **'Starting…'**
-  String get teamUiPhoneStatusStarting;
-
-  /// On this phone: status
-  ///
-  /// In en, this message translates to:
-  /// **'Stopping…'**
-  String get teamUiPhoneStatusStopping;
-
-  /// On this phone: a verb is running
-  ///
-  /// In en, this message translates to:
-  /// **'Working… ({verb})'**
-  String teamUiPhoneStatusWorking(String verb);
-
-  /// On this phone: running status with the agent count
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =0{Running} =1{Running · 1 agent} other{Running · {count} agents}}'**
-  String teamUiPhoneStatusRunning(int count);
-
-  /// On this phone: status after a failure
-  ///
-  /// In en, this message translates to:
-  /// **'Not running · the last step failed'**
-  String get teamUiPhoneStatusFailed;
-
-  /// On this phone: the supervisor process is up but its health check fails
-  ///
-  /// In en, this message translates to:
-  /// **'Started, but not answering on {url}'**
-  String teamUiPhoneStatusUnreachable(String url);
-
-  /// On this phone: status unreadable
-  ///
-  /// In en, this message translates to:
-  /// **'Status could not be read'**
-  String get teamUiPhoneStatusUnknown;
-
-  /// On this phone: installed versions line
-  ///
-  /// In en, this message translates to:
-  /// **'gc {gc} · bd {bd} · dolt {dolt}'**
-  String teamUiPhoneVersions(String gc, String bd, String dolt);
-
-  /// On this phone: stop confirmation title
-  ///
-  /// In en, this message translates to:
-  /// **'Stop the team on this phone?'**
-  String get teamUiPhoneStopTitle;
-
-  /// On this phone: stop confirmation body
-  ///
-  /// In en, this message translates to:
-  /// **'Running agents stop where they are. Nothing is lost; runs resume when you start it again.'**
-  String get teamUiPhoneStopBody;
-
-  /// On this phone: killed by Android line (03-onboarding §5)
-  ///
-  /// In en, this message translates to:
-  /// **'Android stopped the team while the app was away. Nothing is lost.'**
-  String get teamUiPhoneKilled;
-
-  /// On this phone: tips row title
-  ///
-  /// In en, this message translates to:
-  /// **'Keep it running'**
-  String get teamUiPhoneKeepRunningTitle;
-
-  /// Settings › Plugins › On this phone: what the Keep it running row is for
-  ///
-  /// In en, this message translates to:
-  /// **'Stop Android from closing the team in the background'**
-  String get teamUiPhoneKeepRunningSubtitle;
-
-  /// Keep it running sheet: intro
-  ///
-  /// In en, this message translates to:
-  /// **'Android stops background work it considers excessive, and the team is exactly that: dozens of short gc and bd processes and an agent at full CPU. Three things keep it alive.'**
-  String get teamUiPhoneTipsIntro;
-
-  /// Keep it running sheet: wake lock tip
-  ///
-  /// In en, this message translates to:
-  /// **'Keep Termux in front, or hold its wake lock: run termux-wake-lock in Termux, or tap Acquire wakelock in its notification. Screen off without it ends the run.'**
-  String get teamUiPhoneTipWakeLock;
-
-  /// Keep it running sheet: battery tip
-  ///
-  /// In en, this message translates to:
-  /// **'Settings › Apps › Termux › Battery › Unrestricted, and switch off your phone maker\'s auto-clean for Termux.'**
-  String get teamUiPhoneTipBattery;
-
-  /// Keep it running sheet: phantom process killer tip
-  ///
-  /// In en, this message translates to:
-  /// **'Android 12 and later still kill the child processes of a background app (the phantom process killer). Turn that off once, from Termux itself over Wireless debugging; no computer needed:'**
-  String get teamUiPhoneTipPhantom;
-
-  /// Keep it running sheet: copy the ADB commands
-  ///
-  /// In en, this message translates to:
-  /// **'Copy commands'**
-  String get teamUiPhoneTipsCopy;
-
-  /// On this phone: remove confirmation title
-  ///
-  /// In en, this message translates to:
-  /// **'Delete AI Team from this phone?'**
-  String get teamUiPhoneRemoveTitle;
-
-  /// On this phone: a verb failed
-  ///
-  /// In en, this message translates to:
-  /// **'That did not work: {reason}'**
-  String teamUiPhoneActionFailed(String reason);
-
-  /// On this phone: unavailable copy (03-onboarding §5)
-  ///
-  /// In en, this message translates to:
-  /// **'Not available on this phone. Running a team needs the 64-bit Linux environment; this device or build can\'t provide it.'**
-  String get teamUiPhoneNotAvailable;
-
-  /// On-device setup: the runtime refused to install or create the city for lack of free space
-  ///
-  /// In en, this message translates to:
-  /// **'Not enough space on this phone. {detail} Free some space (Storage on this phone can clean build caches), then try again.'**
-  String teamUiPhoneFailedNoSpace(String detail);
-
-  /// No description provided for @phoneServerConnect.
-  ///
-  /// In en, this message translates to:
-  /// **'Connect'**
-  String get phoneServerConnect;
-
-  /// No description provided for @phoneServerOpen.
-  ///
-  /// In en, this message translates to:
-  /// **'Open'**
-  String get phoneServerOpen;
-
   /// No description provided for @phoneServerStart.
   ///
   /// In en, this message translates to:
   /// **'Start'**
   String get phoneServerStart;
 
-  /// No description provided for @phoneServerStop.
-  ///
-  /// In en, this message translates to:
-  /// **'Stop'**
-  String get phoneServerStop;
-
-  /// No description provided for @phoneServerMore.
-  ///
-  /// In en, this message translates to:
-  /// **'More server actions'**
-  String get phoneServerMore;
-
-  /// No description provided for @phoneServerForget.
-  ///
-  /// In en, this message translates to:
-  /// **'Forget saved sign-in'**
-  String get phoneServerForget;
-
-  /// No description provided for @phoneServerStartFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'The server did not start. Open Manage setup to see why.'**
-  String get phoneServerStartFailed;
-
   /// No description provided for @phoneServerRestartFailed.
   ///
   /// In en, this message translates to:
   /// **'The server did not restart. Open Manage setup to see why.'**
   String get phoneServerRestartFailed;
-
-  /// No description provided for @phoneServerStopFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'The server could not be stopped. Try again.'**
-  String get phoneServerStopFailed;
-
-  /// No description provided for @termuxStorageCatSharedCaches.
-  ///
-  /// In en, this message translates to:
-  /// **'Other caches and package data'**
-  String get termuxStorageCatSharedCaches;
-
-  /// No description provided for @termuxStorageNoteSharedCaches.
-  ///
-  /// In en, this message translates to:
-  /// **'Shared caches, package installs and download folders may support other tools or contain files worth keeping. They cannot be removed here.'**
-  String get termuxStorageNoteSharedCaches;
-
-  /// No description provided for @termuxStorageRescanRequired.
-  ///
-  /// In en, this message translates to:
-  /// **'Previous scan · Scan again before cleaning more'**
-  String get termuxStorageRescanRequired;
 
   /// Title of the confirmation shown before a shared session link is revoked.
   ///
@@ -16461,12 +15279,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Stay connected'**
   String get safetyMcpDisconnectKeep;
-
-  /// Body of the confirmation shown before an orphaned helper process is stopped.
-  ///
-  /// In en, this message translates to:
-  /// **'Nothing is waiting on it, but whatever it was still doing is lost. It gets a polite stop, then a forced one after 5 seconds.'**
-  String get safetyStopOrphanBody;
 
   /// Settings hub group header.
   ///
@@ -16531,7 +15343,7 @@ abstract class AppLocalizations {
   /// Search aliases for the On this phone row; preserve English terms.
   ///
   /// In en, this message translates to:
-  /// **'phone termux local on-device on device android install setup storage services'**
+  /// **'phone local on-device on device android install setup storage services linux'**
   String get settingsHubSearchPhoneAliases;
 
   /// Search aliases for the Accounts row; preserve English terms.
@@ -16948,18 +15760,6 @@ abstract class AppLocalizations {
   /// **'references reference docs sources context'**
   String get discoverReferencesAliases;
 
-  /// No description provided for @discoverRunningNowAliases.
-  ///
-  /// In en, this message translates to:
-  /// **'running now running on this phone processes termux services stop busy memory background'**
-  String get discoverRunningNowAliases;
-
-  /// No description provided for @discoverStorageAliases.
-  ///
-  /// In en, this message translates to:
-  /// **'storage on this phone disk space clean termux'**
-  String get discoverStorageAliases;
-
   /// No description provided for @discoverMonitorAliases.
   ///
   /// In en, this message translates to:
@@ -17131,7 +15931,7 @@ abstract class AppLocalizations {
   /// No description provided for @capabilityCompact.
   ///
   /// In en, this message translates to:
-  /// **'Shorten'**
+  /// **'Compact'**
   String get capabilityCompact;
 
   /// No description provided for @capabilityCompactDetail.
@@ -17461,7 +16261,7 @@ abstract class AppLocalizations {
   /// One-time tip above the composer when the conversation uses most of the model's context window. Its button compacts the conversation.
   ///
   /// In en, this message translates to:
-  /// **'The context is {percent}% full: shorten the conversation to keep going.'**
+  /// **'The context is {percent}% full: compact to keep going.'**
   String nudgeCompact(String percent);
 
   /// Tooltip of the close button on a one-time tip card.
@@ -17578,318 +16378,6 @@ abstract class AppLocalizations {
   /// **'Claude Code on this phone'**
   String get localAgentTitle;
 
-  /// Claude Code block, offer: what setting it up does.
-  ///
-  /// In en, this message translates to:
-  /// **'Run Claude Code here with no computer. The app installs Node.js, the Paseo daemon and Claude Code into the Ubuntu it already manages, and reaches them on this phone only.'**
-  String get localAgentOfferBody;
-
-  /// Claude Code block, offer: honest download and disk size.
-  ///
-  /// In en, this message translates to:
-  /// **'About 60 MB to download for Node.js, plus the packages; about 1 GB once installed. Needs 2 GB free.'**
-  String get localAgentOfferSize;
-
-  /// Claude Code block, offer: the background-kill caveat.
-  ///
-  /// In en, this message translates to:
-  /// **'Android may stop Termux in the background. The battery settings that keep the OpenCode server alive keep this alive too.'**
-  String get localAgentOfferWarning;
-
-  /// Claude Code block, offer: starts the install.
-  ///
-  /// In en, this message translates to:
-  /// **'Set up Claude Code'**
-  String get localAgentSetUp;
-
-  /// Claude Code block, offer: hides the offer.
-  ///
-  /// In en, this message translates to:
-  /// **'Not now'**
-  String get localAgentNotNow;
-
-  /// Claude Code block: shown when the managed Ubuntu is missing.
-  ///
-  /// In en, this message translates to:
-  /// **'Claude Code runs in On this phone. Finish the On this phone setup first, then come back here.'**
-  String get localAgentNeedsUbuntuBody;
-
-  /// Claude Code block: opens the On this phone wizard when Ubuntu is missing.
-  ///
-  /// In en, this message translates to:
-  /// **'Open phone setup'**
-  String get localAgentOpenSetup;
-
-  /// Claude Code block: shown when the in-app Linux is already installed but Termux, which Claude Code needs, is not.
-  ///
-  /// In en, this message translates to:
-  /// **'Claude Code needs Termux for now; On this phone does not run it yet. Set up Termux to use it here.'**
-  String get localAgentNeedsTermuxBody;
-
-  /// Claude Code block: opens the Termux setup wizard when only the in-app Linux exists.
-  ///
-  /// In en, this message translates to:
-  /// **'Set up with Termux'**
-  String get localAgentSetUpWithTermux;
-
-  /// Claude Code block, step list: installing the pinned Node.js.
-  ///
-  /// In en, this message translates to:
-  /// **'Node.js'**
-  String get localAgentStepNode;
-
-  /// Claude Code block, step list: installing the Paseo daemon.
-  ///
-  /// In en, this message translates to:
-  /// **'Paseo daemon'**
-  String get localAgentStepPaseo;
-
-  /// Claude Code block, step list: installing Claude Code.
-  ///
-  /// In en, this message translates to:
-  /// **'Claude Code'**
-  String get localAgentStepClaude;
-
-  /// Claude Code block, step list and button: the person's own sign-in.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign in to Claude'**
-  String get localAgentStepSignIn;
-
-  /// Claude Code block, step list: starting the daemon.
-  ///
-  /// In en, this message translates to:
-  /// **'Start on this phone'**
-  String get localAgentStepStart;
-
-  /// Claude Code block: heading while install or start runs.
-  ///
-  /// In en, this message translates to:
-  /// **'Setting up Claude Code'**
-  String get localAgentInstalling;
-
-  /// Claude Code block: reassurance under the live output.
-  ///
-  /// In en, this message translates to:
-  /// **'You can leave this screen. The install keeps going in Termux.'**
-  String get localAgentLeaveNote;
-
-  /// Claude Code block, sign-in step: what will happen.
-  ///
-  /// In en, this message translates to:
-  /// **'Termux opens and Claude Code shows a link. Approve it in your browser, paste the code back into Termux, then return here. This app never sees or stores your Claude sign-in.'**
-  String get localAgentSignInBody;
-
-  /// Claude Code block, sign-in step: continues when the app cannot see a sign-in the person knows exists.
-  ///
-  /// In en, this message translates to:
-  /// **'I already signed in'**
-  String get localAgentSignInAlready;
-
-  /// Claude Code block, sign-in step: fallback when the terminal did not open.
-  ///
-  /// In en, this message translates to:
-  /// **'Termux could not be opened. Open Termux yourself and run: {command}'**
-  String localAgentSignInOpenFailed(String command);
-
-  /// Claude Code block, sign-in step: shown after returning without a saved sign-in.
-  ///
-  /// In en, this message translates to:
-  /// **'No Claude sign-in was found yet.'**
-  String get localAgentSignInMissing;
-
-  /// Claude Code block and card: the daemon answered its health check.
-  ///
-  /// In en, this message translates to:
-  /// **'Claude Code is running on this phone'**
-  String get localAgentReadyTitle;
-
-  /// Claude Code block, ready: the loopback and password guarantee.
-  ///
-  /// In en, this message translates to:
-  /// **'It listens on this phone only (127.0.0.1), behind a password this app keeps.'**
-  String get localAgentReadyBody;
-
-  /// Claude Code block and card: installed versions.
-  ///
-  /// In en, this message translates to:
-  /// **'Claude Code {claude} · Paseo {paseo} · Node.js {node}'**
-  String localAgentVersions(String claude, String paseo, String node);
-
-  /// Claude Code block: installed, daemon not running.
-  ///
-  /// In en, this message translates to:
-  /// **'Claude Code is installed and stopped'**
-  String get localAgentInstalledTitle;
-
-  /// Claude Code block: the daemon was killed in the background.
-  ///
-  /// In en, this message translates to:
-  /// **'Android stopped Claude Code while the app was away. Nothing is lost.'**
-  String get localAgentKilled;
-
-  /// Claude Code block: heading of the failure view.
-  ///
-  /// In en, this message translates to:
-  /// **'Claude Code setup stopped'**
-  String get localAgentFailedTitle;
-
-  /// Claude Code block: the free-space guard refused.
-  ///
-  /// In en, this message translates to:
-  /// **'Not enough space on this phone. {detail} Free some space, then try again.'**
-  String localAgentFailedNoSpace(String detail);
-
-  /// Claude Code block: download failure.
-  ///
-  /// In en, this message translates to:
-  /// **'Node.js could not be downloaded. Check the network, then try again.'**
-  String get localAgentFailedDownload;
-
-  /// Claude Code block: checksum refusal.
-  ///
-  /// In en, this message translates to:
-  /// **'The Node.js download did not match its pinned checksum, so nothing was installed. Try again; if it happens twice, something on the network is changing the file.'**
-  String get localAgentFailedChecksum;
-
-  /// Claude Code block: npm reported a native build failure.
-  ///
-  /// In en, this message translates to:
-  /// **'A package needs a native module with no ready-made build for this phone. Nothing was compiled; the output below names it.'**
-  String get localAgentFailedNativeBuild;
-
-  /// Claude Code block: npm failed for another reason.
-  ///
-  /// In en, this message translates to:
-  /// **'The packages could not be installed. Check the network, then try again.'**
-  String get localAgentFailedPackages;
-
-  /// Claude Code block: the daemon port is taken by something else.
-  ///
-  /// In en, this message translates to:
-  /// **'Port 6767 on this phone is already used by another program. Stop that program, then try again.'**
-  String get localAgentFailedPortInUse;
-
-  /// Claude Code block: health check timed out.
-  ///
-  /// In en, this message translates to:
-  /// **'Claude Code did not answer within two minutes. The output below shows what it printed.'**
-  String get localAgentFailedTimeout;
-
-  /// Claude Code block: a verb was killed mid-way.
-  ///
-  /// In en, this message translates to:
-  /// **'Android stopped the step before it finished. Try again; it picks up where it stopped.'**
-  String get localAgentFailedInterrupted;
-
-  /// Claude Code block: unsupported CPU.
-  ///
-  /// In en, this message translates to:
-  /// **'Claude Code needs a 64-bit phone.'**
-  String get localAgentFailedUnsupported;
-
-  /// Claude Code block and card: the daemon exited or is unhealthy.
-  ///
-  /// In en, this message translates to:
-  /// **'Claude Code stopped or does not answer. Start it again.'**
-  String get localAgentFailedDaemon;
-
-  /// Claude Code block: any other failure, with the script's own sentence.
-  ///
-  /// In en, this message translates to:
-  /// **'It stopped: {detail}'**
-  String localAgentFailedReason(String detail);
-
-  /// Claude Code connect: title of the folder chooser.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose a project folder'**
-  String get localAgentProjectTitle;
-
-  /// Claude Code connect: what the folder is for.
-  ///
-  /// In en, this message translates to:
-  /// **'Claude Code works inside one project folder on this phone.'**
-  String get localAgentProjectBody;
-
-  /// Claude Code connect: free path field.
-  ///
-  /// In en, this message translates to:
-  /// **'Or type a path inside Ubuntu'**
-  String get localAgentProjectPathLabel;
-
-  /// Claude Code connect: the typed path is not absolute.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter a full path, like /root/projects/my-app.'**
-  String get localAgentProjectPathInvalid;
-
-  /// Claude Code connect: the connection attempt failed.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not connect to Claude Code on this phone. {detail}'**
-  String localAgentConnectFailed(String detail);
-
-  /// Servers card: a control failed.
-  ///
-  /// In en, this message translates to:
-  /// **'That did not work. {detail}'**
-  String localAgentCardActionFailed(String detail);
-
-  /// Confirm sheet: restarting the daemon.
-  ///
-  /// In en, this message translates to:
-  /// **'Restart Claude Code on this phone?'**
-  String get localAgentRestartTitle;
-
-  /// Confirm sheet: what restarting the daemon costs.
-  ///
-  /// In en, this message translates to:
-  /// **'Claude Code is briefly unavailable and anything it is doing right now is interrupted. Your conversations stay on the phone.'**
-  String get localAgentRestartBody;
-
-  /// Confirm sheet: stopping the daemon.
-  ///
-  /// In en, this message translates to:
-  /// **'Stop Claude Code on this phone?'**
-  String get localAgentStopTitle;
-
-  /// Confirm sheet: what stopping the daemon costs.
-  ///
-  /// In en, this message translates to:
-  /// **'Anything Claude Code is doing on this phone is interrupted, and this app disconnects from it. Your projects, conversations and Claude sign-in stay; start it again to continue.'**
-  String get localAgentStopBody;
-
-  /// Claude Code block: menu action that uninstalls it.
-  ///
-  /// In en, this message translates to:
-  /// **'Remove from this phone'**
-  String get localAgentRemove;
-
-  /// Confirm sheet: removing the install.
-  ///
-  /// In en, this message translates to:
-  /// **'Remove Claude Code from this phone?'**
-  String get localAgentRemoveTitle;
-
-  /// Confirm sheet: what removing deletes and keeps.
-  ///
-  /// In en, this message translates to:
-  /// **'Stops it and deletes Node.js, Paseo and Claude Code from Ubuntu, about 1 GB. Your projects and your Claude sign-in stay.'**
-  String get localAgentRemoveBody;
-
-  /// Confirm sheet: cancels the removal.
-  ///
-  /// In en, this message translates to:
-  /// **'Keep it'**
-  String get localAgentRemoveKeep;
-
-  /// Claude Code block: tooltip of the overflow menu.
-  ///
-  /// In en, this message translates to:
-  /// **'More Claude Code actions'**
-  String get localAgentMore;
-
   /// No description provided for @firstRunAgentsSideBySide.
   ///
   /// In en, this message translates to:
@@ -17947,7 +16435,7 @@ abstract class AppLocalizations {
   /// What to do when a request is too large
   ///
   /// In en, this message translates to:
-  /// **'Send fewer or smaller attachments, or shorten the conversation, then try again.'**
+  /// **'Send fewer or smaller attachments, or compact the conversation, then try again.'**
   String get agentErrorRequestTooLargeHint;
 
   /// Plain-language error headline: rate limit
@@ -18031,7 +16519,7 @@ abstract class AppLocalizations {
   /// Button on a failed compaction notice that retries the compaction
   ///
   /// In en, this message translates to:
-  /// **'Shorten again'**
+  /// **'Compact again'**
   String get chatUiCompactAgain;
 
   /// What a failed compaction means for the reader, shown before the server's reason
@@ -18190,24 +16678,6 @@ abstract class AppLocalizations {
   /// **'{name} attached as text · {sheets, plural, =1{1 sheet} other{{sheets} sheets}}, {rows, plural, =1{1 row} other{{rows} rows}}'**
   String chatAttachmentSheetAttached(String name, int sheets, int rows);
 
-  /// Menu item: reinstall Paseo and Claude Code at their current versions, keeping sign-in
-  ///
-  /// In en, this message translates to:
-  /// **'Update Claude Code'**
-  String get localAgentUpdate;
-
-  /// Shown when the installed Paseo daemon is older than the app's pinned version
-  ///
-  /// In en, this message translates to:
-  /// **'An update adds the newest Claude models, such as Opus 5.5.'**
-  String get localAgentUpdateAvailable;
-
-  /// Button that updates Claude Code and Paseo on the phone
-  ///
-  /// In en, this message translates to:
-  /// **'Update'**
-  String get localAgentUpdateNow;
-
   /// Small label after a model's name in the model picker when it was released in the last 30 days
   ///
   /// In en, this message translates to:
@@ -18261,18 +16731,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The phone restarted, so the local server stopped. Start it again when you need it.'**
   String get setupStoppedByRestart;
-
-  /// Title when the app-managed phone server is not running
-  ///
-  /// In en, this message translates to:
-  /// **'The server on this phone is stopped'**
-  String get phoneServerStoppedTitle;
-
-  /// Explanation when the app-managed phone server is not running
-  ///
-  /// In en, this message translates to:
-  /// **'It stops when the phone restarts or Android closes Termux to save battery. Your conversations are kept; start it again to continue.'**
-  String get phoneServerStoppedBody;
 
   /// Button that starts the phone server and connects to it
   ///
@@ -18423,30 +16881,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Setting up OpenCode on this phone'**
   String get phoneSetupProgressTitle;
-
-  /// Title of the confirmation before cancelling phone setup
-  ///
-  /// In en, this message translates to:
-  /// **'Stop setup?'**
-  String get phoneSetupProgressStopTitle;
-
-  /// Body of the confirmation before cancelling phone setup
-  ///
-  /// In en, this message translates to:
-  /// **'What\'s finished stays installed.'**
-  String get phoneSetupProgressStopMessage;
-
-  /// Confirms cancelling phone setup
-  ///
-  /// In en, this message translates to:
-  /// **'Stop setup'**
-  String get phoneSetupProgressStopConfirm;
-
-  /// Dismisses the cancel confirmation and lets phone setup continue
-  ///
-  /// In en, this message translates to:
-  /// **'Keep going'**
-  String get phoneSetupProgressKeepGoing;
 
   /// Label for the managed OpenCode runtime
   ///
@@ -19162,23 +17596,11 @@ abstract class AppLocalizations {
   /// **'Other ways'**
   String get phoneSetupStartOtherWays;
 
-  /// Opens the Termux-based setup
-  ///
-  /// In en, this message translates to:
-  /// **'Use Termux instead'**
-  String get phoneSetupStartUseTermux;
-
   /// Opens the form for connecting to an agent running elsewhere
   ///
   /// In en, this message translates to:
   /// **'Connect to a computer by address'**
   String get phoneSetupStartByAddress;
-
-  /// Under Other ways when Termux already runs OpenCode: set up the in-app one anyway
-  ///
-  /// In en, this message translates to:
-  /// **'Set it up in this app instead'**
-  String get phoneSetupStartSetUpHere;
 
   /// Headline while a setup is running or was stopped part way
   ///
@@ -19221,24 +17643,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open'**
   String get phoneSetupStartOpen;
-
-  /// Headline when a Termux-managed OpenCode was found on this phone
-  ///
-  /// In en, this message translates to:
-  /// **'OpenCode is already set up in Termux'**
-  String get phoneSetupStartTermuxHeadline;
-
-  /// Under the Termux headline
-  ///
-  /// In en, this message translates to:
-  /// **'You set it up with Termux before. Connect to keep using it.'**
-  String get phoneSetupStartTermuxBody;
-
-  /// Connects to the Termux-managed OpenCode
-  ///
-  /// In en, this message translates to:
-  /// **'Connect'**
-  String get phoneSetupStartConnect;
 
   /// Inline message when starting setup or opening the agent failed
   ///
@@ -19798,18 +18202,6 @@ abstract class AppLocalizations {
   /// **'A running agent turn will stop. Your conversations are kept.'**
   String get workServerRestartBody;
 
-  /// Status line: a leftover process on the phone keeps using the CPU
-  ///
-  /// In en, this message translates to:
-  /// **'OpenCode has been busy for {duration} with nothing to do'**
-  String workRunaway(String duration);
-
-  /// Status line: a leftover process in a project folder keeps using the CPU
-  ///
-  /// In en, this message translates to:
-  /// **'OpenCode has been busy in {project} for {duration} with nothing to do'**
-  String workRunawayInProject(String project, String duration);
-
   /// Connecting screen title while the phone's own server starts
   ///
   /// In en, this message translates to:
@@ -20014,59 +18406,11 @@ abstract class AppLocalizations {
   /// **'Connected'**
   String get serverRowConnected;
 
-  /// The phone server row's one line: what it runs and where it stands, e.g. 'OpenCode 2 · Running'
-  ///
-  /// In en, this message translates to:
-  /// **'{runtime} · {state}'**
-  String phoneServerRowStatus(String runtime, String state);
-
-  /// State of the server on this phone while it restarts
-  ///
-  /// In en, this message translates to:
-  /// **'Restarting'**
-  String get phoneServerRowRestarting;
-
-  /// State of a server on this phone when the app could not reach it
-  ///
-  /// In en, this message translates to:
-  /// **'Not answering'**
-  String get phoneServerRowNotAnswering;
-
-  /// State of a saved server on this phone that is not set up or not ready
-  ///
-  /// In en, this message translates to:
-  /// **'Not running'**
-  String get phoneServerRowNotRunning;
-
-  /// Menu entry that opens a server's or plugin's details
-  ///
-  /// In en, this message translates to:
-  /// **'Details'**
-  String get phoneServerRowDetails;
-
-  /// Supporting line of the Claude Code row on the On this phone page
-  ///
-  /// In en, this message translates to:
-  /// **'Optional'**
-  String get localAgentRowOptional;
-
   /// Title of the page for Claude Code on this phone
   ///
   /// In en, this message translates to:
   /// **'Claude Code'**
   String get localAgentPageTitle;
-
-  /// Switch that lets the app restart the phone server after it crashes
-  ///
-  /// In en, this message translates to:
-  /// **'Restart after a crash'**
-  String get managedRecoveryRowTitle;
-
-  /// What the restart-after-a-crash switch does
-  ///
-  /// In en, this message translates to:
-  /// **'Up to 3 tries, only while this app is open. It never installs or updates.'**
-  String get managedRecoveryRowDetail;
 
   /// AI Team row line when a team was found on the server
   ///
@@ -20259,12 +18603,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Terminal on this phone. Tap to type; touch and hold to select text.'**
   String get localTerminalSemantics;
-
-  /// Name of the OpenCode server this app runs in Termux (Servers row, switcher, Work tab header); the app's built-in server is plain "This phone"
-  ///
-  /// In en, this message translates to:
-  /// **'Termux'**
-  String get phoneServerTermuxTitle;
 
   /// All conversations: title of the state when the list could not load; the reason is under it
   ///
@@ -20530,12 +18868,6 @@ abstract class AppLocalizations {
   /// **'Installed once, next to OpenCode on this phone.'**
   String get teamDiscoverInAppDownloadBody;
 
-  /// AI Team intro, OpenCode in Termux: where the download goes
-  ///
-  /// In en, this message translates to:
-  /// **'Installed into Termux, next to OpenCode.'**
-  String get teamDiscoverTermuxDownloadBody;
-
   /// AI Team intro: the battery row's title
   ///
   /// In en, this message translates to:
@@ -20547,12 +18879,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Several agents run at once, and Android may stop some if it runs too many.'**
   String get teamDiscoverInAppBatteryBody;
-
-  /// AI Team intro, OpenCode in Termux: why it costs battery
-  ///
-  /// In en, this message translates to:
-  /// **'Keep Termux open while it works; Android may stop it in the background. Nothing is lost.'**
-  String get teamDiscoverTermuxBatteryBody;
 
   /// AI Team intro, on this phone: the per-project row's title
   ///
@@ -23686,30 +22012,6 @@ abstract class AppLocalizations {
   /// **'Run agents right on this phone. Set it up?'**
   String get kitCapPhoneBuiltinOffer;
 
-  /// KitCapabilityExplainer: the name of the capability "phone.termux", shown as the title of the dimmed row or the missing state
-  ///
-  /// In en, this message translates to:
-  /// **'Server in Termux'**
-  String get kitCapPhoneTermuxTitle;
-
-  /// KitCapabilityExplainer: why the capability "phone.termux" is missing, in one sentence (the dimmed row's supporting line and the missing state's body)
-  ///
-  /// In en, this message translates to:
-  /// **'Needs Termux on this phone.'**
-  String get kitCapPhoneTermuxWhy;
-
-  /// KitCapabilityExplainer: the button that starts the flow turning "phone.termux" on (a verb, COPY-8)
-  ///
-  /// In en, this message translates to:
-  /// **'Set up with Termux'**
-  String get kitCapPhoneTermuxEnable;
-
-  /// KitCapabilityExplainer: the one-sentence turn-on offer for "phone.termux" at the moment of need, beside its button and "Not now"
-  ///
-  /// In en, this message translates to:
-  /// **'Run this phone\'s server in Termux instead?'**
-  String get kitCapPhoneTermuxOffer;
-
   /// KitCapabilityExplainer: the name of the capability "phone.any", shown as the title of the dimmed row or the missing state
   ///
   /// In en, this message translates to:
@@ -23815,7 +22117,7 @@ abstract class AppLocalizations {
   /// KitCapabilityExplainer: why the capability "claude.local" is missing, in one sentence (the dimmed row's supporting line and the missing state's body)
   ///
   /// In en, this message translates to:
-  /// **'Needs Termux on this phone and a Claude subscription.'**
+  /// **'Needs built-in Linux on this phone and a Claude subscription.'**
   String get kitCapClaudeLocalWhy;
 
   /// KitCapabilityExplainer: the button that starts the flow turning "claude.local" on (a verb, COPY-8)
@@ -24211,12 +22513,6 @@ abstract class AppLocalizations {
   /// KitCapabilityExplainer: a place a capability can run, read after "on" ("isn't available on …", "Works on …")
   ///
   /// In en, this message translates to:
-  /// **'Termux'**
-  String get kitHostTermux;
-
-  /// KitCapabilityExplainer: a place a capability can run, read after "on" ("isn't available on …", "Works on …")
-  ///
-  /// In en, this message translates to:
   /// **'computers with OpenCode 2'**
   String get kitHostOpenCode2;
 
@@ -24301,13 +22597,13 @@ abstract class AppLocalizations {
   /// Search: why Claude Code on this phone is unavailable on a phone without the Termux bridge, and where it is available
   ///
   /// In en, this message translates to:
-  /// **'Claude Code runs on a phone only through Termux, which this device doesn\'t have. Run it on a computer with Paseo and add that computer as a server.'**
+  /// **'Claude Code runs on a phone only in the app\'s built-in Linux, which this device doesn\'t have. Run it on a computer with Paseo and add that computer as a server.'**
   String get searchClaudeCodeGateDevice;
 
   /// Search on a desktop: why Claude Code on this phone is not here, and where Claude Code is available instead
   ///
   /// In en, this message translates to:
-  /// **'Claude Code on this phone is for Android phones with Termux. On a computer, run Claude Code with Paseo and add it as a server.'**
+  /// **'Claude Code on this phone is for Android phones with built-in Linux. On a computer, run Claude Code with Paseo and add it as a server.'**
   String get searchClaudeCodeGateDesktop;
 
   /// Search: the action of the Claude Code explanation; opens the servers list where a Paseo server is added
@@ -25148,30 +23444,6 @@ abstract class AppLocalizations {
   /// **'Server actions'**
   String get serverSwitcherCurrentMenu;
 
-  /// Claude Code on this phone row: state word when Start or Restart has run for more than 8 seconds.
-  ///
-  /// In en, this message translates to:
-  /// **'Still starting · this can take a minute'**
-  String get localAgentEntryStillStarting;
-
-  /// Claude Code on this phone row: state word when the last start failed; the reason is shown under the row and a tap starts it again.
-  ///
-  /// In en, this message translates to:
-  /// **'Didn\'t start'**
-  String get localAgentEntryDidNotStart;
-
-  /// Claude Code on this phone row: state word while Node.js, Paseo and Claude Code are being removed from the phone.
-  ///
-  /// In en, this message translates to:
-  /// **'Removing'**
-  String get localAgentEntryRemoving;
-
-  /// Claude Code on this phone row: the state word followed by a note that Claude Code is not signed in; the row's menu offers Sign in to Claude.
-  ///
-  /// In en, this message translates to:
-  /// **'{state} · Not signed in to Claude'**
-  String localAgentEntrySignedOut(String state);
-
   /// Form sheet: why Dismiss cannot be pressed while the answers are being sent
   ///
   /// In en, this message translates to:
@@ -25622,24 +23894,6 @@ abstract class AppLocalizations {
   /// **'Cloud environment ID'**
   String get importEnvironmentId;
 
-  /// Phone setup screen A, Other ways, when OpenCode is ready in the app and also set up in Termux: connect to the Termux one instead.
-  ///
-  /// In en, this message translates to:
-  /// **'Use the one in Termux'**
-  String get phoneSetupStartUseTermuxOne;
-
-  /// Phone setup screen A, Other ways: the supporting line of "Use the one in Termux".
-  ///
-  /// In en, this message translates to:
-  /// **'OpenCode is also set up in Termux. Connect to it instead.'**
-  String get phoneSetupStartUseTermuxOneDetail;
-
-  /// Phone setup screen A, Other ways: supporting line of "Use Termux instead" when Termux is installed but has not granted the run-command permission.
-  ///
-  /// In en, this message translates to:
-  /// **'Termux is installed but hasn\'t let this app in yet. Finish its setup.'**
-  String get phoneSetupStartTermuxNotAllowed;
-
   /// Add tools sheet: every optional tool is installed, so there is nothing to add.
   ///
   /// In en, this message translates to:
@@ -25652,35 +23906,11 @@ abstract class AppLocalizations {
   /// **'Required'**
   String get phoneSetupCustomizeIncluded;
 
-  /// Running now: title when the process list could not be read
-  ///
-  /// In en, this message translates to:
-  /// **'Couldn\'t read what\'s running'**
-  String get termuxProcsLoadFailedTitle;
-
-  /// Running now: body of the empty state
-  ///
-  /// In en, this message translates to:
-  /// **'When OpenCode, the AI Team or a build runs here, it shows up in this list.'**
-  String get termuxProcsEmptyBody;
-
-  /// Running now: title of the result when some processes did not stop
-  ///
-  /// In en, this message translates to:
-  /// **'Not everything stopped'**
-  String get termuxProcsNotStoppedTitle;
-
   /// Copies a process's command line
   ///
   /// In en, this message translates to:
   /// **'Copy command'**
   String get termuxProcsCopyCommand;
-
-  /// Opens the phone server controls for a protected process
-  ///
-  /// In en, this message translates to:
-  /// **'Open This phone'**
-  String get termuxProcsOpenControls;
 
   /// Details label for a process's ID
   ///
@@ -25694,59 +23924,11 @@ abstract class AppLocalizations {
   /// **'Parent process ID'**
   String get termuxProcsParentId;
 
-  /// Process details: what a process in the OpenCode server group is
-  ///
-  /// In en, this message translates to:
-  /// **'Part of the OpenCode server on this phone.'**
-  String get termuxProcsAboutOpenCode;
-
-  /// Process details: what a process in the AI Team group is
-  ///
-  /// In en, this message translates to:
-  /// **'Part of the AI Team. Stopping it stops the work the team is doing.'**
-  String get termuxProcsAboutAiTeam;
-
-  /// Process details: what a build daemon is
-  ///
-  /// In en, this message translates to:
-  /// **'A build helper. The next build starts it again when it needs it.'**
-  String get termuxProcsAboutBuild;
-
-  /// Process details: why an orphan is safe to stop
-  ///
-  /// In en, this message translates to:
-  /// **'Nothing is waiting on it, so stopping it is safe.'**
-  String get termuxProcsAboutOrphan;
-
-  /// Process details: what a process in the Other group is
-  ///
-  /// In en, this message translates to:
-  /// **'Started by something else on this phone.'**
-  String get termuxProcsAboutOther;
-
   /// Stop confirmation: a stopped process has no undo
   ///
   /// In en, this message translates to:
   /// **'It can\'t be started again from here.'**
   String get termuxProcsNoRestart;
-
-  /// Stop AI Team group confirmation: what is lost
-  ///
-  /// In en, this message translates to:
-  /// **'Any task the team is working on stops too.'**
-  String get termuxProcsStopGroupTeamLost;
-
-  /// Stop AI Team group confirmation: how to start it again
-  ///
-  /// In en, this message translates to:
-  /// **'You can start the team again from AI Team.'**
-  String get termuxProcsStopGroupTeamRestart;
-
-  /// In the Stop setup confirmation: where the person can pick setup up again
-  ///
-  /// In en, this message translates to:
-  /// **'Continue any time from On this phone.'**
-  String get phoneSetupProgressStopContinueLater;
 
   /// AI Team merge section: under a refused merge, what happened and the next step.
   ///
@@ -25951,60 +24133,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Setup output'**
   String get setupTerminalTitle;
-
-  /// On this phone section: stops the AI team running on this phone (asks first)
-  ///
-  /// In en, this message translates to:
-  /// **'Stop the team'**
-  String get teamPhoneStopTeam;
-
-  /// On this phone section: starts the stopped AI team on this phone
-  ///
-  /// In en, this message translates to:
-  /// **'Start the team'**
-  String get teamPhoneStartTeam;
-
-  /// On this phone section: starts the team Android stopped
-  ///
-  /// In en, this message translates to:
-  /// **'Start the team again'**
-  String get teamPhoneStartTeamAgain;
-
-  /// On this phone section: deletes the AI team from this phone (asks first)
-  ///
-  /// In en, this message translates to:
-  /// **'Delete the team from this phone'**
-  String get teamPhoneDeleteTeam;
-
-  /// Delete the team sheet: what happens, in plain words
-  ///
-  /// In en, this message translates to:
-  /// **'The team stops, and the AI Team turns off for this server.'**
-  String get teamPhoneRemoveBody;
-
-  /// Delete the team sheet: what goes
-  ///
-  /// In en, this message translates to:
-  /// **'The team\'s programs, its files and its task list are deleted'**
-  String get teamPhoneRemoveLost;
-
-  /// Delete the team sheet: what stays
-  ///
-  /// In en, this message translates to:
-  /// **'Your project files and their git history stay'**
-  String get teamPhoneRemoveKept;
-
-  /// Delete the team sheet: the space the team's downloads take
-  ///
-  /// In en, this message translates to:
-  /// **'Frees about {size} MB'**
-  String teamPhoneRemoveFrees(int size);
-
-  /// Delete the team sheet: confirm button
-  ///
-  /// In en, this message translates to:
-  /// **'Delete the team'**
-  String get teamPhoneRemoveConfirm;
 
   /// Shared product states: title of the alert shown when an action the person started failed
   ///
@@ -27542,6 +25670,66 @@ abstract class AppLocalizations {
   /// **'Open release page'**
   String get desktopReleaseOpenPage;
 
+  /// Title of the in-app update prompt sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Update available'**
+  String get appUpdatePromptTitle;
+
+  /// Primary button in the in-app update prompt sheet to download and install.
+  ///
+  /// In en, this message translates to:
+  /// **'Download and update'**
+  String get appUpdateDownloadAndUpdate;
+
+  /// Secondary button to dismiss the in-app update prompt for now.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get appUpdateLater;
+
+  /// Download size label in the update prompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Size: {size}'**
+  String appUpdateSize(String size);
+
+  /// Section header for release notes and changes in the update sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s new'**
+  String get appUpdateChangelog;
+
+  /// Button to trigger installation after the update package is downloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Install'**
+  String get appUpdateInstall;
+
+  /// Status text while update is downloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading update…'**
+  String get appUpdateDownloading;
+
+  /// Status text once APK download is finished.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to install. Tap Install to finish updating.'**
+  String get appUpdateReadyToInstall;
+
+  /// Status text when update download encounters an error.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to download update. Check connection and retry.'**
+  String get appUpdateDownloadFailed;
+
+  /// Button to retry a failed update download.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get appUpdateRetry;
+
   /// Title of the sheet listing the agents and commands a conversation started (was 'Tasks', which also meant to-dos and team tasks).
   ///
   /// In en, this message translates to:
@@ -27893,19 +26081,19 @@ abstract class AppLocalizations {
   /// Conversation context: what being near the limit means and what to do.
   ///
   /// In en, this message translates to:
-  /// **'Older details may be dropped from what the model sees. Shorten the conversation to keep going, or start a new one.'**
+  /// **'Older details may be dropped from what the model sees. Compact the conversation to keep going, or start a new one.'**
   String get sessionContextNearLimitBody;
 
   /// Conversation context: starts compacting the conversation.
   ///
   /// In en, this message translates to:
-  /// **'Shorten this conversation'**
+  /// **'Compact this conversation'**
   String get sessionContextCompactAction;
 
   /// Conversation context: the compact confirmation's question.
   ///
   /// In en, this message translates to:
-  /// **'Shorten this conversation?'**
+  /// **'Compact this conversation?'**
   String get sessionContextCompactTitle;
 
   /// Conversation context: what compacting does.
@@ -27923,13 +26111,13 @@ abstract class AppLocalizations {
   /// Conversation context: the compact confirmation's button.
   ///
   /// In en, this message translates to:
-  /// **'Shorten conversation'**
+  /// **'Compact conversation'**
   String get sessionContextCompactConfirm;
 
   /// Conversation context: shown after compacting was started.
   ///
   /// In en, this message translates to:
-  /// **'Shortening started. The numbers update when it finishes.'**
+  /// **'Compacting started. The numbers update when it finishes.'**
   String get sessionContextCompactStarted;
 
   /// Conversation context: why compacting is unavailable while a reply runs.
@@ -29366,18 +27554,6 @@ abstract class AppLocalizations {
   /// **'Disconnect from {server}'**
   String serverDisconnectFrom(String server);
 
-  /// Confirm button and menu item that stop Claude Code on this phone.
-  ///
-  /// In en, this message translates to:
-  /// **'Stop Claude Code'**
-  String get localAgentStopNamed;
-
-  /// Row action that starts Claude Code on this phone.
-  ///
-  /// In en, this message translates to:
-  /// **'Start Claude Code'**
-  String get localAgentStartNamed;
-
   /// Confirm title before switching to the saved server whose request the person opened.
   ///
   /// In en, this message translates to:
@@ -29636,12 +27812,6 @@ abstract class AppLocalizations {
   /// **'In the app'**
   String get thisPhoneHostInApp;
 
-  /// This phone: where OpenCode runs, when it runs in the Termux app
-  ///
-  /// In en, this message translates to:
-  /// **'In Termux'**
-  String get thisPhoneHostTermux;
-
   /// This phone: the button when OpenCode is not set up yet
   ///
   /// In en, this message translates to:
@@ -29707,42 +27877,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Wait for the current step to finish'**
   String get thisPhoneBusy;
-
-  /// Termux setup checklist: the instruction under 'Connect Termux once' while it waits for the person
-  ///
-  /// In en, this message translates to:
-  /// **'In Termux, paste the copied line and press Enter.'**
-  String get phoneSetupTermuxAllowHow;
-
-  /// Termux setup checklist: the title while an update runs
-  ///
-  /// In en, this message translates to:
-  /// **'Updating this phone'**
-  String get phoneSetupTermuxUpdatingTitle;
-
-  /// Termux setup checklist: the title while OpenCode starts
-  ///
-  /// In en, this message translates to:
-  /// **'Starting the server'**
-  String get phoneSetupTermuxStartingTitle;
-
-  /// Termux setup checklist: the line under 'Start OpenCode' while the app connects to it
-  ///
-  /// In en, this message translates to:
-  /// **'Connecting'**
-  String get phoneSetupTermuxConnecting;
-
-  /// Termux setup checklist: the quiet line under the title while setup runs
-  ///
-  /// In en, this message translates to:
-  /// **'You can leave the app. Termux keeps working and this list picks up where it is when you come back.'**
-  String get phoneSetupTermuxLeaveHint;
-
-  /// Phone setup start: the cost line under 'Use Termux instead', said before anything installs
-  ///
-  /// In en, this message translates to:
-  /// **'About 10–15 minutes the first time, in Termux\'s storage'**
-  String get phoneSetupTermuxCost;
 
   /// Remove from this phone: the default choice's body, with the estimated space it frees, e.g. '700.0 MB'
   ///
@@ -29894,60 +28028,6 @@ abstract class AppLocalizations {
   /// **'{title} stopped'**
   String teamUiGateRunStoppedTitle(String title);
 
-  /// Running now: first words of an orphan's line, why it was flagged
-  ///
-  /// In en, this message translates to:
-  /// **'Parent gone'**
-  String get termuxProcsKindParentGone;
-
-  /// Running now: first words of an orphan's line that burns CPU with nothing waiting on it
-  ///
-  /// In en, this message translates to:
-  /// **'No owner'**
-  String get termuxProcsKindNoOwner;
-
-  /// Running now: the one bulk stop, offered only while orphans exist; also its confirm button
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{Stop 1 orphaned helper} other{Stop {count} orphaned helpers}}'**
-  String termuxProcsStopOrphans(int count);
-
-  /// Running now: title of the confirmation for the bulk orphan stop
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{Stop the orphaned helper?} other{Stop {count} orphaned helpers?}}'**
-  String termuxProcsStopOrphansTitle(int count);
-
-  /// Settings › Plugins › On this phone: the row that stops the team while it runs
-  ///
-  /// In en, this message translates to:
-  /// **'Stop the team on this phone'**
-  String get teamPhoneStopTeamRow;
-
-  /// Settings › Plugins › On this phone: what stopping the team does, under its row
-  ///
-  /// In en, this message translates to:
-  /// **'Agents stop where they are; nothing is lost'**
-  String get teamPhoneStopTeamRowSupporting;
-
-  /// Settings › Plugins › On this phone: the team's project by name under its status
-  ///
-  /// In en, this message translates to:
-  /// **'Working on {name}'**
-  String teamUiPhoneWorkingOn(String name);
-
-  /// Technical details label for the team engine's versions
-  ///
-  /// In en, this message translates to:
-  /// **'Engine versions'**
-  String get teamUiPhoneVersionsLabel;
-
-  /// Technical details label for the team's full project path
-  ///
-  /// In en, this message translates to:
-  /// **'Project folder'**
-  String get teamUiPhoneProjectLabel;
-
   /// The default name of the in-app server inside a sentence ('Disconnect from this phone')
   ///
   /// In en, this message translates to:
@@ -30007,24 +28087,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Last command'**
   String get teamAgentLastCommandLabel;
-
-  /// Storage on this phone: the one footnote under the list
-  ///
-  /// In en, this message translates to:
-  /// **'Only build caches can be cleaned here'**
-  String get termuxStorageOnlyBuildCaches;
-
-  /// Storage on this phone: label over a category's folders when it cannot be cleaned
-  ///
-  /// In en, this message translates to:
-  /// **'Where it is'**
-  String get termuxStorageWhereItIs;
-
-  /// Storage on this phone: the one clean button, with the size it frees
-  ///
-  /// In en, this message translates to:
-  /// **'Clean build caches ({size})'**
-  String termuxStorageCleanBuildCaches(String size);
 
   /// Title of the page that lists every saved server's last and next background check, and of the Servers page row that opens it
   ///
@@ -30259,12 +28321,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Python, AI Team, voice typing and more'**
   String get thisPhoneAddToolsDetail;
-
-  /// Termux setup: the job installed one OpenCode generation but Termux serves the other; switching is This phone's job
-  ///
-  /// In en, this message translates to:
-  /// **'Termux already runs the other OpenCode. Switch it on This phone, then continue setup.'**
-  String get phoneSetupTermuxOtherRuntime;
 
   /// "Undo from this prompt?" sheet on a server that undoes at once (no review step): the primary button that undoes.
   ///
@@ -30590,12 +28646,6 @@ abstract class AppLocalizations {
   /// **'What the agent may run here without asking you.'**
   String get automationSavedRulesDetail;
 
-  /// Phone setup start screen: headline while a setup job in Termux is running or stopped part way. {percent} is a whole number.
-  ///
-  /// In en, this message translates to:
-  /// **'Setup in Termux is {percent}% done'**
-  String phoneSetupStartTermuxProgressHeadline(int percent);
-
   /// AI Team ready page (after Add tools installed AI Team): title when no project is open yet.
   ///
   /// In en, this message translates to:
@@ -30656,12 +28706,6 @@ abstract class AppLocalizations {
   /// **'Couldn’t stop the team on this phone, so it is still on. Try again.'**
   String get teamHomeTurnOffFailed;
 
-  /// AI Team page subtitle, after the place: Android stopped the phone's team (the line under the bar offers Start the team again).
-  ///
-  /// In en, this message translates to:
-  /// **'Stopped'**
-  String get teamHomeHostStopped;
-
   /// AI Team page subtitle, after the place: the heat guard paused the team because the phone is hot. Never the person's pause.
   ///
   /// In en, this message translates to:
@@ -30685,12 +28729,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The phone got very hot at {time}, so the team stopped. Its work is kept, and it starts again once the phone has cooled.'**
   String teamHomeHeatStoppedLine(String time);
-
-  /// AI Team page row on the phone's Termux team: opens its own controls (keep running tips, stop, remove from this phone).
-  ///
-  /// In en, this message translates to:
-  /// **'Keep it running, stop it or remove it'**
-  String get teamHomePhoneControls;
 
   /// AI Team page: what the whole team spent today. {usage} is e.g. '$0.42 est. · 12.4k tokens'.
   ///
@@ -31082,12 +29120,6 @@ abstract class AppLocalizations {
   /// **'The app couldn\'t read or save a file on this device.'**
   String get productErrorStorage;
 
-  /// Error words: a command the app sent to Termux failed (its output goes to details).
-  ///
-  /// In en, this message translates to:
-  /// **'Termux didn\'t finish that. Check that Termux is installed and open, then try again.'**
-  String get productErrorTermux;
-
   /// Label of the folded technical text under an error alert.
   ///
   /// In en, this message translates to:
@@ -31202,84 +29234,6 @@ abstract class AppLocalizations {
   /// **'The work waits for review. Nothing is lost.'**
   String get teamGateCardIfIgnoredReview;
 
-  /// Running on this phone: the budget line, also the row's summary on This phone. limit is Android's phantom process limit (32).
-  ///
-  /// In en, this message translates to:
-  /// **'{count} of {limit} background processes'**
-  String termuxProcsBudget(int count, int limit);
-
-  /// Running on this phone: under the budget line, what the limit is and that other apps count too
-  ///
-  /// In en, this message translates to:
-  /// **'Android 12 and later may stop the oldest ones when all apps together run more than {limit}.'**
-  String termuxProcsBudgetNote(int limit);
-
-  /// Running on this phone: under the budget line when the count is past the limit
-  ///
-  /// In en, this message translates to:
-  /// **'More than {limit}: Android may stop the oldest of these at any time.'**
-  String termuxProcsBudgetOver(int limit);
-
-  /// Running on this phone: body when the list could not be read; the technical reason is under Details
-  ///
-  /// In en, this message translates to:
-  /// **'Termux did not answer. Open Termux, then try again.'**
-  String get termuxProcsLoadFailedBody;
-
-  /// Running on this phone: a later refresh failed; the technical reason is under Details
-  ///
-  /// In en, this message translates to:
-  /// **'Couldn\'t read the list again, so it shows the last reading.'**
-  String get termuxProcsRefreshFailed;
-
-  /// Running on this phone: a stop could not be sent; the technical reason is under Details
-  ///
-  /// In en, this message translates to:
-  /// **'Couldn\'t stop it. Try again, or stop it from Termux.'**
-  String get termuxProcsStopFailed;
-
-  /// Running on this phone: what a process is, first words of its line
-  ///
-  /// In en, this message translates to:
-  /// **'OpenCode server'**
-  String get termuxProcsKindOpenCode;
-
-  /// Running on this phone: what a process is, first words of its line
-  ///
-  /// In en, this message translates to:
-  /// **'AI Team'**
-  String get termuxProcsKindAiTeam;
-
-  /// Running on this phone: what a process is, first words of its line
-  ///
-  /// In en, this message translates to:
-  /// **'Claude Code'**
-  String get termuxProcsKindClaudeCode;
-
-  /// Running on this phone: what a process is (a build daemon or dev server), first words of its line
-  ///
-  /// In en, this message translates to:
-  /// **'Dev service'**
-  String get termuxProcsKindDevService;
-
-  /// Running on this phone: what a process is (a shell session), first words of its line
-  ///
-  /// In en, this message translates to:
-  /// **'Terminal'**
-  String get termuxProcsKindTerminal;
-
-  /// Running on this phone: what a process is (anything else), first words of its line
-  ///
-  /// In en, this message translates to:
-  /// **'Helper'**
-  String get termuxProcsKindHelper;
-
-  /// Running on this phone: the Termux app's own process, first words of its line
-  ///
-  /// In en, this message translates to:
-  /// **'Termux app'**
-  String get termuxProcsKindHostApp;
-
   /// Running on this phone: the process used the processor since the last reading
   ///
   /// In en, this message translates to:
@@ -31297,84 +29251,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'running {elapsed}'**
   String termuxProcsRunningFor(String elapsed);
-
-  /// Running on this phone: what a kind's stop stops, by name
-  ///
-  /// In en, this message translates to:
-  /// **'{names}: each gets a polite stop, then a forced one after 5 seconds.'**
-  String termuxProcsStopKindBody(String names);
-
-  /// Running on this phone: one stop for every process of a kind (offered from two up); also its confirm button. things is a kind in the plural, e.g. 'dev services'
-  ///
-  /// In en, this message translates to:
-  /// **'Stop all {count} {things}'**
-  String termuxProcsStopKind(int count, String things);
-
-  /// Running on this phone: the question of a kind's stop
-  ///
-  /// In en, this message translates to:
-  /// **'Stop all {count} {things}?'**
-  String termuxProcsStopKindTitle(int count, String things);
-
-  /// Running on this phone: the AI Team kind in the plural, inside 'Stop all 3 …'
-  ///
-  /// In en, this message translates to:
-  /// **'AI Team processes'**
-  String get termuxProcsKindsAiTeam;
-
-  /// Running on this phone: the Claude Code kind in the plural, inside 'Stop all 3 …'
-  ///
-  /// In en, this message translates to:
-  /// **'Claude Code processes'**
-  String get termuxProcsKindsClaudeCode;
-
-  /// Running on this phone: the dev service kind in the plural, inside 'Stop all 3 …'
-  ///
-  /// In en, this message translates to:
-  /// **'dev services'**
-  String get termuxProcsKindsDevServices;
-
-  /// Running on this phone: the terminal kind in the plural, inside 'Stop all 3 …'
-  ///
-  /// In en, this message translates to:
-  /// **'terminals'**
-  String get termuxProcsKindsTerminals;
-
-  /// Running on this phone: the helper kind in the plural, inside 'Stop all 3 …'
-  ///
-  /// In en, this message translates to:
-  /// **'helpers'**
-  String get termuxProcsKindsHelpers;
-
-  /// Running on this phone: what stopping the dev services costs
-  ///
-  /// In en, this message translates to:
-  /// **'The next build starts them again when it needs them.'**
-  String get termuxProcsStopDevRestart;
-
-  /// Running on this phone: what a Claude Code process is
-  ///
-  /// In en, this message translates to:
-  /// **'Claude Code, the coding agent. Stopping it ends the answer it is writing.'**
-  String get termuxProcsAboutClaudeCode;
-
-  /// Running on this phone: what a terminal process is
-  ///
-  /// In en, this message translates to:
-  /// **'A terminal. Stopping it closes it and whatever runs in it.'**
-  String get termuxProcsAboutTerminal;
-
-  /// Running on this phone: what the Termux app's own process is
-  ///
-  /// In en, this message translates to:
-  /// **'The Termux app itself. It is not stopped from here.'**
-  String get termuxProcsAboutHostApp;
-
-  /// Running on this phone › Details: ps's average CPU since the process started
-  ///
-  /// In en, this message translates to:
-  /// **'Average processor use'**
-  String get termuxProcsAverageCpu;
 
   /// Running on this phone › Details: total CPU time the process used
   ///
@@ -31646,12 +29522,6 @@ abstract class AppLocalizations {
   /// **'Couldn\'t start a new conversation'**
   String get appNewConversationFailed;
 
-  /// Status line on the connecting page when starting the phone server failed; the reason in words is under it.
-  ///
-  /// In en, this message translates to:
-  /// **'OpenCode on this phone didn\'t start'**
-  String get rootPhoneServerStartFailed;
-
   /// Map page root-connecting: the address is under Details.
   ///
   /// In en, this message translates to:
@@ -31807,12 +29677,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You\'re on mobile data. This download counts against your data plan.'**
   String get voiceAutoSetupMobileData;
-
-  /// First mic tap voice setup sheet (P10.4): warning when the network type is unknown; the size is on the button
-  ///
-  /// In en, this message translates to:
-  /// **'This connection may count against a data plan.'**
-  String get voiceAutoSetupMaybeMetered;
 
   /// First mic tap voice setup sheet (P10.4): primary button on Wi-Fi; {size} is the download size
   ///
@@ -32095,18 +29959,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Keep in backlog'**
   String get teamStartRunKeepInBacklog;
-
-  /// Announced once after the Work status line's Stop ended the leftover process
-  ///
-  /// In en, this message translates to:
-  /// **'Stopped {helper}'**
-  String workRunawayStopped(String helper);
-
-  /// Work status line when stopping the leftover process did not end it
-  ///
-  /// In en, this message translates to:
-  /// **'Couldn\'t stop {helper}. Try again, or stop it from Termux.'**
-  String workRunawayStopFailed(String helper);
 
   /// Server settings: the line under 'Copy update commands for {server}' before it is tapped.
   ///
@@ -34136,30 +31988,6 @@ abstract class AppLocalizations {
   /// **'Enter the address'**
   String get addServerTailscaleNext;
 
-  /// Setup journey, failed Get Termux row when the installed Termux is too old: opens the current Termux download page in the browser.
-  ///
-  /// In en, this message translates to:
-  /// **'Get the current Termux'**
-  String get phoneSetupTermuxGetCurrent;
-
-  /// Phone setup reached on a device that cannot run it (not Android): title of the page that points to connecting a server instead.
-  ///
-  /// In en, this message translates to:
-  /// **'Connect a server'**
-  String get phoneSetupUnsupportedTitle;
-
-  /// Phone setup reached on a device that cannot run it: body above the command to copy (opencode2 pair).
-  ///
-  /// In en, this message translates to:
-  /// **'Setting up on the device itself works only on Android phones. On your computer, run this command, then add the server here with the code it prints.'**
-  String get phoneSetupUnsupportedBody;
-
-  /// Storage screen: the scan's last row while it runs, measuring everything Termux uses
-  ///
-  /// In en, this message translates to:
-  /// **'The whole Termux install'**
-  String get termuxStorageStageTotal;
-
   /// A setup component failed; neither its stage nor a reason the app can word is known (the raw text is in the Details log)
   ///
   /// In en, this message translates to:
@@ -34172,57 +32000,11 @@ abstract class AppLocalizations {
   /// **'Stopped at {name}. What went wrong is under Details.'**
   String setupProgressViewFailedAt(String name);
 
-  /// Status line: a leftover helper process on the phone (not OpenCode itself) keeps using the CPU; helper is the process's own name, e.g. 'node'
-  ///
-  /// In en, this message translates to:
-  /// **'A leftover {helper} process has been busy for {duration} with nothing to do'**
-  String workRunawayHelper(String helper, String duration);
-
-  /// Status line: a leftover helper process in a project folder (not OpenCode itself) keeps using the CPU
-  ///
-  /// In en, this message translates to:
-  /// **'A leftover {helper} process in {project} has been busy for {duration} with nothing to do'**
-  String workRunawayHelperInProject(
-    String helper,
-    String project,
-    String duration,
-  );
-
-  /// Status line menu: opens Running on this phone, the list of processes on the phone
-  ///
-  /// In en, this message translates to:
-  /// **'See what\'s running'**
-  String get workRunawaySeeRunning;
-
   /// Technical: This phone: the row in place of Update when the installed OpenCode is already the version the app installs, e.g. 'Up to date · 1.18.29'
   ///
   /// In en, this message translates to:
   /// **'Up to date · {version}'**
   String thisPhoneUpToDate(String version);
-
-  /// This phone: the title of the question before an update in Termux; runtime is 'OpenCode' or 'OpenCode 2'
-  ///
-  /// In en, this message translates to:
-  /// **'Update {runtime}?'**
-  String thisPhoneUpdateTitle(String runtime);
-
-  /// Technical: This phone: what an update does, in the question before it, naming the version it installs
-  ///
-  /// In en, this message translates to:
-  /// **'Installs version {version}, restarts the server on this phone and connects again.'**
-  String thisPhoneUpdateBody(String version);
-
-  /// This phone: the consequence line in the question before an update
-  ///
-  /// In en, this message translates to:
-  /// **'Your conversations are kept. The server is away for a minute while it restarts.'**
-  String get thisPhoneUpdateKept;
-
-  /// This phone: why Update waits while a conversation is still working
-  ///
-  /// In en, this message translates to:
-  /// **'A reply is still being written. Stop it or let it finish, then update.'**
-  String get thisPhoneUpdateBusy;
 
   /// This phone: the button after the server did not start
   ///
@@ -34253,12 +32035,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This phone couldn\'t check on {runtime}. Try again in a moment.'**
   String thisPhoneCheckFailed(String runtime);
-
-  /// This phone: the line under the status when a switch between OpenCode versions stopped half way; runtime is the version it switched to
-  ///
-  /// In en, this message translates to:
-  /// **'{runtime} didn\'t start after the switch. Your conversations are kept.'**
-  String thisPhoneSwitchStopped(String runtime);
 
   /// This phone: the quiet line under the status while OpenCode 2 imports the chats from OpenCode 1 after a switch
   ///
@@ -34398,623 +32174,11 @@ abstract class AppLocalizations {
   /// **'Back to the worker'**
   String get chatWatchBackToWorker;
 
-  /// Moving from Termux to the in-app server: the page title and the This phone row that opens it (its detail says where things go).
-  ///
-  /// In en, this message translates to:
-  /// **'Move from Termux'**
-  String get migrationTitle;
-
-  /// Moving from Termux to the in-app server: the wait while Termux and the phone are checked.
-  ///
-  /// In en, this message translates to:
-  /// **'Checking Termux and phone storage…'**
-  String get migrationChecking;
-
-  /// Moving from Termux to the in-app server: the review's opening line.
-  ///
-  /// In en, this message translates to:
-  /// **'Your projects are copied into OpenCode inside this app. Nothing in Termux is changed or removed.'**
-  String get migrationReviewIntro;
-
-  /// Moving from Termux to the in-app server: label of the group of items that become active files (projects).
-  ///
-  /// In en, this message translates to:
-  /// **'Copied and ready to use'**
-  String get migrationGroupMoves;
-
-  /// Moving from Termux to the in-app server: label of the group of items kept only as private copies.
-  ///
-  /// In en, this message translates to:
-  /// **'Saved privately, not turned on'**
-  String get migrationGroupExports;
-
-  /// Moving from Termux to the in-app server: label of what the move leaves behind.
-  ///
-  /// In en, this message translates to:
-  /// **'Not moved'**
-  String get migrationGroupNotMoved;
-
-  /// Moving from Termux to the in-app server: item: the project folders in Termux's Ubuntu.
-  ///
-  /// In en, this message translates to:
-  /// **'Projects'**
-  String get migrationItemProjects;
-
-  /// Moving from Termux to the in-app server: item: OpenCode's global config, including MCP servers.
-  ///
-  /// In en, this message translates to:
-  /// **'MCP and agent settings'**
-  String get migrationItemConfig;
-
-  /// Moving from Termux to the in-app server: item: OpenCode's raw data folder with past conversations; kept only as a backup copy.
-  ///
-  /// In en, this message translates to:
-  /// **'Conversation history (backup copy)'**
-  String get migrationItemSessions;
-
-  /// Moving from Termux to the in-app server: item: the global Git configuration.
-  ///
-  /// In en, this message translates to:
-  /// **'Git settings'**
-  String get migrationItemGitConfig;
-
-  /// Moving from Termux to the in-app server: item: the shell start files (.bashrc, .zshrc and the login one).
-  ///
-  /// In en, this message translates to:
-  /// **'Shell settings'**
-  String get migrationItemShellFiles;
-
-  /// Moving from Termux to the in-app server: item: the AI Team's saved state.
-  ///
-  /// In en, this message translates to:
-  /// **'AI Team'**
-  String get migrationItemAiTeam;
-
-  /// Moving from Termux to the in-app server: what copying the projects does.
-  ///
-  /// In en, this message translates to:
-  /// **'Into a new folder in On this phone. Nothing there is overwritten.'**
-  String get migrationItemProjectsWhat;
-
-  /// Moving from Termux to the in-app server: what the settings copy is.
-  ///
-  /// In en, this message translates to:
-  /// **'To review before using: commands and paths may only work in Termux.'**
-  String get migrationItemConfigWhat;
-
-  /// Moving from Termux to the in-app server: what the conversation history copy is.
-  ///
-  /// In en, this message translates to:
-  /// **'May contain your sign-ins, and the app doesn\'t open it. Termux keeps your usable history.'**
-  String get migrationItemSessionsWhat;
-
-  /// Moving from Termux to the in-app server: what the Git settings copy is.
-  ///
-  /// In en, this message translates to:
-  /// **'Your Git name, email and options, to review.'**
-  String get migrationItemGitConfigWhat;
-
-  /// Moving from Termux to the in-app server: what the shell settings copy is.
-  ///
-  /// In en, this message translates to:
-  /// **'Keeps .bashrc, .zshrc and your other shell start files; they never run.'**
-  String get migrationItemShellFilesWhat;
-
-  /// Moving from Termux to the in-app server: what the AI Team copy is.
-  ///
-  /// In en, this message translates to:
-  /// **'The team\'s saved state. Setup installs its tools again.'**
-  String get migrationItemAiTeamWhat;
-
-  /// Moving from Termux to the in-app server: an item's measured size and file count, e.g. '1.2 GB · 3,400 files'.
-  ///
-  /// In en, this message translates to:
-  /// **'{size} · {count, plural, =1{1 file} other{{count} files}}'**
-  String migrationItemSize(String size, int count);
-
-  /// Moving from Termux to the in-app server: an item Termux could not measure (its size is unknown, never zero).
-  ///
-  /// In en, this message translates to:
-  /// **'Size unknown'**
-  String get migrationSizeUnknown;
-
-  /// Moving from Termux to the in-app server: note under the private copies group.
-  ///
-  /// In en, this message translates to:
-  /// **'Private copies stay in On this phone. Nothing in them runs or turns on by itself.'**
-  String get migrationExportsNote;
-
-  /// Moving from Termux to the in-app server: not moved: provider sign-ins, when their names are unknown.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign-ins to AI providers: sign in again after the move'**
-  String get migrationNotMovedSignIn;
-
-  /// Moving from Termux to the in-app server: not moved: provider sign-ins, named, e.g. 'Anthropic and OpenAI'.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign-ins to {names}: sign in again after the move'**
-  String migrationNotMovedSignInNamed(String names);
-
-  /// Moving from Termux to the in-app server: not moved: SSH keys and Git credentials.
-  ///
-  /// In en, this message translates to:
-  /// **'SSH keys and saved Git passwords'**
-  String get migrationNotMovedKeys;
-
-  /// Moving from Termux to the in-app server: not moved: toolchains and caches.
-  ///
-  /// In en, this message translates to:
-  /// **'Installed tools and caches: setup installs them again'**
-  String get migrationNotMovedTools;
-
-  /// Moving from Termux to the in-app server: what is kept: everything in Termux.
-  ///
-  /// In en, this message translates to:
-  /// **'Termux stays as it is, and its server keeps working until you remove it'**
-  String get migrationTermuxKept;
-
-  /// Moving from Termux to the in-app server: why the app must stay open.
-  ///
-  /// In en, this message translates to:
-  /// **'Keep the app open while copying. Android stops it when you leave the app, and it picks up from here when you resume.'**
-  String get migrationKeepOpen;
-
-  /// Moving from Termux to the in-app server: the review's primary action.
-  ///
-  /// In en, this message translates to:
-  /// **'Copy to On this phone'**
-  String get migrationStart;
-
-  /// Moving from Termux to the in-app server: why the primary is off when nothing is selected.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose at least one item to copy.'**
-  String get migrationChooseOne;
-
-  /// Moving from Termux to the in-app server: stage: Termux packs the item.
-  ///
-  /// In en, this message translates to:
-  /// **'Preparing your files in Termux…'**
-  String get migrationPacking;
-
-  /// Moving from Termux to the in-app server: stage: the item is copied into the app.
-  ///
-  /// In en, this message translates to:
-  /// **'Copying files to this app…'**
-  String get migrationCopying;
-
-  /// Moving from Termux to the in-app server: stage: the copy is imported.
-  ///
-  /// In en, this message translates to:
-  /// **'Importing your files…'**
-  String get migrationUnpacking;
-
-  /// Moving from Termux to the in-app server: stage: the copy is verified.
-  ///
-  /// In en, this message translates to:
-  /// **'Checking the copied files…'**
-  String get migrationVerifying;
-
-  /// Moving from Termux to the in-app server: stage: the app connects to the in-app server.
-  ///
-  /// In en, this message translates to:
-  /// **'Connecting to On this phone…'**
-  String get migrationSwitching;
-
-  /// Moving from Termux to the in-app server: the last step of the copy.
-  ///
-  /// In en, this message translates to:
-  /// **'Connect to On this phone'**
-  String get migrationStepConnect;
-
-  /// Moving from Termux to the in-app server: stops the running copy (asks first).
-  ///
-  /// In en, this message translates to:
-  /// **'Stop copying'**
-  String get migrationStop;
-
-  /// Moving from Termux to the in-app server: the stop question's title.
-  ///
-  /// In en, this message translates to:
-  /// **'Stop copying?'**
-  String get migrationStopTitle;
-
-  /// Moving from Termux to the in-app server: the stop question's body.
-  ///
-  /// In en, this message translates to:
-  /// **'You can resume later from This phone.'**
-  String get migrationStopBody;
-
-  /// Moving from Termux to the in-app server: stop question: what is kept.
-  ///
-  /// In en, this message translates to:
-  /// **'What was copied so far is kept'**
-  String get migrationStopKept;
-
-  /// Moving from Termux to the in-app server: stop question: keep the copy running.
-  ///
-  /// In en, this message translates to:
-  /// **'Keep copying'**
-  String get migrationKeepGoing;
-
-  /// Moving from Termux to the in-app server: the stopped state's title.
-  ///
-  /// In en, this message translates to:
-  /// **'Copy stopped. You can resume later.'**
-  String get migrationCancelled;
-
-  /// Moving from Termux to the in-app server: the stopped state's body after Stop.
-  ///
-  /// In en, this message translates to:
-  /// **'What was copied is kept, and Termux isn\'t changed.'**
-  String get migrationCancelledBody;
-
-  /// Moving from Termux to the in-app server: the stopped state's body when leaving the app stopped it.
-  ///
-  /// In en, this message translates to:
-  /// **'It stopped because the app left the screen: Android doesn\'t let it run in the background. What was copied is kept.'**
-  String get migrationStoppedLeaving;
-
-  /// Moving from Termux to the in-app server: resumes the saved copy.
-  ///
-  /// In en, this message translates to:
-  /// **'Resume copying'**
-  String get migrationResume;
-
-  /// Moving from Termux to the in-app server: the low-space state's title.
-  ///
-  /// In en, this message translates to:
-  /// **'More free space is needed before copying.'**
-  String get migrationNeedsSpace;
-
-  /// Moving from Termux to the in-app server: the low-space state's body.
-  ///
-  /// In en, this message translates to:
-  /// **'Needs about {needed}, and {free} is free. Free up space on this phone, or copy fewer items.'**
-  String migrationNeedsSpaceBody(String needed, String free);
-
-  /// Moving from Termux to the in-app server: the low-space state's body when free space could not be read.
-  ///
-  /// In en, this message translates to:
-  /// **'Needs about {needed}, and the free space couldn\'t be read. Free up space on this phone, or copy fewer items.'**
-  String migrationNeedsSpaceBodyUnknown(String needed);
-
-  /// Moving from Termux to the in-app server: low space: back to the review.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose fewer items'**
-  String get migrationChooseFewer;
-
-  /// Moving from Termux to the in-app server: the state when OpenCode inside the app is not installed.
-  ///
-  /// In en, this message translates to:
-  /// **'Set up On this phone first.'**
-  String get migrationNeedsBuiltin;
-
-  /// Moving from Termux to the in-app server: why OpenCode 2 setup comes first.
-  ///
-  /// In en, this message translates to:
-  /// **'Your projects move into OpenCode inside this app, so it needs setting up. Setup installs Linux and {runtime}, then this continues here.'**
-  String migrationNeedsBuiltinBody(String runtime);
-
-  /// Moving from Termux to the in-app server: starts the in-app server's setup.
-  ///
-  /// In en, this message translates to:
-  /// **'Set up On this phone'**
-  String get migrationSetUpBuiltin;
-
-  /// Moving from Termux to the in-app server: setup could not be started.
-  ///
-  /// In en, this message translates to:
-  /// **'Setup couldn\'t start. Try again, or set it up from This phone.'**
-  String get migrationSetupFailed;
-
-  /// Moving from Termux to the in-app server: title when Termux cannot be reached.
-  ///
-  /// In en, this message translates to:
-  /// **'Termux isn\'t answering'**
-  String get migrationTermuxNotAnswering;
-
-  /// Moving from Termux to the in-app server: way forward when Termux cannot be reached.
-  ///
-  /// In en, this message translates to:
-  /// **'Open Termux, then try again.'**
-  String get migrationTermuxUnavailable;
-
-  /// Moving from Termux to the in-app server: opens the Termux app.
-  ///
-  /// In en, this message translates to:
-  /// **'Open Termux'**
-  String get migrationOpenTermux;
-
-  /// Moving from Termux to the in-app server: the failed state's title; the body says why in plain words.
-  ///
-  /// In en, this message translates to:
-  /// **'The move stopped'**
-  String get migrationFailedTitle;
-
-  /// Moving from Termux to the in-app server: failure: files changed in Termux while copying.
-  ///
-  /// In en, this message translates to:
-  /// **'Files changed during copying. Try again when Termux is idle.'**
-  String get migrationSourceChanged;
-
-  /// Moving from Termux to the in-app server: failure: Termux is still busy with the last step.
-  ///
-  /// In en, this message translates to:
-  /// **'Termux is finishing the previous step. Try again shortly.'**
-  String get migrationSourceBusy;
-
-  /// Moving from Termux to the in-app server: failure: links, sockets or external Git worktrees.
-  ///
-  /// In en, this message translates to:
-  /// **'This item contains files that cannot be copied safely.'**
-  String get migrationUnsupportedFiles;
-
-  /// Moving from Termux to the in-app server: way forward for files that cannot be copied.
-  ///
-  /// In en, this message translates to:
-  /// **'Links, sockets and Git worktrees can\'t be copied. Remove them in Termux and try again, or copy that project by hand.'**
-  String get migrationUnsupportedFilesFix;
-
-  /// Moving from Termux to the in-app server: failure: a Git object link points at a Termux-private file that could not be read.
-  ///
-  /// In en, this message translates to:
-  /// **'Some of this project\'s Git history can\'t be read in Termux, so it can\'t be moved safely.'**
-  String get migrationLinkedFileUnreadable;
-
-  /// Moving from Termux to the in-app server: way forward for unreadable Git object links.
-  ///
-  /// In en, this message translates to:
-  /// **'Open Termux, run git fsck in that project to see what is missing, then try again. Nothing was changed on your phone.'**
-  String get migrationLinkedFileUnreadableFix;
-
-  /// Moving from Termux to the in-app server: failure: an item is too big.
-  ///
-  /// In en, this message translates to:
-  /// **'This item exceeds the migration size or file limit.'**
-  String get migrationTooLarge;
-
-  /// Moving from Termux to the in-app server: way forward for an item that is too big.
-  ///
-  /// In en, this message translates to:
-  /// **'Each item can hold up to 512 MB and 20,000 files. Delete build folders such as node_modules in Termux, then try again.'**
-  String get migrationTooLargeFix;
-
-  /// Moving from Termux to the in-app server: failure: the copied archive did not match.
-  ///
-  /// In en, this message translates to:
-  /// **'The copy could not be verified. Your Termux files are unchanged.'**
-  String get migrationVerificationFailed;
-
-  /// Moving from Termux to the in-app server: failure: moved files were changed afterwards.
-  ///
-  /// In en, this message translates to:
-  /// **'Imported files changed. They will not be overwritten.'**
-  String get migrationDestinationChanged;
-
-  /// Moving from Termux to the in-app server: what happens to changed files.
-  ///
-  /// In en, this message translates to:
-  /// **'The files in On this phone stay as you left them.'**
-  String get migrationDestinationChangedFix;
-
-  /// Moving from Termux to the in-app server: failure: writing the copy failed.
-  ///
-  /// In en, this message translates to:
-  /// **'The copy could not be saved. Check phone storage and try again.'**
-  String get migrationStorageFailed;
-
-  /// Moving from Termux to the in-app server: failure: a step ran out of time.
-  ///
-  /// In en, this message translates to:
-  /// **'This step took too long. Keep the app open and resume.'**
-  String get migrationTimedOut;
-
-  /// Moving from Termux to the in-app server: failure: the selection does not match the saved one.
-  ///
-  /// In en, this message translates to:
-  /// **'Use the saved migration selection to resume.'**
-  String get migrationSelectionChanged;
-
-  /// Moving from Termux to the in-app server: failure: the files are in, the connection failed.
-  ///
-  /// In en, this message translates to:
-  /// **'Files are copied, but On this phone could not connect.'**
-  String get migrationConnectionFailed;
-
-  /// Moving from Termux to the in-app server: Details label: the fixed reason code.
-  ///
-  /// In en, this message translates to:
-  /// **'Reason'**
-  String get migrationFailureCode;
-
-  /// Moving from Termux to the in-app server: Details label: the item being copied when it stopped.
-  ///
-  /// In en, this message translates to:
-  /// **'Item'**
-  String get migrationFailureItem;
-
-  /// Moving from Termux to the in-app server: opens This phone for the in-app server.
-  ///
-  /// In en, this message translates to:
-  /// **'Open This phone'**
-  String get migrationOpenThisPhone;
-
-  /// Moving from Termux to the in-app server: the finished state's title.
-  ///
-  /// In en, this message translates to:
-  /// **'Moved from Termux'**
-  String get migrationDoneTitle;
-
-  /// Moving from Termux to the in-app server: the finished state's body.
-  ///
-  /// In en, this message translates to:
-  /// **'Files copied. Your Termux server is still available.'**
-  String get migrationDone;
-
-  /// Moving from Termux to the in-app server: next step: provider sign-in on the in-app server.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign in to your AI providers again'**
-  String get migrationSignInAgain;
-
-  /// Moving from Termux to the in-app server: next step detail with the provider names.
-  ///
-  /// In en, this message translates to:
-  /// **'{names} appear in your Termux settings. Sign in here to use them.'**
-  String migrationSignInAgainNamed(String names);
-
-  /// Moving from Termux to the in-app server: next step detail when provider names are unknown.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign-ins never move from Termux. Until you sign in here, replies use OpenCode\'s free model, which is slower.'**
-  String get migrationSignInAgainAny;
-
-  /// Moving from Termux to the in-app server: next step: where the projects are.
-  ///
-  /// In en, this message translates to:
-  /// **'Your projects'**
-  String get migrationProjectsWhere;
-
-  /// Moving from Termux to the in-app server: where the projects are, e.g. 'termux-0123abcd'.
-  ///
-  /// In en, this message translates to:
-  /// **'In the folder {folder} in On this phone'**
-  String migrationProjectsWhereBody(String folder);
-
-  /// Moving from Termux to the in-app server: next step: where the private copies are.
-  ///
-  /// In en, this message translates to:
-  /// **'Private copies'**
-  String get migrationExportsWhere;
-
-  /// Moving from Termux to the in-app server: which private copies were saved.
-  ///
-  /// In en, this message translates to:
-  /// **'{items}: saved in On this phone, not turned on'**
-  String migrationExportsWhereBody(String items);
-
-  /// Moving from Termux to the in-app server: next step: removing Termux is the person's choice.
-  ///
-  /// In en, this message translates to:
-  /// **'Remove the Termux server when you\'re ready'**
-  String get migrationRemoveTermux;
-
-  /// Moving from Termux to the in-app server: why and how Termux stays.
-  ///
-  /// In en, this message translates to:
-  /// **'Nothing is removed for you. Until then it keeps working, and you can switch back to it on Servers.'**
-  String get migrationRemoveTermuxBody;
-
-  /// Moving from Termux to the in-app server: the finished state's primary: goes to the in-app server's home.
-  ///
-  /// In en, this message translates to:
-  /// **'Open On this phone'**
-  String get migrationOpenBuiltin;
-
-  /// Moving from Termux to the in-app server: Details label: the projects' folder inside the in-app Linux.
-  ///
-  /// In en, this message translates to:
-  /// **'Projects folder'**
-  String get migrationDetailProjects;
-
-  /// Moving from Termux to the in-app server: Details label: the private copies' folder inside the in-app Linux.
-  ///
-  /// In en, this message translates to:
-  /// **'Private copies folder'**
-  String get migrationDetailExports;
-
-  /// Moving from Termux to the in-app server: shown after the app was closed during a copy.
-  ///
-  /// In en, this message translates to:
-  /// **'The move didn\'t finish'**
-  String get migrationUnfinishedTitle;
-
-  /// Moving from Termux to the in-app server: the unfinished copy's body.
-  ///
-  /// In en, this message translates to:
-  /// **'Resume to carry on where it stopped. What was already copied is kept, and Termux isn\'t changed.'**
-  String get migrationUnfinishedBody;
-
-  /// Moving from Termux to the in-app server: the app could not prepare its private storage.
-  ///
-  /// In en, this message translates to:
-  /// **'The move can\'t start'**
-  String get migrationUnavailableTitle;
-
-  /// Moving from Termux to the in-app server: way forward when the migration cannot be prepared.
-  ///
-  /// In en, this message translates to:
-  /// **'The app couldn\'t prepare its private storage for the copy. Try again, and if it keeps happening, restart the app.'**
-  String get migrationUnavailableBody;
-
-  /// Moving from Termux to the in-app server: This phone row: what moving does.
-  ///
-  /// In en, this message translates to:
-  /// **'Copy your projects to the server on this phone. Termux stays as it is.'**
-  String get migrationRowBody;
-
-  /// Moving from Termux to the in-app server: This phone row: a copy that did not finish.
-  ///
-  /// In en, this message translates to:
-  /// **'Resume moving to On this phone'**
-  String get migrationRowResume;
-
-  /// Moving from Termux to the in-app server: This phone row: the unfinished copy's detail.
-  ///
-  /// In en, this message translates to:
-  /// **'Stopped before it finished. What was copied is kept.'**
-  String get migrationRowResumeBody;
-
-  /// Moving from Termux to the in-app server: This phone row: a copy is running.
-  ///
-  /// In en, this message translates to:
-  /// **'Moving to On this phone'**
-  String get migrationRowRunning;
-
-  /// Moving from Termux to the in-app server: This phone row: after the move.
-  ///
-  /// In en, this message translates to:
-  /// **'Remove the Termux server when you\'re ready.'**
-  String get migrationRowDoneBody;
-
-  /// Moving from Termux to the in-app server: one-time offer under the Termux server row on Servers.
-  ///
-  /// In en, this message translates to:
-  /// **'Move your Termux projects into this app? Termux stays as it is.'**
-  String get migrationOffer;
-
-  /// Moving from Termux to the in-app server: the offer's action: opens the review; nothing starts yet.
-  ///
-  /// In en, this message translates to:
-  /// **'Review what moves'**
-  String get migrationOfferAction;
-
   /// Providers: after 'Sign-in may not have started' on a provider's row (neutral, not needs-you): the way forward. The row's sheet offers to forget it on this phone.
   ///
   /// In en, this message translates to:
   /// **'Check the server before you start again'**
   String get integrationsSignInUncertainNext;
-
-  /// AI Team page while Android has the phone's team stopped: label over the tasks as the app last read them (dimmed, not live). {time} is a clock time, or a date and time before today.
-  ///
-  /// In en, this message translates to:
-  /// **'Tasks as of {time}'**
-  String teamHomeLastKnownTasks(String time);
-
-  /// AI Team page while Android has the phone's team stopped: label over the agents as the app last read them (dimmed, not live). {time} is a clock time, or a date and time before today.
-  ///
-  /// In en, this message translates to:
-  /// **'Agents as of {time}'**
-  String teamHomeLastKnownAgents(String time);
-
-  /// AI Team page while Android has the phone's team stopped: why Start a task is off and why the last-known tasks do not open.
-  ///
-  /// In en, this message translates to:
-  /// **'Start the team again to give it a task or open one.'**
-  String get teamHomeStoppedStartFirst;
 
   /// Why the in-app server did not start: its process ended before it answered
   ///
@@ -35075,180 +32239,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'To connect {name} without the app, set this where the server runs, then restart the server.'**
   String integrationsEnvironmentNote(String name);
-
-  /// Termux problem line: OpenCode answered on this phone but the app lacks Termux's Run commands permission.
-  ///
-  /// In en, this message translates to:
-  /// **'OpenCode is running in Termux, but this app can\'t reach Termux yet. Allow access and it connects.'**
-  String get termuxProblemAccessHeard;
-
-  /// Termux problem line: the app lacks Termux's Run commands permission (usual after the app's storage was cleared).
-  ///
-  /// In en, this message translates to:
-  /// **'This app can\'t reach Termux yet. Allow access so it can find OpenCode there and connect.'**
-  String get termuxProblemAccessNeeded;
-
-  /// Termux problem line: Android no longer shows the permission question; only the app's settings page can grant it.
-  ///
-  /// In en, this message translates to:
-  /// **'Android blocked Termux access for this app. In this app\'s permissions, turn on “Run commands in Termux environment”.'**
-  String get termuxProblemAccessBlocked;
-
-  /// Termux problem line: allow-external-apps is off in Termux.
-  ///
-  /// In en, this message translates to:
-  /// **'Termux doesn\'t take commands from other apps yet. One line in Termux allows it.'**
-  String get termuxProblemOtherAppsOff;
-
-  /// Termux problem line: Termux did not answer a command in time.
-  ///
-  /// In en, this message translates to:
-  /// **'Termux didn\'t answer. Android may have put it to sleep. Open Termux to wake it.'**
-  String get termuxProblemAsleep;
-
-  /// Termux problem line: Termux says OpenCode runs but OpenCode does not answer.
-  ///
-  /// In en, this message translates to:
-  /// **'{runtime} is set up in Termux but isn\'t answering. A restart usually brings it back.'**
-  String termuxProblemNotAnswering(String runtime);
-
-  /// Termux problem line: Termux is not installed.
-  ///
-  /// In en, this message translates to:
-  /// **'Termux isn\'t on this phone. Install it again, or set up On this phone instead.'**
-  String get termuxProblemNotInstalled;
-
-  /// Termux problem line: the installed Termux cannot take commands from other apps.
-  ///
-  /// In en, this message translates to:
-  /// **'This Termux is too old for the app to use. Install the current Termux from F-Droid.'**
-  String get termuxProblemOutdated;
-
-  /// Termux problem line: something else failed; retrying may help.
-  ///
-  /// In en, this message translates to:
-  /// **'This phone couldn\'t check on {runtime} in Termux. Try again in a moment.'**
-  String termuxProblemUnknown(String runtime);
-
-  /// Termux fix action: shows Android's permission question.
-  ///
-  /// In en, this message translates to:
-  /// **'Allow access to Termux'**
-  String get termuxFixAllowAccess;
-
-  /// Termux fix action: opens the app's Android settings page.
-  ///
-  /// In en, this message translates to:
-  /// **'Open this app\'s permissions'**
-  String get termuxFixOpenPermissions;
-
-  /// Termux fix action: opens the sheet with the line that turns on allow-external-apps.
-  ///
-  /// In en, this message translates to:
-  /// **'Allow other apps in Termux'**
-  String get termuxFixAllowOtherApps;
-
-  /// Termux fix action: opens Termux (wakes it; the copied line can be pasted there).
-  ///
-  /// In en, this message translates to:
-  /// **'Open Termux'**
-  String get termuxFixOpenTermux;
-
-  /// Termux fix action: restarts OpenCode in Termux.
-  ///
-  /// In en, this message translates to:
-  /// **'Restart {runtime} in Termux'**
-  String termuxFixRestart(String runtime);
-
-  /// Termux fix action: opens the Termux download page.
-  ///
-  /// In en, this message translates to:
-  /// **'Get Termux'**
-  String get termuxFixGetTermux;
-
-  /// Termux fix action: opens the Termux download page to replace an old build.
-  ///
-  /// In en, this message translates to:
-  /// **'Get the current Termux'**
-  String get termuxFixGetCurrentTermux;
-
-  /// Sheet title: the line that lets other apps run commands in Termux.
-  ///
-  /// In en, this message translates to:
-  /// **'Allow other apps'**
-  String get termuxOtherAppsTitle;
-
-  /// Sheet body above the copyable allow-external-apps line.
-  ///
-  /// In en, this message translates to:
-  /// **'Paste this line in Termux and press Enter, then come back here. Open Termux copies it for you.'**
-  String get termuxOtherAppsBody;
-
-  /// First screen, found on this phone: heading when OpenCode answered in Termux.
-  ///
-  /// In en, this message translates to:
-  /// **'OpenCode is running in Termux'**
-  String get termuxLeadRunning;
-
-  /// First screen, found on this phone: the line under 'OpenCode is running in Termux' when the app lacks Termux access (the heading already says OpenCode runs).
-  ///
-  /// In en, this message translates to:
-  /// **'This app can\'t reach Termux yet. Allow access and it connects to your conversations.'**
-  String get termuxLeadAccessLine;
-
-  /// First screen, found on this phone: heading when OpenCode is set up in Termux but not running or answering.
-  ///
-  /// In en, this message translates to:
-  /// **'OpenCode is set up in Termux'**
-  String get termuxLeadSetUp;
-
-  /// First screen, found on this phone: heading when only Termux is known.
-  ///
-  /// In en, this message translates to:
-  /// **'Termux is on this phone'**
-  String get termuxLeadTermuxOnly;
-
-  /// First screen, found on this phone: the line under a running OpenCode in Termux.
-  ///
-  /// In en, this message translates to:
-  /// **'Connect to pick up your conversations.'**
-  String get termuxLeadRunningBody;
-
-  /// First screen, found on this phone: the line under a stopped OpenCode in Termux.
-  ///
-  /// In en, this message translates to:
-  /// **'It\'s stopped. Start it to pick up your conversations.'**
-  String get termuxLeadStoppedBody;
-
-  /// First screen primary: connects to the running OpenCode in Termux.
-  ///
-  /// In en, this message translates to:
-  /// **'Connect to the server in Termux'**
-  String get termuxLeadConnect;
-
-  /// First screen primary: starts the stopped OpenCode in Termux.
-  ///
-  /// In en, this message translates to:
-  /// **'Start the server in Termux'**
-  String get termuxLeadStart;
-
-  /// Row: a fresh start with the server that runs inside this app, offered to a Termux user.
-  ///
-  /// In en, this message translates to:
-  /// **'Set up On this phone instead'**
-  String get termuxInAppInstead;
-
-  /// Row detail under Set up the in-app server instead.
-  ///
-  /// In en, this message translates to:
-  /// **'A fresh start that runs inside this app. No Termux needed.'**
-  String get termuxInAppInsteadDetail;
-
-  /// This phone row detail: the move needs Termux, which cannot be reached now.
-  ///
-  /// In en, this message translates to:
-  /// **'A fresh start inside this app. To bring your projects from Termux, fix Termux access first.'**
-  String get termuxInAppInsteadBlocked;
 
   /// About: row that opens the notices for parts shipped inside the app.
   ///
@@ -35367,7 +32357,7 @@ abstract class AppLocalizations {
   /// Manage-space delete confirm: what is kept.
   ///
   /// In en, this message translates to:
-  /// **'Termux, your computers and anything pushed to git stay'**
+  /// **'Your computers and anything pushed to git stay'**
   String get manageSpaceKeptAll;
 
   /// Manage-space page: why an action is off during an export.
@@ -35411,12 +32401,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Stays'**
   String get manageSpaceKeptLabel;
-
-  /// Manage-space page: kept row.
-  ///
-  /// In en, this message translates to:
-  /// **'Termux and the projects in it'**
-  String get manageSpaceKeptTermux;
 
   /// Manage-space page: kept row.
   ///
@@ -35724,54 +32708,6 @@ abstract class AppLocalizations {
   /// **'{name} key saved. The server has not loaded it yet.'**
   String integrationsKeySavedPending(String name);
 
-  /// Moving from Termux to the in-app server: the review: the space the chosen items need while copying (a conservative estimate) and the phone's free space.
-  ///
-  /// In en, this message translates to:
-  /// **'Needs about {needed} · {free} free'**
-  String migrationReviewSpace(String needed, String free);
-
-  /// Moving from Termux to the in-app server: the review: the space the chosen items need when the phone's free space could not be read.
-  ///
-  /// In en, this message translates to:
-  /// **'Needs about {needed} · Free space unknown'**
-  String migrationReviewSpaceUnknown(String needed);
-
-  /// Moving from Termux to the in-app server: the review: why copying cannot start, and the way forward, when the chosen items need more than the free space.
-  ///
-  /// In en, this message translates to:
-  /// **'Not enough free space for this. Choose fewer items, or free up space on this phone.'**
-  String get migrationReviewSpaceShort;
-
-  /// Moving from Termux to the in-app server: action on a stopped or unfinished copy: throw away the temporary copy and start over.
-  ///
-  /// In en, this message translates to:
-  /// **'Discard saved copy'**
-  String get migrationDiscard;
-
-  /// Moving from Termux to the in-app server: confirmation title for discarding the saved copy.
-  ///
-  /// In en, this message translates to:
-  /// **'Discard this saved copy?'**
-  String get migrationDiscardTitle;
-
-  /// Moving from Termux to the in-app server: confirmation body for discarding the saved copy.
-  ///
-  /// In en, this message translates to:
-  /// **'Temporary copy files will be removed. Files already imported and everything in Termux will stay.'**
-  String get migrationDiscardBody;
-
-  /// Moving from Termux to the in-app server: shown when discarding the saved copy failed; it stays and can be discarded again.
-  ///
-  /// In en, this message translates to:
-  /// **'The saved copy couldn\'t be removed. Try again in a moment.'**
-  String get migrationDiscardFailed;
-
-  /// Moving from Termux to the in-app server: shown while a stopped copy is still finishing its current step.
-  ///
-  /// In en, this message translates to:
-  /// **'Stopping…'**
-  String get migrationStopping;
-
   /// Model picker: last row and free-model note action; opens Providers to add or sign in to a provider.
   ///
   /// In en, this message translates to:
@@ -35835,19 +32771,19 @@ abstract class AppLocalizations {
   /// Confirm sheet title before compacting the conversation
   ///
   /// In en, this message translates to:
-  /// **'Shorten this conversation?'**
+  /// **'Compact this conversation?'**
   String get chatUiCompactConfirmTitle;
 
   /// Confirm sheet: one line on what Compact does
   ///
   /// In en, this message translates to:
-  /// **'Shortening replaces earlier messages with a short summary to save space. It can\'t be undone.'**
+  /// **'Compact replaces earlier messages with a short summary to save space. It can\'t be undone.'**
   String get chatUiCompactConfirmBody;
 
   /// Confirm sheet button that starts compacting
   ///
   /// In en, this message translates to:
-  /// **'Shorten conversation'**
+  /// **'Compact conversation'**
   String get chatUiCompactConfirmAction;
 
   /// KitTurn: end line of an unfinished turn while the connection is coming back
@@ -39390,36 +36326,6 @@ abstract class AppLocalizations {
   /// **'Without access to files this folder’s files cannot be shown, so it was not opened. Allow access, or choose a folder in the app’s project space.'**
   String get storageAccessRefusedBody;
 
-  /// Shared-storage project on a Termux server: title.
-  ///
-  /// In en, this message translates to:
-  /// **'Allow Termux storage?'**
-  String get storageTermuxTitle;
-
-  /// Shared-storage project on a Termux server: body.
-  ///
-  /// In en, this message translates to:
-  /// **'Your server runs in Termux, and Termux cannot read your phone’s shared storage yet. Without that, this folder shows only hidden items such as .git.'**
-  String get storageTermuxBody;
-
-  /// Shared-storage project on a Termux server: opens Termux to run termux-setup-storage.
-  ///
-  /// In en, this message translates to:
-  /// **'Open Termux'**
-  String get storageTermuxAllow;
-
-  /// Shared-storage project on a Termux server: title of the instruction after Termux opened.
-  ///
-  /// In en, this message translates to:
-  /// **'Allow storage in Termux'**
-  String get storageTermuxStillTitle;
-
-  /// Shared-storage project on a Termux server: what to do.
-  ///
-  /// In en, this message translates to:
-  /// **'In Termux, allow storage when Android asks (the command is termux-setup-storage), then open the folder again.'**
-  String get storageTermuxStillBody;
-
   /// Files: title when a shared-storage folder lists only hidden items and access is off.
   ///
   /// In en, this message translates to:
@@ -39431,12 +36337,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This folder is in your phone’s shared storage and the app cannot read most of its files yet. Only hidden items show.'**
   String get filesAccessNeededBody;
-
-  /// Files: body for the missing-access notice on a Termux server.
-  ///
-  /// In en, this message translates to:
-  /// **'This folder is in your phone’s shared storage and Termux cannot read most of its files yet. Only hidden items show.'**
-  String get filesAccessNeededTermuxBody;
 
   /// Shared-storage project while AI Team is on: restart of the in-app OpenCode so a newly opened folder is visible.
   ///
@@ -40125,13 +37025,13 @@ abstract class AppLocalizations {
   /// Agent persona: Claude Code's card line, at most 28 characters
   ///
   /// In en, this message translates to:
-  /// **'Careful with big changes'**
+  /// **'Understands your codebase'**
   String get agentPersonaClaudeCodeStrength;
 
   /// Agent persona: one sentence about Claude Code, for sheets and settings
   ///
   /// In en, this message translates to:
-  /// **'Plans before it edits; good for larger changes across files.'**
+  /// **'Anthropic’s coding tool that lives in your terminal and understands your codebase.'**
   String get agentPersonaClaudeCodeAbout;
 
   /// Agent persona: what a person needs to use Claude Code
@@ -40143,13 +37043,13 @@ abstract class AppLocalizations {
   /// Agent persona: Codex's card line, at most 28 characters
   ///
   /// In en, this message translates to:
-  /// **'Fast edits and reviews'**
+  /// **'Lightweight terminal agent'**
   String get agentPersonaCodexStrength;
 
   /// Agent persona: one sentence about Codex, for sheets and settings
   ///
   /// In en, this message translates to:
-  /// **'Quick at focused fixes and reviewing changes.'**
+  /// **'OpenAI’s lightweight coding agent that runs in your terminal.'**
   String get agentPersonaCodexAbout;
 
   /// Agent persona: what a person needs to use Codex
@@ -40161,13 +37061,13 @@ abstract class AppLocalizations {
   /// Agent persona: Gemini's card line, at most 28 characters
   ///
   /// In en, this message translates to:
-  /// **'Reads a lot at once'**
+  /// **'Gemini in your terminal'**
   String get agentPersonaGeminiStrength;
 
   /// Agent persona: one sentence about Gemini, for sheets and settings
   ///
   /// In en, this message translates to:
-  /// **'Handles long files and wide questions well.'**
+  /// **'Google’s open source agent that brings Gemini into your terminal.'**
   String get agentPersonaGeminiAbout;
 
   /// Agent persona: what a person needs to use Gemini
@@ -40179,13 +37079,13 @@ abstract class AppLocalizations {
   /// Agent persona: Kilo's card line, at most 28 characters
   ///
   /// In en, this message translates to:
-  /// **'Your choice of provider'**
+  /// **'500+ models, zero markup'**
   String get agentPersonaKiloStrength;
 
   /// Agent persona: one sentence about Kilo, for sheets and settings
   ///
   /// In en, this message translates to:
-  /// **'One agent that works with many model providers.'**
+  /// **'An open agent with 500+ models at zero markup, or your own keys.'**
   String get agentPersonaKiloAbout;
 
   /// Agent persona: what a person needs to use Kilo
@@ -40197,13 +37097,13 @@ abstract class AppLocalizations {
   /// Agent persona: Cline's card line, at most 28 characters
   ///
   /// In en, this message translates to:
-  /// **'Step by step, asks first'**
+  /// **'The open agent'**
   String get agentPersonaClineStrength;
 
   /// Agent persona: one sentence about Cline, for sheets and settings
   ///
   /// In en, this message translates to:
-  /// **'Works in small steps and checks in with you.'**
+  /// **'An open source coding agent for your editor or your terminal.'**
   String get agentPersonaClineAbout;
 
   /// Agent persona: what a person needs to use Cline
@@ -40215,13 +37115,13 @@ abstract class AppLocalizations {
   /// Agent persona: OpenCode's card line, at most 28 characters
   ///
   /// In en, this message translates to:
-  /// **'Any model, free ones too'**
+  /// **'The open source coding agent'**
   String get agentPersonaOpenCodeStrength;
 
   /// Agent persona: one sentence about OpenCode, for sheets and settings
   ///
   /// In en, this message translates to:
-  /// **'Works with any provider, and has free models to start.'**
+  /// **'The open source coding agent: free models included, or connect any provider.'**
   String get agentPersonaOpenCodeAbout;
 
   /// Agent persona: what a person needs to use OpenCode
@@ -40599,7 +37499,7 @@ abstract class AppLocalizations {
   /// Sign-in terminal: what to do while Claude's own sign-in runs
   ///
   /// In en, this message translates to:
-  /// **'{agent} opens its sign-in page. Sign in there with your Claude account, then come back. If {agent} asks for a code, copy it on the page and choose Paste.'**
+  /// **'{agent} opens its sign-in page. Sign in there with your Claude account and come back: {agent} finishes on its own. Only if the page shows a code, copy it and choose Paste.'**
   String agentsSignInTerminalIntro(String agent);
 
   /// Sign-in step body for an agent other than Claude Code
@@ -43803,13 +40703,13 @@ abstract class AppLocalizations {
   /// Context ring: the word beside the ring while the conversation is being compacted
   ///
   /// In en, this message translates to:
-  /// **'Shortening'**
+  /// **'Compacting'**
   String get kitContextRingCompacting;
 
   /// Context ring: screen-reader words while the conversation is being compacted
   ///
   /// In en, this message translates to:
-  /// **'Context, shortening'**
+  /// **'Context, compacting'**
   String get kitContextRingCompactingSemantics;
 
   /// Context details sheet: its title
@@ -43875,7 +40775,7 @@ abstract class AppLocalizations {
   /// Context details sheet: the button that compacts the conversation
   ///
   /// In en, this message translates to:
-  /// **'Shorten now'**
+  /// **'Compact now'**
   String get kitContextSheetCompactNow;
 
   /// Chat: the accessible name of the row of the person's own common short phrases above the message box
@@ -51894,12 +48794,6 @@ abstract class AppLocalizations {
   /// **'Putting back {done} of {total} Git files…'**
   String gitRepairRestoring(int done, int total);
 
-  /// Repair sheet: Termux copies the missing files back
-  ///
-  /// In en, this message translates to:
-  /// **'Copying {done} of {total} Git files from Termux…'**
-  String gitRepairAskingTermux(int done, int total);
-
   /// Repair sheet: last step, Git checks the project
   ///
   /// In en, this message translates to:
@@ -51935,48 +48829,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Start the conversation'**
   String get gitRepairStart;
-
-  /// Repair sheet: the files are in Termux and the app may not run commands there yet
-  ///
-  /// In en, this message translates to:
-  /// **'Files are in Termux'**
-  String get gitRepairTermuxNotAllowedTitle;
-
-  /// Repair sheet: what Allow does
-  ///
-  /// In en, this message translates to:
-  /// **'Allow the app to run commands in Termux, and it copies them back.'**
-  String get gitRepairTermuxNotAllowedBody;
-
-  /// Repair sheet: asks for Termux's Run commands permission, then repairs
-  ///
-  /// In en, this message translates to:
-  /// **'Allow and repair'**
-  String get gitRepairAllow;
-
-  /// Repair sheet: Termux did not run the copy
-  ///
-  /// In en, this message translates to:
-  /// **'Termux didn\'t answer'**
-  String get gitRepairTermuxNoAnswerTitle;
-
-  /// Repair sheet: way forward when Termux did not answer
-  ///
-  /// In en, this message translates to:
-  /// **'Open Termux once so it starts, come back here, and repair again.'**
-  String get gitRepairTermuxNoAnswerBody;
-
-  /// Repair sheet: runs the repair again
-  ///
-  /// In en, this message translates to:
-  /// **'Repair again'**
-  String get gitRepairAgain;
-
-  /// Repair sheet: opens the Termux app
-  ///
-  /// In en, this message translates to:
-  /// **'Open Termux'**
-  String get gitRepairOpenTermux;
 
   /// Repair sheet: some files are gone for good
   ///
@@ -52680,6 +49532,18 @@ abstract class AppLocalizations {
   /// **'A remote with that name is already set up. Choose another name.'**
   String get gitProblemRemoteExists;
 
+  /// GitHub: invalid repository name
+  ///
+  /// In en, this message translates to:
+  /// **'Use a repository name with up to 100 letters, numbers, dots, dashes or underscores.'**
+  String get gitProblemInvalidGitHubRepositoryName;
+
+  /// GitHub: repository name is unavailable
+  ///
+  /// In en, this message translates to:
+  /// **'That name is already used or unavailable in your GitHub account. Try another.'**
+  String get gitProblemGitHubRepositoryNameUnavailable;
+
   /// Git: invalid clone folder name
   ///
   /// In en, this message translates to:
@@ -52704,6 +49568,18 @@ abstract class AppLocalizations {
   /// **'Clone'**
   String get gitActionClone;
 
+  /// Git: initialize the current project
+  ///
+  /// In en, this message translates to:
+  /// **'Start tracking'**
+  String get gitActionInitialize;
+
+  /// GitHub: create and connect a repository
+  ///
+  /// In en, this message translates to:
+  /// **'Create on GitHub'**
+  String get gitActionPublish;
+
   /// Git: busy
   ///
   /// In en, this message translates to:
@@ -52716,11 +49592,35 @@ abstract class AppLocalizations {
   /// **'Cloning…'**
   String get gitBusyClone;
 
+  /// Git: initializing the current project
+  ///
+  /// In en, this message translates to:
+  /// **'Starting Git in this project…'**
+  String get gitBusyInitialize;
+
+  /// GitHub: creating and connecting a repository
+  ///
+  /// In en, this message translates to:
+  /// **'Creating repository on GitHub…'**
+  String get gitBusyPublish;
+
   /// Git: result
   ///
   /// In en, this message translates to:
   /// **'Remote added.'**
   String get gitDoneRemoteAdded;
+
+  /// Git: initialization worked
+  ///
+  /// In en, this message translates to:
+  /// **'Git is ready in this project.'**
+  String get gitDoneInitialized;
+
+  /// GitHub: repository created and connected, but local files have not been pushed
+  ///
+  /// In en, this message translates to:
+  /// **'GitHub repository created and connected. Your project has not been sent yet.'**
+  String get gitDoneGitHubRepositoryCreated;
 
   /// Git: clone worked; path is the new folder
   ///
@@ -52854,6 +49754,84 @@ abstract class AppLocalizations {
   /// **'Clone'**
   String get gitCloneButton;
 
+  /// Git row: initialize Git in the open project
+  ///
+  /// In en, this message translates to:
+  /// **'Start tracking this project'**
+  String get gitInitializeProject;
+
+  /// Git row supporting: initialize Git in place
+  ///
+  /// In en, this message translates to:
+  /// **'Keep these files here and start using Git.'**
+  String get gitInitializeProjectHint;
+
+  /// Git row: create and connect a GitHub repository
+  ///
+  /// In en, this message translates to:
+  /// **'Create a GitHub repository'**
+  String get gitPublishToGitHub;
+
+  /// Git row supporting: create a repository
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a name and who can see it.'**
+  String get gitPublishToGitHubHint;
+
+  /// GitHub repository creation step title
+  ///
+  /// In en, this message translates to:
+  /// **'Create repository'**
+  String get gitPublishTitle;
+
+  /// GitHub repository creation field
+  ///
+  /// In en, this message translates to:
+  /// **'Repository name'**
+  String get gitPublishName;
+
+  /// GitHub repository creation name hint
+  ///
+  /// In en, this message translates to:
+  /// **'Use letters, numbers, dots, dashes or underscores.'**
+  String get gitPublishNameHint;
+
+  /// GitHub repository creation visibility control
+  ///
+  /// In en, this message translates to:
+  /// **'Who can see it'**
+  String get gitPublishVisibility;
+
+  /// GitHub repository visibility option
+  ///
+  /// In en, this message translates to:
+  /// **'Private'**
+  String get gitPublishPrivate;
+
+  /// GitHub repository visibility option
+  ///
+  /// In en, this message translates to:
+  /// **'Public'**
+  String get gitPublishPublic;
+
+  /// GitHub repository private visibility explanation
+  ///
+  /// In en, this message translates to:
+  /// **'Only you and people you choose can see this repository.'**
+  String get gitPublishPrivateHint;
+
+  /// GitHub repository public visibility explanation
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone can see this repository.'**
+  String get gitPublishPublicHint;
+
+  /// GitHub repository creation primary action
+  ///
+  /// In en, this message translates to:
+  /// **'Create repository'**
+  String get gitPublishButton;
+
   /// Git row title
   ///
   /// In en, this message translates to:
@@ -52883,6 +49861,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add a remote'**
   String get gitRemoteAddTitle;
+
+  /// Button on the Git remotes step: pick the remote address from the signed-in GitHub account's repositories.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from GitHub'**
+  String get gitRemotePickGitHub;
+
+  /// Title of the sheet listing the GitHub account's repositories.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a repository'**
+  String get gitRemotePickGitHubTitle;
+
+  /// Shown under the button when the GitHub account has no repositories (or they could not be listed).
+  ///
+  /// In en, this message translates to:
+  /// **'No repositories on this GitHub account yet.'**
+  String get gitRemotePickGitHubNone;
+
+  /// Supporting line on a private repository in the GitHub repository list.
+  ///
+  /// In en, this message translates to:
+  /// **'Private'**
+  String get gitRemoteRepoPrivate;
 
   /// Git remote field
   ///
@@ -53580,18 +50582,6 @@ abstract class AppLocalizations {
   /// **'The server didn\'t stop'**
   String get thisPhoneAnswerStopFailed;
 
-  /// This phone: the answer when a switch between OpenCode versions stopped half way
-  ///
-  /// In en, this message translates to:
-  /// **'The switch didn\'t finish'**
-  String get thisPhoneAnswerSwitchStopped;
-
-  /// This phone: the answer when the app cannot reach Termux; the line under it says why and the button fixes it
-  ///
-  /// In en, this message translates to:
-  /// **'Can\'t reach Termux'**
-  String get thisPhoneAnswerTermux;
-
   /// This phone: the answer when the app cannot safely identify its old processes; the line says to force stop and reopen
   ///
   /// In en, this message translates to:
@@ -54263,12 +51253,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'More ways to set up'**
   String get welcomeMoreWays;
-
-  /// First-run welcome, the Just show me row's one line when a server was found on the phone: the demo is offline and simulated
-  ///
-  /// In en, this message translates to:
-  /// **'A simulated conversation'**
-  String get welcomeDemoLine;
 
   /// KitProgressRing: what a screen reader hears for the measured figure; {percent} is a whole number.
   ///
@@ -55965,7 +52949,7 @@ abstract class AppLocalizations {
   /// Body of the near-limit warning on Running on this phone. The Developer options path is text only.
   ///
   /// In en, this message translates to:
-  /// **'{count} of {limit} background processes: above {limit}, Android stops this app\'s oldest processes first, and those are the servers. New agents wait for room. Stop what was left behind or isn\'t needed.'**
+  /// **'{count} of {limit} background processes: above {limit}, Android stops this app\'s oldest processes first, and those are the servers. Stop what was left behind or isn\'t needed, or lift the limit with Developer options › Disable child process restrictions.'**
   String runningPhoneLimitBody(int count, int limit);
 
   /// Label of a group of processes on Running on this phone: what started them.
@@ -56334,725 +53318,101 @@ abstract class AppLocalizations {
   /// **'Stop {agent}'**
   String stopRowSemantics(String agent);
 
-  /// Voice mode while the mic is held: letting go finishes the recording
+  /// Details: plain line naming where the phone safety check stopped: Android ended the test program
   ///
   /// In en, this message translates to:
-  /// **'Let go when you\'re done'**
-  String get vpttLetGoToFinish;
+  /// **'The safety test was closed by Android (signal {signal}) before it could finish.'**
+  String phoneTeamProofSignal(int signal);
 
-  /// Voice mode while the mic is held and dragged away: letting go throws the recording away
+  /// Details: plain line, one named check was ended by Android. check is a short technical name
   ///
   /// In en, this message translates to:
-  /// **'Let go to cancel'**
-  String get vpttLetGoToCancel;
+  /// **'The safety check “{check}” was closed by Android (signal {signal}).'**
+  String phoneTeamProofCheckSignal(String check, int signal);
 
-  /// Voice mode: the spoken words will be sent after a countdown; seconds is the whole seconds left
+  /// Details: plain line, the phone allowed something the sandbox must block
   ///
   /// In en, this message translates to:
-  /// **'Sending in {seconds}…'**
-  String vpttSendingIn(String seconds);
+  /// **'The safety check “{check}” failed: this phone did not block it the way the team\'s sandbox needs.'**
+  String phoneTeamProofNotBlocked(String check);
 
-  /// Voice mode countdown: keep the words in the box and do not send them
+  /// Details: plain line, the sandbox launcher refused to start
   ///
   /// In en, this message translates to:
-  /// **'Don\'t send'**
-  String get vpttDontSend;
+  /// **'The team\'s sandbox could not start on this phone.'**
+  String get phoneTeamProofSandbox;
 
-  /// Voice typing language choice: listen for the app's own language
+  /// Details: plain line, a normal Ubuntu step (like a Git commit) failed inside the sandbox
   ///
   /// In en, this message translates to:
-  /// **'Same as the app'**
-  String get vpttLanguageFollowApp;
+  /// **'The Ubuntu step “{check}” failed inside the team\'s sandbox.'**
+  String phoneTeamProofUbuntu(String check);
 
-  /// Voice typing language choice: what Same as the app does
+  /// Details: plain line, the proof's test files were changed or missing
   ///
   /// In en, this message translates to:
-  /// **'Listens for the app\'s language when it can, and works out the language from your voice when it can\'t.'**
-  String get vpttLanguageFollowAppDetail;
+  /// **'The safety check\'s private test files changed or could not be set up.'**
+  String get phoneTeamProofFixture;
 
-  /// Voice typing language choice: what Detect from speech does
+  /// Details: plain line, the safety test timed out
   ///
   /// In en, this message translates to:
-  /// **'Works out the language from your voice each time.'**
-  String get vpttLanguageDetectDetail;
+  /// **'The safety test did not answer in time.'**
+  String get phoneTeamProofNoAnswer;
 
-  /// Voice typing setting: stop listening after a pause and send
+  /// Details: plain line, a check of the proot protection tier failed
   ///
   /// In en, this message translates to:
-  /// **'Send when I stop talking'**
-  String get vpttAutoSendTitle;
+  /// **'The proot safety check “{check}” did not pass.'**
+  String phoneTeamProofProot(String check);
 
-  /// Voice typing setting: what Send when I stop talking does
+  /// Details: plain line naming the step the safety check stopped at
   ///
   /// In en, this message translates to:
-  /// **'After a short pause, your words are sent. You get 3 seconds to cancel. Holding the mic never sends by itself.'**
-  String get vpttAutoSendDetail;
+  /// **'The safety check stopped at “{check}”.'**
+  String phoneTeamProofOther(String check);
 
-  /// Tip above the composer's mic: holding it records until the finger lifts
+  /// New conversation: visible action inside the agent grid that opens phone agent setup
   ///
   /// In en, this message translates to:
-  /// **'Hold the mic to talk, let go to finish'**
-  String get tipHoldMic;
+  /// **'Add an agent'**
+  String get chatsNewAddAgent;
 
-  /// Help › Tips row: the tip about holding the mic
+  /// Agent persona: Antigravity card line, at most 28 characters
   ///
   /// In en, this message translates to:
-  /// **'Hold to talk'**
-  String get tipHoldMicTitle;
+  /// **'Antigravity in your terminal'**
+  String get agentPersonaAntigravityStrength;
 
-  /// Voice typing language row: the app's language has no offline speech support, so Same as the app falls back to detecting
+  /// Agent persona: one sentence about Antigravity
   ///
   /// In en, this message translates to:
-  /// **'Your app\'s language ({language}) isn\'t one the offline speech model knows, so it works out the language from your voice instead.'**
-  String vpttLanguageUnavailableOffline(String language);
+  /// **'Google’s terminal-first way to work with Antigravity agents.'**
+  String get agentPersonaAntigravityAbout;
 
-  /// Voice typing language row: the smallest speech model recognises non-English languages poorly; language is the language's own name
+  /// Agent persona: what a person needs to use Antigravity
   ///
   /// In en, this message translates to:
-  /// **'The Compact model is rough outside English. For {language}, choose Balanced or High accuracy above.'**
-  String vpttLanguageCompactRough(String language);
+  /// **'A Google account; sign in in your browser'**
+  String get agentPersonaAntigravityNeeds;
 
-  /// Connection check on a server's page.
+  /// Agents: Antigravity sign-in uses its own terminal and browser code flow
   ///
   /// In en, this message translates to:
-  /// **'Check connection'**
-  String get connCheckTitle;
+  /// **'Antigravity gives you a sign-in link in the terminal. Open it in your browser and sign in with Google, then paste the browser’s code into the terminal.'**
+  String get agentsAntigravitySignInIntro;
 
-  /// Connection check on a server's page.
+  /// Agents: way forward when the upstream Gemini CLI asks the user to switch; does not claim Gemini is unsupported by the app
   ///
   /// In en, this message translates to:
-  /// **'Test the address, sign-in, version, live updates and speed.'**
-  String get connCheckRowDetail;
+  /// **'If Gemini CLI asks you to use Antigravity, go back to Agents and install Antigravity (agy). Your Gemini conversations stay here.'**
+  String get agentsGeminiMigrationNote;
 
-  /// Connection check on a server's page.
+  /// Setup stage when a program crashed and the app runs the step again more carefully
   ///
   /// In en, this message translates to:
-  /// **'Five quick checks against this server. Nothing is changed or saved.'**
-  String get connCheckIntro;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'Check connection'**
-  String get connCheckRun;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'Check again'**
-  String get connCheckAgain;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'Checking…'**
-  String get connCheckRunning;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'Address reachable'**
-  String get connCheckStepAddress;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign-in accepted'**
-  String get connCheckStepSignIn;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'Server version supported'**
-  String get connCheckStepVersion;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'Live updates arriving'**
-  String get connCheckStepLive;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'Round-trip time'**
-  String get connCheckStepSpeed;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'The server answered.'**
-  String get connCheckAddressOk;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'Nothing answered at this address. Check that the server is running and that this phone can reach it, for example over Tailscale.'**
-  String get connCheckAddressUnreachable;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'Something answered, but it is not an OpenCode server. Check the address and the port.'**
-  String get connCheckAddressNotOpenCode;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'The server accepted this sign-in.'**
-  String get connCheckSignInOk;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'This server asks for a password. Add it under Name and address.'**
-  String get connCheckNeedsPassword;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'The server did not accept the saved password. Copy the current one from the server and save it again.'**
-  String get connCheckPasswordRejected;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'This server works with this app.'**
-  String get connCheckVersionOkUnknown;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'This server runs an older OpenCode that this app no longer supports. Update it to OpenCode 2.'**
-  String get connCheckVersionUnsupported;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'The server is starting, or reports a problem. Wait a moment and check again.'**
-  String get connCheckVersionNotReady;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'Updates are arriving as they happen.'**
-  String get connCheckLiveOk;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'Still connecting to live updates. Check again in a moment.'**
-  String get connCheckLiveConnecting;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'Live updates are not arriving. A proxy that buffers or cuts long connections is the usual cause.'**
-  String get connCheckLiveDown;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'Connect to this server to check live updates.'**
-  String get connCheckLiveNotChecked;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'That is slow. Try a closer network, or check the route your VPN takes.'**
-  String get connCheckSpeedSlow;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'Not checked, because an earlier step needs fixing first.'**
-  String get connCheckSkipped;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'How to reach your computer'**
-  String get connCheckReachHelp;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'Tailscale or an SSH tunnel, step by step.'**
-  String get connCheckReachHelpDetail;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'How to reach your computer'**
-  String get reachTitle;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'Your computer\'s OpenCode server should stay private. These two ways keep it off the public internet. Try Tailscale first.'**
-  String get reachIntro;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'Tailscale (recommended)'**
-  String get reachTailscaleHeading;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'Install Tailscale on your computer and on this phone, and sign in to the same account on both.'**
-  String get reachTailscale1;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'On the computer, start the server with a password, for example: opencode serve --port 4096'**
-  String get reachTailscale2;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'Find the computer\'s Tailscale name or its 100.x.x.x address in the Tailscale app.'**
-  String get reachTailscale3;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'Here, add a server with that name and port, for example http://100.101.102.103:4096, and enter the password.'**
-  String get reachTailscale4;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'SSH tunnel (if you cannot use Tailscale)'**
-  String get reachSshHeading;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'You need an SSH app on this phone that can forward a port, and SSH access to your computer.'**
-  String get reachSsh1;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'Start the server on the computer, bound to itself only: opencode serve --port 4096'**
-  String get reachSsh2;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'In the SSH app, forward local port 4096 to 127.0.0.1:4096 on the computer, and keep it running.'**
-  String get reachSsh3;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'Here, add a server at http://127.0.0.1:4096 and enter the password. Then use Check connection.'**
-  String get reachSsh4;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'ssh -N -L 127.0.0.1:4096:127.0.0.1:4096 you@your-computer'**
-  String get reachSshCommand;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'Keep it private'**
-  String get reachSafetyHeading;
-
-  /// Connection check on a server's page.
-  ///
-  /// In en, this message translates to:
-  /// **'Never open the server\'s port to the public internet or share it through a public tunnel. Anyone who reaches it can run commands on your computer.'**
-  String get reachSafety;
-
-  /// Version check result, with the server's version.
-  ///
-  /// In en, this message translates to:
-  /// **'Version {version} works with this app.'**
-  String connCheckVersionOk(String version);
-
-  /// Round-trip time in milliseconds.
-  ///
-  /// In en, this message translates to:
-  /// **'About {ms} ms for a round trip.'**
-  String connCheckSpeedOk(int ms);
-
-  /// No description provided for @scheduleRunNow.
-  ///
-  /// In en, this message translates to:
-  /// **'Run now'**
-  String get scheduleRunNow;
-
-  /// No description provided for @scheduleRunNowNote.
-  ///
-  /// In en, this message translates to:
-  /// **'Starts one run right away. The next scheduled time stays the same.'**
-  String get scheduleRunNowNote;
-
-  /// Keyboard shortcuts sheet: section of shortcuts that work while reviewing changes
-  ///
-  /// In en, this message translates to:
-  /// **'In a review'**
-  String get shortcutsHelpReview;
-
-  /// Keyboard shortcuts sheet: the key label for stopping a running reply (must differ from the plain Esc row)
-  ///
-  /// In en, this message translates to:
-  /// **'Esc while a reply runs'**
-  String get shortcutsStopReplyKeys;
-
-  /// Keyboard shortcuts sheet: Esc stops the reply that is running
-  ///
-  /// In en, this message translates to:
-  /// **'Stop the running reply'**
-  String get shortcutsStopReply;
-
-  /// Keyboard shortcuts sheet: jump to the next change in a review
-  ///
-  /// In en, this message translates to:
-  /// **'Next change'**
-  String get shortcutsReviewNextChange;
-
-  /// Keyboard shortcuts sheet: jump to the previous change in a review
-  ///
-  /// In en, this message translates to:
-  /// **'Previous change'**
-  String get shortcutsReviewPreviousChange;
-
-  /// Queue notice reason: drafts dropped for age
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{1 was too old to send} other{{count} were too old to send}}'**
-  String queueEvictedTooOld(int count);
-
-  /// Queue notice reason: drafts dropped for size
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{1 to stay within the queue limit} other{{count} to stay within the queue limit}}'**
-  String queueEvictedOverLimit(int count);
-
-  /// No description provided for @queueEvictedJoin.
-  ///
-  /// In en, this message translates to:
-  /// **' and '**
-  String get queueEvictedJoin;
-
-  /// Queue notice: what was discarded
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{Discarded 1 queued draft: {reasons}.} other{Discarded {count} queued drafts: {reasons}.}}'**
-  String queueEvictedSummary(int count, String reasons);
-
-  /// Thinking level: default
-  ///
-  /// In en, this message translates to:
-  /// **'Thinking level back to the default.'**
-  String get chatUiThinkingLevelDefault;
-
-  /// Thinking level changed from the keyboard
-  ///
-  /// In en, this message translates to:
-  /// **'Thinking: {level}.'**
-  String chatUiThinkingLevelSet(String level);
-
-  /// Shortcuts sheet: cycle the thinking level
-  ///
-  /// In en, this message translates to:
-  /// **'Next / previous thinking level'**
-  String get shortcutsThinkingLevel;
-
-  /// Shortcuts sheet: move the transcript by page
-  ///
-  /// In en, this message translates to:
-  /// **'Scroll the conversation by a page'**
-  String get shortcutsTranscriptPages;
-
-  /// Shortcuts sheet: jump to the first or last message
-  ///
-  /// In en, this message translates to:
-  /// **'First message / latest message'**
-  String get shortcutsTranscriptEnds;
-
-  /// Shortcuts sheet: next file in a review
-  ///
-  /// In en, this message translates to:
-  /// **'Next file'**
-  String get shortcutsReviewNextFile;
-
-  /// Shortcuts sheet: previous file in a review
-  ///
-  /// In en, this message translates to:
-  /// **'Previous file'**
-  String get shortcutsReviewPreviousFile;
-
-  /// Shortcuts sheet: note under single-key shortcuts
-  ///
-  /// In en, this message translates to:
-  /// **'Single keys such as N, P, [ and ] only work when no text field has focus.'**
-  String get shortcutsNotWhileTyping;
-
-  /// Share a file on the local Wi-Fi (sheet opened from the file viewer).
-  ///
-  /// In en, this message translates to:
-  /// **'Share on Wi-Fi'**
-  String get fileShareAction;
-
-  /// Share a file on the local Wi-Fi (sheet opened from the file viewer).
-  ///
-  /// In en, this message translates to:
-  /// **'Share on Wi-Fi'**
-  String get fileShareTitle;
-
-  /// Share a file on the local Wi-Fi (sheet opened from the file viewer).
-  ///
-  /// In en, this message translates to:
-  /// **'QR code to download {name}'**
-  String fileShareQrLabel(String name);
-
-  /// Share a file on the local Wi-Fi (sheet opened from the file viewer).
-  ///
-  /// In en, this message translates to:
-  /// **'Link'**
-  String get fileShareLinkLabel;
-
-  /// Share a file on the local Wi-Fi (sheet opened from the file viewer).
-  ///
-  /// In en, this message translates to:
-  /// **'Copy link'**
-  String get fileShareCopyLink;
-
-  /// Share a file on the local Wi-Fi (sheet opened from the file viewer).
-  ///
-  /// In en, this message translates to:
-  /// **'Anyone on this Wi-Fi with the link can download this file.'**
-  String get fileShareWarning;
-
-  /// Share a file on the local Wi-Fi (sheet opened from the file viewer).
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =0{Not downloaded yet} =1{Downloaded 1 time} other{Downloaded {count} times}}'**
-  String fileShareDownloads(int count);
-
-  /// Share a file on the local Wi-Fi (sheet opened from the file viewer).
-  ///
-  /// In en, this message translates to:
-  /// **'Stops sharing in {time}'**
-  String fileShareTimeLeft(String time);
-
-  /// Share a file on the local Wi-Fi (sheet opened from the file viewer).
-  ///
-  /// In en, this message translates to:
-  /// **'Stop sharing'**
-  String get fileShareStop;
-
-  /// Share a file on the local Wi-Fi (sheet opened from the file viewer).
-  ///
-  /// In en, this message translates to:
-  /// **'Sharing has stopped. Nobody can download this file now.'**
-  String get fileShareEnded;
-
-  /// Share a file on the local Wi-Fi (sheet opened from the file viewer).
-  ///
-  /// In en, this message translates to:
-  /// **'This phone is not on Wi-Fi. Connect to Wi-Fi to share this file with a nearby device.'**
-  String get fileShareNoWifi;
-
-  /// Share a file on the local Wi-Fi (sheet opened from the file viewer).
-  ///
-  /// In en, this message translates to:
-  /// **'This file can\'t be shared because it may hold keys or passwords.'**
-  String get fileSharePrivate;
-
-  /// Share a file on the local Wi-Fi (sheet opened from the file viewer).
-  ///
-  /// In en, this message translates to:
-  /// **'Sharing could not start. Try again in a moment.'**
-  String get fileShareUnavailable;
-
-  /// Settings › Voice: the choice of who reads replies aloud.
-  ///
-  /// In en, this message translates to:
-  /// **'Read-aloud voice'**
-  String get readAloudVoiceTitle;
-
-  /// Read-aloud voice choice: the speech voice installed on the phone (default).
-  ///
-  /// In en, this message translates to:
-  /// **'Phone\'s voice'**
-  String get readAloudVoicePhone;
-
-  /// Detail under the Phone's voice choice.
-  ///
-  /// In en, this message translates to:
-  /// **'Uses the speech voices installed on this phone.'**
-  String get readAloudVoicePhoneDetail;
-
-  /// Read-aloud voice choice that downloads the natural voice; {size} is the download size such as 142 MB.
-  ///
-  /// In en, this message translates to:
-  /// **'Natural voice (download, about {size})'**
-  String readAloudVoiceNaturalDownload(String size);
-
-  /// Read-aloud voice choice once the natural voice is on the phone.
-  ///
-  /// In en, this message translates to:
-  /// **'Natural voice'**
-  String get readAloudVoiceNatural;
-
-  /// Detail under the Natural voice choice.
-  ///
-  /// In en, this message translates to:
-  /// **'Sounds more like a person and works offline. English only for now; other languages are read by the phone\'s voice.'**
-  String get readAloudVoiceNaturalDetail;
-
-  /// Progress title while the natural voice downloads.
-  ///
-  /// In en, this message translates to:
-  /// **'Downloading the natural voice'**
-  String get naturalVoiceDownloading;
-
-  /// Button that deletes the downloaded natural voice; {size} is the space it frees.
-  ///
-  /// In en, this message translates to:
-  /// **'Remove natural voice ({size})'**
-  String naturalVoiceRemove(String size);
-
-  /// Confirmation title for removing the natural voice.
-  ///
-  /// In en, this message translates to:
-  /// **'Remove the natural voice?'**
-  String get naturalVoiceRemoveTitle;
-
-  /// Confirmation body for removing the natural voice.
-  ///
-  /// In en, this message translates to:
-  /// **'Replies go back to being read by the phone\'s voice. You can download the natural voice again later.'**
-  String get naturalVoiceRemoveBody;
-
-  /// Cancel button of the remove-natural-voice confirmation.
-  ///
-  /// In en, this message translates to:
-  /// **'Keep it'**
-  String get naturalVoiceKeep;
-
-  /// Shown once when a reply is in a language the natural voice does not speak.
-  ///
-  /// In en, this message translates to:
-  /// **'The natural voice can\'t read this language yet, so the phone\'s voice is reading.'**
-  String get naturalVoiceFallbackNote;
-
-  /// Natural voice download could not start for lack of space; {size} is what is needed.
-  ///
-  /// In en, this message translates to:
-  /// **'There isn\'t enough free storage. Free up about {size} and try again.'**
-  String naturalVoiceNoSpace(String size);
-
-  /// Natural voice download failed for a reason other than space.
-  ///
-  /// In en, this message translates to:
-  /// **'The natural voice could not be set up. Check your connection and try again.'**
-  String get naturalVoiceFailed;
-
-  /// App-wide status line while new heavy work (a new agent conversation, the AI Team, a setup job) waits because the app runs too many programs. It starts by itself when room frees up. Followed by processBudgetAgentsRunning when agents run.
-  ///
-  /// In en, this message translates to:
-  /// **'Waiting for room: the phone allows about {ceiling} programs at once.'**
-  String processBudgetWaitRoom(int ceiling);
-
-  /// Second sentence of the waiting-for-room line: how many agent conversations run now.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{1 agent is running.} other{{count} agents are running.}}'**
-  String processBudgetAgentsRunning(int count);
-
-  /// App-wide status line while new heavy work waits because the phone is hot.
-  ///
-  /// In en, this message translates to:
-  /// **'Waiting: the phone is warm. It starts by itself when the phone cools down.'**
-  String get processBudgetWaitWarm;
-
-  /// App-wide status line while new heavy work waits because the battery is at or under 20% and not charging.
-  ///
-  /// In en, this message translates to:
-  /// **'Waiting: the battery is low. It starts by itself once the phone charges.'**
-  String get processBudgetWaitBattery;
-
-  /// Action on the waiting line: opens Running on this phone.
-  ///
-  /// In en, this message translates to:
-  /// **'See what runs'**
-  String get processBudgetSeeRunning;
-
-  /// Caption on Running on this phone: how many programs count toward the limit, and the app's ceiling (32, or 48 when Android's limit is off).
-  ///
-  /// In en, this message translates to:
-  /// **'{count} of them count toward the limit of about {ceiling}'**
-  String processBudgetCount(int count, int ceiling);
-
-  /// Status line of an agent conversation while the agent helper restarts after Android killed it (exit 137, not requested).
-  ///
-  /// In en, this message translates to:
-  /// **'Android stopped the agent because too many programs were running. Starting it again…'**
-  String get agentKilledByAndroid;
-
-  /// Status line of an agent conversation once the helper is back after Android killed it.
-  ///
-  /// In en, this message translates to:
-  /// **'Android stopped the agent because too many programs were running. It\'s back; your conversation continues.'**
-  String get agentBackAfterKill;
-
-  /// Agent row: the app is moving this agent to the version it was tested with, by itself
-  ///
-  /// In en, this message translates to:
-  /// **'Updating to {version}…'**
-  String agentsStateUpdating(String version);
-
-  /// Agent row: the app is updating the shared helper this agent runs on, by itself
-  ///
-  /// In en, this message translates to:
-  /// **'Updating…'**
-  String get agentsStateUpdatingHelper;
-
-  /// Agent row: an automatic update is waiting for a quiet moment (no conversation or setup running)
-  ///
-  /// In en, this message translates to:
-  /// **'Will update when nothing is running'**
-  String get agentsStateUpdateWaiting;
-
-  /// Headline when OpenCode's free tier refuses a request (FreeUsageLimitError)
-  ///
-  /// In en, this message translates to:
-  /// **'OpenCode\'s free models stopped this reply.'**
-  String get agentErrorFreeTier;
-
-  /// What to do when OpenCode's free tier refuses a long conversation
-  ///
-  /// In en, this message translates to:
-  /// **'Long conversations are often refused on the free tier, even when you\'ve used little today. Shortening this one or starting a new one usually helps.'**
-  String get agentErrorFreeTierHint;
-
-  /// Free-tier refusal note: how large the conversation context is; tokens is a short count such as 167k
-  ///
-  /// In en, this message translates to:
-  /// **'This conversation is about {tokens} tokens long.'**
-  String agentErrorFreeTierSize(String tokens);
-
-  /// Free-tier refusal action: compact the conversation
-  ///
-  /// In en, this message translates to:
-  /// **'Shorten this conversation'**
-  String get chatFreeTierShorten;
-
-  /// Free-tier refusal action: start a new conversation carrying the last prompt
-  ///
-  /// In en, this message translates to:
-  /// **'Continue in a new conversation'**
-  String get chatFreeTierNewConversation;
+  /// **'Trying again in compatibility mode'**
+  String get phoneSetupStageCompat;
 
   /// Failure words when the agent host refuses to send a file because it is over the size the viewer reads; not a computer that is off
   ///
@@ -57093,7 +53453,7 @@ abstract class AppLocalizations {
   /// Confirm button that hands an .apk to Android's installer
   ///
   /// In en, this message translates to:
-  /// **'Install…'**
+  /// **'Install app…'**
   String get phoneFileInstallAction;
 
   /// Question when a reply links a large or non-text file that is on this phone
@@ -57117,7 +53477,7 @@ abstract class AppLocalizations {
   /// Title when this version cannot hand a phone file to another app
   ///
   /// In en, this message translates to:
-  /// **'Open it in Files'**
+  /// **'Find the file'**
   String get phoneFileFindTitle;
 
   /// Body when the phone file cannot be opened from here; names where it is
@@ -57138,2044 +53498,311 @@ abstract class AppLocalizations {
   /// **'{name} is in {folder}. Open it from the Files app.'**
   String phoneFileWhereOpen(String name, String folder);
 
-  /// Agent row: a big automatic update waits for Wi-Fi instead of using mobile data
+  /// Providers page: headline when the list of providers did not load (issue #124); the body says why
   ///
   /// In en, this message translates to:
-  /// **'Will update on Wi-Fi'**
-  String get agentsStateUpdateWifi;
+  /// **'Could not load providers'**
+  String get integrationsProvidersLoadFailed;
 
-  /// Composer note while an agent update cannot let a message through: Send is off until it finishes; the draft is kept
+  /// Providers and MCP page: headline when the list of MCP servers did not load; the body says why
   ///
   /// In en, this message translates to:
-  /// **'{agent} is updating, {percent}%. You can send when it\'s done.'**
-  String agentUpdateSendBlocked(String agent, String percent);
+  /// **'Could not load MCP servers'**
+  String get integrationsMcpServersLoadFailed;
 
-  /// Composer note while an agent update cannot let a message through and its progress is not known yet
+  /// Providers and MCP page: headline when the list of MCP resources did not load; the body says why
   ///
   /// In en, this message translates to:
-  /// **'{agent} is updating. You can send when it\'s done.'**
-  String agentUpdateSendBlockedNoPercent(String agent);
+  /// **'Could not load MCP resources'**
+  String get integrationsResourcesLoadFailed;
 
-  /// Plain words when the phone could not start agent work because agent setup or an update was running; technical text goes under Details
+  /// Providers and MCP page: body when a list did not load for a reason the app could not sort; Details show the technical text
   ///
   /// In en, this message translates to:
-  /// **'Your agents are being updated, so this could not start yet. Try again in a moment; your message is kept.'**
-  String get productErrorAgentUpdating;
+  /// **'The server didn\'t send this list. Try again.'**
+  String get integrationsListFailedBody;
 
-  /// Running on this phone: card that leads to Developer options on Android 14+ after Android stopped agent work.
+  /// Providers and MCP page: body when the server says the open project's folder does not exist on it
   ///
   /// In en, this message translates to:
-  /// **'Let agents run more programs at once'**
-  String get childLimitTitle;
+  /// **'This project\'s folder isn\'t on the server any more. Open another project.'**
+  String get integrationsFolderMissing;
 
-  /// Child process limit card: why, honestly (never says unlimited).
+  /// Providers page: calm state when the server has no provider list (an older or newer server version); not an error
   ///
   /// In en, this message translates to:
-  /// **'Android stops agents when the app runs more than 32 programs. Turning this off lets bigger jobs finish; the app still pauses work when the phone gets hot or the battery is low.'**
-  String get childLimitBody;
+  /// **'This server doesn\'t list providers'**
+  String get integrationsProvidersUnsupported;
 
-  /// Child process limit card: the step when Developer options are on.
+  /// MCP page: calm state when the server has no MCP server list (an older or newer server version); not an error
   ///
   /// In en, this message translates to:
-  /// **'In Developer options, turn on “Disable child process restrictions”, then come back.'**
-  String get childLimitStepsOpen;
+  /// **'This server doesn\'t list MCP servers'**
+  String get integrationsMcpServersUnsupported;
 
-  /// Child process limit card: button that opens Developer options.
+  /// MCP page: calm state when the server has no MCP resource list (an older or newer server version); not an error
   ///
   /// In en, this message translates to:
-  /// **'Open Developer options'**
-  String get childLimitOpenDeveloper;
+  /// **'This server doesn\'t list MCP resources'**
+  String get integrationsResourcesUnsupported;
 
-  /// Child process limit card: the step when Developer options are off.
+  /// Providers and MCP page: body under the 'This server doesn't list …' states
   ///
   /// In en, this message translates to:
-  /// **'Developer options are off. Turn them on in Settings › About phone: tap Build number seven times.'**
-  String get childLimitStepsEnable;
+  /// **'Its version doesn\'t offer this list.'**
+  String get integrationsListUnsupportedBody;
 
-  /// Child process limit card: button that opens About phone.
+  /// Providers and MCP page: calm state while the connection to the server is starting or reconnecting; not an error
   ///
   /// In en, this message translates to:
-  /// **'Open About phone'**
-  String get childLimitOpenAbout;
+  /// **'Waiting for the server'**
+  String get integrationsWaitingTitle;
 
-  /// Child process limit card: steps as text only (no button).
+  /// Providers and MCP page: body under 'Waiting for the server'
   ///
   /// In en, this message translates to:
-  /// **'Open Settings › System › Developer options and turn on “Disable child process restrictions”.'**
-  String get childLimitStepsText;
+  /// **'This page loads by itself once the server is connected.'**
+  String get integrationsWaitingBody;
 
-  /// Child process limit card: quiet action that hides the card.
+  /// Crash report offer: the one calm notice shown once after the app crashed. Nothing is sent by itself.
   ///
   /// In en, this message translates to:
-  /// **'Hide'**
-  String get childLimitHide;
+  /// **'OpenCode Mobile closed unexpectedly last time. Send a crash report?'**
+  String get crashOfferMessage;
 
-  /// Small tag beside Claude Agent's models and its row in the model picker: this is a trial
+  /// Crash report offer: opens Report a problem with the crash details pre-filled, to review before sending.
   ///
   /// In en, this message translates to:
-  /// **'Trial'**
-  String get claudeAgentTrialTag;
+  /// **'Review and send'**
+  String get crashOfferReview;
 
-  /// Model picker row on this phone's server that turns on OpenCode's own Claude Agent provider
-  ///
-  /// In en, this message translates to:
-  /// **'Try Claude Agent'**
-  String get claudeAgentTryTitle;
-
-  /// Supporting line of the Try Claude Agent row
-  ///
-  /// In en, this message translates to:
-  /// **'Claude inside OpenCode, with your Claude Code sign-in on this phone. Your Claude Code chats stay as they are.'**
-  String get claudeAgentTrySupporting;
-
-  /// Supporting line of the Try Claude Agent row while the app sets it up
-  ///
-  /// In en, this message translates to:
-  /// **'Setting up Claude Agent…'**
-  String get claudeAgentPreparing;
-
-  /// Model picker notice title when OpenCode's Claude Agent finds no Claude Code sign-in
-  ///
-  /// In en, this message translates to:
-  /// **'Claude isn\'t signed in on this phone'**
-  String get claudeAgentNeedsSignInTitle;
-
-  /// Model picker notice body: where to sign in (the existing Agents page)
-  ///
-  /// In en, this message translates to:
-  /// **'Claude Agent uses Claude Code\'s sign-in. Sign in to Claude Code in Agents, then check again.'**
-  String get claudeAgentNeedsSignInBody;
-
-  /// Model picker notice title when Claude Code is missing from the phone's Linux
-  ///
-  /// In en, this message translates to:
-  /// **'Claude Code isn\'t installed on this phone'**
-  String get claudeAgentNotInstalledTitle;
-
-  /// Model picker notice body when Claude Code is not installed
-  ///
-  /// In en, this message translates to:
-  /// **'Claude Agent runs the Claude Code on this phone. Install it in Agents, then check again.'**
-  String get claudeAgentNotInstalledBody;
-
-  /// Model picker notice title when another program named claude already exists where the app would add its launcher
-  ///
-  /// In en, this message translates to:
-  /// **'Claude Agent can\'t be set up here'**
-  String get claudeAgentBlockedTitle;
-
-  /// Model picker notice body for the blocked case
-  ///
-  /// In en, this message translates to:
-  /// **'This phone\'s Linux already has another program called claude in /usr/local/sbin, and the app leaves it alone.'**
-  String get claudeAgentBlockedBody;
-
-  /// Model picker notice title when Claude Agent's models did not arrive
-  ///
-  /// In en, this message translates to:
-  /// **'Claude Agent didn\'t start'**
-  String get claudeAgentFailedTitle;
-
-  /// Model picker notice body for the failed case
-  ///
-  /// In en, this message translates to:
-  /// **'Its models didn\'t arrive. Check again in a moment.'**
-  String get claudeAgentFailedBody;
-
-  /// Notice action that opens Settings › Agents, where Claude Code is installed and signed in
-  ///
-  /// In en, this message translates to:
-  /// **'Open Agents'**
-  String get claudeAgentOpenAgents;
-
-  /// Notice action that checks Claude Agent again
-  ///
-  /// In en, this message translates to:
-  /// **'Check again'**
-  String get claudeAgentCheckAgain;
-
-  /// Screen reader name of the Check again action
-  ///
-  /// In en, this message translates to:
-  /// **'Check Claude Agent again'**
-  String get claudeAgentCheckAgainLabel;
-
-  /// Model picker status once Claude Agent's models arrived
-  ///
-  /// In en, this message translates to:
-  /// **'Claude Agent is ready. Its models are marked Trial.'**
-  String get claudeAgentReady;
-
-  /// Keep running screen: switch title. On means the app never slows the agents' programs when the phone is warm, the battery is low or the app is hidden
-  ///
-  /// In en, this message translates to:
-  /// **'Always full speed'**
-  String get fullSpeedSetting;
-
-  /// Keep running screen: one line under the Always full speed switch
-  ///
-  /// In en, this message translates to:
-  /// **'Off: when the phone is warm, the battery is low or the app is hidden, builds and tests on this phone run slower to save heat and battery. Replies are not slowed.'**
-  String get fullSpeedSettingDetail;
-
-  /// Keep running screen: replaces the line under the Always full speed switch while the agents' programs run at lower priority
-  ///
-  /// In en, this message translates to:
-  /// **'Builds and tests are running slower right now to save heat and battery. Replies are not slowed.'**
-  String get fullSpeedSettingEasing;
-
-  /// No description provided for @teamVoiceProductOwner.
-  ///
-  /// In en, this message translates to:
-  /// **'Product owner'**
-  String get teamVoiceProductOwner;
-
-  /// No description provided for @teamVoiceArchitect.
-  ///
-  /// In en, this message translates to:
-  /// **'Architect'**
-  String get teamVoiceArchitect;
-
-  /// No description provided for @teamVoiceManager.
-  ///
-  /// In en, this message translates to:
-  /// **'Manager'**
-  String get teamVoiceManager;
-
-  /// No description provided for @teamVoiceDeveloper.
-  ///
-  /// In en, this message translates to:
-  /// **'Developer'**
-  String get teamVoiceDeveloper;
-
-  /// No description provided for @teamVoiceDeveloperAs.
-  ///
-  /// In en, this message translates to:
-  /// **'Developer · {persona}'**
-  String teamVoiceDeveloperAs(String persona);
-
-  /// No description provided for @teamVoiceReviewer.
-  ///
-  /// In en, this message translates to:
-  /// **'Reviewer'**
-  String get teamVoiceReviewer;
-
-  /// No description provided for @teamVoiceSaysPlanning.
-  ///
-  /// In en, this message translates to:
-  /// **'Planning how to build it.'**
-  String get teamVoiceSaysPlanning;
-
-  /// No description provided for @teamVoiceSaysPlanReady.
-  ///
-  /// In en, this message translates to:
-  /// **'The plan is ready for you.'**
-  String get teamVoiceSaysPlanReady;
-
-  /// No description provided for @teamVoiceSaysStarting.
-  ///
-  /// In en, this message translates to:
-  /// **'Starting on this task.'**
-  String get teamVoiceSaysStarting;
-
-  /// No description provided for @teamVoiceSaysWorking.
-  ///
-  /// In en, this message translates to:
-  /// **'Working on this task.'**
-  String get teamVoiceSaysWorking;
-
-  /// No description provided for @teamVoiceSaysChecking.
-  ///
-  /// In en, this message translates to:
-  /// **'Checking the work against its criteria.'**
-  String get teamVoiceSaysChecking;
-
-  /// No description provided for @teamVoiceSaysFoundProblems.
-  ///
-  /// In en, this message translates to:
-  /// **'Found problems that need a fix.'**
-  String get teamVoiceSaysFoundProblems;
-
-  /// No description provided for @teamVoiceSaysMerging.
-  ///
-  /// In en, this message translates to:
-  /// **'Merging the work into dev.'**
-  String get teamVoiceSaysMerging;
-
-  /// No description provided for @teamVoiceSaysMerged.
-  ///
-  /// In en, this message translates to:
-  /// **'Merged into dev.'**
-  String get teamVoiceSaysMerged;
-
-  /// No description provided for @teamVoiceSaysPlanQueued.
-  ///
-  /// In en, this message translates to:
-  /// **'The plan is in line to start.'**
-  String get teamVoiceSaysPlanQueued;
-
-  /// No description provided for @teamVoiceSaysQueued.
-  ///
-  /// In en, this message translates to:
-  /// **'This task is in line to start.'**
-  String get teamVoiceSaysQueued;
-
-  /// No description provided for @teamVoiceSaysWaitingForLane.
-  ///
-  /// In en, this message translates to:
-  /// **'Waiting for a free lane.'**
-  String get teamVoiceSaysWaitingForLane;
-
-  /// No description provided for @teamVoiceSaysWaitingForTask.
-  ///
-  /// In en, this message translates to:
-  /// **'Waiting for another task to finish.'**
-  String get teamVoiceSaysWaitingForTask;
-
-  /// No description provided for @teamVoiceSaysWaitingForChat.
-  ///
-  /// In en, this message translates to:
-  /// **'Waiting for your chat to finish.'**
-  String get teamVoiceSaysWaitingForChat;
-
-  /// No description provided for @teamVoiceSaysWaitingForCheck.
-  ///
-  /// In en, this message translates to:
-  /// **'Waiting for this phone to be checked.'**
-  String get teamVoiceSaysWaitingForCheck;
-
-  /// No description provided for @teamVoiceSaysPaused.
-  ///
-  /// In en, this message translates to:
-  /// **'Paused.'**
-  String get teamVoiceSaysPaused;
-
-  /// No description provided for @teamVoiceSaysStopped.
-  ///
-  /// In en, this message translates to:
-  /// **'Stopped.'**
-  String get teamVoiceSaysStopped;
-
-  /// No description provided for @teamVoiceSaysInterrupted.
-  ///
-  /// In en, this message translates to:
-  /// **'Interrupted. Resume it to pick up where it was.'**
-  String get teamVoiceSaysInterrupted;
-
-  /// No description provided for @teamVoiceSaysResuming.
-  ///
-  /// In en, this message translates to:
-  /// **'Checking the earlier session before resuming.'**
-  String get teamVoiceSaysResuming;
-
-  /// No description provided for @teamVoiceNowPlanning.
-  ///
-  /// In en, this message translates to:
-  /// **'Architect is planning'**
-  String get teamVoiceNowPlanning;
-
-  /// No description provided for @teamVoiceNowWorking.
-  ///
-  /// In en, this message translates to:
-  /// **'{developer} is working'**
-  String teamVoiceNowWorking(String developer);
-
-  /// No description provided for @teamVoiceNowChecking.
-  ///
-  /// In en, this message translates to:
-  /// **'Reviewer is checking'**
-  String get teamVoiceNowChecking;
-
-  /// No description provided for @teamVoiceNowNeedsYou.
-  ///
-  /// In en, this message translates to:
-  /// **'Waiting for you'**
-  String get teamVoiceNowNeedsYou;
-
-  /// No description provided for @teamVoiceNowMerging.
-  ///
-  /// In en, this message translates to:
-  /// **'Manager is merging into dev'**
-  String get teamVoiceNowMerging;
-
-  /// No description provided for @teamVoiceNowMerged.
-  ///
-  /// In en, this message translates to:
-  /// **'Merged into dev'**
-  String get teamVoiceNowMerged;
-
-  /// No description provided for @teamVoiceNowWaiting.
-  ///
-  /// In en, this message translates to:
-  /// **'Waiting to start'**
-  String get teamVoiceNowWaiting;
-
-  /// No description provided for @teamVoiceNowPaused.
-  ///
-  /// In en, this message translates to:
-  /// **'Paused'**
-  String get teamVoiceNowPaused;
-
-  /// No description provided for @teamVoiceNowStopped.
-  ///
-  /// In en, this message translates to:
-  /// **'Stopped'**
-  String get teamVoiceNowStopped;
-
-  /// No description provided for @teamVoiceNowResuming.
-  ///
-  /// In en, this message translates to:
-  /// **'Resuming'**
-  String get teamVoiceNowResuming;
-
-  /// No description provided for @teamVoiceNowManager.
-  ///
-  /// In en, this message translates to:
-  /// **'Manager has an update'**
-  String get teamVoiceNowManager;
-
-  /// No description provided for @teamVoiceReviewerResult.
-  ///
-  /// In en, this message translates to:
-  /// **'{total, plural, =1{Checked 1 criterion: {met} met.} other{Checked {total} criteria: {met} met.}}'**
-  String teamVoiceReviewerResult(int total, int met);
-
-  /// No description provided for @teamVoiceApprovePlan.
-  ///
-  /// In en, this message translates to:
-  /// **'Start building {name}'**
-  String teamVoiceApprovePlan(String name);
-
-  /// No description provided for @teamVoiceAcceptPhase.
-  ///
-  /// In en, this message translates to:
-  /// **'Accept {phase}'**
-  String teamVoiceAcceptPhase(String phase);
-
-  /// No description provided for @teamVoicePutOnMain.
-  ///
-  /// In en, this message translates to:
-  /// **'Put {repo} on main'**
-  String teamVoicePutOnMain(String repo);
-
-  /// Linux manager: title of the Services page and its hub row.
-  ///
-  /// In en, this message translates to:
-  /// **'Services'**
-  String get linuxSvcTitle;
-
-  /// Linux manager hub: the Services row when nothing is known yet.
-  ///
-  /// In en, this message translates to:
-  /// **'Keep your own programs running'**
-  String get linuxSvcRowDetail;
-
-  /// Linux manager hub: the Services row line when some services run; names are comma separated.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{1 running: {names}} other{{count} running: {names}}}'**
-  String linuxSvcHubRunning(int count, String names);
-
-  /// Linux manager hub: the Services row line when none runs.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{1 service, off} other{{count} services, all off}}'**
-  String linuxSvcHubOff(int count);
-
-  /// Linux manager hub: the Services row line when a service gave up.
-  ///
-  /// In en, this message translates to:
-  /// **'{name} stopped after crashing'**
-  String linuxSvcHubCrashed(String name);
-
-  /// Services page: first row.
-  ///
-  /// In en, this message translates to:
-  /// **'Add a service'**
-  String get linuxSvcAdd;
-
-  /// Services page: first row, supporting line.
-  ///
-  /// In en, this message translates to:
-  /// **'Run a command of your own and keep it running'**
-  String get linuxSvcAddDetail;
-
-  /// Add a service page: title.
-  ///
-  /// In en, this message translates to:
-  /// **'Add a service'**
-  String get linuxSvcAddTitle;
-
-  /// Services page: empty state.
-  ///
-  /// In en, this message translates to:
-  /// **'Nothing runs on its own yet. Add your own command and it keeps running, even after a crash or when the app restarts.'**
-  String get linuxSvcEmpty;
-
-  /// Services page: caption under the list.
-  ///
-  /// In en, this message translates to:
-  /// **'A service you start keeps running: it comes back after a crash and when the app restarts, until you stop it.'**
-  String get linuxSvcKeepsRunning;
-
-  /// Services page: caption about the screen being off.
-  ///
-  /// In en, this message translates to:
-  /// **'While the screen is off, services may pause unless the phone is charging.'**
-  String get linuxSvcScreenOff;
-
-  /// Service state: running, start time unknown.
-  ///
-  /// In en, this message translates to:
-  /// **'Running'**
-  String get linuxSvcRunning;
-
-  /// Service state: running; duration is a kit duration such as 3 h 12 min.
-  ///
-  /// In en, this message translates to:
-  /// **'Running for {duration}'**
-  String linuxSvcRunningFor(String duration);
-
-  /// Service row: the port, after the state.
-  ///
-  /// In en, this message translates to:
-  /// **'port {port}'**
-  String linuxSvcPort(String port);
-
-  /// Service state: off.
-  ///
-  /// In en, this message translates to:
-  /// **'Off'**
-  String get linuxSvcOff;
-
-  /// Service state: starting.
-  ///
-  /// In en, this message translates to:
-  /// **'Starting…'**
-  String get linuxSvcStarting;
-
-  /// Service state: stopping.
-  ///
-  /// In en, this message translates to:
-  /// **'Stopping…'**
-  String get linuxSvcStopping;
-
-  /// Service state: being removed.
-  ///
-  /// In en, this message translates to:
-  /// **'Removing…'**
-  String get linuxSvcRemoving;
-
-  /// Service state: crashed and will be tried again; counts down.
-  ///
-  /// In en, this message translates to:
-  /// **'Crashed (exit {code}). Trying again in {seconds} s'**
-  String linuxSvcRetrying(int code, int seconds);
-
-  /// Service state: gave up after crashing; time is the clock time of the last exit.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{Stopped after crashing once · {time}} other{Stopped after crashing {count} times · {time}}}'**
-  String linuxSvcGaveUp(int count, String time);
-
-  /// Service state: gave up, number of crashes unknown.
-  ///
-  /// In en, this message translates to:
-  /// **'Stopped after crashing · {time}'**
-  String linuxSvcGaveUpNoCount(String time);
-
-  /// Service state: the program ended by itself.
-  ///
-  /// In en, this message translates to:
-  /// **'Finished (exit {code})'**
-  String linuxSvcExited(int code);
-
-  /// Service state: its port is taken by another program.
-  ///
-  /// In en, this message translates to:
-  /// **'Port {port} is already in use. Trying again soon'**
-  String linuxSvcPortBusy(String port);
-
-  /// Service chip: start.
-  ///
-  /// In en, this message translates to:
-  /// **'Start'**
-  String get linuxSvcStart;
-
-  /// Service chip: stop.
-  ///
-  /// In en, this message translates to:
-  /// **'Stop'**
-  String get linuxSvcStop;
-
-  /// Service act naming its target.
-  ///
-  /// In en, this message translates to:
-  /// **'Start {name}'**
-  String linuxSvcStartNamed(String name);
-
-  /// Service act naming its target.
-  ///
-  /// In en, this message translates to:
-  /// **'Stop {name}'**
-  String linuxSvcStopNamed(String name);
-
-  /// Service act naming its target.
-  ///
-  /// In en, this message translates to:
-  /// **'Restart {name}'**
-  String linuxSvcRestartNamed(String name);
-
-  /// Service act naming its target.
-  ///
-  /// In en, this message translates to:
-  /// **'Remove {name}'**
-  String linuxSvcRemoveNamed(String name);
-
-  /// Service act: open its page in the preview.
-  ///
-  /// In en, this message translates to:
-  /// **'Open {name}'**
-  String linuxSvcOpenNamed(String name);
-
-  /// Service act: open, supporting line.
-  ///
-  /// In en, this message translates to:
-  /// **'Its page on port {port}'**
-  String linuxSvcOpenDetail(String port);
-
-  /// Service act: stop, supporting line.
-  ///
-  /// In en, this message translates to:
-  /// **'It stays stopped until you start it again'**
-  String get linuxSvcStopDetail;
-
-  /// Service act: start, supporting line.
-  ///
-  /// In en, this message translates to:
-  /// **'It keeps running, also after a crash or an app restart'**
-  String get linuxSvcStartDetail;
-
-  /// Service page: how often it came back after a crash.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{Came back once after a crash, at {time}} other{Came back {count} times after a crash, last at {time}}}'**
-  String linuxSvcCameBack(int count, String time);
-
-  /// Remove question: title.
-  ///
-  /// In en, this message translates to:
-  /// **'Remove {name}?'**
-  String linuxSvcRemoveTitle(String name);
-
-  /// Remove question: body.
-  ///
-  /// In en, this message translates to:
-  /// **'It stops now and is no longer kept running.'**
-  String get linuxSvcRemoveBody;
-
-  /// Remove question: what goes.
-  ///
-  /// In en, this message translates to:
-  /// **'Its log and settings are deleted'**
-  String get linuxSvcRemoveGoes;
-
-  /// Remove question: what stays.
-  ///
-  /// In en, this message translates to:
-  /// **'The program stays installed'**
-  String get linuxSvcRemoveStays;
-
-  /// Service log: title.
-  ///
-  /// In en, this message translates to:
-  /// **'Log'**
-  String get linuxSvcLogTitle;
-
-  /// Service log: empty.
-  ///
-  /// In en, this message translates to:
-  /// **'Nothing written yet'**
-  String get linuxSvcLogEmpty;
-
-  /// Service log: marker line, started.
-  ///
-  /// In en, this message translates to:
-  /// **'Started'**
-  String get linuxSvcLogStarted;
-
-  /// Service log: marker line, crashed.
-  ///
-  /// In en, this message translates to:
-  /// **'Crashed (exit {code})'**
-  String linuxSvcLogCrashed(int code);
-
-  /// Service log: marker line, ended normally.
-  ///
-  /// In en, this message translates to:
-  /// **'Ended (exit {code})'**
-  String linuxSvcLogEnded(int code);
-
-  /// Service log: marker line, retry delay.
-  ///
-  /// In en, this message translates to:
-  /// **'Trying again in {seconds} s'**
-  String linuxSvcLogRetry(int seconds);
-
-  /// Service log: marker line, gave up.
-  ///
-  /// In en, this message translates to:
-  /// **'Gave up after crashing too many times'**
-  String get linuxSvcLogGaveUp;
-
-  /// Service log: marker line, port busy.
-  ///
-  /// In en, this message translates to:
-  /// **'Port {port} is in use'**
-  String linuxSvcLogPortBusy(String port);
-
-  /// Services page: error title when the service runner is down.
-  ///
-  /// In en, this message translates to:
-  /// **'Services couldn\'t start.'**
-  String get linuxSvcCouldNotStart;
-
-  /// Services: a problem with no other words.
-  ///
-  /// In en, this message translates to:
-  /// **'That didn\'t work. Try again.'**
-  String get linuxSvcProblemFailed;
-
-  /// Services page: Linux is not installed.
-  ///
-  /// In en, this message translates to:
-  /// **'Set up Linux from This phone, then come back to add services.'**
-  String get linuxSvcProblemMissing;
-
-  /// Services: too many.
-  ///
-  /// In en, this message translates to:
-  /// **'You can keep up to 16 services. Remove one first.'**
-  String get linuxSvcProblemTooMany;
-
-  /// Services: could not write the files.
-  ///
-  /// In en, this message translates to:
-  /// **'Couldn\'t save that. The phone may be out of space.'**
-  String get linuxSvcProblemWrite;
-
-  /// Add a service: name rule.
-  ///
-  /// In en, this message translates to:
-  /// **'Use 2 to 24 lowercase letters, numbers or dashes, starting with a letter'**
-  String get linuxSvcErrNameShape;
-
-  /// Add a service: reserved name.
-  ///
-  /// In en, this message translates to:
-  /// **'That name is kept for the app. Pick another'**
-  String get linuxSvcErrNameReserved;
-
-  /// Add a service: name taken.
-  ///
-  /// In en, this message translates to:
-  /// **'That name is already used by a service'**
-  String get linuxSvcErrNameTaken;
-
-  /// Add a service: name taken by a known service.
-  ///
-  /// In en, this message translates to:
-  /// **'That name is used by {name}'**
-  String linuxSvcErrNameUsedBy(String name);
-
-  /// Add a service: empty command.
-  ///
-  /// In en, this message translates to:
-  /// **'Write the command to run'**
-  String get linuxSvcErrCommand;
-
-  /// Add a service: bad folder.
-  ///
-  /// In en, this message translates to:
-  /// **'Write the folder it runs in, starting with /'**
-  String get linuxSvcErrFolder;
-
-  /// Add a service: port out of range.
-  ///
-  /// In en, this message translates to:
-  /// **'Use a port from 1024 to 65535'**
-  String get linuxSvcErrPortRange;
-
-  /// Add a service: port below 1024.
-  ///
-  /// In en, this message translates to:
-  /// **'Ports below 1024 aren\'t allowed on Android'**
-  String get linuxSvcErrPortLow;
-
-  /// Add a service: the server's port.
-  ///
-  /// In en, this message translates to:
-  /// **'Port {port} belongs to OpenCode'**
-  String linuxSvcErrPortServer(String port);
-
-  /// Add a service: reserved port.
-  ///
-  /// In en, this message translates to:
-  /// **'That port belongs to OpenCode or another part of this app. Pick another port'**
-  String get linuxSvcErrPortReserved;
-
-  /// Add a service: port taken.
-  ///
-  /// In en, this message translates to:
-  /// **'That port is already used by another service. Pick another port'**
-  String get linuxSvcErrPortTaken;
-
-  /// Add a service: port taken by a known service.
-  ///
-  /// In en, this message translates to:
-  /// **'Port {port} is used by {name}'**
-  String linuxSvcErrPortUsedBy(String port, String name);
-
-  /// Add a service: field.
-  ///
-  /// In en, this message translates to:
-  /// **'Name'**
-  String get linuxSvcFieldName;
-
-  /// Add a service: name helper.
-  ///
-  /// In en, this message translates to:
-  /// **'2 to 24 lowercase letters, numbers or dashes'**
-  String get linuxSvcFieldNameHelper;
-
-  /// Add a service: field.
-  ///
-  /// In en, this message translates to:
-  /// **'Command'**
-  String get linuxSvcFieldCommand;
-
-  /// Add a service: command helper.
-  ///
-  /// In en, this message translates to:
-  /// **'Runs in bash. It should keep running, not finish'**
-  String get linuxSvcFieldCommandHelper;
-
-  /// Add a service: field.
-  ///
-  /// In en, this message translates to:
-  /// **'Folder'**
-  String get linuxSvcFieldFolder;
-
-  /// Add a service: field; the field is marked optional by the kit.
-  ///
-  /// In en, this message translates to:
-  /// **'Port'**
-  String get linuxSvcFieldPort;
-
-  /// Add a service: port helper.
-  ///
-  /// In en, this message translates to:
-  /// **'Lets you open it and stops two programs fighting over one port'**
-  String get linuxSvcFieldPortHelper;
-
-  /// Add a service: switch.
-  ///
-  /// In en, this message translates to:
-  /// **'Restart when it crashes'**
-  String get linuxSvcRestartSwitch;
-
-  /// Add a service: switch, supporting line.
-  ///
-  /// In en, this message translates to:
-  /// **'It comes back by itself, also after a restart of the app'**
-  String get linuxSvcRestartSwitchDetail;
-
-  /// Add a service: primary button.
-  ///
-  /// In en, this message translates to:
-  /// **'Save and start'**
-  String get linuxSvcSaveStart;
-
-  /// Add a service: busy.
-  ///
-  /// In en, this message translates to:
-  /// **'Saving…'**
-  String get linuxSvcSaving;
-
-  /// Services page: the service runner does not answer (body under the title).
-  ///
-  /// In en, this message translates to:
-  /// **'The part of Linux that keeps services running isn\'t answering. Try again.'**
-  String get linuxSvcDownBody;
-
-  /// Service state: wanted on, but held off while the phone is too hot.
-  ///
-  /// In en, this message translates to:
-  /// **'Paused: the phone is too hot. Starts again when it cools'**
-  String get linuxSvcPaused;
-
-  /// Vitals strip: the word under the phone's heat.
-  ///
-  /// In en, this message translates to:
-  /// **'Phone heat'**
-  String get linuxVitalsHeat;
-
-  /// Heat word: Android reports no or light heat.
-  ///
-  /// In en, this message translates to:
-  /// **'Cool'**
-  String get linuxVitalsCool;
-
-  /// Heat word: Android reports moderate heat.
-  ///
-  /// In en, this message translates to:
-  /// **'Warm'**
-  String get linuxVitalsWarm;
-
-  /// Heat word: Android throttles the phone.
-  ///
-  /// In en, this message translates to:
-  /// **'Hot'**
-  String get linuxVitalsHot;
-
-  /// Heat word: critical heat or worse.
-  ///
-  /// In en, this message translates to:
-  /// **'Too hot'**
-  String get linuxVitalsTooHot;
-
-  /// Vitals strip: the phone's free memory.
-  ///
-  /// In en, this message translates to:
-  /// **'Memory free'**
-  String get linuxVitalsMemoryFree;
-
-  /// Vitals strip: the share of the phone's CPU Linux uses.
-  ///
-  /// In en, this message translates to:
-  /// **'Linux CPU'**
-  String get linuxVitalsLinuxCpu;
-
-  /// Screen reader label of the heat reading.
-  ///
-  /// In en, this message translates to:
-  /// **'Phone heat: {heat}'**
-  String linuxVitalsHeatLabel(Object heat);
-
-  /// Screen reader label of free memory.
-  ///
-  /// In en, this message translates to:
-  /// **'Memory free: {value}'**
-  String linuxVitalsMemoryLabel(Object value);
-
-  /// Screen reader label of Linux CPU.
-  ///
-  /// In en, this message translates to:
-  /// **'Linux CPU: {value}'**
-  String linuxVitalsCpuLabel(Object value);
-
-  /// Vitals sentence when the phone is cool.
-  ///
-  /// In en, this message translates to:
-  /// **'Linux uses {memory} of memory. Nothing is heating the phone.'**
-  String linuxVitalsSummaryCool(Object memory);
-
-  /// Vitals sentence when Android does not say how hot the phone is.
-  ///
-  /// In en, this message translates to:
-  /// **'Linux uses {memory} of memory.'**
-  String linuxVitalsSummary(Object memory);
-
-  /// Vitals sentence when the phone is warm and a Linux program is busy; tapping opens Running.
-  ///
-  /// In en, this message translates to:
-  /// **'{heat}. {program} is using {percent}% CPU.'**
-  String linuxVitalsHeavy(Object heat, Object program, Object percent);
-
-  /// Vitals sentence when the phone is warm and Linux is quiet.
-  ///
-  /// In en, this message translates to:
-  /// **'{heat}, but not because of Linux: it uses {percent}% CPU.'**
-  String linuxVitalsNotLinux(Object heat, Object percent);
-
-  /// Screen reader action of the vitals sentence that names a program.
-  ///
-  /// In en, this message translates to:
-  /// **'Open Running now'**
-  String get linuxVitalsOpenRunning;
-
-  /// About: group holding the Star on GitHub and Share the app rows.
-  ///
-  /// In en, this message translates to:
-  /// **'Tell others'**
-  String get starShareGroup;
-
-  /// About: row that opens the project page on GitHub.
-  ///
-  /// In en, this message translates to:
-  /// **'Star on GitHub'**
-  String get starRowTitle;
-
-  /// About: supporting line of the Star on GitHub row.
-  ///
-  /// In en, this message translates to:
-  /// **'Helps others find the app'**
-  String get starRowDetail;
-
-  /// About: row that opens the system share sheet with a link to the app.
-  ///
-  /// In en, this message translates to:
-  /// **'Share the app'**
-  String get shareRowTitle;
-
-  /// About: supporting line of the Share the app row.
-  ///
-  /// In en, this message translates to:
-  /// **'Send a link to a friend'**
-  String get shareRowDetail;
-
-  /// The one line shared by Share the app; {url} is the website link.
-  ///
-  /// In en, this message translates to:
-  /// **'OpenCode Mobile: use your OpenCode coding agent from your phone. {url}'**
-  String shareAppMessage(String url);
-
-  /// Search keywords for the Star on GitHub and Share the app rows.
-  ///
-  /// In en, this message translates to:
-  /// **'star github favorite rate like support project repository share app friend send link recommend invite tell'**
-  String get starShareSearchAliases;
-
-  /// What's new sheet title; {version} is the app version.
-  ///
-  /// In en, this message translates to:
-  /// **'What\'s new in {version}'**
-  String whatsNewTitle(String version);
-
-  /// What's new sheet: opens the share sheet with a link to the app.
-  ///
-  /// In en, this message translates to:
-  /// **'Share'**
-  String get whatsNewShare;
-
-  /// What's new sheet: closes it.
-  ///
-  /// In en, this message translates to:
-  /// **'Close'**
-  String get whatsNewClose;
-
-  /// About: row that opens the What's new sheet.
-  ///
-  /// In en, this message translates to:
-  /// **'What\'s new'**
-  String get whatsNewRowTitle;
-
-  /// About: supporting line of the What's new row.
-  ///
-  /// In en, this message translates to:
-  /// **'See what changed in this version'**
-  String get whatsNewRowDetail;
-
-  /// What's new 2.2.0 line.
-  ///
-  /// In en, this message translates to:
-  /// **'The app now updates itself. You can check for an update any time in Settings › This app › Updates.'**
-  String get whatsNew220Updates;
-
-  /// What's new 2.2.0 line.
-  ///
-  /// In en, this message translates to:
-  /// **'OpenCode 2.2.5 is built in, and your agents update themselves.'**
-  String get whatsNew220Agents;
-
-  /// What's new 2.2.0 line.
-  ///
-  /// In en, this message translates to:
-  /// **'Large text stays easy to read. Pick your size in Appearance.'**
-  String get whatsNew220LargeText;
-
-  /// What's new 2.2.0 line.
-  ///
-  /// In en, this message translates to:
-  /// **'Paste an image into the message box to show it to the agent.'**
-  String get whatsNew220PasteImages;
-
-  /// What's new 2.2.0 line.
-  ///
-  /// In en, this message translates to:
-  /// **'Hold the microphone button to talk, then let go.'**
-  String get whatsNew220Voice;
-
-  /// What's new walkthrough: previous step.
-  ///
-  /// In en, this message translates to:
-  /// **'Back'**
-  String get whatsNewBack;
-
-  /// What's new walkthrough: goes to the real control and highlights it.
-  ///
-  /// In en, this message translates to:
-  /// **'Show me'**
-  String get whatsNewShowMe;
-
-  /// Highlight sentence over About > Check for updates.
-  ///
-  /// In en, this message translates to:
-  /// **'Check for an update here, any time.'**
-  String get whatsNewShowUpdates;
-
-  /// Help > Tips: name of the What's new walkthrough.
-  ///
-  /// In en, this message translates to:
-  /// **'What\'s new in this version'**
-  String get whatsNewTipsTitle;
-
-  /// Highlight sentence over Settings > Agents.
-  ///
-  /// In en, this message translates to:
-  /// **'Your agents and their updates are here.'**
-  String get whatsNewShowAgents;
-
-  /// Highlight sentence over the message box paste control.
-  ///
-  /// In en, this message translates to:
-  /// **'Press and hold the message box, or tap +, to paste an image.'**
-  String get whatsNewShowPaste;
-
-  /// Highlight sentence over the microphone.
-  ///
-  /// In en, this message translates to:
-  /// **'Hold this button and talk, then let go.'**
-  String get whatsNewShowMic;
-
-  /// Status line and sheet title when a newer release exists.
-  ///
-  /// In en, this message translates to:
-  /// **'Version {version} is ready'**
-  String appUpdateReadyTitle(String version);
-
-  /// Action on the update status line.
-  ///
-  /// In en, this message translates to:
-  /// **'Update'**
-  String get appUpdateUpdate;
-
-  /// Dismisses the update offer until the next app start.
+  /// Crash report offer: dismisses the offer for this crash.
   ///
   /// In en, this message translates to:
   /// **'Not now'**
-  String get appUpdateNotNow;
+  String get crashOfferNotNow;
 
-  /// Status line while the update downloads.
+  /// Crash report offer: heading of Report a problem and the GitHub issue title for a crash report. Fixed words, never the exception.
   ///
   /// In en, this message translates to:
-  /// **'Downloading version {version}'**
-  String appUpdateDownloadingTitle(String version);
+  /// **'The app closed unexpectedly'**
+  String get crashOfferReportTitle;
 
-  /// Download progress.
+  /// Privacy and data: section holding the crash report offer switch.
   ///
   /// In en, this message translates to:
-  /// **'{percent}% done'**
-  String appUpdatePercent(String percent);
+  /// **'Crash reports'**
+  String get crashOfferSection;
 
-  /// Stops the download.
+  /// Privacy and data: switch that lets the app offer a crash report after it closed unexpectedly.
   ///
   /// In en, this message translates to:
-  /// **'Cancel'**
-  String get appUpdateCancel;
+  /// **'Offer crash reports'**
+  String get crashOfferSettingTitle;
 
-  /// Status while the file is verified.
+  /// Privacy and data: what the crash report offer switch does.
   ///
   /// In en, this message translates to:
-  /// **'Checking the download…'**
-  String get appUpdateVerifying;
+  /// **'After the app closes unexpectedly, offer a report you can review first. Nothing is ever sent by itself.'**
+  String get crashOfferSettingDetail;
 
-  /// Status while Android installs.
+  /// First mic tap voice setup sheet (P10.4): notice when the network type cannot be told (for example a VPN); the plain download button follows
   ///
   /// In en, this message translates to:
-  /// **'Installing…'**
-  String get appUpdateInstalling;
+  /// **'This phone can\'t tell whether this connection costs data.'**
+  String get voiceAutoSetupUnknownNetwork;
 
-  /// Status line when the checked file waits for the install.
+  /// The one notice for someone whose saved setup ran OpenCode in Termux, which the app no longer supports. Termux is an app name.
   ///
   /// In en, this message translates to:
-  /// **'Version {version} is downloaded and checked'**
-  String appUpdateInstallReadyTitle(String version);
+  /// **'Termux is no longer supported. Set up built-in Linux on this phone, or connect to your computer. Your projects in Termux are still there; copy them to the phone\'s shared storage or push them with Git to bring them over.'**
+  String get termuxRetiredNotice;
 
-  /// Starts the Android install of the checked file.
+  /// Action on the Termux notice: opens phone setup for the Linux built into the app.
   ///
   /// In en, this message translates to:
-  /// **'Install'**
-  String get appUpdateInstall;
+  /// **'Set up built-in Linux'**
+  String get termuxRetiredSetUpLinux;
 
-  /// Shown when Android must first allow installs from this app.
+  /// Setup error when Node.js crashes on this phone's system in every safe mode the app tried (issue #117); the screen then offers connecting a computer
   ///
   /// In en, this message translates to:
-  /// **'To install it, allow this app to install updates, then come back.'**
-  String get appUpdatePermissionNeeded;
+  /// **'This phone\'s system can\'t run Node.js inside built-in Linux. You can still use OpenCode Mobile by connecting to your computer.'**
+  String get phoneSetupErrorNodeUnsupported;
 
-  /// Screen reader label of the Settings gear while an update waits.
+  /// Button on the failed phone setup screen when this phone cannot run Node.js: opens adding a server on a computer
   ///
   /// In en, this message translates to:
-  /// **'Settings, update available'**
-  String get appUpdateSettingsBadgeLabel;
+  /// **'Connect a computer'**
+  String get phoneSetupConnectComputer;
 
-  /// Link and section for the release notes.
+  /// One-time question on the first start of a build that can send analytics: title.
   ///
   /// In en, this message translates to:
-  /// **'What\'s new'**
-  String get appUpdateWhatsNew;
+  /// **'Help improve OpenCode Mobile?'**
+  String get telemetryConsentTitle;
 
-  /// Primary action of the update sheet.
+  /// One-time analytics question: what agreeing does and where to turn it off. Must match PRIVACY.md.
   ///
   /// In en, this message translates to:
-  /// **'Update now'**
-  String get appUpdateNow;
+  /// **'If you agree, the app sends anonymous usage and app health numbers, and crash reports, through Google Firebase. You can change each in Settings › Privacy and data.'**
+  String get telemetryConsentBody;
 
-  /// Secondary action of the update sheet.
+  /// One-time analytics question: what is sent.
   ///
   /// In en, this message translates to:
-  /// **'Open Settings'**
-  String get appUpdateOpenSettings;
+  /// **'Sent: pages and features used, whether connecting, sending and setup work, app speed, memory and storage ranges, crash reports. A random install ID.'**
+  String get telemetryConsentSends;
 
-  /// Title of the Updates page.
+  /// One-time analytics question: what is never sent.
   ///
   /// In en, this message translates to:
-  /// **'Updates'**
-  String get appUpdatesTitle;
+  /// **'Never sent: your code, conversations, files, server addresses or keys. No advertising ID.'**
+  String get telemetryConsentNever;
 
-  /// Search words for the Updates row.
+  /// One-time analytics question: the button that turns sharing on.
   ///
   /// In en, this message translates to:
-  /// **'update upgrade new version release install github check تحديث ترقية نسخة جديدة إصدار تثبيت'**
-  String get appUpdatesSearchAliases;
+  /// **'Share both'**
+  String get telemetryConsentShare;
 
-  /// Supporting line of the Updates row.
+  /// One-time analytics question: the button that leaves sharing off and never asks again.
   ///
   /// In en, this message translates to:
-  /// **'Check for and install new versions'**
-  String get appUpdatesRowSummary;
+  /// **'Not now'**
+  String get telemetryConsentNotNow;
 
-  /// Updates page state.
+  /// Privacy and data: switch for anonymous usage counts, performance and device ranges (Google Analytics for Firebase).
   ///
   /// In en, this message translates to:
-  /// **'Up to date · checked just now'**
-  String get appUpdateCheckedJustNow;
+  /// **'Usage and app health'**
+  String get telemetryUsageTitle;
 
-  /// Updates page state; {when} is a relative time.
+  /// Privacy and data: what the usage switch sends. Must match PRIVACY.md.
   ///
   /// In en, this message translates to:
-  /// **'Up to date · checked {when}'**
-  String appUpdateUpToDate(String when);
+  /// **'Sends anonymous counts to Google Analytics for Firebase: which kinds of pages and features you use, whether connecting, sending, setup, agents, the background service and updates work, how fast the app starts and how smooth pages are, memory warnings, and ranges for your phone\'s memory, free storage, CPU and WebView version. Also sends timings to Firebase Performance Monitoring: how long app start, connecting, the first reply, setup steps and starting an agent take. Only fixed words, ranges and numbers, with a random install ID, your phone model and Android version. No code, conversations, files, addresses, keys or advertising ID.'**
+  String get telemetryUsageDetail;
 
-  /// Updates page state before any check.
+  /// Privacy and data: switch for sending crash reports (Google Firebase Crashlytics).
   ///
   /// In en, this message translates to:
-  /// **'Not checked yet'**
-  String get appUpdateNeverChecked;
+  /// **'Crash reports'**
+  String get telemetryCrashesTitle;
 
-  /// Updates page state while asking GitHub.
+  /// Privacy and data: what the crash reports switch sends. Must match PRIVACY.md.
   ///
   /// In en, this message translates to:
-  /// **'Checking…'**
-  String get appUpdateChecking;
+  /// **'Sends crash reports to Google Firebase Crashlytics: the kind of error and where in the app\'s code it happened, never its message, the last steps you took as short words, and why Android ended the app last time. No code, conversations, files, addresses, keys or advertising ID.'**
+  String get telemetryCrashesDetail;
 
-  /// Updates page state with the download size.
+  /// One-time analytics question: the link that opens the two separate switches.
   ///
   /// In en, this message translates to:
-  /// **'{version} is ready · {size}'**
-  String appUpdateAvailableLine(String version, String size);
+  /// **'Choose'**
+  String get telemetryConsentChoose;
 
-  /// A size in megabytes.
+  /// One-time analytics question: the button that applies the two switches as set.
   ///
   /// In en, this message translates to:
-  /// **'{mb} MB'**
-  String appUpdateSizeMb(String mb);
+  /// **'Save my choices'**
+  String get telemetryConsentSave;
 
-  /// Updates page state with the switch off.
+  /// Settings > Help: row and sheet title for sending a redacted log to the developer.
   ///
   /// In en, this message translates to:
-  /// **'Checking is off. Use Check now when you want to look.'**
-  String get appUpdateCheckingOff;
+  /// **'Send a problem report'**
+  String get sendReportTitle;
 
-  /// Switch label on the Updates page.
+  /// Settings > Help: row detail under Send a problem report.
   ///
   /// In en, this message translates to:
-  /// **'Check GitHub for new versions'**
-  String get appUpdateCheckSwitch;
+  /// **'Review a redacted log, then send it'**
+  String get sendReportRowDetail;
 
-  /// Privacy line under the check switch.
+  /// Send a problem report: sheet subtitle above the preview.
   ///
   /// In en, this message translates to:
-  /// **'The app asks GitHub for the latest version number and sends nothing about you.'**
-  String get appUpdateCheckSwitchBody;
+  /// **'This is everything the report holds. Nothing is sent until you tap Send.'**
+  String get sendReportSubtitle;
 
-  /// Row that checks immediately.
+  /// Send a problem report: the button that sends the previewed text.
   ///
   /// In en, this message translates to:
-  /// **'Check now'**
-  String get appUpdateCheckNow;
+  /// **'Send'**
+  String get sendReportSend;
 
-  /// Retries a failed update.
+  /// Send a problem report: shown while the preview is built.
   ///
   /// In en, this message translates to:
-  /// **'Try again'**
-  String get appUpdateTryAgain;
+  /// **'Collecting the report…'**
+  String get sendReportCollecting;
 
-  /// Plain failure.
+  /// Send a problem report: heading after the report was sent.
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t reach GitHub. Check your connection and try again.'**
-  String get appUpdateFailNetwork;
+  /// **'Report sent'**
+  String get sendReportSentTitle;
 
-  /// Plain failure.
+  /// Send a problem report: what the report code is for.
   ///
   /// In en, this message translates to:
-  /// **'This release has no file for your phone yet.'**
-  String get appUpdateFailNoFile;
+  /// **'Quote this report code if you open an issue on GitHub, so the developer can find your report.'**
+  String get sendReportSentBody;
 
-  /// Plain failure.
+  /// Send a problem report: plain words when sending failed.
   ///
   /// In en, this message translates to:
-  /// **'The download didn\'t match its checksum, so it wasn\'t installed.'**
-  String get appUpdateFailChecksum;
+  /// **'The report could not be sent. Check your connection and try again.'**
+  String get sendReportFailed;
 
-  /// Plain failure; owner wording.
-  ///
-  /// In en, this message translates to:
-  /// **'This download isn\'t signed like your app, so it wasn\'t installed.'**
-  String get appUpdateFailSigner;
-
-  /// Plain failure.
-  ///
-  /// In en, this message translates to:
-  /// **'This download is for a different app, so it wasn\'t installed.'**
-  String get appUpdateFailPackage;
-
-  /// Plain failure.
-  ///
-  /// In en, this message translates to:
-  /// **'This download isn\'t newer than your app, so it wasn\'t installed.'**
-  String get appUpdateFailVersion;
-
-  /// Plain failure.
-  ///
-  /// In en, this message translates to:
-  /// **'There wasn\'t room to save the download.'**
-  String get appUpdateFailStorage;
-
-  /// Plain failure.
-  ///
-  /// In en, this message translates to:
-  /// **'Android couldn\'t finish the install. Try again.'**
-  String get appUpdateFailInstaller;
-
-  /// Updates page
-  ///
-  /// In en, this message translates to:
-  /// **'Version {version}'**
-  String appUpdateCurrentVersion(String version);
-
-  /// Updates page
-  ///
-  /// In en, this message translates to:
-  /// **'Build'**
-  String get appUpdateBuildLabel;
-
-  /// Updates page
-  ///
-  /// In en, this message translates to:
-  /// **'Open on GitHub'**
-  String get appUpdateOpenRelease;
-
-  /// Updates page row after a refused or failed update
-  ///
-  /// In en, this message translates to:
-  /// **'{version} couldn\'t be installed'**
-  String appUpdateNotInstalled(String version);
-
-  /// Item in the message box's text-selection menu, next to Paste, when the clipboard holds a picture: attaches it to the message
-  ///
-  /// In en, this message translates to:
-  /// **'Paste image'**
-  String get composerPasteImage;
-
-  /// Row in the composer's + tools sheet, shown only when the clipboard holds a picture
-  ///
-  /// In en, this message translates to:
-  /// **'Paste image from clipboard'**
-  String get composerPasteImageFromClipboard;
-
-  /// Supporting line under the paste-image row in the composer's + tools sheet
-  ///
-  /// In en, this message translates to:
-  /// **'Attach the copied picture'**
-  String get composerPasteImageFromClipboardSupporting;
-
-  /// Note over the message box when Paste image finds no picture on the clipboard
-  ///
-  /// In en, this message translates to:
-  /// **'There is no picture on the clipboard.'**
-  String get composerPasteImageEmpty;
-
-  /// Remove from this phone, shown only once a Linux backup was saved: both choices leave the backup files alone, because they live in the place the person picked with Save to
-  ///
-  /// In en, this message translates to:
-  /// **'Backups you saved stay where you put them'**
-  String get removeFromPhoneBackupsKept;
-
-  /// Linux hub row and the Backups page title.
-  ///
-  /// In en, this message translates to:
-  /// **'Backups'**
-  String get linuxBackupRow;
-
-  /// Backups row when none was saved.
-  ///
-  /// In en, this message translates to:
-  /// **'No backup yet'**
-  String get linuxBackupRowNever;
-
-  /// Backups row: when the last one was saved.
-  ///
-  /// In en, this message translates to:
-  /// **'Last backup {date}'**
-  String linuxBackupRowLast(Object date);
-
-  /// Section label.
-  ///
-  /// In en, this message translates to:
-  /// **'What to back up'**
-  String get linuxBackupWhat;
-
-  /// Backup kind.
-  ///
-  /// In en, this message translates to:
-  /// **'Setup'**
-  String get linuxBackupSetup;
-
-  /// Backup kind detail.
-  ///
-  /// In en, this message translates to:
-  /// **'Packages, tools, services and settings files'**
-  String get linuxBackupSetupDetail;
-
-  /// Backup kind.
-  ///
-  /// In en, this message translates to:
-  /// **'Setup and projects'**
-  String get linuxBackupSetupProjects;
-
-  /// Backup kind detail.
-  ///
-  /// In en, this message translates to:
-  /// **'Also your projects, without folders they can download again'**
-  String get linuxBackupSetupProjectsDetail;
-
-  /// Backup kind (was Export projects on This phone).
-  ///
-  /// In en, this message translates to:
-  /// **'Projects only'**
-  String get linuxBackupProjectsOnly;
-
-  /// Backup kind detail.
-  ///
-  /// In en, this message translates to:
-  /// **'A zip of your projects to keep or move'**
-  String get linuxBackupProjectsOnlyDetail;
-
-  /// Primary button.
-  ///
-  /// In en, this message translates to:
-  /// **'Back up setup'**
-  String get linuxBackupNowSetup;
-
-  /// Primary button.
-  ///
-  /// In en, this message translates to:
-  /// **'Back up setup and projects'**
-  String get linuxBackupNowSetupProjects;
-
-  /// Primary button.
-  ///
-  /// In en, this message translates to:
-  /// **'Back up projects'**
-  String get linuxBackupNowProjects;
-
-  /// Footnote on the Backups page.
-  ///
-  /// In en, this message translates to:
-  /// **'Backups never hold sign-ins, passwords or private SSH keys. You choose where each one is saved.'**
-  String get linuxBackupPrivacy;
-
-  /// Row that opens the file picker.
-  ///
-  /// In en, this message translates to:
-  /// **'Restore from a backup'**
-  String get linuxRestoreRow;
-
-  /// Restore row detail.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose a backup file to put back'**
-  String get linuxRestoreRowDetail;
-
-  /// Progress caption while the zip is written.
-  ///
-  /// In en, this message translates to:
-  /// **'Saving the backup: {done} of {total}'**
-  String linuxBackupSaving(Object done, Object total);
-
-  /// Done notice.
-  ///
-  /// In en, this message translates to:
-  /// **'Backup saved: {size}, as {name}'**
-  String linuxBackupSaved(Object size, Object name);
-
-  /// Failure notice title.
-  ///
-  /// In en, this message translates to:
-  /// **'The backup didn\'t finish'**
-  String get linuxBackupFailedTitle;
-
-  /// Failure notice title.
-  ///
-  /// In en, this message translates to:
-  /// **'The restore didn\'t finish'**
-  String get linuxRestoreFailedTitle;
-
-  /// Problem.
-  ///
-  /// In en, this message translates to:
-  /// **'Another task is using Linux now. Try again when it ends.'**
-  String get linuxBackupProblemBusy;
-
-  /// Problem.
-  ///
-  /// In en, this message translates to:
-  /// **'Linux isn\'t set up on this phone.'**
-  String get linuxBackupProblemMissing;
-
-  /// Problem.
-  ///
-  /// In en, this message translates to:
-  /// **'Linux couldn\'t make the backup.'**
-  String get linuxBackupProblemJob;
-
-  /// Problem.
-  ///
-  /// In en, this message translates to:
-  /// **'The backup couldn\'t be saved there. There may not be enough room.'**
-  String get linuxBackupProblemSave;
-
-  /// Problem.
-  ///
-  /// In en, this message translates to:
-  /// **'That file isn\'t a backup made by this app.'**
-  String get linuxBackupProblemNotBackup;
-
-  /// Problem.
-  ///
-  /// In en, this message translates to:
-  /// **'That backup was made by a newer version of the app. Update the app first.'**
-  String get linuxBackupProblemNewer;
-
-  /// Problem.
-  ///
-  /// In en, this message translates to:
-  /// **'Linux couldn\'t put the backup back.'**
-  String get linuxBackupProblemRestore;
-
-  /// While a chosen file is read.
-  ///
-  /// In en, this message translates to:
-  /// **'Reading the backup…'**
-  String get linuxRestoreChecking;
-
-  /// Restore question title.
-  ///
-  /// In en, this message translates to:
-  /// **'Restore this backup?'**
-  String get linuxRestoreTitle;
-
-  /// Restore question body.
-  ///
-  /// In en, this message translates to:
-  /// **'{what}, made on {date}.'**
-  String linuxRestoreBody(Object what, Object date);
-
-  /// Restore question button.
-  ///
-  /// In en, this message translates to:
-  /// **'Restore'**
-  String get linuxRestoreConfirm;
-
-  /// Consequence.
-  ///
-  /// In en, this message translates to:
-  /// **'Your projects stay. One with the same name comes back as “name (restored)”.'**
-  String get linuxRestoreKeptProjects;
-
-  /// Consequence.
-  ///
-  /// In en, this message translates to:
-  /// **'Settings files it holds replace yours; yours are kept with “.before-restore” added.'**
-  String get linuxRestoreReplacedSettings;
-
-  /// Consequence.
-  ///
-  /// In en, this message translates to:
-  /// **'Packages, tools and services it lists are put back.'**
-  String get linuxRestoreAddedTools;
-
-  /// Done notice.
-  ///
-  /// In en, this message translates to:
-  /// **'Linux is restored.'**
-  String get linuxRestoreDone;
-
-  /// Restore note.
-  ///
-  /// In en, this message translates to:
-  /// **'Ubuntu no longer has: {names}'**
-  String linuxRestoreSkipped(Object names);
-
-  /// Restore summary.
-  ///
-  /// In en, this message translates to:
-  /// **'Back: projects {projects}, services {services}, settings files {settings}, packages {packages}'**
-  String linuxRestoreCounts(
-    Object projects,
-    Object services,
-    Object settings,
-    Object packages,
-  );
-
-  /// Job panel title.
-  ///
-  /// In en, this message translates to:
-  /// **'Backing up Linux'**
-  String get linuxMgrJobBackingUp;
-
-  /// Job panel title.
-  ///
-  /// In en, this message translates to:
-  /// **'Restoring Linux'**
-  String get linuxMgrJobRestoring;
-
-  /// Job stop.
-  ///
-  /// In en, this message translates to:
-  /// **'Stop the backup'**
-  String get linuxMgrJobStopBackup;
-
-  /// Job stop.
-  ///
-  /// In en, this message translates to:
-  /// **'Stop restoring'**
-  String get linuxMgrJobStopRestore;
-
-  /// Job stop question.
-  ///
-  /// In en, this message translates to:
-  /// **'Stop the backup?'**
-  String get linuxMgrJobStopBackupTitle;
-
-  /// Job stop question.
-  ///
-  /// In en, this message translates to:
-  /// **'Stop restoring?'**
-  String get linuxMgrJobStopRestoreTitle;
-
-  /// Job done.
-  ///
-  /// In en, this message translates to:
-  /// **'The backup is ready'**
-  String get linuxMgrJobDoneBackup;
-
-  /// Job done.
-  ///
-  /// In en, this message translates to:
-  /// **'Linux is restored'**
-  String get linuxMgrJobDoneRestore;
-
-  /// Reset question alternative.
-  ///
-  /// In en, this message translates to:
-  /// **'Back up first'**
-  String get linuxMgrResetBackUpFirst;
-
-  /// Settings row and page title: the on-device assistant
-  ///
-  /// In en, this message translates to:
-  /// **'Assistant on this phone'**
-  String get localAssistantTitle;
-
-  /// Assistant page: one line saying what it does
-  ///
-  /// In en, this message translates to:
-  /// **'Writes short summaries of your conversations with a model that runs on this phone.'**
-  String get localAssistantSubtitle;
-
-  /// Switch row title
-  ///
-  /// In en, this message translates to:
-  /// **'Turn on the assistant'**
-  String get localAssistantSwitchTitle;
-
-  /// Switch row supporting line
-  ///
-  /// In en, this message translates to:
-  /// **'Adds Summarize on this phone to every conversation.'**
-  String get localAssistantSwitchSupporting;
-
-  /// Privacy note on the assistant page
-  ///
-  /// In en, this message translates to:
-  /// **'The model is downloaded once. After that it works offline and nothing you write leaves the phone.'**
-  String get localAssistantPrivacy;
-
-  /// Model status line before download
-  ///
-  /// In en, this message translates to:
-  /// **'Not downloaded · {size}'**
-  String localAssistantNotDownloaded(String size);
-
-  /// Model status line once downloaded
-  ///
-  /// In en, this message translates to:
-  /// **'On this phone · {size}'**
-  String localAssistantOnPhone(String size);
-
-  /// Which chip the loaded model runs on
-  ///
-  /// In en, this message translates to:
-  /// **'Runs on the graphics chip'**
-  String get localAssistantBackendGpu;
-
-  /// Which chip the loaded model runs on
-  ///
-  /// In en, this message translates to:
-  /// **'Runs on the processor'**
-  String get localAssistantBackendCpu;
-
-  /// Backend line while the model is not in memory
-  ///
-  /// In en, this message translates to:
-  /// **'Loads when you ask for a summary'**
-  String get localAssistantBackendIdle;
-
-  /// Primary action: start the model download
-  ///
-  /// In en, this message translates to:
-  /// **'Download ({size})'**
-  String localAssistantDownload(String size);
-
-  /// Progress title
-  ///
-  /// In en, this message translates to:
-  /// **'Downloading the assistant'**
-  String get localAssistantDownloading;
-
-  /// Progress title while the file is verified
-  ///
-  /// In en, this message translates to:
-  /// **'Checking the download'**
-  String get localAssistantVerifying;
-
-  /// Download progress caption
-  ///
-  /// In en, this message translates to:
-  /// **'{received} of {total}'**
-  String localAssistantProgress(String received, String total);
-
-  /// Stops the model download
-  ///
-  /// In en, this message translates to:
-  /// **'Cancel download'**
-  String get localAssistantCancelDownload;
-
-  /// Removes the downloaded model
-  ///
-  /// In en, this message translates to:
-  /// **'Delete from this phone ({size})'**
-  String localAssistantDelete(String size);
-
-  /// Confirm title
-  ///
-  /// In en, this message translates to:
-  /// **'Delete the assistant?'**
-  String get localAssistantDeleteTitle;
-
-  /// Confirm body
-  ///
-  /// In en, this message translates to:
-  /// **'This frees {size}. You can download it again later.'**
-  String localAssistantDeleteBody(String size);
-
-  /// Shown instead of starting the download off Wi-Fi
-  ///
-  /// In en, this message translates to:
-  /// **'You are not on Wi-Fi. The download is {size}.'**
-  String localAssistantNeedsWifi(String size);
-
-  /// Lets the person override the Wi-Fi rule once
-  ///
-  /// In en, this message translates to:
-  /// **'Download on mobile data'**
-  String get localAssistantUseMobileData;
-
-  /// Shown instead of starting the download without room
-  ///
-  /// In en, this message translates to:
-  /// **'Not enough free space. Free about {size} and try again.'**
-  String localAssistantNoSpace(String size);
-
-  /// Why the assistant is not offered
-  ///
-  /// In en, this message translates to:
-  /// **'This phone has too little memory for the assistant. It needs about 6 GB.'**
-  String get localAssistantUnavailableMemory;
-
-  /// Why the assistant is not offered
-  ///
-  /// In en, this message translates to:
-  /// **'The assistant runs on 64-bit phones only.'**
-  String get localAssistantUnavailableAbi;
-
-  /// Why the assistant is not offered
-  ///
-  /// In en, this message translates to:
-  /// **'The assistant is available on Android phones.'**
-  String get localAssistantUnavailablePlatform;
-
-  /// Download or load failed; the technical text sits under Details
-  ///
-  /// In en, this message translates to:
-  /// **'The assistant could not be set up. Try again.'**
-  String get localAssistantSetupFailed;
-
-  /// Retry after a failure
-  ///
-  /// In en, this message translates to:
-  /// **'Try again'**
-  String get localAssistantTryAgain;
-
-  /// Conversation menu entry: write a summary with the on-device model
-  ///
-  /// In en, this message translates to:
-  /// **'Summarize on this phone'**
-  String get localAssistantSummarizeMenu;
-
-  /// Conversation menu entry supporting line
-  ///
-  /// In en, this message translates to:
-  /// **'Written here, with no network'**
-  String get localAssistantSummarizeSupporting;
-
-  /// Summary sheet title
-  ///
-  /// In en, this message translates to:
-  /// **'Summary'**
-  String get localAssistantSheetTitle;
-
-  /// Summary sheet subtitle
-  ///
-  /// In en, this message translates to:
-  /// **'Written on this phone'**
-  String get localAssistantSheetSubtitle;
-
-  /// Shown while the model loads before the first words
-  ///
-  /// In en, this message translates to:
-  /// **'Getting the assistant ready'**
-  String get localAssistantPreparing;
-
-  /// Stops the summary
-  ///
-  /// In en, this message translates to:
-  /// **'Stop'**
-  String get localAssistantStop;
-
-  /// Copies the summary
-  ///
-  /// In en, this message translates to:
-  /// **'Copy summary'**
-  String get localAssistantCopy;
-
-  /// Closes the summary sheet
+  /// Send a problem report: closes the sheet after sending.
   ///
   /// In en, this message translates to:
   /// **'Done'**
-  String get localAssistantDone;
+  String get sendReportDone;
 
-  /// Note under a stopped summary
+  /// Report code row label (Settings > About and the sent report).
   ///
   /// In en, this message translates to:
-  /// **'Stopped. This is what was written so far.'**
-  String get localAssistantStopped;
+  /// **'Report code'**
+  String get reportCodeLabel;
 
-  /// Note under a failed summary
+  /// Tooltip of the copy button next to the report code.
   ///
   /// In en, this message translates to:
-  /// **'The summary could not be finished. Try again.'**
-  String get localAssistantRunFailed;
+  /// **'Copy report code'**
+  String get reportCodeCopy;
 
-  /// Small line under a finished summary
+  /// Chat: why a message wasn't sent: the agent's earlier sign-in ran out or could not be renewed (Claude Code: OAuth session expired).
   ///
   /// In en, this message translates to:
-  /// **'First words after {seconds} s · {rate} words a second'**
-  String localAssistantStats(String seconds, String rate);
+  /// **'{agent} needs you to sign in again'**
+  String chatSendFailureSignInAgain(String agent);
 
-  /// Settings search keywords
+  /// Plain reason for engine code serverRestarted: the phone's OpenCode restarted or crashed during a team step
   ///
   /// In en, this message translates to:
-  /// **'assistant gemma summarize offline on-device model local ai'**
-  String get localAssistantSearchAliases;
+  /// **'OpenCode restarted while this step was running, so it was cut off.'**
+  String get teamRefusalServerRestarted;
 
-  /// Settings › Help row title for the web build only
+  /// Way forward for engine code serverRestarted
   ///
   /// In en, this message translates to:
-  /// **'Browser mode'**
-  String get browserModeTitle;
+  /// **'Resume to send that step again. It picks up from the work already done.'**
+  String get teamRefusalServerRestartedNext;
 
-  /// Settings › Help row, web build only: the line under the title
+  /// Plain line for engine code restartResend: the engine resends the cut-off step by itself
   ///
   /// In en, this message translates to:
-  /// **'What works in this browser and what needs the phone app'**
-  String get browserModeSubtitle;
+  /// **'OpenCode restarted while this step was running. The team is sending it again.'**
+  String get teamRefusalRestartResend;
 
-  /// Browser mode page: opening paragraph
+  /// Way forward for engine code restartResend
   ///
   /// In en, this message translates to:
-  /// **'This is OpenCode Mobile running in a web browser. Remote OpenCode servers work as they do in the phone app. Features that need the phone itself are not offered here.'**
-  String get browserModeIntro;
-
-  /// Browser mode page: section heading
-  ///
-  /// In en, this message translates to:
-  /// **'Available in the browser'**
-  String get browserModeAvailableHeading;
-
-  /// Browser mode page: what works
-  ///
-  /// In en, this message translates to:
-  /// **'Connect to OpenCode servers, chat, approve requests, browse files, and follow activity.'**
-  String get browserModeAvailableServers;
-
-  /// Browser mode page: what works on a desktop browser
-  ///
-  /// In en, this message translates to:
-  /// **'Keyboard shortcuts, right-click menus, and drag-and-drop attachments on a desktop browser.'**
-  String get browserModeAvailableKeyboard;
-
-  /// Browser mode page: what works
-  ///
-  /// In en, this message translates to:
-  /// **'Pasting into any field with the keyboard.'**
-  String get browserModeAvailablePaste;
-
-  /// Browser mode page: section heading
-  ///
-  /// In en, this message translates to:
-  /// **'Needs the phone app'**
-  String get browserModeUnavailableHeading;
-
-  /// Browser mode page: needs the phone
-  ///
-  /// In en, this message translates to:
-  /// **'Running a server or AI agents on this device, and the on-device setup.'**
-  String get browserModeUnavailableTermux;
-
-  /// Browser mode page: needs the phone
-  ///
-  /// In en, this message translates to:
-  /// **'Voice input, read-aloud, and camera QR pairing.'**
-  String get browserModeUnavailableVoice;
-
-  /// Browser mode page: needs the phone
-  ///
-  /// In en, this message translates to:
-  /// **'Background monitoring, notifications, the home-screen widget, launcher shortcuts, and the Quick Settings tile. Keep this tab open to keep following a session.'**
-  String get browserModeUnavailableBackground;
-
-  /// Browser mode page: needs the phone or desktop app
-  ///
-  /// In en, this message translates to:
-  /// **'Codex and Paseo connections. They sign in with a WebSocket header that browsers cannot send, and there is no supported browser sign-in for them yet.'**
-  String get browserModeUnavailableAgentSocket;
-
-  /// Browser mode page: section heading for facts about the open page
-  ///
-  /// In en, this message translates to:
-  /// **'This page'**
-  String get browserModeContextHeading;
-
-  /// Browser mode page: the page is a secure origin
-  ///
-  /// In en, this message translates to:
-  /// **'Opened from a secure origin. Server passwords can be saved, and the Paste buttons can read the clipboard.'**
-  String get browserModeSecureContextOk;
-
-  /// Browser mode page: the page is not a secure origin
-  ///
-  /// In en, this message translates to:
-  /// **'Opened over plain HTTP from a network address, which the browser does not treat as secure. Server passwords cannot be saved here and the Paste buttons cannot read the clipboard. Open the app over HTTPS or from localhost to lift both limits. Servers without a password still work, and you can still paste into fields with the keyboard.'**
-  String get browserModeSecureContextMissing;
-
-  /// Browser mode page: mixed content
-  ///
-  /// In en, this message translates to:
-  /// **'A page opened over HTTPS can only reach HTTPS servers; the browser blocks plain-HTTP connections from it.'**
-  String get browserModeMixedContent;
-
-  /// Browser mode page: cross-origin requests
-  ///
-  /// In en, this message translates to:
-  /// **'The server must allow this page’s origin. If a connection test fails at once here while the same address works from the phone app, the server is refusing browser requests from this origin.'**
-  String get browserModeCors;
-
-  /// Add server form, web build on a non-secure origin: shown before a password is typed
-  ///
-  /// In en, this message translates to:
-  /// **'This page was opened over plain HTTP from a network address, so the browser will not keep a server password. Leave the password empty for a server that has none, or open the app over HTTPS or from localhost to save one.'**
-  String get browserEditorInsecureOrigin;
-
-  /// Add server form, web build without clipboard access: replaces the Paste pairing code button
-  ///
-  /// In en, this message translates to:
-  /// **'Copy the code the pairing command prints and paste it into the server address field with the keyboard. The Paste button needs a secure (HTTPS or localhost) page.'**
-  String get browserPairingPasteHint;
-
-  /// Web build: why Codex and Paseo cannot be chosen or connected
-  ///
-  /// In en, this message translates to:
-  /// **'Codex and Paseo connections are not available in the browser. They sign in with a WebSocket header that browsers cannot send, and no browser sign-in is supported yet. Use the phone or desktop app for them; OpenCode servers work here.'**
-  String get browserAgentSocketUnavailable;
-
-  /// Servers list, web build: the line on a saved Codex or Paseo server
-  ///
-  /// In en, this message translates to:
-  /// **'Not available in the browser'**
-  String get browserAgentSocketRowUnavailable;
-
-  /// Web build: the connection failed with no more detail from the browser
-  ///
-  /// In en, this message translates to:
-  /// **'The browser could not reach the server. Check the address and that the server is running. A server on a different origin must allow the origin of this page (CORS), and a page loaded over https cannot use an http:// or ws:// server.'**
-  String get browserTransportFailure;
-
-  /// Add server form, web build: the connection check timed out
-  ///
-  /// In en, this message translates to:
-  /// **'The connection timed out. Check the address, and that the server is reachable from this browser.'**
-  String get browserProbeTimeout;
-
-  /// About: the line under the version, web build only
-  ///
-  /// In en, this message translates to:
-  /// **'A browser client for the OpenCode server you choose. Voice, background monitoring and servers on this device are not available here.'**
-  String get aboutBrowserSummary;
+  /// **'Nothing to do. Work already done is kept.'**
+  String get teamRefusalRestartResendNext;
 }
 
 class _AppLocalizationsDelegate

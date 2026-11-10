@@ -18,7 +18,7 @@
         "cancel": false
       },
       "recipe": {
-        "version": "2.2.5",
+        "version": "2.1.1",
         "executable": "opencode",
         "launchArgs": [
           "serve",
@@ -28,14 +28,14 @@
         "signInArgs": [],
         "artifacts": {
           "arm64": {
-            "url": "https://registry.npmjs.org/@opencode/cli-linux-arm64/-/cli-linux-arm64-2.2.5.tgz",
-            "sha256": "f8c5a82075fede9b5b044ed6c8a6d13ad807a7e62caea1cd0a878adef49eb053",
+            "url": "https://registry.npmjs.org/@opencode/cli-linux-arm64/-/cli-linux-arm64-2.1.1.tgz",
+            "sha256": "cfa3ae6363fc3082f03072297069d81f53559a761371fdb4b56fe6bfa01ca066",
             "format": "tarGz",
             "archiveMember": "package/bin/opencode"
           },
           "x64": {
-            "url": "https://registry.npmjs.org/@opencode/cli-linux-x64-baseline/-/cli-linux-x64-baseline-2.2.5.tgz",
-            "sha256": "873856acbaa71c5ed8df6433e312dfa0c82a86e2cddfb9d80f0a31123a917a08",
+            "url": "https://registry.npmjs.org/@opencode/cli-linux-x64-baseline/-/cli-linux-x64-baseline-2.1.1.tgz",
+            "sha256": "216d3861d0a167adad5850282439bae13483203f4b110f0510f260118bba2858",
             "format": "tarGz",
             "archiveMember": "package/bin/opencode"
           }
@@ -199,7 +199,7 @@
         "cancel": false
       },
       "recipe": {
-        "version": "0.66.0",
+        "version": "0.63.0",
         "executable": "gemini",
         "launchArgs": [
           "--acp"
@@ -207,20 +207,20 @@
         "signInArgs": [],
         "artifacts": {
           "arm64": {
-            "url": "https://registry.npmjs.org/@google/gemini-cli/-/gemini-cli-0.66.0.tgz",
-            "sha256": "269734d35287fbd8ed2982534258ecf4a95f184b6e06e6732e0d6850c28701d9",
+            "url": "https://registry.npmjs.org/@google/gemini-cli/-/gemini-cli-0.63.0.tgz",
+            "sha256": "97a6edfc10645463b517f0518d46a8c72efbdc12558a9a948607f726284a0420",
             "format": "npmTarGz",
             "archiveMember": "package/bundle/gemini.js",
-            "downloadBytes": 20889095,
-            "installedBytes": 98815455
+            "downloadBytes": 20810043,
+            "installedBytes": 98439442
           },
           "x64": {
-            "url": "https://registry.npmjs.org/@google/gemini-cli/-/gemini-cli-0.66.0.tgz",
-            "sha256": "269734d35287fbd8ed2982534258ecf4a95f184b6e06e6732e0d6850c28701d9",
+            "url": "https://registry.npmjs.org/@google/gemini-cli/-/gemini-cli-0.63.0.tgz",
+            "sha256": "97a6edfc10645463b517f0518d46a8c72efbdc12558a9a948607f726284a0420",
             "format": "npmTarGz",
             "archiveMember": "package/bundle/gemini.js",
-            "downloadBytes": 20889095,
-            "installedBytes": 98815455
+            "downloadBytes": 20810043,
+            "installedBytes": 98439442
           }
         }
       }
@@ -243,7 +243,7 @@
         "cancel": false
       },
       "recipe": {
-        "version": "0.26.4",
+        "version": "0.25.0",
         "executable": "qwen",
         "launchArgs": [
           "--acp"
@@ -251,20 +251,20 @@
         "signInArgs": [],
         "artifacts": {
           "arm64": {
-            "url": "https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.26.4.tgz",
-            "sha256": "a7640f1c0656b7e54ea5995335ed6cc18ee219b8b4200fe8a6141cff148aaa89",
+            "url": "https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.25.0.tgz",
+            "sha256": "afeab0c85d682f201101319ce05decf3302d7ed7fb6319baa6a592051ea1a1ba",
             "format": "npmTarGz",
             "archiveMember": "package/cli-entry.js",
-            "downloadBytes": 42796897,
-            "installedBytes": 154807157
+            "downloadBytes": 33195960,
+            "installedBytes": 116286799
           },
           "x64": {
-            "url": "https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.26.4.tgz",
-            "sha256": "a7640f1c0656b7e54ea5995335ed6cc18ee219b8b4200fe8a6141cff148aaa89",
+            "url": "https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.25.0.tgz",
+            "sha256": "afeab0c85d682f201101319ce05decf3302d7ed7fb6319baa6a592051ea1a1ba",
             "format": "npmTarGz",
             "archiveMember": "package/cli-entry.js",
-            "downloadBytes": 42796897,
-            "installedBytes": 154807157
+            "downloadBytes": 33195960,
+            "installedBytes": 116286799
           }
         }
       }
@@ -287,7 +287,7 @@
         "cancel": false
       },
       "recipe": {
-        "version": "7.8.18",
+        "version": "7.8.3",
         "executable": "kilo",
         "launchArgs": [
           "acp"
@@ -298,20 +298,20 @@
         ],
         "artifacts": {
           "arm64": {
-            "url": "https://registry.npmjs.org/@kilocode/cli-linux-arm64/-/cli-linux-arm64-7.8.18.tgz",
-            "sha256": "0f1bd0fb983f67ec1edf53c185e9521268f8f133af2a4cec2f1967e5d60e45ef",
+            "url": "https://registry.npmjs.org/@kilocode/cli-linux-arm64/-/cli-linux-arm64-7.8.3.tgz",
+            "sha256": "bd61f03eb14053fdcaf5245eb1740455b0447fe9d6d48b4adaeea6bb4ae53a90",
             "format": "tarGz",
             "archiveMember": "package/bin/kilo",
-            "downloadBytes": 83529597,
-            "installedBytes": 258264056
+            "downloadBytes": 63881791,
+            "installedBytes": 169322640
           },
           "x64": {
-            "url": "https://registry.npmjs.org/@kilocode/cli-linux-x64/-/cli-linux-x64-7.8.18.tgz",
-            "sha256": "bde638d0a493155088e4454fbe4a9697571443665e2a22d5a78cad645b96b554",
+            "url": "https://registry.npmjs.org/@kilocode/cli-linux-x64/-/cli-linux-x64-7.8.3.tgz",
+            "sha256": "03b963726d8002ea6bee21d8db6121201e6ed8230a0e1fce8857f4c8d091333c",
             "format": "tarGz",
             "archiveMember": "package/bin/kilo",
-            "downloadBytes": 84132773,
-            "installedBytes": 259213488
+            "downloadBytes": 64190979,
+            "installedBytes": 170363008
           }
         }
       }
@@ -334,7 +334,7 @@
         "cancel": false
       },
       "recipe": {
-        "version": "3.0.74",
+        "version": "3.0.68",
         "executable": "cline",
         "launchArgs": [
           "--acp"
@@ -344,20 +344,20 @@
         ],
         "artifacts": {
           "arm64": {
-            "url": "https://registry.npmjs.org/@cline/cli-linux-arm64/-/cli-linux-arm64-3.0.74.tgz",
-            "sha256": "10c1f63c143b6f7eba3320543df2f6081232d79fb1830c293cf006115dce9049",
+            "url": "https://registry.npmjs.org/@cline/cli-linux-arm64/-/cli-linux-arm64-3.0.68.tgz",
+            "sha256": "5e0ad56ba4c494c437f6dcdc2557c165478e05e1800e1fe6f7d476e4fd4c84f2",
             "format": "tarGz",
             "archiveMember": "package/bin/cline",
-            "downloadBytes": 54812128,
-            "installedBytes": 162253096
+            "downloadBytes": 49689972,
+            "installedBytes": 130861352
           },
           "x64": {
-            "url": "https://registry.npmjs.org/@cline/cli-linux-x64/-/cli-linux-x64-3.0.74.tgz",
-            "sha256": "52502438a8d78a451156c38df2eb31116d658c94d1d5461b4e29761d06211bfc",
+            "url": "https://registry.npmjs.org/@cline/cli-linux-x64/-/cli-linux-x64-3.0.68.tgz",
+            "sha256": "a979929090eb9a934b3907e2cf519368964d6a35e96079d6db4fc89caad98ab1",
             "format": "tarGz",
             "archiveMember": "package/bin/cline",
-            "downloadBytes": 55037574,
-            "installedBytes": 161793504
+            "downloadBytes": 49918778,
+            "installedBytes": 130434528
           }
         }
       }

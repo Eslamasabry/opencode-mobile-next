@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart';
 
 /// Public metadata only. The corresponding private key remains in Android's
@@ -30,8 +29,7 @@ abstract interface class ByoHostSigner {
 /// receive signatures, never private key bytes. Native failures are deliberately
 /// replaced by fixed error codes so platform details cannot reach diagnostics.
 class AndroidByoHostSigner implements ByoHostSigner {
-  // `Platform` throws on the web, and ProfileStore asks at construction.
-  static bool get supported => !kIsWeb && Platform.isAndroid;
+  static bool get supported => Platform.isAndroid;
   AndroidByoHostSigner({MethodChannel? channel})
     : _channel = channel ?? const MethodChannel('oc/byo_host_signer');
   final MethodChannel _channel;

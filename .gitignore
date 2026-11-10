@@ -75,3 +75,5 @@ tool/qa/build-server.env
 # Private Firebase config (never commit)
 google-services.json
 native/androidApp/src/*/google-services.json
+# Private Firebase config
+google-services*.json

@@ -100,6 +100,7 @@ class _Linux extends BuiltinLinux {
   Future<BuiltinLinuxRunResult> run(
     String script, {
     Duration timeout = const Duration(minutes: 2),
+    String? input,
   }) async {
     runs.add(script);
     if (runError case final error?) throw error;
@@ -420,22 +421,6 @@ void main() {
       expect(setupOpened, 1);
       expect(find.byKey(const ValueKey('linux-reset-partial')), findsNothing);
       expect(LinuxResetFlow.pending(connection.store.prefs), isFalse);
-      await unmount(tester);
-    });
-
-    testWidgets('Backups sits on the hub; Reset offers "Back up first"', (
-      tester,
-    ) async {
-      await mount(tester, LinuxManagerScreen(onRepair: () async {}));
-      expect(find.byKey(const ValueKey('linux-row-backups')), findsOneWidget);
-      expect(find.text('No backup yet'), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey('linux-row-reset')));
-      await settle(tester);
-      await tester.tap(find.byKey(const ValueKey('linux-reset-backup-first')));
-      await settle(tester);
-      // Nothing is erased: the person is taken to Backups instead.
-      expect(linux.removed, isEmpty);
-      expect(find.byKey(const ValueKey('linux-backups')), findsOneWidget);
       await unmount(tester);
     });
 

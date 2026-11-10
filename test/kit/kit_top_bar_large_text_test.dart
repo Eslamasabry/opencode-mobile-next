@@ -67,16 +67,14 @@ void main() {
       expect(branch.center.dy, moreOrLessEquals(project.center.dy, epsilon: 1));
     });
 
-    testWidgets('at text size 2.0 keeps one line, the header stays compact', (
+    testWidgets('at text size 2.0 starts its own line with no leading dot', (
       tester,
     ) async {
       await _pumpScopeLine(tester, 2);
       final project = tester.getRect(find.textContaining('IPTV_King'));
       final branch = tester.getRect(find.text('Git'));
-      // Both words ride one line (the header would otherwise stack three
-      // rows and fill a third of the screen).
-      expect(branch.center.dy, moreOrLessEquals(project.center.dy, epsilon: 1));
-      expect(find.text('\u00b7'), findsOneWidget);
+      expect(branch.top, greaterThanOrEqualTo(project.bottom - 1));
+      expect(find.text('\u00b7'), findsNothing);
     });
   });
 
