@@ -46,6 +46,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.unit.toIntSize
 import io.github.eslamasabry.oc.ui.design.color.Argb
 import io.github.eslamasabry.oc.ui.design.effects.FrostSpec
@@ -329,7 +331,70 @@ internal fun kitGlassSheet(shape: io.github.eslamasabry.oc.ui.design.tokens.KitS
 }
 
 /** The Glass pane's face (Dart `_KitSurfacePainter.paint`): shadows outside it, then the tint, the glow and the rim. */
-internal fun Modifier.kitGlassFace(d: SurfaceDecoration): Modifier = drawBehind { drawGlassFace(d) }
+internal fun Modifier.kitGlassFace(d: SurfaceDecoration): Modifier = this then GlassFaceElement(d)
+
+private data class GlassFaceElement(val d: SurfaceDecoration) : ModifierNodeElement<GlassFaceNode>() {
+    override fun create() = GlassFaceNode(d)
+
+    override fun update(node: GlassFaceNode) {
+        node.d = d
+    }
+}
+
+/**
+ * Draws a pane's face from a picture of it, painted again only when the decoration, the pane's size or the reading
+ * direction changes. A face is some ten outlines, gradients and clips; painting it afresh allocated all of them every
+ * time the pane was drawn, and under Glass every pane on a page is drawn again on every frame of a scroll (the picture
+ * behind it moved), so a page of row groups rebuilt all of them per frame (jank pass 2026-11-10). The picture is as
+ * much larger than the pane as its shadows reach, so nothing outside the face is cut.
+ */
+private class GlassFaceNode(var d: SurfaceDecoration) : Modifier.Node(), DrawModifierNode {
+    private var picture: GraphicsLayer? = null
+    private var of: SurfaceDecoration? = null
+    private var ofSize: Size = Size.Unspecified
+    private var ofDirection: LayoutDirection? = null
+    private var margin = 0
+
+    override fun ContentDrawScope.draw() {
+        if (size.width > 0f && size.height > 0f) {
+            val layer = picture ?: requireGraphicsContext().createGraphicsLayer().also { picture = it }
+            if (of != d || ofSize != size || ofDirection != layoutDirection) {
+                val face = d
+                margin = kotlin.math.ceil(glassFaceReachDp(face).dp.toPx()).toInt() + 2
+                val m = margin.toFloat()
+                val faceWidth = size.width
+                val faceHeight = size.height
+                val wide = kotlin.math.ceil(faceWidth).toInt() + 2 * margin
+                val tall = kotlin.math.ceil(faceHeight).toInt() + 2 * margin
+                // A snapshot of the density, as recordDetached: the scope itself as the picture's density loops back.
+                layer.record(Density(density, fontScale), layoutDirection, IntSize(wide, tall)) {
+                    // The face is painted at the pane's own size, [margin] in from the picture's top and start.
+                    inset(m, m, wide - m - faceWidth, tall - m - faceHeight) { drawGlassFace(face) }
+                }
+                of = face
+                ofSize = size
+                ofDirection = layoutDirection
+            }
+            val m = margin.toFloat()
+            translate(-m, -m) { drawLayer(layer) }
+        }
+        drawContent()
+    }
+
+    override fun onDetach() {
+        picture?.let { requireGraphicsContext().releaseGraphicsLayer(it) }
+        picture = null
+        of = null
+    }
+}
+
+/** How far outside the face its shadows can paint, in dp (offsets, blur and spread; generous, it only sizes the picture). */
+internal fun glassFaceReachDp(d: SurfaceDecoration): Float {
+    var reach = d.hardOffsetDp.coerceAtLeast(0f)
+    for (s in d.shadows) reach = maxOf(reach, kotlin.math.abs(s.dxDp) + kotlin.math.abs(s.dyDp) + s.blurDp * 3f + s.spreadDp)
+    d.paired?.let { reach = maxOf(reach, it.distanceDp * 2f + it.blurDp * 3f) }
+    return reach
+}
 
 /** [kitGlassFace]'s painting, for a face drawn inside another box (a chosen row's inset face). */
 internal fun DrawScope.drawGlassFace(d: SurfaceDecoration) {
