@@ -96,9 +96,13 @@ public fun KitTip(
 ) {
     kitAssert(message.isNotBlank()) { "KitTip: a tip is one sentence" }
     val dismiss by rememberUpdatedState(onDismissed)
-    var bounds by remember { mutableStateOf(Rect.Zero) }
+    // Where the anchor sits is kept outside the snapshot state and read when the tip is about to show: an anchor in a
+    // scrolling list moves every frame, and its tip part was composed again each time (jank pass 2026-11-10). [placed]
+    // is written once, so a tip asked for before its anchor's first layout still finds its side.
+    val bounds = remember { arrayOf(Rect.Zero) }
+    var placed by remember { mutableStateOf(false) }
     val windowHeight = LocalWindowInfo.current.containerSize.height.toFloat()
-    val above = TipRules.above(bounds.top, windowHeight)
+    val above = remember(visible, placed, windowHeight) { TipRules.above(bounds[0].top, windowHeight) }
     val motion = KitMotion.state
     val specs = KitMotion.specs
     val shown = remember { MutableTransitionState(false) }
@@ -109,7 +113,12 @@ public fun KitTip(
             dismiss()
         }
     }
-    Box(modifier.onGloballyPositioned { bounds = it.boundsInWindow() }) {
+    Box(
+        modifier.onGloballyPositioned {
+            bounds[0] = it.boundsInWindow()
+            if (!placed) placed = true
+        }
+    ) {
         anchor()
         if (shown.currentState || shown.targetState) {
             val gap = with(LocalDensity.current) { Space.S2.dp.roundToPx() }
