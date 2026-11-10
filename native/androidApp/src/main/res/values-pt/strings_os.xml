@@ -2,7 +2,7 @@
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
     <plurals name="notifStatusNeedsYou">
-        <item quantity="one">1 precisa de você</item>
+        <item quantity="one">%1$d precisa de você</item>
         <item quantity="many">%1$d precisam de você</item>
         <item quantity="other">%1$d precisam de você</item>
     </plurals>

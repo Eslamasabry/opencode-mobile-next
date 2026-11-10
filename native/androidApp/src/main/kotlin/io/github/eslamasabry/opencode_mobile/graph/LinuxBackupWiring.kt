@@ -438,7 +438,7 @@ private class AndroidLinuxBackups(
                     path,
                     OsConstants.O_RDONLY or
                         OsConstants.O_NOFOLLOW or
-                        OsConstants.O_CLOEXEC or
+                        oCloexec or
                         OsConstants.O_NONBLOCK,
                     0,
                 )
@@ -476,7 +476,7 @@ private class AndroidLinuxBackups(
                         OsConstants.O_CREAT or
                         OsConstants.O_EXCL or
                         OsConstants.O_NOFOLLOW or
-                        OsConstants.O_CLOEXEC or
+                        oCloexec or
                         OsConstants.O_NONBLOCK,
                     384,
                 )
@@ -507,7 +507,7 @@ private class AndroidLinuxBackups(
                     path,
                     OsConstants.O_RDONLY or
                         OsConstants.O_NOFOLLOW or
-                        OsConstants.O_CLOEXEC or
+                        oCloexec or
                         OsConstants.O_NONBLOCK,
                     0,
                 )

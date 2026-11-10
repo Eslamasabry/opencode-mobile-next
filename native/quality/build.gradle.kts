@@ -80,7 +80,16 @@ val compileAllTestSources =
         description = "Compiles every module's unit-test sources, so a module whose tests no longer compile fails the gate."
         val android = compileAndroidTests.get()
         rootProject.subprojects.filter { it != project }.forEach { other ->
-            dependsOn(other.tasks.matching { it.name in jvmTestCompiles || (android && androidTestCompile.matches(it.name)) })
+            // By name, never `tasks.matching { }`: matching creates every task of the module to ask its name, and
+            // AGP 9.5 has one (generate<Variant>ComposePreviewRunfiles) that refuses to be created in :androidApp,
+            // which stopped this gate at configuration (release dry run 2026-11-10).
+            dependsOn(
+                other.provider {
+                    other.tasks.names
+                        .filter { it in jvmTestCompiles || (android && androidTestCompile.matches(it)) }
+                        .map { other.tasks.named(it) }
+                },
+            )
         }
         val note = if (android) "desktop, JVM and Android" else "desktop and JVM only (no Android SDK, or oc.testCompileGuard=jvm)"
         doLast { logger.lifecycle("test sources compiled: $note") }

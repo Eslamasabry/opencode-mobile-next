@@ -835,7 +835,7 @@ class AndroidPlansReaders(
                                             android.system.OsConstants.O_CREAT or
                                             android.system.OsConstants.O_TRUNC or
                                             android.system.OsConstants.O_NOFOLLOW or
-                                            android.system.OsConstants.O_CLOEXEC,
+                                            oCloexec,
                                         0b110_000_000,
                                     )
                                 try {

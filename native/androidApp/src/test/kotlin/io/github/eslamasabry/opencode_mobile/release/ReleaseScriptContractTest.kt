@@ -66,7 +66,9 @@ class ReleaseScriptContractTest {
         assertTrue(github.contains("Refusing publication outside Eslamasabry/opencode-mobile-next"))
         assertTrue(github.contains("Local tag, remote tag and synchronized master must identify the same source."))
         assertTrue(github.contains("SHA256SUMS"), "draft assets are checked against their sums")
-        assertTrue(github.contains("--draft=false --prerelease=false --latest"), "a verified draft is what gets published")
+        // Promotion is the only step that makes a release the latest one, and it runs after the re-verification
+        // (the 2.1.5 script publishes a pre-release first, then `release.sh promote`).
+        assertTrue(github.contains("--prerelease=false --latest"), "a verified release is what gets promoted to latest")
         assertTrue(File(RepoFiles.root, "test/release_script_test.sh").isFile)
         assertTrue(File(RepoFiles.root, "test/github_release_script_test.sh").isFile)
     }

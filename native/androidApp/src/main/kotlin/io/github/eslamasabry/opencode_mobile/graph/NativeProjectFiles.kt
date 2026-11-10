@@ -210,7 +210,7 @@ internal class NativeProjectFiles(private val app: Application) {
         val flags =
             OsConstants.O_RDONLY or
                 OsConstants.O_NOFOLLOW or
-                OsConstants.O_CLOEXEC or
+                oCloexec or
                 OsConstants.O_NONBLOCK
         val fd = Os.open(file.path, flags, 0)
         try {
