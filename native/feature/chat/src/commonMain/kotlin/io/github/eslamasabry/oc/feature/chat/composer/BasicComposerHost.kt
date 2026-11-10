@@ -18,6 +18,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -660,9 +661,12 @@ public fun BasicComposer(
         }
         // E20-S20: the tray lives inside the message box (KitComposerBox `above`, Flutter concept C); its More, and
         // "+" on a server that takes no files, open the tools list (Flutter `_openTools`).
-        val words = field.text.toString()
+        // The words are read where they are used (a tap) and as yes/no facts: reading them here would rerun this whole
+        // body on every key.
+        val wordsBlank by remember(field) { derivedStateOf { field.text.isBlank() } }
+        val wordsEmpty by remember(field) { derivedStateOf { field.text.isEmpty() } }
         val clearWords: () -> Unit = {
-            clearedText = words
+            clearedText = field.text.toString()
             field.edit { replace(0, length, "") }
             editor.userEditSerial += 1
             editor.lastReported = ""
@@ -710,15 +714,15 @@ public fun BasicComposer(
                     saved = chrome.openSavedPrompts,
                     sendLater =
                         chrome.sendLater
-                            ?.takeIf { words.isNotBlank() }
+                            ?.takeIf { !wordsBlank }
                             ?.let { later ->
                                 {
                                     // N-44: the keyboard goes first, so the sheet's wheel is never under its button.
                                     focusManager.clearFocus()
-                                    later(words)
+                                    later(field.text.toString())
                                 }
                             },
-                    clearText = clearWords.takeIf { words.isNotEmpty() },
+                    clearText = clearWords.takeIf { !wordsEmpty },
                     conversation = conversationRow,
                     modelWords = modelWords(state, chrome),
                     model = {
@@ -773,7 +777,8 @@ public fun BasicComposer(
                 role = io.github.eslamasabry.oc.ui.kit.KitTextRole.Supporting,
             )
         }
-        val query = ComposerQuery.of(field.text.toString())
+        val queryNow by remember(field) { derivedStateOf { ComposerQuery.of(field.text.toString()) } }
+        val query = queryNow
         // S30 story 2 (Flutter `composer.dart` `_suggestions`): a `/word` lists the app's own actions and the
         // server's commands together, best match first, five at most, then "Show all" opens the grouped,
         // searchable Commands sheet. A server command fills the box with `/name `; an app action leaves it and runs.
@@ -857,7 +862,7 @@ public fun BasicComposer(
         // turn, with no ring (the glowing border is the running sign; owner, 2026-11-09).
         val waitingRequest = chrome.requestWaiting()
         val stopShown = busy || waitingRequest
-        val typed = field.text.isNotBlank() || state.draft.attachments.isNotEmpty()
+        val typed = !wordsBlank || state.draft.attachments.isNotEmpty()
         val sendReady =
             state.available &&
                 editorReady &&
@@ -1002,7 +1007,7 @@ public fun BasicComposer(
                     }
                 }
         KitPictureReceiver(takePicture, Modifier.fillMaxWidth()) {
-        KitComposerRowFit(words, leadingTargets = 1, stack = slab) { stacked ->
+        KitComposerRowFit({ field.text.toString() }, leadingTargets = 1, stack = slab) { stacked ->
             KitComposerBox(
                 running = busy && !waitingRequest,
                 stacked = stacked,

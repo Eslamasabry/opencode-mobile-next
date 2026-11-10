@@ -3,6 +3,9 @@ package io.github.eslamasabry.oc.ui.kitchat.composer
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
@@ -30,6 +33,19 @@ public fun KitComposerRowFit(
     leadingTargets: Int = 1,
     stack: Boolean = false,
     content: @Composable (stacked: Boolean) -> Unit,
+): Unit = KitComposerRowFit({ text }, modifier, leadingTargets, stack, content)
+
+/**
+ * The same, with the words read lazily: a key typed that does not change the answer recomposes nothing, neither
+ * this nor the caller (which would otherwise rerun with every key to hand the words down).
+ */
+@Composable
+public fun KitComposerRowFit(
+    text: () -> String,
+    modifier: Modifier = Modifier,
+    leadingTargets: Int = 1,
+    stack: Boolean = false,
+    content: @Composable (stacked: Boolean) -> Unit,
 ) {
     val measure = rememberTextMeasurer()
     val tokens = LocalKitTokens.current
@@ -37,9 +53,23 @@ public fun KitComposerRowFit(
     BoxWithConstraints(modifier.kitMaxWidth(CapRole.Conversation).fillMaxWidth()) {
         val width = composerRowFieldWidth(maxWidth.value, tokens.minTarget.toFloat(), leadingTargets).dp
         val px = with(LocalDensity.current) { width.roundToPx() }.coerceAtLeast(1)
-        val one = Constraints(maxWidth = px)
-        val layout = measure.measure(AnnotatedString(text), style = style, maxLines = 1, constraints = one)
-        content(stack || text.contains('\n') || layout.hasVisualOverflow)
+        val stacked by
+            remember(px, measure, style, stack, text) {
+                derivedStateOf {
+                    val words = text()
+                    stack ||
+                        words.contains('\n') ||
+                        measure
+                            .measure(
+                                AnnotatedString(words),
+                                style = style,
+                                maxLines = 1,
+                                constraints = Constraints(maxWidth = px),
+                            )
+                            .hasVisualOverflow
+                }
+            }
+        content(stacked)
     }
 }
 
