@@ -320,6 +320,9 @@ public interface ChatsActions {
     /** Closes the notice [ChatsUi.newBlocked] shows. */
     public fun dismissNewBlocked() {}
 
+    /** The opening card's Start, when this phone's OpenCode was stopped by the person. */
+    public fun startOpeningPhoneServer() {}
+
     public fun openSettings()
 
     /** Opens the Updates page (only offered while [ChatsUi.updateReady]). */

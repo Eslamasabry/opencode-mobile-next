@@ -408,17 +408,26 @@ private fun MonitoringSettings(state: ChatsUi, actions: ChatsActions) {
 }
 
 @Composable
-internal fun OpeningStatus(opening: ChatsOpeningUi, actions: ChatsActions) {
+internal fun OpeningStatus(opening: ChatsOpeningUi, actions: ChatsActions, blocked: Boolean = false) {
     // Connecting and starting live in the server pill; only a failure needs its own card.
     var askRestart by remember { mutableStateOf(false) }
     KitStateView(
         kind = KitStateKind.Error,
-        title = stringResource(Res.string.homeOpeningFailed, opening.serverName),
-        body = stringResource(Res.string.homeOpeningFailedBody),
-        failure = opening.failure,
+        title =
+            if (opening.phoneOff) stringResource(Res.string.homePhoneOffTitle)
+            else stringResource(Res.string.homeOpeningFailed, opening.serverName),
+        // After a tap on New conversation the card also says that nothing was started, so there is one card, not two.
+        body =
+            when {
+                opening.phoneOff -> stringResource(Res.string.thisPhoneAnswerOffLine)
+                blocked -> stringResource(Res.string.homeNewBlockedBody, opening.serverName)
+                else -> stringResource(Res.string.homeOpeningFailedBody)
+            },
+        failure = if (opening.phoneOff) null else opening.failure,
         primary =
             if (opening.phase == ChatsOpeningPhase.Failed)
-                KitAction(stringResource(Res.string.kitTryAgain), actions::retryOpening)
+                if (opening.phoneOff) KitAction(stringResource(Res.string.homePhoneOffStart), actions::startOpeningPhoneServer)
+                else KitAction(stringResource(Res.string.kitTryAgain), actions::retryOpening)
             else null,
         // A rejected or missing sign-in is fixed where it is typed; any failure can switch server.
         secondary =
@@ -444,7 +453,7 @@ internal fun OpeningStatus(opening: ChatsOpeningUi, actions: ChatsActions) {
             if (opening.phase == ChatsOpeningPhase.Failed)
                 listOfNotNull(
                     // This phone's own OpenCode can be restarted from here (Flutter root-connecting Restart).
-                    if (opening.onThisPhone)
+                    if (opening.onThisPhone && !opening.phoneOff)
                         KitAction(stringResource(Res.string.connectionRestartPhoneServer), { askRestart = true })
                     else null,
                     KitAction(stringResource(Res.string.openingChangeServer), actions::openServers),
@@ -471,48 +480,15 @@ internal fun OpeningStatus(opening: ChatsOpeningUi, actions: ChatsActions) {
 }
 
 /**
- * New conversation was tapped while its server is still opening or is not answering: says so, and offers the way
- * forward that fits (this phone's own OpenCode restarts; a computer is tried again; either can be swapped).
+ * New conversation was tapped while its server is still opening (no failure card is on screen): says so. Once the
+ * server has failed, the same words live in the opening card, so there is one card.
  */
 @Composable
 internal fun NewConversationBlocked(opening: ChatsOpeningUi, actions: ChatsActions) {
-    var askRestart by remember { mutableStateOf(false) }
-    val failed = opening.phase == ChatsOpeningPhase.Failed
     KitNotice(
-        title = if (failed) stringResource(Res.string.homeOpeningFailed, opening.serverName) else null,
-        message =
-            stringResource(
-                if (failed) Res.string.homeNewBlockedBody else Res.string.homeNewBlockedOpening,
-                opening.serverName,
-            ),
-        tone = if (failed) StatusTone.Failure else StatusTone.Neutral,
-        actions =
-            if (!failed) emptyList()
-            else
-                listOf(
-                    if (opening.onThisPhone)
-                        KitLineAction(stringResource(Res.string.homeNewBlockedRestart), { askRestart = true })
-                    else KitLineAction(stringResource(Res.string.kitTryAgain), actions::retryOpening),
-                    KitLineAction(stringResource(Res.string.openingChangeServer), actions::openServers),
-                ),
+        message = stringResource(Res.string.homeNewBlockedOpening, opening.serverName),
+        tone = StatusTone.Neutral,
         dismiss = KitLineAction(stringResource(Res.string.workspaceDismissNotice), actions::dismissNewBlocked),
-    )
-    KitConfirm(
-        spec =
-            if (askRestart)
-                KitConfirmSpec(
-                    title = stringResource(Res.string.workServerRestartTitle),
-                    confirmLabel = stringResource(Res.string.workServerRestart),
-                    kind = KitConfirmKind.Stop,
-                    icon = KitIcons.restart,
-                    body = stringResource(Res.string.workServerRestartBody),
-                )
-            else null,
-        onConfirm = {
-            askRestart = false
-            actions.restartOpeningPhoneServer()
-        },
-        onCancel = { askRestart = false },
     )
 }
 

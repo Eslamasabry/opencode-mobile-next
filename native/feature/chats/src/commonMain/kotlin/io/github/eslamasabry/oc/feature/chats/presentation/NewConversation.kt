@@ -13,6 +13,7 @@ import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
+import io.github.eslamasabry.oc.core.common.NetworkWhy
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -38,11 +39,18 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.time.Duration.Companion.seconds
+
+/** How long the page waits for a server's first answer before it says so and offers Try again. */
+internal val SETUP_WAIT = 90.seconds
 
 public data class NewConversationServer(
     val profile: ProfileId,
     val name: String,
     val connected: Boolean,
+    /** This phone's own OpenCode is off because the person stopped it. */
+    val phoneOff: Boolean = false,
 )
 
 public data class NewConversationProject(
@@ -110,6 +118,10 @@ public interface NewConversationHost {
         Outcome.Failed(Failure.Unavailable(FeatureId("projectFolderCreation")))
 
     public val servers: StateFlow<List<NewConversationServer>>
+
+    /** Starts this phone's own OpenCode after the person stopped it. */
+    public suspend fun startPhoneServer(profile: ProfileId): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("startPhoneServer")))
 
     public suspend fun setup(profile: ProfileId): Outcome<NewConversationSetup>
 
@@ -309,6 +321,9 @@ public data class NewConversationUi(
     val folderMissing: Boolean = false,
     val remakingFolder: Boolean = false,
     val remakeFailure: Failure? = null,
+    /** The chosen server is this phone's own OpenCode and the person stopped it: no list can be read until it starts. */
+    val phoneOff: Boolean = false,
+    val startingPhone: Boolean = false,
 ) {
     val canCopy: Boolean
         get() = setup?.projects?.any { it.directory == directory && it.separateCopy } == true
@@ -383,6 +398,9 @@ public interface NewConversationActions {
 
     public fun retryLoad()
 
+    /** Starts this phone's OpenCode when [NewConversationUi.phoneOff]. */
+    public fun startPhoneServer() {}
+
     /** New project in the project sheet: asks for its name. */
     public fun askNewProject() {}
 
@@ -419,6 +437,10 @@ public class NewConversationViewModel(
         viewModelScope.launch {
             host.servers.collect { servers ->
                 mutable.update { it.copy(servers = servers) }
+                // The person's Start (here or on This phone) brought the server back: read it again.
+                val shown = mutable.value
+                if (shown.phoneOff && !shown.startingPhone && servers.none { it.profile == shown.profile && it.phoneOff })
+                    shown.profile?.let(::chooseServer)
                 if (mutable.value.profile == null) {
                     val target =
                         route.profile?.takeIf { wanted -> servers.any { it.profile == wanted } }
@@ -486,9 +508,22 @@ public class NewConversationViewModel(
         if (mutable.value.busy || mutable.value.attempted || mutable.value.deliveryUnconfirmed)
             return
         val ticket = ++generation
-        mutable.update { it.copy(profile = profile, busy = true, failure = null, setup = null) }
+        // A server the person turned off cannot answer: say so now instead of waiting on it.
+        if (mutable.value.servers.any { it.profile == profile && it.phoneOff }) {
+            mutable.update {
+                it.copy(profile = profile, busy = false, failure = null, setup = null, phoneOff = true)
+            }
+            return
+        }
+        mutable.update {
+            it.copy(profile = profile, busy = true, failure = null, setup = null, phoneOff = false)
+        }
         viewModelScope.launch {
-            when (val loaded = host.setup(profile)) {
+            // Never wait for ever: a server that does not answer in time is a failure with a Try again.
+            val answered =
+                withTimeoutOrNull(SETUP_WAIT) { host.setup(profile) }
+                    ?: Outcome.Failed(Failure.Network(NetworkWhy.Unknown))
+            when (val loaded = answered) {
                 is Outcome.Failed ->
                     if (ticket == generation)
                         mutable.update { it.copy(busy = false, failure = loaded.failure) }
@@ -620,6 +655,20 @@ public class NewConversationViewModel(
                         }
                     }
                 }
+            }
+        }
+    }
+
+    override fun startPhoneServer() {
+        val profile = mutable.value.profile ?: return
+        if (!mutable.value.phoneOff || mutable.value.startingPhone) return
+        mutable.update { it.copy(startingPhone = true, failure = null) }
+        viewModelScope.launch {
+            val started = host.startPhoneServer(profile)
+            mutable.update { it.copy(startingPhone = false) }
+            when (started) {
+                is Outcome.Failed -> mutable.update { it.copy(failure = started.failure) }
+                is Outcome.Ok -> chooseServer(profile)
             }
         }
     }

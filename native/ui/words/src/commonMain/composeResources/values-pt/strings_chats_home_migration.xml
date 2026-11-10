@@ -18,5 +18,6 @@
     <string name="homeMonitorPaused">As verificações ficam pausadas enquanto o app e o serviço em segundo plano estão parados.</string>
     <string name="homeNewBlockedBody">As novas conversas começam em %1$s. Ele ainda não responde, então nada foi iniciado.</string>
     <string name="homeNewBlockedOpening">%1$s ainda está abrindo. Tente novamente em instantes.</string>
-    <string name="homeNewBlockedRestart">Reiniciar o OpenCode neste celular</string>
+    <string name="homePhoneOffStart">Iniciar o OpenCode neste celular</string>
+    <string name="homePhoneOffTitle">O OpenCode neste celular está desligado</string>
 </resources>

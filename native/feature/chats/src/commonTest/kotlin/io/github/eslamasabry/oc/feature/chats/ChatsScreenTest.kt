@@ -160,21 +160,104 @@ class ChatsScreenTest {
             assertEquals(listOf("new", "computer"), actions.calls)
         }
 
+    private fun failedOpening(name: String, phone: Boolean, off: Boolean = false) =
+        io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningUi(
+            io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningPhase.Failed,
+            name,
+            onThisPhone = phone,
+            phoneOff = off,
+        )
+
     @Test
-    fun `NEW-BLOCKED the notice names the server and offers to restart this phone's OpenCode`() = runComposeUiTest {
+    fun `NEW-BLOCKED the phone's own server turned off is one card with Start, not two`() = runComposeUiTest {
         val actions = RecordingChatsActions()
-        val failed =
-            io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningUi(
-                io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningPhase.Failed,
-                "This phone",
-                onThisPhone = true,
-            )
         setContent {
-            Themed { ChatsScreen(ui().copy(home = ChatsHomeExtraState(opening = failed), newBlocked = true), actions) }
+            Themed {
+                ChatsScreen(
+                    ui().copy(home = ChatsHomeExtraState(opening = failedOpening("This phone", phone = true, off = true)), newBlocked = true),
+                    actions,
+                )
+            }
         }
-        onNodeWithText("New conversations start on This phone. It isn’t answering yet, so nothing was started.").assertExists()
-        onNodeWithText("Restart OpenCode on this phone").assertExists()
-        onAllNodesWithText("Change server").assertCountEquals(2)
+        onAllNodesWithText("OpenCode on this phone is off").assertCountEquals(1)
+        onAllNodesWithText("Start OpenCode on this phone").assertCountEquals(1)
+        onAllNodesWithText("Dismiss").assertCountEquals(0)
+        onAllNodesWithText("Restart OpenCode").assertCountEquals(0)
+    }
+
+    @Test
+    fun `NEW-BLOCKED a computer that does not answer is one card that says nothing was started, with Try again`() = runComposeUiTest {
+        setContent {
+            Themed {
+                ChatsScreen(
+                    ui().copy(home = ChatsHomeExtraState(opening = failedOpening("Home PC", phone = false)), newBlocked = true),
+                    RecordingChatsActions(),
+                )
+            }
+        }
+        onAllNodesWithText("Home PC isn’t answering").assertCountEquals(1)
+        onAllNodesWithText("New conversations start on Home PC. It isn’t answering yet, so nothing was started.").assertCountEquals(1)
+        onAllNodesWithText("Try again").assertCountEquals(1)
+        onAllNodesWithText("Change server").assertCountEquals(1)
+        onAllNodesWithText("Dismiss").assertCountEquals(0)
+    }
+
+    @Test
+    fun `NEW-BLOCKED a server that is only still opening gets the small notice`() = runComposeUiTest {
+        val opening =
+            io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningUi(
+                io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningPhase.Connecting,
+                "Home PC",
+            )
+        setContent { Themed { ChatsScreen(ui().copy(home = ChatsHomeExtraState(opening = opening), newBlocked = true), RecordingChatsActions()) } }
+        onNodeWithText("Home PC is still opening. Try again in a moment.").assertExists()
+    }
+
+    @Test
+    fun `PHONE-OFF the new-conversation page says the server is off and offers Start, never Please wait`() = runComposeUiTest {
+        val calls = mutableListOf<String>()
+        val phone = io.github.eslamasabry.oc.core.common.ids.ProfileId("phone")
+        val actions =
+            object : io.github.eslamasabry.oc.feature.chats.presentation.NewConversationActions {
+                override fun back() {}
+
+                override fun addServer() {}
+
+                override fun chooseServer(profile: io.github.eslamasabry.oc.core.common.ids.ProfileId) {}
+
+                override fun draftChanged(text: String) {}
+
+                override fun start() {}
+
+                override fun sheet(sheet: io.github.eslamasabry.oc.feature.chats.presentation.NewConversationSheet?) {}
+
+                override fun chooseDirectory(directory: String) {}
+
+                override fun chooseModel(model: io.github.eslamasabry.oc.core.model.ModelRef?) {}
+
+                override fun chooseAgent(agent: String?) {}
+
+                override fun separateCopy(on: Boolean) {}
+
+                override fun import(conversation: io.github.eslamasabry.oc.core.domain.ImportableConversation) {}
+
+                override fun retryLoad() {}
+
+                override fun startPhoneServer() {
+                    calls += "start"
+                }
+            }
+        val state =
+            io.github.eslamasabry.oc.feature.chats.presentation.NewConversationUi(
+                servers = listOf(io.github.eslamasabry.oc.feature.chats.presentation.NewConversationServer(phone, "This phone", false, phoneOff = true)),
+                profile = phone,
+                phoneOff = true,
+            )
+        setContent { Themed { io.github.eslamasabry.oc.feature.chats.ui.NewConversationScreen(state, actions) } }
+        onAllNodesWithText("OpenCode on this phone is off").assertCountEquals(1)
+        onAllNodesWithText("Please wait for the current action.").assertCountEquals(0)
+        onNodeWithText("Start OpenCode on this phone").performClick()
+        assertEquals(listOf("start"), calls)
     }
 
     @Test

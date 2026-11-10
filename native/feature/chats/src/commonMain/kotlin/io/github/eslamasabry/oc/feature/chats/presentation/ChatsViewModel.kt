@@ -666,6 +666,14 @@ public class ChatsViewModel(
         }
     }
 
+    override fun startOpeningPhoneServer() {
+        val opening = home.snapshot.value.opening ?: return
+        val profile = opening.profile ?: return
+        if (!opening.onThisPhone) return
+        newRefused.value = false
+        viewModelScope.launch { home.startPhoneServer(profile) }
+    }
+
     override fun restartOpeningPhoneServer() {
         val opening = home.snapshot.value.opening ?: return
         val profile = opening.profile ?: return

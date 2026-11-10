@@ -29,6 +29,11 @@ class AndroidChatPhoneServer(
     override fun runsHere(profile: ProfileId): Boolean =
         (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value == profile.raw
 
+    /** Starts this phone's OpenCode (the This phone page's own start path), e.g. after the person stopped it. */
+    suspend fun start(profile: ProfileId): Outcome<Unit> =
+        if (runsHere(profile)) server.start()
+        else Outcome.Failed(Failure.Unavailable(FeatureId("startPhoneServer")))
+
     override suspend fun restart(profile: ProfileId): Outcome<Unit> =
         if (runsHere(profile)) server.restart()
         else Outcome.Failed(Failure.Unavailable(FeatureId("restartPhoneServer")))
