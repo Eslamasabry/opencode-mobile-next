@@ -57,6 +57,14 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitPinned
 import org.jetbrains.compose.resources.stringResource
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.runtime.remember
 
 /**
  * The agent a conversation belongs to: [id] is the bundled mark slug (blank: no mark, Dart `agentMark: null`), [name]
@@ -148,7 +156,9 @@ public fun KitFeedItem(
     val running = tone == KitRowStateTone.Running && word != null
     val sweep = running && !KitMotion.state.reduced && KitMotion.state.ambientLoops
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
-    val sweepBrush = if (sweep) sweepBrush(stateColor, colors.text1, rtl) else null
+    // Where the live word sits in the meta line, for the sweep drawn over it.
+    var wordStart = 0
+    var wordEnd = 0
     val meta = buildAnnotatedString {
         if (agent != null) {
             if (agent.id.isNotBlank()) appendInlineContent(MARK, agent.name)
@@ -157,8 +167,9 @@ public fun KitFeedItem(
         if (word != null) {
             if (done) appendInlineContent(CHECK, "✓")
             val weight = if (tone == KitRowStateTone.NeedsYou || running) FontWeight.SemiBold else null // F: lib/ui/kit/kit_feed_item.dart:442,453
-            val style = if (sweepBrush != null) SpanStyle(brush = sweepBrush, fontWeight = weight) else SpanStyle(color = stateColor, fontWeight = weight)
-            withStyle(style) { append(word) }
+            wordStart = length
+            withStyle(SpanStyle(color = stateColor, fontWeight = weight)) { append(word) }
+            wordEnd = length
             append(KitFeedItemRules.DOT)
         }
         if (project.isNotEmpty()) append("⁨$project⁩")
@@ -195,12 +206,15 @@ public fun KitFeedItem(
                     // Quiet: the secondary tone at the size of the line under it, never a badge.
                     if (pinned) KitGlyph(KitIcons.pin, colors.text2, with(LocalDensity.current) { size.sp.toDp() })
                 }
+                val laid = remember { SweepLayout() }
                 BasicText(
                     meta,
+                    modifier = if (sweep) Modifier.kitLiveSweep(laid, wordStart, wordEnd, stateColor, colors.text1, rtl) else Modifier,
                     style = base,
                     maxLines = if (large) Int.MAX_VALUE else 1,
                     overflow = TextOverflow.Ellipsis,
                     inlineContent = inline,
+                    onTextLayout = if (sweep) laid::set else null,
                 )
             }
         }
@@ -213,21 +227,55 @@ public fun KitFeedItem(
 private const val MARK = "kit-feed-mark"
 private const val CHECK = "kit-feed-check"
 
-/** The live word's light: a soft highlight sweeping over "Working", one lap per [MotionTokens.LIVE_SWEEP_LAP]. */
+/** The meta line as it was last laid out, and the live word's outline in it (kept until the layout changes). */
+private class SweepLayout {
+    var result: TextLayoutResult? = null
+    var outline: Path? = null
+    var range: Long = -1
+
+    fun set(layout: TextLayoutResult) {
+        if (layout !== result) {
+            result = layout
+            outline = null
+        }
+    }
+}
+
+/**
+ * The live word's light: a soft highlight sweeping over "Working", one lap per [MotionTokens.LIVE_SWEEP_LAP]. It is
+ * drawn over the word's own letters, and its place is read only while drawing: a running row is neither composed nor
+ * laid out again as the light moves (it was, every frame, for each running row; jank pass 2026-11-10). The sweep runs
+ * across the whole line, as the span's brush did, and shows where it crosses the word.
+ */
 @Composable
-private fun sweepBrush(color: Color, light: Color, rtl: Boolean): Brush {
+private fun Modifier.kitLiveSweep(laid: SweepLayout, start: Int, end: Int, color: Color, light: Color, rtl: Boolean): Modifier {
     val lap = rememberInfiniteTransition(label = "kit-feed-sweep")
-    val t by lap.animateFloat(
-        0f,
-        1f,
-        infiniteRepeatable(tween(MotionTokens.LIVE_SWEEP_LAP, easing = LinearEasing), RepeatMode.Restart),
-        label = "kit-feed-sweep-t",
-    )
-    val centre = KitFeedItemRules.sweepCentre(t, rtl)
-    val half = KitFeedItemRules.SWEEP_HALF
-    return Brush.horizontalGradient(
-        (centre - half).coerceIn(0f, 1f) to color,
-        centre.coerceIn(0f, 1f) to light,
-        (centre + half).coerceIn(0f, 1f) to color,
-    )
+    val t =
+        lap.animateFloat(
+            0f,
+            1f,
+            infiniteRepeatable(tween(MotionTokens.LIVE_SWEEP_LAP, easing = LinearEasing), RepeatMode.Restart),
+            label = "kit-feed-sweep-t",
+        )
+    // Its own layer: the light takes the word's letters as its shape (SrcAtop), and only this line is drawn again.
+    return graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+        .drawWithContent {
+            drawContent()
+            val layout = laid.result ?: return@drawWithContent
+            if (end <= start || end > layout.layoutInput.text.length) return@drawWithContent
+            val key = start.toLong() shl 32 or end.toLong()
+            val outline = laid.outline?.takeIf { laid.range == key } ?: layout.getPathForRange(start, end).also { laid.outline = it; laid.range = key }
+            val centre = KitFeedItemRules.sweepCentre(t.value, rtl)
+            val half = KitFeedItemRules.SWEEP_HALF
+            clipPath(outline) {
+                drawRect(
+                    Brush.horizontalGradient(
+                        (centre - half).coerceIn(0f, 1f) to color,
+                        centre.coerceIn(0f, 1f) to light,
+                        (centre + half).coerceIn(0f, 1f) to color,
+                    ),
+                    blendMode = BlendMode.SrcAtop,
+                )
+            }
+        }
 }
