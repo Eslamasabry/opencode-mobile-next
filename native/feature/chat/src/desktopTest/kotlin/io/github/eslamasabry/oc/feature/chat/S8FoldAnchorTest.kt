@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -17,12 +18,18 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.down
+import androidx.compose.ui.test.up
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.feature.chat.ui.FOLD_ANCHOR_HOLD_MS
+import io.github.eslamasabry.oc.feature.chat.ui.FoldAnchor
 import io.github.eslamasabry.oc.feature.chat.ui.foldAnchor
 import io.github.eslamasabry.oc.feature.chat.ui.rememberFoldAnchor
 import kotlin.math.abs
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
@@ -74,5 +81,38 @@ class S8FoldAnchorTest {
     fun `P-010 an opened row stays under the finger`() {
         val (before, after) = headerTopAfterOpening(anchored = true)
         assertTrue(abs(after - before) <= 1f, "the row's top stays put: $before → $after")
+    }
+
+    @Test
+    fun `a touch on a row does not recompose the list, and the hold still lets go after its time`() {
+        runDesktopComposeUiTest(360, 640) {
+            var runs = 0
+            var held: FoldAnchor? = null
+            setContent {
+                val lazy = rememberLazyListState()
+                val anchor = rememberFoldAnchor()
+                held = anchor
+                SideEffect { runs++ }
+                LazyColumn(Modifier.fillMaxSize(), state = lazy, reverseLayout = true) {
+                    items(10) { i ->
+                        Box(
+                            Modifier.fillMaxWidth()
+                                .height(48.dp)
+                                .foldAnchor("row-$i", anchor, lazy)
+                                .testTag("row-$i")
+                        )
+                    }
+                }
+            }
+            waitForIdle()
+            val before = runs
+            onNodeWithTag("row-1", useUnmergedTree = true).performTouchInput { down(center); up() }
+            waitForIdle()
+            assertEquals("row-1", held!!.item, "the touched row is held")
+            assertEquals(before, runs, "the touch did not recompose the list's host")
+            mainClock.advanceTimeBy(FOLD_ANCHOR_HOLD_MS + 100)
+            waitForIdle()
+            assertEquals(null, held!!.item, "and let go after the hold time")
+        }
     }
 }

@@ -45,6 +45,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.movableContentOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
@@ -279,7 +280,19 @@ public fun KitMarkdownBlock(
     if (reveal != null && reveal.streamed && !block.reveals) {
         SideEffect { reveal.registry.settle(block.key, reveal.group) }
     }
-    if (live) DisableSelection { body() } else body()
+    KitLiveSelectionScope(live, body)
+}
+
+/**
+ * Not selectable while [live] (the Compose selection-while-streaming issue, §7.8). A reply block stops being live the
+ * moment it stops being the tail, and the structure around [content] used to differ between the two, so the block was
+ * torn down and drawn again (its words still fading in could pop). The content moves between the two call sites with
+ * its state instead.
+ */
+@Composable
+internal fun KitLiveSelectionScope(live: Boolean, content: @Composable () -> Unit) {
+    val stable = remember { movableContentOf { inner: @Composable () -> Unit -> inner() } }
+    if (live) DisableSelection { stable(content) } else stable(content)
 }
 
 /** The kinds drawn through the word-by-word reveal. */

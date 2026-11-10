@@ -292,8 +292,6 @@ private fun StepRow(
             child != null ||
             files.isNotEmpty()
     val full = folds.full[key] == true
-    val lines = text?.lines()?.size ?: 0
-    val more = pluralStringResource(Res.plurals.kitCodeShowAll, lines, lines)
     KitToolRow(
         view = view,
         opened = folds.open[key] == true,
@@ -331,7 +329,9 @@ private fun StepRow(
                         role = KitButtonRole.Tertiary,
                         modifier = Modifier.testTag("chat-step-file-$i"),
                     )
-                    if (shell)
+                    if (shell) {
+                        // Counted only where it is shown (an open shell step), once per output.
+                        val lines = remember(text) { text?.lines()?.size ?: 0 }
                         KitCommandBox(
                             command = f.subject ?: "",
                             output = text,
@@ -340,10 +340,11 @@ private fun StepRow(
                                 else
                                     io.github.eslamasabry.oc.ui.kitchat.tool
                                         .KIT_COMMAND_OUTPUT_LINES,
-                            moreLabel = more,
+                            moreLabel = pluralStringResource(Res.plurals.kitCodeShowAll, lines, lines),
                             onMore = { folds.full[key] = true },
                             exitLabel = null,
                         )
+                    }
                     val rerun = reply?.onRerunCommand
                     val again = if (rerun == null) null else rerunCommand(f.kind, step.state, out.input, f.subject)
                     if (shell && rerun != null && again != null)

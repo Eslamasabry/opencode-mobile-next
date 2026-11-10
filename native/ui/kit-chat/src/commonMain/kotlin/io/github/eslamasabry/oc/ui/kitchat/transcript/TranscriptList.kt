@@ -202,7 +202,7 @@ public fun KitTranscriptList(
         // the viewport meets the composer, so letters do not run into the pill.
         val chromeBottom = chrome.calculateBottomPadding()
         val ground = LocalKitColors.current.ground
-        val fade by
+        val fadeState =
             animateFloatAsState(
                 if (state.awayFromLatest) 1f else 0f,
                 // KitMotion's STANDARD on the kit's Enter curve, not Compose's default curve.
@@ -215,7 +215,10 @@ public fun KitTranscriptList(
         // fades it out with the words under the bottom block, so it has no edge of its own.
         // Over a glass slab (owner 2026-11-10) there is no fade at all: the words run sharp under the one pane, and the
         // pill is a drop of glass over them.
-        if (fade > 0f && !io.github.eslamasabry.oc.ui.kit.frame.kitScreenBottomIsSlab())
+        // The fade's value is read only when it draws; composition sees just whether it shows at all (twice per fade),
+        // not every frame of it.
+        val fadeShown by remember { derivedStateOf { fadeState.value > 0f } }
+        if (fadeShown && !io.github.eslamasabry.oc.ui.kit.frame.kitScreenBottomIsSlab())
             Box(
                 Modifier.align(Alignment.BottomCenter)
                     .fillMaxWidth()
@@ -229,7 +232,7 @@ public fun KitTranscriptList(
                                 startY = 0f,
                                 endY = JUMP_FADE_DP.dp.toPx(),
                             ),
-                            alpha = fade,
+                            alpha = fadeState.value,
                         )
                     }
             )

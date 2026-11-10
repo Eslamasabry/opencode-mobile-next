@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -17,6 +18,7 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 /** How long after a touch the touched row is held in place: the kit's fold (250 ms) and some slack. */
@@ -64,12 +66,15 @@ internal object FoldAnchorRules {
 @Composable
 internal fun rememberFoldAnchor(): FoldAnchor {
     val anchor = remember { FoldAnchor() }
-    val serial = anchor.serial
-    LaunchedEffect(serial) {
-        if (serial > 0) {
-            delay(FOLD_ANCHOR_HOLD_MS)
-            anchor.release(serial)
-        }
+    // The serial moves on every touch of any row; read here in composition it would recompose the whole list.
+    LaunchedEffect(anchor) {
+        snapshotFlow { anchor.serial }
+            .collectLatest { serial ->
+                if (serial > 0) {
+                    delay(FOLD_ANCHOR_HOLD_MS)
+                    anchor.release(serial)
+                }
+            }
     }
     return anchor
 }

@@ -11,7 +11,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalDensity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
@@ -54,6 +53,7 @@ import io.github.eslamasabry.oc.feature.chat.sessiontransfer.ui.SessionTransferS
 import io.github.eslamasabry.oc.feature.chat.start.presentation.ChatStartViewModel
 import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
 import io.github.eslamasabry.oc.feature.chat.ui.MessageTeachingScope
+import io.github.eslamasabry.oc.feature.chat.ui.rememberBottomInsetOpen
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
@@ -202,7 +202,7 @@ public class ChatEntries(
                 )
             }
             var offerDetails by remember(route) { mutableStateOf(false) }
-            val keyboardOpen = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+            val keyboardOpen by rememberBottomInsetOpen(WindowInsets.ime)
             val offerStatus =
                 replyOffer
                     ?.takeUnless { keyboardOpen }

@@ -91,6 +91,7 @@ public class ChatViewModel(
                 },
                 viewModelScope,
                 SharingStarted.WhileSubscribed(STOP_AFTER_MS),
+                world.work,
             )
 
     /**

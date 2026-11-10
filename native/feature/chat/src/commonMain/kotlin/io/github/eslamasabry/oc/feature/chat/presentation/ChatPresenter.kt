@@ -20,7 +20,6 @@ import io.github.eslamasabry.oc.feature.chat.world.StoppedPrompt
 import io.github.eslamasabry.oc.feature.chat.world.ChatLoad
 import io.github.eslamasabry.oc.feature.chat.world.ChatWorld
 import io.github.eslamasabry.oc.feature.chat.world.ChatUndone
-import io.github.eslamasabry.oc.feature.chat.world.DraftFacts
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import io.github.eslamasabry.oc.feature.chat.world.PendingState
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeed
@@ -123,7 +122,8 @@ internal data class ChatInputs(
     val capabilities: ServerCapabilities,
     val link: ChatLink,
     val pending: ImmutableList<PendingSend>,
-    val draft: DraftFacts,
+    /** The Back guard's only need of the draft: typing must not present a new screen state per key. */
+    val draftUnsaved: Boolean,
     val retry: LinkRetryFacts = LinkRetryFacts.None,
 )
 
@@ -201,7 +201,9 @@ public class ChatPresenter(
                     Five(t, l, ti, c, k)
                 }
                 .combine(world.pending) { f, p -> f to p }
-                .combine(world.draft) { (f, p), d -> ChatInputs(f.t, f.l, f.ti, f.c, f.k, p, d) }
+                .combine(world.draft.map { it.unsaved }.distinctUntilChanged()) { (f, p), d ->
+                    ChatInputs(f.t, f.l, f.ti, f.c, f.k, p, d)
+                }
                 .combine(retryFacts()) { i, r -> i.copy(retry = r) }
         // Read acknowledgement follows the world, not the screen's composition (plan 09 §6.7).
         combine(world.load, world.transcript, local) { _, _, _ ->
@@ -283,7 +285,7 @@ public class ChatPresenter(
             world.capabilities.value,
             world.link.value,
             world.pending.value,
-            world.draft.value,
+            world.draft.value.unsaved,
             retryNow(world.linkRetryAtMs.value),
         )
 
@@ -401,7 +403,7 @@ public class ChatPresenter(
                             !l.stopping && !l.stopAfterStep && i.capabilities.promptSteering,
                     )
                 else null,
-            pending = i.pending.asReversed().toImmutableList(),
+            pending = pendingShown(i.pending),
             find = find,
             menu = l.menu,
             confirm = l.confirm,
@@ -414,7 +416,7 @@ public class ChatPresenter(
                     l.menu != null || l.select != null || l.picture != null,
                     l.confirm != null,
                     l.findQuery != null,
-                    i.draft.unsaved,
+                    i.draftUnsaved,
                 ),
             select = l.select,
             insert = l.insert,
@@ -432,16 +434,34 @@ public class ChatPresenter(
                         l.olderFailure,
                     )
                 },
-            receiptChecks =
-                l.receiptChecks
-                    .filterKeys { id -> i.pending.any { it.localId == id } }
-                    .toPersistentMap(),
+            receiptChecks = receiptChecksShown(l.receiptChecks, i.pending),
             limitSwitch = limitOffers(t, i.capabilities, l.switches),
             switchOnline = i.link == ChatLink.Live,
             switching = l.switching,
             attachAgain = l.attachAgain,
             starAsk = l.starAsk && t.run.busy && i.link == ChatLink.Live,
         )
+    }
+
+    private var lastPending: ImmutableList<PendingSend> = persistentListOf()
+    private var lastReceiptChecks: PersistentMap<Long, ReceiptCheckUi> = persistentMapOf()
+
+    /** Newest first; the same instance while the bubbles are equal, so readers of it skip. */
+    private fun pendingShown(pending: ImmutableList<PendingSend>): ImmutableList<PendingSend> {
+        if (pending.isEmpty() && lastPending.isEmpty()) return lastPending
+        if (pending.size == lastPending.size && pending.asReversed() == lastPending) return lastPending
+        return pending.asReversed().toImmutableList().also { lastPending = it }
+    }
+
+    /** The receipt checks of the bubbles still shown; the same instance while equal. */
+    private fun receiptChecksShown(
+        checks: PersistentMap<Long, ReceiptCheckUi>,
+        pending: ImmutableList<PendingSend>,
+    ): PersistentMap<Long, ReceiptCheckUi> {
+        if (checks.isEmpty() && lastReceiptChecks.isEmpty()) return lastReceiptChecks
+        val shown = checks.filterKeys { id -> pending.any { it.localId == id } }
+        if (shown == lastReceiptChecks) return lastReceiptChecks
+        return shown.toPersistentMap().also { lastReceiptChecks = it }
     }
 
     /** B-169: the limit offer of each failed turn. */
