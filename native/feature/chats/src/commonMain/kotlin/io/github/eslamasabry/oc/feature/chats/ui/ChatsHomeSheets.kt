@@ -47,6 +47,9 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
+import io.github.eslamasabry.oc.ui.design.color.StatusTone
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
+import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.words.res.*
@@ -447,6 +450,52 @@ internal fun OpeningStatus(opening: ChatsOpeningUi, actions: ChatsActions) {
                     KitAction(stringResource(Res.string.openingChangeServer), actions::openServers),
                 )
             else emptyList(),
+    )
+    KitConfirm(
+        spec =
+            if (askRestart)
+                KitConfirmSpec(
+                    title = stringResource(Res.string.workServerRestartTitle),
+                    confirmLabel = stringResource(Res.string.workServerRestart),
+                    kind = KitConfirmKind.Stop,
+                    icon = KitIcons.restart,
+                    body = stringResource(Res.string.workServerRestartBody),
+                )
+            else null,
+        onConfirm = {
+            askRestart = false
+            actions.restartOpeningPhoneServer()
+        },
+        onCancel = { askRestart = false },
+    )
+}
+
+/**
+ * New conversation was tapped while its server is still opening or is not answering: says so, and offers the way
+ * forward that fits (this phone's own OpenCode restarts; a computer is tried again; either can be swapped).
+ */
+@Composable
+internal fun NewConversationBlocked(opening: ChatsOpeningUi, actions: ChatsActions) {
+    var askRestart by remember { mutableStateOf(false) }
+    val failed = opening.phase == ChatsOpeningPhase.Failed
+    KitNotice(
+        title = if (failed) stringResource(Res.string.homeOpeningFailed, opening.serverName) else null,
+        message =
+            stringResource(
+                if (failed) Res.string.homeNewBlockedBody else Res.string.homeNewBlockedOpening,
+                opening.serverName,
+            ),
+        tone = if (failed) StatusTone.Failure else StatusTone.Neutral,
+        actions =
+            if (!failed) emptyList()
+            else
+                listOf(
+                    if (opening.onThisPhone)
+                        KitLineAction(stringResource(Res.string.homeNewBlockedRestart), { askRestart = true })
+                    else KitLineAction(stringResource(Res.string.kitTryAgain), actions::retryOpening),
+                    KitLineAction(stringResource(Res.string.openingChangeServer), actions::openServers),
+                ),
+        dismiss = KitLineAction(stringResource(Res.string.workspaceDismissNotice), actions::dismissNewBlocked),
     )
     KitConfirm(
         spec =

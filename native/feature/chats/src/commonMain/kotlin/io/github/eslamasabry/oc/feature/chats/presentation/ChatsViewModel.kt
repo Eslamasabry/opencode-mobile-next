@@ -101,6 +101,7 @@ public class ChatsViewModel(
     )
 
     private val renaming = MutableStateFlow(Renaming())
+    private val newRefused = MutableStateFlow(false)
 
     /** The switcher's switch in flight, and why the last one did not happen. */
     private data class Switching(
@@ -192,6 +193,7 @@ public class ChatsViewModel(
                 )
             }
             .combine(confirmingAlways) { base, row -> base.copy(confirmAlways = row) }
+            .combine(newRefused) { base, refused -> base.copy(newBlocked = refused && base.home.opening != null) }
             // B-161 / B-162: each row's branch, and the Usage row's tightest limit.
             .combine(home.branches) { base, known -> HomeRows.withBranches(base, known) }
             .combine(home.usageLimits) { base, limits -> base.copy(usage = HomeRows.tightest(limits)) }
@@ -517,7 +519,12 @@ public class ChatsViewModel(
     }
 
     override fun newConversation() {
-        if (state.value.home.opening == null) nav.open(ChatsRoute.New(profile = null))
+        // A server that is not answering cannot start a conversation; the home says so instead of doing nothing.
+        if (state.value.home.opening == null) nav.open(ChatsRoute.New(profile = null)) else newRefused.value = true
+    }
+
+    override fun dismissNewBlocked() {
+        newRefused.value = false
     }
 
     override fun openSettings() {

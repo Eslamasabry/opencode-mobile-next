@@ -16,4 +16,7 @@
     <string name="homeMonitorUnavailable">Không phản hồi. Các yêu cầu của nó chưa được hiển thị.</string>
     <string name="homeMonitorWifi">Đang chờ Wi-Fi</string>
     <string name="homeMonitorPaused">Việc kiểm tra tạm dừng khi ứng dụng và dịch vụ nền đã dừng.</string>
+    <string name="homeNewBlockedBody">Cuộc trò chuyện mới bắt đầu trên %1$s. Máy chủ chưa phản hồi nên chưa có gì được bắt đầu.</string>
+    <string name="homeNewBlockedOpening">%1$s vẫn đang mở. Hãy thử lại sau giây lát.</string>
+    <string name="homeNewBlockedRestart">Khởi động lại OpenCode trên điện thoại này</string>
 </resources>

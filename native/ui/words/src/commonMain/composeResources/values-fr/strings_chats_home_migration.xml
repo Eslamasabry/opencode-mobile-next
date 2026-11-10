@@ -16,4 +16,7 @@
     <string name="homeMonitorUnavailable">Ne répond pas. Ses demandes ne sont pas affichées.</string>
     <string name="homeMonitorWifi">En attente du Wi-Fi</string>
     <string name="homeMonitorPaused">Les vérifications sont suspendues tant que l’application et le service en arrière-plan sont arrêtés.</string>
+    <string name="homeNewBlockedBody">Les nouvelles conversations démarrent sur %1$s. Il ne répond pas encore, rien n’a donc été lancé.</string>
+    <string name="homeNewBlockedOpening">%1$s est encore en cours d’ouverture. Réessayez dans un instant.</string>
+    <string name="homeNewBlockedRestart">Redémarrer OpenCode sur ce téléphone</string>
 </resources>

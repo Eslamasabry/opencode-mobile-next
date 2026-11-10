@@ -16,4 +16,7 @@
     <string name="homeMonitorUnavailable">Не отвечает. Его запросы не показаны.</string>
     <string name="homeMonitorWifi">Ожидание Wi-Fi</string>
     <string name="homeMonitorPaused">Проверки приостановлены, пока приложение и фоновая служба остановлены.</string>
+    <string name="homeNewBlockedBody">Новые разговоры начинаются на %1$s. Он пока не отвечает, поэтому ничего не запущено.</string>
+    <string name="homeNewBlockedOpening">%1$s ещё открывается. Повторите через мгновение.</string>
+    <string name="homeNewBlockedRestart">Перезапустить OpenCode на этом телефоне</string>
 </resources>

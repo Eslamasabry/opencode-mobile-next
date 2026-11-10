@@ -161,6 +161,23 @@ class ChatsScreenTest {
         }
 
     @Test
+    fun `NEW-BLOCKED the notice names the server and offers to restart this phone's OpenCode`() = runComposeUiTest {
+        val actions = RecordingChatsActions()
+        val failed =
+            io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningUi(
+                io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningPhase.Failed,
+                "This phone",
+                onThisPhone = true,
+            )
+        setContent {
+            Themed { ChatsScreen(ui().copy(home = ChatsHomeExtraState(opening = failed), newBlocked = true), actions) }
+        }
+        onNodeWithText("New conversations start on This phone. It isn’t answering yet, so nothing was started.").assertExists()
+        onNodeWithText("Restart OpenCode on this phone").assertExists()
+        onAllNodesWithText("Change server").assertCountEquals(2)
+    }
+
+    @Test
     fun `SCREENS-NAV-27 G3 the calm words sit above the middle and the button at the bottom`() =
         runComposeUiTest {
             setContent { Themed { ChatsScreen(ui(), RecordingChatsActions()) } }

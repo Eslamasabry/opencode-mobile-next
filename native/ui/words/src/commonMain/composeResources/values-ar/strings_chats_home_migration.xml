@@ -15,4 +15,7 @@
     <string name="homeMonitorUnavailable">لا يستجيب. طلباته غير معروضة.</string>
     <string name="homeMonitorWifi">في انتظار Wi-Fi</string>
     <string name="homeMonitorPaused">التحقق متوقف ما دام التطبيق وخدمة الخلفية متوقفين.</string>
+    <string name="homeNewBlockedBody">المحادثات الجديدة تبدأ على %1$s وهو لا يستجيب بعد، فلم يبدأ شيء.</string>
+    <string name="homeNewBlockedOpening">%1$s ما زال يفتح. أعد المحاولة بعد لحظة.</string>
+    <string name="homeNewBlockedRestart">أعد تشغيل OpenCode على هذا الهاتف</string>
 </resources>
