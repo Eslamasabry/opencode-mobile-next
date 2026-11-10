@@ -31,7 +31,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -280,7 +279,7 @@ public class ChatsViewModel(
         viewModelScope.launch {
             var lastPlaces: Set<BranchPlace>? = null
             var lastWanted: List<ChatFeedItem>? = null
-            combine(feed.snapshot.distinctUntilChanged(), briefs.brief.distinctUntilChanged(), filters.distinctUntilChanged()) {
+            combine(feed.snapshot, briefs.brief, filters) {
                     snapshot,
                     brief,
                     chosen ->

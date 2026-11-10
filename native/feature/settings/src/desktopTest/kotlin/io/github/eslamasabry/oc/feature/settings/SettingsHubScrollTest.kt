@@ -24,6 +24,8 @@ import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
+import io.github.eslamasabry.oc.ui.kit.theme.KitWindowInfo
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
@@ -44,7 +46,7 @@ class SettingsHubScrollTest {
                 localeTag = "en",
                 stillFrame = true,
             ) {
-                CompositionLocalProvider(LocalKitRedactor provides Redactor()) {
+                CompositionLocalProvider(LocalKitRedactor provides Redactor(), LocalKitWindow provides KitWindowInfo(412f, 915f)) {
                     // Short enough that the last group is below the fold until the hub is scrolled.
                     Box(Modifier.size(412.dp, 260.dp)) { SettingsScreen(state, RecordingActions()) }
                 }

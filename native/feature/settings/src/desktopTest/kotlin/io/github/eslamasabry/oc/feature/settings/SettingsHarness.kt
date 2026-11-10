@@ -30,6 +30,8 @@ import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kit.theme.KitWindowInfo
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 
 /** The real kit theme on the desktop platform over the theme's ground, still frame, motion off, at plan 06 §15.3's phone size. */
@@ -44,7 +46,8 @@ fun SettingsThemed(dark: Boolean = false, locale: String = "en", fontScale: Floa
         stillFrame = true,
     ) {
         // The app provides its redactor around every screen; the Library's mono parts refuse to draw without it.
-        CompositionLocalProvider(LocalKitRedactor provides Redactor()) {
+        // The window is the phone it draws (Settings now reads the window, not a measured box, to pick one pane or two).
+        CompositionLocalProvider(LocalKitRedactor provides Redactor(), LocalKitWindow provides KitWindowInfo(412f, 915f)) {
             Box(Modifier.size(412.dp, 915.dp).background(LocalKitColors.current.ground)) { content() }
         }
     }

@@ -4,7 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.assertExists
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
@@ -59,10 +59,10 @@ class HomeJankScreenTest {
         var state by mutableStateOf(base)
         show { state }
         waitForIdle()
-        val before = onNodeWithText("Fix login").fetchSemanticsNode().id
+        val before = onNodeWithContentDescription("Fix login", substring = true).fetchSemanticsNode().id
         state = base.copy(archivable = persistentSetOf("login"))
         waitForIdle()
-        assertEquals(before, onNodeWithText("Fix login").fetchSemanticsNode().id, "the row keeps its node when it gains Archive")
+        assertEquals(before, onNodeWithContentDescription("Fix login", substring = true).fetchSemanticsNode().id, "the row keeps its node when it gains Archive")
     }
 
     @Test
@@ -70,11 +70,11 @@ class HomeJankScreenTest {
         var state by mutableStateOf(base.copy(home = ChatsHomeExtraState(known = true)))
         show { state }
         waitForIdle()
-        val before = onNodeWithText("Running").fetchSemanticsNode().id
+        val before = onNodeWithContentDescription("Running", substring = true).fetchSemanticsNode().id
         val source = ChatsListSourceUi(ProfileId("p"), "Office PC", shown = true, main = true, onThisPhone = false, unreachable = false)
         state = base.copy(home = ChatsHomeExtraState(sources = persistentListOf(source), known = true))
         waitForIdle()
-        onNodeWithText("Office PC").assertExists()
-        assertEquals(before, onNodeWithText("Running").fetchSemanticsNode().id, "the chips are not rebuilt when the pill arrives")
+        onNodeWithContentDescription("Office PC", substring = true).assertExists()
+        assertEquals(before, onNodeWithContentDescription("Running", substring = true).fetchSemanticsNode().id, "the chips are not rebuilt when the pill arrives")
     }
 }
