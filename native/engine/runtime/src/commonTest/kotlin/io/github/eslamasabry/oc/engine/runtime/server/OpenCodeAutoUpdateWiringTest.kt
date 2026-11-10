@@ -150,10 +150,10 @@ class OpenCodeAutoUpdateWiringTest {
         val host = LateHost()
         val updater = OpenCodeAutoUpdater(host, jobs) { false }
         val job = launchOpenCodeAutoUpdate(updater, host, openCodeAutoUpdateLooks(host, {}, 30.seconds))
-        advanceUntilIdle()
+        runCurrent()
         assertEquals(0, jobs.runs)
         advanceTimeBy(31_000)
-        advanceUntilIdle()
+        runCurrent()
         assertEquals(1, jobs.runs)
         job.cancel()
     }
