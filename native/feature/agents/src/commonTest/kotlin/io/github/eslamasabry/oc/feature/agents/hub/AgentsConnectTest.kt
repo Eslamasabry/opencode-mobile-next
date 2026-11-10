@@ -20,7 +20,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 
@@ -117,7 +118,9 @@ class AgentsConnectTest {
                 openChat = {},
                 phoneHost = host,
             )
-        advanceUntilIdle()
+        // The page looks again after a pause; the presenter lives in the background scope, which idle ignores.
+        advanceTimeBy(6_000)
+        runCurrent()
         assertEquals(2, host.calls)
         assertTrue(presenter.state.value.helperConnected)
         assertFalse(presenter.state.value.helperConnectFailed)
