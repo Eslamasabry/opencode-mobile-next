@@ -38,8 +38,10 @@ class CacheFirstWorkspaceTest {
         return ProjectServer(ProfileId("p"), "srv", gateway, ops)
     }
 
+    // The test's own scope, not backgroundScope: advanceUntilIdle() never runs background work, so a workspace launched
+    // there would not read at all. Its jobs end by themselves, so runTest can wait for them.
     private fun TestScope.workspace(kept: () -> KeptWorkspace?, keep: (KeptWorkspace) -> Unit, published: (ProjectWorkspaceUi) -> Unit) =
-        ProjectWorkspace("/work", backgroundScope, published, {}, kept, { keep(it) })
+        ProjectWorkspace("/work", this, published, {}, kept, { keep(it) })
 
     @Test
     fun `CF-90 the first frame of the checkout sheet with kept facts has the live worktrees, and no read has run`() = runTest {

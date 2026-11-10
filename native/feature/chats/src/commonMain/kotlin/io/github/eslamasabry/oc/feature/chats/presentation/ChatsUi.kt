@@ -220,6 +220,11 @@ public data class ChatsUi(
     val switcher: ServerSwitcherUi = ServerSwitcherUi(),
     /** A pull to refresh is reading the list again. */
     val refreshing: Boolean = false,
+    /**
+     * New conversation was tapped while the server it starts on is still opening or not answering: the home says so
+     * and offers the way forward instead of doing nothing. Clears itself once that server answers.
+     */
+    val newBlocked: Boolean = false,
     /** Row keys whose waiting permission can be answered Always allow (its server keeps the grant). */
     val alwaysAllowable: ImmutableSet<String> = persistentSetOf(),
     /** The row whose Always allow waits on its confirm, or null. */
@@ -311,6 +316,9 @@ public interface ChatsActions {
     public fun togglePin(row: ConversationRowUi) {}
 
     public fun newConversation()
+
+    /** Closes the notice [ChatsUi.newBlocked] shows. */
+    public fun dismissNewBlocked() {}
 
     public fun openSettings()
 

@@ -423,6 +423,27 @@ class ChatsViewModelTest {
     }
 
     @Test
+    fun `NEW-BLOCKED New conversation while the server does not answer says so and opens nothing`() = runTest {
+        val nav = RecordingNavigator()
+        val home = Home(listOf(source("main", main = true)))
+        val vm = ChatsViewModel(Feed(), Briefs(), Door(false), { Instant.fromEpochMilliseconds(0) }, clock, nav, home = home)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        home.snapshot.value =
+            home.snapshot.value.copy(
+                opening = ChatsOpeningUi(ChatsOpeningPhase.Failed, "This phone", profile = ProfileId("main"), onThisPhone = true)
+            )
+        vm.newConversation()
+        assertEquals(emptyList(), nav.routes, "a server that does not answer starts no page")
+        assertTrue(vm.state.value.newBlocked, "the tap is answered, never ignored")
+        vm.dismissNewBlocked()
+        assertFalse(vm.state.value.newBlocked)
+        vm.newConversation()
+        assertTrue(vm.state.value.newBlocked)
+        home.snapshot.value = home.snapshot.value.copy(opening = null)
+        assertFalse(vm.state.value.newBlocked, "the notice goes away once the server answers")
+    }
+
+    @Test
     fun `B-OPENING-RESTART the opening card restarts only this phone's own server`() = runTest {
         val home = Home(listOf(source("main", main = true)))
         val vm =

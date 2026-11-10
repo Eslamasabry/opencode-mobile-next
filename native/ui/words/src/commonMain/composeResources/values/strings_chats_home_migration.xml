@@ -15,4 +15,7 @@
     <string name="homeMonitorUnavailable">Isn’t answering. Its requests are not shown.</string>
     <string name="homeMonitorWifi">Waiting for Wi-Fi</string>
     <string name="homeMonitorPaused">Checks are paused while the app and background service are stopped.</string>
+    <string name="homeNewBlockedBody">New conversations start on %1$s. It isn’t answering yet, so nothing was started.</string>
+    <string name="homeNewBlockedOpening">%1$s is still opening. Try again in a moment.</string>
+    <string name="homeNewBlockedRestart">Restart OpenCode on this phone</string>
 </resources>

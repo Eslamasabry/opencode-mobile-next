@@ -471,15 +471,19 @@ class OpenProjectViewModelTest {
     }
 
     @Test
-    fun `B-106 Open on the home folder says why on the page instead of doing nothing`() {
+    fun `B-106 the home folder is never a page to open from, so no Open button can be tapped on it`() {
         val gateway = Located().apply { tree = mapOf("/root" to listOf(dir("api"))) }
         val nav = Nav()
         val vm = OpenProjectViewModel(nav, Servers(listOf(computer(gateway, Ops(listOf(project("/srv/app", true, 1)))))), SessionOpenedFolders())
         vm.chooseServer(pcId)
+        // The browser only ever shows folders it entered; entering home or root is refused, so the page stays on the
+        // projects and "Open <folder>" (which openShown answers) is not there to be tapped. openShown's own refusal
+        // (refusedPath) guards a state this page cannot reach today.
         vm.enterFolder("/root")
+        assertEquals(null, vm.state.value.path)
+        assertEquals(OpenProjectStep.Projects, vm.state.value.step)
         vm.openShown()
         assertTrue(nav.routes.isEmpty())
-        assertEquals("/root", vm.state.value.refusedPath)
-        assertEquals("/root", vm.state.value.path)
+        assertEquals(null, vm.state.value.refusedPath)
     }
 }

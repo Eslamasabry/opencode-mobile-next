@@ -16,4 +16,7 @@
     <string name="homeMonitorUnavailable">Tidak menjawab. Permintaannya tidak ditampilkan.</string>
     <string name="homeMonitorWifi">Menunggu Wi-Fi</string>
     <string name="homeMonitorPaused">Pemeriksaan dijeda selagi aplikasi dan layanan latar belakang berhenti.</string>
+    <string name="homeNewBlockedBody">Percakapan baru dimulai di %1$s. Server itu belum menjawab, jadi belum ada yang dimulai.</string>
+    <string name="homeNewBlockedOpening">%1$s masih dibuka. Coba lagi sebentar lagi.</string>
+    <string name="homeNewBlockedRestart">Mulai ulang OpenCode di ponsel ini</string>
 </resources>
