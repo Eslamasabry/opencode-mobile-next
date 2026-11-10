@@ -18,5 +18,6 @@
     <string name="homeMonitorPaused">Việc kiểm tra tạm dừng khi ứng dụng và dịch vụ nền đã dừng.</string>
     <string name="homeNewBlockedBody">Cuộc trò chuyện mới bắt đầu trên %1$s. Máy chủ chưa phản hồi nên chưa có gì được bắt đầu.</string>
     <string name="homeNewBlockedOpening">%1$s vẫn đang mở. Hãy thử lại sau giây lát.</string>
-    <string name="homeNewBlockedRestart">Khởi động lại OpenCode trên điện thoại này</string>
+    <string name="homePhoneOffStart">Bật OpenCode trên điện thoại này</string>
+    <string name="homePhoneOffTitle">OpenCode trên điện thoại này đang tắt</string>
 </resources>

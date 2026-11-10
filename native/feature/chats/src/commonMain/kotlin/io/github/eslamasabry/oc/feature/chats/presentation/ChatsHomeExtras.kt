@@ -44,6 +44,8 @@ public data class ChatsOpeningUi(
     val profile: ProfileId? = null,
     /** The opening server is this phone's own OpenCode: the failure card can restart it (Flutter root-connecting). */
     val onThisPhone: Boolean = false,
+    /** This phone's own OpenCode is off because the person stopped it: the way forward is Start, not Restart. */
+    val phoneOff: Boolean = false,
 )
 
 /** What the "Connections in this list" sheet says as a whole, apart from each row's own state. */
@@ -165,6 +167,10 @@ public interface ChatsHomeExtras {
     public suspend fun restartPhoneServer(profile: ProfileId): Outcome<Unit> =
         Outcome.Failed(Failure.Unavailable(FeatureId("restartPhoneServer")))
 
+    /** Start this phone's own OpenCode after the person stopped it, then read the list again. */
+    public suspend fun startPhoneServer(profile: ProfileId): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("startPhoneServer")))
+
     /**
      * B-161: the git branch of each folder the home lists; a folder without git is absent. The connection owner
      * fills it (OC2 `GET /vcs` per folder); by default rows show no branch.
@@ -213,4 +219,19 @@ public class NoChatsHomeExtras : ChatsHomeExtras {
 
     private fun unavailable(): Outcome<Unit> =
         Outcome.Failed(Failure.Unavailable(FeatureId("conversationSources")))
+}
+
+/**
+ * A person's Stop of this phone's own OpenCode closes the app's connection to it, so every screen (the pill, the
+ * list, the new-conversation page) sees a server that is not there instead of one that still reads "Connected".
+ * [observe] gets each reading of "the person stopped it" and the profile that runs on this phone, if any.
+ */
+public class PhoneStopWatch(private val disconnect: suspend (ProfileId) -> Unit) {
+    private var wasStopped: Boolean? = null
+
+    public suspend fun observe(stoppedByPerson: Boolean, onThisPhone: ProfileId?) {
+        val before = wasStopped
+        wasStopped = stoppedByPerson
+        if (stoppedByPerson && before != true && onThisPhone != null) disconnect(onThisPhone)
+    }
 }

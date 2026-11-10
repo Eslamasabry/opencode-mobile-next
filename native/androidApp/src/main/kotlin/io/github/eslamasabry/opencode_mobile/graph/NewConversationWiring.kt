@@ -84,15 +84,29 @@ class AndroidNewConversationHost(
     private val projectCreation: io.github.eslamasabry.oc.feature.projects.presentation.ProjectCreation,
     /** N-51: the store behind the chat's model favourites (`oc.modelLibrary.<profileId>`). */
     private val modelLibraries: Set<RecentModelsBacking>,
+    private val phone: BuiltinRuntime,
+    private val phoneServer: AndroidChatPhoneServer,
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
 ) : NewConversationHost {
     private val serial = dispatchers.serial("new-conversation")
     private val lane = Mutex()
     override val servers: StateFlow<List<NewConversationServer>> =
-        connections.servers
-            .map { rows -> rows.map { NewConversationServer(it.id, it.name, it.connected) } }
+        kotlinx.coroutines.flow.combine(connections.servers, phone.serverFacts) { rows, facts ->
+                rows.map {
+                    NewConversationServer(
+                        it.id,
+                        it.name,
+                        it.connected,
+                        // The person's Stop leaves nothing to wait for: the page says so and offers Start.
+                        phoneOff = facts.stoppedByPerson && phoneServer.runsHere(it.id),
+                    )
+                }
+            }
             .stateIn(appScope, SharingStarted.Eagerly, emptyList())
+
+    override suspend fun startPhoneServer(profile: ProfileId): Outcome<Unit> =
+        phoneServer.start(profile)
 
     override fun canRepair(profile: ProfileId, directory: String): Boolean =
         gitRepair.availableProject(profile, directory)

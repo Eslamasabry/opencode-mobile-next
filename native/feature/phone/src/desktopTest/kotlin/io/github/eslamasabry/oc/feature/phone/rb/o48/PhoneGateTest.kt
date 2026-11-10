@@ -97,11 +97,12 @@ class PhoneGateTest {
         }
         onNodeWithText("Stop OpenCode on this phone").performClick()
         assertEquals(0, stopped)
-        onNodeWithText("Stop the local server?").assertIsDisplayed()
+        onNodeWithText("Stop OpenCode on this phone?").assertIsDisplayed()
         onNodeWithText("Keep running", useUnmergedTree = true).performClick()
         assertEquals(0, stopped)
         onNodeWithText("Stop OpenCode on this phone").performClick()
-        onNodeWithText("Stop local server").performClick()
+        // The row and the confirm button now share the action's name; the confirm is the later one.
+        onAllNodesWithText("Stop OpenCode on this phone").onLast().performClick()
         assertEquals(1, stopped)
     }
 

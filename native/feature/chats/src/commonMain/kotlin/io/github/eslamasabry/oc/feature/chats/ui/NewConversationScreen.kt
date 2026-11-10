@@ -111,12 +111,15 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
         if (field.text.toString() != state.text) field.edit { replace(0, length, state.text) }
     }
     val working = stringResource(Res.string.serversWorking)
+    val phoneOffWords = stringResource(Res.string.homePhoneOffTitle)
     val enabled =
-        if (state.deliveryUnconfirmed)
+        if (state.phoneOff) KitEnabled.Disabled(phoneOffWords)
+        else if (state.deliveryUnconfirmed)
             KitEnabled.Disabled(stringResource(Res.string.p12NewDeliveryUnconfirmed))
         else if (state.busy) KitEnabled.Disabled(working) else KitEnabled.Enabled
     val startBlocked =
         when {
+            state.phoneOff -> phoneOffWords
             state.busy -> working
             state.deliveryUnconfirmed -> stringResource(Res.string.p12NewDeliveryUnconfirmed)
             state.creationUnconfirmed -> stringResource(Res.string.p12NewCreationUnconfirmed)
@@ -152,7 +155,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     val promptHint = stringResource(Res.string.chatsNewBuildPrompt)
                     // N-48: an unconfirmed send already has its notice above; the reason is said once.
                     if (
-                        startBlocked != null && startBlocked != promptHint && !state.busy &&
+                        startBlocked != null && startBlocked != promptHint && !state.busy && !state.phoneOff &&
                             !state.deliveryUnconfirmed && !state.creationUnconfirmed &&
                             !state.folderMissing
                     )
@@ -225,6 +228,21 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     }
                     // The form's notices and ways forward keep the gutter like the field above them.
                     val inset = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
+                    // The person turned this phone's OpenCode off: say so, and the way forward is Start.
+                    if (state.phoneOff)
+                        KitNotice(
+                            message = stringResource(Res.string.thisPhoneAnswerOffLine),
+                            modifier = inset,
+                            title = phoneOffWords,
+                            tone = StatusTone.Failure,
+                            actions =
+                                listOf(
+                                    KitLineAction(
+                                        stringResource(Res.string.homePhoneOffStart),
+                                        actions::startPhoneServer,
+                                    )
+                                ),
+                        )
                     if (state.deliveryUnconfirmed) {
                         // N-48: the field already says it once (its own reason); under it only the ways forward: the
                         // conversation (where it can be sent again) and Discard, which opens this form again.

@@ -291,9 +291,9 @@ public fun ChatsScreen(
         ) {
             // The saved rows draw as the normal list (the view model puts them in the feed); only a failure adds its card.
             state.home.opening?.takeIf { it.phase == ChatsOpeningPhase.Failed }?.let { opening ->
-                item(key = "opening-status", contentType = "opening-status") { Box(kitItemMotion()) { OpeningStatus(opening, actions) } }
+                item(key = "opening-status", contentType = "opening-status") { Box(kitItemMotion()) { OpeningStatus(opening, actions, blocked = state.newBlocked) } }
             }
-            state.home.opening?.takeIf { state.newBlocked }?.let { opening ->
+            state.home.opening?.takeIf { state.newBlocked && it.phase != ChatsOpeningPhase.Failed }?.let { opening ->
                 item(key = "new-blocked", contentType = "new-blocked") { Box(kitItemMotion()) { NewConversationBlocked(opening, actions) } }
             }
             replyOffer?.let { offer -> item(key = "reply-notification-offer", contentType = "reply-notification-offer") { Box(kitItemMotion()) { offer() } } }

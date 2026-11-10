@@ -260,7 +260,7 @@
     <string name="e7SetupTerminalSemantics">Terminal tương tác. Dùng nút hỗ trợ tiếp cận để có bản ghi dễ đọc và ô nhập có nhãn.</string>
     <string name="e7SetupEmptyPairClipboard">Bộ nhớ tạm đang trống. Hãy chạy “opencode2 pair” trên máy chủ và sao chép mã nó in ra.</string>
     <string name="e7SetupTokenRequired">Không đọc được token đã lưu</string>
-    <string name="e7SetupStopLocal">Dừng máy chủ cục bộ</string>
+    <string name="e7SetupStopLocal">Dừng OpenCode trên điện thoại này</string>
     <string name="e7SetupCameraSettingsDetail">Android sẽ không hỏi lại, nên bạn cần đổi trong cài đặt ứng dụng: bật Máy ảnh, rồi quay lại. Dán mã không cần quyền nào và dùng được ngay bây giờ.</string>
     <string name="e7SetupInputUnavailable">Không nhập được vào terminal</string>
     <string name="e7SetupDidNotConnect">Máy chủ không kết nối được.</string>
@@ -283,7 +283,7 @@
     <string name="safetyStopSharingTitle">Dừng chia sẻ cuộc trò chuyện này?</string>
     <string name="safetyStopSharingBody">Liên kết sẽ không còn dùng được với bất kỳ ai đang có nó. Bản thân cuộc trò chuyện không thay đổi.</string>
     <string name="safetyStopSharingKeep">Tiếp tục chia sẻ</string>
-    <string name="safetyStopLocalServerTitle">Dừng máy chủ cục bộ?</string>
+    <string name="safetyStopLocalServerTitle">Dừng OpenCode trên điện thoại này?</string>
     <string name="safetyStopLocalServerBody">Mọi việc tác nhân đang chạy trên điện thoại này sẽ bị ngắt, và ứng dụng ngắt kết nối với nó. Dự án và cuộc trò chuyện của bạn vẫn nằm trên điện thoại; hãy khởi động lại máy chủ để tiếp tục.</string>
     <string name="safetyStopLocalServerKeep">Tiếp tục chạy</string>
     <string name="safetyMcpDisconnectTitle">Ngắt kết nối %1$s?</string>

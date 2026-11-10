@@ -158,6 +158,7 @@ public class OpenProjectViewModel(
         mutable.update {
             it.copy(
                 step = OpenProjectStep.Projects,
+                refusedPath = null,
                 serverName = server.name,
                 onThisPhone = server.phoneFolders,
                 path = null,
@@ -184,6 +185,7 @@ public class OpenProjectViewModel(
         mutable.update {
             it.copy(
                 step = OpenProjectStep.Folder,
+                refusedPath = null,
                 path = target,
                 makeIn = target,
                 pathStart = "$target/",
@@ -461,8 +463,14 @@ public class OpenProjectViewModel(
     }
 
     override fun finishPath(path: String?) {
-        mutable.update { it.copy(dialog = null) }
-        if (path == null || ProjectRules.pathProblem(path) != null) return
+        mutable.update { it.copy(dialog = null, refusedPath = null) }
+        if (path == null) return
+        // Home and root cannot be projects: say so on the page (the same words as the Open refusal), never silence.
+        if (ProjectRules.pathProblem(path) == PathProblem.HomeOrRoot) {
+            mutable.update { it.copy(refusedPath = ProjectRules.normalize(path)) }
+            return
+        }
+        if (ProjectRules.pathProblem(path) != null) return
         val server = current() ?: return
         val normal = ProjectRules.normalize(path)
         if (!(builtin(server) && creator.available(server))) return openFolder(normal)

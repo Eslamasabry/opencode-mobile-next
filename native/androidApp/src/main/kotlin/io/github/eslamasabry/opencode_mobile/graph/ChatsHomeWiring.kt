@@ -28,6 +28,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ChatsHomeExtras
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsListSourceUi
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningPhase
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningUi
+import io.github.eslamasabry.oc.feature.chats.presentation.PhoneStopWatch
 import io.github.eslamasabry.oc.feature.chats.presentation.NoChatsHomeExtras
 import io.github.eslamasabry.oc.feature.chats.presentation.OpeningRules
 import io.github.eslamasabry.oc.feature.chats.presentation.PhoneStartWatch
@@ -42,6 +43,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -49,6 +53,7 @@ import kotlinx.coroutines.withContext
 private fun optional(key: String, value: String?): Map<String, Any> = if (value == null) emptyMap() else mapOf(key to value)
 
 private val QUIET_RETRY_EVERY = 3.seconds
+private val STOP_SETTLES = 3.seconds
 
 /**
  * One source selector over the actual runtime; hiding a source never closes a graph an open chat
@@ -78,7 +83,20 @@ class AppChatsHome(
     private var phoneWatch: Pair<ProfileId, PhoneStartWatch>? = null
     private var quietRetry: Job? = null
 
+    // The person's Stop of this phone's OpenCode closes the connection to it, so the pill and every screen stop
+    // reading "Connected".
+    private val stopWatch = PhoneStopWatch { profile -> runtime.disconnect(profile) }
+
     init {
+        scope.launch {
+            // A restart stops and starts within moments; only a stop that stays is the person's, so wait a few seconds.
+            phone.serverFacts.map { it.stoppedByPerson }.distinctUntilChanged().collectLatest { stopped ->
+                if (stopped) delay(STOP_SETTLES)
+                val owner =
+                    runtime.profiles.profiles.value.firstOrNull { phoneServer.runsHere(it.id) }?.id
+                stopWatch.observe(stopped, owner)
+            }
+        }
         scope.launch {
             if (stores.warm() is Outcome.Failed) return@launch
             combine(
@@ -129,6 +147,7 @@ class AppChatsHome(
                     failure = failure,
                     profile = active,
                     onThisPhone = phoneServer.runsHere(active),
+                    phoneOff = phoneServer.runsHere(active) && phone.serverFacts.value.stoppedByPerson,
                 )
             } else null
         if (opening == null) phoneWatch = null
@@ -217,6 +236,12 @@ class AppChatsHome(
     override suspend fun disconnect(profile: ProfileId): Outcome<Unit> = runtime.disconnect(profile)
 
     override suspend fun restartPhoneServer(profile: ProfileId): Outcome<Unit> = phoneServer.restart(profile)
+
+    override suspend fun startPhoneServer(profile: ProfileId): Outcome<Unit> {
+        val started = phoneServer.start(profile)
+        if (started is Outcome.Ok) runtime.retryListSource(profile)
+        return record(started)
+    }
 
     private suspend fun record(result: Outcome<Unit>): Outcome<Unit> =
         withContext(lane) {

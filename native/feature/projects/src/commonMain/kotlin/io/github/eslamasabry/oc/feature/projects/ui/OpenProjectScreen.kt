@@ -161,7 +161,7 @@ public fun OpenProjectScreen(state: OpenProjectUi, actions: OpenProjectActions) 
                                 }
                             }
                         }
-                    if (state.step == OpenProjectStep.Folder && state.refusedPath != null && state.refusedPath == state.path)
+                    if (state.refusedPath != null && (state.path == null || state.refusedPath == state.path))
                         item(key = "refused") { KitNotice(stringResource(Res.string.folderBrowserHomeHere)) }
                     item(key = "folders") { Folders(state, actions) }
                     item(key = "more") { MoreWays(state, actions) }

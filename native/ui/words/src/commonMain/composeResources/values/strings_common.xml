@@ -262,7 +262,7 @@
     <string name="e7SetupTerminalSemantics">Interactive terminal. Use the accessibility button for a readable transcript and labeled input.</string>
     <string name="e7SetupEmptyPairClipboard">The clipboard is empty. Run “opencode2 pair” on the server and copy the code it prints.</string>
     <string name="e7SetupTokenRequired">Can't read the saved token</string>
-    <string name="e7SetupStopLocal">Stop local server</string>
+    <string name="e7SetupStopLocal">Stop OpenCode on this phone</string>
     <string name="e7SetupCameraSettingsDetail">Android will not ask again, so this has to be changed in app settings: turn on Camera, then come back. Pasting the code needs no permission at all and works right now.</string>
     <string name="e7SetupInputUnavailable">Terminal input unavailable</string>
     <string name="e7SetupDidNotConnect">The server did not connect.</string>
@@ -285,7 +285,7 @@
     <string name="safetyStopSharingTitle">Stop sharing this conversation?</string>
     <string name="safetyStopSharingBody">The link stops working for anyone who has it. The conversation itself is not changed.</string>
     <string name="safetyStopSharingKeep">Keep sharing</string>
-    <string name="safetyStopLocalServerTitle">Stop the local server?</string>
+    <string name="safetyStopLocalServerTitle">Stop OpenCode on this phone?</string>
     <string name="safetyStopLocalServerBody">Anything the agent is running on this phone is interrupted, and this app disconnects from it. Your projects and conversations stay on the phone; start the server again to continue.</string>
     <string name="safetyStopLocalServerKeep">Keep running</string>
     <string name="safetyMcpDisconnectTitle">Disconnect %1$s?</string>

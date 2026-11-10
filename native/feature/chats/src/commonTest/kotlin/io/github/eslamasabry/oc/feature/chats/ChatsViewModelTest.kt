@@ -16,6 +16,8 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ChatsHomeSheet
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsListSourceUi
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningPhase
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningUi
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeConnectionState
+import io.github.eslamasabry.oc.feature.chats.presentation.PhoneStopWatch
 import io.github.eslamasabry.oc.feature.chats.presentation.HomePermissionReply
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsViewModel
@@ -344,6 +346,12 @@ class ChatsViewModelTest {
 
         val disconnected = mutableListOf<String>()
         val restarted = mutableListOf<String>()
+        val started = mutableListOf<String>()
+
+        override suspend fun startPhoneServer(profile: ProfileId): Outcome<Unit> {
+            started += profile.raw
+            return answer
+        }
 
         override suspend fun restartPhoneServer(profile: ProfileId): Outcome<Unit> {
             restarted += profile.raw
@@ -441,6 +449,44 @@ class ChatsViewModelTest {
         assertTrue(vm.state.value.newBlocked)
         home.snapshot.value = home.snapshot.value.copy(opening = null)
         assertFalse(vm.state.value.newBlocked, "the notice goes away once the server answers")
+    }
+
+    @Test
+    fun `NEW-BLOCKED New conversation with this phone's OpenCode turned off opens nothing and Start starts it`() = runTest {
+        val nav = RecordingNavigator()
+        val home = Home(listOf(source("main", main = true)))
+        val vm = ChatsViewModel(Feed(), Briefs(), Door(false), { Instant.fromEpochMilliseconds(0) }, clock, nav, home = home)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        home.snapshot.value =
+            home.snapshot.value.copy(
+                opening = ChatsOpeningUi(ChatsOpeningPhase.Failed, "This phone", profile = ProfileId("main"), onThisPhone = true, phoneOff = true)
+            )
+        assertEquals(HomeConnectionState.NotAnswering, vm.state.value.connection?.state)
+        vm.newConversation()
+        assertEquals(emptyList(), nav.routes)
+        assertTrue(vm.state.value.newBlocked)
+        vm.startOpeningPhoneServer()
+        assertEquals(listOf("main"), home.started)
+        assertFalse(vm.state.value.newBlocked)
+    }
+
+    @Test
+    fun `STOP-WATCH a stop by the person closes the phone's connection once`() = runTest {
+        val closed = mutableListOf<String>()
+        val watch = PhoneStopWatch { closed += it.raw }
+        val phone = ProfileId("phone")
+        watch.observe(false, phone)
+        assertEquals(emptyList(), closed)
+        watch.observe(true, phone)
+        watch.observe(true, phone)
+        assertEquals(listOf("phone"), closed, "closed once, not on every reading")
+        watch.observe(false, phone)
+        watch.observe(true, phone)
+        assertEquals(listOf("phone", "phone"), closed)
+        // A server that is not on this phone is never closed by this phone's stop.
+        watch.observe(false, null)
+        watch.observe(true, null)
+        assertEquals(2, closed.size)
     }
 
     @Test

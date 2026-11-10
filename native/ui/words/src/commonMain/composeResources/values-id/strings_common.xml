@@ -260,7 +260,7 @@
     <string name="e7SetupTerminalSemantics">Terminal interaktif. Pakai tombol aksesibilitas untuk transkrip yang mudah dibaca dan input berlabel.</string>
     <string name="e7SetupEmptyPairClipboard">Papan klip kosong. Jalankan “opencode2 pair” di server dan salin kode yang dicetak.</string>
     <string name="e7SetupTokenRequired">Token tersimpan tidak bisa dibaca</string>
-    <string name="e7SetupStopLocal">Hentikan server lokal</string>
+    <string name="e7SetupStopLocal">Hentikan OpenCode di ponsel ini</string>
     <string name="e7SetupCameraSettingsDetail">Android tidak akan bertanya lagi, jadi ini harus diubah di pengaturan aplikasi: aktifkan Kamera, lalu kembali. Menempel kode tidak memerlukan izin sama sekali dan bisa dilakukan sekarang.</string>
     <string name="e7SetupInputUnavailable">Input terminal tidak tersedia</string>
     <string name="e7SetupDidNotConnect">Server tidak tersambung.</string>
@@ -283,7 +283,7 @@
     <string name="safetyStopSharingTitle">Berhenti membagikan percakapan ini?</string>
     <string name="safetyStopSharingBody">Tautan tidak lagi berfungsi bagi siapa pun yang memilikinya. Percakapannya sendiri tidak berubah.</string>
     <string name="safetyStopSharingKeep">Tetap bagikan</string>
-    <string name="safetyStopLocalServerTitle">Hentikan server lokal?</string>
+    <string name="safetyStopLocalServerTitle">Hentikan OpenCode di ponsel ini?</string>
     <string name="safetyStopLocalServerBody">Apa pun yang sedang dijalankan agen di ponsel ini dihentikan, dan aplikasi ini terputus darinya. Proyek dan percakapan Anda tetap ada di ponsel; mulai server lagi untuk melanjutkan.</string>
     <string name="safetyStopLocalServerKeep">Tetap jalankan</string>
     <string name="safetyMcpDisconnectTitle">Putuskan %1$s?</string>

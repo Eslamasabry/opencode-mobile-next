@@ -171,7 +171,7 @@
     <string name="e7SetupTerminalSemantics">Terminal interactivo. Usa el botón de accesibilidad para ver una transcripción legible y la entrada con etiqueta.</string>
     <string name="e7SetupEmptyPairClipboard">El portapapeles está vacío. Ejecuta “opencode2 pair” en el servidor y copia el código que imprime.</string>
     <string name="e7SetupTokenRequired">No se puede leer el token guardado</string>
-    <string name="e7SetupStopLocal">Detener servidor local</string>
+    <string name="e7SetupStopLocal">Detener OpenCode en este teléfono</string>
     <string name="e7SetupCameraSettingsDetail">Android no volverá a preguntar, así que debes cambiarlo en los ajustes de la app: activa Cámara y vuelve. Pegar el código no necesita ningún permiso y funciona ahora mismo.</string>
     <string name="e7SetupInputUnavailable">Entrada del terminal no disponible</string>
     <string name="e7SetupDidNotConnect">El servidor no se conectó.</string>
@@ -185,7 +185,7 @@
     <string name="safetyStopSharingTitle">¿Dejar de compartir esta conversación?</string>
     <string name="safetyStopSharingBody">El enlace deja de funcionar para cualquiera que lo tenga. La conversación en sí no cambia.</string>
     <string name="safetyStopSharingKeep">Seguir compartiendo</string>
-    <string name="safetyStopLocalServerTitle">¿Detener el servidor local?</string>
+    <string name="safetyStopLocalServerTitle">¿Detener OpenCode en este teléfono?</string>
     <string name="safetyStopLocalServerBody">Se interrumpe lo que el agente esté ejecutando en este teléfono y esta app se desconecta de él. Tus proyectos y conversaciones se quedan en el teléfono; vuelve a iniciar el servidor para continuar.</string>
     <string name="safetyStopLocalServerKeep">Seguir ejecutando</string>
     <string name="safetyMcpDisconnectTitle">¿Desconectar %1$s?</string>
