@@ -194,7 +194,7 @@ public class AndroidManageSpaceStorage(
                     path,
                     OsConstants.O_RDONLY or
                         OsConstants.O_NOFOLLOW or
-                        OsConstants.O_CLOEXEC or
+                        oCloexec or
                         OsConstants.O_NONBLOCK,
                     0,
                 )
@@ -320,3 +320,7 @@ private object AndroidStorageTree : StorageTree {
             null
         }
 }
+
+/** `O_CLOEXEC` is an API 27 constant in OsConstants; Android 8.0 has no field to read. On Linux it is 0x80000. */
+private val oCloexec: Int =
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O_MR1) OsConstants.O_CLOEXEC else 0x80000

@@ -565,17 +565,25 @@ class AndroidPdfPages(
             waiting.invokeOnCancellation { Handler(Looper.getMainLooper()).post { finish(null) } }
             val ok =
                 try {
-                    application.bindIsolatedService(
-                        Intent(application, LocalPdfService::class.java),
-                        Context.BIND_AUTO_CREATE,
-                        "pdf" +
-                            WifiShareRules.token(
-                                    ByteArray(SLOT_BYTES).also(SecureRandom()::nextBytes)
-                                )
-                                .filter { it.isLetterOrDigit() },
-                        application.mainExecutor,
-                        bound,
-                    )
+                    val service = Intent(application, LocalPdfService::class.java)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        // A fresh isolated process per document (Android 10+).
+                        application.bindIsolatedService(
+                            service,
+                            Context.BIND_AUTO_CREATE,
+                            "pdf" +
+                                WifiShareRules.token(
+                                        ByteArray(SLOT_BYTES).also(SecureRandom()::nextBytes)
+                                    )
+                                    .filter { it.isLetterOrDigit() },
+                            application.mainExecutor,
+                            bound,
+                        )
+                    } else {
+                        // Android 8 and 9 have no per-call instances: the one isolated process the manifest declares
+                        // still keeps the parser away from the app's data. Callbacks arrive on the main thread.
+                        application.bindService(service, bound, Context.BIND_AUTO_CREATE)
+                    }
                 } catch (_: SecurityException) {
                     false
                 } catch (_: IllegalArgumentException) {

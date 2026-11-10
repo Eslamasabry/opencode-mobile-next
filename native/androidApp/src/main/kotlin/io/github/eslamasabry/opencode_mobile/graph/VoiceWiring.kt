@@ -258,7 +258,8 @@ class AndroidVoiceSettings(application: Application, appScope: AppCoroutineScope
 /** An on-device recognizer exists (API 31+): the only one dictation may use (plan 10 §17 S1). */
 private fun onDeviceRecognizer(app: Application): Boolean =
     OnDeviceSpeech.usable(Build.VERSION.SDK_INT) {
-        Build.VERSION.SDK_INT >= OnDeviceSpeech.MIN_SDK &&
+        // The platform constant, not OnDeviceSpeech.MIN_SDK (the same level): lint reads only this form as a guard.
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
             SpeechRecognizer.isOnDeviceRecognitionAvailable(app)
     }
 
@@ -460,7 +461,7 @@ private class PhoneDictation(
     /** Opens the on-device recognizer for the next phrase (never the default service: S1). */
     private fun listen(): Boolean {
         recognizer?.destroy()
-        if (Build.VERSION.SDK_INT < OnDeviceSpeech.MIN_SDK) return false
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return false
         val r =
             try {
                 SpeechRecognizer.createOnDeviceSpeechRecognizer(app)

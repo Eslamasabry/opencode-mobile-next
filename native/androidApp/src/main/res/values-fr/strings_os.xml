@@ -2,7 +2,7 @@
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
     <plurals name="notifStatusNeedsYou">
-        <item quantity="one">1 vous attend</item>
+        <item quantity="one">%1$d vous attend</item>
         <item quantity="many">%1$d vous attendent</item>
         <item quantity="other">%1$d vous attendent</item>
     </plurals>
