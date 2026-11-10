@@ -57,7 +57,7 @@ class TelemetryServiceTest {
                 "queue_flush",
                 "linux_setup_step", "agent_start", "bg_service_end", "update_result", "app_start", "jank",
                 "memory_pressure", "star_prompt_shown", "star_prompt_tapped", "star_prompt_dismissed",
-                "journey_milestone", "use_for",
+                "journey_milestone", "use_for", "share_in", "starter_used",
             ),
             ProductEvent.entries.map { it.wire },
         )

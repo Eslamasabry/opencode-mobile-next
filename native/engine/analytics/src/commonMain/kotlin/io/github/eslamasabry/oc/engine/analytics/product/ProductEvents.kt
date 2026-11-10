@@ -119,6 +119,12 @@ public enum class ProductEvent(public val wire: String) {
 
     /** Pictures or files were shared into the app: `count` (a range), `kind` image or file. Never a name or address. */
     ShareIn("share_in"),
+
+    /**
+     * The person tapped a starter chip on a new conversation: `starter`, from [ProductStarter]. The chip's words and
+     * the prompt it inserts are never sent.
+     */
+    StarterUsed("starter_used"),
 }
 
 /** A value with a fixed wire word. */
@@ -259,7 +265,36 @@ public enum class ProductFeature(override val wire: String) : ProductValue {
     ModelSwitch("model_switch"),
     ServerAdd("server_add"),
     GitAction("git_action"),
-    ReviewOpen("review_open"),
+    ReviewOpen("review_open");
+
+    public companion object {
+        /** The feature that merely opening [screen] counts as, or null. Only the review page is one. */
+        public fun openedBy(screen: ProductScreen): ProductFeature? =
+            if (screen == ProductScreen.Review) ReviewOpen else null
+    }
+}
+
+/**
+ * The starter chips of a new conversation, by kind. Mirrored by name from the composer engine's `StarterKind` (this
+ * module cannot depend on it): a name that is not listed, including one added later, is sent as [Other] until it is
+ * listed here.
+ */
+public enum class ProductStarter(override val wire: String) : ProductValue {
+    ListFolder("list_folder"),
+    FindBug("find_bug"),
+    BuildWebPage("build_web_page"),
+    PythonScript("python_script"),
+    NodeProject("node_project"),
+    Readme("readme"),
+    ExplainProject("explain_project"),
+    WhatChanged("what_changed"),
+    AddTests("add_tests"),
+    Other("other");
+
+    public companion object {
+        /** [kindName] is the starter kind's enum name (`FindBug`); anything else is [Other]. */
+        public fun of(kindName: String?): ProductStarter = entries.firstOrNull { it.name == kindName } ?: Other
+    }
 }
 
 /**
@@ -381,6 +416,7 @@ public val productSchema: Map<String, Map<String, Set<String>>> =
                     "after_range" to HealthRanges.sinceStart.toSet(),
                 ),
             ProductEvent.UseFor.wire to mapOf("kind" to ProductUseFor.entries.map { it.wire }.toSet()),
+            ProductEvent.StarterUsed.wire to mapOf("starter" to ProductStarter.entries.map { it.wire }.toSet()),
             ProductEvent.ConnectComputerChosen.wire to emptyMap(),
             ProductEvent.UpdateOffered.wire to emptyMap(),
             ProductEvent.UpdateInstalled.wire to emptyMap(),

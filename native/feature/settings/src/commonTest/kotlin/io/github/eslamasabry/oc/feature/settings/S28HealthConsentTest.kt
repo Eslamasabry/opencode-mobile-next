@@ -112,7 +112,7 @@ class S28HealthConsentTest {
                 "notif_allowed", "server_kind", "oc_server_version", "exit_reason", "breadcrumbs",
                 "app_version", "build_kind", "engine_state", "connections", "problem_report",
                 // The install-to-first-reply funnel (docs/native/analytics/next-focus-2026-11-10.md).
-                "journey_milestone", "journey_stage",
+                "journey_milestone", "journey_stage", "starter_used",
             )
         val listed = HealthContract.contractEvents.values.flatten().toSet()
         assertEquals(emptySet(), contract - listed)

@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.core.domain.LocatedFileGateway
 import io.github.eslamasabry.oc.core.domain.WorktreeInspectionGateway
 import io.github.eslamasabry.oc.core.model.ServerLocation
 import io.github.eslamasabry.oc.core.model.VersionControlSetupState
+import io.github.eslamasabry.oc.engine.analytics.health.AppTelemetry
 import io.github.eslamasabry.oc.engine.composer.phrases.ChatStartFacts
 import io.github.eslamasabry.oc.engine.composer.phrases.StarterKind
 import io.github.eslamasabry.oc.engine.composer.phrases.Starters
@@ -204,6 +205,7 @@ public class ChatStartViewModel(
             return
         nextInsert += 1
         insert.value = StartInsert(Long.MIN_VALUE + nextInsert, Starters.insertText(label))
+        AppTelemetry.current.starterUsed(kind.name)
     }
 
     override fun insertDone(id: Long) {

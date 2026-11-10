@@ -23,6 +23,8 @@
     <string name="collectBackground">Por que o serviço em segundo plano parou</string>
     <string name="collectUpdates">Se uma atualização foi instalada e o tipo de falha</string>
     <string name="collectPages">Que tipos de página e recursos você usa, etapas de configuração, a primeira resposta, quanto dura uma visita e quantas mensagens você enviou nela</string>
+    <string name="collectJourney">Até onde você chegou nos primeiros passos (abriu o app, configurou, conectou, enviou uma mensagem, recebeu uma primeira resposta) e aproximadamente quanto tempo depois de concordar. Cada etapa é contada uma só vez</string>
+    <string name="collectStarters">Que tipo de sugestão você tocou em uma nova conversa, nunca as palavras dela nem o que ela pede</string>
     <string name="collectStart">A rapidez com que o app inicia</string>
     <string name="collectSmooth">A fluidez das páginas (a parcela de quadros lentos e congelados) e a taxa de atualização da tela</string>
     <string name="collectMemory">Avisos de memória do Android</string>

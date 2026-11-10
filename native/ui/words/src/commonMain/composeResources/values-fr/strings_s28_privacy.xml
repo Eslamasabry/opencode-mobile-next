@@ -23,6 +23,8 @@
     <string name="collectBackground">Pourquoi le service en arrière-plan s’est arrêté</string>
     <string name="collectUpdates">Si une mise à jour s’est installée, et le type d’échec</string>
     <string name="collectPages">Les types de pages et de fonctions que vous utilisez, les étapes de configuration, la première réponse, la durée d’une visite et le nombre de messages envoyés pendant celle-ci</string>
+    <string name="collectJourney">Jusqu’où vous êtes allé dans vos premiers pas (ouvert l’appli, configuré, connecté, envoyé un message, reçu une première réponse) et environ combien de temps après votre accord. Chaque étape n’est comptée qu’une fois</string>
+    <string name="collectStarters">Le type de suggestion touché dans une nouvelle conversation, jamais ses mots ni ce qu’elle demande</string>
     <string name="collectStart">La rapidité de démarrage de l’application</string>
     <string name="collectSmooth">La fluidité des pages (la part d’images lentes et figées), et la fréquence de rafraîchissement de l’écran</string>
     <string name="collectMemory">Les avertissements de mémoire d’Android</string>
