@@ -115,9 +115,22 @@ public class ScheduleEditViewModel(
     private val servers: ScheduleServers,
     private val nav: AppNavigator,
     private val clock: kotlin.time.Clock,
+    kept: Set<ScheduleEditorLastKnown> = emptySet(),
 ) : ViewModel(), ScheduleEditActions {
     private val profile = route.profileId.raw
-    private val mutable = MutableStateFlow(ScheduleEditUi(editing = route.scheduleId != null))
+    private val keptPort = kept.firstOrNull()
+
+    /** A schedule made from a conversation starts from that conversation, so it has no kept copy. */
+    private val keptItem: String? =
+        route.scheduleId ?: KeptScheduleEditor.NEW.takeIf { route.from == null }
+    private val keptFirst: KeptScheduleEditor? = keptItem?.let { keptPort?.peek(route.profileId, it) }
+    private var typedByPerson = false
+    private val mutable =
+        MutableStateFlow(
+            keptFirst?.frame(route.scheduleId != null, clock.now().toEpochMilliseconds())?.let {
+                if (route.scheduleId == null && route.projectDir != null) it.copy(fields = it.fields.copy(project = route.projectDir)) else it
+            } ?: ScheduleEditUi(editing = route.scheduleId != null),
+        )
     public val state: StateFlow<ScheduleEditUi> = mutable.asStateFlow()
     private var editing: ScheduledPrompt? = null
     private var sessionId: String? = null
@@ -130,6 +143,15 @@ public class ScheduleEditViewModel(
     private val typedPrompt = MutableStateFlow<String?>(null)
 
     init {
+        viewModelScope.launch {
+            // A cold start has only the disk copy: draw it as soon as it is read, unless the live read was faster.
+            if (keptFirst == null && keptItem != null && keptPort != null) {
+                val was = keptPort.read(route.profileId, keptItem)
+                if (was != null && mutable.value.phase == EditPhase.Loading) {
+                    mutable.update { was.frame(route.scheduleId != null, clock.now().toEpochMilliseconds()) }
+                }
+            }
+        }
         viewModelScope.launch { seed() }
         viewModelScope.launch {
             typedPrompt.filterNotNull().collectLatest {
@@ -141,7 +163,7 @@ public class ScheduleEditViewModel(
     private suspend fun seed() {
         val target = servers.target(route.profileId)
         if (!target.available) {
-            mutable.update { it.copy(phase = EditPhase.Unavailable) }
+            mutable.update { it.copy(phase = EditPhase.Unavailable, updating = false) }
             return
         }
         val models = servers.models(route.profileId)
@@ -186,12 +208,15 @@ public class ScheduleEditViewModel(
         // `schedule.<id|new>`).
         val kept = engine.promptDraft(profile, route.scheduleId)?.takeIf { it.isNotBlank() }
         mutable.update {
+            // Typing started on the kept copy stays: only the live facts around it are replaced.
+            val live = if (kept != null) fields.copy(prompt = kept) else fields
             it.copy(
                 phase =
                     if (route.scheduleId != null && existing == null) EditPhase.Unavailable
                     else EditPhase.Ready,
-                fields = if (kept != null) fields.copy(prompt = kept) else fields,
-                seed = it.seed + 1,
+                fields = if (typedByPerson) it.fields else live,
+                seed = if (typedByPerson) it.seed else it.seed + 1,
+                updating = false,
                 nowMs = clock.now().toEpochMilliseconds(),
                 models = models.toImmutableList(),
                 continuesConversation = sessionId != null,
@@ -200,12 +225,17 @@ public class ScheduleEditViewModel(
                 lastRun = lastRun?.toLastRunUi(),
             )
         }
+        val now = mutable.value
+        if (keptPort != null && keptItem != null && now.phase == EditPhase.Ready) {
+            keptPort.keep(route.profileId, keptItem, KeptScheduleEditor.of(now))
+        }
     }
 
     override fun back(): Unit = nav.back()
 
     override fun edited(input: EditorFields) {
         if (mutable.value.phase != EditPhase.Ready) return
+        typedByPerson = true
         val before = mutable.value.fields.prompt
         // The seed stays: the open form is not rebuilt, but a recreated one starts from these
         // fields.

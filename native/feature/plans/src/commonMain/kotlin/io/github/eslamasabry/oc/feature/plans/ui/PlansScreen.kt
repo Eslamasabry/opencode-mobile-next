@@ -84,7 +84,7 @@ public fun PlansScreen(
                     ),
             )
         },
-        loading = state.phase == PlansPhase.Loading || state.refreshing,
+        loading = state.phase == PlansPhase.Loading || state.refreshing || state.updating,
         loadingLabel = words.loading,
         width = KitScreenWidth.Reading,
         edges = KitScreenEdges.Bleed,

@@ -83,12 +83,17 @@ public class ChangesPresenter(
     private val sendBack: ReviewSendBack? = null,
     agent: ReviewAgentPorts = ReviewAgentPorts(),
     private val branch: ReviewBranchRead? = null,
+    private val shelf: ReviewShelf? = null,
 ) : ChangesActions {
     private val runner = agent.runner(review)
     private val guideAsk = agent.guideAsk
     private val guides = agent.guides
+    private val itemKey = ReviewShelf.changes(messageId)
     private val mutable =
-        MutableStateFlow(ChangesUi(turn = messageId != null, canSendBack = sendBack != null))
+        MutableStateFlow(
+            shelf?.peek(itemKey)?.changes?.frame(turn = messageId != null, canSendBack = sendBack != null)
+                ?: ChangesUi(turn = messageId != null, canSendBack = sendBack != null)
+        )
     public val state: StateFlow<ChangesUi> = mutable.asStateFlow()
     private var set: ChangeSet = ConversationReview.Empty
 
@@ -113,6 +118,13 @@ public class ChangesPresenter(
     private var shown: Map<String, String> = emptyMap()
 
     init {
+        if (shelf != null && state.value.load == ReviewLoad.Loading) {
+            // A cold start has only the disk copy: draw it when read, unless the live read was faster.
+            scope.launch {
+                val was = shelf.read(itemKey)?.changes ?: return@launch
+                mutable.update { if (it.load == ReviewLoad.Loading) was.frame(it.turn, it.canSendBack) else it }
+            }
+        }
         scope.launch {
             review.state.collect { s ->
                 mutable.update {
@@ -149,13 +161,16 @@ public class ChangesPresenter(
     }
 
     private fun load(quiet: Boolean = false) {
-        if (!quiet || state.value.load !is ReviewLoad.Ready) mutable.update { it.copy(load = ReviewLoad.Loading) }
+        if ((!quiet || state.value.load !is ReviewLoad.Ready) && !state.value.updating) {
+            mutable.update { it.copy(load = ReviewLoad.Loading) }
+        }
         scope.launch {
             review.refresh() // the staged boundary decides Undo all; a failed read leaves it as it
             // was
             when (val read = review.changes(messageId)) {
                 is Outcome.Failed ->
-                    if (!(quiet && state.value.load == ReviewLoad.Ready))
+                    if (state.value.updating) mutable.update { it.copy(updating = false) } // the kept rows stay
+                    else if (!(quiet && state.value.load == ReviewLoad.Ready))
                         mutable.update { it.copy(load = ReviewLoad.Failed(read.failure)) }
                 is Outcome.Ok -> {
                     set = read.value
@@ -170,7 +185,9 @@ public class ChangesPresenter(
                     val (scopedFiles, chosen) =
                         when (val scoped = scopedRows(toolRows)) {
                             is Outcome.Failed -> {
-                                mutable.update { it.copy(load = ReviewLoad.Failed(scoped.failure)) }
+                                mutable.update {
+                                    if (it.updating) it.copy(updating = false) else it.copy(load = ReviewLoad.Failed(scoped.failure))
+                                }
                                 return@launch
                             }
                             is Outcome.Ok -> scoped.value
@@ -191,8 +208,10 @@ public class ChangesPresenter(
                             removed = rows.sumOrNull { r -> r.removed },
                             undoAll = undoAll(ReviewLoad.Ready),
                             canGuide = guideAsk != null && !working && rows.isNotEmpty(),
+                            updating = false,
                         )
                     }
+                    shelf?.keep(itemKey, KeptReview(changes = KeptChanges.of(state.value)))
                     followGuide()
                 }
             }
@@ -499,15 +518,37 @@ public class FileDiffPresenter(
     private val scope: CoroutineScope,
     agent: ReviewAgentPorts = ReviewAgentPorts(),
     private val branch: ReviewBranchRead? = null,
+    private val shelf: ReviewShelf? = null,
 ) : FileDiffActions {
     private val staged = source == FileDiffSource.Staged
     private val workingTree = source == FileDiffSource.WorkingTree
     private val wholeBranch = source == FileDiffSource.Branch
     private val runner = if (staged) null else agent.runner(review)
-    private val mutable = MutableStateFlow(FileDiffUi(path, canComment = runner != null))
+    private val itemKey = ReviewShelf.file(source, messageId, path)
+    private val mutable =
+        MutableStateFlow(
+            shelf?.peek(itemKey)?.file?.let { frame(it) } ?: FileDiffUi(path, canComment = runner != null)
+        )
     public val state: StateFlow<FileDiffUi> = mutable.asStateFlow()
 
+    private fun frame(kept: KeptFile): FileDiffUi =
+        FileDiffUi(
+            path,
+            load = ReviewLoad.Ready,
+            diff = kept.diff().takeUnless { kept.missing },
+            missing = kept.missing,
+            noDiff = kept.noDiff,
+            canComment = runner != null,
+            updating = true,
+        )
+
     init {
+        if (shelf != null && state.value.load == ReviewLoad.Loading) {
+            scope.launch {
+                val was = shelf.read(itemKey)?.file ?: return@launch
+                mutable.update { if (it.load == ReviewLoad.Loading) frame(was).copy(comments = it.comments, drafts = it.drafts) else it }
+            }
+        }
         load()
         runner?.let { r ->
             scope.launch {
@@ -571,12 +612,16 @@ public class FileDiffPresenter(
     }
 
     private fun load(quiet: Boolean = false) {
-        if (!quiet) mutable.update { it.copy(load = ReviewLoad.Loading) }
+        if (!quiet && !state.value.updating) mutable.update { it.copy(load = ReviewLoad.Loading) }
         scope.launch {
             val read = read()
             // A quiet read that fails keeps the last diff on screen.
             if (read is ReviewLoad.Failed && quiet && state.value.load == ReviewLoad.Ready) return@launch
-            if (read is ReviewLoad.Failed) mutable.update { it.copy(load = read) }
+            if (read is ReviewLoad.Failed) {
+                mutable.update { if (it.updating) it.copy(updating = false) else it.copy(load = read) }
+            } else {
+                KeptFile.of(state.value)?.let { shelf?.keep(itemKey, KeptReview(file = it)) }
+            }
         }
     }
 
@@ -592,7 +637,7 @@ public class FileDiffPresenter(
         return when (read) {
             is Outcome.Failed -> ReviewLoad.Failed(read.failure)
             is Outcome.Ok -> {
-                mutable.update { read.value(it).copy(load = ReviewLoad.Ready) }
+                mutable.update { read.value(it).copy(load = ReviewLoad.Ready, updating = false) }
                 ReviewLoad.Ready
             }
         }
@@ -796,13 +841,20 @@ public class StagedPresenter(
     private val review: ConversationReview,
     private val nav: ReviewNavigation,
     private val scope: CoroutineScope,
+    private val shelf: ReviewShelf? = null,
 ) : StagedActions {
-    private val mutable = MutableStateFlow(StagedUi())
+    private val mutable = MutableStateFlow(shelf?.peek(ReviewShelf.STAGED)?.staged?.frame() ?: StagedUi())
     public val state: StateFlow<StagedUi> = mutable.asStateFlow()
     private var reviewed: StagedReview? = null
     private var acting = false
 
     init {
+        if (shelf != null && state.value.phase == StagedPhase.Loading) {
+            scope.launch {
+                val was = shelf.read(ReviewShelf.STAGED)?.staged ?: return@launch
+                mutable.update { if (it.phase == StagedPhase.Loading) was.frame().copy(busy = it.busy, title = it.title ?: was.title) else it }
+            }
+        }
         scope.launch {
             review.state.collect { s ->
                 mutable.update { ui ->
@@ -823,11 +875,11 @@ public class StagedPresenter(
     }
 
     private fun load() {
-        mutable.update { it.copy(phase = StagedPhase.Loading, loadFailure = null) }
+        mutable.update { if (it.updating) it.copy(loadFailure = null) else it.copy(phase = StagedPhase.Loading, loadFailure = null) }
         scope.launch {
             val read = review.refresh()
             if (read is Outcome.Failed && !review.state.value.loaded) {
-                mutable.update { it.copy(loadFailure = read.failure) }
+                mutable.update { if (it.updating) it.copy(updating = false) else it.copy(loadFailure = read.failure) }
                 return@launch
             }
             take(review.review())
@@ -837,12 +889,13 @@ public class StagedPresenter(
     private suspend fun take(current: StagedReview?) {
         reviewed = current
         if (current == null) {
-            mutable.update { it.copy(phase = StagedPhase.None, files = null) }
+            mutable.update { it.copy(phase = StagedPhase.None, files = null, updating = false) }
             return
         }
         mutable.update {
             it.copy(
                 phase = StagedPhase.Review,
+                updating = false,
                 files = current.revert.files,
                 prompt = null,
                 promptUnavailable = false,
@@ -861,6 +914,7 @@ public class StagedPresenter(
                 messagesAfter = count,
             )
         }
+        shelf?.keep(ReviewShelf.STAGED, KeptReview(staged = KeptStaged.of(state.value)))
     }
 
     override fun back(): Unit = nav.back()
@@ -875,12 +929,12 @@ public class StagedPresenter(
     }
 
     override fun askKeep() {
-        if (state.value.phase == StagedPhase.Review && !state.value.busy)
+        if (state.value.phase == StagedPhase.Review && !state.value.busy && !state.value.updating)
             mutable.update { it.copy(confirm = StagedConfirm.Keep, failure = null) }
     }
 
     override fun askPutBack() {
-        if (state.value.phase == StagedPhase.Review && !state.value.busy)
+        if (state.value.phase == StagedPhase.Review && !state.value.busy && !state.value.updating)
             mutable.update { it.copy(confirm = StagedConfirm.PutBack, failure = null) }
     }
 

@@ -87,6 +87,8 @@ public class FactsBookEngine(
     private val random: Random = Random.Default,
     /** The secure random source and the screen lock owner signatures need. */
     private val signing: FactsBookSigning,
+    /** Cache-first: the node's last answers, kept per profile. Null: every page loads live, as before. */
+    private val kept: FactsBookKept? = null,
 ) {
     private val lane = Mutex()
     private val mutable = MutableStateFlow(FactsBookState())
@@ -94,13 +96,20 @@ public class FactsBookEngine(
 
     private var gateway: FactsBookGateway? = null
     private var outbox: FactsBookOutbox? = null
+    private var keptGateway: FactsBookGateway? = null
+
+    /**
+     * Reads from what the node last answered (nothing is sent), for a page's first frame; null while unpaired or with
+     * nothing kept. A page shows it at once, then replaces it with the live read.
+     */
+    public val keptNode: FactsBookGateway? get() = keptGateway
 
     /** The gateway, for the pages' own reads (things, a thing, search, areas). Null while unpaired. */
     public val node: FactsBookGateway? get() = gateway
 
     /** Rules, events and what they proposed, read only where the node's capabilities list them. */
     public val triggers: FactsBookTriggers =
-        FactsBookTriggers({ gateway }, { state.value.capabilities }, clock) { t ->
+        FactsBookTriggers({ gateway }, { state.value.capabilities }, clock, keptNode = { keptGateway }) { t ->
             mutable.update { it.copy(proposalsWaiting = t.proposals.size, proposalIds = t.proposals.map { p -> p.id }.toSet(), openOffers = t.openOffers(clock.now()).size) }
         }
 
@@ -110,6 +119,7 @@ public class FactsBookEngine(
             if (state.value.loaded && state.value.profileId == profileId) return@withLock
             gateway = null
             outbox = null
+            keptGateway = null
             if (profileId == null) {
                 mutable.value = FactsBookState(loaded = true)
                 return@withLock
@@ -138,6 +148,32 @@ public class FactsBookEngine(
                 canApprove = gateway != null && signer != null,
                 pending = box.entries.map(OutboxEntry::asEntry),
             )
+        if (kept != null && link != null && token != null) {
+            keptGateway = HttpFactsBookGateway(ReplayFactsBookHttp(kept, profileId, link.baseUrl), null)
+            seedFromKept()
+            triggers.seedFromKept()
+        }
+    }
+
+    /** The overview as the node last answered it, shown as ready; the live read replaces it in place. */
+    private suspend fun seedFromKept() {
+        val old = keptGateway ?: return
+        val status = (old.status() as? FbResult.Ok)?.value ?: return
+        val review = (old.reviewItems() as? FbResult.Ok)?.value ?: return
+        val pending = (old.pendingCaptures() as? FbResult.Ok)?.value ?: return
+        val things = (old.things() as? FbResult.Ok)?.value ?: return
+        val caps = (old.capabilities() as? FbResult.Ok)?.value
+        mutable.update {
+            if (it.load != FactsBookLoad.Idle) it
+            else it.copy(
+                status = status,
+                review = review,
+                pending = pending + it.pending.filter { e -> e.onPhone },
+                recent = newest(things),
+                load = FactsBookLoad.Ready,
+                capabilities = caps ?: it.capabilities,
+            )
+        }
     }
 
     /** Reads everything the overview shows, after sending what the outbox holds. */

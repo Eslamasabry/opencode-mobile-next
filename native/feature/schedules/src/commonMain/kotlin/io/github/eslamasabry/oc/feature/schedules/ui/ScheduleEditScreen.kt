@@ -88,7 +88,7 @@ public fun ScheduleEditScreen(state: ScheduleEditUi, actions: ScheduleEditAction
                 onExit = actions::back,
             )
         },
-        loading = state.phase == EditPhase.Loading,
+        loading = state.phase == EditPhase.Loading || state.updating,
         loadingLabel = words.loading,
         // The one main action stays at the thumb, visible without scrolling (screen standard).
         bottom =

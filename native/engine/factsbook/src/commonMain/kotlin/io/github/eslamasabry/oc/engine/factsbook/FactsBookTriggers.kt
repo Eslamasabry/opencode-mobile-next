@@ -74,6 +74,8 @@ public class FactsBookTriggers internal constructor(
     private val node: () -> FactsBookGateway?,
     private val capabilities: () -> FactsBookCapabilities,
     private val clock: Clock,
+    /** Cache-first: reads from what the node last answered (nothing is sent); null with nothing kept. */
+    private val keptNode: () -> FactsBookGateway? = { null },
     /** Told after every change, so the Memory section counts proposals and offers once with the rest. */
     private val changed: (TriggersState) -> Unit = {},
 ) {
@@ -102,6 +104,20 @@ public class FactsBookTriggers internal constructor(
         mutable.value = TriggersState()
         changed(mutable.value)
     }
+
+    /** The pages' lists as the node last answered them, shown as ready; the live read replaces them in place. */
+    internal suspend fun seedFromKept(): Unit =
+        lane.withLock {
+            if (mutable.value.load != TriggersLoad.Idle || !supported) return@withLock
+            val old = keptNode() as? FactsBookTriggerCalls ?: return@withLock
+            val rules = (old.rules() as? FbResult.Ok)?.value ?: return@withLock
+            val events = (old.events() as? FbResult.Ok)?.value ?: return@withLock
+            val firings = (old.firings() as? FbResult.Ok)?.value ?: return@withLock
+            val proposals = (old.reminderProposals() as? FbResult.Ok)?.value ?: return@withLock
+            val offers = if (offersSupported) ((old.offers() as? FbResult.Ok)?.value ?: return@withLock) else emptyList()
+            mutable.value = TriggersState(TriggersLoad.Ready, rules, events, firings, proposals, offers, null)
+            changed(mutable.value)
+        }
 
     /** Reads everything the pages show. With [quiet] nothing flips to loading (a refresh after a write). */
     public suspend fun refresh(quiet: Boolean = false): Unit = lane.withLock { refreshLocked(quiet) }

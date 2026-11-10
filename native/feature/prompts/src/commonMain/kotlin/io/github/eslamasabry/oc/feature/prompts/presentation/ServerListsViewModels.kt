@@ -24,7 +24,8 @@ import kotlinx.coroutines.launch
 public sealed interface ListPhase<out T> {
     public data object Loading : ListPhase<Nothing>
 
-    public data class Shown<T>(val items: List<T>, val server: String) : ListPhase<T>
+    /** [updating]: these are the last-seen rows and the live read is on its way (a quiet bar, no skeleton). */
+    public data class Shown<T>(val items: List<T>, val server: String, val updating: Boolean = false) : ListPhase<T>
 
     public data class NotOnServer(val server: String) : ListPhase<Nothing>
 
@@ -89,36 +90,69 @@ public class CommandsViewModel(
     private val inbox: ComposerInbox,
     private val skillSources: Set<SkillsSource>,
     private val nav: AppNavigator,
+    kept: Set<ServerListsLastKnown> = emptySet(),
 ) : ViewModel(), CommandsActions {
-    private val local = MutableStateFlow(CommandsUi())
+    private val shelf = kept.firstOrNull()
+    private val local =
+        MutableStateFlow(
+            shelf?.peek(route.ref, ServerListItems.COMMANDS)?.let { commandsFrame(it) } ?: CommandsUi()
+        )
+
+    private fun commandsFrame(was: KeptServerList) =
+        CommandsUi(
+            phase = ListPhase.Shown(was.commandItems(), was.server, updating = true),
+            skills = was.skillInfos(),
+        )
     public val state: StateFlow<CommandsUi> = local.asStateFlow()
 
     init {
+        if (shelf != null && local.value.phase == ListPhase.Loading) {
+            // A cold start has only the disk copy: draw it when read, unless the live read was faster.
+            viewModelScope.launch {
+                val was = shelf.read(route.ref, ServerListItems.COMMANDS) ?: return@launch
+                local.update { if (it.phase == ListPhase.Loading) commandsFrame(was).copy(skillsLoading = it.skillsLoading) else it }
+            }
+        }
         retry()
     }
 
     override fun back(): Unit = nav.back()
 
     override fun retry() {
-        local.update { it.copy(phase = ListPhase.Loading) }
+        local.update { if (it.phase is ListPhase.Shown) it else it.copy(phase = ListPhase.Loading) }
         viewModelScope.launch {
             val read = lists.commands(route.ref).phase()
-            local.update { it.copy(phase = read) }
+            local.update { ui ->
+                val standing = ui.phase as? ListPhase.Shown
+                // A failed live read leaves the kept rows standing (no failure page over data the person can use).
+                if (read is ListPhase.Failed && standing?.updating == true) ui.copy(phase = standing.copy(updating = false))
+                else ui.copy(phase = read)
+            }
+            keepCommands()
         }
         val source = skillSources.singleOrNull()?.takeIf { it.available(route.ref) } ?: return
         local.update { it.copy(skillsLoading = true, skillsFailure = null) }
         viewModelScope.launch {
             when (val read = source.list(route.ref)) {
-                is Outcome.Ok ->
+                is Outcome.Ok -> {
                     local.update { it.copy(skills = read.value, skillsLoading = false) }
+                    keepCommands()
+                }
                 is Outcome.Failed ->
-                    local.update { it.copy(skillsFailure = read.failure, skillsLoading = false) }
+                    local.update { it.copy(skillsFailure = read.failure.takeIf { _ -> it.skills.isEmpty() }, skillsLoading = false) }
             }
         }
     }
 
+    private suspend fun keepCommands() {
+        val ui = local.value
+        val shown = ui.phase as? ListPhase.Shown ?: return
+        if (shown.updating) return
+        shelf?.keep(route.ref, ServerListItems.COMMANDS, KeptServerList.ofCommands(shown.server, shown.items, ui.skills))
+    }
+
     override fun activateSkill(id: String) {
-        if (local.value.skills.none { it.id == id }) return
+        if (local.value.skills.none { it.id == id } || local.value.skillsLoading) return
         val source = skillSources.singleOrNull() ?: return
         // The engine rejects concurrent actions as Busy; the screen keeps their destination
         // explicit.
@@ -153,21 +187,41 @@ public class TasksViewModel(
     @Assisted private val route: PromptsRoute.Tasks,
     private val lists: ConversationLists,
     private val nav: AppNavigator,
+    kept: Set<ServerListsLastKnown> = emptySet(),
 ) : ViewModel(), TasksActions {
-    private val local = MutableStateFlow(TasksUi())
+    private val shelf = kept.firstOrNull()
+    private val local =
+        MutableStateFlow(shelf?.peek(route.ref, ServerListItems.TASKS)?.let { tasksFrame(it) } ?: TasksUi())
+
+    private fun tasksFrame(was: KeptServerList) =
+        TasksUi(phase = ListPhase.Shown(was.taskItems(), was.server, updating = true))
     public val state: StateFlow<TasksUi> = local.asStateFlow()
 
     init {
+        if (shelf != null && local.value.phase == ListPhase.Loading) {
+            viewModelScope.launch {
+                val was = shelf.read(route.ref, ServerListItems.TASKS) ?: return@launch
+                local.update { if (it.phase == ListPhase.Loading) tasksFrame(was).copy(unfinishedOnly = it.unfinishedOnly) else it }
+            }
+        }
         retry()
     }
 
     override fun back(): Unit = nav.back()
 
     override fun retry() {
-        local.update { it.copy(phase = ListPhase.Loading) }
+        local.update { if (it.phase is ListPhase.Shown) it else it.copy(phase = ListPhase.Loading) }
         viewModelScope.launch {
             val read = lists.tasks(route.ref).phase()
-            local.update { it.copy(phase = read) }
+            local.update { ui ->
+                val standing = ui.phase as? ListPhase.Shown
+                if (read is ListPhase.Failed && standing?.updating == true) ui.copy(phase = standing.copy(updating = false))
+                else ui.copy(phase = read)
+            }
+            val shown = local.value.phase as? ListPhase.Shown
+            if (shown != null && !shown.updating) {
+                shelf?.keep(route.ref, ServerListItems.TASKS, KeptServerList.ofTasks(shown.server, shown.items))
+            }
         }
     }
 

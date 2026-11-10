@@ -41,8 +41,10 @@ public class AgentToolsViewModel(
     private val host: AgentToolsHost,
     private val nav: AppNavigator,
     renderers: Set<io.github.eslamasabry.oc.core.domain.RemoteTerminalRenderer>,
+    kept: Set<AgentToolsLastKnown> = emptySet(),
 ) : ViewModel(), AgentToolsActions {
-    private val mutable = MutableStateFlow(AgentToolsUi())
+    private val shelf = kept.firstOrNull()
+    private val mutable = MutableStateFlow(AgentToolsUi().seeded(shelf?.peek(route.profile, route.session)))
     public val state: StateFlow<AgentToolsUi> = mutable.asStateFlow()
     private var owner: AgentToolsSession? = null
     private var generation = 0
@@ -146,8 +148,11 @@ public class AgentToolsViewModel(
                 gateway is AgentFeaturesGateway
         val hostTools = gateway.capabilities.value.hostAgentProviders
         val oldUncertain = state.value.uncertain
+        val oldRows = state.value
         mutable.value =
             AgentToolsUi(
+                features = oldRows.features,
+                models = oldRows.models,
                 connected = true,
                 name = source.name,
                 directory = safe(gateway.location.value.directory.orEmpty()),
@@ -169,6 +174,11 @@ public class AgentToolsViewModel(
         }
         if (!options || sid == null) return
         viewModelScope.launch {
+            if (shelf != null && !state.value.hasRows()) {
+                // Disk read: only when memory had no first frame; the live read below replaces it.
+                val old = shelf.read(route.profile, sid)
+                if (old != null && current(run, source)) mutable.update { it.seeded(old) }
+            }
             val providers = gateway.providers()
             if (!current(run, source)) {
                 stale()
@@ -211,15 +221,11 @@ public class AgentToolsViewModel(
             }
             when (features) {
                 is Outcome.Failed -> failed(features.failure)
-                is Outcome.Ok ->
-                    mutable.update {
-                        it.copy(
-                            loading = false,
-                            models = choices,
-                            features = features.value.map(::safeFeature).toImmutableList(),
-                            failure = null,
-                        )
-                    }
+                is Outcome.Ok -> {
+                    val live = features.value.map(::safeFeature).toImmutableList()
+                    mutable.update { it.copy(loading = false, models = choices, features = live, failure = null) }
+                    shelf?.keep(route.profile, sid, KeptAgentTools.of(live, choices))
+                }
             }
         }
     }

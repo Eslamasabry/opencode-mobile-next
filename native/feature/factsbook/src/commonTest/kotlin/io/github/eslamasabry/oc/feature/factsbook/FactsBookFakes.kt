@@ -9,6 +9,8 @@ import io.github.eslamasabry.oc.core.data.lane.WriterLane
 import io.github.eslamasabry.oc.core.data.secret.SecretStore
 import io.github.eslamasabry.oc.engine.factsbook.FactsBookEngine
 import io.github.eslamasabry.oc.engine.factsbook.FactsBookHttp
+import io.github.eslamasabry.oc.engine.factsbook.FactsBookKept
+import io.github.eslamasabry.oc.engine.factsbook.KeptFactsBookHttp
 import io.github.eslamasabry.oc.engine.factsbook.FactsBookOutboxStore
 import io.github.eslamasabry.oc.engine.factsbook.FactsBookSigning
 import io.github.eslamasabry.oc.engine.factsbook.FactsBookNodeHost
@@ -203,6 +205,8 @@ internal class FakeAccess(
     owner: Boolean = false,
     val node: FakeNode = FakeNode(),
     val secrets: MemorySecrets = MemorySecrets(if (paired) mapOf("oc.factsbook.p1" to "t") else emptyMap()),
+    /** Cache-first: the node's last answers, shared between two visits by handing the same one to both. */
+    val kept: FactsBookKept? = null,
 ) : FactsBookAccess {
     val kv = MemoryKv(if (paired) mapOf("oc.factsbookNode.p1" to PrefValue.Str(if (owner) OWNER_LINK else LINK)) else emptyMap())
     val store = FactsBookStore(kv, secrets, WriterLane("app"))
@@ -211,7 +215,10 @@ internal class FakeAccess(
     override val engine: FactsBookEngine =
         FactsBookEngine(
             store,
-            gatewayFor = { _, token, signer -> HttpFactsBookGateway(node, token, Random(1), retryDelayMs = 1, owner = signer) },
+            gatewayFor = { link, token, signer ->
+                val http = if (kept == null) node else KeptFactsBookHttp(node, kept, { "p1" }, link.baseUrl)
+                HttpFactsBookGateway(http, token, Random(1), retryDelayMs = 1, owner = signer)
+            },
             outboxFor = { id ->
                 object : FactsBookOutboxStore {
                     override suspend fun read(): String? = store.readOutbox(id)
@@ -222,6 +229,7 @@ internal class FakeAccess(
             clock = FixedClock(),
             random = Random(2),
             signing = FactsBookSigning({ n -> ByteArray(n) { (it + 7).toByte() } }),
+            kept = kept,
         )
     override val activeProfileId: MutableStateFlow<String?> = MutableStateFlow("p1")
     override val enabled: MutableStateFlow<Boolean> = MutableStateFlow(on)
@@ -291,5 +299,16 @@ internal class FakeNodeHost : FactsBookNodeHost {
         steps += "remove"
         facts = facts.copy(dataExists = false, serviceRunning = false)
         return NodeStep.Done(Unit)
+    }
+}
+
+/** The node's last answers in memory (the app keeps them per profile and server on disk). */
+internal class MemoryKept : FactsBookKept {
+    private val answers = LinkedHashMap<String, kotlinx.serialization.json.JsonElement>()
+
+    override suspend fun read(profile: String, key: String) = answers["$profile|$key"]
+
+    override suspend fun keep(profile: String, key: String, body: kotlinx.serialization.json.JsonElement) {
+        answers["$profile|$key"] = body
     }
 }

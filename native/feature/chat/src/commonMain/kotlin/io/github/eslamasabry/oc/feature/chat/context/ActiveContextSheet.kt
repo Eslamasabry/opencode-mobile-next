@@ -116,8 +116,8 @@ internal fun ActiveContextScreen(visible: Boolean, state: ActiveContextUi, onClo
             }),
             edges = KitScreenEdges.Bleed,
         ) {
-            // Ready carries no refresh-progress flag. Never manufacture a spinner or a timer in the screen.
-            KitRefresh(refreshing = false, onRefresh = onRefresh, enabled = ready != null && openId == null) {
+            // Kept or previous messages stay on screen; Ready.refreshing only lights the kit's quiet refresh line.
+            KitRefresh(refreshing = ready?.refreshing == true, onRefresh = onRefresh, enabled = ready != null && openId == null) {
                 key(openId) {
                     val scroll = if (openId == null) listScroll else rememberScrollState()
                     Column(Modifier.fillMaxSize().verticalScroll(scroll).padding(top = if (openId == null) Space.S2.dp else Space.S3.dp)) {

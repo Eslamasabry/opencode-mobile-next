@@ -44,7 +44,18 @@ public class PlansViewModel(
     private val nav: AppNavigator,
     private val clock: Clock,
     private val collector: CollectorControls,
+    kept: Set<PlansLastKnown> = emptySet(),
 ) : ViewModel(), PlansActions {
+    private val shelf = kept.firstOrNull()
+    private val keptPlans = MutableStateFlow(shelf?.peek())
+
+    /** Nothing live yet (the first read is on its way): the last-seen cards, else the engine's own first state. */
+    private fun first(snapshot: io.github.eslamasabry.oc.engine.integrations.usage.UsageSnapshot, busy: Boolean, nowMs: Long): PlansUi {
+        val live = plansUi(snapshot, busy, nowMs)
+        val was = keptPlans.value
+        return if (live.phase == PlansPhase.Loading && was != null) was.frame(nowMs).copy(refreshing = busy) else live
+    }
+
     private val refreshing = MutableStateFlow(false)
     private val collectors = MutableStateFlow<List<CollectorTarget>>(emptyList())
     private val confirmation = MutableStateFlow<CollectorTarget?>(null)
@@ -69,6 +80,19 @@ public class PlansViewModel(
                         confirmCollector = pending,
                         collectorFailed = failed,
                     )
+            }
+            // CACHE-FIRST: before the first live reading, the last-seen cards stand in (no skeleton).
+            .combine(keptPlans) { ui, was ->
+                if (ui.phase == PlansPhase.Loading && was != null) {
+                    was.frame(ui.nowMs).copy(
+                        refreshing = ui.refreshing,
+                        collectors = ui.collectors,
+                        confirmCollector = ui.confirmCollector,
+                        collectorFailed = ui.collectorFailed,
+                    )
+                } else {
+                    ui
+                }
             }
             // LINUX-2: the phone's own collector setup.
             .combine(collector.state) { ui, c -> ui.copy(collector = c) }
@@ -135,10 +159,22 @@ public class PlansViewModel(
             .stateIn(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(5_000),
-                plansUi(source.snapshot.value, false, clock.now().toEpochMilliseconds()),
+                first(source.snapshot.value, false, clock.now().toEpochMilliseconds()),
             )
 
     init {
+        if (shelf != null) {
+            viewModelScope.launch {
+                // A cold start has only the disk copy: read it once; every good live snapshot is kept.
+                if (keptPlans.value == null) keptPlans.value = shelf.read()
+                source.snapshot.collect { snap ->
+                    if (snap.loaded) {
+                        val live = plansUi(snap, false, clock.now().toEpochMilliseconds())
+                        if (live.phase != PlansPhase.Loading) shelf.keep(KeptPlans.of(live))
+                    }
+                }
+            }
+        }
         load(force = false)
     }
 

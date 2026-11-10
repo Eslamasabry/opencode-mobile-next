@@ -400,7 +400,9 @@ public class NewConversationViewModel(
     private val nav: AppNavigator,
     private val clock: Clock,
     private val reports: NewChatReports,
+    kept: Set<ImportsLastKnown> = emptySet(),
 ) : ViewModel(), NewConversationActions {
+    private val importShelf = kept.firstOrNull()
     private val mutable =
         MutableStateFlow(
             if (route.initialText.isEmpty()) NewConversationUi()
@@ -846,17 +848,31 @@ public class NewConversationViewModel(
         val shown = mutable.value
         val profile = shown.profile ?: return
         val directory = shown.directory ?: return
-        mutable.update { it.copy(importBusy = true, importFailed = false, imports = null) }
+        // Cache-first: the list last read for this folder shows at once; the live list replaces it in place.
+        val first = importShelf?.peek(profile, directory)
+        mutable.update {
+            it.copy(
+                importBusy = first == null,
+                importFailed = false,
+                imports = first?.toImports(),
+                importsReadAtMs = first?.readAtMs ?: it.importsReadAtMs,
+            )
+        }
         viewModelScope.launch {
-            when (val result = host.imports(profile, directory)) {
-                is Outcome.Ok ->
+            if (first == null) {
+                importShelf?.read(profile, directory)?.let { stored ->
                     mutable.update {
-                        it.copy(
-                            importBusy = false,
-                            imports = result.value,
-                            importsReadAtMs = clock.now().toEpochMilliseconds(),
-                        )
+                        if (it.imports != null) it
+                        else it.copy(importBusy = false, imports = stored.toImports(), importsReadAtMs = stored.readAtMs)
                     }
+                }
+            }
+            when (val result = host.imports(profile, directory)) {
+                is Outcome.Ok -> {
+                    val at = clock.now().toEpochMilliseconds()
+                    mutable.update { it.copy(importBusy = false, imports = result.value, importsReadAtMs = at) }
+                    importShelf?.keep(profile, directory, KeptImports.of(result.value, at))
+                }
                 is Outcome.Failed ->
                     mutable.update { it.copy(importBusy = false, importFailed = true) }
             }

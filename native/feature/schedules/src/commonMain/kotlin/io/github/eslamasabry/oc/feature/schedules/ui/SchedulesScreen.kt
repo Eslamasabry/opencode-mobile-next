@@ -77,7 +77,7 @@ public fun SchedulesScreen(state: SchedulesUi, actions: SchedulesActions) {
                     onExit = actions::back,
                 )
             },
-            loading = state.phase == SchedulesPhase.Loading,
+            loading = state.phase == SchedulesPhase.Loading || state.updating,
             loadingLabel = words.loading,
             bottom =
                 if (state.phase != SchedulesPhase.List && state.phase != SchedulesPhase.Empty) null

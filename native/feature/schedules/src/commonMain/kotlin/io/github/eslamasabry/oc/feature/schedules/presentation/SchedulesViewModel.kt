@@ -34,7 +34,10 @@ public class SchedulesViewModel(
     private val servers: ScheduleServers,
     private val nav: AppNavigator,
     private val clock: kotlin.time.Clock,
+    kept: Set<SchedulesLastKnown> = emptySet(),
 ) : ViewModel(), SchedulesActions {
+    private val keptPort = kept.firstOrNull()
+    private val keptFirst: KeptSchedules? = keptPort?.peek(route.profileId)
     private val profile = route.profileId.raw
 
     private data class Local(
@@ -46,13 +49,29 @@ public class SchedulesViewModel(
     )
 
     private val local = MutableStateFlow(Local())
+    private val seeded = MutableStateFlow<KeptSchedules?>(keptFirst)
 
     public val state: StateFlow<SchedulesUi> =
-        combine(engine.state(profile), local) { engineState, own -> present(engineState, own) }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SchedulesUi(highlight = route.highlight))
+        combine(engine.state(profile), local, seeded) { engineState, own, was -> present(engineState, own, was) }
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                keptFirst?.let { KeptSchedules.frame(it, route.highlight) } ?: SchedulesUi(highlight = route.highlight),
+            )
 
     init {
         load()
+        if (keptPort != null) {
+            viewModelScope.launch {
+                // A cold start has only the disk copy: read it once, then every good live list is kept.
+                if (keptFirst == null) keptPort.read(route.profileId)?.let { seeded.value = it }
+                state.collect { ui ->
+                    if (ui.phase == SchedulesPhase.List || ui.phase == SchedulesPhase.Empty) {
+                        if (!ui.updating) keptPort.keep(route.profileId, KeptSchedules.of(ui))
+                    }
+                }
+            }
+        }
     }
 
     private fun load() {
@@ -63,7 +82,7 @@ public class SchedulesViewModel(
         }
     }
 
-    private fun present(engineState: SchedulesState, own: Local): SchedulesUi {
+    private fun present(engineState: SchedulesState, own: Local, was: KeptSchedules?): SchedulesUi {
         val target = own.target
         val unavailable =
             when {
@@ -80,6 +99,15 @@ public class SchedulesViewModel(
                 engineState.schedules.isEmpty() -> SchedulesPhase.Empty
                 else -> SchedulesPhase.List
             }
+        if (phase == SchedulesPhase.Loading && was != null) {
+            // Nothing live yet: draw what the list last showed, with the buttons working on the kept rows.
+            return KeptSchedules.frame(was, route.highlight).copy(
+                confirmDelete = own.confirmDelete,
+                started = own.started,
+                busy = own.busy,
+                nowMs = clock.now().toEpochMilliseconds(),
+            )
+        }
         val rows =
             engineState.schedules.map { schedule ->
                 val last = engineState.runs.firstOrNull { it.scheduleId == schedule.id }

@@ -125,6 +125,8 @@ public class ChatEntries(
         emptySet(),
     private val pictureEncoders: Set<io.github.eslamasabry.oc.feature.chat.ui.ChatPictureEncoder> =
         emptySet(),
+    private val activeContextKept: Set<io.github.eslamasabry.oc.feature.chat.context.ActiveContextLastKnown> =
+        emptySet(),
 ) : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
         entry<ConnectionFormRoute> { route ->
@@ -369,7 +371,7 @@ public class ChatEntries(
                 )
             // B-CHAT-001..003: the inspector of what the next turn reads; offered only where the
             // server has the route.
-            val activeContext = remember(route.ref) { ActiveContextModel(route.ref, registry) }
+            val activeContext = remember(route.ref) { ActiveContextModel(route.ref, registry, activeContextKept.firstOrNull()) }
             DisposableEffect(activeContext) { onDispose { activeContext.close() } }
             val inspect =
                 KitLineAction(

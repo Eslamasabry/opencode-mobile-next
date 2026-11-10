@@ -42,6 +42,7 @@ public class ChangesViewModel(
     nav: AppNavigator,
     drafts: ReviewDrafts,
     agent: ReviewAgent,
+    kept: Set<ReviewLastKnown> = emptySet(),
 ) : ViewModel(), ChangesActions {
     private val presenter =
         hub.notes(route.ref).let { notes ->
@@ -53,6 +54,7 @@ public class ChangesViewModel(
                 drafts.sendBack(route.ref),
                 ReviewAgentPorts(notes.comments, agent.sender(route.ref), agent.guideAsk(route.ref), notes.guides),
                 hub.branch(route.ref),
+                kept.firstOrNull()?.let { ReviewShelf(it, route.ref) },
             )
         }
     public val state: StateFlow<ChangesUi> = presenter.state
@@ -100,6 +102,7 @@ public class FileDiffViewModel(
     hub: ReviewHub,
     private val nav: AppNavigator,
     agent: ReviewAgent,
+    kept: Set<ReviewLastKnown> = emptySet(),
 ) : ViewModel(), FileDiffActions {
     private val presenter =
         FileDiffPresenter(
@@ -115,6 +118,7 @@ public class FileDiffViewModel(
             viewModelScope,
             ReviewAgentPorts(hub.notes(route.ref).comments, agent.sender(route.ref)),
             hub.branch(route.ref),
+            kept.firstOrNull()?.let { ReviewShelf(it, route.ref) },
         )
     public val state: StateFlow<FileDiffUi> = presenter.state
 
@@ -160,8 +164,19 @@ public class UndoFromHereViewModel(@Assisted route: ReviewRoute.UndoFromHere, hu
 
 /** "Review the undo". */
 @AssistedInject
-public class StagedViewModel(@Assisted route: ReviewRoute.Staged, hub: ReviewHub, nav: AppNavigator) : ViewModel(), StagedActions {
-    private val presenter = StagedPresenter(hub.review(route.ref), RouteNavigation(nav, route.ref, null), viewModelScope)
+public class StagedViewModel(
+    @Assisted route: ReviewRoute.Staged,
+    hub: ReviewHub,
+    nav: AppNavigator,
+    kept: Set<ReviewLastKnown> = emptySet(),
+) : ViewModel(), StagedActions {
+    private val presenter =
+        StagedPresenter(
+            hub.review(route.ref),
+            RouteNavigation(nav, route.ref, null),
+            viewModelScope,
+            kept.firstOrNull()?.let { ReviewShelf(it, route.ref) },
+        )
     public val state: StateFlow<StagedUi> = presenter.state
 
     override fun back(): Unit = presenter.back()
