@@ -108,7 +108,7 @@ class AppServerListsLastKnown(store: LastKnown, stores: PreviewStores) : ServerL
         lists.keep(ref.profileId, key(ref, item), kept)
 
     companion object {
-        val LISTS = CacheShelf("serverLists", KeptServerList.serializer(), maxBytes = 96 * 1024, maxEntries = 40)
+        val LISTS = CacheShelf("serverLists", kotlinx.serialization.serializer<KeptServerList>(), maxBytes = 96 * 1024, maxEntries = 40)
     }
 }
 
@@ -138,7 +138,7 @@ class AppPlansLastKnown(private val store: LastKnown, private val stores: Previe
     companion object {
         /** Not a profile: the owner of the one cross-server entry. */
         val PLANS_OWNER = ProfileId("plans-all-servers")
-        val PLANS = CacheShelf("plans", KeptPlans.serializer(), maxBytes = 96 * 1024, maxEntries = 1)
+        val PLANS = CacheShelf("plans", kotlinx.serialization.serializer<KeptPlans>(), maxBytes = 96 * 1024, maxEntries = 1)
     }
 }
 

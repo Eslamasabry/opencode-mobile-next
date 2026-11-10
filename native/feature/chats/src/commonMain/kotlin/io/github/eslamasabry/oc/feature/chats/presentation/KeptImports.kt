@@ -50,7 +50,7 @@ public data class KeptImports(
         public fun of(found: ImportableConversations, readAtMs: Long): KeptImports =
             KeptImports(
                 found.items.take(MAX_ROWS).map {
-                    Row(it.agentId, it.handle, it.directory, it.lastUsedMs, it.title, it.firstPrompt?.take(MAX_PROMPT))
+                    Row(it.agentId, it.handle, it.directory, it.lastUsed.toEpochMilliseconds(), it.title, it.firstPrompt?.take(MAX_PROMPT))
                 },
                 found.alreadyImported,
                 readAtMs,

@@ -128,7 +128,9 @@ public class ScheduleEditViewModel(
     private val mutable =
         MutableStateFlow(
             keptFirst?.frame(route.scheduleId != null, clock.now().toEpochMilliseconds())?.let {
-                if (route.scheduleId == null && route.projectDir != null) it.copy(fields = it.fields.copy(project = route.projectDir)) else it
+                // Read once: the route's property is another module's, so the compiler will not smart-cast it.
+                val dir = route.projectDir
+                if (route.scheduleId == null && dir != null) it.copy(fields = it.fields.copy(project = dir)) else it
             } ?: ScheduleEditUi(editing = route.scheduleId != null),
         )
     public val state: StateFlow<ScheduleEditUi> = mutable.asStateFlow()
