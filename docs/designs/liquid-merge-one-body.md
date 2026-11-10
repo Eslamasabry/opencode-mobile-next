@@ -177,6 +177,21 @@ spring) is unchanged, with two exceptions:
   top edge), and its outer edge sits on the body's outer edge when the control is at that end (shape rule 3);
 - the pill's rest position: sunk 8 dp into the message box (today it rests 8 dp above it; shape rule 4).
 
+**Drop and rebound** (owner 2026-11-11: "make it drop down and then rebound to shape"; prototype `motion.py`,
+`motion-slow.mp4`, `motion-real.mp4`; not yet approved). A joined menu or pill does not scale as a whole:
+
+- a bead swells under the control; the height then runs ahead on a spring with damping ratio 0.62 (stiffness 520 for
+  the menu, 480 for the pill) and passes its rest length by about 8 %, once;
+- the width follows 30 ms later on a calmer spring (0.80, 620);
+- while the height is past its rest the body is narrower by 0.6 of that excess, and wider while it is short of it,
+  so the rebound reads as one mass;
+- corners relax from the bead's full round to the pane's own radius with the width; the reach is up to 1.5 times
+  its rest value while it pours;
+- content waits for the width (it never stands outside the glass), then arrives top to bottom;
+- closing has no bounce: content first, then height and width together back to the bead, which sinks into the body
+  (the prototype still closes the height before the width, leaving a flat slab for a moment: to fix).
+Reduced motion: a fade, as today.
+
 The menu's own "frost while it grows" transform no longer applies to a joined menu: the field follows the growing
 box each frame, so the lens is never misaligned.
 
