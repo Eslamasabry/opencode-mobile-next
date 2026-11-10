@@ -12,7 +12,12 @@ import io.github.eslamasabry.oc.engine.runtime.server.OpenCodeHostFacts
 import io.github.eslamasabry.oc.engine.runtime.server.OpenCodeUpdateJobs
 import io.github.eslamasabry.oc.engine.runtime.server.launchOpenCodeAutoUpdate
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupState
+import android.os.SystemClock
+import io.github.eslamasabry.oc.engine.runtime.server.OpenCodeIdleSettle
+import io.github.eslamasabry.oc.engine.runtime.setup.SetupComponentIds
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 
 /**
@@ -54,15 +59,28 @@ class PhoneOpenCodeAutoUpdate(
                     setup.update()
                 }
             }
-        val updater = OpenCodeAutoUpdater(host, jobs) { !runtime.workKnownIdle() }
+        val settled = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+        // `leases.busy` reads false only after a real status read of a connected server (NativeChatLeases `known`), and
+        // goes back to unknown when that read fails; the 30 s settle on top is Flutter's `inAppAutoUpdateSettle`.
+        val settle = OpenCodeIdleSettle(appScope, { SystemClock.elapsedRealtime() }) { settled.tryEmit(Unit) }
+        val updater =
+            OpenCodeAutoUpdater(host, jobs) {
+                // Flutter also refuses while `localPhoneAgentWorkBusy`: the agent's `<owner>.agents` reading.
+                settle.busy(runtime.workKnownIdle()) || runtime.agentWorkBusy()
+            }
         appScope.launchOpenCodeAutoUpdate(
             updater,
             host,
-            combine(runtime.serverFacts, setup.progress, leases.busy) { _, _, _ -> },
+            merge(combine(runtime.serverFacts, setup.progress, leases.busy) { _, _, _ -> }, settled),
         )
         appScope.launch {
             setup.progress.collect {
-                runtime.noteUpdateJob(it.state == SetupState.Running, it.state == SetupState.Failed)
+                // Only the OpenCode update job (a job of the OpenCode component alone) shows on the Update row.
+                val update = it.components.map { c -> c.id } == listOf(SetupComponentIds.OPENCODE)
+                runtime.noteUpdateJob(
+                    update && it.state == SetupState.Running,
+                    update && it.state == SetupState.Failed,
+                )
             }
         }
     }

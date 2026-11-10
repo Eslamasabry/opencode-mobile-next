@@ -1585,6 +1585,9 @@ internal constructor(
     /** Known idle: no reply or work on the owner's server (an unknown reading counts as busy, as in Flutter). */
     fun workKnownIdle(): Boolean = ownerId()?.raw?.let { owner -> leases.busy.value[owner] } == false
 
+    /** Flutter `localPhoneAgentWorkBusy`: the phone agent's own chat on this server is working (its `<owner>.agents` reading). */
+    fun agentWorkBusy(): Boolean = ownerId()?.raw?.let { owner -> leases.busy.value["$owner.agents"] } == true
+
     fun serverSource(update: suspend () -> Outcome<Unit>): PhoneServerSource =
         object : PhoneServerSource {
             override val facts: StateFlow<PhoneServerFacts> =
