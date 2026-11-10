@@ -113,6 +113,9 @@ public interface PhoneAgents {
 
     public suspend fun cancelInstall(): Outcome<Unit> = Outcome.Ok(Unit)
 
+    /** Puts away the notice of the last install that failed or was interrupted. */
+    public suspend fun dismissInstallResult(): Outcome<Unit> = Outcome.Ok(Unit)
+
     /**
      * Runs the agent's own logout. `true` only when a fresh status read says it is signed out;
      * `false` means not confirmed. Conversations are never touched.
@@ -219,7 +222,20 @@ public data class PhoneAgentInstallation(
     val id: String,
     val phase: PhoneAgentInstallPhase,
     val fraction: Double?,
+    /** Why a failed or interrupted install ended, in a closed set; the words live in the screen. */
+    val failure: PhoneAgentInstallFailure? = null,
+    /** The technical side, already redacted; shown only under Details. */
+    val details: io.github.eslamasabry.oc.core.common.Redacted? = null,
 )
+
+public enum class PhoneAgentInstallFailure {
+    Download,
+    Checksum,
+    Storage,
+    Interrupted,
+    Version,
+    Unknown,
+}
 
 public enum class PhoneAgentInstallPhase {
     Installing,

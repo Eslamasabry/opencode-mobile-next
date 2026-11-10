@@ -25,6 +25,7 @@ import io.github.eslamasabry.oc.protocol.paseo.gateway.PaseoProbeResult
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.agentsPhoneHelperProfile
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
+import io.github.eslamasabry.opencode_mobile.PhoneAgentHost
 import java.security.SecureRandom
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
@@ -98,13 +99,22 @@ class AppLocalAgentHostStarter(
                             password,
                             PaseoConfig.render().json,
                             expectedHelperVersion = AgentPins.builtIn.paseo.version,
+                            // As the Flutter app's ordinary start: an older tested helper runs as it is.
+                            testedHelperVersions = AgentPins.builtIn.paseoTestedVersions.toSet(),
                         )
                         Outcome.Ok(Unit)
                     }
                 } catch (e: CancellationException) {
                     throw e
-                } catch (_: Exception) {
-                    Outcome.Failed(Failure.Runtime(RuntimeProblem.ServerStartUnavailable))
+                } catch (e: Exception) {
+                    // A helper that is missing or too old to run is its own reason, with its own way forward.
+                    Outcome.Failed(
+                        Failure.Runtime(
+                            if (PhoneAgentHost.failureCode(e) == "helper_update_required")
+                                RuntimeProblem.HelperUpdateRequired
+                            else RuntimeProblem.ServerStartUnavailable
+                        )
+                    )
                 }
             }
         if (started is Outcome.Failed) return@withLock started

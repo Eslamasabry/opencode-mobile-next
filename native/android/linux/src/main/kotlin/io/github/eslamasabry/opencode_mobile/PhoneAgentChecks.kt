@@ -63,7 +63,11 @@ class PhoneAgentChecks internal constructor(private val linux: BuiltinLinux) {
 
     internal fun runVersion(profile: String, path: String): String? {
         val child = try {
-            linux.startAgentProcess(profile, listOf(path, "--version"))
+            // The same Node.js safe mode the launch script gets, so the check sees what a launch would.
+            linux.startAgentProcess(
+                profile,
+                listOf("/bin/sh", "-c", NodeCompatState.SERVER_ENV + "exec \"\$0\" --version", path),
+            )
         } catch (_: Exception) { null } ?: return null
         val output = StringBuilder()
         var reader: Thread? = null

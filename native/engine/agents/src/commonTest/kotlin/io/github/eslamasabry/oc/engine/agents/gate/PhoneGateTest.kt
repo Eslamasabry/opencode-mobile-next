@@ -10,7 +10,9 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class PhoneGateTest {
     private val pins = AgentPins.builtIn
@@ -59,6 +61,24 @@ class PhoneGateTest {
         // Faithful to the Dart order: the agent version is compared first, so a proof whose helper also moved is still
         // offered (recorded as an open problem in the S3-AGENTSE report).
         assertEquals("2.1.294", PhoneGate.olderQualifiedVersion(helperMoved, claude, AgentArchitecture.Arm64, pins))
+    }
+
+    @Test
+    fun `proof from the Flutter app still counts when it was given on another tested helper, never on another CPU or version`() {
+        val sha = claude.artifactFor(AgentArchitecture.Arm64)!!.sha256
+        val lock = pins.paseo.packageLockSha256
+        val flutter = gate("claude", "2.1.316", sha, "0.11.2", "other-lock", "v22.0.0")
+        // The agent runs at the version the proof was given on, and that version is a tested one.
+        assertTrue(PhoneGate.qualifies(flutter, claude, AgentArchitecture.Arm64, pins, "2.1.316"))
+        assertFalse(PhoneGate.qualifies(flutter, claude, AgentArchitecture.Arm64, pins, "2.1.319"))
+        assertFalse(PhoneGate.qualifies(flutter, claude, AgentArchitecture.X64, pins, "2.1.316"))
+        assertFalse(PhoneGate.qualifies(null, claude, AgentArchitecture.Arm64, pins, "2.1.316"))
+        // A helper that was never tested does not carry proof.
+        val odd = gate("claude", "2.1.316", sha, "0.1.0", lock, "v24.22.2")
+        assertFalse(PhoneGate.qualifies(odd, claude, AgentArchitecture.Arm64, pins, "2.1.316"))
+        // The current pair qualifies exactly.
+        val now = gate("claude", "2.1.319", sha, "0.15.3", lock, "v24.22.2")
+        assertTrue(PhoneGate.qualifies(now, claude, AgentArchitecture.Arm64, pins, "2.1.319"))
     }
 
     @Test
