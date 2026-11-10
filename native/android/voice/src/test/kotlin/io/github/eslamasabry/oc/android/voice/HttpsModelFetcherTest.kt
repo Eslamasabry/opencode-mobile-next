@@ -116,4 +116,12 @@ class HttpsModelFetcherTest {
             assertEquals(MediaProblem.DownloadNoResponse, failure.problem)
             assertTrue("huggingface" !in failure.details!!.text && "token" !in failure.details!!.text)
         }
+
+    @Test
+    fun `B-123 a dropped network says offline, not that the model server gave no response`() {
+        assertEquals(MediaProblem.DownloadOffline, HttpsModelFetcher.classify(java.net.UnknownHostException("huggingface.co")))
+        assertEquals(MediaProblem.DownloadOffline, HttpsModelFetcher.classify(java.net.NoRouteToHostException("x")))
+        assertEquals(MediaProblem.DownloadOffline, HttpsModelFetcher.classify(java.net.ConnectException("Network is unreachable")))
+        assertEquals(MediaProblem.DownloadNoResponse, HttpsModelFetcher.classify(java.net.ConnectException("Connection refused")))
+    }
 }

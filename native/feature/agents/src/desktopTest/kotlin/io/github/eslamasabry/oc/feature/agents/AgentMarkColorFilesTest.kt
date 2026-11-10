@@ -35,7 +35,7 @@ class AgentMarkColorFilesTest {
     @Test
     fun `B-AGENTS-291 the agent ids map to the colour file of their brand`() {
         assertTrue(ProviderMarks.agentColorFile("claude") == "claude-color")
-        assertTrue(ProviderMarks.agentColorFile("antigravity") == "google-color")
+        assertTrue(ProviderMarks.agentColorFile("antigravity") == null) // B-116: no Google G
         assertTrue(ProviderMarks.agentColorFile("opencode") == null)
         assertTrue(ProviderMarks.agentColorFile("codex") == null)
     }

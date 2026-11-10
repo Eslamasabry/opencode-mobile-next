@@ -128,6 +128,14 @@ internal class OkHttpModelFetcher(
         fun classify(error: IOException): MediaProblem =
             when (error) {
                 is SocketTimeoutException -> MediaProblem.DownloadTimedOut
+                // No route / no DNS means the phone is offline: say so, not "no response".
+                is java.net.UnknownHostException, is java.net.NoRouteToHostException -> MediaProblem.DownloadOffline
+                is java.net.ConnectException ->
+                    if (error.message?.contains("unreachable", ignoreCase = true) == true) {
+                        MediaProblem.DownloadOffline
+                    } else {
+                        MediaProblem.DownloadNoResponse
+                    }
                 is SSLException, is EOFException -> MediaProblem.DownloadClosed
                 else -> MediaProblem.DownloadNoResponse
             }

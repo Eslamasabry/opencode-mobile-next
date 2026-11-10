@@ -365,6 +365,11 @@ public class OpenProjectViewModel(
     override fun openShown() {
         val path = state.value.path ?: return
         if (state.value.step != OpenProjectStep.Folder || state.value.loading) return
+        // B-106: home and root cannot be projects; say so on the page instead of doing nothing.
+        if (ProjectRules.pathProblem(ProjectRules.normalize(path)) != null) {
+            mutable.update { it.copy(refusedPath = path) }
+            return
+        }
         openFolder(path)
     }
 

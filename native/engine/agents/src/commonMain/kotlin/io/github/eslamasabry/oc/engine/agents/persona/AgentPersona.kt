@@ -25,7 +25,7 @@ public data class AgentPersona(
         public val ClaudeCode: AgentPersona = AgentPersona(AgentPersonaId.ClaudeCode, "claude", AgentMaker.Anthropic)
         public val Codex: AgentPersona = AgentPersona(AgentPersonaId.Codex, "codex", AgentMaker.OpenAi)
         public val Gemini: AgentPersona = AgentPersona(AgentPersonaId.Gemini, "gemini", AgentMaker.Google)
-        public val Antigravity: AgentPersona = AgentPersona(AgentPersonaId.Antigravity, "google", AgentMaker.Google)
+        public val Antigravity: AgentPersona = AgentPersona(AgentPersonaId.Antigravity, "", AgentMaker.Google) // B-116: no official mark; neutral, not Google's G
         public val Kilo: AgentPersona = AgentPersona(AgentPersonaId.Kilo, "kilocode", AgentMaker.OpenSource)
         public val Cline: AgentPersona = AgentPersona(AgentPersonaId.Cline, "cline", AgentMaker.OpenSource)
         public val OpenCode: AgentPersona = AgentPersona(AgentPersonaId.OpenCode, "opencode", AgentMaker.OpenSource)
@@ -51,7 +51,7 @@ public data class AgentPersona(
         /** lib/domain/mark_catalog.dart `_agentMarks` (agent icon key → bundled mark slug). */
         public val agentMarks: Map<String, String> = mapOf(
             "opencode" to "opencode", "opencode2" to "opencode", "claude" to "claude", "codex" to "codex",
-            "gemini" to "gemini", "antigravity" to "google", "agy" to "google", "qwen" to "qwen", "kilo" to "kilocode", "cline" to "cline", "goose" to "goose",
+            "gemini" to "gemini", "qwen" to "qwen", "kilo" to "kilocode", "cline" to "cline", "goose" to "goose",
             "pi" to "pi", "omp-acp" to "pi", "copilot" to "copilot",
         )
 
