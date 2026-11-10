@@ -408,7 +408,7 @@ private fun ColumnScope.AppearanceControls(
         val picks = LOOK_PICKS.filter(LiveLooks::draws).let { if (onePage) it.take(5) else it }
         val chosen = ui.liveLook?.takeIf(LiveLooks::draws)
         val looks =
-            if (allLooks) LiveLooks.offered
+            if (allLooks) LiveLooks.offered + listOfNotNull(chosen?.takeIf { it !in LiveLooks.offered })
             else
                 picks.filter { !onePage || chosen == null || chosen in picks || it != picks.last() } +
                     listOfNotNull(chosen?.takeIf { it !in picks })

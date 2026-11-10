@@ -24,7 +24,7 @@ class LiveLooksBTest {
             val look = LiveLooks.shader(id) ?: fail("no look for $id")
             assertEquals(id, look.id)
             assertSame(look, LiveLooks.shader(id))
-            assertTrue(id in LiveLooks.offered, "$id is offered in the Look picker")
+            assertTrue(id in LiveLooks.offered || id in LiveLooks.shelved, "$id is offered in the Look picker, or shelved")
         }
     }
 

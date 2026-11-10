@@ -733,13 +733,15 @@ public fun ChatScreen(
                                                 testTag = "chat-find-open",
                                                 icon = KitIcons.search,
                                             ),
-                                        ) + unitActions + unitActs,
+                                        ) + (if (demoMode) emptyList() else unitActions) + unitActs,
                                     more = { hidden ->
                                         KitChatMoreMenu(
                                             label = stringResource(Res.string.kitTopBarMore),
                                             expanded = barMenuOpen,
                                             items =
-                                                hidden.map { extra ->
+                                                // The demo's own acts (Reset demo, Leave) sit in the menu: "Reset demo"
+                                                // in words beside Search crowded the bar (emulator walk 2026-11-10).
+                                                ((if (demoMode) unitActions else emptyList()) + hidden).map { extra ->
                                                     KitMenuItem(
                                                         label = extra.label,
                                                         onSelect = {

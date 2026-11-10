@@ -38,6 +38,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -173,6 +174,33 @@ private fun CheckBadge(selected: Boolean, modifier: Modifier = Modifier) {
     ) {
         // C04 (audit 2026-11-09): the bare accent check, no disc behind it.
         KitGlyph(KitIcons.check, colors.accent, (Space.S4).dp) // F: lib/ui/kit/kit_option_card.dart:381
+    }
+}
+
+/**
+ * A picture card's check: on the picture's top-start corner (the tiny conversation leaves it free), on a disc of the
+ * card's own fill so it reads on any look. The name under the picture keeps the card's whole width.
+ */
+@Composable
+private fun PictureCheck(selected: Boolean, modifier: Modifier = Modifier) {
+    val colors = LocalKitColors.current
+    val shown by animateFloatAsState(if (selected) 1f else 0f, KitMotion.specs.enter(), label = "picture-check")
+    val scale by animateFloatAsState(if (selected) 1f else MotionTokens.MARK_FROM, KitMotion.specs.enter(), label = "picture-check-scale")
+    Box(
+        modifier
+            .padding(Space.S1.dp)
+            .size(Space.S5.dp)
+            .graphicsLayer {
+                alpha = shown
+                scaleX = scale
+                scaleY = scale
+            }
+            .background(colors.surface1.copy(alpha = 1f), CircleShape)
+            .testTag("kit-option-picture-check")
+            .clearAndSetSemantics {},
+        contentAlignment = Alignment.Center,
+    ) {
+        KitGlyph(KitIcons.check, colors.accent, (Space.S4).dp)
     }
 }
 
@@ -335,7 +363,10 @@ private fun OptionCardBody(
                     Spacer(Modifier.height(Space.S2.dp))
                 }
                 fills -> {
-                    Box(Modifier.fillMaxWidth().weight(1f)) { media?.invoke() }
+                    Box(Modifier.fillMaxWidth().weight(1f)) {
+                        media?.invoke()
+                        PictureCheck(selected, Modifier.align(Alignment.TopStart))
+                    }
                     Spacer(Modifier.height(Space.S2.dp))
                 }
                 media != null -> {
@@ -344,14 +375,17 @@ private fun OptionCardBody(
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
+                // A look's name is a caption under its picture and keeps the card's whole width (its check sits on the
+                // picture): at the row-title size beside a check, three across, "Constellation" and "Oscilloscope"
+                // broke inside the word (emulator walk 2026-11-10).
                 KitText(
                     label,
                     Modifier.weight(1f),
-                    role = TypeRole.RowTitle,
+                    role = if (fills) TypeRole.Label else TypeRole.RowTitle,
                     tone = if (enabled) TextTone.Primary else TextTone.Tertiary,
                     maxLines = lines,
                 )
-                if (icon == null) CheckBadge(selected)
+                if (icon == null && !fills) CheckBadge(selected)
             }
             caption?.let { KitText(it, role = TypeRole.Secondary, maxLines = 3) } // F: lib/ui/kit/kit_option_card.dart:263
             if (sayReason) disabledReason?.let { KitText(it, role = TypeRole.Secondary, maxLines = 3) } // F: lib/ui/kit/kit_option_card.dart:266

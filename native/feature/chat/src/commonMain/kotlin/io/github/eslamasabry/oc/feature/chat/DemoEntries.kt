@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.chat
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -89,12 +90,15 @@ private class DemoComposerHost(private val vm: DemoViewModel) : ComposerHost {
         when (stage) {
             DemoStage.Ready -> BasicComposer(state, vm, chrome, modifier)
             DemoStage.Review ->
-                Row(modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    KitButton(stringResource(Res.string.stateDemoAllow), vm::allow)
+                // One under the other: side by side, "Deny simulated edit" wrapped to two lines on a phone beside a
+                // one-line Allow (emulator walk 2026-11-10).
+                Column(modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    KitButton(stringResource(Res.string.stateDemoAllow), vm::allow, fullWidth = true)
                     KitButton(
                         stringResource(Res.string.stateDemoDeny),
                         vm::deny,
                         role = KitButtonRole.Secondary,
+                        fullWidth = true,
                     )
                 }
             DemoStage.Finished ->

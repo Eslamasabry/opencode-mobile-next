@@ -31,10 +31,14 @@ class LiveLooksTest {
     }
 
     @Test
-    fun `B-KIT-LIVE-012 the picker offers the painted aurora and every shader look in Flutter's order`() {
+    fun `B-KIT-LIVE-012 the picker offers the painted aurora and every shader look but the shelved patterns, in Flutter's order`() {
         val offered = LiveLooks.offered
         assertTrue(offered.containsAll(builderA + "auroraImage"))
-        assertEquals(LiveLooks.ids, offered, "every stored look is drawn and selectable")
+        assertTrue(LiveLooks.ids.all(LiveLooks::draws), "every stored look is drawn")
+        // Owner 2026-11-10: the five patterns are cut from the picker; a saved one still draws.
+        assertEquals(setOf("halftone", "blueprint", "circuit", "honeycomb", "brushedMetal"), LiveLooks.shelved)
+        assertEquals(LiveLooks.ids - LiveLooks.shelved, offered, "every other look is selectable")
+        assertTrue(LiveLooks.shelved.all(LiveLooks::draws), "a shelved look someone saved still shows")
         assertEquals(LiveLooks.ids.filter { it in offered }, offered)
         assertEquals(offered.size, offered.map(LiveLooks::label).toSet().size, "each look has its own name")
     }

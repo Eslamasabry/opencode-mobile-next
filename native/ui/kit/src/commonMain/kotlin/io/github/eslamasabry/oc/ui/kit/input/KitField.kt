@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -253,10 +254,23 @@ public fun KitField(
     ) {
         "KitField: a saved secret needs onReplaceSecret"
     }
+    // The label's own tap puts the cursor in its field, as a form's label does everywhere (emulator walk 2026-11-10:
+    // a tap on "Address" did nothing). It adds no second control for a screen reader: the field carries the label.
+    val fieldFocus = focusRequester ?: remember { FocusRequester() }
+    val keyboard = LocalSoftwareKeyboardController.current
+    val labelFocuses = enabled.isEnabled && !(kind == KitFieldKind.Secret && secretPresence == SecretFieldPresence.Saved)
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
         if (labelShown)
             KitText(
                 label,
+                if (labelFocuses)
+                    Modifier.testTag("kit-field-label").pointerInput(fieldFocus, keyboard) {
+                        detectTapGestures {
+                            fieldFocus.requestFocus()
+                            keyboard?.show()
+                        }
+                    }
+                else Modifier,
                 role = TypeRole.Label,
                 tone = TextTone.Secondary,
                 kind = KitTextKind.Frame,
@@ -275,7 +289,7 @@ public fun KitField(
                 maxLength,
                 imeAction,
                 enabled,
-                focusRequester,
+                fieldFocus,
                 onSubmit,
                 onTextChanged,
                 multilineLines,

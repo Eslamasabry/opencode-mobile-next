@@ -57,7 +57,7 @@ class LiveBackgroundDesktopTest {
 
     @Test
     fun `B-KIT-LIVE-020 every shader look compiles with the shared prelude`() {
-        for (id in LiveLooks.offered) {
+        for (id in LiveLooks.ids) { // the shelved looks too: a saved one still draws
             val look = LiveLooks.shader(id) ?: continue
             assertNotNull(DesktopLiveShader.compile(LiveShaderLib.PRELUDE + look.shader), "$id does not compile")
         }

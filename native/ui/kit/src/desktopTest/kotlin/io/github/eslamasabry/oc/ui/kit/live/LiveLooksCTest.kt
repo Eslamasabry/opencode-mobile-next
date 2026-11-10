@@ -35,7 +35,7 @@ class LiveLooksCTest {
         )
         mine.forEach {
             assertSame(it, LiveLooks.shader(it.id))
-            assertTrue(it.id in LiveLooks.offered, "${it.id} is offered in the Look picker")
+            assertTrue(it.id in LiveLooks.offered || it.id in LiveLooks.shelved, "${it.id} is offered in the Look picker, or shelved")
         }
     }
 

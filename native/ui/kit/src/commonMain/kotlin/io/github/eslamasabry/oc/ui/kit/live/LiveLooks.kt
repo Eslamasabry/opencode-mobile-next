@@ -140,9 +140,15 @@ public object LiveLooks {
             "bokeh" to Res.string.liveStyleBokeh,
         )
 
-    /** What the Look picker offers, in Flutter's order. */
+    /**
+     * The pattern looks the picker no longer offers (owner 2026-11-10: the patterns "look very cheap" next to the
+     * colour looks). They are still drawn: a look saved before keeps showing, and the picker shows it as the chosen one.
+     */
+    public val shelved: Set<String> = setOf("halftone", "blueprint", "circuit", "honeycomb", "brushedMetal")
+
+    /** What the Look picker offers, in Flutter's order: every look the app draws but the [shelved] ones. */
     public val offered: List<String>
-        get() = ids.filter(::draws)
+        get() = ids.filter { draws(it) && it !in shelved }
 }
 
 /** How a page ground draws its live look. */
