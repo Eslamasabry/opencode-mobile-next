@@ -165,6 +165,11 @@ import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import io.github.eslamasabry.oc.ui.words.res.agentPersonaOtherName
 import io.github.eslamasabry.oc.ui.words.res.workspaceDismissNotice
+import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.ui.platform.LocalDensity
 
 /**
  * The Conversations home (07 §5 B01). Arranges kit parts only (Konsist K1). One list by urgency in
@@ -267,7 +272,9 @@ public fun ChatsScreen(
         // while the server is still opening. The kit part also answers F5 / Ctrl+R and a TalkBack "Refresh" action.
         // G2: rows follow each other with only their hairline between them (Flutter KitSliverRowGroup); a 4 dp gap
         // between list items put every row 4 px lower than the one before it.
+        val list = rememberLazyListState()
         LazyColumn(
+            state = list,
             modifier = Modifier.kitGlassSource(listGlass),
             // The calm empty page fills the room and keeps its own end space, so it never scrolls by that much.
             contentPadding =
@@ -355,11 +362,11 @@ public fun ChatsScreen(
                             tertiary =
                                 if (state.hasComputer) null
                                 else KitAction(stringResource(Res.string.chatsHomeConnectComputer), actions::connectComputer, icon = KitIcons.computer),
-                            modifier = Modifier.fillParentMaxSize(),
+                            modifier = calmRoom(list, "empty"),
                         )
                     }
                 ChatsPhase.NoMatch ->
-                    item(key = "no-match", contentType = "no-match") { CalmNoMatchPage(state, actions, Modifier.fillParentMaxSize()) }
+                    item(key = "no-match", contentType = "no-match") { CalmNoMatchPage(state, actions, calmRoom(list, "no-match")) }
                 ChatsPhase.List -> {
                     // A1 (owner, 2026-11-08): "Right now" holds everything working or waiting on the person, never
                     // capped; "Recent" the five latest of the rest; then the way to the whole list. Each section is
@@ -478,6 +485,29 @@ private fun CalmNoMatchPage(state: ChatsUi, actions: ChatsActions, modifier: Mod
  * [tertiary] under it. Both rise in once (KitEntrance; still under reduced motion). Arranged from kit parts; the kit's
  * KitStateView has no calm page form yet (proposed to the kit owner).
  */
+/** The least room a calm page keeps, however much stands above it. */
+private const val CALM_MIN_ROOM_DP: Int = 320
+
+/**
+ * The calm page's room: what is left of the list's window under whatever stands above it, so its action stays on
+ * screen. It used to take a whole window's height, and any notice above it (a new person gets "Notify you when the
+ * agent needs you?" right after setting up This phone) pushed "New conversation" below the fold: the home said "No
+ * conversations yet" and showed no way to start one (emulator walk of the release candidate, 2026-11-10). Before the
+ * list's first layout the page takes the window's height, as before.
+ */
+@Composable
+private fun LazyItemScope.calmRoom(list: LazyListState, key: String): Modifier {
+    val room by remember(list, key) {
+        derivedStateOf {
+            val info = list.layoutInfo
+            val self = info.visibleItemsInfo.firstOrNull { it.key == key }
+            if (self == null) null else (info.viewportEndOffset - info.afterContentPadding - self.offset).takeIf { it > 0 }
+        }
+    }
+    val px = room ?: return Modifier.fillParentMaxSize()
+    return Modifier.fillParentMaxWidth().height(maxOf(with(LocalDensity.current) { px.toDp() }, CALM_MIN_ROOM_DP.dp))
+}
+
 @Composable
 private fun CalmPage(title: String, body: String, primary: KitAction, tertiary: KitAction?, modifier: Modifier) {
     val gutter = LocalKitTokens.current.gutter.dp
