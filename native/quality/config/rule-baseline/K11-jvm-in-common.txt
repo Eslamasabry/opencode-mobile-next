@@ -1,0 +1,6 @@
+# K11-jvm-in-common: files that broke this rule on the day the list was written. Fix one, then delete its line.
+# Never add a line by hand; a new file must follow the rule.
+engine/analytics/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/analytics/health/Telemetry.kt
+feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/inbox/presentation/ChatInboxViewModel.kt
+ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/turn/KitElapsed.kt
+ui/kit-content/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/content/viewer/KitViewerBytes.kt

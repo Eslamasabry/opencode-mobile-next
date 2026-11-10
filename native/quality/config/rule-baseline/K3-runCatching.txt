@@ -1,0 +1,12 @@
+# K3-runCatching: files that broke this rule on the day the list was written. Fix one, then delete its line.
+# Never add a line by hand; a new file must follow the rule.
+androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/FactsBookDeviceCheck.kt
+androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/FactsBookNodeHost.kt
+androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/TeamWiring.kt
+androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/TelemetryHealthWiring.kt
+engine/analytics/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/analytics/health/HealthTelemetry.kt
+engine/factsbook/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/factsbook/FactsBookPhoneNode.kt
+engine/integrations-catalog/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/integrations/catalog/KeptLibrary.kt
+ui/kit-content/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/content/image/KitImageGallery.kt
+ui/kit-content/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/content/image/KitImageMarkup.kt
+ui/kit/src/androidMain/kotlin/io/github/eslamasabry/oc/ui/kit/platform/AndroidBackdropSampler.kt

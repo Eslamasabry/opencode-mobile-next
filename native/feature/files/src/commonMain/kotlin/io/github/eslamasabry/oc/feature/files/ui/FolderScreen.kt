@@ -291,7 +291,7 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                         )
                     }
                 if (state.offline)
-                    item("offline") {
+                    item("offline", contentType = "offline") {
                         KitNotice(
                             stringResource(Res.string.filesShowingSaved),
                             tone = StatusTone.Attention,

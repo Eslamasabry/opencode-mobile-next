@@ -36,6 +36,10 @@ tasks.test {
     inputs.files(fileTree(rootDir) { include("**/src/**/*.kt", "**/build.gradle.kts", "MODULE_OWNERS"); exclude("**/build/**", "build-logic/**") })
         .withPropertyName("sources").withPathSensitivity(PathSensitivity.RELATIVE)
     systemProperty("oc.root", rootDir.absolutePath)
+    // -Poc.ruleBaseline=write rewrites quality/config/rule-baseline/*.txt from what the rules find (review the diff: it
+    // must only shrink); anything else checks against them.
+    systemProperty("oc.ruleBaseline", providers.gradleProperty("oc.ruleBaseline").getOrElse("check"))
+    inputs.dir(layout.projectDirectory.dir("config/rule-baseline")).withPropertyName("ruleBaseline").withPathSensitivity(PathSensitivity.RELATIVE)
     // E00-S13: T2's component-freeze step checks the merged same-package release manifest ("required", or a path).
     inputs.files(fileTree(rootDir) {
         include("**/src/**/AndroidManifest.xml", "**/src/**/res/xml/*.xml", "quality/config/component-freeze/**")

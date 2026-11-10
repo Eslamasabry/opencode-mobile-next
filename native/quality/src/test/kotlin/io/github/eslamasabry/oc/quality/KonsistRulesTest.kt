@@ -27,6 +27,27 @@ class KonsistRulesTest {
      */
     private fun projectRootForKonsist(): File = root
 
+    /**
+     * A rule whose debt is written down: `quality/config/rule-baseline/<rule>.txt` lists the files that broke it when
+     * the suite ran again on 2026-11-10 after weeks of not starting. A file not on the list fails (no new debt), and
+     * a listed file that no longer breaks the rule fails too (take it off: the list only shrinks).
+     */
+    private fun ratchet(rule: String, breaking: Collection<File>) {
+        val now = breaking.map { it.relativeTo(root).invariantSeparatorsPath }.toSortedSet()
+        val file = File(root, "quality/config/rule-baseline/$rule.txt")
+        if (System.getProperty("oc.ruleBaseline") == "write") {
+            file.parentFile.mkdirs()
+            file.writeText(
+                "# $rule: files that broke this rule on the day the list was written. Fix one, then delete its line.\n" +
+                    "# Never add a line by hand; a new file must follow the rule.\n" + now.joinToString("") { "$it\n" }
+            )
+            return
+        }
+        val listed = file.takeIf { it.isFile }?.readLines().orEmpty().filter { it.isNotBlank() && !it.startsWith("#") }.toSet()
+        kotlin.test.assertEquals(emptyList(), (now - listed).toList(), "$rule: new files break the rule")
+        kotlin.test.assertEquals(emptyList(), (listed - now).sorted(), "$rule: fixed; delete these lines from ${file.name}")
+    }
+
     // protocol (S1-OC2 request) and src/jvmShared (S1-NET request) added by INTEGRATE-W1; android/
     // (copied Flutter
     // Kotlin, TWINS.md) is not scanned until its slice rewrites it.
@@ -49,10 +70,12 @@ class KonsistRulesTest {
             features.files.isNotEmpty(),
             "Konsist saw no feature files; the scope is wrong (P-03-6)",
         )
-        features.files.assertTrue { file ->
-            KitOnly.violations(file.packagee?.name, file.name, file.imports.map { it.name })
-                .isEmpty()
-        }
+        ratchet(
+            "K1-kit-only",
+            features.files
+                .filter { file -> KitOnly.violations(file.packagee?.name, file.name, file.imports.map { it.name }).isNotEmpty() }
+                .map { File(it.path) },
+        )
     }
 
     @Test
@@ -69,9 +92,12 @@ class KonsistRulesTest {
 
     @Test
     fun `K3 no runCatching in files with suspend functions`() {
-        production.files.assertFalse {
-            Regex("""\brunCatching\s*[({]""").containsMatchIn(it.text) && "suspend " in it.text
-        }
+        ratchet(
+            "K3-runCatching",
+            production.files
+                .filter { Regex("""\brunCatching\s*[({]""").containsMatchIn(it.text) && "suspend " in it.text }
+                .map { File(it.path) },
+        )
     }
 
     @Test
@@ -96,11 +122,13 @@ class KonsistRulesTest {
 
     @Test
     fun `K4 no Dispatchers or Clock System outside core common`() {
-        production.files
-            .filter { "/core/common/" !in it.path }
-            .assertFalse { f ->
-                Regex("""\bDispatchers\.""").containsMatchIn(f.text) || "Clock.System" in f.text
-            }
+        ratchet(
+            "K4-dispatchers-clock",
+            production.files
+                .filter { "/core/common/" !in it.path }
+                .filter { f -> Regex("""\bDispatchers\.""").containsMatchIn(f.text) || "Clock.System" in f.text }
+                .map { File(it.path) },
+        )
     }
 
     @Test
@@ -158,12 +186,16 @@ class KonsistRulesTest {
 
     @Test
     fun `K11 no String format, System, Thread, java or javax in commonMain`() {
-        production.files
-            .filter { "/src/commonMain/" in it.path }
-            .assertFalse { f ->
-                f.imports.any { it.name.startsWith("java.") || it.name.startsWith("javax.") } ||
-                    Regex("""String\.format|\bSystem\.|\bThread\.""").containsMatchIn(f.text)
-            }
+        ratchet(
+            "K11-jvm-in-common",
+            production.files
+                .filter { "/src/commonMain/" in it.path }
+                .filter { f ->
+                    f.imports.any { it.name.startsWith("java.") || it.name.startsWith("javax.") } ||
+                        Regex("""String\.format|\bSystem\.|\bThread\.""").containsMatchIn(f.text)
+                }
+                .map { File(it.path) },
+        )
     }
 
     @Test
