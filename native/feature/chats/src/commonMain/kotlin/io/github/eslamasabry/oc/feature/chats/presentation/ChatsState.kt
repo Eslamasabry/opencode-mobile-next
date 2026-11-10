@@ -144,7 +144,6 @@ public object ChatsState {
             ago = RelativeAge.of(item.lastActivityMs, nowMs),
             running = item.running,
             permission = item.permission,
-            observedAtMs = nowMs,
             preview = item.preview.takeIf { it.isNotBlank() }?.let(HomePreviewRules::oneLine),
         )
 

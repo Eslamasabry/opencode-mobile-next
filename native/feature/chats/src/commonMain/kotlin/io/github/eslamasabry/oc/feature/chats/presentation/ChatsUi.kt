@@ -44,7 +44,6 @@ public data class ConversationRowUi(
     val ago: RelativeAge? = null,
     val running: io.github.eslamasabry.oc.engine.agents.feed.FeedRunning? = null,
     val permission: io.github.eslamasabry.oc.engine.agents.feed.FeedPermission? = null,
-    val observedAtMs: Long = 0,
     val updatedAtMs: Long? = null,
     val canOpen: Boolean = true,
     /** The agent's bundled mark slug (empty: a neutral mark) and its plain name, from the persona table. */
