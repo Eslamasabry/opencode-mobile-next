@@ -186,20 +186,32 @@ spring) is unchanged, with two exceptions:
   top edge), and its outer edge sits on the body's outer edge when the control is at that end (shape rule 3);
 - the pill's rest position: sunk 8 dp into the message box (today it rests 8 dp above it; shape rule 4).
 
-**Drop and rebound** (owner 2026-11-11: "make it drop down and then rebound to shape"; prototype `motion.py`,
-`motion-slow.mp4`, `motion-real.mp4`; not yet approved). A joined menu or pill does not scale as a whole:
+**Drop, rebound, fill** (owner 2026-11-11: "make it drop down and then rebound to shape", then "When menu is
+dropping it should rebound a bit and then start filling to the left at resting line"; prototype `motion2.py`).
+A joined menu does not scale as a whole. In order:
 
-- a bead swells under the control; the height then runs ahead on a spring with damping ratio 0.62 (stiffness 520 for
-  the menu, 480 for the pill) and passes its rest length by about 8 %, once;
-- the width follows 30 ms later on a calmer spring (0.80, 620);
-- while the height is past its rest the body is narrower by 0.6 of that excess, and wider while it is short of it,
-  so the rebound reads as one mass;
-- corners relax from the bead's full round to the pane's own radius with the width; the reach is up to 1.5 times
-  its rest value while it pours;
-- content waits for the width (it never stands outside the glass), then arrives top to bottom;
-- closing has no bounce: content first, then height and width together back to the bead, which sinks into the body
-  (the prototype still closes the height before the width, leaving a flat slab for a moment: to fix).
-Reduced motion: a fade, as today.
+1. **Drop.** A column as wide as the control (56 dp), its outer edge on the bar's outer edge, falls from the bar. Its
+   length runs on a spring with damping ratio 0.62, stiffness 900, and passes the resting line (the menu's bottom
+   edge) by about 8 %, turning at about 133 ms. While it is past the line it is narrower by the same share.
+2. **Rebound.** It comes back to the resting line on the same spring (one overshoot, no ringing after it).
+3. **Fill.** 20 ms after the turn the width grows to the left on a calm spring (0.92, 900): no sideways bounce.
+4. **Rows are uncovered by the glass:** each row is clipped to the body and eases in over the 14 dp behind the
+   moving left edge; no word is ever drawn outside the glass.
+5. The reach is up to 1.5 times its rest value while the column falls, easing to rest with a critically damped
+   twin of the drop spring.
+
+Closing has no bounce: the width empties to the right first (critically damped, stiffness 2400), the column is drawn
+up 70 ms later (2000), the rows fade as the edge passes them.
+
+The pill does the same upwards: it rises 44 dp narrow (half width 24 dp) on (0.62, 800), passes its rest, turns,
+then widens to its full width on (0.92, 900); its label appears once it is 70 % wide.
+
+A menu that opens from a control not at the body's end, or upwards from a chip on the message box, uses the same
+order with the column under (or over) its control and the fill running both ways to its rest box.
+
+Springs keep their velocity when reversed mid-flight (the kit's springs already do). Reduced motion: a fade, as
+today. The rows are readable about 0.3 s after the tap (today about 0.2 s); the owner has seen that in the
+prototype.
 
 The menu's own "frost while it grows" transform no longer applies to a joined menu: the field follows the growing
 box each frame, so the lens is never misaligned.
