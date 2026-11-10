@@ -1952,10 +1952,10 @@ internal class Oc2Gateway(
                         name,
                         listed
                             .filter { it.enabled }
-                            .map { it.modelID ?: it.id.removePrefix("$id/") }
+                            .map { Oc2SessionSelection.catalogModelId(it) }
                             .toImmutableList(),
                         listed
-                            .associate { (it.modelID ?: it.id.removePrefix("$id/")) to it.raw }
+                            .associate { Oc2SessionSelection.catalogModelId(it) to it.raw }
                             .toImmutableMap(),
                     )
                 }
@@ -1965,7 +1965,7 @@ internal class Oc2Gateway(
                 providers,
                 providers,
                 default?.providerID,
-                default?.let { it.modelID ?: it.id.removePrefix("${it.providerID}/") },
+                default?.let { Oc2SessionSelection.catalogModelId(it) },
             )
             .ok()
     }
