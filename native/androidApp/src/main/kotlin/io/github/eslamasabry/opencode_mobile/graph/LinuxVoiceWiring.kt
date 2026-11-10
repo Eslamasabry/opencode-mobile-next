@@ -40,6 +40,8 @@ import io.github.eslamasabry.oc.engine.runtime.host.RuntimePhase
 import io.github.eslamasabry.oc.engine.runtime.host.RuntimeStatus
 import io.github.eslamasabry.oc.engine.runtime.server.AppOpenStart
 import io.github.eslamasabry.oc.engine.runtime.server.LocalServerGate
+import io.github.eslamasabry.oc.engine.runtime.server.OpenCodeVersions
+import io.github.eslamasabry.oc.engine.runtime.server.PhoneWorkIdle
 import io.github.eslamasabry.oc.engine.runtime.server.LocalServerWait
 import io.github.eslamasabry.oc.engine.runtime.server.LaunchMode
 import io.github.eslamasabry.oc.engine.runtime.server.PhoneServerPort
@@ -821,9 +823,13 @@ internal constructor(
     private suspend fun publish() {
         val status = (runtimeStatus() as? Outcome.Ok)?.value
         val stopped = withContext(io) { runCatchingBlocking { stoppedByPerson() } ?: true }
+        val owner = ownerId()?.let { profiles.profile(it) }?.profile
+        val versions = OpenCodeVersions.of(status, owner?.serverVersion, owner?.requiresOpenCode2Migration != true)
         facts.update {
             it.copy(
                 status = status,
+                installedVersion = versions.installed,
+                pinnedVersion = versions.pinned,
                 stoppedByPerson = stopped,
                 replyRunning = ownerId()?.raw?.let { owner -> leases.busy.value[owner] } == true,
                 // This phone offers the OpenCode 2 move while its saved server still needs it.
@@ -1009,8 +1015,22 @@ internal constructor(
     suspend fun mayUpdate(): Boolean {
         val status = (runtimeStatus() as? Outcome.Ok)?.value ?: return false
         if (!status.serverRunning) return true
-        val owner = ownerId()?.raw ?: return false
-        return leases.busy.value[owner] == false
+        return readWorkIdle().idle
+    }
+
+    /** What the idle decision saw, for the one-line log (no personal data). */
+    data class WorkIdle(val idle: Boolean, val lease: Boolean?, val direct: Boolean?, val agent: Boolean)
+
+    /**
+     * Known idle for the owner's server: the chat-lease reading when there is one, else a status read made now (the
+     * lease map has no entry until a connected server has been read), and the phone agent's own chat not working.
+     */
+    suspend fun readWorkIdle(): WorkIdle {
+        val owner = ownerId()?.raw
+        val lease = owner?.let { leases.busy.value[it] }
+        val direct = if (owner != null && lease == null) leases.readNow(owner) else null
+        val agent = agentWorkBusy()
+        return WorkIdle(PhoneWorkIdle.knownIdle(lease, direct, agent), lease, direct, agent)
     }
 
     /** An explicit idle-policy edit is bounded and never manufactures a supported receipt. */
@@ -1569,6 +1589,16 @@ internal constructor(
     suspend fun stopServer(): Outcome<Unit> = stopNow()
 
     suspend fun refreshServer() = refreshNow()
+
+    /** The setup engine's OpenCode job, as This phone's Update row shows it (running or failed last time). */
+    fun noteUpdateJob(running: Boolean, failed: Boolean) =
+        facts.update { it.copy(updateRunning = running, updateFailed = failed) }
+
+    /** The saved server still needs the OpenCode 2 move (a half-finished switch). */
+    fun switchPending(): Boolean = facts.value.needsOpenCode2Move
+
+    /** Flutter `localPhoneAgentWorkBusy`: the phone agent's own chat on this server is working (its `<owner>.agents` reading). */
+    fun agentWorkBusy(): Boolean = ownerId()?.raw?.let { owner -> leases.busy.value["$owner.agents"] } == true
 
     fun serverSource(update: suspend () -> Outcome<Unit>): PhoneServerSource =
         object : PhoneServerSource {
