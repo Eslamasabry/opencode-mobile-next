@@ -443,9 +443,8 @@ public fun ServerEditorScreen(
                 )
             }
         }
-        Column(
+        RailColumn(
             Modifier.fillMaxSize().verticalScroll(scroll).padding(LocalKitTokens.current.gutter.dp),
-            verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
             if (state.newServer) {
                 val total =
@@ -491,34 +490,36 @@ public fun ServerEditorScreen(
                         stringResource(Res.string.firstRunAgentsSideBySide),
                         role = TypeRole.Secondary,
                     )
-                    for (kind in
-                        listOf(BackendKind.OpenCode2, BackendKind.Codex, BackendKind.Paseo)) KitRow(
-                        title = backendName(kind),
-                        leading =
-                            KitRowLeading.Glyph(
-                                when (kind) {
-                                    BackendKind.OpenCode2 -> KitIcons.computer
-                                    BackendKind.Codex -> KitIcons.code
-                                    BackendKind.Paseo -> KitIcons.agent
-                                }
-                            ),
-                        supporting =
-                            stringResource(
-                                when (kind) {
-                                    BackendKind.OpenCode2 -> Res.string.addServerTypeOpenCodeDetail
-                                    BackendKind.Codex -> Res.string.addServerTypeCodexDetail
-                                    BackendKind.Paseo -> Res.string.addServerTypePaseoDetail
-                                }
-                            ),
-                        supportingMaxLines =
-                            2, // F: lib/ui/screens/servers/profile_editor_steps.dart:372
-                        trailing = KitRowTrailing.Chevron,
-                        onClick = {
-                            backend = kind
-                            tailscale = false
-                            actions.step(ServerEditorStep.Connect)
-                        },
-                    )
+                    KitRowGroup {
+                        for (kind in
+                            listOf(BackendKind.OpenCode2, BackendKind.Codex, BackendKind.Paseo)) KitRow(
+                            title = backendName(kind),
+                            leading =
+                                KitRowLeading.Glyph(
+                                    when (kind) {
+                                        BackendKind.OpenCode2 -> KitIcons.computer
+                                        BackendKind.Codex -> KitIcons.code
+                                        BackendKind.Paseo -> KitIcons.agent
+                                    }
+                                ),
+                            supporting =
+                                stringResource(
+                                    when (kind) {
+                                        BackendKind.OpenCode2 -> Res.string.addServerTypeOpenCodeDetail
+                                        BackendKind.Codex -> Res.string.addServerTypeCodexDetail
+                                        BackendKind.Paseo -> Res.string.addServerTypePaseoDetail
+                                    }
+                                ),
+                            supportingMaxLines =
+                                2, // F: lib/ui/screens/servers/profile_editor_steps.dart:372
+                            trailing = KitRowTrailing.Chevron,
+                            onClick = {
+                                backend = kind
+                                tailscale = false
+                                actions.step(ServerEditorStep.Connect)
+                            },
+                        )
+                    }
                     Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
                     KitRowGroup(label = stringResource(Res.string.serversAddOtherWays)) {
                         if (state.canTailscale)
@@ -1185,5 +1186,18 @@ private fun EditorLinkMoment(link: KitServersLinkState, state: ServerEditorUi, a
                 textAlign = TextAlign.Center,
             )
         }
+    }
+}
+
+/**
+ * The page's padded column, named as the rail its rows and row groups sit on. The page bleeds (its frame lays no
+ * gutter), so without this a row group stepped in a second gutter: on Glass, Soft and Brutal the "other ways" panel
+ * was 16 dp narrower than the words above it, and the three kinds, loose rows, did not line up with it (seen on the
+ * emulator 2026-11-10).
+ */
+@Composable
+private fun RailColumn(modifier: Modifier, content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit) {
+    androidx.compose.runtime.CompositionLocalProvider(LocalKitOnRail provides true) {
+        Column(modifier, verticalArrangement = Arrangement.spacedBy(Space.S3.dp), content = content)
     }
 }
