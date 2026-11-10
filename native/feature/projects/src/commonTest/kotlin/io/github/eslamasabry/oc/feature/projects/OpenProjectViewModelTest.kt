@@ -486,4 +486,19 @@ class OpenProjectViewModelTest {
         assertTrue(nav.routes.isEmpty())
         assertEquals(null, vm.state.value.refusedPath)
     }
+
+    @Test
+    fun `PATH-REFUSED a typed home path says why on the page instead of closing the dialog and doing nothing`() {
+        val nav = Nav()
+        val vm = OpenProjectViewModel(nav, Servers(listOf(computer())), SessionOpenedFolders())
+        vm.chooseServer(pcId)
+        vm.askPath()
+        vm.finishPath("/root")
+        assertEquals(null, vm.state.value.dialog)
+        assertTrue(nav.routes.isEmpty(), "home is never opened as a project")
+        assertEquals("/root", vm.state.value.refusedPath)
+        // Choosing a server again starts the page clean.
+        vm.chooseServer(pcId)
+        assertEquals(null, vm.state.value.refusedPath)
+    }
 }
