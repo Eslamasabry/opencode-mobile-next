@@ -111,6 +111,8 @@ class AppTelemetryHealth(
             )
         this.health = health
         health.start()
+        // The install-to-first-reply funnel watches the events below, so it is attached before any of them is sent.
+        telemetry.attachJourney(PrefsJourneyMemory(TelemetryAnswers(stores.prefs, stores.lanes.app), scope))
         // app_open cold and update_installed (`oc.telemetry.lastVersion`, Flutter's key and value shape).
         scope.launch {
             val answers = TelemetryAnswers(stores.prefs, stores.lanes.app)
@@ -291,7 +293,11 @@ class AppTelemetryHealth(
         val listener =
             Window.OnFrameMetricsAvailableListener { _, metrics, _ ->
                 val total = metrics.getMetric(FrameMetrics.TOTAL_DURATION)
-                health?.jank?.onFrames(total = 1, slow = if (total > budgetNs) 1 else 0)
+                health?.jank?.onFrames(
+                    total = 1,
+                    slow = if (total > budgetNs) 1 else 0,
+                    frozen = if (total > FROZEN_FRAME_NS) 1 else 0,
+                )
             }
         runCatching { window.addOnFrameMetricsAvailableListener(listener, main) }.onSuccess {
             framesOn = window to listener
@@ -346,6 +352,9 @@ class AppTelemetryHealth(
     companion object {
         /** How often quiet turns and dropped streams are looked at. */
         private const val JOURNEY_TICK_MS = 30_000L
+
+        /** A frame this slow is frozen by Android vitals' definition (700 ms). */
+        private const val FROZEN_FRAME_NS = 700_000_000L
 
         /** The contract's `agent_start.fail_kind` for an agent host failure. */
         fun agentFailKind(failure: PaseoFailureKind?): String =

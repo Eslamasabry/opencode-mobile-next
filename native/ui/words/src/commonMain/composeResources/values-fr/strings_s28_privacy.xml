@@ -22,9 +22,9 @@
     <string name="collectAgents">Si un agent a démarré, et le type d’échec</string>
     <string name="collectBackground">Pourquoi le service en arrière-plan s’est arrêté</string>
     <string name="collectUpdates">Si une mise à jour s’est installée, et le type d’échec</string>
-    <string name="collectPages">Les types de pages et de fonctions que vous utilisez, les étapes de configuration, la première réponse et la durée d’une visite</string>
+    <string name="collectPages">Les types de pages et de fonctions que vous utilisez, les étapes de configuration, la première réponse, la durée d’une visite et le nombre de messages envoyés pendant celle-ci</string>
     <string name="collectStart">La rapidité de démarrage de l’application</string>
-    <string name="collectSmooth">La fluidité des pages, et la fréquence de rafraîchissement de l’écran</string>
+    <string name="collectSmooth">La fluidité des pages (la part d’images lentes et figées), et la fréquence de rafraîchissement de l’écran</string>
     <string name="collectMemory">Les avertissements de mémoire d’Android</string>
     <string name="collectDevice">Des tranches pour la mémoire et l’espace libre de votre téléphone, son type de processeur et la version de WebView, si les notifications sont autorisées, et le type et la version du serveur que vous utilisez</string>
     <string name="collectCrashKind">Le type d’erreur et l’endroit du code de l’application où elle s’est produite, jamais son message</string>

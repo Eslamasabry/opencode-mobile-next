@@ -3,6 +3,7 @@ package io.github.eslamasabry.opencode_mobile.graph
 import io.github.eslamasabry.oc.core.data.kv.KeyValueStore
 import io.github.eslamasabry.oc.engine.analytics.health.ApprovalMeter
 import io.github.eslamasabry.oc.engine.analytics.health.FirstReplyOnce
+import io.github.eslamasabry.oc.engine.analytics.health.JourneyMemory
 import io.github.eslamasabry.oc.engine.analytics.health.SetupJobState
 import io.github.eslamasabry.oc.engine.analytics.health.SetupJourneyCodec
 import io.github.eslamasabry.oc.engine.analytics.health.SetupJourneyMemory
@@ -78,6 +79,18 @@ internal class PrefsSetupMemory(
 
     override fun save(saved: SetupJourneySaved?) {
         scope.launch { answers.saveSetupJourney(saved?.let(SetupJourneyCodec::encode)) }
+    }
+}
+
+/** [JourneyMemory] over the app's preferences: reads in memory, writes on the app scope. */
+internal class PrefsJourneyMemory(
+    private val answers: TelemetryAnswers,
+    private val scope: CoroutineScope,
+) : JourneyMemory {
+    override fun load(): String? = answers.journey()
+
+    override fun save(encoded: String) {
+        scope.launch { answers.saveJourney(encoded) }
     }
 }
 
