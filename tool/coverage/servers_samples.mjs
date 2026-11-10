@@ -12,7 +12,7 @@ import { finishFamily } from './oc_cases_lib.mjs';
 import { serversFamilies } from './families/servers.mjs';
 
 const outDir = process.argv[2] ?? 'test/fixtures/coverage';
-const protocol = process.argv[3] ?? '/home/owner/node_modules/@getpaseo/protocol/dist/messages.js';
+const protocol = process.argv[3] ?? '/home/eslam/node_modules/@getpaseo/protocol/dist/messages.js';
 const protocolMessages = await import(pathToFileURL(protocol).href);
 const families = serversFamilies({
   oc2File: 'contracts/opencode2-openapi-beta-18600.json',

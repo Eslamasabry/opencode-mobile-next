@@ -8,7 +8,7 @@
 //   flutter test --concurrency=1 --dart-define=SEND_FAILURE_OUT=<dir> \
 //     tool/capture/send_failure_test.dart
 //
-// Output: /home/owner/Storage2/launch-footage/send-failure/<kind>-dark.png
+// Output: /home/eslam/Storage2/launch-footage/send-failure/<kind>-dark.png
 //
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -25,7 +25,7 @@ import 'fixtures.dart';
 
 const _out = String.fromEnvironment(
   'SEND_FAILURE_OUT',
-  defaultValue: '/home/owner/Storage2/launch-footage/send-failure',
+  defaultValue: '/home/eslam/Storage2/launch-footage/send-failure',
 );
 const _size = Size(412, 915);
 const _session = 'kilo-chat';

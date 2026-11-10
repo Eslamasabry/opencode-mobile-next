@@ -6,7 +6,7 @@
 //   TZ=UTC flutter test --concurrency=1 tool/capture/stopgear_test.dart
 //   ... --dart-define=VISION_PASS=pass2 (file prefix)
 //
-// Output: /home/owner/vision-assets/out/stopgear/renders/<pass>-<scene>.png
+// Output: /home/eslam/vision-assets/out/stopgear/renders/<pass>-<scene>.png
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -35,7 +35,7 @@ import 'fixtures.dart';
 
 const _out = String.fromEnvironment(
   'VISION_OUT',
-  defaultValue: '/home/owner/vision-assets/out/stopgear/renders',
+  defaultValue: '/home/eslam/vision-assets/out/stopgear/renders',
 );
 
 /// The pass the images belong to ("pass1"), the file name's prefix.

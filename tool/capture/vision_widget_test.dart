@@ -31,7 +31,7 @@ const _renders = String.fromEnvironment(
 );
 const _out = String.fromEnvironment(
   'VISION_OUT',
-  defaultValue: '/home/owner/vision-assets/out/vision-widget',
+  defaultValue: '/home/eslam/vision-assets/out/vision-widget',
 );
 
 /// The Robolectric renders are 3x (xxhdpi).

@@ -5,7 +5,7 @@
 //     tool/capture/vision_chat_test.dart
 //   flutter test --concurrency=1 tool/capture/vision_chat_test.dart
 //
-// Output: /home/owner/Storage2/launch-footage/vision-chat/<phase>-<light|dark>.png
+// Output: /home/eslam/Storage2/launch-footage/vision-chat/<phase>-<light|dark>.png
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/domain/models.dart';
@@ -19,7 +19,7 @@ import 'package:shared_preferences_platform_interface/shared_preferences_platfor
 import 'fixtures.dart';
 
 const _phase = String.fromEnvironment('VISION_PHASE', defaultValue: 'after');
-const _dir = '/home/owner/Storage2/launch-footage/vision-chat';
+const _dir = '/home/eslam/Storage2/launch-footage/vision-chat';
 
 class _Api extends CaptureApi {
   // What OpenCode 2 advertises: it asks before acting and steers a send made

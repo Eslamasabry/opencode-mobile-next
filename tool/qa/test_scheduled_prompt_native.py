@@ -6,9 +6,9 @@ import subprocess
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
-KOTLIN = Path(os.path.expanduser('~/.sdkman/candidates/kotlin/2.3.20'))
-JDK = Path(os.path.expanduser('~/Storage/tmp/codex-audit3-temurin17/jdk-17.0.20.1+1'))
-CACHE = Path(os.path.expanduser('~/.gradle/caches/modules-2/files-2.1'))
+KOTLIN = Path('/home/eslam/.sdkman/candidates/kotlin/2.3.20')
+JDK = Path('/home/eslam/Storage/tmp/codex-audit3-temurin17/jdk-17.0.20.1+1')
+CACHE = Path('/home/eslam/.gradle/caches/modules-2/files-2.1')
 MAIN = ROOT / 'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile'
 TEST = ROOT / 'android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile'
 
@@ -24,7 +24,7 @@ def main():
     junit = artifact('junit/junit/4.13.2')
     hamcrest = artifact('org.hamcrest/hamcrest-core/1.3')
     json = artifact("org.json/json/20180813")
-    android = Path(os.path.expanduser('~/Android/Sdk/platforms/android-37.0/android.jar'))
+    android = Path("/home/eslam/Android/Sdk/platforms/android-37.0/android.jar")
     classpath = os.pathsep.join(map(str, (junit, hamcrest, json, android)))
     with tempfile.TemporaryDirectory(prefix='scheduled-prompt-jvm-') as directory:
         output = Path(directory) / 'tests.jar'

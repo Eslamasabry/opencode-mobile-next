@@ -54,13 +54,13 @@
     "command": "opencode acp",
     "continuation_epoch": "1",
     "continuation_reset_pending": "",
-    "core_hash_breakdown": "{\"version\":\"v5\",\"fields\":{\"AcceptStartupDialogs\":\"e3b0c44298fc1c14\",\"Command\":\"8d9499c6f1b2e021\",\"CopyFiles\":\"3140490a80a0aec5\",\"Env\":\"3f260839069aa706\",\"FPExtra\":\"355bdff729bcfa56\",\"Lifecycle\":\"e3b0c44298fc1c14\",\"MCPServers\":\"e3b0c44298fc1c14\",\"MouseOn\":\"b1865da277ec01c2\",\"OverlayDir\":\"e3b0c44298fc1c14\",\"OverlayProviders\":\"544d9fef15d8e774\",\"PreStart\":\"f5847136448f9ab4\",\"SessionSetup\":\"e3b0c44298fc1c14\",\"SessionSetupScript\":\"e3b0c44298fc1c14\"},\"copy_files\":[{\"rel_dst\":\".gc/agents/dogs/gastown.dog-1/.opencode/plugins/gascity.js\",\"src\":\"/home/owner/Storage/Code/gascity-spike/city/.gc/agents/dogs/gastown.dog-1/.opencode/plugins/gascity.js\",\"probed\":true,\"content_hash\":\"cd31c4b20a0ac5db36c8c747ba8ad5152ba60ccd16e3a3c1a31f2bfb7748d702\"},{\"rel_dst\":\".gc/settings.json\",\"src\":\"/home/owner/Storage/Code/gascity-spike/city/.gc/settings.json\",\"probed\":false}]}",
+    "core_hash_breakdown": "{\"version\":\"v5\",\"fields\":{\"AcceptStartupDialogs\":\"e3b0c44298fc1c14\",\"Command\":\"8d9499c6f1b2e021\",\"CopyFiles\":\"3140490a80a0aec5\",\"Env\":\"3f260839069aa706\",\"FPExtra\":\"355bdff729bcfa56\",\"Lifecycle\":\"e3b0c44298fc1c14\",\"MCPServers\":\"e3b0c44298fc1c14\",\"MouseOn\":\"b1865da277ec01c2\",\"OverlayDir\":\"e3b0c44298fc1c14\",\"OverlayProviders\":\"544d9fef15d8e774\",\"PreStart\":\"f5847136448f9ab4\",\"SessionSetup\":\"e3b0c44298fc1c14\",\"SessionSetupScript\":\"e3b0c44298fc1c14\"},\"copy_files\":[{\"rel_dst\":\".gc/agents/dogs/gastown.dog-1/.opencode/plugins/gascity.js\",\"src\":\"/home/eslam/Storage/Code/gascity-spike/city/.gc/agents/dogs/gastown.dog-1/.opencode/plugins/gascity.js\",\"probed\":true,\"content_hash\":\"cd31c4b20a0ac5db36c8c747ba8ad5152ba60ccd16e3a3c1a31f2bfb7748d702\"},{\"rel_dst\":\".gc/settings.json\",\"src\":\"/home/eslam/Storage/Code/gascity-spike/city/.gc/settings.json\",\"probed\":false}]}",
     "creation_complete_at": "2026-09-10T18:02:27Z",
     "detached_at": "",
     "effective_sleep_after_idle": "off",
     "gc.trigger_bead_id": "gc-19",
     "gc.trigger_bead_store_ref": "city",
-    "gc.work_dir": "/home/owner/Storage/Code/gascity-spike/city/.gc/agents/dogs/gastown.dog-1",
+    "gc.work_dir": "/home/eslam/Storage/Code/gascity-spike/city/.gc/agents/dogs/gastown.dog-1",
     "generation": "2",
     "idle_claim_nudge_at": "2026-09-10T18:02:22Z",
     "idle_claim_nudge_count": "0",
@@ -101,7 +101,7 @@
     "wake_mode": "fresh",
     "wake_request": "",
     "wake_requested_at": "",
-    "work_dir": "/home/owner/Storage/Code/gascity-spike/city/.gc/agents/dogs/gastown.dog-1"
+    "work_dir": "/home/eslam/Storage/Code/gascity-spike/city/.gc/agents/dogs/gastown.dog-1"
    }
   },
   {
@@ -156,13 +156,13 @@
     "command": "opencode acp",
     "continuation_epoch": "1",
     "continuation_reset_pending": "",
-    "core_hash_breakdown": "{\"version\":\"v5\",\"fields\":{\"AcceptStartupDialogs\":\"e3b0c44298fc1c14\",\"Command\":\"8d9499c6f1b2e021\",\"CopyFiles\":\"e559b840debc878d\",\"Env\":\"b2d0bd36e5ce5e2b\",\"FPExtra\":\"144fa3f11014f43c\",\"Lifecycle\":\"e3b0c44298fc1c14\",\"MCPServers\":\"e3b0c44298fc1c14\",\"MouseOn\":\"b1865da277ec01c2\",\"OverlayDir\":\"e3b0c44298fc1c14\",\"OverlayProviders\":\"544d9fef15d8e774\",\"PreStart\":\"c6a31f5ab673a8b4\",\"SessionSetup\":\"e3b0c44298fc1c14\",\"SessionSetupScript\":\"e3b0c44298fc1c14\"},\"copy_files\":[{\"rel_dst\":\".gc/worktrees/ocproof/polecats/gastown.furiosa/.opencode/plugins/gascity.js\",\"src\":\"/home/owner/Storage/Code/gascity-spike/city/.gc/worktrees/ocproof/polecats/gastown.furiosa/.opencode/plugins/gascity.js\",\"probed\":true,\"content_hash\":\"cd31c4b20a0ac5db36c8c747ba8ad5152ba60ccd16e3a3c1a31f2bfb7748d702\"},{\"rel_dst\":\".gc/settings.json\",\"src\":\"/home/owner/Storage/Code/gascity-spike/city/.gc/settings.json\",\"probed\":false}]}",
+    "core_hash_breakdown": "{\"version\":\"v5\",\"fields\":{\"AcceptStartupDialogs\":\"e3b0c44298fc1c14\",\"Command\":\"8d9499c6f1b2e021\",\"CopyFiles\":\"e559b840debc878d\",\"Env\":\"b2d0bd36e5ce5e2b\",\"FPExtra\":\"144fa3f11014f43c\",\"Lifecycle\":\"e3b0c44298fc1c14\",\"MCPServers\":\"e3b0c44298fc1c14\",\"MouseOn\":\"b1865da277ec01c2\",\"OverlayDir\":\"e3b0c44298fc1c14\",\"OverlayProviders\":\"544d9fef15d8e774\",\"PreStart\":\"c6a31f5ab673a8b4\",\"SessionSetup\":\"e3b0c44298fc1c14\",\"SessionSetupScript\":\"e3b0c44298fc1c14\"},\"copy_files\":[{\"rel_dst\":\".gc/worktrees/ocproof/polecats/gastown.furiosa/.opencode/plugins/gascity.js\",\"src\":\"/home/eslam/Storage/Code/gascity-spike/city/.gc/worktrees/ocproof/polecats/gastown.furiosa/.opencode/plugins/gascity.js\",\"probed\":true,\"content_hash\":\"cd31c4b20a0ac5db36c8c747ba8ad5152ba60ccd16e3a3c1a31f2bfb7748d702\"},{\"rel_dst\":\".gc/settings.json\",\"src\":\"/home/eslam/Storage/Code/gascity-spike/city/.gc/settings.json\",\"probed\":false}]}",
     "creation_complete_at": "2026-09-10T17:57:55Z",
     "detached_at": "",
     "effective_sleep_after_idle": "off",
     "gc.trigger_bead_id": "gc-1",
     "gc.trigger_bead_store_ref": "rig:ocproof",
-    "gc.work_dir": "/home/owner/Storage/Code/gascity-spike/city/.gc/worktrees/ocproof/polecats/gastown.furiosa",
+    "gc.work_dir": "/home/eslam/Storage/Code/gascity-spike/city/.gc/worktrees/ocproof/polecats/gastown.furiosa",
     "generation": "2",
     "idle_claim_nudge_at": "2026-09-10T17:57:52Z",
     "idle_claim_nudge_count": "0",
@@ -203,7 +203,7 @@
     "wake_mode": "fresh",
     "wake_request": "",
     "wake_requested_at": "",
-    "work_dir": "/home/owner/Storage/Code/gascity-spike/city/.gc/worktrees/ocproof/polecats/gastown.furiosa"
+    "work_dir": "/home/eslam/Storage/Code/gascity-spike/city/.gc/worktrees/ocproof/polecats/gastown.furiosa"
    }
   },
   {
@@ -292,7 +292,7 @@
     "configured_named_session": "true",
     "continuation_epoch": "1",
     "continuation_reset_pending": "",
-    "core_hash_breakdown": "{\"version\":\"v5\",\"fields\":{\"AcceptStartupDialogs\":\"e3b0c44298fc1c14\",\"Command\":\"8d9499c6f1b2e021\",\"CopyFiles\":\"1f75652356bb5a72\",\"Env\":\"15892a92ce26b073\",\"FPExtra\":\"267f392493f6a2f1\",\"Lifecycle\":\"e3b0c44298fc1c14\",\"MCPServers\":\"e3b0c44298fc1c14\",\"MouseOn\":\"b1865da277ec01c2\",\"OverlayDir\":\"e3b0c44298fc1c14\",\"OverlayProviders\":\"544d9fef15d8e774\",\"PreStart\":\"d57ef524d43f6c84\",\"SessionSetup\":\"e3b0c44298fc1c14\",\"SessionSetupScript\":\"e3b0c44298fc1c14\"},\"copy_files\":[{\"rel_dst\":\".gc/agents/ocproof/witness/.opencode/plugins/gascity.js\",\"src\":\"/home/owner/Storage/Code/gascity-spike/city/.gc/agents/ocproof/witness/.opencode/plugins/gascity.js\",\"probed\":true,\"content_hash\":\"cd31c4b20a0ac5db36c8c747ba8ad5152ba60ccd16e3a3c1a31f2bfb7748d702\"},{\"rel_dst\":\".gc/settings.json\",\"src\":\"/home/owner/Storage/Code/gascity-spike/city/.gc/settings.json\",\"probed\":false}]}",
+    "core_hash_breakdown": "{\"version\":\"v5\",\"fields\":{\"AcceptStartupDialogs\":\"e3b0c44298fc1c14\",\"Command\":\"8d9499c6f1b2e021\",\"CopyFiles\":\"1f75652356bb5a72\",\"Env\":\"15892a92ce26b073\",\"FPExtra\":\"267f392493f6a2f1\",\"Lifecycle\":\"e3b0c44298fc1c14\",\"MCPServers\":\"e3b0c44298fc1c14\",\"MouseOn\":\"b1865da277ec01c2\",\"OverlayDir\":\"e3b0c44298fc1c14\",\"OverlayProviders\":\"544d9fef15d8e774\",\"PreStart\":\"d57ef524d43f6c84\",\"SessionSetup\":\"e3b0c44298fc1c14\",\"SessionSetupScript\":\"e3b0c44298fc1c14\"},\"copy_files\":[{\"rel_dst\":\".gc/agents/ocproof/witness/.opencode/plugins/gascity.js\",\"src\":\"/home/eslam/Storage/Code/gascity-spike/city/.gc/agents/ocproof/witness/.opencode/plugins/gascity.js\",\"probed\":true,\"content_hash\":\"cd31c4b20a0ac5db36c8c747ba8ad5152ba60ccd16e3a3c1a31f2bfb7748d702\"},{\"rel_dst\":\".gc/settings.json\",\"src\":\"/home/eslam/Storage/Code/gascity-spike/city/.gc/settings.json\",\"probed\":false}]}",
     "creation_complete_at": "2026-09-10T17:57:27Z",
     "detached_at": "",
     "effective_sleep_after_idle": "off",
@@ -334,7 +334,7 @@
     "wake_mode": "fresh",
     "wake_request": "",
     "wake_requested_at": "",
-    "work_dir": "/home/owner/Storage/Code/gascity-spike/city/.gc/agents/ocproof/witness"
+    "work_dir": "/home/eslam/Storage/Code/gascity-spike/city/.gc/agents/ocproof/witness"
    }
   },
   {
@@ -353,7 +353,7 @@
    "metadata": {
     "gc.formula_hash": "9442d1c832fd61f6e7948c07272cf6aedb2c86f4ab74768e5e229e8472a12e8e",
     "gc.formula_name": "mol-digest-generate",
-    "gc.formula_source": "/home/owner/.gc/cache/repos/d0e8066c2997e7d4c2c4c26b6ee527c7659dbd55626fb106c555d89af11b3996/gastown/formulas/mol-digest-generate.toml",
+    "gc.formula_source": "/home/eslam/.gc/cache/repos/d0e8066c2997e7d4c2c4c26b6ee527c7659dbd55626fb106c555d89af11b3996/gastown/formulas/mol-digest-generate.toml",
     "gc.kind": "wisp",
     "gc.routed_to": "gastown.dog",
     "gc.var.event_timeout": "30",
@@ -382,7 +382,7 @@
     "configured_named_session": "true",
     "continuation_epoch": "1",
     "continuation_reset_pending": "",
-    "core_hash_breakdown": "{\"version\":\"v5\",\"fields\":{\"AcceptStartupDialogs\":\"e3b0c44298fc1c14\",\"Command\":\"8d9499c6f1b2e021\",\"CopyFiles\":\"399c734c1e986537\",\"Env\":\"528083f8732c9a3d\",\"FPExtra\":\"267f392493f6a2f1\",\"Lifecycle\":\"e3b0c44298fc1c14\",\"MCPServers\":\"e3b0c44298fc1c14\",\"MouseOn\":\"b1865da277ec01c2\",\"OverlayDir\":\"e3b0c44298fc1c14\",\"OverlayProviders\":\"544d9fef15d8e774\",\"PreStart\":\"6ed9b7dbaee52f96\",\"SessionSetup\":\"e3b0c44298fc1c14\",\"SessionSetupScript\":\"e3b0c44298fc1c14\"},\"copy_files\":[{\"rel_dst\":\".gc/agents/deacon/.opencode/plugins/gascity.js\",\"src\":\"/home/owner/Storage/Code/gascity-spike/city/.gc/agents/deacon/.opencode/plugins/gascity.js\",\"probed\":true,\"content_hash\":\"cd31c4b20a0ac5db36c8c747ba8ad5152ba60ccd16e3a3c1a31f2bfb7748d702\"},{\"rel_dst\":\".gc/settings.json\",\"src\":\"/home/owner/Storage/Code/gascity-spike/city/.gc/settings.json\",\"probed\":false}]}",
+    "core_hash_breakdown": "{\"version\":\"v5\",\"fields\":{\"AcceptStartupDialogs\":\"e3b0c44298fc1c14\",\"Command\":\"8d9499c6f1b2e021\",\"CopyFiles\":\"399c734c1e986537\",\"Env\":\"528083f8732c9a3d\",\"FPExtra\":\"267f392493f6a2f1\",\"Lifecycle\":\"e3b0c44298fc1c14\",\"MCPServers\":\"e3b0c44298fc1c14\",\"MouseOn\":\"b1865da277ec01c2\",\"OverlayDir\":\"e3b0c44298fc1c14\",\"OverlayProviders\":\"544d9fef15d8e774\",\"PreStart\":\"6ed9b7dbaee52f96\",\"SessionSetup\":\"e3b0c44298fc1c14\",\"SessionSetupScript\":\"e3b0c44298fc1c14\"},\"copy_files\":[{\"rel_dst\":\".gc/agents/deacon/.opencode/plugins/gascity.js\",\"src\":\"/home/eslam/Storage/Code/gascity-spike/city/.gc/agents/deacon/.opencode/plugins/gascity.js\",\"probed\":true,\"content_hash\":\"cd31c4b20a0ac5db36c8c747ba8ad5152ba60ccd16e3a3c1a31f2bfb7748d702\"},{\"rel_dst\":\".gc/settings.json\",\"src\":\"/home/eslam/Storage/Code/gascity-spike/city/.gc/settings.json\",\"probed\":false}]}",
     "creation_complete_at": "2026-09-10T17:57:27Z",
     "detached_at": "",
     "effective_sleep_after_idle": "off",
@@ -422,7 +422,7 @@
     "wake_mode": "fresh",
     "wake_request": "",
     "wake_requested_at": "",
-    "work_dir": "/home/owner/Storage/Code/gascity-spike/city/.gc/agents/deacon"
+    "work_dir": "/home/eslam/Storage/Code/gascity-spike/city/.gc/agents/deacon"
    }
   },
   {
@@ -447,7 +447,7 @@
     "configured_named_session": "true",
     "continuation_epoch": "1",
     "continuation_reset_pending": "",
-    "core_hash_breakdown": "{\"version\":\"v5\",\"fields\":{\"AcceptStartupDialogs\":\"e3b0c44298fc1c14\",\"Command\":\"8d9499c6f1b2e021\",\"CopyFiles\":\"f4a6abe5fa0761db\",\"Env\":\"02658bd9d5d6ebd1\",\"FPExtra\":\"267f392493f6a2f1\",\"Lifecycle\":\"e3b0c44298fc1c14\",\"MCPServers\":\"e3b0c44298fc1c14\",\"MouseOn\":\"b1865da277ec01c2\",\"OverlayDir\":\"e3b0c44298fc1c14\",\"OverlayProviders\":\"544d9fef15d8e774\",\"PreStart\":\"097dcac86cbaf033\",\"SessionSetup\":\"e3b0c44298fc1c14\",\"SessionSetupScript\":\"e3b0c44298fc1c14\"},\"copy_files\":[{\"rel_dst\":\".gc/agents/mayor/.opencode/plugins/gascity.js\",\"src\":\"/home/owner/Storage/Code/gascity-spike/city/.gc/agents/mayor/.opencode/plugins/gascity.js\",\"probed\":true,\"content_hash\":\"cd31c4b20a0ac5db36c8c747ba8ad5152ba60ccd16e3a3c1a31f2bfb7748d702\"},{\"rel_dst\":\".gc/settings.json\",\"src\":\"/home/owner/Storage/Code/gascity-spike/city/.gc/settings.json\",\"probed\":false}]}",
+    "core_hash_breakdown": "{\"version\":\"v5\",\"fields\":{\"AcceptStartupDialogs\":\"e3b0c44298fc1c14\",\"Command\":\"8d9499c6f1b2e021\",\"CopyFiles\":\"f4a6abe5fa0761db\",\"Env\":\"02658bd9d5d6ebd1\",\"FPExtra\":\"267f392493f6a2f1\",\"Lifecycle\":\"e3b0c44298fc1c14\",\"MCPServers\":\"e3b0c44298fc1c14\",\"MouseOn\":\"b1865da277ec01c2\",\"OverlayDir\":\"e3b0c44298fc1c14\",\"OverlayProviders\":\"544d9fef15d8e774\",\"PreStart\":\"097dcac86cbaf033\",\"SessionSetup\":\"e3b0c44298fc1c14\",\"SessionSetupScript\":\"e3b0c44298fc1c14\"},\"copy_files\":[{\"rel_dst\":\".gc/agents/mayor/.opencode/plugins/gascity.js\",\"src\":\"/home/eslam/Storage/Code/gascity-spike/city/.gc/agents/mayor/.opencode/plugins/gascity.js\",\"probed\":true,\"content_hash\":\"cd31c4b20a0ac5db36c8c747ba8ad5152ba60ccd16e3a3c1a31f2bfb7748d702\"},{\"rel_dst\":\".gc/settings.json\",\"src\":\"/home/eslam/Storage/Code/gascity-spike/city/.gc/settings.json\",\"probed\":false}]}",
     "creation_complete_at": "2026-09-10T17:57:27Z",
     "detached_at": "",
     "effective_sleep_after_idle": "off",
@@ -487,7 +487,7 @@
     "wake_mode": "fresh",
     "wake_request": "",
     "wake_requested_at": "",
-    "work_dir": "/home/owner/Storage/Code/gascity-spike/city/.gc/agents/mayor"
+    "work_dir": "/home/eslam/Storage/Code/gascity-spike/city/.gc/agents/mayor"
    }
   },
   {
@@ -512,7 +512,7 @@
     "configured_named_session": "true",
     "continuation_epoch": "2",
     "continuation_reset_pending": "",
-    "core_hash_breakdown": "{\"version\":\"v5\",\"fields\":{\"AcceptStartupDialogs\":\"e3b0c44298fc1c14\",\"Command\":\"8d9499c6f1b2e021\",\"CopyFiles\":\"958ce74c2f206afd\",\"Env\":\"3867693c4e2f460f\",\"FPExtra\":\"267f392493f6a2f1\",\"Lifecycle\":\"e3b0c44298fc1c14\",\"MCPServers\":\"e3b0c44298fc1c14\",\"MouseOn\":\"b1865da277ec01c2\",\"OverlayDir\":\"e3b0c44298fc1c14\",\"OverlayProviders\":\"544d9fef15d8e774\",\"PreStart\":\"50b4cd3fec02d1e4\",\"SessionSetup\":\"e3b0c44298fc1c14\",\"SessionSetupScript\":\"e3b0c44298fc1c14\"},\"copy_files\":[{\"rel_dst\":\".gc/agents/boot/.opencode/plugins/gascity.js\",\"src\":\"/home/owner/Storage/Code/gascity-spike/city/.gc/agents/boot/.opencode/plugins/gascity.js\",\"probed\":true,\"content_hash\":\"cd31c4b20a0ac5db36c8c747ba8ad5152ba60ccd16e3a3c1a31f2bfb7748d702\"},{\"rel_dst\":\".gc/settings.json\",\"src\":\"/home/owner/Storage/Code/gascity-spike/city/.gc/settings.json\",\"probed\":false}]}",
+    "core_hash_breakdown": "{\"version\":\"v5\",\"fields\":{\"AcceptStartupDialogs\":\"e3b0c44298fc1c14\",\"Command\":\"8d9499c6f1b2e021\",\"CopyFiles\":\"958ce74c2f206afd\",\"Env\":\"3867693c4e2f460f\",\"FPExtra\":\"267f392493f6a2f1\",\"Lifecycle\":\"e3b0c44298fc1c14\",\"MCPServers\":\"e3b0c44298fc1c14\",\"MouseOn\":\"b1865da277ec01c2\",\"OverlayDir\":\"e3b0c44298fc1c14\",\"OverlayProviders\":\"544d9fef15d8e774\",\"PreStart\":\"50b4cd3fec02d1e4\",\"SessionSetup\":\"e3b0c44298fc1c14\",\"SessionSetupScript\":\"e3b0c44298fc1c14\"},\"copy_files\":[{\"rel_dst\":\".gc/agents/boot/.opencode/plugins/gascity.js\",\"src\":\"/home/eslam/Storage/Code/gascity-spike/city/.gc/agents/boot/.opencode/plugins/gascity.js\",\"probed\":true,\"content_hash\":\"cd31c4b20a0ac5db36c8c747ba8ad5152ba60ccd16e3a3c1a31f2bfb7748d702\"},{\"rel_dst\":\".gc/settings.json\",\"src\":\"/home/eslam/Storage/Code/gascity-spike/city/.gc/settings.json\",\"probed\":false}]}",
     "creation_complete_at": "2026-09-10T18:02:26Z",
     "detached_at": "",
     "drain_at": "2026-09-10T18:01:22Z",
@@ -555,7 +555,7 @@
     "wake_mode": "fresh",
     "wake_request": "",
     "wake_requested_at": "",
-    "work_dir": "/home/owner/Storage/Code/gascity-spike/city/.gc/agents/boot"
+    "work_dir": "/home/eslam/Storage/Code/gascity-spike/city/.gc/agents/boot"
    }
   }
  ],

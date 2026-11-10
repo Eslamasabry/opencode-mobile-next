@@ -1,5 +1,5 @@
 {
- "generatedFrom": "2e4981744a72f255161c994493e4d5cc92518702",
+ "generatedFrom": "0b6444c441408625194ee1da9fdf7c9ff9e421a0",
  "pages": [
   {
    "id": "system",
@@ -1586,10 +1586,6 @@
      "element": "phone-setup-start-primary-open"
     },
     {
-     "page": "phone-setup-progress",
-     "element": "phone-setup-progress-termux-done-home"
-    },
-    {
      "page": "phone-setup-ready",
      "element": "phone-setup-ready-close"
     }
@@ -2056,69 +2052,6 @@
       "controller.profile != null"
      ],
      "destructive": true
-    },
-    {
-     "id": "server-switcher-sheet-phone-disconnect",
-     "type": "menu-item",
-     "label": "Disconnect (phone server card menu)",
-     "key": "termux-running-server-disconnect",
-     "file": "lib/ui/widgets/termux_running_server_entry.dart",
-     "line": 112,
-     "action": "open-sheet",
-     "target": "settings-disconnect-sheet",
-     "targetWidget": "confirmDisconnectServer",
-     "effect": "confirmDisconnectServer; on confirm controller.disconnect(keepActive: true), then pops ServerSwitcherLeave(alreadyDisconnected: true) and the shell goes to '/servers'. The server keeps running.",
-     "gates": [
-      "connected through the phone server profile"
-     ],
-     "destructive": true
-    },
-    {
-     "id": "server-switcher-sheet-phone-forget",
-     "type": "menu-item",
-     "label": "Forget saved sign-in (phone server card menu)",
-     "key": "termux-running-server-forget",
-     "file": "lib/ui/widgets/termux_running_server_entry.dart",
-     "line": 123,
-     "action": "navigate",
-     "target": "servers",
-     "targetWidget": "/servers",
-     "effect": "Pops ServerSwitcherOpenServers(ServersRouteRequest.forget(profile.id)); the Servers screen opens its remove-server confirm sheet for that profile.",
-     "gates": [
-      "a saved profile matches the phone server"
-     ],
-     "destructive": true
-    },
-    {
-     "id": "server-switcher-sheet-phone-manage",
-     "type": "menu-item",
-     "label": "Manage (phone server card menu)",
-     "key": "termux-running-server-manage",
-     "file": "lib/ui/widgets/termux_running_server_entry.dart",
-     "line": 128,
-     "action": "navigate",
-     "target": "termux-setup-installed",
-     "targetWidget": "openThisPhone",
-     "effect": "Pops ServerSwitcherOpenPhoneSetup; the shell opens This phone for Termux (openThisPhone(kind: termux), home_screen.dart:540).",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "server-switcher-sheet-phone-connect",
-     "type": "button",
-     "label": "Connect | Open (phone server card)",
-     "key": "termux-running-server-connect",
-     "file": "lib/ui/widgets/termux_running_server_entry.dart",
-     "line": 132,
-     "action": "navigate",
-     "target": "servers",
-     "targetWidget": "/servers",
-     "effect": "Card onConnect: when this shell is already connected through that profile the sheet just closes; otherwise pops ServerSwitcherOpenServers(ServersRouteRequest.connect(id, detectedRunning: true)) and the Servers screen connects without the runtime-choice detour. Card onEnterCredentials pops ServersRouteRequest.enterPhoneCredentials, which opens the editor on the phone server URL.",
-     "gates": [
-      "platformCapabilities.supportsTermux",
-      "a running or stopped managed server was observed"
-     ],
-     "destructive": false
     }
    ],
    "sheetKey": "server-switcher-sheet"
@@ -18856,11 +18789,6 @@
      "element": "servers-profile-row"
     },
     {
-     "page": "embedded-termux-running-server-entry",
-     "element": null,
-     "evidence": "lib/ui/widgets/termux_running_server_entry.dart:228"
-    },
-    {
      "page": "servers-welcome",
      "element": "servers-welcome-connect"
     },
@@ -19585,10 +19513,6 @@
     {
      "page": "servers",
      "element": "servers-profile-menu-remove"
-    },
-    {
-     "page": "embedded-termux-running-server-entry",
-     "element": "embedded-termux-running-server-entry-menu-forget"
     }
    ],
    "gates": [],
@@ -19677,14 +19601,6 @@
      "element": "server-switcher-sheet-manage"
     },
     {
-     "page": "server-switcher-sheet",
-     "element": "server-switcher-sheet-phone-connect"
-    },
-    {
-     "page": "server-switcher-sheet",
-     "element": "server-switcher-sheet-phone-forget"
-    },
-    {
      "page": "connection-status-details-sheet",
      "element": "connection-status-details-sheet-change-server"
     },
@@ -19715,10 +19631,6 @@
     {
      "page": "phone-setup-start",
      "element": "phone-setup-start-by-address"
-    },
-    {
-     "page": "phone-setup-progress",
-     "element": "phone-setup-progress-termux-connect-existing"
     },
     {
      "page": "settings-disconnect-sheet",
@@ -21287,128 +21199,12 @@
      "element": "termux-setup-installed-update"
     },
     {
-     "page": "embedded-local-agent-onboarding-block",
-     "element": "embedded-local-agent-onboarding-block-open-setup"
-    },
-    {
      "page": "phone-setup-start",
      "element": "phone-setup-start-use-termux"
     }
    ],
    "gates": [],
    "elements": [
-    {
-     "id": "phone-setup-progress-termux-get",
-     "type": "button",
-     "label": "Get Termux",
-     "key": "phone-setup-termux-get",
-     "file": "lib/ui/screens/phone_setup/phone_setup_termux_job_screen.dart",
-     "line": 582,
-     "action": "external-link",
-     "target": null,
-     "targetWidget": null,
-     "effect": "openExternalLink(context, termuxDownloadUrl) (the F-Droid page, through the external-link confirm); coming back re-checks Termux.",
-     "gates": [
-      "Termux persisted job host; corresponding person action pending"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "phone-setup-progress-termux-app-settings",
-     "type": "button",
-     "label": "App settings",
-     "key": "phone-setup-termux-app-settings",
-     "file": "lib/ui/screens/phone_setup/phone_setup_termux_job_screen.dart",
-     "line": 588,
-     "action": "external-link",
-     "target": null,
-     "targetWidget": null,
-     "effect": "TermuxBridge.openAppSettings() when Android denied the command permission.",
-     "gates": [
-      "Termux persisted job host; corresponding person action pending"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "phone-setup-progress-termux-allow",
-     "type": "button",
-     "label": "Copy & open Termux",
-     "key": "phone-setup-termux-allow",
-     "file": "lib/ui/screens/phone_setup/phone_setup_termux_job_screen.dart",
-     "line": 593,
-     "action": "external-link",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_allowTermux(): requests command permission, copies the unlock command, and opens Termux; return checks the permission gate before starting the persisted job.",
-     "gates": [
-      "Termux persisted job host; corresponding person action pending"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "phone-setup-progress-termux-done-home",
-     "type": "button",
-     "label": "[first setup done]",
-     "key": null,
-     "file": "lib/ui/screens/phone_setup/phone_setup_termux_screen.dart",
-     "line": 154,
-     "action": "navigate",
-     "target": "home-shell",
-     "targetWidget": "/home",
-     "effect": "TermuxHostPhase.ready on a first setup: pushNamedAndRemoveUntil(/home).",
-     "gates": [
-      "Termux host, firstSetup"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "phone-setup-progress-termux-done-back",
-     "type": "button",
-     "label": "[update or switch done]",
-     "key": null,
-     "file": "lib/ui/screens/phone_setup/phone_setup_termux_screen.dart",
-     "line": 160,
-     "action": "dismiss",
-     "target": null,
-     "targetWidget": null,
-     "effect": "TermuxHostPhase.ready otherwise: maybePop after 1.2 s, back to This phone.",
-     "gates": [
-      "Termux host, !firstSetup"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "phone-setup-progress-termux-connect-existing",
-     "type": "button",
-     "label": "Connect existing server",
-     "key": null,
-     "file": "lib/ui/screens/phone_setup/phone_setup_termux_screen.dart",
-     "line": 370,
-     "action": "navigate",
-     "target": "servers",
-     "targetWidget": "/servers",
-     "effect": "Off Android (TermuxBridge.supported false): pushNamed(/servers, ServersRouteRequest.add()). Merges termux-setup-unsupported.",
-     "gates": [
-      "!TermuxBridge.supported"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "phone-setup-progress-termux-continue",
-     "type": "button",
-     "label": "Continue setup",
-     "key": "setup-progress-continue",
-     "file": "lib/ui/screens/phone_setup/phone_setup_termux_screen.dart",
-     "line": 412,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "TermuxHostSetup.retry(): follows a setup the app lost track of, finishes a half-done switch, connects again, or stops and reruns the job.",
-     "gates": [
-      "Termux host, TermuxHostPhase.failed"
-     ],
-     "destructive": false
-    },
     {
      "id": "phone-setup-progress-continue",
      "type": "button",
@@ -21757,501 +21553,6 @@
    ]
   },
   {
-   "id": "termux-migration",
-   "title": "Move from Termux",
-   "kind": "screen",
-   "area": "termux",
-   "file": "lib/ui/screens/termux_migration_screen.dart",
-   "widget": "TermuxMigrationScreen",
-   "presentedBy": [
-    "openTermuxMigration",
-    "termux-migration"
-   ],
-   "line": 168,
-   "purpose": "Move a Termux user's projects (and, opt-in, private exports of settings, history, Git/shell settings and AI Team state) to the in-app Ubuntu server: review with sizes and what does not move, copy with real stages, stop/resume, verify, switch, then next steps (sign in again, where things went, remove the Termux server when ready). Backend docs/qa/codex-termux-migration-2026-09-28; UI slice-migration-ui (2026-09-28).",
-   "reachedFrom": [
-    {
-     "page": "termux-setup-installed",
-     "element": null,
-     "note": "opener id 'termux-setup-installed-move-from-termux' not found; page-level edge"
-    },
-    {
-     "page": "servers",
-     "element": null,
-     "note": "opener id 'servers-termux-migration-offer' not found; page-level edge"
-    }
-   ],
-   "gates": [
-    "Termux profile present; the in-app server is set up first through setup v2 when missing"
-   ],
-   "elements": [],
-   "key": "termux-migration"
-  },
-  {
-   "id": "termux-processes",
-   "title": "Running now",
-   "kind": "screen",
-   "area": "termux",
-   "file": "lib/ui/screens/termux_processes_screen.dart",
-   "widget": "TermuxProcessesScreen",
-   "presentedBy": [],
-   "line": 47,
-   "purpose": "Lists every process owned by the app's Termux user, grouped (OpenCode server, AI Team, Build daemons, Orphans, Other) with CPU/memory, auto-refreshing every 10s, with stop actions for single processes and whole groups.",
-   "reachedFrom": [
-    {
-     "page": "termux-setup-installed",
-     "element": "termux-setup-installed-processes-row"
-    },
-    {
-     "page": "embedded-termux-attention-line",
-     "element": "embedded-termux-attention-line-open"
-    },
-    {
-     "page": "termux-storage",
-     "element": "termux-storage-open-running"
-    }
-   ],
-   "gates": [
-    "no gate in the screen itself; all openers are Termux-only surfaces"
-   ],
-   "elements": [
-    {
-     "id": "termux-processes-refresh",
-     "type": "icon-button",
-     "label": "Refresh",
-     "key": "termux-procs-refresh",
-     "file": "lib/ui/screens/termux_processes_screen.dart",
-     "line": 292,
-     "action": "other",
-     "target": null,
-     "effect": "`_refresh()` -> `TermuxProcesses.scan()`.",
-     "gates": [
-      "disabled while `_busy`"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "termux-processes-pull-refresh",
-     "type": "gesture",
-     "label": "[pull to refresh]",
-     "key": null,
-     "file": "lib/ui/screens/termux_processes_screen.dart",
-     "line": 302,
-     "action": "other",
-     "target": null,
-     "effect": "RefreshIndicator `onRefresh: _refresh`.",
-     "gates": [
-      "not while `_loading`"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "termux-processes-stop-group",
-     "type": "button",
-     "label": "Stop all",
-     "key": "termux-procs-stop-group-<group.wireName>",
-     "file": "lib/ui/screens/termux_processes_screen.dart",
-     "line": 397,
-     "action": "open-sheet",
-     "target": "termux-processes-stop-group-sheet",
-     "targetWidget": "showConfirmSheet",
-     "effect": "`_stopGroup(group)`: opens the stop-group confirm sheet.",
-     "gates": [
-      "per group header: `group.stoppable && stoppable > 0` (at least one non-protected member)",
-      "disabled while `_busy`"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "termux-processes-row",
-     "type": "list-tile",
-     "label": "<process name> (CPU {cpu}% · {memory} · {elapsed})",
-     "key": "termux-proc-<pid>",
-     "file": "lib/ui/screens/termux_processes_screen.dart",
-     "line": 469,
-     "action": "open-sheet",
-     "target": "termux-processes-details-sheet",
-     "targetWidget": "_showDetails",
-     "effect": "`_showDetails(process)` opens the process details sheet.",
-     "gates": [
-      "`!process.protected`"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "termux-processes-row-stop",
-     "type": "icon-button",
-     "label": "Stop {name}",
-     "key": "termux-proc-stop-<pid>",
-     "file": "lib/ui/screens/termux_processes_screen.dart",
-     "line": 502,
-     "action": "mutate",
-     "target": null,
-     "effect": "`_stopProcess(process, confirm: !process.isOrphan)`: orphans are stopped in one tap with no confirmation via `TermuxProcesses.stopPid(pid)`; result line shown and list refreshed.",
-     "gates": [
-      "`!process.protected && process.isOrphan`",
-      "disabled while `_busy`"
-     ],
-     "destructive": true
-    },
-    {
-     "id": "termux-processes-row-protected",
-     "type": "list-tile",
-     "label": "<process name> · \"Protected · open the server controls\"",
-     "key": "termux-proc-<pid>",
-     "file": "lib/ui/screens/termux_processes_screen.dart",
-     "line": 547,
-     "action": "navigate",
-     "target": "termux-setup-installed",
-     "targetWidget": "openThisPhone",
-     "effect": "_openServerControls: openThisPhone(context, kind: termux) (or widget.onOpenServerControls).",
-     "gates": [
-      "`process.protected` (OpenCode server, sshd)"
-     ],
-     "destructive": false
-    }
-   ]
-  },
-  {
-   "id": "termux-processes-stop-one-sheet",
-   "title": "Stop {name}?",
-   "kind": "sheet",
-   "area": "termux",
-   "file": "lib/ui/screens/termux_processes_screen.dart",
-   "widget": "_stopProcess",
-   "presentedBy": [
-    "showConfirmSheet"
-   ],
-   "line": 117,
-   "purpose": "Confirms stopping one non-orphan process (polite stop, forced after 5 seconds).",
-   "reachedFrom": [
-    {
-     "page": "termux-processes-details-sheet",
-     "element": "termux-processes-details-sheet-stop"
-    }
-   ],
-   "gates": [
-    "only when `confirm == true`, i.e. `!process.isOrphan`"
-   ],
-   "elements": [
-    {
-     "id": "termux-processes-stop-one-sheet-confirm",
-     "type": "button",
-     "label": "Stop",
-     "key": "termux-procs-confirm-stop",
-     "file": "lib/ui/kit/kit_confirm_sheet.dart",
-     "line": 68,
-     "action": "mutate",
-     "target": null,
-     "effect": "`_runStop(() => TermuxProcesses.stopPid(process.pid))`, shows a result line and refreshes.",
-     "gates": [],
-     "destructive": true
-    },
-    {
-     "id": "termux-processes-stop-one-sheet-cancel",
-     "type": "button",
-     "label": "Keep",
-     "key": null,
-     "file": "lib/ui/kit/kit_confirm_sheet.dart",
-     "line": 86,
-     "action": "dismiss",
-     "target": null,
-     "effect": "Pops the sheet with false; the caller returns without acting (barrier tap / back does the same).",
-     "gates": [],
-     "destructive": false
-    }
-   ],
-   "key": "termux-procs-confirm"
-  },
-  {
-   "id": "termux-processes-details-sheet",
-   "title": "<process name>",
-   "kind": "sheet",
-   "area": "termux",
-   "file": "lib/ui/screens/termux_processes_screen.dart",
-   "widget": "_showDetails",
-   "presentedBy": [
-    "_showDetails"
-   ],
-   "line": 200,
-   "purpose": "Process details: PID/parent, full command, folder, and either a stop button or a link to the server controls.",
-   "reachedFrom": [
-    {
-     "page": "termux-processes",
-     "element": "termux-processes-row"
-    }
-   ],
-   "gates": [],
-   "elements": [
-    {
-     "id": "termux-processes-details-sheet-stop",
-     "type": "button",
-     "label": "Stop",
-     "key": "termux-procs-details-stop",
-     "file": "lib/ui/screens/termux_processes_screen.dart",
-     "line": 261,
-     "action": "open-sheet",
-     "target": "termux-processes-stop-one-sheet",
-     "targetWidget": "showConfirmSheet",
-     "effect": "Pops the sheet then `_stopProcess(process, confirm: !process.isOrphan)`: non-orphans get the stop-one confirm sheet; orphans are stopped immediately (`TermuxProcesses.stopPid`).",
-     "gates": [
-      "`!process.protected`"
-     ],
-     "destructive": true
-    },
-    {
-     "id": "termux-processes-details-sheet-server-controls",
-     "type": "button",
-     "label": "Protected · open the server controls",
-     "key": null,
-     "file": "lib/ui/screens/termux_processes_screen.dart",
-     "line": 263,
-     "action": "navigate",
-     "target": "termux-setup-installed",
-     "targetWidget": "openThisPhone",
-     "effect": "Closes the sheet, then _openServerControls: openThisPhone(context, kind: termux).",
-     "gates": [
-      "`process.protected` (not reachable from the list today: protected rows navigate directly instead of opening this sheet)"
-     ],
-     "destructive": false
-    }
-   ],
-   "key": "termux-procs-details"
-  },
-  {
-   "id": "termux-processes-stop-group-sheet",
-   "title": "Stop every process in {group}?",
-   "kind": "sheet",
-   "area": "termux",
-   "file": "lib/ui/screens/termux_processes_screen.dart",
-   "widget": "_confirmStop",
-   "presentedBy": [
-    "showConfirmSheet"
-   ],
-   "line": 245,
-   "purpose": "Confirms stopping every non-protected process in a group.",
-   "reachedFrom": [
-    {
-     "page": "termux-processes",
-     "element": "termux-processes-stop-group"
-    }
-   ],
-   "gates": [],
-   "elements": [
-    {
-     "id": "termux-processes-stop-group-sheet-confirm",
-     "type": "button",
-     "label": "Stop {count}",
-     "key": "termux-procs-confirm-stop",
-     "file": "lib/ui/kit/kit_confirm_sheet.dart",
-     "line": 68,
-     "action": "mutate",
-     "target": null,
-     "effect": "`_runStop(() => TermuxProcesses.stopGroup(group))`.",
-     "gates": [],
-     "destructive": true
-    },
-    {
-     "id": "termux-processes-stop-group-sheet-cancel",
-     "type": "button",
-     "label": "Keep",
-     "key": null,
-     "file": "lib/ui/kit/kit_confirm_sheet.dart",
-     "line": 86,
-     "action": "dismiss",
-     "target": null,
-     "effect": "Pops the sheet with false; the caller returns without acting (barrier tap / back does the same).",
-     "gates": [],
-     "destructive": false
-    }
-   ],
-   "key": "termux-procs-confirm"
-  },
-  {
-   "id": "termux-storage",
-   "title": "Storage on this phone",
-   "kind": "screen",
-   "area": "termux",
-   "file": "lib/ui/screens/termux_storage_screen.dart",
-   "widget": "TermuxStorageScreen",
-   "presentedBy": [],
-   "line": 71,
-   "purpose": "Shows what Termux uses per category with exact paths; runs a cancellable background scan with a live log, and cleans regenerable caches after confirmation. Three body states: intro (no report), scanning, report.",
-   "reachedFrom": [
-    {
-     "page": "termux-setup-installed",
-     "element": "termux-setup-installed-storage-row"
-    }
-   ],
-   "gates": [
-    "no gate in the screen itself; opened only from TermuxPhoneToolsRows"
-   ],
-   "elements": [
-    {
-     "id": "termux-storage-rescan",
-     "type": "icon-button",
-     "label": "Scan again",
-     "key": "termux-storage-rescan",
-     "file": "lib/ui/screens/termux_storage_screen.dart",
-     "line": 260,
-     "action": "mutate",
-     "target": null,
-     "effect": "`_startScan()` -> `TermuxStorage.startScan()`; switches to the scanning body.",
-     "gates": [
-      "`_report != null && !_scanning`",
-      "disabled while `_busy`"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "termux-storage-scan",
-     "type": "button",
-     "label": "Scan storage",
-     "key": "termux-storage-scan",
-     "file": "lib/ui/screens/termux_storage_screen.dart",
-     "line": 338,
-     "action": "mutate",
-     "target": null,
-     "effect": "`_startScan()`.",
-     "gates": [
-      "intro state: `_report == null` and not scanning",
-      "disabled while `_busy`"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "termux-storage-cancel-scan",
-     "type": "button",
-     "label": "Cancel scan",
-     "key": "termux-storage-cancel",
-     "file": "lib/ui/screens/termux_storage_screen.dart",
-     "line": 382,
-     "action": "mutate",
-     "target": null,
-     "effect": "`_cancelScan()` -> `TermuxStorage.cancelScan()` then `_refresh()`.",
-     "gates": [
-      "scanning state: `_status?.state == running || (_busy && _report == null)`"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "termux-storage-open-running",
-     "type": "button",
-     "label": "Open Running now",
-     "key": "termux-storage-open-running",
-     "file": "lib/ui/screens/termux_storage_screen.dart",
-     "line": 464,
-     "action": "navigate",
-     "target": "termux-processes",
-     "targetWidget": "TermuxProcessesScreen",
-     "effect": "Pushes `MaterialPageRoute(TermuxProcessesScreen)`.",
-     "gates": [
-      "`_resultIsProblem` (clean refused: \"In use by {process}. Stop it under Running now first.\")"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "termux-storage-category",
-     "type": "list-tile",
-     "label": "<category label> ({size} | \"Nothing here\" | \"{size} · Not removed from here\")",
-     "key": "termux-storage-cat-<category.key>",
-     "file": "lib/ui/screens/termux_storage_screen.dart",
-     "line": 545,
-     "action": "other",
-     "target": null,
-     "effect": "ExpansionTile; expands the category note and the list of paths with sizes (\"What Clean removes\").",
-     "gates": [
-      "report state"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "termux-storage-category-clean",
-     "type": "button",
-     "label": "Clean (busy: \"Removing…\")",
-     "key": "termux-storage-clean-<category.key>",
-     "file": "lib/ui/screens/termux_storage_screen.dart",
-     "line": 611,
-     "action": "open-sheet",
-     "target": "termux-storage-clean-sheet",
-     "targetWidget": "showConfirmSheet",
-     "effect": "`_clean(category)` opens the clean confirm sheet.",
-     "gates": [
-      "`category.canClean && category.paths.isNotEmpty`",
-      "enabled only when `!_busy && !report.isStale` (after a clean that requires a rescan the report is stale)"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "termux-storage-copy-log",
-     "type": "icon-button",
-     "label": "Copy output",
-     "key": null,
-     "file": "lib/ui/widgets/setup_terminal.dart",
-     "line": 135,
-     "action": "copy",
-     "target": null,
-     "effect": "SetupTerminal copy button with `onCopy: _copyLog`: copies the scan log (no snackbar; no-op when empty).",
-     "gates": [
-      "scanning state"
-     ],
-     "destructive": false
-    }
-   ],
-   "nonInteractive": [
-    "project rows (`termux-storage-project-<name>`) are ListTiles without onTap"
-   ]
-  },
-  {
-   "id": "termux-storage-clean-sheet",
-   "title": "Remove {size} of {category}?",
-   "kind": "sheet",
-   "area": "termux",
-   "file": "lib/ui/screens/termux_storage_screen.dart",
-   "widget": "_clean",
-   "presentedBy": [
-    "showConfirmSheet"
-   ],
-   "line": 184,
-   "purpose": "Confirms removing the listed cache paths of one category.",
-   "reachedFrom": [
-    {
-     "page": "termux-storage",
-     "element": "termux-storage-category-clean"
-    }
-   ],
-   "gates": [],
-   "elements": [
-    {
-     "id": "termux-storage-clean-sheet-confirm",
-     "type": "button",
-     "label": "Remove {size}",
-     "key": "termux-storage-confirm-remove",
-     "file": "lib/ui/kit/kit_confirm_sheet.dart",
-     "line": 68,
-     "action": "mutate",
-     "target": null,
-     "effect": "`TermuxStorage.clean(category.key)`; shows \"Removed {size}\" or the in-use problem line; marks the report stale when a rescan is required.",
-     "gates": [],
-     "destructive": true
-    },
-    {
-     "id": "termux-storage-clean-sheet-cancel",
-     "type": "button",
-     "label": "Keep",
-     "key": null,
-     "file": "lib/ui/kit/kit_confirm_sheet.dart",
-     "line": 86,
-     "action": "dismiss",
-     "target": null,
-     "effect": "Pops the sheet with false; the caller returns without acting (barrier tap / back does the same).",
-     "gates": [],
-     "destructive": false
-    }
-   ],
-   "key": "termux-storage-confirm"
-  },
-  {
    "id": "termux-setup-installed",
    "title": "This phone",
    "kind": "screen",
@@ -22270,28 +21571,8 @@
      "element": "root-connecting-termux-secondary"
     },
     {
-     "page": "server-switcher-sheet",
-     "element": "server-switcher-sheet-phone-manage"
-    },
-    {
      "page": "servers",
      "element": "servers-termux-setup"
-    },
-    {
-     "page": "termux-processes",
-     "element": "termux-processes-row-protected"
-    },
-    {
-     "page": "termux-processes-details-sheet",
-     "element": "termux-processes-details-sheet-server-controls"
-    },
-    {
-     "page": "embedded-termux-running-server-entry",
-     "element": "embedded-termux-running-server-entry-menu-manage"
-    },
-    {
-     "page": "embedded-local-agent-server-entry",
-     "element": "embedded-local-agent-server-entry-menu-manage"
     },
     {
      "page": "embedded-phone-server-card",
@@ -22300,10 +21581,6 @@
     {
      "page": "team-intro",
      "element": "team-intro-set-up-termux"
-    },
-    {
-     "page": "embedded-team-phone-section",
-     "element": "embedded-team-phone-section-open-setup"
     },
     {
      "page": "settings",
@@ -22614,38 +21891,6 @@
       "host.kind == inApp and a process reading with something in it (read when This phone opens and every 15 s while it is in front)"
      ],
      "destructive": false
-    },
-    {
-     "id": "termux-setup-installed-storage-row",
-     "type": "list-tile",
-     "label": "Storage on this phone",
-     "key": "termux-storage-row",
-     "file": "lib/ui/widgets/termux_phone_tools.dart",
-     "line": 107,
-     "action": "navigate",
-     "target": "termux-storage",
-     "targetWidget": "TermuxStorageScreen",
-     "effect": "TermuxPhoneToolsRows(only: storage): pushKitPage(TermuxStorageScreen).",
-     "gates": [
-      "host.kind == termux"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "termux-setup-installed-processes-row",
-     "type": "list-tile",
-     "label": "Running now",
-     "key": "termux-procs-row",
-     "file": "lib/ui/widgets/termux_phone_tools.dart",
-     "line": 116,
-     "action": "navigate",
-     "target": "termux-processes",
-     "targetWidget": "TermuxProcessesScreen",
-     "effect": "TermuxPhoneToolsRows(only: processes): pushKitPage(TermuxProcessesScreen).",
-     "gates": [
-      "host.kind == termux"
-     ],
-     "destructive": false
     }
    ],
    "key": "this-phone"
@@ -22688,522 +21933,6 @@
     }
    ],
    "key": "this-phone-termux-tools"
-  },
-  {
-   "id": "embedded-local-agent-onboarding-block",
-   "title": "Claude Code on this phone",
-   "kind": "overlay",
-   "area": "termux",
-   "file": "lib/ui/widgets/local_agent_onboarding.dart",
-   "widget": "LocalAgentOnboardingBlock",
-   "presentedBy": [],
-   "line": 185,
-   "purpose": "The one door to Claude Code on the phone: offer, install (Node.js, Paseo daemon, Claude Code) with a step list and the live output, Claude's own sign-in in a Termux terminal, start, and Connect through one saved Paseo server on ws://127.0.0.1:6767. Reads and drives LocalAgentRuntime (~/.oc/claude.sh).",
-   "reachedFrom": [
-    {
-     "page": "local-agent-page",
-     "element": null,
-     "via": "embedded"
-    }
-   ],
-   "gates": [
-    "platformCapabilities.supportsTermux",
-    "hidden when claude.sh status cannot be read or the offer was dismissed (prefs local_agents_offer_skipped)"
-   ],
-   "embeddedIn": [
-    "LocalAgentScreen"
-   ],
-   "hostPages": [
-    "local-agent-page"
-   ],
-   "elements": [
-    {
-     "id": "embedded-local-agent-onboarding-block-copy-log",
-     "type": "icon-button",
-     "label": "[copy output]",
-     "key": null,
-     "file": "lib/ui/widgets/local_agent_onboarding.dart",
-     "line": 568,
-     "action": "copy",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_copyLog(): copies the install log tail shown in the SetupTerminal panel.",
-     "gates": [
-      "steps and failed views, log not empty"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "embedded-local-agent-onboarding-block-menu",
-     "type": "icon-button",
-     "label": "More Claude Code actions",
-     "key": "local-agent-menu",
-     "file": "lib/ui/widgets/local_agent_onboarding.dart",
-     "line": 628,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "opens overflow menu (PopupMenuButton<VoidCallback>)",
-     "gates": [
-      "sign-in, stopped, ready views; failed view when installed",
-      "disabled while _busy || _connecting"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "embedded-local-agent-onboarding-block-menu-refresh",
-     "type": "menu-item",
-     "label": "Refresh",
-     "key": "local-agent-refresh",
-     "file": "lib/ui/widgets/local_agent_onboarding.dart",
-     "line": 634,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_refresh(): re-reads claude.sh status.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "embedded-local-agent-onboarding-block-menu-remove",
-     "type": "menu-item",
-     "label": "Remove from this phone",
-     "key": "local-agent-remove",
-     "file": "lib/ui/widgets/local_agent_onboarding.dart",
-     "line": 639,
-     "action": "open-sheet",
-     "target": "remove-local-agents-confirm-sheet",
-     "targetWidget": "confirmRemoveLocalAgents",
-     "effect": "_remove(): confirmRemoveLocalAgents, then LocalAgentRuntime.remove() without --forget-signin, so the person's Claude sign-in stays.",
-     "gates": [],
-     "destructive": true
-    },
-    {
-     "id": "embedded-local-agent-onboarding-block-skip",
-     "type": "button",
-     "label": "Not now",
-     "key": "local-agent-skip",
-     "file": "lib/ui/widgets/local_agent_onboarding.dart",
-     "line": 733,
-     "action": "toggle-setting",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_skip(): stores local_agents_offer_skipped and hides the offer.",
-     "gates": [
-      "offer view: status phase absent"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "embedded-local-agent-onboarding-block-set-up",
-     "type": "button",
-     "label": "Set up Claude Code",
-     "key": "local-agent-set-up",
-     "file": "lib/ui/widgets/local_agent_onboarding.dart",
-     "line": 738,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_install(): LocalAgentRuntime.install() (claude.sh install, detached) with the steps view polling status and the log; goes on to start when a sign-in already exists.",
-     "gates": [
-      "offer view: status phase absent"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "embedded-local-agent-onboarding-block-needs-ubuntu-refresh",
-     "type": "button",
-     "label": "Refresh",
-     "key": "local-agent-needs-ubuntu-refresh",
-     "file": "lib/ui/widgets/local_agent_onboarding.dart",
-     "line": 763,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_refresh(): re-reads claude.sh status.",
-     "gates": [
-      "needs-ubuntu view"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "embedded-local-agent-onboarding-block-open-setup",
-     "type": "button",
-     "label": "Open phone setup",
-     "key": "local-agent-open-setup",
-     "file": "lib/ui/widgets/local_agent_onboarding.dart",
-     "line": 838,
-     "action": "navigate",
-     "target": "phone-setup-progress",
-     "targetWidget": "openPhoneSetupTermux",
-     "effect": "widget.onOpenPhoneSetup: LocalAgentScreen passes openPhoneSetupTermux(context), the Termux host of phone setup (Claude Code needs Termux's Linux).",
-     "gates": [
-      "needs-ubuntu view",
-      "widget.onOpenPhoneSetup != null (null inside the wizard itself)"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "embedded-local-agent-onboarding-block-sign-in-already",
-     "type": "button",
-     "label": "I already signed in",
-     "key": "local-agent-sign-in-already",
-     "file": "lib/ui/widgets/local_agent_onboarding.dart",
-     "line": 851,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_start(): starts the daemon without a detected sign-in, for a sign-in the script's file check cannot see.",
-     "gates": [
-      "sign-in view"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "embedded-local-agent-onboarding-block-sign-in-refresh",
-     "type": "button",
-     "label": "Refresh",
-     "key": "local-agent-sign-in-refresh",
-     "file": "lib/ui/widgets/local_agent_onboarding.dart",
-     "line": 856,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_refresh(afterSignIn: true): re-reads status and says when no sign-in was found.",
-     "gates": [
-      "sign-in view"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "embedded-local-agent-onboarding-block-sign-in",
-     "type": "button",
-     "label": "Sign in to Claude",
-     "key": "local-agent-sign-in-open",
-     "file": "lib/ui/widgets/local_agent_onboarding.dart",
-     "line": 863,
-     "action": "external-link",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_signIn(): LocalAgentRuntime.openSignIn() opens a foreground Termux terminal running claude.sh signin (Claude Code's own sign-in inside Ubuntu); status is re-read when the app resumes. The app never sees the credential.",
-     "gates": [
-      "sign-in view: installed and signed_in=no"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "embedded-local-agent-onboarding-block-start",
-     "type": "button",
-     "label": "Start",
-     "key": "local-agent-start",
-     "file": "lib/ui/widgets/local_agent_onboarding.dart",
-     "line": 926,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_start(): LocalAgentRuntime.start(); ready only after /api/health answers.",
-     "gates": [
-      "stopped view: installed, not running"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "embedded-local-agent-onboarding-block-connect",
-     "type": "button",
-     "label": "Connect | Open",
-     "key": "local-agent-connect",
-     "file": "lib/ui/widgets/local_agent_onboarding.dart",
-     "line": 982,
-     "action": "open-sheet",
-     "target": "local-agent-project-sheet",
-     "targetWidget": "LocalAgentProjectSheet",
-     "effect": "_connect(): project chooser, then saveLocalAgentProfile (one Paseo server, ws://127.0.0.1:6767, password from claude.sh password) and ConnectionController.connect; when already connected through it, host onConnected.",
-     "gates": [
-      "ready view",
-      "disabled while _busy || _connecting"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "embedded-local-agent-onboarding-block-retry",
-     "type": "button",
-     "label": "Try again",
-     "key": "local-agent-retry",
-     "file": "lib/ui/widgets/local_agent_onboarding.dart",
-     "line": 1030,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_retry(): start again when the failed step was Start and the install is present, else install again (resume-safe).",
-     "gates": [
-      "failed view"
-     ],
-     "destructive": false
-    }
-   ],
-   "key": "local-agent-block"
-  },
-  {
-   "id": "local-agent-project-sheet",
-   "title": "Choose a project folder",
-   "kind": "sheet",
-   "area": "termux",
-   "file": "lib/ui/widgets/local_agent_onboarding.dart",
-   "widget": "showLocalAgentProjectSheet",
-   "presentedBy": [],
-   "line": 1077,
-   "purpose": "Picks the folder Claude Code works in, as a path inside Ubuntu: a folder under ~/projects (the script creates my-first-project with git init when there are none) or a typed path.",
-   "reachedFrom": [
-    {
-     "page": "embedded-local-agent-onboarding-block",
-     "element": "embedded-local-agent-onboarding-block-connect"
-    }
-   ],
-   "gates": [],
-   "elements": [
-    {
-     "id": "local-agent-project-sheet-continue",
-     "type": "button",
-     "label": "Continue",
-     "key": "local-agent-project-continue",
-     "file": "lib/ui/widgets/local_agent_onboarding.dart",
-     "line": 1095,
-     "action": "submit",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_continue(): pops with the selected folder, or LocalAgentRuntime.ensureProject(typed) then pops with it.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "local-agent-project-sheet-folder",
-     "type": "toggle",
-     "label": "<folder name>",
-     "key": "local-agent-project-<i>",
-     "file": "lib/ui/widgets/local_agent_onboarding.dart",
-     "line": 1236,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Selects that folder and clears the typed path.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "local-agent-project-sheet-path",
-     "type": "text-field",
-     "label": "Or type a path inside Ubuntu",
-     "key": "local-agent-project-path",
-     "file": "lib/ui/widgets/local_agent_onboarding.dart",
-     "line": 1256,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "A typed absolute path wins over the selection; validated by localAgentProjectPathProblem.",
-     "gates": [],
-     "destructive": false
-    }
-   ],
-   "key": "local-agent-project-sheet"
-  },
-  {
-   "id": "embedded-local-agent-server-entry",
-   "title": "Claude Code on this phone",
-   "kind": "overlay",
-   "area": "termux",
-   "file": "lib/ui/widgets/local_agent_server_entry.dart",
-   "widget": "LocalAgentServerEntry",
-   "presentedBy": [],
-   "line": 25,
-   "purpose": "Card for the Claude Code daemon on this phone, beside the OpenCode server's card on the Servers screen, the welcome screen and in the server switcher, controlled where it is shown. Same look (LocalServerCard), its own state: claude.sh status on mount, on resume, on revision and after every control.",
-   "reachedFrom": [
-    {
-     "page": "server-switcher-sheet",
-     "element": null,
-     "via": "embedded"
-    },
-    {
-     "page": "servers",
-     "element": null,
-     "via": "embedded"
-    }
-   ],
-   "gates": [
-    "platformCapabilities.supportsTermux",
-    "status readable and status.installed (nothing installed is the wizard's business)"
-   ],
-   "embeddedIn": [
-    "ServersScreen",
-    "ServerSwitcherSheet"
-   ],
-   "hostPages": [
-    "server-switcher-sheet",
-    "servers"
-   ],
-   "elements": [
-    {
-     "id": "embedded-local-agent-server-entry-menu",
-     "type": "icon-button",
-     "label": "More Claude Code actions",
-     "key": "local-agent-server-menu",
-     "file": "lib/ui/widgets/local_agent_server_entry.dart",
-     "line": 254,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "opens overflow menu (PopupMenuButton<VoidCallback>)",
-     "gates": [
-      "disabled while locked"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "embedded-local-agent-server-entry-menu-disconnect",
-     "type": "menu-item",
-     "label": "Disconnect",
-     "key": "local-agent-server-disconnect",
-     "file": "lib/ui/widgets/local_agent_server_entry.dart",
-     "line": 258,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Host onDisconnect: confirmDisconnectServer, then connection.disconnect(keepActive: true); the daemon keeps running.",
-     "gates": [
-      "connected through the saved server",
-      "widget.onDisconnect != null"
-     ],
-     "destructive": true
-    },
-    {
-     "id": "embedded-local-agent-server-entry-recheck",
-     "type": "menu-item",
-     "label": "Refresh",
-     "key": "local-agent-server-recheck",
-     "file": "lib/ui/widgets/local_agent_server_entry.dart",
-     "line": 263,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_check(): re-reads claude.sh status.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "embedded-local-agent-server-entry-menu-manage",
-     "type": "menu-item",
-     "label": "Manage setup",
-     "key": "local-agent-server-manage",
-     "file": "lib/ui/widgets/local_agent_server_entry.dart",
-     "line": 269,
-     "action": "navigate",
-     "target": "termux-setup-installed",
-     "targetWidget": "openThisPhone",
-     "effect": "onManage: Servers _openTermuxSetup -> openThisPhone(kind: termux); in the switcher it pops ServerSwitcherOpenPhoneSetup and the shell opens This phone.",
-     "gates": [
-      "widget.onManage != null"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "embedded-local-agent-server-entry-menu-forget",
-     "type": "menu-item",
-     "label": "Forget saved sign-in",
-     "key": "local-agent-server-forget",
-     "file": "lib/ui/widgets/local_agent_server_entry.dart",
-     "line": 275,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Host onForget(profile): forgets the saved server on this device; the daemon and the Claude sign-in are untouched.",
-     "gates": [
-      "a saved server exists",
-      "widget.onForget != null"
-     ],
-     "destructive": true
-    },
-    {
-     "id": "embedded-local-agent-server-entry-start",
-     "type": "button",
-     "label": "Start",
-     "key": "local-agent-server-start",
-     "file": "lib/ui/widgets/local_agent_server_entry.dart",
-     "line": 285,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_start(): LocalAgentRuntime.start(); a failure is shown on the card in its own sentence.",
-     "gates": [
-      "not running"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "embedded-local-agent-server-entry-connect",
-     "type": "button",
-     "label": "Connect | Open",
-     "key": "local-agent-server-connect",
-     "file": "lib/ui/widgets/local_agent_server_entry.dart",
-     "line": 286,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_connect(): re-reads status; with a saved server that has a project folder, host onConnect(saved); otherwise host onManage (the folder is chosen in the wizard).",
-     "gates": [
-      "status.isReady",
-      "disabled while locked or a verb runs"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "embedded-local-agent-server-entry-restart",
-     "type": "button",
-     "label": "Restart",
-     "key": "local-agent-server-restart",
-     "file": "lib/ui/widgets/local_agent_server_entry.dart",
-     "line": 287,
-     "action": "open-sheet",
-     "target": "restart-local-agents-sheet",
-     "targetWidget": "confirmRestartLocalAgents",
-     "effect": "_restart(): confirmRestartLocalAgents(busyConversations), then LocalAgentRuntime.restart().",
-     "gates": [
-      "status.isReady"
-     ],
-     "destructive": true
-    },
-    {
-     "id": "embedded-local-agent-server-entry-stop",
-     "type": "button",
-     "label": "Stop",
-     "key": "local-agent-server-stop",
-     "file": "lib/ui/widgets/local_agent_server_entry.dart",
-     "line": 288,
-     "action": "open-sheet",
-     "target": "stop-local-agents-confirm-sheet",
-     "targetWidget": "confirmStopLocalAgents",
-     "effect": "_stop(): confirmStopLocalAgents, then LocalAgentRuntime.stop().",
-     "gates": [
-      "status.isReady"
-     ],
-     "destructive": true
-    },
-    {
-     "id": "embedded-local-agent-server-entry-details",
-     "type": "list-tile",
-     "label": "Details",
-     "key": null,
-     "file": "lib/ui/widgets/local_agent_server_entry.dart",
-     "line": 289,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "expands the installed versions of Claude Code, Paseo and Node.js.",
-     "gates": [
-      "versions recorded"
-     ],
-     "destructive": false
-    }
-   ],
-   "key": "local-agent-server"
   },
   {
    "id": "remove-from-phone-sheet",
@@ -23393,159 +22122,6 @@
    "key": "phone-server-card"
   },
   {
-   "id": "stop-local-agents-confirm-sheet",
-   "title": "Stop Claude Code on this phone?",
-   "kind": "sheet",
-   "area": "termux",
-   "file": "lib/ui/widgets/safety_confirms.dart",
-   "widget": "confirmStopLocalAgents",
-   "presentedBy": [
-    "confirmStopLocalAgents"
-   ],
-   "line": 99,
-   "purpose": "Confirms stopping the Claude Code daemon: what it is doing is interrupted and the app disconnects; projects, conversations and the Claude sign-in stay.",
-   "reachedFrom": [
-    {
-     "page": "embedded-local-agent-server-entry",
-     "element": "embedded-local-agent-server-entry-stop"
-    }
-   ],
-   "gates": [],
-   "elements": [
-    {
-     "id": "stop-local-agents-confirm-sheet-cancel",
-     "type": "button",
-     "label": "Keep running",
-     "key": null,
-     "file": "lib/ui/widgets/safety_confirms.dart",
-     "line": 109,
-     "action": "dismiss",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Pops false; nothing changes.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "stop-local-agents-confirm-sheet-confirm",
-     "type": "button",
-     "label": "Stop",
-     "key": "confirm-stop-local-agents",
-     "file": "lib/ui/widgets/safety_confirms.dart",
-     "line": 110,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Pops true; the caller then runs the action.",
-     "gates": [],
-     "destructive": true
-    }
-   ],
-   "key": "stop-local-agents-confirm-sheet"
-  },
-  {
-   "id": "restart-local-agents-sheet",
-   "title": "Restart Claude Code on this phone?",
-   "kind": "sheet",
-   "area": "termux",
-   "file": "lib/ui/widgets/safety_confirms.dart",
-   "widget": "confirmRestartLocalAgents",
-   "presentedBy": [
-    "confirmRestartLocalAgents"
-   ],
-   "line": 115,
-   "purpose": "Confirms restarting the Claude Code daemon, counting the conversations it would interrupt.",
-   "reachedFrom": [
-    {
-     "page": "embedded-local-agent-server-entry",
-     "element": "embedded-local-agent-server-entry-restart"
-    }
-   ],
-   "gates": [],
-   "elements": [
-    {
-     "id": "restart-local-agents-sheet-cancel",
-     "type": "button",
-     "label": "Cancel",
-     "key": null,
-     "file": "lib/ui/widgets/safety_confirms.dart",
-     "line": 130,
-     "action": "dismiss",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Pops false; nothing changes.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "restart-local-agents-sheet-confirm",
-     "type": "button",
-     "label": "Restart",
-     "key": "confirm-restart-local-agents",
-     "file": "lib/ui/widgets/safety_confirms.dart",
-     "line": 131,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Pops true; the caller then runs the action.",
-     "gates": [],
-     "destructive": true
-    }
-   ],
-   "key": "restart-local-agents-sheet"
-  },
-  {
-   "id": "remove-local-agents-confirm-sheet",
-   "title": "Remove Claude Code from this phone?",
-   "kind": "sheet",
-   "area": "termux",
-   "file": "lib/ui/widgets/safety_confirms.dart",
-   "widget": "confirmRemoveLocalAgents",
-   "presentedBy": [
-    "confirmRemoveLocalAgents"
-   ],
-   "line": 137,
-   "purpose": "Confirms removing Node.js, Paseo and Claude Code from Ubuntu, and says that projects and the Claude sign-in stay.",
-   "reachedFrom": [
-    {
-     "page": "embedded-local-agent-onboarding-block",
-     "element": "embedded-local-agent-onboarding-block-menu-remove"
-    }
-   ],
-   "gates": [],
-   "elements": [
-    {
-     "id": "remove-local-agents-confirm-sheet-cancel",
-     "type": "button",
-     "label": "Keep it",
-     "key": null,
-     "file": "lib/ui/widgets/safety_confirms.dart",
-     "line": 147,
-     "action": "dismiss",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Pops false; nothing changes.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "remove-local-agents-confirm-sheet-confirm",
-     "type": "button",
-     "label": "Remove from this phone",
-     "key": "confirm-remove-local-agents",
-     "file": "lib/ui/widgets/safety_confirms.dart",
-     "line": 148,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Pops true; the caller then runs the action.",
-     "gates": [],
-     "destructive": true
-    }
-   ],
-   "key": "remove-local-agents-confirm-sheet"
-  },
-  {
    "id": "embedded-setup-terminal",
    "title": "LIVE OUTPUT / LAST OUTPUT",
    "kind": "overlay",
@@ -23555,20 +22131,12 @@
    "presentedBy": [],
    "line": 9,
    "purpose": "Reusable setup log panel (selectable, ANSI-stripped, colored lines) with one copy button; hosted in TeamPhoneOnboardingBlock and LocalAgentOnboardingBlock (the Termux wizard that also used it is gone, slice P1.3/P1.5).",
-   "reachedFrom": [
-    {
-     "page": "embedded-local-agent-onboarding-block",
-     "element": null,
-     "via": "embedded"
-    }
-   ],
+   "reachedFrom": [],
    "gates": [],
    "embeddedIn": [
     "LocalAgentOnboardingBlock"
    ],
-   "hostPages": [
-    "embedded-local-agent-onboarding-block"
-   ],
+   "hostPages": [],
    "elements": [
     {
      "id": "embedded-setup-terminal-copy",
@@ -23585,248 +22153,6 @@
     }
    ],
    "key": "setup-live-output"
-  },
-  {
-   "id": "embedded-termux-attention-line",
-   "title": "Something is still running on this phone",
-   "kind": "overlay",
-   "area": "termux",
-   "file": "lib/ui/widgets/termux_phone_tools.dart",
-   "widget": "TermuxRunawayWatcher",
-   "presentedBy": [],
-   "line": 143,
-   "purpose": "Workspace line shown only while an orphaned Termux helper has burned more than 10 minutes of CPU (polled every 60s).",
-   "reachedFrom": [],
-   "gates": [
-    "`TermuxBridge.supported`",
-    "`_worst != null` (an orphan over `threshold` = 10 min CPU)",
-    "host gate at lib/ui/screens/workspace_screen.dart:632 to be read by the workspace agent"
-   ],
-   "embeddedIn": [
-    "WorkspaceScreen"
-   ],
-   "hostPages": [],
-   "elements": [
-    {
-     "id": "embedded-termux-attention-line-open",
-     "type": "list-tile",
-     "label": "Something is still running on this phone — {name} has used {cpu} of CPU with nothing waiting on it",
-     "key": "termux-attention-line",
-     "file": "lib/ui/widgets/termux_phone_tools.dart",
-     "line": 212,
-     "action": "navigate",
-     "target": "termux-processes",
-     "targetWidget": "TermuxProcessesScreen",
-     "effect": "Pushes `MaterialPageRoute(TermuxProcessesScreen)`; re-checks on return.",
-     "gates": [],
-     "destructive": false
-    }
-   ]
-  },
-  {
-   "id": "embedded-termux-running-server-entry",
-   "title": "Server on this phone",
-   "kind": "overlay",
-   "area": "termux",
-   "file": "lib/ui/widgets/termux_running_server_entry.dart",
-   "widget": "TermuxRunningServerEntry",
-   "presentedBy": [],
-   "line": 37,
-   "purpose": "Card for the app-managed OpenCode server on this phone, first on the Servers screen, the welcome screen and in the server switcher: connect or open, start, restart, stop, and a menu with Disconnect, Refresh, Manage setup and Forget saved sign-in. It owns the server's state; the look is LocalServerCard, shared with the Claude Code daemon's card.",
-   "reachedFrom": [
-    {
-     "page": "server-switcher-sheet",
-     "element": null,
-     "via": "embedded"
-    },
-    {
-     "page": "servers",
-     "element": null,
-     "via": "embedded"
-    }
-   ],
-   "gates": [
-    "platformCapabilities.supportsTermux",
-    "_server != null and state not unsupported/absent (a running or stopped managed server)"
-   ],
-   "embeddedIn": [
-    "ServersScreen",
-    "ServerSwitcherSheet"
-   ],
-   "hostPages": [
-    "server-switcher-sheet",
-    "servers"
-   ],
-   "elements": [
-    {
-     "id": "embedded-termux-running-server-entry-menu",
-     "type": "icon-button",
-     "label": "More server actions",
-     "key": "termux-running-server-menu",
-     "file": "lib/ui/widgets/termux_running_server_entry.dart",
-     "line": 315,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "opens overflow menu (PopupMenuButton<VoidCallback>)",
-     "gates": [
-      "disabled while locked"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "embedded-termux-running-server-entry-menu-disconnect",
-     "type": "menu-item",
-     "label": "Disconnect",
-     "key": "termux-running-server-disconnect",
-     "file": "lib/ui/widgets/termux_running_server_entry.dart",
-     "line": 319,
-     "action": "open-sheet",
-     "target": "settings-disconnect-sheet",
-     "targetWidget": "confirmDisconnectServer",
-     "effect": "Host onDisconnect: confirmDisconnectServer then connection.disconnect(keepActive: true); the server keeps running.",
-     "gates": [
-      "connected through this profile",
-      "widget.onDisconnect != null"
-     ],
-     "destructive": true
-    },
-    {
-     "id": "embedded-termux-running-server-entry-recheck",
-     "type": "menu-item",
-     "label": "Refresh",
-     "key": "termux-running-server-recheck",
-     "file": "lib/ui/widgets/termux_running_server_entry.dart",
-     "line": 324,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_check(): re-reads the phone server state.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "embedded-termux-running-server-entry-menu-manage",
-     "type": "menu-item",
-     "label": "Manage setup",
-     "key": "termux-running-server-manage",
-     "file": "lib/ui/widgets/termux_running_server_entry.dart",
-     "line": 330,
-     "action": "navigate",
-     "target": "termux-setup-installed",
-     "targetWidget": "openThisPhone",
-     "effect": "onManage: Servers _openTermuxSetup -> openThisPhone(kind: termux); in the switcher it pops ServerSwitcherOpenPhoneSetup and the shell opens This phone.",
-     "gates": [
-      "widget.onManage != null"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "embedded-termux-running-server-entry-menu-forget",
-     "type": "menu-item",
-     "label": "Forget saved sign-in",
-     "key": "termux-running-server-forget",
-     "file": "lib/ui/widgets/termux_running_server_entry.dart",
-     "line": 336,
-     "action": "open-sheet",
-     "target": "servers-remove-server-sheet",
-     "targetWidget": "_delete",
-     "effect": "Host onForget(profile): ServersScreen._delete confirm sheet, then connection.deleteProfileAndLocalData(profile.id). The server itself is untouched.",
-     "gates": [
-      "a saved profile matches the phone server",
-      "widget.onForget != null"
-     ],
-     "destructive": true
-    },
-    {
-     "id": "embedded-termux-running-server-entry-start",
-     "type": "button",
-     "label": "Start",
-     "key": "termux-running-server-start",
-     "file": "lib/ui/widgets/termux_running_server_entry.dart",
-     "line": 346,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_start(): widget.actions.restart() (LocalServerControls.restart) with a progress bar, then re-reads the phone; a failure is shown on the card.",
-     "gates": [
-      "server.isStopped",
-      "disabled when widget.actions == null or locked"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "embedded-termux-running-server-entry-connect",
-     "type": "button",
-     "label": "Connect | Open",
-     "key": "termux-running-server-connect",
-     "file": "lib/ui/widgets/termux_running_server_entry.dart",
-     "line": 347,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_connect(): re-reads the phone (detectTermuxRunningServer), then host onConnect(saved) or, with no saved profile / needsCredentials / requiresPasswordReentry, host onEnterCredentials(fresh, saved).",
-     "gates": [
-      "!server.isStopped",
-      "disabled while widget.busy || _checking || _operation != null"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "embedded-termux-running-server-entry-restart",
-     "type": "button",
-     "label": "Restart",
-     "key": "termux-running-server-restart",
-     "file": "lib/ui/widgets/termux_running_server_entry.dart",
-     "line": 348,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_restart(): confirmRestartLocalServer(busyConversations) confirm sheet, then widget.actions.restart().",
-     "gates": [
-      "!server.isStopped",
-      "widget.actions != null",
-      "disabled while locked"
-     ],
-     "destructive": true
-    },
-    {
-     "id": "embedded-termux-running-server-entry-stop",
-     "type": "button",
-     "label": "Stop",
-     "key": "termux-running-server-stop",
-     "file": "lib/ui/widgets/termux_running_server_entry.dart",
-     "line": 349,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_stop(): confirmStopLocalServer confirm sheet, then widget.actions.stop() (LocalServerControls.stop).",
-     "gates": [
-      "!server.isStopped",
-      "widget.actions != null",
-      "disabled while locked"
-     ],
-     "destructive": true
-    },
-    {
-     "id": "embedded-termux-running-server-entry-details",
-     "type": "list-tile",
-     "label": "Server details",
-     "key": null,
-     "file": "lib/ui/widgets/termux_running_server_entry.dart",
-     "line": 350,
-     "action": "other",
-     "target": null,
-     "targetWidget": null,
-     "effect": "ExpansionTile: expands version and last check time.",
-     "gates": [
-      "server.isRunning"
-     ],
-     "destructive": false
-    }
-   ],
-   "key": "termux-running-server",
-   "notes": "Embedded via ServersScreen._runningServerEntry and ServerSwitcherSheet; both build LocalServerCardActions from LocalServerControls."
   },
   {
    "id": "embedded-work-graph",
@@ -27387,8 +25713,9 @@
      "file": "lib/ui/screens/team/team_settings_screen.dart",
      "line": 328,
      "action": "open-sheet",
-     "target": "embedded-team-phone-section",
+     "target": null,
      "targetWidget": "TeamPhoneSection",
+     "unresolvedTarget": "TeamPhoneSection",
      "effect": "Top bar menu: a kit sheet holding the phone Termux team's own controls (embedded-team-phone-section), in every state of the page.",
      "gates": [
       "teamPhoneProfile(connection.profile)"
@@ -28138,269 +26465,6 @@
      "gates": [
       "disabled while _busy"
      ],
-     "destructive": false
-    }
-   ]
-  },
-  {
-   "id": "embedded-team-phone-section",
-   "title": "On this phone",
-   "kind": "overlay",
-   "area": "team",
-   "file": "lib/ui/widgets/team_phone_section.dart",
-   "widget": "TeamPhoneSection",
-   "presentedBy": [],
-   "line": 80,
-   "purpose": "The phone Termux team's own controls (P3.4: a kit sheet from the AI Team page's menu, reachable in every state of the page): phone supervisor status, Start/Stop, keep-running tips, Remove.",
-   "reachedFrom": [
-    {
-     "page": "team-settings",
-     "element": "team-home-phone-controls"
-    },
-    {
-     "page": "team-home",
-     "element": null,
-     "via": "embedded"
-    }
-   ],
-   "gates": [
-    "teamPhoneProfile(profile) (host)",
-    "controls only when await runtime.supportsAiTeam; otherwise a \"not available\" text"
-   ],
-   "embeddedIn": [
-    "TeamHomeScreen (menu sheet)"
-   ],
-   "hostPages": [
-    "team-home"
-   ],
-   "elements": [
-    {
-     "id": "embedded-team-phone-section-start-again",
-     "type": "button",
-     "label": "Start again",
-     "key": "team-phone-start-again",
-     "file": "lib/ui/widgets/team_phone_section.dart",
-     "line": 381,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_start -> _run(runtime.start); enables the phone config on the profile when it comes up ready.",
-     "gates": [
-      "status.killedByAndroid",
-      "disabled while working"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "embedded-team-phone-section-stop",
-     "type": "button",
-     "label": "Stop",
-     "key": "team-phone-stop",
-     "file": "lib/ui/widgets/team_phone_section.dart",
-     "line": 388,
-     "action": "open-sheet",
-     "target": "team-phone-stop-sheet",
-     "targetWidget": "showConfirmSheet",
-     "effect": "_stop: confirm sheet, then _run(runtime.stop).",
-     "gates": [
-      "status.isReady (running) && !killed",
-      "disabled while working"
-     ],
-     "destructive": true
-    },
-    {
-     "id": "embedded-team-phone-section-start",
-     "type": "button",
-     "label": "Start",
-     "key": "team-phone-start",
-     "file": "lib/ui/widgets/team_phone_section.dart",
-     "line": 395,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "_start -> _run(runtime.start).",
-     "gates": [
-      "canStart: status != null && !working && !running && status.hasCity"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "embedded-team-phone-section-keep-running",
-     "type": "list-tile",
-     "label": "Keep it running",
-     "key": "team-phone-keep-running",
-     "file": "lib/ui/widgets/team_phone_section.dart",
-     "line": 411,
-     "action": "open-sheet",
-     "target": "team-phone-tips-sheet",
-     "targetWidget": "showTeamPhoneTipsSheet",
-     "effect": "showTeamPhoneTipsSheet(context).",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "embedded-team-phone-section-remove",
-     "type": "button",
-     "label": "Remove from this phone",
-     "key": "team-phone-remove",
-     "file": "lib/ui/widgets/team_phone_section.dart",
-     "line": 428,
-     "action": "open-sheet",
-     "target": "team-phone-remove-sheet",
-     "targetWidget": "showConfirmSheet",
-     "effect": "_remove: destructive confirm sheet, then runtime.remove(), turns the plugin off for the profile and calls onRemoved.",
-     "gates": [
-      "status.installed",
-      "disabled while working"
-     ],
-     "destructive": true
-    },
-    {
-     "id": "embedded-team-phone-section-open-setup",
-     "type": "button",
-     "label": "Open phone setup",
-     "key": "team-phone-open-setup",
-     "file": "lib/ui/widgets/team_phone_section.dart",
-     "line": 440,
-     "action": "navigate",
-     "target": "termux-setup-installed",
-     "targetWidget": "openThisPhone",
-     "effect": "_openSetup: widget.onOpenSetup or openThisPhone(context, kind: termux), where the AI Team is added.",
-     "gates": [
-      "status != null && !working && not running/killed/canStart (no city yet)"
-     ],
-     "destructive": false
-    }
-   ]
-  },
-  {
-   "id": "team-phone-stop-sheet",
-   "title": "Stop the team on this phone?",
-   "kind": "sheet",
-   "area": "team",
-   "file": "lib/ui/widgets/team_phone_section.dart",
-   "widget": "_stop",
-   "presentedBy": [],
-   "line": 191,
-   "purpose": "Confirmation before stopping the phone-hosted supervisor.",
-   "reachedFrom": [
-    {
-     "page": "embedded-team-phone-section",
-     "element": "embedded-team-phone-section-stop"
-    }
-   ],
-   "gates": [],
-   "elements": [
-    {
-     "id": "team-phone-stop-sheet-confirm",
-     "type": "button",
-     "label": "Stop team",
-     "key": "team-phone-stop-confirm",
-     "file": "lib/ui/kit/kit_confirm_sheet.dart",
-     "line": 82,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Pops true; _stop then runs _run(runtime.stop). Not styled destructive (destructive: false in the call).",
-     "gates": [],
-     "destructive": true
-    },
-    {
-     "id": "team-phone-stop-sheet-cancel",
-     "type": "button",
-     "label": "Keep",
-     "key": null,
-     "file": "lib/ui/kit/kit_confirm_sheet.dart",
-     "line": 86,
-     "action": "dismiss",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Navigator.pop(context, false); nothing is sent.",
-     "gates": [],
-     "destructive": false
-    }
-   ]
-  },
-  {
-   "id": "team-phone-remove-sheet",
-   "title": "Remove the AI team from this phone?",
-   "kind": "sheet",
-   "area": "team",
-   "file": "lib/ui/widgets/team_phone_section.dart",
-   "widget": "_remove",
-   "presentedBy": [],
-   "line": 207,
-   "purpose": "Destructive confirmation before removing the on-device AI Team runtime.",
-   "reachedFrom": [
-    {
-     "page": "embedded-team-phone-section",
-     "element": "embedded-team-phone-section-remove"
-    }
-   ],
-   "gates": [],
-   "elements": [
-    {
-     "id": "team-phone-remove-sheet-confirm",
-     "type": "button",
-     "label": "Remove",
-     "key": "team-phone-remove-confirm",
-     "file": "lib/ui/kit/kit_confirm_sheet.dart",
-     "line": 82,
-     "action": "mutate",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Pops true; _remove then runtime.remove(), controller.remove() or orchestrationStore.sweep, clears profile.orchestration, setPhoneOffer(dismissed), syncOrchestration, SnackBar, onRemoved.",
-     "gates": [],
-     "destructive": true
-    },
-    {
-     "id": "team-phone-remove-sheet-cancel",
-     "type": "button",
-     "label": "Keep",
-     "key": null,
-     "file": "lib/ui/kit/kit_confirm_sheet.dart",
-     "line": 86,
-     "action": "dismiss",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Navigator.pop(context, false); nothing is sent.",
-     "gates": [],
-     "destructive": false
-    }
-   ]
-  },
-  {
-   "id": "team-phone-tips-sheet",
-   "title": "Keep it running",
-   "kind": "sheet",
-   "area": "team",
-   "file": "lib/ui/widgets/team_phone_section.dart",
-   "widget": "showTeamPhoneTipsSheet",
-   "presentedBy": [
-    "showTeamPhoneTipsSheet"
-   ],
-   "line": 450,
-   "purpose": "Tips to keep the phone supervisor alive (wake lock, battery, phantom-process ADB commands).",
-   "reachedFrom": [
-    {
-     "page": "embedded-team-phone-section",
-     "element": "embedded-team-phone-section-keep-running"
-    }
-   ],
-   "gates": [],
-   "elements": [
-    {
-     "id": "team-phone-tips-sheet-copy",
-     "type": "button",
-     "label": "Copy commands",
-     "key": "team-phone-tips-copy",
-     "file": "lib/ui/widgets/team_phone_section.dart",
-     "line": 516,
-     "action": "copy",
-     "target": null,
-     "targetWidget": null,
-     "effect": "Clipboard.setData(teamPhoneAdbCommands) then SnackBar.",
-     "gates": [],
      "destructive": false
     }
    ]
@@ -32811,14 +30875,6 @@
     {
      "page": "server-switcher-sheet",
      "element": "server-switcher-sheet-disconnect"
-    },
-    {
-     "page": "server-switcher-sheet",
-     "element": "server-switcher-sheet-phone-disconnect"
-    },
-    {
-     "page": "embedded-termux-running-server-entry",
-     "element": "embedded-termux-running-server-entry-menu-disconnect"
     }
    ],
    "gates": [],
@@ -35646,71 +33702,6 @@
    "elements": []
   },
   {
-   "id": "linux-backups",
-   "title": "Backups",
-   "kind": "screen",
-   "area": "misc",
-   "file": "lib/ui/screens/linux_manager/linux_backups_page.dart",
-   "widget": "LinuxBackupsPage",
-   "presentedBy": [],
-   "line": 47,
-   "purpose": "Keep a copy of the phone's Linux setup: choose setup, setup and projects, or projects only (the former Export projects), save one zip where the person picks, and restore one from a file. Backups never hold sign-ins, passwords or private SSH keys.",
-   "reachedFrom": [
-    {
-     "page": "linux-manager",
-     "element": "linux-manager-backups"
-    },
-    {
-     "page": "linux-manager",
-     "element": "linux-manager-reset"
-    }
-   ],
-   "gates": [
-    "in-app host only"
-   ],
-   "elements": [
-    {
-     "id": "linux-backups-go",
-     "type": "button",
-     "label": "Back up <what>",
-     "key": "linux-backup-go",
-     "file": "lib/ui/screens/linux_manager/linux_backups_page.dart",
-     "line": 297,
-     "action": "mutate",
-     "target": null,
-     "effect": "Asks where to save the zip, makes the backup inside Linux and saves it; Projects only opens the projects export.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "linux-backups-choice",
-     "type": "list-tile",
-     "label": "Setup / Setup and projects / Projects only",
-     "key": "linux-backup-choice",
-     "file": "lib/ui/screens/linux_manager/linux_backups_page.dart",
-     "line": 322,
-     "action": "other",
-     "target": null,
-     "effect": "Chooses what the primary backs up.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "linux-backups-restore",
-     "type": "list-tile",
-     "label": "Restore from a backup",
-     "key": "linux-restore-row",
-     "file": "lib/ui/screens/linux_manager/linux_backups_page.dart",
-     "line": 350,
-     "action": "mutate",
-     "target": null,
-     "effect": "Opens the file picker, reads the backup, asks, then puts it back.",
-     "gates": [],
-     "destructive": false
-    }
-   ]
-  },
-  {
    "id": "linux-manager",
    "title": "Linux on this phone",
    "kind": "screen",
@@ -35813,19 +33804,6 @@
      "destructive": false
     },
     {
-     "id": "linux-manager-services",
-     "type": "list-tile",
-     "label": "Services",
-     "key": "linux-row-services",
-     "file": "lib/ui/screens/linux_manager/linux_manager_screen.dart",
-     "line": 154,
-     "action": "navigate",
-     "target": "linux-services",
-     "effect": "Opens Services. The line under it names what runs, or the one that gave up.",
-     "gates": [],
-     "destructive": false
-    },
-    {
      "id": "linux-manager-reset",
      "type": "list-tile",
      "label": "Reset Linux",
@@ -35839,19 +33817,6 @@
       "not while setup or a package job runs"
      ],
      "destructive": true
-    },
-    {
-     "id": "linux-manager-backups",
-     "type": "list-tile",
-     "label": "Backups",
-     "key": "linux-row-backups",
-     "file": "lib/ui/screens/linux_manager/linux_manager_screen.dart",
-     "line": 322,
-     "action": "navigate",
-     "target": "linux-backups",
-     "effect": "Opens Backups. The line under it says when the last backup was saved, or that there is none yet.",
-     "gates": [],
-     "destructive": false
     }
    ]
   },
@@ -36087,223 +34052,6 @@
       "not the OpenCode server",
       "disabled while stopping"
      ],
-     "destructive": true
-    }
-   ]
-  },
-  {
-   "id": "linux-service-add",
-   "title": "Add a service",
-   "kind": "screen",
-   "area": "misc",
-   "file": "lib/ui/screens/linux_manager/linux_service_add_page.dart",
-   "widget": "LinuxServiceAddPage",
-   "presentedBy": [],
-   "line": 33,
-   "purpose": "A command of your own: name, command, folder, optional port and restart-on-crash; each field says what is wrong beside it.",
-   "reachedFrom": [
-    {
-     "page": "linux-services",
-     "element": "linux-services-add"
-    }
-   ],
-   "gates": [
-    "in-app host only"
-   ],
-   "elements": [
-    {
-     "id": "linux-service-save",
-     "type": "button",
-     "label": "Save and start",
-     "key": "linux-service-save",
-     "file": "lib/ui/screens/linux_manager/linux_service_add_page.dart",
-     "line": 207,
-     "action": "other",
-     "target": null,
-     "effect": "save() then start(); closes. A start that fails is shown on the list.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "linux-service-restart-toggle",
-     "type": "toggle",
-     "label": "Restart when it crashes",
-     "key": "linux-service-restart-switch",
-     "file": "lib/ui/screens/linux_manager/linux_service_add_page.dart",
-     "line": 303,
-     "action": "other",
-     "target": null,
-     "effect": "Chooses restart on-failure (on) or never.",
-     "gates": [],
-     "destructive": false
-    }
-   ]
-  },
-  {
-   "id": "linux-service",
-   "title": "Service",
-   "kind": "screen",
-   "area": "misc",
-   "file": "lib/ui/screens/linux_manager/linux_service_page.dart",
-   "widget": "LinuxServicePage",
-   "presentedBy": [],
-   "line": 23,
-   "purpose": "One service: its state in words, Open (with a port), Start or Stop, Restart, Remove, and its live log with search and copy.",
-   "reachedFrom": [
-    {
-     "page": "linux-services",
-     "element": "linux-services-row"
-    }
-   ],
-   "gates": [
-    "in-app host only"
-   ],
-   "elements": [
-    {
-     "id": "linux-service-open",
-     "type": "list-tile",
-     "label": "Open <service>",
-     "key": "linux-service-open",
-     "file": "lib/ui/screens/linux_manager/linux_service_page.dart",
-     "line": 213,
-     "action": "navigate",
-     "target": null,
-     "effect": "openDevPreview on the service's port.",
-     "gates": [
-      "the service has a port and is running"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "linux-service-stop",
-     "type": "list-tile",
-     "label": "Stop <service>",
-     "key": "linux-service-stop",
-     "file": "lib/ui/screens/linux_manager/linux_service_page.dart",
-     "line": 225,
-     "action": "other",
-     "target": null,
-     "effect": "stop(): stays stopped until started again.",
-     "gates": [
-      "it is kept running"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "linux-service-start",
-     "type": "list-tile",
-     "label": "Start <service>",
-     "key": "linux-service-start",
-     "file": "lib/ui/screens/linux_manager/linux_service_page.dart",
-     "line": 237,
-     "action": "other",
-     "target": null,
-     "effect": "start(): kept running, also after a crash or a restart.",
-     "gates": [
-      "it is off or gave up"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "linux-service-restart",
-     "type": "list-tile",
-     "label": "Restart <service>",
-     "key": "linux-service-restart",
-     "file": "lib/ui/screens/linux_manager/linux_service_page.dart",
-     "line": 249,
-     "action": "other",
-     "target": null,
-     "effect": "restart(): a new kick.",
-     "gates": [
-      "it is running"
-     ],
-     "destructive": false
-    },
-    {
-     "id": "linux-service-remove",
-     "type": "list-tile",
-     "label": "Remove <service>",
-     "key": "linux-service-remove",
-     "file": "lib/ui/screens/linux_manager/linux_service_page.dart",
-     "line": 258,
-     "action": "open-dialog",
-     "target": null,
-     "effect": "Asks, then remove() and leaves the page.",
-     "gates": [],
-     "destructive": true
-    }
-   ]
-  },
-  {
-   "id": "linux-services",
-   "title": "Services",
-   "kind": "screen",
-   "area": "misc",
-   "file": "lib/ui/screens/linux_manager/linux_services_page.dart",
-   "widget": "LinuxServicesPage",
-   "presentedBy": [],
-   "line": 35,
-   "purpose": "What the person keeps running in the app's Linux: one list by urgency, each service with its state in words and a Start or Stop chip; Add a service first.",
-   "reachedFrom": [
-    {
-     "page": "linux-manager",
-     "element": "linux-manager-services"
-    }
-   ],
-   "gates": [
-    "in-app host only"
-   ],
-   "elements": [
-    {
-     "id": "linux-services-add",
-     "type": "list-tile",
-     "label": "Add a service",
-     "key": "linux-services-add",
-     "file": "lib/ui/screens/linux_manager/linux_services_page.dart",
-     "line": 209,
-     "action": "navigate",
-     "target": "linux-service-add",
-     "effect": "Opens the form for a command of your own.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "linux-services-row",
-     "type": "list-tile",
-     "label": "<service> · state",
-     "key": "linux-service-<name>",
-     "file": "lib/ui/screens/linux_manager/linux_services_page.dart",
-     "line": 250,
-     "action": "navigate",
-     "target": "linux-service",
-     "effect": "Opens the service page.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "linux-services-chip",
-     "type": "chip",
-     "label": "Start / Stop",
-     "key": "linux-service-chip-<name>",
-     "file": "lib/ui/screens/linux_manager/linux_services_page.dart",
-     "line": 255,
-     "action": "other",
-     "target": null,
-     "effect": "start() keeps it running; stop() leaves it off until started again.",
-     "gates": [],
-     "destructive": false
-    },
-    {
-     "id": "linux-services-remove",
-     "type": "menu-item",
-     "label": "Remove <service>",
-     "key": "linux-service-remove-<name>",
-     "file": "lib/ui/screens/linux_manager/linux_services_page.dart",
-     "line": 297,
-     "action": "open-dialog",
-     "target": null,
-     "effect": "Asks, then remove(): the log and settings go, the program stays installed.",
-     "gates": [],
      "destructive": true
     }
    ]
@@ -36895,26 +34643,6 @@
     "from": "server-switcher-sheet",
     "element": "server-switcher-sheet-disconnect",
     "to": "settings-disconnect-sheet"
-   },
-   {
-    "from": "server-switcher-sheet",
-    "element": "server-switcher-sheet-phone-connect",
-    "to": "servers"
-   },
-   {
-    "from": "server-switcher-sheet",
-    "element": "server-switcher-sheet-phone-disconnect",
-    "to": "settings-disconnect-sheet"
-   },
-   {
-    "from": "server-switcher-sheet",
-    "element": "server-switcher-sheet-phone-manage",
-    "to": "termux-setup-installed"
-   },
-   {
-    "from": "server-switcher-sheet",
-    "element": "server-switcher-sheet-phone-forget",
-    "to": "servers"
    },
    {
     "from": "connection-status-details-sheet",
@@ -38583,16 +36311,6 @@
    },
    {
     "from": "termux-setup-installed",
-    "element": "termux-setup-installed-storage-row",
-    "to": "termux-storage"
-   },
-   {
-    "from": "termux-setup-installed",
-    "element": "termux-setup-installed-processes-row",
-    "to": "termux-processes"
-   },
-   {
-    "from": "termux-setup-installed",
     "element": "termux-setup-installed-keep-running",
     "to": "notifications-settings"
    },
@@ -38610,41 +36328,6 @@
     "from": "termux-setup-installed",
     "element": "this-phone-running-row",
     "to": "running-on-phone"
-   },
-   {
-    "from": "termux-processes",
-    "element": "termux-processes-stop-group",
-    "to": "termux-processes-stop-group-sheet"
-   },
-   {
-    "from": "termux-processes",
-    "element": "termux-processes-row",
-    "to": "termux-processes-details-sheet"
-   },
-   {
-    "from": "termux-processes",
-    "element": "termux-processes-row-protected",
-    "to": "termux-setup-installed"
-   },
-   {
-    "from": "termux-processes-details-sheet",
-    "element": "termux-processes-details-sheet-server-controls",
-    "to": "termux-setup-installed"
-   },
-   {
-    "from": "termux-processes-details-sheet",
-    "element": "termux-processes-details-sheet-stop",
-    "to": "termux-processes-stop-one-sheet"
-   },
-   {
-    "from": "termux-storage",
-    "element": "termux-storage-open-running",
-    "to": "termux-processes"
-   },
-   {
-    "from": "termux-storage",
-    "element": "termux-storage-category-clean",
-    "to": "termux-storage-clean-sheet"
    },
    {
     "from": "development-services",
@@ -38685,56 +36368,6 @@
     "from": "development-services",
     "element": "development-services-remove",
     "to": "development-services-confirm-sheet"
-   },
-   {
-    "from": "embedded-termux-running-server-entry",
-    "element": "embedded-termux-running-server-entry-menu-disconnect",
-    "to": "settings-disconnect-sheet"
-   },
-   {
-    "from": "embedded-termux-running-server-entry",
-    "element": "embedded-termux-running-server-entry-menu-manage",
-    "to": "termux-setup-installed"
-   },
-   {
-    "from": "embedded-termux-running-server-entry",
-    "element": "embedded-termux-running-server-entry-menu-forget",
-    "to": "servers-remove-server-sheet"
-   },
-   {
-    "from": "embedded-termux-attention-line",
-    "element": "embedded-termux-attention-line-open",
-    "to": "termux-processes"
-   },
-   {
-    "from": "embedded-local-agent-onboarding-block",
-    "element": "embedded-local-agent-onboarding-block-open-setup",
-    "to": "phone-setup-progress"
-   },
-   {
-    "from": "embedded-local-agent-onboarding-block",
-    "element": "embedded-local-agent-onboarding-block-menu-remove",
-    "to": "remove-local-agents-confirm-sheet"
-   },
-   {
-    "from": "embedded-local-agent-onboarding-block",
-    "element": "embedded-local-agent-onboarding-block-connect",
-    "to": "local-agent-project-sheet"
-   },
-   {
-    "from": "embedded-local-agent-server-entry",
-    "element": "embedded-local-agent-server-entry-restart",
-    "to": "restart-local-agents-sheet"
-   },
-   {
-    "from": "embedded-local-agent-server-entry",
-    "element": "embedded-local-agent-server-entry-stop",
-    "to": "stop-local-agents-confirm-sheet"
-   },
-   {
-    "from": "embedded-local-agent-server-entry",
-    "element": "embedded-local-agent-server-entry-menu-manage",
-    "to": "termux-setup-installed"
    },
    {
     "from": "phone-setup-start",
@@ -38780,16 +36413,6 @@
     "from": "phone-setup-progress",
     "element": "phone-setup-progress-cancel",
     "to": "phone-setup-progress-stop-sheet"
-   },
-   {
-    "from": "phone-setup-progress",
-    "element": "phone-setup-progress-termux-done-home",
-    "to": "home-shell"
-   },
-   {
-    "from": "phone-setup-progress",
-    "element": "phone-setup-progress-termux-connect-existing",
-    "to": "servers"
    },
    {
     "from": "phone-setup-ready",
@@ -38860,11 +36483,6 @@
     "from": "team-settings",
     "element": "team-home-change-address",
     "to": "team-host-sheet"
-   },
-   {
-    "from": "team-settings",
-    "element": "team-home-phone-controls",
-    "to": "embedded-team-phone-section"
    },
    {
     "from": "team-settings",
@@ -39200,26 +36818,6 @@
     "from": "team-phone-onboarding-success",
     "element": "team-phone-onboarding-success-open-workspace",
     "to": "chat"
-   },
-   {
-    "from": "embedded-team-phone-section",
-    "element": "embedded-team-phone-section-stop",
-    "to": "team-phone-stop-sheet"
-   },
-   {
-    "from": "embedded-team-phone-section",
-    "element": "embedded-team-phone-section-open-setup",
-    "to": "termux-setup-installed"
-   },
-   {
-    "from": "embedded-team-phone-section",
-    "element": "embedded-team-phone-section-keep-running",
-    "to": "team-phone-tips-sheet"
-   },
-   {
-    "from": "embedded-team-phone-section",
-    "element": "embedded-team-phone-section-remove",
-    "to": "team-phone-remove-sheet"
    },
    {
     "from": "team-host-sheet",
@@ -39728,11 +37326,6 @@
    },
    {
     "from": "linux-manager",
-    "element": "linux-manager-services",
-    "to": "linux-services"
-   },
-   {
-    "from": "linux-manager",
     "element": "linux-manager-running",
     "to": "linux-processes"
    },
@@ -39750,21 +37343,6 @@
     "from": "linux-manager",
     "element": "linux-manager-packages",
     "to": "linux-packages"
-   },
-   {
-    "from": "linux-manager",
-    "element": "linux-manager-backups",
-    "to": "linux-backups"
-   },
-   {
-    "from": "linux-services",
-    "element": "linux-services-add",
-    "to": "linux-service-add"
-   },
-   {
-    "from": "linux-services",
-    "element": "linux-services-row",
-    "to": "linux-service"
    },
    {
     "from": "scheduled-prompts",
@@ -39938,12 +37516,6 @@
     "from": "mcp-catalog",
     "element": "mcp-catalog-switch",
     "to": "mcp-catalog-remove-sheet",
-    "secondary": true
-   },
-   {
-    "from": "linux-manager",
-    "element": "linux-manager-reset",
-    "to": "linux-backups",
     "secondary": true
    },
    {
@@ -40335,47 +37907,6 @@
     "via": "state"
    },
    {
-    "from": "embedded-termux-running-server-entry",
-    "element": null,
-    "to": "profile-editor"
-   },
-   {
-    "from": "server-switcher-sheet",
-    "element": null,
-    "to": "embedded-termux-running-server-entry",
-    "via": "embedded"
-   },
-   {
-    "from": "servers",
-    "element": null,
-    "to": "embedded-termux-running-server-entry",
-    "via": "embedded"
-   },
-   {
-    "from": "embedded-local-agent-onboarding-block",
-    "element": null,
-    "to": "embedded-setup-terminal",
-    "via": "embedded"
-   },
-   {
-    "from": "local-agent-page",
-    "element": null,
-    "to": "embedded-local-agent-onboarding-block",
-    "via": "embedded"
-   },
-   {
-    "from": "server-switcher-sheet",
-    "element": null,
-    "to": "embedded-local-agent-server-entry",
-    "via": "embedded"
-   },
-   {
-    "from": "servers",
-    "element": null,
-    "to": "embedded-local-agent-server-entry",
-    "via": "embedded"
-   },
-   {
     "from": "servers",
     "element": null,
     "to": "phone-setup-start"
@@ -40401,16 +37932,6 @@
     "element": null,
     "to": "embedded-phone-server-card",
     "via": "embedded"
-   },
-   {
-    "from": "termux-setup-installed",
-    "element": null,
-    "to": "termux-migration"
-   },
-   {
-    "from": "servers",
-    "element": null,
-    "to": "termux-migration"
    },
    {
     "from": "settings",
@@ -40439,12 +37960,6 @@
     "from": "this-phone-add-tools-sheet",
     "element": null,
     "to": "team-phone-onboarding-killed",
-    "via": "embedded"
-   },
-   {
-    "from": "team-home",
-    "element": null,
-    "to": "embedded-team-phone-section",
     "via": "embedded"
    },
    {
@@ -40678,11 +38193,6 @@
    "part": "b1-chat-screen"
   },
   {
-   "file": "lib/ui/screens/chat/chat_local_summary.dart",
-   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): the conversation menu's Summarize on this phone entry; the sheet it opens is lib/local_llm/local_llm_ui.dart. No separate surface.",
-   "part": "b1-chat-screen"
-  },
-  {
    "file": "lib/ui/screens/chat/chat_mentions.dart",
    "reason": "Not a page: the chat's @-mention search state and helpers, drawn in the composer.",
    "part": "o-usage-and-settings"
@@ -40705,6 +38215,11 @@
   {
    "file": "lib/ui/screens/chat/chat_page_cache.dart",
    "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): what one build of the page reads, kept between builds; draws nothing, no separate surface.",
+   "part": "b1-chat-screen"
+  },
+  {
+   "file": "lib/ui/screens/chat/chat_path_link.dart",
+   "reason": "Part file of lib/ui/screens/chat_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface.",
    "part": "b1-chat-screen"
   },
   {
@@ -40968,6 +38483,11 @@
    "part": "j2-library"
   },
   {
+   "file": "lib/ui/screens/library/integrations_load_states.dart",
+   "reason": "Not a page: how each Integrations list stands when it is not loaded (waiting, not offered, failed), part of the Integrations screen.",
+   "part": "o-usage-and-settings"
+  },
+  {
    "file": "lib/ui/screens/library/integrations_mcp.dart",
    "reason": "Part file of lib/ui/screens/library_screen.dart (same screen, same library): its elements are listed under that screen's ledger entries; no separate surface.",
    "part": "j2-library"
@@ -41000,11 +38520,6 @@
   {
    "file": "lib/ui/screens/linux_manager/linux_reset.dart",
    "reason": "the Reset Linux question and flow, listed as the Reset row on the hub page",
-   "part": "q-linux-manager"
-  },
-  {
-   "file": "lib/ui/screens/linux_manager/linux_services_common.dart",
-   "reason": "the live list of services, their words and the Remove question, shared by the Services pages; the acts are listed on those pages",
    "part": "q-linux-manager"
   },
   {
@@ -41051,6 +38566,11 @@
    "file": "lib/ui/screens/scheduling/schedule_routes.dart",
    "reason": "Capability-gated navigation and revalidated conversation routing; the destination screens are registered above.",
    "part": "scheduled-prompts"
+  },
+  {
+   "file": "lib/ui/screens/send_problem_report.dart",
+   "reason": "A sheet opened from Settings > Help (openSendProblemReport), not a page: it shows the redacted report and its Send button; no separate surface in the page map.",
+   "part": "j1-settings-more"
   },
   {
    "file": "lib/ui/screens/servers/profile_editor.dart",

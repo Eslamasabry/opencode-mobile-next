@@ -61,13 +61,13 @@ class PhoneRuntime {
     }
 
     if (await installed() == currentCertificationBuild) return;
-    const apk = '/home/owner/Storage/tmp/oc-apk-share/oc-2203.apk';
+    const apk = '/home/eslam/Storage/tmp/oc-apk-share/oc-2203.apk';
     if (!File(apk).existsSync() || FileSystemEntity.isLinkSync(apk)) {
       throw const ProbeFailure('normal_apk_unavailable');
     }
     try {
       final manifest = await Process.run(
-        '/home/owner/Android/Sdk/build-tools/36.1.0/aapt',
+        '/home/eslam/Android/Sdk/build-tools/36.1.0/aapt',
         ['dump', 'badging', apk],
       ).timeout(const Duration(seconds: 30));
       if (manifest.exitCode != 0 ||
@@ -77,7 +77,7 @@ class PhoneRuntime {
         throw const ProbeFailure('normal_apk_build_mismatch');
       }
       final certificate = await Process.run(
-        '/home/owner/Android/Sdk/build-tools/36.1.0/apksigner',
+        '/home/eslam/Android/Sdk/build-tools/36.1.0/apksigner',
         ['verify', '--print-certs', apk],
       ).timeout(const Duration(seconds: 30));
       if (certificate.exitCode != 0 ||

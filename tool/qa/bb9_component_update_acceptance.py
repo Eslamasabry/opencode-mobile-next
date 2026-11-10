@@ -566,7 +566,7 @@ class FilesystemSession:
 
 
 def inherited_lock(fd=None):
-    stat = os.stat(os.path.expanduser('~/Storage/tmp/oc-emulator.lock'))
+    stat = os.stat('/home/eslam/Storage/tmp/oc-emulator.lock')
     if fd is None:
         found = []
         for path in Path('/proc/self/fd').iterdir():

@@ -7,7 +7,7 @@
 //   flutter test --concurrency=1 --dart-define=AURORA_PHASE=before \
 //     tool/capture/bright_aurora_test.dart
 //
-// Output: /home/owner/Storage2/launch-footage/bright-aurora/<phase>-<scene>.png
+// Output: /home/eslam/Storage2/launch-footage/bright-aurora/<phase>-<scene>.png
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -32,7 +32,7 @@ const _phase = String.fromEnvironment('AURORA_PHASE', defaultValue: 'after');
 const _second = int.fromEnvironment('AURORA_SECOND', defaultValue: 21);
 const _dir = String.fromEnvironment(
   'AURORA_OUT',
-  defaultValue: '/home/owner/Storage2/launch-footage/bright-aurora',
+  defaultValue: '/home/eslam/Storage2/launch-footage/bright-aurora',
 );
 
 void _mockSecureStorage(WidgetTester tester) {

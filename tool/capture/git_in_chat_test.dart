@@ -2,7 +2,7 @@
 // branch chip in its header, the Git sheet the chip opens, the Save changes
 // file list, and the GitHub sign-in code step. The project's Git answers come
 // from a fake server shell, so nothing touches a server or a repository.
-// Writes one PNG per screen under /home/owner/Storage2/launch-footage/
+// Writes one PNG per screen under /home/eslam/Storage2/launch-footage/
 // git-in-chat/.
 //
 // Run with:
@@ -23,7 +23,7 @@ import '../../test/git/git_test_support.dart';
 import '../../test/support/setup_capture_preferences.dart';
 import 'fixtures.dart';
 
-const _outputDir = '/home/owner/Storage2/launch-footage/git-in-chat';
+const _outputDir = '/home/eslam/Storage2/launch-footage/git-in-chat';
 
 const _status =
     '# branch.oid b196b9f452aac7110d9a5277edd4d698e72d9872\x00'

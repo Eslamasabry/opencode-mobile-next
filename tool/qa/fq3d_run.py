@@ -21,10 +21,10 @@ import threading
 BINARY = Path(
     os.environ.get(
         "FQ3D_BINARY",
-        os.path.expanduser('~/Storage/Code/oc2-spike/new/node_modules/@opencode/cli-linux-x64/bin/opencode'),
+        "/home/eslam/Storage/Code/oc2-spike/new/node_modules/@opencode/cli-linux-x64/bin/opencode",
     )
 )
-FLUTTER = os.path.expanduser('~/.shorebird/bin/cache/flutter/6e5e949520159b5ceb029598be37520cd433b046/bin/flutter')
+FLUTTER = "/home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter"
 OUTPUT = Path("docs/qa/FQ3d-2026-10-08/pc-client-proof.json")
 
 

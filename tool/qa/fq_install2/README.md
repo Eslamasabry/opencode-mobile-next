@@ -7,7 +7,7 @@ SHA-256, source commit and the reviewed build's only relevant Dart define:
 ```json
 {
   "normal": {
-    "apk": "/home/owner/Storage/tmp/oc-apk-share/oc-2197.apk",
+    "apk": "/home/eslam/Storage/tmp/oc-apk-share/oc-2197.apk",
     "build": 2197,
     "sha256": "<64 lowercase hex from the actual APK>",
     "sourceRevision": "<40 lowercase hex from its actual build>",
@@ -34,7 +34,7 @@ python3 tool/qa/fq_install2/run.py fx --case low-storage --manifest /tmp/actual-
 
 Accepted targets: Codex (`codex`), Gemini CLI (`gemini`), Qwen Code (`qwen`), Goose
 (`goose`), Oh My Pi (`omp-acp`), fx. One target per command. Execution acquires
-`/home/owner/Storage/tmp/oc-emulator.lock`, only uses emulator-5554, checks actual
+`/home/eslam/Storage/tmp/oc-emulator.lock`, only uses emulator-5554, checks actual
 free space first (800 MB minimum), verifies signer `1DE5BF08…`, rejects active
 or unreadable setup/checks, and rejects another installed target. It installs
 through Settings → Agents when needed and measures the target read-only. It

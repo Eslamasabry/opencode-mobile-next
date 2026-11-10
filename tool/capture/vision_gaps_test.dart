@@ -7,7 +7,7 @@
 //
 //   TZ=UTC flutter test --concurrency=1 tool/capture/vision_gaps_test.dart
 //
-// Output: /home/owner/vision-assets/out/gaps/renders/<scene>.png
+// Output: /home/eslam/vision-assets/out/gaps/renders/<scene>.png
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -26,7 +26,7 @@ import 'fixtures.dart';
 
 const _out = String.fromEnvironment(
   'VISION_OUT',
-  defaultValue: '/home/owner/vision-assets/out/gaps/renders',
+  defaultValue: '/home/eslam/vision-assets/out/gaps/renders',
 );
 
 /// Only these scenes (comma separated), when given.

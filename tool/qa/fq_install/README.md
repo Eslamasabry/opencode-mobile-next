@@ -12,7 +12,7 @@ python3 tool/qa/fq_install/run.py fx
 ```
 
 Accepted IDs are exactly those six. Each invocation acquires the shared
-`/home/owner/Storage/tmp/oc-emulator.lock` itself and refuses a busy lock by default. Add `--wait` to queue behind another lane. It
+`/home/eslam/Storage/tmp/oc-emulator.lock` itself and refuses a busy lock by default. Add `--wait` to queue behind another lane. It
 only addresses `emulator-5554`, expects its x64 Ubuntu runtime, and infers the
 repository from this script's location. It generates the catalog from
 `catalog.dart` using the pinned Shorebird Dart SDK and this worktree's
@@ -30,7 +30,7 @@ native job, runs Check this phone, projects the matching version/gate/auth
 facts, probes account-free CLI initialization in an empty HOME, and cleans up
 before the next target. If a different app is installed, it verifies the
 approved APK's full local signer and restores
-`/home/owner/Storage/tmp/oc-apk-share/oc-2196.apk` with `adb install -r -d`.
+`/home/eslam/Storage/tmp/oc-apk-share/oc-2196.apk` with `adb install -r -d`.
 Restoring or force-stopping requires a known terminal native setup snapshot
 and no visible setup/check preflight. An active or unreadable job blocks these
 mutations. The app is never uninstalled or cleared. Individual device helpers

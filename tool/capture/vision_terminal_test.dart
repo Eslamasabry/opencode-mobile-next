@@ -4,7 +4,7 @@
 //
 //   TZ=UTC flutter test --concurrency=1 tool/capture/vision_terminal_test.dart
 //
-// Output: /home/owner/vision-assets/out/vision-terminal/<phase>-<scene>.png
+// Output: /home/eslam/vision-assets/out/vision-terminal/<phase>-<scene>.png
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,7 +27,7 @@ import 'fixtures.dart';
 import 'audit/audit_env.dart';
 
 const _phase = String.fromEnvironment('VISION_PHASE', defaultValue: 'after');
-const _dir = '/home/owner/vision-assets/out/vision-terminal';
+const _dir = '/home/eslam/vision-assets/out/vision-terminal';
 
 const _phoneOutput =
     '\x1b[1;32mroot@localhost\x1b[0m:\x1b[1;34m~/projects/neon-breaker\x1b[0m# git status\r\n'

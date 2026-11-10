@@ -7,7 +7,7 @@
 //   flutter test --concurrency=1 --dart-define=VISION_OUT=<dir> \
 //     tool/capture/vision_welcome_test.dart
 //
-// Output: /home/owner/Storage2/launch-footage/vision-welcome/<scene>.png
+// Output: /home/eslam/Storage2/launch-footage/vision-welcome/<scene>.png
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -33,7 +33,7 @@ import 'audit/audit_env.dart';
 
 const _out = String.fromEnvironment(
   'VISION_OUT',
-  defaultValue: '/home/owner/Storage2/launch-footage/vision-welcome',
+  defaultValue: '/home/eslam/Storage2/launch-footage/vision-welcome',
 );
 
 enum _Job { none, running, stopped, done }

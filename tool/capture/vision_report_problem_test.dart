@@ -6,7 +6,7 @@
 //   flutter test --concurrency=1 --dart-define=VISION_PASS=pass1 \
 //     tool/capture/vision_report_problem_test.dart
 //
-// Output: /home/owner/Storage2/launch-footage/vision-report-problem/<pass>/
+// Output: /home/eslam/Storage2/launch-footage/vision-report-problem/<pass>/
 // <scene>.png (without a pass, straight into the folder).
 import 'dart:async';
 
@@ -27,7 +27,7 @@ import '../../test/support/setup_capture_preferences.dart';
 import 'fixtures.dart';
 
 const _pass = String.fromEnvironment('VISION_PASS', defaultValue: '');
-const _root = '/home/owner/Storage2/launch-footage/vision-report-problem';
+const _root = '/home/eslam/Storage2/launch-footage/vision-report-problem';
 String get _dir => _pass.isEmpty ? _root : '$_root/$_pass';
 
 class _Api extends CaptureApi {

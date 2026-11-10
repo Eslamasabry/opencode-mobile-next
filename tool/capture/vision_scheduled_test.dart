@@ -8,7 +8,7 @@
 //   TZ=UTC flutter test --concurrency=1 --dart-define=VISION_OUT=<dir> \
 //     tool/capture/vision_scheduled_test.dart
 //
-// Output: /home/owner/Storage2/launch-footage/vision-scheduled/<scene>.png
+// Output: /home/eslam/Storage2/launch-footage/vision-scheduled/<scene>.png
 //
 // The data is invented and plain: a project "neon-breaker" on a saved server
 // "Laptop", on Tuesday 20 October 2026 at 8:10 in the morning.
@@ -33,7 +33,7 @@ import 'audit/audit_env.dart';
 
 const _out = String.fromEnvironment(
   'VISION_OUT',
-  defaultValue: '/home/owner/Storage2/launch-footage/vision-scheduled',
+  defaultValue: '/home/eslam/Storage2/launch-footage/vision-scheduled',
 );
 
 /// What is on the screen.

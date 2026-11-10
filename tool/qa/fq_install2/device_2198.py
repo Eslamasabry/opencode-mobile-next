@@ -15,7 +15,7 @@ from PIL import Image, ImageDraw
 import run
 
 QA = run.REPO / 'docs/qa/FQ-install2-2026-10-09'
-NORMAL = Path('/home/owner/Storage/tmp/oc-apk-share/oc-2198.apk')
+NORMAL = Path('/home/eslam/Storage/tmp/oc-apk-share/oc-2198.apk')
 SOURCE = '064a43a3687773626dc5ce37853446c29be41e0c'
 
 

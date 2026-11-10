@@ -5,7 +5,7 @@
 //     tool/capture/quiet_notices_test.dart
 //   flutter test --concurrency=1 tool/capture/quiet_notices_test.dart
 //
-// Output: /home/owner/Storage2/launch-footage/quiet-notices/<phase>-dark.png
+// Output: /home/eslam/Storage2/launch-footage/quiet-notices/<phase>-dark.png
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -20,7 +20,7 @@ import '../../test/support/chats_fakes.dart';
 import 'fixtures.dart';
 
 const _phase = String.fromEnvironment('NOTE_PHASE', defaultValue: 'after');
-const _dir = '/home/owner/Storage2/launch-footage/quiet-notices';
+const _dir = '/home/eslam/Storage2/launch-footage/quiet-notices';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

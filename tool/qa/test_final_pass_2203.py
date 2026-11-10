@@ -76,7 +76,7 @@ class FreshRerunLocationTest(unittest.TestCase):
         ):
             live.fresh(context)
         self.assertEqual(
-            checked, [Path("/home/owner/Storage/android-qa-fb1-final-new-run")]
+            checked, [Path("/home/eslam/Storage/android-qa-fb1-final-new-run")]
         )
 
 

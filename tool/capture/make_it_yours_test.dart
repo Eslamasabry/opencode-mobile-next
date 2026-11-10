@@ -6,7 +6,7 @@
 //   TZ=UTC flutter test --concurrency=1 tool/capture/make_it_yours_test.dart
 //   ... --dart-define=VISION_PASS=pass2 (file prefix)
 //
-// Output: /home/owner/vision-assets/out/make-it-yours/progress/<pass>-<scene>-<dark|light>.png
+// Output: /home/eslam/vision-assets/out/make-it-yours/progress/<pass>-<scene>-<dark|light>.png
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -23,7 +23,7 @@ import 'fixtures.dart';
 
 const _out = String.fromEnvironment(
   'VISION_OUT',
-  defaultValue: '/home/owner/vision-assets/out/make-it-yours/progress',
+  defaultValue: '/home/eslam/vision-assets/out/make-it-yours/progress',
 );
 
 /// The pass the images belong to ("pass1"), the file name's prefix.

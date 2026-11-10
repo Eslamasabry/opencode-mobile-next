@@ -28,7 +28,7 @@ import 'fixtures.dart';
 
 const _out = String.fromEnvironment(
   'FIDELITY_OUT',
-  defaultValue: '/home/owner/Storage2/launch-footage/chat-fidelity',
+  defaultValue: '/home/eslam/Storage2/launch-footage/chat-fidelity',
 );
 
 const _dir = '/root/projects/neon-breaker';

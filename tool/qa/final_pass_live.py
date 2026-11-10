@@ -26,7 +26,7 @@ def resources():
     )
     facts = {
         "availableRamBytes": int(memory["MemAvailable"].split()[0]) * 1024,
-        "storageFreeBytes": shutil.disk_usage(os.path.expanduser('~/Storage')).free,
+        "storageFreeBytes": shutil.disk_usage("/home/eslam/Storage").free,
         "rootFreeBytes": shutil.disk_usage("/").free,
         "kvmAccessible": os.access("/dev/kvm", os.R_OK | os.W_OK),
     }
@@ -43,7 +43,7 @@ def fresh(context):
     facts = resources()
     if not facts["admitted"]:
         return result(context, "fb1", "blocked", "fresh_avd_resource_budget", facts)
-    root = Path(os.path.expanduser('~/Storage')) / ("android-qa-fb1-" + context.run_id)
+    root = Path("/home/eslam/Storage") / ("android-qa-fb1-" + context.run_id)
     if root.exists():
         return result(context, "fb1", "blocked", "fresh_avd_directory_exists", facts)
     held = []
@@ -73,7 +73,7 @@ def fresh(context):
         path = root / folder
         path.mkdir(mode=0o700, exist_ok=True)
         env[key] = str(path)
-    sdk = Path(os.path.expanduser('~/Android/Sdk'))
+    sdk = Path("/home/eslam/Android/Sdk")
     env.update(
         ANDROID_HOME=str(sdk),
         ANDROID_SDK_ROOT=str(sdk),
