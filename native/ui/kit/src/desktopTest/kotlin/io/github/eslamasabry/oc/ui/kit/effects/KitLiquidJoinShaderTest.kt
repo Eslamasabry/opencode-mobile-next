@@ -1,8 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.effects
 
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ShaderBrush
 import io.github.eslamasabry.oc.ui.design.effects.JoinBox
 import io.github.eslamasabry.oc.ui.design.effects.LiquidJoin
 import io.github.eslamasabry.oc.ui.kit.live.LiveShaderProgram
@@ -53,7 +51,7 @@ class KitLiquidJoinShaderTest {
     /** The shader's mode-[mode] output alpha (0-255) over a [w] x [h] px area. */
     private fun alphas(p: LiveShaderProgram, u: JoinUniforms, mode: Float, w: Int, h: Int): IntArray {
         u.set(p, mode, res = 1f)
-        val shader = (p.brush as ShaderBrush).createShader(Size(w.toFloat(), h.toFloat()))
+        val shader = (p as DesktopLiveShader).skiaShader()
         val bitmap = Bitmap()
         bitmap.allocPixels(ImageInfo.makeN32(w, h, ColorAlphaType.PREMUL))
         Canvas(bitmap).drawPaint(Paint().apply { this.shader = shader })

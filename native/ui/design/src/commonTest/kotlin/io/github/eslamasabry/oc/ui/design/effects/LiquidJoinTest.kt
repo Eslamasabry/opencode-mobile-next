@@ -192,9 +192,9 @@ class LiquidJoinTest {
     fun `liquid join material - bright content is held back under light words, dark content lifted under dark words`() {
         assertEquals(.2f, LiquidJoin.held(.2f, lightInk = true), 1e-6f, "below the knee: unchanged")
         assertEquals(LiquidJoin.KNEE + (.9f - LiquidJoin.KNEE) * LiquidJoin.KNEE_SLOPE, LiquidJoin.held(.9f, lightInk = true), 1e-6f)
-        assertTrue(LiquidJoin.held(1f, lightInk = true) < .5f, "white behind light words is kept under half its light")
+        assertEquals(.50f, LiquidJoin.held(1f, lightInk = true), .01f, "white behind light words keeps about half its light")
         assertEquals(.8f, LiquidJoin.held(.8f, lightInk = false), 1e-6f, "above the mirrored knee: unchanged")
-        assertTrue(LiquidJoin.held(0f, lightInk = false) > .5f, "black behind dark words is lifted over half")
+        assertEquals(.50f, LiquidJoin.held(0f, lightInk = false), .01f, "black behind dark words is lifted to about half")
         for (i in 0..100) {
             val l = i / 100f
             assertEquals(1f - LiquidJoin.held(1f - l, lightInk = true), LiquidJoin.held(l, lightInk = false), 1e-5f, "mirrored at $l")

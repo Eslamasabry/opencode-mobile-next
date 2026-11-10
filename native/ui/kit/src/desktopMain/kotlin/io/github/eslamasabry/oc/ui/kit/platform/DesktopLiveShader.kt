@@ -32,6 +32,9 @@ internal class DesktopLiveShader(effect: RuntimeEffect) : LiveShaderProgram() {
      */
     fun effect(blurPx: Float): androidx.compose.ui.graphics.RenderEffect? = filter(blurPx)?.asComposeRenderEffect()
 
+    /** The shader with the uniforms set so far, as Skia's own (tests read it back without Compose). */
+    fun skiaShader(): org.jetbrains.skia.Shader = builder.makeShader()
+
     /** [effect] as Skia's image filter. */
     fun filter(blurPx: Float): org.jetbrains.skia.ImageFilter? =
         try {
