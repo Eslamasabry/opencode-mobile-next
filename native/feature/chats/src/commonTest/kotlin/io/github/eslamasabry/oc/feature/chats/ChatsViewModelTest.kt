@@ -355,9 +355,16 @@ class ChatsViewModelTest {
             return answer
         }
 
-        override suspend fun showSource(profile: ProfileId, shown: Boolean): Outcome<Unit> = Unit.ok()
+        val shownCalls = mutableListOf<Pair<String, Boolean>>()
+        var sourceAnswer: Outcome<Unit> = Unit.ok()
+        var retryAnswer: Outcome<Unit> = Unit.ok()
 
-        override suspend fun retrySource(profile: ProfileId): Outcome<Unit> = Unit.ok()
+        override suspend fun showSource(profile: ProfileId, shown: Boolean): Outcome<Unit> {
+            shownCalls += profile.raw to shown
+            return sourceAnswer
+        }
+
+        override suspend fun retrySource(profile: ProfileId): Outcome<Unit> = retryAnswer
 
         override suspend fun retryOpening(): Outcome<Unit> = Unit.ok()
 
@@ -563,5 +570,75 @@ class ChatsViewModelTest {
         vm.showProjectChoices()
         vm.openFilterProject()
         assertEquals(listOf<AppRoute>(io.github.eslamasabry.oc.ui.routes.ProjectsRoute.Open), nav.routes)
+    }
+
+    private val termux = ProfileId("termux")
+    private val refusedConnection = Failure.Network(io.github.eslamasabry.oc.core.common.NetworkWhy.Refused)
+
+    private fun sourcesVm(home: Home): ChatsViewModel =
+        ChatsViewModel(Feed(), Briefs(), Door(false), { Instant.fromEpochMilliseconds(0) }, clock, RecordingNavigator(), home = home)
+
+    @Test
+    fun `a saved server that refuses the connection does not raise the sheet's could-not-change error`() = runTest {
+        val home = Home(listOf(source("main", main = true), source("termux")))
+        // However the connection owner words it, a refused connection is the row's, not a failure to save the choice.
+        home.sourceAnswer = Outcome.Failed(refusedConnection)
+        val vm = sourcesVm(home)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        vm.showSources()
+        vm.showSource(termux, true)
+        assertEquals(null, vm.state.value.home.failure)
+        // Trying that server again answers on its row too.
+        home.retryAnswer = Outcome.Failed(refusedConnection)
+        vm.retrySource(termux)
+        assertEquals(null, vm.state.value.home.failure)
+        assertEquals(listOf("termux" to true), home.shownCalls)
+    }
+
+    @Test
+    fun `turning an unreachable server off always works and leaves no error`() = runTest {
+        val home = Home(listOf(source("main", main = true), source("termux").copy(unreachable = true)))
+        val vm = sourcesVm(home)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        vm.showSources()
+        // An earlier failure to save is cleared by the next choice that works.
+        home.sourceAnswer = Outcome.Failed(Failure.StorageRefused())
+        vm.showSource(termux, true)
+        assertTrue(vm.state.value.home.failure is Failure.StorageRefused)
+        home.sourceAnswer = Unit.ok()
+        vm.showSource(termux, false)
+        assertEquals(null, vm.state.value.home.failure)
+        assertEquals(listOf("termux" to true, "termux" to false), home.shownCalls)
+    }
+
+    @Test
+    fun `a choice that could not be saved is the sheet's failure, and closing the sheet clears it`() = runTest {
+        val home = Home(listOf(source("main", main = true), source("termux")))
+        val saveFailed = Failure.StorageRefused()
+        home.sourceAnswer = Outcome.Failed(saveFailed)
+        val vm = sourcesVm(home)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        vm.showSources()
+        vm.showSource(termux, true)
+        assertEquals(saveFailed, vm.state.value.home.failure)
+        vm.closeHomeSheet()
+        assertEquals(null, vm.state.value.home.failure)
+    }
+
+    @Test
+    fun `only saving problems are the sheet's to say`() {
+        val network = io.github.eslamasabry.oc.core.common.NetworkWhy.Refused
+        listOf(
+            Failure.Network(network),
+            Failure.TimedOut(),
+            Failure.SignIn(io.github.eslamasabry.oc.core.common.SignInWhy.PasswordRejected),
+            Failure.Incompatible(io.github.eslamasabry.oc.core.common.IncompatibleKind.LegacyOpenCode1),
+            Failure.Refused(io.github.eslamasabry.oc.core.common.RefusalReason.StaleScope),
+        ).forEach { assertEquals(null, io.github.eslamasabry.oc.feature.chats.presentation.SourceChoiceRules.sheetFailure(it), "$it") }
+        listOf(
+            Failure.StorageRefused(),
+            Failure.Unexpected(),
+            Failure.Refused(io.github.eslamasabry.oc.core.common.RefusalReason.ProfileDeleted),
+        ).forEach { assertEquals(it, io.github.eslamasabry.oc.feature.chats.presentation.SourceChoiceRules.sheetFailure(it)) }
     }
 }

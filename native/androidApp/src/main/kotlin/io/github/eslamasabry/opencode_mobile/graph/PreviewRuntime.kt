@@ -306,9 +306,11 @@ class PreviewRuntime(
             is Outcome.Failed -> return@command saved
             is Outcome.Ok -> Unit
         }
-        val result = if (shown) connectForHome(id, makeActive = false) else Unit.ok()
+        // The choice is saved. A server that does not answer is recorded on its own row (sourceFailures); it is not a
+        // failure to change the list, so turning it on or off here never raises the sheet's error.
+        if (shown) connectForHome(id, makeActive = false)
         rebuildFeed()
-        result
+        Unit.ok()
     }
 
     internal suspend fun retryListSource(id: ProfileId): Outcome<Unit> = command {

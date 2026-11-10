@@ -4,6 +4,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.v2.runComposeUiTest
@@ -91,6 +95,25 @@ class KitNoticeTest {
         onNodeWithTag("kit-notice-copy-details", useUnmergedTree = true).assertExists()
         onNodeWithText("Switch server", useUnmergedTree = true).assertExists()
         onNodeWithText("GET /session timed out", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun `RB08-NOTICE-007 an error with a details fold has one copy action, the fold's, not a second on the notice`() = runComposeUiTest {
+        setContent {
+            Themed {
+                KitErrorNotice(
+                    "Couldn’t save", failure = Failure.StorageRefused(), details = Redacted("storage refused"),
+                    detailsLabel = "Details", copyLabel = "Copy details",
+                )
+            }
+        }
+        onNodeWithTag("kit-notice-copy-details", useUnmergedTree = true).assertDoesNotExist()
+        onNodeWithText("Copy details", useUnmergedTree = true).assertDoesNotExist()
+        onNodeWithText("storage refused", useUnmergedTree = true).assertDoesNotExist()
+        onNodeWithTag("kit-details-toggle").performSemanticsAction(SemanticsActions.Expand)
+        waitForIdle()
+        onNodeWithText("storage refused", useUnmergedTree = true).assertExists()
+        onAllNodesWithText("Copy details", useUnmergedTree = true).assertCountEquals(1)
     }
 
     @Test

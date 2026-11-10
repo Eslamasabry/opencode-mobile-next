@@ -4,6 +4,7 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
@@ -44,6 +45,22 @@ public data class ChatsOpeningUi(
     /** The opening server is this phone's own OpenCode: the failure card can restart it (Flutter root-connecting). */
     val onThisPhone: Boolean = false,
 )
+
+/** What the "Connections in this list" sheet says as a whole, apart from each row's own state. */
+public object SourceChoiceRules {
+    /**
+     * The sheet-level failure for the outcome of a choice, or null. Only a choice that could not be saved is the
+     * sheet's to say; a connection that does not answer (network, sign-in, certificate, version, ...) belongs to its
+     * row and must never read as "could not change this list".
+     */
+    public fun sheetFailure(failure: Failure): Failure? =
+        failure.takeIf {
+            it is Failure.StorageRefused ||
+                it is Failure.Unexpected ||
+                it is Failure.Unknown ||
+                (it is Failure.Refused && it.reason == RefusalReason.ProfileDeleted)
+        }
+}
 
 public data class ChatsListSourceUi(
     val profile: ProfileId,
@@ -113,6 +130,10 @@ public data class ChatsMonitoringUi(
 public interface ChatsHomeExtras {
     public val snapshot: StateFlow<ChatsHomeExtraState>
 
+    /**
+     * Saves whether [profile] is in the list. The outcome is about saving the choice only: a server that does not
+     * answer is that row's own `unreachable`, never a failure here.
+     */
     public suspend fun showSource(profile: ProfileId, shown: Boolean): Outcome<Unit>
 
     public suspend fun retrySource(profile: ProfileId): Outcome<Unit>

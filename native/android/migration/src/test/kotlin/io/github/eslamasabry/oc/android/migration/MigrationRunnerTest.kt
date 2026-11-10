@@ -40,9 +40,8 @@ class MigrationRunnerTest {
         assertTrue(w.paths.backup.resolve(S0Backup.MANIFEST).isFile)
         assertEquals(listOf<Long?>(null), w.signals.updated)
         assertEquals(MigrationOutcome.Done, w.signals.done.single().outcome)
-        // The census found AI Team, Memory data in the fixture (S2-GATEUI's one-time notice).
-        assertTrue(DeferredFeature.AiTeam in open.notices.deferredFeatures)
-        assertTrue(DeferredFeature.Memory in open.notices.deferredFeatures)
+        // AI Team and Memory data in the fixture is read in place by the native app: no "not in this version" notice.
+        assertEquals(emptySet(), open.notices.deferredFeatures)
     }
 
     @Test
@@ -245,7 +244,7 @@ class MigrationRunnerTest {
     }
 
     @Test
-    fun `the census flags AI Team, Memory and Gemma data for the one-time notice, which never shows again`() = runTest {
+    fun `the census flags only the on-phone model for the one-time notice, which never shows again`() = runTest {
         val w = world().apply { Seed.phone(this) }
         File(w.paths.files, "oc.teamEngine.${Seed.REMOTE}").mkdirs()
         File(w.paths.files, "local_llm_models/gemma").apply { mkdirs() }.resolve("model.bin").writeBytes(byteArrayOf(1))
@@ -253,12 +252,26 @@ class MigrationRunnerTest {
 
         val runner = w.runner(io())
         val open = assertIs<RunnerState.Open>(runner.run())
-        assertEquals(setOf(DeferredFeature.AiTeam, DeferredFeature.Memory, DeferredFeature.Gemma), open.notices.deferredFeatures)
+        assertEquals(setOf(DeferredFeature.Gemma), open.notices.deferredFeatures)
         runner.acknowledgeNotices()
         assertEquals(MigrationNoticeSet(), assertIs<RunnerState.Open>(runner.state.value).notices)
 
         assertEquals(MigrationNoticeSet(), assertIs<RunnerState.Open>(w.runner(io()).run()).notices)
         assertTrue(File(w.paths.files, "oc.teamEngine.${Seed.REMOTE}").isDirectory) // never touched
+    }
+
+    @Test
+    fun `a result saved by the earlier build that names AI Team and Memory stops naming them without a re-run`() = runTest {
+        val w = world().apply { Seed.phone(this) }
+        File(w.paths.files, "local_llm_models/gemma").apply { mkdirs() }.resolve("model.bin").writeBytes(byteArrayOf(1))
+        w.runner(io()).run()
+        assertTrue(w.journalText().contains("\"deferred\":[\"Gemma\"]"))
+        // What the earlier build saved for this phone, before AI Team and Memory were built.
+        w.paths.journal.writeText(w.journalText().replace("\"deferred\":[\"Gemma\"]", "\"deferred\":[\"AiTeam\",\"Gemma\",\"Memory\"]"))
+
+        val open = assertIs<RunnerState.Open>(w.runner(io()).run())
+
+        assertEquals(setOf(DeferredFeature.Gemma), open.notices.deferredFeatures)
     }
 
     @Test

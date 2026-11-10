@@ -110,7 +110,7 @@ internal class MigrationJournal private constructor(private val root: LinkedHash
     /** Census flags for S2-GATEUI's one-time notice (plan 02 §3.7 item 4). */
     var deferredFeatures: Set<DeferredFeature>
         get() = ((obj("notices")["deferred"] as? List<*>) ?: emptyList<Any?>())
-            .mapNotNull { w -> DeferredFeature.entries.firstOrNull { it.name == w } }.toSet()
+            .mapNotNull { w -> DeferredFeature.entries.firstOrNull { it.name == w } }.filter { it in DeferredFeature.stillDeferred }.toSet()
         set(value) { obj("notices")["deferred"] = value.map { it.name }.sorted() }
 
     var noticesAcknowledgedAt: Long?

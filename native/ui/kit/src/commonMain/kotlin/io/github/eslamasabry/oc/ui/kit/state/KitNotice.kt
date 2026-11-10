@@ -389,7 +389,8 @@ public fun KitOfferNotice(
  * caller (from `:ui:words` for the [failure]); the kit picks the fix by [KitErrorKind.of]: network → [retry] and
  * [switchServer]; other → [retry] and [report] (only when the app set a report hook). Whenever [details] (already
  * redacted) are given, a trailing Copy details button copies them; they are never shown. A caller that passes
- * [detailsLabel] also gets them in a `KitDetailsFold` under the notice, last and collapsed.
+ * [detailsLabel] gets them in a `KitDetailsFold` under the notice instead, last and collapsed, and the fold's own
+ * copy is then the one copy action (no second button on the notice, the shape a sheet needs).
  *
  * States: error (network), error (other) Text: reading Cap: Reading Motion: KitEntrance; Off = instant Hidden: none
  * Replaces: KitNotice.error (lib/ui/kit/kit_notice.dart)
@@ -411,8 +412,9 @@ public fun KitErrorNotice(
     val actions = listOfNotNull(retry, if (kind == KitErrorKind.Network) switchServer else report)
     val clipboard = LocalClipboardManager.current
     val copyWords = copyLabel ?: stringResource(Res.string.kitCopyDetails)
+    // With the fold the notice has one copy action, the fold's; without it the notice carries its own button.
     val copy: (@Composable () -> Unit)? =
-        details?.let { d ->
+        details?.takeIf { detailsLabel == null }?.let { d ->
             @Composable {
                 KitIconButton(
                     KitIcons.copy,
