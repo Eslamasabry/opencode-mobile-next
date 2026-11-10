@@ -90,5 +90,7 @@ public object KitMotionManifest {
             "KitStepProgress" to KitMotionClass.Fold,
             "KitToast" to KitMotionClass.Travel,
             "KitStaggerRow" to KitMotionClass.Travel,
+            "KitModelSheet.rows" to KitMotionClass.Travel,
+            "KitModelSheet.star" to KitMotionClass.Settle,
         )
 }

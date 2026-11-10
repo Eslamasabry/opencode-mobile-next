@@ -70,6 +70,10 @@ public fun KitProviderLogo(
     modifier: Modifier = Modifier,
     /** The mark's own size; a row's tile passes its glyph size so the mark sits inside it like a glyph. */
     markSize: androidx.compose.ui.unit.Dp = 24.dp,
+    /** The colour a one-colour mark is drawn in; null = the page's first ink. A part that turns its words (a tab under its pill) passes the words' colour. */
+    tint: androidx.compose.ui.graphics.Color? = null,
+    /** The room the mark keeps; null = at least 28 dp (a row's leading slot). A mark set in a line of words keeps just its own size. */
+    slot: androidx.compose.ui.unit.Dp? = null,
 ) {
     val source = LocalKitLogoLoader.current
     var providerSvg by remember(id, agent, source) { mutableStateOf<String?>(null) }
@@ -98,13 +102,13 @@ public fun KitProviderLogo(
             }
         }
     if (missing) return
-    Box(modifier.size(maxOf(28.dp, markSize)).clearAndSetSemantics {}, contentAlignment = Alignment.Center) {
+    Box(modifier.size(slot ?: maxOf(28.dp, markSize)).clearAndSetSemantics {}, contentAlignment = Alignment.Center) {
         if (request != null)
             AsyncImage(
                 model = request,
                 contentDescription = null,
                 modifier = Modifier.size(markSize),
-                colorFilter = if (art?.tinted != false) ColorFilter.tint(LocalKitColors.current.text1) else null,
+                colorFilter = if (art?.tinted != false) ColorFilter.tint(tint ?: LocalKitColors.current.text1) else null,
             )
     }
 }

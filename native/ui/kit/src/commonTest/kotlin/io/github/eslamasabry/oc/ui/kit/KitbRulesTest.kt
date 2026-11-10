@@ -108,8 +108,9 @@ class KitbRulesTest {
                 "KitModalMotion.sheet", "KitSwapMorph", "kitItemMotion.placement", "kitItemMotion.fade", "KitSheet.drag",
                 "KitSheet.release", "KitGrow.title", "KitRollingNumber", "KitDissolve", "KitChoiceRow.fill",
                 "KitChoiceRow.mark", "KitStepProgress", "KitToast", "KitStaggerRow",
-                // The finger-linked tabs (2026-11-10).
-                "KitTabStrip.pill", "KitTabPages.drag", "KitTabPages.settle", "KitTabPages.tap",
+                // The finger-linked tabs and the model sheet built on them (2026-11-10).
+                "KitTabStrip.pill", "KitTabPages.drag", "KitTabPages.settle", "KitTabPages.tap", "KitModelSheet.rows",
+                "KitModelSheet.star",
             )
         assertEquals(expected, KitMotionManifest.parts.keys)
         assertEquals(KitMotionClass.Travel, KitMotionManifest.parts.getValue("KitSwap.count"))
