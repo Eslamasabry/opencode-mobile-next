@@ -146,7 +146,7 @@ class JourneyMilestonesTest {
     @Test
     fun `B-NEXT-008 the milestone event and the stage property admit only their closed words`() = runTest {
         val r = rig()
-        r.service.track(ProductEvent.JourneyMilestone, mapOf("step" to "my secret project", "after_range" to "/home/me"))
+        r.service.track(ProductEvent.JourneyMilestone, mapOf("step" to "my secret project", "after_range" to "/data/user/0/app"))
         r.service.setUserProperties(mapOf("journey_stage" to "https://example.com"))
         assertEquals(emptyList(), r.vendor.properties.filter { it["journey_stage"] == "https://example.com" })
         assertTrue(r.vendor.events.none { (n, p) -> n == "journey_milestone" && p.values.any { it.contains("secret") || it.contains("/") } })
