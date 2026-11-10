@@ -37,7 +37,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.onEach
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
@@ -128,14 +134,29 @@ public class TurnFactsPresenter(private val clock: Clock) {
     private var sessionKey = "turn"
     private var lastLink: ChatLink? = null
 
+    /**
+     * [work] is where the facts are worked out (the connection's own context, never the main thread). A streamed text
+     * delta moves only [TurnFeed.lastProgressAtMs]; the facts do not read it except to time the stall, which they do
+     * at each tick and at each real change, so a delta alone recomputes nothing.
+     */
     public fun states(
         feed: Flow<TurnFeed>,
         waiting: Flow<Boolean>,
         scope: CoroutineScope,
         started: SharingStarted,
+        work: CoroutineContext = EmptyCoroutineContext,
     ): StateFlow<TurnFactsUi> {
-        val ticks = factTicks(clock, feed.map { ticking(it) }, TICK_MS)
-        return combine(feed, waiting, ticks) { f, w, now -> present(f, now, w) }
+        val progress = MutableStateFlow<Long?>(null)
+        val core =
+            feed
+                .onEach { progress.value = it.lastProgressAtMs }
+                .distinctUntilChanged(::sameApartFromProgress)
+        val ticks = factTicks(clock, core.map { ticking(it) }, TICK_MS)
+        return combine(core, waiting, ticks) { f, w, now ->
+                val newest = progress.value
+                present(if (f.lastProgressAtMs == newest) f else f.copy(lastProgressAtMs = newest), now, w)
+            }
+            .flowOn(work)
             .stateIn(scope, started, TurnFactsUi.Empty)
     }
 
@@ -275,6 +296,17 @@ public class TurnFactsPresenter(private val clock: Clock) {
         const val TICK_MS = 1_000L
     }
 }
+
+/** Two feeds that differ only in when progress last arrived: the facts are the same until the next tick. */
+internal fun sameApartFromProgress(a: TurnFeed, b: TurnFeed): Boolean =
+    a.ledger === b.ledger &&
+        a.busy == b.busy &&
+        a.runStartedAtMs == b.runStartedAtMs &&
+        a.retry == b.retry &&
+        a.lastOutcome == b.lastOutcome &&
+        a.link == b.link &&
+        a.windows == b.windows &&
+        a.timings == b.timings
 
 /** Whether the work line of [work] opens by itself (Dart `KitWorkLine.opensByDefault`). */
 internal fun TurnWork.opensByDefault(): Boolean = state == WorkLineState.EndedFailed
