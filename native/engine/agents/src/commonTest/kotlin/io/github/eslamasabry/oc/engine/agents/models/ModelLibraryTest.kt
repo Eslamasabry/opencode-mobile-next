@@ -44,6 +44,20 @@ class ModelLibraryTest {
     }
 
     @Test
+    fun `an old favourite saved as the shared modelID keeps the plain entry and an unknown one is dropped`() {
+        val stored = ModelLibrary(
+            favorites = listOf(model("claude-fable-5-2", "anthropic"), model("retired-model", "anthropic")),
+            recent = listOf(model("claude-fable-5-2", "anthropic")),
+        )
+        // The catalog now lists the plain entry and its Fast entry by their own ids.
+        val ids = setOf("anthropic" to "claude-fable-5-2", "anthropic" to "claude-fable-5-2-fast")
+        val kept = stored.retainWhere { it.providerId to it.modelId in ids }
+        assertEquals(listOf("claude-fable-5-2"), kept.favorites.map { it.modelId })
+        assertEquals(listOf("claude-fable-5-2"), kept.recent.map { it.modelId })
+        assertFalse(kept.isFavorite(model("claude-fable-5-2-fast", "anthropic")))
+    }
+
+    @Test
     fun `B-STATE-032 corrupt entries are ignored and oversized history is bounded on read`() {
         val ref = { id: String -> AgentJson.encode(ModelLibrary.refJson(model(id))) }
         val recent = (0 until 30).joinToString(",") { ref("m$it") }

@@ -81,7 +81,15 @@ public data class Oc2ModelInfo(
     /** The base (non-tiered) price, or the first entry when every entry is tiered. */
     public val baseCost: Oc2ModelCost? get() = cost.firstOrNull { it.tierSize == null } ?: cost.firstOrNull()
 
-    public fun ref(variant: String? = null): Oc2ModelRef = Oc2ModelRef(modelID ?: id, providerID ?: "", variant)
+    /**
+     * The reference the server takes for this entry: its own catalog [id] (unique per provider), peeled of its
+     * provider prefix. [modelID] is the upstream name and can be shared by several entries ("Fast" over plain).
+     */
+    public fun ref(variant: String? = null): Oc2ModelRef {
+        val provider = providerID.orEmpty()
+        val bare = if (provider.isNotEmpty() && id.startsWith("$provider/") && id.length > provider.length + 1) id.removePrefix("$provider/") else id
+        return Oc2ModelRef(bare, provider, variant)
+    }
 
     @Serializable
     internal data class VariantId(val id: String)
