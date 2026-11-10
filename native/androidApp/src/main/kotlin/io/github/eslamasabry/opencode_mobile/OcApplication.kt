@@ -4,7 +4,6 @@ import android.app.ActivityManager
 import android.app.Application
 import android.content.pm.ApplicationInfo
 import android.os.Build
-import android.util.Log
 import android.os.Process
 import android.os.SystemClock
 import android.os.Trace
@@ -96,7 +95,7 @@ class OcApplication : Application(), GraphOwner {
         PhoneServerScripts.configurePort { BuiltinLinux.get(this).selectedServerPort }
         step("graph") { appGraph }
         startProduct()
-        Log.i("OcStartup", "Application.onCreate total ${SystemClock.elapsedRealtime() - tOnCreate}ms")
+        startupLog.i { "Application.onCreate total ${SystemClock.elapsedRealtime() - tOnCreate}ms" }
     }
 
     /** The starters nothing in the first frame waits for, in their original relative order. */
@@ -139,6 +138,9 @@ class OcApplication : Application(), GraphOwner {
             .start()
     }
 
+    /** Start-up timings go through the app's one logger (rule K5): steps before it is installed wait in its buffer. */
+    private val startupLog = AppLog.tagged("OcStartup")
+
     /** One startup step, visible in a system trace as `oc.start.<name>` and timed in the log. */
     private inline fun step(name: String, block: () -> Unit) {
         val t0 = SystemClock.elapsedRealtime()
@@ -148,7 +150,7 @@ class OcApplication : Application(), GraphOwner {
         } finally {
             Trace.endSection()
             val ms = SystemClock.elapsedRealtime() - t0
-            Log.i("OcStartup", "$name ${ms}ms on ${Thread.currentThread().name}")
+            startupLog.i { "$name ${ms}ms on ${Thread.currentThread().name}" }
         }
     }
 

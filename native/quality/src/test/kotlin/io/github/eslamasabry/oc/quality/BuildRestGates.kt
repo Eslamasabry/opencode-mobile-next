@@ -34,7 +34,8 @@ internal object BuildRestGates {
 
     private val LITERAL_SPACER = Regex("""Spacer\(.*\.height\(\s*\d+(\.\d+)?\.dp""")
     private val SPACER = Regex("""Spacer\(.*\.height\(""")
-    private val GROUP_START = Regex("""^(KitRowGroup|kitSliverRowGroup|KitPanel)\(""")
+    // `KitRowGroup(` and the trailing-lambda form `KitRowGroup {`: the first version saw only the parenthesis.
+    private val GROUP_START = Regex("""^(KitRowGroup|kitSliverRowGroup|KitPanel)\s*[({]""")
 
     /** A `Spacer(Modifier.height(<number>.dp))`: a gap with a number a screen chose instead of a token or the kit's stack. */
     fun literalSpacer(path: String, text: String): List<Hit> = scan(path, text, "literal dp spacer", LITERAL_SPACER)
@@ -51,6 +52,17 @@ internal object BuildRestGates {
     private val PROTOCOL_IMPORT = Regex("""^import io\.github\.eslamasabry\.oc\.protocol\.""")
     private val BACKEND_BRANCH = Regex("""(==|!=)\s*BackendKind\.|BackendKind\.\w+\s*->|\bis BackendKind\b|when\s*\([^)]*\bbackend\b[^)]*\)""")
     private val NOTIFY = Regex("""\.notify\(\s*\w""")
+
+    /**
+     * UI files reviewed as allowed to name the server kind (path → reason). Shrinks only. The rule is about a connected
+     * server: what it can do comes from its capabilities. Choosing which kind of server to ADD is the one place the
+     * person picks the kind itself.
+     */
+    val FLAVOUR_REVIEWED: Map<String, String> =
+        mapOf(
+            "feature/servers/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/servers/ui/ServerEditorScreen.kt" to
+                "the add-server page: the person chooses the kind here, so its steps, words and icons follow that choice (move the per-kind facts into the editor's state: backlog B-222)",
+        )
 
     /** A feature or UI file that imports a protocol client or branches on the server flavour. */
     fun uiBoundary(path: String, text: String): List<Hit> =
@@ -79,6 +91,8 @@ internal object BuildRestGates {
                 "the idle-return notice of the same service",
             "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/SettingsWiring.kt" to
                 "Settings › Notifications › Send a test notification",
+            "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/VoiceDownloadNotices.kt" to
+                "the voice pack download's own progress line: a download the person started, on its own channel, gone after 15 minutes (reviewed 2026-11-10)",
         )
 
     // ---- B-BUILD-023: kit-only UI rules ----
@@ -112,6 +126,16 @@ internal object BuildRestGates {
                 "the share QR code's square cap (a code wider than 280 dp is not easier to scan)",
             "feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/ui/ChatTranscript.kt" to
                 "the reading column of the transcript on a tablet (plan 07 readable measure)",
+            // Reviewed 2026-11-10 when the gate ran again after weeks of not starting. Each belongs in a kit part's own
+            // width cap (backlog B-221); until then they are listed, not hidden.
+            "feature/search/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/search/ui/SearchScreen.kt" to
+                "the server pill beside the search field: a long server name must not push the field off the bar",
+            "feature/chats/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chats/ui/ChatsScreen.kt" to
+                "the server pill on the Conversations bar row: a long name must leave room for the filters",
+            "feature/setup/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/setup/ui/SetupScreen.kt" to
+                "the setup note under the progress ring: a short centred measure, not the full page width",
+            "feature/phonesetup/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/phonesetup/ui/SetupJourneyScreen.kt" to
+                "the same setup note in the phone's own setup journey",
         )
 
     // ---- B-BUILD-033: every page has a home and every edge lands on one ----
@@ -120,12 +144,24 @@ internal object BuildRestGates {
         override fun toString() = "$parent.$name"
     }
 
-    private val SEALED_ROUTE = Regex("""sealed interface (\w+)\s*:\s*AppRoute\b""")
+    private val SEALED_FAMILY = Regex("""sealed interface (\w+)\s*:\s*(\w+)\b""")
     private val DECL = Regex("""\b(?:data class|data object|object|class)\s+(\w+)""")
 
     /** The concrete destinations in the route files: a class or object that extends AppRoute or a sealed route family. */
     fun routes(files: Map<String, String>): List<Route> {
-        val families = files.values.flatMap { t -> SEALED_ROUTE.findAll(t).map { it.groupValues[1] } }.toSet() + "AppRoute"
+        // A family is a sealed interface on AppRoute, or one nested under such a family (FilesRoute.AnyFolder): a page
+        // of the nested one is a page of the family that AppRoute knows.
+        val parentOf = files.values.flatMap { t -> SEALED_FAMILY.findAll(t).map { it.groupValues[1] to it.groupValues[2] } }.toMap()
+        fun rootOf(name: String): String? {
+            var at = name
+            repeat(8) {
+                val parent = parentOf[at] ?: return null
+                if (parent == "AppRoute") return at
+                at = parent
+            }
+            return null
+        }
+        val families = parentOf.keys.mapNotNull { k -> rootOf(k)?.let { k to it } }.toMap() + ("AppRoute" to "AppRoute")
         return files.values.flatMap { t ->
             DECL.findAll(t).mapNotNull { m ->
                 var i = m.range.last + 1
@@ -139,7 +175,7 @@ internal object BuildRestGates {
                 val rest = t.substring(i).trimStart()
                 if (!rest.startsWith(":")) return@mapNotNull null
                 val parent = Regex("""^:\s*(\w+)""").find(rest)?.groupValues?.get(1) ?: return@mapNotNull null
-                if (parent in families) Route(parent, m.groupValues[1]) else null
+                families[parent]?.let { family -> Route(family, m.groupValues[1]) }
             }.toList()
         }
     }
@@ -151,7 +187,8 @@ internal object BuildRestGates {
 
     fun hasEntry(route: Route, entries: Set<String>): Boolean = "$route" in entries || route.name in entries
 
-    private val EDGE = Regex("""\b(?:open|replaceRoot|navigate)\(\s*(\w+Route)\.(\w+)""")
+    // A page name starts with a capital; `FilesRoute.folder(place)` is a factory that returns one of the family's pages.
+    private val EDGE = Regex("""\b(?:open|replaceRoot|navigate)\(\s*(\w+Route)\.([A-Z]\w*)""")
 
     /** Every `open(XRoute.Y…)` in [files]: the edges between pages. */
     fun edges(files: Map<String, String>): List<Pair<String, Route>> =

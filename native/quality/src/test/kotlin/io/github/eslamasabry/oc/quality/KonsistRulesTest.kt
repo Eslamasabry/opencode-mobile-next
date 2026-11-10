@@ -105,11 +105,22 @@ class KonsistRulesTest {
 
     @Test
     fun `K5 no Log, println, printStackTrace or logging interceptors`() {
-        production.files.assertFalse { f ->
-            f.imports.any { it.name == "android.util.Log" } ||
-                Regex("""\bprintln\(|printStackTrace\(|HttpLoggingInterceptor""")
-                    .containsMatchIn(f.text)
-        }
+        // Reviewed exceptions (path → reason); the list only shrinks.
+        val reviewed =
+            mapOf(
+                "/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/DiagnosticsAttentionWiring.kt" to
+                    "the uncaught-crash line: this device's logcat is the one place the crash message is kept (834d840fbd)",
+                "/ui/gate/src/desktopMain/kotlin/io/github/eslamasabry/oc/ui/gate/AlignGuard.kt" to
+                    "test tooling, never in the app: tells the developer a baselined rule can shrink",
+                "/ui/gate/src/desktopMain/kotlin/io/github/eslamasabry/oc/ui/gate/LayoutGuard.kt" to
+                    "test tooling, never in the app: tells the developer a baselined rule can shrink",
+            )
+        val raw = Regex("""\bprintln\(|printStackTrace\(|HttpLoggingInterceptor""")
+        fun logsRaw(f: com.lemonappdev.konsist.api.declaration.KoFileDeclaration) =
+            f.imports.any { it.name == "android.util.Log" } || raw.containsMatchIn(f.text)
+        production.files.assertFalse { f -> logsRaw(f) && reviewed.keys.none { f.path.endsWith(it) } }
+        val stale = reviewed.keys.filter { key -> production.files.none { f -> f.path.endsWith(key) && logsRaw(f) } }
+        kotlin.test.assertEquals(emptyList(), stale, "a reviewed file no longer logs raw: remove it from the list")
     }
 
     @Test
