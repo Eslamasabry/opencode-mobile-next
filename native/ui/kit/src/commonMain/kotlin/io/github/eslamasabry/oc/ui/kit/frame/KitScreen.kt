@@ -433,7 +433,7 @@ public fun KitScreen(
                                     .kitLiquidTouchWatch(barTouch)
                                     .then(if (barFace != null) kitLiquidWordsHost(LiquidRole.Bar, frost) else Modifier)
                             ) {
-                                CompositionLocalProvider(LocalKitLiquidJoin provides join) {
+                                CompositionLocalProvider(LocalKitLiquidJoin provides join, io.github.eslamasabry.oc.ui.kit.effects.LocalKitOnLiquidGlass provides (barFace != null)) {
                                     if (barFace != null) KitLiquidBarPane(barFace.kitLiquidTouchLight(barTouch, LiquidBarShape, barInset), barBody)
                                     else if (frostedFace != null) KitLiquidBarPane(frostedFace)
                                     it()

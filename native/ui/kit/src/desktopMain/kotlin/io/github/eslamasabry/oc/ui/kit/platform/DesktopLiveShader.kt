@@ -30,11 +30,14 @@ internal class DesktopLiveShader(effect: RuntimeEffect) : LiveShaderProgram() {
      * This shader as an image filter over its `content` input, blurred first by [blurPx] (a radius, as Compose's
      * `BlurEffect` takes it); null if Skia refuses it. Joined glass's lens pass (`KitPlatform.liquidJoinEffect`).
      */
-    fun effect(blurPx: Float): androidx.compose.ui.graphics.RenderEffect? =
+    fun effect(blurPx: Float): androidx.compose.ui.graphics.RenderEffect? = filter(blurPx)?.asComposeRenderEffect()
+
+    /** [effect] as Skia's image filter. */
+    fun filter(blurPx: Float): org.jetbrains.skia.ImageFilter? =
         try {
             val sigma = if (blurPx > 0f) blurPx * 0.57735f + 0.5f else 0f
             val input = if (sigma > 0f) org.jetbrains.skia.ImageFilter.makeBlur(sigma, sigma, org.jetbrains.skia.FilterTileMode.CLAMP, null, null) else null
-            org.jetbrains.skia.ImageFilter.makeRuntimeShader(builder, "content", input).asComposeRenderEffect()
+            org.jetbrains.skia.ImageFilter.makeRuntimeShader(builder, "content", input)
         } catch (_: RuntimeException) {
             null
         }

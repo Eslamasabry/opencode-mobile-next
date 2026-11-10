@@ -71,7 +71,7 @@ public fun KitText(
     val text = if (maxLines != Int.MAX_VALUE && role in TITLE_ROLES) kitTitleLine(text) else text
     val style =
         base.copy(
-            color = LocalKitColors.current.tone(tone),
+            color = kitToneOnGlass(tone),
             textDirection = if (kind == KitTextKind.Reading) TextDirection.Content else TextDirection.Unspecified,
             textAlign = textAlign ?: TextAlign.Start,
             fontFeatureSettings = if (tabular) "tnum" else base.fontFeatureSettings, // F: lib/ui/kit/kit_text.dart:635-636
@@ -136,7 +136,7 @@ public fun KitMonoText(
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val style =
         LocalKitTypography.current.style(TypeRole.Mono).copy(
-            color = LocalKitColors.current.tone(tone),
+            color = kitToneOnGlass(tone),
             textDirection = TextDirection.Ltr,
             textAlign = if (rtl) TextAlign.Right else TextAlign.Left,
         )
@@ -236,4 +236,16 @@ public fun KitText(text: String, role: KitTextRole, modifier: Modifier = Modifie
         KitTextRole.Body -> KitText(text, modifier, TypeRole.Body)
         KitTextRole.Supporting -> KitText(text, modifier, TypeRole.Secondary, TextTone.Secondary)
     }
+}
+
+/**
+ * [tone]'s ink here: on a liquid pane ([io.github.eslamasabry.oc.ui.kit.effects.LocalKitOnLiquidGlass]) the second line
+ * is brighter than on the page (owner 2026-11-11: the bar's second line did not read over an orange photo).
+ */
+@Composable
+internal fun kitToneOnGlass(tone: TextTone): androidx.compose.ui.graphics.Color {
+    val colors = LocalKitColors.current
+    val ink = colors.tone(tone)
+    if (tone != TextTone.Secondary || !io.github.eslamasabry.oc.ui.kit.effects.LocalKitOnLiquidGlass.current) return ink
+    return androidx.compose.ui.graphics.lerp(ink, colors.text1, io.github.eslamasabry.oc.ui.design.effects.LiquidJoin.SECOND_INK_ON_GLASS)
 }

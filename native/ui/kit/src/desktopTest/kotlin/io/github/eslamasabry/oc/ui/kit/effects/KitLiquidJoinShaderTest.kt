@@ -118,5 +118,34 @@ class KitLiquidJoinShaderTest {
         assertNotNull(DesktopKitPlatform().liquidJoinEffect(lens, 0f))
     }
 
+    /** The lens pass over a flat [grey] (0-255) page, deep inside a pane (no bend), read back at its centre. */
+    private fun throughLens(grey: Int, knee: FloatArray): Int {
+        val lens = program(effect = true)
+        val big = JoinBox(20f, 20f, 400f, 400f, 24f)
+        val far = JoinBox(5000f, 5000f, 10f, 10f, 10f)
+        val u = uniforms(big, far, big, far, 0f)
+        JoinUniforms(u.geometry, 0f, u.band, 4f, 4f, 0f, 0f, 1f, 1f, 0f, knee, u.tintMine, u.tintTheirs, 1f).set(lens, 0f, 1f)
+        val filter = (lens as DesktopLiveShader).filter(0f)!!
+        val bitmap = Bitmap()
+        bitmap.allocPixels(ImageInfo.makeN32(40, 40, ColorAlphaType.PREMUL))
+        val canvas = Canvas(bitmap)
+        canvas.saveLayer(null, Paint().apply { imageFilter = filter })
+        canvas.drawPaint(Paint().apply { color = org.jetbrains.skia.Color.makeRGB(grey, grey, grey) })
+        canvas.restore()
+        return (bitmap.getColor(20, 20) shr 8) and 0xFF
+    }
+
+    @Test
+    fun `liquid join material - the lens pass holds back bright content under light words`() {
+        val off = throughLens(230, KNEE_OFF)
+        assertEquals(230f, off.toFloat(), 2f, "no knee: the page as it is")
+        val held = throughLens(230, floatArrayOf(LiquidJoin.KNEE, LiquidJoin.KNEE_SLOPE, 1f))
+        assertEquals(LiquidJoin.held(230 / 255f, lightInk = true) * 255f, held.toFloat(), 3f, "bright content held back")
+        val dark = throughLens(40, floatArrayOf(LiquidJoin.KNEE, LiquidJoin.KNEE_SLOPE, 1f))
+        assertEquals(40f, dark.toFloat(), 2f, "dark content under light words unchanged")
+        val lifted = throughLens(20, floatArrayOf(LiquidJoin.KNEE, LiquidJoin.KNEE_SLOPE, 0f))
+        assertEquals(LiquidJoin.held(20 / 255f, lightInk = false) * 255f, lifted.toFloat(), 3f, "dark content lifted under dark words")
+    }
+
     private data class Quad(val a: JoinBox, val b: JoinBox, val sa: JoinBox, val sb: JoinBox)
 }

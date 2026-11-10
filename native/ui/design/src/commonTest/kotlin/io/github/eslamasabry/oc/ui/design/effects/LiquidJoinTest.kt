@@ -188,6 +188,34 @@ class LiquidJoinTest {
         assertEquals(182f, (cl + cr) / 2f, 1e-4f, "a control in the middle drops its column under itself")
     }
 
+    @Test
+    fun `liquid join material - bright content is held back under light words, dark content lifted under dark words`() {
+        assertEquals(.2f, LiquidJoin.held(.2f, lightInk = true), 1e-6f, "below the knee: unchanged")
+        assertEquals(LiquidJoin.KNEE + (.9f - LiquidJoin.KNEE) * LiquidJoin.KNEE_SLOPE, LiquidJoin.held(.9f, lightInk = true), 1e-6f)
+        assertTrue(LiquidJoin.held(1f, lightInk = true) < .5f, "white behind light words is kept under half its light")
+        assertEquals(.8f, LiquidJoin.held(.8f, lightInk = false), 1e-6f, "above the mirrored knee: unchanged")
+        assertTrue(LiquidJoin.held(0f, lightInk = false) > .5f, "black behind dark words is lifted over half")
+        for (i in 0..100) {
+            val l = i / 100f
+            assertEquals(1f - LiquidJoin.held(1f - l, lightInk = true), LiquidJoin.held(l, lightInk = false), 1e-5f, "mirrored at $l")
+            if (i > 0) assertTrue(LiquidJoin.held(l, true) >= LiquidJoin.held(l - .01f, true), "keeps the order of brightness")
+        }
+    }
+
+    @Test
+    fun `liquid join material - the blur is cut and the saturation kept`() {
+        // Owner 2026-11-11: "Cut the blur and leave the saturation as is."
+        for (dark in listOf(true, false)) {
+            assertEquals(3f, LiquidEdge.recipe(LiquidRole.Bar, dark).blurDp)
+            assertEquals(2f, LiquidEdge.recipe(LiquidRole.Composer, dark).blurDp)
+            assertEquals(if (dark) 6f else 3f, LiquidEdge.recipe(LiquidRole.Menu, dark).blurDp)
+            assertEquals(1f, LiquidEdge.recipe(LiquidRole.Pill, dark).blurDp)
+            assertEquals(1f, LiquidEdge.recipe(LiquidRole.Status, dark).blurDp)
+            assertEquals(12f, LiquidEdge.recipe(LiquidRole.Sheet, dark).blurDp, "sheets keep theirs")
+            for (role in LiquidRole.entries) assertEquals(1.6f, LiquidEdge.recipe(role, dark).saturation, "$role saturation")
+        }
+    }
+
     private data class Layout(val name: String, val a: JoinBox, val b: JoinBox, val reach: Float)
 
     private fun layouts(): List<Layout> =

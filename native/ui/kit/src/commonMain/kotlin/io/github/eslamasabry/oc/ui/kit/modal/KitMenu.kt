@@ -627,6 +627,7 @@ public fun KitMenuPanel(
             .kitFloating("menu")
             .testTag("kit-menu")
     ) {
+        CompositionLocalProvider(io.github.eslamasabry.oc.ui.kit.effects.LocalKitOnLiquidGlass provides (liquidFace != null)) {
         // C17 (audit 2026-11-09): glyphs are all or nothing. Every item has one, aligned in one column, or none shows
         // one; a half-iconed menu makes the text column jump.
         val glyphSlot = items.isNotEmpty() && items.all { it.icon != null }
@@ -650,6 +651,7 @@ public fun KitMenuPanel(
                     )
                 is KitMenuEntry.Item -> MenuRow(entry.item, glyphSlot, onChoose)
             }
+        }
         }
     }
 }

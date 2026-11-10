@@ -199,4 +199,28 @@ class KitLiquidJoinKitTest {
         val sink = io.github.eslamasabry.oc.ui.design.effects.LiquidJoin.PILL_SINK_DP * density.density
         kotlin.test.assertEquals(box.top + sink, pill.bottom, 1.5f, "the pill's foot ${pill.bottom} vs the box's top ${box.top}")
     }
+
+    @Test
+    fun `liquid join material - a second line on glass is brighter than on the page, a first line unchanged`() = runDesktopComposeUiTest(100, 100) {
+        val seen = mutableMapOf<String, Color>()
+        setContent {
+            KitTheme(appearance = glass, platform = platform(true), localeTag = "en") {
+                val colors = io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors.current
+                seen["text1"] = colors.text1
+                seen["text2"] = colors.text2
+                seen["page"] = io.github.eslamasabry.oc.ui.kit.kitToneOnGlass(io.github.eslamasabry.oc.ui.design.type.TextTone.Secondary)
+                androidx.compose.runtime.CompositionLocalProvider(LocalKitOnLiquidGlass provides true) {
+                    seen["glass"] = io.github.eslamasabry.oc.ui.kit.kitToneOnGlass(io.github.eslamasabry.oc.ui.design.type.TextTone.Secondary)
+                    seen["glass1"] = io.github.eslamasabry.oc.ui.kit.kitToneOnGlass(io.github.eslamasabry.oc.ui.design.type.TextTone.Primary)
+                }
+            }
+        }
+        waitForIdle()
+        kotlin.test.assertEquals(seen.getValue("text2"), seen.getValue("page"), "on the page: text2")
+        kotlin.test.assertEquals(seen.getValue("text1"), seen.getValue("glass1"), "a first line is unchanged on glass")
+        fun lum(c: Color) = .2126f * c.red + .7152f * c.green + .0722f * c.blue
+        val toward = kotlin.math.abs(lum(seen.getValue("glass")) - lum(seen.getValue("text1")))
+        val before = kotlin.math.abs(lum(seen.getValue("text2")) - lum(seen.getValue("text1")))
+        kotlin.test.assertTrue(toward < before * .5f, "the second line on glass is most of the way to the first line's ink")
+    }
 }

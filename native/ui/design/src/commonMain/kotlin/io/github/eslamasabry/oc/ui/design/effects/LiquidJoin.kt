@@ -299,4 +299,32 @@ public object LiquidJoin {
 
     /** A control within this share of the body's width from one of its ends counts as at that end. */
     public const val END_SHARE: Float = .25f
+
+    /*
+     * The material (owner 2026-11-11, "Yeah bright content held back is readable"): inside a joined pane's lens the
+     * glass keeps only a share of the light of content brighter than a knee, so words on the glass read over a bright
+     * photo without more blur, a thicker tint or a plate. Under light words (a dark theme) it holds the bright end; under
+     * dark words (a light theme, or words flipped to dark ink) it lifts the dark end the same way.
+     */
+
+    /** The knee (luminance) past which the glass holds back light. */
+    public const val KNEE: Float = .36f
+
+    /** The share of the light past the knee the glass keeps. */
+    public const val KNEE_SLOPE: Float = .22f
+
+    /**
+     * [lum] (0-1) through the knee: under [lightInk] light above [KNEE] is kept at [KNEE_SLOPE] of itself; under dark
+     * ink dark below `1 - KNEE` is lifted the same way. The shader applies it per pixel as a scale of the colour.
+     */
+    public fun held(lum: Float, lightInk: Boolean): Float =
+        if (lightInk) {
+            if (lum > KNEE) KNEE + (lum - KNEE) * KNEE_SLOPE else lum
+        } else {
+            val inv = 1f - lum
+            1f - if (inv > KNEE) KNEE + (inv - KNEE) * KNEE_SLOPE else inv
+        }
+
+    /** How much brighter a pane's second line is on glass than on the page: this share of the way to its first line. */
+    public const val SECOND_INK_ON_GLASS: Float = .6f
 }

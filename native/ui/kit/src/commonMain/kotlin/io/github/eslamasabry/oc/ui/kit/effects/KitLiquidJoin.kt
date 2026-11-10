@@ -347,7 +347,7 @@ private class JoinedPaneNode(
                 saturation = recipe.saturation,
                 contrast = recipe.contrast,
                 brightness = recipe.brightness,
-                knee = KNEE_OFF,
+                knee = kneeOf(spec),
                 tintMine = tintNow(spec),
                 tintTheirs = tintNow(theirSpec),
                 rimPx = spec.rimDp.dp.toPx(),
@@ -380,6 +380,22 @@ private class JoinedPaneNode(
         }
     }
 }
+
+/**
+ * The knee that holds back bright content in [spec]'s lens (LiquidJoin.held): it holds the bright end under light words
+ * and lifts the dark end under dark words, following the words' ink flip.
+ */
+private fun kneeOf(spec: KitLiquidPaneSpec): FloatArray {
+    val flipped = (spec.flip?.progress?.value ?: 0f) > .5f
+    val lightInk = spec.rimAdds != flipped
+    return floatArrayOf(LiquidJoin.KNEE, LiquidJoin.KNEE_SLOPE, if (lightInk) 1f else 0f)
+}
+
+/**
+ * True for the words on a liquid pane (the bar, a menu): their second line is drawn brighter than on the page
+ * (LiquidJoin.SECOND_INK_ON_GLASS of the way to the first line), so it reads over what passes behind the glass.
+ */
+public val LocalKitOnLiquidGlass: ProvidableCompositionLocal<Boolean> = staticCompositionLocalOf { false }
 
 /** A pane's tint now: its face, cross-faded to the other theme's as its words flip. */
 private fun tintNow(spec: KitLiquidPaneSpec): Color {

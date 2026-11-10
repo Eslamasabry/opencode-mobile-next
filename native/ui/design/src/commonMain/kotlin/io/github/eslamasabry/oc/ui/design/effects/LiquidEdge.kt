@@ -117,16 +117,20 @@ public object LiquidEdge {
         @Suppress("UNUSED_PARAMETER")
         fun r(blur: Float, refraction: Float, shadow: Float, tintDark: Float, tintLight: Float, rimMax: Float = RIM_MAX_DP, share: Float = RIM_SHARE, depth: Boolean = false) =
             LiquidRecipe(SATURATION, PRESS, lift, blur, refraction, NO_SHADOW, rimMax, share, depth, if (dark) tintDark else tintLight)
+        // The blur is cut (owner 2026-11-11, docs/designs/liquid-merge-one-body.md "The material": "I think we added too
+        // much blur. Cut the blur and leave the saturation as is."): the bars 6 to 3 dp, the message box 4 to 2, menus
+        // 12 to 6 (light 6 to 3), the pills and chips 2 to 1. Sheets keep theirs. Bright content behind joined glass is
+        // held back inside its lens instead (LiquidJoin.held).
         return when (role) {
-            // Bars and the message box carry words over moving text: their glass frosts it to colour and shape
-            // (never readable text behind words), while the rim still bends it.
-            LiquidRole.Bar -> r(6f, 34f, .14f, .18f, .12f)
-            LiquidRole.Composer -> r(4f, 34f, .16f, .20f, .18f)
+            // Bars and the message box carry words over moving text: their glass frosts it to colour and shape, while
+            // the rim still bends it.
+            LiquidRole.Bar -> r(3f, 34f, .14f, .18f, .12f)
+            LiquidRole.Composer -> r(2f, 34f, .16f, .20f, .18f)
             LiquidRole.Sheet -> r(12f, 48f, 0f, .22f, .14f, rimMax = 30f)
-            LiquidRole.Menu -> r(if (dark) 12f else 6f, 48f, .18f, .20f, .10f, rimMax = 26f)
+            LiquidRole.Menu -> r(if (dark) 6f else 3f, 48f, .18f, .20f, .10f, rimMax = 26f)
             // Small pills (the jump pill, the chips over the message box) are calm glass: a narrow rim and a light bend,
             // no lens to the middle (owner 2026-11-08: the jump pill's lens read swirly over text).
-            LiquidRole.Pill, LiquidRole.Status -> r(2f, 12f, .16f, .18f, .28f, rimMax = 12f, share = .28f)
+            LiquidRole.Pill, LiquidRole.Status -> r(1f, 12f, .16f, .18f, .28f, rimMax = 12f, share = .28f)
             LiquidRole.Action -> r(1f, 26f, .22f, .55f, .62f, rimMax = 40f, share = .5f, depth = true)
         }
     }
