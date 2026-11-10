@@ -5379,17 +5379,7 @@ class BuiltinLinux(private val context: Context) {
         }
         beginServerStart()
         val chosen =
-            (listOf(selectedServerPort) + (4100..4199)).distinct().firstOrNull { candidate ->
-                try {
-                    java.net.ServerSocket().use { socket ->
-                        socket.reuseAddress = false
-                        socket.bind(java.net.InetSocketAddress("127.0.0.1", candidate))
-                    }
-                    true
-                } catch (_: java.io.IOException) {
-                    false
-                }
-            }
+            (listOf(selectedServerPort) + (4100..4199)).distinct().firstOrNull { LoopbackPort.free(it) }
                 ?: run {
                     selectedPortBusy = true
                     throw ServerPortBusy(selectedServerPort)
