@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.engine.analytics.product
 
 import io.github.eslamasabry.oc.engine.analytics.health.HealthRanges
 import io.github.eslamasabry.oc.engine.analytics.health.HealthWords
+import io.github.eslamasabry.oc.engine.analytics.health.Milestone
 import kotlin.time.Duration
 
 /*
@@ -47,7 +48,7 @@ public enum class ProductEvent(public val wire: String) {
     /** The person used a feature: `feature`, from [ProductFeature]. */
     FeatureUsed("feature_used"),
 
-    /** The app went to the background: `minutes_range` it was in front. */
+    /** The app went to the background: `minutes_range` it was in front, `turns_range` (messages answered meanwhile). */
     SessionLength("session_length"),
 
     // ---- B-190 health and diagnostics (docs/telemetry/health-and-diagnostics.md) ----
@@ -88,7 +89,7 @@ public enum class ProductEvent(public val wire: String) {
     /** Time to the first frame: `kind`, `ms_range`. */
     AppStart("app_start"),
 
-    /** Slow frames on one kind of page, once per session: `screen`, `janky_pct_range`, `refresh_hz`. */
+    /** Slow frames on one kind of page, once per session: `screen`, `janky_pct_range`, `frozen_range`, `refresh_hz`. */
     Jank("jank"),
 
     /** Android asked the app to free memory: `level`. */
@@ -102,6 +103,19 @@ public enum class ProductEvent(public val wire: String) {
 
     /** The person tapped "Not now". No properties. */
     StarPromptDismissed("star_prompt_dismissed"),
+
+    /**
+     * An early step of the install-to-first-reply funnel was reached, once per install: `step` (a
+     * [io.github.eslamasabry.oc.engine.analytics.health.Milestone] word) and `after_range` (how long after the person
+     * first agreed to usage). Derived from the events above by `JourneyMilestones`, never sent by a call site.
+     */
+    JourneyMilestone("journey_milestone"),
+
+    /**
+     * The answer to the one question "What do you want help with?", reduced to one word: `kind`, from
+     * [ProductUseFor]. Sent once, and again only if the person changes the answer.
+     */
+    UseFor("use_for"),
 }
 
 /** A value with a fixed wire word. */
@@ -239,6 +253,35 @@ public enum class ProductFeature(override val wire: String) : ProductValue {
     ReviewOpen("review_open"),
 }
 
+/**
+ * The one coarse word the use-case question leaves the phone as (docs/designs/regular-people-2026-11-09.md section 3,
+ * owner decision D3 A). Never the picks themselves: with few users, a six-way multi-pick next to a country and a phone
+ * model could point at one person, four words cannot.
+ */
+public enum class ProductUseFor(override val wire: String) : ProductValue {
+    Everyday("everyday"),
+    Coding("coding"),
+    Both("both"),
+    Looking("looking");
+
+    public companion object {
+        /**
+         * [everyday] is whether any everyday pick (study, writing, and so on) was chosen, [coding] whether the coding
+         * pick was. Neither (only "just exploring", or nothing picked) is [Looking].
+         */
+        public fun of(everyday: Boolean, coding: Boolean): ProductUseFor =
+            when {
+                everyday && coding -> Both
+                everyday -> Everyday
+                coding -> Coding
+                else -> Looking
+            }
+
+        /** Whether [next] is worth sending: the first answer, or a different one. */
+        public fun changed(previous: String?, next: ProductUseFor): Boolean = previous != next.wire
+    }
+}
+
 /** Duration buckets: the vendor never sees an exact time. */
 public object ProductBuckets {
     public val minutes: List<String> = listOf("under_2", "2_to_5", "5_to_10", "10_to_20", "20_to_40", "over_40")
@@ -318,7 +361,17 @@ public val productSchema: Map<String, Map<String, Set<String>>> =
                 ),
             ProductEvent.ScreenView.wire to mapOf("screen" to ProductScreen.entries.map { it.wire }.toSet()),
             ProductEvent.FeatureUsed.wire to mapOf("feature" to ProductFeature.entries.map { it.wire }.toSet()),
-            ProductEvent.SessionLength.wire to mapOf("minutes_range" to HealthRanges.sessionMinutes.toSet()),
+            ProductEvent.SessionLength.wire to
+                mapOf(
+                    "minutes_range" to HealthRanges.sessionMinutes.toSet(),
+                    "turns_range" to HealthRanges.counts.toSet(),
+                ),
+            ProductEvent.JourneyMilestone.wire to
+                mapOf(
+                    "step" to Milestone.entries.map { it.wire }.toSet(),
+                    "after_range" to HealthRanges.sinceStart.toSet(),
+                ),
+            ProductEvent.UseFor.wire to mapOf("kind" to ProductUseFor.entries.map { it.wire }.toSet()),
             ProductEvent.ConnectComputerChosen.wire to emptyMap(),
             ProductEvent.UpdateOffered.wire to emptyMap(),
             ProductEvent.UpdateInstalled.wire to emptyMap(),
@@ -408,6 +461,7 @@ private fun healthSchema(): Map<String, Map<String, Set<String>>> {
             mapOf(
                 "screen" to screens,
                 "janky_pct_range" to HealthRanges.jankPct.toSet(),
+                "frozen_range" to HealthRanges.frozen.toSet(),
                 "refresh_hz" to HealthRanges.refreshHz.toSet(),
             ),
         ProductEvent.MemoryPressure.wire to mapOf("level" to HealthWords.memoryLevels),

@@ -167,7 +167,7 @@ class ProductAnalyticsTest {
                 "app_open" to mapOf("kind" to "cold"),
                 "update_installed" to emptyMap(),
                 "update_result" to mapOf("kind" to "in_app", "result" to "installed"),
-                "session_length" to mapOf("minutes_range" to "5_to_15"),
+                "session_length" to mapOf("minutes_range" to "5_to_15", "turns_range" to "0"),
                 "app_open" to mapOf("kind" to "warm"),
             ),
             sink.events,

@@ -399,5 +399,7 @@ public object NoTelemetry : Telemetry {
 
     override suspend fun sendProblemReport(redactedText: String): String? = null
 
+    override fun takeSessionTurns(): Int = 0
+
     override suspend fun reportCode(): String? = null
 }

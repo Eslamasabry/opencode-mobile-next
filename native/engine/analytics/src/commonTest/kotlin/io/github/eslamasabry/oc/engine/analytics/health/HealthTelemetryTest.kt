@@ -163,7 +163,10 @@ class HealthTelemetryTest {
         jank.onFrames(total = 100, slow = 100) // already sent this session
         jank.endSession()
         assertEquals(
-            listOf("jank" to mapOf("screen" to "chat", "janky_pct_range" to "5-15", "refresh_hz" to "60")),
+            listOf(
+                "jank" to
+                    mapOf("screen" to "chat", "janky_pct_range" to "5-15", "frozen_range" to "0", "refresh_hz" to "60"),
+            ),
             vendor.events,
         )
     }
