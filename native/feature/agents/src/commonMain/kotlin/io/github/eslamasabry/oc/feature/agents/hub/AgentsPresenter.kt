@@ -576,7 +576,7 @@ public class AgentsPresenter(
                     while (
                         result is Outcome.Failed &&
                             result.failure.mayAnswerSoon() &&
-                            again < 0 &&
+                            again < AUTO_RETRIES &&
                             connectable(phone.state.value)
                     ) {
                         again++

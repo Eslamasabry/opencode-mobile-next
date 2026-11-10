@@ -12,8 +12,7 @@ internal object HelperAnswerWait {
     const val BUDGET_MS = 60_000L
     const val STEP_MS = 500L
 
-    fun stillStarting(failure: Failure): Boolean =
-        failure is Failure.Network || failure is Failure.TimedOut || failure is Failure.ComputerDidNotAnswer
+    fun stillStarting(failure: Failure): Boolean = failure.mayAnswerSoon()
 
     /** Runs [attempt] until [done] says to stop, or [budgetMs] has passed on [now]; returns the last answer. */
     suspend fun <T> until(
