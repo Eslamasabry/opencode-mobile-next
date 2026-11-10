@@ -44,6 +44,15 @@ private fun clearing(from: Float, to: Float, strength: Float): List<Color> =
     }
 
 /**
+ * A fade's edge on a whole pixel. A gradient that clears content (DstOut) through a rectangle whose edge lies inside a
+ * pixel is drawn anti-aliased, which needs the renderer to mix coverage into the blend: that leaves a hairline of
+ * half-cleared content at the edge, and it is what made the Android emulator's renderer crash on every chat
+ * (2026-11-09 upgrade proof, "bad color buffer handle"; found by bisect 2026-11-10). On whole pixels the same fade is a
+ * plain blend everywhere.
+ */
+internal fun wholePx(y: Float): Float = kotlin.math.round(y)
+
+/**
  * Fades this content out at its scroll edges. Top: cleared above [clearAbove] px, fading in over [topReach] below it.
  * Bottom: whole down to [fadeFromBottom] px above the bottom edge, fading out over [bottomReach] from there, cleared
  * below. A null edge is left alone; [strength] (0–1, read while drawing) eases the top edge in and out. The content
@@ -66,8 +75,9 @@ internal fun Modifier.kitScrollEdges(
             if (clearAbove != null) {
                 val k = strength().coerceIn(0f, 1f)
                 if (k > 0f) {
-                    val t = clearAbove().coerceIn(0f, size.height)
-                    val r = topReachPx?.invoke() ?: topReach.toPx()
+                    val edge = clearAbove().coerceIn(0f, size.height)
+                    val t = wholePx(edge)
+                    val r = wholePx(edge + (topReachPx?.invoke() ?: topReach.toPx())) - t
                     if (t > 0f) {
                         drawRect(Color.Black.copy(alpha = k), Offset.Zero, Size(w, t), blendMode = BlendMode.DstOut)
                     }
@@ -81,8 +91,9 @@ internal fun Modifier.kitScrollEdges(
                 }
             }
             if (fadeFromBottom != null) {
-                val y0 = (size.height - fadeFromBottom()).coerceIn(0f, size.height)
-                val r = bottomReach.toPx()
+                val from = (size.height - fadeFromBottom()).coerceIn(0f, size.height)
+                val y0 = wholePx(from)
+                val r = wholePx(from + bottomReach.toPx()) - y0
                 if (r > 0f)
                     drawRect(
                         Brush.verticalGradient(clearing(0f, 1f, 1f), startY = y0, endY = y0 + r),

@@ -248,9 +248,10 @@ internal fun DrawScope.drawStatusEdge(
 ) {
     if (statusPx <= 0f) return
     val w = size.width
-    val h = statusPx + STATUS_EDGE_REACH_DP.dp.toPx()
+    // On whole pixels, the same ones the body's own fade clears on (kitScrollEdges, wholePx): the two are complements.
+    val h = wholePx(statusPx + STATUS_EDGE_REACH_DP.dp.toPx())
     if (w <= 0f) return
-    val solid = statusEdgeSolid(statusPx)
+    val solid = wholePx(statusEdgeSolid(statusPx))
     if (effect != null) {
         val box = IntSize(w.toInt().coerceAtLeast(1), h.toInt().coerceAtLeast(1))
         layers.blur.renderEffect = effect
