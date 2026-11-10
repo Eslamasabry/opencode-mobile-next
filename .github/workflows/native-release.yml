@@ -122,7 +122,8 @@ jobs:
       - name: Install the pinned Android SDK parts
         run: |
           set -euo pipefail
-          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
+          # `yes` is cut off when sdkmanager has read enough; under pipefail that ended the step (first run, 2026-11-10).
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.1" "build-tools;37.0.0" > /dev/null
           echo "sdk.dir=$ANDROID_HOME" > native/local.properties
 
@@ -175,7 +176,8 @@ jobs:
         run: |
           set -euo pipefail
           export JAVA_HOME="$JAVA_HOME_21_X64"
-          ./gradlew --console=plain :androidApp:assembleSwitchRelease
+          # The same build memory as native CI (native-setup): R8 on the full app does not fit the project default.
+          ./gradlew --console=plain "-Dorg.gradle.jvmargs=-Xmx6g -XX:MaxMetaspaceSize=1g -XX:+UseParallelGC -Dfile.encoding=UTF-8" :androidApp:assembleSwitchRelease
 
       - name: Delete the signing file
         if: always()
