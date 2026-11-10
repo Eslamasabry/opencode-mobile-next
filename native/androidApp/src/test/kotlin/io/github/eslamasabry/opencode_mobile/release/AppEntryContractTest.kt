@@ -79,6 +79,7 @@ class AppEntryContractTest {
                 ".WidgetOverlayActivity",
                 ".WidgetConfigureActivity",
                 "io.github.eslamasabry.opencode_mobile.graph.ScheduleOpenActivity",
+                ".graph.FactsBookConfirmActivity",
             ),
             names,
             "a new activity needs its focus highlight checked here",
@@ -101,7 +102,14 @@ class AppEntryContractTest {
         val body = schedules.substring(schedules.indexOf("class ScheduleOpenActivity"))
         assertTrue(body.contains("finish()"))
         assertTrue(!body.contains("setContent") && !body.contains("setContentView"))
-        // The widget trampoline (B-AGENT-317) shows nothing either; its overlay is a Compose host.
+        // FactsBook's screen-lock host shows nothing of its own either: translucent, and its only job is to open the
+        // system confirm-credential screen and report the answer.
+        val confirm = activities.single { it.second.getAttributeNS(ns, "name") == ".graph.FactsBookConfirmActivity" }.second
+        assertEquals("@android:style/Theme.Translucent.NoTitleBar", confirm.getAttributeNS(ns, "theme"))
+        val factsBook = RepoFiles.text("androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/FactsBookDeviceCheck.kt")
+        val confirmBody = factsBook.substring(factsBook.indexOf("class FactsBookConfirmActivity"))
+        assertTrue(confirmBody.contains("createConfirmDeviceCredentialIntent"))
+        assertTrue(!confirmBody.contains("setContent") && !confirmBody.contains("setContentView"))
         val widgetRoute = activities.single { it.second.getAttributeNS(ns, "name") == ".WidgetRouteActivity" }.second
         assertEquals("@android:style/Theme.Translucent.NoTitleBar", widgetRoute.getAttributeNS(ns, "theme"))
         assertEquals("true", widgetRoute.getAttributeNS(ns, "noHistory"))

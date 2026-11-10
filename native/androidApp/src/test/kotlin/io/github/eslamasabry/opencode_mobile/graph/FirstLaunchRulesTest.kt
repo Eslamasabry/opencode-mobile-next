@@ -13,10 +13,13 @@ class FirstLaunchRulesTest {
     fun `E00-S07 H1 mirrors a 2_1_4 language choice only when the system holds none`() {
         // 2.1.4 AppLocaleStore saves the bare language code, or removes the key for "Use system language".
         assertTrue(FirstLaunchRules.mirrorLocale("ar", ""))
-        assertTrue(FirstLaunchRules.mirrorLocale("zh", ""))
+        assertTrue(FirstLaunchRules.mirrorLocale("es", ""))
         assertFalse(FirstLaunchRules.mirrorLocale(null, ""), "system language: nothing to mirror")
         assertFalse(FirstLaunchRules.mirrorLocale("ar", "es"), "a language set in system settings is kept")
         assertFalse(FirstLaunchRules.mirrorLocale("xx", ""), "not a 2.1.4 language")
+        // 2.1.x offered Japanese; native offers a language only at 95 % of English (LanguageCoverage), and Japanese
+        // is far below it, so that choice is not mirrored and the app is English as a whole.
+        assertFalse(FirstLaunchRules.mirrorLocale("ja", ""), "a 2.1.x language native does not offer yet")
         assertFalse(FirstLaunchRules.mirrorLocale("", ""))
     }
 

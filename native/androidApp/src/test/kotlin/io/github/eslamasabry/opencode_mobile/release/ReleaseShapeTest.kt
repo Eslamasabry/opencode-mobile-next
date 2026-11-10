@@ -148,7 +148,7 @@ class ReleaseShapeTest {
         assertTrue(workflow.contains("PUBLIC_CI_CERT_SHA256: 842284B27AA297FB74CF831779FD16498517E1BC2104451459FEC2EA7AC11D1C"))
         for (abi in listOf("arm64-v8a", "x86_64", "universal")) assertTrue(workflow.contains(abi))
         assertTrue(workflow.contains("SHA256SUMS"))
-        assertTrue(workflow.contains("if: always()") && workflow.contains("rm -f \"\${{ runner.temp }}/native-key.properties\""))
+        assertTrue(workflow.contains("if: always()") && workflow.contains("rm -rf \"\${{ runner.temp }}/native-key.properties\""))
     }
 
     // ---- release tools ----------------------------------------------------------------------------------------------
