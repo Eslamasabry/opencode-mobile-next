@@ -3,6 +3,8 @@ package io.github.eslamasabry.oc.engine.runtime.server
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.engine.runtime.host.RuntimeStatus
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Whether the phone server should be updated to the pinned OpenCode now (port of lib/state/in_app_auto_update.dart
@@ -80,7 +82,7 @@ public class OpenCodeAutoUpdater(
         try {
             val key = "${host.runtime}:${host.pinnedVersion}"
             if (!decide(key, explain = true)) return
-            host.refresh()
+            withTimeoutOrNull(READ_LIMIT) { host.refresh() }
             if (!decide(key)) return
             // A try refused before the job started is not spent: the next look tries again.
             if (jobs.updateOpenCode(host.runtime)) attempted += key
@@ -88,6 +90,11 @@ public class OpenCodeAutoUpdater(
         } finally {
             checking.unlock()
         }
+    }
+
+    public companion object {
+        /** How long a status read may take before the decision goes on without it. */
+        public val READ_LIMIT: kotlin.time.Duration = 15.seconds
     }
 
     private fun note(line: String) {

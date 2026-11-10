@@ -78,7 +78,11 @@ class OcApplication : Application(), GraphOwner {
             RedactingWriter(
                 redactor,
                 // B-190: the app's own log ring for "Send a problem report".
-                listOf(DiagnosticsLogSink, io.github.eslamasabry.opencode_mobile.telemetry.TelemetryRingSink),
+                appLogSinks(
+                    debuggable = applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0,
+                    base = listOf(DiagnosticsLogSink, io.github.eslamasabry.opencode_mobile.telemetry.TelemetryRingSink),
+                    logcat = LogcatLogSink(),
+                ),
             ), // P12: warnings/errors feed Report a problem
             Severity.Info,
         ) // ring + logcat sinks: slice 1

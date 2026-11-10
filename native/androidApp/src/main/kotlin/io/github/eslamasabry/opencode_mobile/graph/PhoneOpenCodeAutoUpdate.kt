@@ -11,6 +11,7 @@ import io.github.eslamasabry.oc.engine.runtime.server.OpenCodeAutoUpdater
 import io.github.eslamasabry.oc.engine.runtime.server.OpenCodeHostFacts
 import io.github.eslamasabry.oc.engine.runtime.server.OpenCodeUpdateJobs
 import io.github.eslamasabry.oc.engine.runtime.server.launchOpenCodeAutoUpdate
+import io.github.eslamasabry.oc.engine.runtime.server.openCodeAutoUpdateLooks
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupState
 import android.os.SystemClock
 import io.github.eslamasabry.oc.engine.runtime.server.OpenCodeIdleSettle
@@ -20,10 +21,7 @@ import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RuntimeProblem
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flow
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 
@@ -46,6 +44,7 @@ class PhoneOpenCodeAutoUpdate(
     fun start() {
         if (started) return
         started = true
+        log.i { "start() reached" }
         val host =
             object : OpenCodeHostFacts {
                 override suspend fun refresh() = this@PhoneOpenCodeAutoUpdate.runtime.refreshServer()
@@ -95,22 +94,17 @@ class PhoneOpenCodeAutoUpdate(
                 val busy = settle.busy(reading.idle)
                 busy
             }
-        val reads = flow {
-            while (true) {
-                val behind = host.installedVersion?.trim()?.removePrefix("v")?.let { it.isNotEmpty() && it != host.pinnedVersion } == true
-                if (behind) {
-                    val now = runtime.readWorkIdle()
-                    if (now != idle.get()) log.i { "work idle=${now.idle} lease=${now.lease} direct=${now.direct} agent=${now.agent}" }
-                    idle.set(now)
-                }
-                emit(Unit)
-                delay(30.seconds)
-            }
-        }
+        val reads =
+            openCodeAutoUpdateLooks(host, {
+                val now = runtime.readWorkIdle()
+                if (now != idle.get()) log.i { "work idle=${now.idle} lease=${now.lease} direct=${now.direct} agent=${now.agent}" }
+                idle.set(now)
+            })
         appScope.launchOpenCodeAutoUpdate(
             updater,
             host,
             merge(combine(runtime.serverFacts, setup.progress, leases.busy) { _, _, _ -> }, settled, reads),
+            log = { log.i { it } },
         )
         appScope.launch {
             setup.progress.collect {
