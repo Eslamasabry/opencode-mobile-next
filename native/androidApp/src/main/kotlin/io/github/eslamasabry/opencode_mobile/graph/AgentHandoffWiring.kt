@@ -453,11 +453,7 @@ class GraphAgentHandoffHost(
                     OwnerId(owner.raw),
                 )
             val arch =
-                when {
-                    "arm64-v8a" in Build.SUPPORTED_ABIS -> AgentArchitecture.Arm64
-                    "x86_64" in Build.SUPPORTED_ABIS -> AgentArchitecture.X64
-                    else -> null
-                }
+PhoneAgentRules.architectureOf(Build.SUPPORTED_ABIS.toList())
             val targets = LinkedHashMap<String, Pair<AgentHandoffChoice, HandoffTarget>>()
             val sourceAdapter = HandoffGatewayAdapter(original.session.server, ::current)
             val targetAdapter =

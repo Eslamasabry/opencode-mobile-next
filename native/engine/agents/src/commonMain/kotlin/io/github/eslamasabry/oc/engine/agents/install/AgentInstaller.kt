@@ -205,10 +205,23 @@ public class AgentInstaller(
                 is Outcome.Failed -> return@withLock read
                 is Outcome.Ok -> read.value
             }
+        if (!ownJob(marker, job)) return@withLock dropStale(owner)
         endIfOver(owner, marker, job)?.let {
             return@withLock it
         }
         project(marker, job).also { state.value = it }.ok()
+    }
+
+    /**
+     * A marker with no job of this app behind it (the Flutter app wrote the same key and left it after a finished
+     * install, or the job record is another agent's) says nothing about an interruption: it is dropped silently.
+     */
+    private fun ownJob(marker: AgentId, job: AgentSetupJob?): Boolean = job != null && job.agent == marker
+
+    private suspend fun dropStale(owner: OwnerId): Outcome<AgentSetupProgress> {
+        val cleared = prefs.commit { remove(AgentKeys.agentInstall(owner)) }
+        if (cleared is Outcome.Failed) return cleared
+        return keptResult(owner).also { state.value = it }.ok()
     }
 
     /**
@@ -220,6 +233,7 @@ public class AgentInstaller(
             val marker =
                 prefs.string(AgentKeys.agentInstall(owner))?.let(::AgentId)
                     ?: return@withLock state.value.ok()
+            if (!ownJob(marker, job)) return@withLock dropStale(owner)
             endIfOver(owner, marker, job)?.let {
                 return@withLock it
             }

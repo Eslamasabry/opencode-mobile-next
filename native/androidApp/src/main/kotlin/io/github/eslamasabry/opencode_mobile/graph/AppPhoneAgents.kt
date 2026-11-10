@@ -135,11 +135,7 @@ class AppPhoneAgents(
     }
 
     private fun architecture(): AgentArchitecture? =
-        when {
-            "arm64-v8a" in Build.SUPPORTED_ABIS -> AgentArchitecture.Arm64
-            "x86_64" in Build.SUPPORTED_ABIS -> AgentArchitecture.X64
-            else -> null
-        }
+        PhoneAgentRules.architectureOf(Build.SUPPORTED_ABIS.toList())
 
     /** "arm64 · Android 15" for the Agents page's phone status line. */
     private fun device(): PhoneDevice? {
