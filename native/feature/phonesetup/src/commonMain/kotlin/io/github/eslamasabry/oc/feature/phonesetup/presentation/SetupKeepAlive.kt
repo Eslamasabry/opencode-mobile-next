@@ -52,13 +52,23 @@ public enum class SystemKill(
         public fun pick(exits: List<ExitFact>, nowMs: Long): SystemKill? {
             val newest = exits.firstOrNull() ?: return null
             if (nowMs - newest.atMs > WINDOW_MS) return null
+            // A swipe from Recents is REASON_OTHER too; the classifier's sub-reason read says it was the person.
+            if (!newest.closedBySystem) return null
             return of(newest.reason, newest.memoryPressure)
         }
     }
 }
 
-/** One previous-process exit, numbers only. */
-public data class ExitFact(val reason: Int, val atMs: Long, val memoryPressure: Boolean = false)
+/**
+ * One previous-process exit, numbers only. [closedBySystem] is the classifier's verdict (`ExitKind.closedBySystem`):
+ * false for a force stop, a Recents swipe or an update, whatever the bare reason number says.
+ */
+public data class ExitFact(
+    val reason: Int,
+    val atMs: Long,
+    val memoryPressure: Boolean = false,
+    val closedBySystem: Boolean = true,
+)
 
 /** The sentence the setup page shows for a kill. */
 public enum class SystemKillMessage { Closed, OutOfMemory }

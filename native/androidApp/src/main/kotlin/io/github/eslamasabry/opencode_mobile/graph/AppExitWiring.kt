@@ -86,7 +86,8 @@ class AppExitHub(
         scope.launch {
             val report = withContext(dispatchers.io) { exits.launchReport() }
             if (stores.warm() !is Outcome.Ok) return@launch
-            val exit = report.exit?.takeIf { it.kind.notable } ?: return@launch
+            // Only a system kill or a crash is news; the person's own force stop is not (upgrade test 2026-11-09).
+            val exit = report.exit?.takeIf { it.kind.announced } ?: return@launch
             val previous = report.previousServices
             if (previous.none { it == "server" || it == "aiteam" }) return@launch
             val stopped =

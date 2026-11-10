@@ -47,7 +47,9 @@ public object ReportHeadlines {
         when (kind) {
             ExitKind.Normal,
             ExitKind.Update,
-            ExitKind.ForceStop -> null
+            ExitKind.ForceStop,
+            // Possibly a battery manager, possibly the person: a later real error names the report instead.
+            ExitKind.BackgroundStop -> null
             ExitKind.LowMemory,
             ExitKind.MemoryLimit -> ReportHeadline.AndroidFreedMemory
             ExitKind.Crash -> ReportHeadline.AppClosedUnexpectedly

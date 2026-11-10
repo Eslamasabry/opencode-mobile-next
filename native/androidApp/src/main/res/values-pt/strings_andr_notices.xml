@@ -2,6 +2,7 @@
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
     <string name="andr_appExitForceStopped">O OpenCode Mobile foi fechado %1$s</string>
+    <string name="andr_appExitStoppedBackground">O OpenCode foi parado. Se não foi você, o gerenciador de bateria do seu telefone pode tê-lo fechado</string>
     <string name="andr_appExitLowMemory">O Android fechou o OpenCode Mobile %1$s para liberar memória</string>
     <string name="andr_appExitCrashed">O OpenCode Mobile parou inesperadamente %1$s</string>
     <string name="andr_appExitKilled">O Android parou o OpenCode Mobile %1$s</string>

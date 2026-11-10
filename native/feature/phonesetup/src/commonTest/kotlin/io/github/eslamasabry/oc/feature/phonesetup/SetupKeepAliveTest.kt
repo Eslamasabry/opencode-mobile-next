@@ -76,6 +76,15 @@ class SetupKeepAliveTest {
     }
 
     @Test
+    fun `OEM-KILL-010 a force stop or a Recents swipe is not blamed on the phone`() {
+        val now = 10_000_000L
+        // REASON_OTHER with the Recents-swipe sub-reason: the classifier says the person closed it.
+        assertNull(SystemKill.pick(listOf(ExitFact(13, now - 1000, closedBySystem = false)), now))
+        assertNull(SystemKill.pick(listOf(ExitFact(10, now - 1000, closedBySystem = false)), now))
+        assertEquals(SystemKill.Other, SystemKill.pick(listOf(ExitFact(13, now - 1000, closedBySystem = true)), now))
+    }
+
+    @Test
     fun `OEM-KILL-003 a restricted battery shows the card and an unrestricted one hides it`() {
         val restricted = BatteryFacts(SetupMaker.Xiaomi, ignoringOptimizations = false, backgroundRestricted = false)
         assertNotNull(BatteryCard.decide(restricted, afterKill = false))
