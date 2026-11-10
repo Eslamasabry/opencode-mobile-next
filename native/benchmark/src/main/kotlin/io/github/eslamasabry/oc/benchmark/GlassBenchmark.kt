@@ -79,6 +79,20 @@ class GlassBenchmark {
     @Test fun menuGlassLiquidFull() = scroll("glass", "menu", liquid = "full")
 
     @Test fun menuGlassAuroraLiquidFull() = scroll("glass-aurora", "menu", liquid = "full")
+
+    /**
+     * Joined glass (docs/designs/liquid-merge-one-body.md section 5): the chat scrolling with the jump pill joined to the
+     * message box (a steady cost while the reader is scrolled up), and the bar's menu joined to the bar, opened and
+     * closed eight times. Pass: the median run's share of frames more than one vsync late rises by at most 1 point and
+     * frame overrun P90 by at most 0.5 ms against chatGlass / menuGlass on the commit before the join.
+     */
+    @Test fun joinPillGlass() = scroll("glass", "join-pill")
+
+    @Test fun joinPillGlassAurora() = scroll("glass-aurora", "join-pill")
+
+    @Test fun joinMenuGlass() = scroll("glass", "join-menu")
+
+    @Test fun joinMenuGlassAurora() = scroll("glass-aurora", "join-menu")
 }
 
 private const val PKG_NATIVE = "io.github.eslamasabry.opencode_mobile.native"
