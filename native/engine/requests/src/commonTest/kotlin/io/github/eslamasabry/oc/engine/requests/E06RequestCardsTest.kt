@@ -101,7 +101,7 @@ class E06RequestCardsTest {
         }
 
     @Test
-    fun `E06-S03 acknowledged Stop marks the chat's cards No longer needed, then they leave within 2 s`() =
+    fun `E06-S03 acknowledged Stop marks the chat's cards No longer needed, then they leave after the read hold`() =
         runTest {
             serverListsAsks()
             val engine = engine()
@@ -118,7 +118,11 @@ class E06RequestCardsTest {
             assertIs<Outcome.Failed>(engine.answer(RequestId("p1"), RequestAnswer.Permission(PermissionReply.Once)))
             assertIs<Outcome.Failed>(engine.answerNow(RequestId("p1"), RequestAnswer.Permission(PermissionReply.Once)))
 
+            // P-109: the line stays long enough to read (RETIRED_SHOWN), then the cards leave.
             advanceTimeBy(2.seconds)
+            runCurrent()
+            assertEquals(AnswerPhase.NoLongerNeeded, engine.phaseOf("p1"))
+            advanceTimeBy(RETIRED_SHOWN - 2.seconds + 1.milliseconds)
             runCurrent()
             assertEquals(listOf("p2"), engine.ids())
             engine.refresh() // the server's stale list does not bring them back
