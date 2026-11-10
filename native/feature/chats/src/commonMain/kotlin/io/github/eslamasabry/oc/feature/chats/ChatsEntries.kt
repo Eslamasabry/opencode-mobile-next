@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.chats
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
@@ -77,14 +78,17 @@ public class ChatsEntries(
                     }
                 }
             // Home is a Root route, so on top it is the whole back stack: Back there would close the app (E05-S21).
-            val top by navigator.top.collectAsStateWithLifecycle()
+            // Read only where it is used (the back guard), so a page pushed over the home does not recompose it.
+            val top = navigator.top.collectAsStateWithLifecycle()
+            val orderedSections =
+                remember(sections) { sections.sortedBy { it.order }.map { section -> @androidx.compose.runtime.Composable { section.Content() } } }
             ChatsScreen(
                 state,
                 vm,
                 appStatus = appStatus,
                 replyOffer = offerContent,
-                root = top == ChatsRoute.Home,
-                sections = sections.sortedBy { it.order }.map { section -> { section.Content() } },
+                root = { top.value == ChatsRoute.Home },
+                sections = orderedSections,
             )
         }
         entry<ChatsRoute.Attention> {

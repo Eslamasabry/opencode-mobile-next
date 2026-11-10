@@ -205,6 +205,7 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
         edges = KitScreenEdges.Bleed,
     ) {
         val list = rememberLazyListState()
+        val rowWords = rememberAllRowWords()
         // Reaching the end asks for the next page; after a failure only the visible Try again does.
         // Keyed on the pages
         // read, so a page that brings no matching row (search, Running, Archived) still leads to
@@ -308,7 +309,7 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
                     }
                 AllPhase.List ->
                     items(state.rows, key = { it.key }, contentType = { "conversation" }) { row ->
-                        AllRow(row, state.selecting, actions)
+                        AllRow(row, state.selecting, rowWords, actions)
                     }
             }
             // Under a filter with no loaded match, older pages may still hold one: Load more and
@@ -415,19 +416,30 @@ private fun Filters(state: AllConversationsUi, actions: ChatsAllActions) {
 @Composable
 private fun rowTitle(title: RowTitle): String = rowTitleWords(title)
 
+/** The words every All conversations row shares, read once by the list. */
+private data class AllRowWords(val working: String, val archivedShort: String, val unknownLocation: String)
+
 @Composable
-private fun AllRow(row: AllRowUi, selecting: Boolean, actions: ChatsAllActions) {
+private fun rememberAllRowWords(): AllRowWords =
+    AllRowWords(
+        working = stringResource(Res.string.globalSessionsWorking),
+        archivedShort = stringResource(Res.string.globalSessionsArchivedShort),
+        unknownLocation = stringResource(Res.string.globalSessionsUnknownLocation),
+    )
+
+@Composable
+private fun AllRow(row: AllRowUi, selecting: Boolean, words: AllRowWords, actions: ChatsAllActions) {
     val title = rowTitle(row.title)
-    val project = row.project ?: stringResource(Res.string.globalSessionsUnknownLocation)
+    val project = row.project ?: words.unknownLocation
     val location = row.server?.let { "$it · $project" } ?: project
     val place =
         row.contextPercent?.let {
             "$location · " + stringResource(Res.string.stateContextUsage, it)
         } ?: location
-    val running = stringResource(Res.string.globalSessionsWorking)
+    val running = words.working
     val status = when {
         row.running -> running
-        row.archived -> stringResource(Res.string.globalSessionsArchivedShort)
+        row.archived -> words.archivedShort
         else -> null
     }
     // ANDR-1: the visible More action takes the trailing slot, so Running moves into the line.
@@ -454,35 +466,9 @@ private fun AllRow(row: AllRowUi, selecting: Boolean, actions: ChatsAllActions) 
         return
     }
     var menu by remember(row.key) { mutableStateOf(false) }
-    val archiveReason = stringResource(Res.string.p12ArchiveUnavailable)
-    val items =
-        listOfNotNull(
-            if (row.pinAvailable) KitMenuItem(
-                stringResource(if (row.pinned) Res.string.stateUnpin else Res.string.statePin),
-                { actions.togglePin(row.key) },
-                icon = if (row.pinned) KitIcons.unpin else KitIcons.pin,
-            ) else null,
-            KitMenuItem(stringResource(Res.string.p12Rename), { actions.rename(row.key) }, icon = KitIcons.edit),
-            KitMenuItem(stringResource(Res.string.chatUiShareSession), { actions.rowAct(row.key, RowAct.Share) }, icon = KitIcons.link),
-            KitMenuItem(stringResource(Res.string.sessionMenuDetails), { actions.rowAct(row.key, RowAct.Details) }, icon = KitIcons.info),
-            if (row.canContinueHere) KitMenuItem(stringResource(Res.string.globalSessionsContinueHere), { actions.continueHere(row.key) }, icon = KitIcons.download) else null,
-            KitMenuItem(stringResource(Res.string.sessionOpenRelated), { actions.rowAct(row.key, RowAct.OpenRelated) }, icon = KitIcons.branch),
-            KitMenuItem(stringResource(Res.string.sessionCopyHandoff), { actions.rowAct(row.key, RowAct.CopyHandoff) }, icon = KitIcons.terminal),
-            KitMenuItem(
-                stringResource(Res.string.sessionMenuArchive),
-                { actions.archive(row.key) },
-                icon = KitIcons.archive,
-                enabled =
-                    if (row.canArchive) KitEnabled.Enabled else KitEnabled.Disabled(archiveReason),
-            ),
-            KitMenuItem(stringResource(Res.string.p12Select), { actions.startSelecting(row.key) }, icon = KitIcons.checkboxChecked),
-            KitMenuItem(
-                stringResource(Res.string.sessionMenuDelete),
-                { actions.delete(row.key) },
-                icon = KitIcons.delete,
-                destructive = true,
-            ),
-        )
+    // Built only while the menu is open; a closed menu keeps what it last showed for its fade.
+    val items = if (menu) allRowMenu(row, actions) else emptyList()
+    val moreFor = stringResource(Res.string.p12MoreFor, title)
     KitMenu(expanded = menu, items = items, onDismissRequest = { menu = false }, title = title) {
         KitRow(
             title = title,
@@ -492,16 +478,44 @@ private fun AllRow(row: AllRowUi, selecting: Boolean, actions: ChatsAllActions) 
             state = if (row.running) KitRowState(null, KitRowStateTone.Running) else null,
             supporting = supporting,
             // The ⋯ glyph, its words for TalkBack only: as words "More for <title>" pushed the title out of the row.
-            trailing =
-                KitRowTrailing.IconAction(
-                    KitLineAction(stringResource(Res.string.p12MoreFor, title), { menu = true }, icon = KitIcons.more)
-                ),
+            trailing = KitRowTrailing.IconAction(KitLineAction(moreFor, { menu = true }, icon = KitIcons.more)),
             growKey = row.ref,
             onLongClick = { menu = true },
-            onLongClickLabel = stringResource(Res.string.p12MoreFor, title),
+            onLongClickLabel = moreFor,
             onClick = { actions.tapRow(row.key) },
         )
     }
+}
+
+@Composable
+private fun allRowMenu(row: AllRowUi, actions: ChatsAllActions): List<KitMenuItem> {
+    val archiveReason = stringResource(Res.string.p12ArchiveUnavailable)
+    return listOfNotNull(
+        if (row.pinAvailable) KitMenuItem(
+            stringResource(if (row.pinned) Res.string.stateUnpin else Res.string.statePin),
+            { actions.togglePin(row.key) },
+            icon = if (row.pinned) KitIcons.unpin else KitIcons.pin,
+        ) else null,
+        KitMenuItem(stringResource(Res.string.p12Rename), { actions.rename(row.key) }, icon = KitIcons.edit),
+        KitMenuItem(stringResource(Res.string.chatUiShareSession), { actions.rowAct(row.key, RowAct.Share) }, icon = KitIcons.link),
+        KitMenuItem(stringResource(Res.string.sessionMenuDetails), { actions.rowAct(row.key, RowAct.Details) }, icon = KitIcons.info),
+        if (row.canContinueHere) KitMenuItem(stringResource(Res.string.globalSessionsContinueHere), { actions.continueHere(row.key) }, icon = KitIcons.download) else null,
+        KitMenuItem(stringResource(Res.string.sessionOpenRelated), { actions.rowAct(row.key, RowAct.OpenRelated) }, icon = KitIcons.branch),
+        KitMenuItem(stringResource(Res.string.sessionCopyHandoff), { actions.rowAct(row.key, RowAct.CopyHandoff) }, icon = KitIcons.terminal),
+        KitMenuItem(
+            stringResource(Res.string.sessionMenuArchive),
+            { actions.archive(row.key) },
+            icon = KitIcons.archive,
+            enabled = if (row.canArchive) KitEnabled.Enabled else KitEnabled.Disabled(archiveReason),
+        ),
+        KitMenuItem(stringResource(Res.string.p12Select), { actions.startSelecting(row.key) }, icon = KitIcons.checkboxChecked),
+        KitMenuItem(
+            stringResource(Res.string.sessionMenuDelete),
+            { actions.delete(row.key) },
+            icon = KitIcons.delete,
+            destructive = true,
+        ),
+    )
 }
 
 /** Select mode's acts, then the one undo offer, at the bottom of the page. */

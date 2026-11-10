@@ -184,6 +184,26 @@ class ChatsViewModelTest {
     }
 
     @Test
+    fun `JANK-HOME-1 a feed change that moves no row does not emit a new home`() =
+        runTest {
+            val feed = Feed()
+            var now = 50_000L
+            val ticking =
+                object : Clock {
+                    override fun now(): Instant = Instant.fromEpochMilliseconds(now++)
+                }
+            feed.snapshot.value = ChatFeedSnapshot(persistentListOf(item("s1")))
+            val vm =
+                ChatsViewModel(feed, Briefs(), Door(false), { Instant.fromEpochMilliseconds(0) }, ticking, RecordingNavigator())
+            val seen = mutableListOf<io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi>()
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect { seen += it } }
+            val before = seen.size
+            // Same rows, a different snapshot (the flag the list does not draw): the screen is rebuilt on a later clock.
+            feed.snapshot.value = feed.snapshot.value.copy(revision = feed.snapshot.value.revision + 1)
+            assertEquals(before, seen.size, "an equal home is not announced again")
+        }
+
+    @Test
     fun `SCREENS-NAV-27 filters and search follow the feed, and Continue dismisses exactly the brief shown`() =
         runTest {
             val feed = Feed()

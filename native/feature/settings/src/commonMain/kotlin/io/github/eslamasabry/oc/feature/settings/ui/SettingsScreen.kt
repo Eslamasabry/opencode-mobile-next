@@ -11,11 +11,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
@@ -82,9 +84,11 @@ public fun SettingsScreen(
         actions.onResume()
         onPauseOrDispose {}
     }
+    // The hub's scroll lives above the page switch, so coming back from a group finds the hub where it was left.
+    val hubScroll = rememberSaveable(saver = ScrollState.Saver) { ScrollState(0) }
     when (val page = state.page) {
-        SettingsPage.Hub -> HubPage(state, actions, modifier, onExit)
-        is SettingsPage.Group -> GroupPage(state, actions, page, modifier, onExit)
+        SettingsPage.Hub -> HubPage(state, actions, modifier, onExit, hubScroll)
+        is SettingsPage.Group -> GroupPage(state, actions, page, modifier, onExit, hubScroll)
         is SettingsPage.ByServer ->
             SettingsFrame(
                 if (
@@ -340,8 +344,10 @@ internal fun SettingsFrame(
     search: (@Composable () -> Unit)? = null,
     large: Boolean = false,
     footer: (@Composable () -> Unit)? = null,
+    scroll: ScrollState? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val pageScroll = scroll ?: rememberScrollState()
     KitScreen(
         modifier = modifier,
         topBar = {
@@ -370,7 +376,7 @@ internal fun SettingsFrame(
             Column(
                 Modifier.fillMaxWidth()
                     .weight(1f)
-                    .verticalScroll(rememberScrollState())
+                    .verticalScroll(pageScroll)
                     .padding(top = Space.S2.dp, bottom = Space.S6.dp),
                 verticalArrangement =
                     Arrangement.spacedBy(

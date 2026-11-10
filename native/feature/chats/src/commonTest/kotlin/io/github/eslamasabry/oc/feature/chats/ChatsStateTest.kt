@@ -38,6 +38,13 @@ class ChatsStateTest {
         )
 
     @Test
+    fun `JANK-HOME-1 building the same feed twice, a moment apart, gives equal screens`() {
+        val feed = ChatFeedSnapshot(listOf(item("a", at = 9_000), item("b", at = 9_500, status = ChatStatus.Running)).toImmutableList())
+        fun at(now: Long) = ChatsState.build(feed, ReturnBrief.None, ChatsFilters(), today, settingsAvailable = true, nowMs = now)
+        assertEquals(at(10_000), at(10_007), "the clock reading must not make otherwise equal screens unequal")
+    }
+
+    @Test
     fun `A1-HOME-01 working and waiting rows lead in Right now, the rest under Recent newest first`() {
         val ui =
             build(

@@ -9,8 +9,10 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
+import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedItem
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedSnapshot
 import io.github.eslamasabry.oc.engine.agents.feed.FeedDay
 import io.github.eslamasabry.oc.engine.agents.feed.OPENCODE_AGENT_ID
@@ -29,7 +31,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -53,7 +55,12 @@ public class ChatsViewModel(
     private val connections: ConversationServers = NoConversationServers(),
     private val appScope: AppCoroutineScope? = null,
     private val pins: ConversationPins = NoConversationPins(),
+    dispatchers: AppDispatchers? = null,
 ) : ViewModel(), ChatsActions {
+    /** Where the home's list is built: off the main thread in the app; where the caller stands in a test. */
+    private val work: kotlin.coroutines.CoroutineContext =
+        dispatchers?.default ?: kotlin.coroutines.EmptyCoroutineContext
+
     override fun openInbox(): Unit = nav.open(MonitorInboxRoute())
 
     private val filters = MutableStateFlow(ChatsFilters())
@@ -149,7 +156,9 @@ public class ChatsViewModel(
                             archiveFailure = archived.failure,
                             archiveFailureAct = archived.failureAct,
                         )
-                },
+                }
+                    // Filtering and sorting the whole feed is work for a worker, not the frame's thread.
+                    .flowOn(work),
                 home.snapshot,
                 sheet,
                 watchedSelection,
@@ -264,21 +273,31 @@ public class ChatsViewModel(
             }
         }
         viewModelScope.launch { previews.texts.collect { if (it.isNotEmpty()) home.rememberPreviews(it) } }
-        // B-161: the branch port reads the folders the list shows, and only those.
+        // B-161: the branch port reads the folders the list shows, and only those. A1: the last message of the rows on
+        // show, and only those; the list never waits for it. One build of the list serves both, only when an input
+        // really changed, off the main thread.
         viewModelScope.launch {
-            combine(feed.snapshot, briefs.brief, filters) { snapshot, brief, chosen -> HomeRows.places(build(snapshot, brief, chosen)) }
-                .distinctUntilChanged()
-                .collect { home.wantBranches(it) }
-        }
-        // A1: the last message of the rows on show, and only those; the list never waits for it.
-        viewModelScope.launch {
-            combine(feed.snapshot, briefs.brief, filters) { snapshot, brief, chosen ->
+            var lastPlaces: Set<BranchPlace>? = null
+            var lastWanted: List<ChatFeedItem>? = null
+            combine(feed.snapshot, briefs.brief, filters) {
+                    snapshot,
+                    brief,
+                    chosen ->
                     val ui = build(snapshot, brief, chosen)
                     val shown = (ui.rightNow + ui.recent + ui.brief?.rows.orEmpty()).mapTo(hashSetOf()) { it.key }
-                    snapshot.items.filter { it.identity in shown }
+                    HomeRows.places(ui) to snapshot.items.filter { it.identity in shown }
                 }
-                .distinctUntilChanged()
-                .collect { previews.want(it) }
+                .flowOn(work)
+                .collect { (places, wanted) ->
+                    if (places != lastPlaces) {
+                        lastPlaces = places
+                        home.wantBranches(places)
+                    }
+                    if (wanted != lastWanted) {
+                        lastWanted = wanted
+                        previews.want(wanted)
+                    }
+                }
         }
     }
 
