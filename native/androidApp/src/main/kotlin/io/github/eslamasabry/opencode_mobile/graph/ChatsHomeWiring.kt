@@ -73,7 +73,6 @@ class AppChatsHome(
     private val scope = CoroutineScope(appScope.coroutineContext + lane)
     private val mutable = MutableStateFlow(ChatsHomeExtraState(known = false))
     override val snapshot: StateFlow<ChatsHomeExtraState> = mutable.asStateFlow()
-    private var actionFailure: Failure? = null
     private val cachedRevisions = mutableMapOf<ProfileId, Pair<String, List<ChatFeedItem>>>()
     // E05-S20: home's wait for this phone's own server, and the quiet retries while it starts.
     private var phoneWatch: Pair<ProfileId, PhoneStartWatch>? = null
@@ -133,7 +132,7 @@ class AppChatsHome(
                 )
             } else null
         if (opening == null) phoneWatch = null
-        mutable.value = ChatsHomeExtraState(sources, opening, actionFailure, monitor.snapshot.value)
+        mutable.value = ChatsHomeExtraState(sources, opening, null, monitor.snapshot.value)
         if (opening?.phase == ChatsOpeningPhase.Starting) keepTryingQuietly()
     }
 
@@ -221,7 +220,6 @@ class AppChatsHome(
 
     private suspend fun record(result: Outcome<Unit>): Outcome<Unit> =
         withContext(lane) {
-            actionFailure = (result as? Outcome.Failed)?.failure
             publish()
             result
         }

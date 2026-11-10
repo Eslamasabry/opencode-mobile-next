@@ -110,6 +110,9 @@ public class ChatsViewModel(
 
     private val switching = MutableStateFlow(Switching())
 
+    /** The sheet-level failure of "Connections in this list": the person's choice could not be saved. */
+    private val sourceFailure = MutableStateFlow<io.github.eslamasabry.oc.core.common.Failure?>(null)
+
     /** A pull to refresh in flight (one at a time). */
     private val refreshing = MutableStateFlow(false)
 
@@ -197,6 +200,7 @@ public class ChatsViewModel(
             .combine(home.projectFacts) { base, facts -> base.copy(projectFacts = facts.toImmutableMap()) }
             // The pill's switcher: every saved server, what it is doing now, and the switch in flight.
             .combine(refreshing) { base, now -> base.copy(refreshing = now) }
+            .combine(sourceFailure) { base, failure -> base.copy(home = base.home.copy(failure = failure)) }
             .combine(switching) { base, now ->
                 base.copy(
                     switcher =
@@ -575,6 +579,7 @@ public class ChatsViewModel(
     }
 
     override fun showSources() {
+        sourceFailure.value = null
         sheet.value = ChatsHomeSheet.Sources
     }
 
@@ -583,6 +588,7 @@ public class ChatsViewModel(
     }
 
     override fun closeHomeSheet() {
+        sourceFailure.value = null
         sheet.value = null
     }
 
@@ -597,11 +603,17 @@ public class ChatsViewModel(
     }
 
     override fun showSource(profile: ProfileId, shown: Boolean) {
-        viewModelScope.launch { home.showSource(profile, shown) }
+        viewModelScope.launch {
+            // Only a choice that could not be saved is the sheet's failure; a server that does not answer is its row's.
+            sourceFailure.value = (home.showSource(profile, shown) as? io.github.eslamasabry.oc.core.common.Outcome.Failed)?.failure?.let(SourceChoiceRules::sheetFailure)
+        }
     }
 
     override fun retrySource(profile: ProfileId) {
-        viewModelScope.launch { home.retrySource(profile) }
+        viewModelScope.launch {
+            home.retrySource(profile) // its answer shows on the row (unreachable), not as a failure of the sheet
+            sourceFailure.value = null
+        }
     }
 
     override fun retryOpening() {

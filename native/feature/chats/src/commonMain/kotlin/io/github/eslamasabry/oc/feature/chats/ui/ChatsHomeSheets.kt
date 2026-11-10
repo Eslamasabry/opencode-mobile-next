@@ -321,11 +321,12 @@ private fun ServerSwitcher(
 @Composable
 private fun SourceChoices(state: ChatsUi, actions: ChatsActions) {
     state.home.failure?.let { problem ->
-        KitStateView(
-            kind = KitStateKind.Error,
-            title = stringResource(Res.string.homeSourcesFailed),
+        io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice(
+            message = stringResource(Res.string.homeSourcesFailed),
             failure = problem,
+            detailsLabel = stringResource(Res.string.kitDetails),
         )
+        Spacer(Modifier.height(Space.S3.dp))
     }
     KitRowGroup {
         state.home.sources.forEach { source ->
@@ -367,11 +368,12 @@ private fun MonitoringSettings(state: ChatsUi, actions: ChatsActions) {
         io.github.eslamasabry.oc.ui.kit.KitTextRole.Supporting,
     )
     state.home.monitoring.failure?.let { problem ->
-        KitStateView(
-            kind = KitStateKind.Error,
-            title = stringResource(Res.string.monitorSaveFailed),
+        io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice(
+            message = stringResource(Res.string.monitorSaveFailed),
             failure = problem,
+            detailsLabel = stringResource(Res.string.kitDetails),
         )
+        Spacer(Modifier.height(Space.S3.dp))
     }
     KitRowGroup {
         state.home.monitoring.sources.forEach { source ->
