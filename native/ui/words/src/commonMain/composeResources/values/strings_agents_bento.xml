@@ -10,6 +10,12 @@
     <string name="agentsHelperNoLinux">Phone agents are not connected: this phone’s built-in Linux is not set up.</string>
     <string name="agentsHelperUpdateRequired">Phone agents are not connected: the agent helper is missing or too old to run.</string>
     <string name="agentsHelperUpdateAction">Update the agent helper</string>
+    <string name="agentsInstallFailedDownload">%1$s could not be installed: the download did not finish. Check the connection and try again.</string>
+    <string name="agentsInstallFailedChecksum">%1$s could not be installed: the download was not the file the app expects, so it was thrown away. Try again.</string>
+    <string name="agentsInstallFailedStorage">%1$s could not be installed: this phone is short of space. Free some space, then try again.</string>
+    <string name="agentsInstallFailedVersion">%1$s could not be installed: the version that arrived is not the one the app expects. Try again.</string>
+    <string name="agentsInstallFailedUnknown">%1$s could not be installed. Try again; Details has what the phone reported.</string>
+    <string name="agentsInstallInterruptedNow">Installing %1$s was interrupted before it finished. Try again to carry on.</string>
     <string name="agentsTabsLabel">Where agents run</string>
     <string name="agentsTabComputers">On computers</string>
     <string name="agentsPhoneReady">This phone is ready</string>

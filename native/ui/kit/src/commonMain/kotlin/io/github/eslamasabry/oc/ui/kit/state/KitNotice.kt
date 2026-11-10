@@ -407,6 +407,8 @@ public fun KitErrorNotice(
     retry: KitLineAction? = null,
     switchServer: KitLineAction? = null,
     report: KitLineAction? = null,
+    /** A close mark for a notice that stays until the person puts it away. */
+    dismiss: KitLineAction? = null,
 ) {
     val kind = KitErrorKind.of(failure)
     val actions = listOfNotNull(retry, if (kind == KitErrorKind.Network) switchServer else report)
@@ -435,7 +437,7 @@ public fun KitErrorNotice(
             glyph = noticeGlyph(StatusTone.Failure),
             notes = emptyList(),
             shown = actions,
-            trailingParts = listOfNotNull(copy),
+            trailingParts = listOfNotNull(copy, dismiss?.let { d -> @Composable { NoticeClose(d) } }),
             liveRegion = true,
         )
         if (details != null && detailsLabel != null) {

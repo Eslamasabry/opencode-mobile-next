@@ -442,7 +442,9 @@ public class AgentsPresenter(
     }
 
     override fun installPhone(id: String): Unit = operation {
-        if (phone.state.value.agents.none { it.id == id && it.installable }) return@operation
+        // Try again after a failed install is allowed even when the agent is partly there.
+        val retrying = phone.state.value.installation?.let { it.id == id && it.phase != PhoneAgentInstallPhase.Installing } == true
+        if (phone.state.value.agents.none { it.id == id && (it.installable || retrying) }) return@operation
         val answer =
             when (val started = phone.install(id)) {
                 is Outcome.Ok -> started.value
@@ -470,6 +472,11 @@ public class AgentsPresenter(
                 is Outcome.Failed -> PhoneAgentInstallResult.Refused(PhoneAgentInstallIssue.Unavailable)
             }
         local.update { it.copy(installIssue = (answer as? PhoneAgentInstallResult.Refused)?.issue) }
+    }
+
+    override fun dismissInstallResult(): Unit = operation {
+        phone.dismissInstallResult()
+        phone.refresh()
     }
 
     override fun cancelPhoneInstall(): Unit = operation {

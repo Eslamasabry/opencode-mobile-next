@@ -2,6 +2,7 @@ package io.github.eslamasabry.opencode_mobile
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -42,5 +43,22 @@ class SetupStepRetryTest {
         assertEquals(plain, SetupStepRetry.missingResult(null))
         assertEquals(plain, SetupStepRetry.missingResult("Unpacking git (1:2.43.0) ..."))
         assertFalse(SetupStepRetry.interrupted(SetupStepRetry.missingResult(null)))
+    }
+
+    @Test fun anAgentStepKeepsOnlyItsFixedMarkerLinesAndProotsSignalReport() {
+        val marker = "[oc] Download failed (curl exit 6): https://example.test/a.tgz"
+        assertEquals(marker, SetupStepRetry.agentLine("  $marker  "))
+        val signal = "proot info: vpid 1: terminated with signal 15"
+        assertEquals(signal, SetupStepRetry.agentLine(signal))
+        // The signal line from an agent step is what makes the automatic retry happen.
+        assertTrue(SetupStepRetry.interrupted(SetupStepRetry.agentLine(signal)))
+    }
+
+    @Test fun otherOutputOfAnAgentStepIsNeverKept() {
+        assertNull(SetupStepRetry.agentLine("npm ERR! something with a token sk-abc123"))
+        assertNull(SetupStepRetry.agentLine("[oc]no space marker"))
+        assertNull(SetupStepRetry.agentLine("[oc] bell\u0007 inside"))
+        assertNull(SetupStepRetry.agentLine("[oc] " + "x".repeat(400)))
+        assertNull(SetupStepRetry.agentLine(""))
     }
 }

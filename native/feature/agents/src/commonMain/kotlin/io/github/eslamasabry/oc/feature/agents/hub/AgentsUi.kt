@@ -143,6 +143,9 @@ public interface AgentsActions {
     /** "Update the agent helper" when the helper is missing or older than the app can run. */
     public fun updatePhoneHelper() {}
 
+    /** Puts the last failed or interrupted install's notice away. */
+    public fun dismissInstallResult() {}
+
     public fun refreshPhone()
 
     public fun requestPreviousVersion(id: String) {}

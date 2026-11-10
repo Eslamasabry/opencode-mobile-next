@@ -113,7 +113,8 @@ public class AgentOwnership(private val prefs: AgentPrefs) {
     public fun ownerPreferenceKeys(owner: OwnerId): Set<String> =
         prefs.keys("oc.").filterTo(LinkedHashSet()) { key ->
             key == AgentKeys.agentPhoneGate(owner) || key == AgentKeys.phoneAgentGateMigration(owner) ||
-                key == AgentKeys.agentInstall(owner) || key == AgentKeys.agentFeed(owner) ||
+                key == AgentKeys.agentInstall(owner) || key == AgentKeys.agentInstallResult(owner) ||
+                key == AgentKeys.agentFeed(owner) ||
                 key == AgentKeys.phoneAgentsUsed(owner) || key.endsWith(".${owner.raw}${AgentKeys.AGENTS_SUFFIX}")
         }
 

@@ -486,6 +486,8 @@ class SetupRunner private constructor(private val context: Context) {
                 logLine(line)
                 if (line.isNotBlank()) seen.last = line.trim()
             }
+            // An agent step's output is not logged; only its fixed marker lines are kept, so a failure can say why.
+            else -> SetupStepRetry.agentLine(line)?.let { seen.last = it }
         }
     }
 
@@ -516,7 +518,9 @@ class SetupRunner private constructor(private val context: Context) {
 
     private fun installerFailure(spec: Spec, component: SetupComponentStatus, code: Int, last: String?): String? =
         if (code == 0) null else if (spec.agentUser) {
-            if (spec.id == "agent-paseo") when (component.stage) {
+            // A fixed marker line from the script says more than the generic sentence, and keeps the retry rule working.
+            if (last != null) last.take(300)
+            else if (spec.id == "agent-paseo") when (component.stage) {
                 "Checking Paseo checksum" -> "Paseo did not pass its checksum check. Run setup again."
                 "Checking Paseo launch command" -> "Paseo did not pass its launch command check. Run setup again."
                 "Checking Paseo version" -> "Paseo did not pass its version check. Run setup again."

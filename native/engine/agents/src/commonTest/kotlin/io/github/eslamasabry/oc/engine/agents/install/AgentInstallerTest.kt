@@ -118,6 +118,41 @@ class AgentInstallerTest {
     }
 
     @Test
+    fun `a failed install stays on the page, with its kind, until the next attempt or until it is dismissed`() = runTest {
+        val jobs = FakeJobs()
+        val prefs = FakeAgentPrefs(mapOf("oc.agentInstall.owner" to "codex"))
+        jobs.job = AgentSetupJob(codex, AgentSetupJobState.Failed, "agent-codex", null, null, AgentSetupFailure.Checksum)
+        val first = (AgentInstaller(prefs, jobs).restore(owner) as Outcome.Ok).value
+        assertEquals(AgentSetupPhase.Failed, first.phase)
+        // The marker is gone after that read, as before; the result is not.
+        assertNull(prefs.string("oc.agentInstall.owner"))
+        val later = AgentInstaller(prefs, jobs)
+        val again = (later.restore(owner) as Outcome.Ok).value
+        assertEquals(AgentSetupPhase.Failed, again.phase)
+        assertEquals(codex, again.agentId)
+        assertEquals(AgentSetupFailure.Checksum, again.failure)
+        later.dismissResult(owner)
+        assertEquals(AgentSetupPhase.Idle, (later.restore(owner) as Outcome.Ok).value.phase)
+    }
+
+    @Test
+    fun `an interrupted install is kept the same way, and a new attempt clears the old result`() = runTest {
+        val jobs = FakeJobs()
+        val prefs = FakeAgentPrefs(mapOf("oc.agentInstall.owner" to "codex"))
+        jobs.job = null
+        AgentInstaller(prefs, jobs).restore(owner)
+        val kept = (AgentInstaller(prefs, jobs).restore(owner) as Outcome.Ok).value
+        assertEquals(AgentSetupPhase.Interrupted, kept.phase)
+        assertEquals(codex, kept.agentId)
+        val installer = AgentInstaller(prefs, jobs)
+        assertEquals(InstallStart.Started, (installer.install(owner, codex, AgentArchitecture.Arm64) as Outcome.Ok).value)
+        assertEquals(AgentSetupPhase.Installing, (installer.restore(owner) as Outcome.Ok).value.phase)
+        jobs.job = AgentSetupJob(codex, AgentSetupJobState.Done, null, null, null, null)
+        installer.restore(owner)
+        assertEquals(AgentSetupPhase.Idle, (AgentInstaller(prefs, jobs).restore(owner) as Outcome.Ok).value.phase)
+    }
+
+    @Test
     fun `B-LINUX-135 cancel stops only the owned job and is a no-op without a marker`() = runTest {
         val jobs = FakeJobs()
         AgentInstaller(FakeAgentPrefs(), jobs).cancel(owner)
