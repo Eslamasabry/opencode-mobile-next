@@ -1,12 +1,15 @@
 # Joined glass: a menu and its bar, a pill and its box, as one body
 
-**Status:** v2 draft, 2026-11-11. Not approved. Nothing in the kit has changed. v1 is in git history (b22b4ccf68).
+**Status:** v3 draft, 2026-11-11 (v2 plus the owner's material and shape directions of the same night). Not approved. Nothing in the kit has changed. v1 is in git history (b22b4ccf68).
 
 **The owner's words:**
 - 2026-11-10: the first fluid merges are a first pass; the neck "needs more work".
 - 2026-11-11, on the split-and-merge demo in Kyant0/AndroidLiquidGlass issue #104: "that's amazing", then "Do it".
 - 2026-11-11, after the first prototype clips: "Don't separate them keep them as one glossy glass body maybe with a
   buldge?"
+- 2026-11-11, on the prototype stills: "It still feels so washed off in general. Not vibrant or live." "I think we
+  added too much blur." "Cut the blur and leave the saturation as is. On the shape itself you need to geometrically
+  craft it as a marvel." Earlier the same night, on a rim that picks up passing content: "Yes I like the alive part".
 
 **Goal:** while a menu is open from a control on a piece of glass, or the jump pill is shown on the message box, the
 two are one body of glossy glass: one outline with a soft swell where they meet, the content bent along that one
@@ -17,7 +20,7 @@ full. Its method is used; its text is not copied (ShaderToy code is non-commerci
 is MIT).
 
 **Moving prototype (a spike, not app code):** `liquid-merge-one-body/joined-menu.mp4` and `joined-pill.mp4`, drawn by
-`liquid-merge-one-body/proto.py` (numpy; 2 px = 1 dp; four times slower than real). Left half: today's kit. Right
+`liquid-merge-one-body/proto2.py` (numpy; 2 px = 1 dp; four times slower than real); the crafted outline and the cut blur are in `shape.py` (rules and curvature check), `craft.py` and the two `shape-*-crafted.png` stills. Left half: today's kit. Right
 half: this design: the field of section 1, each pane drawing its own side with its own frost, rim, bend and tint mixed
 per pixel, the pieces moving on the kit's release spring. The page behind is a stand-in and the lens is a close copy
 of the library's, so it shows the shape, the outline and the motion, not the final look of the glass.
@@ -57,9 +60,10 @@ facing = (1 - dot(ga, gb)) / 2                       // 1 where the shapes face 
 inside = s(da) * s(db)                               // fades the blend out deep inside either shape
          where s(d) = 1 - smoothstep(0.5 m, m, -d),  m = min(corner radius, half the short side)
 k      = max(reach * facing * inside, 0.001)
-h      = max(k - abs(da - db), 0) / (2 k)            // 0 far from the junction, 0.5 on the line da = db
-d      = min(da, db) - h * h * k                     // the joined body: inside where d < 0
-w      = (da <= db) ? h : 1 - h                      // the partner's share at p
+h      = max(k - abs(da - db), 0) / k                // 0 far from the junction, 1 on the line da = db
+d      = min(da, db) - h * h * h * k / 6             // the joined body: inside where d < 0 (a CUBIC kernel)
+m      = h * h / 2                                   // 0 far away, 0.5 on the line da = db
+w      = (da <= db) ? m : 1 - m                      // the partner's share at p
 g      = mix(ga, gb, w)                              // the body's direction, NOT normalised
 ```
 
@@ -67,8 +71,37 @@ g      = mix(ga, gb, w)                              // the body's direction, NO
 - `inside` removes the step the direction makes on a shape's centre line (design review, finding 5).
 - `g` shrinks where the two directions oppose. Cover and rim light use `d / max(length(g), 0.05)`; the bend uses `g`
   as it is, so the bend vanishes on the junction line instead of tearing there (finding 4, and the reference).
-- `reach` is 48 dp for a menu on the bar and 32 dp for the pill, tuned on the phone. With no partner, or `reach` 0,
-  `d = da` and `g = ga`: the library's own shape.
+- The kernel is cubic, not the reference's quadratic: the fillet then meets both edges with matching curvature, so
+  the rim light runs through the join without a kink. Measured on the prototype's outlines (`shape.py`), the largest
+  step of curvature along the join is 3 times smaller for the menu and 6 times smaller for the pill.
+- `reach` is not tuned by eye: it is solved for the fillet radius the shape rules below ask for (134 dp for the menu
+  on the bar, 56 dp for the pill; both large because `facing` and `inside` scale it down). With no partner, or
+  `reach` 0, `d = da` and `g = ga`: the library's own shape.
+
+### The shape rules
+
+The owner asked for the joined outline to be crafted geometry, not whatever a blend gives. The rules:
+
+1. **Convex corners are the kit's own arcs.** A pane must not change shape at the moment it joins.
+2. **One radius per join.** The tightest radius of every concave fillet equals a convex radius beside it: 24 dp for a
+   menu (its corner radius), 16 dp for the pill (its end radius). Each flank is then an S-curve of two equal radii.
+3. **Aligned flanks are one line.** A menu opened from a control at the bar's end has its outer edge on the bar's
+   outer edge, and its field reaches up to the bar's centre line (inside the bar, so it changes nothing else). The
+   bar's end cap then runs straight down into the menu's side, tangent, with no waist.
+4. **The pill is a capsule sunk a quarter of its height** (8 dp of 32) into the message box, so it reads as a drop
+   rising out of the box and not a tab laid on it.
+5. **Curvature is checked, not assumed:** `LiquidJoinTest` measures the curvature along the outline of each rest
+   layout and fails on a step larger than the measured values above plus a margin.
+
+### The material
+
+- Saturation stays 1.6 (the owner: "leave the saturation as is").
+- The blur is cut. Proposed, to be confirmed on the phone before `LiquidEdge`'s recipes change: bar 6 to 3 dp, message
+  box 4 to 2 dp, menu 12 to 6 dp, pill and chips 2 to 0.5 dp. This is a change to glass at rest and is its own
+  commit, separate from the join.
+- The rim that picks up passing content (the reference's edge reflection) is liked as an idea and is its own later
+  step: it needs the page outside the pane as an input to the rim pass.
+- No colour fringe.
 
 ## 2. The joined pane
 
@@ -133,9 +166,9 @@ draw a lone pane the same. That is acceptance check 1.
 The kit's motion for the menu (grow from 55 % about the control, fade, 8 dp slide) and the pill (rise on the release
 spring) is unchanged, with two exceptions:
 
-- the menu's rest position: its top edge overlaps the bar's bottom edge by 4 dp, and for a chip menu the message
-  box's top edge, so the join is a filleted corner and not a film across a gap;
-- the pill's rest position: it overlaps the message box's top edge by 4 dp (today it rests 8 dp above it).
+- the menu's rest position: its top edge overlaps the bar's bottom edge by 4 dp (for a chip menu, the message box's
+  top edge), and its outer edge sits on the body's outer edge when the control is at that end (shape rule 3);
+- the pill's rest position: sunk 8 dp into the message box (today it rests 8 dp above it; shape rule 4).
 
 The menu's own "frost while it grows" transform no longer applies to a joined menu: the field follows the growing
 box each frame, so the lens is never misaligned.
@@ -191,7 +224,8 @@ bridge.
 
 1. Does the change of frost across the junction line show (bar 6 dp, menu 12 dp)? If it does, the drop's blur ramps
    to the body's inside the junction with a second blurred input.
-2. Is 4 dp of overlap the right rest position for the pill, or does the owner want it higher with a longer swell?
+2. With the pill nearly clear (0.5 dp), "Jump to latest" sits on readable text. Is 1 dp the floor for a pane that
+   carries a label?
 3. The pill lies inside the transcript recording that the message box's glass reads (design review, finding 1), so
    the box's side could show the pill's own label bent in it. To be checked in phase 1; if so, the pill is drawn
    outside that recording.
