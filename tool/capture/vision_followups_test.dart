@@ -6,7 +6,7 @@
 //   TZ=UTC flutter test --concurrency=1 --dart-define=VISION_OUT=<dir> \
 //     --dart-define=VISION_ONLY=chat-waiting-dark tool/capture/vision_followups_test.dart
 //
-// Output: /home/eslam/Storage2/launch-footage/vision-followups/<scene>.png
+// Output: /home/owner/Storage2/launch-footage/vision-followups/<scene>.png
 import 'dart:async';
 
 import 'package:clock/clock.dart';
@@ -41,7 +41,7 @@ import 'fixtures.dart';
 
 const _out = String.fromEnvironment(
   'VISION_OUT',
-  defaultValue: '/home/eslam/Storage2/launch-footage/vision-followups',
+  defaultValue: '/home/owner/Storage2/launch-footage/vision-followups',
 );
 
 /// Only these scenes (comma separated), when given.

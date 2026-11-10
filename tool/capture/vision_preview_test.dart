@@ -12,7 +12,7 @@
 //   flutter test --concurrency=1 --dart-define=VISION_OUT=<dir> \
 //     tool/capture/vision_preview_test.dart
 //
-// Output: /home/eslam/vision-assets/out/vision-preview/<scene>.png
+// Output: /home/owner/vision-assets/out/vision-preview/<scene>.png
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -38,7 +38,7 @@ import 'audit/audit_env.dart';
 
 const _out = String.fromEnvironment(
   'VISION_OUT',
-  defaultValue: '/home/eslam/vision-assets/out/vision-preview',
+  defaultValue: '/home/owner/vision-assets/out/vision-preview',
 );
 
 enum _Step { ready, typed, sent, notSent, listening, failed, details }

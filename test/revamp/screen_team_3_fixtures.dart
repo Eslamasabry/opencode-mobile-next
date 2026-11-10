@@ -89,7 +89,7 @@ List<WorkItem> team3Work() => [
         'branch': 'polecat/oc-loy',
         'target': 'master',
         'gc.work_dir':
-            '/home/eslam/city2/.gc/worktrees/ocproof/polecats/'
+            '/home/owner/city2/.gc/worktrees/ocproof/polecats/'
             'gastown.furiosa',
         'last_output': 'PASS test_calc.py::test_add\n1 passed in 0.02s',
         'validation': {'status': 'passed', 'summary': '1 of 1 tests'},

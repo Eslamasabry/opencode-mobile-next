@@ -29,8 +29,8 @@ import uuid
 
 
 SERIAL = "emulator-5554"
-LOCK = Path("/home/eslam/Storage/tmp/oc-emulator.lock")
-NORMAL_APK = Path("/home/eslam/Storage/tmp/oc-apk-share/oc-2203.apk")
+LOCK = Path("/home/owner/Storage/tmp/oc-emulator.lock")
+NORMAL_APK = Path("/home/owner/Storage/tmp/oc-apk-share/oc-2203.apk")
 REPO = Path(__file__).resolve().parents[2]
 PRIVATE_ROOT = Path.home() / ".local/share/opencode/private-demo-recordings"
 

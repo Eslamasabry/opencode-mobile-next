@@ -8,18 +8,18 @@
 #
 # What is built: the app code at APP_REF (default preview/fb-usage) plus the
 # catalog package from CATALOG_REF (default feat/widgetbook-poc), merged in a
-# detached checkout of the dedicated worktree /home/eslam/Storage2/wt/oc_app-
+# detached checkout of the dedicated worktree /home/owner/Storage2/wt/oc_app-
 # catalog. Once the catalog is merged into APP_REF the merge is a no-op.
 # Only local refs are read (no fetch) and nothing is ever committed to them.
 set -uo pipefail
 
 APP_REF="${APP_REF:-preview/fb-usage}"
 CATALOG_REF="${CATALOG_REF:-feat/widgetbook-poc}"
-WT="${CATALOG_WORKTREE:-/home/eslam/Storage2/wt/oc_app-catalog}"
-HOME_DIR="${CATALOG_HOME:-/home/eslam/Storage2/catalog}"
+WT="${CATALOG_WORKTREE:-/home/owner/Storage2/wt/oc_app-catalog}"
+HOME_DIR="${CATALOG_HOME:-/home/owner/Storage2/catalog}"
 FLUTTER="${FLUTTER:-$HOME/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter}"
 DART="$(dirname "$FLUTTER")/dart"
-NODE="${NODE:-$(command -v node || echo /home/eslam/.nvm/versions/node/v24.11.1/bin/node)}"
+NODE="${NODE:-$(command -v node || echo /home/owner/.nvm/versions/node/v24.11.1/bin/node)}"
 SWEEP_PORT="${SWEEP_PORT:-8770}"
 KEEP=3
 LOCK_TOOL="$WT/tool/qa/machine_lock.sh"

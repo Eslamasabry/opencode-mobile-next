@@ -92,7 +92,7 @@ def restore_normal_app():
  import shutil
  import probe
  probe.require_idle_setup()
- apk = Path('/home/eslam/Storage/tmp/oc-apk-share/oc-2196.apk')
+ apk = Path('/home/owner/Storage/tmp/oc-apk-share/oc-2196.apk')
  if not apk.is_file():
   raise RuntimeError('Approved normal APK is unavailable')
  sdk = Path(os.environ.get('ANDROID_SDK_ROOT') or os.environ.get('ANDROID_HOME') or str(Path.home()/'Android/Sdk'))

@@ -1,12 +1,12 @@
 from pathlib import Path
 import subprocess, os, sys
-root = Path(__file__).resolve().parents[2] if '/tool/qa/' in str(Path(__file__).resolve()) else Path('/home/eslam/Storage/Code/oc_app-sol-bb')
+root = Path(__file__).resolve().parents[2] if '/tool/qa/' in str(Path(__file__).resolve()) else Path('/home/owner/Storage/Code/oc_app-sol-bb')
 main = root/'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile'
 test = root/'android/app/src/test/kotlin/io/github/eslamasabry/opencode_mobile'
-junit='/home/eslam/.gradle/caches/modules-2/files-2.1/junit/junit/4.13.2/8ac9e16d933b6fb43bc7f576336b8f4d7eb5ba12/junit-4.13.2.jar'
-hamcrest='/home/eslam/.gradle/caches/modules-2/files-2.1/org.hamcrest/hamcrest-core/1.3/42a25dc3219429f0e5d060061f71acb49bf010a0/hamcrest-core-1.3.jar'
-jar='/home/eslam/Storage/tmp/oc-bb3-pure-tests.jar'
-runner=Path('/home/eslam/Storage/tmp/OcBb3PureRunner.kt')
+junit='/home/owner/.gradle/caches/modules-2/files-2.1/junit/junit/4.13.2/8ac9e16d933b6fb43bc7f576336b8f4d7eb5ba12/junit-4.13.2.jar'
+hamcrest='/home/owner/.gradle/caches/modules-2/files-2.1/org.hamcrest/hamcrest-core/1.3/42a25dc3219429f0e5d060061f71acb49bf010a0/hamcrest-core-1.3.jar'
+jar='/home/owner/Storage/tmp/oc-bb3-pure-tests.jar'
+runner=Path('/home/owner/Storage/tmp/OcBb3PureRunner.kt')
 runner.write_text('''import org.junit.runner.JUnitCore
 import org.junit.runner.Request
 fun main(args: Array<String>) {
@@ -18,8 +18,8 @@ fun main(args: Array<String>) {
 ''')
 files=[main/(x+'.kt') for x in ['NativeRuntimeOwnership','NativeServerRecipe','RestartBackoff']]+[test/(x+'Test.kt') for x in ['NativeRuntimeOwnership','NativeServerRecipe','RestartBackoff']]+[runner]
 lock=[str(root/'tool/qa/machine_lock.sh'),'build','--']
-compilecmd=lock+['/home/eslam/.sdkman/candidates/kotlin/current/bin/kotlinc','-J-Xmx256m','-J-XX:MaxMetaspaceSize=192m','-cp',junit]+list(map(str,files))+['-d',jar]
-runcmd=lock+['/home/eslam/.sdkman/candidates/kotlin/current/bin/kotlin','-J-Xmx128m','-cp',jar+':'+junit+':'+hamcrest]
+compilecmd=lock+['/home/owner/.sdkman/candidates/kotlin/current/bin/kotlinc','-J-Xmx256m','-J-XX:MaxMetaspaceSize=192m','-cp',junit]+list(map(str,files))+['-d',jar]
+runcmd=lock+['/home/owner/.sdkman/candidates/kotlin/current/bin/kotlin','-J-Xmx128m','-cp',jar+':'+junit+':'+hamcrest]
 def compile():
  subprocess.run(compilecmd,cwd=root,check=True)
 def green():

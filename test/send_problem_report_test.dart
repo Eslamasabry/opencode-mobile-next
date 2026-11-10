@@ -16,7 +16,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import 'support/telemetry_recorder.dart';
 
-const _secret = 'sk-ant-api03-SHEETREDACTKEYabcdefghijklmnop';
+const _secret = 'sk-ant-api03-SHEETRefghijklmnop';
 
 Widget _app(Telemetry telemetry, Widget home) => ProviderScope(
   overrides: [telemetryProvider.overrideWithValue(telemetry)],

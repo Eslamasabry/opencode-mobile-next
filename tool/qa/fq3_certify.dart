@@ -26,7 +26,7 @@ void adoptReservation(String value) {
   inheritedReservation = true;
 }
 
-const lock = '/home/eslam/Storage/tmp/oc-emulator.lock';
+const lock = '/home/owner/Storage/tmp/oc-emulator.lock';
 String? argument(List<String> args, String flag) {
   final index = args.indexOf(flag);
   return index >= 0 && index + 1 < args.length ? args[index + 1] : null;

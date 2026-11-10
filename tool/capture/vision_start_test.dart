@@ -7,7 +7,7 @@
 //   flutter test --concurrency=1 --dart-define=VISION_OUT=<dir> \
 //     tool/capture/vision_start_test.dart
 //
-// Output: /home/eslam/Storage2/launch-footage/vision-start/opus/<scene>.png
+// Output: /home/owner/Storage2/launch-footage/vision-start/opus/<scene>.png
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -25,7 +25,7 @@ import 'fixtures.dart';
 
 const _out = String.fromEnvironment(
   'VISION_OUT',
-  defaultValue: '/home/eslam/Storage2/launch-footage/vision-start/opus',
+  defaultValue: '/home/owner/Storage2/launch-footage/vision-start/opus',
 );
 
 enum _Scene {

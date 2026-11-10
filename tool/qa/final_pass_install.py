@@ -32,7 +32,7 @@ import sys
 
 _AGENTS = {'codex', 'gemini', 'qwen', 'goose', 'omp-acp', 'fx'}
 _IMPORTS = ('manifest', 'launch', 'low_storage', 'uninstall', 'device', 'probe', 'agent', 'run', 'device_install')
-_LOCK = Path('/home/eslam/Storage/tmp/oc-emulator.lock')
+_LOCK = Path('/home/owner/Storage/tmp/oc-emulator.lock')
 
 
 def _result(status, reason, receipts=(), **data):

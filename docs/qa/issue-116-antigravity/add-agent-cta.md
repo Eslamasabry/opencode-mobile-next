@@ -36,7 +36,7 @@ This follow-up does not access the owner's phone or credentials.
 
 - Candidate base: `a223bd262`; follow-up is uncommitted in this worktree.
   Staging failed because shared Git metadata is read-only:
-  `/home/eslam/Storage/Code/oc_app/.git/worktrees/issue-116/index.lock`.
+  `/home/owner/Storage/Code/oc_app/.git/worktrees/issue-116/index.lock`.
   A preliminary add staged only `lib/ui/kit/kit_add_agent_card.dart`; the
   subsequent complete staging operation was denied. No commit was created.
   Prepared message: `/tmp/issue-116-add-agent-commit-message.txt` (includes

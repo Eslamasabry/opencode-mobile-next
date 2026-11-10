@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Serves the published catalog: /home/eslam/Storage2/catalog/current.
+"""Serves the published catalog: /home/owner/Storage2/catalog/current.
 
 `current` is a symlink that rebuild.sh switches atomically; the path is
 opened afresh on every request, so a new release shows up with no restart.
@@ -12,7 +12,7 @@ import http.server
 import os
 import sys
 
-ROOT = os.environ.get("CATALOG_CURRENT", "/home/eslam/Storage2/catalog/current")
+ROOT = os.environ.get("CATALOG_CURRENT", "/home/owner/Storage2/catalog/current")
 HOST = os.environ.get("CATALOG_HOST", "127.0.0.1")
 PORT = int(os.environ.get("CATALOG_PORT", "8766"))
 

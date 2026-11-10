@@ -1,5 +1,5 @@
 {
-  "source": "/home/eslam/node_modules/@getpaseo/protocol/dist/messages.js",
+  "source": "/home/owner/node_modules/@getpaseo/protocol/dist/messages.js",
   "schema": {
     "worktree_setup": [
       {

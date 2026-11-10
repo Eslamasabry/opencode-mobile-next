@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(sys.argv[1] if len(sys.argv) > 1 else
-            '/home/eslam/Storage2/launch-footage/audit-styles')
+            '/home/owner/Storage2/launch-footage/audit-styles')
 
 # (harness dir, file regex) -> screen name
 MAP = [

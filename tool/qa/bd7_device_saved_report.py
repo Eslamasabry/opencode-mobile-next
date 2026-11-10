@@ -31,7 +31,7 @@ from tool.qa.fq9.common import (
 )
 from tool.qa.fq9.ports import AndroidPorts, apk_identity, verify_artifact, FAIL_CODES
 
-NORMAL_APK = Path("/home/eslam/Storage/tmp/oc-apk-share/oc-2203.apk")
+NORMAL_APK = Path("/home/owner/Storage/tmp/oc-apk-share/oc-2203.apk")
 SAVED_CODES = (
     frozenset(
         {

@@ -1,8 +1,8 @@
 # Release sanity 2.1.2+60 (candidate 46a381155, build 4505)
 
-APK: /home/eslam/Storage2/wt/rel-212/build/vps-apk/app-release-4505.apk (103 MB), signer
+APK: /home/owner/Storage2/wt/rel-212/build/vps-apk/app-release-4505.apk (103 MB), signer
 1DE5BF08...D60C (matches the local release key), GeneratedPluginRegistrant present.
-/home/eslam/Storage2/wt/apk-share does not exist, so no copy was made.
+/home/owner/Storage2/wt/apk-share does not exist, so no copy was made.
 Base for the update test: app-release-4501.apk (2.1.0 line).
 Devices: OC_API37 (Android 17, Landlock tier), OC_API35 (Android 15, proot tier), both x86_64 AVDs.
 

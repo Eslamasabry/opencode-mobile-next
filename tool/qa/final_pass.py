@@ -23,8 +23,8 @@ if __package__ in (None, ''):
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 ROOT = Path(__file__).resolve().parents[2]
-LOCK = Path('/home/eslam/Storage/tmp/oc-emulator.lock')
-NORMAL = Path('/home/eslam/Storage/tmp/oc-apk-share/oc-2203.apk')
+LOCK = Path('/home/owner/Storage/tmp/oc-emulator.lock')
+NORMAL = Path('/home/owner/Storage/tmp/oc-apk-share/oc-2203.apk')
 PACKAGE = 'io.github.eslamasabry.opencode_mobile'
 ROWS = ('fq9-upgrade', 'ba-install', 'ba-removal', 'ba-storage-floor', 'bb5',
         'fq3', 'fq9-background', 'bd7', 'fb1', 'demo')

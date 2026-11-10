@@ -6,7 +6,7 @@
 // pass<PASS>-<scene>-<style>-light.png.
 //
 //   TZ=UTC flutter test -j 1 --dart-define=PASS=1 \
-//     --dart-define=OUT=/home/eslam/vision-assets/out/ui-bugs-2/progress \
+//     --dart-define=OUT=/home/owner/vision-assets/out/ui-bugs-2/progress \
 //     tool/capture/ui_bugs_2_capture_test.dart
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';

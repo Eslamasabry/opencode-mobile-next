@@ -69,7 +69,7 @@ void main() {
         'a free text sentence',
         '/data/user/0/app/files',
         'vps.example.net',
-        '100.126.15.6',
+        '100.64.1.2',
         'https://host/x?token=1',
         'x' * 60,
         '',
@@ -973,7 +973,7 @@ void main() {
 
   group('send a problem report', () {
     test('redaction removes a key, a URL, a host and a path', () {
-      const secret = 'sk-ant-api03-REDACTMEKEYabcdefghijklmnop';
+      const secret = 'sk-ant-api03-REDACTefghijklmnop';
       final out = ReportRedaction.redact('''
 12:00:01 event conn_attempt result=fail
 12:00:02 error with key $secret in config

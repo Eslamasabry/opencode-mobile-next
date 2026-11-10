@@ -1,7 +1,7 @@
 {
   "sources": [
     "contracts/opencode2-openapi-beta-18600.json",
-    "/home/eslam/node_modules/@getpaseo/protocol/dist/messages.js"
+    "/home/owner/node_modules/@getpaseo/protocol/dist/messages.js"
   ],
   "operations": [
     {

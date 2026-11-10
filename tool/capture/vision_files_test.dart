@@ -7,7 +7,7 @@
 //   flutter test --concurrency=1 --dart-define=VISION_PASS=pass1 \
 //     tool/capture/vision_files_test.dart
 //
-// Output: /home/eslam/Storage2/launch-footage/vision-files/<pass>/<scene>.png
+// Output: /home/owner/Storage2/launch-footage/vision-files/<pass>/<scene>.png
 // (without a pass, straight into the folder).
 import 'dart:async';
 
@@ -32,7 +32,7 @@ import '../../test/support/setup_capture_preferences.dart';
 import 'fixtures.dart';
 
 const _pass = String.fromEnvironment('VISION_PASS', defaultValue: '');
-const _root = '/home/eslam/Storage2/launch-footage/vision-files';
+const _root = '/home/owner/Storage2/launch-footage/vision-files';
 String get _dir => _pass.isEmpty ? _root : '$_root/$_pass';
 
 const _project = '/home/dev/neon-breaker';

@@ -4,7 +4,7 @@
 //
 // Run with:
 //   flutter test --no-pub --concurrency=1 \
-//     --dart-define=OUT=/home/eslam/Storage2/launch-footage/vision-diff-git/after \
+//     --dart-define=OUT=/home/owner/Storage2/launch-footage/vision-diff-git/after \
 //     tool/capture/vision_diff_git_test.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -23,7 +23,7 @@ import 'fixtures.dart';
 
 const _out = String.fromEnvironment(
   'OUT',
-  defaultValue: '/home/eslam/Storage2/launch-footage/vision-diff-git/after',
+  defaultValue: '/home/owner/Storage2/launch-footage/vision-diff-git/after',
 );
 
 const _status =

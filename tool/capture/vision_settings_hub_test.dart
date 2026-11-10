@@ -6,7 +6,7 @@
 //   flutter test --concurrency=1 --dart-define=VISION_PASS=pass1 \
 //     tool/capture/vision_settings_hub_test.dart
 //
-// Output: /home/eslam/Storage2/launch-footage/vision-settings-hub/<pass>/
+// Output: /home/owner/Storage2/launch-footage/vision-settings-hub/<pass>/
 // <scene>.png (without a pass, straight into the folder).
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -24,7 +24,7 @@ import '../../test/support/setup_capture_preferences.dart';
 import 'fixtures.dart';
 
 const _pass = String.fromEnvironment('VISION_PASS', defaultValue: '');
-const _root = '/home/eslam/Storage2/launch-footage/vision-settings-hub';
+const _root = '/home/owner/Storage2/launch-footage/vision-settings-hub';
 String get _dir => _pass.isEmpty ? _root : '$_root/$_pass';
 
 class _Api extends CaptureApi {

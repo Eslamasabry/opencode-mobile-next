@@ -7,13 +7,13 @@ No Gradle, network, signing, emulator, or host connection is used.
 from pathlib import Path
 import os,subprocess,tempfile,zipfile
 root=Path(__file__).resolve().parents[2]
-cache=Path('/home/eslam/.gradle/caches/modules-2/files-2.1')
+cache=Path('/home/owner/.gradle/caches/modules-2/files-2.1')
 with tempfile.TemporaryDirectory(prefix='schedule-android-') as d:
  d=Path(d)
  aar=next((cache/'androidx.work/work-runtime/2.10.5').glob('*/*.aar'))
  with zipfile.ZipFile(aar) as z:(d/'work.jar').write_bytes(z.read('classes.jar'))
- flutter=Path('/home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/cache/artifacts/engine/android-arm64-release/flutter.jar')
- cp=[Path('/home/eslam/Android/Sdk/platforms/android-37.0/android.jar'),flutter,d/'work.jar',next((cache/'com.google.guava/listenablefuture/1.0').glob('*/*.jar'))]
+ flutter=Path('/home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/cache/artifacts/engine/android-arm64-release/flutter.jar')
+ cp=[Path('/home/owner/Android/Sdk/platforms/android-37.0/android.jar'),flutter,d/'work.jar',next((cache/'com.google.guava/listenablefuture/1.0').glob('*/*.jar'))]
  stub=d/'Boundaries.kt'
  stub.write_text('''package io.github.eslamasabry.opencode_mobile
 import android.content.Context
@@ -31,5 +31,5 @@ const val native_schedule_digest_body=4; const val native_schedule_ran=5; const 
 }}
 ''')
  files=list((root/'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile').glob('ScheduledPrompt*.kt'))
- subprocess.run(['/home/eslam/.sdkman/candidates/kotlin/2.3.20/bin/kotlinc','-J-Xmx256m','-J-XX:MaxMetaspaceSize=192m','-jvm-target','17','-cp',os.pathsep.join(map(str,cp)),'-d',str(d/'out.jar'),str(stub),*map(str,files)],check=True)
+ subprocess.run(['/home/owner/.sdkman/candidates/kotlin/2.3.20/bin/kotlinc','-J-Xmx256m','-J-XX:MaxMetaspaceSize=192m','-jvm-target','17','-cp',os.pathsep.join(map(str,cp)),'-d',str(d/'out.jar'),str(stub),*map(str,files)],check=True)
  print('Scheduled Android source compile passed (existing app boundaries stubbed).')

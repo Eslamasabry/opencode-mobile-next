@@ -69,7 +69,7 @@ class _Recorder implements TelemetryAdapter {
   Future<String?> appInstanceId() async => 'abcdef0123456789';
 }
 
-const _anthropic = 'sk-ant-api03-TELEMKEYONEabcdefghijklmnop';
+const _anthropic = 'sk-ant-api03-TELEMKefghijklmnop';
 const _github = 'ghp_TELEMGITHUBtoken0123456789abcdefgh';
 const _url =
     'https://admin:TELEMURLPASSword@vps.example.net:4096/x?token=TELEMQUERYtoken99';

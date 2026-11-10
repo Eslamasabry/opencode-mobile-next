@@ -8,7 +8,7 @@
 //   TZ=UTC flutter test --no-pub --concurrency=1 \
 //     tool/capture/vision_git_one_step_test.dart
 //
-// Output: /home/eslam/Storage2/launch-footage/vision-git-one-step/<scene>.png
+// Output: /home/owner/Storage2/launch-footage/vision-git-one-step/<scene>.png
 // (--dart-define=OUT=<dir> writes elsewhere, e.g. a pass folder).
 import 'dart:async';
 import 'dart:io';
@@ -36,7 +36,7 @@ import 'fixtures.dart';
 
 const _out = String.fromEnvironment(
   'OUT',
-  defaultValue: '/home/eslam/Storage2/launch-footage/vision-git-one-step',
+  defaultValue: '/home/owner/Storage2/launch-footage/vision-git-one-step',
 );
 
 /// The repository as the fake shell tells it.
