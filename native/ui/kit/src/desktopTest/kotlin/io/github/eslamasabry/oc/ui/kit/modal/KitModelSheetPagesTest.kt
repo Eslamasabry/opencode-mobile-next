@@ -363,4 +363,43 @@ class KitModelSheetPagesTest {
         onNodeWithText("Acme Two").assertExists()
         onNodeWithText("Acme One").assertDoesNotExist()
     }
+
+    @Test
+    fun `while a finger drags, the two pages move as one strip and the next page is only at the right`() = runComposeUiTest {
+        val scene = Scene()
+        // Favorites (empty), then Zen (the chosen model's provider, where it opens), then OpenAI.
+        setContent { Sheet(scene, options = zai + openai, current = zai[0].key, level = MotionLevel.Full) }
+        settle()
+        selected("Zen")
+        fun x(text: String) = onNodeWithText(text, useUnmergedTree = true).fetchSemanticsNode().positionInRoot.x
+        val pageA = onNodeWithTag("chat-model-list").fetchSemanticsNode()
+        val width = pageA.size.width.toFloat()
+        val left = pageA.positionInRoot.x
+        val marker = x("GLM-5.3-Flash")
+        // A real pointer: down, several moves, no up.
+        mainClock.autoAdvance = false
+        onNodeWithTag("kit-tab-pages").performTouchInput {
+            down(Offset(this.width * 0.8f, this.height * 0.5f))
+            moveBy(Offset(-30f, 0f))
+            moveBy(Offset(-40f, 0f))
+            moveBy(Offset(-50f, 0f))
+        }
+        mainClock.advanceTimeByFrame()
+        mainClock.advanceTimeByFrame()
+        val lists = onAllNodesWithTag("chat-model-list").fetchSemanticsNodes().sortedBy { it.positionInRoot.x }
+        assertEquals(2, lists.size, "the page being left and the page arriving, nothing else")
+        val a = lists[0].positionInRoot.x
+        val b = lists[1].positionInRoot.x
+        val moved = left - a
+        assertTrue(moved > 60f && moved <= 120f, "the page under the finger moved left with it: $moved of 120 px dragged")
+        assertEquals(marker - moved, x("GLM-5.3-Flash"), 0.5f, "its rows moved by exactly as much")
+        assertEquals(a + width, b, 0.5f, "the next page starts where this one ends")
+        // Nothing of the next page lies inside the page being left: every one of its rows is past that page's end.
+        for (row in listOf("GPT-5.6 Sol", "gpt-5.5", "gpt-5.5-2026-10-01")) {
+            assertTrue(x(row) >= a + width, "$row of the next page is at ${x(row)}, right of ${a + width}")
+        }
+        onNodeWithTag("kit-tab-pages").performTouchInput { up() }
+        mainClock.autoAdvance = true
+        settle()
+    }
 }
