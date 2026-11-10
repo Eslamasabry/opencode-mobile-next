@@ -37,7 +37,7 @@ throwaway repositories and SSH/device shims.
 Final commands and results:
 
 - `python3 native/tool/test/test_gates_review.py`: **19 tests, 0 failures**.
-- `JAVA_HOME=/home/eslam/Storage/tools/jdk-21.0.13+9 bash native/tool/test/run_tests.sh`: **128 checks, 0 failures**;
+- `JAVA_HOME=/home/owner/Storage/tools/jdk-21.0.13+9 bash native/tool/test/run_tests.sh`: **128 checks, 0 failures**;
   includes the 19-method review suite. The original positive boundary-host fixture now uses an explicitly permitted
   canonical range, and task-list expectations include Android compilation.
 - Bash syntax checks for changed shell scripts, Python AST parsing for changed Python files, and `git diff --check`:
@@ -45,7 +45,7 @@ Final commands and results:
 - From `native/`, holding the existing shared PC `oc-build.lock` for the entire invocation:
 
   ```sh
-  JAVA_HOME=/home/eslam/Storage/tools/jdk-21.0.13+9 ANDROID_HOME=/home/eslam/Android/Sdk \
+  JAVA_HOME=/home/owner/Storage/tools/jdk-21.0.13+9 ANDROID_HOME=/home/owner/Android/Sdk \
     ./gradlew --no-daemon -Pkotlin.incremental=false \
     :core:common:desktopTest :core:common:testAndroidHostTest :core:common:compileAndroidMain
   ```

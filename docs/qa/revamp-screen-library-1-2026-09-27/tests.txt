@@ -1,34 +1,34 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_test.dart: (setUpAll)
-00:00 +0: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_test.dart: a key is sent from the one dialog and never shown again
-00:01 +1: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_test.dart: Disconnect names the provider and confirms before it acts
-00:01 +2: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_test.dart: MCP rows: urgent first, the act named, Remove explained
-00:01 +3: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_test.dart: a server without a catalog explains instead of loading
-00:01 +4: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_test.dart: Models offers to connect a provider when none is signed in
-00:01 +5: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_test.dart: (tearDownAll)
-00:01 +5: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart
-00:02 +5: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: (setUpAll)
-00:02 +5: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (dark) loaded 412
-00:03 +6: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (dark) loaded 1280
-00:03 +7: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (dark) mcp
-00:03 +8: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (dark) unavailable
-00:03 +9: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (dark) connect method sheet
-00:04 +10: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (dark) connect key dialog
-00:04 +11: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (dark) oauth inputs sheet
-00:04 +12: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (dark) disconnect sheet
-00:04 +13: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (dark) sign in at host sheet
-00:04 +14: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (dark) mcp menu with an explained gate
-00:04 +15: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: catalog (dark) no provider
-00:04 +16: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (light) loaded 412
-00:04 +17: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (light) loaded 1280
-00:05 +18: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (light) mcp
-00:05 +19: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (light) unavailable
-00:05 +20: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (light) connect method sheet
-00:05 +21: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (light) connect key dialog
-00:05 +22: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (light) oauth inputs sheet
-00:05 +23: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (light) disconnect sheet
-00:05 +24: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (light) sign in at host sheet
-00:05 +25: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (light) mcp menu with an explained gate
-00:05 +26: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: catalog (light) no provider
-00:05 +27: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: (tearDownAll)
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_test.dart: (setUpAll)
+00:00 +0: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_test.dart: a key is sent from the one dialog and never shown again
+00:01 +1: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_test.dart: Disconnect names the provider and confirms before it acts
+00:01 +2: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_test.dart: MCP rows: urgent first, the act named, Remove explained
+00:01 +3: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_test.dart: a server without a catalog explains instead of loading
+00:01 +4: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_test.dart: Models offers to connect a provider when none is signed in
+00:01 +5: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_test.dart: (tearDownAll)
+00:01 +5: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart
+00:02 +5: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: (setUpAll)
+00:02 +5: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (dark) loaded 412
+00:03 +6: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (dark) loaded 1280
+00:03 +7: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (dark) mcp
+00:03 +8: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (dark) unavailable
+00:03 +9: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (dark) connect method sheet
+00:04 +10: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (dark) connect key dialog
+00:04 +11: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (dark) oauth inputs sheet
+00:04 +12: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (dark) disconnect sheet
+00:04 +13: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (dark) sign in at host sheet
+00:04 +14: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (dark) mcp menu with an explained gate
+00:04 +15: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: catalog (dark) no provider
+00:04 +16: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (light) loaded 412
+00:04 +17: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (light) loaded 1280
+00:05 +18: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (light) mcp
+00:05 +19: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (light) unavailable
+00:05 +20: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (light) connect method sheet
+00:05 +21: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (light) connect key dialog
+00:05 +22: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (light) oauth inputs sheet
+00:05 +23: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (light) disconnect sheet
+00:05 +24: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (light) sign in at host sheet
+00:05 +25: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: integrations (light) mcp menu with an explained gate
+00:05 +26: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: catalog (light) no provider
+00:05 +27: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_85a3b576-e95-5/test/revamp/screen_library_1_golden_test.dart: (tearDownAll)
 00:05 +27: All tests passed!

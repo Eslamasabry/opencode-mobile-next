@@ -8,8 +8,8 @@ this commit. No push, Flutter run, APK, emulator, signing or release occurred.
 From `engine/phone`:
 
 ```sh
-OC_PHONE_PROOF_ROOT=/home/eslam/Storage/Code/oc_app-codex-aiteam-oc2/build/qa/aiteam-oc2-live/proof-root \
-OC_ENGINE_TEST_ROOT=/home/eslam/Storage/Code/oc_app-codex-aiteam-oc2/build/qa/aiteam-oc2-live/engine-test-root \
+OC_PHONE_PROOF_ROOT=/home/owner/Storage/Code/oc_app-codex-aiteam-oc2/build/qa/aiteam-oc2-live/proof-root \
+OC_ENGINE_TEST_ROOT=/home/owner/Storage/Code/oc_app-codex-aiteam-oc2/build/qa/aiteam-oc2-live/engine-test-root \
 ../../tool/qa/machine_lock.sh test -- cargo test -j 2
 ```
 

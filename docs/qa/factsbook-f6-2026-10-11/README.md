@@ -4,11 +4,11 @@ Evidence record. The real `factsbook-node` runs **inside the app's built-in Linu
 
 ## The node build
 
-Source: `/home/eslam/Storage/Code/factsbook`, commit `91a8c8bf361423c22f9002566d9635515c7b57f9` (`git archive`, clean tree; the later commits `d4399fc` and `c4767d1` only touch tests and docs). Toolchain: Rust 1.92 from `rust-toolchain.toml`, `cargo-zigbuild` and `ziglang` 0.17.0 from a Python venv (no sudo, no system C compiler), `rustup target add`.
+Source: `/home/owner/Storage/Code/factsbook`, commit `91a8c8bf361423c22f9002566d9635515c7b57f9` (`git archive`, clean tree; the later commits `d4399fc` and `c4767d1` only touch tests and docs). Toolchain: Rust 1.92 from `rust-toolchain.toml`, `cargo-zigbuild` and `ziglang` 0.17.0 from a Python venv (no sudo, no system C compiler), `rustup target add`.
 
 ```
-CARGO_HOME=/home/eslam/Storage/cache/cargo-home \
-CARGO_TARGET_DIR=/home/eslam/Storage2/fb-target-<target> \
+CARGO_HOME=/home/owner/Storage/cache/cargo-home \
+CARGO_TARGET_DIR=/home/owner/Storage2/fb-target-<target> \
 cargo +1.92 zigbuild --release -j 2 --target <target> -p fb-node --bin factsbook-node
 ```
 

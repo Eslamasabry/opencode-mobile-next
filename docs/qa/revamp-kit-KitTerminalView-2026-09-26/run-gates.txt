@@ -59,69 +59,69 @@ Downloading packages...
 Got dependencies!
 54 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G1: modal and toast entry points live in the kit
-00:00 +1: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G15: no width literals outside the kit
-00:00 +2: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G16: every UI component comes from the kit
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G1: modal and toast entry points live in the kit
+00:00 +1: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G15: no width literals outside the kit
+00:00 +2: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G16: every UI component comes from the kit
 Shell: G16: 5 baseline entries dropped — commit the smaller numbers with KIT_RATCHET_WRITE=1 KIT_RATCHET_GATES=G16:
 Shell:   lib/ui/widgets/terminal_view.dart "Container" 1 -> 0
 Shell:   lib/ui/widgets/terminal_view.dart "SelectableText" 1 -> 0
 Shell:   lib/ui/widgets/terminal_view.dart "SingleChildScrollView" 1 -> 0
 Shell:   lib/ui/widgets/terminal_view.dart "Text" 2 -> 0
 Shell:   lib/ui/widgets/terminal_view.dart "TextButton" 2 -> 0
-00:00 +3: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G2: copy, haptics, links and motion go through the kit
+00:00 +3: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G2: copy, haptics, links and motion go through the kit
 Shell: G2: 1 baseline entries dropped — commit the smaller numbers with KIT_RATCHET_WRITE=1 KIT_RATCHET_GATES=G2:
 Shell:   lib/ui/kit/terminal_key_bar.dart "HapticFeedback. in kit" 1 -> 0
-00:00 +4: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G7: layout is directional and bidi marks come from KitBidi
-00:00 +5: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G15 inside the kit: only kit_layout.dart owns widths
-00:00 +6: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G17 colour: every colour comes from a ThemeRoles role
+00:00 +4: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G7: layout is directional and bidi marks come from KitBidi
+00:00 +5: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G15 inside the kit: only kit_layout.dart owns widths
+00:00 +6: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G17 colour: every colour comes from a ThemeRoles role
 Shell: G17: 4 baseline entries dropped — commit the smaller numbers with KIT_RATCHET_WRITE=1 KIT_RATCHET_GATES=G17:
 Shell:   lib/ui/widgets/terminal_view.dart ".colorScheme" 2 -> 0
 Shell:   lib/ui/widgets/terminal_view.dart ".textTheme" 1 -> 0
 Shell:   lib/ui/widgets/terminal_view.dart "Colors.*" 2 -> 0
 Shell:   lib/ui/widgets/terminal_view.dart "attention roles" 1 -> 0
-00:00 +7: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G21 look and motion: numbers and effects come from the kit
+00:00 +7: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G21 look and motion: numbers and effects come from the kit
 Shell: G21: 4 baseline entries dropped — commit the smaller numbers with KIT_RATCHET_WRITE=1 KIT_RATCHET_GATES=G21:
 Shell:   lib/ui/kit/terminal_key_bar.dart "EdgeInsets numeric" 1 -> 0
 Shell:   lib/ui/widgets/terminal_view.dart "BorderRadius.circular(<n>" 1 -> 0
 Shell:   lib/ui/widgets/terminal_view.dart "EdgeInsets numeric" 2 -> 0
 Shell:   lib/ui/widgets/terminal_view.dart "TextStyle(" 13 -> 0
-00:00 +8: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G48 drafts: multiline input in a kit sheet keeps a draft
-00:00 +9: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: allowlists never grow (KIT-5)
-00:00 +10: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: allowlist keys are exact paths or folders under lib/
-00:00 +11: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: every G2/G7/G15x/G17/G21/G48 row is named once and has a reason
-00:00 +12: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: every allowlist entry gives a real reason
-00:00 +13: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: the Flutter widget catalogue exists and is non-trivial
-00:00 +14: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G1 matches showDialog<T>( but not showKitDialog( or a comment
-00:00 +15: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) SnackBar( does not count showSnackBar( or KitSnackBar(
-00:00 +16: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G16 counts real widget constructions, not static members or app classes
-00:00 +17: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G15 counts a width compared to a literal, not BoxConstraints(maxWidth: n)
-00:00 +18: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G2 counts uses of an old API, not its declaration
-00:00 +19: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G2 counts motion literals and seams, not KitMotion names
-00:00 +20: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings SEC-1: launchUrl in the kit is absolute with no allowlist
-00:00 +21: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G7 counts left/right layout, not the directional forms
-00:00 +22: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G7 is absolute in the kit, forced-LTR parts may align left
-00:00 +23: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G15x counts breakpoints and layout widths, not guards or gaps
-00:00 +24: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G17 counts literal colours and theme reads, not transparent
-00:00 +25: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G21 counts look literals the way the rulebook writes them
-00:00 +26: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G21 LOOK-21 in the kit: every stroke width comes from KitTokens
-00:00 +27: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G21 metal/chrome reads identifiers and file names
-00:00 +28: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G48 flags a sheet with a multiline field and no draft
-00:00 +29: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G17 and G21 also scan Flutter UI code outside lib/ui/
-00:00 +30: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings theme files, allowlist keys and scopes resolve as documented
-00:00 +31: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings KIT-5: an allowlist key the committed set lacks fails
-00:00 +32: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/golden_harness_test.dart
-00:00 +32: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/golden_harness_test.dart: G23 golden-name rule (TEST-20) accepts the documented shapes
-00:00 +33: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/golden_harness_test.dart: G23 golden-name rule (TEST-20) rejects the rest
-00:00 +34: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/golden_harness_test.dart: G23 golden-name rule (TEST-20) reads the regenerate header only at the top of the file
-00:00 +35: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/golden_harness_test.dart: G23 scanner strips line and block comments, not strings
-00:00 +36: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/golden_harness_test.dart: G23 scanner baseline growth honours ratchet-tighten only for its check
-00:00 +37: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/golden_harness_test.dart: G23 font loaders register every family AppTheme and pubspec name (TEST-8)
-00:00 +38: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/golden_harness_test.dart: G23 baseline only shrinks and never holds kit gallery entries
-00:00 +39: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
-00:02 +40: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/l10n_coverage_test.dart
-00:03 +40: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/l10n_coverage_test.dart: hardcoded string detector
-00:03 +41: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/l10n_coverage_test.dart: no file gained hardcoded UI strings
+00:00 +8: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G48 drafts: multiline input in a kit sheet keeps a draft
+00:00 +9: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: allowlists never grow (KIT-5)
+00:00 +10: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: allowlist keys are exact paths or folders under lib/
+00:00 +11: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: every G2/G7/G15x/G17/G21/G48 row is named once and has a reason
+00:00 +12: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: every allowlist entry gives a real reason
+00:00 +13: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: the Flutter widget catalogue exists and is non-trivial
+00:00 +14: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G1 matches showDialog<T>( but not showKitDialog( or a comment
+00:00 +15: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) SnackBar( does not count showSnackBar( or KitSnackBar(
+00:00 +16: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G16 counts real widget constructions, not static members or app classes
+00:00 +17: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G15 counts a width compared to a literal, not BoxConstraints(maxWidth: n)
+00:00 +18: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G2 counts uses of an old API, not its declaration
+00:00 +19: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G2 counts motion literals and seams, not KitMotion names
+00:00 +20: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings SEC-1: launchUrl in the kit is absolute with no allowlist
+00:00 +21: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G7 counts left/right layout, not the directional forms
+00:00 +22: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G7 is absolute in the kit, forced-LTR parts may align left
+00:00 +23: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G15x counts breakpoints and layout widths, not guards or gaps
+00:00 +24: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G17 counts literal colours and theme reads, not transparent
+00:00 +25: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G21 counts look literals the way the rulebook writes them
+00:00 +26: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G21 LOOK-21 in the kit: every stroke width comes from KitTokens
+00:00 +27: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G21 metal/chrome reads identifiers and file names
+00:00 +28: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G48 flags a sheet with a multiline field and no draft
+00:00 +29: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings G17 and G21 also scan Flutter UI code outside lib/ui/
+00:00 +30: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings theme files, allowlist keys and scopes resolve as documented
+00:00 +31: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings KIT-5: an allowlist key the committed set lacks fails
+00:00 +32: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/golden_harness_test.dart
+00:00 +32: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/golden_harness_test.dart: G23 golden-name rule (TEST-20) accepts the documented shapes
+00:00 +33: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/golden_harness_test.dart: G23 golden-name rule (TEST-20) rejects the rest
+00:00 +34: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/golden_harness_test.dart: G23 golden-name rule (TEST-20) reads the regenerate header only at the top of the file
+00:00 +35: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/golden_harness_test.dart: G23 scanner strips line and block comments, not strings
+00:00 +36: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/golden_harness_test.dart: G23 scanner baseline growth honours ratchet-tighten only for its check
+00:00 +37: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/golden_harness_test.dart: G23 font loaders register every family AppTheme and pubspec name (TEST-8)
+00:00 +38: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/golden_harness_test.dart: G23 baseline only shrinks and never holds kit gallery entries
+00:00 +39: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/golden_harness_test.dart: G23 golden harness ratchet (TEST-7, TEST-8, TEST-9, TEST-20, ARCH-11)
+00:02 +40: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/l10n_coverage_test.dart
+00:03 +40: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/l10n_coverage_test.dart: hardcoded string detector
+00:03 +41: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/l10n_coverage_test.dart: no file gained hardcoded UI strings
 l10n: these files improved; lower their baseline in test/l10n_coverage_test.dart:
   lib/ui/screens/app_diagnostics_screen.dart: 1 (baseline 12)
   lib/ui/screens/chat_screen.dart: 1 (baseline 27)
@@ -187,225 +187,225 @@ l10n: these files improved; lower their baseline in test/l10n_coverage_test.dart
   lib/ui/widgets/tool_card.dart: 0 (baseline 7)
   lib/ui/widgets/transcript_display_toggles.dart: 0 (baseline 2)
   lib/voice/notices.dart: 0 (baseline 1)
-00:04 +42: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart
-00:07 +42: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: the label rule separates labels from sentences
-00:07 +43: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: action labels use the glossary word, not a banned synonym
-00:07 +44: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: every allow-listed key still needs its exemption
-00:07 +45: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: the noun rule matches standalone words only
-00:07 +46: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: labels say conversation, not session or chat
-00:07 +47: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: the engine-word rule catches Gas City terms, not plain words
-00:07 +48: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: AI Team rows and cards use the person's words, not the engine's
-00:07 +49: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: every allow-listed engine key is still there and still needs it
-00:07 +50: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: every allow-listed noun key still needs its exemption
-00:07 +51: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: G11 ICU messages expand to their plain wordings
-00:07 +52: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: G11 confirm titles and labels are checked through wrappers
-00:07 +53: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: G11 confirmation titles ask and labels name the act (COPY-9)
-00:07 +54: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: G11 the contradiction rule finds both halves of a pair
-00:07 +55: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: G11 the contradiction scan skips text that is never rendered
-00:07 +56: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: G11 no text says two contradicting states at once (COPY-17)
-00:08 +57: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: G11 every allow-listed contradiction key still needs it
-00:08 +58: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: G11 the technical-word rule finds engine words, ports, paths and versions
-00:08 +59: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: G11 technical words only in keys described as Technical: or Field example: (COPY-11)
-00:08 +60: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: G28 the glossary extension finds each pattern
-00:08 +61: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: G28 every allow-listed product key still needs it
-00:08 +62: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: G28 labels and copy follow the glossary (COPY-6–8, COPY-10, COPY-12, COPY-21, LOOK-15)
-00:08 +63: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_ledger_coverage_test.dart
-00:09 +63: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_ledger_coverage_test.dart: every screen file has a home in the ledger
-00:09 +64: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_ledger_coverage_test.dart: ledger ids are unique and every edge lands on a page
-00:09 +65: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/design_standard_test.dart
-00:10 +65: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/design_standard_test.dart: G3x: migrated screens hold every forbidden pattern at zero (or below their baseline)
-00:10 +66: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/design_standard_test.dart: G3x: migrated classes in mixed files use the kit
-00:10 +67: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/design_standard_test.dart: G3x: the baseline only shrinks and names only migrated entries
-00:10 +68: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/design_standard_test.dart: G3x: a screen migrated on or after 2026-09-26 has an _ar_dark golden
-00:10 +69: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/design_standard_test.dart: raw parts a migrated screen gave up do not come back
-00:10 +70: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/design_standard_test.dart: every allowlist entry names a migrated file and gives a reason
-00:10 +71: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/design_standard_test.dart: each migrated screen has dark and light goldens at 412x915
-00:10 +72: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/design_standard_test.dart: scenes take their time only from KitIllustration (§10)
-00:10 +73: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/design_standard_test.dart: the kit is the one place raw progress and filled buttons live
-00:10 +74: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) every G1, G2, G7, G17 and G21 pattern is forbidden
-00:10 +75: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) a screen that breaks one rule of each gate fails each
-00:10 +76: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) scopes: the kit and the theme files are judged by their own rules
-00:10 +77: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) directional and themed forms pass
-00:10 +78: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) bidi literals count outside the kit, as characters or escapes
-00:10 +79: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) an argument list is read to its closing parenthesis
-00:10 +80: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart
-00:14 +80: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: manifest the G4 manifest is read (the parser still works)
-00:14 +81: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: manifest every kit.dart part has reduced-motion samples (G8x)
-00:14 +82: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: manifest this file registers only the parts that predate G8x
-00:14 +83: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: manifest the ratchet only shrinks and names real samples
-00:14 +84: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: manifest registrations name parts kit.dart exports
-00:15 +85: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitActionBlock (MOT-7) default settles at once under system
-00:15 +86: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitActionBlock (MOT-7) working settles at once under system
-00:15 +87: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitActionBlock (MOT-7) default settles at once under effectsOff
-00:15 +88: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitActionBlock (MOT-7) working settles at once under effectsOff
-00:15 +89: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitActionStack (MOT-7) default settles at once under system
-00:16 +90: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitActionStack (MOT-7) default settles at once under effectsOff
-00:16 +91: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitAnimatedRows (MOT-7) default settles at once under system
-00:16 +92: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitAnimatedRows (MOT-7) row inserted changes and settles at once under system
-00:16 +93: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitAnimatedRows (MOT-7) row removed changes and settles at once under system
-00:16 +94: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitAnimatedRows (MOT-7) default settles at once under effectsOff
-00:16 +95: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitAnimatedRows (MOT-7) row inserted changes and settles at once under effectsOff
-00:16 +96: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitAnimatedRows (MOT-7) row removed changes and settles at once under effectsOff
-00:16 +97: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitAskLine (MOT-7) default settles at once under system
-00:16 +98: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitAskLine (MOT-7) default settles at once under effectsOff
-00:16 +99: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitButton (MOT-7) primary working settles at once under system
-00:16 +100: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitButton (MOT-7) secondary working settles at once under system
-00:16 +101: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitButton (MOT-7) tertiary settles at once under system
-00:16 +102: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitButton (MOT-7) disabled settles at once under system
-00:16 +103: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitButton (MOT-7) working ends changes and settles at once under system
-00:16 +104: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitButton (MOT-7) working ends with an icon changes and settles at once under system
-00:16 +105: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitButton (MOT-7) primary working settles at once under effectsOff
-00:16 +106: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitButton (MOT-7) secondary working settles at once under effectsOff
-00:16 +107: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitButton (MOT-7) tertiary settles at once under effectsOff
-00:16 +108: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitButton (MOT-7) disabled settles at once under effectsOff
-00:16 +109: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitButton (MOT-7) working ends changes and settles at once under effectsOff
-00:16 +110: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitButton (MOT-7) working ends with an icon changes and settles at once under effectsOff
-00:16 +111: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitChevron (MOT-7) default settles at once under system
-00:16 +112: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitChevron (MOT-7) default settles at once under effectsOff
-00:16 +113: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitConfirmSheet (MOT-7) default settles at once under system
-00:17 +114: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitConfirmSheet (MOT-7) working settles at once under system
-00:17 +115: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitConfirmSheet (MOT-7) details open changes and settles at once under system
-00:17 +116: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitConfirmSheet (MOT-7) default settles at once under effectsOff
-00:17 +117: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitConfirmSheet (MOT-7) working settles at once under effectsOff
-00:17 +118: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitConfirmSheet (MOT-7) details open changes and settles at once under effectsOff
-00:17 +119: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitEntrance (MOT-7) default settles at once under system
-00:17 +120: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitEntrance (MOT-7) trigger changes changes and settles at once under system
-00:17 +121: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitEntrance (MOT-7) default settles at once under effectsOff
-00:17 +122: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitEntrance (MOT-7) trigger changes changes and settles at once under effectsOff
-00:17 +123: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitExpandRow (MOT-7) closed settles at once under system
-00:17 +124: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitExpandRow (MOT-7) open settles at once under system
-00:17 +125: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitExpandRow (MOT-7) opens on press changes and settles at once under system
-00:17 +126: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitExpandRow (MOT-7) closes on press changes and settles at once under system
-00:17 +127: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitExpandRow (MOT-7) closed settles at once under effectsOff
-00:17 +128: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitExpandRow (MOT-7) open settles at once under effectsOff
-00:17 +129: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitExpandRow (MOT-7) opens on press changes and settles at once under effectsOff
-00:17 +130: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitExpandRow (MOT-7) closes on press changes and settles at once under effectsOff
-00:17 +131: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitGlass (MOT-7) default settles at once under system
-00:17 +132: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitGlass (MOT-7) default settles at once under effectsOff
-00:17 +133: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitIconButton (MOT-7) default settles at once under system
-00:17 +134: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitIconButton (MOT-7) default settles at once under effectsOff
-00:17 +135: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitIllustration (MOT-7) entrance settles at once under system
-00:17 +136: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitIllustration (MOT-7) ambient settles at once under system
-00:17 +137: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitIllustration (MOT-7) ambient turns on changes and settles at once under system
-00:17 +138: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitIllustration (MOT-7) entrance settles at once under effectsOff
-00:17 +139: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitIllustration (MOT-7) ambient settles at once under effectsOff
-00:18 +140: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitIllustration (MOT-7) ambient turns on changes and settles at once under effectsOff
-00:18 +141: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitInset (MOT-7) default settles at once under system
-00:18 +142: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitInset (MOT-7) default settles at once under effectsOff
-00:18 +143: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitLoadingBar (MOT-7) loading settles at once under system
-00:18 +144: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitLoadingBar (MOT-7) idle settles at once under system
-00:18 +145: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitLoadingBar (MOT-7) loading ends changes and settles at once under system
-00:18 +146: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitLoadingBar (MOT-7) loading settles at once under effectsOff
-00:18 +147: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitLoadingBar (MOT-7) idle settles at once under effectsOff
-00:18 +148: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitLoadingBar (MOT-7) loading ends changes and settles at once under effectsOff
-00:18 +149: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitNotice (MOT-7) default settles at once under system
-00:18 +150: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitNotice (MOT-7) default settles at once under effectsOff
-00:18 +151: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitPanel (MOT-7) default settles at once under system
-00:18 +152: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitPanel (MOT-7) default settles at once under effectsOff
-00:18 +153: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitPortalScene (MOT-7) ambient settles at once under system
-00:18 +154: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitPortalScene (MOT-7) ambient settles at once under effectsOff
-00:18 +155: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitProgressView (MOT-7) waiting settles at once under system
-00:18 +156: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitProgressView (MOT-7) known settles at once under system
-00:18 +157: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitProgressView (MOT-7) progress moves changes and settles at once under system
-00:18 +158: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitProgressView (MOT-7) waiting settles at once under effectsOff
-00:18 +159: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitProgressView (MOT-7) known settles at once under effectsOff
-00:18 +160: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitProgressView (MOT-7) progress moves changes and settles at once under effectsOff
-00:18 +161: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitRefresh (MOT-7) default settles at once under system
-00:18 +162: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitRefresh (MOT-7) pulled and released changes and settles at once under system
-00:18 +163: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitRefresh (MOT-7) default settles at once under effectsOff
-00:18 +164: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitRefresh (MOT-7) pulled and released changes and settles at once under effectsOff
-00:18 +165: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitRequestCard (MOT-7) default settles at once under system
-00:18 +166: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitRequestCard (MOT-7) default settles at once under effectsOff
-00:18 +167: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitReveal (MOT-7) default settles at once under system
-00:18 +168: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitReveal (MOT-7) child arrives changes and settles at once under system
-00:18 +169: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitReveal (MOT-7) child leaves changes and settles at once under system
-00:18 +170: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitReveal (MOT-7) default settles at once under effectsOff
-00:18 +171: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitReveal (MOT-7) child arrives changes and settles at once under effectsOff
-00:18 +172: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitReveal (MOT-7) child leaves changes and settles at once under effectsOff
-00:18 +173: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitRow (MOT-7) default settles at once under system
-00:19 +174: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitRow (MOT-7) disabled settles at once under system
-00:19 +175: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitRow (MOT-7) default settles at once under effectsOff
-00:19 +176: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitRow (MOT-7) disabled settles at once under effectsOff
-00:19 +177: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitRowIcon (MOT-7) current settles at once under system
-00:19 +178: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitRowIcon (MOT-7) current settles at once under effectsOff
-00:19 +179: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitRowMenu (MOT-7) default settles at once under system
-00:19 +180: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitRowMenu (MOT-7) menu opens changes and settles at once under system
-00:19 +181: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitRowMenu (MOT-7) default settles at once under effectsOff
-00:19 +182: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitRowMenu (MOT-7) menu opens changes and settles at once under effectsOff
-00:19 +183: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitScreen (MOT-7) loading settles at once under system
-00:19 +184: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitScreen (MOT-7) loading ends changes and settles at once under system
-00:19 +185: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitScreen (MOT-7) loading settles at once under effectsOff
-00:19 +186: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitScreen (MOT-7) loading ends changes and settles at once under effectsOff
-00:19 +187: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitSecretField (MOT-7) default settles at once under system
-00:19 +188: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitSecretField (MOT-7) revealed changes and settles at once under system
-00:19 +189: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitSecretField (MOT-7) default settles at once under effectsOff
-00:19 +190: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitSecretField (MOT-7) revealed changes and settles at once under effectsOff
-00:19 +191: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitSheet (MOT-7) loading settles at once under system
-00:19 +192: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitSheet (MOT-7) loading settles at once under effectsOff
-00:19 +193: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitSkeletonRows (MOT-7) default settles at once under system
-00:19 +194: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitSkeletonRows (MOT-7) default settles at once under effectsOff
-00:19 +195: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitSkeletonTranscript (MOT-7) default settles at once under system
-00:19 +196: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitSkeletonTranscript (MOT-7) default settles at once under effectsOff
-00:19 +197: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStateView (MOT-7) working settles at once under system
-00:19 +198: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStateView (MOT-7) illustrated settles at once under system
-00:19 +199: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStateView (MOT-7) details open changes and settles at once under system
-00:19 +200: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStateView (MOT-7) working settles at once under effectsOff
-00:19 +201: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStateView (MOT-7) illustrated settles at once under effectsOff
-00:19 +202: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStateView (MOT-7) details open changes and settles at once under effectsOff
-00:19 +203: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStatusLine (MOT-7) default settles at once under system
-00:19 +204: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStatusLine (MOT-7) default settles at once under effectsOff
-00:20 +205: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStatusMark (MOT-7) waiting settles at once under system
-00:20 +206: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStatusMark (MOT-7) working settles at once under system
-00:20 +207: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStatusMark (MOT-7) done settles at once under system
-00:20 +208: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStatusMark (MOT-7) failed settles at once under system
-00:20 +209: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStatusMark (MOT-7) working to done changes and settles at once under system
-00:20 +210: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStatusMark (MOT-7) waiting settles at once under effectsOff
-00:20 +211: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStatusMark (MOT-7) working settles at once under effectsOff
-00:20 +212: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStatusMark (MOT-7) done settles at once under effectsOff
-00:20 +213: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStatusMark (MOT-7) failed settles at once under effectsOff
-00:20 +214: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStatusMark (MOT-7) working to done changes and settles at once under effectsOff
-00:20 +215: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitSwitchRow (MOT-7) default settles at once under system
-00:20 +216: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitSwitchRow (MOT-7) switched on changes and settles at once under system
-00:20 +217: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitSwitchRow (MOT-7) default settles at once under effectsOff
-00:20 +218: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitSwitchRow (MOT-7) switched on changes and settles at once under effectsOff
-00:20 +219: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitTabSwitcher (MOT-7) default settles at once under system
-00:20 +220: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitTabSwitcher (MOT-7) index changes changes and settles at once under system
-00:20 +221: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitTabSwitcher (MOT-7) default settles at once under effectsOff
-00:20 +222: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitTabSwitcher (MOT-7) index changes changes and settles at once under effectsOff
-00:20 +223: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitTaskMark (MOT-7) waiting settles at once under system
-00:20 +224: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitTaskMark (MOT-7) working settles at once under system
-00:20 +225: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitTaskMark (MOT-7) done settles at once under system
-00:20 +226: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitTaskMark (MOT-7) failed settles at once under system
-00:20 +227: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitTaskMark (MOT-7) needsYou settles at once under system
-00:20 +228: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitTaskMark (MOT-7) stopped settles at once under system
-00:20 +229: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitTaskMark (MOT-7) waiting settles at once under effectsOff
-00:20 +230: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitTaskMark (MOT-7) working settles at once under effectsOff
-00:20 +231: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitTaskMark (MOT-7) done settles at once under effectsOff
-00:20 +232: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitTaskMark (MOT-7) failed settles at once under effectsOff
-00:20 +233: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitTaskMark (MOT-7) needsYou settles at once under effectsOff
-00:20 +234: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitTaskMark (MOT-7) stopped settles at once under effectsOff
-00:20 +235: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: LoadingList (MOT-7) default settles at once under system
-00:20 +236: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: LoadingList (MOT-7) default settles at once under effectsOff
-00:20 +237: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: ProductEmptyState (MOT-7) default settles at once under system
-00:20 +238: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: ProductEmptyState (MOT-7) default settles at once under effectsOff
-00:20 +239: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: ProductErrorState (MOT-7) default settles at once under system
-00:20 +240: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: ProductErrorState (MOT-7) default settles at once under effectsOff
-00:20 +241: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: ProductInlineEmpty (MOT-7) default settles at once under system
-00:20 +242: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: ProductInlineEmpty (MOT-7) default settles at once under effectsOff
-00:20 +243: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: SectionLabel (MOT-7) default settles at once under system
-00:20 +244: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: SectionLabel (MOT-7) default settles at once under effectsOff
-00:20 +245: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: showKitConfirm (MOT-7) destructive opens and settles at once under system
-00:20 +246: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: showKitConfirm (MOT-7) dismissed changes and settles at once under system
-00:20 +247: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: showKitConfirm (MOT-7) destructive opens and settles at once under effectsOff
-00:21 +248: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: showKitConfirm (MOT-7) dismissed changes and settles at once under effectsOff
-00:21 +249: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: showKitSheet (MOT-7) content opens and settles at once under system
-00:21 +250: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: showKitSheet (MOT-7) full opens and settles at once under system
-00:21 +251: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: showKitSheet (MOT-7) dismissed changes and settles at once under system
-00:21 +252: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: showKitSheet (MOT-7) content opens and settles at once under effectsOff
-00:21 +253: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: showKitSheet (MOT-7) full opens and settles at once under effectsOff
-00:21 +254: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: showKitSheet (MOT-7) dismissed changes and settles at once under effectsOff
-00:21 +255: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: with motion on, KitStatusMark working spins
-00:21 +256: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: with motion on, KitExpandRow animates its opening
-00:21 +257: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStatusMark working shows its still dot under system
-00:21 +258: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStatusMark working shows its still dot under effectsOff
+00:04 +42: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart
+00:07 +42: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: the label rule separates labels from sentences
+00:07 +43: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: action labels use the glossary word, not a banned synonym
+00:07 +44: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: every allow-listed key still needs its exemption
+00:07 +45: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: the noun rule matches standalone words only
+00:07 +46: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: labels say conversation, not session or chat
+00:07 +47: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: the engine-word rule catches Gas City terms, not plain words
+00:07 +48: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: AI Team rows and cards use the person's words, not the engine's
+00:07 +49: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: every allow-listed engine key is still there and still needs it
+00:07 +50: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: every allow-listed noun key still needs its exemption
+00:07 +51: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: G11 ICU messages expand to their plain wordings
+00:07 +52: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: G11 confirm titles and labels are checked through wrappers
+00:07 +53: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: G11 confirmation titles ask and labels name the act (COPY-9)
+00:07 +54: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: G11 the contradiction rule finds both halves of a pair
+00:07 +55: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: G11 the contradiction scan skips text that is never rendered
+00:07 +56: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: G11 no text says two contradicting states at once (COPY-17)
+00:08 +57: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: G11 every allow-listed contradiction key still needs it
+00:08 +58: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: G11 the technical-word rule finds engine words, ports, paths and versions
+00:08 +59: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: G11 technical words only in keys described as Technical: or Field example: (COPY-11)
+00:08 +60: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: G28 the glossary extension finds each pattern
+00:08 +61: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: G28 every allow-listed product key still needs it
+00:08 +62: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_glossary_test.dart: G28 labels and copy follow the glossary (COPY-6–8, COPY-10, COPY-12, COPY-21, LOOK-15)
+00:08 +63: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_ledger_coverage_test.dart
+00:09 +63: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_ledger_coverage_test.dart: every screen file has a home in the ledger
+00:09 +64: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/ui_ledger_coverage_test.dart: ledger ids are unique and every edge lands on a page
+00:09 +65: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/design_standard_test.dart
+00:10 +65: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/design_standard_test.dart: G3x: migrated screens hold every forbidden pattern at zero (or below their baseline)
+00:10 +66: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/design_standard_test.dart: G3x: migrated classes in mixed files use the kit
+00:10 +67: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/design_standard_test.dart: G3x: the baseline only shrinks and names only migrated entries
+00:10 +68: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/design_standard_test.dart: G3x: a screen migrated on or after 2026-09-26 has an _ar_dark golden
+00:10 +69: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/design_standard_test.dart: raw parts a migrated screen gave up do not come back
+00:10 +70: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/design_standard_test.dart: every allowlist entry names a migrated file and gives a reason
+00:10 +71: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/design_standard_test.dart: each migrated screen has dark and light goldens at 412x915
+00:10 +72: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/design_standard_test.dart: scenes take their time only from KitIllustration (§10)
+00:10 +73: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/design_standard_test.dart: the kit is the one place raw progress and filled buttons live
+00:10 +74: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) every G1, G2, G7, G17 and G21 pattern is forbidden
+00:10 +75: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) a screen that breaks one rule of each gate fails each
+00:10 +76: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) scopes: the kit and the theme files are judged by their own rules
+00:10 +77: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) directional and themed forms pass
+00:10 +78: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) bidi literals count outside the kit, as characters or escapes
+00:10 +79: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) an argument list is read to its closing parenthesis
+00:10 +80: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart
+00:14 +80: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: manifest the G4 manifest is read (the parser still works)
+00:14 +81: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: manifest every kit.dart part has reduced-motion samples (G8x)
+00:14 +82: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: manifest this file registers only the parts that predate G8x
+00:14 +83: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: manifest the ratchet only shrinks and names real samples
+00:14 +84: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: manifest registrations name parts kit.dart exports
+00:15 +85: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitActionBlock (MOT-7) default settles at once under system
+00:15 +86: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitActionBlock (MOT-7) working settles at once under system
+00:15 +87: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitActionBlock (MOT-7) default settles at once under effectsOff
+00:15 +88: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitActionBlock (MOT-7) working settles at once under effectsOff
+00:15 +89: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitActionStack (MOT-7) default settles at once under system
+00:16 +90: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitActionStack (MOT-7) default settles at once under effectsOff
+00:16 +91: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitAnimatedRows (MOT-7) default settles at once under system
+00:16 +92: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitAnimatedRows (MOT-7) row inserted changes and settles at once under system
+00:16 +93: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitAnimatedRows (MOT-7) row removed changes and settles at once under system
+00:16 +94: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitAnimatedRows (MOT-7) default settles at once under effectsOff
+00:16 +95: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitAnimatedRows (MOT-7) row inserted changes and settles at once under effectsOff
+00:16 +96: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitAnimatedRows (MOT-7) row removed changes and settles at once under effectsOff
+00:16 +97: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitAskLine (MOT-7) default settles at once under system
+00:16 +98: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitAskLine (MOT-7) default settles at once under effectsOff
+00:16 +99: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitButton (MOT-7) primary working settles at once under system
+00:16 +100: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitButton (MOT-7) secondary working settles at once under system
+00:16 +101: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitButton (MOT-7) tertiary settles at once under system
+00:16 +102: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitButton (MOT-7) disabled settles at once under system
+00:16 +103: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitButton (MOT-7) working ends changes and settles at once under system
+00:16 +104: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitButton (MOT-7) working ends with an icon changes and settles at once under system
+00:16 +105: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitButton (MOT-7) primary working settles at once under effectsOff
+00:16 +106: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitButton (MOT-7) secondary working settles at once under effectsOff
+00:16 +107: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitButton (MOT-7) tertiary settles at once under effectsOff
+00:16 +108: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitButton (MOT-7) disabled settles at once under effectsOff
+00:16 +109: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitButton (MOT-7) working ends changes and settles at once under effectsOff
+00:16 +110: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitButton (MOT-7) working ends with an icon changes and settles at once under effectsOff
+00:16 +111: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitChevron (MOT-7) default settles at once under system
+00:16 +112: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitChevron (MOT-7) default settles at once under effectsOff
+00:16 +113: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitConfirmSheet (MOT-7) default settles at once under system
+00:17 +114: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitConfirmSheet (MOT-7) working settles at once under system
+00:17 +115: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitConfirmSheet (MOT-7) details open changes and settles at once under system
+00:17 +116: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitConfirmSheet (MOT-7) default settles at once under effectsOff
+00:17 +117: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitConfirmSheet (MOT-7) working settles at once under effectsOff
+00:17 +118: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitConfirmSheet (MOT-7) details open changes and settles at once under effectsOff
+00:17 +119: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitEntrance (MOT-7) default settles at once under system
+00:17 +120: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitEntrance (MOT-7) trigger changes changes and settles at once under system
+00:17 +121: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitEntrance (MOT-7) default settles at once under effectsOff
+00:17 +122: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitEntrance (MOT-7) trigger changes changes and settles at once under effectsOff
+00:17 +123: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitExpandRow (MOT-7) closed settles at once under system
+00:17 +124: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitExpandRow (MOT-7) open settles at once under system
+00:17 +125: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitExpandRow (MOT-7) opens on press changes and settles at once under system
+00:17 +126: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitExpandRow (MOT-7) closes on press changes and settles at once under system
+00:17 +127: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitExpandRow (MOT-7) closed settles at once under effectsOff
+00:17 +128: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitExpandRow (MOT-7) open settles at once under effectsOff
+00:17 +129: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitExpandRow (MOT-7) opens on press changes and settles at once under effectsOff
+00:17 +130: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitExpandRow (MOT-7) closes on press changes and settles at once under effectsOff
+00:17 +131: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitGlass (MOT-7) default settles at once under system
+00:17 +132: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitGlass (MOT-7) default settles at once under effectsOff
+00:17 +133: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitIconButton (MOT-7) default settles at once under system
+00:17 +134: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitIconButton (MOT-7) default settles at once under effectsOff
+00:17 +135: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitIllustration (MOT-7) entrance settles at once under system
+00:17 +136: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitIllustration (MOT-7) ambient settles at once under system
+00:17 +137: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitIllustration (MOT-7) ambient turns on changes and settles at once under system
+00:17 +138: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitIllustration (MOT-7) entrance settles at once under effectsOff
+00:17 +139: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitIllustration (MOT-7) ambient settles at once under effectsOff
+00:18 +140: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitIllustration (MOT-7) ambient turns on changes and settles at once under effectsOff
+00:18 +141: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitInset (MOT-7) default settles at once under system
+00:18 +142: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitInset (MOT-7) default settles at once under effectsOff
+00:18 +143: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitLoadingBar (MOT-7) loading settles at once under system
+00:18 +144: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitLoadingBar (MOT-7) idle settles at once under system
+00:18 +145: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitLoadingBar (MOT-7) loading ends changes and settles at once under system
+00:18 +146: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitLoadingBar (MOT-7) loading settles at once under effectsOff
+00:18 +147: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitLoadingBar (MOT-7) idle settles at once under effectsOff
+00:18 +148: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitLoadingBar (MOT-7) loading ends changes and settles at once under effectsOff
+00:18 +149: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitNotice (MOT-7) default settles at once under system
+00:18 +150: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitNotice (MOT-7) default settles at once under effectsOff
+00:18 +151: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitPanel (MOT-7) default settles at once under system
+00:18 +152: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitPanel (MOT-7) default settles at once under effectsOff
+00:18 +153: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitPortalScene (MOT-7) ambient settles at once under system
+00:18 +154: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitPortalScene (MOT-7) ambient settles at once under effectsOff
+00:18 +155: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitProgressView (MOT-7) waiting settles at once under system
+00:18 +156: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitProgressView (MOT-7) known settles at once under system
+00:18 +157: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitProgressView (MOT-7) progress moves changes and settles at once under system
+00:18 +158: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitProgressView (MOT-7) waiting settles at once under effectsOff
+00:18 +159: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitProgressView (MOT-7) known settles at once under effectsOff
+00:18 +160: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitProgressView (MOT-7) progress moves changes and settles at once under effectsOff
+00:18 +161: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitRefresh (MOT-7) default settles at once under system
+00:18 +162: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitRefresh (MOT-7) pulled and released changes and settles at once under system
+00:18 +163: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitRefresh (MOT-7) default settles at once under effectsOff
+00:18 +164: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitRefresh (MOT-7) pulled and released changes and settles at once under effectsOff
+00:18 +165: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitRequestCard (MOT-7) default settles at once under system
+00:18 +166: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitRequestCard (MOT-7) default settles at once under effectsOff
+00:18 +167: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitReveal (MOT-7) default settles at once under system
+00:18 +168: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitReveal (MOT-7) child arrives changes and settles at once under system
+00:18 +169: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitReveal (MOT-7) child leaves changes and settles at once under system
+00:18 +170: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitReveal (MOT-7) default settles at once under effectsOff
+00:18 +171: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitReveal (MOT-7) child arrives changes and settles at once under effectsOff
+00:18 +172: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitReveal (MOT-7) child leaves changes and settles at once under effectsOff
+00:18 +173: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitRow (MOT-7) default settles at once under system
+00:19 +174: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitRow (MOT-7) disabled settles at once under system
+00:19 +175: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitRow (MOT-7) default settles at once under effectsOff
+00:19 +176: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitRow (MOT-7) disabled settles at once under effectsOff
+00:19 +177: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitRowIcon (MOT-7) current settles at once under system
+00:19 +178: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitRowIcon (MOT-7) current settles at once under effectsOff
+00:19 +179: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitRowMenu (MOT-7) default settles at once under system
+00:19 +180: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitRowMenu (MOT-7) menu opens changes and settles at once under system
+00:19 +181: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitRowMenu (MOT-7) default settles at once under effectsOff
+00:19 +182: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitRowMenu (MOT-7) menu opens changes and settles at once under effectsOff
+00:19 +183: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitScreen (MOT-7) loading settles at once under system
+00:19 +184: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitScreen (MOT-7) loading ends changes and settles at once under system
+00:19 +185: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitScreen (MOT-7) loading settles at once under effectsOff
+00:19 +186: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitScreen (MOT-7) loading ends changes and settles at once under effectsOff
+00:19 +187: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitSecretField (MOT-7) default settles at once under system
+00:19 +188: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitSecretField (MOT-7) revealed changes and settles at once under system
+00:19 +189: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitSecretField (MOT-7) default settles at once under effectsOff
+00:19 +190: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitSecretField (MOT-7) revealed changes and settles at once under effectsOff
+00:19 +191: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitSheet (MOT-7) loading settles at once under system
+00:19 +192: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitSheet (MOT-7) loading settles at once under effectsOff
+00:19 +193: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitSkeletonRows (MOT-7) default settles at once under system
+00:19 +194: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitSkeletonRows (MOT-7) default settles at once under effectsOff
+00:19 +195: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitSkeletonTranscript (MOT-7) default settles at once under system
+00:19 +196: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitSkeletonTranscript (MOT-7) default settles at once under effectsOff
+00:19 +197: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStateView (MOT-7) working settles at once under system
+00:19 +198: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStateView (MOT-7) illustrated settles at once under system
+00:19 +199: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStateView (MOT-7) details open changes and settles at once under system
+00:19 +200: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStateView (MOT-7) working settles at once under effectsOff
+00:19 +201: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStateView (MOT-7) illustrated settles at once under effectsOff
+00:19 +202: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStateView (MOT-7) details open changes and settles at once under effectsOff
+00:19 +203: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStatusLine (MOT-7) default settles at once under system
+00:19 +204: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStatusLine (MOT-7) default settles at once under effectsOff
+00:20 +205: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStatusMark (MOT-7) waiting settles at once under system
+00:20 +206: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStatusMark (MOT-7) working settles at once under system
+00:20 +207: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStatusMark (MOT-7) done settles at once under system
+00:20 +208: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStatusMark (MOT-7) failed settles at once under system
+00:20 +209: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStatusMark (MOT-7) working to done changes and settles at once under system
+00:20 +210: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStatusMark (MOT-7) waiting settles at once under effectsOff
+00:20 +211: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStatusMark (MOT-7) working settles at once under effectsOff
+00:20 +212: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStatusMark (MOT-7) done settles at once under effectsOff
+00:20 +213: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStatusMark (MOT-7) failed settles at once under effectsOff
+00:20 +214: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStatusMark (MOT-7) working to done changes and settles at once under effectsOff
+00:20 +215: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitSwitchRow (MOT-7) default settles at once under system
+00:20 +216: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitSwitchRow (MOT-7) switched on changes and settles at once under system
+00:20 +217: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitSwitchRow (MOT-7) default settles at once under effectsOff
+00:20 +218: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitSwitchRow (MOT-7) switched on changes and settles at once under effectsOff
+00:20 +219: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitTabSwitcher (MOT-7) default settles at once under system
+00:20 +220: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitTabSwitcher (MOT-7) index changes changes and settles at once under system
+00:20 +221: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitTabSwitcher (MOT-7) default settles at once under effectsOff
+00:20 +222: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitTabSwitcher (MOT-7) index changes changes and settles at once under effectsOff
+00:20 +223: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitTaskMark (MOT-7) waiting settles at once under system
+00:20 +224: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitTaskMark (MOT-7) working settles at once under system
+00:20 +225: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitTaskMark (MOT-7) done settles at once under system
+00:20 +226: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitTaskMark (MOT-7) failed settles at once under system
+00:20 +227: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitTaskMark (MOT-7) needsYou settles at once under system
+00:20 +228: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitTaskMark (MOT-7) stopped settles at once under system
+00:20 +229: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitTaskMark (MOT-7) waiting settles at once under effectsOff
+00:20 +230: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitTaskMark (MOT-7) working settles at once under effectsOff
+00:20 +231: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitTaskMark (MOT-7) done settles at once under effectsOff
+00:20 +232: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitTaskMark (MOT-7) failed settles at once under effectsOff
+00:20 +233: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitTaskMark (MOT-7) needsYou settles at once under effectsOff
+00:20 +234: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitTaskMark (MOT-7) stopped settles at once under effectsOff
+00:20 +235: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: LoadingList (MOT-7) default settles at once under system
+00:20 +236: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: LoadingList (MOT-7) default settles at once under effectsOff
+00:20 +237: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: ProductEmptyState (MOT-7) default settles at once under system
+00:20 +238: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: ProductEmptyState (MOT-7) default settles at once under effectsOff
+00:20 +239: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: ProductErrorState (MOT-7) default settles at once under system
+00:20 +240: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: ProductErrorState (MOT-7) default settles at once under effectsOff
+00:20 +241: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: ProductInlineEmpty (MOT-7) default settles at once under system
+00:20 +242: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: ProductInlineEmpty (MOT-7) default settles at once under effectsOff
+00:20 +243: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: SectionLabel (MOT-7) default settles at once under system
+00:20 +244: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: SectionLabel (MOT-7) default settles at once under effectsOff
+00:20 +245: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: showKitConfirm (MOT-7) destructive opens and settles at once under system
+00:20 +246: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: showKitConfirm (MOT-7) dismissed changes and settles at once under system
+00:20 +247: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: showKitConfirm (MOT-7) destructive opens and settles at once under effectsOff
+00:21 +248: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: showKitConfirm (MOT-7) dismissed changes and settles at once under effectsOff
+00:21 +249: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: showKitSheet (MOT-7) content opens and settles at once under system
+00:21 +250: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: showKitSheet (MOT-7) full opens and settles at once under system
+00:21 +251: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: showKitSheet (MOT-7) dismissed changes and settles at once under system
+00:21 +252: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: showKitSheet (MOT-7) content opens and settles at once under effectsOff
+00:21 +253: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: showKitSheet (MOT-7) full opens and settles at once under effectsOff
+00:21 +254: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: showKitSheet (MOT-7) dismissed changes and settles at once under effectsOff
+00:21 +255: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: with motion on, KitStatusMark working spins
+00:21 +256: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: with motion on, KitExpandRow animates its opening
+00:21 +257: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStatusMark working shows its still dot under system
+00:21 +258: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit_motion_test.dart: KitStatusMark working shows its still dot under effectsOff
 00:21 +259: All tests passed!

@@ -8,7 +8,7 @@ five agents or rerun the complete BD16 batch.
 
 ## Device evidence
 
-Only `emulator-5554`, under `flock -w 3600 /home/eslam/Storage/tmp/oc-emulator.lock`
+Only `emulator-5554`, under `flock -w 3600 /home/owner/Storage/tmp/oc-emulator.lock`
 for the entire session through final normal-APK verification. No shell deletion,
 account sign-in/out, app uninstall/data clear, build, or owner-phone operation.
 

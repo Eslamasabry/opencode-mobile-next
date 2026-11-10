@@ -1,9 +1,9 @@
 # Area map: state-data (lib/state, ConnectionController, profiles, secrets, caches, stores)
 
-Native-rewrite map. READ-ONLY survey of `/home/eslam/Storage/Code/wt/oc_app-batch1` (HEAD 65e3f70a3, 2026-11-01, app 2.1.0+57).
+Native-rewrite map. READ-ONLY survey of `/home/owner/Storage/Code/wt/oc_app-batch1` (HEAD 65e3f70a3, 2026-11-01, app 2.1.0+57).
 Scope: `lib/state/**` (68k lines, 216 files incl. `connection/*.dart` 54 part files, `profiles/*`, `factsbook/*`, `orchestration/*`),
 plus every store those classes own outside `lib/state` that the day-1 migration must carry (listed in section 4).
-IDs: `STATE-DATA-NN`. Test evidence: the 159 `state-data` rows in `/home/eslam/Storage/Code/wt/native-plan/catalog/raw-*.jsonl` (section 11).
+IDs: `STATE-DATA-NN`. Test evidence: the 159 `state-data` rows in `/home/owner/Storage/Code/wt/native-plan/catalog/raw-*.jsonl` (section 11).
 
 Reading order for a rewrite agent: section 1 (facts that decide the architecture), section 2 (physical stores and exact encodings),
 section 3 (migration recipe), section 4 (every key/file), section 5 (deletion sweep), section 6 (feature catalog, 55 ids), 7 (lifecycles + timers), 8 (hard-won behaviors), 9 (performance), 10 (risks), 11 (tests), 12 (packages), 13 (native bridges), 14-15 (suggested shape, open decisions), 16 (evidence/method).
@@ -626,7 +626,7 @@ Must keep: opening a chat must not move it to the top as "Done - Just now" (`b43
 
 ## 8. Hard-won behaviors a rewrite must not lose (with evidence)
 
-Commit ids are in `/home/eslam/Storage/Code/wt/oc_app-batch1` (`git log --oneline -- lib/state/...`).
+Commit ids are in `/home/owner/Storage/Code/wt/oc_app-batch1` (`git log --oneline -- lib/state/...`).
 
 1. **Never duplicate or lose a prompt** (`f29f47634` preserve uncertain sends without automatic replay; `e91f20e02` bound the offline queue and give the user a way out; `dfdd4ac8f` preserve saved input and expose confirmed corrupt-data recovery; `3ee0ddd45` guard interactive sends during temporary phone runs). Marker-before-send, removal-after-accept, review on unknown, corrupt blob fails closed, explicit empty save is the only recovery.
 2. **Profile deletion fails closed and says so** (`9d9099cf7`, `e957246a3`, `4595cbce3`, `7c6d009c5` stop and drain shared writers before deletion, `856bde79b` read native schedule keys late and mock the channel, `cf060261a` a server added again under a removed id is readable again). Sweep-by-key-shape; draining writers before key discovery; stash before generic sweep.
@@ -687,7 +687,7 @@ Commit ids are in `/home/eslam/Storage/Code/wt/oc_app-batch1` (`git log --onelin
 
 Highest-leverage Flutter test files for this area (counts are catalog rows): `usage_subscriptions_test` 27, `stash_attachments_test` 23, `offline_queue_test` 20, `profile_deletion_test` 19, `pending_command_journal_test` 16, `lifecycle_report_test` 15, `report_problem_test` 15, `session_draft_test` 14, `stash_lifecycle_test` 14, `usage_subscriptions_controller_test` 14, `scheduled_prompt_store_test` 13, `agent_handoff_links_test` 12, `offline_queue_concurrency_test` 12, `queued_prompt_removal_wiring_test` 11, `scheduled_prompt_models_test` 10, `session_selection_sync_test` 10, `settings_access_test` 10, then `automatic_activity_test`, `mobile_download_consent_test`, `offline_queue_unconfirmed_test`, `profile_sign_in_reset_test`, `session_inventory_paging_test`, `session_link_bindings_test`, `app_preferences_store_test`, `kit/kit_draft_manifest_test`, `phone_project_engine_controller_test`, `session_auto_approval_store_test`, `settings_scope_domain_test`, `setup_audit_store_test`, `setup_registry_test`, `command_receipts_test`, `profile_store_test`, `oc1_profile_upgrade_test`, `notification_preferences_test`, `settings_scope_controller_test`.
 Migration rows to port as migration tests: notification-rules merge, OC1 profile upgrade flags, read-state consent migration; add new ones for secure-storage decrypt, both string-list encodings, double prefix, marker preservation, and idempotent re-run.
-Catalog files: `/home/eslam/Storage/Code/wt/native-plan/catalog/raw-*.jsonl` (filter `"area":"state-data"`).
+Catalog files: `/home/owner/Storage/Code/wt/native-plan/catalog/raw-*.jsonl` (filter `"area":"state-data"`).
 Writing order that de-risks the rewrite: (1) lenient JSON + redactor, (2) KV store with `commit` semantics + writer-lane/`closeProfile` primitive, (3) profile store + sweep, (4) offline queue + draft stores, (5) migration reader, (6) CC split.
 
 ---------------------------------------------------------------------------------------------------

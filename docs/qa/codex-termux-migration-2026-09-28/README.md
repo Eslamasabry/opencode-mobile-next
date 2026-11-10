@@ -322,7 +322,7 @@ were added/changed. All heavy commands used the shared machine lock.
 Pinned toolchain and final commands:
 
 ```bash
-migration_flutter=/home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter
+migration_flutter=/home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter
 
 tool/qa/machine_lock.sh test -- "$migration_flutter" test --no-pub --concurrency=1 \
   test/termux_migration_controller_test.dart \

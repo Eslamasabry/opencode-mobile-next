@@ -5,9 +5,9 @@ sys.path.insert(0,'tool/qa')
 import bb9_component_update_acceptance as H
 import bb9_external_installer as E
 H.inherited_lock()
-normal=Path('/home/eslam/Storage/tmp/oc-apk-share/oc-2195.apk')
+normal=Path('/home/owner/Storage/tmp/oc-apk-share/oc-2195.apk')
 sha=hashlib.sha256(normal.read_bytes()).hexdigest()
-sdk='/home/eslam/Android/Sdk/build-tools/36.0.0/'
+sdk='/home/owner/Android/Sdk/build-tools/36.0.0/'
 cert=subprocess.run([sdk+'apksigner','verify','--print-certs',str(normal)],capture_output=True,text=True,check=True)
 assert re.findall(r'Signer #\d+ certificate SHA-256 digest: ([a-f0-9]+)',cert.stdout)==[H.Q.CERT.lower()]
 meta=subprocess.run([sdk+'aapt','dump','badging',str(normal)],capture_output=True,text=True,check=True)

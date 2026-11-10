@@ -1,6 +1,6 @@
 from pathlib import Path
 import fcntl,json,sys,shlex
-sys.path.insert(0,'/home/eslam/Storage/Code/oc_app-sol-bd')
+sys.path.insert(0,'/home/owner/Storage/Code/oc_app-sol-bd')
 from tool.qa.bd7_device_crash_smoke import DeviceSession,LOCK_PATH,NORMAL_APK,PACKAGE
 from tool.qa.bd7_exit_proof import parse_exit_history
 from tool.qa.bd9_normal_restore import prepare_restore

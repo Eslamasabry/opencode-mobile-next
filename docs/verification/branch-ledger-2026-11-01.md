@@ -2,10 +2,10 @@
 
 Written 2026-11-01 for the owner.
 
-- Freeze branch: `int/freeze-2026-11-01`, worktree `/home/eslam/Storage/Code/wt/oc_app-freeze`. Tip before this ledger: `fc8164b8f`. Built on `int/batch1-2026-11-01`. App version in `pubspec.yaml`: 2.1.0+57.
+- Freeze branch: `int/freeze-2026-11-01`, worktree `/home/owner/Storage/Code/wt/oc_app-freeze`. Tip before this ledger: `fc8164b8f`. Built on `int/batch1-2026-11-01`. App version in `pubspec.yaml`: 2.1.0+57.
 - Verified: `flutter analyze lib test` reported no issues at `92ed57977`, and again after the last repair commit `fc8164b8f`. Nothing else was run.
 - Not done, by the freeze rules: no `flutter test`, no Kotlin compile, no APK, no emulator, no phone. Every test that was added or changed in this run is written but has never been run.
-- Not done, by the house rules: nothing was pushed, tagged, released or signed. No branch and no worktree was deleted. The shared checkout `/home/eslam/Storage/Code/oc_app` was not touched.
+- Not done, by the house rules: nothing was pushed, tagged, released or signed. No branch and no worktree was deleted. The shared checkout `/home/owner/Storage/Code/oc_app` was not touched.
 - Words used (AGENTS.md rule 8): "merged" means in the freeze branch on this machine only. "Verified" means the analyzer passed. It does not mean a test or a device run.
 - How to read "merged-equivalent": `git branch --merged` will not list most of these, because the integration line arrived through snapshot commits and `git cherry` shows their commits as missing. They were classified by comparing content (files, patch ids, ancestry), not by commit hashes.
 - Outside this ledger: the branches `int/phone-backend`, `int/ui-batch-2026-10-14` and `build/aiteam-phase-a` exist but were not in the classified data. Nobody reviewed them here.
@@ -159,33 +159,33 @@ Before you start:
 
 Worktrees to remove first (from the classified data):
 
-- `fix/restart-server-after-opencode-update-2026-11-01` at `/home/eslam/Storage/Code/wt/oc_app-restart-after-update`
-- `feat/wifi-share-chat-links-2026-11-01` at `/home/eslam/Storage/Code/wt/oc_app-wifilinks`
-- `feat/claude-agent-trial-2026-11-01` at `/home/eslam/Storage2/wt/oc_app-claudeagent`
-- `fix/p1-tests-2026-11-01` at `/home/eslam/Storage2/wt/oc_app-p1fix`
-- `feat/process-budget-2026-11-01` at `/home/eslam/Storage2/wt/oc_app-procbudget`
-- `perf/dart-2026-11-01` at `/home/eslam/Storage2/wt/oc_app-perf-dart`
-- `test/file-open-native-2026-11-01` at `/home/eslam/Storage2/wt/oc_app-fileopen-native`
-- `fix/background-cpu-2026-11-01` at `/home/eslam/Storage2/wt/oc_app-bgcpu`
-- `fix/pins-2026-10-31` at `/home/eslam/Storage2/wt/oc_app-pins`
-- `fix/paseo-file-open-2026-10-31` at `/home/eslam/Storage2/wt/oc_app-fileopen`
-- `fix/large-text-2026-10-31` at `/home/eslam/Storage2/wt/oc_app-largetext`
-- `fix/free-limit-2026-10-31` at `/home/eslam/Storage2/wt/oc_app-freelimit`
-- `fix/b4-g1-polish` at `/home/eslam/Storage2/wt/oc_app-b4-g1-polish`
-- `fix/m2-resend-card` at `/home/eslam/Storage2/wt/oc_app-m2-resend-card`
-- `qa/p1-recheck` at `/home/eslam/Storage2/wt/oc_app-p1-recheck`
-- `fix/oc2-managed-switch` at `/home/eslam/Storage/Code/oc_app-oc2-managed-switch`
-- `fix/daily-flow-integration` at `/home/eslam/Storage/Code/oc_app-ui-integration`
-- `revamp/shared-chat-2` at `/home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_9cdf1571-206-1`
-- `gate/G33` at `/home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_90f46939-fa7-1`
-- `feat/stable-ux-site-20260913` at `/home/eslam/Storage/Code/oc_app-stable-ux-site`
-- `feat/stable-ux-chat-20260913` at `/home/eslam/Storage/Code/oc_app-stable-ux-chat`
-- `feat/stable-ux-setup-20260913` at `/home/eslam/Storage/Code/oc_app-stable-ux-setup`
-- `marketing/stable-launch-20260913` at `/home/eslam/Storage/Code/oc_app-marketing-launch`
-- `feat/linux-services-core-2026-10-31` at `/home/eslam/Storage2/wt/oc_app-svccore`
-- `feat/linux-services-ui-2026-10-31` at `/home/eslam/Storage2/wt/oc_app-svcui`
-- `feat/web-shell-20260913` at `/home/eslam/Storage/Code/wt/fin-feat-web-shell-20260913`
-- `feat/web-storage-20260913` at `/home/eslam/Storage/Code/wt/fin-feat-web-storage-20260913`
+- `fix/restart-server-after-opencode-update-2026-11-01` at `/home/owner/Storage/Code/wt/oc_app-restart-after-update`
+- `feat/wifi-share-chat-links-2026-11-01` at `/home/owner/Storage/Code/wt/oc_app-wifilinks`
+- `feat/claude-agent-trial-2026-11-01` at `/home/owner/Storage2/wt/oc_app-claudeagent`
+- `fix/p1-tests-2026-11-01` at `/home/owner/Storage2/wt/oc_app-p1fix`
+- `feat/process-budget-2026-11-01` at `/home/owner/Storage2/wt/oc_app-procbudget`
+- `perf/dart-2026-11-01` at `/home/owner/Storage2/wt/oc_app-perf-dart`
+- `test/file-open-native-2026-11-01` at `/home/owner/Storage2/wt/oc_app-fileopen-native`
+- `fix/background-cpu-2026-11-01` at `/home/owner/Storage2/wt/oc_app-bgcpu`
+- `fix/pins-2026-10-31` at `/home/owner/Storage2/wt/oc_app-pins`
+- `fix/paseo-file-open-2026-10-31` at `/home/owner/Storage2/wt/oc_app-fileopen`
+- `fix/large-text-2026-10-31` at `/home/owner/Storage2/wt/oc_app-largetext`
+- `fix/free-limit-2026-10-31` at `/home/owner/Storage2/wt/oc_app-freelimit`
+- `fix/b4-g1-polish` at `/home/owner/Storage2/wt/oc_app-b4-g1-polish`
+- `fix/m2-resend-card` at `/home/owner/Storage2/wt/oc_app-m2-resend-card`
+- `qa/p1-recheck` at `/home/owner/Storage2/wt/oc_app-p1-recheck`
+- `fix/oc2-managed-switch` at `/home/owner/Storage/Code/oc_app-oc2-managed-switch`
+- `fix/daily-flow-integration` at `/home/owner/Storage/Code/oc_app-ui-integration`
+- `revamp/shared-chat-2` at `/home/owner/Storage/Code/oc_app/.claude/worktrees/wf_9cdf1571-206-1`
+- `gate/G33` at `/home/owner/Storage/Code/oc_app/.claude/worktrees/wf_90f46939-fa7-1`
+- `feat/stable-ux-site-20260913` at `/home/owner/Storage/Code/oc_app-stable-ux-site`
+- `feat/stable-ux-chat-20260913` at `/home/owner/Storage/Code/oc_app-stable-ux-chat`
+- `feat/stable-ux-setup-20260913` at `/home/owner/Storage/Code/oc_app-stable-ux-setup`
+- `marketing/stable-launch-20260913` at `/home/owner/Storage/Code/oc_app-marketing-launch`
+- `feat/linux-services-core-2026-10-31` at `/home/owner/Storage2/wt/oc_app-svccore`
+- `feat/linux-services-ui-2026-10-31` at `/home/owner/Storage2/wt/oc_app-svcui`
+- `feat/web-shell-20260913` at `/home/owner/Storage/Code/wt/fin-feat-web-shell-20260913`
+- `feat/web-storage-20260913` at `/home/owner/Storage/Code/wt/fin-feat-web-storage-20260913`
 
 Branch lists, one command per group:
 

@@ -76,7 +76,7 @@ The demo section shows all six screens. Everything else stays quiet: a plain
 feature list instead of cards, no stats strip, no eyebrows, and no
 scroll-reveal animation. The
 design record and renders are kept outside the repository
-(`/home/eslam/Storage2/wt/site-redesign-2026-10-31/`).
+(`/home/owner/Storage2/wt/site-redesign-2026-10-31/`).
 
 Deployment: `.github/workflows/pages.yml` publishes `docs/site` to GitHub Pages
 on pushes to `master` that touch `docs/site/**`, or by manual dispatch. The site

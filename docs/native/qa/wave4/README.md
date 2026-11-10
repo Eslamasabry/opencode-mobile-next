@@ -7,7 +7,7 @@ The build is much better than wave 1: no crash, Stop works, steering works, Mark
 - APK tested: `qa/p12-wave4-030afe554-preview-debug.apk` (from the VPS `~/wt/p12-apks/`)
   - SHA-256 `2ce2c8f8332b5c6e0b10f9995af445ac85c3913b1de58bae4f4fd7b173c4038f`
   - package `io.github.eslamasabry.opencode_mobile.native`, versionCode 10003, 3.0.0-dev
-- Source: `native/p12-integrate-2026-11-03` at `c6d14e8d6` (= `030afe554` + one docs line), worktree `/home/eslam/Storage2/wt/apk-qa-wave4`
+- Source: `native/p12-integrate-2026-11-03` at `c6d14e8d6` (= `030afe554` + one docs line), worktree `/home/owner/Storage2/wt/apk-qa-wave4`
 - Device: emulator AVD `OC_NATIVE_PREVIEW_20261102` (API 35, software GPU, 720×1280), fresh install
 - Backend: OpenCode 2 stable CLI on this PC, port 46400, throwaway project `apk-qa-wave4-server/project`, model **Z.AI Coding Plan · GLM-5.3-Flash**
 - A second server entry, "QA relay" (port 46401), goes through a small logging relay. It records request lines, request bodies and socket closes (`qa/relay.log`), never auth headers.

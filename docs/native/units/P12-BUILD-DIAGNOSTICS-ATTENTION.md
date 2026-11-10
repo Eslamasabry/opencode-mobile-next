@@ -156,10 +156,10 @@ Compile-only verification of unit `ecde9a395c9744c99ca20be287d740c4b74238d4` mer
 - Fetched the ignored sherpa-onnx AAR with `native/tools/vendor/fetch.sh`; its pinned SHA-256 passed.
 - No tests were run, weakened or deleted. No other unit's behavior was changed.
 
-Ran in `native/`, under `/home/eslam/Storage/tmp/oc-build.lock`:
+Ran in `native/`, under `/home/owner/Storage/tmp/oc-build.lock`:
 
 ```bash
-export JAVA_HOME=/home/eslam/Storage2/tools/jdk21 ANDROID_HOME="$HOME/Android/Sdk"
+export JAVA_HOME=/home/owner/Storage2/tools/jdk21 ANDROID_HOME="$HOME/Android/Sdk"
 nice -n 5 ./gradlew --console=plain --continue \
   -Dorg.gradle.workers.max=2 -Dorg.gradle.daemon.idletimeout=300000 \
   -Dorg.gradle.jvmargs='-Xmx2g -XX:MaxMetaspaceSize=768m' \

@@ -1,6 +1,6 @@
 # Map: builtin-linux (the phone's own Ubuntu, servers, setup, process safety)
 
-Date: 2026-11-01. Source of truth: `/home/eslam/Storage/Code/wt/oc_app-batch1` (branch `int/batch1-2026-11-01`, HEAD `65e3f70a3`). Read-only study; nothing in any repo was changed.
+Date: 2026-11-01. Source of truth: `/home/owner/Storage/Code/wt/oc_app-batch1` (branch `int/batch1-2026-11-01`, HEAD `65e3f70a3`). Read-only study; nothing in any repo was changed.
 Paths below are relative to that worktree unless they start with `/`. `K/` means `android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/`. "Guest" means a path inside the Ubuntu root filesystem. "FS" = the Flutter source.
 
 Feature ids are `BUILTIN-LINUX-NN`. A rewrite agent that reads only this file should be able to find every capability, its files, its data, its channel calls and the traps behind it.
@@ -330,7 +330,7 @@ Every Ubuntu program, in every launch path, goes through `BuiltinLinux.prootComm
 ---------------------------------------------------------------------------
 ### 3.G In-flight Linux manager features (not in this worktree; Flutter branches with tests)
 
-Design: `docs/design/linux-manager-2026-10-31/{1-use-cases,2-architecture,3-ui}.md`. Branches (all Dart/bash, **no Kotlin change**, chained): `feat/linux-services-core-2026-10-31` → `feat/linux-vitals-2026-11-01` → `feat/linux-backup-2026-11-01` (worktrees under `/home/eslam/Storage2/wt/oc_app-{svccore,svcui,vitals,backup}`). QA records on the backup branch: `docs/qa/linux-{services-s1a-2026-10-31,vitals-s2a-2026-11-01,backup-s3-2026-11-01}/README.md`. Owner freeze: some tests written but not run.
+Design: `docs/design/linux-manager-2026-10-31/{1-use-cases,2-architecture,3-ui}.md`. Branches (all Dart/bash, **no Kotlin change**, chained): `feat/linux-services-core-2026-10-31` → `feat/linux-vitals-2026-11-01` → `feat/linux-backup-2026-11-01` (worktrees under `/home/owner/Storage2/wt/oc_app-{svccore,svcui,vitals,backup}`). QA records on the backup branch: `docs/qa/linux-{services-s1a-2026-10-31,vitals-s2a-2026-11-01,backup-s3-2026-11-01}/README.md`. Owner freeze: some tests written but not run.
 
 #### BUILTIN-LINUX-45 — Linux services supervisor `oc-svd` (S1a)
 - Keep a bot / dev server / catalog app running: crash restarts, wanted state on disk, logs, give-up. Max **16** definitions; names `[a-z][a-z0-9-]{1,23}`; reserved: `server svc linux-job phone-engine`, prefixes `agent- aiteam oc-`; reserved ports `4096 4097 6767 8372 8472` plus 1024–65535 rule and uniqueness.
@@ -656,7 +656,7 @@ JVM unit tests in `android/app/src/test/kotlin/…` that belong here (port first
 `ServiceDiagnostics.snapshot` → `{running, lastExitCode, lastUptimeMs, lastExitAtMs, lastStopRequested, uptimeMs, restartCount, exitReason: memory_or_phantom_kill|exited|unknown}`.
 
 ---------------------------------------------------------------------------
-## 14. Test inventory to port first (from `/home/eslam/Storage/Code/wt/native-plan/catalog`)
+## 14. Test inventory to port first (from `/home/owner/Storage/Code/wt/native-plan/catalog`)
 
 The catalog files **253 behaviours** under area `builtin-linux`: 133 integration, 66 unit, 30 contract, 15 migration, 6 e2e, 3 screenshot. Heaviest source files (behaviours): `setup_engine_test` 50, `linux_manager_parse_test` 45, `phone_agents_host_test` 33, `setup_component_removal_test` 31, `phone_server_healing_test` 41 (area-adjacent), `builtin_linux_test` 26, `termux_scripts_test` 49, `setup_preflight_test` 25, `phone_agent_scripts_test` 21, `agent_removal_scripts_test` 20, `listening_ports_test` 19, `builtin_server_recovery_native_test` 19, `opencode_history_copy_test` 19, `phone_project_scan_test` 19, `local_terminal_test` 18, `detected_dev_servers_test` 17, `phone_process_watch_test` 17, `builtin_server_recovery_test` 17, `termux_migration_controller_test` 17, `managed_runtime_switch_preflight_test` 17, `builtin_server_test` 16, `quota_collector_host_test` 16, `aiteam_component_test` 16, `phone_agents_idle_host_test` 16, `phone_agents_removal_host_test` 16, `setup_scripts_test` 15, `termux_processes_test` 15. Other relevant: `builtin_work_leases_test` 13, `builtin_project_removal_test` 13, `local_terminal_signin_foreground_test` 13, `builtin_folders_test` 10, `thermal_guard_test` 29, `app_exit_recovery_test` 25, `app_exit_history_test` 11, `reply_watch_test`, `git_link_repair_test`, `termux_migration_*`. Logic tests that read the native state through a fake channel become direct JVM tests; script tests (`setup_scripts_test`, `linux_manager_parse_test`, `linux_services_script_test`, `linux_backup_plan_test`) run real `sh`/`bash`.
 Kotlin: 30 JVM test classes (§7) + androidTest acceptance classes `BuiltinComponentFilesystemAcceptance, BuiltinComponentUpdateAcceptance, BuiltinIdleAcceptance, BuiltinRestoreAcceptance, BuiltinRuntimeAcceptance, BuiltinRuntimeReclaimAcceptance, BuiltinWorkLeaseAcceptance, PhoneEngineAcceptance, PhoneEngineNativeRegressions, Bb8DeviceSmoke, Bd9DeviceSmoke`.

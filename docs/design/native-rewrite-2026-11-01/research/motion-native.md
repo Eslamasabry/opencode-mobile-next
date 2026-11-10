@@ -597,8 +597,8 @@ fun resolve(s: MotionSignals): MotionLevel = when {
   - `~/.gradle/caches`: `org.jetbrains.compose.material3:material3-android:1.12.0-alpha03` `.module` depends on `androidx.compose.material3`, and the cache holds `material3-android 1.5.0-alpha22`;
   - `javap` on `animation-android 1.12.1` (`DeferredAnimatedContent`, `SharedContentConfig` members), `animation-core-android 1.12.1` (`DeferredTransitionState.defer/animateTo`, `EaseOutCubic`, InfiniteTransition duration scale), `foundation(-layout)-android 1.12.1` (overscroll APIs, `imeNestedScroll` `@ExperimentalLayoutApi`), `ui-android 1.12.1` (`preferredFrameRate`, `WindowInsetsRulers`), and `material-ripple-android` (`UnprojectedRipple extends RippleDrawable`).
 - Repo and plan inputs:
-  - `/home/eslam/Storage/Code/kmp-demo` (`App.kt` gesture latch, `Theme.kt` springs, `AndroidPlatform.kt` reduce-motion read);
-  - `/home/eslam/Storage/Code/wt/native-plan/map/ui-kit.md` §07–§10;
-  - `/home/eslam/Storage/Code/wt/native-plan/research/kmp-cmp-status.md`;
-  - `/home/eslam/Storage/Code/wt/oc_app-batch1/docs/qa/micro-motion-2026-10-27/README.md`;
+  - `/home/owner/Storage/Code/kmp-demo` (`App.kt` gesture latch, `Theme.kt` springs, `AndroidPlatform.kt` reduce-motion read);
+  - `/home/owner/Storage/Code/wt/native-plan/map/ui-kit.md` §07–§10;
+  - `/home/owner/Storage/Code/wt/native-plan/research/kmp-cmp-status.md`;
+  - `/home/owner/Storage/Code/wt/oc_app-batch1/docs/qa/micro-motion-2026-10-27/README.md`;
   - owner memory files `android-native-feel`, `micro-animations-wanted`, `no-glass-rule`, `text-scale-cap`, `teach-what-is-hidden`, `composer-green-glow-liked`, `chat-kit-decisions-2026-10-02`.

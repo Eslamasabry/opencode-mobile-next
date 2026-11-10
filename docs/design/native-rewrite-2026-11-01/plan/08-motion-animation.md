@@ -75,7 +75,7 @@ in section 09 §8; §5.1 gives only its motion values and rules.
   `kmp-cmp-status.md` (versions).
 - Maps: `../map/ui-kit.md` UI-KIT-07 to -10, -13, -18, -20, -22 to -30, -41, -50 to -52, K4, K5;
   `chat-genui.md` CHAT-GENUI-08, -09, -14, -21, -26, -27, -33, -40, -43, -56; `screens-nav.md` §1, §3.2.
-- Flutter source (read-only, `/home/eslam/Storage/Code/wt/oc_app-batch1`): `lib/ui/kit/kit_motion.dart`,
+- Flutter source (read-only, `/home/owner/Storage/Code/wt/oc_app-batch1`): `lib/ui/kit/kit_motion.dart`,
   `motion/*.dart`, `chat/kit_composer_edge.dart`, `kit_composer_classic.dart`, `kit_message_lift.dart`,
   `kit_markdown_fresh.dart`, `kit_stream_caret.dart`, `kit_step_light.dart`, `kit_step_signal.dart`, `kit_turn.dart`
   (`_LiveSweep`), `kit_composer_status_strip.dart` (`KitComposerStop`), `kit_composer_caption.dart` (`_StopRing`,
@@ -85,7 +85,7 @@ in section 09 §8; §5.1 gives only its motion values and rules.
   (`_read`), `lib/ui/screens/settings/appearance_screen.dart` (`_motionBody`), `docs/ux-system/revamp/STANDARDS.md`
   MOT-1 to MOT-15, `docs/qa/micro-motion-2026-10-27/README.md`, and the jitter fixes J1–J10 of 2026-10-28/29
   (`c45c02031`, `d1a2daf9a`, `39be428aa`, `e268c012b`, `dd8c662b8`, `d95a6cd80`, `0380766e5`, `bbd1c1124`, `b4339921c`).
-- Demo (`/home/eslam/Storage/Code/kmp-demo`): `App.kt` (gesture latch), `ui/Theme.kt` (springs),
+- Demo (`/home/owner/Storage/Code/kmp-demo`): `App.kt` (gesture latch), `ui/Theme.kt` (springs),
   `ui/ChatScreen.kt` (`RevealLoop`, `runningGlow`, composer), `ui/Kit.kt` (haptics).
 - Owner memory: `android-native-feel`, `micro-animations-wanted`, `composer-green-glow-liked`,
   `chat-kit-decisions-2026-10-02` (incl. the 2026-10-30 Stop override), `no-glass-rule`, `steer-not-queue`,
@@ -2122,7 +2122,7 @@ An iOS design pass (ADR §12 D13) decides whether iOS keeps the container transf
   chat_notices}.dart`, `lib/state/app_preferences.dart`, `lib/ui/screens/settings/appearance_screen.dart`,
   `test/{appearance_effects_test,retired_prefs_test,kit_states_scenes_test,chat_stop_guard_test}.dart`; Shorebird Flutter
   `page_transitions_theme.dart` (`FadeForwardsPageTransitionsBuilder` tweens).
-- Demo: `/home/eslam/Storage/Code/kmp-demo/shared/src/commonMain/kotlin/io/github/eslamasabry/kmpdemo/{App.kt,
+- Demo: `/home/owner/Storage/Code/kmp-demo/shared/src/commonMain/kotlin/io/github/eslamasabry/kmpdemo/{App.kt,
   ui/Theme.kt, ui/ChatScreen.kt, ui/Kit.kt}`.
 - Checked today [V] (local Gradle cache, javap): `androidx.compose.material3:material3-android:1.5.0-alpha22`
   (`MotionScheme`, `BottomSheetKt.BottomSheet`, `sheetPredictiveBackScaling`, `RippleKt.ripple(…, Shape, …)`,

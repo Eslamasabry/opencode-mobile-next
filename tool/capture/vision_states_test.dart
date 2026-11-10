@@ -9,7 +9,7 @@
 //   flutter test --concurrency=1 --dart-define=VISION_OUT=<dir> \
 //     --dart-define=VISION_ONLY=empty-dark tool/capture/vision_states_test.dart
 //
-// Output: /home/eslam/Storage2/launch-footage/vision-states/<scene>.png
+// Output: /home/owner/Storage2/launch-footage/vision-states/<scene>.png
 //
 // The data is invented and plain: "Laptop" is the server in use; offline,
 // its link dropped and its own retry timer tries again in 12 s.
@@ -47,7 +47,7 @@ import 'fixtures.dart';
 
 const _out = String.fromEnvironment(
   'VISION_OUT',
-  defaultValue: '/home/eslam/Storage2/launch-footage/vision-states',
+  defaultValue: '/home/owner/Storage2/launch-footage/vision-states',
 );
 
 /// Only these scenes (comma separated), when given.

@@ -257,7 +257,7 @@ The catalog and the maps were taken from `oc_app-batch1` at `65e3f70a3`. The fre
 
 **None of these features exist in `oc_app-batch1`.** Until `flutter-final` is tagged, the source for every feature in
 the table below, for every twin (§5.6) and for every top-up row is the read-only worktree
-`/home/eslam/Storage/Code/wt/oc_app-freeze` (branch `int/freeze-2026-11-01`), read at a commit named in the brief.
+`/home/owner/Storage/Code/wt/oc_app-freeze` (branch `int/freeze-2026-11-01`), read at a commit named in the brief.
 
 Each feature gets a disposition. This is S02-3, and it answers ADR D16 for the branches the freeze has already merged.
 "Switch" means it ships in the switch release and is covered by the catalog top-up below.
@@ -655,11 +655,11 @@ Each copy is a **twin**, recorded in `native/TWINS.md`:
   - the baselines in §4.1;
   - the flows.
 - **Read-only source trees:**
-  - `/home/eslam/Storage/Code/wt/oc_app-batch1` (`65e3f70a3`): where the catalog's `sources` paths and line numbers
+  - `/home/owner/Storage/Code/wt/oc_app-batch1` (`65e3f70a3`): where the catalog's `sources` paths and line numbers
     point;
-  - `/home/eslam/Storage/Code/wt/oc_app-freeze` (`int/freeze-2026-11-01`): every §3.5 feature, every twin (§5.6) and
+  - `/home/owner/Storage/Code/wt/oc_app-freeze` (`int/freeze-2026-11-01`): every §3.5 feature, every twin (§5.6) and
     every top-up row;
-  - later `/home/eslam/Storage/Code/wt/oc_app-flutter-final` replaces both.
+  - later `/home/owner/Storage/Code/wt/oc_app-flutter-final` replaces both.
 - **Upgrade-journey starts** (S-3): public = the GitHub `v2.1.0+57` APK; owner lineage = the exact build on NX721J and
   the local-key build of `flutter-final` (what the phone will carry at the switch).
 - Agents never edit any of these worktrees.
@@ -890,10 +890,10 @@ untouched.
 
 ```bash
 # PC, from the main repo. Never inside the shared checkout's working files: worktree add only.
-cd /home/eslam/Storage/Code/oc_app
+cd /home/owner/Storage/Code/oc_app
 U=s1-core-data; D=2026-11-10
-git worktree add --no-checkout -b native/$U-$D /home/eslam/Storage/Code/wt/ocn-$U native/main
-cd /home/eslam/Storage/Code/wt/ocn-$U
+git worktree add --no-checkout -b native/$U-$D /home/owner/Storage/Code/wt/ocn-$U native/main
+cd /home/owner/Storage/Code/wt/ocn-$U
 git sparse-checkout set --cone native docs/native docs/qa/native contracts
 # cone mode also brings the files directly in docs/ and docs/qa/ (so docs/qa/README.md), not the 132 MB of Flutter records
 git checkout native/$U-$D
@@ -910,7 +910,7 @@ git checkout native/$U-$D
   PC first: the touched-module list and `check_write_set.sh`. `vps_gradle.sh` passes the module list to the VPS as
   an argument.
 - **Clean up after merge (coordinator):**
-  1. `git merge-base --is-ancestor native/$U-$D native/main && git worktree remove /home/eslam/Storage/Code/wt/ocn-$U && git branch -d native/$U-$D`
+  1. `git merge-base --is-ancestor native/$U-$D native/main && git worktree remove /home/owner/Storage/Code/wt/ocn-$U && git branch -d native/$U-$D`
   2. On the VPS: `rm -rf ~/wt/ocn-$U`, by that exact path.
   3. Check `df -h /` on both machines.
 
@@ -987,7 +987,7 @@ uncommitted diff.
 | Machine | Runs | Settings and limits |
 |---|---|---|
 | VPS (`$OC_VPS_HOST`; 8 vCPU, 23 GB + 8 GB swap, 290 GB, no KVM) | T1, T2, release builds (then re-signed on the PC), Roborazzi record/verify (**the only golden host**), the headless desktop gallery, the nightly iOS klib job | `org.gradle.jvmargs=-Xmx3g` or more. One T2 at a time: `flock ~/.oc-native-t2.lock`. Before T2: `df -h /` must show ≥ 30 GB free (it filled up on 2026-11-01). The IP stays out of git: scripts read `OC_VPS_HOST`. |
-| PC (8 CPU, 16 GB, one emulator) | T0, T3 (emulator, Maestro, upgrade journey), T4 (Macrobenchmark, profiles), APK re-signing, git-side checks (§7.3) | Starting values, which slice-0 proof P8 confirms or replaces when it sets the host caps: `-Xmx2g`, `org.gradle.workers.max=2`, `kotlin.compiler.execution.strategy=in-process`. **One build at a time across both apps:** native scripts take the **same build slot** that Flutter fixers use, `tool/qa/machine_lock.sh build` (the lock file `/home/eslam/Storage/tmp/oc-build.lock`), never a separate native lock. A native Gradle build and a Flutter release build running together caused the two global OOMs in `pc-capacity-ceiling`. Before any Gradle or emulator start, `free -m` must show ≥ 7 GB available. |
+| PC (8 CPU, 16 GB, one emulator) | T0, T3 (emulator, Maestro, upgrade journey), T4 (Macrobenchmark, profiles), APK re-signing, git-side checks (§7.3) | Starting values, which slice-0 proof P8 confirms or replaces when it sets the host caps: `-Xmx2g`, `org.gradle.workers.max=2`, `kotlin.compiler.execution.strategy=in-process`. **One build at a time across both apps:** native scripts take the **same build slot** that Flutter fixers use, `tool/qa/machine_lock.sh build` (the lock file `/home/owner/Storage/tmp/oc-build.lock`), never a separate native lock. A native Gradle build and a Flutter release build running together caused the two global OOMs in `pc-capacity-ceiling`. Before any Gradle or emulator start, `free -m` must show ≥ 7 GB available. |
 
 - **Concurrency:**
   - at most **6** builder agents with one VPS, rising to about 9–10 with a second VPS (D15);
@@ -1007,7 +1007,7 @@ uncommitted diff.
 ### 7.9 Emulator, build numbers, signers, the owner's phone
 
 - **One emulator holder at a time:**
-  1. Hold the lock with `flock /home/eslam/Storage/tmp/oc-emulator.lock`.
+  1. Hold the lock with `flock /home/owner/Storage/tmp/oc-emulator.lock`.
   2. Install and run inside one hold.
   3. Release by killing the `sleep` child, then confirm with `flock -n <lock> true` (`emulator-lock-holder`).
 - **Before any install:**
@@ -1057,7 +1057,7 @@ uncommitted diff.
 
 ### 7.11 Never do
 
-1. Edit another agent's worktree, the shared checkout `/home/eslam/Storage/Code/oc_app` (worktree commands excepted),
+1. Edit another agent's worktree, the shared checkout `/home/owner/Storage/Code/oc_app` (worktree commands excepted),
    or the Flutter reference worktrees.
 2. Run `git stash`, `git checkout -- <path>`, `git reset` or `git clean` on files you do not own
    (`no-stash-in-shared-checkout`).
@@ -1087,7 +1087,7 @@ Binding: native-plan 01 (ADR) and 02 (principles). Section 03 owns module detail
 ## Before you start
 - Your brief names: finish line, non-goal, read set, write set, contract, catalog rows, deletes, checks, evidence path, build-number range.
 - Worktree: sparse, own branch native/s<N>-<unit>-<date>. Never edit outside your write set.
-- Flutter sources are read-only. Catalog `sources` paths: /home/eslam/Storage/Code/wt/oc_app-batch1 (65e3f70a3). Freeze-tip features, twins (Kotlin, its tests, res, pins, scripts, ARB) and top-up rows: /home/eslam/Storage/Code/wt/oc_app-freeze (int/freeze-2026-11-01, at the commit in your brief). Later both become oc_app-flutter-final.
+- Flutter sources are read-only. Catalog `sources` paths: /home/owner/Storage/Code/wt/oc_app-batch1 (65e3f70a3). Freeze-tip features, twins (Kotlin, its tests, res, pins, scripts, ARB) and top-up rows: /home/owner/Storage/Code/wt/oc_app-freeze (int/freeze-2026-11-01, at the commit in your brief). Later both become oc_app-flutter-final.
 
 ## Layers (the build fails if you break them)
 - protocol and engine both sit on core. Engines never import protocols (gateways arrive through Metro). ui (kit, kit-chat, kit-content, words, routes, design) sits on core. Features see the kit, engines' public API and core.domain/model/common only; shell assembles features; androidApp assembles everything.
@@ -1138,7 +1138,7 @@ Binding: native-plan 01 (ADR) and 02 (principles). Section 03 owns module detail
 
 ```markdown
 # Brief: native/s<N>-<unit>-<YYYY-MM-DD>
-Model: <Codex|Sonnet|Opus>          Worktree: /home/eslam/Storage/Code/wt/ocn-<unit>
+Model: <Codex|Sonnet|Opus>          Worktree: /home/owner/Storage/Code/wt/ocn-<unit>
 Finish line: <one sentence a person or a test can observe>
 Non-goal: <one sentence>
 Removes: <what this change takes away: controls, words, steps, code paths> (simplify rule)
@@ -1422,7 +1422,7 @@ Work proceeds on the default until the owner answers. The coordinator adds these
 
 ## 13. Sources
 
-- Binding: `/home/eslam/Storage/Code/wt/native-plan/plan/01-architecture-decision.md` (§1, §4, §5.2, §6.3, §7, §9,
+- Binding: `/home/owner/Storage/Code/wt/native-plan/plan/01-architecture-decision.md` (§1, §4, §5.2, §6.3, §7, §9,
   §10, §11, §12).
 - Catalog:
   - `catalog/BEHAVIORS.md` (summary, areas, MIGR, Appendices C–E);

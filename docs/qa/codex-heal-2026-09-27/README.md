@@ -82,7 +82,7 @@ A supported, already installed selected model stays selected. A saved preference
 
 The required Kotlin command `cd android && ./gradlew :app:compileReleaseKotlin` passed (177 tasks, 3m36s). This host uses Ubuntu OpenJDK 17.0.20; Temurin 17 was not installed. No signing key was used or generated for this job.
 
-Pinned tools: `/home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/{flutter,dart}`. `flutter pub get` completed. Formatting all 26 changed/new Dart files with `--language-version=3.10 --output=none --set-exit-if-changed` passed with zero changes; `git diff --check` passed.
+Pinned tools: `/home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/{flutter,dart}`. `flutter pub get` completed. Formatting all 26 changed/new Dart files with `--language-version=3.10 --output=none --set-exit-if-changed` passed with zero changes; `git diff --check` passed.
 
 The selected test manifest below covers 456 cases across 23 files, including all requested gates. The first integration run had four failures: a timezone-sensitive receipt assertion, incomplete setup-route test fakes, and two deletion assertions exposing an unnecessary policy write for unmanaged profiles. The production deletion path now does nothing when no stored Termux recovery exists. The four affected files were rerun (69 cases); the final route-fixture correction passed all six autostart cases. A final report/binding run passed all 22 cases after invalidating readiness before an explicit manual start. The other 19 files passed the initial run and their covered behavior was unaffected by those corrections.
 

@@ -1,4 +1,4 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88be54cc-40b-5/test/repository_hygiene_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88be54cc-40b-5/test/repository_hygiene_test.dart
 00:00 +0: G25 repository hygiene MOT-10: flutter_animate is never a dependency or an import
 00:06 +1: G25 repository hygiene SEC-6, SEC-7: no skill packs, keystores or signing secrets and no screen recordings in docs/qa are tracked
 00:06 +2: G25 repository hygiene TEST-12: golden-failure artefacts are never committed (ratchet)

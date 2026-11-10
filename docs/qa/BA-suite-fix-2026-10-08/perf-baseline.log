@@ -1,4 +1,4 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/perf_catalog_budget_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app-sol-ba/test/perf_catalog_budget_test.dart
 00:00 +0: (setUpAll)
 00:00 +0: 20 minutes of chat with 6 wakes and 3 chat opens load the catalog at most twice
 00:00 +1: a wake is ready in one health check; the reload behind it skips a fresh catalog
@@ -45,4 +45,4 @@ The test description was:
 00:00 +6 -1: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/perf_catalog_budget_test.dart: a wake is ready in one health check; the reload behind it skips a fresh catalog
+  /home/owner/Storage/Code/oc_app-sol-ba/test/perf_catalog_budget_test.dart: a wake is ready in one health check; the reload behind it skips a fresh catalog

@@ -1,47 +1,47 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_foreground_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_foreground_test.dart: successive replacement cannot skip the oldest pending drain
-00:00 +1: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_foreground_test.dart: replacement waits for old terminal drain and foreground release
-00:00 +2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_foreground_test.dart: old unbind cannot clear a replacement binding
-00:00 +3: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_foreground_test.dart: cancelling a reservation before the drain gate never starts a service
-00:00 +4: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_foreground_test.dart: failed cleanup blocks admission and remains retryable
-00:00 +5: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart
-00:00 +5: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: missing foreground binding refuses sign-in before native PTY start
-00:00 +6: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: reserves synchronously and waits for active foreground before PTY start
-00:00 +7: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: ending pending native start drains its late exact ID before releasing foreground
-00:00 +8: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: disposing a pending sign-in drains late native ID without reopening URL
-00:00 +9: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: cancel during foreground admission ends promptly without issuing native start
-00:00 +10: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: admission refusal uses fixed words and releases without native launch
-00:00 +11: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: inactive admission cannot launch a PTY
-00:00 +12: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: native sign-in errors never expose platform or CLI text
-00:00 +13: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: exit holds foreground through authentication checking until explicit end
-00:00 +14: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: foreground loss drains only its sign-in and leaves normal shells alone
-00:00 +15: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: duplicate ends share a drain and hold protection until native removal completes
-00:00 +16: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: failed drain retains protection and allows an exact-ID retry
-00:00 +17: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: owner unbind drains registered pending PTY before releasing its delegate
-00:00 +18: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart
-00:03 +18: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: a new shell starts at the terminal size, then runs
-00:03 +19: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: a new shell a failed start says why
-00:03 +20: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: a new shell shells are numbered in the order they were opened
-00:03 +21: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: output is drawn and every chunk is answered
-00:03 +22: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: output a character split across two chunks arrives whole
-00:03 +23: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: output a wide character at the last column wraps whole
-00:03 +24: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: output after clear, a selection copies the words it covers
-00:03 +25: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: output output for a shell this side does not know is still answered
-00:03 +26: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: output an exit ends the shell with its code
-00:03 +27: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: input typed text reaches the shell as UTF-8
-00:03 +28: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: input a sticky Ctrl turns the next typed letter into its control byte
-00:03 +29: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: input nothing is sent before the shell runs or after it ended
-00:03 +30: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: size a resize reaches the shell once the view settles
-00:03 +31: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: shells outlive the screen load adopts shells Android runs, with their recent output
-00:03 +32: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: shells outlive the screen load runs once
-00:03 +33: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: shells outlive the screen restart replaces an ended shell
-00:03 +34: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: shells outlive the screen stop leaves the shell listed as ended
-00:03 +35: /home/eslam/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: channel events are parsed from the Android shapes
-00:04 +36: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart
-00:13 +36: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: (setUpAll)
-00:13 +36: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: fx: its Vercel device page opens and its code copies
-00:13 +37: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: Codex: its device page and the code on the next line
-00:14 +38: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: Claude: a page it broke across rows opens whole, and there is no code to copy
+00:00 +0: loading /home/owner/Storage/Code/oc_app-sol-ba/test/agent_sign_in_foreground_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app-sol-ba/test/agent_sign_in_foreground_test.dart: successive replacement cannot skip the oldest pending drain
+00:00 +1: /home/owner/Storage/Code/oc_app-sol-ba/test/agent_sign_in_foreground_test.dart: replacement waits for old terminal drain and foreground release
+00:00 +2: /home/owner/Storage/Code/oc_app-sol-ba/test/agent_sign_in_foreground_test.dart: old unbind cannot clear a replacement binding
+00:00 +3: /home/owner/Storage/Code/oc_app-sol-ba/test/agent_sign_in_foreground_test.dart: cancelling a reservation before the drain gate never starts a service
+00:00 +4: /home/owner/Storage/Code/oc_app-sol-ba/test/agent_sign_in_foreground_test.dart: failed cleanup blocks admission and remains retryable
+00:00 +5: loading /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart
+00:00 +5: /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: missing foreground binding refuses sign-in before native PTY start
+00:00 +6: /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: reserves synchronously and waits for active foreground before PTY start
+00:00 +7: /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: ending pending native start drains its late exact ID before releasing foreground
+00:00 +8: /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: disposing a pending sign-in drains late native ID without reopening URL
+00:00 +9: /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: cancel during foreground admission ends promptly without issuing native start
+00:00 +10: /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: admission refusal uses fixed words and releases without native launch
+00:00 +11: /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: inactive admission cannot launch a PTY
+00:00 +12: /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: native sign-in errors never expose platform or CLI text
+00:00 +13: /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: exit holds foreground through authentication checking until explicit end
+00:00 +14: /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: foreground loss drains only its sign-in and leaves normal shells alone
+00:00 +15: /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: duplicate ends share a drain and hold protection until native removal completes
+00:00 +16: /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: failed drain retains protection and allows an exact-ID retry
+00:00 +17: /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_signin_foreground_test.dart: owner unbind drains registered pending PTY before releasing its delegate
+00:00 +18: loading /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart
+00:03 +18: /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: a new shell starts at the terminal size, then runs
+00:03 +19: /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: a new shell a failed start says why
+00:03 +20: /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: a new shell shells are numbered in the order they were opened
+00:03 +21: /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: output is drawn and every chunk is answered
+00:03 +22: /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: output a character split across two chunks arrives whole
+00:03 +23: /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: output a wide character at the last column wraps whole
+00:03 +24: /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: output after clear, a selection copies the words it covers
+00:03 +25: /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: output output for a shell this side does not know is still answered
+00:03 +26: /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: output an exit ends the shell with its code
+00:03 +27: /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: input typed text reaches the shell as UTF-8
+00:03 +28: /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: input a sticky Ctrl turns the next typed letter into its control byte
+00:03 +29: /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: input nothing is sent before the shell runs or after it ended
+00:03 +30: /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: size a resize reaches the shell once the view settles
+00:03 +31: /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: shells outlive the screen load adopts shells Android runs, with their recent output
+00:03 +32: /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: shells outlive the screen load runs once
+00:03 +33: /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: shells outlive the screen restart replaces an ended shell
+00:03 +34: /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: shells outlive the screen stop leaves the shell listed as ended
+00:03 +35: /home/owner/Storage/Code/oc_app-sol-ba/test/local_terminal_test.dart: channel events are parsed from the Android shapes
+00:04 +36: loading /home/owner/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart
+00:13 +36: /home/owner/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: (setUpAll)
+00:13 +36: /home/owner/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: fx: its Vercel device page opens and its code copies
+00:13 +37: /home/owner/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: Codex: its device page and the code on the next line
+00:14 +38: /home/owner/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: Claude: a page it broke across rows opens whole, and there is no code to copy
 Pending timers:
 Timer (duration: 0:00:00.080000, periodic: false), created:
 #0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
@@ -105,9 +105,9 @@ Timer (duration: 0:00:00.080000, periodic: false), created:
 #62     WidgetTester.pump.<anonymous closure> (package:flutter_test/src/widget_tester.dart:652:53)
 #65     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
 #66     WidgetTester.pump (package:flutter_test/src/widget_tester.dart:652:27)
-#67     _print (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart:86:16)
+#67     _print (file:///home/owner/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart:86:16)
 <asynchronous suspension>
-#68     main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart:183:5)
+#68     main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart:183:5)
 <asynchronous suspension>
 #69     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -132,11 +132,11 @@ When the exception was thrown, this was the stack:
 The test description was:
   Claude: a page it broke across rows opens whole, and there is no code to copy
 ════════════════════════════════════════════════════════════════════════════════════════════════════
-00:14 +38 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: Claude: a page it broke across rows opens whole, and there is no code to copy [E]
+00:14 +38 -1: /home/owner/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: Claude: a page it broke across rows opens whole, and there is no code to copy [E]
   Test failed. See exception logs above.
   The test description was: Claude: a page it broke across rows opens whole, and there is no code to copy
   
-00:14 +38 -1: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: the newest page wins
+00:14 +38 -1: /home/owner/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: the newest page wins
 Pending timers:
 Timer (duration: 0:00:00.080000, periodic: false), created:
 #0      new FakeTimer._ (package:fake_async/fake_async.dart:342:62)
@@ -200,9 +200,9 @@ Timer (duration: 0:00:00.080000, periodic: false), created:
 #62     WidgetTester.pump.<anonymous closure> (package:flutter_test/src/widget_tester.dart:652:53)
 #65     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
 #66     WidgetTester.pump (package:flutter_test/src/widget_tester.dart:652:27)
-#67     _print (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart:86:16)
+#67     _print (file:///home/owner/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart:86:16)
 <asynchronous suspension>
-#68     main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart:198:5)
+#68     main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart:198:5)
 <asynchronous suspension>
 #69     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -227,15 +227,15 @@ When the exception was thrown, this was the stack:
 The test description was:
   the newest page wins
 ════════════════════════════════════════════════════════════════════════════════════════════════════
-00:14 +38 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: the newest page wins [E]
+00:14 +38 -2: /home/owner/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: the newest page wins [E]
   Test failed. See exception logs above.
   The test description was: the newest page wins
   
-00:14 +38 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: plain http and this phone's own pages are never offered
-00:14 +39 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: the buttons leave once the sign-in ends
-00:14 +40 -2: /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: (tearDownAll)
+00:14 +38 -2: /home/owner/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: plain http and this phone's own pages are never offered
+00:14 +39 -2: /home/owner/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: the buttons leave once the sign-in ends
+00:14 +40 -2: /home/owner/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: (tearDownAll)
 00:14 +40 -2: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: Claude: a page it broke across rows opens whole, and there is no code to copy
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: the newest page wins
+  /home/owner/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: Claude: a page it broke across rows opens whole, and there is no code to copy
+  /home/owner/Storage/Code/oc_app-sol-ba/test/agent_sign_in_terminal_test.dart: the newest page wins

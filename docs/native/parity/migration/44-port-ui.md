@@ -70,7 +70,7 @@ Finish line: decide every assigned file by reachable native behaviour and port f
 
 Approval fixes (docs/native/parity/approvals/44-port-ui.md) changed code after the compile evidence below; the build VPS compiles the fixed branch. Existing tests not updated by this job and now stale (owner: tests afterwards): `QaWave1ComposerTest`, `ComposerModelsFilesTest` (Apply flow, renamed tags/copy) and `WorldComposerFilesModelsTest` (disabled models are now listed in the catalog).
 
-Compile-only evidence: both requested targets passed for the card batch (3m46s), file/phone/status batch (1m41s), and model batch (1m22s). The final unchanged-source gate also passed (592 tasks, 1s); both requested targets pass in all four saved batches. Each run uses the shared machine build lock, `nice -n 5`, `JAVA_HOME=/home/eslam/Storage2/tools/jdk21`, `ANDROID_HOME=$HOME/Android/Sdk`, and:
+Compile-only evidence: both requested targets passed for the card batch (3m46s), file/phone/status batch (1m41s), and model batch (1m22s). The final unchanged-source gate also passed (592 tasks, 1s); both requested targets pass in all four saved batches. Each run uses the shared machine build lock, `nice -n 5`, `JAVA_HOME=/home/owner/Storage2/tools/jdk21`, `ANDROID_HOME=$HOME/Android/Sdk`, and:
 
 ```sh
 ./gradlew :androidApp:compilePreviewDebugKotlin compileKotlinDesktop -Dorg.gradle.workers.max=2 -Dorg.gradle.daemon.idletimeout=300000 '-Dorg.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=768m'

@@ -44,7 +44,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 E2E = HERE.parent
 FIXTURES = E2E / "fixtures"
 DEFAULT_SERIAL = "emulator-5584"
-DEFAULT_LOCK = os.environ.get("OC_EMULATOR_LOCK", "/home/eslam/Storage/tmp/oc-emulator.lock")
+DEFAULT_LOCK = os.environ.get("OC_EMULATOR_LOCK", os.path.expanduser("~/Storage/tmp/oc-emulator.lock"))
 APP_IDS = {
     ("flutter", "stableRelease"): "io.github.eslamasabry.opencode_mobile",
     ("native", "stableRelease"): "io.github.eslamasabry.opencode_mobile",

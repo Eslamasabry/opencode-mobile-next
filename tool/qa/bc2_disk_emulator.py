@@ -19,7 +19,7 @@ import uuid
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
 SDK = pathlib.Path.home() / "Android/Sdk"
-LOCK = "/home/eslam/Storage/tmp/oc-emulator.lock"
+LOCK = "/home/owner/Storage/tmp/oc-emulator.lock"
 
 
 def run(argv, *, timeout=180):

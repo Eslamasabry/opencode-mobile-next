@@ -236,15 +236,6 @@ jobs:
           for p in $(pgrep -f GradleDaemon || true); do
             if ls -l "/proc/$p/fd" 2>/dev/null | grep -q "$GITHUB_WORKSPACE/native/"; then kill -9 "$p" 2>/dev/null || true; fi
           done
-      - name: Output directory the LooksCapture tests hard-code
-        # Several LooksCapture helpers mkdirs() /home/eslam/wt/lane-looks/looks-out/screens; the runner user cannot create /home/eslam.
-        if: ${{ needs.plan.outputs.lane == 'full' }}
-        working-directory: ${{ github.workspace }}
-        run: |
-          mkdir -p /home/eslam/wt/lane-looks/looks-out/screens 2>/dev/null || {
-            sudo mkdir -p /home/eslam/wt/lane-looks/looks-out/screens
-            sudo chown -R "$USER" /home/eslam
-          }
       - name: Pick this shard's modules
         id: pick
         run: |
@@ -419,7 +410,7 @@ jobs:
           retention-days: 7
           if-no-files-found: error
       - name: Upload APK for the phone sync (native/next only)
-        # The PC's phone-sync timer (/home/eslam/Storage2/tools/phone-sync.sh) polls for this artifact name. Dispatch with
+        # The PC's phone-sync timer (phone-sync.sh on the maintainer PC) polls for this artifact name. Dispatch with
         # apk_only=true after each merge into native/next: the commits carry [skip ci], so a push does not trigger.
         if: ${{ github.ref == 'refs/heads/native/next' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

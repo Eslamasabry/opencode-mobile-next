@@ -1,5 +1,5 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: persisted startup waits for reconnect before loading tabs
+00:00 +0: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: persisted startup waits for reconnect before loading tabs
 -------------------------------------------------------------------------------
 The Shorebird Updater is unavailable in the current environment.
 -------------------------------------------------------------------------------
@@ -8,348 +8,348 @@ contain the Shorebird Engine. Most commonly this is due to building with
 `flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
 It can also occur when running on an unsupported platform (e.g. web).
 
-00:01 +1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: newer file request wins and location invalidates retained files
-00:01 +2: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: nested files use project-relative API paths and breadcrumbs
-00:01 +3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: files show exact changes and aggregate nested changes without crowding
-00:01 +4: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: file review comments return to the active chat callback
-00:02 +5: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: top-level file review copies its comment for another chat
-00:02 +6: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: changes card opens the changed set grouped by status
-00:02 +7: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: project files stage as references distinct from attachments
-00:02 +8: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: file status failure stays scoped and retries independently
-00:02 +9: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: foreground refresh reloads the current file directory
-00:02 +10: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: file search clear control has an accessible tooltip
-00:03 +11: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: clearing file search restores the directory it started in
-00:03 +12: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: unsupported binary files show preview metadata
-00:03 +13: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: image files open as a zoomable preview
-00:03 +14: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: project CSV uses table preview and retains full truncated source for attach
-00:03 +15: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: chat file viewer can attach the original project file
-00:03 +16: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: symbol search opens the exact source line in file preview
-00:03 +17: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: symbol search debounces typing and explains empty results
-00:04 +18: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: unavailable symbol search leaves file browsing intact
-00:04 +19: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: terminal reconnects, forwards control input, and closes channels
-00:04 +20: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: stale terminal create does not open in a new repository
-00:04 +21: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: stale terminal rename does not reload a new workspace
-00:04 +22: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: stale terminal remove does not reload a new repository
-00:04 +23: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: permission actions wrap on a narrow screen
-00:04 +24: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: model details remain scrollable on a short screen
-00:04 +25: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: server switch removes the previous home stack
-00:04 +26: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: remote quick add opens an editor without saving a fake host
-00:05 +27: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_deletion_test.dart
-00:05 +27: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_deletion_test.dart: profileScopedPreferenceKeys finds every shape and nothing else
-00:05 +28: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_deletion_test.dart: deleting a profile leaves nothing keyed to it behind
-00:05 +29: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_deletion_test.dart: nothing deleted comes back after a restart
-00:05 +30: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_deletion_test.dart: deleting the other profile leaves the first one whole
-00:05 +31: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_deletion_test.dart: queued prompts awaiting delivery review are swept with the profile and counted in the disclosure
-00:05 +32: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_deletion_test.dart: queued prompts awaiting delivery review stay on the device, marker intact, when the sweep is refused
-00:05 +33: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_deletion_test.dart: a widget snapshot with no owner is cleared rather than left
-00:05 +34: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_deletion_test.dart: a store that refuses writes keeps the server when its queued prompts cannot be deleted
-00:05 +35: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_deletion_test.dart: a store that refuses writes keeps the server when a draft write is refused
-00:05 +36: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_deletion_test.dart: a store that refuses writes keeps the server when a scoped setting will not go
-00:05 +37: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_deletion_test.dart: a store that refuses writes keeps the server when the widget snapshot will not clear
-00:05 +38: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_deletion_test.dart: a store that refuses writes reports every refusal, not just the first
-00:05 +39: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_deletion_test.dart: a store that refuses writes a clean run still reports a complete deletion
-00:05 +40: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_deletion_test.dart: drafts record the profile that owns them
-00:05 +41: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart
-00:06 +41: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart: the rule is off by default and round-trips through JSON
-00:06 +42: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart: a busy session is tracked as an observed interval and reminds once
-00:06 +43: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart: observed idle ends the interval and retires its reminder; a later busy interval reminds again
-00:06 +44: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart: a failed poll neither ends nor extends the interval; absence ends it
-00:06 +45: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart: a gap longer than the observation limit restarts the interval instead of asserting continuous work
-00:06 +46: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart: intervals and posted reminders survive a restart without reminding twice
-00:06 +47: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart: no reminder in the foreground, during quiet hours, or when off
-00:06 +48: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart: turning the rule off retires only check-in reminders
-00:06 +49: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart: disabling monitoring forgets the intervals
-00:06 +50: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart: claim is durable before native dispatch and a refused alert is not retried after restart
-00:06 +51: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart: foreground return during the route write prevents notification dispatch
-00:06 +52: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart: foreground return during the claim write prevents notification dispatch
-00:06 +53: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart: clearing notification keys by toggling the rule does not repeat its interval
-00:06 +54: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart: refused durable claim keeps due row but sends no native alert
-00:06 +55: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart: failed dispatch claims do not starve later sessions past the batch limit
-00:06 +56: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart: profile deletion sweeps interval, rules and route data
-00:06 +57: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart: same session in a different workspace starts a new observation
-00:06 +58: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_navigation_test.dart
-00:07 +58: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_navigation_test.dart: a source edit during request preflight cannot switch active transport
-00:07 +59: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_navigation_test.dart: monitored permission alert carries an opaque profile route with no reply actions
-00:07 +60: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_navigation_test.dart: monitored checkIn alert carries an opaque profile route with no reply actions
-00:07 +61: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_screen_test.dart
-00:07 +61: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_screen_test.dart: monitoring is explicit and selected-location rows show truthful current and unknown states
-00:08 +62: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_screen_test.dart: monitor settings remain reachable at 320px and 2.5x text
-00:09 +63: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_screen_test.dart: active server due interval appears in the Inbox without becoming pending attention
-00:09 +64: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_test.dart
-00:09 +64: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_test.dart: enabled legacy Codex rules remain unavailable without factory or alert work
-00:09 +65: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_test.dart: off by default; explicit opt-in persists and zero is a known observation
-00:09 +66: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_test.dart: Wi-Fi false and thrown network policy both pause without opening transport
-00:09 +67: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_test.dart: failure is unknown with backoff; expired success and changed location are unknown
-00:09 +68: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_test.dart: background requires an existing active service and never enables keep-live
-00:09 +69: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_test.dart: same session IDs get distinct profile alerts and durable opaque routes
-00:09 +70: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_test.dart: quiet hours wrap midnight and later requests beyond first eight eventually alert
-00:09 +71: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_test.dart: consent changes during a failed alert stop retries before the next post
-00:09 +72: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_test.dart: quiet hours changing during a failed alert stop retries before the next post
-00:09 +73: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_test.dart: a failed alert dismissal keeps its key for a later successful retry
-00:09 +74: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_test.dart: a timed-out poll cannot publish its late attention result
-00:09 +75: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_test.dart: deletion cancels admission and sweeps settings, alert routing, and late results
-00:09 +76: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_test.dart: same-ID source edits invalidate rows, backoff and old alert routes
-00:09 +77: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_test.dart: clock rollback makes snapshots unknown and refuses future routes
-00:09 +78: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_secure_storage_test.dart
-00:10 +78: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_secure_storage_test.dart: a Linux keyring failure surfaces as SecureStorageUnavailable
-00:10 +79: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_secure_storage_test.dart: elsewhere the same failure gets the generic device sentence
-00:10 +80: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_secure_storage_test.dart: the keyring probe reports only a Linux desktop without one
-00:10 +81: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_secure_storage_test.dart: Codex token is isolated from password storage and JSON
-00:10 +82: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_secure_storage_test.dart: missing Codex token requests reentry without exposing metadata
-00:10 +83: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_secure_storage_test.dart: Codex save rolls metadata back when its token cannot be stored
-00:10 +84: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_secure_storage_test.dart: Codex deletion removes only its token
-00:10 +85: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_secure_storage_test.dart: Codex deletion rolls metadata back when its token cannot be deleted
-00:10 +86: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_secure_storage_test.dart: the Servers editor warns about the missing keyring before and after save
-00:11 +87: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_store_test.dart
-00:12 +87: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_store_test.dart: keeps profile metadata when its secure password is unreadable
-00:12 +88: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_store_test.dart: persists and clears a thinking variant per profile
-00:12 +89: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_store_test.dart: persists an exact location independently for each server
-00:12 +90: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_store_test.dart: ignores malformed and empty saved locations
-00:12 +91: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_store_test.dart: persists app-wide transcript display preferences
-00:12 +92: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_store_test.dart: persists app-wide appearance with a migration-safe dark default
-00:12 +93: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_store_test.dart: normalizes and validates Codex origins without changing HTTP rules
-00:12 +94: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/profile_store_test.dart: validates Codex directory and token bounds without echoing input
-00:12 +95: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/project_health_screen_test.dart
-00:13 +95: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/project_health_screen_test.dart: project health renders server truth as flat native sections
-00:14 +96: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/project_health_screen_test.dart: one unavailable health API does not hide working sections
-00:14 +97: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/project_health_screen_test.dart: empty language status explains OpenCode activation truth
-00:14 +98: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/project_health_screen_test.dart: non-Git project initializes only after explicit confirmation
-00:14 +99: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/project_health_screen_test.dart: failed Git initialization remains visible and retryable
-00:14 +100: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/project_health_screen_test.dart: Git initialization resolves the repository again at tap time
-00:15 +101: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/project_health_screen_test.dart: project health waits for the wake-time repository
-00:15 +102: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/project_health_screen_test.dart: workspace exposes project health without compact overflow
-00:15 +103: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/project_health_screen_test.dart: workspace cannot overwrite a session directory refresh
-00:15 +104: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart
-00:16 +104: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: archived pager remains reachable through an empty filtered first page
-00:16 +105: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: project browser and rename dialog fit compact large text
-00:17 +106: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: project search and reset-name use server project truth
-00:17 +107: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: selecting a project opens its exact local directory
-00:17 +108: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: workspace groups projects behind one compact context entry
-00:17 +109: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: workspace puts sessions above the one management route
-00:17 +110: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: the quick-ask pill stays reachable without scrolling
-00:17 +111: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: recent session end-swipe archives with an undo window
-00:18 +112: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: delete stays in the session menu behind a confirm
-00:18 +113: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: project discovery does not block already loaded conversations
-00:18 +114: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: failed project discovery still finds and opens a previous chat
-00:18 +115: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: retrying the project catalog keeps loaded conversations visible
-00:18 +116: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: a fresh server with zero projects asks for a project folder
-00:18 +117: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: a home-folder project is never opened automatically
-00:18 +118: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: an empty project catalog does not hide existing sessions
-00:18 +119: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: zero projects still allows finding and opening an older chat
-00:18 +120: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: zero projects keeps session errors and older pages reachable
-00:18 +121: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: a first session starts only after a project folder is opened by path
-00:19 +122: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: creating a folder on the managed server opens it
-00:19 +123: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: remote servers offer open by path but not create
-00:19 +124: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/prompt_photos_test.dart
-00:19 +124: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/prompt_photos_test.dart: origin precedes picker launch; selected bytes survive source deletion
-00:19 +125: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/prompt_photos_test.dart: cancel clears request without manufacturing an attachment
-00:19 +126: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/prompt_photos_test.dart: startup without a pending request does not call the native picker
-00:19 +127: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/prompt_photos_test.dart: permission denial does not leave a nonexistent photo blocking retry
-00:19 +128: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/prompt_photos_test.dart: refused request persistence never launches camera
-00:19 +129: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/prompt_photos_test.dart: lost native result retains original destination at restart
-00:19 +130: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/prompt_photos_test.dart: late picker result cannot resurrect a removed profile photo
-00:19 +131: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/prompt_photos_test.dart: a pending photo prevents another picker overwriting it
-00:19 +132: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/prompt_photos_test.dart: image validation rejects fake extensions and oversized input
-00:19 +133: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/prompt_shelf_test.dart
-00:20 +133: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/prompt_shelf_test.dart: late successful sends do not recreate a deleted profile history
-00:20 +134: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/prompt_shelf_test.dart: stash survives reload with full attachments/references, separate from drafts and other profiles
-00:20 +135: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/prompt_shelf_test.dart: 50 stash entries never evict a saved prompt; history is bounded separately
-00:20 +136: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/prompt_shelf_test.dart: failed save retains acknowledged state and later writes recover
-00:20 +137: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/prompt_shelf_test.dart: history boundary filtering preserves selection, multiline movement and composing text
-00:20 +138: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/prompt_shelf_test.dart: real composer arrows restore the exact draft and leave modifier/suggestion keys alone
-00:21 +139: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/prompt_shelf_test.dart: temporary attachments are named and partial restore keeps the source entry
-00:22 +140: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/prompt_shelf_test.dart: stash and restore preserve a current draft and structured reference at 411.0
-00:22 +141: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/prompt_shelf_test.dart: stash and restore preserve a current draft and structured reference at 320.0
-00:23 +142: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/prompt_transport_test.dart
-00:23 +142: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/prompt_transport_test.dart: prompt uses the generated contract without wire drift (correlated: false)
-00:23 +143: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/prompt_transport_test.dart: prompt uses the generated contract without wire drift (correlated: true)
-00:23 +144: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/prompt_transport_test.dart: declared prompt errors retain product-facing server details
-00:23 +145: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_logo_test.dart
-00:24 +145: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_logo_test.dart: provider logo domains known ids map to the provider website
-00:24 +146: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_logo_test.dart: provider logo domains unknown ids fall back to <id>.com
-00:24 +147: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_logo_test.dart: provider logo domains logo URL addresses the favicon service directly
-00:24 +148: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_logo_test.dart: provider logo domains monogram takes initials of the presented name
-00:24 +149: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_logo_test.dart: known provider renders the fetched image
-00:25 +150: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_logo_test.dart: a logo that cannot load falls back to the monogram
-00:25 +151: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_logo_test.dart: skipping the image renders the monogram deterministically
-00:25 +152: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_logo_test.dart: OpenCode providers draw the prompt glyph, never an image
-00:25 +153: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_logo_test.dart: logo is decorative and excluded from semantics
-00:25 +154: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_budgets_test.dart
-00:25 +154: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_budgets_test.dart: threshold survives restart with account, source and unit isolation
-00:25 +155: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_budgets_test.dart: failed write retains previous rule and durable preference
-00:25 +156: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_budgets_test.dart: one malformed persisted rule does not discard valid budgets
-00:25 +157: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_budgets_test.dart: attention requires opt-in fresh evidence and dedupes across restart
-00:25 +158: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_budgets_test.dart: profile deletion sweeps rules and a pending save cannot resurrect them
-00:25 +159: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_budgets_test.dart: unknown resets never rearm and detached sources cannot alert
-00:25 +160: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart
-00:26 +160: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: GLM uses its fixed collector route with unknown window duration
-00:26 +161: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: MiniMax reads its fixed collector route and rejects a different provider
-00:26 +162: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: Claude collection is unavailable before any authenticated request
-00:26 +163: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: one fixed same-origin GET, header-only Basic, dedicated options
-00:26 +164: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: snapshots profile values rather than following mutable credentials/URL
-00:26 +165: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: rejects unsafe origins before the adapter is called
-00:26 +166: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: rejects raw empty userinfo even when Uri removes it
-00:26 +167: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: no empty-password, unreadable-keyring, or ambiguous Basic fallback
-00:26 +168: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: approved loopback forms still send authentication and only the fixed path
-00:26 +169: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: empty user is preserved, not silently substituted with another principal
-00:26 +170: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: HTTP failures are status-only, never follow redirects or probe fallbacks
-00:26 +171: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: unexpected redirect metadata is also refused
-00:26 +172: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: JSON, UTF-8, schema and account mismatch errors become safe failures
-00:26 +173: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: accepts exactly 64 KiB while a single oversized chunk is refused
-00:26 +174: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: caps streaming before Dio buffering and stops an oversized source early
-00:26 +175: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: transport exceptions never expose raw errors, URL, or credentials
-00:26 +176: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: stream errors are sanitized too
-00:26 +177: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: close is idempotent and a closed gateway never calls an adapter
-00:26 +178: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: close settles a read whose headers have not arrived
-00:26 +179: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: close cancels a partially received body, not just the request future
-00:26 +180: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: total deadline covers stalled headers without wall-clock waiting
-00:26 +181: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: total body deadline defeats slow-dripping responses
-00:26 +182: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_monitor_test.dart
-00:27 +182: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_monitor_test.dart: no reads before independent enrollment and future evidence is refused
-00:27 +183: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_monitor_test.dart: background polling needs active runtime and unknown Wi-Fi fails closed
-00:27 +184: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_monitor_test.dart: native opt-in and quiet hours are separate from fresh reads
-00:27 +185: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_monitor_test.dart: unknown resets dedupe across restart and account rotation cannot publish or route
-00:27 +186: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_monitor_test.dart: password and re-entry changes retire old observations and preserve markers
-00:27 +187: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_monitor_test.dart: three-source cycles rotate fairly without relabelling the active server
-00:27 +188: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_monitor_test.dart: alert sink failures roll back the claim for a later truthful retry
-00:27 +189: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_monitor_test.dart: rotating credentials retires providers independently through disable and reenroll
-00:27 +190: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_monitor_test.dart: background cancellation and deletion reject late provider completions
-00:27 +191: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_monitor_test.dart: failed disable pauses reads until cleanup can be retried
-00:27 +192: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_monitor_test.dart: recovery dismisses old alerts and changing threshold rearms its own marker
-00:27 +193: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_monitor_test.dart: unenrolled startup and disposed queued work leave no timers or reads
-00:27 +194: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_monitor_test.dart: valid historical route survives unavailable refresh but disable rejects pending route
-00:27 +195: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_monitor_test.dart: expired measurements hide while historical alerts remain until review
-00:27 +196: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_monitor_test.dart: quota native routes require opaque scope and cannot carry quick actions
-00:27 +197: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart
-00:28 +197: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: provider switches discard data, cancel work and require fresh consent
-00:28 +198: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: a gateway response cannot impersonate the selected provider
-00:28 +199: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: construction/getters/refresh have zero calls until informed consent
-00:28 +200: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: consented read acquires a copied profile and never wakes upstream
-00:28 +201: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: quota consent, reads, and disable never write preferences or secure storage
-00:28 +202: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: a new screen/store after restart never inherits consent or snapshots
-00:28 +203: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: missing/unsafe credentials are typed setup failures without gateway creation
-00:28 +204: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: failed secure-storage restore never downgrades to an anonymous read
-00:28 +205: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: a page without an active saved profile cannot acquire consent later
-00:28 +206: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: same-source failed refresh retains only the prior snapshot marked stale
-00:28 +207: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: overlapping explicit reads close old work; late success cannot overwrite
-00:28 +208: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: late failure cannot poison a replacement read or reset its loading flag
-00:28 +209: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: profile URL/principal/password changes detach even without notification
-00:28 +210: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: even same-URL profiles cannot share a screen consent or late response
-00:28 +211: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: name-only changes do not revoke consent or relabel account data
-00:28 +212: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: location switch clears data and cancels before the old request finishes
-00:28 +213: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: transport generations interrupt reads but retained same-source UI reacquires
-00:28 +214: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: repository replacement without revision or notification rejects old completion
-00:28 +215: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: pause cancels even when shared background transport is retained; resume never polls
-00:28 +216: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: shared lifecycle suspension gates reads without invoking recovery
-00:28 +217: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: disable and dispose discard consent/data and ignore late outcomes
-00:28 +218: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: disable permits explicit same-visit reconsent, not an old request resurrection
-00:28 +219: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: store-only removal clears retained data even without a connection notification
-00:28 +220: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: profile deletion start synchronously cancels consent and reads before any await
-00:28 +221: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: a removed profile returning unchanged cannot republish an old response or consent
-00:28 +222: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: failed deletion retains the profile but cannot restore old consent or late errors
-00:28 +223: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: parent disposal synchronously cancels a retained read and ignores late success
-00:28 +224: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: parent disposal synchronously cancels a retained read and ignores late failure
-00:28 +225: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: deleting another profile leaves this visit and its snapshot intact
-00:28 +226: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: new account snapshots atomically replace, never merge, old account windows
-00:28 +227: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: reentrant consent revocation prevents even gateway construction
-00:28 +228: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: a factory scope change closes its gateway without dispatching
-00:28 +229: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: factory/read/close failures cannot leak raw text into overview state
-00:28 +230: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: expiry/reset timers only notify staleness, never replenish or poll
-00:28 +231: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: disable cancels expiry notification and binding lifecycle observer is removed
-00:28 +232: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: none freshness and future fetched time are never presented as fresh
-00:28 +233: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart
-00:29 +233: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: first visit requires both consent and an explicit read
-00:30 +234: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: unsafe source configuration cannot enable consent or leak URL copy
-00:30 +235: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: 0.0% used displays 100% remaining
-00:30 +236: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: 100.0% used displays 0% remaining
-00:30 +237: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: 25.5% used displays 74.5% remaining
-00:30 +238: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: missing windows and explicit null reset replace old measurements honestly
-00:30 +239: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: failed refresh retains a labelled stale result and retry replaces it
-00:31 +240: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: provider statuses and account mismatch replace allowances with safe copy
-00:31 +241: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: collector failures use retry copy distinct from provider sign-in and raw errors
-00:31 +242: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: location change drops the snapshot and rejects a late read
-00:31 +243: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: profile change drops the snapshot and rejects a late read
-00:31 +244: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: stop using the collector cancels reads and requires fresh checkbox consent
-00:32 +245: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: backgrounding cancels the read and resume waits for manual retry
-00:32 +246: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: ending an injected visit cancels expiry
-00:32 +247: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: ending an injected visit cancels expiry and a pending read
-00:32 +248: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: passing a reported reset marks stale without refilling or polling
-00:32 +249: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: 360x740 at 2.5x with a 320dp keyboard keeps every action reachable
-00:32 +250: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: keyboard consent and read remain separate accessible actions
-00:32 +251: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: MiniMax requires consent and identifies its subscription-key source
-00:33 +252: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: dark quota semantics and 48dp targets survive reduced motion
-00:33 +253: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: light quota semantics and 48dp targets survive reduced motion
-00:33 +254: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: replacing the screen controller never reuses the prior visit consent or snapshot
-00:33 +255: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: changing provider requires fresh consent and never relabels a late Codex read
-00:33 +256: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: dark Claude stays unavailable and returning to Codex requires fresh consent at 360x740 and 2.5x
-00:33 +257: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: light Claude stays unavailable and returning to Codex requires fresh consent at 360x740 and 2.5x
-00:33 +258: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: Settings opens Remaining usage for a saved v1 profile without quota probing
-00:34 +259: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: personal threshold is saved and attention requires explicit opt-in
-00:34 +260: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: monitoring requires separate consent and can be disabled from its review page
-00:34 +261: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: synthetic remaining usage rendered preview
-00:34 +261 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart
-00:35 +261 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: MiniMax preserves source-bound percentages and rejects invented eligibility
-00:35 +262 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: Claude source-bound snapshots do not claim independently matched account identity
-00:35 +263 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: provider/source mismatches and invented Claude eligibility are rejected
-00:35 +264 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: the route is explicitly separate from upstream OpenCode APIs
-00:35 +265 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: parses reported and missing windows without invented allowances
-00:35 +266 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: optional ordinary usage remains unknown, and false stays false
-00:35 +267 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: zero and fully used are real values, not missing windows
-00:35 +268 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: expiry is inclusive; a passed reset never replenishes a window
-00:35 +269 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: snapshot is detached from mutable input and its windows are immutable
-00:35 +270 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: accepts each declared no-measurement status without making up quotas
-00:35 +271 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: no error status or unverified/mismatched account may carry measurements
-00:35 +272 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: all known plan labels are accepted; arbitrary plan copy is discarded
-00:35 +273 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: rejects wrong version/provider/source, missing keys, and non-objects
-00:35 +274 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: timestamp bounds and ordering are strict, including window resets
-00:35 +275 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: account references must be opaque lower-case hex; matched needs one
-00:35 +276 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: rejects non-finite/out-of-range percentages and status contradictions
-00:35 +277 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: duration and window identifiers are bounded and unique
-00:35 +278 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: diagnostic strings and parse failures do not echo input or account refs
-00:35 +279 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_runtime_heal_test.dart
-00:35 +279 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_runtime_heal_test.dart: (setUpAll)
-00:35 +279 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_runtime_heal_test.dart: unloadedProviders compares the connected list with the runtime
-00:35 +280 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_runtime_heal_test.dart: a provider the server signed in to but never loaded is healed on load
-00:36 +281 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_runtime_heal_test.dart: an unhealable provider is flagged once and reloads on request
-00:36 +282 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/provider_runtime_heal_test.dart: (tearDownAll)
-00:36 +282 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/read_aloud_test.dart
-00:36 +282 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/read_aloud_test.dart: construction and disposal without playback never access the engine
-00:36 +283 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/read_aloud_test.dart: unsupported platforms cannot query voices or send reply text
-00:36 +284 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/read_aloud_test.dart: backgrounding cancels the active operation and prevents new speech
-00:36 +285 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/read_aloud_test.dart: disposing pending playback stops it and late acceptance stays cancelled
-00:36 +286 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/read_aloud_test.dart: a native terminal failure during pending acceptance reaches the caller
-00:36 +287 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/read_aloud_test.dart: reply reading asks consent before engine access and stops on leaving chat
-00:37 +288 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/read_aloud_test.dart: unsent voice conversation is never persisted or sent and is cleared on background
-00:38 +289 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart
-00:39 +289 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: release URL policy permits only loopback HTTP
-00:39 +290 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: IPv6 loopback is loopback everywhere
-00:39 +291 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: bare IPv6 addresses normalize into usable URLs
-00:39 +292 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: Android cleartext and launch resources are release-safe
-00:39 +293 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: secure storage biometric lint exception stays narrow and truthful
-00:39 +294 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: Android launcher supports adaptive, round, and themed icons
-00:39 +295 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: Android background coding alerts are private and actionable
-00:39 +296 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: Shorebird updates have one app-controlled owner
-00:39 +297 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: privacy policy is bundled and names sensitive product surfaces
-00:39 +298 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: Android release builds require the production signing lineage
-00:39 +299 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: Android exposes build identity and authenticates shell approval
-00:39 +300 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: markdown blocks custom schemes and confirms HTTP with host
-00:39 +301 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: sharing requires privacy consent and exposes stop sharing
-00:40 +302 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: question sheet keeps actions reachable with keyboard and 2x text
-00:40 +303 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: chat composer remains reachable at 640x320 with 2x text
-00:40 +304 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: compact composer shows one slash result when height allows
-00:40 +305 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: full-screen prompt editor fits a 320dp phone at 2x text
-00:40 +306 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: session destination controls fit a 320dp phone at 2x text
-00:41 +307 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: tool expansion has 48dp target and reduced-motion semantics
-00:41 +308 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: bundled privacy policy and open source notices render in app
-00:42 +309 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: offline banner states that displayed data may be stale
-00:42 +310 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/release_script_contract_test.dart
-00:43 +310 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/release_script_contract_test.dart: release script enforces the fail-closed publish contract
-00:47 +311 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/repository_hygiene_test.dart
-00:47 +311 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/repository_hygiene_test.dart: the internal engineering log is out of the public tree
-00:47 +312 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/repository_hygiene_test.dart: the root points contributors at CONTRIBUTING, not the log
-00:47 +313 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/repository_hygiene_test.dart: third-party agent skill packs are not carried in the tree
-00:47 +314 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/repository_hygiene_test.dart: every bundled third-party component has a license text
-00:47 +315 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/repository_hygiene_test.dart: a public repository carries its governance files
-00:47 +316 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/repository_hygiene_test.dart: the non-affiliation statement reaches every public entry point
-00:47 +317 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/repository_hygiene_test.dart: the notice inventory matches the resolved dependency versions
+00:01 +1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: newer file request wins and location invalidates retained files
+00:01 +2: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: nested files use project-relative API paths and breadcrumbs
+00:01 +3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: files show exact changes and aggregate nested changes without crowding
+00:01 +4: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: file review comments return to the active chat callback
+00:02 +5: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: top-level file review copies its comment for another chat
+00:02 +6: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: changes card opens the changed set grouped by status
+00:02 +7: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: project files stage as references distinct from attachments
+00:02 +8: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: file status failure stays scoped and retries independently
+00:02 +9: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: foreground refresh reloads the current file directory
+00:02 +10: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: file search clear control has an accessible tooltip
+00:03 +11: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: clearing file search restores the directory it started in
+00:03 +12: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: unsupported binary files show preview metadata
+00:03 +13: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: image files open as a zoomable preview
+00:03 +14: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: project CSV uses table preview and retains full truncated source for attach
+00:03 +15: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: chat file viewer can attach the original project file
+00:03 +16: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: symbol search opens the exact source line in file preview
+00:03 +17: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: symbol search debounces typing and explains empty results
+00:04 +18: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: unavailable symbol search leaves file browsing intact
+00:04 +19: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: terminal reconnects, forwards control input, and closes channels
+00:04 +20: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: stale terminal create does not open in a new repository
+00:04 +21: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: stale terminal rename does not reload a new workspace
+00:04 +22: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: stale terminal remove does not reload a new repository
+00:04 +23: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: permission actions wrap on a narrow screen
+00:04 +24: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: model details remain scrollable on a short screen
+00:04 +25: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: server switch removes the previous home stack
+00:04 +26: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/product_ui_regression_test.dart: remote quick add opens an editor without saving a fake host
+00:05 +27: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_deletion_test.dart
+00:05 +27: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_deletion_test.dart: profileScopedPreferenceKeys finds every shape and nothing else
+00:05 +28: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_deletion_test.dart: deleting a profile leaves nothing keyed to it behind
+00:05 +29: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_deletion_test.dart: nothing deleted comes back after a restart
+00:05 +30: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_deletion_test.dart: deleting the other profile leaves the first one whole
+00:05 +31: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_deletion_test.dart: queued prompts awaiting delivery review are swept with the profile and counted in the disclosure
+00:05 +32: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_deletion_test.dart: queued prompts awaiting delivery review stay on the device, marker intact, when the sweep is refused
+00:05 +33: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_deletion_test.dart: a widget snapshot with no owner is cleared rather than left
+00:05 +34: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_deletion_test.dart: a store that refuses writes keeps the server when its queued prompts cannot be deleted
+00:05 +35: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_deletion_test.dart: a store that refuses writes keeps the server when a draft write is refused
+00:05 +36: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_deletion_test.dart: a store that refuses writes keeps the server when a scoped setting will not go
+00:05 +37: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_deletion_test.dart: a store that refuses writes keeps the server when the widget snapshot will not clear
+00:05 +38: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_deletion_test.dart: a store that refuses writes reports every refusal, not just the first
+00:05 +39: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_deletion_test.dart: a store that refuses writes a clean run still reports a complete deletion
+00:05 +40: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_deletion_test.dart: drafts record the profile that owns them
+00:05 +41: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart
+00:06 +41: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart: the rule is off by default and round-trips through JSON
+00:06 +42: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart: a busy session is tracked as an observed interval and reminds once
+00:06 +43: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart: observed idle ends the interval and retires its reminder; a later busy interval reminds again
+00:06 +44: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart: a failed poll neither ends nor extends the interval; absence ends it
+00:06 +45: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart: a gap longer than the observation limit restarts the interval instead of asserting continuous work
+00:06 +46: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart: intervals and posted reminders survive a restart without reminding twice
+00:06 +47: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart: no reminder in the foreground, during quiet hours, or when off
+00:06 +48: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart: turning the rule off retires only check-in reminders
+00:06 +49: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart: disabling monitoring forgets the intervals
+00:06 +50: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart: claim is durable before native dispatch and a refused alert is not retried after restart
+00:06 +51: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart: foreground return during the route write prevents notification dispatch
+00:06 +52: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart: foreground return during the claim write prevents notification dispatch
+00:06 +53: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart: clearing notification keys by toggling the rule does not repeat its interval
+00:06 +54: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart: refused durable claim keeps due row but sends no native alert
+00:06 +55: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart: failed dispatch claims do not starve later sessions past the batch limit
+00:06 +56: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart: profile deletion sweeps interval, rules and route data
+00:06 +57: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_check_in_test.dart: same session in a different workspace starts a new observation
+00:06 +58: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_navigation_test.dart
+00:07 +58: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_navigation_test.dart: a source edit during request preflight cannot switch active transport
+00:07 +59: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_navigation_test.dart: monitored permission alert carries an opaque profile route with no reply actions
+00:07 +60: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_navigation_test.dart: monitored checkIn alert carries an opaque profile route with no reply actions
+00:07 +61: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_screen_test.dart
+00:07 +61: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_screen_test.dart: monitoring is explicit and selected-location rows show truthful current and unknown states
+00:08 +62: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_screen_test.dart: monitor settings remain reachable at 320px and 2.5x text
+00:09 +63: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_screen_test.dart: active server due interval appears in the Inbox without becoming pending attention
+00:09 +64: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_test.dart
+00:09 +64: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_test.dart: enabled legacy Codex rules remain unavailable without factory or alert work
+00:09 +65: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_test.dart: off by default; explicit opt-in persists and zero is a known observation
+00:09 +66: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_test.dart: Wi-Fi false and thrown network policy both pause without opening transport
+00:09 +67: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_test.dart: failure is unknown with backoff; expired success and changed location are unknown
+00:09 +68: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_test.dart: background requires an existing active service and never enables keep-live
+00:09 +69: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_test.dart: same session IDs get distinct profile alerts and durable opaque routes
+00:09 +70: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_test.dart: quiet hours wrap midnight and later requests beyond first eight eventually alert
+00:09 +71: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_test.dart: consent changes during a failed alert stop retries before the next post
+00:09 +72: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_test.dart: quiet hours changing during a failed alert stop retries before the next post
+00:09 +73: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_test.dart: a failed alert dismissal keeps its key for a later successful retry
+00:09 +74: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_test.dart: a timed-out poll cannot publish its late attention result
+00:09 +75: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_test.dart: deletion cancels admission and sweeps settings, alert routing, and late results
+00:09 +76: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_test.dart: same-ID source edits invalidate rows, backoff and old alert routes
+00:09 +77: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_monitor_test.dart: clock rollback makes snapshots unknown and refuses future routes
+00:09 +78: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_secure_storage_test.dart
+00:10 +78: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_secure_storage_test.dart: a Linux keyring failure surfaces as SecureStorageUnavailable
+00:10 +79: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_secure_storage_test.dart: elsewhere the same failure gets the generic device sentence
+00:10 +80: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_secure_storage_test.dart: the keyring probe reports only a Linux desktop without one
+00:10 +81: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_secure_storage_test.dart: Codex token is isolated from password storage and JSON
+00:10 +82: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_secure_storage_test.dart: missing Codex token requests reentry without exposing metadata
+00:10 +83: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_secure_storage_test.dart: Codex save rolls metadata back when its token cannot be stored
+00:10 +84: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_secure_storage_test.dart: Codex deletion removes only its token
+00:10 +85: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_secure_storage_test.dart: Codex deletion rolls metadata back when its token cannot be deleted
+00:10 +86: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_secure_storage_test.dart: the Servers editor warns about the missing keyring before and after save
+00:11 +87: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_store_test.dart
+00:12 +87: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_store_test.dart: keeps profile metadata when its secure password is unreadable
+00:12 +88: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_store_test.dart: persists and clears a thinking variant per profile
+00:12 +89: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_store_test.dart: persists an exact location independently for each server
+00:12 +90: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_store_test.dart: ignores malformed and empty saved locations
+00:12 +91: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_store_test.dart: persists app-wide transcript display preferences
+00:12 +92: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_store_test.dart: persists app-wide appearance with a migration-safe dark default
+00:12 +93: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_store_test.dart: normalizes and validates Codex origins without changing HTTP rules
+00:12 +94: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/profile_store_test.dart: validates Codex directory and token bounds without echoing input
+00:12 +95: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/project_health_screen_test.dart
+00:13 +95: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/project_health_screen_test.dart: project health renders server truth as flat native sections
+00:14 +96: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/project_health_screen_test.dart: one unavailable health API does not hide working sections
+00:14 +97: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/project_health_screen_test.dart: empty language status explains OpenCode activation truth
+00:14 +98: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/project_health_screen_test.dart: non-Git project initializes only after explicit confirmation
+00:14 +99: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/project_health_screen_test.dart: failed Git initialization remains visible and retryable
+00:14 +100: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/project_health_screen_test.dart: Git initialization resolves the repository again at tap time
+00:15 +101: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/project_health_screen_test.dart: project health waits for the wake-time repository
+00:15 +102: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/project_health_screen_test.dart: workspace exposes project health without compact overflow
+00:15 +103: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/project_health_screen_test.dart: workspace cannot overwrite a session directory refresh
+00:15 +104: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart
+00:16 +104: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: archived pager remains reachable through an empty filtered first page
+00:16 +105: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: project browser and rename dialog fit compact large text
+00:17 +106: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: project search and reset-name use server project truth
+00:17 +107: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: selecting a project opens its exact local directory
+00:17 +108: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: workspace groups projects behind one compact context entry
+00:17 +109: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: workspace puts sessions above the one management route
+00:17 +110: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: the quick-ask pill stays reachable without scrolling
+00:17 +111: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: recent session end-swipe archives with an undo window
+00:18 +112: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: delete stays in the session menu behind a confirm
+00:18 +113: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: project discovery does not block already loaded conversations
+00:18 +114: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: failed project discovery still finds and opens a previous chat
+00:18 +115: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: retrying the project catalog keeps loaded conversations visible
+00:18 +116: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: a fresh server with zero projects asks for a project folder
+00:18 +117: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: a home-folder project is never opened automatically
+00:18 +118: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: an empty project catalog does not hide existing sessions
+00:18 +119: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: zero projects still allows finding and opening an older chat
+00:18 +120: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: zero projects keeps session errors and older pages reachable
+00:18 +121: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: a first session starts only after a project folder is opened by path
+00:19 +122: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: creating a folder on the managed server opens it
+00:19 +123: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/projects_screen_test.dart: remote servers offer open by path but not create
+00:19 +124: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/prompt_photos_test.dart
+00:19 +124: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/prompt_photos_test.dart: origin precedes picker launch; selected bytes survive source deletion
+00:19 +125: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/prompt_photos_test.dart: cancel clears request without manufacturing an attachment
+00:19 +126: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/prompt_photos_test.dart: startup without a pending request does not call the native picker
+00:19 +127: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/prompt_photos_test.dart: permission denial does not leave a nonexistent photo blocking retry
+00:19 +128: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/prompt_photos_test.dart: refused request persistence never launches camera
+00:19 +129: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/prompt_photos_test.dart: lost native result retains original destination at restart
+00:19 +130: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/prompt_photos_test.dart: late picker result cannot resurrect a removed profile photo
+00:19 +131: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/prompt_photos_test.dart: a pending photo prevents another picker overwriting it
+00:19 +132: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/prompt_photos_test.dart: image validation rejects fake extensions and oversized input
+00:19 +133: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/prompt_shelf_test.dart
+00:20 +133: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/prompt_shelf_test.dart: late successful sends do not recreate a deleted profile history
+00:20 +134: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/prompt_shelf_test.dart: stash survives reload with full attachments/references, separate from drafts and other profiles
+00:20 +135: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/prompt_shelf_test.dart: 50 stash entries never evict a saved prompt; history is bounded separately
+00:20 +136: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/prompt_shelf_test.dart: failed save retains acknowledged state and later writes recover
+00:20 +137: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/prompt_shelf_test.dart: history boundary filtering preserves selection, multiline movement and composing text
+00:20 +138: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/prompt_shelf_test.dart: real composer arrows restore the exact draft and leave modifier/suggestion keys alone
+00:21 +139: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/prompt_shelf_test.dart: temporary attachments are named and partial restore keeps the source entry
+00:22 +140: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/prompt_shelf_test.dart: stash and restore preserve a current draft and structured reference at 411.0
+00:22 +141: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/prompt_shelf_test.dart: stash and restore preserve a current draft and structured reference at 320.0
+00:23 +142: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/prompt_transport_test.dart
+00:23 +142: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/prompt_transport_test.dart: prompt uses the generated contract without wire drift (correlated: false)
+00:23 +143: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/prompt_transport_test.dart: prompt uses the generated contract without wire drift (correlated: true)
+00:23 +144: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/prompt_transport_test.dart: declared prompt errors retain product-facing server details
+00:23 +145: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_logo_test.dart
+00:24 +145: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_logo_test.dart: provider logo domains known ids map to the provider website
+00:24 +146: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_logo_test.dart: provider logo domains unknown ids fall back to <id>.com
+00:24 +147: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_logo_test.dart: provider logo domains logo URL addresses the favicon service directly
+00:24 +148: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_logo_test.dart: provider logo domains monogram takes initials of the presented name
+00:24 +149: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_logo_test.dart: known provider renders the fetched image
+00:25 +150: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_logo_test.dart: a logo that cannot load falls back to the monogram
+00:25 +151: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_logo_test.dart: skipping the image renders the monogram deterministically
+00:25 +152: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_logo_test.dart: OpenCode providers draw the prompt glyph, never an image
+00:25 +153: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_logo_test.dart: logo is decorative and excluded from semantics
+00:25 +154: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_budgets_test.dart
+00:25 +154: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_budgets_test.dart: threshold survives restart with account, source and unit isolation
+00:25 +155: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_budgets_test.dart: failed write retains previous rule and durable preference
+00:25 +156: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_budgets_test.dart: one malformed persisted rule does not discard valid budgets
+00:25 +157: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_budgets_test.dart: attention requires opt-in fresh evidence and dedupes across restart
+00:25 +158: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_budgets_test.dart: profile deletion sweeps rules and a pending save cannot resurrect them
+00:25 +159: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_budgets_test.dart: unknown resets never rearm and detached sources cannot alert
+00:25 +160: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart
+00:26 +160: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: GLM uses its fixed collector route with unknown window duration
+00:26 +161: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: MiniMax reads its fixed collector route and rejects a different provider
+00:26 +162: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: Claude collection is unavailable before any authenticated request
+00:26 +163: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: one fixed same-origin GET, header-only Basic, dedicated options
+00:26 +164: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: snapshots profile values rather than following mutable credentials/URL
+00:26 +165: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: rejects unsafe origins before the adapter is called
+00:26 +166: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: rejects raw empty userinfo even when Uri removes it
+00:26 +167: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: no empty-password, unreadable-keyring, or ambiguous Basic fallback
+00:26 +168: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: approved loopback forms still send authentication and only the fixed path
+00:26 +169: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: empty user is preserved, not silently substituted with another principal
+00:26 +170: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: HTTP failures are status-only, never follow redirects or probe fallbacks
+00:26 +171: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: unexpected redirect metadata is also refused
+00:26 +172: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: JSON, UTF-8, schema and account mismatch errors become safe failures
+00:26 +173: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: accepts exactly 64 KiB while a single oversized chunk is refused
+00:26 +174: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: caps streaming before Dio buffering and stops an oversized source early
+00:26 +175: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: transport exceptions never expose raw errors, URL, or credentials
+00:26 +176: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: stream errors are sanitized too
+00:26 +177: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: close is idempotent and a closed gateway never calls an adapter
+00:26 +178: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: close settles a read whose headers have not arrived
+00:26 +179: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: close cancels a partially received body, not just the request future
+00:26 +180: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: total deadline covers stalled headers without wall-clock waiting
+00:26 +181: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_client_test.dart: total body deadline defeats slow-dripping responses
+00:26 +182: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_monitor_test.dart
+00:27 +182: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_monitor_test.dart: no reads before independent enrollment and future evidence is refused
+00:27 +183: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_monitor_test.dart: background polling needs active runtime and unknown Wi-Fi fails closed
+00:27 +184: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_monitor_test.dart: native opt-in and quiet hours are separate from fresh reads
+00:27 +185: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_monitor_test.dart: unknown resets dedupe across restart and account rotation cannot publish or route
+00:27 +186: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_monitor_test.dart: password and re-entry changes retire old observations and preserve markers
+00:27 +187: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_monitor_test.dart: three-source cycles rotate fairly without relabelling the active server
+00:27 +188: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_monitor_test.dart: alert sink failures roll back the claim for a later truthful retry
+00:27 +189: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_monitor_test.dart: rotating credentials retires providers independently through disable and reenroll
+00:27 +190: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_monitor_test.dart: background cancellation and deletion reject late provider completions
+00:27 +191: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_monitor_test.dart: failed disable pauses reads until cleanup can be retried
+00:27 +192: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_monitor_test.dart: recovery dismisses old alerts and changing threshold rearms its own marker
+00:27 +193: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_monitor_test.dart: unenrolled startup and disposed queued work leave no timers or reads
+00:27 +194: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_monitor_test.dart: valid historical route survives unavailable refresh but disable rejects pending route
+00:27 +195: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_monitor_test.dart: expired measurements hide while historical alerts remain until review
+00:27 +196: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_monitor_test.dart: quota native routes require opaque scope and cannot carry quick actions
+00:27 +197: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart
+00:28 +197: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: provider switches discard data, cancel work and require fresh consent
+00:28 +198: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: a gateway response cannot impersonate the selected provider
+00:28 +199: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: construction/getters/refresh have zero calls until informed consent
+00:28 +200: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: consented read acquires a copied profile and never wakes upstream
+00:28 +201: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: quota consent, reads, and disable never write preferences or secure storage
+00:28 +202: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: a new screen/store after restart never inherits consent or snapshots
+00:28 +203: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: missing/unsafe credentials are typed setup failures without gateway creation
+00:28 +204: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: failed secure-storage restore never downgrades to an anonymous read
+00:28 +205: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: a page without an active saved profile cannot acquire consent later
+00:28 +206: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: same-source failed refresh retains only the prior snapshot marked stale
+00:28 +207: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: overlapping explicit reads close old work; late success cannot overwrite
+00:28 +208: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: late failure cannot poison a replacement read or reset its loading flag
+00:28 +209: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: profile URL/principal/password changes detach even without notification
+00:28 +210: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: even same-URL profiles cannot share a screen consent or late response
+00:28 +211: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: name-only changes do not revoke consent or relabel account data
+00:28 +212: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: location switch clears data and cancels before the old request finishes
+00:28 +213: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: transport generations interrupt reads but retained same-source UI reacquires
+00:28 +214: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: repository replacement without revision or notification rejects old completion
+00:28 +215: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: pause cancels even when shared background transport is retained; resume never polls
+00:28 +216: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: shared lifecycle suspension gates reads without invoking recovery
+00:28 +217: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: disable and dispose discard consent/data and ignore late outcomes
+00:28 +218: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: disable permits explicit same-visit reconsent, not an old request resurrection
+00:28 +219: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: store-only removal clears retained data even without a connection notification
+00:28 +220: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: profile deletion start synchronously cancels consent and reads before any await
+00:28 +221: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: a removed profile returning unchanged cannot republish an old response or consent
+00:28 +222: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: failed deletion retains the profile but cannot restore old consent or late errors
+00:28 +223: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: parent disposal synchronously cancels a retained read and ignores late success
+00:28 +224: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: parent disposal synchronously cancels a retained read and ignores late failure
+00:28 +225: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: deleting another profile leaves this visit and its snapshot intact
+00:28 +226: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: new account snapshots atomically replace, never merge, old account windows
+00:28 +227: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: reentrant consent revocation prevents even gateway construction
+00:28 +228: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: a factory scope change closes its gateway without dispatching
+00:28 +229: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: factory/read/close failures cannot leak raw text into overview state
+00:28 +230: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: expiry/reset timers only notify staleness, never replenish or poll
+00:28 +231: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: disable cancels expiry notification and binding lifecycle observer is removed
+00:28 +232: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_overview_test.dart: none freshness and future fetched time are never presented as fresh
+00:28 +233: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart
+00:29 +233: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: first visit requires both consent and an explicit read
+00:30 +234: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: unsafe source configuration cannot enable consent or leak URL copy
+00:30 +235: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: 0.0% used displays 100% remaining
+00:30 +236: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: 100.0% used displays 0% remaining
+00:30 +237: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: 25.5% used displays 74.5% remaining
+00:30 +238: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: missing windows and explicit null reset replace old measurements honestly
+00:30 +239: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: failed refresh retains a labelled stale result and retry replaces it
+00:31 +240: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: provider statuses and account mismatch replace allowances with safe copy
+00:31 +241: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: collector failures use retry copy distinct from provider sign-in and raw errors
+00:31 +242: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: location change drops the snapshot and rejects a late read
+00:31 +243: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: profile change drops the snapshot and rejects a late read
+00:31 +244: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: stop using the collector cancels reads and requires fresh checkbox consent
+00:32 +245: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: backgrounding cancels the read and resume waits for manual retry
+00:32 +246: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: ending an injected visit cancels expiry
+00:32 +247: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: ending an injected visit cancels expiry and a pending read
+00:32 +248: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: passing a reported reset marks stale without refilling or polling
+00:32 +249: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: 360x740 at 2.5x with a 320dp keyboard keeps every action reachable
+00:32 +250: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: keyboard consent and read remain separate accessible actions
+00:32 +251: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: MiniMax requires consent and identifies its subscription-key source
+00:33 +252: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: dark quota semantics and 48dp targets survive reduced motion
+00:33 +253: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: light quota semantics and 48dp targets survive reduced motion
+00:33 +254: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: replacing the screen controller never reuses the prior visit consent or snapshot
+00:33 +255: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: changing provider requires fresh consent and never relabels a late Codex read
+00:33 +256: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: dark Claude stays unavailable and returning to Codex requires fresh consent at 360x740 and 2.5x
+00:33 +257: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: light Claude stays unavailable and returning to Codex requires fresh consent at 360x740 and 2.5x
+00:33 +258: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: Settings opens Remaining usage for a saved v1 profile without quota probing
+00:34 +259: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: personal threshold is saved and attention requires explicit opt-in
+00:34 +260: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: monitoring requires separate consent and can be disabled from its review page
+00:34 +261: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_screen_test.dart: synthetic remaining usage rendered preview
+00:34 +261 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart
+00:35 +261 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: MiniMax preserves source-bound percentages and rejects invented eligibility
+00:35 +262 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: Claude source-bound snapshots do not claim independently matched account identity
+00:35 +263 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: provider/source mismatches and invented Claude eligibility are rejected
+00:35 +264 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: the route is explicitly separate from upstream OpenCode APIs
+00:35 +265 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: parses reported and missing windows without invented allowances
+00:35 +266 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: optional ordinary usage remains unknown, and false stays false
+00:35 +267 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: zero and fully used are real values, not missing windows
+00:35 +268 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: expiry is inclusive; a passed reset never replenishes a window
+00:35 +269 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: snapshot is detached from mutable input and its windows are immutable
+00:35 +270 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: accepts each declared no-measurement status without making up quotas
+00:35 +271 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: no error status or unverified/mismatched account may carry measurements
+00:35 +272 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: all known plan labels are accepted; arbitrary plan copy is discarded
+00:35 +273 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: rejects wrong version/provider/source, missing keys, and non-objects
+00:35 +274 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: timestamp bounds and ordering are strict, including window resets
+00:35 +275 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: account references must be opaque lower-case hex; matched needs one
+00:35 +276 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: rejects non-finite/out-of-range percentages and status contradictions
+00:35 +277 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: duration and window identifiers are bounded and unique
+00:35 +278 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_quota_test.dart: diagnostic strings and parse failures do not echo input or account refs
+00:35 +279 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_runtime_heal_test.dart
+00:35 +279 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_runtime_heal_test.dart: (setUpAll)
+00:35 +279 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_runtime_heal_test.dart: unloadedProviders compares the connected list with the runtime
+00:35 +280 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_runtime_heal_test.dart: a provider the server signed in to but never loaded is healed on load
+00:36 +281 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_runtime_heal_test.dart: an unhealable provider is flagged once and reloads on request
+00:36 +282 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/provider_runtime_heal_test.dart: (tearDownAll)
+00:36 +282 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/read_aloud_test.dart
+00:36 +282 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/read_aloud_test.dart: construction and disposal without playback never access the engine
+00:36 +283 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/read_aloud_test.dart: unsupported platforms cannot query voices or send reply text
+00:36 +284 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/read_aloud_test.dart: backgrounding cancels the active operation and prevents new speech
+00:36 +285 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/read_aloud_test.dart: disposing pending playback stops it and late acceptance stays cancelled
+00:36 +286 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/read_aloud_test.dart: a native terminal failure during pending acceptance reaches the caller
+00:36 +287 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/read_aloud_test.dart: reply reading asks consent before engine access and stops on leaving chat
+00:37 +288 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/read_aloud_test.dart: unsent voice conversation is never persisted or sent and is cleared on background
+00:38 +289 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart
+00:39 +289 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: release URL policy permits only loopback HTTP
+00:39 +290 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: IPv6 loopback is loopback everywhere
+00:39 +291 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: bare IPv6 addresses normalize into usable URLs
+00:39 +292 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: Android cleartext and launch resources are release-safe
+00:39 +293 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: secure storage biometric lint exception stays narrow and truthful
+00:39 +294 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: Android launcher supports adaptive, round, and themed icons
+00:39 +295 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: Android background coding alerts are private and actionable
+00:39 +296 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: Shorebird updates have one app-controlled owner
+00:39 +297 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: privacy policy is bundled and names sensitive product surfaces
+00:39 +298 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: Android release builds require the production signing lineage
+00:39 +299 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: Android exposes build identity and authenticates shell approval
+00:39 +300 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: markdown blocks custom schemes and confirms HTTP with host
+00:39 +301 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: sharing requires privacy consent and exposes stop sharing
+00:40 +302 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: question sheet keeps actions reachable with keyboard and 2x text
+00:40 +303 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: chat composer remains reachable at 640x320 with 2x text
+00:40 +304 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: compact composer shows one slash result when height allows
+00:40 +305 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: full-screen prompt editor fits a 320dp phone at 2x text
+00:40 +306 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: session destination controls fit a 320dp phone at 2x text
+00:41 +307 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: tool expansion has 48dp target and reduced-motion semantics
+00:41 +308 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: bundled privacy policy and open source notices render in app
+00:42 +309 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/release_blockers_test.dart: offline banner states that displayed data may be stale
+00:42 +310 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/release_script_contract_test.dart
+00:43 +310 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/release_script_contract_test.dart: release script enforces the fail-closed publish contract
+00:47 +311 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/repository_hygiene_test.dart
+00:47 +311 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/repository_hygiene_test.dart: the internal engineering log is out of the public tree
+00:47 +312 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/repository_hygiene_test.dart: the root points contributors at CONTRIBUTING, not the log
+00:47 +313 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/repository_hygiene_test.dart: third-party agent skill packs are not carried in the tree
+00:47 +314 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/repository_hygiene_test.dart: every bundled third-party component has a license text
+00:47 +315 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/repository_hygiene_test.dart: a public repository carries its governance files
+00:47 +316 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/repository_hygiene_test.dart: the non-affiliation statement reaches every public entry point
+00:47 +317 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/repository_hygiene_test.dart: the notice inventory matches the resolved dependency versions
 00:47 +318 ~1: All tests passed!

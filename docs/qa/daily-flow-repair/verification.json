@@ -26,7 +26,7 @@
     ],
     "exit_code": 0,
     "seconds": 155.8,
-    "log": "/home/eslam/Storage/Code/oc_app-ui-audit-20260909/followup/local-build.log",
+    "log": "/home/owner/Storage/Code/oc_app-ui-audit-20260909/followup/local-build.log",
     "ci": false
   },
   "native": {
@@ -50,7 +50,7 @@
   "focused_project_health": "9 passed",
   "serial_suite": {
     "status": "PASS",
-    "run_directory": "/home/eslam/Storage/Code/oc_app-ui-audit-20260909/followup/serial-suite-candidate/serial-20260909T144010Z-560c1219",
+    "run_directory": "/home/owner/Storage/Code/oc_app-ui-audit-20260909/followup/serial-suite-candidate/serial-20260909T144010Z-560c1219",
     "files": 259,
     "chunks": 11,
     "passed": 2751,

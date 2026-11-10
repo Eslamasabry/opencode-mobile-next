@@ -3,7 +3,7 @@
   "builds": [
     {
       "command": [
-        "/home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter",
+        "/home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter",
         "build",
         "apk",
         "--release",
@@ -21,14 +21,14 @@
     },
     {
       "command": [
-        "/home/eslam/Storage/Code/oc_app-sol-bd/android/gradlew",
+        "/home/owner/Storage/Code/oc_app-sol-bd/android/gradlew",
         "-p",
-        "/home/eslam/Storage/Code/oc_app-sol-bd/android",
+        "/home/owner/Storage/Code/oc_app-sol-bd/android",
         ":app:assembleReleaseAndroidTest",
         "--no-daemon",
         "-PocBd9Smoke=true",
         "-PocBb8Smoke=true",
-        "-Ptarget=/home/eslam/Storage/Code/oc_app-sol-bd/integration_test/bb8_agent_auth_device_test.dart",
+        "-Ptarget=/home/owner/Storage/Code/oc_app-sol-bd/integration_test/bb8_agent_auth_device_test.dart",
         "-PflutterVersionCode=2204",
         "-Pdart-defines=QkI4X1BST0ZJTEVfSUQ9MTc5MDgzOTM5MjA3MzY5NQ=="
       ],

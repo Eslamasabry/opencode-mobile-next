@@ -12,7 +12,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/../../.."
 FLUTTER=${FLUTTER:-$HOME/.shorebird/bin/cache/flutter/6e5e949520159b5ceb029598be37520cd433b046/bin/flutter}
-ROOT=${ROOT:-/home/eslam/Storage2/launch-footage/audit-styles}
+ROOT=${ROOT:-$HOME/Storage2/launch-footage/audit-styles}
 combo=$1
 set_=${2:-all}
 IFS=- read -r style mode extra <<<"$combo"

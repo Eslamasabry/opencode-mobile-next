@@ -83,7 +83,7 @@ name, one state line, one act.
 
 ## 3. Visual passes against concept A
 
-Renders: `/home/eslam/Storage2/launch-footage/vision-server-switcher/` (final); `before/`,
+Renders: `/home/owner/Storage2/launch-footage/vision-server-switcher/` (final); `before/`,
 `pass1/`…`pass4/` (first build), `pass5/` (rework pass 1).
 
 - Rework pass 1 (`pass5/`): compact rows, line + pill. Checked: all rows the same height; the check,

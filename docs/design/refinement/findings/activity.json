@@ -11,7 +11,7 @@
       "0eabc2d:lib/ui/screens/profile_monitor_screen.dart",
       "mobbin/activity/image-02.webp",
       "https://mobbin.com/screens/e48bd893-d026-4592-a8ab-64b6490f8b32",
-      "/home/eslam/Storage/Code/oc_app-ui-activity/docs/qa/clear-activity/README.md"
+      "/home/owner/Storage/Code/oc_app-ui-activity/docs/qa/clear-activity/README.md"
     ],
     "observed": "Empty branch checked pending/running counts but did not exclude unknown saved-server status.",
     "impact": "Users may stop checking when activity is unknown.",
@@ -33,7 +33,7 @@
       "/tmp/oc-ui-audit-20260909/09-activity.xml",
       "mobbin/activity/image-03.webp",
       "https://mobbin.com/screens/f23940e0-7a29-4fb9-a336-f707a4de63b1",
-      "/home/eslam/Storage/Code/oc_app-ui-activity/docs/qa/clear-activity/README.md"
+      "/home/owner/Storage/Code/oc_app-ui-activity/docs/qa/clear-activity/README.md"
     ],
     "observed": "Baseline monitor block occupies112dp before the central success result, with zero counts and a scope paragraph.",
     "impact": "The result takes longer to find; active request hierarchy also starts with monitor accounting.",
@@ -52,7 +52,7 @@
       "screenshots/09-activity.png",
       "0eabc2d:lib/ui/screens/activity_screen.dart",
       "0eabc2d:lib/ui/screens/profile_monitor_screen.dart",
-      "/home/eslam/Storage/Code/oc_app-ui-activity/docs/qa/clear-activity/README.md"
+      "/home/owner/Storage/Code/oc_app-ui-activity/docs/qa/clear-activity/README.md"
     ],
     "observed": "The largest empty-state button says Turn on background updates; its callback navigates to BackgroundSettingsScreen.",
     "impact": "Action wording suggests a state change, and optional setup dominates an attention inbox.",
@@ -71,7 +71,7 @@
       "screenshots/09-activity.png",
       "0eabc2d:lib/ui/screens/activity_screen.dart",
       "0eabc2d:lib/ui/screens/profile_monitor_screen.dart",
-      "/home/eslam/Storage/Code/oc_app-ui-activity/docs/qa/clear-activity/README.md"
+      "/home/owner/Storage/Code/oc_app-ui-activity/docs/qa/clear-activity/README.md"
     ],
     "observed": "Running-only pages show a separate empty Needs attention block; collapsed Completion digests shows an implementation disclaimer.",
     "impact": "Users read absence bookkeeping and implementation detail before their actual task.",
@@ -90,7 +90,7 @@
       "screenshots/09-activity.png",
       "0eabc2d:lib/ui/screens/activity_screen.dart",
       "0eabc2d:lib/ui/screens/profile_monitor_screen.dart",
-      "/home/eslam/Storage/Code/oc_app-ui-activity/docs/qa/clear-activity/README.md"
+      "/home/owner/Storage/Code/oc_app-ui-activity/docs/qa/clear-activity/README.md"
     ],
     "observed": "Form rows are capability gated but loading/error aggregation was unconditional.",
     "impact": "Stale forms state can show a spinner/error on a connection without forms.",

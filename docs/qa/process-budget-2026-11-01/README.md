@@ -34,7 +34,7 @@ Not cut, and why:
 
 ## Budget guard, kill line and card: device proof (emulator-5584, API 35, APK 4419)
 
-Recorded in `/home/eslam/Storage2/wt/shots-2026-11-01/procbudget/` (raw clips
+Recorded in `/home/owner/Storage2/wt/shots-2026-11-01/procbudget/` (raw clips
 `raw-a-queue.mp4`, `raw-b-kill.mp4`, `raw-c-card.mp4`; edited
 `procbudget.mp4`).
 

@@ -1,6 +1,6 @@
 # Signal: a railway signal box with a console's instruments (2026-10-30)
 
-*Part of [design schools](../README.md). Owner-approved concept CD (renders kept locally in `/home/eslam/Storage2/wt/concepts-2026-10-30/cd/`). Code: `lib/ui/kit/style/kit_style_signal.dart` (the spec), `kit_signal.dart` and `kit_signal_slip.dart` (the instruments), palette `lib/ui/theme_packs_signal.dart`.*
+*Part of [design schools](../README.md). Owner-approved concept CD (renders kept locally in `/home/owner/Storage2/wt/concepts-2026-10-30/cd/`). Code: `lib/ui/kit/style/kit_style_signal.dart` (the spec), `kit_signal.dart` and `kit_signal_slip.dart` (the instruments), palette `lib/ui/theme_packs_signal.dart`.*
 
 ## Idea
 

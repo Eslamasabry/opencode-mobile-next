@@ -9,7 +9,7 @@
 //   flutter test --concurrency=1 --dart-define=VISION_OUT=<dir> \
 //     --dart-define=VISION_ONLY=main-dark tool/capture/vision_inbox_test.dart
 //
-// Output: /home/eslam/Storage2/launch-footage/vision-inbox/<scene>.png
+// Output: /home/owner/Storage2/launch-footage/vision-inbox/<scene>.png
 //
 // The data is invented and plain: the server in use ("Laptop") waits on a
 // command and a question; "Studio Mac" is a side connection (a server the
@@ -46,7 +46,7 @@ import 'fixtures.dart';
 
 const _out = String.fromEnvironment(
   'VISION_OUT',
-  defaultValue: '/home/eslam/Storage2/launch-footage/vision-inbox',
+  defaultValue: '/home/owner/Storage2/launch-footage/vision-inbox',
 );
 
 /// Only this scene, when given (a pass renders the main one first).

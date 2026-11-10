@@ -49,7 +49,7 @@ python3 -I native/e2e/runner/run.py --app flutter --flows E2E-22,E2E-23 --lang a
    change it checks that `adb devices` lists it as `device`, that `ro.kernel.qemu=1`, and with `--expect-avd` that
    `adb emu avd name` reports that AVD. Every adb call carries `-s <serial>`, Maestro gets `--device <serial>`, and
    a failed adb command stops the run (audit codex-04 #14). The owner's phone is never a target.
-2. **Lock and resources.** It takes the emulator lock (`--lock`, default `/home/eslam/Storage/tmp/oc-emulator.lock`,
+2. **Lock and resources.** It takes the emulator lock (`--lock`, default `/home/owner/Storage/tmp/oc-emulator.lock`,
    or `OC_EMULATOR_LOCK`) and refuses under 7 GB available RAM (`--skip-resource-checks` to override on a
    bigger box).
 3. **Install.** `adb install -r` only (never `-d`, never uninstall); `--expect-signer` checks the certificate

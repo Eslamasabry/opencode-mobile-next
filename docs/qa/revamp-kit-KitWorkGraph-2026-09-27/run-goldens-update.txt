@@ -1,5 +1,5 @@
 machine_lock: got test slot 2 after 9s
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_cb026353-734-4/test/goldens/kit/kit_work_graph_golden_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_cb026353-734-4/test/goldens/kit/kit_work_graph_golden_test.dart
 00:00 +0: (setUpAll)
 00:00 +0: rows · dark
 00:01 +1: rows blocked · dark

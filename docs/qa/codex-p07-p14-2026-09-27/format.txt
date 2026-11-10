@@ -1,7 +1,7 @@
 Warning: Package resolution error when reading "analysis_options.yaml" file for "lib/builtin/setup/component_removal.dart":
-Failed to resolve package URI "package:flutter_lints/flutter.yaml" in include at "/home/eslam/Storage/Code/oc_app-codex-p07-p14/analysis_options.yaml".
+Failed to resolve package URI "package:flutter_lints/flutter.yaml" in include at "/home/owner/Storage/Code/oc_app-codex-p07-p14/analysis_options.yaml".
 Warning: Package resolution error when reading "analysis_options.yaml" file for "lib/builtin/team/builtin_team.dart":
-Failed to resolve package URI "package:flutter_lints/flutter.yaml" in include at "/home/eslam/Storage/Code/oc_app-codex-p07-p14/analysis_options.yaml".
+Failed to resolve package URI "package:flutter_lints/flutter.yaml" in include at "/home/owner/Storage/Code/oc_app-codex-p07-p14/analysis_options.yaml".
 Warning: Package resolution error when reading "analysis_options.yaml" file for "test/setup_component_removal_test.dart":
-Failed to resolve package URI "package:flutter_lints/flutter.yaml" in include at "/home/eslam/Storage/Code/oc_app-codex-p07-p14/analysis_options.yaml".
+Failed to resolve package URI "package:flutter_lints/flutter.yaml" in include at "/home/owner/Storage/Code/oc_app-codex-p07-p14/analysis_options.yaml".
 Formatted 6 files (0 changed) in 0.03 seconds.

@@ -8,7 +8,7 @@
 /// sign-in folder Claude Code already uses on this phone, and tells OpenCode
 /// that the person chose this login ("connect external").
 ///
-/// Plan and evidence: /home/eslam/Storage2/wt/paseo-exit-plan-2026-11-01/.
+/// Plan and evidence: /home/owner/Storage2/wt/paseo-exit-plan-2026-11-01/.
 library;
 
 /// OpenCode's provider and integration id.

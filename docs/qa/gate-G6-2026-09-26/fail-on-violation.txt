@@ -1,5 +1,5 @@
 $ git apply docs/qa/gate-G6-2026-09-26/fail-on-violation.patch
-$ /home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter test -j 1 test/text_scale_overflow_test.dart --plain-name G6
+$ /home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter test -j 1 test/text_scale_overflow_test.dart --plain-name G6
 Resolving dependencies...
 Downloading packages...
   android_file_picker 1.1.0 (2.0.0 available)
@@ -59,7 +59,7 @@ Downloading packages...
 Got dependencies!
 54 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart
 00:00 +0: G6 kit overflow matrix (setUpAll)
 00:00 +0: G6 kit overflow matrix every exported kit part has a scene, and every scene a part
 00:00 +0 -1: G6 kit overflow matrix every exported kit part has a scene, and every scene a part [E]
@@ -152,7 +152,7 @@ test/text_scale_overflow_baseline.json:
 600x960 text 2.0 rtl: A RenderFlex overflowed by 214 pixels on the right.
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart:1010:11)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart:1010:11)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -162,7 +162,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart line 1010
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart line 1010
 The test description was:
   KitActionBlock/default fits every overflow size, text scale and direction
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -204,7 +204,7 @@ test/text_scale_overflow_baseline.json:
 412x915 text 2.0 rtl: A RenderFlex overflowed by 35 pixels on the right.
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart:1010:11)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart:1010:11)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -214,7 +214,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart line 1010
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart line 1010
 The test description was:
   KitActionBlock/disabled fits every overflow size, text scale and direction
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -276,7 +276,7 @@ test/text_scale_overflow_baseline.json:
 600x960 text 2.0 ltr: A RenderFlex overflowed by 138 pixels on the right.
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart:1010:11)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart:1010:11)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -286,7 +286,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart line 1010
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart line 1010
 The test description was:
   KitRequestCard/default fits every overflow size, text scale and direction
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -310,7 +310,7 @@ test/text_scale_overflow_baseline.json:
 360x740 text 2.0 ltr: A RenderFlex overflowed by 25 pixels on the right.
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart:1010:11)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart:1010:11)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -320,7 +320,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart line 1010
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart line 1010
 The test description was:
   KitRequestCard/disabled fits every overflow size, text scale and direction
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -341,7 +341,7 @@ KitRow/default improved. Tighten test/text_scale_overflow_baseline.json in the s
 320x640 text 1.0 ltr: fixed (baselined: A RenderFlex overflowed by 20 pixels on the right.)
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart:1018:11)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart:1018:11)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -351,7 +351,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart line 1018
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart line 1018
 The test description was:
   KitRow/default fits every overflow size, text scale and direction
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -405,7 +405,7 @@ test/text_scale_overflow_baseline.json:
 600x960 text 2.0 ltr: A RenderFlex overflowed by 56 pixels on the right.
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart:1010:11)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart:1010:11)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -415,7 +415,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart line 1010
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart line 1010
 The test description was:
   KitScreen/default fits every overflow size, text scale and direction
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -482,7 +482,7 @@ test/text_scale_overflow_baseline.json:
 1600x1000 text 2.0 rtl: A RenderFlex overflowed by 35 pixels on the right.
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart:1010:11)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart:1010:11)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -492,7 +492,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart line 1010
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart line 1010
 The test description was:
   KitSheet/default fits every overflow size, text scale and direction
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -561,7 +561,7 @@ test/text_scale_overflow_baseline.json:
 1600x1000 text 2.0 rtl: A RenderFlex overflowed by 115 pixels on the right.
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart:1010:11)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart:1010:11)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -571,7 +571,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart line 1010
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart line 1010
 The test description was:
   KitSheet/full fits every overflow size, text scale and direction
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -635,7 +635,7 @@ test/text_scale_overflow_baseline.json:
 1600x1000 text 2.0 rtl: A RenderFlex overflowed by 35 pixels on the right.
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart:1010:11)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart:1010:11)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -645,7 +645,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart line 1010
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart line 1010
 The test description was:
   KitSheet/loading fits every overflow size, text scale and direction
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -709,7 +709,7 @@ test/text_scale_overflow_baseline.json:
 1600x1000 text 2.0 rtl: A RenderFlex overflowed by 35 pixels on the right.
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart:1010:11)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart:1010:11)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -719,7 +719,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart line 1010
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart line 1010
 The test description was:
   KitSheet/disabled fits every overflow size, text scale and direction
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -753,7 +753,7 @@ test/text_scale_overflow_baseline.json:
 412x915 text 2.0 rtl: A RenderFlex overflowed by 61 pixels on the right.
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart:1010:11)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart:1010:11)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -763,7 +763,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart line 1010
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart line 1010
 The test description was:
   KitSheet/inline fits every overflow size, text scale and direction
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -860,7 +860,7 @@ test/text_scale_overflow_baseline.json:
 915x412 text 2.0 rtl: A RenderFlex overflowed by 287 pixels on the right.
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart:1010:11)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart:1010:11)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -870,7 +870,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart line 1010
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart line 1010
 The test description was:
   KitStateView/error fits every overflow size, text scale and direction
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -931,7 +931,7 @@ test/text_scale_overflow_baseline.json:
 800x1280 text 2.0 ltr: A RenderFlex overflowed by 2.3 pixels on the right.
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart:1010:11)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart:1010:11)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -941,7 +941,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart line 1010
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart line 1010
 The test description was:
   KitPanel/violation fits every overflow size, text scale and direction
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -980,9 +980,9 @@ Shell: --- end baseline ---
 00:33 +49 -15: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionBlock/default fits every overflow size, text scale and direction
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionBlock/disabled fits every overflow size, text scale and direction
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitPanel/violation fits every overflow size, text scale and direction
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRequestCard/default fits every overflow size, text scale and direction
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionBlock/default fits every overflow size, text scale and direction
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitActionBlock/disabled fits every overflow size, text scale and direction
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitPanel/violation fits every overflow size, text scale and direction
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-5/test/text_scale_overflow_test.dart: G6 kit overflow matrix KitRequestCard/default fits every overflow size, text scale and direction
   ... and 11 more
 exit 1

@@ -74,7 +74,7 @@ LEARNINGS.md.
 
 ## Visual passes (412×915 dp, 2× density, blurred shadows, dark)
 
-Concept: `/home/eslam/Storage2/launch-footage/screen-concepts/b3-git-sheet/concept-b.png`
+Concept: `/home/owner/Storage2/launch-footage/screen-concepts/b3-git-sheet/concept-b.png`
 (picked one-step save and send) and `concept-a.png` (the named primary
 pinned at the bottom). Pass folders sit beside the finals.
 
@@ -107,7 +107,7 @@ pinned at the bottom). Pass folders sit beside the finals.
   fold.
 
 Final renders, one phone screen each, in
-`/home/eslam/Storage2/launch-footage/vision-git-one-step/`:
+`/home/owner/Storage2/launch-footage/vision-git-one-step/`:
 `1-home-dark`, `1-home-light`, `2-review-dark`, `2-review-light`,
 `3-sending-dark`, `4-saved-and-sent-dark`, `5-send-only-dark`,
 `5-get-latest-dark`, `6-not-sent-sign-in-dark`, `7-home-320dp-2x-text`,

@@ -91,7 +91,7 @@ Arabic (values-ar): تشغيل npm install؟ · تعديل settings.dart؟ · ا
 
 The only part of this pick the app draws. Renders (412×915 dp at 2×, real fonts, blurred
 shadows) by `tool/capture/vision_notifications_test.dart` into
-`/home/eslam/vision-assets/out/vision-notifications/`.
+`/home/owner/vision-assets/out/vision-notifications/`.
 
 | Pass | Seen | Changed |
 |---|---|---|

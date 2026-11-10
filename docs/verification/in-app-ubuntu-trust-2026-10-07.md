@@ -34,4 +34,4 @@ an agent-writable helper as root" cannot be met on this kernel by any launch pol
   integrity.
 - **C — Keep OpenCode cards off** until a kernel boundary exists on phones.
 
-Raw outputs: /home/eslam/Storage/tmp/claude-tmp/claude-1000/-home-eslam-Storage-Code-oc-app/87a8d964-900c-48f3-a841-cd593d87ac4c/scratchpad/b0-results/landlock-run1.txt, /home/eslam/Storage/tmp/claude-tmp/claude-1000/-home-eslam-Storage-Code-oc-app/87a8d964-900c-48f3-a841-cd593d87ac4c/scratchpad/b0-results/landlock-direct.txt.
+Raw outputs: /home/owner/Storage/tmp/claude-tmp/claude-1000/-home-eslam-Storage-Code-oc-app/87a8d964-900c-48f3-a841-cd593d87ac4c/scratchpad/b0-results/landlock-run1.txt, /home/owner/Storage/tmp/claude-tmp/claude-1000/-home-eslam-Storage-Code-oc-app/87a8d964-900c-48f3-a841-cd593d87ac4c/scratchpad/b0-results/landlock-direct.txt.

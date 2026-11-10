@@ -1,4 +1,4 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-5/test/kit/kit_progress_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-5/test/kit/kit_progress_test.dart
 00:00 +0: KitProgress.staged line joins the step, the label and the eta with " · "
 00:00 +1: KitProgress.staged line uses the caption ahead of the eta when both are given
 00:00 +2: KitProgress.staged line uses the locale plural forms in Arabic
@@ -39,7 +39,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-5/test/kit/kit_progress_test.dart line 194
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-5/test/kit/kit_progress_test.dart line 194
 The test description was:
   the same step and label dropping its value asserts
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -74,7 +74,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-5/test/kit/kit_progress_test.dart line 293
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-5/test/kit/kit_progress_test.dart line 293
 The test description was:
   an hour or more rounds whole hours up, never down
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -103,7 +103,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-5/test/kit/kit_progress_test.dart line 344
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-5/test/kit/kit_progress_test.dart line 344
 The test description was:
   the line is read once: the bar and its words are one node
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -133,7 +133,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-5/test/kit/kit_progress_test.dart line 392
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-5/test/kit/kit_progress_test.dart line 392
 The test description was:
   inside a KitStateView the bar stays its own node: the title is not folded into it, the line is not
   read twice
@@ -158,7 +158,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-5/test/kit/kit_progress_test.dart line 443
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-5/test/kit/kit_progress_test.dart line 443
 The test description was:
   waiting under reduced motion is still indeterminate: no value and no percentage, the same as with
   motion
@@ -177,8 +177,8 @@ The test description was:
 00:01 +23 -7: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-5/test/kit/kit_progress_test.dart: KitProgress.known line and eta rounding an hour or more rounds whole hours up, never down
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-5/test/kit/kit_progress_test.dart: KitProgress.known value asserts value within 0..1
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-5/test/kit/kit_progress_test.dart: KitProgress.staged line asserts stepValue within 0..1
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-5/test/kit/kit_progress_test.dart: KitProgressView never goes backwards within a job (debug) the same step and label dropping its value asserts
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-5/test/kit/kit_progress_test.dart: KitProgress.known line and eta rounding an hour or more rounds whole hours up, never down
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-5/test/kit/kit_progress_test.dart: KitProgress.known value asserts value within 0..1
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-5/test/kit/kit_progress_test.dart: KitProgress.staged line asserts stepValue within 0..1
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-5/test/kit/kit_progress_test.dart: KitProgressView never goes backwards within a job (debug) the same step and label dropping its value asserts
   ... and 3 more

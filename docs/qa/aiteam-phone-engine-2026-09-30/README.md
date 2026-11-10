@@ -130,17 +130,17 @@ unchanged-candidate app suite remains a separate integration boundary:
 
 ```bash
 OC_TEST_SLOTS=1 \
-TMPDIR=/home/eslam/Storage/tmp/aiteam-phone-engine-build/tmp \
-CARGO_TARGET_DIR=/home/eslam/Storage/tmp/aiteam-phone-engine-build/target \
-OC_ENGINE_TEST_ROOT=/home/eslam/Storage/tmp/aiteam-phone-engine-tests \
-OC_PHONE_PROOF_ROOT=/home/eslam/Storage/tmp/aiteam-phone-boundary-tests \
+TMPDIR=/home/owner/Storage/tmp/aiteam-phone-engine-build/tmp \
+CARGO_TARGET_DIR=/home/owner/Storage/tmp/aiteam-phone-engine-build/target \
+OC_ENGINE_TEST_ROOT=/home/owner/Storage/tmp/aiteam-phone-engine-tests \
+OC_PHONE_PROOF_ROOT=/home/owner/Storage/tmp/aiteam-phone-boundary-tests \
 tool/qa/machine_lock.sh test -- \
   cargo test --manifest-path engine/phone/Cargo.toml --locked -- --include-ignored --test-threads=1
 
 OC_TEST_SLOTS=1 \
-TMPDIR=/home/eslam/Storage/tmp/aiteam-phone-engine-build/tmp \
+TMPDIR=/home/owner/Storage/tmp/aiteam-phone-engine-build/tmp \
 tool/qa/machine_lock.sh test -- \
-  /home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter \
+  /home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter \
   test --concurrency=1 test/phone_project_engine_gateway_test.dart \
   test/phone_project_engine_controller_test.dart test/builtin_phone_engine_test.dart
 ```

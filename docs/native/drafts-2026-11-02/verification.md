@@ -43,4 +43,4 @@ The composer uses kit controls and localized English/Arabic failure/repeat copy.
 
 `opencode-native-drafts-preview-20261102.apk`, 22,384,374 bytes, SHA-256 `4fc04f3f144b6dc3a5f0874a2edf0457104edee187be9ffe6e6e348839cf5f09`. Certificate SHA-256 `1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C`, matching the previously installed emulator preview. This does not establish compatibility with an unspecified owner-phone signer.
 
-The Tailscale-only download directory contains APKs only; the new file was verified HTTP 200 with the correct Content-Length. No public release, tag, push, PR or integration-branch merge was performed. Machine-local logs/JUnit receipts remain under `/home/eslam/Storage2/wt/native-drafts-artifacts-20261102`.
+The Tailscale-only download directory contains APKs only; the new file was verified HTTP 200 with the correct Content-Length. No public release, tag, push, PR or integration-branch merge was performed. Machine-local logs/JUnit receipts remain under `/home/owner/Storage2/wt/native-drafts-artifacts-20261102`.

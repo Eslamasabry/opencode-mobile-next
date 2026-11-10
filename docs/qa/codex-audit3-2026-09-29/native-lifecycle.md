@@ -33,4 +33,4 @@ tool/qa/machine_lock.sh test -- "$F" test --no-pub --concurrency=1 test/reply_wa
 tool/qa/machine_lock.sh test -- "$F" test --no-pub --concurrency=1 test/termux_access_audit_test.dart test/builtin_recovery_bridge_test.dart test/native_lifecycle_contract_test.dart
 ```
 
-`F=/home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter`. Scoped `git diff --check` passed after the final source/test edits. The first command is the recorded red run; the second and third are green runs. No source edits occurred after the green lifecycle run; the third run covers final additions to bridge/native tests and the permission fallback fix.
+`F=/home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter`. Scoped `git diff --check` passed after the final source/test edits. The first command is the recorded red run; the second and third are green runs. No source edits occurred after the green lifecycle run; the third run covers final additions to bridge/native tests and the permission fallback fix.

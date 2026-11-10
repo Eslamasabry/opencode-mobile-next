@@ -80,7 +80,7 @@ Final compile gate: PASS for both `:androidApp:assemblePreviewDebug` and `compil
 Command (from `native/`, under the shared build locks):
 
 ```sh
-JAVA_HOME=/home/eslam/Storage2/tools/jdk21 ANDROID_HOME="$HOME/Android/Sdk" nice -n 5 ./gradlew --console=plain --continue -Dorg.gradle.workers.max=2 -Dorg.gradle.daemon.idletimeout=300000 -Dorg.gradle.jvmargs='-Xmx2g -XX:MaxMetaspaceSize=768m' :androidApp:assemblePreviewDebug compileKotlinDesktop
+JAVA_HOME=/home/owner/Storage2/tools/jdk21 ANDROID_HOME="$HOME/Android/Sdk" nice -n 5 ./gradlew --console=plain --continue -Dorg.gradle.workers.max=2 -Dorg.gradle.daemon.idletimeout=300000 -Dorg.gradle.jvmargs='-Xmx2g -XX:MaxMetaspaceSize=768m' :androidApp:assemblePreviewDebug compileKotlinDesktop
 ```
 
 The ignored Sherpa AAR was restored from a local worktree only after matching `native/third_party/SHA256SUMS`. `built now` and `already there` describe inspected implementation and real app wiring; no row was marked proven in a ledger and no runtime/device verification is claimed.

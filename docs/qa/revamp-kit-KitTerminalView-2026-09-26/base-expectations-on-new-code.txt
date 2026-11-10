@@ -59,8 +59,8 @@ Downloading packages...
 Got dependencies!
 54 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_view_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_view_test.dart: the program stands out of its path; flags and strings apart
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_view_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_view_test.dart: the program stands out of its path; flags and strings apart
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following TestFailure was thrown running a test:
 Expected: Color:<Color(alpha: 1.0000, red: 0.6392, green: 0.6471, blue: 0.6706, colorSpace:
@@ -69,7 +69,7 @@ ColorSpace.sRGB)>
 ColorSpace.sRGB)>
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_view_test.dart:58:5)
+#4      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_view_test.dart:58:5)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -79,15 +79,15 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_view_test.dart line 58
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_view_test.dart line 58
 The test description was:
   the program stands out of its path; flags and strings apart
 ════════════════════════════════════════════════════════════════════════════════════════════════════
-00:00 +0 -1: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_view_test.dart: the program stands out of its path; flags and strings apart [E]
+00:00 +0 -1: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_view_test.dart: the program stands out of its path; flags and strings apart [E]
   Test failed. See exception logs above.
   The test description was: the program stands out of its path; flags and strings apart
   
-00:00 +0 -1: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_view_test.dart: output keeps its colours, or is tinted by what it says
+00:00 +0 -1: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_view_test.dart: output keeps its colours, or is tinted by what it says
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following TestFailure was thrown running a test:
 Expected: Color:<Color(alpha: 1.0000, red: 1.0000, green: 0.4784, blue: 0.4784, colorSpace:
@@ -96,7 +96,7 @@ ColorSpace.sRGB)>
 ColorSpace.sRGB)>
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_view_test.dart:83:5)
+#4      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_view_test.dart:83:5)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -106,26 +106,26 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_view_test.dart line 83
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_view_test.dart line 83
 The test description was:
   output keeps its colours, or is tinted by what it says
 ════════════════════════════════════════════════════════════════════════════════════════════════════
-00:00 +0 -2: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_view_test.dart: output keeps its colours, or is tinted by what it says [E]
+00:00 +0 -2: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_view_test.dart: output keeps its colours, or is tinted by what it says [E]
   Test failed. See exception logs above.
   The test description was: output keeps its colours, or is tinted by what it says
   
-00:00 +0 -2: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_view_test.dart: long output shows its end, the rest a tap away
-00:01 +1 -2: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart
-00:01 +1 -2: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart: modified text Ctrl turns letters into control bytes
-00:01 +2 -2: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart: modified text Ctrl on the symbols that have a control form
-00:01 +3 -2: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart: modified text text without a control form passes unchanged
-00:01 +4 -2: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart: modified text Alt puts Esc first; only the first character is modified
-00:01 +5 -2: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart: sticky modifiers Ctrl applies to the next text once, then releases
-00:01 +6 -2: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart: sticky modifiers a second tap releases the latch
-00:01 +7 -2: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart: keys sent to the terminal arrows follow the cursor-key mode programs ask for
-00:01 +8 -2: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart: keys sent to the terminal Esc, Tab, symbols and page keys
-00:01 +9 -2: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart: keys sent to the terminal Ctrl with an arrow sends the modified sequence
-00:01 +10 -2: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart: the bar has every key the spec lists
+00:00 +0 -2: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_view_test.dart: long output shows its end, the rest a tap away
+00:01 +1 -2: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart
+00:01 +1 -2: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart: modified text Ctrl turns letters into control bytes
+00:01 +2 -2: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart: modified text Ctrl on the symbols that have a control form
+00:01 +3 -2: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart: modified text text without a control form passes unchanged
+00:01 +4 -2: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart: modified text Alt puts Esc first; only the first character is modified
+00:01 +5 -2: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart: sticky modifiers Ctrl applies to the next text once, then releases
+00:01 +6 -2: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart: sticky modifiers a second tap releases the latch
+00:01 +7 -2: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart: keys sent to the terminal arrows follow the cursor-key mode programs ask for
+00:01 +8 -2: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart: keys sent to the terminal Esc, Tab, symbols and page keys
+00:01 +9 -2: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart: keys sent to the terminal Ctrl with an arrow sends the modified sequence
+00:01 +10 -2: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart: the bar has every key the spec lists
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following TestFailure was thrown running a test:
 Expected: exactly one matching candidate
@@ -134,7 +134,7 @@ Expected: exactly one matching candidate
 interrupt
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart:120:9)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart:120:9)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -144,16 +144,16 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart line 120
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart line 120
 The test description was:
   has every key the spec lists
 ════════════════════════════════════════════════════════════════════════════════════════════════════
-00:02 +10 -3: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart: the bar has every key the spec lists [E]
+00:02 +10 -3: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart: the bar has every key the spec lists [E]
   Test failed. See exception logs above.
   The test description was: has every key the spec lists
   
-00:02 +10 -3: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart: the bar tapping Ctrl latches it for the next key only
-00:02 +11 -3: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart: the bar every key is at least 44 by 48 on a phone
+00:02 +10 -3: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart: the bar tapping Ctrl latches it for the next key only
+00:02 +11 -3: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart: the bar every key is at least 44 by 48 on a phone
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following StateError was thrown running a test:
 Bad state: No element
@@ -161,7 +161,7 @@ Bad state: No element
 When the exception was thrown, this was the stack:
 #0      Iterable.single (dart:core/iterable.dart:694:25)
 #1      WidgetController.getSize (package:flutter_test/src/controller.dart:2178:47)
-#2      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart:164:29)
+#2      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart:164:29)
 <asynchronous suspension>
 #3      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -173,14 +173,14 @@ When the exception was thrown, this was the stack:
 The test description was:
   every key is at least 44 by 48 on a phone
 ════════════════════════════════════════════════════════════════════════════════════════════════════
-00:02 +11 -4: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart: the bar every key is at least 44 by 48 on a phone [E]
+00:02 +11 -4: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart: the bar every key is at least 44 by 48 on a phone [E]
   Test failed. See exception logs above.
   The test description was: every key is at least 44 by 48 on a phone
   
 00:02 +11 -4: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart: the bar every key is at least 44 by 48 on a phone
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart: the bar has every key the spec lists
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_view_test.dart: output keeps its colours, or is tinted by what it says
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_view_test.dart: the program stands out of its path; flags and strings apart
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart: the bar every key is at least 44 by 48 on a phone
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_key_bar_test.dart: the bar has every key the spec lists
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_view_test.dart: output keeps its colours, or is tinted by what it says
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/zz_base_terminal_view_test.dart: the program stands out of its path; flags and strings apart

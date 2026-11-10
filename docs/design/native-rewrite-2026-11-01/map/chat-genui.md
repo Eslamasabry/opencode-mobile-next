@@ -1,16 +1,16 @@
 # Map: chat-genui (chat screen, transcript, streaming, composer, requests, review/revert, generative UI)
 
 Written 2026-11-01 for the native rewrite (Kotlin / Compose Multiplatform, Android first).
-Read-only study of `/home/eslam/Storage/Code/wt/oc_app-batch1` at commit `65e3f70a3` (Flutter app 2.1.0+57).
+Read-only study of `/home/owner/Storage/Code/wt/oc_app-batch1` at commit `65e3f70a3` (Flutter app 2.1.0+57).
 Nothing in the repo was changed. Where I could not prove something from code I write "(verify)".
 Where docs and code disagree, code wins and I say so.
 
 Feature ids are `CHAT-GENUI-NN`. Each feature has: **What** the person sees, **How** (files), **Data** it stores,
-**Traps** a rewrite must not lose, **Tests** that pin it (catalog = `/home/eslam/Storage/Code/wt/native-plan/catalog`,
+**Traps** a rewrite must not lose, **Tests** that pin it (catalog = `/home/owner/Storage/Code/wt/native-plan/catalog`,
 area `chat-genui`, 124 logic behaviours; many more are widget tests that come later), and a **Stance**
 (KEEP = reproduce behaviour exactly; PORT = same job, native implementation; DECIDE = owner/architect choice; DROP).
 
-All paths are relative to `/home/eslam/Storage/Code/wt/oc_app-batch1` unless stated.
+All paths are relative to `/home/owner/Storage/Code/wt/oc_app-batch1` unless stated.
 
 ---
 
@@ -824,7 +824,7 @@ Pulled from commit messages (`git log -- lib/ui/screens/chat lib/ui/kit/chat ...
 
 ## 9. Where to read more (in the source repo)
 
-`docs/design/steering-contract.md`, `genui-contract-2026-10-07.md`, `genui-plan-2026-10-07.md`, `command-receipts-contract.md`, `agent-handoff-contract.md`, `BD3-mcp-chat-contract.md`, `docs/opencode2-protocol-notes.md`, `docs/ux-system/kit-api/Kit{Turn,Message,WorkLine,StepTimeline,ToolRow,Composer,ComposerChips,RequestCard,RequestSheet,QueuedMessage,Markdown,CodeBlock,DiffView,ImageGallery,ImageMarkup,ContextRing,JumpPill,Undo}.md`, `docs/ux-system/teaching.md`, `docs/qa/codex-perf-2026-09-28/chat.md`, `docs/qa/scroll-perf-2026-10-23/README.md`, `docs/qa/vision-chat-approval-2026-10-20/README.md`, `docs/ux-system/map/chat.json`. Owner memory files that bind this area (in `/home/eslam/.claude/projects/-home-eslam-Storage-Code-oc-app/memory/`): `chat-transcript-turn-model.md`, `chat-kit-decisions-2026-10-02.md`, `steer-not-queue.md`, `no-raw-errors-rule.md`, `micro-animations-wanted.md`, `composer-green-glow-liked.md`, `no-glass-rule.md`, `android-native-feel.md`, `component-max-width-rule.md`, `text-scale-cap.md`, `teach-what-is-hidden.md`, `oc2-stuck-tools-root-cause.md`.
+`docs/design/steering-contract.md`, `genui-contract-2026-10-07.md`, `genui-plan-2026-10-07.md`, `command-receipts-contract.md`, `agent-handoff-contract.md`, `BD3-mcp-chat-contract.md`, `docs/opencode2-protocol-notes.md`, `docs/ux-system/kit-api/Kit{Turn,Message,WorkLine,StepTimeline,ToolRow,Composer,ComposerChips,RequestCard,RequestSheet,QueuedMessage,Markdown,CodeBlock,DiffView,ImageGallery,ImageMarkup,ContextRing,JumpPill,Undo}.md`, `docs/ux-system/teaching.md`, `docs/qa/codex-perf-2026-09-28/chat.md`, `docs/qa/scroll-perf-2026-10-23/README.md`, `docs/qa/vision-chat-approval-2026-10-20/README.md`, `docs/ux-system/map/chat.json`. Owner memory files that bind this area (in `/home/owner/.claude/projects/-home-eslam-Storage-Code-oc-app/memory/`): `chat-transcript-turn-model.md`, `chat-kit-decisions-2026-10-02.md`, `steer-not-queue.md`, `no-raw-errors-rule.md`, `micro-animations-wanted.md`, `composer-green-glow-liked.md`, `no-glass-rule.md`, `android-native-feel.md`, `component-max-width-rule.md`, `text-scale-cap.md`, `teach-what-is-hidden.md`, `oc2-stuck-tools-root-cause.md`.
 
 Web sources used for the Markdown/highlighting candidates in 16/17 (unverified for maturity, check before adopting): [mikepenz multiplatform-markdown-renderer](https://klibs.io/project/mikepenz/multiplatform-markdown-renderer), [markdown-compose](https://klibs.io/package/com.adamglin.compose.markdown/markdown-compose), [huarangmeng/Markdown](https://klibs.io/project/huarangmeng/Markdown), [orca](https://klibs.io/project/wertikolix/orca), [SyntaxMP](https://github.com/GallatinApps/SyntaxMP), [CodeHigh](https://klibs.io/project/huarangmeng/codehigh).
 

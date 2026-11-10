@@ -1,6 +1,6 @@
 # Run 8a: test/termux_setup_screen_test.dart on this branch (code head, KitNotice v2). One case fails.
 Waiting for another flutter command to release the startup lock...
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/termux_setup_screen_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/termux_setup_screen_test.dart
 00:00 +0: late version save cannot replace a newer same-profile connection
 00:01 +1: cancel owns transport before active profile persistence completes
 00:01 +2: cancel preserves a newer connection to the same phone profile
@@ -23,7 +23,7 @@ When the exception was thrown, this was the stack:
 #0      WidgetController._getElementPoint (package:flutter_test/src/controller.dart:2095:7)
 #1      WidgetController.getCenter (package:flutter_test/src/controller.dart:1947:12)
 #2      WidgetController.tap (package:flutter_test/src/controller.dart:1080:7)
-#3      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/termux_setup_screen_test.dart:845:18)
+#3      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/termux_setup_screen_test.dart:845:18)
 <asynchronous suspension>
 #4      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -83,4 +83,4 @@ The test description was:
 00:09 +53 -1: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/termux_setup_screen_test.dart: missing prior profile refuses switch without mutating setup
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/termux_setup_screen_test.dart: missing prior profile refuses switch without mutating setup

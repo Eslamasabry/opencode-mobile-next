@@ -7,8 +7,8 @@
     "dimension": "copy",
     "evidence": [
       "../screenshots/11-settings.png",
-      "/home/eslam/Storage/Code/oc_app-ui-settings/lib/ui/screens/settings_screen.dart",
-      "/home/eslam/Storage/Code/oc_app-ui-settings/docs/qa/settings-discovery/after-settings-dark-1x.png"
+      "/home/owner/Storage/Code/oc_app-ui-settings/lib/ui/screens/settings_screen.dart",
+      "/home/owner/Storage/Code/oc_app-ui-settings/docs/qa/settings-discovery/after-settings-dark-1x.png"
     ],
     "observed": "More entry says Settings while pushed title says Settings and server. Server is already a category and current connection is already summarized.",
     "impact": "User must reinterpret scope after navigation.",
@@ -25,8 +25,8 @@
     "dimension": "layout",
     "evidence": [
       "../screenshots/11-settings.png",
-      "/home/eslam/Storage/Code/oc_app-ui-settings/lib/ui/screens/settings_screen.dart",
-      "/home/eslam/Storage/Code/oc_app-ui-settings/docs/qa/settings-discovery/after-settings-dark-1x.png"
+      "/home/owner/Storage/Code/oc_app-ui-settings/lib/ui/screens/settings_screen.dart",
+      "/home/owner/Storage/Code/oc_app-ui-settings/docs/qa/settings-discovery/after-settings-dark-1x.png"
     ],
     "observed": "Settings uses36dp backplates and default ListTile spacing, More24dp bare symbols. Equivalent navigable rows shift their label rails and icon mass.",
     "impact": "The transition feels like a different component family.",
@@ -43,8 +43,8 @@
     "dimension": "accessibility",
     "evidence": [
       "../screenshots/11-settings.png",
-      "/home/eslam/Storage/Code/oc_app-ui-settings/lib/ui/screens/settings_screen.dart",
-      "/home/eslam/Storage/Code/oc_app-ui-settings/docs/qa/settings-discovery/after-settings-dark-1x.png"
+      "/home/owner/Storage/Code/oc_app-ui-settings/lib/ui/screens/settings_screen.dart",
+      "/home/owner/Storage/Code/oc_app-ui-settings/docs/qa/settings-discovery/after-settings-dark-1x.png"
     ],
     "observed": "Category title and subtitle are forced to one line. Remaining usage subtitle visibly ends setup requi... at the normal audited width.",
     "impact": "Hides prerequisites and makes large-text discovery less useful.",
@@ -61,8 +61,8 @@
     "dimension": "density",
     "evidence": [
       "../screenshots/11-settings.png",
-      "/home/eslam/Storage/Code/oc_app-ui-settings/lib/ui/screens/settings_screen.dart",
-      "/home/eslam/Storage/Code/oc_app-ui-settings/docs/qa/settings-discovery/after-settings-dark-1x.png"
+      "/home/owner/Storage/Code/oc_app-ui-settings/lib/ui/screens/settings_screen.dart",
+      "/home/owner/Storage/Code/oc_app-ui-settings/docs/qa/settings-discovery/after-settings-dark-1x.png"
     ],
     "observed": "Summary uses technical mono12 text for URL plus health/version above a separate Server destination. URL is already available on server subpage.",
     "impact": "Technical identity receives more emphasis than adjustable preferences.",
@@ -79,8 +79,8 @@
     "dimension": "flow",
     "evidence": [
       "../screenshots/14-light-appearance.png",
-      "/home/eslam/Storage/Code/oc_app-ui-settings/lib/ui/screens/settings_screen.dart",
-      "/home/eslam/Storage/Code/oc_app-ui-settings/docs/qa/settings-discovery/after-settings-dark-1x.png"
+      "/home/owner/Storage/Code/oc_app-ui-settings/lib/ui/screens/settings_screen.dart",
+      "/home/owner/Storage/Code/oc_app-ui-settings/docs/qa/settings-discovery/after-settings-dark-1x.png"
     ],
     "observed": "Category gives no current mode/theme; user must enter the page to learn the selected configuration.",
     "impact": "An avoidable drill-down interrupts quick verification.",
@@ -97,8 +97,8 @@
     "dimension": "type",
     "evidence": [
       "../screenshots/15-coding-defaults.png",
-      "/home/eslam/Storage/Code/oc_app-ui-settings/lib/ui/screens/settings_screen.dart",
-      "/home/eslam/Storage/Code/oc_app-ui-settings/docs/qa/settings-discovery/after-settings-dark-1x.png"
+      "/home/owner/Storage/Code/oc_app-ui-settings/lib/ui/screens/settings_screen.dart",
+      "/home/owner/Storage/Code/oc_app-ui-settings/docs/qa/settings-discovery/after-settings-dark-1x.png"
     ],
     "observed": "More shows GPT-5.6 Sol 1M (OAuth); Coding defaults displays OpenAI \u00b7 gpt-5.6-sol in code-style text.",
     "impact": "Same choice appears to be a different setting.",
@@ -115,8 +115,8 @@
     "dimension": "flow",
     "evidence": [
       "../screenshots/15-coding-defaults.png",
-      "/home/eslam/Storage/Code/oc_app-ui-settings/lib/ui/screens/settings_screen.dart",
-      "/home/eslam/Storage/Code/oc_app-ui-settings/docs/qa/settings-discovery/after-settings-dark-1x.png"
+      "/home/owner/Storage/Code/oc_app-ui-settings/lib/ui/screens/settings_screen.dart",
+      "/home/owner/Storage/Code/oc_app-ui-settings/docs/qa/settings-discovery/after-settings-dark-1x.png"
     ],
     "observed": "Selected agent onTap calls the same showModelPicker(context) as Selected model without a requested agent focus.",
     "impact": "Tap destination violates user expectation and adds a hunt for the actual agent control.",
@@ -133,8 +133,8 @@
     "dimension": "density",
     "evidence": [
       "../screenshots/15-coding-defaults.png",
-      "/home/eslam/Storage/Code/oc_app-ui-settings/lib/ui/screens/settings_screen.dart",
-      "/home/eslam/Storage/Code/oc_app-ui-settings/docs/qa/settings-discovery/after-settings-dark-1x.png"
+      "/home/owner/Storage/Code/oc_app-ui-settings/lib/ui/screens/settings_screen.dart",
+      "/home/owner/Storage/Code/oc_app-ui-settings/docs/qa/settings-discovery/after-settings-dark-1x.png"
     ],
     "observed": "Experimental/Workspaces uses a full section and long informational row without an action. Actual workspaces live in Workspace tab.",
     "impact": "A three-setting page becomes a mixed settings/documentation page.",
@@ -151,7 +151,7 @@
     "dimension": "component",
     "evidence": [
       "../screenshots/14-light-appearance.png",
-      "/home/eslam/Storage/Code/oc_app-ui-settings/lib/ui/screens/settings_screen.dart"
+      "/home/owner/Storage/Code/oc_app-ui-settings/lib/ui/screens/settings_screen.dart"
     ],
     "observed": "Four tiny swatches per theme communicate palette but no type, code, selection, surface or contrast relationship. Current checkmark is clear.",
     "impact": "Choosing a theme needs trial-and-back rather than a predictable preview.",

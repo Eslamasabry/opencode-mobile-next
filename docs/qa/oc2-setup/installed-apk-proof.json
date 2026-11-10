@@ -12,11 +12,11 @@
   },
   "artifacts": {
     "arm64-v8a": {
-      "path": "/home/eslam/Storage/Code/oc_app-oc2-setup-integration/build/app/outputs/flutter-apk/app-arm64-v8a-release.apk",
+      "path": "/home/owner/Storage/Code/oc_app-oc2-setup-integration/build/app/outputs/flutter-apk/app-arm64-v8a-release.apk",
       "sha256": "a22add4b8fe01e7be76e1cd21a350a2f0422b8b711cc23ffd552f0198dc8d70b"
     },
     "x86_64": {
-      "path": "/home/eslam/Storage/Code/oc_app-oc2-setup-integration/build/app/outputs/flutter-apk/app-x86_64-release.apk",
+      "path": "/home/owner/Storage/Code/oc_app-oc2-setup-integration/build/app/outputs/flutter-apk/app-x86_64-release.apk",
       "sha256": "23f7a1691f87ed2e87ff3dd1236dd0733f23f6dbf4355e56dc750776bbf99748"
     }
   },

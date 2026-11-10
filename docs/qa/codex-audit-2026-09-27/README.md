@@ -131,8 +131,8 @@ Keep `connection.dart` single-owner. Keep both sides of native channels under on
 Validation ran against the unchanged candidate above, with the pinned toolchain:
 
 ```text
-/home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter
-/home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/dart
+/home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter
+/home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/dart
 ```
 
 Heavy invocations use `OC_TEST_SLOTS=1 tool/qa/machine_lock.sh` and are serialized. No reviewer launched tests. The audit coordinator ran the explicitly requested analyzer and focused checks; there is no full-suite claim.

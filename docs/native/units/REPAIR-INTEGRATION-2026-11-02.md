@@ -8,7 +8,7 @@ Branch: `native/repair-integration-2026-11-02`, based on M0 `3bb7632ee56b0060e6a
 
 The earlier fix runner could not update shared worktree Git metadata. Workers exported commits to bundles instead. Its unconditional forced worktree cleanup then removed two bundles stored under `native/build/`.
 
-Recovered `chat` and `gates` from their temporary Git repositories. Eleven bundles are archived outside disposable worktrees in `/home/eslam/Storage2/wt/native-repair-artifacts-20261102/`, with SHA-256 hashes in `manifest.json`. All bundles passed `git bundle verify`. Their original histories are retained under local `recovered/<unit>` refs. Integration commits apply each verified final scoped diff. Original histories remain available under the recovered refs.
+Recovered `chat` and `gates` from their temporary Git repositories. Eleven bundles are archived outside disposable worktrees in `/home/owner/Storage2/wt/native-repair-artifacts-20261102/`, with SHA-256 hashes in `manifest.json`. All bundles passed `git bundle verify`. Their original histories are retained under local `recovered/<unit>` refs. Integration commits apply each verified final scoped diff. Original histories remain available under the recovered refs.
 
 | Repair | Original tip |
 |---|---|
@@ -113,4 +113,4 @@ PC rendering commands, both with the same fresh-Test init and unchanged candidat
 ./gradlew :androidApp:assemblePreviewDebug
 ```
 
-Full logs, original failure evidence, exact launch scripts, JUnit XML and validated recovery bundles are archived outside disposable worktrees in `/home/eslam/Storage2/wt/native-repair-artifacts-20261102/`. VPS access reused the owner's private build-server environment and key-only SSH; no host address or key is recorded here. Compiler warnings remain (deprecated Compose APIs, unused graph input and a redundant cast); `oc.werror` remained at the preview default. No warning suppression or performance threshold change was introduced.
+Full logs, original failure evidence, exact launch scripts, JUnit XML and validated recovery bundles are archived outside disposable worktrees in `/home/owner/Storage2/wt/native-repair-artifacts-20261102/`. VPS access reused the owner's private build-server environment and key-only SSH; no host address or key is recorded here. Compiler warnings remain (deprecated Compose APIs, unused graph input and a redundant cast); `oc.werror` remained at the preview default. No warning suppression or performance threshold change was introduced.

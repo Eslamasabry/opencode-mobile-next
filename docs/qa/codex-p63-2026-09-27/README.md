@@ -138,7 +138,7 @@ is claimed.
 ## Commit outcome
 
 `git add docs/qa/codex-p63-2026-09-27/README.md` failed because Git could
-not create `/home/eslam/Storage/Code/oc_app/.git/worktrees/oc_app-codex-p63/index.lock`:
+not create `/home/owner/Storage/Code/oc_app/.git/worktrees/oc_app-codex-p63/index.lock`:
 `Read-only file system`. The report remains untracked in the working tree.
 The requested message, including both attribution trailers, is saved in
 root `COMMIT_MSG.txt` for the coordinator. No push was attempted.

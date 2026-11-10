@@ -9,11 +9,11 @@ for implementation and validation status.
 ## Second PC follow-up: ZAI provider and real tools
 
 The coordinator reported restoring the accidental ancestor npm install from the
-previous attempt. This follow-up did not touch `/home/eslam`'s package files.
+previous attempt. This follow-up did not touch `/home/owner`'s package files.
 It created its own `package.json`, verified `npm prefix` equalled the scratch
 directory, and used `npm install --prefix <scratch> @opencode/cli@2.0.29`.
 
-- Private root: `/home/eslam/Storage/tmp/oc2-probe-aiteam-pc/run-followup3-9VN1kf`,
+- Private root: `/home/owner/Storage/tmp/oc2-probe-aiteam-pc/run-followup3-9VN1kf`,
   umask 077, separate HOME, all XDG directories, and TMPDIR. Server bound only
   `127.0.0.1:4193`, version 2.0.29, listener PID **4193270**.
 - `/api/integration` advertised `zai-coding-plan` with key authentication. A
@@ -95,7 +95,7 @@ tool execution. [pc-results.json](pc-results.json) contains allowlisted evidence
 and cleanup receipts.
 
 - Created private scratch root
-  `/home/eslam/Storage/tmp/oc2-probe-aiteam-pc/run-20261014-qr4XrD` with umask 077,
+  `/home/owner/Storage/tmp/oc2-probe-aiteam-pc/run-20261014-qr4XrD` with umask 077,
   separate HOME and XDG config/data/cache/state directories. The retained server
   also used a scratch `TMPDIR` and bound **127.0.0.1:4193** only.
 - Installed and verified `@opencode/cli@2.0.29`. The corrected isolated install
@@ -144,8 +144,8 @@ directory**, including the scratch credential database, logs, caches and scripts
 Only the sanitized evidence remains in this checkout. No pattern kill was used.
 
 The initial npm install was a scope mistake: without a scratch manifest, npm
-resolved the ancestor package prefix to **`/home/eslam`**. It updated
-`/home/eslam/package.json`, `/home/eslam/package-lock.json`, and `node_modules`.
+resolved the ancestor package prefix to **`/home/owner`**. It updated
+`/home/owner/package.json`, `/home/owner/package-lock.json`, and `node_modules`.
 Its debug log recorded five additions (`@opencode/cli` and four Linux x64 binary
 packages) and one change (`@code-yeongyu/comment-checker`). This was corrected for
 the probe by creating the private manifest and using an explicit prefix. The
@@ -165,7 +165,7 @@ Flutter were not run. B2 remains blocked pending a usable authorized model.
 - Checkout: `codex/aiteam-oc2`, starting revision
   `efbc3a5ea73c9a914feb315c3a87099f7f8c386a`.
 - Build host: `the build server`, SSH key authentication.
-- Scratch root: `/home/eslam/oc2-probe-aiteam-20261014-3jL7XM`.
+- Scratch root: `/home/owner/oc2-probe-aiteam-20261014-3jL7XM`.
   Separate `home`, `config`, `data`, `cache`, and `state` directories supplied
   `HOME`, `XDG_CONFIG_HOME`, `XDG_DATA_HOME`, `XDG_CACHE_HOME`, and `XDG_STATE_HOME`.
 - Installed with `npm i @opencode/cli@2.0.29`; explicitly ran

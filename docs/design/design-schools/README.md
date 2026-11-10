@@ -94,4 +94,4 @@ Each guide lists its own. The core set:
 - Swiss style: [International Typographic Style](https://en.wikipedia.org/wiki/International_Typographic_Style); Müller-Brockmann, *Grid Systems in Graphic Design* (1981)
 - Flutter: [BackdropFilter](https://api.flutter.dev/flutter/widgets/BackdropFilter-class.html), [BackdropGroup](https://api.flutter.dev/flutter/widgets/BackdropGroup-class.html), [Performance best practices](https://docs.flutter.dev/perf/best-practices), [Impeller `SolidRRectBlurContents`](https://api.flutter.dev/impeller/classimpeller_1_1_solid_r_rect_blur_contents.html)
 
-Copyright: these docs summarise in our own words, quote at most a short line, and link every source. No third-party pages or images are stored in the repo. Concept images stay in `/home/eslam/Storage2/launch-footage/` (local).
+Copyright: these docs summarise in our own words, quote at most a short line, and link every source. No third-party pages or images are stored in the repo. Concept images stay in `/home/owner/Storage2/launch-footage/` (local).

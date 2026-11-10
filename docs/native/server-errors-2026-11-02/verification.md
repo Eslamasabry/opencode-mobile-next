@@ -40,4 +40,4 @@ English/Arabic copy and real-screen Arabic Details behavior are covered; other l
 
 ## Artifact
 
-`opencode-native-server-errors-10002.apk`, 22,386,235 bytes, SHA-256 `4c1155d98e78d9dc1e23077a1ce012a7d5b5bce5e6a60fe69dd690fdb35267d7`. Certificate SHA-256 `1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C`, matching previously distributed native previews. APK-only Tailscale download was checked HTTP200 and byte length before delivery. Logs/JUnit/original model patches remain under `/home/eslam/Storage2/wt/native-server-errors-artifacts-20261102`.
+`opencode-native-server-errors-10002.apk`, 22,386,235 bytes, SHA-256 `4c1155d98e78d9dc1e23077a1ce012a7d5b5bce5e6a60fe69dd690fdb35267d7`. Certificate SHA-256 `1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C`, matching previously distributed native previews. APK-only Tailscale download was checked HTTP200 and byte length before delivery. Logs/JUnit/original model patches remain under `/home/owner/Storage2/wt/native-server-errors-artifacts-20261102`.

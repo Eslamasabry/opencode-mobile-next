@@ -1,5 +1,5 @@
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.42s
-     Running tests/boundary_proof.rs (/home/eslam/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/boundary_proof-8ede8bae1da8d736)
+     Running tests/boundary_proof.rs (/home/owner/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/boundary_proof-8ede8bae1da8d736)
 
 running 3 tests
 test preparer_seeds_real_main_and_refuses_arbitrary_paths_or_reentry ... ok
@@ -9,7 +9,7 @@ ok
 
 test result: ok. 2 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.01s
 
-     Running tests/daemon_startup.rs (/home/eslam/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/daemon_startup-65e08fb95743080b)
+     Running tests/daemon_startup.rs (/home/owner/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/daemon_startup-65e08fb95743080b)
 
 running 4 tests
 test actual_cleanup_cli_erases_mode_zero_tree_without_following_escape_links ... ok
@@ -19,7 +19,7 @@ test occupied_legacy_port_never_receives_the_real_daemon_bearer ... ok
 
 test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.35s
 
-     Running tests/repository_authority.rs (/home/eslam/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/repository_authority-29e848db2ea9dce2)
+     Running tests/repository_authority.rs (/home/owner/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/repository_authority-29e848db2ea9dce2)
 
 running 27 tests
 test a_new_promotion_reconciles_old_applied_intent_before_main_moves_again ... ok
@@ -52,7 +52,7 @@ test workers_are_independent_with_no_main_origin_alternates_or_private_path ... 
 
 test result: ok. 27 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.58s
 
-     Running tests/repository_merge_journal.rs (/home/eslam/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/repository_merge_journal-28059d3043e12449)
+     Running tests/repository_merge_journal.rs (/home/owner/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/repository_merge_journal-28059d3043e12449)
 
 running 6 tests
 test applied_journal_cannot_publish_over_rewritten_dev_or_changed_main ... ok
@@ -64,7 +64,7 @@ test repo_collection_sweeps_its_journals_and_keeps_only_private_authentication_k
 
 test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.62s
 
-     Running tests/repository_proot_objects.rs (/home/eslam/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/repository_proot_objects-080505e00ef20291)
+     Running tests/repository_proot_objects.rs (/home/owner/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/repository_proot_objects-080505e00ef20291)
 
 running 9 tests
 test config_head_and_refs_never_receive_object_link_exception ... ok
@@ -79,7 +79,7 @@ test worker_collection_normalizes_committed_proot_object_and_preserves_main ... 
 
 test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.97s
 
-     Running tests/repository_search_ancestors.rs (/home/eslam/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/repository_search_ancestors-4349ffcb109f990b)
+     Running tests/repository_search_ancestors.rs (/home/owner/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/repository_search_ancestors-4349ffcb109f990b)
 
 running 2 tests
 test execute_only_ancestor_does_not_make_descendant_symlinks_trusted ... ok
@@ -87,7 +87,7 @@ test execute_only_ancestor_supports_create_import_worker_and_readable_leaf_opera
 
 test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
 
-     Running tests/repository_worker_recovery.rs (/home/eslam/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/repository_worker_recovery-20332a0dcf5de7c3)
+     Running tests/repository_worker_recovery.rs (/home/owner/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/repository_worker_recovery-20332a0dcf5de7c3)
 
 running 7 tests
 test abandoned_clone_and_untracked_files_are_replaced_from_current_dev ... ok
@@ -100,7 +100,7 @@ test task_and_parent_symlinks_cannot_redirect_deletion_into_canonical_storage ..
 
 test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.62s
 
-     Running tests/startup_reporting.rs (/home/eslam/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/startup_reporting-927f481342c8017e)
+     Running tests/startup_reporting.rs (/home/owner/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/startup_reporting-927f481342c8017e)
 
 running 4 tests
 test actual_subject_keeps_private_fd_live_closes_inherited_fds_and_exits_on_eof ... ok
@@ -110,7 +110,7 @@ test subject_refuses_symlink_sentinel_and_invalid_fixture_without_echoing_path .
 
 test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
 
-     Running tests/status_fallback.rs (/home/eslam/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/status_fallback-ec4938bfc6817e67)
+     Running tests/status_fallback.rs (/home/owner/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/status_fallback-ec4938bfc6817e67)
 
 running 3 tests
 test all_known_directories_are_checked_and_only_team_busy_is_excluded ... ok
@@ -119,7 +119,7 @@ test unknown_directory_busy_blocks_until_exact_idle_and_eof_never_grants_idle ..
 
 test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
 
-     Running tests/store_durability.rs (/home/eslam/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/store_durability-2df019de6dac4de9)
+     Running tests/store_durability.rs (/home/owner/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/store_durability-2df019de6dac4de9)
 
 running 27 tests
 test cas_rejects_late_updates_and_usage_regression_atomically ... ok
@@ -152,7 +152,7 @@ test usage_changes_workspace_snapshot_without_invalidating_user_revision ... ok
 
 test result: ok. 27 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.85s
 
-     Running tests/store_merge_projection.rs (/home/eslam/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/store_merge_projection-a562b32998181056)
+     Running tests/store_merge_projection.rs (/home/owner/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/store_merge_projection-a562b32998181056)
 
 running 4 tests
 test checked_scoped_receipt_projects_stable_merged_queue_without_read_mutation ... ok
@@ -162,7 +162,7 @@ test malformed_scopes_refs_and_failed_checks_block_completed_merge_projection ..
 
 test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.23s
 
-     Running tests/store_planner_projection.rs (/home/eslam/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/store_planner_projection-6e0b879c0acd49cc)
+     Running tests/store_planner_projection.rs (/home/owner/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/store_planner_projection-6e0b879c0acd49cc)
 
 running 5 tests
 test legacy_interrupted_planner_gets_a_stable_read_only_current_state_timeline ... ok
@@ -173,7 +173,7 @@ test timeline_is_bounded_and_never_echoes_unknown_reason_payload ... ok
 
 test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.95s
 
-     Running tests/store_resolved_models.rs (/home/eslam/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/store_resolved_models-2446449c439192c3)
+     Running tests/store_resolved_models.rs (/home/owner/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/store_resolved_models-2446449c439192c3)
 
 running 5 tests
 test first_resolution_after_session_or_in_same_creation_patch_is_refused ... ok
@@ -184,7 +184,7 @@ test role_checkpoint_uses_stage_cas_and_does_not_partially_merge_on_conflict ...
 
 test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.21s
 
-     Running tests/store_restart_reconciliation.rs (/home/eslam/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/store_restart_reconciliation-9d391a8820a774f0)
+     Running tests/store_restart_reconciliation.rs (/home/owner/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/store_restart_reconciliation-9d391a8820a774f0)
 
 running 6 tests
 test fresh_session_provenance_is_atomic_and_cannot_be_forged_after_dispatch ... ok
@@ -196,7 +196,7 @@ test user_paused_stopped_and_existing_review_reasons_never_auto_resume ... ok
 
 test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.32s
 
-     Running tests/store_retry_plan.rs (/home/eslam/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/store_retry_plan-ea5de24593799517)
+     Running tests/store_retry_plan.rs (/home/owner/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/store_retry_plan-ea5de24593799517)
 
 running 9 tests
 test explicit_retry_uses_current_roles_without_reapproving_spec_or_replaying_turn ... ok
@@ -211,7 +211,7 @@ test retry_requires_current_approved_spec_and_failed_latest_planner ... ok
 
 test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.73s
 
-     Running tests/store_review_acceptance.rs (/home/eslam/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/store_review_acceptance-86e6a5364f4a6140)
+     Running tests/store_review_acceptance.rs (/home/owner/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/store_review_acceptance-86e6a5364f4a6140)
 
 running 4 tests
 test accepting_every_phase_and_milestone_does_not_promote_or_mark_done ... ok
@@ -221,7 +221,7 @@ test review_commands_reject_stale_revision_and_invalid_target_without_mutation .
 
 test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.37s
 
-     Running tests/store_scheduler.rs (/home/eslam/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/store_scheduler-ee895e439c5b49be)
+     Running tests/store_scheduler.rs (/home/owner/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/store_scheduler-ee895e439c5b49be)
 
 running 7 tests
 test ceilings_require_real_usage_and_pause_at_exact_limit ... ok
@@ -234,7 +234,7 @@ test single_cap_is_project_wide_and_parallel_cap_is_server_wide ... ok
 
 test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running tests/task_workflow.rs (/home/eslam/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/task_workflow-276a2b3956101699)
+     Running tests/task_workflow.rs (/home/owner/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/task_workflow-276a2b3956101699)
 
 running 5 tests
 test checked_clone_merges_only_to_dev_then_expected_promotion_receipt_survives_restart ... ok

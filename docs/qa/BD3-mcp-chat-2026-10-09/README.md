@@ -46,7 +46,7 @@ not proof that the different installed beta behaves identically.
 - `opencode2 --version` through the installed wrapper failed because its
   package postinstall had not run. No installation or repair was attempted.
 - Direct executable
-  `/home/eslam/node_modules/@opencode-ai/cli-linux-x64/bin/opencode2 --version`
+  `/home/owner/node_modules/@opencode-ai/cli-linux-x64/bin/opencode2 --version`
   returned `opencode2 v0.0.0-beta-19242`.
 - A bounded isolated launch used that direct executable, a temporary working
   directory, separate XDG config/data/cache/state paths, no inherited token/key/
@@ -63,7 +63,7 @@ not proof that the different installed beta behaves identically.
 
 ### OpenCode 1
 
-Working native binary: `/home/eslam/node_modules/opencode-linux-x64/bin/opencode`,
+Working native binary: `/home/owner/node_modules/opencode-linux-x64/bin/opencode`,
 v1.18.23. The default wrapper was broken (postinstall missing); no install or
 repair was attempted. An isolated fixture used temporary XDG roots and an
 app-authored synthetic stdio MCP server. It made zero model requests.

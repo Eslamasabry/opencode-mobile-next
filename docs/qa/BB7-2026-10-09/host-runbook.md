@@ -1,7 +1,7 @@
 # BB7 staged device runbook
 
 Run only on emulator-5554, with one inherited exclusive
-`/home/eslam/Storage/tmp/oc-emulator.lock` descriptor held across setup, all events,
+`/home/owner/Storage/tmp/oc-emulator.lock` descriptor held across setup, all events,
 the coordinator's intervening build, and final normal-2202 restoration. Do not
 release the lock after a failed command before restoring the normal app.
 The driver verifies that descriptor on every invocation. It does not start builds.
@@ -28,7 +28,7 @@ state file; retaining it privately permits recovery if a later step fails.
 
 `init` additionally requires `--apk`, `--runner-apk`, `--normal-apk`,
 `--normal-sidecar`, `--apksigner`, `--aapt`, `--target-sha`, `--runner-sha`.
-The normal path is fixed to `/home/eslam/Storage/tmp/oc-apk-share/oc-2202.apk`,
+The normal path is fixed to `/home/owner/Storage/tmp/oc-apk-share/oc-2202.apk`,
 with SHA-256 `e63fb2e4ff32280ad4c739aee9c17db508eab2e99a42573c4e83bd66dc0babb0`.
 The shared helper validates the certificate against
 `1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c`.

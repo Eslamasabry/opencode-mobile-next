@@ -1,224 +1,224 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/about_alpha_notice_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/about_alpha_notice_test.dart: About shows the alpha/vibecoded notice and both report paths
-00:00 +1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/about_alpha_notice_test.dart: the notice copy keeps all three public claims
-00:00 +2: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart
-00:02 +2: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: dark: chat meets the accessibility guidelines
-00:03 +3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: dark: the busy chat composer meets the guidelines
-00:04 +4: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: dark: the home shell meets the guidelines
-00:04 +5: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: dark: workspace meets the guidelines
-00:04 +6: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: dark: Activity meets the guidelines
-00:04 +7: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: dark: the More hub meets the guidelines
-00:04 +8: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: dark: the session-first workspace meets the guidelines
-00:04 +9: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: dark: manage project meets the guidelines
-00:04 +10: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: dark: the More hub meets the guidelines
-00:04 +11: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: dark: settings meets the guidelines
-00:04 +12: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: dark: servers first run meets the guidelines
-00:05 +13: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: dark: the permission sheet meets the guidelines
-00:05 +14: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: dark: the form renderer meets the guidelines
-00:05 +15: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: light: chat meets the accessibility guidelines
-00:05 +16: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: light: the busy chat composer meets the guidelines
-00:05 +17: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: light: the home shell meets the guidelines
-00:05 +18: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: light: workspace meets the guidelines
-00:05 +19: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: light: Activity meets the guidelines
-00:05 +20: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: light: the More hub meets the guidelines
-00:05 +21: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: light: the session-first workspace meets the guidelines
-00:05 +22: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: light: manage project meets the guidelines
-00:05 +23: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: light: the More hub meets the guidelines
-00:05 +24: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: light: settings meets the guidelines
-00:06 +25: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: light: servers first run meets the guidelines
-00:06 +26: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: light: the permission sheet meets the guidelines
-00:06 +27: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: light: the form renderer meets the guidelines
-00:06 +28: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/active_context_test.dart
-00:06 +28: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/active_context_test.dart: phone context preview
-00:06 +28 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/active_context_test.dart: context GET uses session identity and authentication, retaining more than 5000 messages
-00:07 +29 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/active_context_test.dart: malformed and duplicate snapshots fail visibly without disabling context
-00:07 +30 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/active_context_test.dart: missing session and auth remain recoverable; missing route is capability failure
-00:07 +31 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/active_context_test.dart: explicit inspector retains instruction text and files without binary bodies or metadata
-00:07 +32 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/active_context_test.dart: tool content preserves all text results and distinguishes pruned and truncated output
-00:07 +33 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/active_context_test.dart: search preview centers a distant literal match without slicing emoji pairs
-00:07 +34 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/active_context_test.dart: search, type filter, full preview and copy act on the selected content
-00:08 +35 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/active_context_test.dart: failed refresh retains labeled snapshot and later refresh recovers
-00:08 +36 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/active_context_test.dart: late context from a previous location never appears
-00:08 +37 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/active_context_test.dart: compact large text with open keyboard stays scrollable to results
-00:08 +38 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/active_context_test.dart: staged revert excludes hidden messages and history invalidation refreshes
-00:08 +39 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/activity_requests_test.dart
-00:09 +39 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/activity_requests_test.dart: custom single answer clears the selected radio and serializes once
-00:10 +40 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/activity_requests_test.dart: choosing a single radio clears custom text and serializes once
-00:10 +41 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/activity_requests_test.dart: multiple choice preserves selected and custom answers
-00:10 +42 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/activity_requests_test.dart: question controls remain reachable with keyboard inset
-00:10 +43 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/activity_screen_test.dart
-00:11 +43 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/activity_screen_test.dart: busy sessions without loaded metadata never show All clear
-00:11 +44 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/activity_screen_test.dart: the inbox renders attention and running, never history
-00:11 +45 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/activity_screen_test.dart: a permission row resolves that permission in place
-00:12 +46 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/activity_screen_test.dart: a question row opens the exact answer sheet
-00:12 +47 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/activity_screen_test.dart: session rows open the exact chat
-00:12 +48 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/activity_screen_test.dart: refresh reconciles the wake transport before querying
-00:12 +49 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/activity_screen_test.dart: an empty inbox reads as success
-00:12 +50 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/activity_screen_test.dart: running sessions omit empty attention bookkeeping
-00:12 +51 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/activity_screen_test.dart: unknown saved-server status never becomes all clear
-00:12 +52 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/activity_screen_test.dart: disconnected empty state stays unknown
-00:12 +53 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/activity_screen_test.dart: requests lead the page and digest explanation is disclosed
-00:12 +54 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/activity_screen_test.dart: failed pending check never shows all clear
-00:12 +55 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/activity_screen_test.dart: unsupported stale forms do not block the current inbox
-00:12 +56 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/activity_screen_test.dart: activity fits a 320dp phone at 2x text
-00:12 +57 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_controller_test.dart
-00:13 +57 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_controller_test.dart: refresh never starts sign-in and reported zero is preserved
-00:13 +58 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_controller_test.dart: independent unavailable usage leaves fresh account and limits
-00:13 +59 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_controller_test.dart: unsupported runtime and API-key auth do not probe subscription metrics
-00:13 +60 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_controller_test.dart: owned completion before start response never restores the code
-00:13 +61 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_controller_test.dart: cancel while starting suppresses the late code until owned receipt settles
-00:13 +62 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_controller_test.dart: failed cancellation stays uncertain and allows only explicit retry
-00:13 +63 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_controller_test.dart: account change clears stale metrics before delayed read completes
-00:13 +64 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_controller_test.dart: account change while waiting clears code and cancels only this session
-00:13 +65 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_controller_test.dart: disconnect invalidates in-flight login and reads with no replay
-00:13 +66 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_controller_test.dart: disposing during login never publishes a late code
-00:13 +67 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart
-00:14 +67 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: (setUpAll)
-00:14 +67 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: explicit sign-in opens reviewed official host and cancel removes code
-00:15 +68 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: rate and usage failures remain independently unavailable
-00:15 +69 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: Servers account entry reaches the panel through its capability
-00:15 +70 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: scope change drops pending code and never binds replacement account
-00:15 +71 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: same-gateway reconnect reads fresh account without replaying sign-in
-00:15 +72 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: browser round trip keeps explicit device attempt and refreshes on resume
-00:15 +73 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: production capture signed-out light
-00:15 +74 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: production capture waiting light
-00:15 +75 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: production capture waiting dark
-00:15 +76 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: production capture waiting large
-00:15 +77 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: production capture usage light
-00:15 +78 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: production capture usage dark
-00:15 +79 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: production capture usage large
-00:16 +80 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: production capture partial light
-00:16 +81 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: production capture uncertain light
-00:16 +82 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: production capture error light
-00:16 +83 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: production capture unsupported light
-00:16 +84 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: production capture disconnected light
-00:16 +85 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: production capture loading light
-00:16 +86 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: (tearDownAll)
-00:16 +86 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_client_test.dart
-00:16 +86 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_client_test.dart: walks session pages by passing cursors back verbatim
-00:16 +87 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_client_test.dart: walks message pages and parses the union
-00:16 +88 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_client_test.dart: prompt sends v2 wire shape and returns the inbox receipt
-00:16 +89 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_client_test.dart: session mutations hit the v2 endpoints with 204 responses
-00:16 +90 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_client_test.dart: location-scoped reads carry the deep-object location params
-00:16 +91 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_client_test.dart: permission and form replies post the documented bodies
-00:16 +92 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_client_test.dart: fs read returns raw bytes without a JSON envelope
-00:16 +93 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_client_test.dart: active sessions map to their status types
-00:16 +94 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_client_test.dart: surfaces typed errors from tagged envelopes
-00:16 +95 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_events_test.dart
-00:17 +95 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_events_test.dart: replays a captured prompt round-trip into typed events
-00:17 +96 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_events_test.dart: unknown event types fall back to UnknownApi2Event without throwing
-00:17 +97 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_events_test.dart: parses the log.synced boundary marker (bare, no envelope)
-00:17 +98 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_events_test.dart: parses permission, form, status, mcp, and vcs events
-00:17 +99 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_events_test.dart
-00:17 +99 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_events_test.dart: adapts the captured prompt round-trip into v1 envelopes
-00:17 +100 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_events_test.dart: session.status idle maps to the v1 session.idle event
-00:17 +101 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_events_test.dart: execution failure surfaces as session.error
-00:17 +102 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_events_test.dart: permission.asked maps to the v2-shaped v1 envelope
-00:17 +103 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_events_test.dart: tool input deltas append through the v1 delta contract
-00:17 +104 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_events_test.dart: session renames and refresh hints map to their v1 names
-00:17 +105 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart
-00:18 +105 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: capabilities capability truth per the port matrix
-00:18 +106 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: sessions maps the captured session page onto the v1 Session shape
-00:18 +107 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: messages → parts round-trip user message carries text and file attachment parts
-00:18 +108 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: messages → parts round-trip assistant "pong" capture maps reasoning/text/tool content
-00:18 +109 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: messages → parts round-trip single assistant fixture parses tokens and cost
-00:18 +110 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: messages → parts round-trip paginated fixture pages map without loss of order
-00:18 +111 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: messages → parts round-trip shell message maps to a v1 tool part
-00:18 +112 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: messages → parts round-trip failed shell maps to a tool error state
-00:18 +113 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: messages → parts round-trip shell metadata preserves the raw v2 status and shellID
-00:18 +114 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: messages → parts round-trip switch markers become tagged v2:switch parts
-00:18 +115 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: messages → parts round-trip synthetic/system/skill become tagged v2:notice parts
-00:18 +116 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: messages → parts round-trip unknown message variants degrade to a generic notice
-00:18 +117 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: messages → parts round-trip compaction statuses become tagged v2:compaction parts
-00:18 +118 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: messages → parts round-trip live-captured variant fixture maps every v2-only shape
-00:18 +119 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: messages → parts round-trip tool error state carries the structured message
-00:18 +120 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: messages → parts round-trip tool file results surface as v1 output files
-00:18 +121 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: messages → parts round-trip tool content interleaving survives as ordered segments
-00:18 +122 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: messages → parts round-trip streaming tool input maps to the v1 pending preview
-00:18 +123 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: permissions maps the v2 request onto the v1 shape
-00:18 +124 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: permissions reply strings map onto the v2 wire enum
-00:18 +125 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: providers & catalog builds the v1 ProvidersResponse from the captured catalogs
-00:18 +126 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: providers & catalog maps catalog models with variant options
-00:18 +127 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: providers & catalog maps agents from the captured agent list
-00:18 +128 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: files & vcs maps fs entries with trailing-slash directories
-00:18 +129 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: files & vcs maps vcs diff and status rows
-00:18 +130 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: errors & health maps the v2 error hierarchy to ApiException
-00:18 +131 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: errors & health maps health
-00:18 +132 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_global_pagination_test.dart
-00:19 +132 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_global_pagination_test.dart: global finder requests newest first and preserves cursor after filtering
-00:19 +133 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart
-00:19 +133 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: view receipt posts the observed idle timestamp in the active location
-00:19 +134 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: ordinary v2 prompt command and shell preserve server selection
-00:19 +135 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: staged revert blocks prompt and commands before implicit server commit
-00:19 +136 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: v2 explicit selection writes replace the model ref and creation uses defaults
-00:19 +137 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: FormGateway (v2) lists a session's pending forms from the captured payload
-00:19 +138 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: FormGateway (v2) reads form state and replies through the session-scoped routes
-00:19 +139 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: FormGateway (v2) surfaces 400 FormInvalidAnswerError as a tagged ApiException
-00:19 +140 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: FormGateway (v2) surfaces 409 FormAlreadySettledError with its tag
-00:19 +141 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: InboxGateway (v2) lists pending inbox items from the captured payload
-00:19 +142 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: InboxGateway (v2) steer, queue, and cancel address the item routes
-00:19 +143 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: InboxGateway (v2) surfaces 409 ConflictError when an item was already delivered
-00:19 +144 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: prompt delivery + permission message (v2) promptAsync carries the queue delivery to the wire
-00:19 +145 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: prompt delivery + permission message (v2) promptAsync omits delivery when unspecified (server default steer)
-00:19 +146 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: prompt delivery + permission message (v2) respondPermissionV2 forwards the reject message
-00:19 +147 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: prompt delivery + permission message (v2) respondPermissionV2 omits an absent message
-00:19 +148 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: v1 gateway stays inert capability flags are off
-00:19 +149 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: v1 gateway stays inert form and inbox lists come back empty without any request
-00:19 +150 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: v1 gateway stays inert form and inbox mutations fail with a typed unavailable error
-00:19 +151 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: event adaptation inbox events pass through under their v2 types
-00:19 +152 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: event adaptation non-user inbox items pass through without a message echo
-00:19 +153 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: event adaptation form events surface as form.v2.* envelopes
-00:19 +154 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_mcp_scope_test.dart
-00:20 +154 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_mcp_scope_test.dart: v2 rejects persistent scope and existing names without PUT
-00:20 +155 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_mcp_scope_test.dart: MCP uniqueness read and add keep the same location across awaits
-00:20 +156 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_models_test.dart
-00:21 +156 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_models_test.dart: parses the captured session list page with cursors
-00:21 +157 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_models_test.dart: parses the captured session create response
-00:21 +158 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_models_test.dart: parses the captured message list into the typed union
-00:21 +159 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_models_test.dart: parses a single captured assistant message
-00:21 +160 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_models_test.dart: parses the captured prompt inbox receipt
-00:21 +161 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_models_test.dart: parses captured model, provider, agent, and catalog listings
-00:21 +162 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_models_test.dart: parses captured location and fs listings
-00:21 +163 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_models_test.dart: unknown message types and enum values never throw
-00:21 +164 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_models_test.dart: parses permission requests and replies use wire names
-00:21 +165 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_models_test.dart: parses forms with the six field types and when conditions
-00:21 +166 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_models_test.dart: parses the captured error envelope shape
-00:21 +167 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_provider_workflows_test.dart
-00:21 +167 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_provider_workflows_test.dart: catalog handles a later failure while the first request waits (false)
-00:21 +168 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_provider_workflows_test.dart: catalog handles a later failure while the first request waits (true)
-00:21 +169 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_provider_workflows_test.dart: OAuth and MCP actions preserve scope and confirm completed code sign-in
-00:21 +170 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_revert_test.dart
-00:22 +170 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_revert_test.dart: reverting a session asks the server to restore the files
-00:22 +171 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_revert_test.dart: reverting does not commit, so it stays undoable
-00:22 +172 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_revert_test.dart: restoring a session clears the staged revert
-00:22 +173 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_revert_test.dart: stage returns its fixed preview and encodes history-only preference
-00:22 +174 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_revert_test.dart: commit and clear use distinct bodyless endpoints
-00:22 +175 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_sse_test.dart
-00:22 +175 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_sse_test.dart: parses bare data frames and keepalive comments
-00:23 +176 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_sse_test.dart: preserves the event: field the v1 consumer discarded
-00:23 +177 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_sse_test.dart: joins multi-line data with newlines per the SSE spec
-00:23 +178 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_sse_test.dart: handles CRLF line endings and chunk boundaries mid-line
-00:23 +179 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_sse_test.dart: dispatches a trailing frame without terminator only on flush
-00:23 +180 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_sse_test.dart: drops oversized frames without corrupting the following ones
-00:23 +181 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_sse_test.dart: event stream delivers typed envelopes and reconnects
-00:24 +182 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_sse_test.dart: session log stream tracks durable seq and surfaces log.synced
-00:25 +183 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_transport_test.dart
-00:25 +183 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_transport_test.dart: normalizes server roots with trailing slashes and /api suffixes
-00:25 +184 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_transport_test.dart: builds Basic auth from the opencode username and password
-00:25 +185 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_transport_test.dart: the transport offers no way to put credentials in a URL
-00:25 +186 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_transport_test.dart: 401 maps to Api2AuthRequired even with an empty body
-00:25 +187 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_transport_test.dart: tagged error envelopes surface tag, status, and extras
-00:25 +188 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_transport_test.dart: 503 boot bodies map to Api2Unavailable
-00:25 +189 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_transport_test.dart: connection refusal maps to Api2NetworkError
-00:25 +190 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/api2_transport_test.dart: health sends Basic auth and parses the payload
-00:25 +191 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/app_diagnostics_screen_test.dart
-00:26 +191 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/app_diagnostics_screen_test.dart: diagnostics are readable at narrow width and sent explicitly
-00:27 +192 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/app_diagnostics_screen_test.dart: diagnostics screen explains an empty process-local report
-00:27 +193 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/app_diagnostics_test.dart
-00:28 +193 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/app_diagnostics_test.dart: diagnostics redact secrets, URLs, and long token-like values
-00:28 +194 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/app_diagnostics_test.dart: diagnostics coalesce bursts and keep a bounded ring
-00:28 +195 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/app_diagnostics_test.dart: error widget hides raw exceptions and records a report
-00:28 +196 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/app_diagnostics_test.dart: bootstrap failure is visible and can be retried
+00:00 +0: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/about_alpha_notice_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/about_alpha_notice_test.dart: About shows the alpha/vibecoded notice and both report paths
+00:00 +1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/about_alpha_notice_test.dart: the notice copy keeps all three public claims
+00:00 +2: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart
+00:02 +2: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: dark: chat meets the accessibility guidelines
+00:03 +3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: dark: the busy chat composer meets the guidelines
+00:04 +4: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: dark: the home shell meets the guidelines
+00:04 +5: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: dark: workspace meets the guidelines
+00:04 +6: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: dark: Activity meets the guidelines
+00:04 +7: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: dark: the More hub meets the guidelines
+00:04 +8: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: dark: the session-first workspace meets the guidelines
+00:04 +9: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: dark: manage project meets the guidelines
+00:04 +10: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: dark: the More hub meets the guidelines
+00:04 +11: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: dark: settings meets the guidelines
+00:04 +12: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: dark: servers first run meets the guidelines
+00:05 +13: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: dark: the permission sheet meets the guidelines
+00:05 +14: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: dark: the form renderer meets the guidelines
+00:05 +15: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: light: chat meets the accessibility guidelines
+00:05 +16: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: light: the busy chat composer meets the guidelines
+00:05 +17: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: light: the home shell meets the guidelines
+00:05 +18: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: light: workspace meets the guidelines
+00:05 +19: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: light: Activity meets the guidelines
+00:05 +20: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: light: the More hub meets the guidelines
+00:05 +21: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: light: the session-first workspace meets the guidelines
+00:05 +22: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: light: manage project meets the guidelines
+00:05 +23: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: light: the More hub meets the guidelines
+00:05 +24: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: light: settings meets the guidelines
+00:06 +25: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: light: servers first run meets the guidelines
+00:06 +26: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: light: the permission sheet meets the guidelines
+00:06 +27: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/accessibility_guidelines_test.dart: light: the form renderer meets the guidelines
+00:06 +28: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/active_context_test.dart
+00:06 +28: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/active_context_test.dart: phone context preview
+00:06 +28 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/active_context_test.dart: context GET uses session identity and authentication, retaining more than 5000 messages
+00:07 +29 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/active_context_test.dart: malformed and duplicate snapshots fail visibly without disabling context
+00:07 +30 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/active_context_test.dart: missing session and auth remain recoverable; missing route is capability failure
+00:07 +31 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/active_context_test.dart: explicit inspector retains instruction text and files without binary bodies or metadata
+00:07 +32 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/active_context_test.dart: tool content preserves all text results and distinguishes pruned and truncated output
+00:07 +33 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/active_context_test.dart: search preview centers a distant literal match without slicing emoji pairs
+00:07 +34 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/active_context_test.dart: search, type filter, full preview and copy act on the selected content
+00:08 +35 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/active_context_test.dart: failed refresh retains labeled snapshot and later refresh recovers
+00:08 +36 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/active_context_test.dart: late context from a previous location never appears
+00:08 +37 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/active_context_test.dart: compact large text with open keyboard stays scrollable to results
+00:08 +38 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/active_context_test.dart: staged revert excludes hidden messages and history invalidation refreshes
+00:08 +39 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/activity_requests_test.dart
+00:09 +39 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/activity_requests_test.dart: custom single answer clears the selected radio and serializes once
+00:10 +40 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/activity_requests_test.dart: choosing a single radio clears custom text and serializes once
+00:10 +41 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/activity_requests_test.dart: multiple choice preserves selected and custom answers
+00:10 +42 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/activity_requests_test.dart: question controls remain reachable with keyboard inset
+00:10 +43 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/activity_screen_test.dart
+00:11 +43 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/activity_screen_test.dart: busy sessions without loaded metadata never show All clear
+00:11 +44 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/activity_screen_test.dart: the inbox renders attention and running, never history
+00:11 +45 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/activity_screen_test.dart: a permission row resolves that permission in place
+00:12 +46 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/activity_screen_test.dart: a question row opens the exact answer sheet
+00:12 +47 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/activity_screen_test.dart: session rows open the exact chat
+00:12 +48 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/activity_screen_test.dart: refresh reconciles the wake transport before querying
+00:12 +49 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/activity_screen_test.dart: an empty inbox reads as success
+00:12 +50 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/activity_screen_test.dart: running sessions omit empty attention bookkeeping
+00:12 +51 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/activity_screen_test.dart: unknown saved-server status never becomes all clear
+00:12 +52 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/activity_screen_test.dart: disconnected empty state stays unknown
+00:12 +53 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/activity_screen_test.dart: requests lead the page and digest explanation is disclosed
+00:12 +54 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/activity_screen_test.dart: failed pending check never shows all clear
+00:12 +55 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/activity_screen_test.dart: unsupported stale forms do not block the current inbox
+00:12 +56 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/activity_screen_test.dart: activity fits a 320dp phone at 2x text
+00:12 +57 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_controller_test.dart
+00:13 +57 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_controller_test.dart: refresh never starts sign-in and reported zero is preserved
+00:13 +58 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_controller_test.dart: independent unavailable usage leaves fresh account and limits
+00:13 +59 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_controller_test.dart: unsupported runtime and API-key auth do not probe subscription metrics
+00:13 +60 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_controller_test.dart: owned completion before start response never restores the code
+00:13 +61 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_controller_test.dart: cancel while starting suppresses the late code until owned receipt settles
+00:13 +62 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_controller_test.dart: failed cancellation stays uncertain and allows only explicit retry
+00:13 +63 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_controller_test.dart: account change clears stale metrics before delayed read completes
+00:13 +64 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_controller_test.dart: account change while waiting clears code and cancels only this session
+00:13 +65 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_controller_test.dart: disconnect invalidates in-flight login and reads with no replay
+00:13 +66 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_controller_test.dart: disposing during login never publishes a late code
+00:13 +67 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart
+00:14 +67 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: (setUpAll)
+00:14 +67 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: explicit sign-in opens reviewed official host and cancel removes code
+00:15 +68 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: rate and usage failures remain independently unavailable
+00:15 +69 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: Servers account entry reaches the panel through its capability
+00:15 +70 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: scope change drops pending code and never binds replacement account
+00:15 +71 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: same-gateway reconnect reads fresh account without replaying sign-in
+00:15 +72 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: browser round trip keeps explicit device attempt and refreshes on resume
+00:15 +73 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: production capture signed-out light
+00:15 +74 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: production capture waiting light
+00:15 +75 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: production capture waiting dark
+00:15 +76 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: production capture waiting large
+00:15 +77 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: production capture usage light
+00:15 +78 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: production capture usage dark
+00:15 +79 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: production capture usage large
+00:16 +80 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: production capture partial light
+00:16 +81 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: production capture uncertain light
+00:16 +82 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: production capture error light
+00:16 +83 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: production capture unsupported light
+00:16 +84 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: production capture disconnected light
+00:16 +85 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: production capture loading light
+00:16 +86 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/agent_account_widget_test.dart: (tearDownAll)
+00:16 +86 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_client_test.dart
+00:16 +86 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_client_test.dart: walks session pages by passing cursors back verbatim
+00:16 +87 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_client_test.dart: walks message pages and parses the union
+00:16 +88 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_client_test.dart: prompt sends v2 wire shape and returns the inbox receipt
+00:16 +89 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_client_test.dart: session mutations hit the v2 endpoints with 204 responses
+00:16 +90 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_client_test.dart: location-scoped reads carry the deep-object location params
+00:16 +91 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_client_test.dart: permission and form replies post the documented bodies
+00:16 +92 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_client_test.dart: fs read returns raw bytes without a JSON envelope
+00:16 +93 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_client_test.dart: active sessions map to their status types
+00:16 +94 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_client_test.dart: surfaces typed errors from tagged envelopes
+00:16 +95 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_events_test.dart
+00:17 +95 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_events_test.dart: replays a captured prompt round-trip into typed events
+00:17 +96 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_events_test.dart: unknown event types fall back to UnknownApi2Event without throwing
+00:17 +97 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_events_test.dart: parses the log.synced boundary marker (bare, no envelope)
+00:17 +98 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_events_test.dart: parses permission, form, status, mcp, and vcs events
+00:17 +99 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_events_test.dart
+00:17 +99 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_events_test.dart: adapts the captured prompt round-trip into v1 envelopes
+00:17 +100 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_events_test.dart: session.status idle maps to the v1 session.idle event
+00:17 +101 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_events_test.dart: execution failure surfaces as session.error
+00:17 +102 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_events_test.dart: permission.asked maps to the v2-shaped v1 envelope
+00:17 +103 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_events_test.dart: tool input deltas append through the v1 delta contract
+00:17 +104 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_events_test.dart: session renames and refresh hints map to their v1 names
+00:17 +105 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart
+00:18 +105 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: capabilities capability truth per the port matrix
+00:18 +106 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: sessions maps the captured session page onto the v1 Session shape
+00:18 +107 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: messages → parts round-trip user message carries text and file attachment parts
+00:18 +108 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: messages → parts round-trip assistant "pong" capture maps reasoning/text/tool content
+00:18 +109 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: messages → parts round-trip single assistant fixture parses tokens and cost
+00:18 +110 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: messages → parts round-trip paginated fixture pages map without loss of order
+00:18 +111 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: messages → parts round-trip shell message maps to a v1 tool part
+00:18 +112 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: messages → parts round-trip failed shell maps to a tool error state
+00:18 +113 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: messages → parts round-trip shell metadata preserves the raw v2 status and shellID
+00:18 +114 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: messages → parts round-trip switch markers become tagged v2:switch parts
+00:18 +115 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: messages → parts round-trip synthetic/system/skill become tagged v2:notice parts
+00:18 +116 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: messages → parts round-trip unknown message variants degrade to a generic notice
+00:18 +117 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: messages → parts round-trip compaction statuses become tagged v2:compaction parts
+00:18 +118 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: messages → parts round-trip live-captured variant fixture maps every v2-only shape
+00:18 +119 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: messages → parts round-trip tool error state carries the structured message
+00:18 +120 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: messages → parts round-trip tool file results surface as v1 output files
+00:18 +121 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: messages → parts round-trip tool content interleaving survives as ordered segments
+00:18 +122 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: messages → parts round-trip streaming tool input maps to the v1 pending preview
+00:18 +123 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: permissions maps the v2 request onto the v1 shape
+00:18 +124 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: permissions reply strings map onto the v2 wire enum
+00:18 +125 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: providers & catalog builds the v1 ProvidersResponse from the captured catalogs
+00:18 +126 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: providers & catalog maps catalog models with variant options
+00:18 +127 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: providers & catalog maps agents from the captured agent list
+00:18 +128 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: files & vcs maps fs entries with trailing-slash directories
+00:18 +129 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: files & vcs maps vcs diff and status rows
+00:18 +130 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: errors & health maps the v2 error hierarchy to ApiException
+00:18 +131 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_gateway_mappers_test.dart: errors & health maps health
+00:18 +132 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_global_pagination_test.dart
+00:19 +132 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_global_pagination_test.dart: global finder requests newest first and preserves cursor after filtering
+00:19 +133 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart
+00:19 +133 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: view receipt posts the observed idle timestamp in the active location
+00:19 +134 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: ordinary v2 prompt command and shell preserve server selection
+00:19 +135 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: staged revert blocks prompt and commands before implicit server commit
+00:19 +136 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: v2 explicit selection writes replace the model ref and creation uses defaults
+00:19 +137 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: FormGateway (v2) lists a session's pending forms from the captured payload
+00:19 +138 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: FormGateway (v2) reads form state and replies through the session-scoped routes
+00:19 +139 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: FormGateway (v2) surfaces 400 FormInvalidAnswerError as a tagged ApiException
+00:19 +140 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: FormGateway (v2) surfaces 409 FormAlreadySettledError with its tag
+00:19 +141 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: InboxGateway (v2) lists pending inbox items from the captured payload
+00:19 +142 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: InboxGateway (v2) steer, queue, and cancel address the item routes
+00:19 +143 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: InboxGateway (v2) surfaces 409 ConflictError when an item was already delivered
+00:19 +144 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: prompt delivery + permission message (v2) promptAsync carries the queue delivery to the wire
+00:19 +145 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: prompt delivery + permission message (v2) promptAsync omits delivery when unspecified (server default steer)
+00:19 +146 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: prompt delivery + permission message (v2) respondPermissionV2 forwards the reject message
+00:19 +147 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: prompt delivery + permission message (v2) respondPermissionV2 omits an absent message
+00:19 +148 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: v1 gateway stays inert capability flags are off
+00:19 +149 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: v1 gateway stays inert form and inbox lists come back empty without any request
+00:19 +150 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: v1 gateway stays inert form and inbox mutations fail with a typed unavailable error
+00:19 +151 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: event adaptation inbox events pass through under their v2 types
+00:19 +152 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: event adaptation non-user inbox items pass through without a message echo
+00:19 +153 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_interaction_gateway_test.dart: event adaptation form events surface as form.v2.* envelopes
+00:19 +154 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_mcp_scope_test.dart
+00:20 +154 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_mcp_scope_test.dart: v2 rejects persistent scope and existing names without PUT
+00:20 +155 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_mcp_scope_test.dart: MCP uniqueness read and add keep the same location across awaits
+00:20 +156 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_models_test.dart
+00:21 +156 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_models_test.dart: parses the captured session list page with cursors
+00:21 +157 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_models_test.dart: parses the captured session create response
+00:21 +158 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_models_test.dart: parses the captured message list into the typed union
+00:21 +159 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_models_test.dart: parses a single captured assistant message
+00:21 +160 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_models_test.dart: parses the captured prompt inbox receipt
+00:21 +161 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_models_test.dart: parses captured model, provider, agent, and catalog listings
+00:21 +162 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_models_test.dart: parses captured location and fs listings
+00:21 +163 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_models_test.dart: unknown message types and enum values never throw
+00:21 +164 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_models_test.dart: parses permission requests and replies use wire names
+00:21 +165 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_models_test.dart: parses forms with the six field types and when conditions
+00:21 +166 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_models_test.dart: parses the captured error envelope shape
+00:21 +167 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_provider_workflows_test.dart
+00:21 +167 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_provider_workflows_test.dart: catalog handles a later failure while the first request waits (false)
+00:21 +168 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_provider_workflows_test.dart: catalog handles a later failure while the first request waits (true)
+00:21 +169 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_provider_workflows_test.dart: OAuth and MCP actions preserve scope and confirm completed code sign-in
+00:21 +170 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_revert_test.dart
+00:22 +170 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_revert_test.dart: reverting a session asks the server to restore the files
+00:22 +171 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_revert_test.dart: reverting does not commit, so it stays undoable
+00:22 +172 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_revert_test.dart: restoring a session clears the staged revert
+00:22 +173 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_revert_test.dart: stage returns its fixed preview and encodes history-only preference
+00:22 +174 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_revert_test.dart: commit and clear use distinct bodyless endpoints
+00:22 +175 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_sse_test.dart
+00:22 +175 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_sse_test.dart: parses bare data frames and keepalive comments
+00:23 +176 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_sse_test.dart: preserves the event: field the v1 consumer discarded
+00:23 +177 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_sse_test.dart: joins multi-line data with newlines per the SSE spec
+00:23 +178 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_sse_test.dart: handles CRLF line endings and chunk boundaries mid-line
+00:23 +179 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_sse_test.dart: dispatches a trailing frame without terminator only on flush
+00:23 +180 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_sse_test.dart: drops oversized frames without corrupting the following ones
+00:23 +181 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_sse_test.dart: event stream delivers typed envelopes and reconnects
+00:24 +182 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_sse_test.dart: session log stream tracks durable seq and surfaces log.synced
+00:25 +183 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_transport_test.dart
+00:25 +183 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_transport_test.dart: normalizes server roots with trailing slashes and /api suffixes
+00:25 +184 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_transport_test.dart: builds Basic auth from the opencode username and password
+00:25 +185 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_transport_test.dart: the transport offers no way to put credentials in a URL
+00:25 +186 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_transport_test.dart: 401 maps to Api2AuthRequired even with an empty body
+00:25 +187 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_transport_test.dart: tagged error envelopes surface tag, status, and extras
+00:25 +188 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_transport_test.dart: 503 boot bodies map to Api2Unavailable
+00:25 +189 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_transport_test.dart: connection refusal maps to Api2NetworkError
+00:25 +190 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/api2_transport_test.dart: health sends Basic auth and parses the payload
+00:25 +191 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/app_diagnostics_screen_test.dart
+00:26 +191 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/app_diagnostics_screen_test.dart: diagnostics are readable at narrow width and sent explicitly
+00:27 +192 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/app_diagnostics_screen_test.dart: diagnostics screen explains an empty process-local report
+00:27 +193 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/app_diagnostics_test.dart
+00:28 +193 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/app_diagnostics_test.dart: diagnostics redact secrets, URLs, and long token-like values
+00:28 +194 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/app_diagnostics_test.dart: diagnostics coalesce bursts and keep a bounded ring
+00:28 +195 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/app_diagnostics_test.dart: error widget hides raw exceptions and records a report
+00:28 +196 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/app_diagnostics_test.dart: bootstrap failure is visible and can be retried
 -------------------------------------------------------------------------------
 The Shorebird Updater is unavailable in the current environment.
 -------------------------------------------------------------------------------
@@ -227,14 +227,14 @@ contain the Shorebird Engine. Most commonly this is due to building with
 `flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
 It can also occur when running on an unsupported platform (e.g. web).
 
-00:29 +197 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/app_iconography_test.dart
-00:30 +197 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/app_iconography_test.dart: RTL mirrors navigation but preserves terminal and branch shapes
-00:30 +198 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/app_iconography_test.dart: brand mark fits its slot and announces one optional label
-00:30 +199 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/app_iconography_test.dart: selected glyph announces its meaning only once
-00:30 +200 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/app_iconography_test.dart: small action glyph retains a labeled full-size button
-00:30 +201 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/app_iconography_test.dart: selected navigation inherits size and color in high contrast
-00:30 +202 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/app_lifecycle_test.dart
-00:31 +202 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/app_lifecycle_test.dart: app lifecycle suspends and resumes the shared transport
+00:29 +197 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/app_iconography_test.dart
+00:30 +197 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/app_iconography_test.dart: RTL mirrors navigation but preserves terminal and branch shapes
+00:30 +198 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/app_iconography_test.dart: brand mark fits its slot and announces one optional label
+00:30 +199 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/app_iconography_test.dart: selected glyph announces its meaning only once
+00:30 +200 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/app_iconography_test.dart: small action glyph retains a labeled full-size button
+00:30 +201 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/app_iconography_test.dart: selected navigation inherits size and color in high contrast
+00:30 +202 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/app_lifecycle_test.dart
+00:31 +202 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/app_lifecycle_test.dart: app lifecycle suspends and resumes the shared transport
 -------------------------------------------------------------------------------
 The Shorebird Updater is unavailable in the current environment.
 -------------------------------------------------------------------------------
@@ -243,7 +243,7 @@ contain the Shorebird Engine. Most commonly this is due to building with
 `flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
 It can also occur when running on an unsupported platform (e.g. web).
 
-00:32 +203 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/app_lifecycle_test.dart: app restores and applies appearance without a restart
+00:32 +203 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/app_lifecycle_test.dart: app restores and applies appearance without a restart
 -------------------------------------------------------------------------------
 The Shorebird Updater is unavailable in the current environment.
 -------------------------------------------------------------------------------
@@ -252,10 +252,10 @@ contain the Shorebird Engine. Most commonly this is due to building with
 `flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
 It can also occur when running on an unsupported platform (e.g. web).
 
-00:32 +204 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/app_lifecycle_test.dart: background suspension keeps Home on its current route
-00:32 +205 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/app_lifecycle_test.dart: opted-in background mode keeps the shared transport active
-00:32 +206 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/app_text_scale_test.dart
-00:33 +206 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/app_text_scale_test.dart: system text scale 3.0 renders app text at the 2.5 ceiling
+00:32 +204 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/app_lifecycle_test.dart: background suspension keeps Home on its current route
+00:32 +205 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/app_lifecycle_test.dart: opted-in background mode keeps the shared transport active
+00:32 +206 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/app_text_scale_test.dart
+00:33 +206 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/app_text_scale_test.dart: system text scale 3.0 renders app text at the 2.5 ceiling
 -------------------------------------------------------------------------------
 The Shorebird Updater is unavailable in the current environment.
 -------------------------------------------------------------------------------
@@ -264,7 +264,7 @@ contain the Shorebird Engine. Most commonly this is due to building with
 `flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
 It can also occur when running on an unsupported platform (e.g. web).
 
-00:34 +207 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/app_text_scale_test.dart: 2.5 system text scale passes through untouched
+00:34 +207 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/app_text_scale_test.dart: 2.5 system text scale passes through untouched
 -------------------------------------------------------------------------------
 The Shorebird Updater is unavailable in the current environment.
 -------------------------------------------------------------------------------
@@ -273,7 +273,7 @@ contain the Shorebird Engine. Most commonly this is due to building with
 `flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
 It can also occur when running on an unsupported platform (e.g. web).
 
-00:34 +208 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/app_text_scale_test.dart: text scale below 1.0 is never raised to the default
+00:34 +208 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/app_text_scale_test.dart: text scale below 1.0 is never raised to the default
 -------------------------------------------------------------------------------
 The Shorebird Updater is unavailable in the current environment.
 -------------------------------------------------------------------------------
@@ -282,7 +282,7 @@ contain the Shorebird Engine. Most commonly this is due to building with
 `flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
 It can also occur when running on an unsupported platform (e.g. web).
 
-00:34 +209 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/app_text_scale_test.dart: moderate system text scale passes through unclamped
+00:34 +209 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/app_text_scale_test.dart: moderate system text scale passes through unclamped
 -------------------------------------------------------------------------------
 The Shorebird Updater is unavailable in the current environment.
 -------------------------------------------------------------------------------
@@ -291,9 +291,9 @@ contain the Shorebird Engine. Most commonly this is due to building with
 `flutter build` or `flutter run` instead of `shorebird release` or `shorebird preview`.
 It can also occur when running on an unsupported platform (e.g. web).
 
-00:34 +210 ~1: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/app_theme_test.dart
-00:35 +210 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/app_theme_test.dart: dark theme keeps the app coherent, legible, and touch friendly
-00:35 +211 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/app_theme_test.dart: light theme keeps the same deliberate contrast and touch targets
-00:35 +212 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/app_theme_test.dart: supporting text remains readable on every default surface tier
-00:35 +213 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/app_theme_test.dart: headlines carry the display face, body stays on the platform face
+00:34 +210 ~1: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/app_theme_test.dart
+00:35 +210 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/app_theme_test.dart: dark theme keeps the app coherent, legible, and touch friendly
+00:35 +211 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/app_theme_test.dart: light theme keeps the same deliberate contrast and touch targets
+00:35 +212 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/app_theme_test.dart: supporting text remains readable on every default surface tier
+00:35 +213 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/app_theme_test.dart: headlines carry the display face, body stays on the platform face
 00:35 +214 ~1: All tests passed!

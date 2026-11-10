@@ -34,7 +34,7 @@ The measurement uses 4x4 blocks; read per 2x2 pixel, the sparse dots of Constell
 
 ## Renders
 
-`/home/eslam/Storage2/launch-footage/progress/glass/` (`LOG.md` lists each pass). `passN-<screen>-<mode>.png` from `tool/capture/surfaces_test.dart` (aurora frozen at 8 s); `passN-<screen>55s-<mode>.png` at 55 s, when ribbons cross the cards. Pass 0 is the starting point, pass 4 is this commit.
+`/home/owner/Storage2/launch-footage/progress/glass/` (`LOG.md` lists each pass). `passN-<screen>-<mode>.png` from `tool/capture/surfaces_test.dart` (aurora frozen at 8 s); `passN-<screen>55s-<mode>.png` at 55 s, when ribbons cross the cards. Pass 0 is the starting point, pass 4 is this commit.
 
 Compared with `glass-inspiration/owner-glass-home.png`, `e-glass/concept.png` and `dryrun-2572/10-home-glass-live.png`:
 

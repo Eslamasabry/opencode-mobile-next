@@ -23,11 +23,11 @@ sandbox-only Robolectric setup issue. Supplementary regressions cover additional
 
 ## Validation
 
-All Gradle invocations run serially under the existing `/home/eslam/Storage/tmp/oc-build.lock`, from `native/`, with:
+All Gradle invocations run serially under the existing `/home/owner/Storage/tmp/oc-build.lock`, from `native/`, with:
 
 ```bash
-JAVA_HOME=/home/eslam/Storage/tools/jdk-21.0.13+9 \
-ANDROID_HOME=/home/eslam/Android/Sdk \
+JAVA_HOME=/home/owner/Storage/tools/jdk-21.0.13+9 \
+ANDROID_HOME=/home/owner/Android/Sdk \
 ./gradlew --no-daemon -Pkotlin.incremental=false --max-workers=2 \
   '-Dorg.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=768m -XX:+UseParallelGC -Dfile.encoding=UTF-8' \
   -I /tmp/notify-robolectric.init.gradle \
@@ -35,7 +35,7 @@ ANDROID_HOME=/home/eslam/Android/Sdk \
 ```
 
 The temporary init script sets **test JVM only** `user.home=/tmp/notify-test-home` and
-`maven.repo.local=/home/eslam/.m2/repository`; Robolectric otherwise attempts to create a download lock in the
+`maven.repo.local=/home/owner/.m2/repository`; Robolectric otherwise attempts to create a download lock in the
 sandbox's read-only home. No repository build settings were changed. Initial setup failures are excluded from the
 six behavioral red results.
 

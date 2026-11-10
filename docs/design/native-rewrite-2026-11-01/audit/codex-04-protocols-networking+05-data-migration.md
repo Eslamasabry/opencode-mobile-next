@@ -4,7 +4,7 @@ Read-only audit against Flutter revision `65e3f70a326aacadf96bb249c9d163c6544f04
 
 1. **BLOCKER — Disabling connection retries does not prevent automatic mutation resends**
 
-   **Where:** [04 §3.2, hardened OkHttp builder](/home/eslam/Storage/Code/wt/native-plan/plan/04-protocols-networking.md:187), §3.5 and P-N5.
+   **Where:** [04 §3.2, hardened OkHttp builder](/home/owner/Storage/Code/wt/native-plan/plan/04-protocols-networking.md:187), §3.5 and P-N5.
 
    **Problem:** `retryOnConnectionFailure(false)` does not establish the promised “never resend a POST” invariant.
 
@@ -14,27 +14,27 @@ Read-only audit against Flutter revision `65e3f70a326aacadf96bb249c9d163c6544f04
 
 2. **BLOCKER — R2 can automatically repeat already executed prompts and schedules**
 
-   **Where:** [05 §9.4, restore pre-update data](/home/eslam/Storage/Code/wt/native-plan/plan/05-data-migration.md:1034), §7.9 H2; [04 §13.4, queue flushing](/home/eslam/Storage/Code/wt/native-plan/plan/04-protocols-networking.md:1480).
+   **Where:** [05 §9.4, restore pre-update data](/home/owner/Storage/Code/wt/native-plan/plan/05-data-migration.md:1034), §7.9 H2; [04 §13.4, queue flushing](/home/owner/Storage/Code/wt/native-plan/plan/04-protocols-networking.md:1480).
 
    **Problem:** Restoring the S0 preferences also restores old dispatch state. External server actions cannot be rolled back with those preferences.
 
-   **Evidence:** A prompt can be unsent in S0, accepted after migration, and then restored as unsent by R2. Reconnection will flush it again. Schedule occurrence claims also live in the restored file: [ScheduledPromptClaims.kt](/home/eslam/Storage/Code/wt/oc_app-batch1/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/ScheduledPromptClaims.kt:7) uses them to distinguish new occurrences from duplicates. Restoring both an old schedule index and old claims can recreate a previously executed occurrence.
+   **Evidence:** A prompt can be unsent in S0, accepted after migration, and then restored as unsent by R2. Reconnection will flush it again. Schedule occurrence claims also live in the restored file: [ScheduledPromptClaims.kt](/home/owner/Storage/Code/wt/oc_app-batch1/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/ScheduledPromptClaims.kt:7) uses them to distinguish new occurrences from duplicates. Restoring both an old schedule index and old claims can recreate a previously executed occurrence.
 
    **Concrete fix:** Preserve dispatch identities and occurrence tombstones outside the restorable snapshot. After R2, hold restored outbound work for reconciliation or explicit review; do not automatically flush queues or re-arm executable schedules. Add “send/fire successfully → restore → reconnect/reboot” journeys.
 
 3. **BLOCKER — The published interfaces cannot compile under ADR §6.1**
 
-   **Where:** [04 §11.2, `GatewayEvents`](/home/eslam/Storage/Code/wt/native-plan/plan/04-protocols-networking.md:1244); [05 §7.3, migration interfaces](/home/eslam/Storage/Code/wt/native-plan/plan/05-data-migration.md:562).
+   **Where:** [04 §11.2, `GatewayEvents`](/home/owner/Storage/Code/wt/native-plan/plan/04-protocols-networking.md:1244); [05 §7.3, migration interfaces](/home/owner/Storage/Code/wt/native-plan/plan/05-data-migration.md:562).
 
    **Problem:** Required types cross explicitly forbidden dependencies.
 
-   **Evidence:** `GatewayEvents`, in `:core:domain`, exposes `StreamStatus`, defined in `:core:net`. The [ADR dependency table](/home/eslam/Storage/Code/wt/native-plan/plan/01-architecture-decision.md:298) forbids domain → net. Likewise, the gate screen directly consumes `MigrationActions` from `:core:data`, while shell → data is forbidden. Section 04 also places `OkHttpWebSockets.connect` below the module containing `WsSpec`, without defining a project-independent lower-level signature.
+   **Evidence:** `GatewayEvents`, in `:core:domain`, exposes `StreamStatus`, defined in `:core:net`. The [ADR dependency table](/home/owner/Storage/Code/wt/native-plan/plan/01-architecture-decision.md:298) forbids domain → net. Likewise, the gate screen directly consumes `MigrationActions` from `:core:data`, while shell → data is forbidden. Section 04 also places `OkHttpWebSockets.connect` below the module containing `WsSpec`, without defining a project-independent lower-level signature.
 
    **Concrete fix:** Move shared status values to an allowed lower module, expose migration presentation through an allowed engine API, and specify the primitive/external-library WebSocket boundary plus its adapter. Freeze signatures that compile against the actual dependency rules before feature work starts.
 
 4. **MAJOR — The Flutter rollback guard can admit incompatible storage**
 
-   **Where:** [05 §7.11, `breaksFlutterReadability`](/home/eslam/Storage/Code/wt/native-plan/plan/05-data-migration.md:901), §6.4, and [§9.3, R1 guard](/home/eslam/Storage/Code/wt/native-plan/plan/05-data-migration.md:1006).
+   **Where:** [05 §7.11, `breaksFlutterReadability`](/home/owner/Storage/Code/wt/native-plan/plan/05-data-migration.md:901), §6.4, and [§9.3, R1 guard](/home/owner/Storage/Code/wt/native-plan/plan/05-data-migration.md:1006).
 
    **Problem:** Native and Flutter consult different compatibility flags, and incompatibility is recorded too late.
 
@@ -44,7 +44,7 @@ Read-only audit against Flutter revision `65e3f70a326aacadf96bb249c9d163c6544f04
 
 5. **MAJOR — Backup publication and restore are not interruption-safe transactions**
 
-   **Where:** [05 S0 steps 6–7](/home/eslam/Storage/Code/wt/native-plan/plan/05-data-migration.md:613), [§8.1 Start fresh](/home/eslam/Storage/Code/wt/native-plan/plan/05-data-migration.md:936), and §9.4.
+   **Where:** [05 S0 steps 6–7](/home/owner/Storage/Code/wt/native-plan/plan/05-data-migration.md:613), [§8.1 Start fresh](/home/owner/Storage/Code/wt/native-plan/plan/05-data-migration.md:936), and §9.4.
 
    **Problem:** Several filesystem transitions have no defined restart behavior.
 
@@ -54,7 +54,7 @@ Read-only audit against Flutter revision `65e3f70a326aacadf96bb249c9d163c6544f04
 
 6. **MAJOR — R2 has no coherent behavior after Room becomes authoritative**
 
-   **Where:** [05 §6.4](/home/eslam/Storage/Code/wt/native-plan/plan/05-data-migration.md:490), §9.4 and §9.5.
+   **Where:** [05 §6.4](/home/owner/Storage/Code/wt/native-plan/plan/05-data-migration.md:490), §9.4 and §9.5.
 
    **Problem:** R2 remains available while the S0 backup exists, including after v2, but restores only preferences and secrets.
 
@@ -64,17 +64,17 @@ Read-only audit against Flutter revision `65e3f70a326aacadf96bb249c9d163c6544f04
 
 7. **MAJOR — R1 does not preserve credential changes or deletions correctly**
 
-   **Where:** [05 §9.3, R1 behavior and return](/home/eslam/Storage/Code/wt/native-plan/plan/05-data-migration.md:1022), M-D8.
+   **Where:** [05 §9.3, R1 behavior and return](/home/owner/Storage/Code/wt/native-plan/plan/05-data-migration.md:1022), M-D8.
 
    **Problem:** The described “Enter password” behavior is incorrect, and return reconciliation misses deletions.
 
-   **Evidence:** A password changed in native leaves the old FSS value intact. Flutter [loads that old value directly](/home/eslam/Storage/Code/wt/oc_app-batch1/lib/state/profiles.dart:325); it does not know that native changed or cleared it. A native sign-out can therefore reactivate an old credential during rollback. Conversely, `R1.return` enumerates existing FSS entries, so a secret deleted in Flutter cannot delete its native counterpart. Comparing against S0 also cannot reliably distinguish changes from successive rollback periods.
+   **Evidence:** A password changed in native leaves the old FSS value intact. Flutter [loads that old value directly](/home/owner/Storage/Code/wt/oc_app-batch1/lib/state/profiles.dart:325); it does not know that native changed or cleared it. A native sign-out can therefore reactivate an old credential during rollback. Conversely, `R1.return` enumerates existing FSS entries, so a secret deleted in Flutter cannot delete its native counterpart. Comparing against S0 also cannot reliably distinguish changes from successive rollback periods.
 
    **Concrete fix:** Record credential revisions and deletion tombstones across transitions. Have the rollback guard invalidate stale legacy entries before normal bootstrap, and reconcile both updates and deletions against a per-transition baseline. Extend J4 with native edits, sign-out, Flutter deletion, and two rollback cycles.
 
 8. **MAJOR — CAS is not specified as atomic against ordinary commits**
 
-   **Where:** [05 §2.2, `FlutterPrefsStore`](/home/eslam/Storage/Code/wt/native-plan/plan/05-data-migration.md:138).
+   **Where:** [05 §2.2, `FlutterPrefsStore`](/home/owner/Storage/Code/wt/native-plan/plan/05-data-migration.md:138).
 
    **Problem:** The file lock is specified for `compareAndSet`, while ordinary commits and their compensating writes have no equivalent exclusion requirement.
 
@@ -84,7 +84,7 @@ Read-only audit against Flutter revision `65e3f70a326aacadf96bb249c9d163c6544f04
 
 9. **MAJOR — The migration gate’s 20-second broadcast wait can cause ANRs**
 
-   **Where:** [05 §7.1, component waiting and follow-up worker](/home/eslam/Storage/Code/wt/native-plan/plan/05-data-migration.md:525).
+   **Where:** [05 §7.1, component waiting and follow-up worker](/home/owner/Storage/Code/wt/native-plan/plan/05-data-migration.md:525).
 
    **Problem:** Twenty seconds is not a safe common budget for receivers, workers, services, and tiles.
 
@@ -94,7 +94,7 @@ Read-only audit against Flutter revision `65e3f70a326aacadf96bb249c9d163c6544f04
 
 10. **MAJOR — SSE buffering permits phone-scale out-of-memory failures**
 
-    **Where:** [04 §6.6, backpressure](/home/eslam/Storage/Code/wt/native-plan/plan/04-protocols-networking.md:822), §6.1.
+    **Where:** [04 §6.6, backpressure](/home/owner/Storage/Code/wt/native-plan/plan/04-protocols-networking.md:822), §6.1.
 
     **Problem:** A message-count bound is ineffective with 16 MiB frames.
 
@@ -104,17 +104,17 @@ Read-only audit against Flutter revision `65e3f70a326aacadf96bb249c9d163c6544f04
 
 11. **MAJOR — Migration explicitly discards an existing photo-recovery source**
 
-    **Where:** [05 M1 “Strays”](/home/eslam/Storage/Code/wt/native-plan/plan/05-data-migration.md:634), Appendix D.
+    **Where:** [05 M1 “Strays”](/home/owner/Storage/Code/wt/native-plan/plan/05-data-migration.md:634), Appendix D.
 
     **Problem:** `flutter_image_picker_shared_preference` is ignored and later deleted even though it can hold the only recovered photo path.
 
-    **Evidence:** Flutter’s [bootstrap recovery](/home/eslam/Storage/Code/wt/oc_app-batch1/lib/state/prompt_photos.dart:304) calls `retrieveLostData()` when the app-owned pending record has no completed attachment. The plugin stores result paths in `ImagePickerCache`, independently of `oc.pendingPromptPhoto.path`. Keeping the cache directory does not recover that association.
+    **Evidence:** Flutter’s [bootstrap recovery](/home/owner/Storage/Code/wt/oc_app-batch1/lib/state/prompt_photos.dart:304) calls `retrieveLostData()` when the app-owned pending record has no completed attachment. The plugin stores result paths in `ImagePickerCache`, independently of `oc.pendingPromptPhoto.path`. Keeping the cache directory does not recover that association.
 
     **Concrete fix:** Import the legacy picker result into the existing pending-photo record, verify its original conversation scope, and persist the recovered attachment before consuming the plugin cache. Add an upgrade fixture killed after the picker result is cached but before Dart receives it.
 
 12. **MAJOR — Pulling Room into the switch release does not resolve the triggering performance failure**
 
-    **Where:** [05 §6.4, retained source keys](/home/eslam/Storage/Code/wt/native-plan/plan/05-data-migration.md:490); ADR §9.8.
+    **Where:** [05 §6.4, retained source keys](/home/owner/Storage/Code/wt/native-plan/plan/05-data-migration.md:490); ADR §9.8.
 
     **Problem:** The default response to an oversized-preferences startup failure leaves the oversized preferences intact.
 
@@ -124,17 +124,17 @@ Read-only audit against Flutter revision `65e3f70a326aacadf96bb249c9d163c6544f04
 
 13. **MAJOR — The shared downloader omits existing redirect behavior**
 
-    **Where:** [04 §3.10, resumable downloads](/home/eslam/Storage/Code/wt/native-plan/plan/04-protocols-networking.md:419), §3.5 and §14.3.
+    **Where:** [04 §3.10, resumable downloads](/home/owner/Storage/Code/wt/native-plan/plan/04-protocols-networking.md:419), §3.5 and §14.3.
 
     **Problem:** The specified downloader has no path through HTTPS download redirects, while the transport treats redirects as failures.
 
-    **Evidence:** Current voice URLs use Hugging Face `/resolve/…` endpoints, and [the existing downloader explicitly follows up to five HTTPS redirects](/home/eslam/Storage/Code/wt/oc_app-batch1/lib/voice/model_download.dart:230). This behavior is absent from the replacement contract. The current reader also validates the exact resumed `Content-Range`; “206 appends” alone loses that check.
+    **Evidence:** Current voice URLs use Hugging Face `/resolve/…` endpoints, and [the existing downloader explicitly follows up to five HTTPS redirects](/home/owner/Storage/Code/wt/oc_app-batch1/lib/voice/model_download.dart:230). This behavior is absent from the replacement contract. The current reader also validates the exact resumed `Content-Range`; “206 appends” alone loses that check.
 
     **Concrete fix:** Specify bounded manual HTTPS redirects for credential-free artifact downloads, with a permit for each destination, while retaining disabled automatic redirects. Preserve exact range/length validation and final digest verification.
 
 14. **MAJOR — The fixture recipe can target the owner’s connected phone**
 
-    **Where:** [05 §10.4, emulator fixture commands](/home/eslam/Storage/Code/wt/native-plan/plan/05-data-migration.md:1137).
+    **Where:** [05 §10.4, emulator fixture commands](/home/owner/Storage/Code/wt/native-plan/plan/05-data-migration.md:1137).
 
     **Problem:** Mutating `adb` commands are not bound to an emulator serial.
 
@@ -144,7 +144,7 @@ Read-only audit against Flutter revision `65e3f70a326aacadf96bb249c9d163c6544f04
 
 15. **MINOR — WebSocket handshake timeout is declared but not applied**
 
-    **Where:** [04 §5.2, `WsSpec` and connector algorithm](/home/eslam/Storage/Code/wt/native-plan/plan/04-protocols-networking.md:594).
+    **Where:** [04 §5.2, `WsSpec` and connector algorithm](/home/owner/Storage/Code/wt/native-plan/plan/04-protocols-networking.md:594).
 
     **Problem:** `handshakeTimeoutMs` has no specified enforcement.
 

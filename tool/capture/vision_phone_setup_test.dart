@@ -8,7 +8,7 @@
 //   flutter test --concurrency=1 --dart-define=VISION_OUT=<dir> \
 //     tool/capture/vision_phone_setup_test.dart
 //
-// Output: /home/eslam/vision-assets/out/vision-phone-setup/<scene>.png
+// Output: /home/owner/vision-assets/out/vision-phone-setup/<scene>.png
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -29,7 +29,7 @@ import 'fixtures.dart' show capturePng, writePng;
 
 const _out = String.fromEnvironment(
   'VISION_OUT',
-  defaultValue: '/home/eslam/vision-assets/out/vision-phone-setup',
+  defaultValue: '/home/owner/vision-assets/out/vision-phone-setup',
 );
 
 enum _Job {

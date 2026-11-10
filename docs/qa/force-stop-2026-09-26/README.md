@@ -52,7 +52,7 @@ None. No emulator, no phone (not allowed for this slice).
 | 2 | Same file with the recovery's restart disabled (`if (false) await _restart(`) | The restart tests fail | `Expected: ['start server', 'start aiteam'] Actual: []` (`fails-without-restart.txt`) | PASS (fails without the change) |
 | 3 | Affected tests: builtin_linux, builtin_server(_autostart, _screen), builtin_team, design_standard, l10n_coverage, search_index, settings_hub, ui_glossary, accessibility_guidelines, app_lifecycle, app_text_scale, home_navigation, first_run_landing, release_blockers, server_profile_reentry, product_ui_regression, server_switcher; goldens settings, work_tab, work_parts, team_discover, phone_server_screens | Pass | All pass except `l10n_coverage_test` "no file gained hardcoded UI strings": `lib/ui/widgets/team_now.dart` (not touched here, fails on the base too). `team_discover_settings_{dark,light}.png` updated deliberately: the new row in "This app". | PASS (one unrelated failure) |
 | 4 | `flutter analyze lib test` | Clean | No issues | PASS |
-| 5 | `flutter build apk --release --target-platform android-arm64` under `/home/eslam/Storage/tmp/oc-build.lock` | Kotlin and Dart compile | Dart AOT and `compileReleaseKotlin` done (`build/app/intermediates/built_in_kotlinc/release/compileReleaseKotlin/classes/…/AppLifecycle.class` written); the build then stops at `validateSigningRelease` (no `android/key.properties` here), as AGENTS.md expects | PASS (compiles; not signed) |
+| 5 | `flutter build apk --release --target-platform android-arm64` under `/home/owner/Storage/tmp/oc-build.lock` | Kotlin and Dart compile | Dart AOT and `compileReleaseKotlin` done (`build/app/intermediates/built_in_kotlinc/release/compileReleaseKotlin/classes/…/AppLifecycle.class` written); the build then stops at `validateSigningRelease` (no `android/key.properties` here), as AGENTS.md expects | PASS (compiles; not signed) |
 
 ## Evidence
 
@@ -74,7 +74,7 @@ F=~/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/fl
 $F pub get
 $F test test/app_exit_recovery_test.dart
 $F test --concurrency=1 tool/capture/force_stop_test.dart   # renders
-flock /home/eslam/Storage/tmp/oc-build.lock $F build apk --release --target-platform android-arm64
+flock /home/owner/Storage/tmp/oc-build.lock $F build apk --release --target-platform android-arm64
 ```
 
 On-device steps for the coordinator (a Nubia/RedMagic, the in-app OpenCode set up,

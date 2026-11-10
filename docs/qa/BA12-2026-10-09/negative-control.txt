@@ -1,4 +1,4 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart
 00:00 +0: fresh agent snapshot restores busy after cached idle
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following TestFailure was thrown running a test:
@@ -7,11 +7,11 @@ Expected: contains 'claude-live'
    Which: does not contain 'claude-live'
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:160:7)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:160:7)
 <asynchronous suspension>
-#5      _withWorld (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:128:5)
+#5      _withWorld (file:///home/owner/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:128:5)
 <asynchronous suspension>
-#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:155:5)
+#6      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:155:5)
 <asynchronous suspension>
 #7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -21,7 +21,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart line 160
+  file:///home/owner/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart line 160
 The test description was:
   fresh agent snapshot restores busy after cached idle
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -37,11 +37,11 @@ Expected: contains 'claude-live'
    Which: does not contain 'claude-live'
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:171:9)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:171:9)
 <asynchronous suspension>
-#5      _withWorld (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:128:5)
+#5      _withWorld (file:///home/owner/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:128:5)
 <asynchronous suspension>
-#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:167:7)
+#6      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:167:7)
 <asynchronous suspension>
 #7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -51,7 +51,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart line 171
+  file:///home/owner/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart line 171
 The test description was:
   hydrating a running agent publishes status without a turn event
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -67,11 +67,11 @@ Expected: contains 'claude-live'
    Which: does not contain 'claude-live'
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:192:11)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:192:11)
 <asynchronous suspension>
-#5      _withWorld (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:128:5)
+#5      _withWorld (file:///home/owner/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:128:5)
 <asynchronous suspension>
-#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:180:9)
+#6      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:180:9)
 <asynchronous suspension>
 #7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -81,7 +81,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart line 192
+  file:///home/owner/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart line 192
 The test description was:
   drop mid-reply then reconnect running restores chat and composer
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -97,11 +97,11 @@ Expected: contains 'claude-live'
    Which: does not contain 'claude-live'
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:192:11)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:192:11)
 <asynchronous suspension>
-#5      _withWorld (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:128:5)
+#5      _withWorld (file:///home/owner/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:128:5)
 <asynchronous suspension>
-#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:180:9)
+#6      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:180:9)
 <asynchronous suspension>
 #7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -111,7 +111,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart line 192
+  file:///home/owner/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart line 192
 The test description was:
   drop mid-reply then reconnect idle restores chat and composer
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -127,11 +127,11 @@ Expected: contains 'streamed-answer'
    Which: does not contain 'streamed-answer'
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:283:9)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:283:9)
 <asynchronous suspension>
-#5      _withWorld (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:128:5)
+#5      _withWorld (file:///home/owner/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:128:5)
 <asynchronous suspension>
-#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:261:7)
+#6      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:261:7)
 <asynchronous suspension>
 #7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -141,7 +141,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart line 283
+  file:///home/owner/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart line 283
 The test description was:
   idle snapshot completes a streamed reply without a terminal event
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -156,11 +156,11 @@ Expected: <true>
   Actual: <false>
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:301:11)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:301:11)
 <asynchronous suspension>
-#5      _withWorld (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:128:5)
+#5      _withWorld (file:///home/owner/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:128:5)
 <asynchronous suspension>
-#6      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:294:7)
+#6      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart:294:7)
 <asynchronous suspension>
 #7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -170,7 +170,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart line 301
+  file:///home/owner/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart line 301
 The test description was:
   subagent running and completed events reach controller busy state
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -181,8 +181,8 @@ The test description was:
 00:01 +0 -6: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: drop mid-reply then reconnect idle restores chat and composer
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: drop mid-reply then reconnect running restores chat and composer
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: fresh agent snapshot restores busy after cached idle
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: hydrating a running agent publishes status without a turn event
+  /home/owner/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: drop mid-reply then reconnect idle restores chat and composer
+  /home/owner/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: drop mid-reply then reconnect running restores chat and composer
+  /home/owner/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: fresh agent snapshot restores busy after cached idle
+  /home/owner/Storage/Code/oc_app-sol-ba/test/paseo_reconnect_state_test.dart: hydrating a running agent publishes status without a turn event
   ... and 2 more

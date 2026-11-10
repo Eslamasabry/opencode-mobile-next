@@ -1,120 +1,120 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_controller_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_controller_test.dart: selected model pack and language persist across manager instances
-00:00 +1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_controller_test.dart: cancel kills active recognition and stale result cannot become a draft
-00:00 +2: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_controller_test.dart: audio interruption cancels listening and discards captured audio
-00:00 +3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_controller_test.dart: recognizer cancellation during startup returns to idle without an error
-00:00 +4: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_controller_test.dart: unexpected recorder stream completion leaves listening with a recovery error
-00:00 +5: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_controller_test.dart: a canceled recorder stream cannot reset a newer listening generation
-00:00 +6: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_controller_test.dart: simultaneous starts and cancellation during startup are guarded
-00:00 +7: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_controller_test.dart: recorder state stream errors terminate an active recording
-00:00 +8: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_controller_test.dart: device preflight disables High accuracy but keeps Balanced available
-00:00 +9: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_controller_test.dart: draft merge preserves existing text around the current selection
-00:00 +10: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_downloader_test.dart
-00:01 +10: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_downloader_test.dart: valid download is checksum verified before atomic install marker
-00:01 +11: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_downloader_test.dart: safe partial response resumes only with matching Content-Range
-00:01 +12: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_downloader_test.dart: corrupt payload and cancellation never create an install marker
-00:01 +13: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_downloader_test.dart: real filesystem install verifies streamed SHA-256 exactly
-00:01 +14: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_downloader_test.dart: cancellation aborts a stalled response body promptly
-00:01 +15: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_downloader_test.dart: cancellation aborts a stalled native TLS handshake promptly
-00:01 +16: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_downloader_test.dart: stalled response body fails on the idle timeout
-00:01 +17: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_downloader_test.dart: failed atomic re-download retains the verified old model
-00:01 +18: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_downloader_test.dart: publication failure rolls back every verified old file
-00:01 +19: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_downloader_test.dart: same-pack installs are serialized across downloader instances
-00:01 +20: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_downloader_test.dart: delete waits for an in-flight install and removes every owned path
-00:01 +21: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_downloader_test.dart: cleanup failure releases the pack lock for a later operation
-00:01 +22: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_downloader_test.dart: response body sink and progress callback failures complete the download
-00:01 +23: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_downloader_test.dart: cancellation during finalization cleans a truncated partial
-00:01 +24: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_model_manager_test.dart
-00:01 +24: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_model_manager_test.dart: deletion invalidates an in-flight initialize readiness result
-00:01 +25: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_model_manager_test.dart: a new selection invalidates old initialize verification
-00:01 +26: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_model_manager_test.dart: initialize cannot publish readiness from a superseded download
-00:01 +27: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_model_manager_test.dart: dispose during device preflight prevents download work
-00:01 +28: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_model_manager_test.dart: superseded initialize does not publish its probed device info
-00:01 +29: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_model_manager_test.dart: cancel during device preflight prevents work and stale device info
-00:01 +30: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_model_manifest_test.dart
-00:02 +30: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_model_manifest_test.dart: voice dependencies and Android permission are pinned
-00:02 +31: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_model_manifest_test.dart: all immutable model values and totals are exact
-00:02 +32: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_model_manifest_test.dart: voice runtime and model notices are complete and bundled
-00:02 +33: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_platform_support_test.dart
-00:03 +33: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_platform_support_test.dart: on a platform with no voice capture the device probe reports capture unsupported, not a microphone
-00:03 +34: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_platform_support_test.dart: on a platform with no voice capture microphone permission is refused, never silently granted
-00:03 +35: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_platform_support_test.dart: on a platform with no voice capture opening app settings is a no-op rather than a throw
-00:03 +36: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_platform_support_test.dart: on Android the device probe uses the channel
-00:03 +37: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_platform_support_test.dart: on Android a granted permission still comes back granted
-00:03 +38: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_platform_support_test.dart: on Android a missing handler leaves the probe merely unknown
-00:03 +39: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_recognizer_config_test.dart
-00:03 +39: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_recognizer_config_test.dart: Whisper worker config maps local paths, language, task, and CPU policy
-00:03 +40: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_recognizer_config_test.dart: auto language maps to sherpa Whisper auto detection
-00:03 +41: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart
-00:04 +41: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: conversation is default off across Exit and re-entry
-00:06 +42: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: late reply stays silent after Stop
-00:07 +43: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: late reply stays silent after background
-00:07 +44: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: late reply stays silent after scope
-00:08 +45: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: late reply stays silent after disconnect
-00:08 +46: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: late reply stays silent after approval
-00:08 +47: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: one foreign identical echo completes with our echo delayed and never speaks
-00:09 +48: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: one foreign identical echo completes with our echo absent and never speaks
-00:09 +49: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: transport without dispatched message IDs keeps replies manual
-00:10 +50: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: intervening user keeps playback manual
-00:10 +51: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: duplicate echo keeps playback manual
-00:10 +52: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: missing parent keeps playback manual
-00:10 +53: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: mixed reply parents keeps playback manual
-00:11 +54: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: native failure leaves text and explicit retry without resending
-00:11 +55: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: completed playback and duplicate reconnect events never replay
-00:11 +56: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: Stop during pending dispatch is not rearmed by acceptance
-00:12 +57: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: fast reply waits for dispatch acceptance before speech
-00:12 +58: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: capture production voice states dark
-00:12 +58 ~1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: capture production voice states light
-00:12 +58 ~2: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: capture production voice states large
-00:12 +58 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: the reply to the sent turn is spoken once after it completes; Stop only stops
-00:12 +59 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: a reply that cannot be matched to the sent turn is offered, not spoken
-00:13 +60 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: Exit revokes the opt-in and a pending reply is never spoken after it
-00:13 +61 ~3: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/web_search_test.dart
-00:14 +61 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/web_search_test.dart: explicit search uses scoped Basic transport and no history mutation or cursor
-00:14 +62 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/web_search_test.dart: provider rejects another response location
-00:14 +63 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/web_search_test.dart: search rejects another response location
-00:14 +64 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/web_search_test.dart: 503 discards remote error copy and marks search unavailable
-00:14 +65 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/web_search_test.dart: malformed provider catalog and wrong provider response fail closed
-00:14 +66 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/web_search_test.dart: empty and excessive queries never reach the server
-00:14 +67 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/web_search_test.dart: a server without search keeps manual source entry available
-00:15 +68 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/web_search_test.dart: search review returns to the real editable composer without sending
-00:16 +69 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/web_search_test.dart: switching account before confirmation blocks the reviewed context
-00:16 +70 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/web_search_test.dart: discovery never searches; results require review and explicit confirmation
-00:16 +71 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/web_search_test.dart: source staging exposes immutable snapshots and rejects unsafe overflow
-00:16 +72 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/web_search_test.dart: multiple providers require choice; refresh never submits a query
-00:16 +73 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/web_search_test.dart: scope switch discards pending search results and local review
-00:16 +74 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/web_search_test.dart: provider invalidation supersedes an in-flight search without another query
-00:16 +75 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/web_search_test.dart: websearch.updated becomes a payload-free domain freshness event
-00:16 +76 ~3: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/widget_snapshot_test.dart
-00:17 +76 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/widget_snapshot_test.dart: writes at most four sessions with busy flags and title fallback
-00:17 +77 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/widget_snapshot_test.dart: unchanged payloads neither rewrite nor redraw
-00:17 +78 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/widget_snapshot_test.dart: non-Android platforms write nothing
-00:17 +79 ~3: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/workspace_hierarchy_test.dart
-00:18 +79 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/workspace_hierarchy_test.dart: empty Workspace has one New session action that opens a session
-00:18 +80 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/workspace_hierarchy_test.dart: a two-line session name remains readable and opens that session
-00:19 +81 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/workspace_hierarchy_test.dart: an unlisted selected folder is not labelled as another project
-00:19 +82 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/workspace_hierarchy_test.dart: project path is compact and its complete value can be inspected
-00:19 +83 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/workspace_hierarchy_test.dart: 320px, 1.0x text, light: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
-00:19 +84 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/workspace_hierarchy_test.dart: 320px, 1.0x text, dark: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
-00:19 +85 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/workspace_hierarchy_test.dart: 320px, 2.0x text, light: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
-00:19 +86 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/workspace_hierarchy_test.dart: 320px, 2.0x text, dark: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
-00:19 +87 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/workspace_hierarchy_test.dart: 390px, 1.0x text, light: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
-00:19 +88 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/workspace_hierarchy_test.dart: 390px, 1.0x text, dark: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
-00:20 +89 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/workspace_hierarchy_test.dart: 390px, 2.0x text, light: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
-00:20 +90 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/workspace_hierarchy_test.dart: 390px, 2.0x text, dark: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
-00:20 +91 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/workspace_hierarchy_test.dart: one session with every blocker shows permission, then question, then form as each is answered
-00:20 +92 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/workspace_hierarchy_test.dart: answering the request returns a pinned session to Pinned in pin order and a busy one to Active
-00:20 +93 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/workspace_hierarchy_test.dart: the section menu reloads sessions and omits Terminal when the server has none
-00:20 +94 ~3: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/workspace_paths_test.dart
-00:21 +94 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/workspace_paths_test.dart: isProtectedWorkspaceDirectory rejects roots, home folders and the server default
-00:21 +95 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/workspace_paths_test.dart: isProtectedWorkspaceDirectory accepts project folders, including ones inside a home
-00:21 +96 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/workspace_paths_test.dart: workspaceDirectoryProblem explains empty, relative and protected paths
-00:21 +97 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/workspace_paths_test.dart: workspaceDirectoryProblem accepts real folders
-00:21 +98 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/workspace_paths_test.dart: projectFolderNameProblem accepts one safe segment
-00:21 +99 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/workspace_paths_test.dart: projectFolderNameProblem rejects paths, hidden names and odd characters
-00:21 +100 ~3: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/worktrees_screen_test.dart
-00:22 +100 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/worktrees_screen_test.dart: compact worktree creation grows into global ready state
-00:23 +101 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/worktrees_screen_test.dart: a failing worktree action reports product copy, not the raw exception
-00:23 +102 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/worktrees_screen_test.dart: reset explains and confirms every destructive file class
-00:24 +103 ~3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/worktrees_screen_test.dart: removing the current worktree switches to primary first
+00:00 +0: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_controller_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_controller_test.dart: selected model pack and language persist across manager instances
+00:00 +1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_controller_test.dart: cancel kills active recognition and stale result cannot become a draft
+00:00 +2: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_controller_test.dart: audio interruption cancels listening and discards captured audio
+00:00 +3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_controller_test.dart: recognizer cancellation during startup returns to idle without an error
+00:00 +4: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_controller_test.dart: unexpected recorder stream completion leaves listening with a recovery error
+00:00 +5: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_controller_test.dart: a canceled recorder stream cannot reset a newer listening generation
+00:00 +6: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_controller_test.dart: simultaneous starts and cancellation during startup are guarded
+00:00 +7: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_controller_test.dart: recorder state stream errors terminate an active recording
+00:00 +8: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_controller_test.dart: device preflight disables High accuracy but keeps Balanced available
+00:00 +9: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_controller_test.dart: draft merge preserves existing text around the current selection
+00:00 +10: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_downloader_test.dart
+00:01 +10: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_downloader_test.dart: valid download is checksum verified before atomic install marker
+00:01 +11: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_downloader_test.dart: safe partial response resumes only with matching Content-Range
+00:01 +12: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_downloader_test.dart: corrupt payload and cancellation never create an install marker
+00:01 +13: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_downloader_test.dart: real filesystem install verifies streamed SHA-256 exactly
+00:01 +14: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_downloader_test.dart: cancellation aborts a stalled response body promptly
+00:01 +15: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_downloader_test.dart: cancellation aborts a stalled native TLS handshake promptly
+00:01 +16: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_downloader_test.dart: stalled response body fails on the idle timeout
+00:01 +17: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_downloader_test.dart: failed atomic re-download retains the verified old model
+00:01 +18: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_downloader_test.dart: publication failure rolls back every verified old file
+00:01 +19: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_downloader_test.dart: same-pack installs are serialized across downloader instances
+00:01 +20: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_downloader_test.dart: delete waits for an in-flight install and removes every owned path
+00:01 +21: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_downloader_test.dart: cleanup failure releases the pack lock for a later operation
+00:01 +22: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_downloader_test.dart: response body sink and progress callback failures complete the download
+00:01 +23: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_downloader_test.dart: cancellation during finalization cleans a truncated partial
+00:01 +24: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_model_manager_test.dart
+00:01 +24: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_model_manager_test.dart: deletion invalidates an in-flight initialize readiness result
+00:01 +25: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_model_manager_test.dart: a new selection invalidates old initialize verification
+00:01 +26: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_model_manager_test.dart: initialize cannot publish readiness from a superseded download
+00:01 +27: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_model_manager_test.dart: dispose during device preflight prevents download work
+00:01 +28: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_model_manager_test.dart: superseded initialize does not publish its probed device info
+00:01 +29: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_model_manager_test.dart: cancel during device preflight prevents work and stale device info
+00:01 +30: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_model_manifest_test.dart
+00:02 +30: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_model_manifest_test.dart: voice dependencies and Android permission are pinned
+00:02 +31: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_model_manifest_test.dart: all immutable model values and totals are exact
+00:02 +32: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_model_manifest_test.dart: voice runtime and model notices are complete and bundled
+00:02 +33: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_platform_support_test.dart
+00:03 +33: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_platform_support_test.dart: on a platform with no voice capture the device probe reports capture unsupported, not a microphone
+00:03 +34: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_platform_support_test.dart: on a platform with no voice capture microphone permission is refused, never silently granted
+00:03 +35: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_platform_support_test.dart: on a platform with no voice capture opening app settings is a no-op rather than a throw
+00:03 +36: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_platform_support_test.dart: on Android the device probe uses the channel
+00:03 +37: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_platform_support_test.dart: on Android a granted permission still comes back granted
+00:03 +38: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_platform_support_test.dart: on Android a missing handler leaves the probe merely unknown
+00:03 +39: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_recognizer_config_test.dart
+00:03 +39: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_recognizer_config_test.dart: Whisper worker config maps local paths, language, task, and CPU policy
+00:03 +40: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_recognizer_config_test.dart: auto language maps to sherpa Whisper auto detection
+00:03 +41: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart
+00:04 +41: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: conversation is default off across Exit and re-entry
+00:06 +42: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: late reply stays silent after Stop
+00:07 +43: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: late reply stays silent after background
+00:07 +44: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: late reply stays silent after scope
+00:08 +45: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: late reply stays silent after disconnect
+00:08 +46: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: late reply stays silent after approval
+00:08 +47: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: one foreign identical echo completes with our echo delayed and never speaks
+00:09 +48: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: one foreign identical echo completes with our echo absent and never speaks
+00:09 +49: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: transport without dispatched message IDs keeps replies manual
+00:10 +50: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: intervening user keeps playback manual
+00:10 +51: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: duplicate echo keeps playback manual
+00:10 +52: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: missing parent keeps playback manual
+00:10 +53: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: mixed reply parents keeps playback manual
+00:11 +54: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: native failure leaves text and explicit retry without resending
+00:11 +55: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: completed playback and duplicate reconnect events never replay
+00:11 +56: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: Stop during pending dispatch is not rearmed by acceptance
+00:12 +57: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: fast reply waits for dispatch acceptance before speech
+00:12 +58: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: capture production voice states dark
+00:12 +58 ~1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: capture production voice states light
+00:12 +58 ~2: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: capture production voice states large
+00:12 +58 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: the reply to the sent turn is spoken once after it completes; Stop only stops
+00:12 +59 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: a reply that cannot be matched to the sent turn is offered, not spoken
+00:13 +60 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/voice_reply_pipeline_test.dart: Exit revokes the opt-in and a pending reply is never spoken after it
+00:13 +61 ~3: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/web_search_test.dart
+00:14 +61 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/web_search_test.dart: explicit search uses scoped Basic transport and no history mutation or cursor
+00:14 +62 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/web_search_test.dart: provider rejects another response location
+00:14 +63 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/web_search_test.dart: search rejects another response location
+00:14 +64 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/web_search_test.dart: 503 discards remote error copy and marks search unavailable
+00:14 +65 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/web_search_test.dart: malformed provider catalog and wrong provider response fail closed
+00:14 +66 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/web_search_test.dart: empty and excessive queries never reach the server
+00:14 +67 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/web_search_test.dart: a server without search keeps manual source entry available
+00:15 +68 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/web_search_test.dart: search review returns to the real editable composer without sending
+00:16 +69 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/web_search_test.dart: switching account before confirmation blocks the reviewed context
+00:16 +70 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/web_search_test.dart: discovery never searches; results require review and explicit confirmation
+00:16 +71 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/web_search_test.dart: source staging exposes immutable snapshots and rejects unsafe overflow
+00:16 +72 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/web_search_test.dart: multiple providers require choice; refresh never submits a query
+00:16 +73 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/web_search_test.dart: scope switch discards pending search results and local review
+00:16 +74 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/web_search_test.dart: provider invalidation supersedes an in-flight search without another query
+00:16 +75 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/web_search_test.dart: websearch.updated becomes a payload-free domain freshness event
+00:16 +76 ~3: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/widget_snapshot_test.dart
+00:17 +76 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/widget_snapshot_test.dart: writes at most four sessions with busy flags and title fallback
+00:17 +77 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/widget_snapshot_test.dart: unchanged payloads neither rewrite nor redraw
+00:17 +78 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/widget_snapshot_test.dart: non-Android platforms write nothing
+00:17 +79 ~3: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/workspace_hierarchy_test.dart
+00:18 +79 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/workspace_hierarchy_test.dart: empty Workspace has one New session action that opens a session
+00:18 +80 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/workspace_hierarchy_test.dart: a two-line session name remains readable and opens that session
+00:19 +81 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/workspace_hierarchy_test.dart: an unlisted selected folder is not labelled as another project
+00:19 +82 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/workspace_hierarchy_test.dart: project path is compact and its complete value can be inspected
+00:19 +83 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/workspace_hierarchy_test.dart: 320px, 1.0x text, light: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
+00:19 +84 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/workspace_hierarchy_test.dart: 320px, 1.0x text, dark: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
+00:19 +85 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/workspace_hierarchy_test.dart: 320px, 2.0x text, light: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
+00:19 +86 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/workspace_hierarchy_test.dart: 320px, 2.0x text, dark: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
+00:19 +87 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/workspace_hierarchy_test.dart: 390px, 1.0x text, light: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
+00:19 +88 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/workspace_hierarchy_test.dart: 390px, 1.0x text, dark: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
+00:20 +89 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/workspace_hierarchy_test.dart: 390px, 2.0x text, light: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
+00:20 +90 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/workspace_hierarchy_test.dart: 390px, 2.0x text, dark: blocked sessions sit once under Needs you, above Pinned, Active and Recent, and nothing overflows
+00:20 +91 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/workspace_hierarchy_test.dart: one session with every blocker shows permission, then question, then form as each is answered
+00:20 +92 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/workspace_hierarchy_test.dart: answering the request returns a pinned session to Pinned in pin order and a busy one to Active
+00:20 +93 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/workspace_hierarchy_test.dart: the section menu reloads sessions and omits Terminal when the server has none
+00:20 +94 ~3: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/workspace_paths_test.dart
+00:21 +94 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/workspace_paths_test.dart: isProtectedWorkspaceDirectory rejects roots, home folders and the server default
+00:21 +95 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/workspace_paths_test.dart: isProtectedWorkspaceDirectory accepts project folders, including ones inside a home
+00:21 +96 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/workspace_paths_test.dart: workspaceDirectoryProblem explains empty, relative and protected paths
+00:21 +97 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/workspace_paths_test.dart: workspaceDirectoryProblem accepts real folders
+00:21 +98 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/workspace_paths_test.dart: projectFolderNameProblem accepts one safe segment
+00:21 +99 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/workspace_paths_test.dart: projectFolderNameProblem rejects paths, hidden names and odd characters
+00:21 +100 ~3: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/worktrees_screen_test.dart
+00:22 +100 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/worktrees_screen_test.dart: compact worktree creation grows into global ready state
+00:23 +101 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/worktrees_screen_test.dart: a failing worktree action reports product copy, not the raw exception
+00:23 +102 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/worktrees_screen_test.dart: reset explains and confirms every destructive file class
+00:24 +103 ~3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/worktrees_screen_test.dart: removing the current worktree switches to primary first
 00:24 +104 ~3: All tests passed!

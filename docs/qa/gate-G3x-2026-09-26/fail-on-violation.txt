@@ -1,6 +1,6 @@
 $ # run 1: throwaway file + throwaway class entry added to _migrated/_migratedClasses; team_card.dart G17 .textTheme. baseline lowered 4 -> 3
 $ tool/qa/machine_lock.sh test -- $F test -j 1 -r expanded test/design_standard_test.dart
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-2/test/design_standard_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-2/test/design_standard_test.dart
 00:00 +0: G3x: migrated screens hold every forbidden pattern at zero (or below their baseline)
 00:00 +0 -1: G3x: migrated screens hold every forbidden pattern at zero (or below their baseline) [E]
   Expected: empty
@@ -56,14 +56,14 @@ $ tool/qa/machine_lock.sh test -- $F test -j 1 -r expanded test/design_standard_
 00:00 +12 -3: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-2/test/design_standard_test.dart: G3x: a screen migrated on or after 2026-09-26 has an _ar_dark golden
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-2/test/design_standard_test.dart: G3x: migrated classes in mixed files use the kit
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-2/test/design_standard_test.dart: G3x: migrated screens hold every forbidden pattern at zero (or below their baseline)
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-2/test/design_standard_test.dart: G3x: a screen migrated on or after 2026-09-26 has an _ar_dark golden
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-2/test/design_standard_test.dart: G3x: migrated classes in mixed files use the kit
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-2/test/design_standard_test.dart: G3x: migrated screens hold every forbidden pattern at zero (or below their baseline)
 exit=1
 
 $ # run 2: throwaway file in _migrated AND smuggled into the baseline with its counts; lib/ui/widgets/nudge_card.dart removed from _migrated (file still exists); write mode
 $ DESIGN_STANDARD_WRITE=1 tool/qa/machine_lock.sh test -- $F test -j 1 -r expanded test/design_standard_test.dart
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-2/test/design_standard_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-2/test/design_standard_test.dart
 Shell: DESIGN_STANDARD_WRITE=1: wrote test/design_standard_baseline.json (60)
 00:00 +0: G3x: migrated screens hold every forbidden pattern at zero (or below their baseline)
 00:00 +1: G3x: migrated classes in mixed files use the kit
@@ -94,7 +94,7 @@ Shell: DESIGN_STANDARD_WRITE=1: wrote test/design_standard_baseline.json (60)
 00:01 +14 -1: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-2/test/design_standard_test.dart: G3x: the baseline only shrinks and names only migrated entries
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-2/test/design_standard_test.dart: G3x: the baseline only shrinks and names only migrated entries
 exit=1
 $ # did write mode drop nudge_card.dart? (diff of the baseline before/after the write run; empty = kept)
 365a366,370
@@ -116,7 +116,7 @@ $ # the diff above is only the encoder re-sorting keys; nudge_card.dart after th
 $ # run 3: test/design_standard_baseline.json deleted, throwaway file in _migrated; write mode
 $ rm test/design_standard_baseline.json
 $ DESIGN_STANDARD_WRITE=1 tool/qa/machine_lock.sh test -- $F test -j 1 -r expanded test/design_standard_test.dart
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-2/test/design_standard_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-2/test/design_standard_test.dart
 Shell: DESIGN_STANDARD_WRITE=1: refusing to write, test/design_standard_baseline.json is missing (restore it from git; write mode only lowers counts)
 00:00 +0: G3x: migrated screens hold every forbidden pattern at zero (or below their baseline)
 00:00 +0 -1: G3x: migrated screens hold every forbidden pattern at zero (or below their baseline) [E]
@@ -176,10 +176,10 @@ Shell: DESIGN_STANDARD_WRITE=1: refusing to write, test/design_standard_baseline
 00:00 +11 -4: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-2/test/design_standard_test.dart: G3x: a screen migrated on or after 2026-09-26 has an _ar_dark golden
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-2/test/design_standard_test.dart: G3x: migrated classes in mixed files use the kit
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-2/test/design_standard_test.dart: G3x: migrated screens hold every forbidden pattern at zero (or below their baseline)
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-2/test/design_standard_test.dart: G3x: the baseline only shrinks and names only migrated entries
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-2/test/design_standard_test.dart: G3x: a screen migrated on or after 2026-09-26 has an _ar_dark golden
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-2/test/design_standard_test.dart: G3x: migrated classes in mixed files use the kit
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-2/test/design_standard_test.dart: G3x: migrated screens hold every forbidden pattern at zero (or below their baseline)
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-2/test/design_standard_test.dart: G3x: the baseline only shrinks and names only migrated entries
 exit=1
 $ ls test/design_standard_baseline.json
 ls: cannot access 'test/design_standard_baseline.json': No such file or directory

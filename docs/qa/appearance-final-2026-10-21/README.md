@@ -43,8 +43,8 @@ be built as drawn without lying about the app.
 
 ## Evidence
 
-- Final renders (one full screen each): `/home/eslam/Storage2/launch-footage/appearance-final/` — dark main, Saver, light, Accent (pink), Surfaces dark/light/Saver, 320 dp at 2x text, Arabic RTL, tablet, Catppuccin with the circuit look, and the other four tabs.
-- Every pass: `/home/eslam/Storage2/launch-footage/progress/appearance-final/passN-*.png` with `LOG.md`.
+- Final renders (one full screen each): `/home/owner/Storage2/launch-footage/appearance-final/` — dark main, Saver, light, Accent (pink), Surfaces dark/light/Saver, 320 dp at 2x text, Arabic RTL, tablet, Catppuccin with the circuit look, and the other four tabs.
+- Every pass: `/home/owner/Storage2/launch-footage/progress/appearance-final/passN-*.png` with `LOG.md`.
 - Renders: `APPEARANCE_SHOTS_DIR=… flutter test --concurrency=1 tool/capture/appearance_revamp_test.dart`.
 - Tests: `test/appearance_final_test.dart` (Saver stored/override/AA, Accent stored/restart/AA for every pack x swatch, Surfaces save, header layout), kit tests for the new parts and variants, `test/kit/kit_keyboard_test.dart` (Accent row), overflow scenes; gates G4, G6, G8x, G16, G17, G21, G28 and the l10n tests pass; `flutter analyze` clean.
 - Goldens regenerated with `TZ=UTC` after a full golden sweep (260 files, in chunks): kit galleries (preview, option card, carousel, segmented + new `tall`), and the chat goldens the Accent touches (bubble edge, Stop ring, links): chat states, approval chip, composer, markdown, message, transcript excerpt, turn, viewer, team, settings, revamp chat/saved prompts/settings/slices.

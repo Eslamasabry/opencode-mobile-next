@@ -4,7 +4,7 @@ This is source-contract evidence, not a device or live-server qualification.
 No owner server was contacted. The checked-in clients and contracts were
 inspected first, followed by official upstream source. The Codex follow-up
 installed only the exact official CLI package in a scratch directory under
-`/home/eslam/Storage/tmp` to generate its protocol schema; no owner package
+`/home/owner/Storage/tmp` to generate its protocol schema; no owner package
 files were touched and no app-server or model session was started. No Flutter
 command was run.
 
@@ -44,7 +44,7 @@ requested 0.153.4 contract. The official npm package
 was installed with:
 
 ```sh
-npm --prefix /home/eslam/Storage/tmp/agent-handoff-codex-01534 install \
+npm --prefix /home/owner/Storage/tmp/agent-handoff-codex-01534 install \
   --ignore-scripts --no-audit --no-fund @openai/codex@0.153.4
 ```
 

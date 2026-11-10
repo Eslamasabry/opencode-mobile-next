@@ -1714,7 +1714,7 @@ Each has a default; work proceeds on it.
 
 ## 17. Sources and verification log (2026-11-01)
 
-Repo [R] (read-only `/home/eslam/Storage/Code/wt/oc_app-batch1`, plus the freeze tip in `/home/eslam/Storage/Code/oc_app`):
+Repo [R] (read-only `/home/owner/Storage/Code/wt/oc_app-batch1`, plus the freeze tip in `/home/owner/Storage/Code/oc_app`):
 `docs/security/threat-model.md`; `docs/verification/in-app-ubuntu-trust-2026-10-07.md`; `docs/aptabase-telemetry-plan.md`;
 `PRIVACY.md`; `THIRD_PARTY_NOTICES.md`; `LICENSES/`; `lib/ui/widgets/external_link.dart`; `lib/voice/model_manifest.dart`;
 `engine/phone/Cargo.toml`; `.github/workflows/android-release.yml`, `android-quality.yml`, `android-device.yml`;

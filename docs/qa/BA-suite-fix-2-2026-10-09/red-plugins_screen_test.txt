@@ -1,4 +1,4 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/plugins_screen_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app-sol-ba/test/plugins_screen_test.dart
 00:00 +0: a plugin row opens its details; nothing offers command links (slice-P3.1: plugins-mapping-dialog and its clear sheet are gone)
 00:00 +1: the server section carries its own label and plugin group
 00:01 +2: unsupported servers make no plugin request
@@ -13,7 +13,7 @@ Timer (duration: 0:00:15.000000, periodic: false), created:
 #2      FakeAsync.run.<anonymous closure> (package:fake_async/fake_async.dart:185:15)
 #5      _QuietReconnect._observeQuietReconnect (package:opencode_mobile/state/connection/quiet_reconnect.dart:20:28)
 #6      ConnectionController.status= (package:opencode_mobile/state/connection.dart:620:5)
-#7      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-ba/test/plugins_screen_test.dart:245:16)
+#7      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-ba/test/plugins_screen_test.dart:245:16)
 <asynchronous suspension>
 #8      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -46,4 +46,4 @@ The test description was:
 00:01 +7 -1: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/plugins_screen_test.dart: plugin events and reconnect refetch current inventory
+  /home/owner/Storage/Code/oc_app-sol-ba/test/plugins_screen_test.dart: plugin events and reconnect refetch current inventory

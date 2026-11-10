@@ -7,7 +7,7 @@
     "dimension": "flow",
     "evidence": [
       "lib/ui/screens/files_screen.dart:_load/_refreshFiles",
-      "/home/eslam/Storage/Code/oc_app-ui-files/docs/qa/clear-files/README.md"
+      "/home/owner/Storage/Code/oc_app-ui-files/docs/qa/clear-files/README.md"
     ],
     "observed": "The requested _path was assigned only after listFiles succeeded; Retry used the previous _path.",
     "impact": "A failed src request could recover by showing root while the user expected src.",
@@ -25,7 +25,7 @@
     "evidence": [
       "screenshots/08-files.png",
       "lib/ui/screens/files_screen.dart:_body/_ChangesCard",
-      "/home/eslam/Storage/Code/oc_app-ui-files/docs/qa/clear-files/README.md"
+      "/home/owner/Storage/Code/oc_app-ui-files/docs/qa/clear-files/README.md"
     ],
     "observed": "Full-width pill selector, outlined search and filled change card precede content. The change card repeats a review instruction beside a chevron.",
     "impact": "The first file arrives after three strong shapes; the structure feels like stacked widgets rather than a browser.",
@@ -43,7 +43,7 @@
     "evidence": [
       "screenshots/08-files.png",
       "lib/ui/screens/files_screen.dart:_fileDetail/_FileChangeBadge/_FolderStatusMark",
-      "/home/eslam/Storage/Code/oc_app-ui-files/docs/qa/clear-files/README.md"
+      "/home/owner/Storage/Code/oc_app-ui-files/docs/qa/clear-files/README.md"
     ],
     "observed": "Added \u00b7 +count is repeated with A badges. src repeats 3 changed files and trailing 3.",
     "impact": "Duplicate marks steal filename width and create a noisy secondary alignment rail. Single letters also require interpretation.",
@@ -60,7 +60,7 @@
     "dimension": "color",
     "evidence": [
       "screenshots/08-files.png",
-      "/home/eslam/Storage/Code/oc_app-ui-files/docs/qa/clear-files/README.md"
+      "/home/owner/Storage/Code/oc_app-ui-files/docs/qa/clear-files/README.md"
     ],
     "observed": "Every folder is filled mint, so .git, dist and node_modules are as prominent as src before the reader reaches source.",
     "impact": "Accent communicates folder type rather than a useful state and draws attention away from changed files.",
@@ -78,7 +78,7 @@
     "evidence": [
       "screenshots/08-files.png",
       "lib/ui/screens/files_screen.dart:_fileListContent",
-      "/home/eslam/Storage/Code/oc_app-ui-files/docs/qa/clear-files/README.md"
+      "/home/owner/Storage/Code/oc_app-ui-files/docs/qa/clear-files/README.md"
     ],
     "observed": "Dense ListTiles use a leading icon gutter and single-line filename; two separate state rails reduce available width.",
     "impact": "Long names truncate despite spare space elsewhere; optical alignment depends on ListTile defaults.",
@@ -96,7 +96,7 @@
     "evidence": [
       "motion-frames/frame-03.png",
       "lib/ui/widgets/product_states.dart:ProductEmptyState",
-      "/home/eslam/Storage/Code/oc_app-ui-files/docs/qa/clear-files/README.md"
+      "/home/owner/Storage/Code/oc_app-ui-files/docs/qa/clear-files/README.md"
     ],
     "observed": "The empty state says Pull down to refresh; shared empty-state widget is an always-scrollable SingleChildScrollView.",
     "impact": "Gesture is discoverable in copy but not an explicit button; no refresh bug demonstrated.",
@@ -113,7 +113,7 @@
     "dimension": "flow",
     "evidence": [
       "lib/ui/screens/files_screen.dart:_fileListContent/_fileRowActions",
-      "/home/eslam/Storage/Code/oc_app-ui-files/docs/qa/clear-files/README.md"
+      "/home/owner/Storage/Code/oc_app-ui-files/docs/qa/clear-files/README.md"
     ],
     "observed": "Deleted rows have onTap null and only Copy path in their context menu, though the changed-files sheet opens them in Review.",
     "impact": "Review remains available but the same file has different entry behavior depending on route.",
@@ -164,7 +164,7 @@
     "evidence": [
       "lib/ui/screens/files_screen.dart:_body",
       "tool/capture/clear_files_test.dart",
-      "/home/eslam/Storage/Code/oc_app-ui-files/docs/qa/clear-files/README.md"
+      "/home/owner/Storage/Code/oc_app-ui-files/docs/qa/clear-files/README.md"
     ],
     "observed": "The horizontal breadcrumb ListView was forced to 52dp despite scalable chip labels and shared chip padding.",
     "impact": "At large text the chip content can exceed its viewport height and lose visual bounds.",

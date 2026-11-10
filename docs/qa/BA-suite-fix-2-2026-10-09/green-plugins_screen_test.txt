@@ -1,4 +1,4 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/plugins_screen_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app-sol-ba/test/plugins_screen_test.dart
 00:00 +0: a plugin row opens its details; nothing offers command links (slice-P3.1: plugins-mapping-dialog and its clear sheet are gone)
 00:01 +1: the server section carries its own label and plugin group
 00:01 +2: unsupported servers make no plugin request

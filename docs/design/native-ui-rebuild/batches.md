@@ -89,7 +89,7 @@ Engines: `sonnet` = Claude Sonnet 5.5 (heavy visual or complex parts, every scre
 
 | Before | The lead provides |
 |---|---|
-| 01 | `~/wt/flutter-ref` checked out at `8302de537`; `~/Storage/Code/oc_app` on the VPS keeps `1bbdc3f9c` (it does today); the tracker puller copies `~/wt/rb-*/looks-out/gate/` to `/home/eslam/Storage2/wt/looks/gate/rb-<NN>/` on the PC |
+| 01 | `~/wt/flutter-ref` checked out at `8302de537`; `~/Storage/Code/oc_app` on the VPS keeps `1bbdc3f9c` (it does today); the tracker puller copies `~/wt/rb-*/looks-out/gate/` to `/home/owner/Storage2/wt/looks/gate/rb-<NN>/` on the PC |
 | every order | the worktree `~/wt/rb-<NN>` on `native/rb-<NN>-<name>`, branched from `native/looks-pass-2026-11-04` after its dependencies merged |
 | 34 | seam in `KitSurface.kt` calling `kitSurfaceGlass(…)` from a stub `KitSurfaceGlass.kt`; seam in `KitText.kt` calling `kitWordsPlate(…)` from a stub `KitWordsPlate.kt` |
 | 35 | `auroraImage` and `vivid` registered in the live-look registry against stubs; the two WebP files copied from GLASS_REF `assets/backgrounds/` |

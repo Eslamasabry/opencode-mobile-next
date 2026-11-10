@@ -244,24 +244,24 @@ If you are a plugin author, please migrate your plugin to Built-in Kotlin using 
 > Task :url_launcher_android:bundleLibCompileToJarRelease UP-TO-DATE
 
 > Task :app:compileReleaseKotlin
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/AppLifecycle.kt:112:23 Condition is always 'false'.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinInstallerProducerQaService.kt:79:32 'fun get(p0: String!): Any?' is deprecated. Deprecated in Java.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinInstallerProducerQaService.kt:342:47 Unnecessary non-null assertion (!!) on a non-null receiver of type 'String'.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinLinux.kt:472:60 Unnecessary non-null assertion (!!) on a non-null receiver of type 'RuntimeProcessIdentity'.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinLinux.kt:1532:69 Unnecessary non-null assertion (!!) on a non-null receiver of type 'BuiltinLinux.Service'.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinLinux.kt:1942:37 Unnecessary non-null assertion (!!) on a non-null receiver of type 'NativeServerRecipe'.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/LocalTerminal.kt:53:28 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeRecoveryBudget.kt:44:23 No cast needed.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:78:24 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:186:19 No cast needed.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:186:22 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:199:19 No cast needed.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:199:22 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:440:23 No cast needed.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:440:26 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:501:19 No cast needed.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:501:22 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/VoiceDownloadNotifications.kt:142:33 'constructor(p0: Context!): Notification.Builder' is deprecated. Deprecated in Java.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/AppLifecycle.kt:112:23 Condition is always 'false'.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinInstallerProducerQaService.kt:79:32 'fun get(p0: String!): Any?' is deprecated. Deprecated in Java.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinInstallerProducerQaService.kt:342:47 Unnecessary non-null assertion (!!) on a non-null receiver of type 'String'.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinLinux.kt:472:60 Unnecessary non-null assertion (!!) on a non-null receiver of type 'RuntimeProcessIdentity'.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinLinux.kt:1532:69 Unnecessary non-null assertion (!!) on a non-null receiver of type 'BuiltinLinux.Service'.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinLinux.kt:1942:37 Unnecessary non-null assertion (!!) on a non-null receiver of type 'NativeServerRecipe'.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/LocalTerminal.kt:53:28 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeRecoveryBudget.kt:44:23 No cast needed.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:78:24 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:186:19 No cast needed.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:186:22 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:199:19 No cast needed.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:199:22 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:440:23 No cast needed.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:440:26 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:501:19 No cast needed.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:501:22 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/VoiceDownloadNotifications.kt:142:33 'constructor(p0: Context!): Notification.Builder' is deprecated. Deprecated in Java.
 
 > Task :app:javaPreCompileRelease
 > Task :app:compileReleaseJavaWithJavac
@@ -391,12 +391,12 @@ w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/
 > Task :integration_test:bundleLibCompileToJarRelease UP-TO-DATE
 
 > Task :app:compileReleaseAndroidTestKotlin
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/androidTest/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinComponentUpdateAcceptance.kt:225:31 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Process'.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/androidTest/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinComponentUpdateAcceptance.kt:227:33 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Process'.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/androidTest/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinComponentUpdateAcceptance.kt:228:43 Unnecessary non-null assertion (!!) on a non-null receiver of type 'RuntimeProcessIdentity'.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/androidTest/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinComponentUpdateAcceptance.kt:230:59 Unnecessary non-null assertion (!!) on a non-null receiver of type 'RuntimeProcessIdentity'.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/androidTest/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinComponentUpdateAcceptance.kt:244:102 Unnecessary non-null assertion (!!) on a non-null receiver of type 'RuntimeProcessIdentity'.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/androidTest/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinComponentUpdateAcceptance.kt:245:43 Unnecessary non-null assertion (!!) on a non-null receiver of type 'RuntimeProcessIdentity'.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/androidTest/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinComponentUpdateAcceptance.kt:225:31 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Process'.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/androidTest/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinComponentUpdateAcceptance.kt:227:33 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Process'.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/androidTest/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinComponentUpdateAcceptance.kt:228:43 Unnecessary non-null assertion (!!) on a non-null receiver of type 'RuntimeProcessIdentity'.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/androidTest/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinComponentUpdateAcceptance.kt:230:59 Unnecessary non-null assertion (!!) on a non-null receiver of type 'RuntimeProcessIdentity'.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/androidTest/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinComponentUpdateAcceptance.kt:244:102 Unnecessary non-null assertion (!!) on a non-null receiver of type 'RuntimeProcessIdentity'.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/androidTest/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinComponentUpdateAcceptance.kt:245:43 Unnecessary non-null assertion (!!) on a non-null receiver of type 'RuntimeProcessIdentity'.
 
 > Task :app:javaPreCompileReleaseAndroidTest
 > Task :app:compileReleaseAndroidTestJavaWithJavac
@@ -639,7 +639,7 @@ w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/androidTest/kot
 > Task :app:createReleaseAndroidTestApkListingFileRedirect
 > Task :app:assembleReleaseAndroidTest
 
-[Incubating] Problems report is available at: file:///home/eslam/Storage/Code/oc_app-sol-bb/build/reports/problems/problems-report.html
+[Incubating] Problems report is available at: file:///home/owner/Storage/Code/oc_app-sol-bb/build/reports/problems/problems-report.html
 
 Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
 

@@ -88,7 +88,7 @@ Checkpoint 4: both compile-only targets passed, **2/2 targets; 0 failed tasks; 0
 
 Final checkpoint: **67/67 unique supplied files; already there 0, ported now 52, not needed 15, blocked 0.** Both requested compile-only targets passed, **2/2 targets; 0 failed tasks; 0 compiler errors; 0 test execution tasks**, 604 actionable tasks (111 executed, 493 up-to-date), 25 s. Log: `/tmp/40-port-screens-3-compile-15.log`. Source is based on `80475413a` plus this final commit; no Kotlin/Gradle change followed the successful gate. Compile warnings remain; they were not suppressed.
 
-The gate ran in `native/` with JDK `/home/eslam/Storage2/tools/jdk21`, `ANDROID_HOME=$HOME/Android/Sdk`, `nice -n 5`, two workers, daemon idle timeout 300000, heap 2 GiB and metaspace 768 MiB, under both `tool/qa/machine_lock.sh build` and `/tmp/oc-native-gradle.lock`:
+The gate ran in `native/` with JDK `/home/owner/Storage2/tools/jdk21`, `ANDROID_HOME=$HOME/Android/Sdk`, `nice -n 5`, two workers, daemon idle timeout 300000, heap 2 GiB and metaspace 768 MiB, under both `tool/qa/machine_lock.sh build` and `/tmp/oc-native-gradle.lock`:
 
 ```sh
 ./gradlew --console=plain --continue -Dorg.gradle.workers.max=2 -Dorg.gradle.daemon.idletimeout=300000 '-Dorg.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=768m' :androidApp:compilePreviewDebugKotlin compileKotlinDesktop

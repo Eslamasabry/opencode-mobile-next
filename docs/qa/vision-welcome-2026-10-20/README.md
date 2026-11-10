@@ -77,7 +77,7 @@ Not taken from the concept: step dots, "You can change this later", the invented
 ## Evidence
 
 Final renders, 412x915 at 2x unless named, one screen each:
-`/home/eslam/Storage2/launch-footage/vision-welcome/` — welcome-dark,
+`/home/owner/Storage2/launch-footage/vision-welcome/` — welcome-dark,
 welcome-light, computer-chosen-dark, setup-running-dark, setup-stopped-dark,
 setup-done-not-connected-dark, no-phone-path-dark, termux-found-dark,
 small-320-text2-dark (320x693 at 2.0 text), arabic-rtl-dark. Capture:

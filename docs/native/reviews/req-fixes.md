@@ -18,10 +18,10 @@ Only `native/engine/requests` production code and tests changed; no shared contr
 
 ## Validation
 
-Every Gradle invocation ran from `native/` under the shared `/home/eslam/Storage/tmp/oc-build.lock`, with:
+Every Gradle invocation ran from `native/` under the shared `/home/owner/Storage/tmp/oc-build.lock`, with:
 
 ```sh
-JAVA_HOME=/home/eslam/Storage/tools/jdk-21.0.13+9 ANDROID_HOME=/home/eslam/Android/Sdk ./gradlew --no-daemon -Pkotlin.incremental=false :engine:requests:desktopTest
+JAVA_HOME=/home/owner/Storage/tools/jdk-21.0.13+9 ANDROID_HOME=/home/owner/Android/Sdk ./gradlew --no-daemon -Pkotlin.incremental=false :engine:requests:desktopTest
 ```
 
 The checked-in `-Xmx2g`, two-worker and in-process Kotlin settings were retained. No overlapping build was launched by this task.

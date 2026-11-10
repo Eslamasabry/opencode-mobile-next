@@ -110,11 +110,11 @@ Reproduce the Rust suite with the required isolated directories (the initial run
 omitted the two test-root variables):
 
 ```bash
-mkdir -p /home/eslam/Storage/tmp/relengine-rust-tests-20261015/{proof,engine}
+mkdir -p /home/owner/Storage/tmp/relengine-rust-tests-20261015/{proof,engine}
 tool/qa/machine_lock.sh test -- env CARGO_BUILD_JOBS=2 \
-  CARGO_TARGET_DIR=/home/eslam/Storage/tmp/aiteam-phone-engine-build/target \
-  OC_PHONE_PROOF_ROOT=/home/eslam/Storage/tmp/relengine-rust-tests-20261015/proof \
-  OC_ENGINE_TEST_ROOT=/home/eslam/Storage/tmp/relengine-rust-tests-20261015/engine \
+  CARGO_TARGET_DIR=/home/owner/Storage/tmp/aiteam-phone-engine-build/target \
+  OC_PHONE_PROOF_ROOT=/home/owner/Storage/tmp/relengine-rust-tests-20261015/proof \
+  OC_ENGINE_TEST_ROOT=/home/owner/Storage/tmp/relengine-rust-tests-20261015/engine \
   cargo test --locked --manifest-path engine/phone/Cargo.toml -- --test-threads=1
 ```
 
@@ -138,7 +138,7 @@ and live `/doc`: **1 live probe passed** ([log](engine-oc1-live-probe.txt)). Liv
 `04b16616693498e2b92af87408d9df3ea4ce60176d8416d36dc6c5bcf8d3bfed`.
 This is host protocol proof, not Android AI Team task execution. No provider
 configuration or model calls were needed. The scratch server was stopped by its
-exact PID (491637), and the temporary probe test was removed. No `/home/eslam`
+exact PID (491637), and the temporary probe test was removed. No `/home/owner`
 package files were changed.
 
 ### Staged native artifacts
@@ -171,7 +171,7 @@ Use Flutter 3.47.1 from the pinned Shorebird cache and the machine lock:
 
 ```bash
 tool/qa/machine_lock.sh test -- \
-  /home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter \
+  /home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter \
   test --concurrency=1 \
   test/phone_project_engine_controller_test.dart \
   test/phone_team_setup_test.dart \

@@ -1,7 +1,7 @@
-   Compiling oc-phone-engine v0.1.0 (/home/eslam/Storage/Code/oc_app-codex-relengine/engine/phone)
+   Compiling oc-phone-engine v0.1.0 (/home/owner/Storage/Code/oc_app-codex-relengine/engine/phone)
     Finished `release` profile [optimized] target(s) in 41.98s
-   Compiling oc-phone-engine v0.1.0 (/home/eslam/Storage/Code/oc_app-codex-relengine/engine/phone)
+   Compiling oc-phone-engine v0.1.0 (/home/owner/Storage/Code/oc_app-codex-relengine/engine/phone)
     Finished `release` profile [optimized] target(s) in 50.04s
-Android native artifacts: /home/eslam/Storage/tmp/aiteam-phone-engine-build/android
+Android native artifacts: /home/owner/Storage/tmp/aiteam-phone-engine-build/android
 Native dependency notices: Rust-Phone-Engine.txt
 Staged both ABI bundles, manifest and notices locally; APK signing and delivery remain separate.

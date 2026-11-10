@@ -100,7 +100,7 @@ qualification slice.
 
 Branch `sol/bd-bd7` starts at `feat/genui-fe` `f0e33d96d`. The coordinator
 explicitly superseded the original2197 dependency with2196. The tested APK is
-`/home/eslam/Storage/tmp/oc-apk-share/oc-2196.apk`, source `d777082c`, SHA256
+`/home/owner/Storage/tmp/oc-apk-share/oc-2196.apk`, source `d777082c`, SHA256
 `78074bc8c8f3244b252ae11f23cb3dc4d748b989c95c33e25111f6c16716af56`, signer
 `1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C`.
 It includes capture `dcbd1771`, consent UI `c09fd449` and exit rows `8644d15d`.
@@ -109,7 +109,7 @@ It includes capture `dcbd1771`, consent UI `c09fd449` and exit rows `8644d15d`.
 ## Device results
 
 All sessions used only `emulator-5554`, held
-`/home/eslam/Storage/tmp/oc-emulator.lock` through restoration, and checked
+`/home/owner/Storage/tmp/oc-emulator.lock` through restoration, and checked
 `df -k /data` before app operations. Proof-session storage was79% used with
 1,750,548KiB available. Every retained session receipt reports a successful
 same-lock2196 reinstall with `adb install -r -d`, live process, resumed

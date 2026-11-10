@@ -4,7 +4,7 @@
 //
 //   flutter test --concurrency=1 tool/capture/no_bottom_nav_test.dart
 //
-// Output: /home/eslam/Storage2/launch-footage/no-bottom-nav/<phase>-<name>.png
+// Output: /home/owner/Storage2/launch-footage/no-bottom-nav/<phase>-<name>.png
 import 'dart:async';
 import 'dart:io';
 
@@ -29,7 +29,7 @@ import 'package:opencode_mobile/ui/search/go_to_commands.dart';
 import 'fixtures.dart';
 
 const _phase = String.fromEnvironment('NAV_PHASE', defaultValue: 'after');
-const _dir = '/home/eslam/Storage2/launch-footage/no-bottom-nav';
+const _dir = '/home/owner/Storage2/launch-footage/no-bottom-nav';
 
 void _mockSecureStorage(WidgetTester tester) {
   const secure = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');

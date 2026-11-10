@@ -1,13 +1,13 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-e7-locale/test/app_locale_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app-e7-locale/test/app_locale_test.dart: Arabic override survives new controller and system removes override
-00:00 +1: /home/eslam/Storage/Code/oc_app-e7-locale/test/app_locale_test.dart: refused write and remove keep acknowledged locale and cache
-00:00 +2: /home/eslam/Storage/Code/oc_app-e7-locale/test/app_locale_test.dart: queued rapid choices wait for storage and newest choice wins
-00:00 +3: /home/eslam/Storage/Code/oc_app-e7-locale/test/app_locale_test.dart: unsupported stored value follows system; unsupported saves rejected
-00:00 +4: /home/eslam/Storage/Code/oc_app-e7-locale/test/app_locale_test.dart: profile deletion key sweep excludes global language choice
-00:00 +5: loading /home/eslam/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart
-00:00 +5: /home/eslam/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: choosing Arabic persists; closing leaves choice unchanged
-00:01 +6: /home/eslam/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: save refusal stays on sheet with old selection and retry copy
-00:01 +7: /home/eslam/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: 320dp 2.5x en all choices reachable
-00:01 +8: /home/eslam/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: 320dp 2.5x ar all choices reachable
-00:01 +9: /home/eslam/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: technical content isolates direction without changing sibling prose
+00:00 +0: loading /home/owner/Storage/Code/oc_app-e7-locale/test/app_locale_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app-e7-locale/test/app_locale_test.dart: Arabic override survives new controller and system removes override
+00:00 +1: /home/owner/Storage/Code/oc_app-e7-locale/test/app_locale_test.dart: refused write and remove keep acknowledged locale and cache
+00:00 +2: /home/owner/Storage/Code/oc_app-e7-locale/test/app_locale_test.dart: queued rapid choices wait for storage and newest choice wins
+00:00 +3: /home/owner/Storage/Code/oc_app-e7-locale/test/app_locale_test.dart: unsupported stored value follows system; unsupported saves rejected
+00:00 +4: /home/owner/Storage/Code/oc_app-e7-locale/test/app_locale_test.dart: profile deletion key sweep excludes global language choice
+00:00 +5: loading /home/owner/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart
+00:00 +5: /home/owner/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: choosing Arabic persists; closing leaves choice unchanged
+00:01 +6: /home/owner/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: save refusal stays on sheet with old selection and retry copy
+00:01 +7: /home/owner/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: 320dp 2.5x en all choices reachable
+00:01 +8: /home/owner/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: 320dp 2.5x ar all choices reachable
+00:01 +9: /home/owner/Storage/Code/oc_app-e7-locale/test/language_picker_test.dart: technical content isolates direction without changing sibling prose
 00:01 +10: All tests passed!

@@ -1,5 +1,5 @@
 BD14 shipped-package source excerpts (2026-10-09)
-Local dependency root: /home/eslam/Storage/tmp/claude-tmp/oc-paseo-lock-4pyx6dwm/node_modules
+Local dependency root: /home/owner/Storage/tmp/claude-tmp/oc-paseo-lock-4pyx6dwm/node_modules
 No network, credentials or account data used. Full source-file SHA-256 precedes each excerpt.
 
 @getpaseo/server/package.json

@@ -1,6 +1,6 @@
 # FQ3b diagnosis and repeatable certification
 
-Normal app: **2196**, emulator-5554, application UID10217. All device work takes `/home/eslam/Storage/tmp/oc-emulator.lock`. The runner restores the approved same-signer2196 APK before and after locked device work when needed, preserving application data. A restoration restarts the normal app because APK updates terminate its process; its stored engine/model choice is retained. An already installed2196 is retained so the app-managed server is not restarted unnecessarily.
+Normal app: **2196**, emulator-5554, application UID10217. All device work takes `/home/owner/Storage/tmp/oc-emulator.lock`. The runner restores the approved same-signer2196 APK before and after locked device work when needed, preserving application data. A restoration restarts the normal app because APK updates terminate its process; its stored engine/model choice is retained. An already installed2196 is retained so the app-managed server is not restarted unnecessarily.
 
 ## OC2: default model versus app-selected model
 
@@ -32,7 +32,7 @@ Each title includes run, engine, scenario and session ordinal. A durable intent 
 Run from the recorded committed candidate. The parent takes the shared lock separately for each phase and history/cleanup job:
 
 ```sh
-DART=/home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/cache/dart-sdk/bin/dart
+DART=/home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/cache/dart-sdk/bin/dart
 "$DART" tool/qa/fq3_certify.dart --run-id fq3-20261008b-cert \
   --oc1-model zai-coding-plan/glm-5.3 --oc2-model opencode/big-pickle
 python3 tool/agents/generate_certification.py

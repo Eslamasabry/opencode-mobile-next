@@ -38,7 +38,7 @@ Rust formatting and `git diff --check` were run. No test/build process was launc
 When the coordinator runs the checks:
 
 ```sh
-OC_ENGINE_TEST_ROOT=/home/eslam/Storage/Code/oc_app-phone-engine-test-artifacts \
+OC_ENGINE_TEST_ROOT=/home/owner/Storage/Code/oc_app-phone-engine-test-artifacts \
   cargo test --test repository_worker_recovery -- --test-threads=1
 ```
 

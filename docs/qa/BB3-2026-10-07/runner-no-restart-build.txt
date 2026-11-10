@@ -1,6 +1,6 @@
 QA-only runner build after official release plugin refresh; target frozen; no adb/device operations.
-Command: ['/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/machine_lock.sh', 'build', '--', '/home/eslam/.gradle/wrapper/dists/gradle-9.5.0-all/aca6g93cdtcf0oapcfka748qh/gradle-9.5.0/bin/gradle', '-p', 'android', '--no-daemon', '--max-workers=1', '-Dorg.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=1g', '-Pkotlin.compiler.execution.strategy=in-process', '-PocBuiltinRuntimeQa=true', '-PocStableEngineQa=true', '-Ptarget-platform=android-x64', ':app:assembleReleaseAndroidTest']
-JAVA_HOME=/home/eslam/Storage/tmp/codex-audit3-temurin17/jdk-17.0.20.1+1
+Command: ['/home/owner/Storage/Code/oc_app-sol-bb/tool/qa/machine_lock.sh', 'build', '--', '/home/owner/.gradle/wrapper/dists/gradle-9.5.0-all/aca6g93cdtcf0oapcfka748qh/gradle-9.5.0/bin/gradle', '-p', 'android', '--no-daemon', '--max-workers=1', '-Dorg.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=1g', '-Pkotlin.compiler.execution.strategy=in-process', '-PocBuiltinRuntimeQa=true', '-PocStableEngineQa=true', '-Ptarget-platform=android-x64', ':app:assembleReleaseAndroidTest']
+JAVA_HOME=/home/owner/Storage/tmp/codex-audit3-temurin17/jdk-17.0.20.1+1
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.5.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
 Daemon will be stopped at the end of the build
 > Task :gradle:checkKotlinGradlePluginConfigurationErrors SKIPPED
@@ -613,7 +613,7 @@ If you are a plugin author, please migrate your plugin to Built-in Kotlin using 
 > Task :app:createReleaseAndroidTestApkListingFileRedirect
 > Task :app:assembleReleaseAndroidTest
 
-[Incubating] Problems report is available at: file:///home/eslam/Storage/Code/oc_app-sol-bb/build/reports/problems/problems-report.html
+[Incubating] Problems report is available at: file:///home/owner/Storage/Code/oc_app-sol-bb/build/reports/problems/problems-report.html
 
 Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
 

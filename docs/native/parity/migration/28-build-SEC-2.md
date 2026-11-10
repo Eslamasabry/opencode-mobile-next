@@ -66,7 +66,7 @@ Final compile checkpoint: **2/2 requested targets passed**, `:androidApp:compile
 Exact command, run in `native/` under `/tmp/oc-native-gradle.lock` and `tool/qa/machine_lock.sh build`:
 
 ```bash
-JAVA_HOME=/home/eslam/Storage2/tools/jdk21 ANDROID_HOME="$HOME/Android/Sdk" \
+JAVA_HOME=/home/owner/Storage2/tools/jdk21 ANDROID_HOME="$HOME/Android/Sdk" \
   nice -n 5 ./gradlew --console=plain \
   -Dorg.gradle.workers.max=2 -Dorg.gradle.daemon.idletimeout=300000 \
   -Dorg.gradle.jvmargs='-Xmx2g -XX:MaxMetaspaceSize=768m' \

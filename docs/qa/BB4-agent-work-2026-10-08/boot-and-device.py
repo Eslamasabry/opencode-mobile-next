@@ -1,11 +1,11 @@
 import subprocess,time,os,json
 from pathlib import Path
-log=Path('/home/eslam/Storage/Code/oc_app-sol-bb/docs/qa/BB4-agent-work-2026-10-08/emulator-readiness.json')
+log=Path('/home/owner/Storage/Code/oc_app-sol-bb/docs/qa/BB4-agent-work-2026-10-08/emulator-readiness.json')
 def adb(*args):return subprocess.run(['adb','-s','emulator-5554',*args],capture_output=True,text=True,timeout=5)
 booted=False
 if adb('get-state').returncode!=0:
  with Path('/tmp/oc-bb4-emulator-boot.log').open('w') as f:
-  child=subprocess.Popen(['/home/eslam/Android/Sdk/emulator/emulator','-avd','OC_API35','-port','5554','-no-window','-no-audio','-no-snapshot','-gpu','swiftshader_indirect'],stdout=f,stderr=subprocess.STDOUT,start_new_session=True,close_fds=True)
+  child=subprocess.Popen(['/home/owner/Android/Sdk/emulator/emulator','-avd','OC_API35','-port','5554','-no-window','-no-audio','-no-snapshot','-gpu','swiftshader_indirect'],stdout=f,stderr=subprocess.STDOUT,start_new_session=True,close_fds=True)
  booted=True
  deadline=time.monotonic()+120
  while time.monotonic()<deadline:

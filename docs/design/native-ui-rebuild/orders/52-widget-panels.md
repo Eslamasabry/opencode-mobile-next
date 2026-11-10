@@ -12,7 +12,7 @@ This order is binding together with `docs/design/native-ui-rebuild/GOLDEN-STANDA
 ## 1. Identity
 
 - Engine: Codex gpt-6.1-sol (`codex`). Time limit: 360 minutes.
-- Worktree (created by the lead; never create one): `eslam@169.58.71.211:~/wt/rb-52`, branch `native/rb-52-widget-panels`.
+- Worktree (created by the lead; never create one): `<build-vps-login>:~/wt/rb-52`, branch `native/rb-52-widget-panels`.
 - Flutter source of truth: `~/wt/flutter-ref` at FLUTTER_REF `8302de53773adef45eaaad016df2bd3cd51d1ebe`.
 - Gate manifest: `docs/design/native-ui-rebuild/orders/52.gate.tsv` (12 goldens). Gate command: `native/tool/design/gate_order.sh 52`.
 - Depends on: order 13, order 25. Do not start until each is merged into `native/looks-pass-2026-11-04` (the lead dispatches only then).

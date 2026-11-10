@@ -58,97 +58,97 @@ Downloading packages...
 Got dependencies!
 54 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the key bar 1. two rows: every key is 48 x 48, apart, reachable at 320 dp
-00:00 +1: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the key bar 1. compact: every key is 48 x 48, apart, reachable at 320 dp
-00:00 +2: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the key bar 1. with Ctrl-C and Ctrl-D: every key is 48 x 48, apart, reachable at 320 dp
-00:01 +3: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the key bar 2. Ctrl latches for one key, with toggled semantics
-00:01 +4: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the key bar 3. Ctrl-C and Ctrl-D reach the terminal as 0x03 and 0x04
-00:01 +5: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the key bar 3. a server bar leads with Ctrl-C, which sends 0x03
-00:01 +6: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the key bar 4. no key vibrates
-00:01 +7: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the key bar 5. disabled keys ignore taps and say why
-00:01 +8: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the key bar 6. in application cursor mode the up arrow sends ESC O A
-00:01 +9: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the live view 7. Tab reaches the shell; Ctrl+Tab leaves the terminal
-00:01 +10: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the live view 7. a PC window: hardware keys only, and no key bar
-00:01 +11: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the live view adaptive: the bar is capped and centred on a medium window
-00:01 +12: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the live view adaptive: one row only when the room above the keyboard is short
-00:01 +13: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the live view 8. read-only drops typed input and disables the keys
-00:01 +14: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the live view the view is one labelled node; the grid is not read
-00:01 +15: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the live view selectedText returns only the selection
-00:01 +16: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 9. the palette themeOf(dark) uses the roles
-00:01 +17: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 9. the palette themeOf(light) uses the roles
-00:01 +18: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 9. the palette the live scene paints only role colours (dark)
-00:01 +19: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 9. the palette the output scene paints only role colours (dark)
-00:02 +20: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 9. the palette the live scene paints only role colours (light)
-00:02 +21: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 9. the palette the output scene paints only role colours (light)
-00:02 +22: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the output form 10. the tail first, the rest a tap away
-00:02 +23: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the output form 10. too long: "Open all" hands over the whole, ANSI stripped
-00:02 +24: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the output form 10. too long with nowhere to open: it says what it shows
-00:02 +25: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the output form empty: only the command, or nothing at all
-00:02 +26: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the output form 11. secrets are masked on screen and in the full text
-00:02 +27: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the output form 12. tints: errors text1 semibold, warnings not amber, ANSI red
-00:02 +28: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the output form the command: program, folder, flags, strings, operators
-00:02 +29: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the output form 13. in Arabic the block stays left to right, buttons at start
-00:02 +30: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the output form 14. the old TerminalView forwards to KitTerminalView.output
-00:02 +31: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 320x640 · 1.0x · en
-00:02 +32: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 320x640 · 1.0x · en
-00:02 +33: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 320x640 · 1.0x · ar
-00:02 +34: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 320x640 · 1.0x · ar
-00:02 +35: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 320x640 · 1.3x · en
-00:02 +36: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 320x640 · 1.3x · en
-00:02 +37: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 320x640 · 1.3x · ar
-00:02 +38: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 320x640 · 1.3x · ar
-00:02 +39: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 320x640 · 2.0x · en
-00:02 +40: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 320x640 · 2.0x · en
-00:02 +41: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 320x640 · 2.0x · ar
-00:02 +42: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 320x640 · 2.0x · ar
-00:03 +43: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 412x915 · 1.0x · en
-00:03 +44: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 412x915 · 1.0x · en
-00:03 +45: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 412x915 · 1.0x · ar
-00:03 +46: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 412x915 · 1.0x · ar
-00:03 +47: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 412x915 · 1.3x · en
-00:03 +48: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 412x915 · 1.3x · en
-00:03 +49: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 412x915 · 1.3x · ar
-00:03 +50: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 412x915 · 1.3x · ar
-00:03 +51: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 412x915 · 2.0x · en
-00:03 +52: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 412x915 · 2.0x · en
-00:03 +53: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 412x915 · 2.0x · ar
-00:03 +54: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 412x915 · 2.0x · ar
-00:03 +55: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 915x412 · 1.0x · en
-00:03 +56: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 915x412 · 1.0x · en
-00:03 +57: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 915x412 · 1.0x · ar
-00:03 +58: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 915x412 · 1.0x · ar
-00:03 +59: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 915x412 · 1.3x · en
-00:03 +60: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 915x412 · 1.3x · en
-00:03 +61: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 915x412 · 1.3x · ar
-00:03 +62: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 915x412 · 1.3x · ar
-00:03 +63: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 915x412 · 2.0x · en
-00:03 +64: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 915x412 · 2.0x · en
-00:03 +65: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 915x412 · 2.0x · ar
-00:03 +66: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 915x412 · 2.0x · ar
-00:03 +67: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: KitTerminalView (MOT-7) live settles at once under system
-00:04 +68: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: KitTerminalView (MOT-7) output settles at once under system
-00:04 +69: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: KitTerminalView (MOT-7) show earlier changes and settles at once under system
-00:04 +70: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: KitTerminalView (MOT-7) latch changes and settles at once under system
-00:04 +71: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: KitTerminalView (MOT-7) live settles at once under effectsOff
-00:04 +72: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: KitTerminalView (MOT-7) output settles at once under effectsOff
-00:04 +73: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: KitTerminalView (MOT-7) show earlier changes and settles at once under effectsOff
-00:04 +74: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: KitTerminalView (MOT-7) latch changes and settles at once under effectsOff
-00:04 +75: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/terminal_key_bar_test.dart
-00:05 +75: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/terminal_key_bar_test.dart: modified text Ctrl turns letters into control bytes
-00:05 +76: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/terminal_key_bar_test.dart: modified text Ctrl on the symbols that have a control form
-00:05 +77: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/terminal_key_bar_test.dart: modified text text without a control form passes unchanged
-00:05 +78: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/terminal_key_bar_test.dart: modified text Alt puts Esc first; only the first character is modified
-00:05 +79: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/terminal_key_bar_test.dart: sticky modifiers Ctrl applies to the next text once, then releases
-00:05 +80: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/terminal_key_bar_test.dart: sticky modifiers a second tap releases the latch
-00:05 +81: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/terminal_key_bar_test.dart: keys sent to the terminal arrows follow the cursor-key mode programs ask for
-00:05 +82: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/terminal_key_bar_test.dart: keys sent to the terminal Esc, Tab, symbols and page keys
-00:05 +83: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/terminal_key_bar_test.dart: keys sent to the terminal Ctrl with an arrow sends the modified sequence
-00:05 +84: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/terminal_key_bar_test.dart: the bar has every key the spec lists
-00:05 +85: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/terminal_key_bar_test.dart: the bar tapping Ctrl latches it for the next key only
-00:05 +86: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/terminal_key_bar_test.dart: the bar every key is at least 44 by 48 on a phone
-00:05 +87: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/terminal_view_test.dart
-00:06 +87: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/terminal_view_test.dart: the program stands out of its path; flags and strings apart
-00:07 +88: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/terminal_view_test.dart: output keeps its colours, or is tinted by what it says
-00:07 +89: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/terminal_view_test.dart: long output shows its end, the rest a tap away
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the key bar 1. two rows: every key is 48 x 48, apart, reachable at 320 dp
+00:00 +1: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the key bar 1. compact: every key is 48 x 48, apart, reachable at 320 dp
+00:00 +2: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the key bar 1. with Ctrl-C and Ctrl-D: every key is 48 x 48, apart, reachable at 320 dp
+00:01 +3: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the key bar 2. Ctrl latches for one key, with toggled semantics
+00:01 +4: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the key bar 3. Ctrl-C and Ctrl-D reach the terminal as 0x03 and 0x04
+00:01 +5: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the key bar 3. a server bar leads with Ctrl-C, which sends 0x03
+00:01 +6: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the key bar 4. no key vibrates
+00:01 +7: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the key bar 5. disabled keys ignore taps and say why
+00:01 +8: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the key bar 6. in application cursor mode the up arrow sends ESC O A
+00:01 +9: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the live view 7. Tab reaches the shell; Ctrl+Tab leaves the terminal
+00:01 +10: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the live view 7. a PC window: hardware keys only, and no key bar
+00:01 +11: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the live view adaptive: the bar is capped and centred on a medium window
+00:01 +12: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the live view adaptive: one row only when the room above the keyboard is short
+00:01 +13: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the live view 8. read-only drops typed input and disables the keys
+00:01 +14: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the live view the view is one labelled node; the grid is not read
+00:01 +15: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the live view selectedText returns only the selection
+00:01 +16: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 9. the palette themeOf(dark) uses the roles
+00:01 +17: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 9. the palette themeOf(light) uses the roles
+00:01 +18: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 9. the palette the live scene paints only role colours (dark)
+00:01 +19: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 9. the palette the output scene paints only role colours (dark)
+00:02 +20: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 9. the palette the live scene paints only role colours (light)
+00:02 +21: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 9. the palette the output scene paints only role colours (light)
+00:02 +22: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the output form 10. the tail first, the rest a tap away
+00:02 +23: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the output form 10. too long: "Open all" hands over the whole, ANSI stripped
+00:02 +24: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the output form 10. too long with nowhere to open: it says what it shows
+00:02 +25: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the output form empty: only the command, or nothing at all
+00:02 +26: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the output form 11. secrets are masked on screen and in the full text
+00:02 +27: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the output form 12. tints: errors text1 semibold, warnings not amber, ANSI red
+00:02 +28: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the output form the command: program, folder, flags, strings, operators
+00:02 +29: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the output form 13. in Arabic the block stays left to right, buttons at start
+00:02 +30: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: the output form 14. the old TerminalView forwards to KitTerminalView.output
+00:02 +31: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 320x640 · 1.0x · en
+00:02 +32: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 320x640 · 1.0x · en
+00:02 +33: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 320x640 · 1.0x · ar
+00:02 +34: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 320x640 · 1.0x · ar
+00:02 +35: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 320x640 · 1.3x · en
+00:02 +36: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 320x640 · 1.3x · en
+00:02 +37: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 320x640 · 1.3x · ar
+00:02 +38: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 320x640 · 1.3x · ar
+00:02 +39: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 320x640 · 2.0x · en
+00:02 +40: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 320x640 · 2.0x · en
+00:02 +41: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 320x640 · 2.0x · ar
+00:02 +42: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 320x640 · 2.0x · ar
+00:03 +43: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 412x915 · 1.0x · en
+00:03 +44: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 412x915 · 1.0x · en
+00:03 +45: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 412x915 · 1.0x · ar
+00:03 +46: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 412x915 · 1.0x · ar
+00:03 +47: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 412x915 · 1.3x · en
+00:03 +48: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 412x915 · 1.3x · en
+00:03 +49: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 412x915 · 1.3x · ar
+00:03 +50: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 412x915 · 1.3x · ar
+00:03 +51: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 412x915 · 2.0x · en
+00:03 +52: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 412x915 · 2.0x · en
+00:03 +53: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 412x915 · 2.0x · ar
+00:03 +54: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 412x915 · 2.0x · ar
+00:03 +55: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 915x412 · 1.0x · en
+00:03 +56: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 915x412 · 1.0x · en
+00:03 +57: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 915x412 · 1.0x · ar
+00:03 +58: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 915x412 · 1.0x · ar
+00:03 +59: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 915x412 · 1.3x · en
+00:03 +60: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 915x412 · 1.3x · en
+00:03 +61: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 915x412 · 1.3x · ar
+00:03 +62: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 915x412 · 1.3x · ar
+00:03 +63: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 915x412 · 2.0x · en
+00:03 +64: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 915x412 · 2.0x · en
+00:03 +65: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) live 915x412 · 2.0x · ar
+00:03 +66: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: 15. overflow (G6) output 915x412 · 2.0x · ar
+00:03 +67: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: KitTerminalView (MOT-7) live settles at once under system
+00:04 +68: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: KitTerminalView (MOT-7) output settles at once under system
+00:04 +69: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: KitTerminalView (MOT-7) show earlier changes and settles at once under system
+00:04 +70: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: KitTerminalView (MOT-7) latch changes and settles at once under system
+00:04 +71: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: KitTerminalView (MOT-7) live settles at once under effectsOff
+00:04 +72: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: KitTerminalView (MOT-7) output settles at once under effectsOff
+00:04 +73: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: KitTerminalView (MOT-7) show earlier changes and settles at once under effectsOff
+00:04 +74: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/kit/kit_terminal_view_test.dart: KitTerminalView (MOT-7) latch changes and settles at once under effectsOff
+00:04 +75: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/terminal_key_bar_test.dart
+00:05 +75: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/terminal_key_bar_test.dart: modified text Ctrl turns letters into control bytes
+00:05 +76: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/terminal_key_bar_test.dart: modified text Ctrl on the symbols that have a control form
+00:05 +77: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/terminal_key_bar_test.dart: modified text text without a control form passes unchanged
+00:05 +78: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/terminal_key_bar_test.dart: modified text Alt puts Esc first; only the first character is modified
+00:05 +79: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/terminal_key_bar_test.dart: sticky modifiers Ctrl applies to the next text once, then releases
+00:05 +80: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/terminal_key_bar_test.dart: sticky modifiers a second tap releases the latch
+00:05 +81: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/terminal_key_bar_test.dart: keys sent to the terminal arrows follow the cursor-key mode programs ask for
+00:05 +82: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/terminal_key_bar_test.dart: keys sent to the terminal Esc, Tab, symbols and page keys
+00:05 +83: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/terminal_key_bar_test.dart: keys sent to the terminal Ctrl with an arrow sends the modified sequence
+00:05 +84: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/terminal_key_bar_test.dart: the bar has every key the spec lists
+00:05 +85: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/terminal_key_bar_test.dart: the bar tapping Ctrl latches it for the next key only
+00:05 +86: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/terminal_key_bar_test.dart: the bar every key is at least 44 by 48 on a phone
+00:05 +87: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/terminal_view_test.dart
+00:06 +87: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/terminal_view_test.dart: the program stands out of its path; flags and strings apart
+00:07 +88: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/terminal_view_test.dart: output keeps its colours, or is tinted by what it says
+00:07 +89: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_0783c790-5fe-6/test/terminal_view_test.dart: long output shows its end, the rest a tap away
 00:07 +90: All tests passed!

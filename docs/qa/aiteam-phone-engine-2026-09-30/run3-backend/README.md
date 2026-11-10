@@ -42,7 +42,7 @@ Phase intake also rejects malformed types, missing titles and duplicate IDs with
 Run on `build/aiteam-phone-engine`, after `517cdcc4`, using the pinned Flutter 3.47.1, JDK 17, Android release instrumentation and the shared emulator/machine locks. Only `adb -s emulator-5554` was used, with OC_API35. Exact APK 2082 first reproduced the error; the temporary same-version backend QA build retained its certificate and data. Both native ABIs were rebuilt and staged. UI files were not changed.
 
 ```sh
-PINNED_FLUTTER=/home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter
+PINNED_FLUTTER=/home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter
 OC_TEST_SLOTS=1 tool/qa/machine_lock.sh test -- cargo test --manifest-path engine/phone/Cargo.toml --locked -- --test-threads=1 --include-ignored
 OC_TEST_SLOTS=1 tool/qa/machine_lock.sh test -- "$PINNED_FLUTTER" test --concurrency=1 test/phone_project_engine_gateway_test.dart test/team_project_controller_test.dart test/phone_project_engine_controller_test.dart test/phone_engine_connection_review_test.dart test/builtin_phone_engine_test.dart
 OC_TEST_SLOTS=1 tool/qa/machine_lock.sh analyze -- "$PINNED_FLUTTER" analyze

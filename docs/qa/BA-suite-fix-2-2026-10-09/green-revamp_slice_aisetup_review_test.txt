@@ -1,4 +1,4 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/revamp/slice_aisetup_review_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app-sol-ba/test/revamp/slice_aisetup_review_test.dart
 00:00 +0: entry the server settings page opens AI setup
 00:01 +1: entry a server without setup sharing gets no entry
 00:01 +2: no credential in the configuration ever renders

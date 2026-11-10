@@ -1,9 +1,9 @@
 # Paper school: QA (2026-10-21)
 
 Branch `feat/style-paper`. Spec: `lib/ui/kit/style/kit_style_paper.dart`.
-Renders (not in git): `/home/eslam/vision-assets/out/style-paper/progress/`
+Renders (not in git): `/home/owner/vision-assets/out/style-paper/progress/`
 (`passN-<screen>-<light|dark>.png`, one phone screen each; `LOG.md` has one
-line per pass). Report: `/home/eslam/vision-assets/out/style-paper/REPORT.md`.
+line per pass). Report: `/home/owner/vision-assets/out/style-paper/REPORT.md`.
 
 ## What Paper does now
 

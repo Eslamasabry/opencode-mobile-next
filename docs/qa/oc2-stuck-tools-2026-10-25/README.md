@@ -11,7 +11,7 @@ agents showed "Subagent cancelled", and even a one-line `printf` never ran.
 Collected from the phone through the app's own terminal (This phone › Open a
 terminal): `/root/.oc-opencode2/data/opencode/log/opencode.log` and
 `opencode.db`. Local copies:
-`/home/eslam/Storage2/launch-footage/qa-stability/phone-data/` (not committed:
+`/home/owner/Storage2/launch-footage/qa-stability/phone-data/` (not committed:
 it holds the owner's conversations).
 
 1. Every interrupted step in the chat (`session_message`, 10-19 to 10-24) has
@@ -80,7 +80,7 @@ returns 200 with the request listed. The phone and the emulator still ran
 ## Device runs (emulator-5584, built-in OpenCode 2.0.29, chat "Running uptime command", Auto-approve on)
 
 The rules were read from the server's own database (`session_v2.permission`)
-after each step. Screenshots: `/home/eslam/Storage2/launch-footage/qa-stability/emu/`.
+after each step. Screenshots: `/home/owner/Storage2/launch-footage/qa-stability/emu/`.
 
 | Build | Step | Server rules for the chat | Result |
 |---|---|---|---|

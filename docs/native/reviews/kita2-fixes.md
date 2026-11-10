@@ -59,15 +59,15 @@ The touched module compiles for desktop and Android. Existing compiler/AGP warni
 The final combined invocation succeeded in 54 seconds; desktop results were reused from its preceding full successful
 run and Android host tests executed after the sandbox-lock adjustment.
 
-Every Gradle invocation held the PC's existing `/home/eslam/Storage/tmp/oc-build.lock` exclusively (opened read-only,
+Every Gradle invocation held the PC's existing `/home/owner/Storage/tmp/oc-build.lock` exclusively (opened read-only,
 without modifying the lock file). Final command from the repository root:
 
 ```sh
-exec 9< /home/eslam/Storage/tmp/oc-build.lock
+exec 9< /home/owner/Storage/tmp/oc-build.lock
 flock -w 60 9
 cd native
-JAVA_HOME=/home/eslam/Storage/tools/jdk-21.0.13+9 \
-ANDROID_HOME=/home/eslam/Android/Sdk \
+JAVA_HOME=/home/owner/Storage/tools/jdk-21.0.13+9 \
+ANDROID_HOME=/home/owner/Android/Sdk \
 ./gradlew --no-daemon -Pkotlin.incremental=false \
   '-Dorg.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=768m -XX:+UseParallelGC -Dfile.encoding=UTF-8' \
   --max-workers=2 -I /tmp/kita2-test-env.gradle \
@@ -76,7 +76,7 @@ ANDROID_HOME=/home/eslam/Android/Sdk \
 
 The explicit JVM option overrides this host's larger user-level heap setting. The temporary init script sets test-only
 `skiko.data.path=/tmp/kita2-skiko`; Android host tests additionally set
-`user.home=/tmp/kita2-robolectric-home`, `maven.repo.local=/home/eslam/.m2/repository`, and
+`user.home=/tmp/kita2-robolectric-home`, `maven.repo.local=/home/owner/.m2/repository`, and
 `robolectric.dependency.repo.url=https://repo.maven.apache.org/maven2`.
 The first desktop attempt could not write Skiko's home-directory lock; the first Android attempt could not write
 Robolectric's home-directory download lock. These sandbox-only adjustments resolved them without repository changes.

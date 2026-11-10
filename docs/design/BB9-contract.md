@@ -2,7 +2,7 @@ DONE: native startup integration qualified, with OpenCode2 surviving-installer r
 
 # BB9 — cold-start pinned update recovery integration
 
-Queued 2026-10-08 after BB3 by the coordinator (BB8 transferred to BD2). Read [BC4's exact proposal and rules](/home/eslam/Storage/Code/oc_app-sol-bc/docs/design/BC4-contract.md). Source branch `sol/bc-setup-safety`, commit `6c84e33d`.
+Queued 2026-10-08 after BB3 by the coordinator (BB8 transferred to BD2). Read [BC4's exact proposal and rules](/home/owner/Storage/Code/oc_app-sol-bc/docs/design/BC4-contract.md). Source branch `sol/bc-setup-safety`, commit `6c84e33d`.
 
 Branch integration: BC commit `6c84e33d` was already an ancestor through frontend
 merge `cf3e4e86`; the requested merge returned Already up to date. No rebase.

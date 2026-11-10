@@ -1,88 +1,88 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: (setUpAll)
-00:00 +0: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: navigation stays inside its glass surface at 320.0 and 2.5x
-00:01 +1: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: navigation stays inside its glass surface at 390.0 and 2.5x
-00:01 +2: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: Files Back clears search, ascends folders, returns home, then guards exit
-00:01 +3: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: inactive Files tab does not consume Back
-00:02 +4: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: switching destinations preserves Files search and folder
-00:02 +5: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: Activity Back returns Workspace before offering exit
-00:02 +6: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: reduced motion switches destinations without animation
-00:02 +7: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: frosted dock preserves last file reachability and yields to keyboard
-00:03 +8: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: phone shell uses product bottom navigation
-00:03 +9: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: one pending badge, on the Activity destination
-00:03 +10: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: the Activity tab shows cross-session sections
-00:03 +11: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: failed reconnect keeps the product shell and location visible
-00:03 +12: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: recovery banner fits a 320dp phone with 2x text
-00:03 +13: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: automatic SSE reconnect still offers a manual retry
-00:04 +14: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: phone header separates long local server and workspace labels
-00:04 +15: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: tablet shell switches to navigation rail
-00:04 +16: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: (tearDownAll)
-00:04 +16: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/host_management_screen_test.dart
-00:04 +16: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/host_management_screen_test.dart: the ubuntu host script passes bash syntax validation
-00:04 +17: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/host_management_screen_test.dart: remote profiles expose the host management destination
-00:05 +18: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/host_management_screen_test.dart: the managed loopback profile hides host management
-00:06 +19: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/host_management_screen_test.dart: copy buttons place the exact command on the clipboard
-00:06 +20: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/host_management_screen_test.dart: host management fits a 320dp phone at 2x text
-00:06 +21: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/info_label_test.dart
-00:06 +21: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/info_label_test.dart: tapping a glossary term opens its explanation
-00:07 +22: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/info_label_test.dart: term is announced as a button with a hint
-00:07 +23: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/info_label_test.dart: every glossary entry stays short enough to read in one glance
-00:07 +24: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/integration_auth_recovery_test.dart
-00:08 +24: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/integration_auth_recovery_test.dart: uncertain PendingAuthKind.oauth requires explicit dismissal before another start
-00:08 +25: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/integration_auth_recovery_test.dart: uncertain PendingAuthKind.command requires explicit dismissal before another start
-00:08 +26: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/integration_auth_recovery_test.dart: unknown start can be explicitly forgotten without another request
-00:09 +27: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/integration_auth_recovery_test.dart: recoverable browser sign-in shows its device code before launch
-00:09 +28: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/ios_remote_platform_gating_test.dart
-00:10 +28: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/ios_remote_platform_gating_test.dart: iOS stale keep-live preference cannot prevent suspension before restore
-00:10 +29: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/ios_remote_platform_gating_test.dart: iOS stale keep-live preference cannot prevent suspension after restore
-00:10 +30: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/ios_remote_platform_gating_test.dart: iOS native backstops stay unavailable without outgoing oc calls
-00:10 +31: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/ios_remote_platform_gating_test.dart: iOS keeps remote server entry and paste pairing without Termux or scanning (variant: TargetPlatform.iOS)
-00:11 +32: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/ios_remote_platform_gating_test.dart: iOS remote chat reads and sends with voice and photos gated off (variant: TargetPlatform.iOS)
-00:11 +33: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/ios_remote_platform_gating_test.dart: iOS settings omit background services without hiding privacy controls (variant: TargetPlatform.iOS)
-00:11 +34: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/ios_remote_platform_gating_test.dart: dark iOS guide shows Keychain guidance at 360x740 and 2.5x (variant: TargetPlatform.iOS)
-00:11 +35: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/ios_remote_platform_gating_test.dart: dark iOS About shows remote-only identity at 360x740 and 2.5x (variant: TargetPlatform.iOS)
-00:12 +36: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/ios_remote_platform_gating_test.dart: light iOS guide shows Keychain guidance at 360x740 and 2.5x (variant: TargetPlatform.iOS)
-00:12 +37: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/ios_remote_platform_gating_test.dart: light iOS About shows remote-only identity at 360x740 and 2.5x (variant: TargetPlatform.iOS)
-00:12 +38: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/ios_runner_contract_test.dart
-00:12 +38: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/ios_runner_contract_test.dart: iOS runner has the generated lifecycle and explicit unsigned-build path
-00:12 +39: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/ios_runner_contract_test.dart: iOS configuration does not claim unsupported native capabilities
-00:12 +40: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/ios_runner_contract_test.dart: iOS CI watches path dependencies and bundled policy/license assets
-00:12 +41: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/ios_runner_contract_test.dart: all declared iOS app icons exist at exact size without an alpha channel
-00:12 +42: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_launch_test.dart
-00:13 +42: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_launch_test.dart: ready event received before the create response is retained
-00:13 +43: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_launch_test.dart: events for another project or directory are ignored
-00:13 +44: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_launch_test.dart: failure event keeps the created worktree and reports the message
-00:13 +45: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_launch_test.dart: create failure surfaces the error with no worktree
-00:13 +46: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_launch_test.dart: timeout becomes unconfirmed; open needs explicit acceptance
-00:13 +47: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_launch_test.dart: open anyway from unconfirmed records the choice
-00:13 +48: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_launch_test.dart: a failed open keeps the launch openable
-00:13 +49: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_launch_test.dart: cancel before the response keeps whatever the server made
-00:13 +50: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_launch_test.dart: cancel while preparing stops waiting without deleting
-00:13 +51: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_launch_test.dart: start is idempotent and cancel is inert once terminal
-00:13 +52: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart
-00:14 +52: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: profile switch before Start permanently retires the sheet
-00:14 +53: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: cached project absent from current catalog never creates
-00:15 +54: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: scope change while revalidating catalog refuses creation
-00:15 +55: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: same-directory workspace change during selection refuses opening
-00:15 +56: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: same-directory workspace change during repository refuses opening
-00:15 +57: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: same-directory workspace change during transport refuses opening
-00:15 +58: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: connection change during repository preparation blocks create
-00:15 +59: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: scope change while waiting for readiness blocks automatic open
-00:15 +60: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: transport preparation cannot retarget session creation
-00:15 +61: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: unresolved current project refuses session creation
-00:15 +62: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: ready worktree opens a blank session in its scope
-00:15 +63: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: a ready event that beats the create response still counts
-00:15 +64: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: no readiness within the wait needs an explicit open
-00:15 +65: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: stop waiting keeps the worktree and creates no session
-00:16 +66: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: stopping before the response warns that create may run
-00:16 +67: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: failed preparation keeps the worktree listed
-00:16 +68: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: a scope that resolves to another project refuses the session
-00:16 +69: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: a failed location switch keeps the launch openable
-00:16 +70: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: without the create capability the sheet refuses to start
-00:16 +71: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: Worktrees screen hides Create without the capability
-00:16 +72: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/l10n_coverage_test.dart
-00:16 +72: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/l10n_coverage_test.dart: hardcoded string detector
-00:16 +73: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/l10n_coverage_test.dart: no file gained hardcoded UI strings
+00:00 +0: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: (setUpAll)
+00:00 +0: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: navigation stays inside its glass surface at 320.0 and 2.5x
+00:01 +1: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: navigation stays inside its glass surface at 390.0 and 2.5x
+00:01 +2: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: Files Back clears search, ascends folders, returns home, then guards exit
+00:01 +3: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: inactive Files tab does not consume Back
+00:02 +4: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: switching destinations preserves Files search and folder
+00:02 +5: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: Activity Back returns Workspace before offering exit
+00:02 +6: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: reduced motion switches destinations without animation
+00:02 +7: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: frosted dock preserves last file reachability and yields to keyboard
+00:03 +8: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: phone shell uses product bottom navigation
+00:03 +9: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: one pending badge, on the Activity destination
+00:03 +10: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: the Activity tab shows cross-session sections
+00:03 +11: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: failed reconnect keeps the product shell and location visible
+00:03 +12: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: recovery banner fits a 320dp phone with 2x text
+00:03 +13: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: automatic SSE reconnect still offers a manual retry
+00:04 +14: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: phone header separates long local server and workspace labels
+00:04 +15: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: tablet shell switches to navigation rail
+00:04 +16: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/home_navigation_test.dart: (tearDownAll)
+00:04 +16: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/host_management_screen_test.dart
+00:04 +16: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/host_management_screen_test.dart: the ubuntu host script passes bash syntax validation
+00:04 +17: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/host_management_screen_test.dart: remote profiles expose the host management destination
+00:05 +18: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/host_management_screen_test.dart: the managed loopback profile hides host management
+00:06 +19: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/host_management_screen_test.dart: copy buttons place the exact command on the clipboard
+00:06 +20: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/host_management_screen_test.dart: host management fits a 320dp phone at 2x text
+00:06 +21: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/info_label_test.dart
+00:06 +21: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/info_label_test.dart: tapping a glossary term opens its explanation
+00:07 +22: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/info_label_test.dart: term is announced as a button with a hint
+00:07 +23: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/info_label_test.dart: every glossary entry stays short enough to read in one glance
+00:07 +24: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/integration_auth_recovery_test.dart
+00:08 +24: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/integration_auth_recovery_test.dart: uncertain PendingAuthKind.oauth requires explicit dismissal before another start
+00:08 +25: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/integration_auth_recovery_test.dart: uncertain PendingAuthKind.command requires explicit dismissal before another start
+00:08 +26: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/integration_auth_recovery_test.dart: unknown start can be explicitly forgotten without another request
+00:09 +27: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/integration_auth_recovery_test.dart: recoverable browser sign-in shows its device code before launch
+00:09 +28: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/ios_remote_platform_gating_test.dart
+00:10 +28: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/ios_remote_platform_gating_test.dart: iOS stale keep-live preference cannot prevent suspension before restore
+00:10 +29: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/ios_remote_platform_gating_test.dart: iOS stale keep-live preference cannot prevent suspension after restore
+00:10 +30: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/ios_remote_platform_gating_test.dart: iOS native backstops stay unavailable without outgoing oc calls
+00:10 +31: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/ios_remote_platform_gating_test.dart: iOS keeps remote server entry and paste pairing without Termux or scanning (variant: TargetPlatform.iOS)
+00:11 +32: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/ios_remote_platform_gating_test.dart: iOS remote chat reads and sends with voice and photos gated off (variant: TargetPlatform.iOS)
+00:11 +33: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/ios_remote_platform_gating_test.dart: iOS settings omit background services without hiding privacy controls (variant: TargetPlatform.iOS)
+00:11 +34: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/ios_remote_platform_gating_test.dart: dark iOS guide shows Keychain guidance at 360x740 and 2.5x (variant: TargetPlatform.iOS)
+00:11 +35: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/ios_remote_platform_gating_test.dart: dark iOS About shows remote-only identity at 360x740 and 2.5x (variant: TargetPlatform.iOS)
+00:12 +36: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/ios_remote_platform_gating_test.dart: light iOS guide shows Keychain guidance at 360x740 and 2.5x (variant: TargetPlatform.iOS)
+00:12 +37: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/ios_remote_platform_gating_test.dart: light iOS About shows remote-only identity at 360x740 and 2.5x (variant: TargetPlatform.iOS)
+00:12 +38: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/ios_runner_contract_test.dart
+00:12 +38: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/ios_runner_contract_test.dart: iOS runner has the generated lifecycle and explicit unsigned-build path
+00:12 +39: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/ios_runner_contract_test.dart: iOS configuration does not claim unsupported native capabilities
+00:12 +40: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/ios_runner_contract_test.dart: iOS CI watches path dependencies and bundled policy/license assets
+00:12 +41: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/ios_runner_contract_test.dart: all declared iOS app icons exist at exact size without an alpha channel
+00:12 +42: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_launch_test.dart
+00:13 +42: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_launch_test.dart: ready event received before the create response is retained
+00:13 +43: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_launch_test.dart: events for another project or directory are ignored
+00:13 +44: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_launch_test.dart: failure event keeps the created worktree and reports the message
+00:13 +45: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_launch_test.dart: create failure surfaces the error with no worktree
+00:13 +46: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_launch_test.dart: timeout becomes unconfirmed; open needs explicit acceptance
+00:13 +47: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_launch_test.dart: open anyway from unconfirmed records the choice
+00:13 +48: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_launch_test.dart: a failed open keeps the launch openable
+00:13 +49: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_launch_test.dart: cancel before the response keeps whatever the server made
+00:13 +50: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_launch_test.dart: cancel while preparing stops waiting without deleting
+00:13 +51: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_launch_test.dart: start is idempotent and cancel is inert once terminal
+00:13 +52: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart
+00:14 +52: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: profile switch before Start permanently retires the sheet
+00:14 +53: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: cached project absent from current catalog never creates
+00:15 +54: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: scope change while revalidating catalog refuses creation
+00:15 +55: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: same-directory workspace change during selection refuses opening
+00:15 +56: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: same-directory workspace change during repository refuses opening
+00:15 +57: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: same-directory workspace change during transport refuses opening
+00:15 +58: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: connection change during repository preparation blocks create
+00:15 +59: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: scope change while waiting for readiness blocks automatic open
+00:15 +60: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: transport preparation cannot retarget session creation
+00:15 +61: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: unresolved current project refuses session creation
+00:15 +62: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: ready worktree opens a blank session in its scope
+00:15 +63: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: a ready event that beats the create response still counts
+00:15 +64: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: no readiness within the wait needs an explicit open
+00:15 +65: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: stop waiting keeps the worktree and creates no session
+00:16 +66: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: stopping before the response warns that create may run
+00:16 +67: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: failed preparation keeps the worktree listed
+00:16 +68: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: a scope that resolves to another project refuses the session
+00:16 +69: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: a failed location switch keeps the launch openable
+00:16 +70: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: without the create capability the sheet refuses to start
+00:16 +71: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/isolated_task_sheet_test.dart: Worktrees screen hides Create without the capability
+00:16 +72: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/l10n_coverage_test.dart
+00:16 +72: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/l10n_coverage_test.dart: hardcoded string detector
+00:16 +73: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/l10n_coverage_test.dart: no file gained hardcoded UI strings
 l10n: these files improved; lower their baseline in test/l10n_coverage_test.dart:
   lib/main.dart: 3 (baseline 4)
   lib/ui/screens/activity_screen.dart: 9 (baseline 11)
@@ -99,171 +99,171 @@ l10n: these files improved; lower their baseline in test/l10n_coverage_test.dart
   lib/ui/widgets/pickers.dart: 10 (baseline 12)
   lib/ui/widgets/diff_view.dart: 0 (baseline 2)
   lib/ui/widgets/markdown.dart: 0 (baseline 2)
-00:16 +74: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_native_contract_test.dart
-00:17 +74: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_native_contract_test.dart: the manifest publishes the static shortcuts resource
-00:17 +75: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_native_contract_test.dart: every declared shortcut targets MainActivity with a whitelisted id
-00:17 +76: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_native_contract_test.dart: the native whitelist matches the declared shortcut ids
-00:17 +77: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_native_contract_test.dart: the extra is removed before the whitelist decides
-00:17 +78: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_native_contract_test.dart: consumeLaunchAction acknowledges readiness and drains once
-00:17 +79: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_native_contract_test.dart: a live tap is pushed only once Dart is listening
-00:17 +80: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_native_contract_test.dart: engine teardown forgets the channel and its readiness
-00:17 +81: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_routing_test.dart
-00:18 +81: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_routing_test.dart: connect opens server selection and keeps the connection
-00:19 +82: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_routing_test.dart: new task while connected creates exactly one empty session
-00:19 +83: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_routing_test.dart: new task without a saved server stays on server selection
-00:19 +84: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_routing_test.dart: new task during password re-entry drops with a notice
-00:19 +85: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_routing_test.dart: new task after a final connection error routes to servers
-00:20 +86: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_routing_test.dart: new task while connecting waits and creates once ready
-00:20 +87: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_routing_test.dart: a scope change aborts the stale creation without losing a newer launch
-00:20 +88: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_routing_test.dart: duplicate rapid new task taps while creation is held coalesce to one
-00:20 +89: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_routing_test.dart: new task leaves a persisted composer draft untouched
-00:21 +90: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_routing_test.dart: new task leaves a held shared draft untouched
-00:21 +91: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_test.dart
-00:22 +91: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_test.dart: drains the shortcut that launched the app, once
-00:22 +92: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_test.dart: maps the connect shortcut id from a cold start
-00:22 +93: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_test.dart: accepts a live shortcut tap while running
-00:22 +94: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_test.dart: ignores unknown actions, null and non-string payloads
-00:22 +95: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_test.dart: an unknown live action does not clear a valid pending one
-00:22 +96: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_test.dart: tolerates a missing native implementation
-00:22 +97: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_test.dart: tolerates a native capture failure
-00:22 +98: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_test.dart: is inert off Android
-00:22 +99: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_test.dart: a newer live tap wins over a stale cold-start consume
-00:22 +100: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_test.dart: a live tap taken before cold-start completion stays taken
-00:22 +101: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_test.dart: dispose while the cold-start consume is pending ignores it
-00:22 +102: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_test.dart: disposing a never-started receiver preserves an active one
-00:22 +103: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_test.dart: dispose unregisters the channel and blocks notifier callbacks
-00:22 +104: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_commands_test.dart
-00:22 +104: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_commands_test.dart: loading command destinations retains arguments and selected chat
-00:23 +105: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_commands_test.dart: new workspace creates a chat and runs without duplicate submission
-00:23 +106: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_commands_test.dart: failed command retains arguments and retries the same new chat
-00:24 +107: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_commands_test.dart: existing chat uses its own model and variant
-00:24 +108: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_commands_test.dart: workspace switch during creation prevents command dispatch
-00:24 +109: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart
-00:24 +109: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: (setUpAll)
-00:24 +109: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: authorization URL policy accepts only credential-free HTTPS hosts
-00:24 +110: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: provider OAuth completion accepts a code or callback URL
-00:24 +111: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: provider integrations remain available when MCP resources fail
-00:25 +112: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: empty MCP state opens persistent native setup
-00:25 +113: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: custom providers from opencode.json appear as configured on the server
-00:26 +114: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: provider aliases retain separate regional connection states
-00:26 +115: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: stored provider credential requires confirmation before disconnect
-00:26 +116: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: legacy OAuth provider can be disconnected from mobile
-00:26 +117: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: environment provider explains that mobile cannot disconnect it
-00:26 +118: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: legacy OAuth can be removed while environment stays active
-00:26 +119: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: failed provider disconnect keeps its action visible for retry
-00:26 +120: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: provider disconnect confirmation fits a compact large-text phone
-00:26 +121: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: MCP resources remain available when integrations fail
-00:26 +122: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: MCP authentication shows the validated destination host
-00:26 +123: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: unsafe MCP authentication URL is rejected before confirmation
-00:27 +124: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: MCP authorization completes from a state-validated callback URL
-00:27 +125: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: MCP authorization rejects mismatched state and can be cancelled
-00:27 +126: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: pending MCP authorization fits compact large-text phones
-00:27 +127: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: MCP actions wait for the wake-time replacement repository
-00:27 +128: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: OAuth rejects blank required text while allowing blank optional text
-00:27 +129: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: OAuth conditions validate visible selects and submit only visible values
-00:28 +130: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: automatic OAuth stays visible and checks server attempt status
-00:28 +131: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: automatic OAuth cannot be cancelled during its callback
-00:28 +132: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: code OAuth completes, refreshes models, and clears its state
-00:28 +133: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: provider search filters by name, id, model, and alias
-00:29 +134: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: completed OAuth can retry a failed runtime refresh
-00:29 +135: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: (tearDownAll)
-00:29 +135: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_refresh_test.dart
-00:29 +135: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_refresh_test.dart: commands retains loaded content after failed refresh and retries
-00:30 +136: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_refresh_test.dart: commands retains empty content after failed refresh and retries
-00:30 +137: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_refresh_test.dart: skills retains loaded content after failed refresh and retries
-00:30 +138: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_refresh_test.dart: skills retains empty content after failed refresh and retries
-00:30 +139: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_refresh_test.dart: references retains loaded content after failed refresh and retries
-00:30 +140: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_refresh_test.dart: references retains empty content after failed refresh and retries
-00:30 +141: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_refresh_test.dart: terminals retains loaded content after failed refresh and retries
-00:31 +142: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_refresh_test.dart: terminals retains empty content after failed refresh and retries
-00:31 +143: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_refresh_test.dart: older command refresh cannot clear a newer refresh error
-00:31 +144: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_screen_test.dart
-00:31 +144: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_screen_test.dart: search finds aliases, recovers from no results, and clears
-00:32 +145: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_screen_test.dart: the default model uses the catalog name and explains its scope
-00:32 +146: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_screen_test.dart: More uses compact rows with Models & agents first
-00:32 +147: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_screen_test.dart: group separators align with destination text, not icon slots
-00:32 +148: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_screen_test.dart: the hub carries no pending badge of its own
-00:32 +149: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_screen_test.dart: Terminal moved into the hub and opens with an app bar
-00:33 +150: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_skills_test.dart
-00:33 +150: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_skills_test.dart: skill content uses the shared Markdown and code renderer
-00:34 +151: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_skills_test.dart: skill preview fits a narrow large-text phone
-00:34 +152: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/library_skills_test.dart: standalone references copy their exact OpenCode mention
-00:34 +153: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/live_status_test.dart
-00:35 +153: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/live_status_test.dart: LiveStatus serialises exactly the four fields Android reads
-00:35 +154: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/live_status_test.dart: LiveStatus compares by value
-00:35 +155: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/live_status_test.dart: publishLiveStatus is a no-op while live mode is off or the service is down
-00:35 +156: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/live_status_test.dart: publishLiveStatus sends the first status at once and skips unchanged ones
-00:35 +157: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/live_status_test.dart: publishLiveStatus coalesces a burst into one trailing push with the newest
-00:35 +158: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/live_status_test.dart: publishLiveStatus a burst that returns to the shown status sends nothing
-00:36 +159: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/live_status_test.dart: publishLiveStatus swallows a missing platform channel
-00:36 +160: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/live_status_test.dart: publishLiveStatus a pause from the notification is not an Android timeout
-00:36 +161: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/live_status_test.dart: ConnectionController.liveStatus counts runs and requests and names the freshest busy session
-00:36 +162: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/live_status_test.dart: ConnectionController.liveStatus publishes through notifyListeners and tool part events
-00:36 +163: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/live_status_test.dart: ConnectionController.liveStatus tool sentences never repeat the tool input
-00:36 +164: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/local_pdf_test.dart
-00:37 +164: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/local_pdf_test.dart: channel input/output budgets reject invalid transport results
-00:37 +165: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/local_pdf_test.dart: PDF page controls browse local rasters and stop at declared limit
-00:37 +166: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/local_pdf_test.dart: scope-retired PDF requests cannot install late pages
-00:37 +167: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/local_pdf_test.dart: disposing a PDF view cancels and ignores a held page
-00:37 +168: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/local_pdf_test.dart: replacing a document retires the old response and resets to page one
-00:37 +169: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/local_pdf_test.dart: backgrounding cancels PDF work and requires an explicit retry
-00:37 +170: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/local_pdf_test.dart: cancel and renderer death recover without retaining a spinner
-00:37 +171: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/local_pdf_test.dart: initial inactive PDF mount waits for explicit resumed retry
-00:37 +172: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/local_pdf_test.dart: inactive document replacement cannot start another render
-00:37 +173: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/local_pdf_test.dart: desktop and encrypted PDF give useful original-save guidance
-00:37 +174: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart
-00:38 +174: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: idle local clears selection and preserves profile and credentials
-00:38 +175: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: disables all local aliases and leaves remote work connected
-00:38 +176: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: does not disconnect unmanaged endpoint http://127.0.0.1:4097
-00:38 +177: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: does not disconnect unmanaged endpoint http://localhost:4096
-00:38 +178: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: does not treat another backend at local URL as managed OpenCode
-00:38 +179: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: known local running work blocks before recovery or disconnect
-00:38 +180: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: pending local permission blocks without needing busy status
-00:38 +181: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: admitted local inbox send blocks before server reports busy
-00:38 +182: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: retains saved local queue during switch (dispatched=false)
-00:38 +183: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: retains saved local queue during switch (dispatched=true)
-00:38 +184: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: unreadable saved queue is untouched during switch
-00:38 +185: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: background monitor local running work blocks with remote active
-00:38 +186: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: recovery persistence failure is actionable and never disconnects
-00:38 +187: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: new work during recovery persistence blocks final disconnect
-00:38 +188: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: in-flight local send blocks without closing its transport
-00:38 +189: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: selection persistence failure prevents switch completion
-00:38 +190: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: managed ServerFlavor.v1 profile never adopts the other running runtime
-00:38 +191: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: managed ServerFlavor.v2 profile never adopts the other running runtime
-00:38 +192: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_server_health_test.dart
-00:39 +192: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_server_health_test.dart: checking is explicit, reads Termux storage, and never starts setup
-00:40 +193: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_server_health_test.dart: pending check prevents duplicates and permits leaving for setup
-00:40 +194: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_server_health_test.dart: failed refresh clears old ready state and hides raw errors
-00:40 +195: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_server_health_test.dart: unsupported platform has no controls or bridge calls
-00:40 +196: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_server_health_test.dart: manual status supersedes an older recovery observation
-00:40 +197: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_server_recovery_test.dart
-00:41 +197: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_server_recovery_test.dart: opt out never probes; duplicate profiles share one owner
-00:41 +198: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_server_recovery_test.dart: three attempts are delayed and survive service recreation
-00:41 +199: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_server_recovery_test.dart: deletion admission cancels a pending probe before restart dispatch
-00:41 +200: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_server_recovery_test.dart: background and changed operation prevent automatic restart
-00:41 +201: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_server_recovery_test.dart: background during a dispatched recovery revokes its permit before return
-00:41 +202: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_server_recovery_test.dart: unknown command outcome pauses without blindly spending remaining budget
-00:41 +203: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_server_recovery_test.dart: failed persistence still revokes a dispatched recovery permit
-00:41 +204: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_server_recovery_test.dart: failed attempt reservation does not spend budget and restart retries once
-00:41 +205: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_server_recovery_test.dart: stale reservation failure cannot restore state after stop supersedes it
-00:41 +206: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_server_recovery_test.dart: nonzero native revocation fails deletion and can be retried
-00:41 +207: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_shell_gateway_test.dart
-00:41 +207: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_shell_gateway_test.dart: v1 never probes the unrelated shell API
-00:41 +208: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_shell_gateway_test.dart: v2 shell reads, byte cursors, timeout and delete retain workspace scope
-00:42 +209: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_shell_gateway_test.dart: shell discovery handles HTTP 404 without advertising false support
-00:42 +210: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_shell_gateway_test.dart: shell discovery handles HTTP 405 without advertising false support
-00:42 +211: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_shell_gateway_test.dart: shell discovery handles HTTP 501 without advertising false support
-00:42 +212: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_shell_gateway_test.dart: shell discovery handles HTTP 401 without advertising false support
-00:42 +213: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_shell_gateway_test.dart: shell discovery handles HTTP 500 without advertising false support
-00:42 +214: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_shell_gateway_test.dart: shell lifecycle and session shell changes survive event projection without fake messages
-00:42 +215: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_workspaces_screen_test.dart
-00:42 +215: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_workspaces_screen_test.dart: managed workspace screen fits a compact large-text phone
-00:43 +216: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_workspaces_screen_test.dart: creating a workspace uses an adapter then opens exact result
-00:43 +217: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/managed_workspaces_screen_test.dart: removing the active workspace returns local before deletion
-00:44 +218: loading /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_agent_blocks_test.dart
-00:45 +218: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_agent_blocks_test.dart: ```choices renders tappable cards that report the option
-00:45 +219: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_agent_blocks_test.dart: ```choices without a handler copies the option and says so
-00:45 +220: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_agent_blocks_test.dart: ```checklist renders read-only items with done state
-00:45 +221: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_agent_blocks_test.dart: ```command renders mono lines with 48dp copy buttons
-00:45 +222: /home/eslam/Storage/Code/oc_app-oc2-setup-integration/test/markdown_agent_blocks_test.dart: unknown fences keep the plain code block
+00:16 +74: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_native_contract_test.dart
+00:17 +74: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_native_contract_test.dart: the manifest publishes the static shortcuts resource
+00:17 +75: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_native_contract_test.dart: every declared shortcut targets MainActivity with a whitelisted id
+00:17 +76: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_native_contract_test.dart: the native whitelist matches the declared shortcut ids
+00:17 +77: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_native_contract_test.dart: the extra is removed before the whitelist decides
+00:17 +78: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_native_contract_test.dart: consumeLaunchAction acknowledges readiness and drains once
+00:17 +79: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_native_contract_test.dart: a live tap is pushed only once Dart is listening
+00:17 +80: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_native_contract_test.dart: engine teardown forgets the channel and its readiness
+00:17 +81: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_routing_test.dart
+00:18 +81: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_routing_test.dart: connect opens server selection and keeps the connection
+00:19 +82: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_routing_test.dart: new task while connected creates exactly one empty session
+00:19 +83: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_routing_test.dart: new task without a saved server stays on server selection
+00:19 +84: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_routing_test.dart: new task during password re-entry drops with a notice
+00:19 +85: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_routing_test.dart: new task after a final connection error routes to servers
+00:20 +86: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_routing_test.dart: new task while connecting waits and creates once ready
+00:20 +87: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_routing_test.dart: a scope change aborts the stale creation without losing a newer launch
+00:20 +88: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_routing_test.dart: duplicate rapid new task taps while creation is held coalesce to one
+00:20 +89: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_routing_test.dart: new task leaves a persisted composer draft untouched
+00:21 +90: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_routing_test.dart: new task leaves a held shared draft untouched
+00:21 +91: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_test.dart
+00:22 +91: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_test.dart: drains the shortcut that launched the app, once
+00:22 +92: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_test.dart: maps the connect shortcut id from a cold start
+00:22 +93: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_test.dart: accepts a live shortcut tap while running
+00:22 +94: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_test.dart: ignores unknown actions, null and non-string payloads
+00:22 +95: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_test.dart: an unknown live action does not clear a valid pending one
+00:22 +96: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_test.dart: tolerates a missing native implementation
+00:22 +97: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_test.dart: tolerates a native capture failure
+00:22 +98: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_test.dart: is inert off Android
+00:22 +99: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_test.dart: a newer live tap wins over a stale cold-start consume
+00:22 +100: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_test.dart: a live tap taken before cold-start completion stays taken
+00:22 +101: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_test.dart: dispose while the cold-start consume is pending ignores it
+00:22 +102: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_test.dart: disposing a never-started receiver preserves an active one
+00:22 +103: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/launch_shortcut_test.dart: dispose unregisters the channel and blocks notifier callbacks
+00:22 +104: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_commands_test.dart
+00:22 +104: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_commands_test.dart: loading command destinations retains arguments and selected chat
+00:23 +105: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_commands_test.dart: new workspace creates a chat and runs without duplicate submission
+00:23 +106: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_commands_test.dart: failed command retains arguments and retries the same new chat
+00:24 +107: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_commands_test.dart: existing chat uses its own model and variant
+00:24 +108: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_commands_test.dart: workspace switch during creation prevents command dispatch
+00:24 +109: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart
+00:24 +109: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: (setUpAll)
+00:24 +109: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: authorization URL policy accepts only credential-free HTTPS hosts
+00:24 +110: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: provider OAuth completion accepts a code or callback URL
+00:24 +111: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: provider integrations remain available when MCP resources fail
+00:25 +112: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: empty MCP state opens persistent native setup
+00:25 +113: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: custom providers from opencode.json appear as configured on the server
+00:26 +114: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: provider aliases retain separate regional connection states
+00:26 +115: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: stored provider credential requires confirmation before disconnect
+00:26 +116: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: legacy OAuth provider can be disconnected from mobile
+00:26 +117: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: environment provider explains that mobile cannot disconnect it
+00:26 +118: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: legacy OAuth can be removed while environment stays active
+00:26 +119: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: failed provider disconnect keeps its action visible for retry
+00:26 +120: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: provider disconnect confirmation fits a compact large-text phone
+00:26 +121: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: MCP resources remain available when integrations fail
+00:26 +122: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: MCP authentication shows the validated destination host
+00:26 +123: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: unsafe MCP authentication URL is rejected before confirmation
+00:27 +124: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: MCP authorization completes from a state-validated callback URL
+00:27 +125: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: MCP authorization rejects mismatched state and can be cancelled
+00:27 +126: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: pending MCP authorization fits compact large-text phones
+00:27 +127: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: MCP actions wait for the wake-time replacement repository
+00:27 +128: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: OAuth rejects blank required text while allowing blank optional text
+00:27 +129: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: OAuth conditions validate visible selects and submit only visible values
+00:28 +130: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: automatic OAuth stays visible and checks server attempt status
+00:28 +131: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: automatic OAuth cannot be cancelled during its callback
+00:28 +132: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: code OAuth completes, refreshes models, and clears its state
+00:28 +133: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: provider search filters by name, id, model, and alias
+00:29 +134: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: completed OAuth can retry a failed runtime refresh
+00:29 +135: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_integrations_test.dart: (tearDownAll)
+00:29 +135: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_refresh_test.dart
+00:29 +135: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_refresh_test.dart: commands retains loaded content after failed refresh and retries
+00:30 +136: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_refresh_test.dart: commands retains empty content after failed refresh and retries
+00:30 +137: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_refresh_test.dart: skills retains loaded content after failed refresh and retries
+00:30 +138: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_refresh_test.dart: skills retains empty content after failed refresh and retries
+00:30 +139: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_refresh_test.dart: references retains loaded content after failed refresh and retries
+00:30 +140: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_refresh_test.dart: references retains empty content after failed refresh and retries
+00:30 +141: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_refresh_test.dart: terminals retains loaded content after failed refresh and retries
+00:31 +142: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_refresh_test.dart: terminals retains empty content after failed refresh and retries
+00:31 +143: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_refresh_test.dart: older command refresh cannot clear a newer refresh error
+00:31 +144: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_screen_test.dart
+00:31 +144: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_screen_test.dart: search finds aliases, recovers from no results, and clears
+00:32 +145: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_screen_test.dart: the default model uses the catalog name and explains its scope
+00:32 +146: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_screen_test.dart: More uses compact rows with Models & agents first
+00:32 +147: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_screen_test.dart: group separators align with destination text, not icon slots
+00:32 +148: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_screen_test.dart: the hub carries no pending badge of its own
+00:32 +149: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_screen_test.dart: Terminal moved into the hub and opens with an app bar
+00:33 +150: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_skills_test.dart
+00:33 +150: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_skills_test.dart: skill content uses the shared Markdown and code renderer
+00:34 +151: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_skills_test.dart: skill preview fits a narrow large-text phone
+00:34 +152: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/library_skills_test.dart: standalone references copy their exact OpenCode mention
+00:34 +153: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/live_status_test.dart
+00:35 +153: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/live_status_test.dart: LiveStatus serialises exactly the four fields Android reads
+00:35 +154: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/live_status_test.dart: LiveStatus compares by value
+00:35 +155: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/live_status_test.dart: publishLiveStatus is a no-op while live mode is off or the service is down
+00:35 +156: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/live_status_test.dart: publishLiveStatus sends the first status at once and skips unchanged ones
+00:35 +157: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/live_status_test.dart: publishLiveStatus coalesces a burst into one trailing push with the newest
+00:35 +158: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/live_status_test.dart: publishLiveStatus a burst that returns to the shown status sends nothing
+00:36 +159: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/live_status_test.dart: publishLiveStatus swallows a missing platform channel
+00:36 +160: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/live_status_test.dart: publishLiveStatus a pause from the notification is not an Android timeout
+00:36 +161: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/live_status_test.dart: ConnectionController.liveStatus counts runs and requests and names the freshest busy session
+00:36 +162: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/live_status_test.dart: ConnectionController.liveStatus publishes through notifyListeners and tool part events
+00:36 +163: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/live_status_test.dart: ConnectionController.liveStatus tool sentences never repeat the tool input
+00:36 +164: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/local_pdf_test.dart
+00:37 +164: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/local_pdf_test.dart: channel input/output budgets reject invalid transport results
+00:37 +165: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/local_pdf_test.dart: PDF page controls browse local rasters and stop at declared limit
+00:37 +166: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/local_pdf_test.dart: scope-retired PDF requests cannot install late pages
+00:37 +167: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/local_pdf_test.dart: disposing a PDF view cancels and ignores a held page
+00:37 +168: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/local_pdf_test.dart: replacing a document retires the old response and resets to page one
+00:37 +169: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/local_pdf_test.dart: backgrounding cancels PDF work and requires an explicit retry
+00:37 +170: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/local_pdf_test.dart: cancel and renderer death recover without retaining a spinner
+00:37 +171: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/local_pdf_test.dart: initial inactive PDF mount waits for explicit resumed retry
+00:37 +172: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/local_pdf_test.dart: inactive document replacement cannot start another render
+00:37 +173: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/local_pdf_test.dart: desktop and encrypted PDF give useful original-save guidance
+00:37 +174: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart
+00:38 +174: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: idle local clears selection and preserves profile and credentials
+00:38 +175: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: disables all local aliases and leaves remote work connected
+00:38 +176: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: does not disconnect unmanaged endpoint http://127.0.0.1:4097
+00:38 +177: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: does not disconnect unmanaged endpoint http://localhost:4096
+00:38 +178: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: does not treat another backend at local URL as managed OpenCode
+00:38 +179: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: known local running work blocks before recovery or disconnect
+00:38 +180: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: pending local permission blocks without needing busy status
+00:38 +181: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: admitted local inbox send blocks before server reports busy
+00:38 +182: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: retains saved local queue during switch (dispatched=false)
+00:38 +183: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: retains saved local queue during switch (dispatched=true)
+00:38 +184: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: unreadable saved queue is untouched during switch
+00:38 +185: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: background monitor local running work blocks with remote active
+00:38 +186: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: recovery persistence failure is actionable and never disconnects
+00:38 +187: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: new work during recovery persistence blocks final disconnect
+00:38 +188: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: in-flight local send blocks without closing its transport
+00:38 +189: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: selection persistence failure prevents switch completion
+00:38 +190: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: managed ServerFlavor.v1 profile never adopts the other running runtime
+00:38 +191: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_runtime_switch_preflight_test.dart: managed ServerFlavor.v2 profile never adopts the other running runtime
+00:38 +192: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_server_health_test.dart
+00:39 +192: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_server_health_test.dart: checking is explicit, reads Termux storage, and never starts setup
+00:40 +193: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_server_health_test.dart: pending check prevents duplicates and permits leaving for setup
+00:40 +194: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_server_health_test.dart: failed refresh clears old ready state and hides raw errors
+00:40 +195: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_server_health_test.dart: unsupported platform has no controls or bridge calls
+00:40 +196: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_server_health_test.dart: manual status supersedes an older recovery observation
+00:40 +197: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_server_recovery_test.dart
+00:41 +197: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_server_recovery_test.dart: opt out never probes; duplicate profiles share one owner
+00:41 +198: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_server_recovery_test.dart: three attempts are delayed and survive service recreation
+00:41 +199: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_server_recovery_test.dart: deletion admission cancels a pending probe before restart dispatch
+00:41 +200: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_server_recovery_test.dart: background and changed operation prevent automatic restart
+00:41 +201: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_server_recovery_test.dart: background during a dispatched recovery revokes its permit before return
+00:41 +202: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_server_recovery_test.dart: unknown command outcome pauses without blindly spending remaining budget
+00:41 +203: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_server_recovery_test.dart: failed persistence still revokes a dispatched recovery permit
+00:41 +204: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_server_recovery_test.dart: failed attempt reservation does not spend budget and restart retries once
+00:41 +205: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_server_recovery_test.dart: stale reservation failure cannot restore state after stop supersedes it
+00:41 +206: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_server_recovery_test.dart: nonzero native revocation fails deletion and can be retried
+00:41 +207: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_shell_gateway_test.dart
+00:41 +207: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_shell_gateway_test.dart: v1 never probes the unrelated shell API
+00:41 +208: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_shell_gateway_test.dart: v2 shell reads, byte cursors, timeout and delete retain workspace scope
+00:42 +209: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_shell_gateway_test.dart: shell discovery handles HTTP 404 without advertising false support
+00:42 +210: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_shell_gateway_test.dart: shell discovery handles HTTP 405 without advertising false support
+00:42 +211: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_shell_gateway_test.dart: shell discovery handles HTTP 501 without advertising false support
+00:42 +212: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_shell_gateway_test.dart: shell discovery handles HTTP 401 without advertising false support
+00:42 +213: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_shell_gateway_test.dart: shell discovery handles HTTP 500 without advertising false support
+00:42 +214: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_shell_gateway_test.dart: shell lifecycle and session shell changes survive event projection without fake messages
+00:42 +215: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_workspaces_screen_test.dart
+00:42 +215: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_workspaces_screen_test.dart: managed workspace screen fits a compact large-text phone
+00:43 +216: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_workspaces_screen_test.dart: creating a workspace uses an adapter then opens exact result
+00:43 +217: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/managed_workspaces_screen_test.dart: removing the active workspace returns local before deletion
+00:44 +218: loading /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_agent_blocks_test.dart
+00:45 +218: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_agent_blocks_test.dart: ```choices renders tappable cards that report the option
+00:45 +219: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_agent_blocks_test.dart: ```choices without a handler copies the option and says so
+00:45 +220: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_agent_blocks_test.dart: ```checklist renders read-only items with done state
+00:45 +221: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_agent_blocks_test.dart: ```command renders mono lines with 48dp copy buttons
+00:45 +222: /home/owner/Storage/Code/oc_app-oc2-setup-integration/test/markdown_agent_blocks_test.dart: unknown fences keep the plain code block
 00:45 +223: All tests passed!

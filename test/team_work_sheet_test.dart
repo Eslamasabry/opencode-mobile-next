@@ -357,7 +357,7 @@ void main() {
       ('team-work-sheet-branch', 'polecat/oc-loy'),
       (
         'team-work-sheet-worktree',
-        '/home/eslam/Storage/Code/gascity-spike/city2/.gc/worktrees/ocproof/'
+        '/home/owner/Storage/Code/gascity-spike/city2/.gc/worktrees/ocproof/'
             'polecats/gastown.furiosa',
       ),
       ('team-work-sheet-target', 'master'),

@@ -1,6 +1,6 @@
 # A1 Conversations home: desktop renders, 2026-11-08
 
-Branch `native/home-a1`. Mockups: `/home/eslam/Storage2/mockups/2026-11-08/A1-{glass,solid}-RECOMMENDED.png`, used as a
+Branch `native/home-a1`. Mockups: `/home/owner/Storage2/mockups/2026-11-08/A1-{glass,solid}-RECOMMENDED.png`, used as a
 layout guide only (owner: no icons in boxes, no pill badges).
 
 Rendered by `A1HomeRendersTest` (feature/chats desktopTest) on the CI runner (goldens lane, run 42519041931), 412 x 915 dp

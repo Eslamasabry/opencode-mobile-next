@@ -1,5 +1,5 @@
 machine_lock: got test slot 1 after 6s
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-5/test/kit/kit_progress_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-5/test/kit/kit_progress_test.dart
 00:00 +0: KitProgress.staged line joins the step, the label and the eta with " · "
 00:00 +1: KitProgress.staged line uses the caption ahead of the eta when both are given
 00:00 +2: KitProgress.staged line uses the locale plural forms in Arabic

@@ -1,4 +1,4 @@
-00:00 +0: loading /home/eslam/wt/oc-app-schedule-clockqa/test/scheduled_prompt_store_test.dart
+00:00 +0: loading /home/owner/wt/oc-app-schedule-clockqa/test/scheduled_prompt_store_test.dart
 00:00 +0: restart preserves schedules, paused state, history and opt-in digest
 00:00 +1: local run timestamps survive JSON before dispatch and completion
 00:00 +1 -1: local run timestamps survive JSON before dispatch and completion [E]
@@ -28,5 +28,5 @@
 00:00 +11 -2: Some tests failed.
 
 Failing tests:
-  /home/eslam/wt/oc-app-schedule-clockqa/test/scheduled_prompt_store_test.dart: advance compares local scheduled time by instant after JSON reload
-  /home/eslam/wt/oc-app-schedule-clockqa/test/scheduled_prompt_store_test.dart: local run timestamps survive JSON before dispatch and completion
+  /home/owner/wt/oc-app-schedule-clockqa/test/scheduled_prompt_store_test.dart: advance compares local scheduled time by instant after JSON reload
+  /home/owner/wt/oc-app-schedule-clockqa/test/scheduled_prompt_store_test.dart: local run timestamps survive JSON before dispatch and completion

@@ -1,4 +1,4 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/agent-a5693db4843269f99/test/motion_setup_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/agent-a5693db4843269f99/test/motion_setup_test.dart
 00:00 +0: (setUpAll)
 00:00 +0: setup start leads with the phone drawing at the top of the page
 00:00 +1: setup start a running setup draws its journey

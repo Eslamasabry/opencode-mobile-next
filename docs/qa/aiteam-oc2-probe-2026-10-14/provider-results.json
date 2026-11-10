@@ -4,7 +4,7 @@
   "host": "local PC",
   "port": 4193,
   "listenerPid": 4193270,
-  "scratchRoot": "/home/eslam/Storage/tmp/oc2-probe-aiteam-pc/run-followup3-9VN1kf",
+  "scratchRoot": "/home/owner/Storage/tmp/oc2-probe-aiteam-pc/run-followup3-9VN1kf",
   "npmPrefixVerified": true,
   "provider": "zai-coding-plan",
   "model": "glm-5.3-flash",
@@ -71,12 +71,12 @@
               "state": {
                 "status": "completed",
                 "input": {
-                  "path": "/home/eslam/Storage/tmp/oc2-probe-aiteam-pc/run-followup3-9VN1kf/repo/readable.txt"
+                  "path": "/home/owner/Storage/tmp/oc2-probe-aiteam-pc/run-followup3-9VN1kf/repo/readable.txt"
                 },
                 "content": [
                   {
                     "type": "text",
-                    "text": "Read file /home/eslam/Storage/tmp/oc2-probe-aiteam-pc/run-followup3-9VN1kf/repo/readable.txt, lines 1-1\n1: READ_FIXTURE_F3_4193_OK"
+                    "text": "Read file /home/owner/Storage/tmp/oc2-probe-aiteam-pc/run-followup3-9VN1kf/repo/readable.txt, lines 1-1\n1: READ_FIXTURE_F3_4193_OK"
                   }
                 ]
               }
@@ -114,7 +114,7 @@
                 "content": [
                   {
                     "type": "text",
-                    "text": "/home/eslam/Storage/tmp/oc2-probe-aiteam-pc/run-followup3-9VN1kf/repo/readable.txt"
+                    "text": "/home/owner/Storage/tmp/oc2-probe-aiteam-pc/run-followup3-9VN1kf/repo/readable.txt"
                   }
                 ]
               }
@@ -185,7 +185,7 @@
               "state": {
                 "status": "completed",
                 "input": {
-                  "path": "/home/eslam/Storage/tmp/oc2-probe-aiteam-pc/run-followup3-9VN1kf/repo/worker-marker.txt",
+                  "path": "/home/owner/Storage/tmp/oc2-probe-aiteam-pc/run-followup3-9VN1kf/repo/worker-marker.txt",
                   "content": "WORKER_ALLOWED"
                 },
                 "content": [

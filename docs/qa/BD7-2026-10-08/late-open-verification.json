@@ -16,13 +16,13 @@
     "result": "PASS",
     "tests": 39,
     "startup_tests": 13,
-    "command": "tool/qa/machine_lock.sh test -- /home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter test --concurrency=1 test/crash_diagnostics_startup_test.dart test/crash_diagnostics_test.dart test/crash_reports_section_test.dart"
+    "command": "tool/qa/machine_lock.sh test -- /home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter test --concurrency=1 test/crash_diagnostics_startup_test.dart test/crash_diagnostics_test.dart test/crash_reports_section_test.dart"
   },
   "analyzer": {
     "result": "PASS",
     "findings": 0,
     "seconds": 11.3,
-    "command": "tool/qa/machine_lock.sh analyze -- /home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter analyze"
+    "command": "tool/qa/machine_lock.sh analyze -- /home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter analyze"
   },
   "python": {
     "result": "PASS",
@@ -59,9 +59,9 @@
   "native_changed": false,
   "apk_build": "not run; coordinator-owned",
   "device_run": false,
-  "candidate": "/home/eslam/Storage/tmp/oc-apk-share/oc-2197.apk",
+  "candidate": "/home/owner/Storage/tmp/oc-apk-share/oc-2197.apk",
   "candidate_present": false,
-  "normal_restore": "/home/eslam/Storage/tmp/oc-apk-share/oc-2196.apk",
+  "normal_restore": "/home/owner/Storage/tmp/oc-apk-share/oc-2196.apk",
   "full_suite": "not run; coordinator-owned",
   "pub_get": "already completed once in this worktree",
   "push": false

@@ -18,12 +18,12 @@ if [[ -z "$kind" || $# -eq 0 ]]; then
   exit 64
 fi
 
-dir="${OC_LOCK_DIR:-/home/eslam/Storage/tmp/oc-locks}"
+dir="${OC_LOCK_DIR:-$HOME/Storage/tmp/oc-locks}"
 mkdir -p "$dir"
 
 case "$kind" in
   build)
-    build_lock="${OC_BUILD_LOCK_FILE:-/home/eslam/Storage/tmp/oc-build.lock}"
+    build_lock="${OC_BUILD_LOCK_FILE:-$HOME/Storage/tmp/oc-build.lock}"
     mkdir -p "$(dirname "$build_lock")"
     exec flock "$build_lock" "$@"
     ;;

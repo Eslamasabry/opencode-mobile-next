@@ -1,82 +1,82 @@
 Waiting for another flutter command to release the startup lock...
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: (setUpAll)
-00:00 +0: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 360x800 · dark
-00:01 +1: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 412x915 · dark
-00:01 +2: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 800x1280 · dark
-00:01 +3: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 1280x800 · dark
-00:01 +4: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 1600x1000 · dark
-00:01 +5: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet · 2.0 text · 412x915 · dark
-00:01 +6: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet · ar · 412x915 · dark
-00:02 +7: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet · 2.0 text · 1280x800 · dark
-00:02 +8: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet · ar · 1280x800 · dark
-00:02 +9: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet loading · dark
-00:02 +10: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet disabled primary · dark
-00:02 +11: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet discard asked in place · dark
-00:02 +12: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet half · dark
-00:02 +13: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet full · 412x915 · dark
-00:02 +14: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet full · 1280x800 · dark
-00:03 +15: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 360x800 · light
-00:03 +16: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 412x915 · light
-00:03 +17: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 800x1280 · light
-00:03 +18: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 1280x800 · light
-00:03 +19: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 1600x1000 · light
-00:03 +20: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet · 2.0 text · 412x915 · light
-00:04 +21: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet · ar · 412x915 · light
-00:04 +22: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet · 2.0 text · 1280x800 · light
-00:04 +23: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet · ar · 1280x800 · light
-00:04 +24: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet loading · light
-00:04 +25: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet disabled primary · light
-00:04 +26: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet discard asked in place · light
-00:04 +27: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet half · light
-00:04 +28: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet full · 412x915 · light
-00:05 +29: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet full · 1280x800 · light
-00:05 +30: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: (tearDownAll)
-00:05 +30: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart
-00:06 +30: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: (setUpAll)
-00:06 +30: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 360x800 · dark
-00:07 +31: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 412x915 · dark
-00:07 +32: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 800x1280 · dark
-00:07 +33: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 1280x800 · dark
-00:07 +34: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 1600x1000 · dark
-00:07 +35: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 2.0 text · 412x915 · dark
-00:07 +36: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · ar · 412x915 · dark
-00:08 +37: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 2.0 text · 1280x800 · dark
-00:08 +38: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · ar · 1280x800 · dark
-00:08 +39: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm neutral · dark
-00:08 +40: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm stop, working · dark
-00:08 +41: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm failed · dark
-00:09 +42: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm discard · dark
-00:09 +43: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm typed name ready · dark
-00:09 +44: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 360x800 · light
-00:09 +45: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 412x915 · light
-00:09 +46: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 800x1280 · light
-00:09 +47: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 1280x800 · light
-00:09 +48: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 1600x1000 · light
-00:10 +49: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 2.0 text · 412x915 · light
-00:10 +50: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · ar · 412x915 · light
-00:10 +51: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 2.0 text · 1280x800 · light
-00:10 +52: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · ar · 1280x800 · light
-00:10 +53: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm neutral · light
-00:10 +54: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm stop, working · light
-00:10 +55: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm failed · light
-00:10 +56: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm discard · light
-00:10 +57: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm typed name ready · light
-00:11 +58: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: (tearDownAll)
-00:11 +58: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart
-00:14 +58: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: a clean tree passes
-00:15 +59: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: androidTapTarget: a 20 dp tall button fails
-00:15 +60: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: labeledTapTarget: an icon button with no label fails
-00:15 +61: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: textContrast: 2.3:1 text fails on its own node
-00:15 +62: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: readingOrder: reversed sort keys fail (goes back up)
-00:15 +63: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: readingOrder: right to left, read right first passes
-00:15 +64: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: readingOrder: right to left, read left first fails
-00:15 +65: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: baseline the committed baseline is within the ceiling
-00:15 +66: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: baseline an entry outside the ceiling fails
-00:15 +67: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: baseline a listed node still failing passes
-00:15 +68: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: baseline another node failing the listed check still fails
-00:15 +69: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: baseline a listed node that now passes fails as stale
-00:15 +70: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: both themes a shot name must end in its theme
-00:15 +71: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: both themes a dark-only gallery is still checked in light
-00:15 +72: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: known gap: a bare 20 dp GestureDetector inside a larger labelled node is not measured
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: (setUpAll)
+00:00 +0: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 360x800 · dark
+00:01 +1: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 412x915 · dark
+00:01 +2: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 800x1280 · dark
+00:01 +3: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 1280x800 · dark
+00:01 +4: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 1600x1000 · dark
+00:01 +5: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet · 2.0 text · 412x915 · dark
+00:01 +6: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet · ar · 412x915 · dark
+00:02 +7: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet · 2.0 text · 1280x800 · dark
+00:02 +8: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet · ar · 1280x800 · dark
+00:02 +9: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet loading · dark
+00:02 +10: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet disabled primary · dark
+00:02 +11: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet discard asked in place · dark
+00:02 +12: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet half · dark
+00:02 +13: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet full · 412x915 · dark
+00:02 +14: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet full · 1280x800 · dark
+00:03 +15: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 360x800 · light
+00:03 +16: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 412x915 · light
+00:03 +17: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 800x1280 · light
+00:03 +18: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 1280x800 · light
+00:03 +19: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default · 1600x1000 · light
+00:03 +20: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet · 2.0 text · 412x915 · light
+00:04 +21: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet · ar · 412x915 · light
+00:04 +22: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet · 2.0 text · 1280x800 · light
+00:04 +23: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet · ar · 1280x800 · light
+00:04 +24: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet loading · light
+00:04 +25: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet disabled primary · light
+00:04 +26: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet discard asked in place · light
+00:04 +27: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet half · light
+00:04 +28: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet full · 412x915 · light
+00:05 +29: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet full · 1280x800 · light
+00:05 +30: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_sheet_golden_test.dart: (tearDownAll)
+00:05 +30: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart
+00:06 +30: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: (setUpAll)
+00:06 +30: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 360x800 · dark
+00:07 +31: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 412x915 · dark
+00:07 +32: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 800x1280 · dark
+00:07 +33: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 1280x800 · dark
+00:07 +34: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 1600x1000 · dark
+00:07 +35: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 2.0 text · 412x915 · dark
+00:07 +36: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · ar · 412x915 · dark
+00:08 +37: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 2.0 text · 1280x800 · dark
+00:08 +38: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · ar · 1280x800 · dark
+00:08 +39: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm neutral · dark
+00:08 +40: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm stop, working · dark
+00:08 +41: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm failed · dark
+00:09 +42: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm discard · dark
+00:09 +43: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm typed name ready · dark
+00:09 +44: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 360x800 · light
+00:09 +45: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 412x915 · light
+00:09 +46: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 800x1280 · light
+00:09 +47: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 1280x800 · light
+00:09 +48: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 1600x1000 · light
+00:10 +49: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 2.0 text · 412x915 · light
+00:10 +50: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · ar · 412x915 · light
+00:10 +51: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · 2.0 text · 1280x800 · light
+00:10 +52: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm destructive · ar · 1280x800 · light
+00:10 +53: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm neutral · light
+00:10 +54: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm stop, working · light
+00:10 +55: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm failed · light
+00:10 +56: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm discard · light
+00:10 +57: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: kit_confirm typed name ready · light
+00:11 +58: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_confirm_sheet_golden_test.dart: (tearDownAll)
+00:11 +58: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart
+00:14 +58: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: a clean tree passes
+00:15 +59: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: androidTapTarget: a 20 dp tall button fails
+00:15 +60: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: labeledTapTarget: an icon button with no label fails
+00:15 +61: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: textContrast: 2.3:1 text fails on its own node
+00:15 +62: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: readingOrder: reversed sort keys fail (goes back up)
+00:15 +63: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: readingOrder: right to left, read right first passes
+00:15 +64: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: readingOrder: right to left, read left first fails
+00:15 +65: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: baseline the committed baseline is within the ceiling
+00:15 +66: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: baseline an entry outside the ceiling fails
+00:15 +67: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: baseline a listed node still failing passes
+00:15 +68: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: baseline another node failing the listed check still fails
+00:15 +69: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: baseline a listed node that now passes fails as stale
+00:15 +70: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: both themes a shot name must end in its theme
+00:15 +71: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: both themes a dark-only gallery is still checked in light
+00:15 +72: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_d514fdd8-8d7-4/test/goldens/kit/kit_gallery_g5_test.dart: known gap: a bare 20 dp GestureDetector inside a larger labelled node is not measured
 00:15 +73: All tests passed!

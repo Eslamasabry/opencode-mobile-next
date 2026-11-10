@@ -14,7 +14,7 @@ index 77df50df..866bf201 100644
 
 # Output (expected: both tests FAIL)
 Waiting for another flutter command to release the startup lock...
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_live_region_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_live_region_test.dart
 00:00 +0: live region (A11Y-3, semantics updates) a rebuild with the same words sends the live region nothing; each new message is announced exactly once
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following TestFailure was thrown running a test:
@@ -23,7 +23,7 @@ Expected: <0>
 rebuild 0 re-sent the live region
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_live_region_test.dart:124:9)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_live_region_test.dart:124:9)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -33,7 +33,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_live_region_test.dart line 124
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_live_region_test.dart line 124
 The test description was:
   a rebuild with the same words sends the live region nothing; each new message is announced exactly
   once
@@ -49,7 +49,7 @@ Expected: empty
   Actual: ['The server answered']
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_live_region_test.dart:177:7)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_live_region_test.dart:177:7)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -59,7 +59,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_live_region_test.dart line 177
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_live_region_test.dart line 177
 The test description was:
   a change of tone alone, with the same words, is not announced
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -70,5 +70,5 @@ The test description was:
 00:00 +0 -2: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_live_region_test.dart: live region (A11Y-3, semantics updates) a change of tone alone, with the same words, is not announced
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_live_region_test.dart: live region (A11Y-3, semantics updates) a rebuild with the same words sends the live region nothing; each new message is announced exactly once
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_live_region_test.dart: live region (A11Y-3, semantics updates) a change of tone alone, with the same words, is not announced
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_263f2366-20e-6/test/kit/kit_notice_live_region_test.dart: live region (A11Y-3, semantics updates) a rebuild with the same words sends the live region nothing; each new message is announced exactly once

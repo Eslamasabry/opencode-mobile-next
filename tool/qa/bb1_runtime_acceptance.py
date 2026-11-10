@@ -59,7 +59,7 @@ def main():
         return fields
 
     try:
-        with open("/home/eslam/Storage/tmp/oc-emulator.lock", "a") as lock:
+        with open("/home/owner/Storage/tmp/oc-emulator.lock", "a") as lock:
             fcntl.flock(lock, fcntl.LOCK_EX)
             require(adb("get-state").stdout.strip() == "device", "emulator_unavailable")
             install(args.apk)

@@ -57,77 +57,77 @@ Downloading packages...
 Got dependencies!
 54 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: bare pasted addresses gain the right scheme
-00:00 +1: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: first run asks one question with exactly three choices
-00:00 +2: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/motion_setup_test.dart: setup start leads with the phone drawing at the top of the page
-00:00 +3: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/motion_setup_test.dart: setup start leads with the phone drawing at the top of the page
-00:00 +4: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/motion_setup_test.dart: setup start leads with the phone drawing at the top of the page
-00:00 +5: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: the phone choice and the demo open their destinations
-00:01 +6: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: the phone choice and the demo open their destinations
-00:01 +7: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/motion_setup_test.dart: setup progress the log opens in view, under a title and bar that stay
-00:01 +8: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: a saved profile keeps the ordinary server list
-00:01 +9: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: a saved profile keeps the ordinary server list
-00:01 +10: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/motion_setup_test.dart: setup progress Cancel sits with the steps, before the folded Details
-00:01 +11: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: editing inactive server names the save consequence
-00:01 +12: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: editing inactive server names the save consequence
-00:01 +13: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: editing inactive server names the save consequence
-00:01 +14: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/motion_setup_test.dart: connecting starting the phone server draws the phone, breathing
-00:01 +15: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: editing active server names the save consequence
-00:01 +16: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: editing active server names the save consequence
-00:01 +17: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: editing active server names the save consequence
-00:01 +18: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: editing active server names the save consequence
-00:01 +19: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/motion_setup_test.dart: connecting reduced motion shows the drawing finished and still
-00:02 +20: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: welcome fits 320dp at 2.5x text, rtl
-00:02 +21: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: welcome fits 320dp at 2.5x text, ltr
-00:02 +22: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: pasting a bare address into the editor fills the scheme
-00:02 +23: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: test connection reports success with the server version
-00:02 +24: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: test connection explains a refused connection
-00:02 +25: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/oc2_server_discovery_test.dart: saved labels distinguish confirmed generation from legacy default
-00:03 +26: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/oc2_server_discovery_test.dart: saved labels distinguish confirmed generation from legacy default
-00:03 +27: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/oc2_server_discovery_test.dart: saved labels distinguish confirmed generation from legacy default
-00:03 +28: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: an invalid url never reaches the probe
-00:03 +29: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/oc2_server_discovery_test.dart: OpenCode 2 entry preserves actual ServerFlavor.v1 autodetection
-00:04 +30: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/phone_setup_welcome_entry_test.dart: no job: nothing extra, and the three choices stay
-00:04 +31: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/phone_setup_welcome_entry_test.dart: no job: nothing extra, and the three choices stay
-00:05 +32: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/phone_setup_welcome_entry_test.dart: no job: nothing extra, and the three choices stay
-00:05 +33: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/oc2_server_discovery_test.dart: single-local connection routes runtime choices only when needed
-00:05 +34: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/phone_setup_welcome_entry_test.dart: a running setup leads with its percent and opens its progress as a first setup
-00:05 +35: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/phone_setup_welcome_entry_test.dart: a running setup leads with its percent and opens its progress as a first setup
-00:05 +36: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/oc2_server_discovery_test.dart: editing endpoint clears cached generation evidence
-00:05 +37: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/phone_setup_welcome_entry_test.dart: a interrupted setup offers Continue, which resumes the same job as a first setup
-00:05 +38: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/oc2_server_discovery_test.dart: editing endpoint retains cached generation evidence
-00:05 +39: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/oc2_server_discovery_test.dart: editing endpoint retains cached generation evidence
-00:05 +40: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/phone_setup_welcome_entry_test.dart: a cancelled setup offers Continue, which resumes the same job as a first setup
-00:05 +41: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/oc2_server_discovery_test.dart: known OC1 user reaches phone setup with no runtime forced
-00:06 +42: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/phone_setup_welcome_entry_test.dart: coming back from phone setup reads the job again
-00:06 +43: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/phone_setup_welcome_entry_test.dart: never shows 100% while it still runs
-00:06 +44: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/phone_setup_welcome_entry_test.dart: done with nothing saved offers Open, which runs only the job's last step
-00:06 +45: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/phone_setup_welcome_entry_test.dart: the welcome never waits for the job to be read
-00:06 +46: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/phone_setup_welcome_entry_test.dart: a read that hangs gives up and leaves the welcome as it is
-00:06 +47: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/phone_setup_welcome_entry_test.dart: a failed Continue says so and keeps the line
-00:06 +48: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/phone_setup_welcome_entry_test.dart: Arabic words and 320dp at 2.5x text fit
-00:06 +49: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: overview the fixture convoy: title, status line, stage, step, details; the Gas City term only in Technical details
-00:08 +50: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: overview TEAM-117: work in the refinery's hands is Reviewing, timed from the hand-off, with nothing working or held up
-00:08 +51: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: overview TEAM-117: the recorded bead has no update time: the hand-off is counted from its creation, steps untimed
-00:08 +52: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: overview answers the five questions top to bottom
-00:08 +53: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: overview names the blocked cause the host gave
-00:08 +54: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: overview the blocked shape: cause from the open dependency
-00:08 +55: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: overview a formula run with stages lists them as its steps
-00:08 +56: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: overview the most urgent needs-you item, answered in place
-00:08 +57: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: overview a host the app can only watch says where to answer
-00:08 +58: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: overview a phone host says where to answer
-00:08 +59: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: overview Details opens the technical sheet with the ids
-00:09 +60: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: overview Work and Agents tabs are real
-00:09 +61: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: timeline lists this run’s events newest first; filters reduce
-00:09 +62: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: timeline a filter that hides every row says so
-00:09 +63: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: timeline events that arrive while scrolled wait behind the pill
-00:10 +64: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: timeline scrolling back to the top releases the held rows
-00:10 +65: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: states a run the host no longer lists, with Back
-00:10 +66: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: states a run that disappears on refresh turns into the state
-00:10 +67: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: states stale shows the card’s line; Refresh clears it
-00:10 +68: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: states before the probe answers: loading
-00:10 +69: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: states a failed probe shows honest copy and Retry recovers
-00:10 +70: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: states the home’s run row opens the task, whose Task details pushes the run detail
-00:11 +71: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: states reads in Arabic with the term and ids LTR
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: bare pasted addresses gain the right scheme
+00:00 +1: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: first run asks one question with exactly three choices
+00:00 +2: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/motion_setup_test.dart: setup start leads with the phone drawing at the top of the page
+00:00 +3: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/motion_setup_test.dart: setup start leads with the phone drawing at the top of the page
+00:00 +4: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/motion_setup_test.dart: setup start leads with the phone drawing at the top of the page
+00:00 +5: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: the phone choice and the demo open their destinations
+00:01 +6: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: the phone choice and the demo open their destinations
+00:01 +7: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/motion_setup_test.dart: setup progress the log opens in view, under a title and bar that stay
+00:01 +8: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: a saved profile keeps the ordinary server list
+00:01 +9: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: a saved profile keeps the ordinary server list
+00:01 +10: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/motion_setup_test.dart: setup progress Cancel sits with the steps, before the folded Details
+00:01 +11: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: editing inactive server names the save consequence
+00:01 +12: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: editing inactive server names the save consequence
+00:01 +13: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: editing inactive server names the save consequence
+00:01 +14: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/motion_setup_test.dart: connecting starting the phone server draws the phone, breathing
+00:01 +15: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: editing active server names the save consequence
+00:01 +16: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: editing active server names the save consequence
+00:01 +17: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: editing active server names the save consequence
+00:01 +18: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: editing active server names the save consequence
+00:01 +19: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/motion_setup_test.dart: connecting reduced motion shows the drawing finished and still
+00:02 +20: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: welcome fits 320dp at 2.5x text, rtl
+00:02 +21: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: welcome fits 320dp at 2.5x text, ltr
+00:02 +22: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: pasting a bare address into the editor fills the scheme
+00:02 +23: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: test connection reports success with the server version
+00:02 +24: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: test connection explains a refused connection
+00:02 +25: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/oc2_server_discovery_test.dart: saved labels distinguish confirmed generation from legacy default
+00:03 +26: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/oc2_server_discovery_test.dart: saved labels distinguish confirmed generation from legacy default
+00:03 +27: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/oc2_server_discovery_test.dart: saved labels distinguish confirmed generation from legacy default
+00:03 +28: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/first_run_welcome_test.dart: an invalid url never reaches the probe
+00:03 +29: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/oc2_server_discovery_test.dart: OpenCode 2 entry preserves actual ServerFlavor.v1 autodetection
+00:04 +30: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/phone_setup_welcome_entry_test.dart: no job: nothing extra, and the three choices stay
+00:04 +31: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/phone_setup_welcome_entry_test.dart: no job: nothing extra, and the three choices stay
+00:05 +32: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/phone_setup_welcome_entry_test.dart: no job: nothing extra, and the three choices stay
+00:05 +33: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/oc2_server_discovery_test.dart: single-local connection routes runtime choices only when needed
+00:05 +34: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/phone_setup_welcome_entry_test.dart: a running setup leads with its percent and opens its progress as a first setup
+00:05 +35: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/phone_setup_welcome_entry_test.dart: a running setup leads with its percent and opens its progress as a first setup
+00:05 +36: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/oc2_server_discovery_test.dart: editing endpoint clears cached generation evidence
+00:05 +37: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/phone_setup_welcome_entry_test.dart: a interrupted setup offers Continue, which resumes the same job as a first setup
+00:05 +38: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/oc2_server_discovery_test.dart: editing endpoint retains cached generation evidence
+00:05 +39: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/oc2_server_discovery_test.dart: editing endpoint retains cached generation evidence
+00:05 +40: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/phone_setup_welcome_entry_test.dart: a cancelled setup offers Continue, which resumes the same job as a first setup
+00:05 +41: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/oc2_server_discovery_test.dart: known OC1 user reaches phone setup with no runtime forced
+00:06 +42: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/phone_setup_welcome_entry_test.dart: coming back from phone setup reads the job again
+00:06 +43: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/phone_setup_welcome_entry_test.dart: never shows 100% while it still runs
+00:06 +44: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/phone_setup_welcome_entry_test.dart: done with nothing saved offers Open, which runs only the job's last step
+00:06 +45: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/phone_setup_welcome_entry_test.dart: the welcome never waits for the job to be read
+00:06 +46: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/phone_setup_welcome_entry_test.dart: a read that hangs gives up and leaves the welcome as it is
+00:06 +47: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/phone_setup_welcome_entry_test.dart: a failed Continue says so and keeps the line
+00:06 +48: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/phone_setup_welcome_entry_test.dart: Arabic words and 320dp at 2.5x text fit
+00:06 +49: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: overview the fixture convoy: title, status line, stage, step, details; the Gas City term only in Technical details
+00:08 +50: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: overview TEAM-117: work in the refinery's hands is Reviewing, timed from the hand-off, with nothing working or held up
+00:08 +51: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: overview TEAM-117: the recorded bead has no update time: the hand-off is counted from its creation, steps untimed
+00:08 +52: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: overview answers the five questions top to bottom
+00:08 +53: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: overview names the blocked cause the host gave
+00:08 +54: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: overview the blocked shape: cause from the open dependency
+00:08 +55: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: overview a formula run with stages lists them as its steps
+00:08 +56: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: overview the most urgent needs-you item, answered in place
+00:08 +57: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: overview a host the app can only watch says where to answer
+00:08 +58: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: overview a phone host says where to answer
+00:08 +59: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: overview Details opens the technical sheet with the ids
+00:09 +60: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: overview Work and Agents tabs are real
+00:09 +61: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: timeline lists this run’s events newest first; filters reduce
+00:09 +62: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: timeline a filter that hides every row says so
+00:09 +63: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: timeline events that arrive while scrolled wait behind the pill
+00:10 +64: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: timeline scrolling back to the top releases the held rows
+00:10 +65: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: states a run the host no longer lists, with Back
+00:10 +66: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: states a run that disappears on refresh turns into the state
+00:10 +67: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: states stale shows the card’s line; Refresh clears it
+00:10 +68: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: states before the probe answers: loading
+00:10 +69: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: states a failed probe shows honest copy and Retry recovers
+00:10 +70: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: states the home’s run row opens the task, whose Task details pushes the run detail
+00:11 +71: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/team_run_screen_test.dart: states reads in Arabic with the term and ids LTR
 00:11 +72: All tests passed!

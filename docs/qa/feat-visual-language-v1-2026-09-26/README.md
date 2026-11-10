@@ -61,7 +61,7 @@ This is STANDARDS.md §0.5 step 1. The foundation this builds on is recorded in
 
 ## 2. Builds
 
-- Branch `feat/visual-language-v1`, worktree `/home/eslam/Storage/Code/oc_app-visual`.
+- Branch `feat/visual-language-v1`, worktree `/home/owner/Storage/Code/oc_app-visual`.
 - **Base (after the merge):** `cca62454`.
 - **Code head:** `7422c5cf` (theme and tests `2193c7d9`, goldens `7422c5cf`).
 - No APK. This step does not build.
@@ -133,7 +133,7 @@ Row 6 is not a formal PROC-6 gate: it was run by hand in chunks, not with `tool/
 
 ```bash
 F=~/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter
-cd /home/eslam/Storage/Code/oc_app-visual
+cd /home/owner/Storage/Code/oc_app-visual
 $F test -j 2 test/theme_roles_test.dart test/app_theme_test.dart test/theme_packs_test.dart \
   test/kit_glass_test.dart test/glass_surface_test.dart test/workspace_stable_layout_test.dart \
   test/kit_ratchet_test.dart test/design_standard_test.dart \

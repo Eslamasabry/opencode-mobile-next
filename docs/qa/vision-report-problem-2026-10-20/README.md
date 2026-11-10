@@ -84,7 +84,7 @@ gates any element; no element reads a flavor to decide what shows.
   fold's "Details ⌄" row (chevron at the end), the filled field without a border, and the filled
   secondary Copy.
 
-Final renders (`/home/eslam/Storage2/launch-footage/vision-report-problem/`): `main-dark`,
+Final renders (`/home/owner/Storage2/launch-footage/vision-report-problem/`): `main-dark`,
 `main-light`, `details-open-dark`, `typed-dark`, `kept-error-dark`, `nothing-noticed-dark`,
 `describe-first-dark`, `failed-job-dark`, `kept-on-phone-page-dark`, `small-320-text2-dark`,
 `arabic-rtl-dark`. Capture: `tool/capture/vision_report_problem_test.dart`.

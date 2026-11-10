@@ -11,9 +11,9 @@ test_trusted_android_app_alias_works_without_admitting_fixture_symlinks (test_bb
 FAIL: test_observer_covers_real_callback_budget_and_reports_only_current_pending_token (test_bb5_native_guard.NativeGuardTest.test_observer_covers_real_callback_budget_and_reports_only_current_pending_token)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb5_native_guard.py", line 122, in test_observer_covers_real_callback_budget_and_reports_only_current_pending_token
+  File "/home/owner/Storage/Code/oc_app-sol-bb/tool/qa/test_bb5_native_guard.py", line 122, in test_observer_covers_real_callback_budget_and_reports_only_current_pending_token
     self.run_case('observation')
-  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb5_native_guard.py", line 116, in run_case
+  File "/home/owner/Storage/Code/oc_app-sol-bb/tool/qa/test_bb5_native_guard.py", line 116, in run_case
     self.assertEqual(0, result.returncode, result.stderr)
 AssertionError: 0 != 1 : Exception in thread "main" java.lang.AssertionError: old 28s deadline remains pending
 	at io.github.eslamasabry.opencode_mobile.GuardHost.check(GuardHost.java:81)

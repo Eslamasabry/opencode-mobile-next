@@ -16,7 +16,7 @@
   "normalVersion": 2202,
   "qaVersion": 2198,
   "targetPlatform": "android-x64",
-  "normalApk": "/home/eslam/Storage/tmp/oc-apk-share/oc-2202.apk",
+  "normalApk": "/home/owner/Storage/tmp/oc-apk-share/oc-2202.apk",
   "normalSHA256": "e63fb2e4ff32280ad4c739aee9c17db508eab2e99a42573c4e83bd66dc0babb0",
   "buildCap": "4GB / two workers / in-process Kotlin / >=6144MiB fresh start / <800MiB abort",
   "deviceProof": false,

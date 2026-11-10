@@ -100,7 +100,7 @@ actual routing/actions in the integrated screens. No APK was built or signed.
 - [Phone light failure](../../../test/goldens/kit/kit_plan_card_error_light.png)
 
 All commands used the pinned toolchain and `OC_TEST_SLOTS=1`,
-`TMPDIR=/home/eslam/Storage/tmp/aiteam-build`, and
+`TMPDIR=/home/owner/Storage/tmp/aiteam-build`, and
 `tool/qa/machine_lock.sh test|analyze --`. Goldens used
 `flutter test --no-pub --concurrency=1 --update-goldens`; the final recovery
 pass added `--name '^error '`. See the test and gallery file lists in the

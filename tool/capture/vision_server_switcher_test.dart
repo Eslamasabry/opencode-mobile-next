@@ -8,7 +8,7 @@
 //   flutter test --concurrency=1 --dart-define=VISION_OUT=<dir> \
 //     tool/capture/vision_server_switcher_test.dart
 //
-// Output: /home/eslam/Storage2/launch-footage/vision-server-switcher/<scene>.png
+// Output: /home/owner/Storage2/launch-footage/vision-server-switcher/<scene>.png
 //
 // The data is invented and plain: three saved servers. "Studio Mac" and
 // "Home PC" are side connections (servers the Conversations list keeps open
@@ -42,7 +42,7 @@ import 'fixtures.dart';
 
 const _out = String.fromEnvironment(
   'VISION_OUT',
-  defaultValue: '/home/eslam/Storage2/launch-footage/vision-server-switcher',
+  defaultValue: '/home/owner/Storage2/launch-footage/vision-server-switcher',
 );
 
 /// What the other servers are to the app.

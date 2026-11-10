@@ -47,7 +47,7 @@ Branch `feat/local-terminal` (worktree `agent-a7b33ab6377d3437a`), spec
 | A/B measurements (earlier session, 2026-09-24) | A: `feat/local-terminal` between `9c769d05` and `5cc94b6b` (exact commit not recorded); B: `bae4c1fd` on `spike/local-terminal-option-b` | not kept | not recorded |
 
 Built with the pinned Flutter 3.47.1
-(`flock /home/eslam/Storage/tmp/oc-build.lock $F build apk --release --target-platform android-x64`),
+(`flock /home/owner/Storage/tmp/oc-build.lock $F build apk --release --target-platform android-x64`),
 signed with the local release key. Commits after `0fd36b9f` change only this
 record and `tool/qa/local_terminal/`.
 
@@ -157,7 +157,7 @@ pass, including the two failures. `ab/` holds the A-vs-B measurements from
 
 ```bash
 F=~/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter
-flock /home/eslam/Storage/tmp/oc-build.lock $F build apk --release --target-platform android-x64
+flock /home/owner/Storage/tmp/oc-build.lock $F build apk --release --target-platform android-x64
 TMPDIR=/tmp/emu-tmp ~/Android/Sdk/emulator/emulator -avd Pixel_6 -no-window -no-snapshot-save -no-boot-anim -gpu swiftshader_indirect &
 adb -s emulator-5554 install -r build/app/outputs/flutter-apk/app-release.apk
 # In the app: On this phone › Set up (about 6 minutes), Create a project,

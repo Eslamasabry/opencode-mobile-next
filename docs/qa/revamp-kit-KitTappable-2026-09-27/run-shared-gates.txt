@@ -6,28 +6,28 @@
   lib/ui/widgets/transcript_display_toggles.dart: 0 (baseline 2)
   lib/voice/notices.dart: 0 (baseline 1)
 00:00 +35: All tests passed!
-00:00 +13: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) bidi literals count outside the kit, as characters or escapes
-00:00 +14: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) an argument list is read to its closing parenthesis
-00:00 +15: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart
-00:01 +15: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: the label rule separates labels from sentences
-00:01 +16: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: action labels use the glossary word, not a banned synonym
-00:01 +17: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: every allow-listed key still needs its exemption
-00:01 +18: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: the noun rule matches standalone words only
-00:01 +19: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: labels say conversation, not session or chat
-00:01 +20: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: the engine-word rule catches Gas City terms, not plain words
-00:01 +21: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: AI Team rows and cards use the person's words, not the engine's
-00:01 +22: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: every allow-listed engine key is still there and still needs it
-00:01 +23: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: every allow-listed noun key still needs its exemption
-00:01 +24: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: G11 ICU messages expand to their plain wordings
-00:01 +25: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: G11 confirm titles and labels are checked through wrappers
-00:01 +26: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: G11 confirmation titles ask and labels name the act (COPY-9)
-00:01 +27: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: G11 the contradiction rule finds both halves of a pair
-00:01 +28: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: G11 the contradiction scan skips text that is never rendered
-00:01 +29: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: G11 no text says two contradicting states at once (COPY-17)
-00:01 +30: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: G11 every allow-listed contradiction key still needs it
-00:01 +31: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: G11 the technical-word rule finds engine words, ports, paths and versions
-00:01 +32: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: G11 technical words only in keys described as Technical: or Field example: (COPY-11)
-00:01 +33: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: G28 the glossary extension finds each pattern
-00:01 +34: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: G28 every allow-listed product key still needs it
-00:01 +35: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: G28 labels and copy follow the glossary (COPY-6–8, COPY-10, COPY-12, COPY-21, LOOK-15)
+00:00 +13: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) bidi literals count outside the kit, as characters or escapes
+00:00 +14: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/design_standard_test.dart: G3x counters on fixture strings (proves the patterns) an argument list is read to its closing parenthesis
+00:00 +15: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart
+00:01 +15: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: the label rule separates labels from sentences
+00:01 +16: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: action labels use the glossary word, not a banned synonym
+00:01 +17: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: every allow-listed key still needs its exemption
+00:01 +18: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: the noun rule matches standalone words only
+00:01 +19: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: labels say conversation, not session or chat
+00:01 +20: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: the engine-word rule catches Gas City terms, not plain words
+00:01 +21: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: AI Team rows and cards use the person's words, not the engine's
+00:01 +22: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: every allow-listed engine key is still there and still needs it
+00:01 +23: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: every allow-listed noun key still needs its exemption
+00:01 +24: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: G11 ICU messages expand to their plain wordings
+00:01 +25: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: G11 confirm titles and labels are checked through wrappers
+00:01 +26: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: G11 confirmation titles ask and labels name the act (COPY-9)
+00:01 +27: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: G11 the contradiction rule finds both halves of a pair
+00:01 +28: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: G11 the contradiction scan skips text that is never rendered
+00:01 +29: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: G11 no text says two contradicting states at once (COPY-17)
+00:01 +30: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: G11 every allow-listed contradiction key still needs it
+00:01 +31: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: G11 the technical-word rule finds engine words, ports, paths and versions
+00:01 +32: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: G11 technical words only in keys described as Technical: or Field example: (COPY-11)
+00:01 +33: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: G28 the glossary extension finds each pattern
+00:01 +34: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: G28 every allow-listed product key still needs it
+00:01 +35: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-2/test/ui_glossary_test.dart: G28 labels and copy follow the glossary (COPY-6–8, COPY-10, COPY-12, COPY-21, LOOK-15)
 00:02 +36: All tests passed!

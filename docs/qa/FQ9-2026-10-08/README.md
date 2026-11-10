@@ -171,8 +171,8 @@ flock:
 
 ```sh
 python3 -m tool.qa.fq9.run --case upgrade --execute \
-  --manifest /home/eslam/Storage/tmp/fq9-2197-artifacts.json \
-  --seed-history-receipt /home/eslam/Storage/tmp/fq9-retained-next.json \
+  --manifest /home/owner/Storage/tmp/fq9-2197-artifacts.json \
+  --seed-history-receipt /home/owner/Storage/tmp/fq9-retained-next.json \
   --run-id fq9-20261009-retained-a
 ```
 
@@ -278,7 +278,7 @@ Flutter/Dart jobs remain one at a time through `machine_lock`.
 
 Branch `sol/bc-fq9` from `feat/genui-fe` **6a75894466151fa2fc45eef1d489fd82d7dee19a**. [Frozen contract and ownership](contract.md); [CLI](../../../tool/qa/fq9/run.py). Finish line: implement and unit-test four repeatable checklist drivers with a safe APK 2197 run plan. Device qualification is a later gate: the coordinator has deferred device work until APK 2197 is posted and a device slot is booked. No emulator, build, signing, download, push or production-source change was performed for this slice.
 
-The CLI defaults to an **offline plan**, even when a manifest is supplied. Only `--execute` loads artifact tools/ADB and takes the shared `/home/eslam/Storage/tmp/oc-emulator.lock`, nonblocking. A busy device returns `emulator_busy`; it does not queue a 30-minute hold behind another lane. Lock ownership lasts through checks, exact fixture cleanup, normal-app restoration/verification and evidence writing. All processes/output are bounded; reports contain fixed result tokens, validated artifact identities, booleans and numeric checkpoints. Credentials, preferences, transcripts, raw device errors and HTTP responses are never printed or stored in evidence. Private reads stay in bounded memory, including the runtime's own password under its app UID; no Keystore decryption or provider configuration read.
+The CLI defaults to an **offline plan**, even when a manifest is supplied. Only `--execute` loads artifact tools/ADB and takes the shared `/home/owner/Storage/tmp/oc-emulator.lock`, nonblocking. A busy device returns `emulator_busy`; it does not queue a 30-minute hold behind another lane. Lock ownership lasts through checks, exact fixture cleanup, normal-app restoration/verification and evidence writing. All processes/output are bounded; reports contain fixed result tokens, validated artifact identities, booleans and numeric checkpoints. Credentials, preferences, transcripts, raw device errors and HTTP responses are never printed or stored in evidence. Private reads stay in bounded memory, including the runtime's own password under its app UID; no Keystore decryption or provider configuration read.
 
 ## Four rows and their limits
 

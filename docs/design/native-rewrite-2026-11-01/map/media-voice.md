@@ -1,6 +1,6 @@
 # Map: media, voice, camera, files and sharing (area `media-voice`)
 
-Date of reading: 2026-11-01. Source: `/home/eslam/Storage/Code/wt/oc_app-batch1` (branch `int/batch1-2026-11-01`, read-only). Owner memory read from `/home/eslam/.claude/projects/-home-eslam-Storage-Code-oc-app/memory`. Test catalog (area `media-voice`, 35 rows, plus 217 more rows from other areas that cite media tests) at `/home/eslam/Storage/Code/wt/native-plan/catalog`.
+Date of reading: 2026-11-01. Source: `/home/owner/Storage/Code/wt/oc_app-batch1` (branch `int/batch1-2026-11-01`, read-only). Owner memory read from `/home/owner/.claude/projects/-home-eslam-Storage-Code-oc-app/memory`. Test catalog (area `media-voice`, 35 rows, plus 217 more rows from other areas that cite media tests) at `/home/owner/Storage/Code/wt/native-plan/catalog`.
 
 Purpose: a rewrite agent that reads only this file must not miss a user-visible feature, an internal capability, a stored key, a size/time limit, an owner rule, or a trap that was already paid for. Feature ids are `MEDIA-VOICE-NN` (50 of them). Sections: 0 scale, 1 owner rules, 2 feature catalog (voice input 01-18, read aloud 19-24, camera/photos/attachments 25-36, viewing/sharing/QR 37-50), 3 platform gates, 4 native bridges, 5 stored data, 6 packages and native replacements, 7 hard-won behaviours, 8 performance, 9 privacy and security invariants, 10 migration, 11 tests, 12 risks and open questions, 13 rewrite guidance (seams, slices), Appendix A file index, Appendix B copy families.
 

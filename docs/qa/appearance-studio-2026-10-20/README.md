@@ -4,7 +4,7 @@ Settings › Appearance rebuilt as a studio: a pinned live preview of the chat (
 
 - New kit parts: `KitAppearancePreview`, `KitCarousel`, `KitOptionCard`, `KitStepSlider`; `KitTabStrip(accent:)`, `KitTabSwitcher(onSwipe:, shrinkWrap:)`, `KitArrivalScope.maybeRowId`. Specs in `docs/ux-system/kit-api/`.
 - Layouts: phone (preview about 44 % of the height, pinned), tablet or wide window (preview at the start, tabs and options at the end), large text or short window (preview scrolls with the page).
-- Frames: `tool/capture/appearance_revamp_test.dart` (`APPEARANCE_SHOTS_DIR`), copies in `/home/eslam/Storage2/launch-footage/appearance-review/`.
+- Frames: `tool/capture/appearance_revamp_test.dart` (`APPEARANCE_SHOTS_DIR`), copies in `/home/owner/Storage2/launch-footage/appearance-review/`.
 - Persistence and behaviour of every setting unchanged; a theme card now applies at once (the old preview sheet with Apply and Undo is no longer used on this page).
 - Tests: `test/appearance_effects_test.dart`, `test/text_size_test.dart`, `test/theme_packs_test.dart`, `test/kit/kit_{appearance_preview,carousel,option_card,step_slider,tab_switcher}_test.dart`, plus the kit gates (manifest, ratchet, motion, overflow, G5 gallery).
 

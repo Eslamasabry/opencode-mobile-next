@@ -33,8 +33,8 @@ layouts (feature sections). It only names the kit parts those sections use.
 **Inputs read:** `01-architecture-decision.md` (binding); `map/ui-kit.md` (58 features, UI-KIT-01…58);
 `map/screens-nav.md` §1, §5; `research/motion-native.md`, `kmp-cmp-status.md` §3, §6, §12.4, and `testing-perf.md`
 §4–§5; `catalog/BEHAVIORS.md` (KIT 62 rows, L10N 24 rows); the Flutter source. **The source of truth is the final
-Flutter state, `int/freeze-2026-11-01` at `fc5c1e78f`** (worktree `/home/eslam/Storage/Code/wt/oc_app-freeze`). It
-contains all of `int/batch1-2026-11-01` (`65e3f70a3`, worktree `/home/eslam/Storage/Code/wt/oc_app-batch1`) plus 384
+Flutter state, `int/freeze-2026-11-01` at `fc5c1e78f`** (worktree `/home/owner/Storage/Code/wt/oc_app-freeze`). It
+contains all of `int/batch1-2026-11-01` (`65e3f70a3`, worktree `/home/owner/Storage/Code/wt/oc_app-batch1`) plus 384
 commits: the 1.3× frame cap (`KitChrome`), the row-title fix, large-text approval chip, app updates, Linux vitals, paste
 image and partial-syntax streaming. Read in particular `lib/ui/kit/`, `lib/l10n/`, `docs/ux-system/kit-v2.md`
 §8–§9, `screen-standard.md` and `test/kit/kit_capacity.json`. Also the demo `kmp-demo/shared/.../ui/*` and the owner
@@ -1662,9 +1662,9 @@ compose.resources {
 ```bash
 # Source: the freeze tip (int/freeze-2026-11-01, recorded SHA; fc5c1e78f today). Run only after the last Flutter merge.
 ./gradlew :tools:strings:run --args="convert \
-  --arb /home/eslam/Storage/Code/wt/oc_app-freeze/lib/l10n \
-  --dart-lib /home/eslam/Storage/Code/wt/oc_app-freeze/lib \
-  --android-res /home/eslam/Storage/Code/wt/oc_app-freeze/android/app/src/main/res \
+  --arb /home/owner/Storage/Code/wt/oc_app-freeze/lib/l10n \
+  --dart-lib /home/owner/Storage/Code/wt/oc_app-freeze/lib \
+  --android-res /home/owner/Storage/Code/wt/oc_app-freeze/android/app/src/main/res \
   --source-sha fc5c1e78f \
   --routes tools/strings/feature-routes.tsv \
   --out ui/words/src/commonMain/composeResources \
@@ -2107,7 +2107,7 @@ each text node's `SemanticsActions.GetTextLayoutResult` (§8.3):
   - `status.json`: per part, whether it has a preview, captures, a capacity entry and a spec; the screen-standard
     results; and catalog-row coverage.
 - **Serve:**
-  - The script rsyncs the output to the PC at `/home/eslam/Storage2/catalog/native/current`.
+  - The script rsyncs the output to the PC at `/home/owner/Storage2/catalog/native/current`.
   - A systemd user unit `oc-native-catalog-serve.service` serves it on `<PC tailnet address>:8767` (Tailscale only).
   - At the switch it moves to `:8766`, and Widgetbook (`oc-catalog-serve.service`, `oc-catalog-rebuild.timer`)
     retires.
@@ -2374,7 +2374,7 @@ post-switch Glass trial ("A", 2026-11-01): it is WP G1 (§18.1), not a question.
   - `../research/testing-perf.md`: §4, §5.
 - **Catalog:** `../catalog/BEHAVIORS.md`: KIT (B-KIT-001…062), L10N (B-L10N-001…024), XPLAT-009/010/011.
 - **Repo (read-only)**, the freeze tip `int/freeze-2026-11-01` at `fc5c1e78f`
-  (`/home/eslam/Storage/Code/wt/oc_app-freeze`; it contains batch1 `65e3f70a3`, `/home/eslam/Storage/Code/wt/oc_app-batch1`):
+  (`/home/owner/Storage/Code/wt/oc_app-freeze`; it contains batch1 `65e3f70a3`, `/home/owner/Storage/Code/wt/oc_app-batch1`):
   - `lib/ui/kit/**` (incl. `kit_chrome.dart`, `kit_update_dot.dart`, `kit_update_sheet.dart`, `kit_vitals_strip.dart`,
     `kit_paste_image_menu.dart`, `chat/kit_markdown_unfinished.dart`, `kit_max_width.dart`, `kit_icon.dart`,
     `motion/kit_haptics.dart`, `kit_copy.dart`, `kit_frost.dart`), `lib/ui/theme_roles.dart` (`schemeFromRoles`),
@@ -2387,7 +2387,7 @@ post-switch Glass trial ("A", 2026-11-01): it is WP G1 (§18.1), not a question.
   - `android/app/src/main/res/values*/`;
   - `docs/ux-system/kit-v2.md` §8–§9, `screen-standard.md`, `docs/ux-system/kit-api/*.md` (111 files);
   - `test/kit/kit_capacity*.json`, `test/support/stress_content.dart`.
-- **Demo:** `/home/eslam/Storage/Code/kmp-demo/shared/src/commonMain/kotlin/io/github/eslamasabry/kmpdemo/ui/{Theme,Kit,Icons}.kt`.
+- **Demo:** `/home/owner/Storage/Code/kmp-demo/shared/src/commonMain/kotlin/io/github/eslamasabry/kmpdemo/ui/{Theme,Kit,Icons}.kt`.
   These are lessons, not code to copy: sampled palette, `danger` red, bouncy `pressScale`, icons that ignore text
   scale.
 - **Owner memory:** `design-standard-rule`, `component-max-width-rule`, `text-scale-cap`, `android-native-feel`,

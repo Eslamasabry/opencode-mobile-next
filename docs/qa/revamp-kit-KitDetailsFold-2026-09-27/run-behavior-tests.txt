@@ -1,5 +1,5 @@
 Waiting for another flutter command to release the startup lock...
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_details_fold_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-2/test/kit/kit_details_fold_test.dart
 00:00 +0: 1. collapsed by default; the toggle opens and closes it
 00:00 +1: 2. controlled: a tap asks the host and waits for it
 00:00 +2: 3. a value shows once, under its first label

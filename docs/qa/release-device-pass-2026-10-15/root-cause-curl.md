@@ -8,7 +8,7 @@ Integration base (`git merge-base master HEAD` at investigation start):
 Finish line: an interrupted prerequisite must not be called Done or allow Node
 to start, and Continue must be able to retry within the same app process.
 Non-goals: runtime/provider changes, UI changes, signing, publication, or host
-package changes. No `/home/eslam/package*` files were touched.
+package changes. No `/home/owner/package*` files were touched.
 
 ## Evidence and cause
 

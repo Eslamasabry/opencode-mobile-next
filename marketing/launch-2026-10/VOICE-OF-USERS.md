@@ -29,7 +29,7 @@ the project pages on that date.
 Status key: **covered** (shipped, evidence cited), **partly**, **missing**.
 Evidence for our status is from `README.md`, `CHANGELOG.md`,
 `docs/releases/v1.4.0+54.md`, and `lib/` in the checkout
-`/home/eslam/Storage2/wt/oc_app-batch`. "Not device-verified" is stated where
+`/home/owner/Storage2/wt/oc_app-batch`. "Not device-verified" is stated where
 our own docs say it.
 
 ### 1. Opening the agent app should "just work" the first time (setup and crashes)

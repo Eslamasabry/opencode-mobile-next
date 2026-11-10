@@ -4,7 +4,7 @@
 
 ---
 
-You own one design school in the OpenCode Mobile Flutter app: **Soft** (neumorphism). Make a worktree first: `git -C /home/eslam/Storage2/wt/oc_app-schools-base worktree add /home/eslam/Storage2/wt/oc_app-style-soft -b feat/style-soft feat/schools-baseline`. Work only there. Read AGENTS.md first, then `docs/ux-system/kit-v2.md` §4, §8 and §9, then `docs/design/design-schools/`: README, contract (§0 first: it says what is built), flutter-techniques, your guide `schools/soft.md` and `briefs/README.md` (the hooks, all built, and the spec field that drives each).
+You own one design school in the OpenCode Mobile Flutter app: **Soft** (neumorphism). Make a worktree first: `git -C /home/owner/Storage2/wt/oc_app-schools-base worktree add /home/owner/Storage2/wt/oc_app-style-soft -b feat/style-soft feat/schools-baseline`. Work only there. Read AGENTS.md first, then `docs/ux-system/kit-v2.md` §4, §8 and §9, then `docs/design/design-schools/`: README, contract (§0 first: it says what is built), flutter-techniques, your guide `schools/soft.md` and `briefs/README.md` (the hooks, all built, and the spec field that drives each).
 
 You run on the PC (8 CPU, 16 GB, shared with other agents): at most one `flutter test` process at a time with `-j 2`; between 00:00 and 02:00 no local Flutter at all. Run `flutter pub get` (and in `widgetbook/`) once at the start, with the pinned Flutter `~/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter`.
 
@@ -19,8 +19,8 @@ You run on the PC (8 CPU, 16 GB, shared with other agents): at most one `flutter
 - Your starting point: Surfaces' Soft, moved **verbatim** into the spec file, plus Fine-tune handling away from its defaults (Depth › Flat drops the shadows and draws a `text3` α 0.45 edge; Edges › On adds that edge). Its goldens are the Surfaces ones and must only change on purpose.
 - Harnesses: `test/kit/kit_style_test.dart` (invariants for every style × brightness × knob combination), `test/goldens/kit/kit_surfaces_golden_test.dart` (your style in light and dark), `tool/capture/surfaces_test.dart` (home, chat, settings and a sheet per style, plus a frame-timing line).
 - Concepts (AI-generated; take the look, never the data):
-  - /home/eslam/Storage2/launch-footage/appearance-concepts-2/g-soft-light/concept.png (light: the owner's favourite; match its raised card, inset composer field and inset-selected segment)
-  - /home/eslam/Storage2/launch-footage/appearance-concepts-2/f-neumorphism/concept.png (dark: beat it; its depth is too faint)
+  - /home/owner/Storage2/launch-footage/appearance-concepts-2/g-soft-light/concept.png (light: the owner's favourite; match its raised card, inset composer field and inset-selected segment)
+  - /home/owner/Storage2/launch-footage/appearance-concepts-2/f-neumorphism/concept.png (dark: beat it; its depth is too faint)
 
 ## Files you own (write only these)
 
@@ -46,12 +46,12 @@ You run on the PC (8 CPU, 16 GB, shared with other agents): at most one `flutter
    - Live background capped at Subtle (H7).
 2. Keep `kit_style_test.dart` green for every style and knob combination. If a guide token fails an invariant, change the token and say so in your report.
 3. Render your goldens (`TZ=UTC flutter test test/goldens/kit/kit_surfaces_golden_test.dart --plain-name "surfaces · soft" --update-goldens`) and **look at every image**. No other golden may change (`git diff --stat -- '*.png'`).
-4. Render the captures: `SURFACES_SHOTS_DIR=/home/eslam/Storage2/launch-footage/progress/soft/passN flutter test tool/capture/surfaces_test.dart --plain-name " soft "`. Compare each, one full screen at a time, with your concept. Do **at least three polish passes**. Extend the capture list to the contract §8 screens as the hooks land.
+4. Render the captures: `SURFACES_SHOTS_DIR=/home/owner/Storage2/launch-footage/progress/soft/passN flutter test tool/capture/surfaces_test.dart --plain-name " soft "`. Compare each, one full screen at a time, with your concept. Do **at least three polish passes**. Extend the capture list to the contract §8 screens as the hooks land.
 5. Check the owner rules on every render: kit only; never red; amber only for "needs you"; one main action in solid mint; no new UI level; plain words; motion 150–250 ms and still under reduced motion; `flutter_animate` banned; Saver → Solid; high contrast per contract §6.
 
 ## Progress images (owner rule 2026-10-21)
 
-After EVERY visual pass, not only at the end, save one full phone screen per changed state as `passN-<screen>-<dark|light>.png` in `/home/eslam/Storage2/launch-footage/progress/soft/`. Append one line per pass to `LOG.md` there: what changed and what comes next. The owner watches these to steer.
+After EVERY visual pass, not only at the end, save one full phone screen per changed state as `passN-<screen>-<dark|light>.png` in `/home/owner/Storage2/launch-footage/progress/soft/`. Append one line per pass to `LOG.md` there: what changed and what comes next. The owner watches these to steer.
 
 ## Tests
 

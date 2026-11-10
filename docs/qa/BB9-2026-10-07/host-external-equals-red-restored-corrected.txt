@@ -3,7 +3,7 @@ F
 FAIL: test_equals_in_apk_path_cannot_be_consumed_as_env_assignment (test_bb9_external_installer.ExternalTests.test_equals_in_apk_path_cannot_be_consumed_as_env_assignment)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb9_external_installer.py", line 109, in test_equals_in_apk_path_cannot_be_consumed_as_env_assignment
+  File "/home/owner/Storage/Code/oc_app-sol-bb/tool/qa/test_bb9_external_installer.py", line 109, in test_equals_in_apk_path_cannot_be_consumed_as_env_assignment
     self.assertEqual(args[:4],['/system/bin/sh','-c','exec "$@"','oc-bb9-owned-launch'])
 AssertionError: Lists differ: ['--root-id', '--kill-on-exit', '--rootfs=/[81 chars]env'] != ['/system/bin/sh', '-c', 'exec "$@"', 'oc-bb9-owned-launch']
 

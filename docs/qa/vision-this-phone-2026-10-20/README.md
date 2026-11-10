@@ -99,7 +99,7 @@ background belongs to the aurora agent).
 ## Evidence
 
 Renders (412x915 at 2x unless named, one screen each) in
-`/home/eslam/Storage2/launch-footage/vision-this-phone/`: running-dark,
+`/home/owner/Storage2/launch-footage/vision-this-phone/`: running-dark,
 running-light, running-rows-dark (scrolled: the quiet rows), heat-paused-dark,
 crashed-restarts-by-itself-dark / -light, kept-stopping-dark,
 stopped-by-you-dark, start-failed-dark, small-320-text2-dark,

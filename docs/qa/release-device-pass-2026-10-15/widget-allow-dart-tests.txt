@@ -1,86 +1,86 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart: cold OC2 stable allowOnce uses the negotiated permission body and clears only the answered request
-00:00 +1: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart: cold OC2 stable reject uses the negotiated permission body and clears only the answered request
-00:00 +2: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart: cold OC2 beta allowOnce uses the negotiated permission body and clears only the answered request
-00:00 +3: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart: cold OC2 beta reject uses the negotiated permission body and clears only the answered request
-00:00 +4: loading /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart
-00:01 +4: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: allowOnce cold tap confirms exact pending request and closes transport
-00:01 +5: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: reject cold tap confirms exact pending request and closes transport
-00:01 +6: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: cold approval waits for health before reading or answering
-00:01 +7: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: unhealthy cold transport never reads or answers permissions
-00:01 +8: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: failed health is sanitized and never answers permissions
-00:01 +9: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: cancel during cold health closes without answering permissions
-00:01 +10: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: deadline during cold health never reads or answers permissions
-00:01 +11: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: profile switch during cold health prevents permission dispatch
-00:01 +12: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: cold dispatch uses private target without exposing it in its result
-00:01 +13: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: missing or stale private target never constructs a transport
-00:01 +14: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: private target reader rejects mismatched identity and deleted target
-00:01 +15: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: duplicate tap is dispatched once
-00:01 +16: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: expired tap never constructs or dispatches transport
-00:01 +17: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: deadline reached during pending read never dispatches afterwards
-00:01 +18: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: cancel while read is in flight prevents late dispatch and closes
-00:01 +19: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: profile deletion during read prevents mutation
-00:01 +20: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: different pending request owner is never answered
-00:01 +21: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: stop checks server user-message identity and busy status
-00:01 +22: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: old run cannot stop a replacement run
-00:01 +23: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: idle run cannot be stopped
-00:01 +24: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: mutation error is uncertain, sanitized, closed, and never retried
-00:01 +25: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: unsupported row action is rejected before opening connection
-00:01 +26: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: durable ownership guard respects profile switch and deletion without opt-in writes
-00:01 +27: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: suspension preserves target proofs and does not resurrect deletion
-00:01 +28: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: cold Team resume uses reviewed revision and closes
-00:01 +29: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: cold Team approvePlan uses reviewed revision and closes
-00:01 +30: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: Team transport uncertainty cannot become retryable rejection
-00:01 +31: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: same-scope durable replacement during read blocks old stop
-00:01 +32: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: target-only load reads target secrets without migrations or writes
-00:01 +33: loading /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart
-00:05 +33: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart: malformed actions cannot enter background dispatch
-00:05 +34: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart: snapshot uses opaque project scope and bounded redacted titles
-00:05 +35: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart: stale profile and scope never stop a conversation
-00:05 +36: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart: old run start never stops a replacement run
-00:05 +37: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart: same action is dispatched once and its result is in snapshot
-00:05 +38: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart: supported steering selects steer delivery
-00:05 +39: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart: OC1-style unsupported steering remains ordinary after-reply send
-00:05 +40: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart: uncertain send is not replayed and never exposes remote text
-00:05 +41: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart: missing exact permission cannot approve another request
-00:05 +42: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart: location switch revokes existing launcher actions
-00:05 +43: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart: needs-you and running rows survive the four-row cap
-00:05 +44: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart: profile deletion drains queued widget writes before clearing
-00:05 +45: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart: unknown mixed-runtime behavior never sends a prompt
-00:05 +46: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart: snapshot details cannot replace identity or introduce raw fields
-00:05 +47: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart: native deletion refusal preserves snapshot and reports failure
-00:05 +48: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart: native profile style clear is called even without cached snapshot
-00:05 +49: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart: allow once confirms only the exact pending permission
-00:05 +50: loading /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_snapshot_test.dart
-00:06 +50: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_snapshot_test.dart: snapshot keeps routing private and profile deletion removes target
-00:06 +51: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_snapshot_test.dart: suspension migrates legacy raw routing out of the snapshot
-00:06 +52: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_snapshot_test.dart: writes at most four sessions with busy flags and title fallback
-00:06 +53: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_snapshot_test.dart: the untitled fallback is the caller's words, English if none
-00:06 +54: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_snapshot_test.dart: publishes presented titles instead of server placeholders
-00:06 +55: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_snapshot_test.dart: presented widget titles use app language and remain redacted
-00:06 +56: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_snapshot_test.dart: unchanged payloads neither rewrite nor redraw
-00:06 +57: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_snapshot_test.dart: non-Android platforms write nothing
-00:06 +58: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_snapshot_test.dart: clearForProfile native answer a host with nothing to say still clears the stored copy
-00:06 +59: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/widget_snapshot_test.dart: clearForProfile native answer an explicit native refusal is a failure
-00:06 +60: loading /home/eslam/Storage/Code/oc_app-codex-relwidget/test/api2_dialect_test.dart
-00:07 +60: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/api2_dialect_test.dart: requests that did not change pass through untouched
-00:07 +61: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/api2_dialect_test.dart: server facts, forms and the current project moved
-00:07 +62: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/api2_dialect_test.dart: experimental routes keep their method and body
-00:07 +63: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/api2_dialect_test.dart: actions that became a method on the parent resource
-00:07 +64: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/api2_dialect_test.dart: worktrees carry the project in the request, not the path
-00:07 +65: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/api2_dialect_test.dart: renamed request fields
-00:07 +66: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/api2_dialect_test.dart: what the stable line removed fails clearly instead of 404ing
-00:07 +67: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/api2_dialect_test.dart: responses are reshaped into what the beta call sites read
-00:07 +68: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/api2_dialect_test.dart: plugin rows are read in both shapes
-00:07 +69: loading /home/eslam/Storage/Code/oc_app-codex-relwidget/test/api2_transport_test.dart
-00:07 +69: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/api2_transport_test.dart: normalizes server roots with trailing slashes and /api suffixes
-00:07 +70: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/api2_transport_test.dart: builds Basic auth from the opencode username and password
-00:07 +71: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/api2_transport_test.dart: the transport offers no way to put credentials in a URL
-00:07 +72: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/api2_transport_test.dart: 401 maps to Api2AuthRequired even with an empty body
-00:08 +73: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/api2_transport_test.dart: tagged error envelopes surface tag, status, and extras
-00:08 +74: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/api2_transport_test.dart: 503 boot bodies map to Api2Unavailable
-00:08 +75: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/api2_transport_test.dart: connection refusal maps to Api2NetworkError
-00:08 +76: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/api2_transport_test.dart: connecting to OpenCode 2.0.4+ settles the stable generation and translates later requests
-00:08 +77: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/api2_transport_test.dart: a beta server is settled by its health answer with no extra request
-00:08 +78: /home/eslam/Storage/Code/oc_app-codex-relwidget/test/api2_transport_test.dart: health sends Basic auth and parses the payload
+00:00 +0: loading /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart: cold OC2 stable allowOnce uses the negotiated permission body and clears only the answered request
+00:00 +1: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart: cold OC2 stable reject uses the negotiated permission body and clears only the answered request
+00:00 +2: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart: cold OC2 beta allowOnce uses the negotiated permission body and clears only the answered request
+00:00 +3: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_http_test.dart: cold OC2 beta reject uses the negotiated permission body and clears only the answered request
+00:00 +4: loading /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart
+00:01 +4: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: allowOnce cold tap confirms exact pending request and closes transport
+00:01 +5: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: reject cold tap confirms exact pending request and closes transport
+00:01 +6: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: cold approval waits for health before reading or answering
+00:01 +7: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: unhealthy cold transport never reads or answers permissions
+00:01 +8: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: failed health is sanitized and never answers permissions
+00:01 +9: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: cancel during cold health closes without answering permissions
+00:01 +10: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: deadline during cold health never reads or answers permissions
+00:01 +11: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: profile switch during cold health prevents permission dispatch
+00:01 +12: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: cold dispatch uses private target without exposing it in its result
+00:01 +13: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: missing or stale private target never constructs a transport
+00:01 +14: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: private target reader rejects mismatched identity and deleted target
+00:01 +15: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: duplicate tap is dispatched once
+00:01 +16: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: expired tap never constructs or dispatches transport
+00:01 +17: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: deadline reached during pending read never dispatches afterwards
+00:01 +18: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: cancel while read is in flight prevents late dispatch and closes
+00:01 +19: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: profile deletion during read prevents mutation
+00:01 +20: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: different pending request owner is never answered
+00:01 +21: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: stop checks server user-message identity and busy status
+00:01 +22: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: old run cannot stop a replacement run
+00:01 +23: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: idle run cannot be stopped
+00:01 +24: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: mutation error is uncertain, sanitized, closed, and never retried
+00:01 +25: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: unsupported row action is rejected before opening connection
+00:01 +26: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: durable ownership guard respects profile switch and deletion without opt-in writes
+00:01 +27: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: suspension preserves target proofs and does not resurrect deletion
+00:01 +28: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: cold Team resume uses reviewed revision and closes
+00:01 +29: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: cold Team approvePlan uses reviewed revision and closes
+00:01 +30: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: Team transport uncertainty cannot become retryable rejection
+00:01 +31: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: same-scope durable replacement during read blocks old stop
+00:01 +32: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_action_runner_test.dart: target-only load reads target secrets without migrations or writes
+00:01 +33: loading /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart
+00:05 +33: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart: malformed actions cannot enter background dispatch
+00:05 +34: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart: snapshot uses opaque project scope and bounded redacted titles
+00:05 +35: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart: stale profile and scope never stop a conversation
+00:05 +36: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart: old run start never stops a replacement run
+00:05 +37: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart: same action is dispatched once and its result is in snapshot
+00:05 +38: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart: supported steering selects steer delivery
+00:05 +39: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart: OC1-style unsupported steering remains ordinary after-reply send
+00:05 +40: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart: uncertain send is not replayed and never exposes remote text
+00:05 +41: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart: missing exact permission cannot approve another request
+00:05 +42: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart: location switch revokes existing launcher actions
+00:05 +43: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart: needs-you and running rows survive the four-row cap
+00:05 +44: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart: profile deletion drains queued widget writes before clearing
+00:05 +45: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart: unknown mixed-runtime behavior never sends a prompt
+00:05 +46: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart: snapshot details cannot replace identity or introduce raw fields
+00:05 +47: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart: native deletion refusal preserves snapshot and reports failure
+00:05 +48: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart: native profile style clear is called even without cached snapshot
+00:05 +49: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_v2_contract_test.dart: allow once confirms only the exact pending permission
+00:05 +50: loading /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_snapshot_test.dart
+00:06 +50: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_snapshot_test.dart: snapshot keeps routing private and profile deletion removes target
+00:06 +51: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_snapshot_test.dart: suspension migrates legacy raw routing out of the snapshot
+00:06 +52: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_snapshot_test.dart: writes at most four sessions with busy flags and title fallback
+00:06 +53: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_snapshot_test.dart: the untitled fallback is the caller's words, English if none
+00:06 +54: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_snapshot_test.dart: publishes presented titles instead of server placeholders
+00:06 +55: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_snapshot_test.dart: presented widget titles use app language and remain redacted
+00:06 +56: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_snapshot_test.dart: unchanged payloads neither rewrite nor redraw
+00:06 +57: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_snapshot_test.dart: non-Android platforms write nothing
+00:06 +58: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_snapshot_test.dart: clearForProfile native answer a host with nothing to say still clears the stored copy
+00:06 +59: /home/owner/Storage/Code/oc_app-codex-relwidget/test/widget_snapshot_test.dart: clearForProfile native answer an explicit native refusal is a failure
+00:06 +60: loading /home/owner/Storage/Code/oc_app-codex-relwidget/test/api2_dialect_test.dart
+00:07 +60: /home/owner/Storage/Code/oc_app-codex-relwidget/test/api2_dialect_test.dart: requests that did not change pass through untouched
+00:07 +61: /home/owner/Storage/Code/oc_app-codex-relwidget/test/api2_dialect_test.dart: server facts, forms and the current project moved
+00:07 +62: /home/owner/Storage/Code/oc_app-codex-relwidget/test/api2_dialect_test.dart: experimental routes keep their method and body
+00:07 +63: /home/owner/Storage/Code/oc_app-codex-relwidget/test/api2_dialect_test.dart: actions that became a method on the parent resource
+00:07 +64: /home/owner/Storage/Code/oc_app-codex-relwidget/test/api2_dialect_test.dart: worktrees carry the project in the request, not the path
+00:07 +65: /home/owner/Storage/Code/oc_app-codex-relwidget/test/api2_dialect_test.dart: renamed request fields
+00:07 +66: /home/owner/Storage/Code/oc_app-codex-relwidget/test/api2_dialect_test.dart: what the stable line removed fails clearly instead of 404ing
+00:07 +67: /home/owner/Storage/Code/oc_app-codex-relwidget/test/api2_dialect_test.dart: responses are reshaped into what the beta call sites read
+00:07 +68: /home/owner/Storage/Code/oc_app-codex-relwidget/test/api2_dialect_test.dart: plugin rows are read in both shapes
+00:07 +69: loading /home/owner/Storage/Code/oc_app-codex-relwidget/test/api2_transport_test.dart
+00:07 +69: /home/owner/Storage/Code/oc_app-codex-relwidget/test/api2_transport_test.dart: normalizes server roots with trailing slashes and /api suffixes
+00:07 +70: /home/owner/Storage/Code/oc_app-codex-relwidget/test/api2_transport_test.dart: builds Basic auth from the opencode username and password
+00:07 +71: /home/owner/Storage/Code/oc_app-codex-relwidget/test/api2_transport_test.dart: the transport offers no way to put credentials in a URL
+00:07 +72: /home/owner/Storage/Code/oc_app-codex-relwidget/test/api2_transport_test.dart: 401 maps to Api2AuthRequired even with an empty body
+00:08 +73: /home/owner/Storage/Code/oc_app-codex-relwidget/test/api2_transport_test.dart: tagged error envelopes surface tag, status, and extras
+00:08 +74: /home/owner/Storage/Code/oc_app-codex-relwidget/test/api2_transport_test.dart: 503 boot bodies map to Api2Unavailable
+00:08 +75: /home/owner/Storage/Code/oc_app-codex-relwidget/test/api2_transport_test.dart: connection refusal maps to Api2NetworkError
+00:08 +76: /home/owner/Storage/Code/oc_app-codex-relwidget/test/api2_transport_test.dart: connecting to OpenCode 2.0.4+ settles the stable generation and translates later requests
+00:08 +77: /home/owner/Storage/Code/oc_app-codex-relwidget/test/api2_transport_test.dart: a beta server is settled by its health answer with no extra request
+00:08 +78: /home/owner/Storage/Code/oc_app-codex-relwidget/test/api2_transport_test.dart: health sends Basic auth and parses the payload
 00:08 +79: All tests passed!

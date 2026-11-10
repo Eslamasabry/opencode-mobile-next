@@ -198,7 +198,7 @@ Executed here:
   formatting success is not analyzer evidence.
 - `kotlinc` compilation of `TermuxSetupRunner.kt`, `TermuxSetupShell.kt`,
   `SetupJob.kt` and `TermuxResultService.kt` against
-  `/home/eslam/Android/Sdk/platforms/android-37.0/android.jar`: exit 0.
+  `/home/owner/Android/Sdk/platforms/android-37.0/android.jar`: exit 0.
 - Compiled the production `TermuxSetupShell.kt` with
   `test/native/termux_setup_harness.kt` and ran its three scenarios directly
   with Java. All passed: progress/bytes and step completion without persisted

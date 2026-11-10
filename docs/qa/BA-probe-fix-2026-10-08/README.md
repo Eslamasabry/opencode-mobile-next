@@ -30,8 +30,8 @@ Run from the repo root with the existing owner profile ID, never a new account:
 
 ```sh
 python3 docs/qa/BA-probe-fix-2026-10-08/driver/build.py --build-dir /tmp/ba-private-probe --profile-id OWNER_PROFILE
-flock -w 1800 /home/eslam/Storage/tmp/oc-emulator.lock python3 docs/qa/BA-probe-fix-2026-10-08/driver/run_context.py --build-dir /tmp/ba-private-probe --profile-id OWNER_PROFILE --mode real
-flock -w 1800 /home/eslam/Storage/tmp/oc-emulator.lock python3 docs/qa/BA-probe-fix-2026-10-08/driver/run_context.py --build-dir /tmp/ba-private-probe --profile-id OWNER_PROFILE --mode fixture
+flock -w 1800 /home/owner/Storage/tmp/oc-emulator.lock python3 docs/qa/BA-probe-fix-2026-10-08/driver/run_context.py --build-dir /tmp/ba-private-probe --profile-id OWNER_PROFILE --mode real
+flock -w 1800 /home/owner/Storage/tmp/oc-emulator.lock python3 docs/qa/BA-probe-fix-2026-10-08/driver/run_context.py --build-dir /tmp/ba-private-probe --profile-id OWNER_PROFILE --mode fixture
 ```
 
 Every compiler is serialized through machine_lock with a256MiB JVM cap; no Gradle, Kotlin Gradle task, or APK build. `fixture` redirects only the project-storage fields of a newly constructed diagnostic host object to a newly created empty cache fixture. Real project paths, runtime rootfs, component admission and canonical auth account home are untouched. The fixture is removed by that diagnostic object on completion. This control distinguishes project admission from the packaged private probe; it does not qualify UI behavior, real-app hidden-API enforcement, startup concurrency or a replacement APK.

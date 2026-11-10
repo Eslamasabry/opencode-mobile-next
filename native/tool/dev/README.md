@@ -9,7 +9,7 @@ preview (`…opencode_mobile.native`) alone: the phone loops install a third app
 | 2. Phone, warm incremental install | the whole app on the phone, as "OpenCode Dev" | **19–26 s** (`once`), ~21 s (`watch`); 34 s on a loaded PC | `dev-loop.sh once` / `dev-loop.sh watch` |
 | 3. Android Studio Live Edit | Compose edits pushed into the running dev app | not measured here (needs the Studio GUI once) | Run **OpenCode Dev (devDebug)** once in Studio |
 
-`dev-loop.sh` is `/home/eslam/Storage2/tools/dev-loop.sh` on the PC (not in the repo: it holds this PC's paths, device id
+`dev-loop.sh` is `/home/owner/Storage2/tools/dev-loop.sh` on the PC (not in the repo: it holds this PC's paths, device id
 and memory rules). `dev-loop.sh status` shows the warm daemon and what the phone has; `dev-loop.sh stop` ends the
 daemons and the hot gallery. Owner rule: no local builds 00:00–02:00 (the script refuses `once`/`watch`/`hot`/`reload`
 then; use the VPS).
@@ -19,7 +19,7 @@ then; use the VPS).
 - Package `io.github.eslamasabry.opencode_mobile.native.dev`, label **OpenCode Dev**, amber icon, `versionName` `…-dev`,
   debuggable. Its own data: it starts clean and never sees the real app's servers or chats.
 - Signed with a dedicated dev keystore (SHA-256 `807ED593…020D`), never the PC's debug key (that is a real lineage) or the
-  preview key. `native/local.properties` names it: `oc.devSigning=/home/eslam/Storage2/keys/dev-loop/dev-signing.properties`
+  preview key. `native/local.properties` names it: `oc.devSigning=/home/owner/Storage2/keys/dev-loop/dev-signing.properties`
   (a properties file with `storeFile`, `storePassword`, `keyAlias`, `keyPassword`; also `-Poc.devSigning` or
   `OC_DEV_SIGNING`). Without it the dev build stops at `refuseDevWithoutDevKey`; it never falls back to another key.
 - Nothing global collides: every provider authority is `${applicationId}.…`; `src/dev/AndroidManifest.xml` turns off the
@@ -40,7 +40,7 @@ then; use the VPS).
 - Warm daemon: `-Xmx3g`, Kotlin in-process (one JVM, so `kotlin.daemon.jvmargs` never starts a second one), incremental
   Kotlin, configuration cache, `-Pandroid.injected.build.abi=arm64-v8a` (only the phone's ABI is packaged: 66 MB instead
   of both ABIs). The dev signing config also writes the v4 `.idsig` that incremental install streams from.
-- Build outputs: `oc.buildRoot=/home/eslam/.cache/oc-dev-loop/build` in `native/local.properties` moves every `build/`
+- Build outputs: `oc.buildRoot=/home/owner/.cache/oc-dev-loop/build` in `native/local.properties` moves every `build/`
   directory off the nearly full Storage2 drive (settings.gradle.kts; unset everywhere else, nothing changes).
 - Memory: the loop does not take the pc-heavy lock. It needs cap + 1.5 GB free to start a cold daemon, writes its cap
   (5000 MB: a warm daemon holds 2.6–4.2 GB) to `tools/dev-loop.holder`, and its daemon carries
@@ -114,9 +114,9 @@ desktop (`DISPLAY=:1`).
 Android Studio 2026.2.2 (build AI-262, supports AGP up to 9.5.1; this project uses 9.3.3) is installed (snap `android-studio`, `/snap/bin/android-studio`).
 Once, by a person at the PC:
 
-1. Open `/home/eslam/Storage2/wt/dev-loop/native` (the Gradle root, not the repo root).
-2. Settings › Build, Execution, Deployment › Build Tools › Gradle: Gradle JDK = `/home/eslam/Storage2/tools/jdk21`
-   (Metro needs JDK 21); Gradle user home = `/home/eslam/Storage2/tools/gradle-home` (shares the warm caches).
+1. Open `/home/owner/Storage2/wt/dev-loop/native` (the Gradle root, not the repo root).
+2. Settings › Build, Execution, Deployment › Build Tools › Gradle: Gradle JDK = `/home/owner/Storage2/tools/jdk21`
+   (Metro needs JDK 21); Gradle user home = `/home/owner/Storage2/tools/gradle-home` (shares the warm caches).
 3. Build Variants: `:androidApp` → **devDebug**.
 4. Pick the phone (NX721J) and the run configuration **OpenCode Dev (devDebug)** (`native/.run/`), press Run.
 5. Settings › Editor › Live Edit: "Push edits automatically". Compose edits then reach the running app in seconds;

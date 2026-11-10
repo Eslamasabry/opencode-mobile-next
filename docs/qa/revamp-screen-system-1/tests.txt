@@ -1,54 +1,54 @@
 Waiting for another flutter command to release the startup lock...
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/about_alpha_notice_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/about_alpha_notice_test.dart: About shows the build once, provenance and one report path
-00:01 +1: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/about_alpha_notice_test.dart: the version copies in one tap
-00:01 +2: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/about_alpha_notice_test.dart: check for updates: fetches an update and says to reopen
-00:01 +3: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/about_alpha_notice_test.dart: check for updates: up to date, and a build that cannot
-00:02 +4: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/about_alpha_notice_test.dart: the tabs switch the document; Open source lists licenses
-00:02 +5: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/about_alpha_notice_test.dart: initialTab 1 opens on Open source
-00:03 +6: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/about_alpha_notice_test.dart: the notice retains provenance and desktop limits without a channel claim
-00:03 +7: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/app_diagnostics_screen_test.dart
-00:05 +7: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/app_diagnostics_screen_test.dart: diagnostics are readable at narrow width and sent explicitly
-00:06 +8: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/app_diagnostics_screen_test.dart: Send names the server it goes to and says what happens
-00:06 +9: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/app_diagnostics_screen_test.dart: Clear asks first with the count, then empties the list
-00:06 +10: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/app_diagnostics_screen_test.dart: diagnostics screen explains an empty process-local report
-00:06 +11: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/server_capabilities_screen_test.dart
-00:07 +11: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/server_capabilities_screen_test.dart: feature ids are unique and every one has words in both languages
-00:07 +12: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/server_capabilities_screen_test.dart: no backend name appears in the words of the screen
-00:07 +13: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/server_capabilities_screen_test.dart: OpenCode 1: everything it serves unfolds from one row
-00:08 +14: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/server_capabilities_screen_test.dart: OpenCode 2: the shell is under Not available on this server
-00:08 +15: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/server_capabilities_screen_test.dart: Codex-like: the hidden Project tools are explained
-00:08 +16: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/server_capabilities_screen_test.dart: Paseo-like: the hidden Project tools are explained
-00:08 +17: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/server_capabilities_screen_test.dart: a desktop says what the device cannot do, not blaming the server
-00:08 +18: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/server_capabilities_screen_test.dart: one list: what is missing first, each saying where to get it
-00:08 +19: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/server_capabilities_screen_test.dart: opened about one feature: that feature is first
-00:09 +20: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/server_capabilities_screen_test.dart: Add a server appears only when the app can open that flow
-00:09 +21: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/server_capabilities_screen_test.dart: layout at 320 dp and 2.5x text no overflow in en
-00:09 +22: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/server_capabilities_screen_test.dart: layout at 320 dp and 2.5x text no overflow in ar
-00:09 +23: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_test.dart
-00:10 +23: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_test.dart: Keep running a Pixel with battery allowed: You're set, nothing left
-00:11 +24: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_test.dart: Keep running a Xiaomi: what is left first, an allowed step moves last
-00:11 +25: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_test.dart: Keep running a settings screen the phone lacks is said in place
-00:11 +26: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_test.dart: Performance a failed step says so in words; Clear names the timings
-00:11 +27: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart
-00:12 +27: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: (setUpAll)
-00:12 +27: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: about (dark)
-00:13 +28: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: about open source (dark)
-00:14 +29: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: app diagnostics (dark)
-00:15 +30: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: app diagnostics clear sheet (dark)
-00:15 +31: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: keep running (dark)
-00:16 +32: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: keep running all set (dark)
-00:16 +33: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: server capabilities (dark)
-00:16 +34: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: about (light)
-00:17 +35: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: about open source (light)
-00:18 +36: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: app diagnostics (light)
-00:18 +37: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: app diagnostics clear sheet (light)
-00:19 +38: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: keep running (light)
-00:19 +39: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: keep running all set (light)
-00:19 +40: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: server capabilities (light)
-00:20 +41: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: about wide (dark)
-00:20 +42: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: app diagnostics wide (dark)
-00:21 +43: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: server capabilities wide (dark)
-00:21 +44: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: keep running wide (light)
-00:22 +45: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: (tearDownAll)
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/about_alpha_notice_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/about_alpha_notice_test.dart: About shows the build once, provenance and one report path
+00:01 +1: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/about_alpha_notice_test.dart: the version copies in one tap
+00:01 +2: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/about_alpha_notice_test.dart: check for updates: fetches an update and says to reopen
+00:01 +3: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/about_alpha_notice_test.dart: check for updates: up to date, and a build that cannot
+00:02 +4: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/about_alpha_notice_test.dart: the tabs switch the document; Open source lists licenses
+00:02 +5: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/about_alpha_notice_test.dart: initialTab 1 opens on Open source
+00:03 +6: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/about_alpha_notice_test.dart: the notice retains provenance and desktop limits without a channel claim
+00:03 +7: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/app_diagnostics_screen_test.dart
+00:05 +7: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/app_diagnostics_screen_test.dart: diagnostics are readable at narrow width and sent explicitly
+00:06 +8: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/app_diagnostics_screen_test.dart: Send names the server it goes to and says what happens
+00:06 +9: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/app_diagnostics_screen_test.dart: Clear asks first with the count, then empties the list
+00:06 +10: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/app_diagnostics_screen_test.dart: diagnostics screen explains an empty process-local report
+00:06 +11: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/server_capabilities_screen_test.dart
+00:07 +11: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/server_capabilities_screen_test.dart: feature ids are unique and every one has words in both languages
+00:07 +12: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/server_capabilities_screen_test.dart: no backend name appears in the words of the screen
+00:07 +13: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/server_capabilities_screen_test.dart: OpenCode 1: everything it serves unfolds from one row
+00:08 +14: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/server_capabilities_screen_test.dart: OpenCode 2: the shell is under Not available on this server
+00:08 +15: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/server_capabilities_screen_test.dart: Codex-like: the hidden Project tools are explained
+00:08 +16: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/server_capabilities_screen_test.dart: Paseo-like: the hidden Project tools are explained
+00:08 +17: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/server_capabilities_screen_test.dart: a desktop says what the device cannot do, not blaming the server
+00:08 +18: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/server_capabilities_screen_test.dart: one list: what is missing first, each saying where to get it
+00:08 +19: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/server_capabilities_screen_test.dart: opened about one feature: that feature is first
+00:09 +20: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/server_capabilities_screen_test.dart: Add a server appears only when the app can open that flow
+00:09 +21: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/server_capabilities_screen_test.dart: layout at 320 dp and 2.5x text no overflow in en
+00:09 +22: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/server_capabilities_screen_test.dart: layout at 320 dp and 2.5x text no overflow in ar
+00:09 +23: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_test.dart
+00:10 +23: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_test.dart: Keep running a Pixel with battery allowed: You're set, nothing left
+00:11 +24: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_test.dart: Keep running a Xiaomi: what is left first, an allowed step moves last
+00:11 +25: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_test.dart: Keep running a settings screen the phone lacks is said in place
+00:11 +26: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_test.dart: Performance a failed step says so in words; Clear names the timings
+00:11 +27: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart
+00:12 +27: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: (setUpAll)
+00:12 +27: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: about (dark)
+00:13 +28: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: about open source (dark)
+00:14 +29: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: app diagnostics (dark)
+00:15 +30: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: app diagnostics clear sheet (dark)
+00:15 +31: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: keep running (dark)
+00:16 +32: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: keep running all set (dark)
+00:16 +33: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: server capabilities (dark)
+00:16 +34: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: about (light)
+00:17 +35: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: about open source (light)
+00:18 +36: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: app diagnostics (light)
+00:18 +37: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: app diagnostics clear sheet (light)
+00:19 +38: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: keep running (light)
+00:19 +39: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: keep running all set (light)
+00:19 +40: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: server capabilities (light)
+00:20 +41: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: about wide (dark)
+00:20 +42: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: app diagnostics wide (dark)
+00:21 +43: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: server capabilities wide (dark)
+00:21 +44: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: keep running wide (light)
+00:22 +45: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_51bc20bd-3cb-2/test/revamp/screen_system_1_golden_test.dart: (tearDownAll)
 00:22 +45: All tests passed!

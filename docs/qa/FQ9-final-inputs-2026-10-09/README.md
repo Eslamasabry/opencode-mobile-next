@@ -28,7 +28,7 @@ python3 tool/qa/fq9/prepare_final_inputs.py \
   --candidate-apk "$NEXT_APK" \
   --candidate-build "$NEXT_BUILD" \
   --candidate-sha256 "$REVIEWED_NEXT_SHA" \
-  --output /home/eslam/Storage/tmp/fq9-final-inputs-NEXT
+  --output /home/owner/Storage/tmp/fq9-final-inputs-NEXT
 ```
 
 The builder creates the artifact manifest, `rows.json` and `fixture-plan.json`.
@@ -58,13 +58,13 @@ This FQ9 input work does not make a whole next-build pass ready.
 ```bash
 python3 tool/qa/final_pass.py --execute --fast \
   --candidate-apk "$NEXT_APK" --candidate-build "$NEXT_BUILD" \
-  --normal-apk /home/eslam/Storage/tmp/oc-apk-share/oc-2202.apk \
-  --inputs /home/eslam/Storage/tmp/fq9-final-inputs-NEXT/rows-merged.json \
+  --normal-apk /home/owner/Storage/tmp/oc-apk-share/oc-2202.apk \
+  --inputs /home/owner/Storage/tmp/fq9-final-inputs-NEXT/rows-merged.json \
   --output docs/qa/final-pass-NEXT
 ```
 
 The final runner must hold
-`/home/eslam/Storage/tmp/oc-emulator.lock` continuously through fixture seeding,
+`/home/owner/Storage/tmp/oc-emulator.lock` continuously through fixture seeding,
 baseline inspection, upgrade, evidence writing and final 2202 restoration.
 There is no separate seed command to run outside that reservation. Upgrade is
 the first device row, before any candidate replacement. Verify the actual

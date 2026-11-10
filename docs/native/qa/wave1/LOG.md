@@ -1,5 +1,5 @@
 # APK QA wave 1 — log (2026-11-03)
-- 01:00 worktree /home/eslam/Storage2/wt/apk-qa-wave1 at 27a04ad4c (501d3abf9 + docs-only ledger commit). Debug APK sha256 90f17190bd5945a3080b1ea9c0216447b63d540466414a1c2b375b99d7b8f65d, versionCode 10003.
+- 01:00 worktree /home/owner/Storage2/wt/apk-qa-wave1 at 27a04ad4c (501d3abf9 + docs-only ledger commit). Debug APK sha256 90f17190bd5945a3080b1ea9c0216447b63d540466414a1c2b375b99d7b8f65d, versionCode 10003.
 - 01:02 test server: opencode v2.2.5 serve :46400, PID 1982037, config/state/cache in apk-qa-wave1-server, default data dir (Z.AI Coding Plan present), project apk-qa-wave1-server/project.
 - 01:05 emu.lock was held 4h by an idle Codex persistent shell (pid 1424885, under flock 1424884) that had booted OC_NATIVE_PREVIEW_20261102 at ~20:52; app idle since 21:14, load 0. Stopped that emulator (adb emu kill) and SIGHUP'd the idle shell to release the lock. Rebooted AVD under my own flock (holder 1990222, qemu 1990223).
 - 01:07 uninstalled old preview 10002 (signature differs), installed debug 10003. First launch: title + "Connect to my computer" + "Settings" only (01-first-launch.png). Buttons run edge to edge with no side margin.

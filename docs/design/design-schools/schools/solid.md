@@ -58,6 +58,6 @@ Today's kit, exactly. The [contract §5](../contract.md#5-kit-parts-that-must-ho
 
 ## 7. Concepts to match
 
-- `appearance-concepts-2/final-dark/concept.png`, `final-light/concept.png`, `final-saver/concept.png` (local, `/home/eslam/Storage2/launch-footage/`)
+- `appearance-concepts-2/final-dark/concept.png`, `final-light/concept.png`, `final-saver/concept.png` (local, `/home/owner/Storage2/launch-footage/`)
 - `glass-inspiration/owner-dark-dashboard.jpg` (the owner's pick, local)
 - `appearance-concepts-2/j-style-picker/concept.png`: the "Solid · Calm and matte" card

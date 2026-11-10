@@ -64,63 +64,63 @@ Downloading packages...
 Got dependencies!
 61 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: spent legacy budget migrates once with marker before activation
-00:00 +1: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: healthy foreground check rebinds the saved profile after a private QA owner switch
-00:00 +2: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: failed native staging keeps legacy spent attempts across retry
-00:00 +3: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: retrying staged migration never overwrites native spent attempts
-00:00 +4: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: valid v2 marker with missing native budget admits no restart
-00:00 +5: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: corrupt migration marker admits no native binding or restart
-00:00 +6: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: malformed native snapshot fails closed
-00:00 +7: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: direct and background reservations share three attempts across owners
-00:00 +8: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: only confirmed manual Start resets native attempts
-00:00 +9: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: healthy manual Start resets budget with automatic restart disabled
-00:00 +10: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: Stop background and scheduled native recovery never dispatch from Dart
-00:00 +11: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: legacy pending confirmation survives migration and records after Stop
-00:00 +12: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: native background pending attempt is confirmed without another dispatch
-00:00 +13: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: historical confirmed receipt survives later crash and records once
-00:00 +14: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: profile deletion drains the active check and native erase before sweep
-00:00 +15: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart
-00:00 +15: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: guarded server then helper completion preserves the exhausted retry budget
-00:00 +16: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: prior stopped helper is never resumed and completion retains its positive generation
-00:00 +17: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: already restored server only restores its owed helper
-00:00 +18: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: unsupported and normal running receipts never authorize restoration
-00:00 +19: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: supported incomplete or malformed idle receipts fail closed
-00:00 +20: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: initial Stop foreground and owner guards prevent every launch
-00:00 +21: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: same owner check coalesces while status is pending
-00:00 +22: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: owner or foreground change after the first read cancels continuation
-00:00 +23: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: owner change during native server restore cannot start its helper
-00:00 +24: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: background or disposal during helper readiness prevents completion
-00:00 +25: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: Stop or changed generation during helper readiness prevents native completion
-00:00 +26: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: native or helper failure exposes only a fixed code without fallback
-00:00 +27: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: foreground loss during the final fresh receipt prevents completion
-00:00 +28: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: late native completion after disposal cannot publish a failure or change
-00:01 +29: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: invalidated stale check cannot finish or clear a newer pending check
-00:01 +30: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_idle_policy_test.dart
-00:01 +30: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_idle_policy_test.dart: idle policy carries authored booleans and minute bounds
-00:01 +31: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_idle_policy_test.dart: resume and completion retain the exact owner generation and have no start fallback
-00:01 +32: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_idle_policy_test.dart: unsafe owners and nonpositive generations never reach the native channel
-00:01 +33: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_idle_policy_test.dart: supporting status requires every correctly typed admission field
-00:01 +34: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_idle_policy_test.dart: unknown or malformed native replies expose only the fixed recovery error
-00:01 +35: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_idle_policy_test.dart: tri-state work heartbeat carries no work text and validates the readable alias
-00:01 +36: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_idle_policy_test.dart: an old channel can refuse a heartbeat without authorizing or exposing output
-00:01 +37: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_idle_policy_test.dart: unsupported platforms never dispatch idle start or heartbeat methods
-00:01 +38: /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_idle_policy_test.dart: a stalled native completion is bounded and has no manual fallback
-00:01 +39: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agents_idle_host_test.dart
-00:02 +39: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agents_idle_host_test.dart: idle host projects strict native receipt for a cold process
-00:02 +40: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agents_idle_host_test.dart: idle host restores with original secret guarded wire and owned hello
-00:02 +41: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agents_idle_host_test.dart: idle host never creates a missing secret
-00:02 +42: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agents_idle_host_test.dart: idle host rejects corrupt or unreadable secrets without writes
-00:02 +43: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agents_idle_host_test.dart: idle host malformed and old receipts cannot authorize restoration
-00:02 +44: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agents_idle_host_test.dart: idle host previously stopped helper stays stopped
-00:02 +45: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agents_idle_host_test.dart: idle host owner changes during secret read prevent dispatch
-00:02 +46: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agents_idle_host_test.dart: idle host coalesces same token and refuses a different token
-00:02 +47: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agents_idle_host_test.dart: idle host native token changed during secure read cannot dispatch
-00:02 +48: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agents_idle_host_test.dart: idle host native token changed during hello refuses readiness
-00:02 +49: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agents_idle_host_test.dart: ordinary host start foreground loss during secret read prevents dispatch
-00:02 +50: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agents_idle_host_test.dart: idle host stop fences a pending secure read
-00:02 +51: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agents_idle_host_test.dart: idle host dispose fences a pending secure read
-00:02 +52: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agents_idle_host_test.dart: idle host requires actual pinned hello and closes rejected probe
-00:02 +53: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agents_idle_host_test.dart: idle host reconnect cannot create a secret after guarded resume
-00:02 +54: /home/eslam/Storage/Code/oc_app-sol-bb/test/phone_agents_idle_host_test.dart: idle host automatic start allows only complete foreground legacy or idle facts
+00:00 +0: loading /home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: spent legacy budget migrates once with marker before activation
+00:00 +1: /home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: healthy foreground check rebinds the saved profile after a private QA owner switch
+00:00 +2: /home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: failed native staging keeps legacy spent attempts across retry
+00:00 +3: /home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: retrying staged migration never overwrites native spent attempts
+00:00 +4: /home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: valid v2 marker with missing native budget admits no restart
+00:00 +5: /home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: corrupt migration marker admits no native binding or restart
+00:00 +6: /home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: malformed native snapshot fails closed
+00:00 +7: /home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: direct and background reservations share three attempts across owners
+00:00 +8: /home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: only confirmed manual Start resets native attempts
+00:00 +9: /home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: healthy manual Start resets budget with automatic restart disabled
+00:00 +10: /home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: Stop background and scheduled native recovery never dispatch from Dart
+00:00 +11: /home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: legacy pending confirmation survives migration and records after Stop
+00:00 +12: /home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: native background pending attempt is confirmed without another dispatch
+00:00 +13: /home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: historical confirmed receipt survives later crash and records once
+00:00 +14: /home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_recovery_native_test.dart: profile deletion drains the active check and native erase before sweep
+00:00 +15: loading /home/owner/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart
+00:00 +15: /home/owner/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: guarded server then helper completion preserves the exhausted retry budget
+00:00 +16: /home/owner/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: prior stopped helper is never resumed and completion retains its positive generation
+00:00 +17: /home/owner/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: already restored server only restores its owed helper
+00:00 +18: /home/owner/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: unsupported and normal running receipts never authorize restoration
+00:00 +19: /home/owner/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: supported incomplete or malformed idle receipts fail closed
+00:00 +20: /home/owner/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: initial Stop foreground and owner guards prevent every launch
+00:00 +21: /home/owner/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: same owner check coalesces while status is pending
+00:00 +22: /home/owner/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: owner or foreground change after the first read cancels continuation
+00:00 +23: /home/owner/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: owner change during native server restore cannot start its helper
+00:00 +24: /home/owner/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: background or disposal during helper readiness prevents completion
+00:00 +25: /home/owner/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: Stop or changed generation during helper readiness prevents native completion
+00:00 +26: /home/owner/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: native or helper failure exposes only a fixed code without fallback
+00:00 +27: /home/owner/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: foreground loss during the final fresh receipt prevents completion
+00:00 +28: /home/owner/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: late native completion after disposal cannot publish a failure or change
+00:01 +29: /home/owner/Storage/Code/oc_app-sol-bb/test/phone_server_idle_test.dart: invalidated stale check cannot finish or clear a newer pending check
+00:01 +30: loading /home/owner/Storage/Code/oc_app-sol-bb/test/builtin_idle_policy_test.dart
+00:01 +30: /home/owner/Storage/Code/oc_app-sol-bb/test/builtin_idle_policy_test.dart: idle policy carries authored booleans and minute bounds
+00:01 +31: /home/owner/Storage/Code/oc_app-sol-bb/test/builtin_idle_policy_test.dart: resume and completion retain the exact owner generation and have no start fallback
+00:01 +32: /home/owner/Storage/Code/oc_app-sol-bb/test/builtin_idle_policy_test.dart: unsafe owners and nonpositive generations never reach the native channel
+00:01 +33: /home/owner/Storage/Code/oc_app-sol-bb/test/builtin_idle_policy_test.dart: supporting status requires every correctly typed admission field
+00:01 +34: /home/owner/Storage/Code/oc_app-sol-bb/test/builtin_idle_policy_test.dart: unknown or malformed native replies expose only the fixed recovery error
+00:01 +35: /home/owner/Storage/Code/oc_app-sol-bb/test/builtin_idle_policy_test.dart: tri-state work heartbeat carries no work text and validates the readable alias
+00:01 +36: /home/owner/Storage/Code/oc_app-sol-bb/test/builtin_idle_policy_test.dart: an old channel can refuse a heartbeat without authorizing or exposing output
+00:01 +37: /home/owner/Storage/Code/oc_app-sol-bb/test/builtin_idle_policy_test.dart: unsupported platforms never dispatch idle start or heartbeat methods
+00:01 +38: /home/owner/Storage/Code/oc_app-sol-bb/test/builtin_idle_policy_test.dart: a stalled native completion is bounded and has no manual fallback
+00:01 +39: loading /home/owner/Storage/Code/oc_app-sol-bb/test/phone_agents_idle_host_test.dart
+00:02 +39: /home/owner/Storage/Code/oc_app-sol-bb/test/phone_agents_idle_host_test.dart: idle host projects strict native receipt for a cold process
+00:02 +40: /home/owner/Storage/Code/oc_app-sol-bb/test/phone_agents_idle_host_test.dart: idle host restores with original secret guarded wire and owned hello
+00:02 +41: /home/owner/Storage/Code/oc_app-sol-bb/test/phone_agents_idle_host_test.dart: idle host never creates a missing secret
+00:02 +42: /home/owner/Storage/Code/oc_app-sol-bb/test/phone_agents_idle_host_test.dart: idle host rejects corrupt or unreadable secrets without writes
+00:02 +43: /home/owner/Storage/Code/oc_app-sol-bb/test/phone_agents_idle_host_test.dart: idle host malformed and old receipts cannot authorize restoration
+00:02 +44: /home/owner/Storage/Code/oc_app-sol-bb/test/phone_agents_idle_host_test.dart: idle host previously stopped helper stays stopped
+00:02 +45: /home/owner/Storage/Code/oc_app-sol-bb/test/phone_agents_idle_host_test.dart: idle host owner changes during secret read prevent dispatch
+00:02 +46: /home/owner/Storage/Code/oc_app-sol-bb/test/phone_agents_idle_host_test.dart: idle host coalesces same token and refuses a different token
+00:02 +47: /home/owner/Storage/Code/oc_app-sol-bb/test/phone_agents_idle_host_test.dart: idle host native token changed during secure read cannot dispatch
+00:02 +48: /home/owner/Storage/Code/oc_app-sol-bb/test/phone_agents_idle_host_test.dart: idle host native token changed during hello refuses readiness
+00:02 +49: /home/owner/Storage/Code/oc_app-sol-bb/test/phone_agents_idle_host_test.dart: ordinary host start foreground loss during secret read prevents dispatch
+00:02 +50: /home/owner/Storage/Code/oc_app-sol-bb/test/phone_agents_idle_host_test.dart: idle host stop fences a pending secure read
+00:02 +51: /home/owner/Storage/Code/oc_app-sol-bb/test/phone_agents_idle_host_test.dart: idle host dispose fences a pending secure read
+00:02 +52: /home/owner/Storage/Code/oc_app-sol-bb/test/phone_agents_idle_host_test.dart: idle host requires actual pinned hello and closes rejected probe
+00:02 +53: /home/owner/Storage/Code/oc_app-sol-bb/test/phone_agents_idle_host_test.dart: idle host reconnect cannot create a secret after guarded resume
+00:02 +54: /home/owner/Storage/Code/oc_app-sol-bb/test/phone_agents_idle_host_test.dart: idle host automatic start allows only complete foreground legacy or idle facts
 00:02 +55: All tests passed!

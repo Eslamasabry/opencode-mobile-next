@@ -52,7 +52,7 @@ One zip, saved where the person picks with Android's "Save to":
 | `.ssh/id_*` rule removed, with the whole `.ssh` folder allowed | no secret (with the rule on, it passes) |
 
 ## Renders (real fonts, light Solid)
-`/home/eslam/Storage2/wt/shots-2026-10-31/linux-s3-device/{1-backups,2-saving,3-saved,4-restored,5-not-a-backup}.png`
+`/home/owner/Storage2/wt/shots-2026-10-31/linux-s3-device/{1-backups,2-saving,3-saved,4-restored,5-not-a-backup}.png`
 
 ## Device proof (emulator-5584, APK 4470, no debug hooks)
 The plugin registrant is present: dexdump counts `GeneratedPluginRegistrant` 6 times.
@@ -62,7 +62,7 @@ The plugin registrant is present: dexdump counts `GeneratedPluginRegistrant` 6 t
 - tar now only streams through the shell and gzip, and "Save to" is asked only once the parts are made;
 - the script tests now run against a tar that fails the same way, and fail on the old code.
 
-**The video:** live recording edited with Remotion, `/home/eslam/Storage2/wt/shots-2026-10-31/linux-s3-device/backup-demo.mp4` (1080×1920, 37 s, no sound). The raw recordings `bk-1.mp4` and `bk-2.mp4` are next to it.
+**The video:** live recording edited with Remotion, `/home/owner/Storage2/wt/shots-2026-10-31/linux-s3-device/backup-demo.mp4` (1080×1920, 37 s, no sound). The raw recordings `bk-1.mp4` and `bk-2.mp4` are next to it.
 
 | Step | Seen |
 |---|---|

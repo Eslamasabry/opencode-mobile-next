@@ -10,7 +10,7 @@ This consolidated record takes precedence over the older November 1 status and h
 
 ### 1. Work preserved and integrated
 
-- Recovered the two repair bundles lost by the earlier cleanup, preserved all **eleven** repair bundles outside disposable worktrees, verified their Git bundles and retained original histories under local `recovered/<unit>` refs. The preservation helper was implemented with an actual GLM 5.3 worker, reviewed, hardened and tested, including durable receipts and failure cases. The archive and manifest are in `/home/eslam/Storage2/wt/native-repair-artifacts-20261102/`.
+- Recovered the two repair bundles lost by the earlier cleanup, preserved all **eleven** repair bundles outside disposable worktrees, verified their Git bundles and retained original histories under local `recovered/<unit>` refs. The preservation helper was implemented with an actual GLM 5.3 worker, reviewed, hardened and tested, including durable receipts and failure cases. The archive and manifest are in `/home/owner/Storage2/wt/native-repair-artifacts-20261102/`.
 - Integrated repairs for gates, connection/engine, composer engine, two kit groups, notifications, widgets, delivery, chat, conversations and requests. Preserved both sides of the overlapping delivery fix. Fixed Stop losing the local send identity, which could leave a chat bubble stuck Sending. Registered 17 previously landed modules in `MODULE_OWNERS`.
 - Integrated the stream fix (`recovered/streamfix`, `57d3b9fb`), retaining scope/review protections and bounded text-row layout/chunking. This does not make all search extraction constant-cost or establish Android frame-budget parity.
 - Corrected machine-dependent test fixtures, supplied frozen Flutter string/migration inputs to the VPS, and forced fresh Gradle Test execution after cached failed desktop results were found.
@@ -79,7 +79,7 @@ All three are the separate `io.github.eslamasabry.opencode_mobile.native` previe
 | 10001 | `opencode-native-drafts-preview-20261102.apk` | 22,384,374 | `4fc04f3f144b6dc3a5f0874a2edf0457104edee187be9ffe6e6e348839cf5f09` |
 | 10002 | `opencode-native-server-errors-10002.apk` | 22,386,235 | `4c1155d98e78d9dc1e23077a1ce012a7d5b5bce5e6a60fe69dd690fdb35267d7` |
 
-Last delivered Tailscale download: [native preview 10002](the private APK share server on the owner PC; address in private notes). The download directory is `/home/eslam/Storage2/wt/native-preview-download-20261102` and contains APKs only. This is a private tailnet delivery, not a public release. The table records delivered artifacts; it does not claim the link was rechecked during this documentation-only stop.
+Last delivered Tailscale download: [native preview 10002](the private APK share server on the owner PC; address in private notes). The download directory is `/home/owner/Storage2/wt/native-preview-download-20261102` and contains APKs only. This is a private tailnet delivery, not a public release. The table records delivered artifacts; it does not claim the link was rechecked during this documentation-only stop.
 
 There is **no built/delivered 10003 APK**. A working-tree version increment to 10003 is preparation only. Do not distribute the current composer working tree as a qualified update.
 
@@ -89,7 +89,7 @@ There is **no built/delivered 10003 APK**. A working-tree version increment to 1
 - Used actual OpenCode CLI workers with model route **`zai-coding-plan/glm-5.3`**. This is distinct from the stable test backend's available `opencode/glm-5.3-flash-free` catalog entry.
 - Heavy jobs were stopped when requested earlier. The owner later authorized both PC and VPS without CPU restrictions. Gradle/emulator ownership remained serialized by machine locks; owner processes were never killed by command-line pattern.
 - Last known owner-facing PC backend: OC2 stable **2.2.5**, on the owner PC (address in private notes). Its private runtime state is under `~/.local/state/oc-app/native-preview-server-20261102`; use the saved/private login rather than publishing credentials. Backend PID `1249297` was still present at this handoff; it was not stopped. Owner listeners on 4150/4199 were not touched.
-- API 35 emulator `OC_NATIVE_PREVIEW_20261102`, serial `emulator-5584`, PID `1425918`, was still present at the stop. Its session holds `/home/eslam/Storage2/wt/emu.lock`; no new emulator checks are authorized by the stop. The PC backend/download service remain available independently of implementation work.
+- API 35 emulator `OC_NATIVE_PREVIEW_20261102`, serial `emulator-5584`, PID `1425918`, was still present at the stop. Its session holds `/home/owner/Storage2/wt/emu.lock`; no new emulator checks are authorized by the stop. The PC backend/download service remain available independently of implementation work.
 - The native preview has a separate Android UID, preferences and Keystore. The Flutter built-in Linux bridge is private/in-process, with unexported services and no supported cross-package credential handoff. Automatic adoption/start/wake of the existing phone Linux was **not implemented**. Saving a verified compatible OC2 URL/login once can use existing startup reconnect; that does not import or control the Flutter Linux installation.
 - No owner Linux reset/reinstall, OC1 database deletion, forced runtime migration or replacement of the installed Flutter app was performed.
 
@@ -97,10 +97,10 @@ Evidence: [existing-Linux handoff analysis](server-errors-2026-11-02/existing-li
 
 ### 7. Model/file composer work completed before the stop — unfinished product
 
-Active checkout: `/home/eslam/Storage2/wt/native-full-composer-20261102`, branch `native/full-composer-2026-11-02`, based on `7f23ae13`. The Flutter checkout `/home/eslam/Storage/Code/oc_app` is a different Git repository; do not edit it to resume these native changes.
+Active checkout: `/home/owner/Storage2/wt/native-full-composer-20261102`, branch `native/full-composer-2026-11-02`, based on `7f23ae13`. The Flutter checkout `/home/owner/Storage/Code/oc_app` is a different Git repository; do not edit it to resume these native changes.
 
 - Committed the finish line, non-goals and integration API at **`42d7ba61`**, including the platform-neutral `PromptFilePicker` interface. The old dormant `FullComposerHost` remains unbound: its early-clear behavior would regress acknowledged drafts. The intended visible richer composer extends the working chat host instead.
-- Ran **six actual GLM 5.3 implementation workers** on the VPS in isolated snapshots: `draft-files`, `android-files`, `protocol-models`, `delivery-rich`, `world-rich`, `ui-rich`. All six OpenCode processes exited 0 and exported patches. This proves worker completion, not app correctness. Scoped provider auth was handled privately. Worker JSONL, patches and exit receipts are under `/home/eslam/Storage2/wt/native-full-composer-artifacts-20261102/vps-evidence/`.
+- Ran **six actual GLM 5.3 implementation workers** on the VPS in isolated snapshots: `draft-files`, `android-files`, `protocol-models`, `delivery-rich`, `world-rich`, `ui-rich`. All six OpenCode processes exited 0 and exported patches. This proves worker completion, not app correctness. Scoped provider auth was handled privately. Worker JSONL, patches and exit receipts are under `/home/owner/Storage2/wt/native-full-composer-artifacts-20261102/vps-evidence/`.
 - Adopted their scoped patches for review: whole-state text/file drafts; a real Android OpenDocument/ContentResolver adapter; model catalog and session-selection protocol APIs; rich delivery snapshots; chat-world model/files integration; visible model/Attach/remove controls, EN/AR copy and tests. App dependencies, graph and Activity lifecycle were prepared. These implementation changes are **uncommitted working-tree changes**.
 - On a newly-created task-owned stable-server session, verified two model POST mutations returned 204 and GET readback matched provider/id. Confirmed model/default/provider/agent endpoints and safe catalog shape. No owner session was mutated by that feasibility probe. Its task-owned session remains recorded in the private artifacts; cleanup was not started after the stop.
 - Coordinator regressions against the old OC2 implementation produced **2 real assertion failures**: selection readback was null and catalog unavailable. The protocol patch then needed immutable-list/import fixes and proper catalog capability projection before its focused checks passed.
@@ -126,13 +126,13 @@ Known review findings remain open; do not silently treat the imported worker pat
 7. Full-state draft writes/restoration currently hardcode a null location, losing `file://` directory/workspace binding. New picker output is data URLs, but legacy/server-file references must remain safe before broader attachment support is enabled.
 8. Default-model mapping uses `modelID` rather than the catalog's distinct mode ID; requested variant `default` is not normalized consistently during delivery readback. Both need regressions.
 
-Private logs and receipts: `/home/eslam/Storage2/wt/native-full-composer-artifacts-20261102/`. Contract: [composer contract](full-composer-2026-11-02/contract.md). The separate in-progress verification note is a partial working record; this consolidated stop-state is authoritative.
+Private logs and receipts: `/home/owner/Storage2/wt/native-full-composer-artifacts-20261102/`. Contract: [composer contract](full-composer-2026-11-02/contract.md). The separate in-progress verification note is a partial working record; this consolidated stop-state is authoritative.
 
 ### 8. Parity, other requests and shipping state
 
 - [Reviewed page inventory](server-errors-2026-11-02/page-parity-map.md) and [CSV](server-errors-2026-11-02/page-parity-map.csv) distinguish routed product journeys from source-only modules. They are **not** an official completed-parity count. Loaded-transcript search/older-message cursor handling already exists; the all-conversations page is a stub and the list only loads its first page. Do not count every source module as a delivered page.
 - Settings, runtime/This phone integration, voice, broader file/project/agent pages, saved-prompt UI and the other unrouted journeys remain unfinished. Automatic Linux adoption, in-place Flutter migration, physical-device qualification, full visual/RTL/accessibility parity, iOS and release gates remain open. No defensible exact “steps to parity” count was established.
-- The requested `google/elephant-goldfish-model` clone exists at `/home/eslam/Storage2/wt/elephant-goldfish-model-explore-20261102`, origin `https://github.com/google/elephant-goldfish-model.git`, clean HEAD `403d8881d62022490637d740657b33f01e321ea8`. No native integration or completed evaluation/test receipt is claimed here.
+- The requested `google/elephant-goldfish-model` clone exists at `/home/owner/Storage2/wt/elephant-goldfish-model-explore-20261102`, origin `https://github.com/google/elephant-goldfish-model.git`, clean HEAD `403d8881d62022490637d740657b33f01e321ea8`. No native integration or completed evaluation/test receipt is claimed here.
 - Delivered: three preview artifacts and the verified server/chat, text-draft and diagnostics journeys above. Enabled/verified in a delivered APK: those bounded journeys only. Current composer work: partly implemented, focused checks only, uncommitted, not delivered.
 - Local implementation commits use `[skip ci]`. No public push, PR, M0/master fast-forward, tag, production deployment, Shorebird release or replacement of the installed Flutter app was performed. Recovery bundles and verified prior commits remain preserved locally/on the VPS.
 
@@ -167,10 +167,10 @@ Private logs and receipts: `/home/eslam/Storage2/wt/native-full-composer-artifac
 | Native code | `native/` on branch **`native/m0-2026-11-01`**, the integration branch; every unit merges here. Public repo: `github.com/Eslamasabry/opencode-mobile-next`. |
 | Unit reports | `docs/native/units/<UNIT>.md` (what each cloud unit built, its tests, deviations) and `docs/native/slice0/*.md` (the slice-0 proofs) |
 | Device proof report | `docs/native/slice0/DEVICE-PROOFS-2026-11-01.md` on branch `native/proof-p5-2026-11-01` (pending merge) |
-| Second-eye reviews | `docs/native/reviews/` (Codex). Local copies: `/home/eslam/Storage/Code/wt/native-reviews/*.md` |
+| Second-eye reviews | `docs/native/reviews/` (Codex). Local copies: `/home/owner/Storage/Code/wt/native-reviews/*.md` |
 | Loop scripts | `docs/native/ops/` (copies of the coordinator's scripts; see §5) |
-| Flutter freeze branch | local `int/freeze-2026-11-01` (worktree `/home/eslam/Storage/Code/wt/oc_app-freeze`); public snapshot `snapshot/freeze-2026-11-01`. Branch ledger: `docs/verification/branch-ledger-2026-11-01.md` |
-| Launch clone for cloud sessions | `/home/eslam/Storage/Code/cloud-launch`, a shallow clone of opencode-mobile-next. Its only remote is `origin`. |
+| Flutter freeze branch | local `int/freeze-2026-11-01` (worktree `/home/owner/Storage/Code/wt/oc_app-freeze`); public snapshot `snapshot/freeze-2026-11-01`. Branch ledger: `docs/verification/branch-ledger-2026-11-01.md` |
+| Launch clone for cloud sessions | `/home/owner/Storage/Code/cloud-launch`, a shallow clone of opencode-mobile-next. Its only remote is `origin`. |
 | Owner memory and decisions | `~/.claude/projects/-home-eslam-Storage-Code-oc-app/memory/` (`MEMORY.md` is the index) |
 
 ## 3. Rules everyone follows (owner rules; breaking them is a regression)
@@ -190,7 +190,7 @@ Private logs and receipts: `/home/eslam/Storage2/wt/native-full-composer-artifac
 - Kill processes only by exact PID.
 - Never wait with `until ! pgrep -f "<pattern>"`: it matches itself forever.
 - Never `adb kill-server`, never `pm clear`, never `install -d`.
-- Hold `flock /home/eslam/Storage2/wt/emu.lock` around every emulator command. The emulator is `emulator-5584`.
+- Hold `flock /home/owner/Storage2/wt/emu.lock` around every emulator command. The emulator is `emulator-5584`.
 - **The owner's phone:** no screenshots, read-only `adb` unless the owner says install. Never touch ports 4150/4199 (the owner's servers).
 
 **UI and product:**
@@ -210,7 +210,7 @@ Private logs and receipts: `/home/eslam/Storage2/wt/native-full-composer-artifac
 
 | Thing | How |
 |---|---|
-| Native build (PC) | `cd native && JAVA_HOME=/home/eslam/Storage/tools/jdk-21.0.13+9 ANDROID_HOME=/home/eslam/Android/Sdk ./gradlew --no-daemon :androidApp:assemblePreviewDebug compileKotlinDesktop`. Gradle needs **JDK 21**. Use `-Pkotlin.incremental=false` if a stale incremental cache errors. Preview APK: `native/androidApp/build/outputs/apk/preview/…` (package `…opencode_mobile.native`, beside the real app). |
+| Native build (PC) | `cd native && JAVA_HOME=/home/owner/Storage/tools/jdk-21.0.13+9 ANDROID_HOME=/home/owner/Android/Sdk ./gradlew --no-daemon :androidApp:assemblePreviewDebug compileKotlinDesktop`. Gradle needs **JDK 21**. Use `-Pkotlin.incremental=false` if a stale incremental cache errors. Preview APK: `native/androidApp/build/outputs/apk/preview/…` (package `…opencode_mobile.native`, beside the real app). |
 | Release preview for the phone | `:androidApp:assemblePreviewRelease`, then zipalign and sign with the debug keystore (separate package, so any key works) |
 | Flutter (frozen app) | Flutter 3.47.8 at `~/.shorebird/bin/cache/flutter/6e5e9495…/bin`; 3.47.1 (`91f8bd75…`) only for 2.1.0 patches. Tests: `tool/qa/vps_test.sh` from your own worktree. APKs: `tool/qa/vps_build_apk.sh <n>`. |
 | Build VPS | key-only ssh; address in the owner's private notes (not in this repo) |
@@ -246,7 +246,7 @@ Run this loop continuously. It is how about 60 units were built on day 1.
    Then the owner's own hands for feel (the back gesture, haptics).
 10. **Refill:** as each unit finishes, launch the next so about 18 run at once.
 
-**Disk trap:** the PC fills up fast. Review clones are sparse and temporary now, and `df -h /home/eslam/Storage` is checked often. If it hits 0, Claude Code's own temp folder fails too.
+**Disk trap:** the PC fills up fast. Review clones are sparse and temporary now, and `df -h /home/owner/Storage` is checked often. If it hits 0, Claude Code's own temp folder fails too.
 
 ## 6. Status at the time of writing (2026-11-01 evening)
 

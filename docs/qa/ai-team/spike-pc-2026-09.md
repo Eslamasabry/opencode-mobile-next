@@ -5,9 +5,9 @@ Verdict: **PASS with conditions.** One bead went sling → polecat → refinery 
 merged on `origin/master` with the Gas Town pack and OpenCode as the harness.
 The conditions are the findings in §4; the plan docs are updated from them.
 
-Workspace (not in the repo): `/home/eslam/Storage/Code/gascity-spike/`
+Workspace (not in the repo): `/home/owner/Storage/Code/gascity-spike/`
 (`bin/gc`, `city/` file-backed attempt, `city2/` Dolt-backed city, `rec/`
-raw recordings). Rig: `/home/eslam/Storage/Code/oc-bg-proof` (`calc.py`).
+raw recordings). Rig: `/home/owner/Storage/Code/oc-bg-proof` (`calc.py`).
 
 ## 1. Versions
 
@@ -27,7 +27,7 @@ pinned at `contracts/gascity-supervisor-openapi-v0-3648ca2d499a.json`.
 
 ```
 gc init --file city2.toml --name bright-lights --no-start city2   # opencode provider, gastown pack
-gc rig add /home/eslam/Storage/Code/oc-bg-proof --name ocproof     # NOT "gc rig add ocproof <path>" (see §4.3)
+gc rig add /home/owner/Storage/Code/oc-bg-proof --name ocproof     # NOT "gc rig add ocproof <path>" (see §4.3)
 gc start                                                           # installs a systemd user unit; see §4.4
 gc bd create "Add subtract function to calc.py" -d "..." -p 1      # in the rig dir → oc-loy
 POST /v0/city/bright-lights/sling  {"bead":"oc-loy","target":"ocproof/gastown.polecat","rig":"ocproof","merge":"local"}

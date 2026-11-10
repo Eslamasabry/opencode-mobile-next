@@ -2,7 +2,7 @@
 
 BLOCKED: native installer admission recovery and a reviewed raised-floor QA APK are required. Branch sol/ba-2198-cert. Finish line: six targets have observed app launch/rejection, app removal with measured cleanup and retained Claude/shared state, and honest low-storage results. Non-goals: account sign-in/logout, touching Claude installations, credential export, bypassing certification gates, filling storage or shell removal of agents.
 
-Normal2198 is coordinator source064a43a3687773626dc5ce37853446c29be41e0c, SHA2562069cc0ca62554e3fd798f8ba8bfa46f44ae84be4ff82142e87b495cdc8b89a3, signer1DE5BF08…. Every device case runs under an outer `flock -w1800 /home/eslam/Storage/tmp/oc-emulator.lock`, checks /data free space before installation and verifies the normal APK in finally. Agents run one at a time and must be removed through the app before proceeding. No manual deletion fallback.
+Normal2198 is coordinator source064a43a3687773626dc5ce37853446c29be41e0c, SHA2562069cc0ca62554e3fd798f8ba8bfa46f44ae84be4ff82142e87b495cdc8b89a3, signer1DE5BF08…. Every device case runs under an outer `flock -w1800 /home/owner/Storage/tmp/oc-emulator.lock`, checks /data free space before installation and verifies the normal APK in finally. Agents run one at a time and must be removed through the app before proceeding. No manual deletion fallback.
 
 The driver observes the current target sheet, target-specific Remove confirmation, freed-size result, Done and fresh Not installed row. It separately measures target payload allocated bytes and /data free-space delta; neither is mislabeled as the exact backend receipt. Retention uses only Claude signed-in boolean, public gate fingerprints, opaque conversation-ID digests, shared executable presence and account-home directory counts. Account contents and names are never read/exported. Screenshots mask the entire Claude row and every signed-in identity before writing JPEGs.
 
@@ -15,7 +15,7 @@ Actual daemon launch remains distinct from a bounded picker/auth rejection. A lo
 Run one target only:
 
 ```sh
-flock -w1800 /home/eslam/Storage/tmp/oc-emulator.lock python3 tool/qa/fq_install2/device_2198.py fx --lock-held
+flock -w1800 /home/owner/Storage/tmp/oc-emulator.lock python3 tool/qa/fq_install2/device_2198.py fx --lock-held
 ```
 
 The driver refuses any pre-existing target installation or target process, measures storage before dispatch, and never invokes legacy manual cleanup or the2196 restore path. App installation timeout must be diagnosed and target absence established before another agent runs. First fx pilot timed out after its bounded240-second native wait; normal2198 was verified afterward. [Closed result](fx-device.json) does not assert install/removal or promote matrix cells. Native/UI observation is queued behind another lane's lock.

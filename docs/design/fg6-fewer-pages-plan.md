@@ -6,7 +6,7 @@ and §2 (canonical paths). Non-goals: anything outside Settings and Library, new
 features, changing what a setting does, removing a capability. Every setting
 stays reachable; only where it lives changes.
 
-Branch `fe/fewer-pages`, worktree `/home/eslam/Storage/Code/oc_app-fe-fewer-pages`,
+Branch `fe/fewer-pages`, worktree `/home/owner/Storage/Code/oc_app-fe-fewer-pages`,
 from `feat/genui-fe` at 6a7589446.
 
 ## 1. What is already done (not counted)

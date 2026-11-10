@@ -13,7 +13,7 @@ all merged with tests (full suite 3590 green). Evidence in
 
 - Live on this PC: supervisor `127.0.0.1:8372` (city `bright-lights`,
   lean profile) and the front `http://100.101.102.103:8373` (allow
-  owner@example.com; state in `/home/eslam/Storage/Code/gascity-spike/front-state`).
+  owner@example.com; state in `/home/owner/Storage/Code/gascity-spike/front-state`).
   In the app: Settings › Plugins › AI Team › Add manually →
   `http://100.101.102.103:8373`, city `bright-lights` (the front is found by
   discovery too).
@@ -40,7 +40,7 @@ tests, plus the two spikes.
   see `spike-phone-2026-09.md` §3f), notifications, emulator screenshot
   captures for the QA index, a `--formula` run recording.
 - To try it: run Gas City on the PC per the host guide (city `bright-lights`
-  in `/home/eslam/Storage/Code/gascity-spike/city2`, forwarder
+  in `/home/owner/Storage/Code/gascity-spike/city2`, forwarder
   `tool/host/tailnet_proxy.py`), then Settings › Plugins › AI Team › Add
   manually with `http://100.101.102.103:8372` and city `bright-lights`.
 

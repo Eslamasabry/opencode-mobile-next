@@ -64,8 +64,8 @@ Final integrated candidate: base `526ea644bfab1cd1c74aa4b4d6caadcd73ff25ef` plus
 Run from `native/`, using the shared PC build lock:
 
 ```bash
-env JAVA_HOME=/home/eslam/Storage2/tools/jdk21 ANDROID_HOME=$HOME/Android/Sdk \
-  flock -w 1800 /home/eslam/Storage/tmp/oc-build.lock \
+env JAVA_HOME=/home/owner/Storage2/tools/jdk21 ANDROID_HOME=$HOME/Android/Sdk \
+  flock -w 1800 /home/owner/Storage/tmp/oc-build.lock \
   nice -n 5 ./gradlew :androidApp:assemblePreviewDebug compileKotlinDesktop \
   -Dorg.gradle.workers.max=2 -Dorg.gradle.daemon.idletimeout=300000 \
   '-Dorg.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=768m' --console=plain

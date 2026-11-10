@@ -45,7 +45,7 @@ behaviour-first defaults:
 - Rows lose their leading icon column. Keep running has the right words but no icons, so the eye has
   no left edge to scan.
 
-The evidence pairs are in `/home/eslam/Storage2/wt/looks/before/` (`native-NN-*` next to
+The evidence pairs are in `/home/owner/Storage2/wt/looks/before/` (`native-NN-*` next to
 `flutter-NN-*`, light and dark). The Flutter references come from the goldens on
 `mobile-next/master` (8302de537, the 2.1.1 product). Local `master` is three weeks stale and still
 has the old 32/650 type scale, so do not use it as the reference.
@@ -284,7 +284,7 @@ Servers, file viewer, This phone / Keep running.
 
 ## 7. Concepts and open taste calls
 
-The concepts are in `/home/eslam/Storage2/wt/looks/concepts/`, four screens × A/B × light/dark:
+The concepts are in `/home/owner/Storage2/wt/looks/concepts/`, four screens × A/B × light/dark:
 
 - **A, "Flutter identity, refined"**: today's layout family with the §4 fixes.
 - **B, "bolder native-first"**: M3 Expressive structure (display-size titles, a summary card, an

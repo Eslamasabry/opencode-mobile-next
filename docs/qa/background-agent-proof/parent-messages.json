@@ -10,7 +10,7 @@
   "content": [
    {
     "type": "text",
-    "text": "The background subagent finished. \u2705\n\n**Result:** `multiply(a, b)` was added to `/home/eslam/Storage/Code/oc-bg-proof/calc.py`, appended after the existing `add`"
+    "text": "The background subagent finished. \u2705\n\n**Result:** `multiply(a, b)` was added to `/home/owner/Storage/Code/oc-bg-proof/calc.py`, appended after the existing `add`"
    }
   ]
  },

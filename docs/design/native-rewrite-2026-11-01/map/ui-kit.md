@@ -1,6 +1,6 @@
 # Map: UI kit, theming, styles, motion, tokens (area `ui-kit`)
 
-Date of reading: 2026-11-01. Source: `/home/eslam/Storage/Code/wt/oc_app-batch1` (branch `int/batch1-2026-11-01`, HEAD `65e3f70a3`), read-only. Owner memory read from `/home/eslam/.claude/projects/-home-eslam-Storage-Code-oc-app/memory`.
+Date of reading: 2026-11-01. Source: `/home/owner/Storage/Code/wt/oc_app-batch1` (branch `int/batch1-2026-11-01`, HEAD `65e3f70a3`), read-only. Owner memory read from `/home/owner/.claude/projects/-home-eslam-Storage-Code-oc-app/memory`.
 
 Purpose: a rewrite agent that reads only this file must know every user-visible kit feature, every internal capability, every stored key, every rule the owner decided, and every trap already paid for. Feature ids are `UI-KIT-NN`. Appendix A maps every one of the 280 files in `lib/ui/kit/` to an id. Section K3 lists the Flutter-to-native equivalents with versions checked on the web on 2026-11-01; Appendix B is the reading list.
 
@@ -795,7 +795,7 @@ Format: symptom or rule, then the fix. Commits are in `lib/ui/kit` history unles
 6. Content: code block + highlight, markdown (static) then streaming layer, diff, log, viewer.
 7. Chat: message, turn, tool row, step timeline, work line, queued message, composer + glow, request card + sheet.
 8. Rest: terminal, scanner/QR, web preview, gallery/markup, charts/tables, team parts, scenes (draw the portal and 4-5 state scenes first), live looks (aurora, mesh, dotRipple first), frost, tips/tour, Appearance guide.
-Test-first catalogue: re-create (a) the gates G5/G6/G7/G8/G11/G12/G18/G19/G20/G37 as Kotlin tests; (b) the 637-case capacity stress as a Compose test list; (c) golden screenshots for each part x light/dark x 412x915 and 1280x800 x text 2.0 x Arabic; (d) the `catalog` of logic tests in `/home/eslam/Storage/Code/wt/native-plan/catalog` for the pure-logic parts (colour maths, tip controller, redaction, markdown parser, menu ordering, diff model, log buffer, key-bar latching, mic press outcomes, tokens/knob maths, capability registry equality with `capabilities.json`).
+Test-first catalogue: re-create (a) the gates G5/G6/G7/G8/G11/G12/G18/G19/G20/G37 as Kotlin tests; (b) the 637-case capacity stress as a Compose test list; (c) golden screenshots for each part x light/dark x 412x915 and 1280x800 x text 2.0 x Arabic; (d) the `catalog` of logic tests in `/home/owner/Storage/Code/wt/native-plan/catalog` for the pure-logic parts (colour maths, tip controller, redaction, markdown parser, menu ordering, diff model, log buffer, key-bar latching, mic press outcomes, tokens/knob maths, capability registry equality with `capabilities.json`).
 
 ---
 

@@ -46,9 +46,9 @@ log file.
   `kvm-ok` is not installed.
 - Host: i7-9700 (8 threads), 15.7 GB RAM with only about 4–5 GB available,
   load average 6–15 from about 15 build agents.
-- Disks: the `OC_API35` AVD lives at `/home/eslam/avd-root/OC_API35.avd` on the
+- Disks: the `OC_API35` AVD lives at `/home/owner/avd-root/OC_API35.avd` on the
   root disk (96–97 % used, about 8–9 GB free). `~/.android` is a symlink to
-  `/home/eslam/Storage/relocated-home/.android` on the Storage disk, so
+  `/home/owner/Storage/relocated-home/.android` on the Storage disk, so
   `Pixel_6` and the other `~/.android/avd/*` AVDs live on the disk that
   filled up earlier today.
 - The system image was intact and did not need to be recreated. Nothing was

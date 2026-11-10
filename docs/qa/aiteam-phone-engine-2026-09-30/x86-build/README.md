@@ -23,7 +23,7 @@ OC_TEST_SLOTS=1 tool/qa/machine_lock.sh build -- engine/phone/tool/build-android
 ```
 
 The default artifact directory is
-`/home/eslam/Storage/tmp/aiteam-phone-engine-build`. Override with
+`/home/owner/Storage/tmp/aiteam-phone-engine-build`. Override with
 `OC_ENGINE_BUILD_DIR`; `/tmp` locations, including resolved symlinks, are rejected.
 `ANDROID_NDK_HOME` defaults to the pinned NDK 28.2.13676358. Both ABIs always build
 before staging, so a single ABI cannot silently retain binaries from older sources.

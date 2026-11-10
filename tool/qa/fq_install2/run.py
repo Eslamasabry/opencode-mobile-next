@@ -22,7 +22,7 @@ from uninstall import run_uninstall
 
 REPO = Path(__file__).resolve().parents[3]
 LEGACY = REPO / 'tool/qa/fq_install'
-LOCK = Path('/home/eslam/Storage/tmp/oc-emulator.lock')
+LOCK = Path(os.path.expanduser('~/Storage/tmp/oc-emulator.lock'))
 SIGNER = '1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c'
 STORAGE_COPY = 'There is not enough free space on this phone. Free some storage and try again.'
 

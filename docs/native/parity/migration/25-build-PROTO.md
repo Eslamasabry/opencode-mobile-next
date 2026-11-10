@@ -10,7 +10,7 @@ Finish line: every assigned switch-scope PROTO row has a real native path with s
 
 Passed together: `:androidApp:compilePreviewDebugKotlin compileKotlinDesktop` — **2/2 requested gates**, 69 desktop compilation targets, 563 actionable tasks (166 executed, 8 from cache, 389 up-to-date), 0 failed tasks, 0 test execution tasks. Duration: 1m 37s. Warnings remain; this is a compile-only result, not runtime or test qualification.
 
-Run from `native/` with `JAVA_HOME=/home/eslam/Storage2/tools/jdk21`, `ANDROID_HOME=$HOME/Android/Sdk`, the shared `/home/eslam/Storage/tmp/oc-build.lock`, `nice -n 5`, and `-Dorg.gradle.workers.max=2 -Dorg.gradle.daemon.idletimeout=300000 -Dorg.gradle.jvmargs='-Xmx2g -XX:MaxMetaspaceSize=768m'`. The unchanged 115-file Kotlin/Gradle/XML source candidate has SHA-256 `59b593536d80b2f4a3cb0db704c4fa94a1d4650e4b5257f67b8157a303146722` (sorted changed path, NUL, bytes, NUL).
+Run from `native/` with `JAVA_HOME=/home/owner/Storage2/tools/jdk21`, `ANDROID_HOME=$HOME/Android/Sdk`, the shared `/home/owner/Storage/tmp/oc-build.lock`, `nice -n 5`, and `-Dorg.gradle.workers.max=2 -Dorg.gradle.daemon.idletimeout=300000 -Dorg.gradle.jvmargs='-Xmx2g -XX:MaxMetaspaceSize=768m'`. The unchanged 115-file Kotlin/Gradle/XML source candidate has SHA-256 `59b593536d80b2f4a3cb0db704c4fa94a1d4650e4b5257f67b8157a303146722` (sorted changed path, NUL, bytes, NUL).
 
 Earlier attempts stopped on a missing vendored Sherpa AAR, a provider return type, colliding resource filenames, and a missing app dependency on the existing network monitor. All were resolved before the successful candidate. The AAR was restored using the repository fetch script and matched its pinned SHA-256; it remains gitignored.
 

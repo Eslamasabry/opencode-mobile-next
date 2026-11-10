@@ -237,8 +237,8 @@ Toolchain: the specified Shorebird path reported Flutter **3.47.1**, Dart
 Commands actually run (all heavy checks used the machine lock):
 
 ```bash
-FLUTTER=/home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter
-DART=/home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/dart
+FLUTTER=/home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter
+DART=/home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/dart
 tool/qa/machine_lock.sh analyze -- "$FLUTTER" pub get
 "$DART" format --language-version=3.10 test/product_repository_test.dart
 tool/qa/machine_lock.sh test -- "$FLUTTER" test --no-pub --concurrency=1 \

@@ -1,7 +1,7 @@
 # Files: just the files, then a reader (vision slice, 2026-10-20)
 
 Branch `feat/vision-files` (from int `a173bd8bf`). Concepts:
-`/home/eslam/Storage2/launch-footage/screen-concepts/b3-files/concept-c.png` (the list) and
+`/home/owner/Storage2/launch-footage/screen-concepts/b3-files/concept-c.png` (the list) and
 `concept-b.png` (the reader). Pick and lists: the vision page "Files" ("C list + B reader"),
 `LEARNINGS.md` beside it, and `docs/design/vision-decisions-2026-10-20.md`. How the page is
 reached since the bottom bar went: `docs/qa/no-bottom-nav-2026-10-20/README.md`.
@@ -82,7 +82,7 @@ Reader, Empty folder, No project).
 
 ## 3. Visual passes against the concepts
 
-Renders: `/home/eslam/Storage2/launch-footage/vision-files/` (`before/`, `pass1/`–`pass3/`, final in
+Renders: `/home/owner/Storage2/launch-footage/vision-files/` (`before/`, `pass1/`–`pass3/`, final in
 the folder). Capture: `tool/capture/vision_files_test.dart` (412x915 dp at 2x, blurred shadows on,
 aurora painted still).
 

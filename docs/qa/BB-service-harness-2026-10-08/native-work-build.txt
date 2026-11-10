@@ -24,11 +24,11 @@ For more information, see http://developer.android.com/build/r/new-dsl.
 
 To determine what is calling applicationVariants, use -Pandroid.debug.obsoleteApi=true on the command line to display more information.
 Add android.sync.suppressAgpWarnings=DEPRECATED_DSL to the gradle.properties file to suppress this warning.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/build.gradle.kts:27:1: 'fun Project.android(configure: Action<BaseAppModuleExtension>): Unit' is deprecated. Replaced by com.android.build.api.dsl.ApplicationExtension.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/build.gradle.kts:27:1: 'fun Project.android(configure: Action<BaseAppModuleExtension>): Unit' is deprecated. Replaced by com.android.build.api.dsl.ApplicationExtension.
 This class is not used for the public extensions in AGP when android.newDsl=true, which is the default in AGP 9.0, and will be removed in AGP 10.0.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/build.gradle.kts:104:1: 'fun Project.android(configure: Action<BaseAppModuleExtension>): Unit' is deprecated. Replaced by com.android.build.api.dsl.ApplicationExtension.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/build.gradle.kts:104:1: 'fun Project.android(configure: Action<BaseAppModuleExtension>): Unit' is deprecated. Replaced by com.android.build.api.dsl.ApplicationExtension.
 This class is not used for the public extensions in AGP when android.newDsl=true, which is the default in AGP 9.0, and will be removed in AGP 10.0.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/build.gradle.kts:125:22: 'val Project.android: BaseAppModuleExtension' is deprecated. Replaced by com.android.build.api.dsl.ApplicationExtension.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/build.gradle.kts:125:22: 'val Project.android: BaseAppModuleExtension' is deprecated. Replaced by com.android.build.api.dsl.ApplicationExtension.
 This class is not used for the public extensions in AGP when android.newDsl=true, which is the default in AGP 9.0, and will be removed in AGP 10.0.
 WARNING: Your app uses the following plugins that apply Kotlin Gradle Plugin (KGP): desktop_drop, flutter_timezone
 Future versions of Flutter will fail to build if your app uses plugins that apply KGP.
@@ -307,25 +307,25 @@ need to be translated.
 > Task :url_launcher_android:compileReleaseJavaWithJavac UP-TO-DATE
 > Task :url_launcher_android:bundleLibCompileToJarRelease UP-TO-DATE
 > Task :app:compileReleaseKotlin
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/AppLifecycle.kt:118:23 Condition is always 'false'.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinInstallerProducerQaService.kt:79:32 'fun get(p0: String!): Any?' is deprecated. Deprecated in Java.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinInstallerProducerQaService.kt:342:47 Unnecessary non-null assertion (!!) on a non-null receiver of type 'String'.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinLinux.kt:472:60 Unnecessary non-null assertion (!!) on a non-null receiver of type 'RuntimeProcessIdentity'.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinLinux.kt:1557:69 Unnecessary non-null assertion (!!) on a non-null receiver of type 'BuiltinLinux.Service'.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinLinux.kt:1967:37 Unnecessary non-null assertion (!!) on a non-null receiver of type 'NativeServerRecipe'.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/LocalTerminal.kt:53:28 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeRecoveryBudget.kt:44:23 No cast needed.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeWorkLeaseHost.kt:157:66 Expression is unused.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:78:24 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:190:19 No cast needed.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:190:22 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:203:19 No cast needed.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:203:22 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:444:23 No cast needed.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:444:26 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:505:19 No cast needed.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:505:22 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
-w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/VoiceDownloadNotifications.kt:142:33 'constructor(p0: Context!): Notification.Builder' is deprecated. Deprecated in Java.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/AppLifecycle.kt:118:23 Condition is always 'false'.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinInstallerProducerQaService.kt:79:32 'fun get(p0: String!): Any?' is deprecated. Deprecated in Java.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinInstallerProducerQaService.kt:342:47 Unnecessary non-null assertion (!!) on a non-null receiver of type 'String'.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinLinux.kt:472:60 Unnecessary non-null assertion (!!) on a non-null receiver of type 'RuntimeProcessIdentity'.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinLinux.kt:1557:69 Unnecessary non-null assertion (!!) on a non-null receiver of type 'BuiltinLinux.Service'.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BuiltinLinux.kt:1967:37 Unnecessary non-null assertion (!!) on a non-null receiver of type 'NativeServerRecipe'.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/LocalTerminal.kt:53:28 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeRecoveryBudget.kt:44:23 No cast needed.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/NativeWorkLeaseHost.kt:157:66 Expression is unused.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:78:24 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:190:19 No cast needed.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:190:22 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:203:19 No cast needed.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:203:22 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:444:23 No cast needed.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:444:26 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:505:19 No cast needed.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/SetupRunner.kt:505:22 This class is not recommended for use in Kotlin. Use 'kotlin.Any' instead.
+w: file:///home/owner/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/VoiceDownloadNotifications.kt:142:33 'constructor(p0: Context!): Notification.Builder' is deprecated. Deprecated in Java.
 
 > Task :app:javaPreCompileRelease
 > Task :app:compileReleaseJavaWithJavac
@@ -474,7 +474,7 @@ w: file:///home/eslam/Storage/Code/oc_app-sol-bb/android/app/src/main/kotlin/io/
 > Task :url_launcher_android:processReleaseJavaRes UP-TO-DATE
 > Task :app:testReleaseUnitTest
 
-[Incubating] Problems report is available at: file:///home/eslam/Storage/Code/oc_app-sol-bb/build/reports/problems/problems-report.html
+[Incubating] Problems report is available at: file:///home/owner/Storage/Code/oc_app-sol-bb/build/reports/problems/problems-report.html
 
 Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
 

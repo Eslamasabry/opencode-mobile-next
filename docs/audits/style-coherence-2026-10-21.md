@@ -1,6 +1,6 @@
 # Style coherence audit (2026-10-21)
 
-*Auditor only: no app code changed. Base: int `787709bfd` (Glass tuned through its spec, H12 merged). Brutal and Paper are still the baseline placeholders, and they are audited as they are. Branch `audit/style-coherence`; harness under `tool/capture/audit/` (audit tooling, not for merging). Renders: `/home/eslam/Storage2/launch-footage/audit-styles/<screen>/<combo>.png`, one full phone screen (412×915 dp at 2×) per image.*
+*Auditor only: no app code changed. Base: int `787709bfd` (Glass tuned through its spec, H12 merged). Brutal and Paper are still the baseline placeholders, and they are audited as they are. Branch `audit/style-coherence`; harness under `tool/capture/audit/` (audit tooling, not for merging). Renders: `/home/owner/Storage2/launch-footage/audit-styles/<screen>/<combo>.png`, one full phone screen (412×915 dp at 2×) per image.*
 
 ## 1. Verdict
 
@@ -299,12 +299,12 @@ Screens that took the style well: Settings hub (except V16), Scheduled, Tips, Th
 
 One screen per image:
 
-1. `/home/eslam/Storage2/launch-footage/audit-styles/new-conversation/brutal-light.png`: in Brutal, the start box and Model/Project group are Brutal, but the four agent cards are still the plain Solid cards.
-2. `/home/eslam/Storage2/launch-footage/audit-styles/conversations/brutal-light.png`: Conversations in Brutal has ink edges but no hard shadows at all, because a hook strips them under the page.
-3. `/home/eslam/Storage2/launch-footage/audit-styles/scheduled/brutal-light.png`: the same style on Scheduled, with its hard shadows. This is what Conversations should look like.
-4. `/home/eslam/Storage2/launch-footage/audit-styles/git-sheet/glass-dark.png`: the Git sheet in Glass is the same opaque slab as in Solid, with no blur, unlike the prompt tools sheet.
-5. `/home/eslam/Storage2/launch-footage/audit-styles/chat-question-card/soft-light.png`: in Soft, the answers sit in a second raised panel inside the raised question card.
-6. `/home/eslam/Storage2/launch-footage/audit-styles/report-problem/paper-light.png`: the text box under "Anything to add?" has no visible edge in any style, and no Paper ink box.
+1. `/home/owner/Storage2/launch-footage/audit-styles/new-conversation/brutal-light.png`: in Brutal, the start box and Model/Project group are Brutal, but the four agent cards are still the plain Solid cards.
+2. `/home/owner/Storage2/launch-footage/audit-styles/conversations/brutal-light.png`: Conversations in Brutal has ink edges but no hard shadows at all, because a hook strips them under the page.
+3. `/home/owner/Storage2/launch-footage/audit-styles/scheduled/brutal-light.png`: the same style on Scheduled, with its hard shadows. This is what Conversations should look like.
+4. `/home/owner/Storage2/launch-footage/audit-styles/git-sheet/glass-dark.png`: the Git sheet in Glass is the same opaque slab as in Solid, with no blur, unlike the prompt tools sheet.
+5. `/home/owner/Storage2/launch-footage/audit-styles/chat-question-card/soft-light.png`: in Soft, the answers sit in a second raised panel inside the raised question card.
+6. `/home/owner/Storage2/launch-footage/audit-styles/report-problem/paper-light.png`: the text box under "Anything to add?" has no visible edge in any style, and no Paper ink box.
 
 ## Method and limits
 

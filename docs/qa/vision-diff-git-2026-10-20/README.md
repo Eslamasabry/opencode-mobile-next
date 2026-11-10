@@ -16,5 +16,5 @@ Permission asks only. Already there: chat card and Chats-list rows (`ChatsHost.l
 The card's mono command is capped at two lines with an ellipsis (kept: a one-line cut could hide the end of a command).
 
 ## Evidence
-`/home/eslam/Storage2/launch-footage/vision-diff-git/{before,after}/` via `tool/capture/vision_diff_git_test.dart` (invented data; the permission card is unchanged, so before = after).
+`/home/owner/Storage2/launch-footage/vision-diff-git/{before,after}/` via `tool/capture/vision_diff_git_test.dart` (invented data; the permission card is unchanged, so before = after).
 Tests: `test/git/*`, `test/review_workspace_test.dart`, `test/review_handoff_test.dart`, `test/diff_page_test.dart`, `test/kit_ratchet_test.dart`.

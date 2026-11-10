@@ -1,4 +1,4 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_fde912d8-958-3/test/tailscale_setup_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_fde912d8-958-3/test/tailscale_setup_test.dart
 00:00 +0: review accepts HTTPS origins and bare MagicDNS without loosening policy
 00:00 +1: native bridge maps only explicit package evidence and fails closed
 00:00 +2: installed is unverified; open and resume preserve the typed address

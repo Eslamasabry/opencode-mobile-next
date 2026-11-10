@@ -1,5 +1,5 @@
 Waiting for another flutter command to release the startup lock...
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_certification_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app-sol-ba/test/agent_certification_test.dart
 00:00 +0: bundled Claude evidence qualifies arm64 and x64 with exact helper
 00:00 +0 -1: bundled Claude evidence qualifies arm64 and x64 with exact helper [E]
   Expected: every element(true)
@@ -13,4 +13,4 @@ Waiting for another flutter command to release the startup lock...
 00:00 +0 -1: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app-sol-ba/test/agent_certification_test.dart: bundled Claude evidence qualifies arm64 and x64 with exact helper
+  /home/owner/Storage/Code/oc_app-sol-ba/test/agent_certification_test.dart: bundled Claude evidence qualifies arm64 and x64 with exact helper

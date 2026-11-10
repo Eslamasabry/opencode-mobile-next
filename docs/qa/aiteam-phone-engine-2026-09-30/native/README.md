@@ -54,7 +54,7 @@ The raw probe attacks canonical sentinel read/write/truncate, traversal, symlink
 Deferred commands (coordinator must serialize and keep artifacts on Storage):
 
 ```bash
-OC_PHONE_PROOF_ROOT=/home/eslam/Storage/Code/oc_app-phone-proof-artifacts \
+OC_PHONE_PROOF_ROOT=/home/owner/Storage/Code/oc_app-phone-proof-artifacts \
   cargo test --manifest-path engine/phone/Cargo.toml --test boundary_proof -- --include-ignored
 flutter test --concurrency=1 test/builtin_phone_engine_test.dart
 ```

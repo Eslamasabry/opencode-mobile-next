@@ -1,6 +1,6 @@
-   Compiling oc-phone-engine v0.1.0 (/home/eslam/Storage/Code/oc_app-codex-relengine/engine/phone)
+   Compiling oc-phone-engine v0.1.0 (/home/owner/Storage/Code/oc_app-codex-relengine/engine/phone)
     Finished `test` profile [unoptimized + debuginfo] target(s) in 8.90s
-     Running unittests src/lib.rs (/home/eslam/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/oc_phone_engine-c99d27927a812917)
+     Running unittests src/lib.rs (/home/owner/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/oc_phone_engine-c99d27927a812917)
 
 running 103 tests
 test admission::tests::restart_cleans_worker_directories_without_reviving_authority ... ok
@@ -109,25 +109,25 @@ test store::checker_publication_tests::workspace_projects_latest_scoped_job_reas
 
 test result: ok. 103 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 19.04s
 
-     Running unittests src/bin/oc-engine-boundary-probe.rs (/home/eslam/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/oc_engine_boundary_probe-203c09592e134df6)
+     Running unittests src/bin/oc-engine-boundary-probe.rs (/home/owner/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/oc_engine_boundary_probe-203c09592e134df6)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running unittests src/bin/oc-engine-sandbox.rs (/home/eslam/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/oc_engine_sandbox-41b27849a3981071)
+     Running unittests src/bin/oc-engine-sandbox.rs (/home/owner/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/oc_engine_sandbox-41b27849a3981071)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running unittests src/main.rs (/home/eslam/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/oc_phone_engine-853ce6f9296cb685)
+     Running unittests src/main.rs (/home/owner/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/oc_phone_engine-853ce6f9296cb685)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running tests/attestation.rs (/home/eslam/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/attestation-5deeffc8b22eaacd)
+     Running tests/attestation.rs (/home/owner/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/attestation-5deeffc8b22eaacd)
 
 running 10 tests
 test cached_binaries_do_not_cache_receipt_signature_or_runtime_authority ... ok
@@ -143,7 +143,7 @@ test tier_tampering_is_signed_and_cannot_change_an_accepted_generation ... ok
 
 test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.54s
 
-     Running tests/boundary_kernel.rs (/home/eslam/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/boundary_kernel-03ac05c937338f55)
+     Running tests/boundary_kernel.rs (/home/owner/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/boundary_kernel-03ac05c937338f55)
 
 running 4 tests
 test blocked_landlock_never_executes_the_requested_program ... ok
@@ -153,7 +153,7 @@ test unavailable_landlock_is_typed_unsupported ... ok
 
 test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.51s
 
-     Running tests/boundary_proof.rs (/home/eslam/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/boundary_proof-8ede8bae1da8d736)
+     Running tests/boundary_proof.rs (/home/owner/Storage/tmp/aiteam-phone-engine-build/target/debug/deps/boundary_proof-8ede8bae1da8d736)
 
 running 3 tests
 test preparer_seeds_real_main_and_refuses_arbitrary_paths_or_reentry ... FAILED

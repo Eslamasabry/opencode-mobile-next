@@ -1,5 +1,5 @@
-00:00 +17: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_cb026353-734-4/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) KIT-7: a new MaterialPageRoute( in a file with no baseline entry fails G16, in lib/ui and in UI code elsewhere under lib/
-00:00 +21: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_cb026353-734-4/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings SEC-1: launchUrl in the kit is absolute with no allowlist
-00:00 +32: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_cb026353-734-4/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings KIT-5: an allowlist key the committed set lacks fails
+00:00 +17: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_cb026353-734-4/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) KIT-7: a new MaterialPageRoute( in a file with no baseline entry fails G16, in lib/ui and in UI code elsewhere under lib/
+00:00 +21: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_cb026353-734-4/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings SEC-1: launchUrl in the kit is absolute with no allowlist
+00:00 +32: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_cb026353-734-4/test/kit_ratchet_test.dart: G2/G7/G15x/G17/G21/G48 rows on fixture strings KIT-5: an allowlist key the committed set lacks fails
 00:01 +48: All tests passed!
 exit 0

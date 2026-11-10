@@ -448,7 +448,7 @@ formatting (one commit, 17 Dart files), generated localization consistency,
 802 QA-tool tests (13 expected skips), and all 161 repository-scanning tests.
 The corrected preference-ledger file separately passed all five cases.
 Only this result paragraph was added afterward; APK source and captures remain
-unchanged. Local log: `/home/eslam/Storage/tmp/widreject-2329-resource-final/preflight-fixed.log`.
+unchanged. Local log: `/home/owner/Storage/tmp/widreject-2329-resource-final/preflight-fixed.log`.
 
 ## Redesign proof on emulator build 2353
 

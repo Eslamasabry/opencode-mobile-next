@@ -143,7 +143,7 @@ DartExecutor, BinaryMessenger and the MethodChannel callback boundary. Normal
 release configuration is unchanged; both QA APKs are rebuilt for this ABI fix.
 
 The driver validates package/version/certificate, confirms the existing shared
-owner privately, and retains one `/home/eslam/Storage/tmp/oc-emulator.lock`
+owner privately, and retains one `/home/owner/Storage/tmp/oc-emulator.lock`
 through install, instrumentation and `finally` restoration. Only emulator-5554
 is used. Restore is the approved `oc-2195.apk`, installed with `-r -d`, using the
 same `1DE5BF08…` signer. No uninstall, clear-data, credential movement/deletion,
@@ -193,7 +193,7 @@ publication, deployment or release is claimed.
 
 After the completed BB8 qualification, the coordinator designated normal 2196
 (`feat/genui-fe` d777082c, approved 1DE5 signer) for future device runs. BB8 now
-uses `/home/eslam/Storage/tmp/oc-apk-share/oc-2196.apk`; the shared restore helper
+uses `/home/owner/Storage/tmp/oc-apk-share/oc-2196.apk`; the shared restore helper
 requires package/installed version 2196 and still installs with `-r -d` inside
 the existing emulator lock. Historical 2195 receipts above remain unchanged.
 

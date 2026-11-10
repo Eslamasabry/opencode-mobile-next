@@ -16,7 +16,7 @@ Finish line: an admitted helper start or a confirmed live helper does not show a
 ## Focused verification
 
 All checks use the pinned Flutter binary:
-`/home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter`.
+`/home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter`.
 One command runs at a time. Initial checks used `OC_TEST_SLOTS=1`; after the coordinator's SAFETY.md update, remaining checks use `OC_TEST_SLOTS=2`.
 
 The final source passed these 179 distinct focused checks:

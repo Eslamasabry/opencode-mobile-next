@@ -21,8 +21,8 @@ rendering through ANGLE on the host. P5 ran on `OC_API37` (API 37, google_apis, 
   with `ui.design.motion.MotionTokens` (`STANDARD` = 250, `QUICK` = 150). The P3 branch fixes the import with the same values.
   The P6 debug build did not show this because the app does not depend on kit-chat. The M0 tip `6b9a2b21` still has the
   bad import, and in the shared checkout `:engine:connection` also failed to compile against the newly merged `core`.
-- The coordinator was merging into `/home/eslam/Storage/Code/cloud-launch` while this ran. P3 and P5 were therefore built in
-  their own worktree, `/home/eslam/Storage2/wt/native-proofs`.
+- The coordinator was merging into `/home/owner/Storage/Code/cloud-launch` while this ran. P3 and P5 were therefore built in
+  their own worktree, `/home/owner/Storage2/wt/native-proofs`.
 
 ## P6: per-app language (Android 13+), screen and notification, Arabic plurals
 

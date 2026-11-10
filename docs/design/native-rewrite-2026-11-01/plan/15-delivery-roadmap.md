@@ -68,7 +68,7 @@ the sibling section that owns its detail.
 |---|---|---|
 | Unit id | `S<slice>-<NAME>` | `S2-TX` |
 | Branch | `native/s<slice>-<name-lowercase>-<YYYY-MM-DD>` (02 §7.2) | `native/s2-tx-2026-12-21` |
-| Worktree | `/home/eslam/Storage/Code/wt/ocn-s<slice>-<name-lowercase>` (sparse, 02 §7.3) | `/home/eslam/Storage/Code/wt/ocn-s2-tx` |
+| Worktree | `/home/owner/Storage/Code/wt/ocn-s<slice>-<name-lowercase>` (sparse, 02 §7.3) | `/home/owner/Storage/Code/wt/ocn-s2-tx` |
 | VPS copy | `~/wt/ocn-s<slice>-<name-lowercase>` (by `native/tool/vps_gradle.sh`) | |
 | Brief | `native/briefs/s<slice>-<name-lowercase>.md` (coordinator writes, §20) | |
 | QA record | `docs/qa/native/s<slice>-<name-lowercase>-<YYYY-MM-DD>/README.md` (02 §9.4) | |
@@ -147,7 +147,7 @@ higher (+≈ 80–100 ad, about +3–4 weeks on calendar A). The M0 re-plan repl
 | Test-writer lane (TW) | 1 agent W2–W5, 2 agents W6–W29, 1 agent W30–W32 (calendar A; shorter on B and C) | Sonnet | T0 compile-only runs on the VPS |
 | Flows lane (FL) | 2 agents W1–W4, then 1 part-time | Sonnet | writes Maestro YAML; never holds the emulator |
 | Fixtures (FX) | 1 Codex session W1–W3, then on request | Codex | PC fixture servers by exact PID only |
-| T3 emulator holder | 1 | Sonnet (Opus for owner-facing candidates) | the one PC emulator under `flock /home/eslam/Storage/tmp/oc-emulator.lock` |
+| T3 emulator holder | 1 | Sonnet (Opus for owner-facing candidates) | the one PC emulator under `flock /home/owner/Storage/tmp/oc-emulator.lock` |
 | T4 performance holder | 1, part-time | Sonnet | PC emulator `OC_API37` by booking; NX721J only with the owner's OK |
 | Coordinator | the lead session | Opus | briefs, merges, T2 on the VPS, ledgers, owner messages |
 
@@ -180,7 +180,7 @@ their deviations (ADR §11 status table, 03 §0.3, §22.5).
 **The recipe** (memory `claude-code-cloud-howto`, `push-freely-snapshot-recipe`; the owner allows pushing work branches
 and launching cloud sessions without asking; master, tags, releases, signing and publishing still need a GO):
 
-1. **Launch** from the clean clone **`/home/eslam/Storage/Code/cloud-launch`** with `claude --cloud`, in tmux (the
+1. **Launch** from the clean clone **`/home/owner/Storage/Code/cloud-launch`** with `claude --cloud`, in tmux (the
    command needs a TTY). Never from the main repo, whose `origin` is the old repository. The coordinator first pushes
    a snapshot of `native/main` (§11.0) and checks the clone out at that snapshot branch.
 2. **Effort:** high for hard units (chat engine and transcript, migration, protocols, the kit owner's units), medium
@@ -376,7 +376,7 @@ owner-phone week moves one week later.
 ### 3.4 Listing a unit's rows (copy-paste)
 
 ```bash
-cd /home/eslam/Storage/Code/wt/ocn-<unit>/native
+cd /home/owner/Storage/Code/wt/ocn-<unit>/native
 # rows of this slice proved by this module:
 jq -r 'select(.scope=="switch" and .slice==2 and .module==":engine:transcript") | .id' catalog/scope.jsonl > rows.txt
 # their text (Given/When/Then) and Flutter sources (rows.txt stays untracked; delete it before committing):
@@ -1340,7 +1340,7 @@ with the decision date, and its flows (E2E-24, E2E-29, parts of E2E-20 and E2E-3
 
 ```markdown
 # Brief: native/s2-chats-2027-01-04
-Model: Sonnet 5.5                 Worktree: /home/eslam/Storage/Code/wt/ocn-s2-chats
+Model: Sonnet 5.5                 Worktree: /home/owner/Storage/Code/wt/ocn-s2-chats
 Finish line: On the preview build, the bootstrap gate, first run, Conversations home, inbox, all conversations,
   filters and new conversation pass E2E-01 and E2E-21 steps 1-7.
 Non-goal: pins feeding launcher shortcuts (S4); agent rows (S3); chat pages (S4).
@@ -1413,7 +1413,7 @@ Report: 02 §7.14 format.
   `../catalog/e2e-flows.md` (flow index, AVD matrix, fixtures).
 - Research: `kmp-cmp-status.md` (§0, §1, §12–§13), `android-surfaces.md` (§0 items 8–9, §14–§16), `testing-perf.md`
   (§0, §9).
-- App-updates spec: `/home/eslam/Storage2/wt/app-updates-2026-10-31/SPEC.md` (the `releases/latest` source, asset
+- App-updates spec: `/home/owner/Storage2/wt/app-updates-2026-10-31/SPEC.md` (the `releases/latest` source, asset
   names, verify-before-install).
 - Owner memory: `dev-freeze-native-rewrite-2026-11-01`, `freeze-owner-decisions-2026-11-01`, `pc-capacity-ceiling`,
   `build-vps`, `subagent-model-choice`, `codex-backend-claude-frontend`, `no-heavy-workflows`, `short-replies-rule`,

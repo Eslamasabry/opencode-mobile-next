@@ -1,5 +1,5 @@
 machine_lock: got test slot 1 after 12s
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_cb026353-734-4/test/team_work_tab_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_cb026353-734-4/test/team_work_tab_test.dart
 00:00 +0: 320dp defaults to List; Graph is one tap away
 00:01 +1: 600dp and wider starts on Graph
 00:02 +2: the choice is remembered per run in the profile store

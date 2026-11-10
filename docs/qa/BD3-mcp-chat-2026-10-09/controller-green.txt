@@ -1,4 +1,4 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app-sol-bd/test/mcp_chat_controller_test.dart
 00:00 +0: runtime add followed by authoritative status makes next-turn tools ready
 00:00 +1: double tap coalesces and successful connect never adds again
 00:00 +2: unrelated existing same name is never reused or overwritten

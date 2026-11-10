@@ -8,9 +8,9 @@ How claims are marked:
 - **[I]** My inference or design proposal. It needs a spike or test before we rely on it.
 
 Read-only inputs used:
-- `/home/eslam/Storage/Code/wt/oc_app-batch1/lib/ui/kit/chat/` (KitMarkdown and its parts, KitTurn), `lib/ui/kit/kit_code_block.dart`, `lib/ui/kit/kit_diff_view.dart` + `lib/ui/kit/diff/`, `lib/ui/screens/chat/chat_transcript.dart`, `chat_scroll.dart`
-- `/home/eslam/Storage/Code/wt/native-plan/map/chat-genui.md` (features 09 and 16-21)
-- the demo `/home/eslam/Storage/Code/kmp-demo/shared/src/commonMain/kotlin/io/github/eslamasabry/kmpdemo/ui/{Markdown.kt,ChatScreen.kt}`
+- `/home/owner/Storage/Code/wt/oc_app-batch1/lib/ui/kit/chat/` (KitMarkdown and its parts, KitTurn), `lib/ui/kit/kit_code_block.dart`, `lib/ui/kit/kit_diff_view.dart` + `lib/ui/kit/diff/`, `lib/ui/screens/chat/chat_transcript.dart`, `chat_scroll.dart`
+- `/home/owner/Storage/Code/wt/native-plan/map/chat-genui.md` (features 09 and 16-21)
+- the demo `/home/owner/Storage/Code/kmp-demo/shared/src/commonMain/kotlin/io/github/eslamasabry/kmpdemo/ui/{Markdown.kt,ChatScreen.kt}`
 - the owner memory files on motion, native feel, text scale, max width, the turn model and chat kit decisions
 
 ---

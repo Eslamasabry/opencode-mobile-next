@@ -2451,7 +2451,7 @@ one WP below (checked in §20).
     `OkHttpWebsocketSession.kt` (no `maxFrameSize`, no extensions).
   - `ktor-websockets-3.6.1-sources.jar`: public `RawWebSocket`, `DefaultWebSocketSession` fragment-size check,
     `start()` is `@InternalAPI`.
-  - OpenCode 2 binaries at `/home/eslam/Storage/Code/oc2-spike` (2.0.10, 2.0.28): SSE heartbeat every `"15 seconds"`;
+  - OpenCode 2 binaries at `/home/owner/Storage/Code/oc2-spike` (2.0.10, 2.0.28): SSE heartbeat every `"15 seconds"`;
     route `/api/experimental/session/:sessionID/log`; inbox item schema `user|synthetic|compaction|move`.
   - `npm view` 2026-11-01: `@opencode/cli` 2.2.5, `@getpaseo/cli` 0.14.0, `@openai/codex` 0.166.0.
   - Maven Central metadata: `okhttp-tls` 5.5.1, `mockwebserver3` 5.5.1, `ktor-client-mock` 3.6.1, `ktor-server-cio` 3.6.1,

@@ -70,7 +70,7 @@ at width at most 480 pixels, quality 75, and deletes the PNG. The host pulls
 ## Commands
 
 Pinned Flutter binary:
-`/home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter`.
+`/home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter`.
 Dependencies were resolved once by the Sol BD lead after adding the SDK
 `integration_test` dev dependency.
 
@@ -102,7 +102,7 @@ adb -s emulator-5554 shell am instrument -w -r -e bd9Qa true \
   io.github.eslamasabry.opencode_mobile.test/io.github.eslamasabry.opencode_mobile.Bd9DeviceSmoke
 ```
 
-Local device sessions use `/home/eslam/Storage/tmp/oc-emulator.lock`.
+Local device sessions use `/home/owner/Storage/tmp/oc-emulator.lock`.
 `OC_EMULATOR_LOCK` supplies a writable temporary path on the disposable CI
 runner. The Sol BD lead restores a normal `lib/main.dart` release APK with the
 same version number and signer after the smoke on the shared emulator.
@@ -322,7 +322,7 @@ Code-only follow-up checks during the renewed hold:
 The coordinator lifted the build hold and delegated resume steps 2–5. The
 former normal-main2201 restore-first step is superseded: Claude owns the
 initial normal restoration using APK2195 from feat/genui-fe e2b3fe16, saved
-at /home/eslam/Storage/tmp/oc-apk-share/oc-2195.apk. Builds and checks use
+at /home/owner/Storage/tmp/oc-apk-share/oc-2195.apk. Builds and checks use
 machine_lock; device sessions still await a separate EMULATOR GO.
 
 Every subsequent local QA run must retain one emulator flock through install,

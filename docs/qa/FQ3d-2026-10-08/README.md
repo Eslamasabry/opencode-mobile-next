@@ -29,7 +29,7 @@ and optional isolated XDG directories after confirmed process exit.
 ```bash
 FQ3D_MODEL_B=opencode/mimo-v2.5-free \
 FQ3D_ISOLATED_CONFIG=1 \
-FQ3D_BINARY=/home/eslam/Storage/Code/oc2-spike/new/node_modules/@opencode/cli-linux-x64-baseline/bin/opencode \
+FQ3D_BINARY=/home/owner/Storage/Code/oc2-spike/new/node_modules/@opencode/cli-linux-x64-baseline/bin/opencode \
 OC_TEST_SLOTS=1 tool/qa/machine_lock.sh test -- python3 tool/qa/fq3d_run.py
 ```
 

@@ -59,68 +59,68 @@ Downloading packages...
 Got dependencies!
 54 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: (setUpAll)
-00:00 +0: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default (no icon) · dark
-00:01 +1: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · dark
-00:01 +2: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · 360x800 · dark
-00:01 +3: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · 915x412 · dark
-00:02 +4: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · 800x1280 · dark
-00:02 +5: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · 1280x800 · dark
-00:02 +6: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · 1600x1000 · dark
-00:02 +7: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · 2.0 text · 412x915 · dark
-00:02 +8: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · ar · 412x915 · dark
-00:03 +9: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · 2.0 text · 1280x800 · dark
-00:03 +10: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · ar · 1280x800 · dark
-00:03 +11: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet consequences · dark
-00:03 +12: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet loading · dark
-00:03 +13: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet disabled primary · dark
-00:03 +14: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet discard asked in place · dark
-00:04 +15: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet half · dark
-00:04 +16: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet not-dismissible · dark
-00:04 +17: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet keyboard-open · dark
-00:04 +18: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet attention · dark
-00:04 +19: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet full · 1280x800 · dark
-00:04 +20: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default (no icon) · light
-00:05 +21: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · light
-00:05 +22: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · 360x800 · light
-00:05 +23: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · 915x412 · light
-00:05 +24: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · 800x1280 · light
-00:05 +25: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · 1280x800 · light
-00:05 +26: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · 1600x1000 · light
-00:06 +27: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · 2.0 text · 412x915 · light
-00:06 +28: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · ar · 412x915 · light
-00:06 +29: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · 2.0 text · 1280x800 · light
-00:06 +30: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · ar · 1280x800 · light
-00:07 +31: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet consequences · light
-00:07 +32: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet loading · light
-00:07 +33: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet disabled primary · light
-00:07 +34: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet discard asked in place · light
-00:07 +35: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet half · light
-00:07 +36: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet not-dismissible · light
-00:07 +37: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet keyboard-open · light
-00:07 +38: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet attention · light
-00:07 +39: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet full · 1280x800 · light
-00:08 +40: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: (tearDownAll)
-00:08 +40: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart
-00:09 +40: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: (setUpAll)
-00:09 +40: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences default · 360x800 · dark
-00:10 +41: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences default · 412x915 · dark
-00:10 +42: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences default · 800x1280 · dark
-00:10 +43: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences default · 1280x800 · dark
-00:10 +44: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences default · 1600x1000 · dark
-00:10 +45: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences · 2.0 text · 412x915 · dark
-00:11 +46: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences · ar · 412x915 · dark
-00:11 +47: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences · 2.0 text · 1280x800 · dark
-00:11 +48: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences · ar · 1280x800 · dark
-00:11 +49: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences default · 360x800 · light
-00:11 +50: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences default · 412x915 · light
-00:11 +51: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences default · 800x1280 · light
-00:11 +52: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences default · 1280x800 · light
-00:11 +53: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences default · 1600x1000 · light
-00:12 +54: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences · 2.0 text · 412x915 · light
-00:12 +55: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences · ar · 412x915 · light
-00:12 +56: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences · 2.0 text · 1280x800 · light
-00:12 +57: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences · ar · 1280x800 · light
-00:12 +58: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: (tearDownAll)
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: (setUpAll)
+00:00 +0: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default (no icon) · dark
+00:01 +1: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · dark
+00:01 +2: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · 360x800 · dark
+00:01 +3: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · 915x412 · dark
+00:02 +4: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · 800x1280 · dark
+00:02 +5: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · 1280x800 · dark
+00:02 +6: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · 1600x1000 · dark
+00:02 +7: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · 2.0 text · 412x915 · dark
+00:02 +8: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · ar · 412x915 · dark
+00:03 +9: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · 2.0 text · 1280x800 · dark
+00:03 +10: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · ar · 1280x800 · dark
+00:03 +11: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet consequences · dark
+00:03 +12: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet loading · dark
+00:03 +13: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet disabled primary · dark
+00:03 +14: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet discard asked in place · dark
+00:04 +15: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet half · dark
+00:04 +16: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet not-dismissible · dark
+00:04 +17: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet keyboard-open · dark
+00:04 +18: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet attention · dark
+00:04 +19: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet full · 1280x800 · dark
+00:04 +20: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet default (no icon) · light
+00:05 +21: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · light
+00:05 +22: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · 360x800 · light
+00:05 +23: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · 915x412 · light
+00:05 +24: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · 800x1280 · light
+00:05 +25: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · 1280x800 · light
+00:05 +26: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · 1600x1000 · light
+00:06 +27: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · 2.0 text · 412x915 · light
+00:06 +28: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · ar · 412x915 · light
+00:06 +29: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · 2.0 text · 1280x800 · light
+00:06 +30: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet with_icon · ar · 1280x800 · light
+00:07 +31: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet consequences · light
+00:07 +32: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet loading · light
+00:07 +33: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet disabled primary · light
+00:07 +34: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet discard asked in place · light
+00:07 +35: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet half · light
+00:07 +36: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet not-dismissible · light
+00:07 +37: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet keyboard-open · light
+00:07 +38: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet attention · light
+00:07 +39: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: kit_sheet full · 1280x800 · light
+00:08 +40: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_sheet_golden_test.dart: (tearDownAll)
+00:08 +40: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart
+00:09 +40: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: (setUpAll)
+00:09 +40: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences default · 360x800 · dark
+00:10 +41: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences default · 412x915 · dark
+00:10 +42: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences default · 800x1280 · dark
+00:10 +43: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences default · 1280x800 · dark
+00:10 +44: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences default · 1600x1000 · dark
+00:10 +45: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences · 2.0 text · 412x915 · dark
+00:11 +46: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences · ar · 412x915 · dark
+00:11 +47: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences · 2.0 text · 1280x800 · dark
+00:11 +48: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences · ar · 1280x800 · dark
+00:11 +49: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences default · 360x800 · light
+00:11 +50: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences default · 412x915 · light
+00:11 +51: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences default · 800x1280 · light
+00:11 +52: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences default · 1280x800 · light
+00:11 +53: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences default · 1600x1000 · light
+00:12 +54: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences · 2.0 text · 412x915 · light
+00:12 +55: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences · ar · 412x915 · light
+00:12 +56: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences · 2.0 text · 1280x800 · light
+00:12 +57: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: kit_consequences · ar · 1280x800 · light
+00:12 +58: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_67322076-29a-3/test/goldens/kit/kit_consequences_golden_test.dart: (tearDownAll)
 00:12 +58: All tests passed!

@@ -35,7 +35,7 @@ was unverified. OC2 passed all except model switching and image inference
 failures and all unrelated existing certification cells. This is protocol-only
 evidence, not UI, install, background or physical-device certification.
 
-FB1 used `/home/eslam/Storage/android-qa-fb1-2203-final`, a fresh named API35 AVD,
+FB1 used `/home/owner/Storage/android-qa-fb1-2203-final`, a fresh named API35 AVD,
 3072 MiB guest RAM and two cores. Admission required 6 GiB available host RAM,
 16 GiB free on Storage, 2 GiB free on `/`, KVM and free 5556/5557 ports.
 Its emulator process was stopped by exact owned PID. The failed AVD and private

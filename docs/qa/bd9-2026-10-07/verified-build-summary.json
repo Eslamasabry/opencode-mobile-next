@@ -12,7 +12,7 @@
   "android_test_build_seconds": 361,
   "commands": [
     [
-      "/home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter",
+      "/home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter",
       "build",
       "apk",
       "--release",
@@ -23,13 +23,13 @@
       "--android-project-arg=ocBd9Smoke=true"
     ],
     [
-      "/home/eslam/Storage/Code/oc_app-sol-bd/android/gradlew",
+      "/home/owner/Storage/Code/oc_app-sol-bd/android/gradlew",
       "-p",
-      "/home/eslam/Storage/Code/oc_app-sol-bd/android",
+      "/home/owner/Storage/Code/oc_app-sol-bd/android",
       ":app:assembleReleaseAndroidTest",
       "--no-daemon",
       "-PocBd9Smoke=true",
-      "-Ptarget=/home/eslam/Storage/Code/oc_app-sol-bd/integration_test/bd9_device_smoke_test.dart",
+      "-Ptarget=/home/owner/Storage/Code/oc_app-sol-bd/integration_test/bd9_device_smoke_test.dart",
       "-PflutterVersionCode=2201"
     ]
   ],

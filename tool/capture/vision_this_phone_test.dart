@@ -10,7 +10,7 @@
 // a /proc scan the fake Linux answers; the countdowns are the crash recovery
 // and heat guard states the page reads.
 //
-// Output: /home/eslam/Storage2/launch-footage/vision-this-phone/<scene>.png
+// Output: /home/owner/Storage2/launch-footage/vision-this-phone/<scene>.png
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -36,7 +36,7 @@ import 'fixtures.dart';
 
 const _out = String.fromEnvironment(
   'VISION_OUT',
-  defaultValue: '/home/eslam/Storage2/launch-footage/vision-this-phone',
+  defaultValue: '/home/owner/Storage2/launch-footage/vision-this-phone',
 );
 
 enum _State { running, crashed, heat, stopped, gaveUp, needsYou }

@@ -76,7 +76,7 @@ is claimed.
 ## Device restoration carried forward from BB4
 
 The last BB device session completed before this checkpoint and restored
-`/home/eslam/Storage/tmp/oc-apk-share/oc-2195.apk` with `adb install -r -d` while
+`/home/owner/Storage/tmp/oc-apk-share/oc-2195.apk` with `adb install -r -d` while
 holding the same emulator lock. App data were preserved; no uninstall, clear
 data or account logout occurred. The app was reopened. Final normal-app
 Connected/Claude Ready status was not certified. See the

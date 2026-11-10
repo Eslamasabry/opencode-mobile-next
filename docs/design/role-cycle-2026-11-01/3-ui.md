@@ -3,7 +3,7 @@
 Step 3 of 3. Builds on `1-use-cases.md` and `2-architecture.md`. Plan only:
 no app code. The renders are concepts made from existing kit parts with fake
 data (light, Solid, 412 dp at 720 px), in
-`/home/eslam/Storage2/wt/shots-2026-11-01/role-cycle/`.
+`/home/owner/Storage2/wt/shots-2026-11-01/role-cycle/`.
 The owner's decisions (Q1–Q7, all 2026-11-01) are listed at the top of
 `1-use-cases.md`.
 

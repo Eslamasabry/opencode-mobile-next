@@ -69,10 +69,10 @@ are preserved.
 ## Reproduction and verification
 
 The private per-row input file is
-`/home/eslam/Storage/tmp/final-rerun-2203-20261009/rows.json`; it uses the supplied
+`/home/owner/Storage/tmp/final-rerun-2203-20261009/rows.json`; it uses the supplied
 [QA2203 BB5 inputs](../BB5-QA2203-2026-10-09/final-pass-inputs.json), new FQ9
 receipt destinations and the merged OC1 baseline policy. The wrapper at
-`/home/eslam/Storage/tmp/final-rerun-2203-20261009/run.py` verifies artifacts,
+`/home/owner/Storage/tmp/final-rerun-2203-20261009/run.py` verifies artifacts,
 acquires `final_pass.reservation()` once, performs the baseline replace install,
 and calls `final_pass.execute()` with the same inherited descriptor. The normal
 restoration occurs before that wrapper releases the reservation.

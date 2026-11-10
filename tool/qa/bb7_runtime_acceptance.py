@@ -280,7 +280,7 @@ def normal_args(config):
 
 def validate_normal(device, config):
     H.require(config['normal_sha'] == NORMAL_SHA and
-              Path(config['normal_apk']) == Path('/home/eslam/Storage/tmp/oc-apk-share/oc-2202.apk'),
+              Path(config['normal_apk']) == Path(os.path.expanduser('~/Storage/tmp/oc-apk-share/oc-2202.apk')),
               'bb7_exact_normal_required')
     B.validate_normal(device, normal_args(config))
 

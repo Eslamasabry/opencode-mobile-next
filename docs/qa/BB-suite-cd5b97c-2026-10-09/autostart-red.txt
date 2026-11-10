@@ -1,4 +1,4 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart
 00:00 +0: opening after a confirmed in-app crash starts it once, then connects; Start and connect on the card starts it again
 -------------------------------------------------------------------------------
 The Shorebird Updater is unavailable in the current environment.
@@ -102,8 +102,8 @@ Timer (duration: 0:00:08.000000, periodic: false), created:
 #27     WidgetTester.pumpWidget.<anonymous closure> (package:flutter_test/src/widget_tester.dart:598:22)
 #30     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
 #31     WidgetTester.pumpWidget (package:flutter_test/src/widget_tester.dart:595:27)
-#32     main.mount (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:163:18)
-#33     main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:240:11)
+#32     main.mount (file:///home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:163:18)
+#33     main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:240:11)
 #34     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:29)
 <asynchronous suspension>
 #35     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
@@ -234,8 +234,8 @@ Timer (duration: 0:00:08.000000, periodic: false), created:
 #27     WidgetTester.pumpWidget.<anonymous closure> (package:flutter_test/src/widget_tester.dart:598:22)
 #30     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
 #31     WidgetTester.pumpWidget (package:flutter_test/src/widget_tester.dart:595:27)
-#32     main.mount (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:163:18)
-#33     main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:316:11)
+#32     main.mount (file:///home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:163:18)
+#33     main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:316:11)
 #34     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:29)
 <asynchronous suspension>
 #35     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
@@ -311,8 +311,8 @@ Timer (duration: 0:00:08.000000, periodic: false), created:
 #27     WidgetTester.pumpWidget.<anonymous closure> (package:flutter_test/src/widget_tester.dart:598:22)
 #30     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
 #31     WidgetTester.pumpWidget (package:flutter_test/src/widget_tester.dart:595:27)
-#32     main.mount (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:163:18)
-#33     main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:337:13)
+#32     main.mount (file:///home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:163:18)
+#33     main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:337:13)
 #34     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:29)
 <asynchronous suspension>
 #35     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
@@ -334,8 +334,8 @@ Timer (duration: 0:00:08.000000, periodic: false), created:
 #27     WidgetTester.pumpWidget.<anonymous closure> (package:flutter_test/src/widget_tester.dart:598:22)
 #30     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
 #31     WidgetTester.pumpWidget (package:flutter_test/src/widget_tester.dart:595:27)
-#32     main.mount (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:163:18)
-#33     main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:337:13)
+#32     main.mount (file:///home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:163:18)
+#33     main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:337:13)
 <asynchronous suspension>
 #34     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -358,8 +358,8 @@ Timer (duration: 0:00:08.000000, periodic: false), created:
 #27     WidgetTester.pumpWidget.<anonymous closure> (package:flutter_test/src/widget_tester.dart:598:22)
 #30     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
 #31     WidgetTester.pumpWidget (package:flutter_test/src/widget_tester.dart:595:27)
-#32     main.mount (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:163:18)
-#33     main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:337:13)
+#32     main.mount (file:///home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:163:18)
+#33     main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:337:13)
 <asynchronous suspension>
 #34     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -382,8 +382,8 @@ Timer (duration: 0:00:08.000000, periodic: false), created:
 #27     WidgetTester.pumpWidget.<anonymous closure> (package:flutter_test/src/widget_tester.dart:598:22)
 #30     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
 #31     WidgetTester.pumpWidget (package:flutter_test/src/widget_tester.dart:595:27)
-#32     main.mount (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:163:18)
-#33     main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:337:13)
+#32     main.mount (file:///home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:163:18)
+#33     main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:337:13)
 <asynchronous suspension>
 #34     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -436,8 +436,8 @@ Timer (duration: 0:00:08.000000, periodic: false), created:
 #27     WidgetTester.pumpWidget.<anonymous closure> (package:flutter_test/src/widget_tester.dart:598:22)
 #30     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
 #31     WidgetTester.pumpWidget (package:flutter_test/src/widget_tester.dart:595:27)
-#32     main.mount (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:163:18)
-#33     main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:350:11)
+#32     main.mount (file:///home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:163:18)
+#33     main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:350:11)
 #34     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:29)
 <asynchronous suspension>
 #35     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
@@ -529,8 +529,8 @@ Timer (duration: 0:00:08.000000, periodic: false), created:
 #27     WidgetTester.pumpWidget.<anonymous closure> (package:flutter_test/src/widget_tester.dart:598:22)
 #30     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
 #31     WidgetTester.pumpWidget (package:flutter_test/src/widget_tester.dart:595:27)
-#32     main.mount (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:163:18)
-#33     main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:389:11)
+#32     main.mount (file:///home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:163:18)
+#33     main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart:389:11)
 #34     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:29)
 <asynchronous suspension>
 #35     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
@@ -561,8 +561,8 @@ The test description was:
 00:02 +0 -10: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart: a running in-app server whose first connect failed is not called stopped, and is connected again while it answers (QA-03)
-  /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart: a running server that rejects our password is replaced at launch, by the app's own start (QA-03)
-  /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart: a server that is already running is only connected to
-  /home/eslam/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart: a start that fails is tried once more, then the card says why in plain words (QA B1)
+  /home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart: a running in-app server whose first connect failed is not called stopped, and is connected again while it answers (QA-03)
+  /home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart: a running server that rejects our password is replaced at launch, by the app's own start (QA-03)
+  /home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart: a server that is already running is only connected to
+  /home/owner/Storage/Code/oc_app-sol-bb/test/builtin_server_autostart_test.dart: a start that fails is tried once more, then the card says why in plain words (QA B1)
   ... and 6 more

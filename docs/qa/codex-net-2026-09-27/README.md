@@ -186,7 +186,7 @@ job's generated `android/.kotlin` cache were removed and absence verified.
 No signing material is staged or committed.
 
 Raw local build evidence is retained outside Git at
-`/home/eslam/Storage/tmp/claude-tmp/oc-net-scanner-_tbsijqm/`; it includes the two
+`/home/owner/Storage/tmp/claude-tmp/oc-net-scanner-_tbsijqm/`; it includes the two
 clean/build logs, plugin-class/JAR checks, Java version, and Kotlin task output.
 
 Backend checkpoint (scanner 7.4.0, final backend source):

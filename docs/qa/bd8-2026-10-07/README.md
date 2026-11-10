@@ -16,7 +16,7 @@ The release tag path first makes a Shorebird dry-run APK, validates size and mat
 Measure an exact installed candidate under a short exclusive device session:
 
 ```sh
-flock /home/eslam/Storage/tmp/oc-emulator.lock python3 tool/release/cold_start.py \
+flock /home/owner/Storage/tmp/oc-emulator.lock python3 tool/release/cold_start.py \
   --apk build/app/outputs/flutter-apk/app-release.apk \
   --output docs/releases/vVERSION-cold-start.json
 ```

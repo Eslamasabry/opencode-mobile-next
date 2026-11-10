@@ -1,5 +1,5 @@
 build number: 900058
-apk:          /home/eslam/Storage/Code/oc_app-codex-schedule/build/vps-apk/app-release-900058.apk
+apk:          /home/owner/Storage/Code/oc_app-codex-schedule/build/vps-apk/app-release-900058.apk
 size:         101M
 signer:       1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C
 elapsed:      1797s (server build+transfer 1777s)

@@ -20,7 +20,7 @@ Read-only review. Files changed during review; this report incorporates the sect
 
 **B1. The authoritative document still overrides several fixes**
 
-- **Where:** [README, precedence rule](/home/eslam/Storage/Code/wt/native-plan/README.md:3); [01 §§8, 9.7, 10.3](/home/eslam/Storage/Code/wt/native-plan/plan/01-architecture-decision.md:479); 03 §§0.3, 6.3–6.4, 10.5; 05 §§3.3, 7.1.
+- **Where:** [README, precedence rule](/home/owner/Storage/Code/wt/native-plan/README.md:3); [01 §§8, 9.7, 10.3](/home/owner/Storage/Code/wt/native-plan/plan/01-architecture-decision.md:479); 03 §§0.3, 6.3–6.4, 10.5; 05 §§3.3, 7.1.
 - **Problem and evidence:** README explicitly makes 01 authoritative. That ADR still requires synchronous first-launch backup in `Application.onCreate`, while revised 03/05 prohibit it. It still treats compileSdk 37.1 as conditional, while 03 now requires it. AndroidX confirms that consuming applications and libraries must update to 37.1. [Compose release notes](https://developer.android.google.cn/jetpack/androidx/releases/compose-ui?hl=en).
   
   Storage contracts also remain incompatible: 03’s `ProfileScope` exposes `registrations` and `sweep`; 05’s exposes registration methods, `scopedKeys`, `ownedData` and `reservedSegments`. Consumers and tests use both shapes.
@@ -28,15 +28,15 @@ Read-only review. Files changed during review; this report incorporates the sect
 
 **B2. Lost-photo migration can either miss the photo or block the entire upgrade**
 
-- **Where:** [05 §7.4, M3/L4b and M5](/home/eslam/Storage/Code/wt/native-plan/plan/05-data-migration.md:895); [10 §16.3](/home/eslam/Storage/Code/wt/native-plan/plan/10-media-voice.md:2082).
+- **Where:** [05 §7.4, M3/L4b and M5](/home/owner/Storage/Code/wt/native-plan/plan/05-data-migration.md:895); [10 §16.3](/home/owner/Storage/Code/wt/native-plan/plan/10-media-voice.md:2082).
 - **Problem and evidence:** The new L4b writes the pending-photo record and an import marker, but M5’s permitted mutation set still names only M2’s re-entry flags and M3’s L1–L3 transforms. Following both instructions produces `Blocked(AuthorityChanged)` after a successful photo import.
   
-  L4b also describes `oc.pendingPromptPhoto.path` and `oc.pendingPromptPhoto.*` as though they were preference keys. The existing app stores **one JSON value**, `oc.pendingPromptPhoto`. The critical recovery case has an origin record with **no path and no ref**; only the plugin cache knows the returned photo. That is explicitly handled by [Flutter’s `recoverLostData()`](/home/eslam/Storage/Code/wt/oc_app-batch1/lib/state/prompt_photos.dart:304) and by section 10, but not consistently by L4b’s condition.
+  L4b also describes `oc.pendingPromptPhoto.path` and `oc.pendingPromptPhoto.*` as though they were preference keys. The existing app stores **one JSON value**, `oc.pendingPromptPhoto`. The critical recovery case has an origin record with **no path and no ref**; only the plugin cache knows the returned photo. That is explicitly handled by [Flutter’s `recoverLostData()`](/home/owner/Storage/Code/wt/oc_app-batch1/lib/state/prompt_photos.dart:304) and by section 10, but not consistently by L4b’s condition.
 - **Concrete fix:** Specify one migration step against the actual JSON schema. Recover plugin-only results when the origin exists and both result fields are absent. Use `MigrationWriter`, include the exact JSON key and marker in M5’s allowed changes, and require a full migration test that reaches `GateState.Open` with the attachment in the original conversation.
 
 **B3. Credential deletion and rollback reconciliation lack a durable transaction**
 
-- **Where:** [05 §4, M2 retry policy, §7.5 and §9.3](/home/eslam/Storage/Code/wt/native-plan/plan/05-data-migration.md:1368).
+- **Where:** [05 §4, M2 retry policy, §7.5 and §9.3](/home/owner/Storage/Code/wt/native-plan/plan/05-data-migration.md:1368).
 - **Problem and evidence:** The revised R1 guard deletes stale FSS credentials and then removes `oc.native.staleLegacySecrets`. On return, native must distinguish those guard deletions from deletions made by the person—but the guard does not persist the consumed list anywhere.
   
   Concrete failure: native changes password A to B; R1’s guard deletes legacy A and clears the list; the process dies. Native returns and sees a credential present in its baseline but absent from FSS. Without the missing transition record, its reconciliation rule can delete B.
@@ -48,7 +48,7 @@ Read-only review. Files changed during review; this report incorporates the sect
 
 **M1. Profile deletion leaves private content in migration backups**
 
-- **Where:** [16 §1.4, `FlutterEraSweep`](/home/eslam/Storage/Code/wt/native-plan/plan/16-security-privacy-release.md:276); [05 §3.5](/home/eslam/Storage/Code/wt/native-plan/plan/05-data-migration.md:397).
+- **Where:** [16 §1.4, `FlutterEraSweep`](/home/owner/Storage/Code/wt/native-plan/plan/16-security-privacy-release.md:276); [05 §3.5](/home/owner/Storage/Code/wt/native-plan/plan/05-data-migration.md:397).
 - **Problem and evidence:** The backup cleaner removes profile-shaped keys and FSS entries. But queued prompts, drafts and profile records live inside app-wide JSON values such as `oc.offlineQueue`, `oc.sessionDrafts` and `oc.profiles`. Those keys do not match `oc.<what>.<id>`.
   
   Section 05 explicitly performs structural collection edits for live data; section 16 does not require those edits in S0, replaced or start-fresh copies. Deleting a server can therefore leave its prompt text and address in retained plaintext backups. Testing only registered key shapes misses this.
@@ -56,7 +56,7 @@ Read-only review. Files changed during review; this report incorporates the sect
 
 **M2. Exported launch intents have contradictory authority**
 
-- **Where:** [16 §1.8.1](/home/eslam/Storage/Code/wt/native-plan/plan/16-security-privacy-release.md:407); [07 §§7.4–7.7](/home/eslam/Storage/Code/wt/native-plan/plan/07-screens-navigation.md:1549).
+- **Where:** [16 §1.8.1](/home/owner/Storage/Code/wt/native-plan/plan/16-security-privacy-release.md:407); [07 §§7.4–7.7](/home/owner/Storage/Code/wt/native-plan/plan/07-screens-navigation.md:1549).
 - **Problem and evidence:** Section 16 says any app can supply `MainActivity` extras, but those extras are navigation-only and network-silent until a tap. Section 07 makes `oc.shortcut=new_task` execute `CreateSession`, and `usage_target` connect another server before opening its target.
   
   An allowlisted string is not proof that an intent came from the app’s own shortcut or widget. Implementing section 07 directly violates section 16’s security promise.
@@ -64,13 +64,13 @@ Read-only review. Files changed during review; this report incorporates the sect
 
 **M3. The updater is not specified to work on supported API 26–27 devices**
 
-- **Where:** [16 §8.3, verification steps 6–7](/home/eslam/Storage/Code/wt/native-plan/plan/16-security-privacy-release.md:1412); 01 §8, minSdk 26.
+- **Where:** [16 §8.3, verification steps 6–7](/home/owner/Storage/Code/wt/native-plan/plan/16-security-privacy-release.md:1412); 01 §8, minSdk 26.
 - **Problem and evidence:** The pipeline unconditionally uses `GET_SIGNING_CERTIFICATES`, `signingInfo` and `longVersionCode`. The signing API and long-version accessor were introduced in API 28. No API 26–27 branch is specified, although those devices remain supported. The verification tests fake the archive inspector, so they cannot catch this platform failure. [Android `PackageInfo` reference](https://developer.android.com/reference/android/content/pm/PackageInfo.html).
 - **Concrete fix:** Specify and implement the legacy signature inspection path below API 28, use a compatible version-code accessor, and run a real update-verification/install journey on API 26. Include wrong signer, wrong package and lower-version APKs.
 
 **M4. The WebView policy does not enforce its claimed origin boundary**
 
-- **Where:** [16 §1.8.5](/home/eslam/Storage/Code/wt/native-plan/plan/16-security-privacy-release.md:490); [17 §2.4](/home/eslam/Storage/Code/wt/native-plan/plan/17-gap-closure.md:540).
+- **Where:** [16 §1.8.5](/home/owner/Storage/Code/wt/native-plan/plan/16-security-privacy-release.md:490); [17 §2.4](/home/owner/Storage/Code/wt/native-plan/plan/17-gap-closure.md:540).
 - **Problem and evidence:** The plan treats `shouldOverrideUrlLoading` as the mechanism preventing unwanted cross-origin navigation. Android explicitly documents that it is not called for POST requests. It also is not a general filter for page subresources or JavaScript network traffic. A page can therefore initiate traffic outside the described link-confirmation path. [Android WebViewClient reference](https://developer.android.com/reference/android/webkit/WebViewClient.html).
   
   The justification for disabling Safe Browsing says previews load only the phone’s own servers; section 17 explicitly supports remote development servers.
@@ -78,7 +78,7 @@ Read-only review. Files changed during review; this report incorporates the sect
 
 **M5. The version-code rules can produce an uninstall-only dead end**
 
-- **Where:** [15 §2.6](/home/eslam/Storage/Code/wt/native-plan/plan/15-delivery-roadmap.md:294); 05 §9.1; [11 CR11-18 and §6.4 R3](/home/eslam/Storage/Code/wt/native-plan/plan/11-android-platform-native.md:92).
+- **Where:** [15 §2.6](/home/owner/Storage/Code/wt/native-plan/plan/15-delivery-roadmap.md:294); 05 §9.1; [11 CR11-18 and §6.4 R3](/home/owner/Storage/Code/wt/native-plan/plan/11-android-platform-native.md:92).
 - **Problem and evidence:** Section 15 restricts stable builds to 10000–19999 and starts owner candidates at 10010. Revised section 05 allocates above every hosted or installed number. Section 11 records signed local builds **900055 and 900058** already installed on an emulator.
   
   These rules cannot all hold. Refusing a downgrade is necessary, but it does not supply a data-preserving upgrade route.
@@ -86,7 +86,7 @@ Read-only review. Files changed during review; this report incorporates the sect
 
 **M6. The M0 readiness gate omits the checks added to resolve the audits**
 
-- **Where:** [15 §4, M0 exit](/home/eslam/Storage/Code/wt/native-plan/plan/15-delivery-roadmap.md:383); [03 §23](/home/eslam/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:3800); 15 §4.2 and Appendix A.
+- **Where:** [15 §4, M0 exit](/home/owner/Storage/Code/wt/native-plan/plan/15-delivery-roadmap.md:383); [03 §23](/home/owner/Storage/Code/wt/native-plan/plan/03-architecture-modules.md:3800); 15 §4.2 and Appendix A.
 - **Problem and evidence:** Section 15 requires checks **1–14**. Section 03 added **15–17**: contract compilation, update-triggered background restoration, and manifest/startup security checks. The roadmap can therefore label M0 passed without the newly required contract and manifest evidence.
   
   Its W2 finish line also promises frozen slice 1–3 contracts and runnable parity flows, while all Flutter flows finish in W4 and catalog top-up continues through W5. Appendix A does not schedule lane work; it assumes those dependencies finish in their assigned weeks. That leaves the advertised dates dependent on unmodelled readiness.
@@ -94,7 +94,7 @@ Read-only review. Files changed during review; this report incorporates the sect
 
 **M7. Feature removal can pass under defaults rather than an owner decision**
 
-- **Where:** [01 §10.1 and §12](/home/eslam/Storage/Code/wt/native-plan/plan/01-architecture-decision.md:735); [02 §§3.3–3.6 and §10](/home/eslam/Storage/Code/wt/native-plan/plan/02-principles-scope.md:296).
+- **Where:** [01 §10.1 and §12](/home/owner/Storage/Code/wt/native-plan/plan/01-architecture-decision.md:735); [02 §§3.3–3.6 and §10](/home/owner/Storage/Code/wt/native-plan/plan/02-principles-scope.md:296).
 - **Problem and evidence:** The parity rule requires owner approval for deferred features. The decision table nevertheless says work proceeds on defaults; the scope file accepts a decision reference such as `"D6"`; the readiness gate accepts “owner answers or recorded defaults.”
   
   Consequently, AI Team/FactsBook deferral, A2A removal and other capability losses can disappear from the switch denominator without evidence that the owner accepted those losses. A referenced unanswered question is not approval.
@@ -104,7 +104,7 @@ Read-only review. Files changed during review; this report incorporates the sect
 
 **N1. The headline size comparison uses different APK configurations**
 
-- **Where:** [README §1](/home/eslam/Storage/Code/wt/native-plan/README.md:18); [12 §11](/home/eslam/Storage/Code/wt/native-plan/plan/12-package-registry.md:1044).
+- **Where:** [README §1](/home/owner/Storage/Code/wt/native-plan/README.md:18); [12 §11](/home/owner/Storage/Code/wt/native-plan/plan/12-package-registry.md:1044).
 - **Problem and evidence:** README compares today’s 107 MB app with a native target below 22 MB. Section 12 identifies the published Flutter arm64 split as approximately **36 MB**, and budgets native using an arm64 split.
 - **Concrete fix:** Compare identically signed release artifacts for the same ABI and feature payload. Separate savings from framework replacement from savings caused by deferred features or changed packaging.
 

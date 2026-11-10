@@ -631,7 +631,7 @@ Order of operations differs: Impeller blurs first then runs the shader (soft edg
 
 ## 6. Fit for THIS app
 
-Inputs read: `/home/eslam/Storage/Code/oc_app/AGENTS.md`; `docs/ux-system/kit-v2.md` in the worktree (note at top: "liquid and frosted glass are removed ... `KitGlass` keeps its name as that thin solid part"; §9 Kit only; G2/G16 ratchets); `lib/ui/kit/` (about 150 parts, `glass/kit_glass.dart`, `kit_nav.dart`, `kit_sheet*.dart`, `kit_dialog.dart`, `kit_buttons.dart`, `kit_floating_action.dart`, `kit_segmented.dart`, `kit_row_parts.dart`); `docs/design/design-standard.md` §floating surface; `docs/design/visual-language-2026-09-26.md` §6; `docs/qa/liquid-glass-2026-09-25/README.md`; `docs/qa/slice-fix-glass-light-2026-09-29/README.md`; git log. The worktree branch is checked out at `1faf73d32`.
+Inputs read: `/home/owner/Storage/Code/oc_app/AGENTS.md`; `docs/ux-system/kit-v2.md` in the worktree (note at top: "liquid and frosted glass are removed ... `KitGlass` keeps its name as that thin solid part"; §9 Kit only; G2/G16 ratchets); `lib/ui/kit/` (about 150 parts, `glass/kit_glass.dart`, `kit_nav.dart`, `kit_sheet*.dart`, `kit_dialog.dart`, `kit_buttons.dart`, `kit_floating_action.dart`, `kit_segmented.dart`, `kit_row_parts.dart`); `docs/design/design-standard.md` §floating surface; `docs/design/visual-language-2026-09-26.md` §6; `docs/qa/liquid-glass-2026-09-25/README.md`; `docs/qa/slice-fix-glass-light-2026-09-29/README.md`; git log. The worktree branch is checked out at `1faf73d32`.
 
 ### 6.1 Prior glass work in this repo (so the owner decision is read in context)
 

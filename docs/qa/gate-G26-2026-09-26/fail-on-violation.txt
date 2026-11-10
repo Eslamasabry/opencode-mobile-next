@@ -39,7 +39,7 @@ index ca049325..30198f51 100644
 -      // ignore: avoid_print
 +      // ignore: unused_local_variable
 ```
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88be54cc-40b-6/test/analyzer_suppressions_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88be54cc-40b-6/test/analyzer_suppressions_test.dart
 00:00 +0: G26: no new analyzer suppression comments (PROC-3)
 00:00 +0 -1: G26: no new analyzer suppression comments (PROC-3) [E]
   Expected: empty
@@ -69,7 +69,7 @@ index ca049325..30198f51 100644
 00:00 +1 -1: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88be54cc-40b-6/test/analyzer_suppressions_test.dart: G26: no new analyzer suppression comments (PROC-3)
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88be54cc-40b-6/test/analyzer_suppressions_test.dart: G26: no new analyzer suppression comments (PROC-3)
 
 ## Run 2: root analysis_options.yaml (finding 2: include removed; fail-closed flow mapping, alias, second document; plus exclude and disabled rule)
 ```diff
@@ -109,7 +109,7 @@ index 9b830558..713e717f 100644
 +analyzer:
 +  exclude: [lib/**]
 ```
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88be54cc-40b-6/test/analyzer_suppressions_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88be54cc-40b-6/test/analyzer_suppressions_test.dart
 00:00 +0: G26: no new analyzer suppression comments (PROC-3)
 00:00 +1: G26: no new analysis options suppression (PROC-3)
 00:00 +1 -1: G26: no new analysis options suppression (PROC-3) [E]
@@ -133,7 +133,7 @@ index 9b830558..713e717f 100644
 00:00 +1 -1: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88be54cc-40b-6/test/analyzer_suppressions_test.dart: G26: no new analysis options suppression (PROC-3)
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88be54cc-40b-6/test/analyzer_suppressions_test.dart: G26: no new analysis options suppression (PROC-3)
 
 ## Run 3: options files anywhere (finding 3) plus include changed and the literal 'analyzer: {exclude: [lib/**]}'
 ```diff
@@ -182,7 +182,7 @@ analyzer:
   exclude:
     - "**"
 ```
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88be54cc-40b-6/test/analyzer_suppressions_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88be54cc-40b-6/test/analyzer_suppressions_test.dart
 00:00 +0: G26: no new analyzer suppression comments (PROC-3)
 00:00 +1: G26: no new analysis options suppression (PROC-3)
 00:00 +1 -1: G26: no new analysis options suppression (PROC-3) [E]
@@ -206,4 +206,4 @@ analyzer:
 00:00 +1 -1: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88be54cc-40b-6/test/analyzer_suppressions_test.dart: G26: no new analysis options suppression (PROC-3)
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88be54cc-40b-6/test/analyzer_suppressions_test.dart: G26: no new analysis options suppression (PROC-3)

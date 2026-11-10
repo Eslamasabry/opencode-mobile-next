@@ -13,8 +13,8 @@ interfaces.
 
 Inputs: the eleven maps in `../map/`, the nine research files in `../research/`, the catalog in
 `../catalog/` (1,544 behaviours condensed from the 6,663 logic tests), the demo at
-`/home/eslam/Storage/Code/kmp-demo`, the read-only Flutter source at
-`/home/eslam/Storage/Code/wt/oc_app-batch1`, and the owner memory files. Nothing in any repo was
+`/home/owner/Storage/Code/kmp-demo`, the read-only Flutter source at
+`/home/owner/Storage/Code/wt/oc_app-batch1`, and the owner memory files. Nothing in any repo was
 changed.
 
 Tags: **[V]** checked today in a primary source. **[R]** read in the repo, the maps or the research
@@ -971,7 +971,7 @@ Internal (read 2026-11-01):
 - **Maps:** `../map/{protocols,state-data,agents-backends,builtin-linux,ui-kit,screens-nav,chat-genui,media-voice,android-platform,packages-build,desktop-web-cross}.md`.
 - **Research:** `../research/{kmp-cmp-status,architecture-stacks,network-data,rendering-chat,motion-native,media,android-surfaces,genui,testing-perf}.md`.
 - **Catalog:** `../catalog/BEHAVIORS.md`, `behaviors.jsonl`.
-- **Demo:** `/home/eslam/Storage/Code/kmp-demo` (`shared/src/commonMain/...`).
+- **Demo:** `/home/owner/Storage/Code/kmp-demo` (`shared/src/commonMain/...`).
 - **Owner memory:** `dev-freeze-native-rewrite-2026-11-01`, `codex-backend-claude-frontend`, `pc-capacity-ceiling`, `build-vps`, `subagent-model-choice`, `no-heavy-workflows`, `owner-tests-i-gate`, `restore-proof-recipe`, `no-users-yet`.
 - **Git history** of `oc_app-batch1` (first commit 2026-08-23).
 

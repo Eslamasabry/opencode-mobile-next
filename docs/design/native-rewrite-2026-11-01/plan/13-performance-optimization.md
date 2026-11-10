@@ -90,7 +90,7 @@ Hot-path rework in `:engine:transcript`, `:ui:kit-chat` and `:core:markdown` goe
 | 10 §2.5, M2, M4, M9, §18 | media size table (≤ 13 MB), warm recognizer released 20 s after recording, verified stamp instead of start-up re-hash, one Coil loader without disk cache; 10 §18's media budgets are imported as §2.10 |
 | 11 CR11-5, §9 | `DeviceFacts.thermalHeadroom` (polled ≤ every 30 s, only while collected), `battery`, `appVisible`; `ProcessHost.setAgentPriority`; FGS table |
 | Perf audit 2026-11-01 (`Storage2/wt/perf-audit-2026-11-01/REPORT.md`) | the Flutter lessons in §16 |
-| The demo (`/home/eslam/Storage/Code/kmp-demo`) | release APK 2,459,429 bytes [R `androidApp-release.apk`]; cold start ≈ 0.25 s in the owner's side-by-side (02 S-5 baseline) with **only library-shipped profiles** (merged ART profile 10,101 lines from Compose and friends; no app-generated profile) [R `build/intermediates/combined_art_profile`] |
+| The demo (`/home/owner/Storage/Code/kmp-demo`) | release APK 2,459,429 bytes [R `androidApp-release.apk`]; cold start ≈ 0.25 s in the owner's side-by-side (02 S-5 baseline) with **only library-shipped profiles** (merged ART profile 10,101 lines from Compose and friends; no app-generated profile) [R `build/intermediates/combined_art_profile`] |
 
 Machines (memory `build-vps`, `pc-capacity-ceiling`, `quiet-hours-vps-only`, `shared-emulator-contention`) [R]:
 
@@ -2064,7 +2064,7 @@ The audit's decision 7 (cap the glow at 60 fps) stays "not now": the running glo
   (15, T12, 63), `media-voice.md` (§8), `chat-genui.md` (PERF-2), `ui-kit.md` (PERF-1, PERF-4, MOT-13).
 - Catalog rows cited: B-CHAT-006, B-CHAT-096, B-STATE-030, B-STATE-054, B-AGENT-150, B-AGENT-169, B-ANDR-025,
   B-ANDR-083..093, B-PROTO-033, B-PROTO-132, B-PROTO-134, B-SEC-117, B-BUILD-025..027, B-LINUX-049..052.
-- Flutter reference (read-only): `/home/eslam/Storage/Code/wt/oc_app-batch1` — `test/perf_*_test.dart`
+- Flutter reference (read-only): `/home/owner/Storage/Code/wt/oc_app-batch1` — `test/perf_*_test.dart`
   (`perf_catalog_budget_test.dart:212-338`, `perf_builtin_pollers_test.dart`, `perf_profile_load_test.dart`),
   `lib/state/connection/{sessions.dart:522-547,status.dart:195-366,lifecycle.dart:85-145,turn_stall.dart:174-192,
   phone_agents_startup.dart}`, `lib/domain/turn_stall.dart:13`, `lib/state/{offline_queue.dart:244-257,
@@ -2079,8 +2079,8 @@ The audit's decision 7 (cap the glow at 60 fps) stays "not now": the running glo
   processes), `f2a3c2c97` (`docs/qa/process-budget-2026-11-01`), `lib/update/app_update_controller.dart`,
   `lib/builtin/linux_services/oc_svd_script.dart`.
 - Demo merged release manifest: `kmp-demo/androidApp/build/intermediates/merged_manifest/release/processReleaseMainManifest/AndroidManifest.xml`.
-- Perf audit: `/home/eslam/Storage2/wt/perf-audit-2026-11-01/REPORT.md`.
-- Demo: `/home/eslam/Storage/Code/kmp-demo` (`androidApp/build.gradle.kts`, release APK 2,459,429 bytes, merged ART
+- Perf audit: `/home/owner/Storage2/wt/perf-audit-2026-11-01/REPORT.md`.
+- Demo: `/home/owner/Storage/Code/kmp-demo` (`androidApp/build.gradle.kts`, release APK 2,459,429 bytes, merged ART
   profile 10,101 lines).
 - Owner memory: `dev-freeze-native-rewrite-2026-11-01`, `freeze-owner-decisions-2026-11-01`, `proot-orphans-heat`,
   `phantom-process-limit`, `voice-model-memory-gate`, `android-native-feel`, `micro-animations-wanted`,

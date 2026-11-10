@@ -42,7 +42,7 @@ Branch `feat/linux-vitals-2026-11-01`, commit `04611f7b9` (APK 4373).
 - **At most four readings is an assert,** as the capacity contract needs.
 
 ## Device proof (emulator-5584, APK 4373, no debug hooks)
-The live recording was edited with Remotion: `/home/eslam/Storage2/wt/shots-2026-10-31/linux-s2-device/vitals-demo.mp4` (1080×1920, 36 s, no sound). The raw recording `vit-1.mp4` is next to it.
+The live recording was edited with Remotion: `/home/owner/Storage2/wt/shots-2026-10-31/linux-s2-device/vitals-demo.mp4` (1080×1920, 36 s, no sound). The raw recording `vit-1.mp4` is next to it.
 
 | Step | Seen |
 |---|---|

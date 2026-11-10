@@ -21,7 +21,7 @@ Frontend integration: [BB1 contract](../../design/BB1-contract.md).
 
 ## Emulator procedure
 
-Only `emulator-5554`, every session under `/home/eslam/Storage/tmp/oc-emulator.lock`.
+Only `emulator-5554`, every session under `/home/owner/Storage/tmp/oc-emulator.lock`.
 Release QA APK retains the native test ABI (`ocStableEngineQa=true`). Test signer
 must equal `1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C`.
 Standalone test-APK runner: `BuiltinRuntimeAcceptance`, steps `diagnostics` then
@@ -65,7 +65,7 @@ Reproduce with:
 python3 tool/qa/bb1_runtime_acceptance.py \
   --apk build/app/outputs/flutter-apk/app-release.apk \
   --runner-apk build/app/outputs/apk/androidTest/release/app-release-androidTest.apk \
-  --apksigner /home/eslam/Android/Sdk/build-tools/36.0.0/apksigner \
+  --apksigner /home/owner/Android/Sdk/build-tools/36.0.0/apksigner \
   --out docs/qa/BB1-2026-10-07/emulator.txt
 ```
 

@@ -1,4 +1,4 @@
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-4/test/kit/kit_work_line_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88da752d-5f7-4/test/kit/kit_work_line_test.dart
 00:00 +0: summaryOf (1) read 3 + edited 1
 00:00 +1: summaryOf (1) one segment only
 00:00 +2: summaryOf (1) no counted call falls back to steps

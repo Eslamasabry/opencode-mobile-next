@@ -4,7 +4,7 @@ State: **failed QA acceptance; BB5 is not device-qualified.** Normal2199 is
 restored, actual OpenCode2 Connected verified, Claude Code visibly signed in;
 the emulator lock has been released. No Gradle/APK/JVM build ran in this turn.
 
-Whole session used `flock -w 3600 /home/eslam/Storage/tmp/oc-emulator.lock` on
+Whole session used `flock -w 3600 /home/owner/Storage/tmp/oc-emulator.lock` on
 emulator5554 only, held across inspection, QA installation, scenario and restore
 (1011seconds). `adb root` enabled access to the private snapshots after the first
 read was refused; it remains enabled for following leads. Private preference and

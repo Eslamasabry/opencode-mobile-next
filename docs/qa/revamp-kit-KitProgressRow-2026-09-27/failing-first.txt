@@ -4,6 +4,6 @@ lib/ui/kit/kit_progress_row.dart (git show HEAD~0 before amend). All three
 fail as expected; with the fix they pass (run-kit-progress-row-test.txt).
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit/kit_progress_row_test.dart: KitProgressRow adaptive on a phone a short title and value still stack
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit/kit_progress_row_test.dart: KitProgressRow.segments a single full segment fills the whole bar, at the bar height, in the accent
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit/kit_progress_row_test.dart: KitProgressRow.segments a surface3 slice marks its end against the track with a hairline, so the bar does not read short
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit/kit_progress_row_test.dart: KitProgressRow adaptive on a phone a short title and value still stack
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit/kit_progress_row_test.dart: KitProgressRow.segments a single full segment fills the whole bar, at the bar height, in the accent
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_501a46a2-753-3/test/kit/kit_progress_row_test.dart: KitProgressRow.segments a surface3 slice marks its end against the track with a hairline, so the bar does not read short

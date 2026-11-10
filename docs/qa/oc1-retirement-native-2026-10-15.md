@@ -38,7 +38,7 @@ which explicitly requires a Landlock ABI6 kernel. No capability was enabled on
 its behalf.
 
 Raw local logs (not committed):
-`/home/eslam/Storage/tmp/killoc1-native-test/{full-tests,resumed-tests,resumed-tests-2}.log`.
+`/home/owner/Storage/tmp/killoc1-native-test/{full-tests,resumed-tests,resumed-tests-2}.log`.
 
 ## Android staging
 
@@ -55,7 +55,7 @@ Its source revision is the then-current shared branch HEAD; `sourceDirty:true`
 records concurrent non-engine edits. The source digest, checked before and after
 the build, is the authoritative native-source match.
 
-Build log: `/home/eslam/Storage/tmp/killoc1-native-test/android-build.log`.
+Build log: `/home/owner/Storage/tmp/killoc1-native-test/android-build.log`.
 
 ## JVM checks
 

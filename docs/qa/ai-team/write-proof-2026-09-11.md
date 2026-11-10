@@ -12,12 +12,12 @@ dart run tool/qa/gascity_write_proof.dart --url http://100.101.102.103:8373 --ci
 ```
 
 Host: Gas City 1.4.1 (build 58ef17e3bd68), city `bright-lights`, rig
-`ocproof` = `/home/eslam/Storage/Code/oc-bg-proof` (bare origin
+`ocproof` = `/home/owner/Storage/Code/oc-bg-proof` (bare origin
 `oc-bg-proof.git`, default branch `master`), lean profile (mayor, deacon,
 boot and witness suspended; polecat pool and refinery active). Front:
 `tool/host/cp_front/front.py` **from this bead** (the policy route is new)
 on `http://100.101.102.103:8373`, allowlist `owner@example.com`, state dir
-`/home/eslam/Storage/Code/gascity-spike/front-state`; this PC's tailnet
+`/home/owner/Storage/Code/gascity-spike/front-state`; this PC's tailnet
 address is identified as that login. The front was restarted from the
 TEAM-207 worktree for the proof (the dev copy had no `/front/policy`) and
 a per-rig config was added at `front-state/rigs/ocproof.json`:

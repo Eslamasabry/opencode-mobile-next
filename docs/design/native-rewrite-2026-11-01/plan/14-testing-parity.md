@@ -109,7 +109,7 @@ native/main ──●───────────────────�
    `native/catalog/` notes. Several units never share a tests branch, so no builder ever inherits another unit's red
    tests.
 3. **The builder branch is created from the tests branch head**:
-   `git worktree add -b native/s3-agents-2026-12-08 /home/eslam/Storage/Code/wt/ocn-s3-agents native/s3-tests-agents-2026-12-01`.
+   `git worktree add -b native/s3-agents-2026-12-08 /home/owner/Storage/Code/wt/ocn-s3-agents native/s3-tests-agents-2026-12-01`.
    If `native/main` moved meanwhile, the builder merges it in.
 4. **Merge rule** (02 §6.7 unit done, item 2): the coordinator merges the builder branch (which contains the tests
    branch) only when
@@ -239,7 +239,7 @@ Rules, checked by `RowHeaderTest` (`:quality`, T1 and T2, a text scan of every t
 When a row's truth is a table of inputs and outputs that Dart code computes, the native test reads vectors produced
 by **running the Flutter code**. The Flutter implementation becomes the oracle, case by case.
 
-- **Where it runs:** a dedicated, writable worktree per source commit, `/home/eslam/Storage/Code/wt/oc_app-vectors-<sha>`,
+- **Where it runs:** a dedicated, writable worktree per source commit, `/home/owner/Storage/Code/wt/oc_app-vectors-<sha>`,
   on a branch `tools/flutter-vectors-<sha>` **created at** that commit. The commit is either R (02 §6.2: `65e3f70a3`
   now, `flutter-final` later) or, for top-up rows, the row's `sources_commit` in `scope.jsonl` (02 §3.5: freeze-tip
   features exist only in `oc_app-freeze`). These branches are never merged anywhere. Agents still never edit
@@ -849,7 +849,7 @@ It always runs **detached**, inside `t3.sh`, which runs under the emulator-lock 
 a done-file (02 §8 script contract; memory `background-task-killer`: long harness tasks get killed on this PC).
 
 1. **Refuse to start** (exit 2) unless all of these hold:
-   - the caller holds the emulator lock (`/home/eslam/Storage/tmp/oc-emulator.lock`; R1);
+   - the caller holds the emulator lock (`/home/owner/Storage/tmp/oc-emulator.lock`; R1);
    - `free -m` shows ≥ 7 GB available (02 §7.8);
    - the filesystem that holds the AVD (from `roles.json`) has ≥ 20 GB free (§4.6);
    - the serial is an `OCN_*` AVD from `roles.json` whenever a selected flow clears app data (§4.2 rule 5).
@@ -949,8 +949,8 @@ image is installed. T14-2 sets the roles below.
   | `public-v57-seeded` | `OCN_U` | the same seed on the GitHub `v2.1.0+57` APK (CI signer `842284B2…1C`) (S-3 b) | the seed changes |
 
   At most 4 snapshots on `OCN_A` and 5 on `OCN_U`; every other role keeps `base` only.
-- **Disk** [V `df`/`du`, 2026-11-01 16:35]: `/` has 25 GB free, `/home/eslam/Storage` 29 GB and
-  `/home/eslam/Storage2` 60 GB. Free space moves by tens of GB in a day on this PC (memory `storage2-offload`), so the
+- **Disk** [V `df`/`du`, 2026-11-01 16:35]: `/` has 25 GB free, `/home/owner/Storage` 29 GB and
+  `/home/owner/Storage2` 60 GB. Free space moves by tens of GB in a day on this PC (memory `storage2-offload`), so the
   rule is per filesystem and checked at every run, not this snapshot of numbers.
   - The stale AVDs hold 39.6 GB. On Storage2: `FB_F6` 5.9, `OCMN_Stable_1042_QA` 6.4, `OCMN_Stable_1042_Public_QA`
     4.4, `OCMN_UI_Refinement` 12 (28.7 GB). On Storage: `Pixel_6` 6.0 (through the relocated `~/.android`) and
@@ -970,8 +970,8 @@ image is installed. T14-2 sets the roles below.
 ### 4.7 Proving a flow on Flutter
 
 1. **Build the references once.**
-   - **R:** a detached worktree `/home/eslam/Storage/Code/wt/oc_app-ref-build` at `65e3f70a3` (the 39 catalog flows).
-   - **R':** a detached worktree `/home/eslam/Storage/Code/wt/oc_app-ref-build-freeze` at the freeze-tip commit the
+   - **R:** a detached worktree `/home/owner/Storage/Code/wt/oc_app-ref-build` at `65e3f70a3` (the 39 catalog flows).
+   - **R':** a detached worktree `/home/owner/Storage/Code/wt/oc_app-ref-build-freeze` at the freeze-tip commit the
      brief names (02 §3.5), for the top-up flows of §4.11, whose features do not exist at `65e3f70a3`.
      `docs/native/reference.md` records both: commit, versionCode, APK SHA-256 and signer (02 §6.2).
    - `oc_app-batch1` and `oc_app-freeze` stay read-only.
@@ -980,7 +980,7 @@ image is installed. T14-2 sets the roles below.
      (memory `build-vps`).
    - Before installing, check that `dexdump <apk> | grep -c GeneratedPluginRegistrant` is greater than 0 (memory
      `shared-emulator-contention`).
-   - Keep `R-<N>.apk`, `Rf-<N>.apk` and their SHA-256 in `/home/eslam/oc-artifacts/flutter-ref/` on the PC and in
+   - Keep `R-<N>.apk`, `Rf-<N>.apk` and their SHA-256 in `/home/owner/oc-artifacts/flutter-ref/` on the PC and in
      `~/oc-artifacts/flutter-ref/` on the VPS.
    - When `flutter-final` is tagged, rebuild one R from it the same way (it replaces both) and re-prove every flow
      (02 §6.2).
@@ -1318,7 +1318,7 @@ Slice-done and switch-ready need a T2 and a T3 on the **same commit**, so they h
 
 | Source | What | Where | Used for |
 |---|---|---|---|
-| **Flutter emulator captures** | `takeScreenshot: <flow>-S<n>` at the key steps of each flow, taken during the Flutter baseline runs (§4.7); 720 px wide JPEGs plus full PNGs; about 250 [E] | `/home/eslam/oc-artifacts/refs/flutter-<N>/` on the PC, mirrored to the VPS; `native/e2e/refs/manifest.json` (name, SHA-256, size, R build) in git | screen-level comparison with the native capture of the same step |
+| **Flutter emulator captures** | `takeScreenshot: <flow>-S<n>` at the key steps of each flow, taken during the Flutter baseline runs (§4.7); 720 px wide JPEGs plus full PNGs; about 250 [E] | `/home/owner/oc-artifacts/refs/flutter-<N>/` on the PC, mirrored to the VPS; `native/e2e/refs/manifest.json` (name, SHA-256, size, R build) in git | screen-level comparison with the native capture of the same step |
 | **Flutter goldens** | the 4,937 PNGs of the frozen tree (real-font renders) | the reference worktree (read-only) | part-level reference for the kit and screenshot rows. 06 maps parts to goldens; the test writer cites the golden next to `Flutter:` |
 | **Owner-picked concepts** | concept images the owner approved (memory `judge-visuals-hard`) | `docs/design/**` [R] | the bar where a concept replaced the Flutter look |
 
@@ -1379,8 +1379,8 @@ commands are shown here so a reviewer can check what each script does.
 `shared-emulator-contention`)
 
 ```bash
-LOCK=/home/eslam/Storage/tmp/oc-emulator.lock
-HOLDER=/home/eslam/Storage/tmp/oc-emulator.holder
+LOCK=/home/owner/Storage/tmp/oc-emulator.lock
+HOLDER=/home/owner/Storage/tmp/oc-emulator.holder
 HOLD=$(( ${BUDGET_S:?tier budget} + 1800 ))                       # the tier's budget plus 30 min, never a fixed 4 h
 setsid flock -w 1800 "$LOCK" sleep "$HOLD" >/dev/null 2>&1 &      # waits up to 30 min for the lock
 FLOCK_PID=$!
@@ -1822,7 +1822,7 @@ plus 0.1 s per test; Roborazzi about 0.4 s per capture.
 
 ### 9.7 The PC
 
-- T0 only, one Gradle build at a time (`flock /home/eslam/Storage/tmp/oc-native-gradle.lock`; `free -m` ≥ 7 GB first,
+- T0 only, one Gradle build at a time (`flock /home/owner/Storage/tmp/oc-native-gradle.lock`; `free -m` ≥ 7 GB first,
   02 §7.8). Plus T3, T4 and APK re-signing.
 - T1 and T2 do not run on the PC. Exception: if the VPS is down, `t1.sh --local` may run with a note in `summary.txt`.
   A local T1 never substitutes for T2.
@@ -2084,7 +2084,7 @@ slice-1 contract freeze until slice 5.
   §3 computed today), `catalog/e2e-flows.md` (rules, environment matrix, phone smoke, fixtures, stub prompts, E2E-01,
   E2E-02, E2E-05, E2E-13, E2E-15, E2E-26, E2E-39, coverage).
 - Research: `research/testing-perf.md` (all sections); `research/kmp-cmp-status.md` (task naming, headless desktop).
-- Repo, read-only (`/home/eslam/Storage/Code/wt/oc_app-batch1` at `65e3f70a3`; `/home/eslam/Storage/Code/wt/oc_app-freeze`
+- Repo, read-only (`/home/owner/Storage/Code/wt/oc_app-batch1` at `65e3f70a3`; `/home/owner/Storage/Code/wt/oc_app-freeze`
   at `fc5c1e78f`): `test/` (counts, script test files), `test/fixtures/api2/` (24 files), `tool/qa/issue87/mock_llm.py`,
   `tool/qa/codex_fixture/`, `tool/qa/fq3/device.dart` (password variables), `integration_test/`, `tool/qa/*live*`,
   `engine/phone` (204 `#[test]`), `android/app/src/test` (batch1 46 files / 645 `@Test`; freeze 52 / 674),

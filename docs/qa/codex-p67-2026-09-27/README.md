@@ -76,4 +76,4 @@ Source review checked call signatures, the profile deletion contract, forbidden-
 
 ## Delivery state
 
-Implemented: partial state APIs and focused tests. Enabled: no UI/native hook-up. Verified: source review/format only; tests/analyzer blocked by sandbox. Committed: **no** — `git add` failed because `/home/eslam/Storage/Code/oc_app/.git/worktrees/oc_app-codex-p67/index.lock` is on a read-only filesystem. Changes remain in this working tree; [COMMIT_MSG.txt](../../../COMMIT_MSG.txt) contains the requested subject/body and attribution trailers. Deployed/released: no. No push requested or attempted.
+Implemented: partial state APIs and focused tests. Enabled: no UI/native hook-up. Verified: source review/format only; tests/analyzer blocked by sandbox. Committed: **no** — `git add` failed because `/home/owner/Storage/Code/oc_app/.git/worktrees/oc_app-codex-p67/index.lock` is on a read-only filesystem. Changes remain in this working tree; [COMMIT_MSG.txt](../../../COMMIT_MSG.txt) contains the requested subject/body and attribution trailers. Deployed/released: no. No push requested or attempted.

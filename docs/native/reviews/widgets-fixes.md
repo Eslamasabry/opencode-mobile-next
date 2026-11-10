@@ -38,11 +38,11 @@ ignores whitespace/trailing commas introduced by formatting while preserving its
 ## Validation
 
 The final command is run from `native/`, one Gradle build at a time under
-`/home/eslam/Storage/tmp/oc-build.lock`:
+`/home/owner/Storage/tmp/oc-build.lock`:
 
 ```sh
-JAVA_HOME=/home/eslam/Storage/tools/jdk-21.0.13+9 \
-ANDROID_HOME=/home/eslam/Android/Sdk \
+JAVA_HOME=/home/owner/Storage/tools/jdk-21.0.13+9 \
+ANDROID_HOME=/home/owner/Android/Sdk \
 ./gradlew --no-daemon -Pkotlin.incremental=false --no-configuration-cache \
   '-Dorg.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=768m -XX:+UseParallelGC -Dfile.encoding=UTF-8' \
   --max-workers=2 -I /tmp/widgets-test-env.gradle \
@@ -68,7 +68,7 @@ and service-shell wiring remain outside this unit; README documents the bindings
 ## Commits and sandbox boundary
 
 The requested shared-worktree commit failed because its Git metadata lives outside the writable sandbox:
-`/home/eslam/Storage/Code/cloud-launch/.git/worktrees/codexfix-widgets/index.lock` is read-only. The source changes and
+`/home/owner/Storage/Code/cloud-launch/.git/worktrees/codexfix-widgets/index.lock` is read-only. The source changes and
 this report remain in the requested worktree. The requested small commits are instead preserved on
 `native/widgets-reviewed-fixes` in `/tmp/widgets-fixes-local`, rooted at `066a00be`, and exported to
 `/tmp/widgets-fixes.bundle`. Every subject ends in `[skip ci]` and every commit carries both requested trailers.

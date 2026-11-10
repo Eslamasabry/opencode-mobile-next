@@ -1,6 +1,6 @@
 # Independent review: managed OC1/OC2 switch
 
-Reviewed 2026-09-09T18:40:14.859154+00:00 at owner worktree `/home/eslam/Storage/Code/oc_app-oc2-managed-switch`, base881e0d1 plus uncommitted switch changes. Source-only bounded review: no tests, processes, installations, credential/config reads or source edits by reviewer. Owner's final corrections inspected after feedback; this is not a runtime/test pass.
+Reviewed 2026-09-09T18:40:14.859154+00:00 at owner worktree `/home/owner/Storage/Code/oc_app-oc2-managed-switch`, base881e0d1 plus uncommitted switch changes. Source-only bounded review: no tests, processes, installations, credential/config reads or source edits by reviewer. Owner's final corrections inspected after feedback; this is not a runtime/test pass.
 
 **Result: identified source issues corrected; no remaining blocking finding in the reviewed scope.** Final owner checks and actual Termux switch/revert remain separate acceptance gates. Pinned18600 Linux host isolation/auth proof is recorded in [upstream-feasibility.md](upstream-feasibility.md); it is not Android proof.
 

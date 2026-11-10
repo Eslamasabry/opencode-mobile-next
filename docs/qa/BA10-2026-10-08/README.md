@@ -87,7 +87,7 @@ tests, not app-removal or device qualification.
 ## Device session plan
 
 Run Codex, Gemini CLI, Qwen Code, Goose, Oh My Pi and fx **one at a time**. Each
-session must hold `/home/eslam/Storage/tmp/oc-emulator.lock` and address only
+session must hold `/home/owner/Storage/tmp/oc-emulator.lock` and address only
 `emulator-5554`:
 
 1. Measure `/data` available bytes before any APK replacement/install; require

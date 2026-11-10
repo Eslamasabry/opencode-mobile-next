@@ -23,7 +23,7 @@
 ERROR: test_partial_target_is_removed_only_through_product_before_fresh_install (tool.qa.fq_install2.test_device_install.PreparationTests.test_partial_target_is_removed_only_through_product_before_fresh_install)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home/eslam/Storage/Code/oc_app-sol-bd/tool/qa/fq_install2/test_device_install.py", line 118, in test_partial_target_is_removed_only_through_product_before_fresh_install
+  File "/home/owner/Storage/Code/oc_app-sol-bd/tool/qa/fq_install2/test_device_install.py", line 118, in test_partial_target_is_removed_only_through_product_before_fresh_install
     self.assertTrue(subject.prepare_absent_target(ports,'fx','fx'))
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 AttributeError: module 'device_install' has no attribute 'prepare_absent_target'
@@ -32,7 +32,7 @@ AttributeError: module 'device_install' has no attribute 'prepare_absent_target'
 ERROR: test_running_target_never_receives_product_removal (tool.qa.fq_install2.test_device_install.PreparationTests.test_running_target_never_receives_product_removal)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home/eslam/Storage/Code/oc_app-sol-bd/tool/qa/fq_install2/test_device_install.py", line 124, in test_running_target_never_receives_product_removal
+  File "/home/owner/Storage/Code/oc_app-sol-bd/tool/qa/fq_install2/test_device_install.py", line 124, in test_running_target_never_receives_product_removal
     with self.assertRaises(RuntimeError): subject.prepare_absent_target(ports,'fx','fx')
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 AttributeError: module 'device_install' has no attribute 'prepare_absent_target'

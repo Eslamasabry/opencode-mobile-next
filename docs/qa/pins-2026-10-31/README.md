@@ -73,7 +73,7 @@ version changed. Check this phone again." with a Check button until it is
 checked (shot 04): expected, but users on the patch will see it for Claude,
 Codex, Kilo and Cline.
 
-Shots: /home/eslam/Storage2/wt/shots-2026-10-31/pins/
+Shots: /home/owner/Storage2/wt/shots-2026-10-31/pins/
 
 ## Termux daemon launch (follow-up)
 

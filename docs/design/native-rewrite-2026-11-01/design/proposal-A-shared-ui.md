@@ -10,8 +10,8 @@ runtime, camera) lives in Android modules behind interfaces. The Android build i
 tested from day 1 but not shipped; iOS is kept compilable but not built until its own phase.
 
 Inputs read: the eleven maps in `../map/`, the nine research files in `../research/`, the behaviour catalog
-(`../catalog/BEHAVIORS.md`, 1,544 rows from the 6,663 logic tests), the demo `/home/eslam/Storage/Code/kmp-demo`, the
-Kotlin in `/home/eslam/Storage/Code/wt/oc_app-batch1/android`, and the owner memory files (MEMORY.md plus
+(`../catalog/BEHAVIORS.md`, 1,544 rows from the 6,663 logic tests), the demo `/home/owner/Storage/Code/kmp-demo`, the
+Kotlin in `/home/owner/Storage/Code/wt/oc_app-batch1/android`, and the owner memory files (MEMORY.md plus
 `dev-freeze-native-rewrite-2026-11-01`, `pc-capacity-ceiling`, `no-heavy-workflows`, `subagent-model-choice`,
 `codex-backend-claude-frontend`, `owner-tests-i-gate`, `settings-scope-model`, `design-schools-direction`, `no-glass-rule`,
 `app-updates-two-layers`, `phantom-process-limit`, `build-vps`, `stabilize-before-shipping`).
@@ -29,7 +29,7 @@ check in slice 0.
    `org.jetbrains.compose.material3:material3:1.13.0-beta01` depends on `androidx.compose.material3:material3:1.5.0-beta01`)
    [V, kmp-cmp-status §0]. So ripple, stretch overscroll, predictive back, IME animation and haptics are Google's own
    Android code, with no smoothness cost.
-2. **The demo the owner liked is already Proposal A in miniature.** In `/home/eslam/Storage/Code/kmp-demo`, every
+2. **The demo the owner liked is already Proposal A in miniature.** In `/home/owner/Storage/Code/kmp-demo`, every
    screen (`ChatScreen.kt`, `ConversationsScreen.kt`, `Markdown.kt`, `Kit.kt`, `Theme.kt`, `App.kt`) is in
    `shared/src/commonMain`; the Android app module is four files (`MainActivity`, `DemoApplication`, `ReplyService`,
    `AndroidPlatform`) [R]. "So so so much smoother" was measured on shared CMP UI.
@@ -983,9 +983,9 @@ Internal (read 2026-11-01):
 - Maps: `../map/{protocols,state-data,agents-backends,builtin-linux,ui-kit,screens-nav,chat-genui,media-voice,android-platform,packages-build,desktop-web-cross}.md`.
 - Research: `../research/{kmp-cmp-status,architecture-stacks,network-data,rendering-chat,motion-native,media,android-surfaces,genui,testing-perf}.md`.
 - Catalog: `../catalog/BEHAVIORS.md`, `behaviors.jsonl` (1,544 rows; 240 device-flow rows).
-- Demo: `/home/eslam/Storage/Code/kmp-demo` (`shared/src/commonMain/.../ui/*`, `App.kt`, `androidApp/.../ReplyService.kt`).
-- Repo counts: `/home/eslam/Storage/Code/wt/oc_app-batch1/android` (`find … -name '*.kt' | xargs wc -l`; `grep -l io.flutter`).
-- Owner memory: `/home/eslam/.claude/projects/-home-eslam-Storage-Code-oc-app/memory/` (files listed at the top).
+- Demo: `/home/owner/Storage/Code/kmp-demo` (`shared/src/commonMain/.../ui/*`, `App.kt`, `androidApp/.../ReplyService.kt`).
+- Repo counts: `/home/owner/Storage/Code/wt/oc_app-batch1/android` (`find … -name '*.kt' | xargs wc -l`; `grep -l io.flutter`).
+- Owner memory: `/home/owner/.claude/projects/-home-eslam-Storage-Code-oc-app/memory/` (files listed at the top).
 
 Web (fetched 2026-11-01):
 

@@ -57,22 +57,22 @@ Downloading packages...
 Got dependencies!
 54 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/repository_hygiene_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/repository_hygiene_test.dart: the internal engineering log is out of the public tree
-00:00 +1: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/repository_hygiene_test.dart: the root points contributors at CONTRIBUTING, not the log
-00:00 +2: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/repository_hygiene_test.dart: third-party agent skill packs are not carried in the tree
-00:00 +3: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/repository_hygiene_test.dart: every bundled third-party component has a license text
-00:00 +4: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/repository_hygiene_test.dart: a public repository carries its governance files
-00:00 +5: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/repository_hygiene_test.dart: the non-affiliation statement reaches every public entry point
-00:00 +6: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/repository_hygiene_test.dart: the notice inventory matches the resolved dependency versions
-00:00 +7: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/design_standard_test.dart: migrated screens use the kit, not raw progress, cards or buttons
-00:00 +8: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/design_standard_test.dart: migrated classes in mixed files use the kit
-00:00 +9: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/design_standard_test.dart: raw parts a migrated screen gave up do not come back
-00:00 +10: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/design_standard_test.dart: every allowlist entry names a migrated file and gives a reason
-00:00 +11: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/design_standard_test.dart: each migrated screen has dark and light goldens at 412x915
-00:00 +12: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/design_standard_test.dart: scenes take their time only from KitIllustration (§10)
-00:00 +13: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/design_standard_test.dart: the kit is the one place raw progress and filled buttons live
-00:00 +14: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/kit_ratchet_test.dart: G1: modal and toast entry points live in the kit
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/repository_hygiene_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/repository_hygiene_test.dart: the internal engineering log is out of the public tree
+00:00 +1: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/repository_hygiene_test.dart: the root points contributors at CONTRIBUTING, not the log
+00:00 +2: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/repository_hygiene_test.dart: third-party agent skill packs are not carried in the tree
+00:00 +3: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/repository_hygiene_test.dart: every bundled third-party component has a license text
+00:00 +4: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/repository_hygiene_test.dart: a public repository carries its governance files
+00:00 +5: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/repository_hygiene_test.dart: the non-affiliation statement reaches every public entry point
+00:00 +6: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/repository_hygiene_test.dart: the notice inventory matches the resolved dependency versions
+00:00 +7: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/design_standard_test.dart: migrated screens use the kit, not raw progress, cards or buttons
+00:00 +8: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/design_standard_test.dart: migrated classes in mixed files use the kit
+00:00 +9: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/design_standard_test.dart: raw parts a migrated screen gave up do not come back
+00:00 +10: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/design_standard_test.dart: every allowlist entry names a migrated file and gives a reason
+00:00 +11: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/design_standard_test.dart: each migrated screen has dark and light goldens at 412x915
+00:00 +12: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/design_standard_test.dart: scenes take their time only from KitIllustration (§10)
+00:00 +13: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/design_standard_test.dart: the kit is the one place raw progress and filled buttons live
+00:00 +14: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/kit_ratchet_test.dart: G1: modal and toast entry points live in the kit
 --- kit_ratchet baseline (commit as test/kit_ratchet_baseline.json if smaller) ---
 {
   "G1": {
@@ -2622,16 +2622,16 @@ Try `flutter pub outdated` for more information.
   }
 }
 --- end baseline ---
-00:00 +15: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/kit_ratchet_test.dart: G15: no width literals outside the kit
-00:00 +16: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/kit_ratchet_test.dart: G16: every UI component comes from the kit
-00:00 +17: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/kit_ratchet_test.dart: every allowlist entry gives a real reason
-00:00 +18: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/kit_ratchet_test.dart: the Flutter widget catalogue exists and is non-trivial
-00:00 +19: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G1 matches showDialog<T>( but not showKitDialog( or a comment
-00:00 +20: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) SnackBar( does not count showSnackBar( or KitSnackBar(
-00:00 +21: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G16 counts real widget constructions, not static members or app classes
-00:00 +22: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G15 counts a width compared to a literal, not BoxConstraints(maxWidth: n)
-00:01 +23: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/l10n_coverage_test.dart: hardcoded string detector
-00:01 +24: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/l10n_coverage_test.dart: no file gained hardcoded UI strings
+00:00 +15: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/kit_ratchet_test.dart: G15: no width literals outside the kit
+00:00 +16: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/kit_ratchet_test.dart: G16: every UI component comes from the kit
+00:00 +17: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/kit_ratchet_test.dart: every allowlist entry gives a real reason
+00:00 +18: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/kit_ratchet_test.dart: the Flutter widget catalogue exists and is non-trivial
+00:00 +19: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G1 matches showDialog<T>( but not showKitDialog( or a comment
+00:00 +20: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) SnackBar( does not count showSnackBar( or KitSnackBar(
+00:00 +21: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G16 counts real widget constructions, not static members or app classes
+00:00 +22: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/kit_ratchet_test.dart: counters on fixture strings (proves the regexes, not just files) G15 counts a width compared to a literal, not BoxConstraints(maxWidth: n)
+00:01 +23: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/l10n_coverage_test.dart: hardcoded string detector
+00:01 +24: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_374c8cc1-848-2/test/l10n_coverage_test.dart: no file gained hardcoded UI strings
 l10n: these files improved; lower their baseline in test/l10n_coverage_test.dart:
   lib/ui/screens/app_diagnostics_screen.dart: 1 (baseline 12)
   lib/ui/screens/chat_screen.dart: 1 (baseline 27)

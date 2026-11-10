@@ -66,7 +66,7 @@ to branch base `02670b857`. No new analyzer finding. No full test suite claimed.
 python3 tool/qa/final_pass.py --dry-run --fast \
   --output docs/qa/BD16-2026-10-09/fast-run
 python3 tool/qa/final_pass.py --execute --fast \
-  --candidate-apk /home/eslam/Storage/tmp/oc-apk-share/oc-2202.apk \
+  --candidate-apk /home/owner/Storage/tmp/oc-apk-share/oc-2202.apk \
   --candidate-build 2202 --inputs /tmp/bd16-inputs/rows.json \
   --output docs/qa/BD16-2026-10-09/fast-run
 ```

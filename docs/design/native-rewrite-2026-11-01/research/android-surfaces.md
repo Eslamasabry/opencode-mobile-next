@@ -4,7 +4,7 @@ Topic: `android-surfaces`. Written 2026-11-01. All web sources were read on 2026
 
 Scope: Glance and RemoteViews widgets, AppFunctions, notifications (Live Updates, ProgressStyle, MetricStyle), foreground-service types and limits, WorkManager and alarms, phantom processes and the new Android 17 memory limiter, predictive back and the other native-feel surfaces, Quick Settings tiles, launcher shortcuts, share targets, credentials and biometrics, distribution (developer verification, signing, 16 KB pages), and what changes at targetSdk 36 and 37.
 
-Repo facts come from `/home/eslam/Storage/Code/wt/oc_app-batch1` (read-only) and from `map/android-platform.md` and `map/builtin-linux.md` in this folder. This file does not repeat those maps. It adds what the platform does now and what that means for the rewrite.
+Repo facts come from `/home/owner/Storage/Code/wt/oc_app-batch1` (read-only) and from `map/android-platform.md` and `map/builtin-linux.md` in this folder. This file does not repeat those maps. It adds what the platform does now and what that means for the rewrite.
 
 Labels:
 
@@ -633,7 +633,7 @@ Primary [V]:
 - Direct Share targets: https://developer.android.com/training/sharing/direct-share-targets [2026-10-28]
 - androidx.biometric releases: https://developer.android.com/jetpack/androidx/releases/biometric
 - Developer verification: https://developer.android.com/developer-verification (no page date; newest linked post June 2026); FAQ https://developer.android.com/developer-verification/guides/faq [2026-09-30]; open-source registration https://developer.android.com/developer-verification/guides/open-source-app-registration [2026-10-23]
-- Repo: `/home/eslam/Storage/Code/wt/oc_app-batch1/android/app/build.gradle.kts`, `AndroidManifest.xml`, `res/xml/widget_*_info.xml`, `StatusNotificationRenderer.kt` (commit `3030fb0b7`); Flutter 3.47.1 `FlutterExtension.kt` (targetSdkVersion 36)
+- Repo: `/home/owner/Storage/Code/wt/oc_app-batch1/android/app/build.gradle.kts`, `AndroidManifest.xml`, `res/xml/widget_*_info.xml`, `StatusNotificationRenderer.kt` (commit `3030fb0b7`); Flutter 3.47.1 `FlutterExtension.kt` (targetSdkVersion 36)
 
 Secondary [S]:
 

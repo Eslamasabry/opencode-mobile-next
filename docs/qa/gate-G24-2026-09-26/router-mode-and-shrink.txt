@@ -57,7 +57,7 @@ Downloading packages...
 Got dependencies!
 54 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88be54cc-40b-4/test/architecture_boundaries_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88be54cc-40b-4/test/architecture_boundaries_test.dart
 00:00 +0: G24 scanner strips comments but keeps strings
 00:00 +1: G24 scanner resolves relative and package imports
 00:00 +2: G24 scanner counts flavour gating
@@ -328,4 +328,4 @@ Shell:
 00:00 +11 -1: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_88be54cc-40b-4/test/architecture_boundaries_test.dart: G24 architecture boundaries ARCH-10: notifications have one posting path
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_88be54cc-40b-4/test/architecture_boundaries_test.dart: G24 architecture boundaries ARCH-10: notifications have one posting path

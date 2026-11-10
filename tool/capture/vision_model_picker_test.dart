@@ -6,7 +6,7 @@
 //   flutter test --concurrency=1 --dart-define=VISION_PASS=pass1 \
 //     tool/capture/vision_model_picker_test.dart
 //
-// Output: /home/eslam/Storage2/launch-footage/vision-model-picker/<pass>/
+// Output: /home/owner/Storage2/launch-footage/vision-model-picker/<pass>/
 // <scenario>.png (the final pass writes straight into the folder).
 import 'dart:async';
 import 'dart:io';
@@ -31,7 +31,7 @@ import 'fixtures.dart';
 import 'audit/audit_env.dart';
 
 const _pass = String.fromEnvironment('VISION_PASS', defaultValue: '');
-const _root = '/home/eslam/Storage2/launch-footage/vision-model-picker';
+const _root = '/home/owner/Storage2/launch-footage/vision-model-picker';
 String get _dir => _pass.isEmpty ? _root : '$_root/$_pass';
 
 class _Api extends CaptureApi {

@@ -3,7 +3,7 @@ E
 ERROR: test_unarmed_initial_launch_uses_prior_receipt_and_requires_armed_live_server (test_bb4_runtime_acceptance.StartupAdmissionTest.test_unarmed_initial_launch_uses_prior_receipt_and_requires_armed_live_server)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home/eslam/Storage/Code/oc_app-sol-bb/tool/qa/test_bb4_runtime_acceptance.py", line 60, in test_unarmed_initial_launch_uses_prior_receipt_and_requires_armed_live_server
+  File "/home/owner/Storage/Code/oc_app-sol-bb/tool/qa/test_bb4_runtime_acceptance.py", line 60, in test_unarmed_initial_launch_uses_prior_receipt_and_requires_armed_live_server
     host.real_start(device,'owner',[]);restore.assert_called_once();self.assertIs(original,restore.call_args.args[1])
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   File "tool/qa/bb4_runtime_acceptance.py", line 29, in stable_start

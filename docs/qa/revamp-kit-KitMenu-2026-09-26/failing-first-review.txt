@@ -59,7 +59,7 @@ Downloading packages...
 Got dependencies!
 54 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart
 00:00 +0: kitMenuLayout (ordering, structural) keeps order within a group and groups in first-item order
 00:00 +1: kitMenuLayout (ordering, structural) moves destructive items last, after one divider, even when passed first
 00:00 +2: kitMenuLayout (ordering, structural) no leading divider when every item is destructive
@@ -75,7 +75,7 @@ Expected: exactly 2 matching candidates
    Which: means none were found but some were expected
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart:345:7)
+#4      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart:345:7)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -85,7 +85,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart line 345
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart line 345
 The test description was:
   2. destructive items render last after a divider; groups keep order
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -101,7 +101,7 @@ Expected: CheckedState:<CheckedState.isTrue>
   Actual: CheckedState:<CheckedState.none>
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart:426:7)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart:426:7)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -111,7 +111,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart line 426
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart line 426
 The test description was:
   a disabled checked item keeps its checked semantics
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -128,7 +128,7 @@ Bad state: No element
 
 When the exception was thrown, this was the stack:
 #0      ListBase.singleWhere (dart:collection/list.dart:167:5)
-#1      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart:583:30)
+#1      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart:583:30)
 <asynchronous suspension>
 #2      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -155,7 +155,7 @@ first): []>
    Which: means none were found but one was expected
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart:639:9)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart:639:9)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -165,7 +165,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart line 639
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart line 639
 The test description was:
   Shift+F10 focuses the first enabled item with a visible ring; Down/Up skip disabled and wrap;
   End/Home jump; Esc closes and focus returns to the invoker
@@ -184,7 +184,7 @@ Expected: false
 First
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart:753:11)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart:753:11)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -194,7 +194,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart line 753
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart line 753
 The test description was:
   a right-click focuses the panel, not an item, and shows no ring; Down then reaches the first item
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -214,7 +214,7 @@ Expected: a value less than or equal to <440>
 no room below above the keyboard, so it opens above
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart:874:7)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart:874:7)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -224,7 +224,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart line 874
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart line 874
 The test description was:
   stays clear of the status bar and opens above the on-screen keyboard
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -241,7 +241,7 @@ Expected: a value less than or equal to <304>
 text 1.0
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure> (file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart:948:9)
+#4      main.<anonymous closure> (file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart:948:9)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -251,7 +251,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart line 948
+  file:///home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart line 948
 The test description was:
   9. at 320dp wide the panel stays inside the gutters, each item is 48dp or taller, and a long label
   wraps without an ellipsis, at text 1.0 and 2.0
@@ -266,8 +266,8 @@ The test description was:
 00:02 +19 -7: Some tests failed.
 
 Failing tests:
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart: 2. destructive items render last after a divider; groups keep order
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart: 3. checked a disabled checked item keeps its checked semantics
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart: 5. KitMenuItem.copy still copies when the invoker unmounted while the menu was open
-  /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart: 7. keyboard, with desktop capabilities Shift+F10 focuses the first enabled item with a visible ring; Down/Up skip disabled and wrap; End/Home jump; Esc closes and focus returns to the invoker
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart: 2. destructive items render last after a divider; groups keep order
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart: 3. checked a disabled checked item keeps its checked semantics
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart: 5. KitMenuItem.copy still copies when the invoker unmounted while the menu was open
+  /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_ce49045b-395-1/test/kit/kit_menu_test.dart: 7. keyboard, with desktop capabilities Shift+F10 focuses the first enabled item with a visible ring; Down/Up skip disabled and wrap; End/Home jump; Esc closes and focus returns to the invoker
   ... and 3 more

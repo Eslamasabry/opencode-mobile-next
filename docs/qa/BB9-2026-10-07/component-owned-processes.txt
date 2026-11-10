@@ -20,6 +20,6 @@ restored_test rootPid=2701618 rootStartTicks=89789184 exit=0
 restored_test pid=2701618 startTicks=89789184 completed=true
 restored_test pid=2701619 startTicks=89789185 completed=true
 restored_test pid=2701644 startTicks=89789191 completed=true
-ARTIFACT removed=/home/eslam/Storage/tmp/bb9-component-worker-tests.jar absent=true
-ARTIFACT removed=/home/eslam/Storage/tmp/bb9-component-worker-red-tests.jar absent=true
-ARTIFACT removed=/home/eslam/Storage/tmp/bb9-component-worker-red.kt absent=true
+ARTIFACT removed=/home/owner/Storage/tmp/bb9-component-worker-tests.jar absent=true
+ARTIFACT removed=/home/owner/Storage/tmp/bb9-component-worker-red-tests.jar absent=true
+ARTIFACT removed=/home/owner/Storage/tmp/bb9-component-worker-red.kt absent=true

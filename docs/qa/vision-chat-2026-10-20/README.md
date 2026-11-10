@@ -44,7 +44,7 @@ strip (`KitTaskChip` stays in the kit, now unused by chat). Agent-features chip 
 ## Evidence
 
 Before/after renders of the real chat while working (412x915, one phone screen per image):
-`/home/eslam/Storage2/launch-footage/vision-chat/` - `before-{dark,light}.png`,
+`/home/owner/Storage2/launch-footage/vision-chat/` - `before-{dark,light}.png`,
 `after-{dark,light}.png`, `after-plus-{dark,light}.png` (the + sheet). Produced by
 `tool/capture/vision_chat_test.dart` (`--dart-define=VISION_PHASE=before` on the old code).
 

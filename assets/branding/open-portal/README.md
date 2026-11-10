@@ -26,7 +26,7 @@ Remaining: inspect a built/installed launcher at real display size, including th
 
 ## Generation provenance
 
-Built-in ImageGen, generated 2026-09-09. Source result: `/home/eslam/.codex/generated_images/01a082f1-066d-7472-8be1-e4ade46112e2/exec-d4c3a8bb-bc0a-4417-9199-249ebfc292cc.png`. Copied unchanged into this directory.
+Built-in ImageGen, generated 2026-09-09. Source result: `/home/owner/.codex/generated_images/01a082f1-066d-7472-8be1-e4ade46112e2/exec-d4c3a8bb-bc0a-4417-9199-249ebfc292cc.png`. Copied unchanged into this directory.
 
 Prompt:
 

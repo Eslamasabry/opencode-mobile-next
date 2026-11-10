@@ -1,54 +1,54 @@
 Waiting for another flutter command to release the startup lock...
-00:00 +0: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_test.dart
-00:00 +0: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_test.dart: (setUpAll)
-00:00 +0: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_test.dart: server sign-in asks in place, then starts and offers Check and Cancel
-00:01 +1: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_test.dart: manage accounts one row per account, no mark while the active one is unknown, and the server environment row
-00:01 +2: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_test.dart: manage accounts the menu names the account; Use sends the switch
-00:01 +3: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_test.dart: manage accounts remove asks with its consequence, then removes
-00:01 +4: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_test.dart: manage accounts a failed rename keeps the dialog open with the reason
-00:01 +5: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_test.dart: manage accounts an empty label is refused before anything is sent
-00:02 +6: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_test.dart: unfinished sign-ins the card offers resume, the code, cancel and forget; forget asks first
-00:02 +7: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_test.dart: tools names the model and provider, and lists callable first
-00:02 +8: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_test.dart: tools search appears from eight tools and filters
-00:02 +9: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_test.dart: tools the detail sheet says what the tool takes before the JSON
-00:02 +10: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_test.dart: tools toolParameters reads a JSON schema, required first
-00:02 +11: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_test.dart: plugins the page is built from the kit: top bar, the AI Team row in "In this app", and the server section
-00:02 +12: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_test.dart: plugins the AI Team sheet says "Off" once
-00:02 +13: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_test.dart: (tearDownAll)
-00:02 +13: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart
-00:05 +13: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: (setUpAll)
-00:05 +13: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: tools (dark) loaded 412
-00:06 +14: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: tools (dark) loaded 1280
-00:06 +15: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: tools (dark) detail sheet
-00:06 +16: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: providers (dark) manage accounts
-00:07 +17: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: providers (dark) remove account question
-00:07 +18: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: providers (dark) server sign-in
-00:07 +19: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: providers (dark) unfinished sign-ins
-00:07 +20: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: plugins (dark) loaded 412
-00:07 +21: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: plugins (dark) loaded 1280
-00:07 +22: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: plugins (dark) AI Team sheet, off
-00:07 +23: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: tools (light) loaded 412
-00:07 +24: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: tools (light) loaded 1280
-00:07 +25: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: tools (light) detail sheet
-00:08 +26: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: providers (light) manage accounts
-00:08 +27: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: providers (light) remove account question
-00:08 +28: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: providers (light) server sign-in
-00:08 +29: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: providers (light) unfinished sign-ins
-00:08 +30: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: plugins (light) loaded 412
-00:08 +31: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: plugins (light) loaded 1280
-00:08 +32: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: plugins (light) AI Team sheet, off
-00:08 +33: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: (tearDownAll)
-00:08 +33: loading /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/plugins_screen_test.dart
-00:10 +33: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/plugins_screen_test.dart: personal command links persist and open review without running
-00:11 +34: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/plugins_screen_test.dart: command removed after review is checked again before Run
-00:11 +35: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/plugins_screen_test.dart: clearing personal links requires confirmation
-00:12 +36: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/plugins_screen_test.dart: removed command never opens a stale mapped action
-00:12 +37: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/plugins_screen_test.dart: one Plugins screen: "In this app" above "On the server"
-00:12 +38: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/plugins_screen_test.dart: unsupported servers make no plugin request
-00:12 +39: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/plugins_screen_test.dart: empty, failure and retry states are distinct and hide raw errors
-00:12 +40: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/plugins_screen_test.dart: late previous-location inventory is discarded
-00:12 +41: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/plugins_screen_test.dart: late inventory after disposal is ignored
-00:12 +42: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/plugins_screen_test.dart: late review validation cannot open a prior-location dialog
-00:12 +43: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/plugins_screen_test.dart: plugin events and reconnect refetch current inventory
-00:12 +44: /home/eslam/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/plugins_screen_test.dart: flat plugin rows fit a narrow phone with large text
+00:00 +0: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_test.dart
+00:00 +0: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_test.dart: (setUpAll)
+00:00 +0: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_test.dart: server sign-in asks in place, then starts and offers Check and Cancel
+00:01 +1: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_test.dart: manage accounts one row per account, no mark while the active one is unknown, and the server environment row
+00:01 +2: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_test.dart: manage accounts the menu names the account; Use sends the switch
+00:01 +3: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_test.dart: manage accounts remove asks with its consequence, then removes
+00:01 +4: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_test.dart: manage accounts a failed rename keeps the dialog open with the reason
+00:01 +5: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_test.dart: manage accounts an empty label is refused before anything is sent
+00:02 +6: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_test.dart: unfinished sign-ins the card offers resume, the code, cancel and forget; forget asks first
+00:02 +7: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_test.dart: tools names the model and provider, and lists callable first
+00:02 +8: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_test.dart: tools search appears from eight tools and filters
+00:02 +9: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_test.dart: tools the detail sheet says what the tool takes before the JSON
+00:02 +10: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_test.dart: tools toolParameters reads a JSON schema, required first
+00:02 +11: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_test.dart: plugins the page is built from the kit: top bar, the AI Team row in "In this app", and the server section
+00:02 +12: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_test.dart: plugins the AI Team sheet says "Off" once
+00:02 +13: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_test.dart: (tearDownAll)
+00:02 +13: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart
+00:05 +13: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: (setUpAll)
+00:05 +13: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: tools (dark) loaded 412
+00:06 +14: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: tools (dark) loaded 1280
+00:06 +15: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: tools (dark) detail sheet
+00:06 +16: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: providers (dark) manage accounts
+00:07 +17: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: providers (dark) remove account question
+00:07 +18: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: providers (dark) server sign-in
+00:07 +19: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: providers (dark) unfinished sign-ins
+00:07 +20: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: plugins (dark) loaded 412
+00:07 +21: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: plugins (dark) loaded 1280
+00:07 +22: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: plugins (dark) AI Team sheet, off
+00:07 +23: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: tools (light) loaded 412
+00:07 +24: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: tools (light) loaded 1280
+00:07 +25: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: tools (light) detail sheet
+00:08 +26: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: providers (light) manage accounts
+00:08 +27: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: providers (light) remove account question
+00:08 +28: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: providers (light) server sign-in
+00:08 +29: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: providers (light) unfinished sign-ins
+00:08 +30: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: plugins (light) loaded 412
+00:08 +31: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: plugins (light) loaded 1280
+00:08 +32: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: plugins (light) AI Team sheet, off
+00:08 +33: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/revamp/screen_library_3_golden_test.dart: (tearDownAll)
+00:08 +33: loading /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/plugins_screen_test.dart
+00:10 +33: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/plugins_screen_test.dart: personal command links persist and open review without running
+00:11 +34: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/plugins_screen_test.dart: command removed after review is checked again before Run
+00:11 +35: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/plugins_screen_test.dart: clearing personal links requires confirmation
+00:12 +36: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/plugins_screen_test.dart: removed command never opens a stale mapped action
+00:12 +37: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/plugins_screen_test.dart: one Plugins screen: "In this app" above "On the server"
+00:12 +38: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/plugins_screen_test.dart: unsupported servers make no plugin request
+00:12 +39: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/plugins_screen_test.dart: empty, failure and retry states are distinct and hide raw errors
+00:12 +40: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/plugins_screen_test.dart: late previous-location inventory is discarded
+00:12 +41: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/plugins_screen_test.dart: late inventory after disposal is ignored
+00:12 +42: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/plugins_screen_test.dart: late review validation cannot open a prior-location dialog
+00:12 +43: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/plugins_screen_test.dart: plugin events and reconnect refetch current inventory
+00:12 +44: /home/owner/Storage/Code/oc_app/.claude/worktrees/wf_807eb76e-7bb-5/test/plugins_screen_test.dart: flat plugin rows fit a narrow phone with large text
 00:12 +45: All tests passed!

@@ -12,7 +12,7 @@ import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[2]
 PACKAGE = "io.github.eslamasabry.opencode_mobile"
-GRADLE = "/home/eslam/.gradle/wrapper/dists/gradle-9.5.0-all/aca6g93cdtcf0oapcfka748qh/gradle-9.5.0/bin/gradle"
+GRADLE = os.path.expanduser('~/.gradle/wrapper/dists/gradle-9.5.0-all/aca6g93cdtcf0oapcfka748qh/gradle-9.5.0/bin/gradle')
 OUT = ROOT / "docs/qa/BB2-2026-10-07"
 SOURCES = ROOT / "android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile"
 RED = {
@@ -35,7 +35,7 @@ def replace_once(value, old, new):
 
 def cleanup():
     owned = ROOT / "build/app/intermediates"
-    assert owned.resolve() == Path("/home/eslam/Storage/Code/oc_app-sol-bb/build/app/intermediates")
+    assert owned.resolve() == Path(os.path.expanduser('~/Storage/Code/oc_app-sol-bb/build/app/intermediates'))
     if owned.exists():
         shutil.rmtree(owned)
 
@@ -47,7 +47,7 @@ def invoke(label, tests):
     for test in sorted(tests):
         args += ["--tests", test]
     env = os.environ.copy()
-    env["JAVA_HOME"] = "/home/eslam/Storage/tmp/codex-audit3-temurin17/jdk-17.0.20.1+1"
+    env["JAVA_HOME"] = os.path.expanduser('~/Storage/tmp/codex-audit3-temurin17/jdk-17.0.20.1+1')
     with (OUT / f"native-{label}.txt").open("w") as output:
         process = subprocess.Popen(args, cwd=ROOT, env=env, stdout=output, stderr=subprocess.STDOUT)
         print(f"{label} owned_gradle_client_pid={process.pid}", flush=True)

@@ -4,7 +4,7 @@
 
 ---
 
-You own one design school in the OpenCode Mobile Flutter app: **Brutal** (neo-brutalism). Make a worktree first: `git -C /home/eslam/Storage2/wt/oc_app-schools-base worktree add /home/eslam/Storage2/wt/oc_app-style-brutal -b feat/style-brutal feat/schools-baseline`. Work only there. Read AGENTS.md first, then `docs/ux-system/kit-v2.md` §4, §8 and §9, then `docs/design/design-schools/`: README, contract (§0 first: it says what is built), flutter-techniques, your guide `schools/brutal.md` and `briefs/README.md` (the hooks, all built, and the spec field that drives each).
+You own one design school in the OpenCode Mobile Flutter app: **Brutal** (neo-brutalism). Make a worktree first: `git -C /home/owner/Storage2/wt/oc_app-schools-base worktree add /home/owner/Storage2/wt/oc_app-style-brutal -b feat/style-brutal feat/schools-baseline`. Work only there. Read AGENTS.md first, then `docs/ux-system/kit-v2.md` §4, §8 and §9, then `docs/design/design-schools/`: README, contract (§0 first: it says what is built), flutter-techniques, your guide `schools/brutal.md` and `briefs/README.md` (the hooks, all built, and the spec field that drives each).
 
 You run on the PC (8 CPU, 16 GB, shared with other agents): at most one `flutter test` process at a time with `-j 2`; between 00:00 and 02:00 no local Flutter at all. Run `flutter pub get` (and in `widgetbook/`) once at the start, with the pinned Flutter `~/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter`.
 
@@ -19,8 +19,8 @@ You run on the PC (8 CPU, 16 GB, shared with other agents): at most one `flutter
 - Your starting point: a **placeholder**: opaque fills, a 2 dp ink edge (`text1`), a blur-0 hard shadow (4 content, 3 control, 6 floating; none when chosen, pressed or flat; mirrored in RTL via the new `hardShadow`/`hardOffset` layer). Soft corners by default; it keeps itself under high contrast.
 - Harnesses: `test/kit/kit_style_test.dart` (invariants for every style × brightness × knob combination), `test/goldens/kit/kit_surfaces_golden_test.dart` (your style in light and dark), `tool/capture/surfaces_test.dart` (home, chat, settings and a sheet per style, plus a frame-timing line).
 - Concepts (AI-generated; take the look, never the data):
-  - /home/eslam/Storage2/launch-footage/appearance-concepts-2/h-brutal-chat/concept.png (take the borders, the hard shadows, the "Needs you" tag and the press look; do NOT copy its yellow command box or lavender bubble)
-  - /home/eslam/Storage2/launch-footage/appearance-concepts-2/j-style-picker/concept.png (the "Brutal · Bold borders, hard shadows" card)
+  - /home/owner/Storage2/launch-footage/appearance-concepts-2/h-brutal-chat/concept.png (take the borders, the hard shadows, the "Needs you" tag and the press look; do NOT copy its yellow command box or lavender bubble)
+  - /home/owner/Storage2/launch-footage/appearance-concepts-2/j-style-picker/concept.png (the "Brutal · Bold borders, hard shadows" card)
 
 ## Files you own (write only these)
 
@@ -46,12 +46,12 @@ You run on the PC (8 CPU, 16 GB, shared with other agents): at most one `flutter
    - Display weight 800, mono section labels in sentence case (H1); square-ish chips (H4); a hard 2 dp accent ring as the running glow (H8).
 2. Keep `kit_style_test.dart` green for every style and knob combination. If a guide token fails an invariant, change the token and say so in your report.
 3. Render your goldens (`TZ=UTC flutter test test/goldens/kit/kit_surfaces_golden_test.dart --plain-name "surfaces · brutal" --update-goldens`) and **look at every image**. No other golden may change (`git diff --stat -- '*.png'`).
-4. Render the captures: `SURFACES_SHOTS_DIR=/home/eslam/Storage2/launch-footage/progress/brutal/passN flutter test tool/capture/surfaces_test.dart --plain-name " brutal "`. Compare each, one full screen at a time, with your concept. Do **at least three polish passes**. Extend the capture list to the contract §8 screens as the hooks land.
+4. Render the captures: `SURFACES_SHOTS_DIR=/home/owner/Storage2/launch-footage/progress/brutal/passN flutter test tool/capture/surfaces_test.dart --plain-name " brutal "`. Compare each, one full screen at a time, with your concept. Do **at least three polish passes**. Extend the capture list to the contract §8 screens as the hooks land.
 5. Check the owner rules on every render: kit only; never red; amber only for "needs you"; one main action in solid mint; no new UI level; plain words; motion 150–250 ms and still under reduced motion; `flutter_animate` banned; Saver → Solid; high contrast per contract §6.
 
 ## Progress images (owner rule 2026-10-21)
 
-After EVERY visual pass, not only at the end, save one full phone screen per changed state as `passN-<screen>-<dark|light>.png` in `/home/eslam/Storage2/launch-footage/progress/brutal/`. Append one line per pass to `LOG.md` there: what changed and what comes next. The owner watches these to steer.
+After EVERY visual pass, not only at the end, save one full phone screen per changed state as `passN-<screen>-<dark|light>.png` in `/home/owner/Storage2/launch-footage/progress/brutal/`. Append one line per pass to `LOG.md` there: what changed and what comes next. The owner watches these to steer.
 
 ## Tests
 

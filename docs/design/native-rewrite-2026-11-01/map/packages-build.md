@@ -1,6 +1,6 @@
 # Map: packages-build (pubspec, Gradle, assets, l10n, CI, releases, Shorebird, APK composition)
 
-Date: 2026-11-01. Source of truth: `/home/eslam/Storage/Code/wt/oc_app-batch1` (branch `int/batch1-2026-11-01`, HEAD `65e3f70a3`, app `2.1.0+57`). READ-ONLY study; nothing in any repo was changed.
+Date: 2026-11-01. Source of truth: `/home/owner/Storage/Code/wt/oc_app-batch1` (branch `int/batch1-2026-11-01`, HEAD `65e3f70a3`, app `2.1.0+57`). READ-ONLY study; nothing in any repo was changed.
 Paths are relative to that worktree unless they start with `/`. `K/` = `android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/`.
 Feature ids are `PACKAGES-BUILD-NN`. Companion maps: `state-data.md` (every pref key / file), `builtin-linux.md` (proot, services, rootfs), `agents-backends.md`, `protocols.md`, `ui-kit.md`, `screens-nav.md`. This file owns: dependencies, Gradle/Android packaging, manifest, resources, assets, l10n, CI/CD, release scripts, Shorebird, store/distribution facts, APK composition, build/test tooling.
 
@@ -29,7 +29,7 @@ In scope: `pubspec.yaml`, `pubspec.lock` (176 packages, 42 direct), `third_party
 
 Seams owned by other maps (only the interface is stated here): pref keys and files (`state-data.md`), proot/rootfs/services (`builtin-linux.md`), widget behaviour, notifications, scheduled prompts (android-platform map), voice behaviour (media-voice map), kit (`ui-kit.md`).
 
-Method: full read of `pubspec.yaml`, `android/app/build.gradle.kts`, manifest, release workflows, `release.sh`, `release_github.sh`, `verify_github_release.py` (header), `vps_build_apk.sh`; grep of every direct dependency's imports in `lib/` and `test/`; unzip analysis of a real release APK; `git log` greps (§13); catalog rows (`area` = `packages-build` 47, `l10n` 24, `migration` 3 in `/home/eslam/Storage/Code/wt/native-plan/catalog/raw-*.jsonl`); web checks 2026-11-01 (§12 of web facts).
+Method: full read of `pubspec.yaml`, `android/app/build.gradle.kts`, manifest, release workflows, `release.sh`, `release_github.sh`, `verify_github_release.py` (header), `vps_build_apk.sh`; grep of every direct dependency's imports in `lib/` and `test/`; unzip analysis of a real release APK; `git log` greps (§13); catalog rows (`area` = `packages-build` 47, `l10n` 24, `migration` 3 in `/home/owner/Storage/Code/wt/native-plan/catalog/raw-*.jsonl`); web checks 2026-11-01 (§12 of web facts).
 
 ---------------------------------------------------------------------------
 ## 2. Identity, versions and toolchain (facts table)
@@ -288,7 +288,7 @@ See §9. Gaps: Kotlin-composed coding-alert titles, action labels, `BuiltinServe
 
 #### PACKAGES-BUILD-30  App update notice and checks (current + planned)
 - Current desktop: `lib/update/desktop_release_check.dart` queries `https://api.github.com/repos/Eslamasabry/opencode-mobile-next/releases?per_page=10` (10 s timeouts, `Accept: application/vnd.github+json`), takes the highest valid non-draft (pre-releases count) tag by build number, links to the releases page via `openExternalLink`; never downloads.
-- Planned (memory `app-updates-two-layers`, spec `/home/eslam/Storage2/wt/app-updates-2026-10-31/SPEC.md`, branch `feat/app-updates-2026-10-31`, not in this tree): layer 1 = in-app dismissible notice → badge on the Settings gear while pending → tapping the gear asks "Update now / Open Settings" → Settings › This app › Updates; APK from GitHub `releases/latest`, verified by `SHA256SUMS` **and** same signer as the installed app, installed with `PackageInstaller` (`REQUEST_INSTALL_PACKAGES`, so it ships in a new release, not a patch); Shorebird patches join the same state model. Layer 2 = managed hosts (built-in Linux, Termux, BYO VPS) follow the app's tested pins only (option A), never "latest".
+- Planned (memory `app-updates-two-layers`, spec `/home/owner/Storage2/wt/app-updates-2026-10-31/SPEC.md`, branch `feat/app-updates-2026-10-31`, not in this tree): layer 1 = in-app dismissible notice → badge on the Settings gear while pending → tapping the gear asks "Update now / Open Settings" → Settings › This app › Updates; APK from GitHub `releases/latest`, verified by `SHA256SUMS` **and** same signer as the installed app, installed with `PackageInstaller` (`REQUEST_INSTALL_PACKAGES`, so it ships in a new release, not a patch); Shorebird patches join the same state model. Layer 2 = managed hosts (built-in Linux, Termux, BYO VPS) follow the app's tested pins only (option A), never "latest".
 - Rewrite note: in the native app layer 1 must exist on day 1 (it is also the bridge for Flutter → native); implement signer comparison with `PackageManager.getPackageInfo(GET_SIGNING_CERTIFICATES)` and `ApkVerifier`-equivalent checks on the downloaded file.
 
 #### PACKAGES-BUILD-31  Release CI (`android-release.yml`, 455 lines)

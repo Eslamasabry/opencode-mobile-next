@@ -32,7 +32,7 @@ All Flutter tests use the pinned 3.47.1 binary and the single machine slot:
 
 ```sh
 OC_TEST_SLOTS=1 tool/qa/machine_lock.sh test -- \
-  /home/eslam/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter \
+  /home/owner/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter \
   test --concurrency 1 <files> --reporter expanded
 ```
 
