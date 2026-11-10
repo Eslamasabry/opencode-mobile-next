@@ -6,6 +6,7 @@ plugins { id("oc.kmp.feature") }
 // device sign-in.
 kotlin {
     sourceSets.commonMain.dependencies {
+        implementation(project(":engine:analytics")) // feature_used for a Git action that worked
         implementation(project(":engine:git"))
         implementation(project(":engine:connection"))
         implementation(project(":ui:kit-chat")) // KitDiffView for one file's patch

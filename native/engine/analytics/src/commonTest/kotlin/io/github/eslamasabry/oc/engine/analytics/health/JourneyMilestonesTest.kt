@@ -250,4 +250,44 @@ class JourneyMilestonesTest {
         off.service.useFor(ProductUseFor.Everyday)
         assertTrue(off.vendor.events.isEmpty())
     }
+
+    // ---- feature counters and starters ----
+
+    @Test
+    fun `B-NEXT-060 a starter chip is sent as its kind's closed word, never its text`() = runTest {
+        val r = rig()
+        for (name in listOf("FindBug", "ListFolder", "AddTests", "SomethingAddedLater", "my private project", null)) {
+            if (name != null) r.service.starterUsed(name)
+        }
+        assertEquals(
+            listOf("find_bug", "list_folder", "add_tests", "other", "other"),
+            r.vendor.events.filter { it.first == "starter_used" }.map { it.second.getValue("starter") },
+        )
+        assertEquals(
+            io.github.eslamasabry.oc.engine.analytics.product.ProductStarter.entries.map { it.wire }.toSet(),
+            productSchema.getValue("starter_used").getValue("starter"),
+        )
+        val off = rig(usage = false)
+        off.service.starterUsed("FindBug")
+        assertTrue(off.vendor.events.isEmpty())
+    }
+
+    @Test
+    fun `B-NEXT-061 every starter kind the composer offers has its own word`() {
+        val names = listOf("ListFolder", "FindBug", "BuildWebPage", "PythonScript", "NodeProject", "Readme", "ExplainProject", "WhatChanged", "AddTests")
+        val words = names.map { io.github.eslamasabry.oc.engine.analytics.product.ProductStarter.of(it).wire }
+        assertEquals(names.size, words.toSet().size)
+        assertTrue("other" !in words)
+    }
+
+    @Test
+    fun `B-NEXT-062 only the review page counts as a feature just by being opened`() {
+        val review = io.github.eslamasabry.oc.engine.analytics.product.ProductScreen.Review
+        assertEquals(
+            io.github.eslamasabry.oc.engine.analytics.product.ProductFeature.ReviewOpen,
+            io.github.eslamasabry.oc.engine.analytics.product.ProductFeature.openedBy(review),
+        )
+        for (s in io.github.eslamasabry.oc.engine.analytics.product.ProductScreen.entries.filter { it != review })
+            assertNull(io.github.eslamasabry.oc.engine.analytics.product.ProductFeature.openedBy(s), s.name)
+    }
 }

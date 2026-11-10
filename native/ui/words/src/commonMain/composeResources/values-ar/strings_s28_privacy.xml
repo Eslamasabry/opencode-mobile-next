@@ -22,6 +22,7 @@
     <string name="collectUpdates">هل ثُبّت التحديث، ونوع الفشل</string>
     <string name="collectPages">أنواع الصفحات والميزات التي تستخدمها، وخطوات الإعداد، وأول رد، ومدة الزيارة، وعدد الرسائل التي أرسلتها فيها</string>
     <string name="collectJourney">إلى أي مرحلة وصلت في خطواتك الأولى (فتحت التطبيق، أعددت، اتصلت، أرسلت رسالة، تلقيت أول رد) وبعد كم من الوقت تقريباً من موافقتك. تُحسب كل خطوة مرة واحدة</string>
+    <string name="collectStarters">نوع الاقتراح الذي ضغطت عليه في محادثة جديدة، من دون كلماته أو ما يطلبه</string>
     <string name="collectStart">سرعة بدء التطبيق</string>
     <string name="collectSmooth">سلاسة الصفحات (نسبة الإطارات البطيئة والمتجمدة)، ومعدل تحديث الشاشة</string>
     <string name="collectMemory">تنبيهات الذاكرة من أندرويد</string>

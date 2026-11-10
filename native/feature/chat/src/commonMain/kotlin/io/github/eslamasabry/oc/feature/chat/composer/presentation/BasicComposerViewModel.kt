@@ -19,6 +19,8 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.platform.PromptFilePicker
 import io.github.eslamasabry.oc.core.model.PromptAttachment
+import io.github.eslamasabry.oc.engine.analytics.health.AppTelemetry
+import io.github.eslamasabry.oc.engine.analytics.product.ProductFeature
 import io.github.eslamasabry.oc.engine.composer.input.AgentSuggestions
 import io.github.eslamasabry.oc.engine.composer.input.MentionAgent
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerTarget
@@ -578,6 +580,8 @@ public class BasicComposerViewModel(
                             attachmentFailure.value = Failure.Media(MediaProblem.DraftFull)
                             return@launch
                         }
+                        // A photo the person took and attached counts once; a cancel or a refusal never gets here.
+                        if (kind == AttachKind.Camera) AppTelemetry.current.feature(ProductFeature.Camera)
                         committingFiles.value = true
                         commit(w, latest.attachments + picked.value.take(room))
                     }

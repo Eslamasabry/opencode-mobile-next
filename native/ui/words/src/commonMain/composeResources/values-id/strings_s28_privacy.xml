@@ -23,6 +23,8 @@
     <string name="collectBackground">Mengapa layanan latar belakang berhenti</string>
     <string name="collectUpdates">Apakah pembaruan berhasil terpasang, dan jenis kegagalan</string>
     <string name="collectPages">Jenis halaman dan fitur yang Anda gunakan, langkah penyiapan, balasan pertama, lama kunjungan, dan jumlah pesan yang Anda kirim saat itu</string>
+    <string name="collectJourney">Sejauh mana Anda melangkah di langkah pertama (membuka aplikasi, menyiapkan, terhubung, mengirim pesan, menerima balasan pertama) dan kira-kira berapa lama setelah Anda setuju. Setiap langkah dihitung sekali</string>
+    <string name="collectStarters">Jenis saran yang Anda ketuk di percakapan baru, tidak pernah kata-katanya atau apa yang diminta</string>
     <string name="collectStart">Seberapa cepat aplikasi dimulai</string>
     <string name="collectSmooth">Seberapa lancar halaman (porsi frame yang lambat dan macet), dan kecepatan refresh layar</string>
     <string name="collectMemory">Peringatan memori dari Android</string>

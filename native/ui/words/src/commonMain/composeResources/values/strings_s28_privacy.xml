@@ -23,6 +23,7 @@
     <string name="collectUpdates">Whether an update installed, and the kind of failure</string>
     <string name="collectPages">Which kinds of pages and features you use, setup steps, the first reply, how long a visit lasts and how many messages you sent in it</string>
     <string name="collectJourney">How far you got in your first steps (opened the app, set up, connected, sent a message, got a first reply) and roughly how long after you agreed. Each step is counted once</string>
+    <string name="collectStarters">Which kind of suggestion you tapped on a new conversation, never its words or what it asks</string>
     <string name="collectStart">How fast the app starts</string>
     <string name="collectSmooth">How smooth pages are (the share of slow and frozen frames), and the screen’s refresh rate</string>
     <string name="collectMemory">Memory warnings from Android</string>
