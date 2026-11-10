@@ -234,7 +234,13 @@ class CacheFirstSchedulesTest {
 
     @Test
     fun `CF-73 with nothing kept the first-ever load is loading`() = runTest {
+        // The view model keeps listening to save the live list, so its state is live from the start: hold the
+        // server's answer to see the first frame, and release it to see that a real answer is then Empty.
+        val gate = kotlinx.coroutines.CompletableDeferred<Unit>()
+        servers.gate = gate
         val vm = SchedulesViewModel(SchedulesRoute.List(pid), engine, servers, nav, clock, setOf(Shelf()))
         assertEquals(SchedulesPhase.Loading, vm.state.value.phase)
+        gate.complete(Unit)
+        assertEquals(SchedulesPhase.Empty, vm.state.value.phase)
     }
 }
