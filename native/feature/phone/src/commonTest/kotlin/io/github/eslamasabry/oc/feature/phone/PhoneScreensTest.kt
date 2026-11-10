@@ -23,6 +23,7 @@ import io.github.eslamasabry.oc.feature.phone.presentation.PhoneExitKind
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneExitNotice
 import kotlin.time.Instant
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -168,8 +169,8 @@ class PhoneScreensTest {
             onNodeWithText("Takes ⁦410 MB⁩ of storage").assertExists()
             onNodeWithText("Stop OpenCode on this phone").performClick()
             // Stop asks Flutter's question first (6bcea0edb); the stop is sent from its confirm.
-            onNodeWithText("Stop the local server?").assertExists()
-            onNodeWithText("Stop local server").performClick()
+            onNodeWithText("Stop OpenCode on this phone?").assertExists()
+            onAllNodesWithText("Stop OpenCode on this phone").onLast().performClick()
             onNodeWithText("Restart OpenCode on this phone").performClick()
             assertEquals(listOf("stop", "askRestart"), calls.seen.filterNot { it.startsWith("shown") })
         }

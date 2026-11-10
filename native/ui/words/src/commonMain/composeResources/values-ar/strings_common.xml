@@ -266,7 +266,7 @@
     <string name="e7SetupTerminalSemantics">طرفية تفاعلية. استخدم زر تسهيل الاستخدام لعرض سجل مقروء وحقل إدخال واضح.</string>
     <string name="e7SetupEmptyPairClipboard">الحافظة فارغة. شغّل «opencode2 pair» على الخادم وانسخ الرمز الذي يعرضه.</string>
     <string name="e7SetupTokenRequired">يلزم إدخال رمز الاتصال مجددًا</string>
-    <string name="e7SetupStopLocal">إيقاف الخادم المحلي</string>
+    <string name="e7SetupStopLocal">إيقاف OpenCode على هذا الهاتف</string>
     <string name="e7SetupCameraSettingsDetail">لن يطلب Android الإذن مجددًا. فعّل الكاميرا من إعدادات التطبيق ثم عُد إلى هنا. يمكنك لصق الرمز الآن دون أي إذن.</string>
     <string name="e7SetupInputUnavailable">إدخال الطرفية غير متاح</string>
     <string name="e7SetupDidNotConnect">لم يتصل الخادم.</string>
@@ -289,7 +289,7 @@
     <string name="safetyStopSharingTitle">إيقاف مشاركة هذه المحادثة؟</string>
     <string name="safetyStopSharingBody">يتوقف الرابط عن العمل لدى كل من يملكه. لا يتغير شيء في المحادثة نفسها.</string>
     <string name="safetyStopSharingKeep">مواصلة المشاركة</string>
-    <string name="safetyStopLocalServerTitle">إيقاف الخادم المحلي؟</string>
+    <string name="safetyStopLocalServerTitle">إيقاف OpenCode على هذا الهاتف؟</string>
     <string name="safetyStopLocalServerBody">يتوقف كل ما ينفذه الوكيل على هذا الهاتف، وينقطع اتصال التطبيق بالخادم. تبقى مشاريعك ومحادثاتك على الهاتف؛ شغّل الخادم مرة أخرى للمتابعة.</string>
     <string name="safetyStopLocalServerKeep">إبقاؤه قيد التشغيل</string>
     <string name="safetyMcpDisconnectTitle">قطع الاتصال بـ %1$s؟</string>

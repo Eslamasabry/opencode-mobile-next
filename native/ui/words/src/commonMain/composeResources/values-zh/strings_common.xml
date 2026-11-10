@@ -260,7 +260,7 @@
     <string name="e7SetupTerminalSemantics">交互式终端。使用无障碍按钮可查看易读的记录和带标签的输入。</string>
     <string name="e7SetupEmptyPairClipboard">剪贴板为空。请在服务器上运行“opencode2 pair”，并复制它输出的代码。</string>
     <string name="e7SetupTokenRequired">无法读取已保存的令牌</string>
-    <string name="e7SetupStopLocal">停止本地服务器</string>
+    <string name="e7SetupStopLocal">停止此手机上的 OpenCode</string>
     <string name="e7SetupCameraSettingsDetail">Android 不会再次询问，因此需要在应用设置中更改：开启相机后再返回。粘贴代码无需任何权限，现在就能用。</string>
     <string name="e7SetupInputUnavailable">终端输入不可用</string>
     <string name="e7SetupDidNotConnect">服务器未连接。</string>
@@ -283,7 +283,7 @@
     <string name="safetyStopSharingTitle">停止分享此对话？</string>
     <string name="safetyStopSharingBody">任何持有该链接的人都将无法再使用它。对话本身不会改变。</string>
     <string name="safetyStopSharingKeep">继续分享</string>
-    <string name="safetyStopLocalServerTitle">停止本地服务器？</string>
+    <string name="safetyStopLocalServerTitle">停止此手机上的 OpenCode？</string>
     <string name="safetyStopLocalServerBody">智能体在此手机上正在运行的任务会被中断，本应用也会与它断开连接。你的项目和对话会保留在手机上；重新启动服务器即可继续。</string>
     <string name="safetyStopLocalServerKeep">继续运行</string>
     <string name="safetyMcpDisconnectTitle">断开 %1$s？</string>

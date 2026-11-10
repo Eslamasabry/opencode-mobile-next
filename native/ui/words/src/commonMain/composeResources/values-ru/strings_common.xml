@@ -332,7 +332,7 @@
     <string name="e7SetupTerminalSemantics">Интерактивный терминал. Кнопка специальных возможностей откроет читаемую запись и поле ввода с подписью.</string>
     <string name="e7SetupEmptyPairClipboard">Буфер обмена пуст. Выполните «opencode2 pair» на сервере и скопируйте выведенный код.</string>
     <string name="e7SetupTokenRequired">Не удаётся прочитать сохранённый токен</string>
-    <string name="e7SetupStopLocal">Остановить локальный сервер</string>
+    <string name="e7SetupStopLocal">Остановить OpenCode на этом телефоне</string>
     <string name="e7SetupCameraSettingsDetail">Android больше не спросит, поэтому изменить это нужно в настройках приложения: включите «Камера» и вернитесь. Код можно вставить без всяких разрешений, это работает прямо сейчас.</string>
     <string name="e7SetupInputUnavailable">Ввод в терминал недоступен</string>
     <string name="e7SetupDidNotConnect">Сервер не подключился.</string>
@@ -355,7 +355,7 @@
     <string name="safetyStopSharingTitle">Закрыть общий доступ к этому чату?</string>
     <string name="safetyStopSharingBody">Ссылка перестанет работать у всех, у кого она есть. Сам чат не изменится.</string>
     <string name="safetyStopSharingKeep">Оставить доступ</string>
-    <string name="safetyStopLocalServerTitle">Остановить локальный сервер?</string>
+    <string name="safetyStopLocalServerTitle">Остановить OpenCode на этом телефоне?</string>
     <string name="safetyStopLocalServerBody">Всё, что агент выполняет на этом телефоне, будет прервано, а приложение отключится от сервера. Проекты и чаты останутся на телефоне; чтобы продолжить, запустите сервер снова.</string>
     <string name="safetyStopLocalServerKeep">Оставить работать</string>
     <string name="safetyMcpDisconnectTitle">Отключить %1$s?</string>

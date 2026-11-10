@@ -262,7 +262,7 @@
     <string name="e7SetupTerminalSemantics">Terminal interactif. Utilisez le bouton d’accessibilité pour obtenir une transcription lisible et une saisie étiquetée.</string>
     <string name="e7SetupEmptyPairClipboard">Le presse-papiers est vide. Lancez « opencode2 pair » sur le serveur et copiez le code affiché.</string>
     <string name="e7SetupTokenRequired">Impossible de lire le jeton enregistré</string>
-    <string name="e7SetupStopLocal">Arrêter le serveur local</string>
+    <string name="e7SetupStopLocal">Arrêter OpenCode sur ce téléphone</string>
     <string name="e7SetupCameraSettingsDetail">Android ne redemandera pas l’autorisation\u00A0: il faut la modifier dans les paramètres de l’application. Activez l’appareil photo, puis revenez. Coller le code ne demande aucune autorisation et fonctionne tout de suite.</string>
     <string name="e7SetupInputUnavailable">Saisie du terminal indisponible</string>
     <string name="e7SetupDidNotConnect">Le serveur ne s’est pas connecté.</string>
@@ -285,7 +285,7 @@
     <string name="safetyStopSharingTitle">Arrêter le partage de cette conversation\u00A0?</string>
     <string name="safetyStopSharingBody">Le lien cesse de fonctionner pour toute personne qui l’a. La conversation elle-même n’est pas modifiée.</string>
     <string name="safetyStopSharingKeep">Continuer le partage</string>
-    <string name="safetyStopLocalServerTitle">Arrêter le serveur local\u00A0?</string>
+    <string name="safetyStopLocalServerTitle">Arrêter OpenCode sur ce téléphone\u00A0?</string>
     <string name="safetyStopLocalServerBody">Tout ce que l’agent exécute sur ce téléphone est interrompu et cette application s’en déconnecte. Vos projets et vos conversations restent sur le téléphone\u00A0; redémarrez le serveur pour continuer.</string>
     <string name="safetyStopLocalServerKeep">Laisser en marche</string>
     <string name="safetyMcpDisconnectTitle">Déconnecter %1$s\u00A0?</string>
