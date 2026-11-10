@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.quality
 
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.runComposeUiTest
@@ -20,15 +21,17 @@ import kotlin.test.Test
 @OptIn(ExperimentalTestApi::class)
 class DesktopShellUiTest {
     @Test
-    fun `shell opens on the placeholder screen, pushes an assisted entry and goes back`() = runComposeUiTest {
+    fun `shell opens on the conversations home, pushes an assisted entry and goes back`() = runComposeUiTest {
         val graph = createGraphFactory<DesktopAppGraph.Factory>().create(desktopBuildInfo, Redactor())
-        setContent { App(graph.shell, DesktopKitPlatform(), graph.metroViewModelFactory) }
+        // Main.kt wraps App in the graph's chat environment (redactor and the rest); the host does the same.
+        setContent { graph.kitChatEnvironment.Provide { App(graph.shell, DesktopKitPlatform(), graph.metroViewModelFactory) } }
 
-        onNodeWithText("Conversations").assertExists()
-        onNodeWithText("Show all conversations").performClick()
-        onNodeWithText("All conversations").assertExists()
-        onNodeWithText("No server connected").assertExists()
-        onNodeWithContentDescription("Back").performClick()
-        onNodeWithText("Conversations").assertExists()
+        // "Conversations" is both the title and the nav tab now; the tab is the one with a handle.
+        onNodeWithTag("kit-nav-Chats").assertExists()
+        onNodeWithText("New conversation").performClick()
+        // The route-keyed (assisted) entry: no server is connected, so it says so and offers to add one.
+        onNodeWithText("Add an OpenCode 2 server to start a conversation.").assertExists()
+        onNodeWithContentDescription("Close").performClick()
+        onNodeWithTag("kit-nav-Chats").assertExists()
     }
 }
