@@ -2,7 +2,7 @@
 # E01-S08: proves on the BUILT (R8-minified) APK that every class the component freeze names is still defined under its
 # frozen name (quality/config/component-freeze/flutter-2.1.4.tsv: component, widget, tile and worker lines). R8 renaming
 # or dropping one would break placed widgets, tiles, queued work or alarms on the update, and the manifest-only freeze
-# test cannot see that.
+# test cannot see that. Classes on component-freeze/pending.tsv (retired on purpose, each with its reason) are skipped.
 #
 #   native/tool/release/kept_classes_check.sh <apk>...
 #
@@ -13,6 +13,7 @@ set -uo pipefail
 
 native_dir="$(cd "$(dirname "$0")/../.." && pwd)"
 freeze="$native_dir/quality/config/component-freeze/flutter-2.1.4.tsv"
+pending="$native_dir/quality/config/component-freeze/pending.tsv"
 cannot() { echo "kept classes: cannot run: $*" >&2; exit 2; }
 case "${1:-}" in -h | --help) sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; "") cannot "no APK given" ;; esac
 [[ -f "$freeze" ]] || cannot "no freeze list at $freeze"
@@ -28,10 +29,18 @@ if [[ -z "$dexdump" ]]; then
 fi
 [[ -n "$dexdump" ]] || cannot "dexdump not found (set OC_DEXDUMP or ANDROID_HOME)"
 
-mapfile -t wanted < <(awk -F'\t' '!/^#/ && NF >= 2 {
-  if ($1 == "component") { sub(/^[^:]*:/, "", $2); print $2 }
-  else if ($1 == "widget" || $1 == "tile" || $1 == "worker") print $2 }' "$freeze" | sort -u)
+classes_of() { # <freeze-format file>: the class each component, widget, tile and worker line names
+  awk -F'\t' '!/^#/ && NF >= 2 {
+    if ($1 == "component") { sub(/^[^:]*:/, "", $2); print $2 }
+    else if ($1 == "widget" || $1 == "tile" || $1 == "worker") print $2 }' "$1" | sort -u
+}
+# A class on pending.tsv was retired on purpose (its line says who decided and why), so it is not expected in the APK.
+# ComponentFreezeTest keeps that list honest: a pending line must still be a gap and must be on the frozen list.
+waived=""
+[[ -f "$pending" ]] && waived="$(classes_of "$pending")"
+mapfile -t wanted < <(classes_of "$freeze" | { if [[ -n "$waived" ]]; then grep -vxFf <(printf '%s\n' "$waived"); else cat; fi; })
 [[ ${#wanted[@]} -gt 0 ]] || cannot "the freeze list names no classes"
+[[ -z "$waived" ]] || while IFS= read -r cls; do echo "retired $cls (component-freeze/pending.tsv)"; done <<<"$waived"
 
 work="$(mktemp -d "${TMPDIR:-/tmp}/oc-kept.XXXXXX")" || cannot "no temporary folder"
 trap 'rm -rf "$work"' EXIT

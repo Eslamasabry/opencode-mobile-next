@@ -126,6 +126,9 @@ expect "E01-S08 kept-classes passes when every frozen class is defined" 0 "$KEPT
 dex_apk "$A/renamed.apk" "io.github.eslamasabry.opencode_mobile.WidgetStatusWorker"
 expect "E01-S08 kept-classes fails when R8 renamed a frozen worker" 1 "$KEPT" "$A/kept.apk" "$A/renamed.apk"
 check "E01-S08 the failure names the class and the APK" has "MISSING renamed.apk: io.github.eslamasabry.opencode_mobile.WidgetStatusWorker"
+dex_apk "$A/retired.apk" "io.github.eslamasabry.opencode_mobile.TermuxResultService"
+expect "E01-S08 kept-classes passes without a class that pending.tsv retired" 0 "$KEPT" "$A/retired.apk"
+check "E01-S08 the retired class is named" has "retired io.github.eslamasabry.opencode_mobile.TermuxResultService"
 expect "E01-S08 kept-classes cannot run without an APK" 2 "$KEPT"
 
 # ---- owner preflight (E00-S16) ----------------------------------------------------------------------------------------
