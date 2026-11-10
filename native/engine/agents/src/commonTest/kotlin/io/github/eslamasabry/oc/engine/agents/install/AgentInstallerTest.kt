@@ -139,7 +139,7 @@ class AgentInstallerTest {
     fun `an interrupted install is kept the same way, and a new attempt clears the old result`() = runTest {
         val jobs = FakeJobs()
         val prefs = FakeAgentPrefs(mapOf("oc.agentInstall.owner" to "codex"))
-        jobs.job = null
+        jobs.job = AgentSetupJob(codex, AgentSetupJobState.Interrupted, "agent-codex", null, null, null)
         AgentInstaller(prefs, jobs).restore(owner)
         val kept = (AgentInstaller(prefs, jobs).restore(owner) as Outcome.Ok).value
         assertEquals(AgentSetupPhase.Interrupted, kept.phase)
@@ -150,6 +150,19 @@ class AgentInstallerTest {
         jobs.job = AgentSetupJob(codex, AgentSetupJobState.Done, null, null, null, null)
         installer.restore(owner)
         assertEquals(AgentSetupPhase.Idle, (AgentInstaller(prefs, jobs).restore(owner) as Outcome.Ok).value.phase)
+    }
+
+    @Test
+    fun `a marker left by the Flutter app, with no job of this app behind it, shows no interrupted install`() = runTest {
+        for (other in listOf(null, AgentSetupJob(AgentId("gemini"), AgentSetupJobState.Done, null, null, null, null))) {
+            val jobs = FakeJobs().apply { job = other }
+            val prefs = FakeAgentPrefs(mapOf("oc.agentInstall.owner" to "claude"))
+            val read = (AgentInstaller(prefs, jobs).restore(owner) as Outcome.Ok).value
+            assertEquals(AgentSetupPhase.Idle, read.phase)
+            assertNull(prefs.string("oc.agentInstall.owner"))
+            assertNull(prefs.string("oc.agentInstallResult.owner"))
+            assertEquals(AgentSetupPhase.Idle, (AgentInstaller(prefs, jobs).restore(owner) as Outcome.Ok).value.phase)
+        }
     }
 
     @Test
