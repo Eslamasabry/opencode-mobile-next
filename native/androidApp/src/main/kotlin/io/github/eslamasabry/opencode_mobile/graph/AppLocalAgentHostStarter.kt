@@ -52,7 +52,32 @@ class AppLocalAgentHostStarter(
 ) : PhoneAgentHostStarter {
     private val lane = Mutex()
 
-    override suspend fun connect(): Outcome<Unit> = lane.withLock {
+    override suspend fun connect(): Outcome<Unit> {
+        // The lock covers the helper and the saved profile only: connecting the profile asks [ensureHelper] again
+        // (it is the same path any later connection of this server takes), so it must not run under the lock.
+        val id =
+            when (val prepared = prepare(save = true, budgetMs = HelperAnswerWait.BUDGET_MS)) {
+                is Outcome.Failed -> return prepared
+                is Outcome.Ok -> prepared.value
+            }
+        return connections.connect(id)
+    }
+
+    /**
+     * Makes sure the helper behind the saved "Phone agents" server [id] runs and answers, starting it when it does
+     * not (Flutter started it whenever that server was needed, not only from the Agents page). Nothing is saved.
+     * Ok for any other server: only this one is the helper's own.
+     */
+    suspend fun ensureHelper(id: ProfileId): Outcome<Unit> {
+        val owned = (stores.prefs.get("oc.phoneAgentOwner.${id.raw}") as? PrefValue.Str)?.value
+        if (!PhoneAgentRules.isHelperProfile(id.raw, owned)) return Outcome.Ok(Unit)
+        return when (val prepared = prepare(save = false, budgetMs = GATE_BUDGET_MS)) {
+            is Outcome.Failed -> prepared
+            is Outcome.Ok -> if (prepared.value == id) Outcome.Ok(Unit) else unavailable()
+        }
+    }
+
+    private suspend fun prepare(save: Boolean, budgetMs: Long): Outcome<ProfileId> = lane.withLock {
         if (phone.state.value.needsRestart) return@withLock unavailable()
         when (val warm = stores.warm()) {
             is Outcome.Failed -> return@withLock warm
@@ -125,6 +150,7 @@ class AppLocalAgentHostStarter(
                 now = { android.os.SystemClock.elapsedRealtime() },
                 pause = { kotlinx.coroutines.delay(it) },
                 done = { it !is PaseoProbeResult.Refused || !HelperAnswerWait.stillStarting(it.failure) },
+                budgetMs = budgetMs,
             ) {
                 factory.paseo.checkConnection(ADDRESS, password, FOLDER)
             }
@@ -135,7 +161,8 @@ class AppLocalAgentHostStarter(
         }
         if (phone.state.value.needsRestart || stores.profiles.profile(profile) == null)
             return@withLock unavailable()
-        val id = ProfileId("${owner.raw}-agents")
+        val id = ProfileId("${owner.raw}$SUFFIX")
+        if (!save) return@withLock Outcome.Ok(id)
         val existing = stores.profiles.profile(id)?.profile
         if (
             existing != null &&
@@ -170,13 +197,15 @@ class AppLocalAgentHostStarter(
             is Outcome.Failed -> return@withLock saved
             is Outcome.Ok -> Unit
         }
-        connections.connect(id)
+        Outcome.Ok(id)
     }
 
     private fun unavailable(): Outcome.Failed =
         Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
 
     private companion object {
+        const val SUFFIX = "-agents"
+        const val GATE_BUDGET_MS = 30_000L
         const val ADDRESS = "ws://127.0.0.1:4099"
         const val FOLDER = "/root/projects"
         val ID = Regex("[A-Za-z0-9_-]{1,80}")

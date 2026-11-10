@@ -361,10 +361,16 @@ class AppPhoneAgents(
         }
         return when (rows) {
             is Outcome.Ok -> {
+                var shownState = rows.value
+                if (owner != null && PhoneAgentRules.staleResult(shownState.installation, shownState.agents)) {
+                    // The agent is there: the earlier cut-short install is forgotten, silently.
+                    installation(owner).dismissResult(owner)
+                    shownState = shownState.copy(installation = null)
+                }
                 mutable.value =
                     if (owner != null && synchronized(admission) { owner in denied })
                         PhoneAgentsState(needsRestart = needsRestart)
-                    else rows.value
+                    else shownState
                 Outcome.Ok(Unit)
             }
             is Outcome.Failed -> rows

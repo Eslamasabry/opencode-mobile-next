@@ -181,6 +181,19 @@ public enum class PhoneAgentRemovalIssue {
     Unavailable,
 }
 
+/**
+ * A refusal that may pass by itself because the helper was only just started: nobody answered yet, or it answered
+ * half-ready (a dropped or garbled first hello). A refused password, a protocol mismatch or an app refusal will not.
+ */
+public fun Failure.mayAnswerSoon(): Boolean =
+    this is Failure.Network ||
+        this is Failure.TimedOut ||
+        this is Failure.ComputerDidNotAnswer ||
+        this is Failure.UnreadableReply ||
+        this is Failure.Unexpected ||
+        this is Failure.Server ||
+        this is Failure.Busy
+
 /** Installed agents: the ones whose helper connection is worth making (Flutter `_installed`). */
 public fun phoneInstalledAgents(state: PhoneAgentsState): Set<String> =
     state.agents.filter { it.status.installed }.map { it.id }.toSet()

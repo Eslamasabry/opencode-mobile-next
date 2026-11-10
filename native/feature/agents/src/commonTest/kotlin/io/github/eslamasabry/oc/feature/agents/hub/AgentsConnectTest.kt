@@ -20,6 +20,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 
@@ -72,6 +73,13 @@ class AgentsConnectTest {
         }
     }
 
+    private class SlowHost(val failures: Int) : PhoneAgentHostStarter {
+        var calls = 0
+
+        override suspend fun connect(): Outcome<Unit> =
+            if (++calls <= failures) Outcome.Failed(Failure.ComputerDidNotAnswer()) else Unit.ok()
+    }
+
     private fun presenter(test: TestScope, phone: Phone, host: Host) =
         AgentsPresenter(
             CoroutineScope(test.backgroundScope.coroutineContext + UnconfinedTestDispatcher(test.testScheduler)),
@@ -95,6 +103,24 @@ class AgentsConnectTest {
         assertTrue(state.helperConnected)
         assertFalse(state.helperConnectFailed)
         assertFalse(state.helperConnecting)
+    }
+
+    @Test
+    fun `a helper that refuses its first look but answers a moment later ends connected without a tap`() = runTest {
+        val host = SlowHost(failures = 1)
+        val presenter =
+            AgentsPresenter(
+                CoroutineScope(backgroundScope.coroutineContext + UnconfinedTestDispatcher(testScheduler)),
+                NoComputers,
+                Phone(listOf(claudeReady)),
+                onBack = {},
+                openChat = {},
+                phoneHost = host,
+            )
+        advanceUntilIdle()
+        assertEquals(2, host.calls)
+        assertTrue(presenter.state.value.helperConnected)
+        assertFalse(presenter.state.value.helperConnectFailed)
     }
 
     @Test

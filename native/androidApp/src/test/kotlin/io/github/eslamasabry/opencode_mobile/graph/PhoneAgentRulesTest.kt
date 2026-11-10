@@ -4,6 +4,9 @@ import io.github.eslamasabry.oc.engine.agents.AgentId
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentArchitecture
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
 import io.github.eslamasabry.oc.engine.agents.readiness.AgentSignInPhase
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallPhase
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallation
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRow
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -81,5 +84,31 @@ class PhoneAgentRulesTest {
         assertEquals(AgentArchitecture.Arm64, PhoneAgentRules.architectureOf(listOf("arm64-v8a", "armeabi-v7a")))
         assertNull(PhoneAgentRules.architectureOf(emptyList()))
         assertNull(PhoneAgentRules.architectureOf(listOf("armeabi-v7a")))
+    }
+
+    private val claudeThere = PhoneAgentRow("claude", "Claude Code", PhoneAgentStatus.SignInNeeded)
+    private val claudeMissing = PhoneAgentRow("claude", "Claude Code", PhoneAgentStatus.NotInstalled)
+
+    private fun ended(phase: PhoneAgentInstallPhase) = PhoneAgentInstallation("claude", phase, null)
+
+    @Test
+    fun `an interrupted or failed install result is dropped once the agent is installed`() {
+        assertTrue(PhoneAgentRules.staleResult(ended(PhoneAgentInstallPhase.Interrupted), listOf(claudeThere)))
+        assertTrue(PhoneAgentRules.staleResult(ended(PhoneAgentInstallPhase.Failed), listOf(claudeThere)))
+    }
+
+    @Test
+    fun `an install result for an agent that is still missing, or a running install, stays`() {
+        assertFalse(PhoneAgentRules.staleResult(ended(PhoneAgentInstallPhase.Interrupted), listOf(claudeMissing)))
+        assertFalse(PhoneAgentRules.staleResult(ended(PhoneAgentInstallPhase.Installing), listOf(claudeThere)))
+        assertFalse(PhoneAgentRules.staleResult(null, listOf(claudeThere)))
+    }
+
+    @Test
+    fun `only the saved Phone agents server of its owner is the helper's`() {
+        assertTrue(PhoneAgentRules.isHelperProfile("abc-agents", "abc"))
+        assertFalse(PhoneAgentRules.isHelperProfile("abc-agents", null))
+        assertFalse(PhoneAgentRules.isHelperProfile("abc-agents", "other"))
+        assertFalse(PhoneAgentRules.isHelperProfile("abc", "abc"))
     }
 }
