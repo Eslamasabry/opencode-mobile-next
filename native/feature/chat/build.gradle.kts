@@ -11,6 +11,7 @@ kotlin {
     }
     sourceSets.commonMain.dependencies {
         implementation(project(":engine:settings"))
+        implementation(project(":engine:analytics")) // feature_used for model and agent switches
         implementation(
             project(":engine:entry")
         ) // the opencode-mobile:// session link for another phone
