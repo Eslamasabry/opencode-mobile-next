@@ -249,7 +249,10 @@ devSigning?.let { p ->
     }
 }
 androidComponents.beforeVariants(androidComponents.selector().withFlavor("channel" to "dev")) { variant ->
-    variant.enable = variant.buildType == "debug" // the loop needs devDebug only
+    // devDebug is the loop's build. devBenchmark is the same app in the release's shape (R8, not debuggable, the
+    // baseline profile, no StrictMode or LeakCanary), signed with the dev key so it installs over "OpenCode Dev" and
+    // keeps its data: smoothness is judged on it, never on the debug build (jank pass 2026-11-10).
+    variant.enable = variant.buildType == "debug" || variant.buildType == "benchmark"
     // Its sources are the preview's; tests and lint run on preview/switch, so `test*`/`connected*` do no extra work.
     variant.hostTests.values.forEach { it.enable = false }
     variant.deviceTests.values.forEach { it.enable = false }
@@ -268,7 +271,7 @@ androidComponents.onVariants(androidComponents.selector().withFlavor("channel" t
                     )
                 }
             }
-        tasks.matching { it.name == "preDevDebugBuild" }.configureEach { dependsOn(refuse) }
+        tasks.matching { it.name == "preDevDebugBuild" || it.name == "preDevBenchmarkBuild" }.configureEach { dependsOn(refuse) }
     }
 }
 
