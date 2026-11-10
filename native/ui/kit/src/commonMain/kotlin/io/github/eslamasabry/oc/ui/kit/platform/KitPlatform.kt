@@ -129,6 +129,14 @@ public interface KitPlatform {
     public fun liveFinish(ground: Color): RenderEffect? = null
 
     /**
+     * Joined glass's lens pass (`KitLiquidJoin.kt`): [program] (the join shader, its uniforms set) as a render effect over
+     * its content input `content`, which is first blurred by [blurPx] (0: not blurred). Built anew for each frame, after
+     * the uniforms are set. Android 13+: `RenderEffect.createRuntimeShaderEffect`; desktop: Skia's runtime-shader image
+     * filter. Null where the platform has none: panes are then never joined.
+     */
+    public fun liquidJoinEffect(program: io.github.eslamasabry.oc.ui.kit.live.LiveShaderProgram, blurPx: Float): RenderEffect? = null
+
+    /**
      * Whether Glass's floating parts can be liquid glass here: the refraction runs on runtime shaders (Android 13+).
      * Android 8–12 and desktop keep today's frost or solid faces (`LiquidGlass.holdOf`, hold Platform).
      */

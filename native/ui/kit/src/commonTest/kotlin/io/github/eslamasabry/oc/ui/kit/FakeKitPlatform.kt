@@ -24,7 +24,14 @@ class FakeKitPlatform(
     override val liquidGlass: Boolean = false,
     /** The share of a frosted liquid pane's pixels its backdrop is drawn at (Android: half). */
     override val liquidResolution: Float = 1f,
+    /** The shader compiler (desktop's in desktop tests; none by default). */
+    override val liveShaders: io.github.eslamasabry.oc.ui.kit.live.LiveShaderCompiler? = null,
+    /** Joined glass's lens pass (desktop's in desktop tests; none by default, so panes are never joined). */
+    private val joinEffect: ((io.github.eslamasabry.oc.ui.kit.live.LiveShaderProgram, Float) -> RenderEffect?)? = null,
 ) : KitPlatform {
+    override fun liquidJoinEffect(program: io.github.eslamasabry.oc.ui.kit.live.LiveShaderProgram, blurPx: Float): RenderEffect? =
+        joinEffect?.invoke(program, blurPx)
+
     /** Every liquid pane this platform was asked to draw, in order (the spec it was given). */
     val liquidSpecs: MutableList<io.github.eslamasabry.oc.ui.kit.effects.KitLiquidPaneSpec> = mutableListOf()
 

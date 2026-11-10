@@ -1,0 +1,567 @@
+package io.github.eslamasabry.oc.ui.kit.effects
+
+import androidx.compose.foundation.shape.CornerBasedShape
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.ProvidableCompositionLocal
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.drawscope.ContentDrawScope
+import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.layer.CompositingStrategy
+import androidx.compose.ui.graphics.layer.GraphicsLayer
+import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.node.CompositionLocalConsumerModifierNode
+import androidx.compose.ui.node.DrawModifierNode
+import androidx.compose.ui.node.GlobalPositionAwareModifierNode
+import androidx.compose.ui.node.ModifierNodeElement
+import androidx.compose.ui.node.currentValueOf
+import androidx.compose.ui.node.invalidateDraw
+import androidx.compose.ui.node.requireGraphicsContext
+import androidx.compose.ui.platform.InspectorInfo
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.toSize
+import io.github.eslamasabry.oc.ui.design.effects.JoinBox
+import io.github.eslamasabry.oc.ui.design.effects.LiquidEdge
+import io.github.eslamasabry.oc.ui.design.effects.LiquidJoin
+import io.github.eslamasabry.oc.ui.kit.live.LiveShaderProgram
+import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
+import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
+import kotlin.math.ceil
+import kotlin.math.floor
+import kotlin.math.max
+import kotlin.math.min
+
+/*
+ * Joined glass (docs/designs/liquid-merge-one-body.md, owner 2026-11-11): while a menu is open from a control on the bar,
+ * or the jump pill stands on the message box, the two panes are ONE body of glass: one outline with a crafted fillet,
+ * one bend, one rim light, one frost. They never let go of each other.
+ *
+ * Each pane draws its own side of one signed-distance field ([LiquidJoin], `:ui:design`) from its own node
+ * ([kitLiquidJoinedPane]), from the picture it already reads (the bar and the box: the transcript; a menu: the page):
+ * 1. its backdrop at the body pane's liquid resolution, blurred by the BODY pane's frost (one frost), then bent along
+ *    the body's mixed direction by the join shader's lens pass (mode 0, a runtime-shader render effect), its colour
+ *    controls inside that pass;
+ * 2. its tint, eased to its partner's over the material band (mode 3), and the cover of its side (mode 1, DstIn);
+ * 3. one rim light along the body's outline on its side (mode 2).
+ * The two sides meet on the line where the two real boxes are equally near, where every mixed value is the same from
+ * both sides.
+ *
+ * Who is joined ([KitLiquidJoin.partnerOf]): a body ([rememberKitLiquidJoinBody]: the bar's capsule, the message box)
+ * and the first drop of it ([rememberKitLiquidJoinDrop]: a menu, the jump pill) while both hold a granted liquid face
+ * (`kitLiquidFace(join = ...)`): Glass, a look with a lens, Android 13+, motion not reduced, within the window's budget.
+ * A pane with no partner is drawn by the vendored library exactly as before.
+ */
+
+/** One pane of a joined body: where it is, how round, and the face it wears. Snapshot state, read in the draw phase. */
+@Stable
+public sealed class KitLiquidJoinPart(
+    /** The screen's joined glass this pane belongs to. */
+    internal val owner: KitLiquidJoin,
+) {
+    /** The pane's box at rest in the window, px (written where it is laid out: [kitLiquidJoinRest]). */
+    internal var rest: Rect by mutableStateOf(Rect.Zero)
+
+    /** Its corner radius at rest, px. */
+    internal var radius: Float by mutableFloatStateOf(0f)
+
+    /** Whether it holds a granted liquid face now (written by `kitLiquidFace`). */
+    internal var granted: Boolean by mutableStateOf(false)
+
+    /** The face it wears (written by `kitLiquidFace`): its recipe, tint, rim and ink flip. */
+    internal var spec: KitLiquidPaneSpec? by mutableStateOf(null)
+
+    /** Its glass now, from its box at rest; a drop's motion reads its springs here (draw phase). */
+    internal open fun glass(): Rect = rest
+}
+
+/** A large pane a drop joins (the bar's capsule "bar", the message box "bottom"). */
+@Stable
+public class KitLiquidJoinBody internal constructor(owner: KitLiquidJoin, internal val name: String) : KitLiquidJoinPart(owner)
+
+/** A drop of the body named [body] (a menu, the jump pill), joined to it while both are liquid. */
+@Stable
+public class KitLiquidJoinDrop internal constructor(owner: KitLiquidJoin, body: String) : KitLiquidJoinPart(owner) {
+    internal var body: String by mutableStateOf(body)
+
+    /** Its glass now from its box at rest (the drop's motion); null: its box at rest. Read in the draw phase. */
+    internal var shape: ((Rect) -> Rect)? = null
+
+    /** The join's reach now, px (its rest reach, swelled while it moves). Read in the draw phase. */
+    internal var reach: () -> Float = { 0f }
+
+    /** A menu: its field reaches the body's centre line (shape rule 3). */
+    internal var reachesCentre: Boolean = false
+
+    override fun glass(): Rect {
+        val r = rest
+        if (r.width <= 0f || r.height <= 0f) return r
+        return shape?.invoke(r) ?: r
+    }
+}
+
+/** One screen's joined glass: its bodies by name and their drops, and the join shader compiled for the platform. */
+@Stable
+public class KitLiquidJoin internal constructor() {
+    internal val bodies = mutableStateMapOf<String, KitLiquidJoinBody>()
+    internal val drops = mutableStateListOf<KitLiquidJoinDrop>()
+    private var compiled: Any? = null
+
+    /** The pane [part] is joined to now, or null (drawn as a lone pane). Snapshot reads: callers redraw as it changes. */
+    internal fun partnerOf(part: KitLiquidJoinPart): KitLiquidJoinPart? =
+        when (part) {
+            is KitLiquidJoinBody -> drops.firstOrNull { it.body == part.name && it.granted }?.takeIf { part.granted }
+            is KitLiquidJoinDrop -> bodies[part.body]?.takeIf { it.granted && part.granted && partnerOf(it) === part }
+        }
+
+    /** The body a drop that opens from [at] (window px) joins: the body under that point, if any. */
+    internal fun bodyAt(at: Offset): KitLiquidJoinBody? = bodies.values.firstOrNull { it.rest.contains(at) }
+
+    /** The join shader for [platform]: its lens pass (with a content input) and its brush passes; null where none. */
+    internal fun programs(platform: KitPlatform): LiquidJoinPrograms? {
+        (compiled as? LiquidJoinPrograms)?.let { return it }
+        if (compiled === NONE) return null
+        val compiler = platform.liveShaders?.takeIf { platform.liquidGlass }
+        val effect = compiler?.compile(LiquidJoinShader.source(effect = true))
+        val brush = compiler?.compile(LiquidJoinShader.source(effect = false))
+        val programs = if (effect != null && brush != null) LiquidJoinPrograms(effect, brush) else null
+        compiled = programs ?: NONE
+        return programs
+    }
+
+    private companion object {
+        val NONE = Any()
+    }
+}
+
+internal class LiquidJoinPrograms(val lens: LiveShaderProgram, val brush: LiveShaderProgram)
+
+/** The screen's joined glass (provided by `KitScreen` where its chrome is Glass over a recorded body); null: none. */
+public val LocalKitLiquidJoin: ProvidableCompositionLocal<KitLiquidJoin?> = staticCompositionLocalOf { null }
+
+/** The body named [name] of this screen's joined glass while this part is composed; null where the screen has none. */
+@Composable
+public fun rememberKitLiquidJoinBody(name: String): KitLiquidJoinBody? = rememberKitLiquidJoinBody(LocalKitLiquidJoin.current, name)
+
+/** The body named [name] of [join] while this part is composed; null without one. */
+@Composable
+internal fun rememberKitLiquidJoinBody(join: KitLiquidJoin?, name: String): KitLiquidJoinBody? {
+    if (join == null) return null
+    val body = remember(join, name) { KitLiquidJoinBody(join, name) }
+    DisposableEffect(join, name, body) {
+        join.bodies[name] = body
+        onDispose { if (join.bodies[name] === body) join.bodies.remove(name) }
+    }
+    return body
+}
+
+/** A drop of the body named [body] while this part is composed and [on]; null where the screen has no joined glass. */
+@Composable
+public fun rememberKitLiquidJoinDrop(body: String, on: Boolean = true): KitLiquidJoinDrop? {
+    val join = LocalKitLiquidJoin.current
+    if (join == null || !on) return null
+    val drop = remember(join) { KitLiquidJoinDrop(join, body) }
+    drop.body = body
+    DisposableEffect(join, drop) {
+        join.drops += drop
+        onDispose { join.drops -= drop }
+    }
+    return drop
+}
+
+/**
+ * Where [part] is: this node's box in the window and its [shape]'s corner radius there. Put it on the node that wears
+ * the pane's face, before the face. Null [part]: nothing.
+ */
+@Composable
+public fun Modifier.kitLiquidJoinRest(part: KitLiquidJoinPart?, shape: androidx.compose.ui.graphics.Shape): Modifier {
+    if (part == null) return this
+    val density = LocalDensity.current
+    return this.onGloballyPositioned {
+        val size = it.size.toSize()
+        part.rest = Rect(it.positionInWindow(), size)
+        part.radius = ((shape as? CornerBasedShape)?.topStart?.toPx(size, density) ?: 0f).coerceAtMost(size.minDimension / 2f)
+    }
+}
+
+/**
+ * The content of a joined drop (a menu's rows) clipped to its glass now: nothing is drawn outside the glass, and the
+ * content eases in over [LiquidJoin.ROW_EASE_DP] behind each edge the glass is still moving across. Put it after the
+ * face, on the same node as [kitLiquidJoinRest].
+ */
+internal fun Modifier.kitLiquidJoinClip(part: KitLiquidJoinPart): Modifier =
+    this.graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }
+        .drawWithContent {
+            val rest = part.rest
+            val g = part.glass()
+            if (rest.width <= 0f || rest.height <= 0f) {
+                drawContent()
+                return@drawWithContent
+            }
+            val l = g.left - rest.left
+            val t = g.top - rest.top
+            val r = g.right - rest.left
+            val b = g.bottom - rest.top
+            if (r <= l || b <= t) return@drawWithContent
+            clipRect(l, t, r, b) { drawContent() }
+            val ease = LiquidJoin.ROW_EASE_DP.dp.toPx()
+            if (l > .5f) {
+                drawRect(Brush.horizontalGradient(0f to Color.Transparent, 1f to Color.Black, startX = l, endX = l + ease), blendMode = BlendMode.DstIn)
+            }
+            if (size.width - r > .5f) {
+                drawRect(Brush.horizontalGradient(0f to Color.Black, 1f to Color.Transparent, startX = r - ease, endX = r), blendMode = BlendMode.DstIn)
+            }
+        }
+
+/** The joined face of [part], drawn behind its content (see the file comment). Use through `kitLiquidFace(join =)`. */
+internal fun Modifier.kitLiquidJoinedPane(join: KitLiquidJoin, part: KitLiquidJoinPart, spec: KitLiquidPaneSpec, backdrop: KitLiquidBackdrop): Modifier =
+    this then JoinedPaneElement(join, part, spec, backdrop)
+
+private data class JoinedPaneElement(
+    val join: KitLiquidJoin,
+    val part: KitLiquidJoinPart,
+    val spec: KitLiquidPaneSpec,
+    val backdrop: KitLiquidBackdrop,
+) : ModifierNodeElement<JoinedPaneNode>() {
+    override fun create(): JoinedPaneNode = JoinedPaneNode(join, part, spec, backdrop)
+
+    override fun update(node: JoinedPaneNode) {
+        node.join = join
+        node.part = part
+        node.spec = spec
+        node.backdrop = backdrop
+        node.invalidateDraw()
+    }
+
+    override fun InspectorInfo.inspectableProperties() {
+        name = "kitLiquidJoinedPane"
+    }
+}
+
+private class JoinedPaneNode(
+    var join: KitLiquidJoin,
+    var part: KitLiquidJoinPart,
+    var spec: KitLiquidPaneSpec,
+    var backdrop: KitLiquidBackdrop,
+) : Modifier.Node(), DrawModifierNode, GlobalPositionAwareModifierNode, CompositionLocalConsumerModifierNode {
+    private var coordinates: LayoutCoordinates? = null
+    private var back: GraphicsLayer? = null
+    private var mask: GraphicsLayer? = null
+
+    override fun onAttach() {
+        val g = requireGraphicsContext()
+        back = g.createGraphicsLayer()
+        mask = g.createGraphicsLayer().also { it.compositingStrategy = CompositingStrategy.Offscreen }
+    }
+
+    override fun onDetach() {
+        val g = requireGraphicsContext()
+        back?.let { g.releaseGraphicsLayer(it) }
+        mask?.let { g.releaseGraphicsLayer(it) }
+        back = null
+        mask = null
+        coordinates = null
+    }
+
+    override fun onGloballyPositioned(coordinates: LayoutCoordinates) {
+        this.coordinates = coordinates
+    }
+
+    override fun ContentDrawScope.draw() {
+        drawJoined()
+        drawContent()
+    }
+
+    private fun ContentDrawScope.drawJoined() {
+        val c = coordinates?.takeIf { it.isAttached } ?: return
+        val back = back ?: return
+        val mask = mask ?: return
+        val platform = currentValueOf(LocalKitPlatform)
+        val programs = join.programs(platform) ?: return
+        // Snapshot reads: the pane draws again when its partner comes, goes or moves.
+        val partner = join.partnerOf(part) ?: return
+        val theirSpec = partner.spec ?: spec
+        val mine = part.glass()
+        if (mine.width <= 0f || mine.height <= 0f) return
+        val theirs = partner.glass()
+        val drop = (part as? KitLiquidJoinDrop) ?: (partner as KitLiquidJoinDrop)
+        val bodyRect = if (part is KitLiquidJoinBody) mine else theirs
+        val reach = if (theirs.width > 0f && theirs.height > 0f) drop.reach() else 0f
+        val bodySpec = if (part is KitLiquidJoinBody) spec else theirSpec
+        val geometry =
+            JoinGeometry.of(
+                mine = mine,
+                mineRadius = part.radius,
+                theirs = theirs,
+                theirRadius = partner.radius,
+                body = bodyRect,
+                dropIsMine = part === drop,
+                reachesCentre = drop.reachesCentre,
+            )
+        // Only this pane's side is drawn, and it lies within reach/6 of this pane's own box.
+        val origin = c.positionInWindow()
+        val grow = reach / 6f + 2f
+        val area = Rect(floor(mine.left - grow), floor(mine.top - grow), ceil(mine.right + grow), ceil(mine.bottom + grow))
+        val local = area.topLeft - origin
+        val full = IntSize(area.width.toInt().coerceAtLeast(1), area.height.toInt().coerceAtLeast(1))
+        val recipe = bodySpec.recipe
+        val res = liquidResolutionOf(recipe, platform.liquidResolution)
+        val small = IntSize(ceil(full.width * res).toInt().coerceAtLeast(1), ceil(full.height * res).toInt().coerceAtLeast(1))
+        val u =
+            JoinUniforms(
+                geometry = geometry.relativeTo(area.topLeft),
+                reach = reach,
+                band = LiquidJoin.BAND_DP.dp.toPx(),
+                rimMine = LiquidEdge.rimPx(min(mine.width, mine.height), density, spec.recipe),
+                rimTheirs = LiquidEdge.rimPx(min(theirs.width, theirs.height).coerceAtLeast(0f), density, theirSpec.recipe),
+                refractionMine = spec.recipe.refractionDp.dp.toPx(),
+                refractionTheirs = theirSpec.recipe.refractionDp.dp.toPx(),
+                saturation = recipe.saturation,
+                contrast = recipe.contrast,
+                brightness = recipe.brightness,
+                knee = KNEE_OFF,
+                tintMine = tintNow(spec),
+                tintTheirs = tintNow(theirSpec),
+                rimPx = spec.rimDp.dp.toPx(),
+            )
+        // 1. The backdrop at the body's resolution, blurred by the body's frost, bent and pressed by the lens pass.
+        u.set(programs.lens, mode = 0f, res = res)
+        back.renderEffect = platform.liquidJoinEffect(programs.lens, recipe.blurDp.dp.toPx() * res)
+        back.record(small) {
+            scale(res, res, Offset.Zero) { translate(-local.x, -local.y) { backdrop.draw(this, c) } }
+        }
+        // 2. The tint eased over the band, then this side's cover.
+        mask.record(full) {
+            scale(1f / res, 1f / res, Offset.Zero) { drawLayer(back) }
+            u.set(programs.brush, mode = 3f, res = 1f)
+            drawRect(programs.brush.brush)
+            u.set(programs.brush, mode = 1f, res = 1f)
+            drawRect(programs.brush.brush, blendMode = BlendMode.DstIn)
+        }
+        translate(local.x, local.y) {
+            drawLayer(mask)
+            // 3. One rim light along the body's outline on this side (the library's highlight on the body's direction).
+            u.set(programs.brush, mode = 2f, res = 1f)
+            drawRect(
+                programs.brush.brush,
+                size = full.toSize(),
+                alpha = spec.rim.alpha,
+                colorFilter = ColorFilter.tint(spec.rim.copy(alpha = 1f)),
+                blendMode = if (spec.rimAdds) BlendMode.Plus else BlendMode.SrcOver,
+            )
+        }
+    }
+}
+
+/** A pane's tint now: its face, cross-faded to the other theme's as its words flip. */
+private fun tintNow(spec: KitLiquidPaneSpec): Color {
+    val f = spec.flip?.progress?.value ?: 0f
+    return if (f > 0f) lerp(spec.fill, spec.flipFill, f) else spec.fill
+}
+
+/** The four boxes one joined pane draws from, in px: its own and its partner's, as the field and as the side see them. */
+internal data class JoinGeometry(val a: JoinBox, val b: JoinBox, val sideA: JoinBox, val sideB: JoinBox) {
+    fun relativeTo(o: Offset): JoinGeometry = JoinGeometry(a.minus(o), b.minus(o), sideA.minus(o), sideB.minus(o))
+
+    companion object {
+        fun of(mine: Rect, mineRadius: Float, theirs: Rect, theirRadius: Float, body: Rect, dropIsMine: Boolean, reachesCentre: Boolean): JoinGeometry {
+            val me = mine.box(mineRadius)
+            val them = theirs.box(theirRadius)
+            val bodyBox = body.box(0f)
+            val fieldMe = if (dropIsMine && reachesCentre) LiquidJoin.fieldBox(me, bodyBox) else me
+            val fieldThem = if (!dropIsMine && reachesCentre) LiquidJoin.fieldBox(them, bodyBox) else them
+            return JoinGeometry(fieldMe, fieldThem, me, them)
+        }
+
+        private fun Rect.box(radius: Float): JoinBox = JoinBox.of(left, top, right, bottom, max(radius, 0f))
+
+        private fun JoinBox.minus(o: Offset): JoinBox = copy(cx = cx - o.x, cy = cy - o.y)
+    }
+}
+
+/** Every uniform of one joined pane's passes (see [LiquidJoinShader]). */
+internal class JoinUniforms(
+    val geometry: JoinGeometry,
+    val reach: Float,
+    val band: Float,
+    val rimMine: Float,
+    val rimTheirs: Float,
+    val refractionMine: Float,
+    val refractionTheirs: Float,
+    val saturation: Float,
+    val contrast: Float,
+    val brightness: Float,
+    /** The knee that holds back bright content: (knee, slope, dark); slope 1 = off. */
+    val knee: FloatArray,
+    val tintMine: Color,
+    val tintTheirs: Color,
+    val rimPx: Float,
+) {
+    fun set(p: LiveShaderProgram, mode: Float, res: Float) {
+        val g = geometry
+        p.float4("a", g.a.cx, g.a.cy, g.a.hx, g.a.hy)
+        p.float("ra", g.a.r)
+        p.float4("b", g.b.cx, g.b.cy, g.b.hx, g.b.hy)
+        p.float("rb", g.b.r)
+        p.float4("sa", g.sideA.cx, g.sideA.cy, g.sideA.hx, g.sideA.hy)
+        p.float4("sb", g.sideB.cx, g.sideB.cy, g.sideB.hx, g.sideB.hy)
+        p.float("reach", reach)
+        p.float("band", band)
+        p.float("mode", mode)
+        p.float("res", res)
+        p.float2("rim", rimMine, rimTheirs)
+        p.float2("refr", refractionMine, refractionTheirs)
+        p.float4("cc", saturation, contrast, brightness, 0f)
+        p.float3("knee", knee[0], knee[1], knee[2])
+        p.float4("tintA", tintMine.red * tintMine.alpha, tintMine.green * tintMine.alpha, tintMine.blue * tintMine.alpha, tintMine.alpha)
+        p.float4("tintB", tintTheirs.red * tintTheirs.alpha, tintTheirs.green * tintTheirs.alpha, tintTheirs.blue * tintTheirs.alpha, tintTheirs.alpha)
+        p.float("rimPx", rimPx)
+        p.float("falloff", RIM_FALLOFF)
+    }
+}
+
+/** How tightly the rim light gathers at its lit arcs (the library pane's, AndroidLiquidGlass.RIM_FALLOFF). */
+internal const val RIM_FALLOFF: Float = 1.6f
+
+/** The knee switched off (the glass keeps all light). */
+internal val KNEE_OFF: FloatArray = floatArrayOf(1f, 1f, 1f)
+
+/**
+ * The join shader: AGSL on Android 13+ and SkSL on desktop, the same text. One source, two programs: the lens pass reads
+ * the blurred backdrop as `content` (used as a render effect); the brush passes have no input. `mode` picks the pass:
+ * 0 the lens (bend, colour controls, the knee), 1 this side's cover, 2 the rim light, 3 the tint. Coordinates are the
+ * drawn area's px; the lens pass runs at `res` of them. The field is [LiquidJoin]'s, line for line.
+ */
+internal object LiquidJoinShader {
+    fun source(effect: Boolean): String =
+        (if (effect) "uniform shader content;\nhalf4 sampleContent(float2 p) { return content.eval(p); }\n"
+        else "half4 sampleContent(float2 p) { return half4(0.0); }\n") + BODY
+
+    private const val BODY: String =
+        """
+uniform float4 a;
+uniform float ra;
+uniform float4 b;
+uniform float rb;
+uniform float4 sa;
+uniform float4 sb;
+uniform float reach;
+uniform float band;
+uniform float mode;
+uniform float res;
+uniform float2 rim;
+uniform float2 refr;
+uniform float4 cc;
+uniform float3 knee;
+uniform float4 tintA;
+uniform float4 tintB;
+uniform float rimPx;
+uniform float falloff;
+
+float sat01(float x) { return clamp(x, 0.0, 1.0); }
+float ss(float e0, float e1, float x) { float t = sat01((x - e0) / (e1 - e0)); return t * t * (3.0 - 2.0 * t); }
+float sdBox(float2 p, float4 r, float c) {
+    float k = max(min(c, min(r.z, r.w)), 0.0);
+    float2 q = abs(p - r.xy) - r.zw + k;
+    return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - k;
+}
+float2 dirBox(float2 p, float4 r, float c, float soften) {
+    float gr = min(max(min(c, min(r.z, r.w)), 0.0) * soften, min(r.z, r.w));
+    float2 rel = p - r.xy;
+    float2 q = abs(rel) - (r.zw - gr);
+    float2 s = sign(rel);
+    if (q.x >= 0.0 || q.y >= 0.0) {
+        float2 m = max(q, 0.0);
+        return s * m / max(length(m), 0.000001);
+    }
+    float g = q.x >= q.y ? 1.0 : 0.0;
+    return s * float2(g, 1.0 - g);
+}
+float depthOf(float4 r, float c) { return max(min(c, min(r.z, r.w)), 0.001); }
+
+half4 main(float2 q) {
+    float2 p = q / res;
+    float da = sdBox(p, a, ra);
+    float db = sdBox(p, b, rb);
+    float2 ga = dirBox(p, a, ra, 1.0);
+    float2 gb = dirBox(p, b, rb, 1.0);
+    float facing = sat01(0.5 - 0.5 * dot(ga, gb));
+    float ma = depthOf(a, ra);
+    float mb = depthOf(b, rb);
+    float inside = (1.0 - ss(0.5 * ma, ma, -da)) * (1.0 - ss(0.5 * mb, mb, -db));
+    float k = max(reach * facing * inside, 0.001);
+    float h = max(k - abs(da - db), 0.0) / k;
+    float m = h * h * 0.5;
+    float w = da <= db ? m : 1.0 - m;
+    float d = min(da, db) - h * h * h * k / 6.0;
+    float2 g = mix(ga, gb, w);
+    float dist = d / max(length(g), 0.05);
+    float das = sdBox(p, sa, ra);
+    float dbs = sdBox(p, sb, rb);
+    float mine = das <= dbs ? 1.0 : 0.0;
+    float t = ss(-band, band, das - dbs);
+    float2 bend = mix(dirBox(p, a, ra, 1.5), dirBox(p, b, rb, 1.5), w);
+    if (mode < 0.5) {
+        float rimW = mix(rim.x, rim.y, t);
+        float amount = mix(refr.x, refr.y, t);
+        float depth = max(-dist, 0.0);
+        float2 at = q;
+        if (rimW > 0.0 && depth < rimW) {
+            float x = 1.0 - depth / rimW;
+            at = q - (1.0 - sqrt(max(1.0 - x * x, 0.0))) * amount * bend * res;
+        }
+        float4 c = float4(sampleContent(at));
+        float3 rgb = c.rgb;
+        float l = dot(rgb, float3(0.213, 0.715, 0.072));
+        rgb = clamp(cc.y * (l + cc.x * (rgb - l)) + (0.5 - 0.5 * cc.y + cc.z), 0.0, 1.0);
+        if (knee.y < 1.0) {
+            float lum = dot(rgb, float3(0.213, 0.715, 0.072));
+            if (knee.z > 0.5) {
+                float held = lum > knee.x ? knee.x + (lum - knee.x) * knee.y : lum;
+                rgb = rgb * (held / max(lum, 0.0001));
+            } else {
+                float inv = 1.0 - lum;
+                float heldInv = inv > knee.x ? knee.x + (inv - knee.x) * knee.y : inv;
+                rgb = 1.0 - (1.0 - rgb) * (heldInv / max(inv, 0.0001));
+            }
+            rgb = clamp(rgb, 0.0, 1.0);
+        }
+        return half4(float4(rgb * c.a, c.a));
+    }
+    if (mode < 1.5) {
+        return half4(sat01(0.5 - dist) * mine);
+    }
+    if (mode < 2.5) {
+        float gl = max(length(bend), 0.05);
+        float lit = pow(abs(dot(bend / gl, float2(0.70710678, 0.70710678))), falloff);
+        float edge = sat01(0.5 - dist) * sat01(dist + rimPx + 0.5);
+        return half4(edge * lit * mine);
+    }
+    return half4(mix(tintA, tintB, t));
+}
+"""
+}

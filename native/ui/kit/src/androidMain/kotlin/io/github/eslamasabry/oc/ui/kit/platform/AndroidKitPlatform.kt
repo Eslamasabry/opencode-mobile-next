@@ -124,6 +124,12 @@ public class AndroidKitPlatform(
 
     override val liquidGlass: Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
 
+    override fun liquidJoinEffect(program: io.github.eslamasabry.oc.ui.kit.live.LiveShaderProgram, blurPx: Float): RenderEffect? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return null
+        val shader = (program as? AndroidLiveShader)?.shader ?: return null
+        return AndroidFrost.join(shader, blurPx)
+    }
+
     // Half the pixels per side for a frosted liquid pane's backdrop, blur and lens (smoothness round 2: Glass inside a
     // 120 Hz frame on a Galaxy S24); the vendored library (third_party/backdrop) scales the layer back up.
     override val liquidResolution: Float = .5f

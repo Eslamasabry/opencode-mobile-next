@@ -15,7 +15,7 @@ import io.github.eslamasabry.oc.ui.kit.live.androidRunsLiveShaders
  */
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 internal class AndroidLiveShader(source: String) : LiveShaderProgram() {
-    private val shader = RuntimeShader(source)
+    internal val shader = RuntimeShader(source)
     override val brush: Brush = ShaderBrush(shader)
 
     override fun float(name: String, v: Float) = shader.setFloatUniform(name, v)

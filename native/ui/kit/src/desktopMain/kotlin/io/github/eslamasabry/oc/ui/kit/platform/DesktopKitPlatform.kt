@@ -73,6 +73,9 @@ public class DesktopKitPlatform : KitPlatform {
 
     override val liveShaders: LiveShaderCompiler = LiveShaderCompiler(DesktopLiveShader::compile)
 
+    override fun liquidJoinEffect(program: io.github.eslamasabry.oc.ui.kit.live.LiveShaderProgram, blurPx: Float): RenderEffect? =
+        (program as? DesktopLiveShader)?.effect(blurPx)
+
     override fun liveFinish(ground: androidx.compose.ui.graphics.Color): RenderEffect? = DesktopLiveShader.finish(ground)
 
     @OptIn(ExperimentalResourceApi::class)
