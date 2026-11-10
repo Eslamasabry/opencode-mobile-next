@@ -137,7 +137,7 @@ class OpenCodeAutoUpdateWiringTest {
         }
 
         // The saved profile is not loaded yet at the first reads.
-        override val installedVersion: String? get() = if (refreshes >= 2) "2.1.1" else null
+        override val installedVersion: String? get() = if (refreshes >= 3) "2.1.1" else null
         override val pinnedVersion: String = "2.2.6"
         override val runtime: String = "opencode2"
         override val switchPending: Boolean = false
