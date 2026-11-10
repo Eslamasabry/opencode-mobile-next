@@ -60,3 +60,4 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 900058 | retired | 2026-10-15 | Flutter VPS build, local key, emulator AVD only; AVD wiped before native installs (Floor) |
 | 10004 | build | 2026-11-06 | native dev line (internal builds), first number the allocator handed out |
 | 10010 | release | 2026-11-07 | E01-S01 switch release 3.0.0: first native release number (native/s15-release) |
+| 10020 | release | 2026-11-10 | native release 3.0.0+10020 (owner lineage) |
