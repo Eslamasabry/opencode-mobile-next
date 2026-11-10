@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.ui.kit.effects
 
 import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
@@ -16,6 +17,7 @@ import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -52,7 +54,15 @@ internal fun Modifier.kitFrostPane(
     // The blur runs on the reduced copy, so its radius is scaled with it.
     val blur = remember(platform, density, sigmaDp, saturation) { platform.frostEffect(FrostSpec(sigmaDp, saturation, 0f), density * k) }
     val at = remember { arrayOfNulls<LayoutCoordinates>(1) }
-    return this.onGloballyPositioned { at[0] = it }
+    // Where the pane lies in its window, as state. The frost is a picture of what is behind the pane where it is, so it
+    // is drawn again when the pane is placed elsewhere: a sheet sliding in drew it once while still below the page and,
+    // over a page that stood still, kept that picture of bare ground at rest (KitFrostedPanelTest, dark).
+    val place = remember { mutableStateOf(Offset.Unspecified) }
+    return this.onGloballyPositioned {
+            at[0] = it
+            val now = it.positionInWindow()
+            if (now != place.value) place.value = now
+        }
         .drawWithCache {
             val layer = obtainGraphicsLayer()
             val outline = shape.createOutline(size, layoutDirection, this)
@@ -62,6 +72,7 @@ internal fun Modifier.kitFrostPane(
             onDrawBehind {
                 // Read in the draw: the pane draws again whenever its backdrop records again.
                 backdrop.version()
+                place.value
                 val c = at[0]?.takeIf { it.isAttached }
                 if (c != null) {
                     layer.renderEffect = blur
