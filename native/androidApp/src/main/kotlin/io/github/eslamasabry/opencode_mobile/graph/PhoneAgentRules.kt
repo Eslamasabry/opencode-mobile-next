@@ -10,7 +10,11 @@ import io.github.eslamasabry.oc.engine.agents.readiness.AgentHiddenReason
 import io.github.eslamasabry.oc.engine.agents.readiness.AgentReadiness
 import io.github.eslamasabry.oc.engine.agents.readiness.AgentSignInPhase
 import io.github.eslamasabry.oc.engine.agents.readiness.PhoneAgentRuntime
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallPhase
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallation
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRow
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
+import io.github.eslamasabry.oc.feature.agents.hub.installed
 import kotlinx.serialization.json.JsonObject
 import io.github.eslamasabry.oc.engine.agents.readiness.PhoneAgentStatus as ReadinessStatus
 
@@ -71,6 +75,26 @@ internal object PhoneAgentRules {
     ): Boolean =
         found != null &&
             (found == agent.recipe?.version || PhoneGate.qualifies(gate, agent, architecture, pins, found))
+
+    /**
+     * Whether saved server [id] is the helper's own "Phone agents" server, whose helper the app starts when the server
+     * is needed: its id is `<owner>-agents` and the owner it was saved for (pref `oc.phoneAgentOwner.<id>`) is that
+     * same owner. Any other server is not the helper's.
+     */
+    fun isHelperProfile(id: String, savedOwner: String?): Boolean =
+        savedOwner != null && Regex("[A-Za-z0-9_-]{1,80}").matches(savedOwner) && id == "$savedOwner-agents"
+
+    /**
+     * A kept "interrupted" or "failed" install result for an agent whose installed-check now passes is out of date (an
+     * earlier run was cut short but the agent is there): it is dropped, not shown. A running or finished-well
+     * install, and a result for an agent still missing, stay.
+     */
+    fun staleResult(installation: PhoneAgentInstallation?, agents: List<PhoneAgentRow>): Boolean {
+        val ended =
+            installation?.phase == PhoneAgentInstallPhase.Failed ||
+                installation?.phase == PhoneAgentInstallPhase.Interrupted
+        return ended && agents.any { it.id == installation?.id && it.status.installed }
+    }
 
     /** What a row says, from Flutter's `buildAgentRow` over the facts read. */
     fun status(

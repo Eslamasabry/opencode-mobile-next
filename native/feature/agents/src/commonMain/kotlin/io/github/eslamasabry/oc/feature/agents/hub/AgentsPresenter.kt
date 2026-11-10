@@ -569,7 +569,20 @@ public class AgentsPresenter(
                 do {
                     connectAgain = false
                     local.update { it.copy(helperConnecting = true, helperConnectFailed = false, helperConnectFailure = null) }
-                    val result = host.connect()
+                    var result = host.connect()
+                    // A helper that was only just started can refuse its first look and answer a moment later: look
+                    // again a few times before the page says "not connected" (a manual Try again used to fix it).
+                    var again = 0
+                    while (
+                        result is Outcome.Failed &&
+                            result.failure.mayAnswerSoon() &&
+                            again < AUTO_RETRIES &&
+                            connectable(phone.state.value)
+                    ) {
+                        again++
+                        delay(AUTO_RETRY_MS)
+                        result = host.connect()
+                    }
                     local.update {
                         it.copy(
                             helperConnecting = false,
@@ -669,5 +682,7 @@ public class AgentsPresenter(
     private companion object {
         /** How often a running install is read again (the old "Tap Refresh to read its latest progress"). */
         const val INSTALL_FOLLOW_MS = 2_000L
+        const val AUTO_RETRIES = 3
+        const val AUTO_RETRY_MS = 5_000L
     }
 }

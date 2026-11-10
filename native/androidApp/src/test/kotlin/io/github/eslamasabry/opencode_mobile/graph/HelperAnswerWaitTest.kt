@@ -45,4 +45,10 @@ class HelperAnswerWaitTest {
         assertTrue(HelperAnswerWait.stillStarting(Failure.ComputerDidNotAnswer()))
         assertFalse(HelperAnswerWait.stillStarting(Failure.SecretUnavailable()))
     }
+
+    @Test
+    fun `a half-ready helper's garbled first answer is tried again`() {
+        assertTrue(HelperAnswerWait.stillStarting(Failure.UnreadableReply()))
+        assertTrue(HelperAnswerWait.stillStarting(Failure.Unexpected()))
+    }
 }
