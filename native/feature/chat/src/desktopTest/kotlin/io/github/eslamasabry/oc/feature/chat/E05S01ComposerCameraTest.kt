@@ -83,6 +83,38 @@ class E05S01ComposerCameraTest {
         }
     }
 
+    @Test
+    fun `B-NEXT-041 a photo taken is counted once as the camera feature, a refusal is not`() = runTest {
+        val rec = FeatureRecorder(this)
+        try {
+            val refused = CameraSource(Outcome.Failed(Failure.Media(MediaProblem.CameraDenied)))
+            val vm1 = BasicComposerViewModel(ComposerTarget("p1", "s1"), Worlds(FakeChatWorld()), emptySet(), setOf(refused))
+            vm1.state.test {
+                var item = awaitItem()
+                while (AttachKind.Camera !in item.attachKinds) item = awaitItem()
+                vm1.attach(AttachKind.Camera)
+                while (item.attachmentFailure == null) item = awaitItem()
+                cancelAndIgnoreRemainingEvents()
+            }
+            assertEquals(emptyList(), rec.features())
+
+            val vm2 =
+                BasicComposerViewModel(
+                    ComposerTarget("p1", "s1"), Worlds(KeepingWorld()), emptySet(), setOf(CameraSource(Outcome.Ok(listOf(photo)))),
+                )
+            vm2.state.test {
+                var item = awaitItem()
+                while (AttachKind.Camera !in item.attachKinds) item = awaitItem()
+                vm2.attach(AttachKind.Camera)
+                while (item.draft.attachments.isEmpty()) item = awaitItem()
+                cancelAndIgnoreRemainingEvents()
+            }
+            assertEquals(listOf("camera"), rec.features())
+        } finally {
+            rec.stop()
+        }
+    }
+
     /** B-MEDIA-008 a camera refusal is explained, offers Open settings, and the tap opens them. */
     @Test
     fun `B-MEDIA-008 a refused camera offers Open settings`() = runTest {
