@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -37,6 +38,15 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
+
+/** Markdown marks stripped before judging whether a thought has any words. */
+private val MARKDOWN_MARKS = Regex("[*_`#]")
+
+/** A thought that only says there was none. */
+private val NO_THOUGHT =
+    Regex(
+        "(?i)^\\W*(no|empty)\\s+(reasoning|thinking|thoughts?)(\\s+(available|provided|recorded|to show))?\\W*$"
+    )
 
 /** Full thoughts, typed server notices and background results. All text and actions use the kit. */
 @Composable
@@ -129,28 +139,28 @@ internal fun TranscriptDetail(
         return
     }
     if (part.type == PartType.Reasoning) {
-        val plain = part.text.replace(Regex("[*_`#]"), "").trim()
-        if (
-            plain.isBlank() ||
-                Regex(
-                        "(?i)^\\W*(no|empty)\\s+(reasoning|thinking|thoughts?)(\\s+(available|provided|recorded|to show))?\\W*$"
-                    )
-                    .matches(plain)
-        )
-            return
+        val plain = remember(part.text) { part.text.replace(MARKDOWN_MARKS, "").trim() }
+        val noThought = remember(plain) { plain.isBlank() || NO_THOUGHT.matches(plain) }
+        if (noThought) return
         val defaultKey = "$key@default"
-        if (folds.open[defaultKey] != reasoningExpanded) {
-            folds.open.remove(key)
-            folds.open[defaultKey] = reasoningExpanded
+        // The thought opens by the chat's reasoning setting until the person opens or closes it themselves; a changed
+        // setting starts over. The reset is written after composition (a write here would be a backwards write); until
+        // it lands the thought already reads as the setting says.
+        val settled = folds.open[defaultKey] == reasoningExpanded
+        SideEffect {
+            if (folds.open[defaultKey] != reasoningExpanded) {
+                folds.open.remove(key)
+                folds.open[defaultKey] = reasoningExpanded
+            }
         }
         // Flutter `_Reasoning` (transcript_rows.dart:651-723): the line is the thought's first line ("Thinking…" while
         // it is still being written) and the body is the thought in the secondary size and tone. The opened body starts
         // after that first line, so an opened thought never says its first line twice (owner, 2026-11-09: grey line,
         // then the same words again in white).
-        val firstLine = plain.lineSequence().first { it.isNotBlank() }.trim()
+        val firstLine = remember(plain) { plain.lineSequence().first { it.isNotBlank() }.trim() }
         val thoughtTitle = if (thinking) stringResource(Res.string.kitMessageThinking) else firstLine
-        val body = if (thinking) part.text else thoughtBody(part.text)
-        val open = folds.open[key] ?: reasoningExpanded
+        val body = remember(part.text, thinking) { if (thinking) part.text else thoughtBody(part.text) }
+        val open = (if (settled) folds.open[key] else null) ?: reasoningExpanded
         val bodyPart: @Composable () -> Unit = { DetailMarkdown(key, body, reply, thought = true) }
         // On an opened work line's rail a thought is one line like every step: a dot, its words, no chevron (Flutter
         // `_Fold` on a timeline); anywhere else it keeps its row with the kit's chevron. A one-line thought has nothing
