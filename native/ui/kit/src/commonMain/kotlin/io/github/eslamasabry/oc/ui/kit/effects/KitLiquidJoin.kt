@@ -306,26 +306,28 @@ private class JoinedPaneNode(
         val mask = mask ?: return
         val platform = currentValueOf(LocalKitPlatform)
         val programs = join.programs(platform) ?: return
-        // Snapshot reads: the pane draws again when its partner comes, goes or moves.
-        val partner = join.partnerOf(part) ?: return
-        val theirSpec = partner.spec ?: spec
+        // Snapshot reads: the pane draws again when its partner comes, goes or moves. In the frame its partner has gone
+        // and the face has not yet been composed back to the library's pane, it draws itself alone (reach 0).
+        val partner = join.partnerOf(part)
+        val theirSpec = partner?.spec ?: spec
         val mine = part.glass()
         if (mine.width <= 0f || mine.height <= 0f) return
-        val theirs = partner.glass()
-        val drop = (part as? KitLiquidJoinDrop) ?: (partner as KitLiquidJoinDrop)
-        val bodyRect = if (part is KitLiquidJoinBody) mine else theirs
-        val reach = if (theirs.width > 0f && theirs.height > 0f) drop.reach() else 0f
+        val theirs = partner?.glass()?.takeIf { it.width > 0f && it.height > 0f }
+        val drop = (part as? KitLiquidJoinDrop) ?: (partner as? KitLiquidJoinDrop)
+        val reach = if (theirs != null && drop != null) drop.reach() else 0f
         val bodySpec = if (part is KitLiquidJoinBody) spec else theirSpec
         val geometry =
-            JoinGeometry.of(
-                mine = mine,
-                mineRadius = part.radius,
-                theirs = theirs,
-                theirRadius = partner.radius,
-                body = bodyRect,
-                dropIsMine = part === drop,
-                reachesCentre = drop.reachesCentre,
-            )
+            if (theirs == null || drop == null) JoinGeometry.alone(mine, part.radius)
+            else
+                JoinGeometry.of(
+                    mine = mine,
+                    mineRadius = part.radius,
+                    theirs = theirs,
+                    theirRadius = partner?.radius ?: 0f,
+                    body = if (part is KitLiquidJoinBody) mine else theirs,
+                    dropIsMine = part === drop,
+                    reachesCentre = drop.reachesCentre,
+                )
         // Only this pane's side is drawn, and it lies within reach/6 of this pane's own box.
         val origin = c.positionInWindow()
         val grow = reach / 6f + 2f
@@ -341,7 +343,7 @@ private class JoinedPaneNode(
                 reach = reach,
                 band = LiquidJoin.BAND_DP.dp.toPx(),
                 rimMine = LiquidEdge.rimPx(min(mine.width, mine.height), density, spec.recipe),
-                rimTheirs = LiquidEdge.rimPx(min(theirs.width, theirs.height).coerceAtLeast(0f), density, theirSpec.recipe),
+                rimTheirs = theirs?.let { LiquidEdge.rimPx(min(it.width, it.height), density, theirSpec.recipe) } ?: 0f,
                 refractionMine = spec.recipe.refractionDp.dp.toPx(),
                 refractionTheirs = theirSpec.recipe.refractionDp.dp.toPx(),
                 saturation = recipe.saturation,
@@ -408,6 +410,13 @@ internal data class JoinGeometry(val a: JoinBox, val b: JoinBox, val sideA: Join
     fun relativeTo(o: Offset): JoinGeometry = JoinGeometry(a.minus(o), b.minus(o), sideA.minus(o), sideB.minus(o))
 
     companion object {
+        /** A pane with no partner: its own box, and a point far outside the window as the other. */
+        fun alone(mine: Rect, radius: Float): JoinGeometry {
+            val me = mine.box(radius)
+            val far = JoinBox(-1e6f, -1e6f, 0f, 0f, 0f)
+            return JoinGeometry(me, far, me, far)
+        }
+
         fun of(mine: Rect, mineRadius: Float, theirs: Rect, theirRadius: Float, body: Rect, dropIsMine: Boolean, reachesCentre: Boolean): JoinGeometry {
             val me = mine.box(mineRadius)
             val them = theirs.box(theirRadius)
