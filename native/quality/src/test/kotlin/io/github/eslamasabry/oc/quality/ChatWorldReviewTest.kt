@@ -133,7 +133,26 @@ class ChatWorldReviewTest {
                 app,
                 dispatchers,
             )
-        val worlds = GraphChatWorlds(registry)
+        // The app's draft owner: a send takes its words from the composer's draft, so the fixture needs the owner the
+        // Android graph binds (without one, a send is refused as StaleScope by design).
+        val drafts =
+            io.github.eslamasabry.oc.engine.composer.drafts.ConversationDrafts(
+                io.github.eslamasabry.oc.engine.composer.drafts.Drafts(
+                    io.github.eslamasabry.oc.engine.composer.store.MemoryComposerPrefs(),
+                    io.github.eslamasabry.oc.engine.composer.vault.AttachmentVault(
+                        io.github.eslamasabry.oc.engine.composer.vault.MemoryPayloadStore()
+                    ),
+                    object : io.github.eslamasabry.oc.engine.composer.store.ComposerProfiles {
+                        override fun exists(profileId: String) = profileId == ref.profileId.raw
+
+                        override fun count() = 1
+                    },
+                    clock,
+                ),
+                app,
+                dispatchers,
+            )
+        val worlds = GraphChatWorlds(registry, setOf(drafts))
         val world: ChatWorld by lazy { worlds.open(ref) }
 
         suspend fun open() {
@@ -141,6 +160,13 @@ class ChatWorldReviewTest {
             registry.open(profile)
             world
             test.runCurrent()
+        }
+
+        /** The composer reports each edit before it sends, and a send must match the draft field. */
+        suspend fun typeAndSend(text: String): Outcome<Unit> {
+            world.draftChanged(text)
+            test.runCurrent() // the draft session takes the edit on its lane, as it does between keystroke and tap
+            return world.send(text)
         }
 
         fun promptIds() =
@@ -155,7 +181,7 @@ class ChatWorldReviewTest {
         f.open()
         val ready = CompletableDeferred<Unit>()
         f.beforeTransport = { ready.await() }
-        assertIs<Outcome.Ok<Unit>>(f.world.send("waiting draft"))
+        assertIs<Outcome.Ok<Unit>>(f.typeAndSend("waiting draft"))
         runCurrent()
         assertEquals(PendingState.Sending, f.world.pending.value.single().state)
         f.clock.advance(
@@ -203,7 +229,7 @@ class ChatWorldReviewTest {
         val f = Fixture(this)
         f.open()
         f.base.admission = PromptAdmission.Uncertain
-        f.world.send("continue")
+        f.typeAndSend("continue")
         runCurrent()
         f.base.events.emit(
             io.github.eslamasabry.oc.core.domain.events.GatewayEvent.RunStarted(ref.sessionId)
@@ -391,7 +417,7 @@ class ChatWorldReviewTest {
             f.base.admission = PromptAdmission.Uncertain
             f.open()
             val entry = CoroutineScope(Job() + f.dispatcher)
-            val admission = entry.async { f.world.send("survive leaving") }
+            val admission = entry.async { f.typeAndSend("survive leaving") }
             runCurrent()
             assertTrue(
                 admission.isCompleted,
@@ -411,7 +437,7 @@ class ChatWorldReviewTest {
             f.worlds.release(reopened)
             // Reconstruct the feature owner over the connection's durable state, as after owner
             // recreation.
-            val recovery = GraphChatWorlds(f.registry).open(ref)
+            val recovery = GraphChatWorlds(f.registry, setOf(f.drafts)).open(ref)
             runCurrent()
             assertEquals(PendingState.Unconfirmed, recovery.pending.value.single().state)
             assertEquals(1, f.base.sentPrompts.size)
@@ -422,8 +448,11 @@ class ChatWorldReviewTest {
         runTest {
             val f = Fixture(this)
             f.open()
-            f.world.send("continue")
-            f.world.send("continue")
+            f.typeAndSend("continue")
+            runCurrent() // the first send's words leave the box before the person types the same words again
+            // The box refuses the same words while their twin is on its way (QA wave 4 N5); "Send again" does not go
+            // through the box, so it is how a second identical admitted send still exists.
+            assertIs<Outcome.Ok<*>>(f.world.sendAgain("continue"))
             runCurrent()
             assertEquals(2, f.world.pending.value.size)
             val next = message("new", "continue")
@@ -489,7 +518,7 @@ class ChatWorldReviewTest {
             )
         )
         runCurrent() // Applied on the model lane, waiting for the 50 ms presentation flush.
-        f.world.send("continue")
+        f.typeAndSend("continue")
         runCurrent()
         advanceTimeBy(60)
         runCurrent()
@@ -505,7 +534,7 @@ class ChatWorldReviewTest {
             ServerPage(persistentListOf(message("old", "continue")), null)
         }
         f.open()
-        assertIs<Outcome.Failed>(f.world.send("continue"))
+        assertIs<Outcome.Failed>(f.typeAndSend("continue"))
         assertTrue(f.base.sentPrompts.isEmpty())
         history.complete(Unit)
         runCurrent()
@@ -521,7 +550,7 @@ class ChatWorldReviewTest {
                 )
             f.beforePrompt = { awaitCancellation() }
             f.open()
-            assertIs<Outcome.Ok<*>>(f.world.send("retain uncertainty"))
+            assertIs<Outcome.Ok<*>>(f.typeAndSend("retain uncertainty"))
             runCurrent()
             f.registry.close(ref.profileId)
             runCurrent()
@@ -538,8 +567,9 @@ class ChatWorldReviewTest {
         f.open()
         // The field can change while admission waits for the reducer/storage; only that field owns
         // draft text.
-        f.world.draftChanged("newer typing")
-        assertIs<Outcome.Ok<*>>(f.world.send("captured earlier"))
+        f.beforeTransport = { f.world.draftChanged("newer typing") }
+        assertIs<Outcome.Ok<*>>(f.typeAndSend("captured earlier"))
+        runCurrent()
         assertEquals("newer typing", f.world.draft.value.text)
     }
 }

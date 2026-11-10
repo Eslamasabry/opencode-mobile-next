@@ -22,7 +22,13 @@ import kotlin.test.*
 class ChatReviewUiTest {
     private val ref = ConversationRef(ProfileId("fixture"), SessionId("session"))
     private inline fun <reified T> actions(crossinline call: (String, Array<out Any?>?) -> Unit): T =
-        Proxy.newProxyInstance(T::class.java.classLoader, arrayOf(T::class.java)) { _, method, args -> call(method.name, args); null } as T
+        Proxy.newProxyInstance(T::class.java.classLoader, arrayOf(T::class.java)) { _, method, args ->
+            call(method.name, args)
+            // The screen reads state flows (such as the scheduled-send signal); an action fake answers them empty.
+            if (method.returnType == kotlinx.coroutines.flow.StateFlow::class.java) kotlinx.coroutines.flow.MutableStateFlow<Any?>(null)
+            else if (method.returnType == java.lang.Boolean.TYPE) false
+            else null
+        } as T
     private class Back : NavigationEventInput() {
         fun press() { dispatchOnBackStarted(NavigationEvent(NavigationEvent.EDGE_LEFT, 0f)); dispatchOnBackCompleted() }
     }
@@ -65,7 +71,7 @@ class ChatReviewUiTest {
             val ask = PermissionRequest(id, ref.sessionId, "edit", kotlinx.collections.immutable.persistentListOf("*.txt"), kotlinx.serialization.json.JsonObject(emptyMap()), kotlinx.collections.immutable.persistentListOf(), null, false, null)
             val slot = RequestSlotUi(RequestCardUi.Permission(id, null, CardState.Waiting, PermissionAsk.of(ask), false))
             var allowed = 0
-            val requests = actions<ChatRequestActions> { name, _ -> if (name.startsWith("allowOnce")) allowed++ }
+            val requests = actions<ChatRequestActions> { name, args -> if (name.startsWith("allowOnce") || (name == "performReviewed" && args?.get(1) == ReviewedRequestAction.AllowOnce)) allowed++ }
             setContent {
                 KitTheme(platform = DesktopKitPlatform(), localeTag = "en") {
                     io.github.eslamasabry.oc.ui.kitchat.KitChatEnvironment(io.github.eslamasabry.oc.core.security.Redactor()).Provide {
@@ -73,12 +79,18 @@ class ChatReviewUiTest {
                     }
                 }
             }
-            onNodeWithText("Allow once").performClick()
+            onNodeWithText("Allow").performClick()
             assertEquals(1, allowed)
-            onNodeWithText("Request owns composer").assertExists()
-            onNodeWithTag("chat-stop-button").assertExists()
-            onNodeWithTag("chat-send-button").assertDoesNotExist()
-            onNodeWithTag("chat-composer-field").assertDoesNotExist()
+            // The composer shows once the conversation has loaded (no composer under the skeleton or the load
+            // error). With it there, a waiting request puts Stop in it and tells it so (the Flutter-parity box keeps
+            // its field and a Send that is disabled while empty; only the keyboard's Send key is held back).
+            if (phase == ChatPhase.Live) {
+                onNodeWithText("Request owns composer").assertExists()
+                onNodeWithTag("chat-stop-button").assertExists()
+            } else {
+                onNodeWithText("Request owns composer").assertDoesNotExist()
+                onNodeWithText("Ordinary composer").assertDoesNotExist()
+            }
         }
     }
 }

@@ -236,11 +236,13 @@ class ChatHeaderUiTest {
             val extras = (1..4).map { n -> KitLineAction("Unit action $n", { tapped += "u$n" }) }
             setContent { Screen(extraActions = extras) }
             onNodeWithText("Fix the build").assertIsDisplayed()
-            // git is the first unit action; the rest follow it. Each is inline or, past the limit, in the ⋯ menu.
-            for (label in listOf("Git") + extras.map { it.label }) {
-                if (onAllNodesWithText(label).fetchSemanticsNodes().isEmpty()) onNodeWithContentDescription("More actions").performClick()
-                onNodeWithText(label).assertIsDisplayed()
-                if (label != "Git") onNodeWithText(label).performClick()
+            // Git is the bar's own chip; every unit action sits on the menu's "Go to" page (past the bar's limit too).
+            onNodeWithText("Git").assertIsDisplayed()
+            for (extra in extras) {
+                onNodeWithContentDescription("More actions").performClick()
+                onNodeWithText("Go to").performClick()
+                onNodeWithText(extra.label).assertIsDisplayed()
+                onNodeWithText(extra.label).performClick()
             }
             assertEquals(listOf("u1", "u2", "u3", "u4"), tapped)
             // Find stays the header's own (its ⋯ menu), so the bar never shows two Find buttons.
@@ -252,7 +254,7 @@ class ChatHeaderUiTest {
         runComposeUiTest {
             setContent { Screen() }
             onNodeWithText("Fix the build").assertIsDisplayed()
-            onNodeWithText("Home PC · app").assertIsDisplayed()
+            onNodeWithText("app · Home PC").assertIsDisplayed()
         }
 
     @Test
@@ -261,9 +263,11 @@ class ChatHeaderUiTest {
             world.capabilities.value = ServerCapabilities(sessionShare = false, sessionFork = false, sessionArchive = false, sessionDelete = true)
             setContent { Screen() }
             onNodeWithContentDescription("More actions").performClick()
-            onNodeWithText("Continue with…").assertIsDisplayed()
+            // The menu is paged: the everyday acts first, the rest behind "More" (Delete last).
             onNodeWithText("Copy transcript").assertIsDisplayed()
             onNodeWithText("Rename conversation").assertIsDisplayed()
+            onNodeWithText("More").performClick()
+            onNodeWithText("Continue elsewhere").assertIsDisplayed()
             onNodeWithText("Delete conversation").assertIsDisplayed()
             assertEquals(0, onAllNodesWithText("Share conversation").fetchSemanticsNodes().size, "gated off by the server")
         }
@@ -273,6 +277,8 @@ class ChatHeaderUiTest {
         runComposeUiTest {
             setContent { Screen() }
             onNodeWithContentDescription("More actions").performClick()
+            onNodeWithText("More").performClick()
+            onNodeWithText("Continue elsewhere").performClick()
             onNodeWithText("Continue with…").performClick()
             onNodeWithText("Continue this work").assertIsDisplayed()
             onNodeWithText("Models on this server").assertIsDisplayed()
@@ -283,10 +289,12 @@ class ChatHeaderUiTest {
         }
 
     @Test
-    fun `tapping the title opens Rename conversation`() =
+    fun `Rename conversation in the menu opens the title field`() =
         runComposeUiTest {
+            // The title is not a switcher any more (Flutter's chat bar); Rename lives in the ⋯ menu.
             setContent { Screen() }
-            onNodeWithText("Fix the build").performClick()
+            onNodeWithContentDescription("More actions").performClick()
+            onNodeWithText("Rename conversation").performClick()
             onNodeWithText("Title").assertIsDisplayed()
         }
 
@@ -296,6 +304,7 @@ class ChatHeaderUiTest {
             world.capabilities.value = ServerCapabilities(sessionDelete = true)
             setContent { Screen() }
             onNodeWithContentDescription("More actions").performClick()
+            onNodeWithText("More").performClick()
             onNodeWithText("Delete conversation").performClick()
             onNodeWithText("Delete “Fix the build”?").assertIsDisplayed()
             assertEquals(emptyList(), port.calls, "nothing runs before the answer")
@@ -321,6 +330,7 @@ class ChatHeaderUiTest {
             port.facts.value = port.facts.value.copy(contextTokens = 300, contextLimit = 1000)
             setContent { Screen() }
             onNodeWithContentDescription("More actions").performClick()
+            onNodeWithText("Go to").performClick()
             onNodeWithText("Details").performClick()
             onNodeWithText("Server").assertIsDisplayed()
             onNodeWithText("Home PC").assertIsDisplayed()
@@ -336,6 +346,8 @@ class ChatHeaderUiTest {
                 setContent { Screen("ar") }
                 onNodeWithText("Fix the build").assertIsDisplayed()
                 onNodeWithContentDescription("المزيد من الإجراءات").performClick()
+                onNodeWithText("المزيد").performClick()
+                onNodeWithText("المتابعة في مكان آخر").performClick()
                 onNodeWithText("المتابعة مع…").assertIsDisplayed()
             } finally {
                 java.util.Locale.setDefault(before)
@@ -346,10 +358,10 @@ class ChatHeaderUiTest {
     fun `B-AGENT-225 the approval chip sits in the composer row and switches this conversation to auto-approve`() =
         runComposeUiTest {
             setContent { Screen() }
-            onNodeWithText("Ask first").assertIsDisplayed().performClick()
+            onNodeWithContentDescription("Ask first").assertIsDisplayed().performClick()
             onNodeWithText("Auto-approve this conversation").performClick()
             waitForIdle()
-            onNodeWithText("Auto-approve on").assertIsDisplayed()
+            onNodeWithContentDescription("Auto-approve on").assertIsDisplayed()
             assertEquals("""{"s1":{"mode":"autoOnce","inheritToChildren":false}}""", approvalStore.raw["oc.autoApprove.p1"])
         }
 
@@ -357,7 +369,7 @@ class ChatHeaderUiTest {
     fun `B-AGENT-225 approve everything asks first`() =
         runComposeUiTest {
             setContent { Screen() }
-            onNodeWithText("Ask first").performClick()
+            onNodeWithContentDescription("Ask first").performClick()
             onAllNodesWithText("Approve everything")[0].performClick()
             onNodeWithText("Approve everything?").assertIsDisplayed()
             assertEquals(emptyMap(), approvalStore.raw)
