@@ -89,7 +89,9 @@ class CacheFirstFactsBookViewModelsTest {
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { section.state.collect {} }
         val s = section.state.first { it.loaded }
         assertEquals(FactsBookLoad.Ready, s.load)
-        assertEquals(1, s.needsYouCount)
+        // The fixture's node holds one change to review, one reminder a rule proposed and one open offer; each waits
+        // for the person and the count says all three (the overview's Needs you counts proposals and offers too).
+        assertEquals(3, s.needsYouCount)
         val care = NeedsYouViewModel(access, nav, FixedClock(), reports, checks)
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { care.state.collect {} }
         val n = care.state.first { it.review.isNotEmpty() }
