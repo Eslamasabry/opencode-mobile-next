@@ -64,7 +64,10 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
 import io.github.eslamasabry.oc.ui.design.effects.FrostRole
 import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
 import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidBarPane
+import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidJoin
 import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidMerge
+import io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidJoin
+import io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidJoinBody
 import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidMergeLayer
 import io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidMerge
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidMergeBlur
@@ -315,7 +318,12 @@ public fun KitScreen(
             val faded = !edgesFade && !kitChromeIsGlass()
             // Liquid glass (Glass only, where FrostPolicy does not hold it): the bar and the composer float as glass
             // over what scrolls behind them; a null face keeps today's ground.
-            val barFace = if (topPart != null) kitLiquidFace(LiquidRole.Bar, frost, LiquidBarShape) else null
+            // Joined glass (KitLiquidJoin.kt): a menu from the bar's controls, or the jump pill on the message box, is one
+            // body of glass with the bar's capsule or the box while both are liquid. Only where the body is recorded.
+            val joinState = remember { KitLiquidJoin() }
+            val join = joinState.takeIf { edgesFade && kitChromeIsGlass() && !KitMotion.state.reduced }
+            val barBody = rememberKitLiquidJoinBody(join, "bar")
+            val barFace = if (topPart != null) kitLiquidFace(LiquidRole.Bar, frost, LiquidBarShape, join = barBody) else null
             // The capsule answers a finger on its controls: a soft light under it, a brighter edge (KitLiquidTouch.kt).
             val barTouch = rememberKitLiquidTouch(on = barFace != null)
             val barInset = with(LocalDensity.current) { { Offset(LIQUID_BAR_INSET_X.dp.toPx(), LIQUID_BAR_INSET_Y.dp.toPx()) } }
@@ -381,7 +389,7 @@ public fun KitScreen(
                     )
                     .testTag("kit-screen")
             ) {
-                CompositionLocalProvider(LocalChromePadding provides padding, LocalKitScreenScroll provides scroll, LocalKitScreenBottom provides bottomState, LocalKitLiquidMerge provides merge) {
+                CompositionLocalProvider(LocalChromePadding provides padding, LocalKitScreenScroll provides scroll, LocalKitScreenBottom provides bottomState, LocalKitLiquidMerge provides merge, LocalKitLiquidJoin provides join) {
                     Box(
                         Modifier.fillMaxSize()
                             .then(
@@ -436,8 +444,8 @@ public fun KitScreen(
                                     .kitLiquidTouchWatch(barTouch)
                                     .then(if (barFace != null) kitLiquidWordsHost(LiquidRole.Bar, frost) else Modifier)
                             ) {
-                                CompositionLocalProvider(LocalKitLiquidMerge provides merge) {
-                                    if (barFace != null) KitLiquidBarPane(barFace.kitLiquidTouchLight(barTouch, LiquidBarShape, barInset))
+                                CompositionLocalProvider(LocalKitLiquidMerge provides merge, LocalKitLiquidJoin provides join) {
+                                    if (barFace != null) KitLiquidBarPane(barFace.kitLiquidTouchLight(barTouch, LiquidBarShape, barInset), barBody)
                                     else if (frostedFace != null) KitLiquidBarPane(frostedFace)
                                     it()
                                 }
@@ -469,7 +477,7 @@ public fun KitScreen(
                             )
                             .testTag("kit-screen-bottom")
                     ) {
-                        CompositionLocalProvider(LocalKitLiquidChrome provides frost, LocalKitScreenBottom provides bottomState, LocalKitLiquidMerge provides merge) { it() }
+                        CompositionLocalProvider(LocalKitLiquidChrome provides frost, LocalKitScreenBottom provides bottomState, LocalKitLiquidMerge provides merge, LocalKitLiquidJoin provides join) { it() }
                     }
                 }
             }

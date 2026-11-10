@@ -41,6 +41,7 @@ import androidx.compose.ui.node.currentValueOf
 import androidx.compose.ui.node.invalidateDraw
 import androidx.compose.ui.node.requireGraphicsContext
 import androidx.compose.ui.platform.InspectorInfo
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -239,7 +240,10 @@ internal fun Modifier.kitLiquidJoinClip(part: KitLiquidJoinPart): Modifier =
 
 /** The joined face of [part], drawn behind its content (see the file comment). Use through `kitLiquidFace(join =)`. */
 internal fun Modifier.kitLiquidJoinedPane(join: KitLiquidJoin, part: KitLiquidJoinPart, spec: KitLiquidPaneSpec, backdrop: KitLiquidBackdrop): Modifier =
-    this then JoinedPaneElement(join, part, spec, backdrop)
+    this.semantics { this[KitLiquidJoined] = if (part is KitLiquidJoinBody) "body" else "drop" } then JoinedPaneElement(join, part, spec, backdrop)
+
+/** Marks a pane drawn joined ("body" or "drop"), for tests; a pane keeps its own test tag. */
+public val KitLiquidJoined: androidx.compose.ui.semantics.SemanticsPropertyKey<String> = androidx.compose.ui.semantics.SemanticsPropertyKey("KitLiquidJoined")
 
 private data class JoinedPaneElement(
     val join: KitLiquidJoin,
