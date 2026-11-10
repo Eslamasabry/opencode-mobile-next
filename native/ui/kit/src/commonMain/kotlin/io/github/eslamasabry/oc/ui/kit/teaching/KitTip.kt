@@ -40,6 +40,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
+import io.github.eslamasabry.oc.ui.kit.modal.MenuLayerEntry
+import io.github.eslamasabry.oc.ui.kit.modal.LocalKitMenuLayer
+import io.github.eslamasabry.oc.ui.kit.modal.KitMenuLayerState
+import androidx.compose.ui.layout.Layout
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.currentCompositionLocalContext
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.DisposableEffect
 import io.github.eslamasabry.oc.ui.design.motion.MotionTokens
 import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -113,21 +121,23 @@ public fun KitTip(
             dismiss()
         }
     }
+    // The anchor's place while the tip shows, for the layer that draws it (read only when the tip is placed).
+    var shownAt by remember { mutableStateOf(Rect.Zero) }
+    val showing = shown.currentState || shown.targetState
     Box(
         modifier.onGloballyPositioned {
-            bounds[0] = it.boundsInWindow()
+            val at = it.boundsInWindow()
+            bounds[0] = at
             if (!placed) placed = true
+            if (showing && shownAt != at) shownAt = at
         }
     ) {
         anchor()
-        if (shown.currentState || shown.targetState) {
+        if (showing) {
             val gap = with(LocalDensity.current) { Space.S2.dp.roundToPx() }
             val rise = with(LocalDensity.current) { TipRules.riseDp(motion).dp.roundToPx() }
-            Popup(
-                popupPositionProvider = remember(above, gap) { TipPosition(above, gap) },
-                onDismissRequest = { dismiss() },
-                properties = PopupProperties(focusable = false, dismissOnClickOutside = true),
-            ) {
+            val place = remember(above, gap) { TipPosition(above, gap) }
+            val bubble: @Composable () -> Unit = {
                 val enter: EnterTransition =
                     if (motion.reduced) EnterTransition.None
                     else fadeIn(specs.tipFade()) +
@@ -137,7 +147,45 @@ public fun KitTip(
                     KitTipBubble(message, Modifier.pointerInput(Unit) { detectTapGestures { dismiss() } })
                 }
             }
+            // In the window's own layer where there is one (every app screen): a tip that opened a window of its own as
+            // the person began to type took the window focus from the message box and closed the keyboard (owner
+            // 2026-11-10: "steals focus from composer whenever there's a tool tip"), and that window crashed the
+            // emulator's renderer. Drawn in the page's window it can do neither. Outside a host, the popup as before.
+            val layer = LocalKitMenuLayer.current
+            if (layer != null) TipInLayer(layer, place, { shownAt.takeIf { it != Rect.Zero } ?: bounds[0] }, bubble)
+            else Popup(popupPositionProvider = place, onDismissRequest = { dismiss() }, properties = PopupProperties(focusable = false, dismissOnClickOutside = true)) { bubble() }
         }
+    }
+}
+
+/**
+ * The tip's bubble in the window's menu layer: placed by [place] against the anchor's bounds, in the layer's own
+ * pixels, following the anchor while it moves (the keyboard opening). The layer takes no touch for it: only the bubble
+ * answers a tap; a touch elsewhere goes to the page, and the tip leaves by itself or when its moment ends.
+ */
+@Composable
+private fun TipInLayer(layer: KitMenuLayerState, place: PopupPositionProvider, anchorInWindow: () -> Rect, bubble: @Composable () -> Unit) {
+    val entry = remember { MenuLayerEntry() }
+    val locals = currentCompositionLocalContext
+    SideEffect {
+        entry.locals = locals
+        entry.content = {
+            Layout(content = bubble, modifier = Modifier.fillMaxSize()) { measurables, constraints ->
+                val loose = constraints.copy(minWidth = 0, minHeight = 0)
+                val placeables = measurables.map { it.measure(loose) }
+                layout(constraints.maxWidth, constraints.maxHeight) {
+                    val at = anchorInWindow()
+                    val origin = layer.origin
+                    val anchor = IntRect(at.left.toInt() - origin.x, at.top.toInt() - origin.y, at.right.toInt() - origin.x, at.bottom.toInt() - origin.y)
+                    val window = IntSize(constraints.maxWidth, constraints.maxHeight)
+                    placeables.forEach { p -> p.place(place.calculatePosition(anchor, window, layoutDirection, IntSize(p.width, p.height))) }
+                }
+            }
+        }
+    }
+    DisposableEffect(layer, entry) {
+        layer.entries += entry
+        onDispose { layer.entries -= entry }
     }
 }
 
