@@ -12,6 +12,7 @@ import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -110,6 +111,7 @@ class KitModelSheetPagesTest {
     private class Scene(favorites: List<KitModelOption> = emptyList()) {
         var favorites by mutableStateOf(favorites)
         val chosen = mutableListOf<KitModelOption?>()
+        val starred = mutableListOf<KitModelOption>()
         var dismissed = 0
         val platform = FakeKitPlatform()
     }
@@ -134,7 +136,10 @@ class KitModelSheetPagesTest {
                             onChoose = { scene.chosen += it },
                             favorites = scene.favorites,
                             recent = recent,
-                            onToggleFavorite = { o -> scene.favorites = if (o in scene.favorites) scene.favorites - o else scene.favorites + o },
+                            onToggleFavorite = { o ->
+                                scene.starred += o
+                                scene.favorites = if (o in scene.favorites) scene.favorites - o else scene.favorites + o
+                            },
                         )
                     }
                 }
@@ -279,5 +284,83 @@ class KitModelSheetPagesTest {
         onNodeWithTag("kit-sheet").performTouchInput { swipe(Offset(centerX, 10f), Offset(centerX, height * 0.7f), durationMillis = 200) }
         settle()
         assertEquals(1, scene.dismissed)
+    }
+
+    // --- input a kit part must survive (device crash 2026-11-11) -------------------------------------------------------
+
+    // A real catalog: two entries of one provider reach the sheet with the same provider and model id, so the same key.
+    private val fable = model("anthropic", "Anthropic", "claude-fable-5-2", "Claude Fable 5.2")
+    private val fableFast = model("anthropic", "Anthropic", "claude-fable-5-2", "Claude Fable 5.2 Fast")
+    private val withRepeats = zai + opencode + listOf(fable, fableFast, model("anthropic", "Anthropic", "claude-opus-5-5", "Claude Opus 5.5"))
+
+    @Test
+    fun `list keys stay unique whatever the server sends`() {
+        assertEquals(listOf("a/x", "a/y"), KitModelPages.listKeys(listOf("a/x", "a/y")), "keys that differ are left alone")
+        val keys = KitModelPages.listKeys(listOf("a/x", "a/x", "default", "a/x", "above"), reserved = setOf("above", "below"))
+        assertEquals(5, keys.toSet().size, "each row has its own key: $keys")
+        assertEquals("a/x", keys[0], "the first keeps its key, so its row keeps its state when a repeat appears")
+        assertTrue("above" !in keys && "below" !in keys, "and none takes a slot the list keeps for itself")
+    }
+
+    @Test
+    fun `two models that share a key are both listed and paging to their page does not throw`() = runComposeUiTest {
+        assertEquals(fable.key, fableFast.key)
+        val scene = Scene(favorites = listOf(zai[0]))
+        setContent { Sheet(scene, options = withRepeats, level = MotionLevel.Full) }
+        settle()
+        selected("Favorites")
+        // Favorites, then the chosen model's provider, then Anthropic: two swipes.
+        onNodeWithTag("kit-tab-pages").performTouchInput { swipeLeft() }
+        settle()
+        onNodeWithTag("kit-tab-pages").performTouchInput { swipeLeft() }
+        settle()
+        selected("Anthropic")
+        onNodeWithText("Claude Fable 5.2").assertExists()
+        onNodeWithText("Claude Fable 5.2 Fast").assertExists()
+        onNodeWithText("Claude Opus 5.5").assertExists()
+    }
+
+    @Test
+    fun `choosing or starring one of two models that share a key acts on the row that was touched`() = runComposeUiTest {
+        val scene = Scene()
+        setContent { Sheet(scene, options = withRepeats, current = fable.key) }
+        settle()
+        selected("Anthropic")
+        assertEquals(1, onAllNodesWithTag("kit-choice-tick", useUnmergedTree = true).fetchSemanticsNodes().size, "one model is the chosen one, so one tick")
+        onNodeWithText("Claude Fable 5.2 Fast").performClick()
+        assertEquals(listOf<KitModelOption?>(fableFast), scene.chosen)
+        onNode(hasContentDescription("Add favorite") and hasAnyAncestor(hasTestTag("chat-model-choice") and hasText("Claude Fable 5.2 Fast"))).performClick()
+        settle()
+        assertEquals(listOf(fableFast), scene.starred)
+    }
+
+    @Test
+    fun `a search that finds two models with one key lists both`() = runComposeUiTest {
+        val scene = Scene()
+        setContent { Sheet(scene, options = withRepeats) }
+        settle()
+        onNodeWithTag("kit-search-field").performTextInput("fable")
+        settle()
+        onNodeWithText("Claude Fable 5.2").assertExists()
+        onNodeWithText("Claude Fable 5.2 Fast").assertExists()
+    }
+
+    @Test
+    fun `two providers with the same name are two tabs with their own pages`() = runComposeUiTest {
+        val first = listOf(model("acme-eu", "Acme", "one", "Acme One"))
+        val second = listOf(model("acme-us", "Acme", "two", "Acme Two"))
+        val pages = KitModelPages.pages(first + second + zai, current = zai[0].key, canFavorite = false)
+        assertEquals(pages.size, pages.map { it.key }.toSet().size, "every page has its own key")
+        val scene = Scene()
+        setContent { Sheet(scene, options = first + second + zai, level = MotionLevel.Full) }
+        settle()
+        assertEquals(2, onAllNodesWithContentDescription("Acme").fetchSemanticsNodes().size)
+        onAllNodesWithContentDescription("Acme")[0].performClick()
+        settle()
+        onNodeWithText("Acme One").assertExists()
+        onNodeWithTag("kit-tab-pages").performTouchInput { swipeLeft() }
+        settle()
+        onNodeWithText("Acme Two").assertExists()
+        onNodeWithText("Acme One").assertDoesNotExist()
     }
 }

@@ -248,6 +248,21 @@ public object KitModelPages {
     ): List<KitModelOption> = KitModelOrder.sections(options, favorites, recent, current, query).flatMap { it.rows }
 
     /**
+     * Keys for a lazy list from [keys] that may repeat: each stays as it is the first time and gets a counter after
+     * that, and none equals a [reserved] one. Two rows a server gave the same provider and model id (seen with real
+     * catalogs, 2026-11-11) are then two rows, not a crash.
+     */
+    public fun listKeys(keys: List<String>, reserved: Set<String> = emptySet()): List<String> {
+        val used = HashSet(reserved)
+        return keys.map { key ->
+            var unique = key
+            var n = 1
+            while (!used.add(unique)) unique = "$key\u0000${n++}"
+            unique
+        }
+    }
+
+    /**
      * A row's quiet second line. [provider] is given where providers mix (picks, search results) and null on a
      * provider's own page. A [twin] adds its id, so two "GPT-5.5" can be told apart.
      */
@@ -456,7 +471,15 @@ private sealed interface ModelItem {
         override val rule: Boolean get() = false
     }
 
-    data class Model(val option: KitModelOption, val mixed: Boolean, val twin: Boolean, override val rule: Boolean = false, val suggested: Boolean = false) : ModelItem {
+    /** [chosen]: this row is the one marked as the chosen model (one row at most, also when rows share a key). */
+    data class Model(
+        val option: KitModelOption,
+        val mixed: Boolean,
+        val twin: Boolean,
+        override val rule: Boolean = false,
+        val suggested: Boolean = false,
+        val chosen: Boolean = false,
+    ) : ModelItem {
         override val key: String get() = if (suggested) "suggested:${option.key}" else option.key
     }
 
@@ -466,20 +489,25 @@ private sealed interface ModelItem {
     }
 }
 
-/** Sets each row's hairline: under a row that is followed by another row, unless either of the two is the chosen one. */
+/**
+ * Marks the chosen row and sets each row's hairline: under a row that is followed by another row, unless either of the
+ * two is the chosen one. A server can list two models under one provider and model id (so one key): both stay rows of
+ * their own, and only the first of them carries the mark, so the list never shows two chosen models.
+ */
 private fun modelItems(items: List<ModelItem>, current: String?): List<ModelItem> {
-    fun chosen(item: ModelItem): Boolean =
-        when (item) {
+    val chosenAt = items.indexOfFirst { it is ModelItem.Model && it.option.key == current }
+    fun chosen(i: Int): Boolean =
+        when (items.getOrNull(i)) {
             is ModelItem.Default -> current == null
-            is ModelItem.Model -> item.option.key == current
+            is ModelItem.Model -> i == chosenAt
             else -> false
         }
     return items.mapIndexed { i, item ->
         val next = items.getOrNull(i + 1)
-        val rule = (next is ModelItem.Model || next is ModelItem.Default) && !chosen(item) && !chosen(next)
+        val rule = (next is ModelItem.Model || next is ModelItem.Default) && !chosen(i) && !chosen(i + 1)
         when (item) {
             is ModelItem.Default -> item.copy(rule = rule)
-            is ModelItem.Model -> item.copy(rule = rule)
+            is ModelItem.Model -> item.copy(rule = rule, chosen = i == chosenAt)
             else -> item
         }
     }
@@ -521,6 +549,8 @@ private fun ModelList(
     val density = LocalDensity.current.density
     val hairline = LocalKitColors.current.hairline
     val list = rememberLazyListState()
+    // A lazy list stops the app on a repeated key, and a model's key comes from the server: never trust it to be unique.
+    val keys = remember(items) { KitModelPages.listKeys(items.map { it.key }, reserved = LIST_SLOTS) }
     // Rows that have scrolled up melt away under the tabs instead of being cut by them. The fade (and its layer) is
     // there only while the list is away from its top, so a page being dragged sideways at rest pays nothing for it.
     val noticesHeight = remember { IntArray(1) }
@@ -545,13 +575,13 @@ private fun ModelList(
         state = list,
         contentPadding = PaddingValues(start = rail, end = rail, bottom = rail),
     ) {
-        item(key = "above", contentType = "above") {
+        item(key = LIST_ABOVE, contentType = "above") {
             // The caller's notices, with a step under them only when there are any.
             KitStackScope {
                 Column(Modifier.fillMaxWidth().onSizeChanged { noticesHeight[0] = it.height }.stepUnder(Space.S2.dp), verticalArrangement = Arrangement.spacedBy(tokens.labelGap.dp)) { above() }
             }
         }
-        items(count = items.size, key = { items[it].key }, contentType = { items[it]::class }) { i ->
+        items(count = items.size, key = { keys[it] }, contentType = { items[it]::class }) { i ->
             val item = items[i]
             val row = entrance.rise(i).rowRule(item.rule, hairline)
             when (item) {
@@ -581,7 +611,7 @@ private fun ModelList(
                     val favorite = option.key in favoriteKeys
                     KitChoiceRow(
                         title = option.label,
-                        selected = option.key == current,
+                        selected = item.chosen,
                         mark = KitChoiceMark.Tick,
                         enabled = KitEnabled.of(option.disabledReason == null, option.disabledReason),
                         supporting = KitModelPages.secondLine(option, provider, item.twin),
@@ -600,11 +630,16 @@ private fun ModelList(
                     )
             }
         }
-        item(key = "below", contentType = "below") {
+        item(key = LIST_BELOW, contentType = "below") {
             KitStackScope { Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(tokens.labelGap.dp)) { below() } }
         }
     }
 }
+
+/** The list's own two slots; no row may take their keys. */
+private const val LIST_ABOVE: String = "above"
+private const val LIST_BELOW: String = "below"
+private val LIST_SLOTS: Set<String> = setOf(LIST_ABOVE, LIST_BELOW)
 
 /** Adds [step] under this box when it has any height: an empty slot takes no room at all. */
 private fun Modifier.stepUnder(step: Dp): Modifier =

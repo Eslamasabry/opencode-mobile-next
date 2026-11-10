@@ -301,4 +301,19 @@ class KitSwipeTabsTest {
         assertEquals(listOf(2), picked)
         onNode(hasContentDescription("Three")).assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
     }
+
+    @Test
+    fun `tabs with the same words are still separate tabs and pages`() = runComposeUiTest {
+        val scene = Scene()
+        val same = listOf("Acme", "Acme", "Acme")
+        setContent { Tabs(scene, MotionLevel.Full, names = same) }
+        waitForIdle()
+        onNodeWithTag("pages").performTouchInput { swipeLeft() }
+        settle()
+        onNodeWithTag("pages").performTouchInput { swipeLeft() }
+        settle()
+        assertEquals(listOf(1, 2), scene.picked)
+        assertEquals(2f, scene.state!!.position)
+        onNodeWithTag("list-2").assertExists()
+    }
 }
