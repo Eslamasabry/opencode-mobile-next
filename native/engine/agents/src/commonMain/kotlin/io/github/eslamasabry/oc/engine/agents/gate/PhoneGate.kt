@@ -77,6 +77,34 @@ public object PhoneGate {
         return CheckRequiredReason.InstallationChanged
     }
 
+    /**
+     * Whether stored proof still covers the agent that runs now ([found]). Proof given by the Flutter app counts across
+     * the helper versions the app has tested (`paseoTestedVersions`: certification evidence carries across them), for
+     * the same CPU and the same agent version, and that agent version must be the pin or a tested one. Proof for another
+     * CPU, another agent version or an untested helper is never used.
+     */
+    public fun qualifies(
+        pin: JsonObject?,
+        agent: AgentDescriptor,
+        architecture: AgentArchitecture,
+        pins: AgentPins,
+        found: String?,
+    ): Boolean {
+        if (pin == null || found == null) return false
+        if ((pin["architecture"] as? JsonPrimitive)?.content != architecture.wire) return false
+        val old = (pin["fingerprint"] as? JsonPrimitive)?.takeIf { it.isString }?.content
+            ?.let { AgentJson.parseOrNull(it) as? JsonArray } ?: return false
+        if (old.size < 6) return false
+        fun at(i: Int) = (old[i] as? JsonPrimitive)?.takeIf { it.isString }?.content
+        val recorded = at(1) ?: return false
+        val helper = at(3) ?: return false
+        val helperOk = helper == pins.paseo.version ||
+            (helper in pins.paseoTestedVersions && pins.paseo.version in pins.paseoTestedVersions)
+        val agentOk = recorded == agent.recipe?.version ||
+            (agent.id == AgentId.CLAUDE && recorded in pins.claudeCodeTestedVersions)
+        return recorded == found && helperOk && agentOk
+    }
+
     /** The version an older stored proof names when only the agent's version moved (same helper pins, same CPU). */
     public fun olderQualifiedVersion(
         pin: JsonObject?,
