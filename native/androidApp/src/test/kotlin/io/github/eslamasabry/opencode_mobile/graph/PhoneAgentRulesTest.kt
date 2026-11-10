@@ -74,4 +74,12 @@ class PhoneAgentRulesTest {
         val skipped = PhoneAgentRules.satisfiedSteps(mapOf("agent-node" to "node", "agent-paseo" to "paseo", "agent-claude" to "agent")) { exits[it] }
         assertEquals(setOf("agent-node"), skipped)
     }
+
+    @Test
+    fun `the primary ABI decides, so an x86 emulator that also lists arm64 is x64`() {
+        assertEquals(AgentArchitecture.X64, PhoneAgentRules.architectureOf(listOf("x86_64", "arm64-v8a")))
+        assertEquals(AgentArchitecture.Arm64, PhoneAgentRules.architectureOf(listOf("arm64-v8a", "armeabi-v7a")))
+        assertNull(PhoneAgentRules.architectureOf(emptyList()))
+        assertNull(PhoneAgentRules.architectureOf(listOf("armeabi-v7a")))
+    }
 }

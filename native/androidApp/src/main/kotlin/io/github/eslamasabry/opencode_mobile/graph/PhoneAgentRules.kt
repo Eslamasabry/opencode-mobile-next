@@ -38,6 +38,17 @@ internal object PhoneAgentRules {
     fun needsVersionProbe(agent: AgentId, payload: Boolean?): Boolean =
         agent == AgentId.CLAUDE || payload == true
 
+    /**
+     * The processor the phone runs, from the FIRST (primary) ABI as Flutter did. An x86_64 emulator also lists
+     * arm64-v8a (translation); taking that one would never match the proof Flutter stored for x64.
+     */
+    fun architectureOf(abis: List<String>): AgentArchitecture? =
+        when (abis.firstOrNull()) {
+            "arm64-v8a" -> AgentArchitecture.Arm64
+            "x86_64" -> AgentArchitecture.X64
+            else -> null
+        }
+
     /** The copy that runs, as a version string. */
     fun foundVersion(version: Map<String, Any?>?): String? = version?.get("foundVersion") as? String
 
