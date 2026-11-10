@@ -1,7 +1,7 @@
 package io.github.eslamasabry.oc.feature.settings.ui
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
@@ -52,6 +52,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitLocaleTag
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import io.github.eslamasabry.oc.ui.words.res.*
@@ -76,11 +77,14 @@ internal fun HubPage(
     actions: SettingsActions,
     modifier: Modifier,
     onExit: (() -> Unit)?,
+    scroll: ScrollState,
 ) {
-    BoxWithConstraints(modifier.fillMaxSize()) {
-        val window = LocalKitWindow.current
+    // The window's own width decides (no sidebar sits around Settings), so the page composes in the normal pass
+    // instead of being subcomposed during layout just to read a width.
+    val window = LocalKitWindow.current
+    Box(modifier.fillMaxSize()) {
         // F: settings_screen.dart:459: from expanded the hub is the list pane and the detail says to choose a group.
-        if (Layout.showsDetail(window.cls, window.short, maxWidth.value)) {
+        if (Layout.showsDetail(window.cls, window.short, window.widthDp)) {
             // The first group fills the detail until another is chosen; with no group, "Choose a group".
             val first = state.firstGroup
             SettingsPanes(
@@ -89,6 +93,7 @@ internal fun HubPage(
                 selected = first?.let { SettingsPage.Group(it.id) },
                 onExit = onExit,
                 pushed = false,
+                listScroll = scroll,
             )
         } else {
             SettingsFrame(
@@ -96,6 +101,7 @@ internal fun HubPage(
                 onBack = onExit,
                 state = state,
                 actions = actions,
+                scroll = scroll,
             ) {
                 HubBody(state, actions)
             }
@@ -115,7 +121,9 @@ private fun SettingsPanes(
     selected: SettingsPage.Group?,
     onExit: (() -> Unit)?,
     pushed: Boolean = true,
+    listScroll: ScrollState? = null,
 ) {
+    val paneScroll = listScroll ?: rememberScrollState()
     KitPaneScreen(
         topBar = {
             KitTopBar(
@@ -130,7 +138,7 @@ private fun SettingsPanes(
             Column(
                 Modifier.fillMaxSize()
                     .testTag("settings-list-pane")
-                    .verticalScroll(rememberScrollState())
+                    .verticalScroll(paneScroll)
                     .padding(top = Space.S2.dp, bottom = Space.S6.dp)
             ) {
                 HubBody(state, actions, selected = selected?.id, selectedPushed = pushed)
@@ -161,6 +169,29 @@ private fun SettingsPanes(
     )
 }
 
+/** Remembers what [rememberSearchEntries] resolved, and for which rows and language. */
+private class SearchEntryCache {
+    var rows: List<SettingsRowId>? = null
+    var locale: String? = null
+    var entries: List<SettingsSearchEntry> = emptyList()
+}
+
+/**
+ * The search index in the person's words. The ~40 titles and acceptance words are resolved when the rows or the
+ * language change, not on every pass the hub redraws; the same list is handed on until then.
+ */
+@Composable
+private fun rememberSearchEntries(rows: List<SettingsRowId>): List<SettingsSearchEntry> {
+    val locale = LocalKitLocaleTag.current
+    val cache = remember { SearchEntryCache() }
+    if (cache.rows != rows || cache.locale != locale) {
+        cache.entries = rows.map { SettingsSearchEntry(it, rowWords(it), aliasWords(it)) }
+        cache.rows = rows
+        cache.locale = locale
+    }
+    return cache.entries
+}
+
 @Composable
 private fun ColumnScope.HubBody(
     state: SettingsUi,
@@ -170,7 +201,7 @@ private fun ColumnScope.HubBody(
     selectedPushed: Boolean = false,
 ) {
     val hub = state.hub
-    val entries = hub.searchable.map { SettingsSearchEntry(it, rowWords(it), aliasWords(it)) }
+    val entries = rememberSearchEntries(hub.searchable)
     LaunchedEffect(entries) { actions.onSearchEntries(entries) }
     val field = rememberTextFieldState(hub.query)
     // Back clears the search in the presenter; the field follows.
@@ -316,11 +347,12 @@ internal fun GroupPage(
     page: SettingsPage.Group,
     modifier: Modifier,
     onExit: (() -> Unit)? = null,
+    hubScroll: ScrollState? = null,
 ) {
-    BoxWithConstraints(modifier.fillMaxSize()) {
-        val window = LocalKitWindow.current
-        if (Layout.showsDetail(window.cls, window.short, maxWidth.value)) {
-            SettingsPanes(state, actions, selected = page, onExit = onExit)
+    val window = LocalKitWindow.current
+    Box(modifier.fillMaxSize()) {
+        if (Layout.showsDetail(window.cls, window.short, window.widthDp)) {
+            SettingsPanes(state, actions, selected = page, onExit = onExit, listScroll = hubScroll)
         } else {
             SettingsFrame(groupWords(page.id), { actions.onBack() }, state, actions) {
                 GroupBody(state, actions, page)
