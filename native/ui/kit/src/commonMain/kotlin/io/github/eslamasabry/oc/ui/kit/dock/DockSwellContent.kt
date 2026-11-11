@@ -193,7 +193,11 @@ private fun MiniCell(child: KitDockChild, inks: DockInks, hot: Boolean) {
     }
 }
 
-/** An action target: its glyph over its word. At least 48 dp each way. */
+/**
+ * An action target: its glyph over its word. At least 48 dp each way. The word keeps [ACTION_WORD_INSET] in from each
+ * side of its own cell, so two neighbours' words always keep the kit's gap between them; a word that does not fit ends
+ * in "..." inside its cell (device QA 2026-11-11: "RenameRemove").
+ */
 @Composable
 private fun ActionCell(kind: DockTargetKind, words: KitDockWords) {
     val icon =
@@ -205,7 +209,11 @@ private fun ActionCell(kind: DockTargetKind, words: KitDockWords) {
             DockTargetKind.Rename -> KitIcons.edit
             else -> KitIcons.removeCircle
         }
-    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+    Column(
+        Modifier.padding(horizontal = ACTION_WORD_INSET.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
         KitIcon(icon, size = KitIconSize.Small, tone = if (kind == DockTargetKind.Remove) TextTone.Secondary else TextTone.Primary)
         KitText(words.targetWord(kind), role = TypeRole.Caption, tone = TextTone.Secondary, kind = KitTextKind.Frame, maxLines = 1)
     }
@@ -242,3 +250,6 @@ private fun RenameField(state: KitEdgeDockState, layout: SwellLayout, ring: KitD
         )
     }
 }
+
+/** Half the kit's gap between two action words: each word keeps this much in from its cell's sides. */
+internal const val ACTION_WORD_INSET: Int = io.github.eslamasabry.oc.ui.design.tokens.Space.S1
