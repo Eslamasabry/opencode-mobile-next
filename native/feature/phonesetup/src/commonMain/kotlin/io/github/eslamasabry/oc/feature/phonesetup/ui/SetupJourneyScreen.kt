@@ -999,13 +999,25 @@ internal class JourneyProgressMemory {
         val promised = running?.let { row -> registry.firstOrNull { it.id == row.id }?.estimatedSeconds }
         val onStep = progress.stepElapsedSeconds
         if (promised != null && onStep != null && onStep > maxOf(promised * 2, OVERDUE_FLOOR_SECONDS)) return null
-        progress.etaSeconds?.let { raw ->
-            val pending = progress.components.filter { it.state == ComponentState.Pending }.sumOf { row ->
-                registry.firstOrNull { it.id == row.id }?.estimatedSeconds ?: 0
-            }
-            val estimate = maxOf(raw, pending)
-            remaining = remaining?.let { minOf(it, estimate) } ?: estimate
+        // The pace-scaled guess only says "enough has happened to guess" (it is null for the first seconds). The
+        // number itself is the steps' own sizes: the running step's part not yet done plus every pending step, so it
+        // drops as seconds pass and as steps complete, and a step with no size makes it unknown rather than a guess.
+        if (progress.etaSeconds == null && remaining == null) return null
+        val sizes = progress.components.filter { it.state == ComponentState.Pending }.map { row ->
+            registry.firstOrNull { it.id == row.id }?.estimatedSeconds?.takeIf { it > 0 }
         }
+        if (sizes.any { it == null }) return remaining
+        val ahead = sizes.sumOf { it ?: 0 }
+        val left =
+            when {
+                running == null -> 0
+                promised == null || promised <= 0 -> return remaining
+                running.fraction != null -> (promised * (1.0 - running.fraction!!.coerceIn(0.0, 1.0))).toInt()
+                onStep != null -> maxOf(0, promised - onStep)
+                else -> promised
+            }
+        val estimate = ahead + left
+        remaining = remaining?.let { minOf(it, estimate) } ?: estimate
         return remaining
     }
 }

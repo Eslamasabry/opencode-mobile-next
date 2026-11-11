@@ -55,3 +55,68 @@ class SetupEtaHonestyTest {
         assertSame(journeyMemory("job-1"), journeyMemory("job-1"))
     }
 }
+
+/** The shown time is built from the steps' own sizes, so it counts down and never sits still while steps finish. */
+class SetupEtaCountdownTest {
+    private val registry =
+        listOf(
+            SetupComponent("a", "A", "A", "", "", estimatedSeconds = 120),
+            SetupComponent("b", "B", "B", "", "", estimatedSeconds = 120),
+            SetupComponent("c", "C", "C", "", "", estimatedSeconds = 120),
+        )
+
+    private fun at(states: List<ComponentState>, onStep: Int, pace: Int? = 400, fraction: Double? = null) =
+        SetupProgress(
+            state = SetupState.Running,
+            components =
+                states.mapIndexed { i, s ->
+                    ComponentProgress(
+                        "abc"[i].toString(),
+                        s,
+                        fraction = if (s == ComponentState.Running) fraction else null,
+                    )
+                },
+            overall = 0.3,
+            etaSeconds = pace,
+            stepElapsedSeconds = onStep,
+        )
+
+    @Test
+    fun `it goes down as seconds pass and as steps complete`() {
+        val m = JourneyProgressMemory()
+        val run = ComponentState.Running
+        val wait = ComponentState.Pending
+        val done = ComponentState.Done
+        val first = m.eta(at(listOf(run, wait, wait), 10), registry)!!
+        val later = m.eta(at(listOf(run, wait, wait), 70), registry)!!
+        val next = m.eta(at(listOf(done, run, wait), 5), registry)!!
+        val last = m.eta(at(listOf(done, done, run), 100), registry)!!
+        assertEquals(350, first)
+        assertEquals(290, later)
+        assertEquals(235, next)
+        assertEquals(20, last)
+    }
+
+    @Test
+    fun `a pace guess that stays high does not hold the number still`() {
+        val m = JourneyProgressMemory()
+        val a = m.eta(at(listOf(ComponentState.Running, ComponentState.Pending, ComponentState.Pending), 10, pace = 120), registry)!!
+        val b = m.eta(at(listOf(ComponentState.Done, ComponentState.Running, ComponentState.Pending), 10, pace = 900), registry)!!
+        assert(b < a)
+    }
+
+    @Test
+    fun `a measured fraction shortens the running step`() {
+        val m = JourneyProgressMemory()
+        val s = listOf(ComponentState.Running, ComponentState.Pending, ComponentState.Pending)
+        assertEquals(240 + 60, m.eta(at(s, 10, fraction = 0.5), registry))
+    }
+
+    @Test
+    fun `nothing is shown before the first guess and nothing when a step has no size`() {
+        val m = JourneyProgressMemory()
+        val s = listOf(ComponentState.Running, ComponentState.Pending, ComponentState.Pending)
+        assertNull(m.eta(at(s, 3, pace = null), registry))
+        assertNull(JourneyProgressMemory().eta(at(s, 3), registry.take(2)))
+    }
+}
