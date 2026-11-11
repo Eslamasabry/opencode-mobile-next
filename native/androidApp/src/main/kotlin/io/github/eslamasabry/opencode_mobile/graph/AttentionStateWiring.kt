@@ -541,6 +541,8 @@ class AppAttentionState(
                 monitors =
                     saved
                         .filter { it.id != selected }
+                        // This phone's agents are part of This phone, not a server to watch (as Watched servers).
+                        .filterNot { stores.isPhoneHelper(it) }
                         .map {
                             MonitorRow(
                                 it.id.raw,

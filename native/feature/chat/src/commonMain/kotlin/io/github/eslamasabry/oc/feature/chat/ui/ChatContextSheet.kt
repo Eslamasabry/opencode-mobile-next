@@ -42,7 +42,6 @@ import io.github.eslamasabry.oc.ui.words.res.e7SharedUserPrompts
 import io.github.eslamasabry.oc.ui.words.res.kitContextRingSemantics
 import io.github.eslamasabry.oc.ui.words.res.kitContextSheetModel
 import io.github.eslamasabry.oc.ui.words.res.kitContextSheetTitle
-import io.github.eslamasabry.oc.ui.words.res.kitSheetDismiss
 import io.github.eslamasabry.oc.ui.words.res.sessionContextMessagesSplit
 import io.github.eslamasabry.oc.ui.words.res.sessionContextPercent
 import io.github.eslamasabry.oc.ui.words.res.sessionContextTokens
@@ -85,7 +84,6 @@ internal fun SessionContextDetailsSheet(context: ContextUi?, visible: Boolean, o
         visible = visible && context != null,
         onDismissRequest = onDismiss,
         title = stringResource(Res.string.e7SharedSessionContext),
-        closeLabel = stringResource(Res.string.kitSheetDismiss),
     ) {
         if (context == null) return@KitSheet
         val sheet = context.sheet
@@ -196,7 +194,6 @@ internal fun ChatContextSheet(
         visible = visible && context?.sheet?.contextLimit != null,
         onDismissRequest = onDismiss,
         title = stringResource(Res.string.kitContextSheetTitle),
-        closeLabel = stringResource(Res.string.kitSheetDismiss),
     ) {
         if (context != null) {
             val limit = context.sheet.contextLimit

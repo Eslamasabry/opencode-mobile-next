@@ -73,6 +73,7 @@ class LiveConversationServers(
     stores: PreviewStores,
     appScope: AppCoroutineScope,
     runtime: PreviewRuntime,
+    private val conversationsLeft: ConversationsLeft,
 ) : ConversationServers {
     override fun prefetch(ref: io.github.eslamasabry.oc.core.common.ids.ConversationRef) {
         registry.graphFor(ref)?.session?.reads?.prefetch(ref.sessionId)
@@ -81,6 +82,8 @@ class LiveConversationServers(
     override fun forget(ref: io.github.eslamasabry.oc.core.common.ids.ConversationRef) {
         registry.graphFor(ref)?.session?.reads?.forget(ref.sessionId)
     }
+
+    override fun left(ref: io.github.eslamasabry.oc.core.common.ids.ConversationRef) = conversationsLeft.tell(ref)
 
     override val servers: StateFlow<ImmutableList<ConversationServer>> =
         combine(registry.live, stores.profiles.profiles) { live, saved ->
@@ -112,7 +115,7 @@ class LiveConversationServers(
 @Inject
 class LiveProjectServers(
     registry: ConnectionRegistry,
-    stores: PreviewStores,
+    private val stores: PreviewStores,
     appScope: AppCoroutineScope,
     attention: AppElsewhereAttention,
 ) : ProjectServers {
@@ -132,6 +135,9 @@ class LiveProjectServers(
                                 ManagedLocalServer.isBuiltin(graph.profile.origin.toString()),
                         attention = trackers[id]?.state,
                         status = graph.session.status,
+                        // This phone's agents are part of This phone: their folders join its projects (Flutter never
+                        // lists them as a server).
+                        partOf = stores.phoneOfHelper(id),
                     )
                 }
             }

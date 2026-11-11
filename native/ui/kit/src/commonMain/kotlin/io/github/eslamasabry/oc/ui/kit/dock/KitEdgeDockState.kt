@@ -153,6 +153,9 @@ public class KitEdgeDockState internal constructor() {
     /** The finger's height while a ring is carried (reorder) or the dock is moved. */
     internal var carryY by mutableFloatStateOf(0f)
 
+    /** Where the finger took the dock to move it: its height above (-) or below the column's centre (dp). */
+    private var grabDy = 0f
+
     // What is open (changes recompose; they change on decisions, not per frame).
     internal var swell by mutableStateOf<SwellLayout?>(null)
     internal var swellRing by mutableIntStateOf(-1)
@@ -198,8 +201,24 @@ public class KitEdgeDockState internal constructor() {
     private var pullStart = DockDims.REST_W
     private var pullFromPanel = false
 
+    /** True while the dock is tucked to its nub (or on its way there). */
+    internal val tucked: Boolean get() = out.value < DockDims.REST_W * 0.5f
+
     /** True while anything is open over the content (a tap outside closes it). */
     internal val anythingOpen: Boolean get() = swell != null || panelOpen || renaming != null
+
+    /** The swell is on its way in ([closeSwell] ran): it takes no touches and no longer widens the touch area. */
+    internal var swellClosing by mutableStateOf(false)
+
+    /** The swell an alert opened by itself: look-only, it never widens the touch area and never takes a tap. */
+    internal var swellLookOnly by mutableStateOf(false)
+
+    /**
+     * True while something open takes every touch in the dock's area (a tap outside closes it and is taken): the list,
+     * a rename, a card or swell the person opened. Not a closing swell (after Remove, Open or any target the area is the
+     * dock's own again at once) and not an alert's look-only swell (device QA 2026-11-11 sweep B; dock study, finding 2).
+     */
+    internal val takesWholeArea: Boolean get() = (swell != null && !swellClosing && !swellLookOnly) || panelOpen || renaming != null
 
     /** The strip's column top now (follows the placement, or the finger while the dock is moved). */
     internal val columnTop: Float get() = top.value
@@ -427,7 +446,7 @@ public class KitEdgeDockState internal constructor() {
             val cTop = top.value
             return if (x >= widthDp - edgeInset - DockDims.NUB_TOUCH && y >= cTop - 12f && y <= cTop + column.height + 12f) DockZone.Nub else DockZone.Outside
         }
-        if (swell != null && hits.inSwell(x, y)) return DockZone.Swell
+        if (swell != null && !swellClosing && !swellLookOnly && hits.inSwell(x, y)) return DockZone.Swell
         if (x < f.aLeft - 4f || y < f.aTop - 8f || y > f.aBottom + 8f) return DockZone.Outside
         val cTop = top.value
         if (y < cTop + DockDims.HEAD) return DockZone.Grip
@@ -474,6 +493,8 @@ public class KitEdgeDockState internal constructor() {
         val first = swell == null || swellGrow.value < 0.03f
         swell = l
         swellRing = i
+        swellClosing = false
+        swellLookOnly = false
         alertJob?.cancel()
         swellJob?.cancel()
         swellJob = scope?.launch {
@@ -496,12 +517,15 @@ public class KitEdgeDockState internal constructor() {
         gesture.closeKept()
         target = null
         swellJob?.cancel()
+        if (swell != null) swellClosing = true
         swellJob = scope?.launch {
             if (!reduced) delay(70)
             swellGrow.animateTo(0f, DockSprings.close(reduced))
             if (swellGrow.value < 0.01f) {
                 swell = null
                 swellRing = -1
+                swellClosing = false
+                swellLookOnly = false
             }
         }
         launch { ride.animateTo(0f, DockSprings.close(reduced)) }
@@ -580,7 +604,8 @@ public class KitEdgeDockState internal constructor() {
                 moving = true
                 carryY = y
                 val room = DockDims.EDGE_MARGIN + DockDims.SHOULDER_REACH
-                val t = (y - column.height / 2f).coerceIn(safeTop + room, max(safeTop + room, safeBottom - room - column.height))
+                // The point of the dock under the finger stays under it: no jump when the move begins.
+                val t = (y - grabDy - column.height / 2f).coerceIn(safeTop + room, max(safeTop + room, safeBottom - room - column.height))
                 launch { top.snapTo(t) }
             }
             DockMode.Pull -> {
@@ -609,7 +634,10 @@ public class KitEdgeDockState internal constructor() {
     internal fun onDown(zone: DockZone) {
         when (zone) {
             DockZone.Ring -> startCharge()
-            DockZone.Grip, DockZone.Nub -> carryY = top.value + column.height / 2f
+            DockZone.Grip, DockZone.Nub -> {
+                carryY = top.value + column.height / 2f
+                grabDy = gesture.y - carryY
+            }
             else -> Unit
         }
         pullStart = if (panelOpen) widthDp - edgeInset - panelTarget().left else out.value
@@ -624,6 +652,8 @@ public class KitEdgeDockState internal constructor() {
         gesture.cancel()
         swell = null
         swellRing = -1
+        swellClosing = false
+        swellLookOnly = false
         target = null
         renaming = null
         panelOpen = false
@@ -686,7 +716,8 @@ public class KitEdgeDockState internal constructor() {
                 moving = false
                 placeGeneration++
                 val side = sideAt(phys(o.x), widthDp, rtl = !onRightForEnd)
-                intents.onPlacementChange(side, biasFor(o.y, column.height, safeTop, safeBottom))
+                // The height saved is the column's centre where it stands: the finger's height less the grab.
+                intents.onPlacementChange(side, biasFor(o.y - grabDy, column.height, safeTop, safeBottom))
             }
             DockOutcome.NewConversation -> intents.onNewConversation()
         }
@@ -813,9 +844,11 @@ public class KitEdgeDockState internal constructor() {
 
     /**
      * A ring's alert (its pulse rose): a request leans the dock out and shows the words in the swell for about three
-     * seconds; a failure sends a pulse along the outline. Nothing shows over an open swell, list or a finger.
+     * seconds; a failure sends a pulse along the outline. Nothing shows over an open swell, list or a finger. A tucked
+     * dock neither leans nor pulses: only that ring's dot on the nub changes colour (the kit's owner, 2026-11-11).
      */
     internal fun alert(i: Int, failed: Boolean) {
+        if (tucked) return
         if (!failed) {
             launch {
                 if (!reduced) {
@@ -838,6 +871,7 @@ public class KitEdgeDockState internal constructor() {
                 delay(if (reduced) 0L else 200L)
                 openSwell(SwellKind.Scrub, i)
                 gesture.keepOpenForAlert(i)
+                swellLookOnly = true
                 delay(3100)
                 if (gesture.mode == DockMode.Idle) closeSwell()
             }

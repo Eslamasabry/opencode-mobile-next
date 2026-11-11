@@ -77,6 +77,7 @@ import io.github.eslamasabry.oc.ui.words.res.kitBackgroundWorkMany
 import io.github.eslamasabry.oc.ui.words.res.kitBackgroundWorkMinutes
 import io.github.eslamasabry.oc.ui.words.res.kitBackgroundWorkOne
 import io.github.eslamasabry.oc.ui.words.res.kitToolDone
+import io.github.eslamasabry.oc.ui.words.res.kitToolDeclined
 import io.github.eslamasabry.oc.ui.words.res.kitToolFailed
 import io.github.eslamasabry.oc.ui.words.res.kitToolNotRun
 import io.github.eslamasabry.oc.ui.words.res.kitToolRunning
@@ -217,6 +218,7 @@ internal fun stepStatus(state: StepState, exitCode: Int?): String =
             else stringResource(Res.string.kitToolFailed)
         StepState.Stopped -> stringResource(Res.string.kitToolStopped)
         StepState.NotRun -> stringResource(Res.string.kitToolNotRun)
+        StepState.Declined -> stringResource(Res.string.kitToolDeclined)
     }
 
 /** B-CHAT-109: "4.2s" under a minute, "1m 15s" past it, in the phone's language. */

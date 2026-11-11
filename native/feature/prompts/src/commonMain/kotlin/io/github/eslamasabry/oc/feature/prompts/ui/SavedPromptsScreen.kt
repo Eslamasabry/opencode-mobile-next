@@ -47,6 +47,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.chatUiEdit
@@ -176,6 +177,7 @@ public fun SavedPromptsScreen(state: SavedPromptsUi, actions: SavedPromptsAction
                         kind = KitStateKind.Empty,
                         title = stringResource(Res.string.promptStashEmptyTitle),
                         body = stringResource(Res.string.promptStashIntro),
+                        size = KitStateSize.Inline,
                     )
                 else -> {
                     KitField(

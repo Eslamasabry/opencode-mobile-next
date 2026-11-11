@@ -47,6 +47,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
@@ -260,6 +261,7 @@ public fun PlanSignInScreen(state: PlanAuthenticationUi, actions: PlanSignInActi
                         KitStateKind.Finished,
                         stringResource(Res.string.m40AuthComplete),
                         body = stringResource(Res.string.m40AuthCompleteBody),
+                        size = KitStateSize.Inline,
                     )
                     KitButton(stringResource(Res.string.m40AuthDone), actions::dismiss)
                 }

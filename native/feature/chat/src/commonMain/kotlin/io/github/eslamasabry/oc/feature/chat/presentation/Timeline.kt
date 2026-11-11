@@ -1,10 +1,14 @@
 package io.github.eslamasabry.oc.feature.chat.presentation
 
+import io.github.eslamasabry.oc.core.common.text.PlainMarkdown
 import io.github.eslamasabry.oc.core.model.transcript.PartType
 import io.github.eslamasabry.oc.core.model.transcript.Role
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptState
+import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolFacts
+import io.github.eslamasabry.oc.engine.transcript.turnfacts.toolFacts
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeed
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 /**
@@ -62,12 +66,13 @@ internal fun timelineEntries(
                     .filter { it.type == PartType.File }
                     .mapNotNull { it.filename?.takeIf(String::isNotBlank) }
                     .joinToString(", ")
+            // The tools stay facts: the screen names each in the plain words of its step row, never the tool's id.
             val tools =
                 parts
-                    .filter { it.type == PartType.Tool }
-                    .mapNotNull { it.tool?.title?.takeIf(String::isNotBlank) ?: it.toolName }
-                    .distinct()
-                    .joinToString(", ")
+                    .filter { it.type == PartType.Tool && it.tool != null }
+                    .map { toolFacts(it) }
+                    .distinctBy { it.phrase to it.titleArgs to it.subject }
+                    .toImmutableList()
             val thought =
                 parts
                     .firstOrNull { it.type == PartType.Reasoning && it.text.isNotBlank() }
@@ -81,24 +86,22 @@ internal fun timelineEntries(
                             it.rowKey == row && it.text.contains(q, ignoreCase = true)
                         }
                         ?.text
+            val noticePart =
+                parts.firstOrNull {
+                    it.type in setOf(PartType.Notice, PartType.Compaction, PartType.Switch)
+                }
+            // A change of model keeps the model's id in its text: say it as the conversation's own replies do.
             val notice =
-                parts
-                    .firstOrNull {
-                        it.type in setOf(PartType.Notice, PartType.Compaction, PartType.Switch)
-                    }
-                    ?.text
-                    .orEmpty()
+                noticePart?.let { part ->
+                    if (part.type == PartType.Switch && (part.noticeMetadata["kind"] ?: part.toolName) == "model")
+                        ReplyModelNames.fromId(part.text)
+                    else part.text
+                }.orEmpty()
+            val spoken = sequenceOf(matched.orEmpty(), text, files).firstOrNull { it.isNotBlank() }.orEmpty()
+            // Flutter's order: words, files, the tools in words, then the thought; a notice last.
             val preview =
-                sequenceOf(
-                        matched.orEmpty(),
-                        text,
-                        files,
-                        tools,
-                        plainPreview(thought),
-                        plainPreview(notice),
-                    )
-                    .firstOrNull { it.isNotBlank() }
-                    .orEmpty()
+                if (spoken.isNotBlank() || tools.isNotEmpty()) spoken
+                else sequenceOf(plainPreview(thought), plainPreview(notice)).firstOrNull { it.isNotBlank() }.orEmpty()
             TimelineEntryUi(
                 info.id,
                 row,
@@ -109,17 +112,13 @@ internal fun timelineEntries(
                     info.role == Role.User &&
                     !info.id.startsWith("local-") &&
                     parts.any { it.type == PartType.Text },
+                if (spoken.isBlank()) tools else persistentListOf(),
             )
         }
         .toImmutableList()
 }
 
-private fun plainPreview(text: String): String =
-    text
-        .replace(Regex("(?m)^\\s{0,3}#{1,6}\\s+"), "")
-        .replace(Regex("`+|\\*\\*|__"), "")
-        .replace(Regex("\\s+"), " ")
-        .trim()
+private fun plainPreview(text: String): String = PlainMarkdown.oneLine(text)
 
 internal fun findExcerpt(state: TranscriptState, hit: FindHit): String? {
     val text =

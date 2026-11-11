@@ -26,6 +26,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitProgress
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
@@ -121,6 +122,7 @@ public fun ProjectStorageScreen(
                     KitStateKind.Working,
                     stringResource(Res.string.manageSpaceMeasuring),
                     progress = KitProgress.Waiting(),
+                    size = KitStateSize.Inline,
                 )
             }
             if (state.notice == StorageNotice.MeasureFailed) {
@@ -128,6 +130,7 @@ public fun ProjectStorageScreen(
                     KitStateKind.Error,
                     stringResource(Res.string.projectStorageMeasureFailed),
                     primary = KitAction(retry, onClick = actions::load),
+                    size = KitStateSize.Inline,
                 )
             }
             if (facts != null) {
@@ -239,6 +242,7 @@ public fun ProjectStorageScreen(
                                 onClick = actions::stopExport,
                             ),
                         body = stringResource(Res.string.projectExportStopDetail),
+                        size = KitStateSize.Inline,
                     )
                 }
                 KitRowGroup {

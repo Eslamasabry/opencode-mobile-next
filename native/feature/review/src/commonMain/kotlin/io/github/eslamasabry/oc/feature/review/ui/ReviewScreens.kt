@@ -115,6 +115,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kitchat.diff.DiffFile
@@ -150,6 +151,7 @@ import io.github.eslamasabry.oc.ui.words.res.reviewIncomplete
 import io.github.eslamasabry.oc.ui.words.res.reviewLooksGood
 import io.github.eslamasabry.oc.ui.words.res.reviewNoChangesBody
 import io.github.eslamasabry.oc.ui.words.res.reviewProjectNotGitBody
+import io.github.eslamasabry.oc.ui.words.res.reviewProjectOpenGit
 import io.github.eslamasabry.oc.ui.words.res.reviewProjectNotGitTitle
 import io.github.eslamasabry.oc.ui.words.res.e7LibraryNoUncommittedChanges
 import io.github.eslamasabry.oc.ui.words.res.reviewNoDiff
@@ -303,7 +305,9 @@ private fun ChangesContent(state: ChangesUi, actions: ChangesActions) {
         topBar = {
             TopBar(
                 stringResource(
-                    if (state.turn) Res.string.reviewTurnTitle else Res.string.chatUiChanges
+                    // The title follows the chip: "in this turn" only describes the Conversation view.
+                    if (state.turn && state.scope == ReviewScope.Conversation) Res.string.reviewTurnTitle
+                    else Res.string.chatUiChanges
                 ),
                 actions::back,
             )
@@ -392,22 +396,27 @@ private fun ChangesContent(state: ChangesUi, actions: ChangesActions) {
                                         KitStateKind.Empty,
                                         stringResource(Res.string.kitDiffNoChanges),
                                         body = stringResource(Res.string.reviewNoChangesBody),
+                                        size = KitStateSize.Inline,
                                     )
                                 state.notRepository ->
                                     KitStateView(
                                         KitStateKind.Empty,
                                         stringResource(Res.string.reviewProjectNotGitTitle),
                                         body = stringResource(Res.string.reviewProjectNotGitBody),
+                                        primary = openGitAction(state, actions),
+                                        size = KitStateSize.Inline,
                                     )
                                 state.scope == ReviewScope.WorkingTree ->
                                     KitStateView(
                                         KitStateKind.Empty,
                                         stringResource(Res.string.e7LibraryNoUncommittedChanges),
+                                        size = KitStateSize.Inline,
                                     )
                                 else ->
                                     KitStateView(
                                         KitStateKind.Empty,
                                         stringResource(Res.string.kitDiffNoChanges),
+                                        size = KitStateSize.Inline,
                                     )
                             }
                         }
@@ -648,6 +657,11 @@ private fun ScopePicker(state: ChangesUi, actions: ChangesActions) {
         }
     }
 }
+
+/** The way out of "Not a Git project": the project's Git page (only where a conversation can open it). */
+@Composable
+private fun openGitAction(state: ChangesUi, actions: ChangesActions): KitAction? =
+    if (state.conversation) KitAction(stringResource(Res.string.reviewProjectOpenGit), actions::openGit) else null
 
 private fun scopeLabel(scope: ReviewScope, turn: Boolean): StringResource =
     when (scope) {

@@ -153,6 +153,7 @@ internal fun VoiceConversationControls(
         visible = state.pickingReplyVoice,
         onDismissRequest = presenter::closeReplyVoices,
         title = stringResource(Res.string.readAloudVoiceTitle),
+        // Closing without a voice leaves reading aloud off: the corner declines it for now.
         closeLabel = stringResource(Res.string.e7VoiceUiNotNow),
     ) {
         KitChoiceList(

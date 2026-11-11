@@ -28,6 +28,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitRowStateTone
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.pluralStringResource
@@ -171,6 +172,7 @@ private fun Ready(ui: FleetHomeUi, nowMs: Long, actions: TeamHomeActions) {
                     stringResource(Res.string.teamUiCardEmptyTitle),
                     Modifier.testTag("team-computer-empty"),
                     body = stringResource(Res.string.teamUiCardEmptyHint),
+                    size = KitStateSize.Inline,
                 )
             } else {
                 KitRowGroup(Modifier.testTag("team-computer-tasks")) {

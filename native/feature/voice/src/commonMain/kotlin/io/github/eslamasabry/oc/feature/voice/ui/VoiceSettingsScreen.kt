@@ -523,7 +523,6 @@ private fun LanguageSheet(state: VoiceSettingsUi, actions: VoiceSettingsPresente
         visible = state.languagePicking,
         onDismissRequest = actions::closeLanguages,
         title = stringResource(Res.string.e7VoiceUiLanguage),
-        closeLabel = stringResource(Res.string.e7VoiceUiNotNow),
     ) {
         KitChoiceList(
             choices =

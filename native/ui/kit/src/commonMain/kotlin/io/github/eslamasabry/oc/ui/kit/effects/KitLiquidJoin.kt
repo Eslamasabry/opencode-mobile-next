@@ -363,7 +363,14 @@ private class JoinedPaneNode(
         val area = Rect(floor(mine.left - grow), floor(mine.top - grow), ceil(mine.right + grow), ceil(mine.bottom + grow))
         val local = area.topLeft - origin
         val full = IntSize(area.width.toInt().coerceAtLeast(1), area.height.toInt().coerceAtLeast(1))
-        val recipe = bodySpec.recipe
+        // One frost for the body, but a menu frosts as a sheet does (words on glass 3): while a menu is joined, the body's
+        // frost moves from the bar's towards the menu's as the menu's rows come in (the drop's content, 0 to 1), so the
+        // bar and the menu stay one body of glass and nothing steps as the menu opens or closes.
+        val dropSpec = if (part is KitLiquidJoinDrop) spec else if (partner is KitLiquidJoinDrop) theirSpec else null
+        val frostsBody = theirs != null && dropSpec != null && dropSpec.recipe.hold.knee && drop != null
+        val recipe =
+            if (frostsBody) joinedFrost(bodySpec.recipe, dropSpec!!.recipe, drop!!.content())
+            else bodySpec.recipe
         val res = liquidResolutionOf(recipe, platform.liquidResolution)
         val small = IntSize(ceil(full.width * res).toInt().coerceAtLeast(1), ceil(full.height * res).toInt().coerceAtLeast(1))
         val u =
@@ -379,6 +386,7 @@ private class JoinedPaneNode(
                 contrast = recipe.contrast,
                 brightness = recipe.brightness,
                 knee = kneeOf(spec),
+                hold = if (frostsBody) dropSpec!!.recipe.hold.chroma else 0f,
                 tintMine = tintNow(spec),
                 tintTheirs = tintNow(theirSpec),
                 rimPx = spec.rimDp.dp.toPx(),
@@ -433,6 +441,13 @@ private class JoinedPaneNode(
         }
     }
 }
+
+/**
+ * The frost of a body joined to a menu: the body's [body] moved towards the menu's [menu] by [t] (0 to 1), blur and
+ * nothing else (the bend, rim and tint ease by the join's own band): linear in [t], so it has no step.
+ */
+internal fun joinedFrost(body: io.github.eslamasabry.oc.ui.design.effects.LiquidRecipe, menu: io.github.eslamasabry.oc.ui.design.effects.LiquidRecipe, t: Float): io.github.eslamasabry.oc.ui.design.effects.LiquidRecipe =
+    body.copy(blurDp = body.blurDp + (menu.blurDp - body.blurDp) * t.coerceIn(0f, 1f))
 
 /**
  * The knee that holds back bright content in [spec]'s lens (LiquidJoin.held): it holds the bright end under light words
@@ -500,6 +515,8 @@ internal class JoinUniforms(
     val tintMine: Color,
     val tintTheirs: Color,
     val rimPx: Float,
+    /** The most chroma the body lets through in its inner part (LiquidEdge.heldRgb, LiquidHold.chroma); 0 = no limit. */
+    val hold: Float = 0f,
 ) {
     /** [light]: the finger's light for modes 4 and 5 (centre x, centre y, radius or line width in px, strength). */
     fun set(p: LiveShaderProgram, mode: Float, res: Float, light: FloatArray = NO_LIGHT) {
@@ -519,6 +536,7 @@ internal class JoinUniforms(
         p.float2("refr", refractionMine, refractionTheirs)
         p.float4("cc", saturation, contrast, brightness, 0f)
         p.float3("knee", knee[0], knee[1], knee[2])
+        p.float("hold", hold)
         p.float4("tintA", tintMine.red * tintMine.alpha, tintMine.green * tintMine.alpha, tintMine.blue * tintMine.alpha, tintMine.alpha)
         p.float4("tintB", tintTheirs.red * tintTheirs.alpha, tintTheirs.green * tintTheirs.alpha, tintTheirs.blue * tintTheirs.alpha, tintTheirs.alpha)
         p.float("rimPx", rimPx)
@@ -562,6 +580,7 @@ uniform float2 rim;
 uniform float2 refr;
 uniform float4 cc;
 uniform float3 knee;
+uniform float hold;
 uniform float4 tintA;
 uniform float4 tintB;
 uniform float rimPx;
@@ -626,14 +645,25 @@ half4 main(float2 q) {
         rgb = clamp(cc.y * (l + cc.x * (rgb - l)) + (0.5 - 0.5 * cc.y + cc.z), 0.0, 1.0);
         if (knee.y < 1.0) {
             float lum = dot(rgb, float3(0.213, 0.715, 0.072));
+            // The rim keeps its colour (content must show there); from half its width inward the colour held back with
+            // the light is in full.
+            float deep = rimW > 0.0 ? ss(0.5 * rimW, rimW, depth) : 1.0;
+            float3 scaled;
+            float grey;
             if (knee.z > 0.5) {
-                float held = lum > knee.x ? knee.x + (lum - knee.x) * knee.y : lum;
-                rgb = rgb * (held / max(lum, 0.0001));
+                grey = lum > knee.x ? knee.x + (lum - knee.x) * knee.y : lum;
+                scaled = rgb * (grey / max(lum, 0.0001));
             } else {
                 float inv = 1.0 - lum;
                 float heldInv = inv > knee.x ? knee.x + (inv - knee.x) * knee.y : inv;
-                rgb = 1.0 - (1.0 - rgb) * (heldInv / max(inv, 0.0001));
+                grey = 1.0 - heldInv;
+                scaled = 1.0 - (1.0 - rgb) * (heldInv / max(inv, 0.0001));
             }
+            // The colour left is limited (hold = the most chroma let through, 0 = no limit), in the lens's inner part.
+            float chroma = max(scaled.r, max(scaled.g, scaled.b)) - min(scaled.r, min(scaled.g, scaled.b));
+            float easy = 0.4 * hold;
+            float limited = (hold > 0.0 && chroma > easy) ? (easy + (hold - easy) * (1.0 - exp(-(chroma - easy) / (hold - easy)))) / chroma : 1.0;
+            rgb = mix(float3(grey), scaled, mix(1.0, limited, deep));
             rgb = clamp(rgb, 0.0, 1.0);
         }
         return half4(float4(rgb * c.a, c.a));

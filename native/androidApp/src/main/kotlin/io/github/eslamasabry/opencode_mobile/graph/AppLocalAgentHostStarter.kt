@@ -235,13 +235,16 @@ class AppLocalAgentHostStarter(
             is Outcome.Failed -> return@withLock mapped
             is Outcome.Ok -> Unit
         }
+        // Saved under the phone's own name: the helper is part of This phone, and every place that names a connection
+        // (a chat's header, an alert, All conversations) must read This phone, never a second server.
+        val name = stores.helperName(profile, getString(Res.string.agentsPhoneHelperProfile))
         when (
             val saved =
                 stores.profiles.upsert(
-                    existing
+                    existing?.copy(name = name)
                         ?: StoredProfile(
                             id,
-                            getString(Res.string.agentsPhoneHelperProfile),
+                            name,
                             ADDRESS,
                             backend = BackendKind.Paseo,
                             codexDirectory = FOLDER,

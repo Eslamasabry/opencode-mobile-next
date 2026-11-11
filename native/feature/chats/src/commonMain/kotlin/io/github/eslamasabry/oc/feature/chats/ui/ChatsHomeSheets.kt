@@ -67,9 +67,7 @@ internal fun HomeFilterChips(state: ChatsUi, actions: ChatsActions) {
     KitChip(
         label = when {
             state.otherFoldersSelected -> stringResource(Res.string.chatsHomeOtherFolders)
-            state.filters.projectDirectory == null -> stringResource(Res.string.chatsHomeAllProjects)
-            else -> state.projectChoices.firstOrNull { it.directory == state.filters.projectDirectory }?.name
-                ?: state.filters.projectDirectory!!.trimEnd('/').substringAfterLast('/')
+            else -> state.projectChipName ?: stringResource(Res.string.chatsHomeAllProjects)
         },
         kind = KitChipKind.Action,
         // F: lib/ui/screens/chats/chats_home_screen.dart:421-423: a chosen project tints the chip (active tone); it
@@ -183,9 +181,12 @@ internal fun ChatsHomeSheets(state: ChatsUi, actions: ChatsActions) {
 
 @Composable
 private fun ProjectChoices(state: ChatsUi, actions: ChatsActions) {
-    val all = state.filters.projectDirectory == null && !state.otherFoldersSelected
+    // A source that can only list one project has no "all": offering it would promise rows it cannot bring. The one
+    // project stands as the choice and reads as the current one (the chip names it too).
+    val onlyOne = state.onlyProject != null && state.projectChoices.isNotEmpty()
+    val all = state.filters.projectDirectory == null && !state.otherFoldersSelected && !onlyOne
     KitRowGroup(leadingTiles = true) {
-        KitRow(
+        if (!onlyOne) KitRow(
             title = stringResource(Res.string.chatsHomeAllProjects),
             leading = KitRowLeading.Glyph(KitIcons.folderOpen, current = all),
             supporting = pluralStringResource(Res.plurals.chatsFilterChatCount, state.allCount, state.allCount),
@@ -194,7 +195,9 @@ private fun ProjectChoices(state: ChatsUi, actions: ChatsActions) {
             onClick = actions::allProjects,
         )
         state.projectChoices.forEach { project ->
-            val selected = state.filters.projectDirectory == project.directory
+            val selected =
+                state.filters.projectDirectory == project.directory ||
+                    (onlyOne && state.filters.projectDirectory == null && !state.otherFoldersSelected)
             val parts = buildList {
                 add(pluralStringResource(Res.plurals.chatsFilterChatCount, project.chatCount, project.chatCount))
                 if (project.runningCount > 0) add(stringResource(Res.string.chatsFilterRunningCount, project.runningCount))
@@ -418,7 +421,10 @@ private fun SourceChoices(state: ChatsUi, actions: ChatsActions) {
         state.home.sources.forEach { source ->
             KitSwitchRow(
                 title = source.name,
-                leading = KitRowLeading.Glyph(if (source.onThisPhone) KitIcons.phone else KitIcons.server),
+                // F: chats_sources_sheet.dart:26-48: the agents on this phone are one switch, marked as Claude Code's.
+                leading =
+                    if (source.agents) KitRowLeading.Logo("claude", source.name, agent = true)
+                    else KitRowLeading.Glyph(if (source.onThisPhone) KitIcons.phone else KitIcons.server),
                 checked = source.shown,
                 locked = source.main,
                 lockedLabel = if (source.main) stringResource(Res.string.chatsSourcesAlways) else null,
@@ -428,6 +434,7 @@ private fun SourceChoices(state: ChatsUi, actions: ChatsActions) {
                 supporting =
                     when {
                         source.main -> stringResource(Res.string.chatsSourcesMain)
+                        source.agents -> stringResource(Res.string.chatsSourcesAgents)
                         source.unreachable -> stringResource(Res.string.chatsSourcesUnreachable)
                         source.onThisPhone -> stringResource(Res.string.chatsSourcesOnPhone)
                         else -> stringResource(Res.string.chatsSourcesElsewhere)

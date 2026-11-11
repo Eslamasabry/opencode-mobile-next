@@ -130,7 +130,9 @@ public object AllConversationsRules {
             )
         }
         val names = model.servers.associate { it.profile to it.name }
-        val many = model.servers.size > 1
+        // A row names its server only when the list holds more than one: This phone's agents carry the phone's name
+        // (they are part of it), so the phone and its agents alone name none.
+        val many = model.servers.map { it.name }.distinct().size > 1
         val hidden = model.pending.map { it.key }.toSet() + model.hiddenSent
         // Subagent sessions belong to their parent's page, never this list (Dart rootsOnly: true);
         // the AI Team's own

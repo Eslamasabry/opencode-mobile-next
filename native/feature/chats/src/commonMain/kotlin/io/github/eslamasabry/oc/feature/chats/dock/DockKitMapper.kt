@@ -49,9 +49,9 @@ public data class DockKitFrame(
 
 /**
  * Maps the engine's [DockUi] onto the kit's [KitDockModel]. Pure: no Compose, no copy beyond [untitled] (the name of a
- * conversation the server has not titled yet). States map one to one. The dock is always available: quiet (idle recent
- * rings, or one live) is the tucked nub, never nothing; a dock with no ring is still a real model (the strip or nub with
- * its "+"). Only a switched-off dock, or a hidden one (no server connected), is [DockKitFrame.Empty], which the kit
+ * conversation the server has not titled yet). States map one to one. The dock is always available: it rests as the
+ * tucked nub (out only when the person pulled it out, which the model says as [DockPresence.Out]), never nothing; a dock
+ * with no ring is still a real model (the strip or nub with its "+"). Only a switched-off dock, or a hidden one (no server connected), is [DockKitFrame.Empty], which the kit
  * draws as nothing.
  */
 public object DockKitMapper {

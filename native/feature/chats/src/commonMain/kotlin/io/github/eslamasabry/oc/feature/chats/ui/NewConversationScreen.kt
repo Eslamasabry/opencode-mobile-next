@@ -34,6 +34,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationAction
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationModel
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationSheet
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationStarter
+import io.github.eslamasabry.oc.feature.chats.presentation.projectPlace
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationUi
 import io.github.eslamasabry.oc.feature.chats.presentation.filterNewConversationModels
 import io.github.eslamasabry.oc.feature.chats.presentation.isStartableAgent
@@ -443,8 +444,8 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
                     val chosen = state.isChosen(project)
                     KitRow(
                         title = project.name,
-                        // The end of the path tells same-named projects apart; it is never cut mid-name.
-                        supporting = io.github.eslamasabry.oc.ui.kit.text.kitPathTail(project.directory),
+                        // The folders it sits in tell same-named projects apart; the phone's own /root is never part of it.
+                        supporting = projectPlace(project.directory),
                         leading = KitRowLeading.Glyph(KitIcons.folderOpen, tile = true, current = chosen),
                         trailing = if (chosen) KitRowTrailing.Check else KitRowTrailing.None,
                         selected = chosen,

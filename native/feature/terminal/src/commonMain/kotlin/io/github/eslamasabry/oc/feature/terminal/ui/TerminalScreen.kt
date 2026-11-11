@@ -81,6 +81,9 @@ public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions, 
         terminal?.title?.takeIf { it.isNotBlank() }
             ?: stringResource(Res.string.libraryTerminalTitle)
     val newLabel = stringResource(Res.string.remoteTerminalCreate)
+    // Flutter's numbering (`terminal_list.dart`): "Terminal 2" is the next one, never the server's random id.
+    val newTitle = stringResource(Res.string.e7SetupTerminalNumber, state.terminals.size + 1)
+    val createNamed: () -> Unit = { actions.create(newTitle) }
     val stopLabel =
         stringResource(
             if (terminal?.running == true) Res.string.terminalScreenStopConfirm
@@ -103,7 +106,7 @@ public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions, 
         }
     }
     val menu = buildList {
-        if (canCreate) add(KitMenuItem(newLabel, close(actions::create), icon = KitIcons.add))
+        if (canCreate) add(KitMenuItem(newLabel, close(createNamed), icon = KitIcons.add))
         // G7: Flutter's "Open preview" for the project's running dev server, on every server terminal.
         if (devServerPort != null)
             add(KitMenuItem(stringResource(Res.string.terminalOpenPreview), close(actions::openDevPreview), icon = KitIcons.browser))
@@ -257,13 +260,15 @@ public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions, 
                         state.failure != null && state.terminals.isEmpty() -> Unit
                         state.terminals.isEmpty() ->
                             item {
+                                // Alone on the page: it takes the list's whole room, so it sits in the page's middle.
                                 KitStateView(
                                     kind = KitStateKind.Empty,
-                                    title = stringResource(Res.string.remoteTerminalEmpty),
+                                    title = stringResource(Res.string.terminalScreenEmptyTitle),
+                                    modifier = Modifier.fillParentMaxSize(),
                                     primary =
                                         KitAction(
                                             newLabel,
-                                            actions::create,
+                                            createNamed,
                                             working = state.working,
                                         ),
                                 )

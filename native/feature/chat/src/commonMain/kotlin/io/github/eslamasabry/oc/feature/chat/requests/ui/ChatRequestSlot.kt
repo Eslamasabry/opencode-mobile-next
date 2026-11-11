@@ -415,13 +415,20 @@ private fun PermissionDetailsSheet(
             Modifier.fillMaxWidth().testTag("chat-permission-details"),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
-            val full = details.fullText ?: stringResource(Res.string.chatUiAllMatchingRequests)
-            KitCodeBlock(
-                mask(full),
-                if (details.command) KitCodeKind.Command else KitCodeKind.Output,
-                wrap = true,
-                showWrapToggle = false,
-            )
+            // W4: a folder read shows the folder (never the server's "."), a search its pattern.
+            val ask = card?.ask
+            val full =
+                (if (ask != null) RequestCardRules.detailsText(ask, details.fullText) else details.fullText)
+                    ?: if (ask == null || RequestCardRules.detailsSaysAllMatching(ask))
+                        stringResource(Res.string.chatUiAllMatchingRequests)
+                    else null
+            if (full != null)
+                KitCodeBlock(
+                    mask(full),
+                    if (details.command) KitCodeKind.Command else KitCodeKind.Output,
+                    wrap = true,
+                    showWrapToggle = false,
+                )
             details.diff?.let { diff -> KitCodeBlock(mask(diff), KitCodeKind.Code, wrap = true, showWrapToggle = false) }
             val values = details.facts.map { fact -> permissionFactValue(fact, redactor) }
             KitDetailsFold(

@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import dev.zacsweers.metro.ContributesIntoSet
 import io.github.eslamasabry.oc.engine.agents.AgentId
+import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
 import io.github.eslamasabry.oc.engine.agents.certification.AgentCertification
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgents
@@ -131,13 +132,19 @@ class AppChatsHome(
         val sources =
             runtime.profiles.profiles.value
                 .map { loaded ->
+                    // F: side_connections.dart:93-99: the phone agents are one switch named after Claude Code, part of
+                    // This phone: never the server, never "not answering" (their own notices say what is wrong).
+                    val agents = runtime.isPhoneHelper(loaded.id)
                     ChatsListSourceUi(
                         profile = loaded.id,
-                        name = loaded.profile.name,
+                        name =
+                            if (agents) AgentCatalog.builtIn.byId(AgentId("claude"))?.name ?: loaded.profile.name
+                            else loaded.profile.name,
                         shown = runtime.listSourceShown(loaded.id),
-                        main = loaded.id == active,
+                        main = !agents && loaded.id == active,
                         onThisPhone = runtime.sourceOnThisPhone(loaded.profile),
-                        unreachable = loaded.id in runtime.sourceFailures,
+                        unreachable = !agents && loaded.id in runtime.sourceFailures,
+                        agents = agents,
                         secret =
                             when {
                                 loaded.reentry.password ->
@@ -148,6 +155,8 @@ class AppChatsHome(
                             },
                     )
                 }
+                // F: the agents' switch comes after every server's.
+                .sortedBy { it.agents }
                 .toImmutableList()
         val owner = active?.let(runtime.profiles::profile)
         val opening =

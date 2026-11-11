@@ -14,4 +14,5 @@
     <string name="reviewSendBackFailed">Không đưa được ghi chú của bạn vào tin nhắn. Thử lại.</string>
     <string name="reviewProjectNotGitTitle">Không phải dự án Git</string>
     <string name="reviewProjectNotGitBody">Chỉ có thể liệt kê thay đổi của dự án được quản lý bằng Git. Hãy bắt đầu theo dõi dự án từ trang Git của dự án để xem chúng ở đây.</string>
+    <string name="reviewProjectOpenGit">Mở trang Git</string>
 </resources>

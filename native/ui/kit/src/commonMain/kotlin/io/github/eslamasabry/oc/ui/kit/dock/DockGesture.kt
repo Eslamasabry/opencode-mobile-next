@@ -19,8 +19,10 @@ import kotlin.math.hypot
  *   Rename is a target in the swell and the peek (and a custom accessibility action, and F2).
  * - After the peek opened, a deliberate move ALONG the strip (not into the card) picks the ring up: REORDER. Lifting
  *   reports the new index and whether it landed above the pin line. A hold first, so a scrub never reorders by mistake.
- * - The tucked nub: a tap brings the dock back; a drag along the edge MOVES it; a drag across past the screen's middle
- *   flips it to the other edge. The grip at the dock's head moves it the same way. A FLICK from the grip (letting go at
+ * - The tucked nub: a tap brings the dock back, and so does a mostly-sideways drag in; any other touch that starts on it
+ *   (a drag along the edge, a long press) is given up to the page under it (dock study, finding 1: a thumb scroll moved
+ *   the tucked dock). The dock moves only from the grip at the head of a dock that is out: a drag along the edge moves
+ *   it, across past the screen's middle flips it to the other edge. A FLICK from the grip (letting go at
  *   [DockRules.flickSpeed] or more, mostly sideways) toward the middle opens the list and never changes edge.
  */
 
@@ -206,9 +208,14 @@ internal class DockGesture(private val rules: DockRules = DockRules()) {
             DockMode.Peek -> peekMove(dx, dy, far, hits, DockFeedback.None)
             DockMode.Reorder -> DockFeedback.None
             DockMode.Pull, DockMode.Move -> DockFeedback.None
-            DockMode.NubPress, DockMode.GripPress -> {
+            DockMode.NubPress -> {
                 if (!far) return DockFeedback.None
-                mode = if (mode == DockMode.NubPress && abs(dx) > rules.axisBias * abs(dy)) DockMode.NubDrag else DockMode.Move
+                // Sideways: the dock's (in brings it out). Anything else is not the band's: given up to the page.
+                mode = if (abs(dx) > rules.axisBias * abs(dy)) DockMode.NubDrag else DockMode.Idle
+                DockFeedback.None
+            }
+            DockMode.GripPress -> {
+                if (far) mode = DockMode.Move
                 DockFeedback.None
             }
             DockMode.NubDrag -> DockFeedback.None
@@ -283,7 +290,10 @@ internal class DockGesture(private val rules: DockRules = DockRules()) {
                 when {
                     t != null -> DockOutcome.Target(ring, t.kind, t.child)
                     !hits.inStrip(x) && hits.inSwell(x, y) -> keep(peek = false)
-                    else -> hits.ringAt(y).let { if (it >= 0) DockOutcome.Open(it) else DockOutcome.Close }
+                    // Lifting off the strip cancels: a ring opens only under a finger still on the strip (its width and
+                    // the strip's own few dp of slop), never at the height of a finger that drifted away.
+                    hits.inStrip(x) -> hits.ringAt(y).let { if (it >= 0) DockOutcome.Open(it) else DockOutcome.Close }
+                    else -> DockOutcome.Close
                 }
             DockMode.Peek ->
                 when {

@@ -14,10 +14,10 @@ class LiquidEdgeDockTest {
     private fun close(a: Float, b: Float, what: String) = assertTrue(abs(a - b) < 1e-4f, "$what: $a, wanted $b")
 
     @Test
-    fun `dock glass - at rest the bar's recipe, fully grown the menu's, halfway every number halfway`() {
+    fun `dock glass - at rest the bar's recipe, fully grown the swell's (the menu's old glass), halfway every number halfway`() {
         for (dark in listOf(true, false)) for (look in listOf(GlassLooks.Glossy, GlassLooks.of(io.github.eslamasabry.oc.ui.design.style.GlassLookId.Clear))) {
             val bar = LiquidEdge.recipe(LiquidRole.Bar, dark, look)
-            val menu = LiquidEdge.recipe(LiquidRole.Menu, dark, look)
+            val menu = LiquidEdge.swellRecipe(dark, look)
             assertEquals(bar, LiquidEdge.recipe(LiquidRole.Dock, dark, look), "the dock's own recipe is the bar's (dark=$dark)")
             assertEquals(bar, LiquidEdge.dockRecipe(dark, 0f, look), "at rest (dark=$dark)")
             assertEquals(menu, LiquidEdge.dockRecipe(dark, 1f, look), "fully grown (dark=$dark)")
@@ -48,7 +48,7 @@ class LiquidEdgeDockTest {
     @Test
     fun `dock glass - the pulled-out list frosts as a sheet does, 12 dp and bend 48, and keeps the menu's tint and rim`() {
         for (dark in listOf(true, false)) {
-            val menu = LiquidEdge.recipe(LiquidRole.Menu, dark)
+            val menu = LiquidEdge.swellRecipe(dark)
             val sheet = LiquidEdge.recipe(LiquidRole.Sheet, dark)
             assertEquals(12f, sheet.blurDp, "the sheet's blur (dark=$dark)")
             assertEquals(48f, sheet.refractionDp, "the sheet's bend (dark=$dark)")

@@ -28,7 +28,6 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.commandLauncherSubtitle
 import io.github.eslamasabry.oc.ui.words.res.composerFullCommands
-import io.github.eslamasabry.oc.ui.words.res.kitSheetDismiss
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -80,7 +79,6 @@ internal fun ChatCommandsSheet(
         onDismissRequest = onDismiss,
         title = stringResource(Res.string.composerFullCommands),
         subtitle = stringResource(Res.string.commandLauncherSubtitle),
-        closeLabel = stringResource(Res.string.kitSheetDismiss),
     ) {
         val field = rememberTextFieldState()
         val query = field.text.toString()

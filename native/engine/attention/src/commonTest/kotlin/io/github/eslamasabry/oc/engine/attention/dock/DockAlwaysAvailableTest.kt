@@ -100,7 +100,7 @@ class DockAlwaysAvailableTest {
         val two = idle.reduce(DockEvent.RunStarted(x)).reduce(DockEvent.RunStarted(y))
         assertEquals(listOf(ref("r6"), ref("r5"), x, y), two.ids(), "fillers give up their places, live ones join last")
         assertEquals(0, two.ui.overflow)
-        assertEquals(DockPresence.Out, two.ui.presence)
+        assertEquals(DockPresence.Nub, two.ui.presence, "two live never bring it out by itself")
         val full = two.reduce(DockEvent.RunStarted(z)).reduce(DockEvent.RunStarted(w)).reduce(DockEvent.RunStarted(v))
         assertEquals(listOf(x, y, z, w), full.ids())
         assertTrue(full.ui.entries.none { it.state == DockState.Idle }, "no idle filler while live ones overflow")

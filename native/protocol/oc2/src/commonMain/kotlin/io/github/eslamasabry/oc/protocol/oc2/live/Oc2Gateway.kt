@@ -1979,7 +1979,7 @@ internal class Oc2Gateway(
         val providerReply = json("/provider", query = scope)
         if (providerReply is Outcome.Failed) return providerReply
         val providerJson = (providerReply as Outcome.Ok).value
-        redactor.registerCredentialValues(providerJson)
+        redactor.registerAnswerCredentials(providerJson)
         val providerPayload = data(providerJson)
         // Older provider inventories include their models and an explicit connected list. An empty
         // connected list is authoritative, never a reason to offer the catalog's models.
@@ -1994,7 +1994,7 @@ internal class Oc2Gateway(
         if (defaultReply is Outcome.Failed) return defaultReply
         val modelJson = (modelReply as Outcome.Ok).value
         val defaultJson = (defaultReply as Outcome.Ok).value
-        redactor.registerCredentialValues(providerJson)
+        redactor.registerAnswerCredentials(providerJson)
         val providerRows =
             data(providerJson) as? JsonArray ?: return Failure.UnreadableReply().failed()
         val modelRows = data(modelJson) as? JsonArray ?: return Failure.UnreadableReply().failed()
@@ -2075,7 +2075,7 @@ internal class Oc2Gateway(
         val providerJson = (providerReply as Outcome.Ok).value
         val modelJson = (modelReply as Outcome.Ok).value
         val agentJson = (agentReply as Outcome.Ok).value
-        redactor.registerCredentialValues(providerJson)
+        redactor.registerAnswerCredentials(providerJson)
         val providerRows =
             data(providerJson) as? JsonArray ?: return Failure.UnreadableReply().failed()
         val modelRows = data(modelJson) as? JsonArray ?: return Failure.UnreadableReply().failed()
@@ -2223,6 +2223,49 @@ internal class Oc2Gateway(
                 }
                 .toImmutableList()
         }
+
+    override suspend fun versionControlHealth(): Outcome<VersionControlHealth> =
+        versionControlHealthAt(location.value)
+
+    /**
+     * `GET /vcs` (Vcs.Info). A real 2.2.6 server answers `{provider:"git", branch:{current?, default?}}` for a
+     * repository (`current` is absent on a detached HEAD) and `{branch:{}}` otherwise. It also answers `{branch:{}}`
+     * for a repository on the first reads of a folder it has not looked at yet (it finds Git a moment later), so
+     * only `provider: "git"` is an answer: anything else is Unknown, never "not a repository". The changed files
+     * come from `GET /vcs/status` (Vcs.FileStatus `{file, additions, deletions, status}`), optional as in Flutter's
+     * `loadVersionControlHealth` (ops_dev.dart).
+     */
+    override suspend fun versionControlHealthAt(location: ServerLocation): Outcome<VersionControlHealth> {
+        val health =
+            read("/vcs", query = locationQuery(location)) { root ->
+                val info =
+                    ((root as? JsonObject)?.let { it["data"] ?: it } as? JsonObject) ?: return@read null
+                val branch = info["branch"] as? JsonObject
+                VersionControlHealth(
+                    branch = branch?.str("current")?.trim()?.takeIf { it.isNotEmpty() },
+                    defaultBranch = branch?.str("default")?.trim()?.takeIf { it.isNotEmpty() },
+                    changes = persistentListOf(),
+                    setupState =
+                        if (info.str("provider") == "git") VersionControlSetupState.Git
+                        else VersionControlSetupState.Unknown,
+                )
+            }
+        if (health !is Outcome.Ok || health.value.setupState != VersionControlSetupState.Git) return health
+        val changes =
+            (json("/vcs/status", query = locationQuery(location)) as? Outcome.Ok)?.value?.let { root ->
+                (((root as? JsonObject)?.get("data") ?: root) as? JsonArray)?.mapNotNull { row ->
+                    val obj = row as? JsonObject ?: return@mapNotNull null
+                    fun count(key: String) = (obj[key] as? JsonPrimitive)?.takeIf { !it.isString }?.intOrNull ?: 0
+                    VersionControlFile(
+                        obj.str("file")?.takeIf { it.isNotEmpty() } ?: return@mapNotNull null,
+                        obj.str("status").orEmpty(),
+                        count("additions"),
+                        count("deletions"),
+                    )
+                }
+            }
+        return Outcome.Ok(health.value.copy(changes = changes.orEmpty().toImmutableList()))
+    }
 
     /**
      * `GET /vcs/diff?mode=working` (protocol notes "VCS"): the folder's uncommitted changes vs

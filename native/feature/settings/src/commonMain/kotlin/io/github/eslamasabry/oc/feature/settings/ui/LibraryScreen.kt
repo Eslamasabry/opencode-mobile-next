@@ -107,7 +107,7 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
         ) {
             item {
                 if (!state.available)
-                    KitStateView(KitStateKind.Calm, stringResource(Res.string.nlibUnavailable))
+                    KitStateView(KitStateKind.Calm, stringResource(Res.string.nlibUnavailable), size = KitStateSize.Inline)
                 if (
                     selectedSection in inventory.failedSections ||
                         (state.tab == LibraryTab.Mcp && "resources" in inventory.failedSections)
@@ -453,7 +453,7 @@ private fun LibraryEmpty(
     }
     if (failed) return
     if (query.isNotEmpty()) {
-        KitStateView(KitStateKind.Calm, stringResource(Res.string.nlibNoMatch))
+        KitStateView(KitStateKind.Calm, stringResource(Res.string.nlibNoMatch), size = KitStateSize.Inline)
         return
     }
     val title =
@@ -477,7 +477,7 @@ private fun LibraryEmpty(
                     .padding(bottom = Space.S3.dp),
         )
     } else {
-        KitStateView(KitStateKind.Calm, stringResource(title))
+        KitStateView(KitStateKind.Calm, stringResource(title), size = KitStateSize.Inline)
     }
 }
 

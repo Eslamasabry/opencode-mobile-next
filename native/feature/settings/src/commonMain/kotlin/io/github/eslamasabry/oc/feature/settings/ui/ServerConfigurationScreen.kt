@@ -27,6 +27,7 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -73,13 +74,14 @@ public fun ServerConfigurationScreen(
             KitGroupNote(stringResource(Res.string.configInspectionExplanation))
             when (state) {
                 ServerConfigurationUi.Loading ->
-                    KitStateView(kind = KitStateKind.Loading, title = title)
+                    KitStateView(kind = KitStateKind.Loading, title = title, size = KitStateSize.Inline)
                 ServerConfigurationUi.Unavailable ->
                     KitStateView(
                         kind = KitStateKind.Error,
                         title = stringResource(Res.string.configInspectionUnavailable),
                         primary =
                             KitAction(stringResource(Res.string.commonRetry), actions::refresh),
+                        size = KitStateSize.Inline,
                     )
                 is ServerConfigurationUi.Ready -> {
                     KitActionBlock(

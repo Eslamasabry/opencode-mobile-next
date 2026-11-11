@@ -54,6 +54,11 @@ public data class NewConversationServer(
     val connected: Boolean,
     /** This phone's own OpenCode is off because the person stopped it. */
     val phoneOff: Boolean = false,
+    /**
+     * Connections that are part of this server and never listed on their own (This phone's agents): a page opened
+     * for one of them (Start new from an agent's conversation) starts here, with that agent chosen.
+     */
+    val standsFor: Set<ProfileId> = emptySet(),
 )
 
 public data class NewConversationProject(
@@ -543,7 +548,9 @@ public class NewConversationViewModel(
                     shown.profile?.let(::chooseServer)
                 if (mutable.value.profile == null) {
                     val target =
-                        route.profile?.takeIf { wanted -> servers.any { it.profile == wanted } }
+                        route.profile?.let { wanted ->
+                            servers.firstOrNull { it.profile == wanted || wanted in it.standsFor }?.profile
+                        }
                             ?: servers.firstOrNull { it.connected }?.profile
                             ?: servers.singleOrNull()?.profile
                     target?.let(::chooseServer)
@@ -1384,3 +1391,18 @@ public fun isStartableAgent(name: String): Boolean =
                 "explore",
                 "general",
             )
+
+/**
+ * The line under a project's name in the project sheet: the folders it sits in, so same-named projects tell apart
+ * ("work/app"). The phone's Linux home (`/root`) is where every project of the phone lives, so it is never part of the
+ * line: a project straight in it has none. Longer than two folders keeps the last two behind an ellipsis.
+ */
+public fun projectPlace(directory: String): String? {
+    val parts = directory.trim().replace('\\', '/').split('/').filter { it.isNotEmpty() }
+    val parents = parts.dropLast(1).let { if (it.firstOrNull() == "root" && directory.trim().startsWith("/root")) it.drop(1) else it }
+    return when {
+        parents.isEmpty() -> null
+        parents.size <= 2 -> parents.joinToString("/")
+        else -> "…/" + parents.takeLast(2).joinToString("/")
+    }
+}

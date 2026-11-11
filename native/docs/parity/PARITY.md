@@ -4,6 +4,21 @@ Date 2026-11-06. Read-only audit. Native tree: `/home/owner/Storage2/wt/scr-merg
 
 > **2026-11-07 — Termux retired.** The owner removed the Termux app from native: built-in Linux is the only engine on the phone and a computer is the other way. Every row that mentions Termux is now N/A ("retired") in `PARITY.json`; the Termux rows below are history, not to-do. A Flutter user with a Termux setup sees one notice instead.
 
+> **2026-11-11 — the Conversations home shows one notice at a time (owner).** Native differs from Flutter on purpose:
+> the home shows at most one notice, chosen by `HomeNotices` (feature/chats `presentation/HomeNotices.kt`), and drops
+> three lines nobody can act on: Flutter's "Showing conversations in {project} only. This server can't list all
+> projects." (`chatsHomeOnlyProject`, chats_home_screen.dart:468; the projects chip names that project instead of "All
+> projects", and its menu has no "All projects" row), "Loading {agents} conversations…" (`chatsHomeStillLoading`; the
+> refresh indicator says it), and native's own "Can't tell what's new on this server". Flutter's quiet plan-limit line
+> stays, as a notice with the agent's page. The phone agents' connection (Paseo, `fetch_agents_request` has no folder
+> filter) reports `globalSessionSearch = false`; the home counts it as reaching every project
+> (`PhoneAgentRules.listsAcrossProjects`), so it never makes This phone's list look single-project.
+
+> **2026-11-11 — one This phone (owner).** As in Flutter, This phone's agents are part of This phone, never a server:
+> native still saves their helper connection as a profile (`<phone>-agents`), but it carries the phone's name, is left
+> out of every server list (Servers sheet and pill, Settings, Servers, New conversation, Watched servers, search and
+> usage, Projects), goes when This phone is removed, and its folders join This phone's projects.
+
 
 ## How to read the counts
 

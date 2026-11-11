@@ -316,7 +316,6 @@
     <string name="chats_all_filter">Bộ lọc: %1$s</string>
     <string name="chats_all_none">Không có bộ lọc</string>
     <string name="chats_back">Quay lại</string>
-    <string name="chatsReturnBriefUnknown">Không rõ máy chủ này có gì mới</string>
     <string name="chatsReturnBriefMore">và %1$d mục nữa</string>
     <string name="workRunawayStopFailedRetry">Không dừng được %1$s. Hãy thử lại.</string>
     <string name="chatsHomeInterrupted">Bị gián đoạn</string>

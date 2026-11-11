@@ -409,7 +409,7 @@ class ChatsScreenTest {
         }
 
     @Test
-    fun `B-CHAT-095 finding 5 unsupported read state is visibly distinct from empty`() =
+    fun `B-CHAT-095 finding 5 an unsupported read state says nothing at all (owner 2026-11-11)`() =
         runComposeUiTest {
             val unknown =
                 ReturnBrief.build(
@@ -422,21 +422,40 @@ class ChatsScreenTest {
                     scope = BRIEF_SCOPE,
                 )
             setContent { Themed { ChatsScreen(ui(brief = unknown), RecordingChatsActions()) } }
-            onNodeWithText("Can't tell what's new on this server").assertExists()
+            // Nobody can act on "can't tell what's new": no line, and no empty block either.
+            onNodeWithText("Can't tell what's new on this server").assertDoesNotExist()
             onAllNodesWithText("Mark all seen").assertCountEquals(0)
         }
 
     @Test
-    fun `the one-project line names the project in quotes and starts where the brief notice starts`() =
+    fun `a server that lists one project names it on the projects chip and shows no notice about it`() =
         runComposeUiTest {
-            val unknown = ReturnBrief.build(emptyList(), false, false, { true }, { false }, { null }, scope = BRIEF_SCOPE)
-            setContent { Themed { ChatsScreen(ui(brief = unknown).copy(onlyProject = "new"), RecordingChatsActions()) } }
-            val line = onNodeWithText("Showing conversations in", substring = true).fetchSemanticsNode()
-            val shown = line.config[androidx.compose.ui.semantics.SemanticsProperties.Text].joinToString { it.text }
-            assertTrue(shown.filter { it != '\u2068' && it != '\u2069' }.startsWith("Showing conversations in \u201Cnew\u201D only."), shown)
-            val project = line.boundsInRoot
-            val brief = onNodeWithText("Can't tell what's new on this server").fetchSemanticsNode().boundsInRoot
-            assertEquals(brief.left, project.left, "same text column")
+            setContent { Themed { ChatsScreen(ui(item("a")).copy(onlyProject = "new"), RecordingChatsActions()) } }
+            onNodeWithText("Showing conversations in", substring = true).assertDoesNotExist()
+            onNodeWithText("This server can't list all projects", substring = true).assertDoesNotExist()
+            // The chip never says "All projects" over a list limited to one.
+            onNodeWithContentDescription("All projects").assertDoesNotExist()
+            onNodeWithContentDescription("new").assertExists()
+        }
+
+    @Test
+    fun `a phone agent at its plan limit says try again later and opens that agent's page`() =
+        runComposeUiTest {
+            val actions = RecordingChatsActions()
+            val limit =
+                io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNotice(
+                    "claude",
+                    "Claude Code",
+                    io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNoticeKind.LimitReached,
+                )
+            val state =
+                ui(item("a")).copy(
+                    agentNotices = io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNotices(lines = persistentListOf(limit))
+                )
+            setContent { Themed { ChatsScreen(state, actions) } }
+            onNodeWithText("plan limit reached · try again later", substring = true).assertExists()
+            onNodeWithText("'s page", substring = true).performClick()
+            assertEquals(listOf("agent claude"), actions.calls.filter { it.startsWith("agent") })
         }
 
     @Test
@@ -489,7 +508,7 @@ class ChatsScreenTest {
             setContent {
                 Themed { ChatsScreen(ui(item("known"), brief = brief), RecordingChatsActions()) }
             }
-            onNodeWithText("Can't tell what's new on this server").assertExists()
+            onNodeWithText("Can't tell what's new on this server").assertDoesNotExist()
             onNodeWithText("Mark all seen").assertExists()
         }
 

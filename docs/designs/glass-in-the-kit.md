@@ -385,7 +385,7 @@ the tint, the cover and one rim light follow the body's outline. Otherwise `reme
 unchanged (the dock's looks pictures and tests did not change).
 
 **The recipe.** A new liquid role, `LiquidRole.Dock`, ranked between the + (Action) and the bars. At rest it is the
-bar's recipe (blur 3 dp, bend 34 dp, rim 22 dp, tint .18 dark / .12 light); fully grown it is the menu's (blur 6 dp dark
+bar's recipe (blur 3 dp, bend 34 dp, rim 22 dp, tint .18 dark / .12 light); fully grown it is the menu's glass as it was until words on glass 3 (`LiquidEdge.swellRecipe`: blur 6 dp dark
 / 3 light, bend 48 dp, rim 26 dp, tint .20 / .10); in between every number is mixed by the body's growth with no step
 (`LiquidEdge.dockRecipe`, `LiquidEdge.mix`). The tint colour is mixed the same way between the bar's face and the menu's
 face. One resolution for the whole growth (the grown end's), so the sharpness never steps while the swell grows. The
@@ -558,6 +558,17 @@ fix needs a third copy of the list's recording cleared in the pill's label band 
 moves), recorded each frame for the pill's backdrop in `kit-chat`, or the pill's backdrop switched to the faded copy,
 which is whole above the box's edge and so does not help. Left for a device pass.
 
+**The jump pill above a stacked block (branch native/frame-pill-clear).** With chips or a request card above the box the
+pill stands above the block, and its words had transcript text running through them: the body was whole up to 8 dp
+above the block and the pill's glass read the list's whole recording. Now, while the pill is shown in that case, the pill
+reports its target's height times its show fraction (`KitScreenBottom.pillClear`, animated on the pill's own STANDARD in /
+QUICK out spec, instant when motion is reduced), and the body's bottom fade starts that much higher, so the body is gone
+at the pill's top and the pill stands on the page's ground like the chips and the label. The pill's glass also reads a copy
+of the list's recording cleared from its top edge down (`KitWordsFade`), since the body's fade never reaches a recording;
+the fade alone would leave the blurred rows in its face. Draw phase only; hidden pill, or a pill joined to the box (nothing
+above the box): nothing changes. Tests: `ChatWordsGlassTest` (label band, the body beside the pill, hidden, not stacked).
+Device: the pill's rest 8 dp above the block is the host's (`jumpPillLift`); the fade's look on a real transcript.
+
 **Pictures** (desktop, Glass dark, white rows scrolled under the panes): `glass-in-the-kit/render-words-top-chat-*.png`,
 `render-words-home-*.png`, `render-words-needs-decision-*.png`, `-before` and `-after`.
 
@@ -599,7 +610,7 @@ that rides out, leaving no ring in the one slot of room; while renaming, the col
 strip's rings are dimmed (45 %). The strip still grows above and below the swell by the fillet and the corner, as for every
 swell (see Limits above): that is the dock's geometry. Picture: `render-dock3-3-before.png`, `render-dock3-3-after.png`.
 
-**4. The list lets the page through (4b).** The grown dock used the Menu's glass: blur 6 dp dark (3 dp light), bend 48 dp.
+**4. The list lets the page through (4b).** The grown dock used the Menu's glass: blur 6 dp dark (3 dp light), bend 48 dp (since words on glass 3 menus frost at 12 dp in both themes; the dock keeps this glass as `LiquidEdge.swellRecipe`).
 For the list only the blur and the bend now move to the Sheet's (`LiquidEdge.baseRecipe`: blur 12 dp, bend 48 dp; the bend
 is the same number, so the change is the blur: dark 6 to 12 dp, light 3 to 12 dp) by the list's own growth
 (`LiquidEdge.toward`, `KitLiquidBodyBoxes.listShare`): zero while a swell or peek is out, rising with the list from zero, so
@@ -675,3 +686,69 @@ the one-line cut at a space drops the rest without marking it; the rows' names n
 no-break space) so the overflow ends them in the mark. The desktop harness shows the mark both before and after (it does not
 reproduce the platform's cut), so that part is not proven on a device. Tests: `KitEdgeDockListPaneTest`; the picture is written by
 `KitEdgeDockListPanePicturesTest` (`render-dock5-list-after.png`; CI keeps no files, so the pictures are made where it runs).
+
+## Words on glass 3: menus and sheets (2026-11-11, branch native/glass-words3)
+
+From the emulator sweep (Glass dark): behind "Rename conversation" in the chat bar's menu a dark user bubble read as a
+highlighted row; a menu title was overprinted by text behind it; a reply's menu was translucent over body text; the green
+"Ask about this file" button was a bright blurry blob behind a sheet's "Copy path", and the green mic button glowed beside
+"Cancel". Finish line: on Glass with the lens on, behind the words of a menu and a sheet nothing reads as a shape, a line
+of text or a bright or coloured blob, and their rims still bend real content. No change to bars, the message box, chips,
+pills, the dock or the action button, to any other look, to the menu's drop and fill.
+
+### As built: 1. Menus frost as the dock's list does
+
+`LiquidEdge.baseRecipe`: the Menu role's blur is 12 dp in both themes (was 6 dark, 3 light); bend (48), rim (26 dp), tint
+(.20 / .10) and saturation (1.6) are unchanged. Two things derive from the Menu recipe and are handled so nothing steps:
+the edge dock's swell (the grown end of the dock's mix) keeps the old glass as `LiquidEdge.swellRecipe` (blur 6 / 3, no
+hold), selected by `kitLiquidPaneSpec(swell = true)` in `KitLiquidBody`, so the dock's strip, swell and list are the
+numbers they were (its list still moves to the sheet's 12 dp by `toward`); and the joined menu. The joined body draws
+ONE frost, the body's (the bar's 3 dp), so a Menu recipe alone would never have reached a menu that opens out of the chat
+bar, which is the case in the pictures. While a menu is joined the body's blur now moves from the bar's to the menu's as
+the menu's rows come in (`joinedFrost`, the drop's `content` 0 to 1, linear, no step; bend, rim and tint ease by the
+join's own band as before), and the lens pass's resolution follows the mixed blur. So the bar's half of the body frosts at
+12 dp while a menu hangs from it (a departure from "no change to bars": it is the one frost of one body); a join with the
+jump pill (blur 1) is untouched, since only the menu (a drop whose glass holds, `LiquidHold`) moves the body's frost.
+
+### As built: 2. The knee reaches plain panes
+
+The vendored library's pane takes effects: no fork is needed. `AndroidLiquidGlass.pane` adds a runtime-shader effect after
+the lens (`runtimeShaderEffect("OcHold", LiquidHoldShader.SOURCE, "content")`) when `recipe.hold.knee` (the Menu and Sheet
+roles; `LiquidHold`). It is the join shader's knee line for line (`kneeOf`: polarity by ink, following the words' flip),
+written once in `KitLiquidHold.kt` as AGSL/SkSL; every declared uniform (`knee`, `hold`, `box`, `corner`, `cc`) is set in
+every effect run (`KitLiquidHoldShaderTest` compares the declared names with the set ones, for this shader and the join
+shader). Desktop: `kitLiquidPlainStandIn` (colour controls, blur, the hold, the tint; no bend, no rim light) is the
+stand-in the tests draw the real menu/sheet faces through. The luminance of white behind a sheet's words is held to .50
+(`LiquidJoin.held`); a bright white card behind the words: peak luma 207 to 110 (menu), 203 to 109 (sheet), still a grey card, not a white one.
+
+### As built: 3. Colour held back
+
+Measured on a pure green (0,255,0) and a pure orange (255,128,0) 56 dp circle behind the words' band (a menu and a sheet,
+dark, desktop stand-in, mean chroma over the circle's core, over the empty pane, of 255): today 199 / 198 (menu), 191 / 190
+(sheet); knee alone 119 / 152 (.60 / .77 of today's) and 115 / 146 (sheet); (a) saturation 1.0 for the Sheet and Menu roles
+with the knee 118 / 139 (.59 / .70), sheet 114 / 134 (.60 / .70); (b) shipped 47 / 46 (.24 / .23), sheet 45 / 43 (.24 / .23).
+(a) cannot work: a pure colour is already saturated at 1.0, and saturation 1.6 only lifts mixed colours (the app's own
+green, #34C759: 166 today, 77 with (a), 46 with (b)). So (b): after the knee the colour that is left is limited
+(`LiquidHold.chroma` = `LiquidEdge.HOLD_CHROMA` = .26): a chroma (largest minus smallest channel) up to .4 of that is
+left alone, above it eases to .26 (`t + (cap - t)(1 - exp(-(c - t)/(cap - t)))`), the light the knee's, in the lens's inner
+part only (`smoothstep(rim/2, rim, depth)`), so the rim keeps its colour (a green block behind a pane's edge: chroma 121
+in the rim band, 51 at the middle). The first try scaled the colour by `(knee / light)^3` above the knee: its core was as
+quiet (.08 / .22) but the sub-knee halo kept its full colour, so a green disc read as a green ring round a grey centre
+(`render-words3-sheet-exponent-ring.png`); the limiter has no ring (the chroma never falls as the colour gets stronger,
+a unit test). Both shaders; the join shader gets it only for a body joined to a menu (the bar's half too: one body).
+
+### 4. A dark bubble is still a plateau
+
+Behind a menu's row a dark bubble (and the mid ground it sits on) keeps its plateau: contrast between the bubble and its
+ground 40 of 255 before and after (a frost cannot remove an area), the steepest edge 16.3 to 9.6 of 255 per 4 dp (a line of text behind the menu: peak 95 to 72, steepest edge 1.9 to 0.0, contrast 68 to 18). Under
+light words in a dark theme the knee holds back the bright end only. If the picture on the device still shows a
+highlighted row, the next lever is a floor for the dark end (the mirror of the knee), not more blur.
+
+**Pictures** (desktop, Glass dark, stand-in lens: no bend, no rim light): `glass-in-the-kit/render-words3-menu-before.png`
+and `-after.png`, `render-words3-sheet-before.png` and `-after.png`.
+
+**Checks** (GitHub, desktop): `LiquidWordsHoldTest` (recipes, the reference colour), `GlassWordsMenuSheetTest` (the real
+menu and sheet faces over a line of text, a dark bubble, a bright card, a green and an orange circle: before and after
+numbers, the rim, the other looks), `KitLiquidHoldShaderTest` (both shaders against the reference, the uniforms),
+`LiquidEdgeDockTest` and `LiquidJoinTest` (the dock keeps its numbers). Not run: anything on a device; the lens's bend and
+rim light, the Android runtime shader (compiled as SkSL on desktop from the same text).

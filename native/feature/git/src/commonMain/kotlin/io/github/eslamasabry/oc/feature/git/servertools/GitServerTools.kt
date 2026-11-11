@@ -42,7 +42,13 @@ public data class GitServerToolsUi(
     val shellSettings: Boolean = false,
     val open: Boolean = false,
     val busy: Boolean = false,
+    /** An action the person took (initialize, worktree, choosing a shell) did not work. */
     val failed: Boolean = false,
+    /**
+     * Only the shell list could not be read. It is the shell section's own problem: the other tools stay usable and the
+     * sheet never opens on an error banner for a read the person did not ask for.
+     */
+    val shellsFailed: Boolean = false,
     val invalidName: Boolean = false,
     val result: ServerToolsResult? = null,
     val createdDirectory: String? = null,
@@ -225,14 +231,14 @@ public class GitServerToolsViewModel(
         val target = location ?: return
         if (state.value.busy || !state.value.shellSettings || !current(expected, target)) return
         val operations = (expected as? GitServerToolsAccessors)?.gitServerOperations ?: return
-        mutable.value = state.value.copy(busy = true, failed = false)
+        mutable.value = state.value.copy(busy = true, shellsFailed = false)
         viewModelScope.launch {
             val answer = operations.terminalShellSettings()
             if (current(expected, target))
                 mutable.value =
                     state.value.copy(
                         busy = false,
-                        failed = answer is Outcome.Failed,
+                        shellsFailed = answer is Outcome.Failed,
                         shells = (answer as? Outcome.Ok)?.value,
                     )
         }
