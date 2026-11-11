@@ -81,10 +81,15 @@ class PhoneServerStateTest {
         assertEquals(AnswerHeadline.Off, answer.headline)
         assertEquals(AnswerLine.StaysOff, answer.line)
         assertEquals(PhoneAct.Start, answer.primary)
-        // A native restore that stopped for "Stopped" is the person's stop too.
+    }
+
+    @Test
+    fun `owner rule a stop the app or Android made is not the person's, even with the native reason stopped`() {
+        val reasonStopped = installed.copy(restoreReason = RestoreReason.Stopped)
+        assertEquals(PhoneServerState.Stopped(StoppedBy.Itself), derive(PhoneServerFacts(status = reasonStopped)))
         assertEquals(
             PhoneServerState.Stopped(StoppedBy.Person),
-            derive(PhoneServerFacts(status = installed.copy(restoreReason = RestoreReason.Stopped))),
+            derive(PhoneServerFacts(status = reasonStopped, stoppedByPerson = true)),
         )
     }
 
