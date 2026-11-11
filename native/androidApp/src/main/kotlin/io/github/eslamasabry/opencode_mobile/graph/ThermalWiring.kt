@@ -51,6 +51,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -86,6 +87,23 @@ class ThermalRuntime(
     val pauseActive: StateFlow<Boolean> = guard.pauseActive
     val notice: StateFlow<ThermalNotice?> = guard.notice
     private var started = false
+
+    /** What the guard holds now, for "This phone" (Flutter `_heat`); null when it holds nothing. */
+    val heat: StateFlow<io.github.eslamasabry.oc.feature.phone.presentation.PhoneHeatFacts?> =
+        kotlinx.coroutines.flow
+            .combine(guard.pauseActive, guard.notice, guard.nextCheckAt) { _, _, at ->
+                val holds = guard.holds
+                if (guard.hold == io.github.eslamasabry.oc.engine.runtime.heat.ThermalHold.None || holds.isEmpty())
+                    null
+                else
+                    io.github.eslamasabry.oc.feature.phone.presentation.PhoneHeatFacts(
+                        stopped =
+                            guard.hold == io.github.eslamasabry.oc.engine.runtime.heat.ThermalHold.Stopped,
+                        resumesByItself = holds.keys.any { allowsRecovery(it) },
+                        resumeAt = at,
+                    )
+            }
+            .stateIn(main, kotlinx.coroutines.flow.SharingStarted.Eagerly, null)
 
     fun start() {
         if (started) return

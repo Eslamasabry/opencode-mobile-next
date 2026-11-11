@@ -67,6 +67,11 @@ import io.github.eslamasabry.oc.ui.words.res.thisPhoneAnswerOffLine
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneAnswerRecovery
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneAnswerRestartNow
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneAnswerRestarting
+import io.github.eslamasabry.oc.ui.words.res.thisPhoneAnswerHeatPaused
+import io.github.eslamasabry.oc.ui.words.res.thisPhoneAnswerHeatResumeCool
+import io.github.eslamasabry.oc.ui.words.res.thisPhoneAnswerHeatResumeIn
+import io.github.eslamasabry.oc.ui.words.res.thisPhoneAnswerHeatStays
+import io.github.eslamasabry.oc.ui.words.res.thisPhoneAnswerHeatStopped
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneAnswerRestartsIn
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneAnswerRestartsSoon
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneAnswerRunning
@@ -116,6 +121,8 @@ internal fun AnswerHeadline.words(): String =
             AnswerHeadline.Restarting -> Res.string.thisPhoneAnswerRestarting
             AnswerHeadline.StartFailed -> Res.string.thisPhoneAnswerStartFailed
             AnswerHeadline.Recovery -> Res.string.thisPhoneAnswerRecovery
+            AnswerHeadline.HeatPaused -> Res.string.thisPhoneAnswerHeatPaused
+            AnswerHeadline.HeatStopped -> Res.string.thisPhoneAnswerHeatStopped
             AnswerHeadline.NeedsOpenCode2 -> Res.string.openCode1UnsupportedTitle
         }
     )
@@ -134,6 +141,10 @@ internal fun AnswerLine.words(): String =
         AnswerLine.RestartsSoon -> stringResource(Res.string.thisPhoneAnswerRestartsSoon)
         is AnswerLine.RestartsIn ->
             stringResource(Res.string.thisPhoneAnswerRestartsIn, wait.words())
+        AnswerLine.HeatResumeCool -> stringResource(Res.string.thisPhoneAnswerHeatResumeCool)
+        is AnswerLine.HeatResumeIn ->
+            stringResource(Res.string.thisPhoneAnswerHeatResumeIn, wait.words())
+        AnswerLine.HeatStays -> stringResource(Res.string.thisPhoneAnswerHeatStays)
         AnswerLine.GaveUp -> stringResource(Res.string.thisPhoneAnswerGaveUp)
         is AnswerLine.PortBusy -> stringResource(Res.string.phoneServerPortBusy, port.toString())
         AnswerLine.StartFailedLine -> stringResource(Res.string.thisPhoneAnswerStartFailedLine)
