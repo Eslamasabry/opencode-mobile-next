@@ -66,6 +66,7 @@ import io.github.eslamasabry.oc.ui.words.res.teamIntroInstalledTitle
 import io.github.eslamasabry.oc.ui.words.res.teamIntroSetUpOn
 import io.github.eslamasabry.oc.ui.words.res.teamIntroSetUpPhone
 import io.github.eslamasabry.oc.ui.words.res.teamIntroTurnOnPhone
+import io.github.eslamasabry.oc.ui.words.res.teamUiHostGuideEnterAddress
 import io.github.eslamasabry.oc.ui.words.res.teamUiHostGuideIntro
 import io.github.eslamasabry.oc.ui.words.res.teamUiHostGuideStep1
 import io.github.eslamasabry.oc.ui.words.res.teamUiHostGuideStep2
@@ -120,7 +121,7 @@ internal fun TeamIntro(intro: TeamIntroUi, actions: TeamIntroActions) {
         }
         if (server != null) item(key = "needs") { Needs(server, intro.canTurnOn, inset) }
     }
-    HostGuide(intro.guide, actions::closeGuide)
+    HostGuide(intro.guide, actions::closeGuide, onEnterAddress = actions::enterAddress)
 }
 
 /** What the team needs on this kind of server, then its cost before the primary (KIT-37). */
@@ -213,7 +214,7 @@ private fun Fact(icon: ImageVector, title: String, body: String) {
  * checksummed front from :engine:setupscripts; nothing is ever piped into a shell).
  */
 @Composable
-private fun HostGuide(visible: Boolean, onDismiss: () -> Unit) {
+internal fun HostGuide(visible: Boolean, onDismiss: () -> Unit, onEnterAddress: (() -> Unit)? = null) {
     @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
     val steps =
         listOf(
@@ -222,7 +223,9 @@ private fun HostGuide(visible: Boolean, onDismiss: () -> Unit) {
             stringResource(Res.string.teamUiHostGuideStep3) to TEAM_START,
             stringResource(Res.string.teamUiHostGuideStep4) to HostScripts.teamFront,
         )
-    KitSheet(visible = visible, onDismissRequest = onDismiss, title = stringResource(Res.string.teamUiHostGuideTitle)) {
+    // The next step is the team's address (Flutter `enterAddress`): its primary closes the guide and opens the address form.
+    val enter = onEnterAddress?.let { KitAction(stringResource(Res.string.teamUiHostGuideEnterAddress), it, icon = KitIcons.edit) }
+    KitSheet(visible = visible, onDismissRequest = onDismiss, title = stringResource(Res.string.teamUiHostGuideTitle), primary = enter) {
         Column(Modifier.testTag("team-host-guide"), verticalArrangement = Arrangement.spacedBy(Space.S4.dp)) {
             KitText(
                 stringResource(Res.string.teamUiHostGuideIntro),
