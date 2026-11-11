@@ -18,6 +18,9 @@ public object AgentKeys {
     public fun phoneAgentGateMigration(owner: OwnerId): String = "oc.phoneAgentGateMigration.${owner.raw}"
     public fun agentPhoneGate(owner: OwnerId): String = "oc.agentPhoneGate.${owner.raw}"
     public fun agentInstall(owner: OwnerId): String = "oc.agentInstall.${owner.raw}"
+
+    /** The last install that failed or was interrupted, kept until the next attempt or until it is dismissed. */
+    public fun agentInstallResult(owner: OwnerId): String = "oc.agentInstallResult.${owner.raw}"
     public fun phoneAgentsUsed(profile: ProfileId): String = "oc.phoneAgentsUsed.${profile.raw}"
     public fun agentFeed(profile: ProfileId): String = "oc.agentFeed.${profile.raw}"
     public fun mainFeed(profile: ProfileId): String = "oc.mainFeed.${profile.raw}"

@@ -3115,6 +3115,7 @@ class BuiltinLinux(private val context: Context) {
         config: String,
         port: Int = 4099,
         expectedHelperVersion: String? = null,
+        testedHelperVersions: Set<String> = emptySet(),
     ): Map<String, Any?> {
         val ticket = captureAgentHostStart(profile, false, null) ?: error("agent_host_unavailable")
         return withAgentHostStart(ticket) {
@@ -3124,7 +3125,10 @@ class BuiltinLinux(private val context: Context) {
                     password,
                     port,
                     config,
-                    PhoneAgentHost.HelperPolicy(expectedVersion = expectedHelperVersion),
+                    PhoneAgentHost.HelperPolicy(
+                        expectedVersion = expectedHelperVersion,
+                        testedVersions = testedHelperVersions,
+                    ),
                 )
             )
         }
@@ -5375,17 +5379,7 @@ class BuiltinLinux(private val context: Context) {
         }
         beginServerStart()
         val chosen =
-            (listOf(selectedServerPort) + (4100..4199)).distinct().firstOrNull { candidate ->
-                try {
-                    java.net.ServerSocket().use { socket ->
-                        socket.reuseAddress = false
-                        socket.bind(java.net.InetSocketAddress("127.0.0.1", candidate))
-                    }
-                    true
-                } catch (_: java.io.IOException) {
-                    false
-                }
-            }
+            (listOf(selectedServerPort) + (4100..4199)).distinct().firstOrNull { LoopbackPort.free(it) }
                 ?: run {
                     selectedPortBusy = true
                     throw ServerPortBusy(selectedServerPort)

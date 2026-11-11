@@ -4,6 +4,7 @@ import io.github.eslamasabry.oc.engine.runtime.storage.HostStorageAvailability
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import io.github.eslamasabry.oc.core.common.pace.Pacer
 import io.github.eslamasabry.oc.engine.runtime.budget.ProcessBudget
 import kotlin.time.Clock
@@ -405,7 +406,14 @@ public class ThisPhoneModel(
             local.update {
                 it.copy(
                     working = null,
-                    notice = if (outcome is Outcome.Failed) ThisPhoneNotice.Failed(op) else null,
+                    notice =
+                        when {
+                            outcome !is Outcome.Failed -> null
+                            // Refused because work is running or not known idle: say so and the way forward.
+                            op == PhoneOp.Update && (outcome.failure as? Failure.Runtime)?.problem == RuntimeProblem.SlotBusy ->
+                                ThisPhoneNotice.UpdateBusy
+                            else -> ThisPhoneNotice.Failed(op)
+                        },
                 )
             }
             if (visible.value) phoneDetails?.refresh()

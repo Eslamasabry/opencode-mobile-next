@@ -10,6 +10,7 @@ import io.github.eslamasabry.oc.core.domain.SessionReadStateGateway
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.domain.facet
 import io.github.eslamasabry.oc.core.domain.events.RunOutcome
+import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.core.model.NewSession
 import io.github.eslamasabry.oc.core.model.transcript.ToolStatus
 import io.github.eslamasabry.oc.core.model.SessionStatus
@@ -66,6 +67,8 @@ class PreviewRuntime(
     private val profileClosers: Set<ProfileCloser>,
     private val clock: Clock,
     private val localGates: LocalServerGates,
+    // Lazy: the helper's starter connects through this class, so it cannot be built before it.
+    private val phoneHelper: Lazy<AppLocalAgentHostStarter>,
 ) : ServerConnections, ServerDisconnects {
     val profiles: ProfileStore = stores.profiles
     private val lane = dispatchers.serial("preview-runtime")
@@ -410,6 +413,13 @@ class PreviewRuntime(
                 return Failure.Runtime(RuntimeProblem.ServerStartUnavailable)
                     .failed()
                     .atStage(ConnectionStage.OpenGateway)
+            }
+        }
+        // The saved "Phone agents" server needs its helper running; the app starts it, not only the Agents page.
+        if (loaded.profile.backend == BackendKind.Paseo) {
+            when (val helper = phoneHelper.value.ensureHelper(id)) {
+                is Outcome.Failed -> return helper.atStage(ConnectionStage.OpenGateway)
+                is Outcome.Ok -> Unit
             }
         }
         when (val opened = registry.open(profile)) {

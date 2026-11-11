@@ -59,8 +59,9 @@ class OpenCodeUpdateTest {
         override var failed = false
         val runs = mutableListOf<String>()
 
-        override suspend fun updateOpenCode(runtime: String) {
+        override suspend fun updateOpenCode(runtime: String): Boolean {
             runs += runtime
+            return true
         }
     }
 

@@ -4,11 +4,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsActions
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsUi
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallFailure
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallIssue
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallPhase
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
@@ -93,12 +95,38 @@ internal fun AgentInstallPanel(
         // Installing and installed read on the agent's tile and in its sheet (with Cancel), not as notices here.
         PhoneAgentInstallPhase.Installing,
         PhoneAgentInstallPhase.Done -> Unit
-        PhoneAgentInstallPhase.Failed ->
-            KitErrorNotice(stringResource(Res.string.linuxAgentInstallFailed, name), modifier)
-        PhoneAgentInstallPhase.Interrupted ->
-            KitNotice(stringResource(Res.string.linuxAgentInstallInterrupted, name), modifier)
+        // The last result stays until Try again or Dismiss; the technical side is under Details.
+        PhoneAgentInstallPhase.Failed,
+        PhoneAgentInstallPhase.Interrupted -> {
+            val retry = KitLineAction(stringResource(Res.string.kitTryAgain), { actions.installPhone(installation.id) })
+            val dismiss = KitLineAction(stringResource(Res.string.kitSheetDismiss), actions::dismissInstallResult)
+            val words =
+                stringResource(
+                    if (installation.phase == PhoneAgentInstallPhase.Interrupted)
+                        Res.string.agentsInstallInterruptedNow
+                    else failedWords(installation.failure),
+                    name,
+                )
+            KitErrorNotice(
+                words,
+                modifier,
+                details = installation.details,
+                detailsLabel = stringResource(Res.string.kitDetails),
+                retry = retry,
+                dismiss = dismiss,
+            )
+        }
     }
 }
+
+private fun failedWords(failure: PhoneAgentInstallFailure?) =
+    when (failure) {
+        PhoneAgentInstallFailure.Download -> Res.string.agentsInstallFailedDownload
+        PhoneAgentInstallFailure.Checksum -> Res.string.agentsInstallFailedChecksum
+        PhoneAgentInstallFailure.Storage -> Res.string.agentsInstallFailedStorage
+        PhoneAgentInstallFailure.Version -> Res.string.agentsInstallFailedVersion
+        else -> Res.string.agentsInstallFailedUnknown
+    }
 
 /** Pinned payload only. Unknown sizes stay absent; bytes are never borrowed from another CPU. */
 internal fun agentPayloadSize(bytes: Long): String =

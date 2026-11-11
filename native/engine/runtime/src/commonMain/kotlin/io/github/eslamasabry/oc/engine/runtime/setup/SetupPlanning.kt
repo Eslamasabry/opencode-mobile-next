@@ -91,6 +91,12 @@ public object SetupPlanning {
     public const val RUNTIME_OPENCODE2: String = "opencode2"
 
     /**
+     * The group the Flutter app's phone-agent install job wrote into setup.json (`{profileId, agentId}`, Flutter
+     * `phone_agents_host.dart`). A saved record may carry it; no setup job is ever started with it.
+     */
+    public const val FLUTTER_AGENT_OWNER_GROUP: String = "phoneAgentOwner"
+
+    /**
      * [ids] plus every required component, expanded by `dependsOn`, in dependency order (registry
      * order among equals).
      */

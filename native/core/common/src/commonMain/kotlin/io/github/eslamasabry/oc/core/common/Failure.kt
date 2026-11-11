@@ -161,6 +161,8 @@ public enum class RuntimeProblem {
     OwnershipUnknown, SlotBusy, RecoveryUnavailable, IdleResumeUnavailable, IdleResumeStale, SetupPersistence,
     InvalidProfile, ConfirmationRequired, StorageUnavailable, RemovalFailed, WorkLeaseInvalid, ServerStartUnavailable,
     NotInstalled, Installing, ComponentRecoveryRequired, ProtectionUnavailable, Generic,
+    /** The phone agents' helper is missing or older than any version the app has tested. */
+    HelperUpdateRequired,
 }
 
 /** App-authored refusal reasons (plan 03 §10.1). Append-only; each has exactly one sentence in :ui:words. */

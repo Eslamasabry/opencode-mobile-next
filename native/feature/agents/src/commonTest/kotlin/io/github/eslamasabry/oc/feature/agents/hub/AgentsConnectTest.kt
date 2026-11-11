@@ -20,6 +20,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 
@@ -49,6 +51,13 @@ class AgentsConnectTest {
 
         override suspend fun refresh(): Outcome<Unit> = Unit.ok()
 
+        val installs = mutableListOf<String>()
+
+        override suspend fun install(id: String): Outcome<PhoneAgentInstallResult> {
+            installs += id
+            return PhoneAgentInstallResult.Started.ok()
+        }
+
         fun set(vararg agents: PhoneAgentRow) {
             state.value = state.value.copy(agents = persistentListOf(*agents))
         }
@@ -63,6 +72,13 @@ class AgentsConnectTest {
             gate?.await()
             return answer
         }
+    }
+
+    private class SlowHost(val failures: Int) : PhoneAgentHostStarter {
+        var calls = 0
+
+        override suspend fun connect(): Outcome<Unit> =
+            if (++calls <= failures) Outcome.Failed(Failure.ComputerDidNotAnswer()) else Unit.ok()
     }
 
     private fun presenter(test: TestScope, phone: Phone, host: Host) =
@@ -88,6 +104,26 @@ class AgentsConnectTest {
         assertTrue(state.helperConnected)
         assertFalse(state.helperConnectFailed)
         assertFalse(state.helperConnecting)
+    }
+
+    @Test
+    fun `a helper that refuses its first look but answers a moment later ends connected without a tap`() = runTest {
+        val host = SlowHost(failures = 1)
+        val presenter =
+            AgentsPresenter(
+                CoroutineScope(backgroundScope.coroutineContext + UnconfinedTestDispatcher(testScheduler)),
+                NoComputers,
+                Phone(listOf(claudeReady)),
+                onBack = {},
+                openChat = {},
+                phoneHost = host,
+            )
+        // The page looks again after a pause; the presenter lives in the background scope, which idle ignores.
+        advanceTimeBy(6_000)
+        runCurrent()
+        assertEquals(2, host.calls)
+        assertTrue(presenter.state.value.helperConnected)
+        assertFalse(presenter.state.value.helperConnectFailed)
     }
 
     @Test
@@ -123,6 +159,64 @@ class AgentsConnectTest {
         assertFalse(presenter.state.value.helperConnectFailed)
         assertNull(presenter.state.value.helperConnectFailure)
         assertTrue(presenter.state.value.helperConnected)
+    }
+
+    @Test
+    fun `a helper that is too old says so and its update runs the install of an agent that is there`() = runTest {
+        val failure = Failure.Runtime(RuntimeProblem.HelperUpdateRequired)
+        val phone = Phone(listOf(claudeReady, geminiMissing))
+        val presenter = presenter(this, phone, Host(Outcome.Failed(failure)))
+        assertEquals(failure, presenter.state.value.helperConnectFailure)
+        presenter.updatePhoneHelper()
+        assertEquals(listOf("claude"), phone.installs)
+    }
+
+    @Test
+    fun `a failed start replaces the old stopped-by-Android notice, which is only history`() = runTest {
+        val phone = Phone(listOf(claudeReady))
+        phone.state.value =
+            phone.state.value.copy(helperStoppedUnexpectedly = true, helperMayHaveBeenStoppedByAndroid = true)
+        val host = Host(Outcome.Failed(Failure.Runtime(RuntimeProblem.HelperUpdateRequired)))
+        val presenter = presenter(this, phone, host)
+        assertTrue(presenter.state.value.helperConnectFailed)
+        assertFalse(presenter.state.value.phone.helperStoppedUnexpectedly)
+        assertFalse(presenter.state.value.phone.helperMayHaveBeenStoppedByAndroid)
+        // Without a failed attempt after it, the recorded stop is still shown.
+        val quiet = Phone(listOf(claudeReady))
+        quiet.state.value = quiet.state.value.copy(helperStoppedUnexpectedly = true)
+        assertTrue(presenter(this, quiet, Host(Unit.ok())).state.value.phone.helperStoppedUnexpectedly)
+    }
+
+    @Test
+    fun `a helper Android ended after it was connected is started again by the page, once`() = runTest {
+        val phone = Phone(listOf(claudeReady))
+        val host = Host()
+        val presenter = presenter(this, phone, host)
+        assertEquals(1, host.calls)
+        val running = phone.state.value
+        val stopped = running.copy(helperStoppedUnexpectedly = true, helperMayHaveBeenStoppedByAndroid = true)
+        phone.state.value = stopped
+        assertEquals(2, host.calls, "the page answers the stop itself; before, nothing started the helper again")
+        // Android ends it again: no loop. The notice stays, and its own action starts the helper.
+        phone.state.value = running
+        phone.state.value = stopped
+        assertEquals(2, host.calls)
+        assertTrue(presenter.state.value.phone.helperStoppedUnexpectedly)
+        presenter.connectPhoneHelper()
+        assertEquals(3, host.calls)
+    }
+
+    @Test
+    fun `the recorded stop is not shown while the page is starting the helper`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val phone = Phone(listOf(claudeReady))
+        phone.state.value =
+            phone.state.value.copy(helperStoppedUnexpectedly = true, helperMayHaveBeenStoppedByAndroid = true)
+        val presenter = presenter(this, phone, Host().also { it.gate = gate })
+        assertTrue(presenter.state.value.helperConnecting)
+        assertFalse(presenter.state.value.phone.helperStoppedUnexpectedly)
+        assertFalse(presenter.state.value.phone.helperMayHaveBeenStoppedByAndroid)
+        gate.complete(Unit)
     }
 
     @Test

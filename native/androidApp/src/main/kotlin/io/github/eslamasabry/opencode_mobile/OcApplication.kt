@@ -78,7 +78,12 @@ class OcApplication : Application(), GraphOwner {
             RedactingWriter(
                 redactor,
                 // B-190: the app's own log ring for "Send a problem report".
-                listOf(DiagnosticsLogSink, io.github.eslamasabry.opencode_mobile.telemetry.TelemetryRingSink),
+                appLogSinks(
+                    debuggable = applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0,
+                    base = listOf(DiagnosticsLogSink, io.github.eslamasabry.opencode_mobile.telemetry.TelemetryRingSink),
+                    logcat = LogcatLogSink(),
+                    asked = ::logTagAsked,
+                ),
             ), // P12: warnings/errors feed Report a problem
             Severity.Info,
         ) // ring + logcat sinks: slice 1
@@ -118,6 +123,11 @@ class OcApplication : Application(), GraphOwner {
                     }
                     step("builtinRuntime") {
                         appGraph.builtinRuntime // P12-FIX-LINUX-VOICE: the built-in Linux follows the activity; phone server comes back
+                    }
+                    step("phoneOpenCodeAutoUpdate") {
+                        (appGraph as io.github.eslamasabry.opencode_mobile.graph.PhoneOpenCodeAutoUpdateAccessors)
+                            .phoneOpenCodeAutoUpdate
+                            .start() // keep the phone server on the pinned OpenCode (B-LINUX-079)
                     }
                     step("nativePhoneHealing") { (appGraph as NativeHealingAccessors).nativePhoneHealing.start() }
                     step("agentWidgets") {

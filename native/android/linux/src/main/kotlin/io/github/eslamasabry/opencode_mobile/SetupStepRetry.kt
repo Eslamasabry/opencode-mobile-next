@@ -15,6 +15,22 @@ internal object SetupStepRetry {
 
     private val signalled = Regex("terminated with signal (?:9|15)\\b")
 
+    private val prootSignal = Regex("^proot info: vpid [0-9]+: terminated with signal [0-9]+$")
+
+    /**
+     * The one kind of line of an agent step's output that may be kept: the scripts' own fixed `[oc] ` marker lines and
+     * proot's report that its guest was signalled. Everything else a program wrote stays unread, so it cannot reach a
+     * message, a log or a notice; these lines are what the retry rule above and the failure kind need.
+     */
+    fun agentLine(line: String): String? {
+        val text = line.trim()
+        return text.takeIf {
+            it.length <= MAX_FAILURE_CHARS &&
+                it.none { c -> c.code < 0x20 || c.code == 0x7f } &&
+                (it.startsWith("[oc] ") || prootSignal.matches(it))
+        }
+    }
+
     fun interrupted(failure: String?): Boolean = failure != null && signalled.containsMatchIn(failure)
 
     /**

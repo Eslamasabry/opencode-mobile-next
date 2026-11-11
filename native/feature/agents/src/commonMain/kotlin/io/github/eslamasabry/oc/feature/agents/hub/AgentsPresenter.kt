@@ -42,6 +42,7 @@ public class AgentsPresenter(
     /** The running helper connection, the installed agents it was last tried for, and a wish to run once more. */
     private var connectJob: Job? = null
     private var triedFor: Set<String> = emptySet()
+    private var restartedStopped = false
     private var connectAgain = false
     private var followJob: Job? = null
     private var readJob: Job? = null
@@ -122,13 +123,26 @@ public class AgentsPresenter(
 
     public val state: StateFlow<AgentsUi> =
         combine(local, computers.computers, phone.state) { own, saved, phoneState ->
-                own.copy(computers = saved, phone = phoneState)
+                own.copy(
+                    computers = saved,
+                    // While the page is starting the helper the recorded stop is already being answered.
+                    phone = phoneState.withoutStaleStop(own.helperConnectFailed || own.helperConnecting),
+                )
             }
             .stateIn(
                 scope,
                 SharingStarted.Eagerly,
                 local.value.copy(computers = computers.computers.value, phone = phone.state.value),
             )
+
+    /**
+     * "The helper stopped" is a saved record of an earlier exit. Once a start after it failed, the page names that
+     * failure instead (Flutter showed the record only while no helper ran and nothing newer had happened).
+     */
+    private fun PhoneAgentsState.withoutStaleStop(startFailed: Boolean): PhoneAgentsState =
+        if (startFailed && (helperStoppedUnexpectedly || helperMayHaveBeenStoppedByAndroid))
+            copy(helperStoppedUnexpectedly = false, helperMayHaveBeenStoppedByAndroid = false)
+        else this
 
     private var accountController: AgentAccountController? = null
     private var accountCollection: Job? = null
@@ -433,7 +447,9 @@ public class AgentsPresenter(
     }
 
     override fun installPhone(id: String): Unit = operation {
-        if (phone.state.value.agents.none { it.id == id && it.installable }) return@operation
+        // Try again after a failed install is allowed even when the agent is partly there.
+        val retrying = phone.state.value.installation?.let { it.id == id && it.phase != PhoneAgentInstallPhase.Installing } == true
+        if (phone.state.value.agents.none { it.id == id && (it.installable || retrying) }) return@operation
         val answer =
             when (val started = phone.install(id)) {
                 is Outcome.Ok -> started.value
@@ -447,6 +463,25 @@ public class AgentsPresenter(
                     if (answer == PhoneAgentInstallResult.Started) null else it.installingAgent,
             )
         }
+    }
+
+    /**
+     * "Update the agent helper": the install that sets up the helper again, run for an agent that is already there (its
+     * own steps are skipped when they are in place).
+     */
+    override fun updatePhoneHelper(): Unit = operation {
+        val id = phoneInstalledAgents(phone.state.value).sorted().firstOrNull() ?: return@operation
+        val answer =
+            when (val started = phone.install(id)) {
+                is Outcome.Ok -> started.value
+                is Outcome.Failed -> PhoneAgentInstallResult.Refused(PhoneAgentInstallIssue.Unavailable)
+            }
+        local.update { it.copy(installIssue = (answer as? PhoneAgentInstallResult.Refused)?.issue) }
+    }
+
+    override fun dismissInstallResult(): Unit = operation {
+        phone.dismissInstallResult()
+        phone.refresh()
     }
 
     override fun cancelPhoneInstall(): Unit = operation {
@@ -519,8 +554,23 @@ public class AgentsPresenter(
     private fun connectWhenInstalled(phoneState: PhoneAgentsState) {
         if (!connectable(phoneState)) return
         val installed = phoneInstalledAgents(phoneState)
-        if (triedFor.containsAll(installed)) return
+        if (triedFor.containsAll(installed)) {
+            restartStoppedOnce(phoneState)
+            return
+        }
         triedFor = triedFor + installed
+        connectHelper()
+    }
+
+    /**
+     * The helper was connected and then stopped on its own (Android ended it): the page starts it again by itself,
+     * once. A second stop is left to the notice's own "Start the agent helper", so a phone that keeps ending the
+     * helper is never restarted in a loop.
+     */
+    private fun restartStoppedOnce(phoneState: PhoneAgentsState) {
+        val stopped = phoneState.helperStoppedUnexpectedly || phoneState.helperMayHaveBeenStoppedByAndroid
+        if (!stopped || restartedStopped || connectJob?.isActive == true || local.value.helperConnectFailed) return
+        restartedStopped = true
         connectHelper()
     }
 
@@ -539,7 +589,20 @@ public class AgentsPresenter(
                 do {
                     connectAgain = false
                     local.update { it.copy(helperConnecting = true, helperConnectFailed = false, helperConnectFailure = null) }
-                    val result = host.connect()
+                    var result = host.connect()
+                    // A helper that was only just started can refuse its first look and answer a moment later: look
+                    // again a few times before the page says "not connected" (a manual Try again used to fix it).
+                    var again = 0
+                    while (
+                        result is Outcome.Failed &&
+                            result.failure.mayAnswerSoon() &&
+                            again < AUTO_RETRIES &&
+                            connectable(phone.state.value)
+                    ) {
+                        again++
+                        delay(AUTO_RETRY_MS)
+                        result = host.connect()
+                    }
                     local.update {
                         it.copy(
                             helperConnecting = false,
@@ -639,5 +702,7 @@ public class AgentsPresenter(
     private companion object {
         /** How often a running install is read again (the old "Tap Refresh to read its latest progress"). */
         const val INSTALL_FOLLOW_MS = 2_000L
+        const val AUTO_RETRIES = 3
+        const val AUTO_RETRY_MS = 5_000L
     }
 }
