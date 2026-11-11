@@ -71,7 +71,6 @@ import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import io.github.eslamasabry.oc.ui.routes.ConnectionFormRoute
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.PreviewRoute
-import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import io.github.eslamasabry.oc.ui.routes.SessionRelationsRoute
 import io.github.eslamasabry.oc.ui.routes.TerminalRoute
 import io.github.eslamasabry.oc.ui.routes.ToolsRoute
@@ -90,7 +89,6 @@ import io.github.eslamasabry.oc.ui.words.res.queueEvictedJoin
 import io.github.eslamasabry.oc.ui.words.res.queueEvictedOverLimit
 import io.github.eslamasabry.oc.ui.words.res.queueEvictedSummary
 import io.github.eslamasabry.oc.ui.words.res.queueEvictedTooOld
-import io.github.eslamasabry.oc.ui.words.res.serverRowMoveQueued
 import io.github.eslamasabry.oc.ui.words.res.nativePendingFailed
 import io.github.eslamasabry.oc.ui.words.res.nativePendingReview
 import io.github.eslamasabry.oc.ui.words.res.protoToolsTitle
@@ -299,34 +297,17 @@ public class ChatEntries(
                         dismissLabel = stringResource(Res.string.kitSheetDismiss),
                     )
                 }
-            // S7 (Flutter chat_states.dart _queuedDraftsStatus): drafts waiting for other servers, with one
-            // Move action per source server (this server is the destination).
+            // S7 (Flutter chat_states.dart _queuedDraftsStatus): drafts waiting for other servers, said here. No Move
+            // action yet: the server-wide move page's port is unavailable until the offline queue has a batch move
+            // with Undo (ServerQueueMoveWiring.kt), and an action that always fails is a dead end.
             val othersStatus =
-                pendingSends.others
-                    .takeIf { it.isNotEmpty() }
-                    ?.let { others ->
-                        val moves =
-                            others.map { other ->
-                                KitLineAction(
-                                    pluralStringResource(
-                                        Res.plurals.serverRowMoveQueued,
-                                        other.count,
-                                        other.count.toString(),
-                                        pendingSends.serverName,
-                                    ),
-                                    { navigator.open(ServersRoute.MoveQueued(other.source)) },
-                                )
-                            }
+                pendingSends.othersTotal
+                    .takeIf { it > 0 }
+                    ?.let { total ->
                         KitStatus(
                             KitStatusKind.Info,
-                            pluralStringResource(
-                                Res.plurals.chatUiOtherDraftsWaiting,
-                                pendingSends.othersTotal,
-                                pendingSends.othersTotal.toString(),
-                            ),
+                            pluralStringResource(Res.plurals.chatUiOtherDraftsWaiting, total, total.toString()),
                             id = "chat-queue-others",
-                            action = moves.first(),
-                            more = moves.drop(1),
                         )
                     }
             val appStatus =
