@@ -348,8 +348,10 @@ internal class FleetGateway(
         val sessionOf = { id: String -> agentOf(id)?.sessionId ?: id }
         return when (control) {
             is FleetControl.Answer -> {
+                // Dart `sessionForGate`: only a pending interaction is answered. A gate bead, a ready review or a failed
+                // run is not one (its id is ours, not the host's request id), so it is refused here, as Flutter does.
                 val sessionId =
-                    gates.firstOrNull { it.id == control.gateId }?.agentId
+                    gates.firstOrNull { it.id == control.gateId && it.kind !in NOT_PENDING }?.agentId
                         ?: return FleetReceipt.rejected(requestId, "no pending interaction on the host")
                 val body = LinkedHashMap<String, Any?>()
                 body["action"] =
@@ -459,6 +461,9 @@ internal class FleetGateway(
 
         /** Dart `nudgeMessage`. */
         const val NUDGE: String = "please continue"
+
+        /** Gates the app made from beads and runs: no pending interaction on the host stands behind them. */
+        private val NOT_PENDING = setOf(GateKind.GateBead, GateKind.ReviewReady, GateKind.RunFailed)
         private const val FRONT_PROBLEM = "urn:opencode-mobile:front:"
 
         private fun looksLikeProblem(json: Json): Boolean =

@@ -43,9 +43,6 @@ public interface FleetGateActions {
 
     public fun deny()
 
-    /** A gate bead's Mark done. */
-    public fun markDone()
-
     /** "Ask the team to fix it": [request] is the error put as a message to the worker. */
     public fun fix(request: String)
 
@@ -134,8 +131,6 @@ public class FleetGateViewModel(
     }
 
     override fun deny() = answer(FleetAnswer.Confirm(false))
-
-    override fun markDone() = answer(FleetAnswer.Confirm(true))
 
     override fun fix(request: String) {
         val agent = state.value.fix ?: return

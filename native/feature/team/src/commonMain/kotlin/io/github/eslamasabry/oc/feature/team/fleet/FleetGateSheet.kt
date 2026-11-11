@@ -315,7 +315,7 @@ private fun RunFailed(ui: FleetGateUi) {
     }
 }
 
-/** Work lines: the work's page is the run page's (a later slice), so they only read here. */
+/** Work lines, read only here: a work item's own sheet is on its task's page. */
 @Composable
 private fun WorkRows(items: List<FleetGateWork>, label: String, tag: String) {
     KitRowGroup(Modifier.testTag(tag), label = label) {
@@ -382,7 +382,7 @@ private fun Receipt(ui: FleetGateUi, actions: FleetGateActions) {
 private fun Notes(ui: FleetGateUi) {
     if (ui.hideActions || !ui.answers) return
     when (ui.kind) {
-        GateKind.Choice, GateKind.FreeText, GateKind.Confirmation, GateKind.GateBead ->
+        GateKind.Choice, GateKind.FreeText, GateKind.Confirmation ->
             KitText(stringResource(Res.string.gateSheetAfterAnswer), Modifier.testTag("fleet-gate-note-after"), role = TypeRole.Secondary, tone = TextTone.Secondary)
         GateKind.RunFailed ->
             ui.fix?.let {
@@ -427,15 +427,10 @@ private fun Actions(ui: FleetGateUi, actions: FleetGateActions) {
                 secondary = KitAction(stringResource(Res.string.teamUiGateAnswerDeny), actions::deny, enabled = enabled),
             )
         }
-        GateKind.GateBead -> {
-            if (!ui.canRespond) return
-            KitActionBlock(
-                Modifier.testTag("fleet-gate-actions"),
-                primary = KitAction(stringResource(Res.string.teamUiGateAnswerMarkDone), actions::markDone, enabled = enabled),
-            )
-        }
         GateKind.RunFailed -> RunActions(ui, actions, enabled)
-        GateKind.Choice, GateKind.ReviewReady, GateKind.Unknown -> Unit
+        // A gate bead is closed on the host: the host answers only a pending interaction (Flutter's resolver refuses a
+        // bead too), so the page says where instead of offering a Mark done that cannot land.
+        GateKind.Choice, GateKind.GateBead, GateKind.ReviewReady, GateKind.Unknown -> Unit
     }
 }
 

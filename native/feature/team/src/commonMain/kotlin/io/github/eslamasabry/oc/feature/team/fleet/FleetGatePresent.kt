@@ -163,9 +163,10 @@ public data class FleetGateUi(
     val answers: Boolean
         get() =
             when (kind) {
-                GateKind.Choice, GateKind.Confirmation, GateKind.FreeText, GateKind.GateBead -> canRespond
+                GateKind.Choice, GateKind.Confirmation, GateKind.FreeText -> canRespond
                 GateKind.RunFailed -> fix != null || retry != null || cancelRunId != null
-                GateKind.ReviewReady, GateKind.Unknown -> false
+                // A gate bead and a ready review are closed on the host: it answers only a pending interaction.
+                GateKind.GateBead, GateKind.ReviewReady, GateKind.Unknown -> false
             }
 }
 

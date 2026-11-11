@@ -146,6 +146,28 @@ class FleetEngineTest {
         }
 
     @Test
+    fun a_gate_bead_is_not_a_pending_interaction_and_is_refused_without_a_request() =
+        runTest {
+            val host = FakeGasCity()
+            host.route(
+                FleetProbe.WELL_KNOWN,
+                """{"provider":"gascity","front":true,"capabilities":{"control":true},"identity":{"allowed":true}}""",
+            )
+            host.route(
+                "${FakeGasCity.CITY}/beads",
+                """{"items":[{"id":"g-1","title":"Approve the plan","status":"open","issue_type":"gate","assignee":"app/polecat-1"}]}""",
+            )
+            val fleet = engine(host)
+            backgroundScope.launch { fleet.live("p1", CONFIG) }
+            advanceUntilIdle()
+            assertTrue(fleet.state("p1").value.snapshot.gates.any { it.id == "bead:g-1" && it.kind == GateKind.GateBead })
+            // Flutter's resolver finds no pending interaction for a bead: nothing is posted to the assignee's session.
+            val receipt = fleet.control("p1", FleetControl.Answer("bead:g-1", FleetAnswer.Confirm(true)))
+            assertEquals(ReceiptStatus.Rejected, receipt.status)
+            assertTrue(host.sends.isEmpty())
+        }
+
+    @Test
     fun plain_http_to_a_lan_address_is_refused_before_any_request() =
         runTest {
             val host = FakeGasCity()

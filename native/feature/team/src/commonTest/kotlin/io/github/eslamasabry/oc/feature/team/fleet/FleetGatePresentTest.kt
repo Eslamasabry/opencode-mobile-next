@@ -129,7 +129,10 @@ class FleetGatePresentTest {
                 work = listOf(FleetWork("w1", "Ship", WorkState.Blocked, dependsOn = listOf("b1")), FleetWork("w2", "Other", WorkState.Ready)),
                 gates = listOf(FleetGate("bead:b1", GateKind.GateBead, "Approve the plan", workId = "b1")),
             )
-        assertEquals(listOf("w1"), FleetGatePresent.present(fleet(snapshot), "bead:b1").unblocks.map { it.id })
+        val ui = FleetGatePresent.present(fleet(snapshot), "bead:b1")
+        assertEquals(listOf("w1"), ui.unblocks.map { it.id })
+        // The host answers only a pending interaction: a bead is closed on the host, so the page says where.
+        assertFalse(ui.answers)
     }
 
     @Test
