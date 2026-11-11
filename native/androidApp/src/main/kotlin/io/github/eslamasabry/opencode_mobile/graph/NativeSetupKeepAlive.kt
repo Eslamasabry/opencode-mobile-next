@@ -44,7 +44,7 @@ class NativeSetupKeepAlive(
     private val dispatchers: AppDispatchers,
     private val clock: Clock,
 ) : SetupKeepAlive {
-    override suspend fun interruption(): SystemKill? =
+    override suspend fun interruption(sinceMs: Long): SystemKill? =
         withContext(dispatchers.io) {
             val history = exits.history(HISTORY)
             SystemKill.pick(
@@ -57,6 +57,7 @@ class NativeSetupKeepAlive(
                     )
                 },
                 clock.now().toEpochMilliseconds(),
+                sinceMs,
             )
         }
 

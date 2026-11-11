@@ -184,7 +184,10 @@ public class SetupJourneyViewModel(
         judged = key
         val stopped = progress.state == SetupState.Failed || progress.state == SetupState.Interrupted
         val waiting = stopped || progress.state == SetupState.Idle
-        val kill = if (stopped) keepAlive.interruption() else null
+        // Only a setup the system stopped ("interrupted") can be a kill. A step that failed while the app lived says
+        // its own reason (no network, storage, the step), never "ran short of memory".
+        val kill =
+            if (progress.state == SetupState.Interrupted) keepAlive.interruption(progress.startedAtMs) else null
         val card = if (waiting) keepAlive.facts()?.let { BatteryCard.decide(it, afterKill = kill != null) } else null
         mutable.update { it.copy(systemKill = kill, batteryCard = card, batteryOpenFailed = false) }
     }
