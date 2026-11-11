@@ -35,6 +35,7 @@ import io.github.eslamasabry.oc.engine.attention.dock.DockUi
 import io.github.eslamasabry.oc.feature.chats.ChatEnvironment
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
@@ -121,8 +122,8 @@ class EdgeDockUndoTapTest {
             onAllNodesWithCustomActions()
                 .mapNotNull { node -> node.config.getOrNull(SemanticsActions.CustomActions)?.firstOrNull { it.label == label } }
                 .first()
-        runOnIdle { action.action() }
-        waitForIdle()
+        runOnUiThread { action.action() }
+        mainClock.advanceTimeBy(1_000)
     }
 
     private fun androidx.compose.ui.test.ComposeUiTest.onAllNodesWithCustomActions() =
@@ -130,12 +131,21 @@ class EdgeDockUndoTapTest {
             .fetchSemanticsNodes()
 
     @Test
-    fun `B-DOCK-UNDO-01 in a conversation Undo on the bar runs Undo, not the reply's More under it`() = runComposeUiTest {
+    fun `B-DOCK-UNDO-01 in a conversation Undo on the bar runs Undo, not the reply's More under it`() =
+        undoOverTheReply(KitAppearance(motion = MotionLevel.Off), stillFrame = true)
+
+    @Test
+    fun `B-DOCK-UNDO-03 the same under Glass with full motion, as on the phone`() =
+        undoOverTheReply(KitAppearance(motion = MotionLevel.Full, style = Style.Glass), stillFrame = false)
+
+    private fun undoOverTheReply(appearance: KitAppearance, stillFrame: Boolean) = runComposeUiTest {
+        // Full motion keeps something moving: step the clock instead of waiting for idle.
+        mainClock.autoAdvance = false
         val port = Port(entries())
         var more = 0
         setContent {
             ChatEnvironment {
-                KitTheme(appearance = KitAppearance(motion = MotionLevel.Off), platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                KitTheme(appearance = appearance, platform = DesktopKitPlatform(), localeTag = "en", stillFrame = stillFrame) {
                     Box(Modifier.size(412.dp, 820.dp)) {
                         val frost = rememberKitFrostState()
                         // The chat's frame: page, overlaid chrome, a recorded transcript, edge to edge (ChatScreen.kt).
@@ -171,13 +181,14 @@ class EdgeDockUndoTapTest {
                 }
             }
         }
-        waitForIdle()
+        mainClock.advanceTimeBy(1_000)
         removeRing("Alpha")
+        mainClock.advanceTimeBy(1_000)
         val undo = onNodeWithText("Undo").getBoundsInRoot()
         val under = onNodeWithContentDescription("More for this reply").getBoundsInRoot()
         assertTrue(overlaps(undo, under), "the reply's More must lie under Undo for this test to mean anything: Undo $undo, More $under")
         onNodeWithText("Undo").performTouchInput { click(center) }
-        waitForIdle()
+        mainClock.advanceTimeBy(1_000)
         assertEquals(0, more, "the tap on Undo reached the reply's More under the bar (Undo $undo, More $under; acts ${port.acts})")
         assertEquals(listOf("remove a", "undo a"), port.acts, "Undo ran (Undo $undo, More $under)")
     }

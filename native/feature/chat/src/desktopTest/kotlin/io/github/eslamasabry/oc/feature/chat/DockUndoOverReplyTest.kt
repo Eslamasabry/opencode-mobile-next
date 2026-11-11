@@ -30,6 +30,7 @@ import io.github.eslamasabry.oc.feature.chat.ui.ChatEdgeDock
 import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.modal.KitUndoBar
@@ -71,7 +72,16 @@ class DockUndoOverReplyTest {
     }
 
     @Test
-    fun `B-DOCK-UNDO-02 Undo over the newest reply runs Undo, never the reply's menu`() = runComposeUiTest {
+    fun `B-DOCK-UNDO-02 Undo over the newest reply runs Undo, never the reply's menu`() =
+        undoOverTheReply(KitAppearance(motion = MotionLevel.Off), stillFrame = true)
+
+    @Test
+    fun `B-DOCK-UNDO-04 the same under Glass with full motion, as on the phone`() =
+        undoOverTheReply(KitAppearance(motion = MotionLevel.Full, style = Style.Glass), stillFrame = false)
+
+    private fun undoOverTheReply(appearance: KitAppearance, stillFrame: Boolean) = runComposeUiTest {
+        // Full motion keeps something moving: step the clock instead of waiting for idle.
+        mainClock.autoAdvance = false
         val rows =
             persistentListOf(
                 FooterRow("footer:m1", "m1", failed = false, stopped = true),
@@ -88,7 +98,7 @@ class DockUndoOverReplyTest {
             }
         var undone = 0
         setContent {
-            KitTheme(platform = DesktopKitPlatform(), appearance = KitAppearance(motion = MotionLevel.Off), localeTag = "en", stillFrame = true) {
+            KitTheme(platform = DesktopKitPlatform(), appearance = appearance, localeTag = "en", stillFrame = stillFrame) {
                 CompositionLocalProvider(LocalKitRedactor provides Redactor()) {
                     Box(Modifier.size(412.dp, 820.dp)) {
                         ChatScreen(state, actions, composer, edgeDock = UndoDock { undone++ })
@@ -96,12 +106,12 @@ class DockUndoOverReplyTest {
                 }
             }
         }
-        waitForIdle()
+        mainClock.advanceTimeBy(1_000)
         val undo = onNodeWithText("Undo").getBoundsInRoot()
         val more = onNodeWithContentDescription("More for this reply", useUnmergedTree = true).getBoundsInRoot()
         val overlap = undo.left < more.right && more.left < undo.right && undo.top < more.bottom && more.top < undo.bottom
         onNodeWithText("Undo").performTouchInput { click(center) }
-        waitForIdle()
+        mainClock.advanceTimeBy(1_000)
         assertEquals(emptyList(), menus, "the tap on Undo opened the reply's menu (Undo $undo, More $more, overlap $overlap)")
         assertEquals(1, undone, "Undo ran (Undo $undo, More $more, overlap $overlap)")
     }
