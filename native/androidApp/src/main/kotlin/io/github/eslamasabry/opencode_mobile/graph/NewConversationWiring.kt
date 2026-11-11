@@ -56,6 +56,7 @@ import io.github.eslamasabry.oc.engine.git.GitLinkRepairReport
 import io.github.eslamasabry.oc.engine.git.GitLinkRepairService
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
+import io.github.eslamasabry.oc.feature.agents.hub.phoneAgentStartsConversation
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgents
 import io.github.eslamasabry.oc.feature.chat.world.RecentModelsBacking
 import io.github.eslamasabry.oc.feature.chats.presentation.*
@@ -77,6 +78,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.JsonPrimitive
 
 /** The first message uses the same durable delivery owner as the conversation composer. */
 @SingleIn(AppScope::class)
@@ -516,7 +518,8 @@ class AndroidNewConversationHost(
                 id = descriptor.id,
                 name = row.name,
                 iconKey = descriptor.iconKey,
-                ready = row.status == PhoneAgentStatus.Ready,
+                // The Agents card's own rule, so the card's New conversation and this list agree.
+                ready = phoneAgentStartsConversation(row),
                 // Flutter's fixAction: install, sign in, phone check, resume.
                 fixable =
                     when (row.status) {
@@ -535,9 +538,11 @@ class AndroidNewConversationHost(
         // The helper's own profile is where phone agents run; it offers no further agents.
         if (!state.available || helper == null || profile == helper) return null
         val facts = phoneFacts()
-        val offer = PhoneChatAgents.offer(facts, AgentId.OPENCODE)
-        val selected =
-            selection(profile).selectedAmong(profile, offer.choices.map { it.id }.toSet(), true)
+        // The remembered agent is any ready one (Flutter selectChatAgent), and the offer lists it even before it is
+        // certified for chat (Flutter agentChoosable: certified or already chosen). Passing OpenCode here instead left
+        // an agent chosen from its Agents card (Antigravity) out of the list, and the page fell back to another.
+        val selected = selection(profile).selectedAmong(profile, readyPhoneAgents(facts), true)
+        val offer = PhoneChatAgents.offer(facts, selected)
         return NewConversationPhone(
             helper = helper,
             choices = offer.choices.map { NewConversationPhoneAgent(it.id.raw, it.name, it.iconKey) },
@@ -546,8 +551,12 @@ class AndroidNewConversationHost(
         )
     }
 
+    /** The agents that can start a conversation now: ready, certified or not (Flutter `selectChatAgent`). */
+    private fun readyPhoneAgents(facts: List<PhoneChatFact>): Set<AgentId> =
+        facts.filter { it.ready }.map { it.id }.toSet()
+
     override suspend fun choosePhoneAgent(profile: ProfileId, agentId: String?): Outcome<Unit> {
-        val choosable = PhoneChatAgents.offer(phoneFacts(), AgentId.OPENCODE).choices.map { it.id }.toSet()
+        val choosable = readyPhoneAgents(phoneFacts())
         return selection(profile)
             .selectAmong(
                 profile,
@@ -574,11 +583,28 @@ class AndroidNewConversationHost(
         val helper = phoneHelperId() ?: return refused()
         val provider =
             AgentCatalog.builtIn.byId(AgentId(agentId))?.providerId ?: return refused()
+        val agentReady =
+            phoneAgents.state.value.agents.any { it.id == agentId && phoneAgentStartsConversation(it) }
         // The helper's first model list takes about ten seconds: the screen asks while the person types.
         return withTimeoutOrNull(PHONE_MODELS_WAIT_MS) {
                 when (val ready = phoneHelperReady(helper)) {
                     is Outcome.Failed -> ready
-                    is Outcome.Ok -> setup(helper)
+                    is Outcome.Ok ->
+                        when (val first = setup(helper)) {
+                            is Outcome.Failed -> first
+                            is Outcome.Ok ->
+                                if (
+                                    phoneModelsNeedRecheck(
+                                        agentReady,
+                                        first.value.models.filter { it.model.providerId == provider },
+                                    )
+                                ) {
+                                    // The helper keeps the list it read first (before the agent was installed or
+                                    // signed in) until asked to look again: ask once, then read it again.
+                                    recheckHelperProviders(helper)
+                                    setup(helper)
+                                } else first
+                        }
                 }
             }
             ?.let { read ->
@@ -598,6 +624,12 @@ class AndroidNewConversationHost(
                     }
                 }
             } ?: Outcome.Failed(Failure.Unavailable(FeatureId("phoneAgentModels")))
+    }
+
+    /** Asks the helper to check its agents and their models again (its list is otherwise kept until a restart). */
+    private suspend fun recheckHelperProviders(helper: ProfileId) {
+        val gateway = registry.live.value[helper]?.session?.server as? PaseoGateway ?: return
+        gateway.hostAgentProviders(refresh = true)
     }
 
     override suspend fun savePhoneAgentModel(
@@ -732,12 +764,20 @@ class AndroidNewConversationHost(
                                 p.modelIds.map { model ->
                                     NewConversationModel(
                                         ModelRef(p.id, model),
-                                        catalog
-                                            ?.models
-                                            ?.firstOrNull {
-                                                it.providerId == p.id && it.id == model
-                                            }
-                                            ?.name ?: model,
+                                        // The catalog's name, else the one the server or agent reports (a phone
+                                        // agent's helper has no catalog), else the id read as words.
+                                        newConversationModelName(
+                                            model,
+                                            catalog
+                                                ?.models
+                                                ?.firstOrNull {
+                                                    it.providerId == p.id && it.id == model
+                                                }
+                                                ?.name,
+                                            (p.modelData[model]?.get("name") as? JsonPrimitive)
+                                                ?.takeIf { it.isString }
+                                                ?.content,
+                                        ),
                                         if (caps.hostAgentProviders) p.name else null,
                                         providerName = p.name.ifBlank { null },
                                     )
