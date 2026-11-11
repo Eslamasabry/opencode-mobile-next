@@ -90,7 +90,7 @@ class HandoffReadingUiTest {
         } as AgentsActions
 
     @Test
-    fun `AG5 the reading shows what was said, never tool output, errors or a key; Details holds the masked record`() =
+    fun `AG5 the reading shows what was said, never tool output, errors or a key, and Details holds the masked record`() =
         runComposeUiTest {
             setContent {
                 CompositionLocalProvider(LocalKitSecretSink provides KitSecretSink {}) {
