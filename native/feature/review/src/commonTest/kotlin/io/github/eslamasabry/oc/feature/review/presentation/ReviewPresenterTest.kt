@@ -193,6 +193,25 @@ class ReviewPresenterTest {
     }
 
     @Test
+    fun `G6 add file to the prompt says added, then already there, and is not offered without a message to take it`() = runTest(UnconfinedTestDispatcher()) {
+        val seen = mutableListOf<String>()
+        var first = true
+        val add = ReviewAddFile { path ->
+            seen += path
+            Outcome.Ok(if (first) AddedFile.Added else AddedFile.AlreadyThere).also { first = false }
+        }
+        val p = FileDiffPresenter(review(), "src/a.kt", "a1", FileDiffSource.Changes, backgroundScope, addFile = add)
+        assertTrue(p.state.value.canAddFile)
+        p.addToPrompt()
+        assertEquals(FileNotice.Added, p.state.value.fileNotice)
+        p.addToPrompt()
+        assertEquals(FileNotice.AlreadyThere, p.state.value.fileNotice)
+        assertEquals(listOf("src/a.kt", "src/a.kt"), seen)
+        val without = FileDiffPresenter(review(), "src/a.kt", "a1", FileDiffSource.Changes, backgroundScope)
+        assertEquals(false, without.state.value.canAddFile)
+    }
+
+    @Test
     fun `B-CHAT-058 a changed file opens its diff from the turn's records`() = runTest(UnconfinedTestDispatcher()) {
         val ui = FileDiffPresenter(review(), "src/a.kt", "a1", FileDiffSource.Changes, backgroundScope).state.value
         assertEquals("a\n", ui.diff?.before)

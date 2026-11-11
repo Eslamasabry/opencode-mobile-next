@@ -48,7 +48,16 @@ public interface ScheduleServers {
     public suspend fun models(profileId: ProfileId): List<ModelChoice>
 
     public suspend fun conversation(ref: ConversationRef): ConversationSeed?
+
+    /** What the phone lets timed runs do right now (Flutter `platformStatus`); read again on return from settings. */
+    public suspend fun timing(): ScheduleTiming = ScheduleTiming()
+
+    /** Opens the phone's own page for exact alarms (Flutter `requestExactAlarm`); a no-op where none is needed. */
+    public fun allowExactTiming() {}
 }
+
+/** Whether runs can start on the minute, and whether the phone would show the result notice. */
+public data class ScheduleTiming(val exactAllowed: Boolean = true, val notificationsAllowed: Boolean = true)
 
 // ---- K01 list
 
@@ -105,6 +114,10 @@ public data class SchedulesUi(
     val nowMs: Long = 0,
     /** Cache-first: the rows are the last ones seen and the live read is still on its way (a quiet bar, no skeleton). */
     val updating: Boolean = false,
+    /** False when the phone holds timed runs back: the list says they may start late (G2). */
+    val exactAllowed: Boolean = true,
+    /** False when the phone hides notifications: the list says a run will not announce itself. */
+    val notificationsAllowed: Boolean = true,
 )
 
 public interface SchedulesActions {
@@ -129,6 +142,12 @@ public interface SchedulesActions {
     public fun setDigest(enabled: Boolean)
 
     public fun retry()
+
+    /** Sends the person to the phone's page for exact timing. */
+    public fun allowExactTiming() {}
+
+    /** The person came back from the phone's settings: read what is allowed again. */
+    public fun refreshTiming() {}
 }
 
 // ---- K02 editor

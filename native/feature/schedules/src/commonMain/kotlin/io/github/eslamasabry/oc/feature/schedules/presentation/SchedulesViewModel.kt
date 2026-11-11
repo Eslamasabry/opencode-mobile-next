@@ -46,6 +46,7 @@ public class SchedulesViewModel(
         val confirmDelete: String? = null,
         val started: String? = null,
         val busy: Boolean = false,
+        val timing: ScheduleTiming = ScheduleTiming(),
     )
 
     private val local = MutableStateFlow(Local())
@@ -79,8 +80,18 @@ public class SchedulesViewModel(
             val target = servers.target(route.profileId)
             local.update { it.copy(target = target, targetLoaded = true) }
             if (target.available) engine.load(profile)
+            refreshTiming()
         }
     }
+
+    override fun refreshTiming() {
+        viewModelScope.launch {
+            val timing = servers.timing()
+            local.update { it.copy(timing = timing) }
+        }
+    }
+
+    override fun allowExactTiming() = servers.allowExactTiming()
 
     private fun present(engineState: SchedulesState, own: Local, was: KeptSchedules?): SchedulesUi {
         val target = own.target
@@ -133,6 +144,8 @@ public class SchedulesViewModel(
             started = own.started,
             busy = own.busy,
             nowMs = clock.now().toEpochMilliseconds(),
+            exactAllowed = own.timing.exactAllowed,
+            notificationsAllowed = own.timing.notificationsAllowed,
         )
     }
 

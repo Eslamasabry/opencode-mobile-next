@@ -102,6 +102,7 @@ public class FileDiffViewModel(
     hub: ReviewHub,
     private val nav: AppNavigator,
     agent: ReviewAgent,
+    drafts: ReviewDrafts,
     kept: Set<ReviewLastKnown> = emptySet(),
 ) : ViewModel(), FileDiffActions {
     private val presenter =
@@ -119,6 +120,7 @@ public class FileDiffViewModel(
             ReviewAgentPorts(hub.notes(route.ref).comments, agent.sender(route.ref)),
             hub.branch(route.ref),
             kept.firstOrNull()?.let { ReviewShelf(it, route.ref) },
+            drafts.addFile(route.ref).takeUnless { route.staged },
         )
     public val state: StateFlow<FileDiffUi> = presenter.state
 
@@ -133,6 +135,8 @@ public class FileDiffViewModel(
     override fun removeComment(id: String): Unit = presenter.removeComment(id)
 
     override fun sendComments(): Unit = presenter.sendComments()
+
+    override fun addToPrompt(): Unit = presenter.addToPrompt()
 
     @AssistedFactory
     @ManualViewModelAssistedFactoryKey

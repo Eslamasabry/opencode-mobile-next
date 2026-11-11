@@ -71,6 +71,7 @@ class DevServicesScreenTest {
         override fun askRemove(id: String) { seen += "askRemove $id" }
         override fun logs(id: String) { seen += "logs $id" }
         override fun visit(id: String) { seen += "visit $id" }
+        override fun preview(port: Int) { seen += "preview $port" }
         override fun askStopFound(id: String) { seen += "askStopFound $id" }
         override fun foundLogs(id: String) { seen += "foundLogs $id" }
         override fun confirm() { seen += "confirm" }
@@ -133,5 +134,24 @@ class DevServicesScreenTest {
             setContent { Themed { DevServicesScreen(DevServicesUi(supported = true, loading = false, problem = DevServicesProblem.Offline), Calls()) } }
             onNodeWithText("The server is not answering", substring = true).assertExists()
             onNodeWithText("The server or project changed", substring = true).assertDoesNotExist()
+        }
+
+    @Test
+    fun `G4 a found dev server and a running service open the in-app preview on their port`() =
+        runComposeUiTest {
+            val calls = Calls()
+            val found = FoundRowUi("p:42", "vite", "node vite --port 5173", persistentListOf(5173), canStop = true, hasLogs = true, canSave = true)
+            val running = web.copy(status = DevelopmentServiceStatus.Running, canStart = false, canStop = true, ports = persistentListOf(3000))
+            setContent {
+                Themed {
+                    DevServicesScreen(
+                        DevServicesUi(supported = true, loading = false, scansPhone = true, services = persistentListOf(running), found = persistentListOf(found)),
+                        calls,
+                    )
+                }
+            }
+            onNodeWithContentDescription("Preview vite").performClick()
+            onNodeWithContentDescription("Preview web").performClick()
+            assertEquals(listOf("preview 5173", "preview 3000"), calls.seen)
         }
 }

@@ -160,6 +160,9 @@ public interface DevServicesActions {
 
     public fun visit(id: String)
 
+    /** Opens the in-app preview of a dev server on [port] (Flutter `_preview`). */
+    public fun preview(port: Int) {}
+
     public fun askStopFound(id: String)
 
     public fun foundLogs(id: String)
