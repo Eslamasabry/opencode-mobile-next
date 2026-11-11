@@ -353,12 +353,12 @@ on every sample of the outline trace (it is called thousands of times a frame by
 - On home, the list's recording (`listGlass`, the one the floating + reads).
 
 **What loses its lens when the dock appears.** The dock costs one pane of the window's five (a feature's recording costs
-nothing). In a chat the message box, the bar and the dock take three, so two pills keep their lens: the jump pill and
-the first chip over the message box; the next chip (the last to claim) is drawn as frost of the same shape. With only
-the jump pill out nothing loses its lens. On home the floating bar (its page recording counts too), the + and the dock
-fit; nothing loses its lens. The owner's rule that the dock is always present means this claim is permanent on both
-screens (`LiquidEdgeDockTest`). If chips matter more than the dock, ranking the dock below the pills while it is tucked
-is a one-line change.
+nothing), and its rank follows its growth (`LiquidEdge.dockRank`): tucked or at rest it ranks below every pill, so in a
+chat the message box, the bar, the jump pill and two chips over the message box all keep their lens and the resting dock
+is frost of the same shape (blur, tint, cover and rim; no bend). Grown (swell, peek or list out) it ranks between the +
+and the bars: it takes a lens and the last chip to claim gives way to frost while the dock is open. With fewer pills the
+resting dock keeps its lens too. On home the floating bar (its page recording counts too), the + and the dock fit,
+resting or grown (`LiquidEdgeDockTest`).
 
 **Limits.**
 - No shoulders into the screen edge under Glass (the two-box join does not draw a third shape).

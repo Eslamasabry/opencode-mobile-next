@@ -170,6 +170,16 @@ public object LiquidEdge {
         )
     }
 
+    /**
+     * The edge dock's place in the window's budget (owner 2026-11-11): tucked or at rest it ranks below every pill (the
+     * chips over the message box and the jump pill keep their lens; a resting dock short of one is frost of the same
+     * shape); grown (the swell, the peek or the list out) it takes its own rank, between the + and the bars.
+     */
+    public fun dockRank(grown: Boolean): Int = if (grown) LiquidRole.Dock.rank else DOCK_REST_RANK
+
+    /** The resting dock's rank: below the status pill, the lowest page role. */
+    public const val DOCK_REST_RANK: Int = 0
+
     /** No liquid pane casts a shadow (owner 2026-11-09: crisp edges, no halo). */
     private const val NO_SHADOW: Float = 0f
 
@@ -463,7 +473,7 @@ public object LiquidEdge {
         val granted = LinkedHashSet<K>()
         val paid = HashSet<Any>()
         var left = budget
-        for (c in claims.sortedWith(compareByDescending<LiquidClaim<K>> { it.role.rank }.thenBy { it.order })) {
+        for (c in claims.sortedWith(compareByDescending<LiquidClaim<K>> { it.rank }.thenBy { it.order })) {
             val sourceCost = if (c.source == null || c.source in paid) 0 else 1
             val cost = 1 + sourceCost
             if (cost > left) continue
@@ -486,8 +496,11 @@ public object LiquidEdge {
 /** How a floating part asking for liquid glass is drawn: bent glass, or frost of the same shape through the same glass. */
 public enum class LiquidFaceKind { Liquid, Frost }
 
-/** One floating part asking to be liquid glass: [order] breaks ties between equal roles (earlier first). */
-public data class LiquidClaim<K>(val key: K, val role: LiquidRole, val source: Any?, val order: Int = 0)
+/**
+ * One floating part asking to be liquid glass: [order] breaks ties between equal roles (earlier first); [rank] is its
+ * role's unless the part says otherwise (the edge dock at rest: [LiquidEdge.dockRank]).
+ */
+public data class LiquidClaim<K>(val key: K, val role: LiquidRole, val source: Any?, val order: Int = 0, val rank: Int = role.rank)
 
 /** The ink the words on one liquid pane are drawn in: light over dark content, dark over bright (Apple's adaptive glass). */
 public enum class LiquidInk { Light, Dark }

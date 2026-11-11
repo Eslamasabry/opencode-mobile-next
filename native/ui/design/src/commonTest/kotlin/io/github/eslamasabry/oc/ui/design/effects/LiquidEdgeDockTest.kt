@@ -74,26 +74,31 @@ class LiquidEdgeDockTest {
     }
 
     /**
-     * What loses its lens when the dock appears. A chat: the bar, the message box, the jump pill and the chips over the
-     * message box claim; every one reads the transcript's recording (a feature's recording: free). Before the dock
-     * the budget of 5 holds the message box, the bar and three pills; with it, two pills: the third pill or chip (the
-     * last to claim) is drawn as frost of the same shape. Home: the floating bar over the page the kit records (costs
-     * 2), the + over the list's recording: the dock fits beside them, nothing loses its lens.
+     * What loses its lens to the dock (owner 2026-11-11: the dock is always there). A chat: the bar, the message box,
+     * the jump pill and two chips over the message box claim (all over the transcript's recording: free). With the dock
+     * tucked or at rest it ranks below every pill: all five keep their lens and the dock is frost of the same shape.
+     * With the dock grown (swell, peek or list out) it ranks between the + and the bars: it takes a lens and the last
+     * chip to claim gives way (frost) while the dock is open. Home: the floating bar over the page the kit records
+     * (costs 2), the + over the list's recording, the dock: everything fits, resting or grown.
      */
     @Test
-    fun `dock glass - in a chat the last pill or chip loses its lens to the dock, at home nothing does`() {
+    fun `dock glass - at rest the dock yields to the pills, grown it takes the last chip's lens`() {
+        fun dock(grown: Boolean) = LiquidClaim("dock", LiquidRole.Dock, null, order = 2, rank = LiquidEdge.dockRank(grown))
         val chat =
-            listOf(LiquidClaim("composer", LiquidRole.Composer, null), LiquidClaim("bar", LiquidRole.Bar, null)) +
-                listOf("jump", "chip0", "chip1").mapIndexed { i, k -> LiquidClaim(k, LiquidRole.Pill, null, order = i) }
-        assertEquals(setOf("composer", "bar", "jump", "chip0", "chip1"), LiquidEdge.grant(chat))
-        val withDock = chat + LiquidClaim("dock", LiquidRole.Dock, null, order = 10)
-        assertEquals(setOf("composer", "bar", "dock", "jump", "chip0"), LiquidEdge.grant(withDock))
-        // With only the jump pill out (no chips) nothing loses its lens.
-        val quiet = chat.take(3) + LiquidClaim("dock", LiquidRole.Dock, null, order = 10)
-        assertEquals(setOf("composer", "bar", "jump", "dock"), LiquidEdge.grant(quiet))
+            listOf(LiquidClaim("composer", LiquidRole.Composer, null, order = 0), LiquidClaim("bar", LiquidRole.Bar, null, order = 1)) +
+                listOf("jump", "chip0", "chip1").mapIndexed { i, k -> LiquidClaim(k, LiquidRole.Pill, null, order = 3 + i) }
+        val all = setOf("composer", "bar", "jump", "chip0", "chip1")
+        assertEquals(all, LiquidEdge.grant(chat), "no dock")
+        assertEquals(all, LiquidEdge.grant(chat + dock(grown = false)), "the dock at rest: the five keep their lens, the dock is frost")
+        assertEquals(setOf("composer", "bar", "dock", "jump", "chip0"), LiquidEdge.grant(chat + dock(grown = true)), "the dock grown: chip1 gives way")
+        // With fewer pills the resting dock has a lens too.
+        assertEquals(setOf("composer", "bar", "jump", "dock"), LiquidEdge.grant(chat.take(3) + dock(grown = false)))
+        assertTrue(LiquidEdge.dockRank(false) < LiquidRole.Status.rank && LiquidEdge.dockRank(true) == LiquidRole.Dock.rank)
         val page = Any()
-        val home =
-            listOf(LiquidClaim("bar", LiquidRole.Bar, page), LiquidClaim("plus", LiquidRole.Action, null), LiquidClaim("dock", LiquidRole.Dock, null))
-        assertEquals(setOf("bar", "plus", "dock"), LiquidEdge.grant(home))
+        for (grown in listOf(false, true)) {
+            val home =
+                listOf(LiquidClaim("bar", LiquidRole.Bar, page), LiquidClaim("plus", LiquidRole.Action, null), dock(grown))
+            assertEquals(setOf("bar", "plus", "dock"), LiquidEdge.grant(home), "home, grown=$grown")
+        }
     }
 }

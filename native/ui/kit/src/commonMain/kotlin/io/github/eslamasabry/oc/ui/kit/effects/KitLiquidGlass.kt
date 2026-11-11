@@ -206,12 +206,12 @@ private fun costed(source: Any?): Any? = source as? KitLiquidSource
 
 /** Asks the window's budget for [role]'s liquid face over [source]; true when granted (always, without a budget). */
 @Composable
-internal fun kitLiquidClaim(role: LiquidRole, source: Any?, asking: Boolean): Boolean {
+internal fun kitLiquidClaim(role: LiquidRole, source: Any?, asking: Boolean, rank: Int = role.rank): Boolean {
     val budget = LocalKitLiquidBudget.current ?: return asking
     val key = remember { Any() }
     val order = remember(budget) { budget.order() }
-    DisposableEffect(budget, role, source, asking) {
-        val claim = LiquidClaim(key, role, costed(source), order)
+    DisposableEffect(budget, role, source, asking, rank) {
+        val claim = LiquidClaim(key, role, costed(source), order, rank)
         if (asking) budget.claims += claim
         onDispose { budget.claims.remove(claim) }
     }
