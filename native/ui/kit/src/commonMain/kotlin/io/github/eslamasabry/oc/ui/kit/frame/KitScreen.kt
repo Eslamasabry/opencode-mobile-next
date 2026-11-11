@@ -1029,7 +1029,7 @@ private fun Panes(
  * Takes every touch inside this box, so nothing that lies under it (a row scrolled under the floating bar) is hit; the
  * box's own controls still get theirs. Hit testing stops at the first sibling that has pointer input under the finger.
  */
-private fun Modifier.kitTouchSink(): Modifier =
+internal fun Modifier.kitTouchSink(): Modifier =
     pointerInput(Unit) {
         awaitPointerEventScope {
             while (true) awaitPointerEvent(androidx.compose.ui.input.pointer.PointerEventPass.Final)
