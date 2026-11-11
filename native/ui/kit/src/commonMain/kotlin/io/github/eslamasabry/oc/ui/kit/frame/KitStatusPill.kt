@@ -27,6 +27,7 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.action.KitWorkingMark
+import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
 import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
 import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
@@ -73,6 +74,12 @@ public fun KitStatusPill(
         }
     val dot by animateColorAsState(ink, specs.quick(), label = "kit-status-pill-dot")
     val look = kitSurfaceLook(KitSurfaceInput(role = SurfaceRole.Control, shape = KitShapeId.Pill, level = SurfaceLevel.Surface3, ownFill = colors.surface3))
+    // Under a floating liquid bar (KitFloatingBar.kt) the pill is a small drop of liquid glass over what scrolls there,
+    // as a chip is: its face comes from the kit (LiquidRole.Pill); null keeps its own face.
+    val liquid =
+        io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidChrome.current?.let { chrome ->
+            io.github.eslamasabry.oc.ui.kit.effects.kitLiquidFace(LiquidRole.Pill, chrome, look.shape)
+        }
     Box(
         modifier
             .heightIn(min = tokens.minTarget.dp)
@@ -86,7 +93,7 @@ public fun KitStatusPill(
         Row(
             Modifier
                 .height(tokens.chipHeight.dp)
-                .then(look.modifier)
+                .then(liquid ?: look.modifier)
                 .padding(start = Space.S3.dp, end = Space.S2.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
