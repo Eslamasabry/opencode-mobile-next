@@ -170,7 +170,7 @@ internal fun ChatsHomeSheets(state: ChatsUi, actions: ChatsActions) {
                     title = stringResource(Res.string.server40DisconnectConfirm, name),
                     body = stringResource(Res.string.server40DisconnectBody),
                     confirmLabel = stringResource(Res.string.server40Disconnect),
-                    kind = KitConfirmKind.Neutral,
+                    kind = KitConfirmKind.Stop,
                 )
             },
         onConfirm = {
