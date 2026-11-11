@@ -59,6 +59,9 @@ public class AgentsPresenter(
     private var phoneRead: Job? = null
     private var readPhoneAgain = false
 
+    /** Counts the page's real steps; a read that ends after a newer step began leaves that step's notice alone. */
+    private var steps = 0
+
     init {
         refreshPhone()
         // Phone agents connect on their own, as in Flutter: when the page opens with an agent installed, and again when
@@ -557,12 +560,16 @@ public class AgentsPresenter(
             scope.launch {
                 do {
                     readPhoneAgain = false
+                    val since = steps
                     when (phone.refresh()) {
                         is Outcome.Ok -> Unit
+                        // A read runs beside the page's steps now: one that failed after a removal (or any step)
+                        // began must not put "could not be read or removed" over that step's own answer.
                         is Outcome.Failed ->
-                            local.update {
-                                it.copy(removal = PhoneAgentRemoval.Refused(PhoneAgentRemovalIssue.Unavailable))
-                            }
+                            if (since == steps && !local.value.busy)
+                                local.update {
+                                    it.copy(removal = PhoneAgentRemoval.Refused(PhoneAgentRemovalIssue.Unavailable))
+                                }
                     }
                 } while (readPhoneAgain)
             }
@@ -822,6 +829,7 @@ public class AgentsPresenter(
 
     private fun operation(block: suspend () -> Unit) {
         if (local.value.busy) return
+        steps++
         local.update { it.copy(busy = true, issue = null) }
         scope.launch {
             try {
