@@ -357,6 +357,9 @@ public class PaseoGateway(
     internal val titleHints = HashMap<String, String>()
     internal val archivedCopies = HashSet<String>()
 
+    /** The listing being read: conversation key -> the record it keeps (PaseoListCopies.kt). */
+    internal val listedCopies = HashMap<String, String>()
+
     /** Background work and failed turns as this gateway read them (B-AGENT-151, PaseoBackgroundTasks.kt). */
     internal val backgroundTasks = PaseoBackgroundTaskBook(sharedBackgroundTasks)
 
@@ -652,9 +655,10 @@ public class PaseoGateway(
         return result.toImmutableList()
     }
 
+    /** One row per conversation: older records of a resumed or imported one are left out (PaseoListCopies.kt). */
     override suspend fun sessionPage(cursor: String?, limit: Int): Outcome<ServerPage<Session>> =
         call {
-            readSessionPage(cursor, limit)
+            withoutOlderCopies(readSessionPage(cursor, limit), firstPage = cursor == null)
         }
 
     internal suspend fun readSessionPage(cursor: String?, limit: Int): ServerPage<Session> {
