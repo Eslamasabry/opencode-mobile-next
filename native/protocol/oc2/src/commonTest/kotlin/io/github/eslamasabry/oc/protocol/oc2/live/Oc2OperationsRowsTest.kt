@@ -139,6 +139,53 @@ class Oc2OperationsRowsTest {
         server.gateway.close()
     }
 
+    // The shapes a real OpenCode 2.2.6 server answered (2026-11-11, local probe; paths replaced): GET /config is a bare
+    // Config.Entry[] where a searched folder is `{type:"directory", path}` with NO `info`, and only a config file is
+    // `{type:"document", path, info}`. A server with no config file at all answers directory entries only.
+    private val realShells =
+        """[{"path":"/bin/sh","name":"sh","acceptable":true},{"path":"/usr/bin/bash","name":"bash","acceptable":true},""" +
+            """{"path":"/usr/bin/fish","name":"fish","acceptable":false}]"""
+
+    private fun realShellServer(config: String) = RowServer(location = demo) { seen ->
+        when {
+            seen.method == "GET" && seen.path == "/api/config/shell" -> json(realShells)
+            seen.method == "GET" && seen.path == "/api/config" -> json(config)
+            else -> respond("", HttpStatusCode.NoContent)
+        }
+    }
+
+    @Test
+    fun `B-PROTO-035 a 2_2_6 server with no config file lists its shells and has no saved choice`() = runTest {
+        // Before the fix every `directory` entry failed the read ("Could not finish" / "That did not work").
+        val server =
+            realShellServer("""[{"type":"directory","path":"/config/opencode"},{"type":"directory","path":"/root/projects/demo"}]""")
+        val settings = assertIs<Outcome.Ok<TerminalShellSettings>>(server.gateway.terminalShellSettings()).value
+        assertEquals("", settings.selected)
+        assertEquals(listOf("sh", "bash", "fish"), settings.options.map { it.name })
+        assertFalse(settings.options.last().acceptable)
+        server.gateway.close()
+    }
+
+    @Test
+    fun `B-PROTO-035 a 2_2_6 config document between directory entries gives the saved shell`() = runTest {
+        val server =
+            realShellServer(
+                """[{"type":"directory","path":"/config/opencode"},""" +
+                    """{"type":"document","path":"/root/projects/demo/opencode.json","info":{"shell":"/usr/bin/bash"}},""" +
+                    """{"type":"directory","path":"/root/projects/demo"}]"""
+            )
+        val settings = assertIs<Outcome.Ok<TerminalShellSettings>>(server.gateway.terminalShellSettings()).value
+        assertEquals("/usr/bin/bash", settings.selected)
+        server.gateway.close()
+    }
+
+    @Test
+    fun `B-PROTO-035 a config answer that is not a list is still unreadable`() = runTest {
+        val server = realShellServer("""{"shell":"/bin/sh"}""")
+        assertIs<Outcome.Failed>(server.gateway.terminalShellSettings())
+        server.gateway.close()
+    }
+
     @Test
     fun `B-PROTO-035 shell settings patch only an acceptable shell, refuse unlisted ones and clear with null`() = runTest {
         val server = shellServer()
