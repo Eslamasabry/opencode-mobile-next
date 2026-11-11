@@ -72,7 +72,7 @@ class KitEdgeDockListGestureTest {
 
     private fun inward(side: KitDockSide) = if (side == KitDockSide.End) -1f else 1f
 
-    /** After the list opened: flush with the dock's own edge, a gutter on the inner side, rounded there, dock unmoved. */
+    /** After the list opened: a whole pane a gutter in from the dock's own edge, a gutter on the inner side, rounded there, dock unmoved. */
     private fun ComposeUiTest.assertListOpenOnItsOwnEdge(run: Run, w: Int, side: KitDockSide, how: String) {
         val at = "$how, $w dp, $side"
         val b = runOnIdle { run.state.body() }
@@ -82,10 +82,10 @@ class KitEdgeDockListGestureTest {
         assertEquals(side == KitDockSide.End, runOnIdle { run.state.onRight }, "$at: the dock stands on its edge")
         assertTrue(b.secondRadius > 0f, "$at: the corners are rounded")
         if (side == KitDockSide.End) {
-            assertTrue(b.secondRight >= w.toFloat(), "$at: the pane reaches the right edge (${b.secondRight})")
+            assertEquals(w - DockDims.GUTTER, b.secondRight, 0.5f, "$at: the whole pane stands a gutter in from the right edge")
             assertTrue(b.secondLeft >= DockDims.PANEL_MIN_GAP - 0.5f && b.secondLeft < w - DockDims.REST_W, "$at: the page gutter on the inner side (${b.secondLeft})")
         } else {
-            assertTrue(b.secondLeft <= 0f, "$at: the pane reaches the left edge (${b.secondLeft})")
+            assertEquals(DockDims.GUTTER, b.secondLeft, 0.5f, "$at: the whole pane stands a gutter in from the left edge")
             assertTrue(b.secondRight <= w - DockDims.PANEL_MIN_GAP + 0.5f && b.secondRight > DockDims.REST_W, "$at: the page gutter on the inner side (${b.secondRight})")
         }
     }
