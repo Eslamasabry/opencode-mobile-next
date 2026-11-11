@@ -257,9 +257,11 @@ public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions, 
                         state.failure != null && state.terminals.isEmpty() -> Unit
                         state.terminals.isEmpty() ->
                             item {
+                                // Alone on the page: it takes the list's whole room, so it sits in the page's middle.
                                 KitStateView(
                                     kind = KitStateKind.Empty,
                                     title = stringResource(Res.string.remoteTerminalEmpty),
+                                    modifier = Modifier.fillParentMaxSize(),
                                     primary =
                                         KitAction(
                                             newLabel,
