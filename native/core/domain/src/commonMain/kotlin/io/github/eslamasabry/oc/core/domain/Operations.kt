@@ -37,6 +37,7 @@ import io.github.eslamasabry.oc.core.model.ServerLocation
 import io.github.eslamasabry.oc.core.model.ServerPage
 import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.core.model.SkillInfo
+import io.github.eslamasabry.oc.core.model.SubAgent
 import io.github.eslamasabry.oc.core.model.TerminalChannel
 import io.github.eslamasabry.oc.core.model.TerminalProcess
 import io.github.eslamasabry.oc.core.model.TerminalShellSettings
@@ -76,8 +77,20 @@ public interface SessionOperationsGateway {
     public suspend fun sessionDetails(id: SessionId): Outcome<Session> =
         unavailable("projectManagement")
 
+    /** The sub-agent conversations [id] started (forks left out). Gated on `subagentSessions`. */
     public suspend fun sessionChildren(id: SessionId): Outcome<ImmutableList<Session>> =
         unavailable("subagentSessions")
+
+    /**
+     * The sub-agents [parent] started, in the neutral shape the dock and the chat read. Gated on `subagentSessions`
+     * like [sessionChildren], which this default wraps without a state (a gateway that also knows the run states
+     * overrides it, see [SubAgents.withStates]). A read, never a subscription: callers ask on connect or on demand.
+     */
+    public suspend fun subAgents(parent: SessionId): Outcome<ImmutableList<SubAgent>> =
+        when (val children = sessionChildren(parent)) {
+            is Outcome.Failed -> children
+            is Outcome.Ok -> Outcome.Ok(SubAgents.of(parent, children.value, statuses = null, readOnly = false))
+        }
 
     /** The share URL, or null when the server made none. */
     public suspend fun shareSession(id: SessionId): Outcome<String?> = unavailable("sessionShare")

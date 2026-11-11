@@ -102,6 +102,7 @@ class ChatHeaderPresenterTest {
             sessionDelete = true,
             sessionModelProviderSwitching = true,
             serverCatalog = true,
+            subagentSessions = true,
         )
 
     @Test
@@ -153,7 +154,7 @@ class ChatHeaderPresenterTest {
 
     @Test
     fun `B-163 Go to offers Schedule a prompt and opens this server's scheduled prompts from this conversation`() {
-        world.capabilities.value = ServerCapabilities(scheduledPrompts = true)
+        world.capabilities.value = ServerCapabilities(scheduledPrompts = true, subagentSessions = true)
         val menu = p.current().menu
         assertEquals(listOf(HeaderAction.Find, HeaderAction.Subagents, HeaderAction.Details, HeaderAction.Schedule), menu.take(4))
         p.choose(HeaderAction.Schedule)
@@ -170,18 +171,18 @@ class ChatHeaderPresenterTest {
 
     @Test
     fun `B-163 Schedule a prompt is a Go to place beside Details, not a More act`() {
-        world.capabilities.value = ServerCapabilities(scheduledPrompts = true)
+        world.capabilities.value = ServerCapabilities(scheduledPrompts = true, subagentSessions = true)
         val menu = p.current().menu
         assertEquals(listOf(HeaderAction.Subagents, HeaderAction.Details, HeaderAction.Schedule), HeaderRules.goTo(menu))
-        world.capabilities.value = ServerCapabilities(scheduledPrompts = false)
+        world.capabilities.value = ServerCapabilities(scheduledPrompts = false, subagentSessions = true)
         assertEquals(listOf(HeaderAction.Subagents, HeaderAction.Details), HeaderRules.goTo(p.current().menu))
     }
 
     @Test
     fun `B-163 Schedule a prompt needs the server's schedules and a project folder`() {
-        world.capabilities.value = ServerCapabilities(scheduledPrompts = false)
+        world.capabilities.value = ServerCapabilities(scheduledPrompts = false, subagentSessions = true)
         assertFalse(HeaderAction.Schedule in p.current().menu)
-        world.capabilities.value = ServerCapabilities(scheduledPrompts = true)
+        world.capabilities.value = ServerCapabilities(scheduledPrompts = true, subagentSessions = true)
         port.facts.value = port.facts.value.copy(directory = null)
         assertFalse(HeaderAction.Schedule in p.current().menu)
     }
@@ -411,15 +412,25 @@ class ChatHeaderPresenterTest {
 
     @Test
     fun `S30-CHAT-003 Go to offers Subagents where the server manages projects and it opens the delegated conversations`() {
-        world.capabilities.value = ServerCapabilities(projectManagement = true)
+        world.capabilities.value = ServerCapabilities(projectManagement = true, subagentSessions = true)
         val menu = p.current().menu
         assertEquals(listOf(HeaderAction.Find, HeaderAction.Subagents, HeaderAction.Details), menu.take(3))
         assertTrue(HeaderAction.Subagents in HeaderRules.goTo(menu), "a Go to place, as in Flutter")
         p.choose(HeaderAction.Subagents)
         assertEquals(io.github.eslamasabry.oc.ui.routes.SessionRelationsRoute(world.ref), nav.opened.single())
         assertFalse(p.current().menuOpen)
-        world.capabilities.value = ServerCapabilities(projectManagement = false)
+        world.capabilities.value = ServerCapabilities(projectManagement = false, subagentSessions = true)
         assertFalse(HeaderAction.Subagents in p.current().menu)
+    }
+
+    @Test
+    fun `S30-CHAT-003 Go to offers Subagents only where the server can list them`() {
+        // The OpenCode 2 defect: projects but no listing showed the entry and the page failed.
+        world.capabilities.value = ServerCapabilities(projectManagement = true, subagentSessions = false)
+        assertFalse(HeaderAction.Subagents in p.current().menu)
+        assertFalse(HeaderAction.Subagents in HeaderRules.goTo(p.current().menu))
+        world.capabilities.value = ServerCapabilities(projectManagement = true, subagentSessions = true)
+        assertTrue(HeaderAction.Subagents in p.current().menu)
     }
 
     @Test

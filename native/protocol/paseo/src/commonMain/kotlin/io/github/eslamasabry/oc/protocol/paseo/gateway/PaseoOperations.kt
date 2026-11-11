@@ -3,8 +3,10 @@ package io.github.eslamasabry.oc.protocol.paseo.gateway
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
+import io.github.eslamasabry.oc.core.domain.SubAgents
 import io.github.eslamasabry.oc.core.model.FileDiff
 import io.github.eslamasabry.oc.core.model.Session
+import io.github.eslamasabry.oc.core.model.SubAgent
 import io.github.eslamasabry.oc.core.model.TerminalChannel
 import io.github.eslamasabry.oc.core.model.TerminalProcess
 import io.github.eslamasabry.oc.core.model.VcsDiffMode
@@ -25,7 +27,14 @@ public class PaseoOperations(private val gateway: PaseoGateway) : ServerOperatio
 
     override suspend fun sessionChildren(id: SessionId): Outcome<ImmutableList<Session>> =
         gateway.laneCall {
-            gateway.subagentChildren(id.raw)
+            gateway.subagentChildrenRead(id.raw)
+        }
+
+    /** Read-only conversations (`subagentReplies` is off), each with the status the helper last pushed. */
+    override suspend fun subAgents(parent: SessionId): Outcome<ImmutableList<SubAgent>> =
+        when (val children = sessionChildren(parent)) {
+            is Outcome.Failed -> children
+            is Outcome.Ok -> Outcome.Ok(SubAgents.withStates(gateway, parent, children.value))
         }
 
     /**
