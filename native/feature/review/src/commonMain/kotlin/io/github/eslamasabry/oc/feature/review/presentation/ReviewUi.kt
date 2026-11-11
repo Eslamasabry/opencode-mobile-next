@@ -25,6 +25,9 @@ public interface ReviewNavigation {
 
     /** "Review the undo". */
     public fun openStaged()
+
+    /** The project's Git page (where "Start tracking" lives). */
+    public fun openGit() {}
 }
 
 /**

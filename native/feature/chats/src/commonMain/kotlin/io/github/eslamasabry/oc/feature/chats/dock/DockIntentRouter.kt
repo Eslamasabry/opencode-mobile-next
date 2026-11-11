@@ -17,6 +17,9 @@ public interface DockFeedback {
     public fun stopFailed(name: String)
 
     public fun answerFailed(name: String)
+
+    /** The conversation was not renamed (the server did not take the name). */
+    public fun renameFailed() {}
 }
 
 /**
@@ -97,7 +100,7 @@ public class DockIntentRouter(
 
     override fun onRename(key: String, name: String) {
         val ref = frame().refs[key] ?: return
-        port.rename(ref, name.trim().takeIf { it.isNotEmpty() })
+        port.rename(ref, name.trim().takeIf { it.isNotEmpty() }) { feedback.renameFailed() }
     }
 
     override fun onNewConversation() {

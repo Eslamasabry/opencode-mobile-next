@@ -1384,3 +1384,18 @@ public fun isStartableAgent(name: String): Boolean =
                 "explore",
                 "general",
             )
+
+/**
+ * The line under a project's name in the project sheet: the folders it sits in, so same-named projects tell apart
+ * ("work/app"). The phone's Linux home (`/root`) is where every project of the phone lives, so it is never part of the
+ * line: a project straight in it has none. Longer than two folders keeps the last two behind an ellipsis.
+ */
+public fun projectPlace(directory: String): String? {
+    val parts = directory.trim().replace('\\', '/').split('/').filter { it.isNotEmpty() }
+    val parents = parts.dropLast(1).let { if (it.firstOrNull() == "root" && directory.trim().startsWith("/root")) it.drop(1) else it }
+    return when {
+        parents.isEmpty() -> null
+        parents.size <= 2 -> parents.joinToString("/")
+        else -> "…/" + parents.takeLast(2).joinToString("/")
+    }
+}

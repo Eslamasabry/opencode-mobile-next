@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.engine.attention.dock
 
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.common.Outcome
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,7 +14,8 @@ import kotlinx.coroutines.launch
  *
  * Confined to one dispatcher (the app's main): every call mutates [DockModel] in place of a lock, like the app's other
  * main-thread state holders. [navigate] opens a conversation the way a tap in the conversation list does; the UI
- * layer supplies it. The tuck is not persisted: it lasts until a new failure or request, or until nothing is live.
+ * layer supplies it. The dock starts tucked and comes out only when the person pulls it out; that choice is not
+ * persisted (it lasts for the session) and nothing the conversations do changes it.
  */
 public class DockController(
     private val scope: CoroutineScope,
@@ -55,6 +57,7 @@ public class DockController(
             peeks?.forgetProfile(event.profile)
         }
         if (event is DockEvent.Deleted) peeks?.forget(event.ref)
+        if (event is DockEvent.Left) peeks?.forget(event.ref)
     }
 
     private fun persist(
@@ -81,14 +84,37 @@ public class DockController(
         feed(DockEvent.Opened(ref))
     }
 
-    /** Holds a ring and types a name. Blank clears it and the session title shows again. */
-    public fun rename(ref: ConversationRef, name: String?) {
+    /**
+     * Holds a ring and types a name. There is one name per conversation: with the app's [DockActions] this renames the
+     * conversation itself (the call its own "Rename conversation" makes) and the ring shows the new title; a failed
+     * call changes nothing and runs [onFailed] (on this controller's dispatcher) so the person is told. Blank only clears
+     * a leftover local nickname so the title shows. Without actions (previews, tests) it keeps the old local nickname.
+     */
+    public fun rename(ref: ConversationRef, name: String?, onFailed: () -> Unit = {}) {
         scope.launch {
-            when (val saved = nicknames.set(ref, name)) {
-                is NicknameResult.Saved -> feed(DockEvent.NicknameSet(ref, saved.name))
-                NicknameResult.Refused -> Unit
+            val port = actions
+            if (port == null) {
+                when (val saved = nicknames.set(ref, name)) {
+                    is NicknameResult.Saved -> feed(DockEvent.NicknameSet(ref, saved.name))
+                    NicknameResult.Refused -> Unit
+                }
+                return@launch
+            }
+            val title = name?.split(Regex("\\s+"))?.filter { it.isNotEmpty() }?.joinToString(" ")?.takeIf { it.isNotEmpty() }
+            if (title == null) {
+                dropNickname(ref)
+            } else if (port.renameConversation(ref, title) is Outcome.Ok) {
+                dropNickname(ref)
+                feed(DockEvent.Meta(ref, title, null))
+            } else {
+                onFailed()
             }
         }
+    }
+
+    private suspend fun dropNickname(ref: ConversationRef) {
+        if (nicknames.nickname(ref) != null) nicknames.clear(ref)
+        feed(DockEvent.NicknameSet(ref, null))
     }
 
     /**
@@ -182,7 +208,15 @@ public class DockController(
 
     /** Reads the saved nicknames of a profile into the dock. Call when its connection goes live. */
     public suspend fun loadNicknames(profile: ProfileId) {
-        feed(DockEvent.Nicknames(profile, nicknames.load(profile)))
+        val saved = nicknames.load(profile)
+        if (actions == null) {
+            feed(DockEvent.Nicknames(profile, saved))
+        } else {
+            // One name per conversation: a local nickname from before renames went to the conversation would hide its
+            // real title (the home shows the title), so it is dropped here.
+            for (session in saved.keys) nicknames.clear(ConversationRef(profile, session))
+            feed(DockEvent.Nicknames(profile, emptyMap()))
+        }
     }
 
     public fun profileGone(profile: ProfileId) {

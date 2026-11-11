@@ -77,14 +77,18 @@ internal class Oc2HostTools(private val gateway: Oc2Gateway, private val locatio
         }
         val config = gateway.json("/config", query = query)
         if (config is Outcome.Failed) return config
+        // GET /config answers Config.Entry[] (2.2.x): `{type:"document", path, info}` for a config file and
+        // `{type:"directory", path}` for a folder searched for one, which has no `info`. A server with no config file
+        // answers directory entries only, so a layer without `info` is "no saved shell here", never unreadable.
+        // Entries run lowest to highest priority: the last document that sets a shell wins.
         val layers =
             data((config as Outcome.Ok).value) as? JsonArray
                 ?: return Failure.UnreadableReply().failed()
         var selected = ""
         for (layer in layers) {
             val obj = layer as? JsonObject ?: return Failure.UnreadableReply().failed()
-            val info = obj.obj("info") ?: return Failure.UnreadableReply().failed()
-            info.str("shell")?.let { selected = it }
+            val info = obj.obj("info") ?: continue
+            info.str("shell")?.takeIf { it.isNotBlank() }?.let { selected = it }
         }
         return TerminalShellSettings(selected, options.toImmutableList()).ok()
     }

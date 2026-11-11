@@ -7,6 +7,7 @@ import io.github.eslamasabry.oc.core.security.Redactor
 import io.ktor.http.*
 import kotlinx.collections.immutable.*
 import kotlinx.coroutines.sync.Mutex
+import kotlin.concurrent.atomics.AtomicReference
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.*
 
@@ -24,6 +25,15 @@ internal class Oc2ProviderSignIn(
     private val lane = Mutex()
     private val attempts = LinkedHashMap<String, Attempt>()
     private val terminal = LinkedHashMap<String, IntegrationAuthStatus>()
+
+    /**
+     * From the last sign-in list: per method (integration id to method id), each visible field's published choices
+     * (`options[].value`). An answer that is exactly one of them is a public choice the server offered in the clear
+     * ("github.com", "enterprise", "global"), so it is not registered as a secret: registered, it masked that word in
+     * every preview and tool row. Every other answer is registered whole, as before (the form schema has no
+     * secret/password flag, so a free-text answer may be a credential).
+     */
+    private val choices = AtomicReference<Map<Pair<String, String>, Map<String, Set<String>>>>(emptyMap())
 
     private fun query(at: ServerLocation = location()): Map<String, String?> =
         mapOf("location[directory]" to at.directory, "location[workspace]" to at.workspace)
@@ -95,11 +105,12 @@ internal class Oc2ProviderSignIn(
         val result = gateway.json("/integration", query = scope)
         if (result is Outcome.Failed) return result
         val root = (result as Outcome.Ok).value
-        redactor.registerCredentialValues(root)
+        redactor.registerAnswerCredentials(root)
         val rows = data(root) as? JsonArray ?: return failed()
         if (rows.size > 1000) return failed()
         val list = mutableListOf<IntegrationInfo>()
         val ids = mutableSetOf<String>()
+        val offered = mutableMapOf<Pair<String, String>, Map<String, Set<String>>>()
         for (raw in rows) {
             val row = raw as? JsonObject ?: return failed()
             val id = text(row, "id")?.takeIf(::valid) ?: return failed()
@@ -115,6 +126,7 @@ internal class Oc2ProviderSignIn(
                 val methodId = text(method, "id")?.takeIf(::valid)
                 val prompts = mutableListOf<JsonObject>()
                 val presets = mutableMapOf<String, String>()
+                val fieldChoices = mutableMapOf<String, Set<String>>()
                 val form = method["form"] as? JsonArray
                 if (form != null && form.size > 32) return failed()
                 for (fieldRaw in form.orEmpty()) {
@@ -126,9 +138,20 @@ internal class Oc2ProviderSignIn(
                             redactor.registerSecret(it)
                         }
                     } else {
+                        (field["options"] as? JsonArray)
+                            ?.take(MAX_CHOICES)
+                            ?.mapNotNull { option ->
+                                ((option as? JsonObject)?.get("value") as? JsonPrimitive)
+                                    ?.takeIf { it.isString }
+                                    ?.content
+                            }
+                            ?.toSet()
+                            ?.takeIf { it.isNotEmpty() }
+                            ?.let { fieldChoices[key] = it }
                         prompts += prompt(field, key)
                     }
                 }
+                if (methodId != null && fieldChoices.isNotEmpty()) offered[id to methodId] = fieldChoices
                 methods +=
                     IntegrationMethodInfo(
                         type,
@@ -167,6 +190,7 @@ internal class Oc2ProviderSignIn(
                     connections.size,
                 )
         }
+        choices.store(offered)
         return list.toImmutableList().ok()
     }
 
@@ -219,7 +243,10 @@ internal class Oc2ProviderSignIn(
         )
             return@withLock failed()
         val scope = query()
-        inputs.values.forEach(redactor::registerSecret)
+        val offered = choices.load()[id to methodId].orEmpty()
+        for ((field, value) in inputs) {
+            if (value !in offered[field].orEmpty()) redactor.registerSecret(value)
+        }
         val reply =
             gateway.json(
                 path(id) + "/connect/oauth",
@@ -322,5 +349,9 @@ internal class Oc2ProviderSignIn(
             )
         if (reply is Outcome.Ok) attempts.remove(attemptId)
         reply.map { Unit }
+    }
+
+    private companion object {
+        const val MAX_CHOICES = 256
     }
 }

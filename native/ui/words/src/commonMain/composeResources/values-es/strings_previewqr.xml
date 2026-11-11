@@ -3,7 +3,7 @@
 <resources>
     <string name="previewQrLeaveTitle">¿Abrir este enlace en tu navegador?</string>
     <string name="previewQrPortLabel">Número de puerto</string>
-    <string name="previewQrPortHelp">O escribe el puerto en el que escucha un servidor de desarrollo.</string>
+    <string name="previewQrPortHelp">O escribe el número del puerto de una aplicación en ejecución.</string>
     <string name="previewQrPortInvalid">Ingresa un puerto del 1 al 65535.</string>
     <string name="previewQrPortOpen">Abrir puerto</string>
     <string name="previewQrPairFilled">Se completó con el código de vinculación. Revísalo y guarda.</string>

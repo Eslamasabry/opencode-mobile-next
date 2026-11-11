@@ -18,6 +18,8 @@ public data class ChatHeaderUi(
     val serverName: String? = null,
     val projectName: String? = null,
     val branch: String? = null,
+    /** The one "is this a Git project" answer; null = not known yet. The Git chip shows only for true. */
+    val git: Boolean? = null,
     /**
      * The ⋯ menu's entries in order (Go to, then Do; destructive last), built from capabilities.
      */
@@ -49,7 +51,10 @@ public data class ChatHeaderUi(
     val parent: io.github.eslamasabry.oc.core.common.ids.ConversationRef? = null,
     /** [parent]'s title as the server names it; null until read or untitled. */
     val parentTitle: String? = null,
-)
+) {
+    /** The Git chip shows for a Git project (or an old branch read while Git is not yet confirmed), never otherwise. */
+    val showsGit: Boolean get() = git == true || (git == null && branch != null)
+}
 
 /** What the ⋯ menu offers (Flutter `SessionMenuAction`, the native subset with a real path). */
 public enum class HeaderAction {

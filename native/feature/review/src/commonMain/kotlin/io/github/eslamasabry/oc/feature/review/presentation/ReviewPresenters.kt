@@ -58,6 +58,9 @@ public interface ChangesActions {
     /** The change-scope picker: this conversation, uncommitted, or the whole branch (Flutter `_selectScope`). */
     public fun chooseScope(scope: ReviewScope) {}
 
+    /** "Open Git for this project": the Git page, from the not-a-Git-project state. */
+    public fun openGit() {}
+
     /** "Send back with a note": opens the note field. */
     public fun sendBack()
 
@@ -439,6 +442,8 @@ public class ChangesPresenter(
     }
 
     override fun openStaged(): Unit = nav.openStaged()
+
+    override fun openGit(): Unit = nav.openGit()
 
     override fun sendBack() {
         val s = state.value

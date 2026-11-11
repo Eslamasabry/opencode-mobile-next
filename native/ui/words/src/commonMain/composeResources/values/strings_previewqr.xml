@@ -1,7 +1,7 @@
 <resources>
     <string name="previewQrLeaveTitle">Open this link in your browser?</string>
     <string name="previewQrPortLabel">Port number</string>
-    <string name="previewQrPortHelp">Or type the port a dev server is listening on.</string>
+    <string name="previewQrPortHelp">Or type the port number of an app that is running.</string>
     <string name="previewQrPortInvalid">Enter a port from 1 to 65535.</string>
     <string name="previewQrPortOpen">Open port</string>
     <string name="previewQrPairFilled">Filled in from the pairing code. Check it, then save.</string>

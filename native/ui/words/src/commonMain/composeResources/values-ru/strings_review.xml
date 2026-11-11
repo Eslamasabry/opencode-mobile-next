@@ -14,4 +14,5 @@
     <string name="reviewSendBackFailed">Не удалось добавить вашу заметку в сообщение. Повторите.</string>
     <string name="reviewProjectNotGitTitle">Проект не в Git</string>
     <string name="reviewProjectNotGitBody">Изменения можно показать только для проекта, который ведётся в Git. Начните отслеживать его на странице Git проекта, чтобы увидеть их здесь.</string>
+    <string name="reviewProjectOpenGit">Открыть страницу Git</string>
 </resources>

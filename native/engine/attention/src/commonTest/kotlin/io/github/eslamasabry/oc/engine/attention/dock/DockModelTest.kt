@@ -66,7 +66,7 @@ class DockModelTest {
     // ---- in / out
 
     @Test
-    fun `presence follows live count, alerts and the tuck`() {
+    fun `presence follows only the person's tuck, never live count or alerts`() {
         data class Case(val label: String, val events: List<DockEvent>, val expect: DockPresence)
         val cases =
             listOf(
@@ -75,17 +75,22 @@ class DockModelTest {
                 Case("one live retreats to the nub", listOf(DockEvent.RunStarted(a)), DockPresence.Nub),
                 Case("nothing live is still the nub, never hidden", listOf(DockEvent.RunStarted(a), DockEvent.RunEnded(a, DockRunEnd.Stopped)), DockPresence.Nub),
                 Case("an idle open conversation alone is the nub", listOf(DockEvent.Opened(a)), DockPresence.Nub),
-                Case("two live come out", listOf(DockEvent.RunStarted(a), DockEvent.RunStarted(b)), DockPresence.Out),
+                Case("two live stay tucked: it never comes out by itself", listOf(DockEvent.RunStarted(a), DockEvent.RunStarted(b)), DockPresence.Nub),
                 Case("one of two stops: back to the nub", listOf(DockEvent.RunStarted(a), DockEvent.RunStarted(b), DockEvent.RunEnded(b, DockRunEnd.Stopped)), DockPresence.Nub),
-                Case("an unanswered request alone brings it out", listOf(DockEvent.RunStarted(a), DockEvent.RequestOpened(a, "r")), DockPresence.Out),
-                Case("a failure alone brings it out", listOf(DockEvent.RunStarted(a), DockEvent.RunEnded(a, DockRunEnd.Failed)), DockPresence.Out),
+                Case("an unanswered request stays on the nub", listOf(DockEvent.RunStarted(a), DockEvent.RequestOpened(a, "r")), DockPresence.Nub),
+                Case("a failure stays on the nub", listOf(DockEvent.RunStarted(a), DockEvent.RunEnded(a, DockRunEnd.Failed)), DockPresence.Nub),
                 Case("a plain finish alone stays a nub", listOf(DockEvent.RunStarted(a), DockEvent.RunEnded(a, DockRunEnd.Succeeded)), DockPresence.Nub),
                 Case("the person tucked it", listOf(DockEvent.RunStarted(a), DockEvent.RunStarted(b), DockEvent.Tuck), DockPresence.Nub),
                 Case("tuck then untuck", listOf(DockEvent.RunStarted(a), DockEvent.RunStarted(b), DockEvent.Tuck, DockEvent.Untuck), DockPresence.Out),
-                Case("a new failure untucks", listOf(DockEvent.RunStarted(a), DockEvent.RunStarted(b), DockEvent.Tuck, DockEvent.RunEnded(a, DockRunEnd.Failed)), DockPresence.Out),
-                Case("a new request untucks", listOf(DockEvent.RunStarted(a), DockEvent.RunStarted(b), DockEvent.Tuck, DockEvent.RequestOpened(b, "r")), DockPresence.Out),
+                Case("a new failure does not untuck", listOf(DockEvent.RunStarted(a), DockEvent.RunStarted(b), DockEvent.Tuck, DockEvent.RunEnded(a, DockRunEnd.Failed)), DockPresence.Nub),
+                Case("a new request does not untuck", listOf(DockEvent.RunStarted(a), DockEvent.RunStarted(b), DockEvent.Tuck, DockEvent.RequestOpened(b, "r")), DockPresence.Nub),
                 Case("a finish does not untuck", listOf(DockEvent.RunStarted(a), DockEvent.RunStarted(b), DockEvent.Tuck, DockEvent.RunEnded(a, DockRunEnd.Succeeded)), DockPresence.Nub),
-                Case("tuck is forgotten when nothing is live", listOf(DockEvent.RunStarted(a), DockEvent.Tuck, DockEvent.RunEnded(a, DockRunEnd.Stopped), DockEvent.RunStarted(a), DockEvent.RunStarted(b)), DockPresence.Out),
+                Case("tucked stays tucked when nothing is live and work starts again", listOf(DockEvent.RunStarted(a), DockEvent.Tuck, DockEvent.RunEnded(a, DockRunEnd.Stopped), DockEvent.RunStarted(a), DockEvent.RunStarted(b)), DockPresence.Nub),
+                Case("pulled out with one live ring comes out", listOf(DockEvent.RunStarted(a), DockEvent.Untuck), DockPresence.Out),
+                Case("pulled out stays out when nothing is live", listOf(DockEvent.RunStarted(a), DockEvent.Untuck, DockEvent.RunEnded(a, DockRunEnd.Stopped)), DockPresence.Out),
+                Case("pulled out stays out across an alert and a page change", listOf(DockEvent.Untuck, DockEvent.RunStarted(a), DockEvent.Opened(b), DockEvent.RequestOpened(a, "r"), DockEvent.Opened(null)), DockPresence.Out),
+                Case("pulled out with no ring is still the nub with its +, and out once a ring comes", listOf(DockEvent.PinsLoaded(p, emptyList()), DockEvent.Untuck), DockPresence.Nub),
+                Case("the out choice waits for the first ring", listOf(DockEvent.PinsLoaded(p, emptyList()), DockEvent.Untuck, DockEvent.RunStarted(a)), DockPresence.Out),
                 Case("a request in the open conversation does not untuck", listOf(DockEvent.Opened(a), DockEvent.RunStarted(a), DockEvent.RunStarted(b), DockEvent.Tuck, DockEvent.RequestOpened(a, "r")), DockPresence.Nub),
             )
         for (case in cases) assertEquals(case.expect, run(*case.events.toTypedArray()).presence, case.label)
@@ -114,7 +119,7 @@ class DockModelTest {
         val x = ref("x", other)
         val ui = run(DockEvent.RunStarted(a), DockEvent.RunStarted(x))
         assertEquals(listOf(a, x), ui.entries.map { it.ref })
-        assertEquals(DockPresence.Out, ui.presence)
+        assertEquals(DockPresence.Nub, ui.presence, "two live never bring it out by itself")
         val gone = DockModel.empty().reduce(DockEvent.RunStarted(a)).reduce(DockEvent.RunStarted(x)).reduce(DockEvent.ProfileGone(other))
         assertEquals(listOf(a), gone.ui.entries.map { it.ref })
         val deleted = gone.reduce(DockEvent.Deleted(a))
@@ -200,7 +205,7 @@ class DockModelTest {
     @Test
     fun `a status read adds busy sessions and finishes the ones that stopped without an event`() {
         val m = DockModel.empty().reduce(DockEvent.StatusesRead(p, setOf(a.sessionId, b.sessionId)))
-        assertEquals(DockPresence.Out, m.ui.presence)
+        assertEquals(DockPresence.Nub, m.ui.presence, "two busy never bring it out by itself")
         val after = m.reduce(DockEvent.StatusesRead(p, setOf(a.sessionId)))
         assertEquals(DockState.Working, after.ui.state(a))
         assertEquals(DockState.Finished, after.ui.state(b))
