@@ -26,6 +26,8 @@ public data class FolderRowUi(
     /** The server's project id, when it keeps a project list (needed to rename). */
     val id: String? = null,
     val kind: io.github.eslamasabry.oc.engine.files.PhoneProjectKind? = null,
+    /** Extra working copies (worktrees) the server keeps for this project; 0 = none or not told. */
+    val worktrees: Int = 0,
 )
 
 /**
@@ -74,6 +76,12 @@ public data class ProjectsPickerUi(
     val phoneFolders: ImmutableList<PhoneFolderUi> = persistentListOf(),
     val phoneLoading: Boolean = false,
     val phoneFailure: Failure? = null,
+    /**
+     * The server works in one folder (Codex, Paseo: no project list, no file browsing): the page says so and
+     * shows [configuredFolder] instead of a project choice (Flutter `_oneFolder`).
+     */
+    val oneFolder: Boolean = false,
+    val configuredFolder: String? = null,
 )
 
 public interface ProjectsPickerActions {

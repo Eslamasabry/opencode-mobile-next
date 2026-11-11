@@ -13,6 +13,7 @@ import io.github.eslamasabry.oc.core.model.NewSession
 import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.core.model.SessionStatus
 import io.github.eslamasabry.oc.core.model.WorkspaceProject
+import io.github.eslamasabry.oc.feature.projects.presentation.ProjectRules
 import io.github.eslamasabry.oc.core.testing.FakeOperationsGateway
 import io.github.eslamasabry.oc.core.testing.FakeServerGateway
 import io.github.eslamasabry.oc.feature.projects.presentation.NoPhoneProjectDiscovery
@@ -295,5 +296,32 @@ class ProjectsViewModelTest {
         gateway.capabilities.value = ServerCapabilities(projectManagement = false)
         val vm = ProjectsPickerViewModel(ProjectsRoute.Picker(), Nav(), Servers(listOf(ProjectServer(p1, "srv", gateway, null))), SessionOpenedFolders(), NoPhoneProjectDiscovery())
         assertEquals(listOf("my-app"), vm.state.value.projects.map { it.name })
+    }
+
+    @Test
+    fun `H7 a server with no project list and no file browsing is the one-folder page`() {
+        val gateway = FakeServerGateway(emptyList())
+        gateway.capabilities.value = ServerCapabilities(projectManagement = false, fileBrowsing = false)
+        val vm = ProjectsPickerViewModel(ProjectsRoute.Picker(), Nav(), Servers(listOf(ProjectServer(p1, "codex", gateway, null))), SessionOpenedFolders(), NoPhoneProjectDiscovery())
+        assertTrue(vm.state.value.oneFolder)
+    }
+
+    @Test
+    fun `H7 a server that can list or browse folders keeps the project choice`() {
+        val gateway = FakeServerGateway(emptyList())
+        gateway.capabilities.value = ServerCapabilities(projectManagement = false, fileBrowsing = true)
+        val vm = ProjectsPickerViewModel(ProjectsRoute.Picker(), Nav(), Servers(listOf(ProjectServer(p1, "oc2", gateway, null))), SessionOpenedFolders(), NoPhoneProjectDiscovery())
+        assertFalse(vm.state.value.oneFolder)
+    }
+
+    @Test
+    fun `H7 a project counts its extra worktrees`() {
+        val summaries =
+            ProjectRules.fromServer(
+                listOf(WorkspaceProject("p", "Api", "/work/api", persistentListOf("/work/api", "/work/api-fix", "/work/api-two/"), 10, true)),
+                emptyList(),
+                emptySet(),
+            )
+        assertEquals(2, summaries.single().worktrees)
     }
 }
