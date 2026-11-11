@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxAgentPayloadRefresh">刷新手机智能体</string>
+    <string name="linuxAgentPayloadRemove">移除 %1$s</string>
+    <string name="linuxAgentPayloadRemoveTitle">从这部手机移除 %1$s？</string>
+    <string name="linuxAgentPayloadRemoveBody">移除已下载的程序和未完成的下载。你的账号、对话和共享工具仍保留在这部手机上。</string>
+    <plurals name="linuxAgentPayloadRemoved">
+        <item quantity="other">程序已移除。释放了 %1$d 字节。</item>
+    </plurals>
+    <string name="linuxAgentPayloadBusy">该智能体或另一项手机设置正在运行。请先停止它，然后重试。</string>
+    <string name="linuxAgentPayloadUnsafe">这些文件与应用自己创建的安装不符。没有移除任何内容。</string>
+    <string name="linuxAgentPayloadUnconfirmed">无法确认已移除。请先刷新列表再重试。</string>
+    <string name="linuxAgentPayloadUnavailable">无法读取或移除手机智能体文件。请刷新后重试。</string>
+</resources>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxExitForceStop">OpenCode 运行时应用被关闭</string>
+    <string name="linuxExitMemory">Android 为释放内存关闭了应用</string>
+    <string name="linuxExitMemoryLimit">应用达到内存上限，被 Android 关闭</string>
+    <string name="linuxExitCrash">OpenCode 运行时应用崩溃</string>
+    <string name="linuxExitKilled">OpenCode 运行时 Android 停止了应用</string>
+    <string name="linuxExitRestored">OpenCode 已重新运行。</string>
+    <string name="linuxExitCheckStatus">请查看下方的当前服务器状态。</string>
+    <string name="linuxExitPolicyOff">自动重启已关闭。准备好后，你可以自行启动 OpenCode。</string>
+</resources>

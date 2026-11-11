@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxGitRepairAction">修复关联的 Git 文件</string>
+    <string name="linuxGitRepairWorking">正在修复 Git 文件…</string>
+    <string name="linuxGitRepairHealthy">Git 可以读取此项目。没有需要修复的对象文件。</string>
+    <plurals name="linuxGitRepairRestored">
+        <item quantity="other">已恢复 %1$d 个 Git 对象文件。Git 又可以读取该项目了。</item>
+    </plurals>
+    <string name="linuxGitRepairMissing">部分 Git 对象无法恢复或验证。请重新克隆项目或恢复一份副本。</string>
+    <string name="linuxGitRepairNotProject">这里只能修复这部手机项目文件夹中的 Git 项目。</string>
+    <string name="linuxGitRepairFailed">这部手机未能完成 Git 文件的修复。请重试。</string>
+    <string name="linuxGitRepairDetailLocal">从此项目内的副本恢复已验证的 Git 对象。项目文件会保留。</string>
+</resources>

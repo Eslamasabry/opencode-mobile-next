@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxBackupPrivacyNative">已知的登录文件和保存的服务环境设置会留在这部手机上。自定义的服务命令会被包含在内；分享备份前请先检查。</string>
+    <string name="linuxBackupServiceAccountsNative">带有已保存环境设置的服务会以关闭状态备份。恢复后，请先重新设置它们的账号和环境，再启动。</string>
+</resources>

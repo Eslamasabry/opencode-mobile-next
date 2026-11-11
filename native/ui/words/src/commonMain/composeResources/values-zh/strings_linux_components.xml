@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxComponentsTitle">Linux 组件</string>
+    <string name="linuxComponentsRefresh">检查已安装的组件</string>
+    <string name="linuxComponentsTeam">AI Team</string>
+    <string name="linuxComponentsUnknown">组件</string>
+    <string name="linuxComponentsInstalled">已安装</string>
+    <string name="linuxComponentsDependents">%1$s 需要它。请先移除那些组件。</string>
+    <string name="linuxComponentsDependencyUnknown">无法检查 %1$s。移除此组件前请再检查一次。</string>
+    <string name="linuxComponentsRequired">这部手机上的服务器需要它。</string>
+    <string name="linuxComponentsUnsupported">无法单独移除此组件。</string>
+    <string name="linuxComponentsAbsent">未安装</string>
+    <string name="linuxComponentsUnknownPresence">无法检查已安装的组件。请重试。</string>
+    <string name="linuxComponentsBusy">请等待设置或当前操作完成。</string>
+    <string name="linuxComponentsFailed">无法移除该组件。请检查后重试。</string>
+    <string name="linuxComponentsRemove">移除 %1$s</string>
+    <string name="linuxComponentsRemoveQuestion">移除 %1$s？</string>
+    <string name="linuxComponentsRemoveBody">只会移除这个组件。你的项目和对话会保留。移除前会再次检查依赖关系。</string>
+    <string name="linuxSetupOpenSettings">打开应用设置</string>
+    <string name="linuxSetupStepWaiting">等待中</string>
+    <string name="linuxSetupStepKept">已安装</string>
+    <string name="linuxSetupSwitchBusy">请先完成这部手机上正在进行的工作并回答待处理的请求，然后重新进行设置。</string>
+    <string name="linuxSetupSwitchFailed">设置无法安全地准备好这部手机。你保存的对话和消息都已保留。请检查网络连接和可用空间，然后重试。</string>
+</resources>
