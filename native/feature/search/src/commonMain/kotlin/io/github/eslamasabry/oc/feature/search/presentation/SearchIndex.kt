@@ -90,7 +90,7 @@ public object SearchIndex {
                 )
             }
             if (caps.agentAccount || caps.serverCatalog)
-                add("settings-providers", SearchPlace.Providers, ProvidersRoute(profile))
+                add("settings-providers", SearchPlace.Providers, LibraryRoute("providers", profileId = profile))
             if (caps.setupConfigRead)
                 add("inside-server-ai-setup", SearchPlace.AiSetup, ServersRoute.Setup(profile))
             // F: search_index/places.dart:206 (`hasTeam`): the team page, not the phone's agents.
