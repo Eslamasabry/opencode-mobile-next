@@ -40,6 +40,7 @@ import io.github.eslamasabry.oc.engine.runtime.host.RuntimePhase
 import io.github.eslamasabry.oc.engine.runtime.host.RuntimeStatus
 import io.github.eslamasabry.oc.engine.runtime.server.AppOpenStart
 import io.github.eslamasabry.oc.engine.runtime.server.LocalServerGate
+import io.github.eslamasabry.oc.engine.runtime.server.LaunchStartRules
 import io.github.eslamasabry.oc.engine.runtime.server.OpenCodeVersions
 import io.github.eslamasabry.oc.engine.runtime.server.PhoneWorkIdle
 import io.github.eslamasabry.oc.engine.runtime.server.LocalServerWait
@@ -1664,6 +1665,11 @@ internal constructor(
                 facts.update {
                     it.copy(starting = waiting, startProblem = if (waiting) null else it.startProblem)
                 }
+            },
+            booting = {
+                val status = (runtimeStatus() as? Outcome.Ok)?.value
+                if (status?.serverRunning == true) LaunchStartRules.stillBooting(status.serverUptime)
+                else kotlin.time.Duration.ZERO
             },
         )
 
