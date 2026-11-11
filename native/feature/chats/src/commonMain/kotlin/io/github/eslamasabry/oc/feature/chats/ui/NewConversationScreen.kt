@@ -47,6 +47,7 @@ import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
+import io.github.eslamasabry.oc.ui.kit.chip.KitChipWrap
 import io.github.eslamasabry.oc.ui.kit.chip.KitFilterChips
 import io.github.eslamasabry.oc.ui.kit.modal.KitNewProjectDialog
 import io.github.eslamasabry.oc.ui.kit.modal.KitNewProjectRow
@@ -366,8 +367,10 @@ private fun NewConversationChoices(state: NewConversationUi, actions: NewConvers
         focus.clearFocus()
         actions.sheet(sheet)
     }
-    // N-32: one compact line above Start; it scrolls sideways when the names are long (never a stack of rows).
-    KitFilterChips(Modifier.testTag("chats-new-choices"), bleed = true) {
+    // P22 (F: new_chat_screen.dart:584-641 shows every choice whole, as rows): the three chips sit above Start on one
+    // line when they fit and wrap onto a second when the names are long, so the project is never cut at the edge or
+    // hidden past a fade (the sideways line of N-32 hid it on a phone).
+    KitChipWrap(Modifier.fillMaxWidth().testTag("chats-new-choices")) {
         // Three chips only: who works (with Plan when chosen), the model, the
         // project. Build/Plan lives inside the agent sheet.
         KitChip(

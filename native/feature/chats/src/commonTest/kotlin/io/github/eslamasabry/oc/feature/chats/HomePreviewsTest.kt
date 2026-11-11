@@ -214,6 +214,60 @@ class HomePreviewsTest {
         assertEquals(listOf("i8"), gateway.reads.drop(6))
     }
 
+    /** A server whose conversations say [words] now (the person's prompt mid-run, the reply once it is written). */
+    private class Scripted(private val inner: FakeServerGateway = FakeServerGateway()) : ServerGateway by inner {
+        var words = ""
+        val reads = mutableListOf<String>()
+
+        override suspend fun messagePage(id: SessionId, cursor: String?, limit: Int): Outcome<ServerPage<MessageWithParts>> {
+            reads += id.raw
+            val said = MessageWithParts(
+                MessageInfo("m", id.raw, Role.Assistant),
+                persistentListOf(Part("p", "m", id.raw, PartType.Text, "text", text = words)),
+            )
+            return ServerPage(persistentListOf(said), null).ok()
+        }
+    }
+
+    @Test
+    fun `B8 a line read while the reply was being written is read again once the run stops`() {
+        val stopped = item("a", at = 1_000)
+        assertTrue(
+            HomePreviewRules.needsRead(stopped, 1_000, 10, nowMs = 20, readWhileRunning = true),
+            "read mid-run, stopped since without its time moving: read again",
+        )
+        assertFalse(HomePreviewRules.needsRead(stopped, 1_000, 10, nowMs = 20, readWhileRunning = false), "read at rest: kept")
+        val still = item("r", at = 1_000, status = ChatStatus.Running)
+        assertFalse(HomePreviewRules.needsRead(still, 1_000, 10, nowMs = 20, readWhileRunning = true), "still running: the 15 s rule")
+    }
+
+    @Test
+    fun `B8 after a restart mid-run the row ends on the reply's words, not the person's prompt`() = runTest {
+        val feed = Feed()
+        val gateway = Scripted()
+        val servers =
+            object : ConversationServers {
+                override val servers =
+                    MutableStateFlow<ImmutableList<ConversationServer>>(persistentListOf(ConversationServer(P1, "p1", gateway, null)))
+            }
+        val clock = object : Clock { override fun now(): Instant = Instant.fromEpochMilliseconds(100_000) }
+        val vm = ChatsViewModel(feed, Briefs(), Door, { Instant.fromEpochMilliseconds(0) }, clock, Nav, connections = servers)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        // Reopened while the run goes on: the newest words are still the person's prompt.
+        gateway.words = "write 300 numbered lines about rivers"
+        feed.snapshot.value = ChatFeedSnapshot(persistentListOf(item("run", at = 5_000, status = ChatStatus.Running)))
+        assertEquals("write 300 numbered lines about rivers", vm.state.value.rightNow.single().preview)
+        // The run ends; the conversation's time does not move with it.
+        gateway.words = "Done: rivers.txt has 300 lines"
+        feed.snapshot.value = ChatFeedSnapshot(persistentListOf(item("run", at = 5_000)))
+        assertEquals("Done: rivers.txt has 300 lines", vm.state.value.recent.single().preview)
+        assertEquals(2, gateway.reads.size)
+        // A pull to refresh reads the shown rows' lines again.
+        gateway.words = "Renamed it to streams.txt"
+        vm.refreshList()
+        assertEquals("Renamed it to streams.txt", vm.state.value.recent.single().preview)
+    }
+
     @Test
     fun `A1-HOME-15 without a server to read from, rows keep no line and the list still shows`() = runTest {
         val feed = Feed()

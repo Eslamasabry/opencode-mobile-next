@@ -198,6 +198,12 @@ public data class ChatsUi(
     val projectFacts: kotlinx.collections.immutable.ImmutableMap<String, HomeProjectFacts> =
         kotlinx.collections.immutable.persistentMapOf(),
     val allCount: Int = 0,
+    /**
+     * P5: what the list's "All conversations" row counts when it opens that page narrowed ([ChatsState.allFilter]: the
+     * chosen project, else Running), so the number is what the page shows; null when it opens the whole list, and the
+     * row counts [allCount].
+     */
+    val shownCount: Int? = null,
     val otherFoldersCount: Int = 0,
     val otherFoldersSelected: Boolean = false,
     val sheet: ChatsHomeSheet? = null,
@@ -262,6 +268,8 @@ public data class ChatsUi(
     val onlyProject: String? = null,
     /** G6: the phone agents' notices (signed out, stopped, plan limit, restart). */
     val agentNotices: HomeAgentNotices = HomeAgentNotices(),
+    /** P14: a row's Details, shown over the home (the person asked about the row, not to open it); null = closed. */
+    val rowDetails: RowDetailsUi? = null,
 ) {
     /**
      * The project the projects chip names, or null for "All projects" / "Other folders". A chosen project names itself;
@@ -285,6 +293,35 @@ public data class ChatsUi(
     /** A computer is saved (not only this phone): the first-run page then skips "Connect a computer". */
     val hasComputer: Boolean
         get() = home.sources.any { !it.onThisPhone }
+}
+
+/**
+ * P14 (F: lib/ui/widgets/session_menu.dart:42-48, Details does not need the open conversation): what the list knows of
+ * one conversation, shown in a sheet over the home. Each fact is null when the list does not know it, and its line is
+ * then left out (no "Not reported yet" on a conversation that was never opened).
+ */
+public data class RowDetailsUi(
+    val key: String,
+    val title: RowTitle,
+    val server: String?,
+    val project: String?,
+    val directory: String?,
+    val agent: String?,
+    val branch: String?,
+) {
+    public companion object {
+        /** [row]'s facts; its server named as the home's sources name it, else as the row does. */
+        public fun of(row: ConversationRowUi, sources: List<ChatsListSourceUi>): RowDetailsUi =
+            RowDetailsUi(
+                key = row.key,
+                title = row.title,
+                server = sources.firstOrNull { it.profile == row.ref.profileId }?.name?.takeIf { it.isNotBlank() } ?: row.server,
+                project = row.project.takeIf { it.isNotBlank() },
+                directory = row.directory,
+                agent = row.agentName,
+                branch = row.branch,
+            )
+    }
 }
 
 /** The conversation just archived (or, with [deleted], deleted), waiting out its undo window. */
@@ -321,6 +358,9 @@ internal fun io.github.eslamasabry.oc.ui.routes.AppNavigator.openRowAct(
 public interface ChatsActions {
     /** A row's menu act other than Open and Archive; no-op where the list cannot offer it. */
     public fun rowAct(row: ConversationRowUi, act: RowAct) {}
+
+    /** Closes a row's Details ([ChatsUi.rowDetails]). */
+    public fun closeRowDetails() {}
 
     public fun answerPermission(row: ConversationRowUi, allow: Boolean) {}
 
