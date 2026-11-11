@@ -396,6 +396,11 @@ private fun ServiceBlock(
         else KitEnabled.Enabled
     val mask = rememberKitMask()
     val logsAvailable = state.supported && row.status != DevelopmentServiceStatus.NotStarted
+    // G4: a running service is previewed on a port its output printed, else the port of its saved address.
+    val previewPorts =
+        if (row.status != DevelopmentServiceStatus.Running) emptyList()
+        else
+            row.ports.toList().ifEmpty { listOfNotNull(PreviewRoute.Page.claim(row.url, null)?.port) }
     val menu =
         listOfNotNull(
             if (row.canStart)
@@ -459,11 +464,6 @@ private fun ServiceBlock(
                 enabled = hold,
             ),
         )
-    // G4: a running service is previewed on a port its output printed, else the port of its saved address.
-    val previewPorts =
-        if (row.status != DevelopmentServiceStatus.Running) emptyList()
-        else
-            row.ports.toList().ifEmpty { listOfNotNull(PreviewRoute.Page.claim(row.url, null)?.port) }
     val ports =
         row.ports
             .takeIf { row.status == DevelopmentServiceStatus.Running && it.isNotEmpty() }
