@@ -449,3 +449,70 @@ resting or grown (`LiquidEdgeDockTest`).
 5. With the dock out in a chat, count the lenses: the bar, the message box, the jump pill and one chip stay liquid; a
    second chip turns to frost.
 6. Battery saver, reduced motion, the Frosted look and the Solid style: the dock is today's solid face.
+
+## Words on the chat's glass (2026-11-11, branch native/glass-words)
+
+Seen on the phone (Android 15, Glass, dark, tonight's build): the message box's placeholder ("Steer while it works…",
+"Ask OpenCode…") had blurred transcript lines running straight through it whenever the transcript was scrolled away
+from the newest message.
+
+**Cause.** The body's own fade (`kitScrollEdges` in `KitScreen`) never reached the glass. The message box's lens reads
+the screen's recording of the transcript (`KitFrostState`, recorded by `kitFrostSource` inside the body, before any
+fade), and under the Glass slab the body is not faded above the bottom block at all. With the morning's blur cut (4 to
+2 dp) the transcript showed through the box's words at nearly full brightness. A pane that is not joined to another
+also gets no luminance knee: the knee lives only in the joined shader (`KitLiquidJoin.kt` `kneeOf`, and the dock's
+body); the library pane (`AndroidLiquidGlass.pane`: colour controls, blur, lens) has none, so the box alone held back
+nothing. The "messages waiting to send" line under the bar: see "The notice line" below.
+
+**What changed** (remedy 2 of the skill, a scroll-edge fade; no blur, tint, saturation or plate changed):
+
+- `frame/KitWordsFade.kt`: where the lens is drawn (Glass, a look with a lens, not held), the frame hands the bottom
+  block a copy of the recording, re-recorded each time the body records, cleared below the top edge of the block's
+  words pane: whole at the edge, gone by the inner end of the lens rim (`LiquidEdge.rimPx` for the pane's size, the
+  same rim the Android lens bends in: 22 dp for the box), along the kit's smooth step on whole pixels. The rim still
+  bends real content, so the box stays glass at its edge; under the words nothing bright is left, and the words'
+  ink flip samples what is really behind them.
+- `frame/KitScreenBottom.kt`: `Modifier.kitScreenWordsPane(role)` reports the pane's top edge and rim; the message box
+  (`KitComposerBox`) carries it while it is liquid.
+- Draw phase only: the body, its layout and scroll, the bar's glass and the jump pill (which reads its own recording)
+  are untouched. Every other style, and Glass without a lens, hand the block the recording itself, as before.
+- Not done: a knee for panes that are not joined. It needs a runtime-shader step in the Android library pane's effect
+  chain (`AndroidLiquidGlass.pane`, androidMain), outside this change and only judgeable on a device; with the fade
+  nothing bright lies behind the box's words, so it is left for later.
+
+**Pictures** (desktop; the desktop's lens stand-in is the recipe's blur under the tint, with no bend and no rim light):
+`glass-in-the-kit/render-words-chat-before.png` and `render-words-chat-after.png`, Glass dark, a white-text transcript
+scrolled away from the newest message, the "1 message is waiting to send" line under the bar.
+
+What they show. Before: the placeholder "Ask OpenCode…" has a blurred transcript line ("…the log, compares the
+timings") running straight through it, and two more blurred lines fill the box down to its row of controls; the box
+over them reads as a grey wash. After: the placeholder stands on the box's own dark glass with nothing behind it; along
+the box's top edge a faint blurred trace of the line behind it remains for the depth of the rim and is gone before the
+placeholder, so the edge still shows something real behind the glass. On the phone the lens also bends that band, which
+the desktop cannot show. The transcript, the jump pill and its join, the bar and the notice line are the same pixels
+in both. One thing seen in the small test scene (a screen of solid white rows): the box no longer flips to the light
+face there, because what it reads behind its words is now the page; the jump pill, which still reads the white rows,
+stays light, so the joined pill and box show two faces meeting at the neck. Over a real transcript (light words on the
+dark page) neither flips.
+
+**Checks** (VPS desktop tests, fake lens = the recipe's blur only):
+- `ChatWordsGlassTest` (new, kit-chat): white rows scrolled under the box, compared with the same scene whose rows draw
+  nothing. Inside the placeholder's line across the field: before the fix mean 219.7, max 234 of 255 (failed); after,
+  mean 0.01, max 0.3 (limit 2 and 8). At the box's top edge (1 to 5 dp in, beside the pill) the rows still add 91.9 of
+  255 (at least 20). The transcript's scroll state, the rows' places and the jump pill's place are the same with and
+  without the lens, and the same before and after (the box sits at 6/340/234/456 dp in both). Outside liquid Glass
+  (Solid, Soft, Brutal, Paper, Signal, Glass on a platform with no lens, Glass's Frosted look) the bottom block sees the
+  screen's own recording.
+- Renders of the eight looks before and after: the seven without a lens are pixel-identical; Glass with the lens
+  differs only inside the box and the pill's neck.
+- Unchanged and green: `KitScreen*`, `ChatEdgeATest`, `KitFloatingBar*`, `ScrollEdgeWholePixelTest`, the kit-chat
+  composer tests, `JumpFadeEdgeTest`, `E20S30JumpPillTest`.
+- Not run: anything on a device; the lens's bend and rim light; a phone's GPU on the extra recording.
+
+**What to check on the phone** (Glass, a look with a lens, dark and light):
+1. Scroll a long chat up so the jump pill shows: "Ask OpenCode…" / "Steer while it works…" and typed words have nothing
+   moving behind them; the box's top rim still shows the transcript bending as it passes under the edge.
+2. The pill on the box: one body, no line or dark notch at the neck, as before.
+3. Scroll fast: the faint band at the box's top edge follows the transcript with no lag and no flash.
+4. Keyboard up (the box moves): the clear area moves with it at once.
+5. Frosted look, Solid and the other styles: exactly as before.
