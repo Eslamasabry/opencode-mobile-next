@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.projects.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
@@ -157,6 +158,10 @@ public fun ProjectsPickerScreen(state: ProjectsPickerUi, actions: ProjectsPicker
                             }
                         }
                     }
+                    if (state.oneFolder) {
+                        item(key = "one-folder") { OneFolder(state) }
+                        return@LazyColumn
+                    }
                     item(key = "start") { StartRows(state, actions) }
                     if (state.canFindPhoneProjects)
                         item(key = "find-phone") {
@@ -295,6 +300,28 @@ private fun PathDialog(state: ProjectsPickerUi, actions: ProjectsPickerActions) 
     }
 }
 
+/** A server that works in one folder (Codex, Paseo): says so and shows the folder it uses; no project choice. */
+@Composable
+private fun OneFolder(state: ProjectsPickerUi) {
+    val folder = state.configuredFolder
+    Column(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+        KitStateView(
+            kind = KitStateKind.Calm,
+            title = stringResource(Res.string.projectsOneFolderTitle),
+            body = stringResource(Res.string.e7ProjectProjectSwitchUnavailableDetail),
+            icon = KitIcons.folderOpen,
+        )
+        KitRowGroup {
+            KitRow(
+                title = stringResource(Res.string.projectConfiguredFolder),
+                leading = KitRowLeading.Glyph(KitIcons.files),
+                supporting = folder ?: stringResource(Res.string.e7ProjectProjectDefaultDirectory),
+                supportingMaxLines = 3,
+            )
+        }
+    }
+}
+
 @Composable
 private fun StartRows(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
     KitRowGroup {
@@ -386,6 +413,8 @@ private fun ProjectRow(
         )
         if (project.running > 0)
             add(stringResource(Res.string.chatsFilterRunningCount, project.running))
+        if (project.worktrees > 0)
+            add(pluralStringResource(Res.plurals.e7ProjectProjectWorktrees, project.worktrees, project.worktrees))
         project.kind?.let { kind ->
             add(
                 stringResource(

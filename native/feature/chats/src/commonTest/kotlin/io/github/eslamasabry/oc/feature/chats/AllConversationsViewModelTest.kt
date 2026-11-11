@@ -25,6 +25,10 @@ import io.github.eslamasabry.oc.feature.chats.presentation.AllProblemKind
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsAllViewModel
 import io.github.eslamasabry.oc.feature.chats.presentation.ConversationServer
 import io.github.eslamasabry.oc.feature.chats.presentation.ConversationServers
+import io.github.eslamasabry.oc.feature.chats.presentation.ConversationsFeed
+import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedItem
+import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedSnapshot
+import io.github.eslamasabry.oc.engine.agents.feed.ChatStatus
 import io.github.eslamasabry.oc.feature.chats.presentation.RowTitle
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.AppRoute
@@ -388,5 +392,63 @@ class AllConversationsViewModelTest {
         assertEquals(listOf("deleteSession a"), replacement.inner.calls.filter { it.startsWith("deleteSession") })
         replacement.gate.complete(Unit)
         assertEquals(listOf("p1/b"), vm.state.value.rows.map { it.key })
+    }
+
+    private class Feed(items: List<ChatFeedItem>) : ConversationsFeed {
+        override val snapshot = MutableStateFlow(ChatFeedSnapshot(items = items.toImmutableList()))
+
+        override suspend fun refresh(): Outcome<Unit> = Unit.ok()
+    }
+
+    private fun feedItem(profile: ProfileId, id: String, status: ChatStatus = ChatStatus.Idle, unseen: Boolean = false) =
+        ChatFeedItem(
+            sourceId = "opencode:${profile.raw}",
+            profileId = profile,
+            sessionId = SessionId(id),
+            title = id,
+            directory = "/work/api",
+            projectName = "api",
+            status = status,
+            lastActivityMs = 1,
+            finishedUnseen = unseen,
+        )
+
+    @Test
+    fun `H2 a row carries its time, the folder to copy, needs you and unread from the home feed`() {
+        val gateway = FakeServerGateway(listOf(session("a", 300), session("b", 200), session("c", 100), session("d", 50)))
+        val feed =
+            Feed(
+                listOf(
+                    feedItem(p1, "a", ChatStatus.NeedsYou),
+                    feedItem(p1, "b", unseen = true),
+                    feedItem(p1, "d", ChatStatus.Running, unseen = true),
+                )
+            )
+        val vm =
+            ChatsAllViewModel(
+                ChatsRoute.All(null),
+                Nav(),
+                Servers(listOf(server(p1, gateway))),
+                AppCoroutineScope(UnconfinedTestDispatcher()),
+                feed = feed,
+            )
+        val rows = vm.state.value.rows.associateBy { it.key }
+        assertTrue(rows.getValue("p1/a").needsYou)
+        assertFalse(rows.getValue("p1/a").unread)
+        assertTrue(rows.getValue("p1/b").unread)
+        assertFalse(rows.getValue("p1/c").unread || rows.getValue("p1/c").needsYou)
+        assertEquals(300L, rows.getValue("p1/a").updatedMs)
+        assertEquals("/work/api", rows.getValue("p1/a").folder)
+        assertTrue(vm.state.value.nowMs > 0)
+    }
+
+    @Test
+    fun `H8 Import a conversation is offered only where a server can import, and opens on that server`() {
+        val plain = FakeServerGateway(listOf(session("a", 1)))
+        plain.capabilities.value = ServerCapabilities(sessionImportExport = false)
+        val none = vm(Nav(), server(p1, plain))
+        assertFalse(none.state.value.canImport)
+        none.openImport()
+        assertNull(none.state.value.import)
     }
 }

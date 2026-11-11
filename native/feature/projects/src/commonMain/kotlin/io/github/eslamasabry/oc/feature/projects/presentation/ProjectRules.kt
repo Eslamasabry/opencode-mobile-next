@@ -19,6 +19,8 @@ public data class ProjectSummary(
     val isGit: Boolean? = null,
     /** The server's project id, when it keeps a project list. */
     val id: String? = null,
+    /** Extra working copies (Git worktrees) the server keeps for this project. */
+    val worktrees: Int = 0,
 )
 
 /** Pure rules of the projects picker and the project page (Dart projects_screen, project_folder_actions). */
@@ -162,6 +164,7 @@ public object ProjectRules {
                     updatedMs = p.updatedAtMs,
                     isGit = p.isGit,
                     id = p.id,
+                    worktrees = p.worktrees.map(::normalize).toSet().count { it != normalize(p.directory) },
                 )
             }
 
