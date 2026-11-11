@@ -51,8 +51,8 @@ is not a runtime dependency. Archive and file hashes are recorded in
 
 ### Agent and provider marks
 
-The single-colour logos in `assets/marks/` (agents such as Claude, Codex and
-Gemini, and about 100 model-provider ids such as Anthropic, OpenAI and Mistral) are the
+The single-colour logos in `assets/marks/` (agents such as Claude, Codex,
+Gemini and Antigravity, and about 100 model-provider ids such as Anthropic, OpenAI and Mistral) are the
 monochrome SVGs of lobe-icons by LobeHub, MIT licensed, Copyright (c) 2023
 LobeHub. The licence is bundled at `LICENSES/MIT-lobe-icons.txt`; each file is
 unchanged apart from removing its `<title>` element. (`opencode.svg` once also

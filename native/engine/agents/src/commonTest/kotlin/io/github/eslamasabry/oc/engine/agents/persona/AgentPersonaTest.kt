@@ -66,11 +66,11 @@ class AgentPersonaTest {
     }
 
     @Test
-    fun `B-AGENT-023 B-116 Antigravity is Google's agent but takes the neutral mark, not Google's G or Gemini's`() {
+    fun `B-AGENT-023 B-116 Antigravity is Google's agent with its own mark, not Google's G or Gemini's`() {
         val persona = AgentPersona.of("antigravity")
         assertEquals(AgentMaker.Google, persona.maker)
-        assertEquals("", persona.markSlug)
-        assertEquals(null, AgentPersona.agentMarkSlug("agy"))
+        assertEquals("antigravity", persona.markSlug)
+        assertEquals("antigravity", AgentPersona.agentMarkSlug("agy"))
         assertEquals("gemini", AgentPersona.of("gemini").markSlug)
     }
 }

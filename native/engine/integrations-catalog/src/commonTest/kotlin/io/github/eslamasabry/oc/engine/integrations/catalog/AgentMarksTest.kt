@@ -23,9 +23,10 @@ class AgentMarksTest {
         )
 
     @Test
-    fun `B-116 Antigravity has no Google G mark, it takes the neutral agent mark`() {
-        assertEquals(null, ProviderMarks.agentSlug("antigravity"))
-        assertEquals(null, ProviderMarks.agentSlug("agy"))
+    fun `B-116 Antigravity draws its own single-colour mark, never Google's G`() {
+        assertEquals("antigravity", ProviderMarks.agentSlug("antigravity"))
+        assertEquals("antigravity", ProviderMarks.agentSlug("agy"))
+        assertTrue("antigravity" in ProviderMarks.slugs)
         assertEquals(null, ProviderMarks.agentColorFile("antigravity"))
     }
 
