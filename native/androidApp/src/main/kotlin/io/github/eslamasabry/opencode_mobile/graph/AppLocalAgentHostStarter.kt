@@ -203,12 +203,13 @@ class AppLocalAgentHostStarter(
     private fun unavailable(): Outcome.Failed =
         Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
 
-    private companion object {
+    companion object {
+        /** The saved helper profile is `<owner>-agents`. */
         const val SUFFIX = "-agents"
-        const val GATE_BUDGET_MS = 30_000L
-        const val ADDRESS = "ws://127.0.0.1:4099"
-        const val FOLDER = "/root/projects"
-        val ID = Regex("[A-Za-z0-9_-]{1,80}")
-        val PASSWORD = Regex("[a-f0-9]{64}")
+        private const val GATE_BUDGET_MS = 30_000L
+        private const val ADDRESS = "ws://127.0.0.1:4099"
+        private const val FOLDER = "/root/projects"
+        private val ID = Regex("[A-Za-z0-9_-]{1,80}")
+        private val PASSWORD = Regex("[a-f0-9]{64}")
     }
 }

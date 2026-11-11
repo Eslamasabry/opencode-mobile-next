@@ -127,6 +127,12 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                 if (state.failure != null) stringResource(Res.string.chatsNewFailed) else working
             state.directory.isNullOrBlank() -> stringResource(Res.string.chatsNewNeedProject)
             state.folderMissing -> stringResource(Res.string.chatsNewFolderMissing)
+            state.phoneNeedsProjectsFolder ->
+                stringResource(
+                    Res.string.chatsNewAgentNeedsProjectsFolder,
+                    state.phoneAgentChoice?.name.orEmpty(),
+                )
+            state.phoneModelsBusy -> working
             state.text.isBlank() -> stringResource(Res.string.chatsNewBuildPrompt)
             else -> null
         }
@@ -528,12 +534,16 @@ private fun AddAgentRow(actions: NewConversationActions) {
 private fun NewConversationAgentStep(state: NewConversationUi, actions: NewConversationActions) {
     val defaultName = state.setup?.defaultRuntime ?: "OpenCode"
     val modes = state.setup?.modes.orEmpty()
-    val namedAgent = state.agent != null && state.agent !in modes
+    val phone = state.setup?.phone
+    val onPhone = state.phoneAgent != null
+    val namedAgent = (state.agent != null && state.agent !in modes) || onPhone
     val named = state.setup?.agents.orEmpty().filter(::isStartableAgent).distinct()
+    val phoneRows = phone != null && (phone.choices.isNotEmpty() || phone.needsSetup.isNotEmpty())
     KitRowGroup(label = stringResource(Res.string.upgNewChatAgents)) {
         // "Add an agent" leads the empty state, and otherwise sits right after the default, in the first
-        // rows (Flutter chatsNewAddAgent). It opens agent setup; Back returns to this same unsent draft.
-        if (named.isEmpty()) AddAgentRow(actions)
+        // rows (Flutter chatsNewAddAgent). With agents on this phone it closes the list, after their rows.
+        // It opens agent setup; Back returns to this same unsent draft.
+        if (named.isEmpty() && !phoneRows) AddAgentRow(actions)
         KitRow(
             title = defaultName,
             leading = KitRowLeading.Logo("opencode", defaultName, agent = true),
@@ -543,7 +553,29 @@ private fun NewConversationAgentStep(state: NewConversationUi, actions: NewConve
             // Already the default: a tap keeps the chosen Build or Plan.
             onClick = { if (namedAgent) actions.chooseAgent(null) },
         )
-        if (named.isNotEmpty()) AddAgentRow(actions)
+        if (named.isNotEmpty() && !phoneRows) AddAgentRow(actions)
+        phone?.choices?.forEach { agent ->
+            KitRow(
+                title = agent.name,
+                leading = KitRowLeading.Logo(agent.iconKey, agent.name, agent = true),
+                selected = state.phoneAgent == agent.id,
+                trailing = if (state.phoneAgent == agent.id) KitRowTrailing.Check else KitRowTrailing.None,
+                supporting = stringResource(Res.string.upgradeAgentReady),
+                onClick = { actions.choosePhoneAgent(agent.id) },
+                modifier = Modifier.testTag("chats-new-agent-${agent.id}"),
+            )
+        }
+        phone?.needsSetup?.forEach { agent ->
+            KitRow(
+                title = agent.name,
+                leading = KitRowLeading.Logo(agent.iconKey, agent.name, agent = true),
+                trailing = KitRowTrailing.Chevron,
+                supporting = stringResource(Res.string.chatsNewSetUp),
+                onClick = { actions.setUpPhoneAgent(agent.id) },
+                modifier = Modifier.testTag("chats-new-agent-${agent.id}"),
+            )
+        }
+        if (phoneRows) AddAgentRow(actions)
         named.forEach { agent ->
             KitRow(
                 title = agent,
@@ -590,7 +622,7 @@ private fun NewConversationAgentStep(state: NewConversationUi, actions: NewConve
 /** N-51: the chat's model sheet, with this server's favourites; choosing a model closes it. */
 @Composable
 private fun NewConversationModelSheet(state: NewConversationUi, actions: NewConversationActions) {
-    val models = state.setup?.models.orEmpty()
+    val models = state.shownModels
     val options = remember(models) { newConversationModelOptions(models) }
     val favorites =
         remember(options, state.favorites) {
@@ -600,7 +632,7 @@ private fun NewConversationModelSheet(state: NewConversationUi, actions: NewConv
         visible = state.sheet == NewConversationSheet.Models,
         onDismissRequest = { actions.sheet(null) },
         options = options,
-        current = state.model?.let { ref -> options.firstOrNull { it.matches(ref) }?.key },
+        current = state.shownModel?.let { ref -> options.firstOrNull { it.matches(ref) }?.key },
         onChoose = { option -> actions.chooseModel(option?.let { ModelRef(it.providerId, it.modelId) }) },
         favorites = favorites,
         onToggleFavorite = { actions.toggleFavorite(ModelRef(it.providerId, it.modelId)) },
@@ -667,6 +699,7 @@ private fun modeLabel(mode: String): String =
  */
 @Composable
 private fun agentChipLabel(state: NewConversationUi): String {
+    state.phoneAgentChoice?.let { return it.name }
     val name = state.agent?.takeIf(::isStartableAgent) ?: state.setup?.defaultRuntime ?: "OpenCode"
     return if (state.agent?.lowercase() == "plan")
         stringResource(
@@ -679,7 +712,7 @@ private fun agentChipLabel(state: NewConversationUi): String {
 
 @Composable
 private fun modelLabel(state: NewConversationUi): String =
-    state.setup?.models?.firstOrNull { it.model == state.model }?.name
+    state.shownModels.firstOrNull { it.model == state.shownModel }?.name
         ?: stringResource(Res.string.modelServerDefault)
 
 /**
