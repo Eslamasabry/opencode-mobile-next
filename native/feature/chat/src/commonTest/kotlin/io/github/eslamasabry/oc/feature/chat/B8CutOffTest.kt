@@ -155,10 +155,11 @@ class B8CutOffTest {
     fun `B8 W4 rule holds - a declined step, reopened with no outcome and no end on the step, is not cut off`() {
         val declined = tool(ToolStatus.Error, "The user declined this tool call", "m2")
         val facts = facts(listOf(prompt("write a file"), unfinished(declined)))
-        assertNull(facts.reading.endNotes["m1"])
+        // W4 surface: the turn says the person declined (not "connection dropped").
+        assertEquals(TurnEndNote.Declined, facts.reading.endNotes["m1"])
         // And as the chat saw it live (OpenCode 2 names the refusal's end "shutdown"): still no restart line.
         val live = facts(listOf(prompt("write a file"), unfinished(declined)), outcome = RunOutcome.Interrupted(InterruptReason.Shutdown))
-        assertNull(live.reading.endNotes["m1"])
+        assertEquals(TurnEndNote.Declined, live.reading.endNotes["m1"])
         // What 2.2.6 really keeps after a Deny: the step ended, error `aborted` "Step interrupted", the session has no
         // newer idle (the same session shape as a lost run): the chat reads the step, so no cut-off line.
         val ended =
@@ -175,6 +176,40 @@ class B8CutOffTest {
             assertTrue(note != TurnEndNote.CutOff && note != TurnEndNote.CutOffBeforeReply, "after a Deny: $note")
             assertTrue(note != TurnEndNote.StoppedServerRestart, "after a Deny: $note")
         }
+    }
+
+    @Test
+    fun `W4 a declined turn says so on its surface, with words before the step or none, reopened or live`() {
+        val declined = tool(ToolStatus.Error, "The user declined this tool call", "m2")
+        val intro = Part("text-0", "m2", sid, PartType.Text, "text", text = "I'll create the file now.", ended = true)
+        assertEquals(TurnEndNote.Declined, facts(listOf(prompt("write a file"), unfinished(intro, declined))).reading.endNotes["m1"])
+        assertFalse(TurnEndNote.Declined.canContinue)
+        assertFalse(TurnEndNote.Declined.isServerStop)
+    }
+
+    @Test
+    fun `W4 a refused step the agent went on past and finished has no declined line`() {
+        val declined = tool(ToolStatus.Error, "The user declined this tool call", "m2")
+        val first = finished(declined, id = "m2")
+        val after = MessageWithParts(
+            MessageInfo("m3", sid, Role.Assistant, providerId = "opencode", modelId = "big-pickle", time = MsgTime(520_100, 521_000), finish = "stop"),
+            listOf(words("Understood, I left the file out.", "m3")).toImmutableList(),
+        )
+        assertNull(facts(listOf(prompt("write a file"), first, after)).reading.endNotes["m1"])
+    }
+
+    @Test
+    fun `W4 Stop after a refusal still reads Stopped and a normal finish has no line`() {
+        val declined = tool(ToolStatus.Error, "The user declined this tool call", "m2")
+        assertEquals(
+            TurnEndNote.Stopped,
+            facts(listOf(prompt("write a file"), unfinished(declined)), outcome = RunOutcome.Interrupted(InterruptReason.User)).reading.endNotes["m1"],
+        )
+        val done = MessageWithParts(
+            MessageInfo("m2", sid, Role.Assistant, providerId = "opencode", modelId = "big-pickle", time = MsgTime(516_098, 520_000), finish = "stop"),
+            listOf(words("one\ntwo\nthree", "m2")).toImmutableList(),
+        )
+        assertNull(facts(listOf(prompt(), done)).reading.endNotes["m1"])
     }
 
     @Test
