@@ -30,13 +30,15 @@ import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * Visible provider sign-in, add-only connector headers and agent skill authoring. Secrets never use
+ * Visible provider list: a tap hands the provider to the sign-in page ([onConnect]), which offers
+ * sign-in, key, server-command and question flows by one rule, add-only connector headers and agent skill authoring. Secrets never use
  * saved state.
  */
 @Composable
 public fun IntegrationsScreen(
     state: IntegrationsUi,
     actions: IntegrationsActions,
+    onConnect: (provider: String) -> Unit = {},
     hostPanel: @Composable () -> Unit = {},
 ) {
     val back = stringResource(Res.string.intBack)
@@ -90,70 +92,11 @@ public fun IntegrationsScreen(
                                 leading =
                                     provider.logo?.let { KitRowLeading.Svg(it) }
                                         ?: KitRowLeading.Glyph(KitIcons.extensions, tile = true),
-                                selected = provider.id == state.selected,
-                                onClick = { actions.chooseProvider(provider.id) },
+                                trailing = KitRowTrailing.Chevron,
+                                onClick = { onConnect(provider.id) },
                             )
                         }
                     }
-                    state.data.providers
-                        .firstOrNull { it.id == state.selected }
-                        ?.let { provider ->
-                            key(state.server, provider.id) {
-                                val secret = remember { TextFieldState() }
-                                val code = remember { TextFieldState() }
-                                if (provider.methods.any { !it.oauth }) {
-                                    KitField(
-                                        secret,
-                                        stringResource(Res.string.intKey),
-                                        kind = KitFieldKind.Secret,
-                                        maxLength = 8192,
-                                    )
-                                    KitButton(
-                                        stringResource(Res.string.intSaveKey),
-                                        {
-                                            actions.saveKey(secret.text.toString())
-                                            secret.edit { replace(0, length, "") }
-                                        },
-                                        enabled = disabled,
-                                    )
-                                }
-                                if (provider.keyPage)
-                                    KitRow(
-                                        stringResource(Res.string.intKeyPage),
-                                        onClick = actions::openKeyPage,
-                                    )
-                                provider.methods
-                                    .filter { it.oauth }
-                                    .forEach { method ->
-                                        KitButton(
-                                            method.label,
-                                            { actions.startOAuth(method.id) },
-                                            enabled = disabled,
-                                        )
-                                    }
-                                if (state.authorization != null) {
-                                    KitText(stringResource(Res.string.intSignInHelp))
-                                    KitButton(
-                                        stringResource(Res.string.intOpenSignIn),
-                                        actions::openAuthorization,
-                                    )
-                                    KitField(
-                                        code,
-                                        stringResource(Res.string.intCode),
-                                        kind = KitFieldKind.Secret,
-                                        maxLength = 8192,
-                                    )
-                                    KitButton(
-                                        stringResource(Res.string.intCompleteSignIn),
-                                        {
-                                            actions.completeOAuth(code.text.toString())
-                                            code.edit { replace(0, length, "") }
-                                        },
-                                        enabled = disabled,
-                                    )
-                                }
-                            }
-                        }
                 } else KitText(stringResource(Res.string.intUnsupported))
                 if (state.data.connectorSupported) {
                     KitRowGroup(label = stringResource(Res.string.intConnectors)) {

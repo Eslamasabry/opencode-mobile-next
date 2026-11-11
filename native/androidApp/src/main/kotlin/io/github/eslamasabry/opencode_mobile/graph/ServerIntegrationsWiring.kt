@@ -246,6 +246,10 @@ class NativeServerIntegrations(
                                 is Outcome.Ok -> {
                                     providers.clear()
                                     credentials.clear()
+                                    val commandSignIn =
+                                        caps.integrationCommandAuth &&
+                                            live.session.server
+                                                .facet<IntegrationCommandGateway>() != null
                                     val rows = buildList {
                                         got.value.forEach { info ->
                                             val key = "provider:${info.id}"
@@ -259,7 +263,15 @@ class NativeServerIntegrations(
                                                         if (info.connectionCount > 0)
                                                             ServerIntegrationState.Connected
                                                         else ServerIntegrationState.Disconnected,
-                                                    mayConnect = info.methods.isNotEmpty(),
+                                                    // Same rule as the sign-in page it opens:
+                                                    // an env-only provider has nothing to start.
+                                                    mayConnect =
+                                                        connectMethods(
+                                                                info.id,
+                                                                info.methods,
+                                                                commandSignIn,
+                                                            )
+                                                            .isNotEmpty(),
                                                     mayDisconnect = info.connections.isNotEmpty(),
                                                 )
                                             )
