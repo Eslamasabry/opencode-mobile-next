@@ -66,6 +66,8 @@ class NewConversationPhoneAgentTest {
         override fun back() {}
     }
 
+    private class Started(val profile: ProfileId, val model: ModelRef?, val agent: String?, val copy: Boolean)
+
     private val claude = NewConversationPhoneAgent("claude", "Claude Code", "claude")
     private val codex = NewConversationPhoneAgent("codex", "Codex", "codex")
 
@@ -73,8 +75,6 @@ class NewConversationPhoneAgentTest {
         private val directory: String = "/root/projects/app",
         private val saved: String? = null,
     ) : NewConversationHost {
-        class Started(val profile: ProfileId, val model: ModelRef?, val agent: String?, val copy: Boolean)
-
         val starts = mutableListOf<Started>()
         val chosen = mutableListOf<Pair<ProfileId, String?>>()
         val savedModels = mutableListOf<Triple<ProfileId, String, ModelRef?>>()
@@ -159,7 +159,7 @@ class NewConversationPhoneAgentTest {
         assertNull(vm.state.value.phoneAgent, "OpenCode until another is chosen")
         vm.choosePhoneAgent("claude")
         assertEquals("claude", vm.state.value.phoneAgent)
-        assertEquals(listOf(server to "claude"), host.chosen, "saved under the shown server, not the helper")
+        assertEquals(listOf<Pair<ProfileId, String?>>(server to "claude"), host.chosen, "saved under the shown server, not the helper")
     }
 
     @Test
@@ -193,7 +193,7 @@ class NewConversationPhoneAgentTest {
         assertNull(vm.state.value.agent)
         vm.chooseAgent(null)
         assertNull(vm.state.value.phoneAgent, "the server's own agent is the choice again")
-        assertEquals(listOf(server to "claude", server to null), host.chosen)
+        assertEquals(listOf<Pair<ProfileId, String?>>(server to "claude", server to null), host.chosen)
     }
 
     @Test
@@ -205,7 +205,7 @@ class NewConversationPhoneAgentTest {
         assertEquals(listOf(claudeModel), vm.state.value.shownModels.map { it.model })
         assertEquals(claudeModel, vm.state.value.shownModel)
         vm.chooseModel(claudeModel)
-        assertEquals(listOf(Triple(server, "claude", claudeModel)), host.savedModels)
+        assertEquals(listOf<Triple<ProfileId, String, ModelRef?>>(Triple(server, "claude", claudeModel)), host.savedModels)
         assertEquals(serverModel, vm.state.value.model, "the server's own model is left alone")
     }
 
