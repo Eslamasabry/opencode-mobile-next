@@ -259,10 +259,22 @@ public val LocalKitSheetHost: ProvidableCompositionLocal<KitSheetHostState?> =
         null
     }
 
-/** Whether the page holds focus, and whether it gave it up to a modal (to be handed back). */
+/** Whether the page holds focus, whether it gave it up to a modal (to be handed back), and the soft keyboard. */
 private class PageFocus {
     var has: Boolean = false
     var saved: Boolean = false
+    var keyboardUp: Boolean = false
+    var keyboardSeen: Boolean = false
+}
+
+/** Keeps [held]'s keyboard facts current in a scope of its own, so the host is not composed again when it moves. */
+@Composable
+private fun PageKeyboard(held: PageFocus) {
+    val up = io.github.eslamasabry.oc.ui.kit.frame.kitKeyboardVisible()
+    SideEffect {
+        held.keyboardUp = up
+        if (up) held.keyboardSeen = true
+    }
 }
 
 /** Places the host around [content]. */
@@ -289,20 +301,27 @@ public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -
             // The in-window modal is a sibling of the page, never a descendant of its
             // cleared semantics. Keep the page composed (drafts/scroll survive) but remove
             // its accessibility nodes while a modal owns the window, including its exit.
-            // The page does not take focus while a modal shows either (words on glass 3, coordinator 2026-11-11): its
-            // content is a focus group that cancels focus entering it, the focus it held is cleared when the modal shows
-            // and given back to the element that had it when the modal hides (only if the page had it).
+            // The page does not take focus while a modal is up either (words on glass 3, coordinator 2026-11-11): its
+            // content is a focus group that cancels focus entering it, and the focus it held is cleared when the modal
+            // is asked to show. From the moment the modal is asked to hide (its exit has only begun) page fields may take
+            // focus again: Find opened from a sheet's row asks once, as the sheet leaves. Then the element that had focus
+            // gets it back only if (a) the page had it when the modal showed, (b) nothing on the page has taken it since,
+            // and (c) the soft keyboard was up when the modal showed, or none was ever seen (a hardware keyboard, a
+            // desktop): focus on a field brings the keyboard back, which the person had put away.
             val modal = state.isShowing || state.isDialogShowing
+            // Asked to show (entering or shown), not leaving; read live in the focus callbacks below.
+            val holds = state.shown.targetState || state.dialogShown.targetState
+            val holding = { state.shown.targetState || state.dialogShown.targetState }
             val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
             val pageFocus = remember { androidx.compose.ui.focus.FocusRequester() }
             val held = remember { PageFocus() }
-            androidx.compose.runtime.LaunchedEffect(modal) {
-                if (modal) {
-                    held.saved = held.has
-                    if (held.saved) {
-                        pageFocus.saveFocusedChild()
-                        focusManager.clearFocus(force = true)
-                    }
+            PageKeyboard(held)
+            androidx.compose.runtime.LaunchedEffect(holds) {
+                if (holds) {
+                    val had = held.has
+                    held.saved = had && (held.keyboardUp || !held.keyboardSeen)
+                    if (held.saved) pageFocus.saveFocusedChild()
+                    if (had) focusManager.clearFocus(force = true)
                 } else if (held.saved) {
                     held.saved = false
                     // The kit yields: a page field that took focus as the modal left (Find opening from a sheet's
@@ -316,10 +335,10 @@ public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -
                     .onFocusChanged {
                         held.has = it.hasFocus
                         // Whatever asked for it (a requestFocus on a page field): the page takes no focus under a modal.
-                        if (modal && it.hasFocus) focusManager.clearFocus(force = true)
+                        if (holding() && it.hasFocus) focusManager.clearFocus(force = true)
                     }
                     .focusRequester(pageFocus)
-                    .focusProperties { if (modal) onEnter = { cancelFocusChange() } }
+                    .focusProperties { if (modal) onEnter = { if (holding()) cancelFocusChange() } }
                     .focusGroup()
                     .kitLiquidSource(page)
             ) {
