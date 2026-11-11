@@ -15,6 +15,14 @@ Date 2026-11-06. Read-only audit. Native tree: `/home/owner/Storage2/wt/scr-merg
 > project only" (`PreviewRuntime` feed `acrossProjects`); the chip stays honest because it names a project only when the
 > list holds exactly one, but a capability that says "the list covers every project" is the real fix.
 
+> **2026-11-11 — Export projects counts folders only (device sweep S10).** Native differs from Flutter on purpose:
+> Flutter's Export lists every top-level entry of the projects folder as a project (project_export.dart:332), so loose
+> files (`notes.txt`) read as projects. Native counts and lists only folders as projects and lists loose files apart
+> under "Files" (`ProjectStorageFacts.folders` / `looseFiles`, feature/phone `storage/ProjectStorage.kt`). The zip is
+> unchanged: loose files are still exported (`NativeProjectFiles.plan`), and Manage space still lists every entry.
+> Related: Add tools on an installed phone (S9) still opens as its own route, but draws nothing under its sheet and
+> closing the sheet leaves that route (Flutter opens the sheet over This phone itself).
+
 
 ## How to read the counts
 
