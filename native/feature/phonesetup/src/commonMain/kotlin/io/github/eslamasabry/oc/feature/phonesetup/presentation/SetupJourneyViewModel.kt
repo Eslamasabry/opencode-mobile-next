@@ -70,8 +70,25 @@ public data class SetupJourneyUi(
     val seconds: Long
         get() = SetupSelection.seconds(install)
 
+    /** The extracted size of the install, when every part of it reports one (the start check counts it too). */
+    val installedBytes: Long?
+        get() = install.map { it.installedBytes }.takeIf { sizes -> sizes.isNotEmpty() && sizes.all { it != null } }
+            ?.sumOf { it ?: 0L }
+
     val preflight: SetupPreflightResult?
-        get() = options?.let { SetupPreflight.check(it.device, bytes) }
+        get() = options?.let { SetupPreflight.check(it.device, bytes, installedBytes) }
+
+    /**
+     * What the install needs free and what this phone has, while the phone is within 1 GB of the need (so a nearly
+     * full phone is told before the download, not only when it is already too full). Null when free space is unknown.
+     */
+    val spaceTight: Pair<Long, Long>?
+        get() {
+            val free = options?.device?.availableStorageBytes ?: return null
+            if (bytes <= 0) return null
+            val need = SetupPreflight.requiredFreeBytes(bytes, installedBytes)
+            return if (free < need + SPACE_MARGIN_BYTES) need to free else null
+        }
 
     val canConfirm: Boolean
         get() =
@@ -184,7 +201,10 @@ public class SetupJourneyViewModel(
         judged = key
         val stopped = progress.state == SetupState.Failed || progress.state == SetupState.Interrupted
         val waiting = stopped || progress.state == SetupState.Idle
-        val kill = if (stopped) keepAlive.interruption() else null
+        // Only a setup the system stopped ("interrupted") can be a kill. A step that failed while the app lived says
+        // its own reason (no network, storage, the step), never "ran short of memory".
+        val kill =
+            if (progress.state == SetupState.Interrupted) keepAlive.interruption(progress.startedAtMs) else null
         val card = if (waiting) keepAlive.facts()?.let { BatteryCard.decide(it, afterKill = kill != null) } else null
         mutable.update { it.copy(systemKill = kill, batteryCard = card, batteryOpenFailed = false) }
     }
@@ -390,3 +410,5 @@ public class SetupJourneyViewModel(
         public fun create(@Assisted route: PhoneSetupRoute): SetupJourneyViewModel
     }
 }
+
+private const val SPACE_MARGIN_BYTES: Long = 1_000_000_000

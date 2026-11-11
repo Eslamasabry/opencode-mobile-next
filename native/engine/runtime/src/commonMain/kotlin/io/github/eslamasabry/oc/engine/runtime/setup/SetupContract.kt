@@ -240,6 +240,8 @@ public data class SetupProgress(
     val activity: SetupActivity? = null,
     /** Seconds since the runner last wrote anything; a large value is the "still working" heartbeat. */
     val quietSeconds: Int? = null,
+    /** When the job began (epoch ms); 0 when unknown. A phone kill is only blamed if it came after this. */
+    val startedAtMs: Long = 0,
 ) {
     val canContinue: Boolean
         get() =
