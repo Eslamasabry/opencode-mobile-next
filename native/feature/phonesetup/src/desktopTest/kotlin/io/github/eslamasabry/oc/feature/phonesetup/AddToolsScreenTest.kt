@@ -5,16 +5,21 @@ package io.github.eslamasabry.oc.feature.phonesetup
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.engine.runtime.setup.SetupDeviceInfo
+import io.github.eslamasabry.oc.engine.runtime.setup.SetupProgress
+import io.github.eslamasabry.oc.engine.runtime.setup.SetupState
 import io.github.eslamasabry.oc.feature.phonesetup.presentation.BatteryOpen
 import io.github.eslamasabry.oc.feature.phonesetup.presentation.SetupJourneyActions
 import io.github.eslamasabry.oc.feature.phonesetup.presentation.SetupJourneyUi
 import io.github.eslamasabry.oc.feature.phonesetup.presentation.SetupOptions
+import io.github.eslamasabry.oc.feature.phonesetup.ui.JourneyBody
 import io.github.eslamasabry.oc.feature.phonesetup.ui.SetupJourneyScreen
+import io.github.eslamasabry.oc.feature.phonesetup.ui.journeyBody
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 /** S9: Add tools from This phone opens over This phone's name, never over the first-run "Set up OpenCode" page. */
 class AddToolsScreenTest {
@@ -60,8 +65,21 @@ class AddToolsScreenTest {
         }
 
     @Test
-    fun `first-run Customize still shows its setup page behind the choices`() =
-        show(SetupJourneyUi(customizing = true, adding = false, checking = false, options = options)) {
-            onNodeWithText("Run a coding agent right here").assertExists()
-        }
+    fun `S9 the page under the sheet is nothing for Add tools, the setup page only for first-run Customize`() {
+        val done = SetupProgress(SetupState.Done, emptyList(), 1.0, jobId = "setup-1")
+        assertEquals(
+            JourneyBody.Nothing,
+            journeyBody(SetupJourneyUi(customizing = true, adding = true, checking = false, progress = done)),
+        )
+        assertEquals(
+            JourneyBody.Hero,
+            journeyBody(SetupJourneyUi(customizing = true, adding = false, checking = false, progress = done)),
+        )
+        // A running add job still shows its progress.
+        val running = done.copy(state = SetupState.Running)
+        assertEquals(
+            JourneyBody.Job,
+            journeyBody(SetupJourneyUi(customizing = true, adding = true, checking = false, progress = running)),
+        )
+    }
 }
