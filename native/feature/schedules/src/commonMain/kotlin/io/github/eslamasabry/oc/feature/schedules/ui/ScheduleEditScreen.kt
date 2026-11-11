@@ -121,7 +121,7 @@ public fun ScheduleEditScreen(state: ScheduleEditUi, actions: ScheduleEditAction
                     KitStateKind.Missing,
                     if (state.editing) words.unavailableEdit else words.unavailableServer,
                 )
-            EditPhase.Ready -> EditorForm(state, draft, words)
+            EditPhase.Ready -> EditorForm(state, draft, words, actions)
         }
     }
 }
@@ -156,7 +156,7 @@ private class EditorDraft(start: EditorFields) {
 }
 
 @Composable
-private fun EditorForm(state: ScheduleEditUi, draft: EditorDraft, words: ScheduleWords) {
+private fun EditorForm(state: ScheduleEditUi, draft: EditorDraft, words: ScheduleWords, actions: ScheduleEditActions) {
     val enabled = if (state.saving) KitEnabled.Disabled(words.saving) else KitEnabled.Enabled
     var targetOpen by remember { mutableStateOf(false) }
     val promptFocus = remember { FocusRequester() }
