@@ -17,17 +17,22 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.clipRect
@@ -261,8 +266,19 @@ private fun RenameField(state: KitEdgeDockState, layout: SwellLayout, ring: KitD
     val style = LocalKitTypography.current.style(TypeRole.RowTitle).copy(color = colors.text1)
     val field = rememberTextFieldState(ring.name, TextRange(0, ring.name.length))
     val focus = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
+    var focused by remember { mutableStateOf(false) }
+    // Another field may hold focus and the keyboard (the chat's message box): the rename field takes both as it appears,
+    // the other field first letting go so the keyboard's input follows the new field (device QA 2026-11-11, run 5, c: the
+    // first typed characters went into the message box). When the rename ends focus goes to nothing, not back to the box.
+    DisposableEffect(Unit) { onDispose { if (focused) focusManager.clearFocus(force = true) } }
     LaunchedEffect(ring.key) {
+        focusManager.clearFocus(force = true)
+        withFrameNanos { }
         focus.requestFocus()
+        // The keyboard's input session moves to this field (it may have been on another one; the keyboard stays up).
+        keyboard?.show()
         snapshotFlow { field.text.toString() }.collect { state.renameText = it }
     }
     val x = if (state.onRight) spot.left else boxW - spot.right
@@ -275,6 +291,7 @@ private fun RenameField(state: KitEdgeDockState, layout: SwellLayout, ring: KitD
                     .size(spot.width.dp, spot.height.dp)
                     .graphicsLayer { alpha = ((state.ride.value - 0.55f) / 0.35f).coerceIn(0f, 1f) }
                     .focusRequester(focus)
+                    .onFocusChanged { focused = it.isFocused }
                     // A hardware Enter saves, as the IME's Done does (the field wraps; it takes no new lines).
                     .onPreviewKeyEvent { e ->
                         if (e.type == KeyEventType.KeyDown && (e.key == Key.Enter || e.key == Key.NumPadEnter)) {

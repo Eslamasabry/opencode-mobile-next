@@ -658,7 +658,14 @@ public class KitEdgeDockState internal constructor() {
                 val ring = rings.getOrNull(from)
                 if (ring != null && ring.pinned != o.pinned) intents.onPinChange(ring.key, o.pinned)
             }
-            is DockOutcome.PullEnd -> settlePull(o.velocity)
+            is DockOutcome.PullEnd -> {
+                // A flick from the head: the dock was carried with the finger; it goes back to its place on its own edge.
+                if (moving) {
+                    moving = false
+                    placeGeneration++
+                }
+                settlePull(o.velocity)
+            }
             DockOutcome.Untuck -> {
                 moving = false
                 launch { out.animateTo(DockDims.REST_W, DockSprings.drop(reduced)) }

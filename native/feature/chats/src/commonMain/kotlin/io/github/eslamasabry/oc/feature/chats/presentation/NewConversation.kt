@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.domain.ImportableConversation
 import io.github.eslamasabry.oc.core.domain.ImportableConversations
+import io.github.eslamasabry.oc.core.model.ModelDisplayName
 import io.github.eslamasabry.oc.core.model.ModelRef
 import io.github.eslamasabry.oc.engine.agents.AgentId
 import io.github.eslamasabry.oc.engine.agents.selection.AgentSelection
@@ -93,6 +94,22 @@ public data class NewConversationPhoneModels(
     val models: List<NewConversationModel>,
     val model: ModelRef?,
 )
+
+/**
+ * A model row's name: the catalog's, else the one the server or agent reports, and when that is blank or only the id
+ * again, the id read as words (Flutter `_choiceName`): never a raw id such as `claude-opus-4-6`.
+ */
+public fun newConversationModelName(modelId: String, catalogName: String?, reportedName: String?): String =
+    ModelDisplayName.of(modelId, catalogName?.takeIf { it.isNotBlank() } ?: reportedName)
+
+/**
+ * Whether the helper's model list for a phone agent must be read again from the agent itself: the Agents page says
+ * the agent is ready, yet the helper's last list names no real model for it (it was read before the agent was
+ * installed or signed in, and the helper keeps that list until it is asked to look again). Asked once per read, never
+ * in a loop.
+ */
+public fun phoneModelsNeedRecheck(agentReady: Boolean, models: List<NewConversationModel>): Boolean =
+    agentReady && models.none { it.model.modelId != "default" }
 
 public data class NewConversationSetup(
     val directory: String?,
@@ -565,6 +582,9 @@ public class NewConversationViewModel(
                     )
                 } else it
             }
+            // Setup may have installed or signed in the agent, or changed its models: its list is read again
+            // (before, the list read when the page opened stayed until the app restarted).
+            reread?.let { agent -> loadPhoneModels(profile, agent) }
         }
     }
 
@@ -651,6 +671,21 @@ public class NewConversationViewModel(
                             )
                         }
                         val wanted = route.phoneAgent
+                        val offer = setup.phone
+                        if (
+                            wanted != null && !wantedApplied && offer != null &&
+                                offer.choices.none { c -> c.id == wanted } &&
+                                offer.needsSetup.none { c -> c.id == wanted }
+                        ) {
+                            // A ready agent the offer lists only once chosen (not yet certified for chat, as Flutter's
+                            // agentChoosable): the Agents card's choice is saved like a tap and the offer read again,
+                            // now listing it. Before, the page dropped it and showed the remembered agent instead.
+                            wantedApplied = true
+                            if (host.choosePhoneAgent(profile, wanted) is Outcome.Ok && ticket == generation) {
+                                chooseServer(profile)
+                                return@launch
+                            }
+                        }
                         if (
                             wanted != null && !wantedApplied &&
                                 setup.phone?.choices?.any { c -> c.id == wanted } == true

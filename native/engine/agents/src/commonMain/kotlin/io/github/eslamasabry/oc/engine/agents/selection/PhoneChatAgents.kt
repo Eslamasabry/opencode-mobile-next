@@ -24,10 +24,15 @@ public data class PhoneChatOffer(val choices: List<PhoneChatFact>, val needsSetu
 
 public object PhoneChatAgents {
     /**
-     * A choice is a ready agent certified for chat on the version this app installs (`agentChoosable`), or the one
-     * already chosen (the agent sheet's "Use ..." chooses a ready agent before it is certified; Start must name what
-     * it starts). A set-up entry is a certified agent with a way forward that is not already a choice. Both follow the
-     * catalog's own order (Claude Code first); agents the catalog does not know go last, in the order given.
+     * A choice is every ready agent ([PhoneChatFact.ready], the same rule the Agents page's cards use to offer New
+     * conversation), and the one already chosen. A set-up entry is a certified agent with a way forward that is not
+     * already a choice. Both follow the catalog's own order (Claude Code first); agents the catalog does not know go
+     * last, in the order given.
+     *
+     * Different from Flutter on purpose (owner decision 2026-11-11, after "Antigravity not showing"): Flutter's
+     * `agentChoosable` also asked for chat certification, so a ready agent the bundled matrix has no row for
+     * (Antigravity: neither Flutter's nor native's matrix lists it) had a "New conversation" on its card but was absent
+     * from this list. The two screens now agree.
      */
     public fun offer(
         facts: List<PhoneChatFact>,
@@ -38,7 +43,7 @@ public object PhoneChatAgents {
         fun rank(fact: PhoneChatFact): Int =
             catalog.agents.indexOfFirst { it.id == fact.id }.let { if (it < 0) catalog.agents.size else it }
         val choices =
-            facts.filter { (it.ready && certification.certifiedForChat(it.id)) || it.id == selected }
+            facts.filter { it.ready || it.id == selected }
         val shown = choices.map { it.id }.toSet()
         val setup =
             facts.filter { it.id !in shown && !it.ready && it.fixable && certification.certifiedForChat(it.id) }

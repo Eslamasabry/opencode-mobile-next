@@ -1,7 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.modal
 
 import androidx.compose.animation.AnimatedVisibility
-import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -39,6 +38,8 @@ import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.action.KitWorkingMark
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
+import io.github.eslamasabry.oc.ui.kit.frame.kitTouchSink
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -126,6 +127,9 @@ public fun KitUndoBar(offer: KitUndoOffer?, onUndo: () -> Unit, onTimeout: () ->
                 .fillMaxWidth()
                 .padding(horizontal = kitPageGutter(), vertical = Space.S2.dp)
                 .clip(shape)
+                // The whole bar takes its touches: a tap on its words, or beside Undo, never reaches what lies under it
+                // (in a chat the newest reply's menu sits exactly there; device QA 2026-11-11, run 5).
+                .kitTouchSink()
                 .background(colors.surface2)
                 .border(1.dp, colors.hairline, shape)
                 .heightIn(min = tokens.rowHeightOne.dp)

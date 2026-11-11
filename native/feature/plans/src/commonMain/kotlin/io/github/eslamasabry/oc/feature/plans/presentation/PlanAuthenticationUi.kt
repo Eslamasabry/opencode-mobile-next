@@ -81,6 +81,9 @@ public interface PlanSignInPort {
         url: String,
         confirmed: Boolean,
     ): Outcome<PlanSignInLink>
+
+    /** The provider's own page for creating an API key (app-authored, never a server value). */
+    public fun openKeyPage(integrationId: String): Outcome<Unit>
 }
 
 public enum class PlanSignInStep {
@@ -131,6 +134,8 @@ public interface PlanSignInActions {
     public fun openPage()
 
     public fun confirmPage()
+
+    public fun openKeyPage()
 
     public fun check()
 
