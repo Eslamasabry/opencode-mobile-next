@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateSkillsTitle">技能</string>
+    <string name="stateSkillsUse">在此对话中使用</string>
+    <string name="stateSkillsDone">技能已添加到此对话。</string>
+    <string name="stateSkillsChanged">对话或文件夹已变更。请重新打开列表。</string>
+    <string name="stateSkillsBusy">正在添加另一个技能。请等它完成。</string>
+    <string name="stateSkillsStaged">添加技能之前，请先完成或取消待处理的撤销。</string>
+    <string name="stateSkillsUnsupported">此服务器无法向对话添加技能。</string>
+    <string name="stateSkillsUncertain">无法确认结果。请先刷新再重试。</string>
+</resources>

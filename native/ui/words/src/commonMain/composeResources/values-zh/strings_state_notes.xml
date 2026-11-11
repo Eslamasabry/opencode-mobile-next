@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateNoteTitle">对话备注</string>
+    <string name="stateNoteDescription">这条备注会指引此对话中的回复。它保存在这个服务器上。</string>
+    <string name="stateNoteField">此对话的备注</string>
+    <string name="stateNoteSave">保存备注</string>
+    <string name="stateNoteRemove">移除备注</string>
+    <string name="stateNoteReload">重新读取已保存的备注</string>
+    <string name="stateNoteWorking">正在保存或读取备注。请稍候。</string>
+    <string name="stateNoteReloadFirst">请先做出更改。备注必须已加载，且编码后不超过 8192 字节。</string>
+    <string name="stateNoteTooLarge">备注太长。请控制在编码后 8192 字节以内。</string>
+    <string name="stateNoteChanged">对话或其已保存的备注已变更。保存前请先重新读取。</string>
+    <string name="stateNoteFailed">无法读取或保存备注。请检查连接后重试。</string>
+    <string name="stateNoteSaved">备注已保存。</string>
+    <string name="stateNoteRemoved">备注已移除。</string>
+    <string name="stateNoteDiscardTitle">放弃对备注的更改？</string>
+    <string name="stateNoteDiscardBody">你尚未保存的更改将丢失。已保存的备注保持原样。</string>
+    <string name="stateNoteDiscard">放弃更改</string>
+</resources>

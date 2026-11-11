@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateStorageAppTitle">允许访问这部手机的文件</string>
+    <string name="stateStorageAppBody">此项目位于共享存储中。请为 OpenCode Mobile 开启“所有文件访问权限”，然后回到这里。</string>
+    <string name="stateStorageAppAction">打开文件访问设置</string>
+</resources>

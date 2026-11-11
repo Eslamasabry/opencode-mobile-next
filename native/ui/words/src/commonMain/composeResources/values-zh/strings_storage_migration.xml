@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="migrationStorageTitle">存储</string>
+    <string name="migrationStorageAssistant">这部手机上的助手模型</string>
+    <string name="migrationStorageDelete">删除模型</string>
+    <string name="migrationStorageDeleteTitle">删除助手模型？</string>
+    <string name="migrationStorageDeleteBody">这会从这部手机上移除已保存的模型和未完成的下载，释放 %1$s。</string>
+    <string name="migrationStorageEmpty">这部手机上没有存储助手模型</string>
+    <string name="localModelSaveFailed">无法更改已保存的模型。请重试。</string>
+</resources>

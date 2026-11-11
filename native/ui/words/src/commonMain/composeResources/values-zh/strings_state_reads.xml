@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateShareViewedTitle">分享我查看过哪些对话</string>
+    <string name="stateShareViewedDetail">告诉此服务器你打开了哪些已完成的回复。关闭时，这些信息只保留在此设备上。</string>
+    <string name="stateShareViewedSaving">正在保存你的隐私选择…</string>
+</resources>
