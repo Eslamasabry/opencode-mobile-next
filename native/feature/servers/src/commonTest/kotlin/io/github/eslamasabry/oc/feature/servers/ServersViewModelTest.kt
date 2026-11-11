@@ -322,4 +322,16 @@ class ServersViewModelTest {
         assertEquals(0, connections.connects)
         assertEquals(io.github.eslamasabry.oc.ui.routes.ServersRoute.Edit(id, newConversation = false), nav.top.value)
     }
+
+    @Test
+    fun `S2 an unreadable saved password points the failure at that server's form`() = runTest {
+        val connections = Connections()
+        connections.connectResult = Outcome.Failed(Failure.SecretUnavailable())
+        val vm = ServersViewModel(null, connections, Navigator(), NoServerRows)
+        vm.connect(id)
+        assertEquals(id, vm.state.value.signIn)
+        connections.connectResult = Outcome.Failed(Failure.TimedOut())
+        vm.connect(id)
+        assertEquals(null, vm.state.value.signIn)
+    }
 }
