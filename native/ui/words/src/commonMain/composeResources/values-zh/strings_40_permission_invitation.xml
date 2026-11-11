@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="invitation40Question">已询问 3 次。以后始终允许这个相同的操作吗？</string>
+    <string name="invitation40KeepAsking">继续询问</string>
+    <string name="invitation40SaveFailed">无法保存这个选择。请求仍在等待；你可以先回答这一次。</string>
+</resources>

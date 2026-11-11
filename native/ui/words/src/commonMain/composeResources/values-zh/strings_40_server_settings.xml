@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="serverSettingsTitle">服务器设置</string>
+    <string name="serverSettingsShell">默认 shell</string>
+    <string name="serverSettingsFailed">未能完成。请重试。</string>
+    <string name="serverSettingsRemove">移除服务器</string>
+    <string name="serverSettingsRemoveBody">从此应用中移除这个已保存的连接及其本地数据。服务器及其电脑上的文件保持原样。</string>
+    <string name="serverSettingsDisconnected">未连接</string>
+    <string name="serverSettingsConnect">连接到此服务器</string>
+    <string name="serverSettingsOnServer">此处的更改保存在 %1$s 上，并与使用它的其他应用共享。</string>
+    <string name="serverSettingsWaiting">等待中</string>
+    <string name="serverSettingsPassed">已通过</string>
+    <string name="serverSettingsAttention">需要处理</string>
+    <string name="serverSettingsFailedCheck">需要修复</string>
+    <string name="serverSettingsSkipped">未检查</string>
+    <string name="serverSettingsShellUnavailable">请连接到共享 shell 设置的服务器，才能更改它的默认 shell。</string>
+    <string name="serverSettingsSaving">正在保存…</string>
+    <string name="serverSettingsTerminal">终端</string>
+    <string name="serverSettingsFiles">浏览文件</string>
+    <string name="serverSettingsProjects">管理项目</string>
+    <string name="serverSettingsSchedules">定时提示词</string>
+    <string name="serverSettingsProviders">模型提供方</string>
+    <string name="serverSettingsPermissions">权限请求</string>
+    <string name="serverSettingsSteering">引导正在运行的回复</string>
+    <string name="serverSettingsSupported">此服务器支持</string>
+    <string name="serverSettingsUnsupported">此服务器不支持</string>
+    <string name="server40DisconnectConfirm">断开与 %1$s 的连接？</string>
+    <string name="server40Disconnect">断开连接</string>
+    <string name="server40DisconnectBody">这会关闭这部手机上的连接。你的对话、草稿和排队的消息仍会保存。</string>
+    <string name="server40Reconnect">重新连接</string>
+    <string name="server40AgentsNone">这台电脑上没有就绪的智能体。</string>
+    <string name="server40Plugins">服务器插件</string>
+    <string name="server40ResetDone">这里已重新使用你的默认设置。</string>
+    <string name="server40ModelHelp">此选择适用于此服务器上的新对话。已有的对话沿用各自的模型。</string>
+</resources>

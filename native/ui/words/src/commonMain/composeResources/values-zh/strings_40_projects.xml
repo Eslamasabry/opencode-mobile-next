@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="r40RelationsTitle">相关对话</string>
+    <string name="r40RelationsRefresh">刷新相关对话</string>
+    <string name="r40RelationsStale">此对话的位置已变更。请返回并重新打开相关对话。</string>
+    <string name="r40RelationsFailure">未能完成。请重试，或返回并重新打开相关对话。</string>
+    <string name="r40RelationsParent">起始于</string>
+    <string name="r40RelationsEmpty">还没有子智能体对话</string>
+    <string name="r40RelationsEmptyBody">委派出去的工作会显示在这里，不会混入你的对话。</string>
+    <string name="r40RelationsChildren">子智能体对话 · %1$s</string>
+    <string name="r40RelationsUntitled">未命名的对话</string>
+    <string name="r40RelationsNeedsYou">需要你 · 打开以回答</string>
+    <string name="r40RelationsWorking">处理中</string>
+    <string name="r40RelationsIdle">空闲</string>
+    <string name="r40RelationsDone">已完成</string>
+    <string name="r40RelationsCurrent">此对话</string>
+    <string name="r40RelationsPinned">已固定</string>
+    <string name="r40RelationsActions">操作</string>
+    <string name="r40RelationsOpening">处理中…</string>
+    <string name="r40RelationsOpen">打开对话</string>
+    <string name="r40RelationsResume">在电脑上继续</string>
+    <string name="r40RelationsPin">固定此对话</string>
+    <string name="r40RelationsUnpin">取消固定此对话</string>
+    <string name="r40RelationsStop">停止子智能体</string>
+    <string name="r40RelationsStopTitle">停止 %1$s？</string>
+    <string name="r40RelationsStopBody">这会停止它当前的工作。对话及其已完成的工作会保留。</string>
+    <string name="r40RelationsKeepRunning">继续运行</string>
+    <string name="r40RelationsResumeBody">请在托管此服务器的电脑上、同一项目中运行这条命令。复制不会发送任何内容。</string>
+    <string name="r40RelationsCopy">复制命令</string>
+    <string name="r40RelationsJustNow">刚刚</string>
+    <string name="r40RelationsMinutes">%1$s 分钟前</string>
+    <string name="r40RelationsHours">%1$s 小时前</string>
+    <string name="r40RelationsDays">%1$s 天前</string>
+</resources>
