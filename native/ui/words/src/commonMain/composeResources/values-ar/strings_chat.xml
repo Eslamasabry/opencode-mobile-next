@@ -109,7 +109,7 @@
         <item quantity="many">التطابق %2$d من %1$d</item>
         <item quantity="other">التطابق %2$d من %1$d</item>
     </plurals>
-    <string name="transcriptFindCount__eq0">لا توجد تطابقات</string>
+    <string name="transcriptFindCount__eq0">التطابق %2$d من %1$d</string>
     <string name="transcriptFindCount__eq1">تطابق واحد</string>
     <string name="transcriptFindPartial">الرسائل المحمّلة فقط. حمّل الرسائل الأقدم لتوسيع البحث.</string>
     <string name="transcriptFindTool">بيانات الأدوات</string>
