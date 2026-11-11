@@ -27,6 +27,11 @@ class Oc2SavedPermissionsRowsTest {
     }
 
     @Test
+    fun `OpenCode 2 lists conversations across projects, so the home never says one project only`() {
+        assertTrue(Oc2Gateway.Capabilities.globalSessionSearch)
+    }
+
+    @Test
     fun `B-164 the list reads the current project's saved grants by project id without a location`() = runTest {
         val server =
             RowServer(location = here) { seen ->

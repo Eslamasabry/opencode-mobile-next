@@ -107,6 +107,9 @@ import io.github.eslamasabry.oc.feature.chats.presentation.HomePreviewRules
 import androidx.compose.runtime.key
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeRightNow
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeRecent
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeAsksOther
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeAsksToEdit
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeAsksToRead
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeAsksToRun
 import io.github.eslamasabry.oc.ui.words.res.chats_all_title
 import io.github.eslamasabry.oc.ui.kit.row.KitSwipeRow
@@ -398,7 +401,10 @@ public fun ChatsScreen(
             }
             state.onlyProject?.let { project ->
                 item(key = "only-project", contentType = "only-project") {
-                    Box(kitItemMotion()) { KitNotice(stringResource(Res.string.chatsHomeOnlyProject, KitBidi.auto(project))) }
+                    // On the gutter like the rows (a notice draws edge to edge; the brief block does the same).
+                    Box(kitItemMotion().padding(horizontal = LocalKitTokens.current.gutter.dp)) {
+                        KitNotice(stringResource(Res.string.chatsHomeOnlyProject, KitBidi.auto(project)))
+                    }
                 }
             }
             // G6 (F: agent_notices.dart:84-157): the phone agents' restart offer, sign-in, stopped and plan-limit lines.
@@ -879,7 +885,15 @@ private fun ConversationRow(
         row.updatedAtMs?.takeIf { flags.nowMs > 0 }?.let { kitRelativeAge(it, flags.nowMs) }
             ?: row.ago?.let { agoText(it) }
     val preview =
-        row.permission?.let { stringResource(Res.string.chatsHomeAsksToRun, KitBidi.ltr(mask(it.command))) }
+        row.permission?.let {
+            val target = KitBidi.ltr(mask(it.command))
+            when (HomePreviewRules.askKind(it.kind)) {
+                HomePreviewRules.AskKind.Run -> stringResource(Res.string.chatsHomeAsksToRun, target)
+                HomePreviewRules.AskKind.Edit -> stringResource(Res.string.chatsHomeAsksToEdit, target)
+                HomePreviewRules.AskKind.Read -> stringResource(Res.string.chatsHomeAsksToRead, target)
+                HomePreviewRules.AskKind.Other -> stringResource(Res.string.chatsHomeAsksOther, target)
+            }
+        }
             // H5: the shell command a running row is on ("Running npm test"), read left to right.
             ?: row.running?.command?.takeIf { row.status == RowStatus.Running && it.isNotBlank() }
                 ?.let { stringResource(Res.string.signalRowRunningCommand, KitBidi.ltr(mask(it))) }

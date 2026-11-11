@@ -2451,7 +2451,9 @@ internal class Oc2Gateway(
                 terminal = true,
                 conversationShell = true,
                 projectManagement = true,
-                globalSessionSearch = false,
+                // GET /session without a directory lists every project (Oc2SearchUsage.searchSessions); Flutter keeps
+                // the default true for OpenCode 2, so the home must not claim a one-project list.
+                globalSessionSearch = true,
                 sessionDiff = false,
                 sessionFork = true,
                 sessionCompact = false,
