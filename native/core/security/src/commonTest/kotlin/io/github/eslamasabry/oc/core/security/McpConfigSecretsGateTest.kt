@@ -100,8 +100,10 @@ class McpConfigSecretsGateTest {
         assertMasked(redactor, "the credential after a scheme word", schemeSplit)
         assertMasked(redactor, "a token-like positional word", positional)
         assertMasked(redactor, "an env-style NAME=value word", envWord)
-        for (word in listOf("Bearer", "debug", "notion-mcp", "mcp-remote", "https://notes.example/mcp", "tracker-mcp"))
+        for (word in listOf("debug", "notion-mcp", "mcp-remote", "https://notes.example/mcp", "tracker-mcp"))
             assertReadable(redactor, word)
+        // The scheme word itself is never registered (the redactor's own Bearer pattern still masks what follows it).
+        assertFalse(redactor.containsSecret("Bearer"), "the scheme word is registered")
     }
 
     @Test
