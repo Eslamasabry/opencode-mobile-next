@@ -61,6 +61,18 @@ public data class AllModel(
     /** The folder each server is open on now, trimmed; "Continue here" moves into it. */
     val openFolders: Map<ProfileId, String> = emptyMap(),
     val moving: MovingHere? = null,
+    /** Per row key: needs-you and unread, from the home feed. */
+    val attention: Map<String, RowAttention> = emptyMap(),
+    /** Servers that can import a conversation file (`sessionImportExport` and the import door). */
+    val importCapable: Set<ProfileId> = emptySet(),
+    val importing: ImportModel? = null,
+)
+
+/** The open import: the servers to choose from, the chosen one, and its reviewed state. */
+public data class ImportModel(
+    val choices: List<ServerName> = emptyList(),
+    val profile: ProfileId? = null,
+    val session: io.github.eslamasabry.oc.engine.agents.sessionimport.SessionImportUi? = null,
 )
 
 /** The "Continue here" question for one row; [working] while the server moves it, [failed] keeps it open. */
@@ -152,6 +164,8 @@ public object AllConversationsRules {
         }
         val rows = shown.map { e ->
             val k = key(e.profile, e.session.id)
+            val attention = model.attention[k]
+            val needsYou = attention?.needsYou == true
             AllRowUi(
                 key = k,
                 ref = ConversationRef(e.profile, e.session.id),
@@ -178,6 +192,10 @@ public object AllConversationsRules {
                     model.sources[e.profile]?.contextUsage?.get(e.session.id)?.let {
                         (it * 100).toInt()
                     },
+                updatedMs = updatedAt(e.session),
+                needsYou = needsYou,
+                unread = !needsYou && !e.running && attention?.unread == true,
+                folder = e.session.directory?.trim()?.takeIf { it.isNotEmpty() },
             )
         }
         val chipDirs =
@@ -254,6 +272,15 @@ public object AllConversationsRules {
                         )
                 },
             renaming = model.renaming,
+            canImport = model.importCapable.isNotEmpty(),
+            import =
+                model.importing?.let { open ->
+                    ImportUi(
+                        choices = open.choices.toImmutableList(),
+                        server = model.servers.firstOrNull { it.profile == open.profile }?.name,
+                        session = open.session,
+                    )
+                },
             undo =
                 if (model.pending.isEmpty()) null
                 else

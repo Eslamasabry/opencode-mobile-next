@@ -16,6 +16,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
+import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAge
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.chats.presentation.AllConversationsUi
 import io.github.eslamasabry.oc.feature.chats.presentation.AllPhase
@@ -131,6 +134,15 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
     LaunchedEffect(state.query) {
         if (state.query.isEmpty() && searchText.text.isNotEmpty()) searchText.edit { replace(0, length, "") }
     }
+    // Flutter's top-bar menu entry: no need to open some conversation first.
+    val importAction =
+        if (state.canImport)
+            KitLineAction(
+                stringResource(Res.string.libraryImportAConversation),
+                actions::openImport,
+                icon = KitIcons.download,
+            )
+        else null
     val barActions =
         when {
             state.selecting ->
@@ -150,8 +162,9 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
                         { actions.startSelecting(null) },
                         icon = KitIcons.checkboxChecked,
                     ),
-                )
-            else -> emptyList()
+                ) + listOfNotNull(importAction)
+            state.phase == AllPhase.NoServer -> emptyList()
+            else -> listOfNotNull(importAction)
         }
     val title =
         if (state.selecting) {
@@ -309,7 +322,7 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
                     }
                 AllPhase.List ->
                     items(state.rows, key = { it.key }, contentType = { "conversation" }) { row ->
-                        AllRow(row, state.selecting, rowWords, actions)
+                        AllRow(row, state.selecting, rowWords, state.nowMs, actions)
                     }
             }
             // Under a filter with no loaded match, older pages may still hold one: Load more and
@@ -322,6 +335,7 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
         }
         ConversationRenameDialog(state.renaming, actions::finishRename)
         ContinueHereDialog(state, actions)
+        ImportConversationSheet(state.import, actions)
     }
 }
 
@@ -417,7 +431,13 @@ private fun Filters(state: AllConversationsUi, actions: ChatsAllActions) {
 private fun rowTitle(title: RowTitle): String = rowTitleWords(title)
 
 /** The words every All conversations row shares, read once by the list. */
-private data class AllRowWords(val working: String, val archivedShort: String, val unknownLocation: String)
+private data class AllRowWords(
+    val working: String,
+    val archivedShort: String,
+    val unknownLocation: String,
+    val needsYou: String,
+    val unread: String,
+)
 
 @Composable
 private fun rememberAllRowWords(): AllRowWords =
@@ -425,10 +445,12 @@ private fun rememberAllRowWords(): AllRowWords =
         working = stringResource(Res.string.globalSessionsWorking),
         archivedShort = stringResource(Res.string.globalSessionsArchivedShort),
         unknownLocation = stringResource(Res.string.globalSessionsUnknownLocation),
+        needsYou = stringResource(Res.string.chatsHomeNeedsYou),
+        unread = stringResource(Res.string.sessionUnread),
     )
 
 @Composable
-private fun AllRow(row: AllRowUi, selecting: Boolean, words: AllRowWords, actions: ChatsAllActions) {
+private fun AllRow(row: AllRowUi, selecting: Boolean, words: AllRowWords, nowMs: Long, actions: ChatsAllActions) {
     val title = rowTitle(row.title)
     val project = row.project ?: words.unknownLocation
     val location = row.server?.let { "$it · $project" } ?: project
@@ -437,18 +459,22 @@ private fun AllRow(row: AllRowUi, selecting: Boolean, words: AllRowWords, action
             "$location · " + stringResource(Res.string.stateContextUsage, it)
         } ?: location
     val running = words.working
+    // The state word leads, then how long ago, then where (Flutter global_sessions_screen.dart:1080-1110).
     val status = when {
+        row.needsYou -> words.needsYou
         row.running -> running
         row.archived -> words.archivedShort
+        row.unread -> words.unread
         else -> null
     }
+    val ago = row.updatedMs.takeIf { it > 0 && nowMs > 0 }?.let { kitRelativeAge(it, nowMs) }
     // ANDR-1: the visible More action takes the trailing slot, so Running moves into the line.
-    val supporting = listOfNotNull(status, place).joinToString(" · ")
+    val supporting = listOfNotNull(status, ago, place).joinToString(" · ")
     if (row.readOnly) {
         KitRow(
             title = title,
             titleMaxLines = 2, // F: lib/ui/screens/global_sessions_screen.dart:1107
-            supporting = place,
+            supporting = listOfNotNull(ago, place).joinToString(" · "),
             enabled = false,
             disabledReason = stringResource(Res.string.stateSavedPreview),
         )
@@ -460,22 +486,27 @@ private fun AllRow(row: AllRowUi, selecting: Boolean, words: AllRowWords, action
             selected = row.selected,
             supporting = supporting,
             mark = KitChoiceMark.Check,
-            tag = if (row.running) running else null,
+            tag = if (row.needsYou) words.needsYou else if (row.running) running else null,
             onClick = { actions.tapRow(row.key) },
         )
         return
     }
     var menu by remember(row.key) { mutableStateOf(false) }
     // Built only while the menu is open; a closed menu keeps what it last showed for its fade.
-    val items = if (menu) allRowMenu(row, actions) else emptyList()
+    val items = if (menu) allRowMenu(row, words.unknownLocation, actions) else emptyList()
     val moreFor = stringResource(Res.string.p12MoreFor, title)
     KitMenu(expanded = menu, items = items, onDismissRequest = { menu = false }, title = title) {
         KitRow(
             title = title,
             titleMaxLines = 2, // F: lib/ui/screens/global_sessions_screen.dart:1107
             supportingMaxLines = 2, // F: lib/ui/screens/global_sessions_screen.dart:1108
-            leading = if (row.running) null else KitRowLeading.Glyph(if (row.archived) KitIcons.archive else KitIcons.chat),
-            state = if (row.running) KitRowState(null, KitRowStateTone.Running) else null,
+            leading = if (row.running || row.needsYou) null else KitRowLeading.Glyph(if (row.archived) KitIcons.archive else KitIcons.chat),
+            state =
+                when {
+                    row.needsYou -> KitRowState(null, KitRowStateTone.NeedsYou)
+                    row.running -> KitRowState(null, KitRowStateTone.Running)
+                    else -> null
+                },
             supporting = supporting,
             // The ⋯ glyph, its words for TalkBack only: as words "More for <title>" pushed the title out of the row.
             trailing = KitRowTrailing.IconAction(KitLineAction(moreFor, { menu = true }, icon = KitIcons.more)),
@@ -488,8 +519,9 @@ private fun AllRow(row: AllRowUi, selecting: Boolean, words: AllRowWords, action
 }
 
 @Composable
-private fun allRowMenu(row: AllRowUi, actions: ChatsAllActions): List<KitMenuItem> {
+private fun allRowMenu(row: AllRowUi, unknownLocation: String, actions: ChatsAllActions): List<KitMenuItem> {
     val archiveReason = stringResource(Res.string.p12ArchiveUnavailable)
+    @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
     return listOfNotNull(
         if (row.pinAvailable) KitMenuItem(
             stringResource(if (row.pinned) Res.string.stateUnpin else Res.string.statePin),
@@ -502,6 +534,11 @@ private fun allRowMenu(row: AllRowUi, actions: ChatsAllActions): List<KitMenuIte
         if (row.canContinueHere) KitMenuItem(stringResource(Res.string.globalSessionsContinueHere), { actions.continueHere(row.key) }, icon = KitIcons.download) else null,
         KitMenuItem(stringResource(Res.string.sessionOpenRelated), { actions.rowAct(row.key, RowAct.OpenRelated) }, icon = KitIcons.branch),
         KitMenuItem(stringResource(Res.string.sessionCopyHandoff), { actions.rowAct(row.key, RowAct.CopyHandoff) }, icon = KitIcons.terminal),
+        KitMenuItem(
+            stringResource(Res.string.globalSessionsCopyFolder),
+            { clipboard.setText(AnnotatedString(row.folder ?: unknownLocation)) },
+            icon = KitIcons.copy,
+        ),
         KitMenuItem(
             stringResource(Res.string.sessionMenuArchive),
             { actions.archive(row.key) },

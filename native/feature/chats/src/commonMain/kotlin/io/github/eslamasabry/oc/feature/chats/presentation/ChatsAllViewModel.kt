@@ -16,6 +16,7 @@ import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
+import io.github.eslamasabry.oc.engine.agents.feed.ChatStatus
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
@@ -32,6 +33,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -51,6 +53,10 @@ public class ChatsAllViewModel(
     private val context: io.github.eslamasabry.oc.engine.settings.context.ContextUsageHistory? =
         null,
     private val previews: ConversationPreviews = NoConversationPreviews(),
+    /** Needs-you and unread come from the home feed: the server's session list does not carry them. */
+    private val feed: ConversationsFeed = QuietConversationsFeed(),
+    private val dispatchers: io.github.eslamasabry.oc.core.common.AppDispatchers? = null,
+    private val importFiles: Set<io.github.eslamasabry.oc.engine.agents.sessionimport.SessionImportFiles> = emptySet(),
 ) : ViewModel(), ChatsAllActions, ChatsPinActions {
     private val model =
         MutableStateFlow(
@@ -80,7 +86,9 @@ public class ChatsAllViewModel(
         model
             .map { current ->
                 // ANDR-1: a host with pin storage shows the row's visible pin action too.
-                val built = AllConversationsRules.build(current)
+                val built =
+                    AllConversationsRules.build(current)
+                        .let { it.copy(nowMs = kotlin.time.Clock.System.now().toEpochMilliseconds()) }
                 if (!pins.supported) built
                 else
                     built.copy(
@@ -111,6 +119,22 @@ public class ChatsAllViewModel(
                             }
                     )
                 }
+            }
+        }
+        // Needs you / unread per row, from the home feed (the same facts the home list marks).
+        viewModelScope.launch {
+            feed.snapshot.collect { snap ->
+                val next =
+                    snap.items
+                        .filter { it.status == ChatStatus.NeedsYou || it.finishedUnseen }
+                        .associate {
+                            AllConversationsRules.key(it.profileId, it.sessionId) to
+                                RowAttention(
+                                    needsYou = it.status == ChatStatus.NeedsYou,
+                                    unread = it.finishedUnseen && it.status == ChatStatus.Idle,
+                                )
+                        }
+                model.update { it.copy(attention = next) }
             }
         }
         viewModelScope.launch {
@@ -153,6 +177,16 @@ public class ChatsAllViewModel(
                         }
                         .map { it.profile }
                         .toSet(),
+                importCapable =
+                    if (dispatchers == null) emptySet()
+                    else
+                        live
+                            .filter {
+                                it.gateway.capabilities.value.sessionImportExport &&
+                                    it.gateway is io.github.eslamasabry.oc.core.domain.SessionTransferImportGateway
+                            }
+                            .map { it.profile }
+                            .toSet(),
                 stealCapable =
                     live
                         .filter {
@@ -794,12 +828,85 @@ public class ChatsAllViewModel(
         nav.open(ServersRoute.Home)
     }
 
+    private var importer: io.github.eslamasabry.oc.engine.agents.sessionimport.SessionImportEngine? = null
+
+    override fun openImport() {
+        if (model.value.importing != null) return
+        val capable = model.value.servers.filter { it.profile in model.value.importCapable }
+        when (capable.size) {
+            0 -> Unit
+            1 -> startImport(capable.single().profile)
+            else -> model.update { it.copy(importing = ImportModel(choices = capable)) }
+        }
+    }
+
+    override fun importPick(profile: ProfileId) {
+        if (profile in model.value.importCapable) startImport(profile)
+    }
+
+    private fun startImport(profile: ProfileId) {
+        val server = servers.firstOrNull { it.profile == profile } ?: return
+        val work = dispatchers ?: return
+        val engine =
+            io.github.eslamasabry.oc.engine.agents.sessionimport.SessionImportEngine(
+                server.gateway,
+                { servers.firstOrNull { it.profile == profile }?.gateway === server.gateway },
+                importFiles.firstOrNull(),
+                work,
+                io.github.eslamasabry.oc.core.model.ServerLocation(
+                    server.gateway.location.value.directory,
+                    server.gateway.location.value.workspace,
+                ),
+            )
+        importer?.close()
+        importer = engine
+        model.update { it.copy(importing = ImportModel(profile = profile, session = engine.state.value)) }
+        viewModelScope.launch {
+            engine.state.takeWhile { !it.closed }.collect { value ->
+                if (importer === engine)
+                    model.update { m -> m.copy(importing = m.importing?.copy(session = value)) }
+            }
+        }
+    }
+
+    override fun importChoose() {
+        importer?.let { engine -> viewModelScope.launch { engine.choose() } }
+    }
+
+    override fun importReview(text: String) {
+        importer?.let { engine -> viewModelScope.launch { engine.review(text) } }
+    }
+
+    override fun importDestination(directory: String, workspace: String) {
+        importer?.destination(directory, workspace)
+    }
+
+    override fun importSend() {
+        importer?.let { engine -> viewModelScope.launch { engine.send() } }
+    }
+
+    override fun importOpen() {
+        val engine = importer ?: return
+        val profile = model.value.importing?.profile ?: return
+        val session = engine.state.value.imported ?: return
+        if (!engine.mayOpen()) return
+        closeImport()
+        nav.openChat(ConversationRef(profile, session))
+    }
+
+    override fun closeImport() {
+        importer?.close()
+        importer = null
+        model.update { it.copy(importing = null) }
+    }
+
     private fun serverOf(key: String): ConversationServer? {
         val profile: ProfileId = AllConversationsRules.profileOf(key)
         return servers.firstOrNull { it.profile == profile }
     }
 
     override fun onCleared() {
+        importer?.close()
         commitDelete()
         super.onCleared()
     }
