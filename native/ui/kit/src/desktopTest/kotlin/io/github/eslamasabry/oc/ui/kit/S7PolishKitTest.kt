@@ -80,9 +80,10 @@ class S7PolishKitTest {
         }
     }
 
-    private fun androidx.compose.ui.test.ComposeUiTest.textLayout(tag: String): TextLayoutResult {
+    private fun androidx.compose.ui.test.ComposeUiTest.textLayout(tag: String, inner: Boolean = false): TextLayoutResult {
         val results = mutableListOf<TextLayoutResult>()
-        val node = onNodeWithTag(tag, useUnmergedTree = true).fetchSemanticsNode()
+        val tagged = onNodeWithTag(tag, useUnmergedTree = true)
+        val node = (if (inner) tagged.onChild() else tagged).fetchSemanticsNode()
         node.config[SemanticsActions.GetTextLayoutResult].action!!(results)
         return results.first()
     }
@@ -162,12 +163,13 @@ class S7PolishKitTest {
         onAllNodesWithContentDescription(label).fetchSemanticsNodes().first().boundsInRoot
 
     @Test
-    fun `P-008 a one-line model row is 56 dp with its star, and the list starts a step under the search`() =
+    fun `P-008 a one-line model row is 64 dp (the two-line floor) with its star, and the list starts a step under the search`() =
         runComposeUiTest {
             setContent { Themed { ModelSheet() } }
             val oneLine =
                 onNode(hasTestTag("chat-model-choice") and hasText("Model 5")).fetchSemanticsNode().boundsInRoot
-            assertEquals(56f, oneLine.height, 0.5f, "a one-line row keeps the 56 dp choice height")
+            // 0f235c6f84: choice rows floor at the two-line row height (64 dp, as Dart kit_choice_list), one line or two.
+            assertEquals(64f, oneLine.height, 0.5f, "a one-line row keeps the 64 dp two-line floor")
             val search = onNodeWithTag("chat-model-search").fetchSemanticsNode().boundsInRoot
             val first = onNodeWithTag("chat-model-default").fetchSemanticsNode().boundsInRoot
             assertEquals(8f, first.top - search.bottom, 0.5f, "a step (8 dp) between the field and the first row")
@@ -203,8 +205,10 @@ class S7PolishKitTest {
         }
         // A6 (scoreboard 2026-11-07, kit_notice_ok/warning/working): Flutter says an untitled notice at the body
         // size (lib/ui/kit/kit_notice.dart:470-472); the status line keeps P-014's secondary size.
-        for ((tag, size, line) in listOf(Triple("kit-notice-message", 16f, 24f), Triple("kit-status-message", 13f, 18f))) {
-            val style = textLayout(tag).layoutInput.style
+        // 23b67875e8: the status line's message is Body (16/24) too, and its tag sits on a Column that clears its
+        // semantics, so the text layout is read from the text inside it.
+        for ((tag, size, line) in listOf(Triple("kit-notice-message", 16f, 24f), Triple("kit-status-message", 16f, 24f))) {
+            val style = textLayout(tag, inner = tag == "kit-status-message").layoutInput.style
             assertEquals(size, style.fontSize.value, 0.01f, "$tag size")
             assertEquals(line, style.lineHeight.value, 0.01f, "$tag line")
             assertEquals(ink, style.color, "$tag keeps primary ink: it is the message, not a note")
