@@ -213,6 +213,49 @@ class NewConversationPhoneAgentTest {
         assertEquals(listOf<Pair<ProfileId, String?>>(server to "claude", server to null), host.chosen)
     }
 
+    private fun named(n: Int) = List(n) { NewConversationModel(ModelRef("p", "m$it"), "Model $it") }
+
+    private fun uiWith(server: List<NewConversationModel>, phone: List<NewConversationModel>? = null, busy: Boolean = false) =
+        io.github.eslamasabry.oc.feature.chats.presentation.NewConversationUi(
+            setup = NewConversationSetup(
+                directory = "/root/projects/app",
+                projects = emptyList(),
+                models = server,
+                agents = emptyList(),
+                model = null,
+                phone = NewConversationPhone(helper, listOf(claude), emptyList(), selected = null),
+            ),
+            phoneAgent = phone?.let { "claude" },
+            phoneModels = phone.orEmpty(),
+            phoneModelsBusy = busy,
+        )
+
+    @Test
+    fun `MODEL-ROW is a control only when there is a model to choose between`() {
+        assertTrue(uiWith(named(12)).modelChoosable, "the phone's OpenCode with many models")
+        assertTrue(uiWith(named(2)).modelChoosable)
+        assertFalse(uiWith(named(1), phone = named(1)).modelChoosable, "a phone agent with one model")
+        assertFalse(uiWith(named(5), phone = emptyList()).modelChoosable, "an agent that reports none")
+        assertFalse(uiWith(emptyList()).modelChoosable, "a server with none")
+        assertFalse(
+            uiWith(listOf(NewConversationModel(ModelRef("p", "default"), "Default"))).modelChoosable,
+            "the server's default alias is not a choice",
+        )
+        assertTrue(uiWith(named(5), phone = emptyList(), busy = true).modelChoosable, "still reading the agent's list")
+    }
+
+    @Test
+    fun `MODEL-ROW the model sheet never opens with nothing to choose`() {
+        val vm = vm(Host())
+        vm.choosePhoneAgent("claude")
+        assertFalse(vm.state.value.modelChoosable)
+        vm.sheet(io.github.eslamasabry.oc.feature.chats.presentation.NewConversationSheet.Models)
+        assertNull(vm.state.value.sheet)
+        vm.choosePhoneAgent(null)
+        vm.sheet(io.github.eslamasabry.oc.feature.chats.presentation.NewConversationSheet.Models)
+        assertNull(vm.state.value.sheet, "the server's single model is not a choice either")
+    }
+
     @Test
     fun `PHONE-AGENT the Model row shows the agent's models, not the server's`() {
         val host = Host()
