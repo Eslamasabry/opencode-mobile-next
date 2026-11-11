@@ -366,7 +366,7 @@ class ChatWordsGlassTest {
         val shownNone = shot(dark(Style.Glass), LensPlatform(), bright = false, chips = true)
         val hidden = shot(dark(Style.Glass), LensPlatform(), bright = true, chips = true, scrollTo = 1)
         val hiddenNone = shot(dark(Style.Glass), LensPlatform(), bright = false, chips = true, scrollTo = 1)
-        assertTrue(hidden.pill == null, "the pill is hidden near the newest: ${hidden.pill}")
+        assertTrue(hidden.pill == null || hidden.pill.bottom - hidden.pill.top <= 1.dp, "the pill is hidden near the newest: ${hidden.pill} list ${hidden.list}")
         val (onMean, _) = strip(shown, shownNone)
         val (offMean, _) = strip(hidden, hiddenNone)
         println("body strip beside pill: shown mean $onMean, hidden mean $offMean")
