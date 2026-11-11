@@ -42,6 +42,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
@@ -143,6 +144,7 @@ public fun PhoneNodeScreen(state: PhoneNodeUi, actions: PhoneNodeActions) {
                         stringResource(words.title),
                         body = words.body?.let { stringResource(it) },
                         icon = words.icon,
+                        size = KitStateSize.Inline,
                     )
                 }
                 if (installed && node.state != PhoneNodeState.Removing && node.state != PhoneNodeState.Installing) {

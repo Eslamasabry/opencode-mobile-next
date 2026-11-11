@@ -25,6 +25,7 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.words.res.chatUiJumpAnywhereForkRestoresAPromptFor
@@ -44,7 +45,6 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiYou
 import io.github.eslamasabry.oc.ui.words.res.commonRetry
 import io.github.eslamasabry.oc.ui.words.res.historyLoadOlder
 import io.github.eslamasabry.oc.ui.words.res.historyLoadedOnly
-import io.github.eslamasabry.oc.ui.words.res.kitSheetDismiss
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import kotlinx.coroutines.flow.drop
 import org.jetbrains.compose.resources.stringResource
@@ -56,7 +56,6 @@ internal fun ChatTimelineSheet(timeline: TimelineUi?, actions: ChatActions, nowM
         visible = timeline != null,
         onDismissRequest = actions::closeTimeline,
         title = stringResource(Res.string.chatUiMessageTimeline),
-        closeLabel = stringResource(Res.string.kitSheetDismiss),
         subtitle = if (timeline?.entries?.any { it.forkable } == true) stringResource(Res.string.chatUiJumpAnywhereForkRestoresAPromptFor) else null,
     ) {
         if (timeline == null) return@KitSheet
@@ -96,7 +95,7 @@ internal fun ChatTimelineSheet(timeline: TimelineUi?, actions: ChatActions, nowM
                 if (timeline.query.isNotBlank() && !timeline.partial) {
                     KitSearchNoMatch(timeline.query, { field.edit { replace(0, length, "") }; actions.timelineQuery("") }, Modifier.testTag("timeline-no-match"))
                 } else {
-                    KitStateView(kind = KitStateKind.Empty, title = stringResource(Res.string.chatUiNoMatchingMessages), icon = KitIcons.history, modifier = Modifier.testTag("timeline-empty"))
+                    KitStateView(kind = KitStateKind.Empty, title = stringResource(Res.string.chatUiNoMatchingMessages), icon = KitIcons.history, modifier = Modifier.testTag("timeline-empty"), size = KitStateSize.Inline)
                 }
             }
         }

@@ -115,6 +115,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kitchat.diff.DiffFile
@@ -392,22 +393,26 @@ private fun ChangesContent(state: ChangesUi, actions: ChangesActions) {
                                         KitStateKind.Empty,
                                         stringResource(Res.string.kitDiffNoChanges),
                                         body = stringResource(Res.string.reviewNoChangesBody),
+                                        size = KitStateSize.Inline,
                                     )
                                 state.notRepository ->
                                     KitStateView(
                                         KitStateKind.Empty,
                                         stringResource(Res.string.reviewProjectNotGitTitle),
                                         body = stringResource(Res.string.reviewProjectNotGitBody),
+                                        size = KitStateSize.Inline,
                                     )
                                 state.scope == ReviewScope.WorkingTree ->
                                     KitStateView(
                                         KitStateKind.Empty,
                                         stringResource(Res.string.e7LibraryNoUncommittedChanges),
+                                        size = KitStateSize.Inline,
                                     )
                                 else ->
                                     KitStateView(
                                         KitStateKind.Empty,
                                         stringResource(Res.string.kitDiffNoChanges),
+                                        size = KitStateSize.Inline,
                                     )
                             }
                         }

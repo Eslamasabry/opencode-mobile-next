@@ -153,7 +153,6 @@ internal fun VoiceConversationControls(
         visible = state.pickingReplyVoice,
         onDismissRequest = presenter::closeReplyVoices,
         title = stringResource(Res.string.readAloudVoiceTitle),
-        closeLabel = stringResource(Res.string.e7VoiceUiNotNow),
     ) {
         KitChoiceList(
             choices =
