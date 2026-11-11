@@ -347,11 +347,12 @@ class KitFloatingBarTest {
             val (statusMean, statusStep) = column(s.image, W / 2f, 1f, STATUS_DP * STATUS_EDGE_SOLID_SHARE - 1f)
             assertTrue(statusMean >= g + 20f, "$page: content under the status bar, mean $statusMean over ground $g")
             assertTrue(statusStep <= BLUR_STEP, "$page: cleared to a blur under the status bar, a step of $statusStep")
-            // Inside the capsule: the rows show through its glass, blurred.
+            // Inside the capsule, past the end of the title's words: the rows show through its glass, blurred.
             val capsule = s.bounds["kit-liquid-bar"]!!
             debugPng(s.image, "scrolled-$page")
-            val (capsuleMean, capsuleStep) = column(s.image, W / 2f, capsule.top.value + 8f, capsule.bottom.value - 8f)
-            println("$page capsule $capsule, column at ${W / 2f}: " + stepsAt(s.image, W / 2f, capsule.top.value + 8f, capsule.bottom.value - 8f))
+            val inside = capsule.right.value - 24f
+            val (capsuleMean, capsuleStep) = column(s.image, inside, capsule.top.value + 8f, capsule.bottom.value - 8f)
+            println("$page capsule $capsule, column at $inside: " + stepsAt(s.image, inside, capsule.top.value + 8f, capsule.bottom.value - 8f))
             assertTrue(capsuleMean >= g + 15f, "$page: content behind the capsule, mean $capsuleMean over ground $g")
             assertTrue(capsuleStep <= BLUR_STEP, "$page: blurred behind the capsule, a step of $capsuleStep")
             // Beside the capsule (its 6 dp margin) the rows run on sharp: they really pass under the bar.
