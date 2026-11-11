@@ -80,6 +80,7 @@ import io.github.eslamasabry.oc.ui.words.res.p12PhoneFolder
 import io.github.eslamasabry.oc.ui.words.res.p12PhoneFolderUnavailable
 import io.github.eslamasabry.oc.ui.words.res.p12ProjectsLoadFailed
 import io.github.eslamasabry.oc.ui.words.res.p12ProjectsOnServer
+import io.github.eslamasabry.oc.ui.words.res.p12ProjectsOnThisPhone
 import io.github.eslamasabry.oc.ui.words.res.p12ProjectsTitle
 import io.github.eslamasabry.oc.ui.words.res.projectFolderCreateFailedTitle
 import io.github.eslamasabry.oc.ui.words.res.projectFolderCreateHelper
@@ -360,7 +361,11 @@ private fun StartRows(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
 
 @Composable
 private fun ServerProjects(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
-    KitRowGroup(label = stringResource(Res.string.p12ProjectsOnServer, state.serverName)) {
+    KitRowGroup(
+        label =
+            if (state.canBrowsePhone) stringResource(Res.string.p12ProjectsOnThisPhone)
+            else stringResource(Res.string.p12ProjectsOnServer, state.serverName)
+    ) {
         val failure = state.projectsFailure
         // Cache-first: a failure never swaps the rows out; it is a notice above the kept ones.
         if (failure != null)

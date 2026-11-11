@@ -69,6 +69,8 @@ public data class DockEntry(
     val pinned: Boolean = false,
     /** The server this conversation lives on (the saved profile's name), when the feed knows it. */
     val serverName: String? = null,
+    /** The mark slug of the server's own agent (OpenCode, Codex), when the host said; null on an agents server. */
+    val serverMark: String? = null,
 ) {
     val name: String? get() = nickname ?: title
 }
@@ -132,6 +134,7 @@ public data class DockHidden(
     val state: DockState,
     /** The ring this sub-agent belongs to; null for a conversation that is a ring itself. */
     val parent: ConversationRef?,
+    val serverMark: String? = null,
 ) {
     val name: String? get() = nickname ?: title
 }
@@ -276,6 +279,9 @@ public sealed interface DockEvent {
     /** The saved server's name, for entries to carry. Blank clears it. */
     public data class ServerName(val profile: ProfileId, val name: String?) : DockEvent
 
+    /** The mark slug of the agent a saved server runs for every conversation (OpenCode, Codex); null for none. */
+    public data class ServerMark(val profile: ProfileId, val slug: String?) : DockEvent
+
     public data class SetPlacement(val placement: DockPlacement) : DockEvent
 
     public data object Tuck : DockEvent
@@ -381,6 +387,7 @@ public class DockModel private constructor(private val s: Snapshot) {
         /** Profiles whose connection is live (their pins were loaded). */
         val online: Set<ProfileId> = emptySet(),
         val servers: Map<ProfileId, String> = emptyMap(),
+        val marks: Map<ProfileId, String> = emptyMap(),
         val placement: DockPlacement = DockPlacement(),
         val tracked: Map<ConversationRef, Tracked> = emptyMap(),
         val names: Map<ConversationRef, String> = emptyMap(),
@@ -473,6 +480,7 @@ public class DockModel private constructor(private val s: Snapshot) {
                         pinned = pinned.filter { it.profileId != e.profile },
                         online = online - e.profile,
                         servers = servers - e.profile,
+                        marks = marks - e.profile,
                         known = known.filterKeys { it.profileId != e.profile }.toPersistentMap(),
                         tracked = tracked.filterKeys { it.profileId != e.profile },
                         names = names.filterKeys { it.profileId != e.profile },
@@ -520,6 +528,8 @@ public class DockModel private constructor(private val s: Snapshot) {
                 }
                 is DockEvent.ServerName ->
                     if (e.name.isNullOrBlank()) copy(servers = servers - e.profile) else if (servers[e.profile] == e.name) this else copy(servers = servers + (e.profile to e.name))
+                is DockEvent.ServerMark ->
+                    if (e.slug.isNullOrBlank()) copy(marks = marks - e.profile) else if (marks[e.profile] == e.slug) this else copy(marks = marks + (e.profile to e.slug))
                 is DockEvent.SetPlacement -> if (placement == e.placement) this else copy(placement = e.placement)
                 is DockEvent.Remove -> remove(e.ref)
                 is DockEvent.Restore -> if (e.ref in removed) copy(removed = removed - e.ref) else this
@@ -819,6 +829,7 @@ public class DockModel private constructor(private val s: Snapshot) {
                         removable = r.ref != openRoot,
                         pinned = r.ref in pinned,
                         serverName = servers[r.ref.profileId],
+                        serverMark = marks[r.ref.profileId],
                     )
                 }
             val live = members.count { it.state != DockState.Idle }
@@ -838,7 +849,7 @@ public class DockModel private constructor(private val s: Snapshot) {
                     if (state == DockState.Idle) {
                         null
                     } else {
-                        DockHidden(ref, t.title, names[ref], t.agent, state, rootOf(ref).takeIf { it != ref })
+                        DockHidden(ref, t.title, names[ref], t.agent, state, rootOf(ref).takeIf { it != ref }, marks[ref.profileId])
                     }
                 }
             return DockUi(

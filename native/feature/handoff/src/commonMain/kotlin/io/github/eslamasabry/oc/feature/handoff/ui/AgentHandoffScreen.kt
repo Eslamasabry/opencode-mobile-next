@@ -67,14 +67,14 @@ public fun AgentHandoffScreen(state: AgentHandoffUi, actions: AgentHandoffAction
                         kind = KitStateKind.Calm,
                         title = stringResource(Res.string.handoffNativeUnavailable),
                         body = blockWords(state.block)
-                            ?: stringResource(Res.string.handoffNativeUnavailableBody),
+                            ?: stringResource(Res.string.handoffNativeNotStartedBody),
                         primary =
                             KitAction(
                                 stringResource(Res.string.handoffNativeRefresh),
                                 actions::refresh,
                             ),
                         secondary =
-                            if (state.block == HandoffBlock.NotConfirmed)
+                            if (state.offersAgents())
                                 KitAction(
                                     stringResource(Res.string.handoffNativeSetup),
                                     actions::setup,

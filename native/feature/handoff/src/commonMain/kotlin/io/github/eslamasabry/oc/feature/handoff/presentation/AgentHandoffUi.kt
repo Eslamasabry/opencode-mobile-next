@@ -49,6 +49,14 @@ public fun AgentHandoffUi.page(): HandoffPage =
         else -> HandoffPage.Choose
     }
 
+/**
+ * The refused page offers "Open Agents" unless the reason is the conversation itself (a computer, a folder outside
+ * the phone's projects, no folder): then Agents cannot help. A refusal with no known reason, or "agents not
+ * confirmed", is exactly when checking the agents is the way forward.
+ */
+public fun AgentHandoffUi.offersAgents(): Boolean =
+    block == null || block == HandoffBlock.NotConfirmed
+
 public interface AgentHandoffActions {
     public fun back()
 

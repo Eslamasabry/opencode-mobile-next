@@ -10,4 +10,6 @@
     <string name="reviewUndoUnavailable">هذا الخادم لا يستطيع التراجع بدءًا من طلب.</string>
     <string name="reviewToolEvidence">بحسب ما أبلغت عنه أدوات الوكيل. التغييرات التي أجرتها الأوامر غير مدرجة.</string>
     <string name="reviewSendBackFailed">تعذّر وضع ملاحظتك في الرسالة. حاول مرة أخرى.</string>
+    <string name="reviewProjectNotGitTitle">ليس مشروع Git</string>
+    <string name="reviewProjectNotGitBody">لا يمكن عرض التغييرات إلا لمشروع تحت Git. ابدأ تتبّعه من صفحة Git للمشروع لتظهر هنا.</string>
 </resources>

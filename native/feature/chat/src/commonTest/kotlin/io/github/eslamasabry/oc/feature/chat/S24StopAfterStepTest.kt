@@ -56,4 +56,16 @@ class S24StopAfterStepTest {
         assertFalse(live.stoppingAfterStep)
         assertTrue(live.canStopAfterStep)
     }
+
+    @Test
+    fun `the stop note is a control message, never drawn as the person's own bubble`() {
+        running(steers = true)
+        presenter.stopAfterStep(note)
+        world.transcript.update {
+            it.copy(rows = kotlinx.collections.immutable.persistentListOf(prompt("a", "hello"), prompt("b", note)))
+        }
+        assertEquals(listOf("hello"), presenter.current().rows.filterIsInstance<io.github.eslamasabry.oc.engine.transcript.state.PromptRow>().map { it.text })
+        presenter.undoStopAfterStep() // the withdrawn note leaves nothing behind either
+        assertEquals(1, presenter.current().rows.size)
+    }
 }

@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.chats.dock
 
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.engine.agents.persona.AgentPersona
 import io.github.eslamasabry.oc.engine.attention.dock.DockChild
 import io.github.eslamasabry.oc.engine.attention.dock.DockEntry
 import io.github.eslamasabry.oc.engine.attention.dock.DockPeek
@@ -57,6 +58,16 @@ public object DockKitMapper {
     /** A key no two conversations share (the profile id's length keeps "a/b"+"c" apart from "a"+"b/c"). */
     public fun key(ref: ConversationRef): String = "${ref.profileId.raw.length}:${ref.profileId.raw}/${ref.sessionId.raw}"
 
+    /**
+     * The mark a ring draws, the one the home row shows for the conversation: the agent's own mark when the session
+     * names a known agent (an agents server's "claude", "codex"), else the server's own agent mark (OpenCode, Codex).
+     * An OpenCode session's agent is a mode such as "build", which is no mark: it falls through to the server's.
+     * Null when neither is known, so the kit draws the monogram of the name.
+     */
+    public fun markOf(agent: String?, serverMark: String?): String? =
+        agent?.takeIf { it.isNotBlank() }?.let { AgentPersona.of(it).markSlug }?.takeIf { it.isNotEmpty() }
+            ?: serverMark?.takeIf { it.isNotBlank() }
+
     public fun state(state: DockState): KitDockRingState =
         when (state) {
             is DockState.WorkingWithTasks -> KitDockRingState.WorkingWithTasks(state.done, state.total)
@@ -105,7 +116,7 @@ public object DockKitMapper {
                 KitDockRing(
                     key = k,
                     name = named(e.name),
-                    markId = e.agent?.takeIf { it.isNotBlank() },
+                    markId = markOf(e.agent, e.serverMark),
                     state = state(e.state),
                     pulse = e.pulse,
                     children = e.children.map(::child),
@@ -121,7 +132,7 @@ public object DockKitMapper {
             ui.hidden.map { h ->
                 val k = key(h.ref)
                 refs[k] = h.ref
-                KitDockRing(key = k, name = named(h.name), markId = h.agent?.takeIf { it.isNotBlank() }, state = state(h.state))
+                KitDockRing(key = k, name = named(h.name), markId = markOf(h.agent, h.serverMark), state = state(h.state))
             }
         val model =
             KitDockModel(
