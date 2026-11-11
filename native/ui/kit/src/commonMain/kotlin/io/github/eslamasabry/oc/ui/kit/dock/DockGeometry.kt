@@ -314,19 +314,25 @@ internal enum class DockTargetKind { Header, Child, More, Open, Allow, Deny, Sto
 /** One target (or a block of words) in the swell, relative to B's top-left corner at full growth. */
 internal data class DockTarget(val kind: DockTargetKind, val child: Int, val rect: DockRect)
 
-/** The targets a ring offers in the swell, in order: Open (peek only), Allow and Deny or Stop, Rename, Remove. */
+/**
+ * The targets a ring offers in the swell, in order (owner 2026-11-11: no shortened action words). The scrub swell shows
+ * only what belongs to the ring's state, with room for its full words: Open, then Allow and Deny for a request or Stop
+ * while it runs. Rename and Remove live in the held ring's card (the peek) and in the list, where there is room.
+ */
 internal fun swellActions(state: KitDockRingState, kind: SwellKind): List<DockTargetKind> {
     if (kind == SwellKind.Rename) return emptyList()
     val list = ArrayList<DockTargetKind>(5)
-    if (kind == SwellKind.Peek) list += DockTargetKind.Open
+    list += DockTargetKind.Open
     if (state == KitDockRingState.NeedsYou) {
         list += DockTargetKind.Allow
         list += DockTargetKind.Deny
     } else if (state.running) {
         list += DockTargetKind.Stop
     }
-    list += DockTargetKind.Rename
-    list += DockTargetKind.Remove
+    if (kind == SwellKind.Peek) {
+        list += DockTargetKind.Rename
+        list += DockTargetKind.Remove
+    }
     return list
 }
 

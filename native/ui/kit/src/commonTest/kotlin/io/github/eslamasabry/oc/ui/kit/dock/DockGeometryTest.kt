@@ -187,11 +187,16 @@ class DockGeometryTest {
     }
 
     @Test
-    fun `the swell offers Allow and Deny for a request, Stop while working, and always Rename and Remove`() {
-        assertEquals(listOf(DockTargetKind.Allow, DockTargetKind.Deny, DockTargetKind.Rename, DockTargetKind.Remove), swellActions(KitDockRingState.NeedsYou, SwellKind.Scrub))
-        assertEquals(listOf(DockTargetKind.Stop, DockTargetKind.Rename, DockTargetKind.Remove), swellActions(KitDockRingState.Thinking, SwellKind.Scrub))
-        assertEquals(listOf(DockTargetKind.Rename, DockTargetKind.Remove), swellActions(KitDockRingState.Finished, SwellKind.Scrub))
-        assertEquals(DockTargetKind.Open, swellActions(KitDockRingState.Idle, SwellKind.Peek).first())
+    fun `the scrub swell offers Open with Allow and Deny for a request or Stop while working, the card adds Rename and Remove`() {
+        assertEquals(listOf(DockTargetKind.Open, DockTargetKind.Allow, DockTargetKind.Deny), swellActions(KitDockRingState.NeedsYou, SwellKind.Scrub))
+        assertEquals(listOf(DockTargetKind.Open, DockTargetKind.Stop), swellActions(KitDockRingState.Thinking, SwellKind.Scrub))
+        assertEquals(listOf(DockTargetKind.Open), swellActions(KitDockRingState.Finished, SwellKind.Scrub))
+        assertEquals(listOf(DockTargetKind.Open), swellActions(KitDockRingState.Idle, SwellKind.Scrub))
+        assertEquals(
+            listOf(DockTargetKind.Open, DockTargetKind.Allow, DockTargetKind.Deny, DockTargetKind.Rename, DockTargetKind.Remove),
+            swellActions(KitDockRingState.NeedsYou, SwellKind.Peek),
+        )
+        assertEquals(listOf(DockTargetKind.Open, DockTargetKind.Rename, DockTargetKind.Remove), swellActions(KitDockRingState.Idle, SwellKind.Peek))
         assertTrue(swellActions(KitDockRingState.NeedsYou, SwellKind.Rename).isEmpty())
     }
 

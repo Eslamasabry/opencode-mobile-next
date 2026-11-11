@@ -117,10 +117,10 @@ class DockGestureTest {
         g.move(emptyX, emptyY, 60L, h)
         assertEquals(DockOutcome.Keep(2, peek = false), g.up(emptyX, emptyY, 0f, h))
         assertTrue(g.keptOpen)
-        val (rx, ry) = h.centreOf(DockTargetKind.Rename)
+        val (rx, ry) = h.centreOf(DockTargetKind.Deny)
         g.down(DockZone.Swell, rx, ry, 1000L, h)
         assertEquals(DockMode.SwellTap, g.mode)
-        assertEquals(DockOutcome.Target(2, DockTargetKind.Rename, -1), g.up(rx, ry, 0f, h))
+        assertEquals(DockOutcome.Target(2, DockTargetKind.Deny, -1), g.up(rx, ry, 0f, h))
     }
 
     @Test

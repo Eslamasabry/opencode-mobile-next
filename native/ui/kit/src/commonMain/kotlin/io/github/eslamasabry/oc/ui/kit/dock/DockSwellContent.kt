@@ -2,6 +2,9 @@ package io.github.eslamasabry.oc.ui.kit.dock
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.absoluteOffset
@@ -14,7 +17,10 @@ import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -195,8 +201,9 @@ private fun MiniCell(child: KitDockChild, inks: DockInks, hot: Boolean) {
 
 /**
  * An action target: its glyph over its word. At least 48 dp each way. The word keeps [ACTION_WORD_INSET] in from each
- * side of its own cell, so two neighbours' words always keep the kit's gap between them; a word that does not fit ends
- * in "..." inside its cell (device QA 2026-11-11: "RenameRemove").
+ * side of its own cell, so two neighbours' words always keep the kit's gap between them (device QA 2026-11-11:
+ * "RenameRemove"). A word is never shortened (owner 2026-11-11): one that does not fit its cell whole (a narrow cell, a
+ * large text size) leaves the cell to its glyph alone; the cell's own label still says the word to assistive technology.
  */
 @Composable
 private fun ActionCell(kind: DockTargetKind, words: KitDockWords) {
@@ -215,9 +222,28 @@ private fun ActionCell(kind: DockTargetKind, words: KitDockWords) {
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         KitIcon(icon, size = KitIconSize.Small, tone = if (kind == DockTargetKind.Remove) TextTone.Secondary else TextTone.Primary)
-        KitText(words.targetWord(kind), role = TypeRole.Caption, tone = TextTone.Secondary, kind = KitTextKind.Frame, maxLines = 1)
+        val word = words.targetWord(kind)
+        var iconOnly by remember(word, LocalDensity.current.fontScale) { mutableStateOf(false) }
+        if (!iconOnly) {
+            KitText(word, Modifier.wholeOrNothing { iconOnly = true }, role = TypeRole.Caption, tone = TextTone.Secondary, kind = KitTextKind.Frame, maxLines = 1)
+        }
     }
 }
+
+/**
+ * Lays out a one-line word at its whole width; when that is wider than the room it is given, it is not placed and
+ * [tooWide] is called (the cell then drops it), so it is never drawn cut or with an ellipsis.
+ */
+private fun Modifier.wholeOrNothing(tooWide: () -> Unit): Modifier =
+    layout { measurable, constraints ->
+        val whole = measurable.measure(constraints.copy(minWidth = 0, maxWidth = Constraints.Infinity))
+        if (constraints.hasBoundedWidth && whole.width > constraints.maxWidth) {
+            tooWide()
+            layout(0, 0) {}
+        } else {
+            layout(whole.width, whole.height) { whole.place(0, 0) }
+        }
+    }
 
 /** The nickname field, right of the ridden-out ring, over the strip, under the thumb. Enter or a tap away saves. */
 @Composable
