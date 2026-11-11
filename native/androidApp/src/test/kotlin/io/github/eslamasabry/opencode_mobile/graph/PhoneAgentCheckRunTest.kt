@@ -31,7 +31,7 @@ class PhoneAgentCheckRunTest {
         override suspend fun saveProof() = save.also { calls += "save" }
     }
 
-    private fun run(steps: Steps, tooOld: Boolean = false) =
+    private suspend fun run(steps: Steps, tooOld: Boolean = false) =
         PhoneAgentCheckRun(steps, "1.2.3", helperTooOld = { tooOld }).run()
 
     @Test
