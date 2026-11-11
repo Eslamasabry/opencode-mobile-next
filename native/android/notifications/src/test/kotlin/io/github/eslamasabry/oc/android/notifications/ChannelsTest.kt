@@ -67,7 +67,7 @@ class ChannelsTest {
         assertFalse(dock.canShowBadge())
         // The old channel was created without the private setting and a channel cannot gain it later: it stays
         // as it was and no longer carries the row.
-        assertEquals(Notification.VISIBILITY_NO_OVERRIDE, manager.getNotificationChannel("opencode_live_connection").lockscreenVisibility)
+        assertEquals(NotificationManager.VISIBILITY_NO_OVERRIDE, manager.getNotificationChannel("opencode_live_connection").lockscreenVisibility)
     }
 
     @Test
