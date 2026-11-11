@@ -7,6 +7,8 @@ import io.github.eslamasabry.oc.feature.agents.hub.AgentsUi
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallFailure
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallIssue
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallPhase
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallation
+import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
@@ -30,16 +32,21 @@ internal fun AgentInstallPanel(
     state.installingAgent?.let { agent ->
         val size = agent.downloadBytes?.let(::agentPayloadSize)
         val needsPhoneSetup = !state.phone.available || state.phone.owner == null
+        // Known before the press: this phone cannot fit the install, so Install waits and the review says why.
+        val short = state.installSpace?.takeIf { it.short }
         val installEnabled =
-            KitEnabled.of(
-                // The live row, not the one captured when the review opened (another install may have started since);
-                // a failed or cut-short install of this agent may always be tried again (the presenter's own rule).
-                ((state.phone.agents.firstOrNull { it.id == agent.id } ?: agent).installable ||
-                    state.phone.installation?.let {
-                        it.id == agent.id && it.phase != PhoneAgentInstallPhase.Installing
-                    } == true) && enabled.isEnabled,
-                stringResource(Res.string.linuxAgentInstallBusy),
-            )
+            if (short != null) KitEnabled.Disabled(stringResource(Res.string.linuxAgentInstallSpace))
+            else
+                KitEnabled.of(
+                    // The live row, not the one captured when the review opened (another install may have started
+                    // since); a failed or cut-short install of this agent may always be tried again (the presenter's
+                    // own rule).
+                    ((state.phone.agents.firstOrNull { it.id == agent.id } ?: agent).installable ||
+                        state.phone.installation?.let {
+                            it.id == agent.id && it.phase != PhoneAgentInstallPhase.Installing
+                        } == true) && enabled.isEnabled,
+                    stringResource(Res.string.linuxAgentInstallBusy),
+                )
         KitSheet(
             visible = true,
             onDismissRequest = actions::dismissInstall,
@@ -80,6 +87,27 @@ internal fun AgentInstallPanel(
             if (agent.id == "gemini") KitNotice(stringResource(Res.string.agentsGeminiMigrationNote))
             if (size != null) KitText(stringResource(Res.string.agentsSetupSizeNote, size))
             if (needsPhoneSetup) KitNotice(stringResource(Res.string.agentsCatalogNeedsPhoneSetup))
+            // What the install needs, the shared parts this phone does not have yet included, and what it has.
+            val space = state.installSpace
+            if (space != null && !space.short)
+                KitText(
+                    stringResource(
+                        Res.string.agentsInstallSpaceFits,
+                        agentPayloadSize(space.neededBytes),
+                        agentPayloadSize(space.freeBytes),
+                    )
+                )
+            if (short != null)
+                KitNotice(
+                    stringResource(
+                        Res.string.agentsInstallNeedsSpace,
+                        agent.name,
+                        agentPayloadSize(short.neededBytes),
+                        agentPayloadSize(short.freeBytes),
+                    ),
+                    tone = StatusTone.Attention,
+                    actions = listOf(freeUpSpace(actions)),
+                )
         }
     }
     state.installIssue?.let { issue ->
@@ -92,6 +120,7 @@ internal fun AgentInstallPanel(
                 }
             ),
             modifier,
+            report = if (issue == PhoneAgentInstallIssue.Space) freeUpSpace(actions) else null,
         )
     }
     val installation = state.phone.installation ?: return
@@ -119,24 +148,40 @@ internal fun AgentInstallPanel(
                     enabled = enabled.isEnabled,
                     disabledReason = waiting,
                 )
-            val words =
-                stringResource(
-                    if (installation.phase == PhoneAgentInstallPhase.Interrupted)
-                        Res.string.agentsInstallInterruptedNow
-                    else failedWords(installation.failure),
-                    name,
-                )
             KitErrorNotice(
-                words,
+                installResultWords(installation, name),
                 modifier,
                 details = installation.details,
                 detailsLabel = stringResource(Res.string.kitDetails),
                 retry = retry,
+                // Short of space: the way forward is the phone's storage, beside Try again.
+                report =
+                    if (installation.failure == PhoneAgentInstallFailure.Storage) freeUpSpace(actions) else null,
                 dismiss = dismiss,
             )
         }
     }
 }
+
+/** The full sentence for a failed or cut-short install of [name]: what happened and the way forward. */
+@Composable
+internal fun installResultWords(installation: PhoneAgentInstallation, name: String): String =
+    stringResource(
+        if (installation.phase == PhoneAgentInstallPhase.Interrupted) Res.string.agentsInstallInterruptedNow
+        else failedWords(installation.failure),
+        name,
+    )
+
+/** "Free up space": this phone's page, where its storage is measured and cleared. */
+@Composable
+private fun freeUpSpace(actions: AgentsActions): KitLineAction =
+    KitLineAction(
+        stringResource(Res.string.linuxMgrFreeUp),
+        {
+            actions.dismissInstall()
+            actions.openPhone()
+        },
+    )
 
 private fun failedWords(failure: PhoneAgentInstallFailure?) =
     when (failure) {
