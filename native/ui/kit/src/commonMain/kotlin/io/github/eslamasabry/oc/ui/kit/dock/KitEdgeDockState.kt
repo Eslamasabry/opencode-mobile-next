@@ -325,6 +325,12 @@ public class KitEdgeDockState internal constructor() {
         return outline
     }
 
+    /**
+     * How far the strip's own parts (rings, the +) stand in from the edge while the list comes off it, so they stay
+     * inside box A, which rides inside the pane (dp, toward the middle).
+     */
+    internal fun stripShift(): Float = if (panelX.value > 0.001f) max(0f, widthDp - listOuterSide(widthDp, panelX.value)) else 0f
+
     /** The list's box at full size (edge frame, dp). */
     internal fun panelTarget(): DockBox = panelBoxNow(top.value)
 

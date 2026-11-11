@@ -260,7 +260,7 @@ private fun RingRow(ring: KitDockRing, current: Boolean, words: KitDockWords, in
         }
         Spacer(Modifier.width(8.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.Center) {
-            KitText(ring.name, role = TypeRole.RowTitle, kind = KitTextKind.Frame, maxLines = 1)
+            KitText(dockTitleLine(ring.name), role = TypeRole.RowTitle, kind = KitTextKind.Frame, maxLines = 1)
             // A blank state line takes no line: the name and the last line close up.
             val line = words.stateLine(ring)
             if (line.isNotBlank()) KitText(line, role = TypeRole.Caption, tone = if (alert) TextTone.Attention else TextTone.Accent.takeIf { ring.state.running } ?: TextTone.Secondary, kind = KitTextKind.Frame, maxLines = 1)
@@ -298,7 +298,7 @@ private fun ChildRows(state: KitEdgeDockState, ring: KitDockRing, currentChild: 
                 )
                 if (c.key == currentChild) drawCircle(inks.ink, 11f * density, alpha = 0.08f)
             }
-            KitText(c.name, role = TypeRole.Label, kind = KitTextKind.Frame, maxLines = 1)
+            KitText(dockTitleLine(c.name), role = TypeRole.Label, kind = KitTextKind.Frame, maxLines = 1)
             val alert = c.state == KitDockRingState.NeedsYou || c.state == KitDockRingState.Failed
             val word = words.stateWord(c.state)
             if (word.isNotBlank()) KitText(word, role = TypeRole.Caption, tone = if (alert) TextTone.Attention else TextTone.Secondary, kind = KitTextKind.Frame, maxLines = 1)
@@ -320,6 +320,13 @@ private fun ChildRows(state: KitEdgeDockState, ring: KitDockRing, currentChild: 
         }
     }
 }
+
+/**
+ * A name shown on one line, with no break opportunity: the platform's one-line cut at a space drops the rest of the
+ * title without marking it (device QA run 5, "Quarterly budget review for the" ended with no "..."), while a line
+ * with nothing to break at is cut by the overflow and ends in the mark.
+ */
+internal fun dockTitleLine(name: String): String = name.replace(' ', '\u00A0')
 
 /** The list's padding on the side toward the screen's middle (dp). */
 private const val PANEL_INNER_PAD = 8f
