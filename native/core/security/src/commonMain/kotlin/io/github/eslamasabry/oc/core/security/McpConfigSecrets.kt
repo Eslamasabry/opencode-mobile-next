@@ -37,12 +37,13 @@ internal fun Redactor.registerMcpServers(container: JsonObject) {
     for ((name, value) in container) {
         val item = value as? JsonObject ?: continue
         when {
-            isMcpServer(item) -> registerServerValues(item)
             // OpenCode 2 nests the servers one level down: `mcp.servers.<name>` (2.1.1 and 2.2.5 Config.InfoEncoded).
-            name == "servers" ->
+            // Checked first: a server the person named `env` or `headers` must not make the map look like one server.
+            name == "servers" && !hasServerShape(item) ->
                 for (server in item.values) {
                     if (server is JsonObject && isMcpServer(server)) registerServerValues(server)
                 }
+            isMcpServer(item) -> registerServerValues(item)
         }
     }
 }
@@ -76,14 +77,17 @@ internal fun Redactor.registerHeaderMaps(subtree: JsonElement) {
  * A local or remote server object: a known `type`, a `command`, a `url` (2.2.5 Mcp.Local/RemoteConfigEncoded), or an
  * environment/headers map or list (a partial entry is still a server's values).
  */
-private fun isMcpServer(item: JsonObject): Boolean {
+private fun isMcpServer(item: JsonObject): Boolean =
+    hasServerShape(item) || PAIR_MEMBERS.any { item[it] is JsonObject || item[it] is JsonArray }
+
+/** A known `type` string, a `command` (list or string) or a `url` string: a server, never a map of servers. */
+private fun hasServerShape(item: JsonObject): Boolean {
     val type = (item["type"] as? JsonPrimitive)?.takeIf { it.isString }?.content?.lowercase()
     val command = item["command"]
     return (type != null && type in SERVER_TYPES) ||
         command is JsonArray ||
         (command as? JsonPrimitive)?.isString == true ||
-        (item["url"] as? JsonPrimitive)?.isString == true ||
-        PAIR_MEMBERS.any { item[it] is JsonObject || item[it] is JsonArray }
+        (item["url"] as? JsonPrimitive)?.isString == true
 }
 
 private fun Redactor.registerServerValues(server: JsonObject) {
