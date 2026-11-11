@@ -5,9 +5,9 @@
     <string name="stateDemoTitle">Démo hors ligne</string>
     <string name="stateDemoDisclosure">Conversation simulée. Aucun serveur, fichier ni réglage enregistré n’est modifié. Quitter efface cette démo.</string>
     <string name="stateDemoPrompt">Rends le message de bienvenue plus chaleureux.</string>
-    <string name="stateDemoReply">Je vais remplacer le message d’accueil de welcome.txt, «\u00A0%1$s\u00A0», par «\u00A0%2$s\u00A0».</string>
-    <string name="stateDemoAllowed">C’est fait. welcome.txt affiche maintenant «\u00A0%1$s\u00A0».</string>
-    <string name="stateDemoDenied">D’accord, je n’ai pas touché à welcome.txt.</string>
+    <string name="stateDemoReply">Je vais changer le message d’accueil dans welcome.txt, de «\u00A0%1$s\u00A0» à «\u00A0%2$s\u00A0».</string>
+    <string name="stateDemoAllowed">C’est fait. welcome.txt indique maintenant «\u00A0%1$s\u00A0».</string>
+    <string name="stateDemoDenied">D’accord, j’ai laissé welcome.txt tel quel.</string>
     <string name="stateDemoBefore">Bonjour</string>
     <string name="stateDemoAfter">Bienvenue à bord\u00A0!</string>
     <string name="stateDemoMore">La démo s’arrête ici. Connectez un serveur pour travailler sur vos propres projets.</string>

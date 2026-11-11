@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="widget_ask_outside_write">写入此项目之外？</string>
+    <string name="widget_ask_outside_read">读取此项目之外？</string>
+    <string name="widget_ask_outside_run">在此项目之外运行命令？</string>
+    <string name="widget_ask_directory">在此项目之外工作？</string>
+    <string name="widget_ask_command">运行此命令？</string>
+    <string name="widget_ask_edit">编辑此文件？</string>
+    <string name="widget_ask_read">读取此文件？</string>
+    <string name="widget_ask_permission">使用 %1$s</string>
+</resources>

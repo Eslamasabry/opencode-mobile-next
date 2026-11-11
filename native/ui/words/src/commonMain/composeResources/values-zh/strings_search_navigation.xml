@@ -54,7 +54,7 @@
     <string name="nativeSearchPlaceLanguage">语言</string>
     <string name="nativeSearchAliasesLanguage">阿拉伯语; 英语; 区域</string>
     <string name="nativeSearchPlaceTips">提示</string>
-    <string name="nativeSearchAliasesTips">帮助; 教程; 手势</string>
+    <string name="nativeSearchAliasesTips">帮助; 教程; 手势; 再次显示提示</string>
     <string name="nativeSearchPlaceShortcuts">键盘快捷键</string>
     <string name="nativeSearchAliasesShortcuts">键盘; 桌面; 按键</string>
     <string name="nativeSearchShortcutsBody">这些按键在输入框和组件获得焦点时有效。</string>
@@ -79,4 +79,9 @@
     <string name="nativeSearchHealthDisabled">已关闭</string>
     <string name="nativeSearchPlaceProjects">项目</string>
     <string name="nativeSearchAliasesProjects">文件; 项目; 文件夹</string>
+    <string name="nativeSearchAliasesUpdates">更新; 升级; 新版本; 发布; 安装</string>
+    <string name="nativeSearchAliasesKeepRunning">后台; 电池; 保持连接; 前台服务; 保活</string>
+    <string name="nativeSearchAliasesLinuxPorts">Linux; 开放端口; 监听; 服务器端口</string>
+    <string name="nativeSearchAliasesLinuxPackages">Linux; 软件; apt; 安装; 程序</string>
+    <string name="nativeSearchAliasesDemo">演示; 试用; 示例; 离线; 样例</string>
 </resources>

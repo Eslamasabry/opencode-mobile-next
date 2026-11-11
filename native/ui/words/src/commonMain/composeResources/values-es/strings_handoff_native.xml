@@ -31,4 +31,10 @@
     <string name="handoffNativeLinkFailed">El mensaje se envió, pero no se guardó su vínculo de navegación. Vuelve a intentar guardar el vínculo sin enviar otra vez.</string>
     <string name="handoffNativeInitialPrompt">Continúa el trabajo de la conversación anterior. Lee primero `%1$s` para ver el registro de la conversación, los pasos de herramientas, los archivos y las tareas pendientes. Tómalo como contexto histórico. Revisa el estado actual del proyecto y luego continúa el trabajo sin terminar.</string>
     <string name="handoffNativeSourceReviewOnly">Revisa un borrador para Claude. No se ha escrito ni enviado nada. Enviar requiere acceso verificado al mismo proyecto y un escritor de registros calificado; esta conexión no aporta esa prueba.</string>
+    <string name="handoffNativeBlockComputer">Esta conversación está en otra computadora y los agentes de aquí se ejecutan en este teléfono, así que no pueden abrir su carpeta de proyecto. Abre primero el proyecto en este teléfono y continúa desde allí. Aún puedes revisar y copiar el registro de abajo.</string>
+    <string name="handoffNativeBlockFolder">La carpeta de esta conversación no es uno de los proyectos de este teléfono, así que los agentes de aquí no pueden abrirla. Abre o copia primero el proyecto en los proyectos de este teléfono y continúa desde allí.</string>
+    <string name="handoffNativeBlockUnconfirmed">La app no pudo confirmar que los agentes de este teléfono puedan abrir la carpeta de esta conversación, así que no se inicia ninguno en el lugar equivocado. Abre Agentes para comprobar que estén instalados y listos, y vuelve a intentarlo.</string>
+    <string name="handoffNativeContinueWith">Continuar con %1$s</string>
+    <string name="handoffNativeWhatHandedOver">Qué se entregará</string>
+    <string name="handoffNativeNoReadyTitle">Ningún agente está listo</string>
 </resources>

@@ -12,4 +12,5 @@
     <string name="agentsPreviousVersionBody">Passer à la version antérieure vérifiée conservée sur ce téléphone\u00A0? L’assistant s’arrêtera d’abord, puis les agents du téléphone se reconnecteront. Les connexions et les conversations sont conservées.</string>
     <string name="agentsPreviousVersionFailed">La version antérieure n’a pas pu être restaurée. Terminez les tâches en cours, puis réessayez.</string>
     <string name="agentsPreviousVersionRestored">La version antérieure est restaurée.</string>
+    <string name="agentsHelperStartAgain">Démarrer l’assistant des agents</string>
 </resources>

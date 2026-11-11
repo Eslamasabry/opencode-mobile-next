@@ -4,8 +4,8 @@
     <string name="stateDemoTitle">تجربة دون اتصال</string>
     <string name="stateDemoDisclosure">جلسة محاكاة. لا تتغير أي خوادم أو ملفات أو إعدادات محفوظة. تُنسى هذه التجربة عند مغادرتها.</string>
     <string name="stateDemoPrompt">اجعل رسالة الترحيب أكثر ودًّا.</string>
-    <string name="stateDemoReply">سأغيّر التحية في welcome.txt من «%1$s» إلى «%2$s».</string>
-    <string name="stateDemoAllowed">تم. أصبح welcome.txt يقول «%1$s».</string>
+    <string name="stateDemoReply">سأغيّر التحية في welcome.txt من “%1$s” إلى “%2$s”.</string>
+    <string name="stateDemoAllowed">تم. أصبح welcome.txt يقول “%1$s”.</string>
     <string name="stateDemoDenied">حسنًا، تركت welcome.txt كما هو.</string>
     <string name="stateDemoBefore">مرحبًا</string>
     <string name="stateDemoAfter">أهلًا بك معنا!</string>

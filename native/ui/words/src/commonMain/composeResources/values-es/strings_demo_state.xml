@@ -6,7 +6,7 @@
     <string name="stateDemoDisclosure">Simulación. No se cambia ningún servidor, archivo ni ajuste guardado. Al salir se olvida esta demostración.</string>
     <string name="stateDemoPrompt">Haz que el mensaje de bienvenida sea más amistoso.</string>
     <string name="stateDemoReply">Voy a cambiar el saludo de welcome.txt de “%1$s” a “%2$s”.</string>
-    <string name="stateDemoAllowed">Listo. welcome.txt ahora dice “%1$s”.</string>
+    <string name="stateDemoAllowed">Listo. Ahora welcome.txt dice “%1$s”.</string>
     <string name="stateDemoDenied">De acuerdo, dejé welcome.txt como estaba.</string>
     <string name="stateDemoBefore">Hola</string>
     <string name="stateDemoAfter">¡Bienvenido a bordo!</string>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="phoneTeamProofSignal">Android đã đóng bài kiểm tra an toàn (tín hiệu %1$d) trước khi nó kịp hoàn tất.</string>
+    <string name="phoneTeamProofCheckSignal">Android đã đóng bước kiểm tra an toàn “%1$s” (tín hiệu %2$d).</string>
+    <string name="phoneTeamProofNotBlocked">Bước kiểm tra an toàn “%1$s” thất bại: điện thoại này không chặn nó theo cách môi trường cô lập của nhóm cần.</string>
+    <string name="phoneTeamProofSandbox">Môi trường cô lập của nhóm không khởi động được trên điện thoại này.</string>
+    <string name="phoneTeamProofUbuntu">Bước Ubuntu “%1$s” thất bại bên trong môi trường cô lập của nhóm.</string>
+    <string name="phoneTeamProofFixture">Các tệp thử riêng của bước kiểm tra an toàn đã thay đổi hoặc không thể thiết lập.</string>
+    <string name="phoneTeamProofNoAnswer">Bài kiểm tra an toàn không phản hồi kịp.</string>
+    <string name="phoneTeamProofProot">Bước kiểm tra an toàn proot “%1$s” không đạt.</string>
+    <string name="phoneTeamProofOther">Bước kiểm tra an toàn dừng tại “%1$s”.</string>
+</resources>

@@ -298,4 +298,6 @@
     <string name="phoneSetupRingDetailsTitle">设置详情</string>
     <string name="browserTransportFailure">浏览器无法连接到服务器。请检查地址，并确认服务器正在运行。位于不同来源的服务器必须允许此页面的来源（CORS），通过 https 加载的页面无法使用 http:// 或 ws:// 服务器。</string>
     <string name="browserProbeTimeout">连接超时。请检查地址，并确认此浏览器可以访问该服务器。</string>
+    <string name="phoneSetupStartStepsNoTime">安装、命名项目、开始对话</string>
+    <string name="phoneSetupPreflightSpaceNumbers">设置需要约 %1$s 可用空间。这部手机有 %2$s。</string>
 </resources>

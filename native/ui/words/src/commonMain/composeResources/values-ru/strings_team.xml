@@ -1774,4 +1774,8 @@
     <string name="teamVoiceApprovePlan">Начать создавать: %1$s</string>
     <string name="teamVoiceAcceptPhase">Принять: %1$s</string>
     <string name="teamVoicePutOnMain">Перенести в main: %1$s</string>
+    <string name="teamRefusalServerRestarted">OpenCode перезапустился, пока выполнялся этот шаг, поэтому он был прерван.</string>
+    <string name="teamRefusalServerRestartedNext">Нажмите «Возобновить», чтобы отправить этот шаг снова. Он продолжится с уже сделанной работы.</string>
+    <string name="teamRefusalRestartResend">OpenCode перезапустился, пока выполнялся этот шаг. Команда отправляет его снова.</string>
+    <string name="teamRefusalRestartResendNext">Ничего делать не нужно. Уже сделанная работа сохранена.</string>
 </resources>

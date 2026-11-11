@@ -21,4 +21,12 @@
     <string name="agentsConversationsStored">Onde as conversas ficam guardadas</string>
     <string name="agentsConversationsStoredOn">Onde as conversas ficam guardadas: %1$s</string>
     <string name="agentsHostAccount">Conta do host: %1$s</string>
+    <string name="agentsHelperUpdateRequired">Os agentes do celular não estão conectados: o auxiliar de agentes está ausente ou é antigo demais para rodar.</string>
+    <string name="agentsHelperUpdateAction">Atualizar o auxiliar de agentes</string>
+    <string name="agentsInstallFailedDownload">Não foi possível instalar %1$s: o download não terminou. Verifique a conexão e tente novamente.</string>
+    <string name="agentsInstallFailedChecksum">Não foi possível instalar %1$s: o que foi baixado não era o arquivo que o app espera, então foi descartado. Tente novamente.</string>
+    <string name="agentsInstallFailedStorage">Não foi possível instalar %1$s: este celular está com pouco espaço. Libere espaço e tente novamente.</string>
+    <string name="agentsInstallFailedVersion">Não foi possível instalar %1$s: a versão recebida não é a que o app espera. Tente novamente.</string>
+    <string name="agentsInstallFailedUnknown">Não foi possível instalar %1$s. Tente novamente; os Detalhes mostram o que o celular informou.</string>
+    <string name="agentsInstallInterruptedNow">A instalação de %1$s foi interrompida antes de terminar. Tente novamente para continuar.</string>
 </resources>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatStarAskTitle">Vous aimez OpenCode Next\u00A0?</string>
+    <string name="chatStarAskBody">Une étoile sur GitHub aide d’autres personnes à le trouver.</string>
+    <string name="chatStarAskAction">Mettre une étoile sur GitHub</string>
+    <string name="chatStarAskDismiss">Pas maintenant</string>
+</resources>

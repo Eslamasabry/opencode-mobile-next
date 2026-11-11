@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="notify_team_decision_title">AI Team cần bạn quyết định</string>
+    <string name="notify_team_decision_body">Một tác vụ đang chờ câu trả lời của bạn. Mở AI Team để trả lời.</string>
+    <string name="notify_team_review_title">Công việc của AI Team đã sẵn sàng để xem lại</string>
+    <string name="notify_team_review_body">Một tác vụ đã xong và đang chờ bạn xem lại.</string>
+    <string name="notify_team_failed_title">Một tác vụ của AI Team đã thất bại</string>
+    <string name="notify_team_failed_body">Mở AI Team để xem chuyện gì đã xảy ra và chạy lại.</string>
+    <string name="notify_team_completed_title">AI Team đã hoàn thành dự án</string>
+    <string name="notify_team_completed_body">Tất cả tác vụ của dự án đã xong.</string>
+</resources>

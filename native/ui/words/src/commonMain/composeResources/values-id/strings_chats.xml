@@ -88,7 +88,7 @@
     <string name="globalSessionsFilterActive">Aktif</string>
     <string name="globalSessionsArchivedNoMatchMessage">Tidak ada percakapan arsip dengan judul itu. Coba pencarian yang lebih pendek.</string>
     <string name="globalSessionsArchivedEmptyTitle">Tidak ada percakapan yang diarsipkan</string>
-    <string name="globalSessionsArchivedEmptyMessage">Percakapan yang Anda arsipkan muncul di sini.</string>
+    <string name="globalSessionsArchivedEmptyMessage">Percakapan yang diarsipkan akan muncul di sini.</string>
     <string name="globalSessionsShowActive">Tampilkan percakapan aktif</string>
     <string name="globalSessionsProjectInUse">%1$s · Sedang dipakai</string>
     <string name="globalSessionsCopyFolder">Salin path folder</string>

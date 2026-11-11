@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="notify_widget_action">正在发送你的小组件操作</string>
+    <string name="notify_widget_action_description">正在核对具体的对话和请求。</string>
+</resources>

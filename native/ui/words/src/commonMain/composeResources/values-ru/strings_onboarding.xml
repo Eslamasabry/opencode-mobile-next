@@ -310,4 +310,6 @@
     <string name="phoneSetupRingDetailsTitle">Подробности настройки</string>
     <string name="browserTransportFailure">Браузеру не удалось связаться с сервером. Проверьте адрес и то, что сервер запущен. Сервер на другом источнике должен разрешить источник этой страницы (CORS), а страница, загруженная по https, не может использовать сервер http:// или ws://.</string>
     <string name="browserProbeTimeout">Время подключения истекло. Проверьте адрес и то, что сервер доступен из этого браузера.</string>
+    <string name="phoneSetupStartStepsNoTime">Установка, название проекта, первый чат</string>
+    <string name="phoneSetupPreflightSpaceNumbers">Для настройки нужно около %1$s свободного места. На этом телефоне доступно %2$s.</string>
 </resources>

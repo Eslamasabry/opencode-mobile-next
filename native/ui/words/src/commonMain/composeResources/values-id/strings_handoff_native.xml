@@ -31,4 +31,10 @@
     <string name="handoffNativeLinkFailed">Pesan terkirim, tetapi tautan navigasinya tidak tersimpan. Coba simpan tautan lagi tanpa mengirim ulang.</string>
     <string name="handoffNativeInitialPrompt">Lanjutkan pekerjaan dari percakapan sebelumnya. Baca `%1$s` lebih dulu untuk catatan percakapan, langkah alat, file, dan tugas yang masih terbuka. Anggap sebagai konteks riwayat. Periksa kondisi proyek saat ini, lalu lanjutkan pekerjaan yang belum selesai.</string>
     <string name="handoffNativeSourceReviewOnly">Tinjau draf untuk Claude. Belum ada yang ditulis atau dikirim. Pengiriman memerlukan akses terverifikasi ke proyek yang sama dan penulis catatan yang memenuhi syarat; koneksi ini tidak menyediakan bukti itu.</string>
+    <string name="handoffNativeBlockComputer">Percakapan ini ada di komputer lain, dan agen di sini berjalan di ponsel ini, jadi tidak dapat membuka folder proyeknya. Buka dulu proyeknya di ponsel ini, lalu lanjutkan dari sana. Catatan di bawah tetap bisa ditinjau dan disalin.</string>
+    <string name="handoffNativeBlockFolder">Folder percakapan ini bukan salah satu proyek di ponsel ini, jadi agen di sini tidak dapat membukanya. Buka atau salin dulu proyeknya ke proyek ponsel ini, lalu lanjutkan dari sana.</string>
+    <string name="handoffNativeBlockUnconfirmed">Aplikasi tidak dapat memastikan bahwa agen di ponsel ini bisa membuka folder percakapan ini, jadi tidak ada yang dimulai di tempat yang salah. Buka Agen untuk memeriksa apakah sudah terpasang dan siap, lalu coba lagi.</string>
+    <string name="handoffNativeContinueWith">Lanjutkan dengan %1$s</string>
+    <string name="handoffNativeWhatHandedOver">Apa yang akan diserahkan</string>
+    <string name="handoffNativeNoReadyTitle">Tidak ada agen yang siap</string>
 </resources>

@@ -54,7 +54,7 @@
     <string name="nativeSearchPlaceLanguage">Langue</string>
     <string name="nativeSearchAliasesLanguage">Arabe\u00A0; anglais\u00A0; français\u00A0; paramètres régionaux</string>
     <string name="nativeSearchPlaceTips">Astuces</string>
-    <string name="nativeSearchAliasesTips">Aide\u00A0; tutoriels\u00A0; gestes</string>
+    <string name="nativeSearchAliasesTips">Aide\u00A0; tutoriels\u00A0; gestes\u00A0; revoir les astuces\u00A0; Help\u00A0; tutorials\u00A0; gestures</string>
     <string name="nativeSearchPlaceShortcuts">Raccourcis clavier</string>
     <string name="nativeSearchAliasesShortcuts">Clavier\u00A0; ordinateur\u00A0; touches</string>
     <string name="nativeSearchShortcutsBody">Ces touches fonctionnent dans la zone de saisie et les commandes de l’app quand elles ont le focus.</string>
@@ -79,4 +79,9 @@
     <string name="nativeSearchHealthDisabled">Désactivé</string>
     <string name="nativeSearchPlaceProjects">Projets</string>
     <string name="nativeSearchAliasesProjects">Fichiers\u00A0; projets\u00A0; dossiers</string>
+    <string name="nativeSearchAliasesUpdates">Mise à jour\u00A0; mettre à jour\u00A0; nouvelle version\u00A0; publication\u00A0; installer\u00A0; Update\u00A0; upgrade\u00A0; release\u00A0; install</string>
+    <string name="nativeSearchAliasesKeepRunning">Arrière-plan\u00A0; batterie\u00A0; rester connecté\u00A0; service au premier plan\u00A0; maintenir actif\u00A0; Background\u00A0; battery\u00A0; foreground service\u00A0; keep alive</string>
+    <string name="nativeSearchAliasesLinuxPorts">Linux\u00A0; ports ouverts\u00A0; écoute\u00A0; port du serveur\u00A0; open ports\u00A0; listening\u00A0; server port</string>
+    <string name="nativeSearchAliasesLinuxPackages">Linux\u00A0; logiciels\u00A0; paquets\u00A0; apt\u00A0; installer\u00A0; programmes\u00A0; software\u00A0; install\u00A0; programs</string>
+    <string name="nativeSearchAliasesDemo">Démo\u00A0; essayer\u00A0; exemple\u00A0; hors ligne\u00A0; Demo\u00A0; try\u00A0; sample\u00A0; offline\u00A0; example</string>
 </resources>

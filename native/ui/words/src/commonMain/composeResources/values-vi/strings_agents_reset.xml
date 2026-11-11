@@ -12,4 +12,5 @@
     <string name="agentsPreviousVersionBody">Chuyển sang phiên bản trước đã được xác minh còn lưu trên điện thoại này? Trình hỗ trợ sẽ dừng trước, rồi tác nhân trên điện thoại kết nối lại. Đăng nhập và các cuộc trò chuyện vẫn được giữ.</string>
     <string name="agentsPreviousVersionFailed">Không khôi phục được phiên bản trước. Hãy hoàn tất công việc đang chạy rồi thử lại.</string>
     <string name="agentsPreviousVersionRestored">Đã khôi phục phiên bản trước.</string>
+    <string name="agentsHelperStartAgain">Khởi động trình hỗ trợ tác nhân</string>
 </resources>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="shortcut_connect_short">连接</string>
+    <string name="shortcut_connect_long">选择要连接的服务器</string>
+    <string name="shortcut_new_task_short">新对话</string>
+    <string name="shortcut_new_task_long">在当前服务器上开始新对话</string>
+</resources>

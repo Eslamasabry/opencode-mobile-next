@@ -297,4 +297,6 @@
     <string name="phoneSetupRingDetailsTitle">Detail penyiapan</string>
     <string name="browserTransportFailure">Browser tidak dapat menjangkau server. Periksa alamatnya dan pastikan server berjalan. Server di origin lain harus mengizinkan origin halaman ini (CORS), dan halaman yang dimuat lewat https tidak dapat memakai server http:// atau ws://.</string>
     <string name="browserProbeTimeout">Koneksi kehabisan waktu. Periksa alamatnya, dan pastikan server dapat dijangkau dari browser ini.</string>
+    <string name="phoneSetupStartStepsNoTime">Pasang, beri nama proyek, mulai percakapan</string>
+    <string name="phoneSetupPreflightSpaceNumbers">Penyiapan membutuhkan sekitar %1$s ruang kosong. Ponsel ini punya %2$s.</string>
 </resources>

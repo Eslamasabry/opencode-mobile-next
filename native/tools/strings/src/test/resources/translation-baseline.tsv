@@ -91,7 +91,6 @@ english	fr	linuxSvcPort
 english	fr	liveStyleCircuit
 english	fr	liveStyleConstellation
 english	fr	liveStyleOscilloscope
-english	fr	m40UsageReadCommand
 english	fr	modelEffortMinimal
 english	fr	monitorMinutes
 english	fr	monitorMinutes__eq1
@@ -222,7 +221,6 @@ english	id	linuxSvcFieldPort
 english	id	linuxSvcLogTitle
 english	id	linuxSvcPort
 english	id	liveStyleHalftone
-english	id	m40UsageReadCommand
 english	id	modelEffortMinimal
 english	id	modelPickerSheetTitle
 english	id	nativeSearchPlaceTips
@@ -289,7 +287,6 @@ english	ru	discoverThemeAliases
 english	ru	e7LocaleUiEnglish
 english	ru	e7LocaleUiPortuguese
 english	ru	e7LocaleUiSpanish
-english	ru	m40UsageReadCommand
 english	ru	modelPickerAgentBuildName
 english	ru	modelPickerAgentPlanName
 english	ru	settingsHubSearchCommandsAliases
@@ -303,7 +300,6 @@ english	vi	externalAgentsDetailCard
 english	vi	gitActionClone
 english	vi	gitCloneButton
 english	vi	kitMenu
-english	vi	m40UsageReadCommand
 english	vi	modelPickerAgentBuildName
 english	vi	modelPickerAgentPlanName
 english	vi	teamBoardTypeEpic

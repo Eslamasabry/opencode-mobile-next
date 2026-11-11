@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="phoneTeamProofSignal">Uji keamanan ditutup oleh Android (sinyal %1$d) sebelum sempat selesai.</string>
+    <string name="phoneTeamProofCheckSignal">Pemeriksaan keamanan “%1$s” ditutup oleh Android (sinyal %2$d).</string>
+    <string name="phoneTeamProofNotBlocked">Pemeriksaan keamanan “%1$s” gagal: ponsel ini tidak memblokirnya seperti yang dibutuhkan sandbox tim.</string>
+    <string name="phoneTeamProofSandbox">Sandbox tim tidak dapat dimulai di ponsel ini.</string>
+    <string name="phoneTeamProofUbuntu">Langkah Ubuntu “%1$s” gagal di dalam sandbox tim.</string>
+    <string name="phoneTeamProofFixture">File uji privat untuk pemeriksaan keamanan berubah atau tidak dapat disiapkan.</string>
+    <string name="phoneTeamProofNoAnswer">Uji keamanan tidak menjawab tepat waktu.</string>
+    <string name="phoneTeamProofProot">Pemeriksaan keamanan proot “%1$s” tidak lulus.</string>
+    <string name="phoneTeamProofOther">Pemeriksaan keamanan berhenti di “%1$s”.</string>
+</resources>

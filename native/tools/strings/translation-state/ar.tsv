@@ -870,6 +870,7 @@ androidApp:andr_termuxRetiredSetUpBuiltin	b36c113546
 androidApp:andr_thermalPaused	e844511a12
 androidApp:andr_thermalResumed	cf7736cbf1
 androidApp:andr_thermalStopped	49e1e5bffe
+androidApp:app_label_preview	f4e39e2b45
 androidApp:notifStatusNeedsYou	0fc1daf3c4
 androidApp:notifStatusReconnectingGeneric	f987ad9aaa
 androidApp:voice_download_complete	37f0afb92a
@@ -2138,7 +2139,7 @@ collectExit	34e19a2690
 collectMemory	39a3b87916
 collectNever	1843642ee2
 collectNeverLabel	67bbd8aef0
-collectPages	6f772ff6cd
+collectPages	f2b6f6677e
 collectPhoneSetup	ae724435ee
 collectQueue	408cf673e3
 collectReport	283ae08ce9
@@ -2146,7 +2147,7 @@ collectReportLabel	87b042b051
 collectRowSummary	021028fb8b
 collectRules	cb60c61eac
 collectSend	22f0a539c9
-collectSmooth	bc46152bf7
+collectSmooth	4a0f0027c2
 collectStall	acce6fdb1a
 collectStart	6f2a8cf39d
 collectSteps	7a98bbbf7c
@@ -3423,7 +3424,7 @@ e7SetupStartupExited	99287b6845
 e7SetupStepUnavailable	dc0f6d4540
 e7SetupStopBeforeUpdate	0745f0631c
 e7SetupStopFailed	0021d6de30
-e7SetupStopLocal	dacac65dbb
+e7SetupStopLocal	e8d39ab116
 e7SetupStopTerminalDetail	3c92664011
 e7SetupStoppedLocal	6ceca56734
 e7SetupStoppingLocal	c71de601f2
@@ -4802,7 +4803,7 @@ gitUsesOwnSignIn	9c74cbcedb
 gitUsesOwnSignInOn	2295d40d12
 gitWriteItForMe	3d61edd77b
 globalSessionsActions	f1e3718af3
-globalSessionsArchivedEmptyMessage	46bb044ff2
+globalSessionsArchivedEmptyMessage	4b8a15e425
 globalSessionsArchivedEmptyTitle	428af25f49
 globalSessionsArchivedNoMatchMessage	3c55fd6d0c
 globalSessionsArchivedShort	3145b4e2e4
@@ -5994,7 +5995,7 @@ kitZoomLevel	e032a21139
 kitZoomOut	aa2e920fcf
 kitZoomReset	80b161517c
 kitZoomShortcut	7a714631eb
-languagePickerPartlyTranslated	70aef2a3d8
+languagePickerPartlyTranslated	3f2bee2f55
 lastKnownUpdatedAgo	7d2f1774ff
 lastKnownUpdatedJustNow	372979d874
 launchShortcutConnectionFailed	d7bd97f0e8
@@ -7470,7 +7471,7 @@ nativeSearchAliasesServices	a8e72155c7
 nativeSearchAliasesSettings	f85d01d007
 nativeSearchAliasesShortcuts	35fb456add
 nativeSearchAliasesSkills	8f9b6cb7bb
-nativeSearchAliasesTips	bcb38195dc
+nativeSearchAliasesTips	799402daaf
 nativeSearchAliasesTools	0f58285ae9
 nativeSearchHealthBranch	56fee82249
 nativeSearchHealthDisabled	d5eb58574b
@@ -9644,7 +9645,7 @@ safetyMcpDisconnectKeep	be81c753a3
 safetyMcpDisconnectTitle	9b04958b61
 safetyStopLocalServerBody	0f66bb8e69
 safetyStopLocalServerKeep	46187c2bb6
-safetyStopLocalServerTitle	87c9b1f922
+safetyStopLocalServerTitle	98b9ea5033
 safetyStopOrphanBody	5bd82b70a4
 safetyStopSharingBody	e8f188603e
 safetyStopSharingKeep	88af74358d
@@ -10115,7 +10116,7 @@ serversRemoveQueuedNotKept	5a35dde0ca
 serversRemoveQueuedUncertain	d7bdf95584
 serversRemoveQueuedUncertain__eq1	2597f8ff13
 serversRemoveQueuedUnreadable	5fb09cad63
-serversRemoveServerKeeps	8d19fd6f34
+serversRemoveServerKeeps	7788d41d8d
 serversSave	f6c33b4fa3
 serversSaveFailed	617976ceb5
 serversSaved	b39a2717ab
@@ -10822,13 +10823,13 @@ stateAttentionTeam	9b499470c3
 stateAttentionTitle	c58b479d6d
 stateContextUsage	136da5aa23
 stateDemoAllow	5b6bcaaf07
-stateDemoAllowed	ac1a0c2658
-stateDemoDenied	c8529b365d
+stateDemoAllowed	ab3159bb46
+stateDemoDenied	af26bf1378
 stateDemoDeny	7364f24b9a
 stateDemoDisclosure	f89ea30549
 stateDemoLeave	2410b73c4c
 stateDemoPrompt	2af1a13142
-stateDemoReply	08fb052f05
+stateDemoReply	37c0ccc123
 stateDemoReset	b1a1ce664c
 stateDemoTitle	65230a623d
 stateDemoTryOffline	80694847f0

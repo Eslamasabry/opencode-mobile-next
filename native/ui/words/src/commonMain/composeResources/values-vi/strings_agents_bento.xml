@@ -21,4 +21,12 @@
     <string name="agentsConversationsStored">Nơi lưu các cuộc trò chuyện</string>
     <string name="agentsConversationsStoredOn">Nơi lưu các cuộc trò chuyện: %1$s</string>
     <string name="agentsHostAccount">Tài khoản trên máy chủ: %1$s</string>
+    <string name="agentsHelperUpdateRequired">Các tác nhân trên điện thoại chưa được kết nối: trình hỗ trợ tác nhân bị thiếu hoặc quá cũ để chạy.</string>
+    <string name="agentsHelperUpdateAction">Cập nhật trình hỗ trợ tác nhân</string>
+    <string name="agentsInstallFailedDownload">Không thể cài đặt %1$s: quá trình tải xuống chưa hoàn tất. Hãy kiểm tra kết nối và thử lại.</string>
+    <string name="agentsInstallFailedChecksum">Không thể cài đặt %1$s: tệp tải về không phải tệp mà ứng dụng mong đợi nên đã bị loại bỏ. Hãy thử lại.</string>
+    <string name="agentsInstallFailedStorage">Không thể cài đặt %1$s: điện thoại này không đủ dung lượng. Hãy giải phóng bớt dung lượng rồi thử lại.</string>
+    <string name="agentsInstallFailedVersion">Không thể cài đặt %1$s: phiên bản tải về không phải phiên bản ứng dụng mong đợi. Hãy thử lại.</string>
+    <string name="agentsInstallFailedUnknown">Không thể cài đặt %1$s. Hãy thử lại; phần Chi tiết có thông tin điện thoại báo về.</string>
+    <string name="agentsInstallInterruptedNow">Việc cài đặt %1$s bị gián đoạn trước khi xong. Hãy thử lại để tiếp tục.</string>
 </resources>

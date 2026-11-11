@@ -16,4 +16,5 @@
     <string name="modelDefaultsPrice">Entrée %1$s $ · sortie %2$s $ par million de jetons</string>
     <string name="modelDefaultsSelected">Sélectionné</string>
     <string name="modelDefaultsSaving">Enregistrement du choix du modèle</string>
+    <string name="modelDefaultsChecking">Vérification des modèles du serveur</string>
 </resources>

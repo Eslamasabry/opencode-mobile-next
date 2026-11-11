@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="setupKilled">Seu celular fechou o OpenCode durante a configuração. As etapas concluídas ficam salvas. Continue para retomar de onde parou.</string>
+    <string name="setupKilledMemory">Seu celular ficou sem memória e fechou o OpenCode durante a configuração. As etapas concluídas ficam salvas. Continue para retomar de onde parou.</string>
+    <string name="setupBatteryTitle">Deixe o OpenCode continuar rodando</string>
+    <string name="setupBatteryBody">Alguns celulares fecham apps para economizar bateria. Altere estas configurações para que a configuração não seja interrompida.</string>
+    <string name="setupBatteryStepUnrestricted">Abra a configuração de Bateria do app e escolha “Sem restrições” (alguns celulares chamam de “Sem limites”).</string>
+    <string name="setupBatteryStepAutostart">Ative a Inicialização automática do OpenCode.</string>
+    <string name="setupBatteryStepNeverSleeping">Adicione o OpenCode aos apps que nunca hibernam.</string>
+    <string name="setupBatteryOpenApp">Abrir configurações do app</string>
+    <string name="setupBatteryOpenAutostart">Abrir Inicialização automática</string>
+    <string name="setupBatteryOpenSamsung">Abrir Bateria</string>
+    <string name="setupBatteryOpenFailed">Este celular não abriu essa tela. Siga os passos em Configurações manualmente.</string>
+</resources>

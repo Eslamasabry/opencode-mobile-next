@@ -266,7 +266,7 @@
     </plurals>
     <string name="serversRemoveDrafts__eq1">1 brouillon non envoyé sera supprimé</string>
     <string name="serversRemoveActiveNext">Vous y êtes connecté\u00A0: l'app se déconnecte et affiche vos serveurs</string>
-    <string name="serversRemoveServerKeeps">Rien n'est supprimé sur le serveur ni chez vos fournisseurs d'IA.</string>
+    <string name="serversRemoveServerKeeps">Rien n’est supprimé sur le serveur ni chez vos fournisseurs d’IA.</string>
     <string name="pairingScannerAllowCamera">Autoriser la caméra</string>
     <string name="pairingScannerStarting">Ouverture de la caméra…</string>
     <string name="profileMonitorSwitchBody">Une exécution est en cours sur %1$s. Le changement affiche %2$s dans cette app\u00A0; l'exécution sur %1$s continue.</string>
@@ -512,4 +512,6 @@
     <string name="serverDetailsAccessDenied">Le serveur a refusé l'accès. Vérifiez quel compte peut utiliser ce serveur.</string>
     <string name="serverDetailsFixSignIn">Corriger la connexion</string>
     <string name="serverDetailsLastAttempt">Dernière tentative de connexion\u00A0: %1$s</string>
+    <string name="connectionAgentStarting">Démarrage de Claude Code…</string>
+    <string name="connectionAgentStartFailed">Claude Code n’a pas démarré. Touchez Redémarrer Claude Code pour réessayer une fois.</string>
 </resources>

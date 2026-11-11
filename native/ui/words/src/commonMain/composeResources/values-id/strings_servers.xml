@@ -500,4 +500,6 @@
     <string name="serverDetailsAccessDenied">Server menolak akses. Periksa akun mana yang dapat memakai server ini.</string>
     <string name="serverDetailsFixSignIn">Perbaiki data masuk</string>
     <string name="serverDetailsLastAttempt">Percobaan koneksi terakhir: %1$s</string>
+    <string name="connectionAgentStarting">Memulai Claude Code…</string>
+    <string name="connectionAgentStartFailed">Claude Code tidak mau mulai. Ketuk Mulai ulang Claude Code untuk mencoba sekali lagi.</string>
 </resources>

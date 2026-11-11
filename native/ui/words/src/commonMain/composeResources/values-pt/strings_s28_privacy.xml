@@ -22,11 +22,11 @@
     <string name="collectAgents">Se um agente iniciou e o tipo de falha</string>
     <string name="collectBackground">Por que o serviço em segundo plano parou</string>
     <string name="collectUpdates">Se uma atualização foi instalada e o tipo de falha</string>
-    <string name="collectPages">Que tipos de página e recursos você usa, etapas de configuração, a primeira resposta, quanto dura uma visita e quantas mensagens você enviou nela</string>
+    <string name="collectPages">Quais tipos de páginas e recursos você usa, as etapas de configuração, a primeira resposta, quanto dura uma visita e quantas mensagens você enviou nela</string>
     <string name="collectJourney">Até onde você chegou nos primeiros passos (abriu o app, configurou, conectou, enviou uma mensagem, recebeu uma primeira resposta) e aproximadamente quanto tempo depois de concordar. Cada etapa é contada uma só vez</string>
     <string name="collectStarters">Que tipo de sugestão você tocou em uma nova conversa, nunca as palavras dela nem o que ela pede</string>
     <string name="collectStart">A rapidez com que o app inicia</string>
-    <string name="collectSmooth">A fluidez das páginas (a parcela de quadros lentos e congelados) e a taxa de atualização da tela</string>
+    <string name="collectSmooth">Quão fluidas são as páginas (a proporção de quadros lentos e travados) e a taxa de atualização da tela</string>
     <string name="collectMemory">Avisos de memória do Android</string>
     <string name="collectDevice">Faixas de memória e de armazenamento livre do seu celular, o tipo de processador e a versão do WebView, se as notificações estão permitidas e o tipo e a versão do servidor que você usa</string>
     <string name="collectCrashKind">O tipo de erro e onde no código do app ele ocorreu, nunca a mensagem</string>
@@ -34,4 +34,5 @@
     <string name="collectSteps">Suas últimas 30 ações, em palavras curtas como chat.send</string>
     <string name="collectCrashKeys">A versão do app, como foi instalado, o tipo de servidor, se o servidor deste celular está ativo, quantas conexões estão abertas e a versão do servidor</string>
     <string name="collectNever">Suas mensagens e respostas, nomes ou caminhos de arquivos, endereços da web, nomes de host, endereços IP, texto de mensagens de erro, chaves ou tokens, o ID de publicidade ou o ID do Android</string>
+    <string name="collectReport">O que você escreve sobre o problema, a última vez que o app fechou inesperadamente, as versões do app e do Android, uma faixa de memória e o tipo de servidor, com chaves, endereços e caminhos apagados. Sem log e sem conversa. Você vê tudo e escolhe Enviar ou Cancelar.</string>
 </resources>

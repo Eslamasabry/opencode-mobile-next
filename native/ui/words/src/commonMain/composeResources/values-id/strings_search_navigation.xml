@@ -54,7 +54,7 @@
     <string name="nativeSearchPlaceLanguage">Bahasa</string>
     <string name="nativeSearchAliasesLanguage">Arab; Inggris; lokal</string>
     <string name="nativeSearchPlaceTips">Tips</string>
-    <string name="nativeSearchAliasesTips">Bantuan; tutorial; gestur</string>
+    <string name="nativeSearchAliasesTips">Bantuan; tutorial; gestur; tampilkan tips lagi</string>
     <string name="nativeSearchPlaceShortcuts">Pintasan keyboard</string>
     <string name="nativeSearchAliasesShortcuts">Keyboard; desktop; tombol</string>
     <string name="nativeSearchShortcutsBody">Tombol ini berfungsi di kotak pesan dan kontrol kit saat sedang difokuskan.</string>
@@ -79,4 +79,9 @@
     <string name="nativeSearchHealthDisabled">Nonaktif</string>
     <string name="nativeSearchPlaceProjects">Proyek</string>
     <string name="nativeSearchAliasesProjects">File; proyek; folder</string>
+    <string name="nativeSearchAliasesUpdates">Pembaruan; update; versi baru; rilis; pasang</string>
+    <string name="nativeSearchAliasesKeepRunning">Latar belakang; baterai; tetap tersambung; layanan latar depan; tetap aktif</string>
+    <string name="nativeSearchAliasesLinuxPorts">Linux; port terbuka; mendengarkan; port server</string>
+    <string name="nativeSearchAliasesLinuxPackages">Linux; perangkat lunak; apt; pasang; program</string>
+    <string name="nativeSearchAliasesDemo">Demo; coba; contoh; offline; sampel</string>
 </resources>
