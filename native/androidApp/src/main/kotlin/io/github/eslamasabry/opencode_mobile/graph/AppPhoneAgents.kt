@@ -539,14 +539,15 @@ class AppPhoneAgents(
      */
     private fun previousOf(owner: ProfileId, agent: AgentDescriptor, found: String?) {
         val key = owner to agent.id
-        val cached = synchronized(admission) { previous[key] }
+        val cached = synchronized(admission) { rollbacks[key] }
         if (cached != null && cached.first == found) return
-        val available = previousAvailable(agent)
-        synchronized(admission) { previous[key] = found to available }
+        // A check that could not run (the phone busy, its time limit) is asked again by the next read.
+        val available = previousCheck(agent) ?: return
+        synchronized(admission) { rollbacks[key] = found to available }
     }
 
     private fun knownPrevious(owner: ProfileId, agent: AgentDescriptor, found: String?): Boolean =
-        synchronized(admission) { previous[owner to agent.id] }?.let { it.first == found && it.second } == true
+        synchronized(admission) { rollbacks[owner to agent.id] }?.let { it.first == found && it.second } == true
 
     private fun keptFacts(owner: ProfileId): Map<String, PhoneAgentFacts.Fact> =
         PhoneAgentFacts.decode(gatePrefs(owner).string(PhoneAgentFacts.key(owner.raw)))
@@ -577,7 +578,7 @@ class AppPhoneAgents(
             if (version) {
                 // Kept for the tile while an install runs (no check runs then), never reused as fresh.
                 versions[key]?.let { versions[key] = STALE to it.second }
-                previous.remove(key)
+                rollbacks.remove(key)
             }
             if (signIn) {
                 accounts.remove(key)
@@ -716,11 +717,16 @@ class AppPhoneAgents(
         Outcome.Ok(answer)
     }
 
-    private fun previousAvailable(agent: AgentDescriptor): Boolean =
+    private fun previousAvailable(agent: AgentDescriptor): Boolean = previousCheck(agent) == true
+
+    /** Null when the check did not finish (refused, or cut at its time limit: `run` answers -1). */
+    private fun previousCheck(agent: AgentDescriptor): Boolean? =
         try {
-            linux.run(AgentPhoneScripts.previousVersion(agent), 30, agentUser = true).exitCode == 0
+            linux.run(AgentPhoneScripts.previousVersion(agent), 30, agentUser = true).exitCode
+                .takeIf { it != -1 }
+                ?.let { it == 0 }
         } catch (_: Exception) {
-            false
+            null
         }
 
     override suspend fun usePreviousVersion(id: String): Outcome<Unit> = lane.step {
@@ -975,7 +981,7 @@ class AppPhoneAgents(
     private val answeredAt = HashMap<Pair<ProfileId, AgentId>, Long>()
 
     /** Claude Code's previous version: kept or not, for the version found then ([previousOf]). */
-    private val previous = HashMap<Pair<ProfileId, AgentId>, Pair<String?, Boolean>>()
+    private val rollbacks = HashMap<Pair<ProfileId, AgentId>, Pair<String?, Boolean>>()
 
     /**
      * What `agentHostVersion` says about the agent (Flutter read it for every row). Only Claude Code, which the
