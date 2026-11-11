@@ -201,6 +201,19 @@ public class KitEdgeDockState internal constructor() {
     /** True while anything is open over the content (a tap outside closes it). */
     internal val anythingOpen: Boolean get() = swell != null || panelOpen || renaming != null
 
+    /** The swell is on its way in ([closeSwell] ran): it takes no touches and no longer widens the touch area. */
+    internal var swellClosing by mutableStateOf(false)
+
+    /** The swell an alert opened by itself: look-only, it never widens the touch area and never takes a tap. */
+    internal var swellLookOnly by mutableStateOf(false)
+
+    /**
+     * True while something open takes every touch in the dock's area (a tap outside closes it and is taken): the list,
+     * a rename, a card or swell the person opened. Not a closing swell (after Remove, Open or any target the area is the
+     * dock's own again at once) and not an alert's look-only swell (device QA 2026-11-11 sweep B; dock study, finding 2).
+     */
+    internal val takesWholeArea: Boolean get() = (swell != null && !swellClosing && !swellLookOnly) || panelOpen || renaming != null
+
     /** The strip's column top now (follows the placement, or the finger while the dock is moved). */
     internal val columnTop: Float get() = top.value
 
@@ -427,7 +440,7 @@ public class KitEdgeDockState internal constructor() {
             val cTop = top.value
             return if (x >= widthDp - edgeInset - DockDims.NUB_TOUCH && y >= cTop - 12f && y <= cTop + column.height + 12f) DockZone.Nub else DockZone.Outside
         }
-        if (swell != null && hits.inSwell(x, y)) return DockZone.Swell
+        if (swell != null && !swellClosing && !swellLookOnly && hits.inSwell(x, y)) return DockZone.Swell
         if (x < f.aLeft - 4f || y < f.aTop - 8f || y > f.aBottom + 8f) return DockZone.Outside
         val cTop = top.value
         if (y < cTop + DockDims.HEAD) return DockZone.Grip
@@ -474,6 +487,8 @@ public class KitEdgeDockState internal constructor() {
         val first = swell == null || swellGrow.value < 0.03f
         swell = l
         swellRing = i
+        swellClosing = false
+        swellLookOnly = false
         alertJob?.cancel()
         swellJob?.cancel()
         swellJob = scope?.launch {
@@ -496,12 +511,15 @@ public class KitEdgeDockState internal constructor() {
         gesture.closeKept()
         target = null
         swellJob?.cancel()
+        if (swell != null) swellClosing = true
         swellJob = scope?.launch {
             if (!reduced) delay(70)
             swellGrow.animateTo(0f, DockSprings.close(reduced))
             if (swellGrow.value < 0.01f) {
                 swell = null
                 swellRing = -1
+                swellClosing = false
+                swellLookOnly = false
             }
         }
         launch { ride.animateTo(0f, DockSprings.close(reduced)) }
@@ -624,6 +642,8 @@ public class KitEdgeDockState internal constructor() {
         gesture.cancel()
         swell = null
         swellRing = -1
+        swellClosing = false
+        swellLookOnly = false
         target = null
         renaming = null
         panelOpen = false
@@ -838,6 +858,7 @@ public class KitEdgeDockState internal constructor() {
                 delay(if (reduced) 0L else 200L)
                 openSwell(SwellKind.Scrub, i)
                 gesture.keepOpenForAlert(i)
+                swellLookOnly = true
                 delay(3100)
                 if (gesture.mode == DockMode.Idle) closeSwell()
             }
