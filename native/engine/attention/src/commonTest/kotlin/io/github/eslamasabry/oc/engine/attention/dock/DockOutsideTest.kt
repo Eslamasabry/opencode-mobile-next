@@ -21,12 +21,12 @@ class DockOutsideTest {
     private val words =
         object : DockOutsideWords {
             override fun untitled() = "Untitled conversation"
-            override fun helperGeneric() = "a helper"
+            override fun helperGeneric() = "a subagent"
             override fun needsYouNamed(name: String) = "$name needs you"
             override fun needsYouCount(count: Int) = if (count == 1) "1 needs you" else "$count need you"
             override fun waitingForAnswer() = "Waiting for your answer"
             override fun othersWorking(count: Int) = "$count others working"
-            override fun helperAsking(child: String) = "Its helper $child is asking"
+            override fun helperAsking(child: String) = "Its subagent $child is asking"
             override fun workingOn(name: String) = "Working on $name"
             override fun conversationsWorking(count: Int) = "$count conversations working"
             override fun tasks(done: Int, total: Int) = "$done of $total tasks"
@@ -35,7 +35,7 @@ class DockOutsideTest {
             override fun stateNeedsYou() = "Needs you"
             override fun stateDone() = "Done, not opened yet"
             override fun stateFailed() = "Stopped before finishing"
-            override fun helpers(count: Int) = "$count helpers"
+            override fun helpers(count: Int) = "$count subagents"
             override fun more(count: Int) = "+$count more"
             override fun lockWorking(count: Int) = "$count working"
             override fun onServer(server: String) = "on $server"
@@ -140,12 +140,12 @@ class DockOutsideTest {
         val child = DockChild(ref("kid"), "t", "explore", DockState.NeedsYou, 1)
         val row = build(ui(entry("a", DockState.NeedsYou, children = listOf(child), causedBy = ref("kid"))))!!
         assertEquals("Chat a needs you", row.title)
-        assertEquals("Its helper explore is asking", row.text)
+        assertEquals("Its subagent explore is asking", row.text)
         val busy = listOf(DockChild(ref("k1"), null, "x", working, 0), DockChild(ref("k2"), null, "y", DockState.Thinking, 0), DockChild(ref("k3"), null, "z", DockState.Idle, 0))
         val two = build(ui(entry("a", working), entry("b", working, children = busy)))!!
-        assertEquals("Chat b · Working · 2 helpers", two.lines[1])
+        assertEquals("Chat b · Working · 2 subagents", two.lines[1])
         val fallback = build(ui(entry("a", DockState.NeedsYou, children = listOf(DockChild(ref("kid"), null, null, DockState.NeedsYou, 0)), causedBy = ref("kid"))))!!
-        assertEquals("Its helper a helper is asking", fallback.text)
+        assertEquals("Its subagent a subagent is asking", fallback.text)
     }
 
     @Test

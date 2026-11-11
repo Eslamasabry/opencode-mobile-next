@@ -4,7 +4,7 @@
     <string name="notify_dock_channel">المحادثات الجارية</string>
     <string name="notify_dock_channel_description">صف هادئ واحد يعرض محادثاتك الجارية عندما يعمل شيء ما أو ينتظرك. تبقى الأسماء مخفية على شاشة القفل.</string>
     <string name="notify_dock_untitled">محادثة بلا عنوان</string>
-    <string name="notify_dock_helper_generic">مساعد</string>
+    <string name="notify_dock_helper_generic">وكيل فرعي</string>
     <string name="notify_dock_name_needs_you">%1$s بحاجة إليك</string>
     <string name="notify_dock_waiting_answer">في انتظار ردك</string>
     <plurals name="notify_dock_others_working">
@@ -15,7 +15,7 @@
         <item quantity="many">%1$s محادثة أخرى تعمل</item>
         <item quantity="other">%1$s محادثة أخرى تعمل</item>
     </plurals>
-    <string name="notify_dock_helper_asking">مساعدها %1$s يسأل</string>
+    <string name="notify_dock_helper_asking">وكيلها الفرعي %1$s يسأل</string>
     <string name="notify_dock_working_on">جارٍ العمل على %1$s</string>
     <string name="notify_dock_state_working">جارٍ العمل</string>
     <string name="notify_dock_state_thinking">يفكّر</string>
@@ -23,12 +23,12 @@
     <string name="notify_dock_state_done">انتهت ولم تُفتح بعد</string>
     <string name="notify_dock_state_failed">توقفت قبل أن تنتهي</string>
     <plurals name="notify_dock_helpers">
-        <item quantity="zero">بلا مساعدين</item>
-        <item quantity="one">مساعد واحد</item>
-        <item quantity="two">مساعدان</item>
-        <item quantity="few">%1$s مساعدين</item>
-        <item quantity="many">%1$s مساعدًا</item>
-        <item quantity="other">%1$s مساعد</item>
+        <item quantity="zero">بلا وكلاء فرعيين</item>
+        <item quantity="one">وكيل فرعي واحد</item>
+        <item quantity="two">وكيلان فرعيان</item>
+        <item quantity="few">%1$s وكلاء فرعيين</item>
+        <item quantity="many">%1$s وكيلًا فرعيًا</item>
+        <item quantity="other">%1$s وكيل فرعي</item>
     </plurals>
     <string name="notify_status_action_open_named">فتح %1$s</string>
     <string name="notify_status_action_stop_named">إيقاف %1$s</string>
