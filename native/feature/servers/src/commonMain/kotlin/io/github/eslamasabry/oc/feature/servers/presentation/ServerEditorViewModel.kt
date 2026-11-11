@@ -316,7 +316,9 @@ public class ServerEditorViewModel(
                 }
             }
             if (!saveAfter || ticket != generation) return@launch
-            mutable.update { it.copy(saving = true, failure = null) }
+            mutable.update {
+                it.copy(saving = true, failure = null, failedCheck = false, failedFromSave = false)
+            }
             try {
                 val saving = input.copy(id = savedId)
                 when (val saved = port.save(saving, checked?.version)) {
