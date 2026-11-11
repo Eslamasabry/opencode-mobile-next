@@ -376,9 +376,11 @@ resting or grown (`LiquidEdgeDockTest`).
   patch; one thin light rim along the outline; the rings, names and the + read.
 - Swell open: strip and swell are one body, the fillets above and below the swell round with no seam or line where they
   meet; the strip runs on above the swell (the extension noted under Limits). The blurred text lines behind the swell
-  show as stripes under its words; "Thinking" is weaker over them. The action words keep their gap now, but in the
-  scrub swell's narrow cells "Rename" and "Remove" are cut to "Rena..." and "Rem..." (the cells are too narrow for
-  them; before the gap fix they read "RenameRemove").
+  show as stripes under its words; "Thinking" is weaker over them. The scrub swell now offers only the ring's state's
+  actions (here, a thinking ring: Open and Stop), whole. Rename and Remove live in the held ring's card and the list. A
+  word that does not fit its cell whole leaves the glyph alone, still labelled: at 360 dp and text size 1.3 the scrub
+  swell of a request shows the Open and Allow glyphs alone and "Deny" in words; in the held ring's card at 360 dp and
+  size 1, Rename and Remove show their glyphs alone (the five cells are too narrow for those two words).
 - List out: the whole list is one pane of the same glass; the bright bands behind show through as pale bars, and the
   rows over them ("Docs", its second line) read with less contrast than over the dark lines; the words did not flip
   (the body's mean stays dark).
