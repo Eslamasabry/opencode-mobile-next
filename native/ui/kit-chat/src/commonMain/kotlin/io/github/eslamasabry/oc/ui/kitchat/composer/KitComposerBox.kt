@@ -4,6 +4,7 @@ import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
 import io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidChrome
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidFace
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidJoinRest
+import io.github.eslamasabry.oc.ui.kit.frame.kitScreenWordsPane
 import io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidJoinBody
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidTouchLight
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidTouchWatch
@@ -192,6 +193,9 @@ public fun KitComposerBox(
         val touch = io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidTouch(on = liquid != null)
         Column(
             Modifier.fillMaxWidth()
+                // Words on glass: while the box is liquid, the transcript its glass sees fades out under it (whole at its
+                // top edge, gone by the inner end of the lens rim), so nothing bright passes behind the words.
+                .then(if (liquid != null) Modifier.kitScreenWordsPane(LiquidRole.Composer) else Modifier)
                 .then(shadow)
                 .kitLiquidTouchWatch(touch)
                 .then(if (liquid != null) Modifier.kitLiquidJoinRest(joinBody, look.shape) else Modifier)
