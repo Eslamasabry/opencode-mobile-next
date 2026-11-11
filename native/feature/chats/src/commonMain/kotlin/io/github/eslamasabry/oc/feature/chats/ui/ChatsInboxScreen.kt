@@ -119,7 +119,13 @@ internal fun ChatsInboxScreen(state: ChatsUi, actions: ChatsActions) {
                                 time = row.updatedAtMs?.takeIf { state.nowMs > 0 }?.let { kitRelativeAge(it, state.nowMs) }
                                     ?: row.ago?.let { agoText(it) },
                                 state = KitRowState(
-                                    stringResource(if (row.status == RowStatus.Stopped) Res.string.chatsHomeStopped else Res.string.chatsHomeDone),
+                                    stringResource(
+                                        when (row.status) {
+                                            RowStatus.Stopped -> Res.string.chatsHomeStopped
+                                            RowStatus.Interrupted -> Res.string.chatsHomeInterrupted
+                                            else -> Res.string.chatsHomeDone
+                                        },
+                                    ),
                                     KitRowStateTone.Quiet,
                                 ),
                                 done = true,

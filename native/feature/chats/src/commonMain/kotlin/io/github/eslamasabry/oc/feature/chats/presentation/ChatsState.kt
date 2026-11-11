@@ -146,7 +146,7 @@ public object ChatsState {
                     ChatStatus.NeedsYou -> RowStatus.NeedsYou
                     ChatStatus.Running -> RowStatus.Running
                     ChatStatus.Failed -> RowStatus.Failed
-                    ChatStatus.Idle -> HomeRowStatusRules.idle(item.finishedUnseen, item.stoppedByPerson)
+                    ChatStatus.Idle -> HomeRowStatusRules.idle(item.finishedUnseen, item.stoppedByPerson, item.interrupted)
                 },
             ago = RelativeAge.of(item.lastActivityMs, nowMs),
             running = item.running,

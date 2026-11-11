@@ -59,7 +59,7 @@ private fun <T> liveRows(
         .toImmutableList()
 }
 
-private fun ConnectionGraph.operations(): ServerOperationsGateway? =
+internal fun ConnectionGraph.operations(): ServerOperationsGateway? =
     session.server.facet<ServerOperationsGateway>()
         ?: session.server
             .facet<LocatedProjectGateway>()

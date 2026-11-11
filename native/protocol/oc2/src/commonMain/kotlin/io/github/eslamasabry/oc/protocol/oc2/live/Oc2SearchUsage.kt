@@ -12,8 +12,10 @@ import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.model.GlobalSessionResult
 import io.github.eslamasabry.oc.core.model.ServerPage
 import io.github.eslamasabry.oc.core.model.Session
+import io.github.eslamasabry.oc.core.model.SessionRunOutcome
 import io.github.eslamasabry.oc.core.model.SessionTime
 import io.github.eslamasabry.oc.protocol.oc2.wire.Oc2Session
+import io.github.eslamasabry.oc.protocol.oc2.wire.Oc2SessionOutcome
 import io.github.eslamasabry.oc.protocol.oc2.wire.Oc2UsageStatistics
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.serialization.json.JsonArray
@@ -170,8 +172,19 @@ public object Oc2SearchUsage {
                 SessionTime(wire.time.created, wire.time.updated, wire.time.archived, wire.time.idle, wire.time.viewed),
             agent = wire.agent,
             model = wire.model?.let { "${it.providerID}/${it.id}" },
+            lastRunOutcome = runOutcomeOf(wire.outcome),
         )
 }
+
+/** The server's word for a conversation's last run, as the core session carries it; unknown stays null. */
+internal fun runOutcomeOf(outcome: Oc2SessionOutcome?): SessionRunOutcome? =
+    when (outcome) {
+        Oc2SessionOutcome.Succeeded -> SessionRunOutcome.Succeeded
+        Oc2SessionOutcome.Failed -> SessionRunOutcome.Failed
+        Oc2SessionOutcome.Interrupted -> SessionRunOutcome.Interrupted
+        Oc2SessionOutcome.Unknown,
+        null -> null
+    }
 
 /** One project the usage filter can offer: the server's project id and a directory it lives in, when known. */
 public data class Oc2ProjectChoice(val id: String, val directory: String?)

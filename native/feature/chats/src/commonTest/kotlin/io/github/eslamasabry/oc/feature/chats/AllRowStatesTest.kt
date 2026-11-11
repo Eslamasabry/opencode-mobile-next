@@ -46,4 +46,17 @@ class AllRowStatesTest {
         val none = rows(RowAttention()).single()
         assertEquals(false, none.unread || none.stopped || none.needsYou)
     }
+
+    @Test
+    fun `a run the server interrupted reads Interrupted, a failed one Failed, neither reads Unread result`() {
+        val cut = rows(RowAttention(unread = true, interrupted = true)).single()
+        assertTrue(cut.interrupted)
+        assertFalse(cut.unread)
+        assertFalse(cut.stopped)
+        val bad = rows(RowAttention(failed = true)).single()
+        assertTrue(bad.failed)
+        // The person's own Stop is a different word and keeps its place.
+        val both = rows(RowAttention(stopped = true, interrupted = true)).single()
+        assertTrue(both.stopped)
+    }
 }

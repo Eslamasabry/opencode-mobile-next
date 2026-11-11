@@ -197,6 +197,7 @@
     <string name="chatsHomeStopped">Stopped</string>
     <string name="chatsHomeDone">Done</string>
     <string name="chatsHomeFailed">Failed</string>
+    <string name="chatsHomeInterrupted">Interrupted</string>
     <string name="chatsHomeToday">Today</string>
     <string name="chatsHomeEarlier">Earlier</string>
     <string name="chatsHomeOnlyProject">Showing conversations in “%1$s” only. This server can't list all projects.</string>

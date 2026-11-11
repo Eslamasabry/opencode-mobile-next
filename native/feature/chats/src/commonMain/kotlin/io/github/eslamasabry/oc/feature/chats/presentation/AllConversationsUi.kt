@@ -105,6 +105,10 @@ public data class AllRowUi(
     val unread: Boolean = false,
     /** The person stopped the run that ended it ("Stopped"). */
     val stopped: Boolean = false,
+    /** The server ended the run and the person has not opened it since ("Interrupted"). */
+    val interrupted: Boolean = false,
+    /** The last run failed ("Failed"). */
+    val failed: Boolean = false,
     /** Blocked on a permission, question or form ("Needs you"). */
     val needsYou: Boolean = false,
     /** The folder it works in, for the row menu's Copy folder path; null = the server did not say. */
@@ -120,6 +124,8 @@ public data class RowAttention(
     val unread: Boolean = false,
     /** The person pressed Stop on the run that ended it. */
     val stopped: Boolean = false,
+    val interrupted: Boolean = false,
+    val failed: Boolean = false,
 )
 
 /**

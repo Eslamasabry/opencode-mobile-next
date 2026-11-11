@@ -197,6 +197,7 @@
     <string name="chatsHomeStopped">أُوقف</string>
     <string name="chatsHomeDone">تم</string>
     <string name="chatsHomeFailed">فشلت</string>
+    <string name="chatsHomeInterrupted">انقطعت</string>
     <string name="chatsHomeToday">اليوم</string>
     <string name="chatsHomeEarlier">سابقًا</string>
     <string name="chatsHomeOnlyProject">تُعرض المحادثات في «%1$s» فقط. لا يستطيع هذا الخادم سرد كل المشاريع.</string>

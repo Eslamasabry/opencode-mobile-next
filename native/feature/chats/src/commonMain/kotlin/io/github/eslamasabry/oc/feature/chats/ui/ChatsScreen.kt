@@ -142,6 +142,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatHomeAnswerFailed
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeClearFilters
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeDone
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeStopped
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeInterrupted
 import io.github.eslamasabry.oc.ui.words.res.agentsStateCantReopen
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeRowStatusRules
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeEmptyCalmBody
@@ -784,6 +785,7 @@ private data class HomeRowWords(
     val failed: String,
     val done: String,
     val stopped: String,
+    val interrupted: String,
     val cantReopen: String,
     val archive: String,
     val otherAgent: String,
@@ -808,6 +810,7 @@ private fun rememberHomeRowWords(): HomeRowWords =
         failed = stringResource(Res.string.chatsHomeFailed),
         done = stringResource(Res.string.chatsHomeDone),
         stopped = stringResource(Res.string.chatsHomeStopped),
+        interrupted = stringResource(Res.string.chatsHomeInterrupted),
         cantReopen = stringResource(Res.string.agentsStateCantReopen),
         archive = stringResource(Res.string.sessionMenuArchive),
         otherAgent = stringResource(Res.string.agentPersonaOtherName),
@@ -880,6 +883,7 @@ private fun ConversationRow(
             RowStatus.Failed -> words.failed
             RowStatus.Done -> words.done
             RowStatus.Stopped -> words.stopped
+            RowStatus.Interrupted -> words.interrupted
             RowStatus.None -> null
         }
     val tone =

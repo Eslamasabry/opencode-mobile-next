@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.core.domain.events.RunOutcome
 import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.core.model.NewSession
 import io.github.eslamasabry.oc.core.model.Session
+import io.github.eslamasabry.oc.core.model.SessionRunOutcome
 import io.github.eslamasabry.oc.core.model.transcript.ToolStatus
 import io.github.eslamasabry.oc.core.model.SessionStatus
 import io.github.eslamasabry.oc.core.model.StreamStatus
@@ -656,7 +657,12 @@ class PreviewRuntime(
     private fun observeFeedEvent(id: ProfileId, event: GatewayEvent): Boolean {
         val listing = listings[id] ?: return false
         val current = listing.value
-        fun status(session: SessionId, status: SessionStatus, failed: Boolean? = null) {
+        fun status(
+            session: SessionId,
+            status: SessionStatus,
+            failed: Boolean? = null,
+            outcome: SessionRunOutcome? = null,
+        ) {
             val next = (runRevision[id] ?: 0) + 1
             runRevision[id] = next
             runSignals.getOrPut(id) { mutableMapOf() }[session] = next
@@ -669,7 +675,13 @@ class PreviewRuntime(
                         if (failed == null) listing.value.sessions
                         else
                             listing.value.sessions.map {
-                                if (it.id == session) it.copy(lastRunFailed = failed) else it
+                                if (it.id == session)
+                                    it.copy(
+                                        lastRunFailed = failed,
+                                        // A new run clears the server's word for the last one; an end sets it.
+                                        lastRunOutcome = outcome ?: if (failed == false) null else it.lastRunOutcome,
+                                    )
+                                else it
                             },
                 )
         }
@@ -702,6 +714,12 @@ class PreviewRuntime(
                         RunOutcome.Idle -> null
                         else -> false
                     },
+                    when (event.outcome) {
+                        is RunOutcome.Failed -> SessionRunOutcome.Failed
+                        is RunOutcome.Interrupted -> SessionRunOutcome.Interrupted
+                        RunOutcome.Succeeded -> SessionRunOutcome.Succeeded
+                        else -> null
+                    },
                 )
             is GatewayEvent.PermissionAsked ->
                 request("permission", event.request.id.raw, event.request.sessionId)
@@ -725,6 +743,11 @@ class PreviewRuntime(
                         sessions =
                             current.sessions.filterNot { it.id == event.session.id } +
                                 event.session.copy(
+                                    lastRunOutcome =
+                                        event.session.lastRunOutcome
+                                            ?: current.sessions
+                                                .firstOrNull { it.id == event.session.id }
+                                                ?.lastRunOutcome,
                                     lastRunFailed =
                                         event.session.lastRunFailed ||
                                             event.session.id in failedRuns[id].orEmpty()
@@ -883,7 +906,7 @@ class PreviewRuntime(
         val readEventRevision = refreshRevision[id] ?: 0
         val readRunRevision = runRevision[id] ?: 0
         val readRequestRevision = requestRevision[id] ?: 0
-        when (val page = readSessionPages(graph.session.server)) {
+        when (val page = readFeedSessionPages(graph.session.server, graph.operations())) {
             is Outcome.Failed -> {
                 listing.value = listing.value.copy(loading = false, failed = true)
                 return page.atStage(ConnectionStage.LoadConversations)
@@ -896,7 +919,13 @@ class PreviewRuntime(
                 unverifiedListings.remove(id)
                 val stored = profiles.profile(id)?.profile
                 if (stored != null)
-                    inventory.save(stored, page.value.sessions) {
+                    // Own project first, then the others: the saved list holds 100 rows, so keep the newest of all.
+                    inventory.save(
+                        stored,
+                        page.value.sessions.sortedByDescending {
+                            it.time?.updatedMs ?: it.time?.createdMs ?: 0L
+                        },
+                    ) {
                         registry.live.value[id] === graph
                     }
                 val statuses = graph.session.server.sessionStatuses()
@@ -907,6 +936,18 @@ class PreviewRuntime(
                     if (caps.legacyQuestionRequests) graph.session.server.pendingQuestions()
                     else null
                 val forms = if (caps.forms) graph.session.server.pendingForms() else null
+                // Across projects the ask lists above cover the connection's own folder only.
+                val others =
+                    if (caps.globalSessionSearch)
+                        readOtherProjectAsks(
+                            graph.session.server,
+                            page.value.sessions,
+                            (statuses as? Outcome.Ok)?.value,
+                            graph.session.server.location.value.directory,
+                        )
+                    else OtherProjectAsks.None
+                val allPermissions = (permissions as? Outcome.Ok)?.value?.plus(others.permissions)
+                val allForms = (forms as? Outcome.Ok)?.value?.plus(others.forms)
                 if (registry.live.value[id] !== graph)
                     return Failure.Refused(RefusalReason.StaleScope).failed()
                 val pending = requests.getOrPut(id) { mutableMapOf() }
@@ -918,7 +959,7 @@ class PreviewRuntime(
                     }
                     replace(
                         "permission",
-                        (permissions as? Outcome.Ok)?.value?.map { it.id.raw to it.sessionId },
+                        allPermissions?.map { it.id.raw to it.sessionId },
                     )
                     replace(
                         "question",
@@ -926,7 +967,7 @@ class PreviewRuntime(
                     )
                     replace(
                         "form",
-                        (forms as? Outcome.Ok)?.value?.map { it.id.raw to it.sessionId },
+                        allForms?.map { it.id.raw to it.sessionId },
                     )
                 }
                 val resolvedStatuses =
@@ -962,8 +1003,8 @@ class PreviewRuntime(
                         running = listing.value.running,
                         stoppedByPerson = listing.value.stoppedByPerson,
                         permissions =
-                            if (permissions is Outcome.Ok)
-                                permissions.value
+                            if (allPermissions != null)
+                                allPermissions
                                     .groupBy { it.sessionId }
                                     .mapNotNull { (sid, asks) ->
                                         asks.firstOrNull()?.let { ask ->
