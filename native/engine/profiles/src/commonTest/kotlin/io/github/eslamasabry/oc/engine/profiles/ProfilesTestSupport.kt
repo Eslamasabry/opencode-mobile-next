@@ -83,6 +83,7 @@ internal class Harness(
     val secrets: FakeSecrets = FakeSecrets(),
     val backend: RefusingBackend = RefusingBackend(),
     platform: SecretPlatform = SecretPlatform.Android,
+    phoneServer: (StoredProfile) -> Boolean = { false },
 ) {
     val kv = PrefsKeyValueStore(backend, FlutterPrefsCodec(JavaListDecoder.Unsupported), StateMigrationGate.alwaysOpen(), io)
     val lanes = DefaultWriterLanes()
@@ -91,7 +92,7 @@ internal class Harness(
         ProfileKeys.register(it)
         DeferredFeatureData.register(it)
     }
-    val store = ProfileStore(kv, secrets, lanes, redactor, platform)
+    val store = ProfileStore(kv, secrets, lanes, redactor, platform, phoneServer)
 
     fun deletion(
         closers: Set<ProfileCloser> = emptySet(),

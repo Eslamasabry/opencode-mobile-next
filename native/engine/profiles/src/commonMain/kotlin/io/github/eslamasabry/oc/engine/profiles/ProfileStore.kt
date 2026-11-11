@@ -68,6 +68,12 @@ public data class LoadedProfile(
      * too.
      */
     val revision: Long = 0,
+    /**
+     * This phone's own server, the OpenCode the app runs here ([PhoneServerProfile]). Never stored: the store derives
+     * it from the saved address and the app's own managed port whenever it publishes a row, so a row saved by setup,
+     * the Flutter-data migration, an edit or any older build carries the same answer.
+     */
+    val managedOnPhone: Boolean = false,
 ) {
     val id: ProfileId
         get() = profile.id
@@ -83,8 +89,11 @@ public data class LoadedProfile(
                 (ProfileOrigins.cleartextNeedsHttps(profile.baseUrl) ||
                     trust.cleartext?.origin != ProfileOrigins.trustOrigin(profile.baseUrl))
 
-    /** The `:core:model` connection shape, or null when the address is not usable. */
-    public fun toServerProfile(managedOnPhone: Boolean = false): ServerProfile? {
+    /**
+     * The `:core:model` connection shape, or null when the address is not usable. [managedOnPhone] defaults to this
+     * row's own answer, so every connection and every "is this still the same connection" check agree on it.
+     */
+    public fun toServerProfile(managedOnPhone: Boolean = this.managedOnPhone): ServerProfile? {
         val origin = ProfileOrigins.serverOrigin(profile.baseUrl) ?: return null
         val applying = trust.forOrigin(origin.toString())
         return ServerProfile(
@@ -119,6 +128,8 @@ public class ProfileStore(
     private val lanes: WriterLanes,
     private val redactor: Redactor,
     private val platform: SecretPlatform = SecretPlatform.Android,
+    /** The app's rule for "this row is this phone's own server" ([PhoneServerProfile.managedOnPhone]). */
+    private val phoneServer: (StoredProfile) -> Boolean = { false },
 ) {
     private val log = AppLog.tagged("profiles")
     private val mutex = Mutex()
@@ -264,6 +275,7 @@ public class ProfileStore(
                     hasSecret,
                     kv.bool(ProfileKeys.tailscale(id)) == true,
                     revision = ++revision,
+                    managedOnPhone = phoneServer(profile),
                 )
             mutableProfiles.update { list ->
                 val i = list.indexOfFirst { it.id == id }
@@ -365,6 +377,7 @@ public class ProfileStore(
                     old?.hasSecret == true,
                     kv.bool(ProfileKeys.tailscale(id)) == true,
                     revision = ++revision,
+                    managedOnPhone = phoneServer(current),
                 )
             mutableProfiles.update { list ->
                 list.map { if (it.id == id) refreshed else it }.toPersistentList()
@@ -514,6 +527,7 @@ public class ProfileStore(
             hasSecret,
             kv.bool(ProfileKeys.tailscale(id)) == true,
             revision = ++revision,
+            managedOnPhone = phoneServer(p),
         )
     }
 

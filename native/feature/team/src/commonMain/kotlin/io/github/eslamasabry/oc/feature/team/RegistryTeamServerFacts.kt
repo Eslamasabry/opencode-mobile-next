@@ -18,18 +18,15 @@ import io.github.eslamasabry.oc.feature.team.presentation.TeamServerKind
 public class RegistryTeamServerFacts(private val registry: ConnectionRegistry) : TeamServerFacts {
     override fun server(profile: ProfileId): TeamServer? {
         val saved = registry.live.value[profile]?.profile ?: return null
-        return TeamServer(kindOf(saved.managedOnPhone, saved.origin.host), saved.name)
+        return TeamServer(kindOf(saved.managedOnPhone), saved.name)
     }
 
     public companion object {
-        private val LOOPBACK = setOf("127.0.0.1", "localhost", "::1")
-
         /**
-         * A server this app started (flag) or any server reached on the phone's own loopback address is this phone;
-         * the connect path does not always carry the flag, and the off page then said "Runs on This phone" with a
-         * computer's icon.
+         * Flutter `teamServerKindOf`: in-app when `looksLikeInAppServer`, which the profile store now answers for every
+         * connection (PhoneServerProfile). A tunnel to a computer on the phone's loopback is a computer.
          */
-        public fun kindOf(managedOnPhone: Boolean, host: String): TeamServerKind =
-            if (managedOnPhone || host.lowercase() in LOOPBACK) TeamServerKind.ThisPhone else TeamServerKind.Computer
+        public fun kindOf(managedOnPhone: Boolean): TeamServerKind =
+            if (managedOnPhone) TeamServerKind.ThisPhone else TeamServerKind.Computer
     }
 }
