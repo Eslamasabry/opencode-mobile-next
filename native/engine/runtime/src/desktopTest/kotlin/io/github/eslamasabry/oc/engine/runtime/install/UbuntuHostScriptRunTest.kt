@@ -220,6 +220,7 @@ cp "${'$'}FAKE_ROOT/release.tar.gz" "${'$'}out"
 
     @Test
     fun `B-LINUX-075 the engine's host script is scripts-host-ubuntu-opencode-sh byte for byte`() {
-        assertEquals(File(Sh.repo, "scripts/host/ubuntu-opencode.sh").readText(), UbuntuHostScript.TEXT)
+        // The native copy at the native pin; the shared scripts/host file is the frozen Flutter app's (2.1.1).
+        assertEquals(File(Sh.repo, "native/scripts/host/ubuntu-opencode.sh").readText(), UbuntuHostScript.TEXT)
     }
 }
