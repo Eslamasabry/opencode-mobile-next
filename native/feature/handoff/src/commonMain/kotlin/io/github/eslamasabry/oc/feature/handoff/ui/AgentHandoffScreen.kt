@@ -60,7 +60,8 @@ public fun AgentHandoffScreen(state: AgentHandoffUi, actions: AgentHandoffAction
                     KitStateView(
                         kind = KitStateKind.Calm,
                         title = stringResource(Res.string.handoffNativeUnavailable),
-                        body = stringResource(Res.string.handoffNativeUnavailableBody),
+                        body = blockWords(state.block)
+                            ?: stringResource(Res.string.handoffNativeUnavailableBody),
                         primary =
                             KitAction(
                                 stringResource(Res.string.handoffNativeRefresh),
@@ -81,7 +82,12 @@ public fun AgentHandoffScreen(state: AgentHandoffUi, actions: AgentHandoffAction
             if (state.connected || sourceReview != null) {
                 if (state.directory.isNotBlank()) item { KitText(state.directory) }
                 if (sourceReview != null)
-                    item { KitNotice(stringResource(Res.string.handoffNativeSourceReviewOnly)) }
+                    item {
+                        KitNotice(
+                            blockWords(state.block)
+                                ?: stringResource(Res.string.handoffNativeSourceReviewOnly)
+                        )
+                    }
                 if (state.links.isNotEmpty())
                     item {
                         KitRowGroup(label = stringResource(Res.string.handoffNativeLinks)) {
@@ -246,6 +252,18 @@ public fun AgentHandoffScreen(state: AgentHandoffUi, actions: AgentHandoffAction
 }
 
 @Composable
+/** The plain words and the way forward for a folder-check reason; null when there is none. */
+@Composable
+private fun blockWords(block: HandoffBlock?): String? =
+    when (block) {
+        HandoffBlock.SourceOnComputer ->
+            stringResource(Res.string.handoffNativeBlockComputer)
+        HandoffBlock.FolderNotOnPhone -> stringResource(Res.string.handoffNativeBlockFolder)
+        HandoffBlock.FolderUnknown -> stringResource(Res.string.handoffUiUnavailableDirectory)
+        HandoffBlock.NotConfirmed -> stringResource(Res.string.handoffNativeBlockUnconfirmed)
+        null -> null
+    }
+
 private fun failureText(kind: HandoffFailureKind): String =
     stringResource(
         when (kind) {
