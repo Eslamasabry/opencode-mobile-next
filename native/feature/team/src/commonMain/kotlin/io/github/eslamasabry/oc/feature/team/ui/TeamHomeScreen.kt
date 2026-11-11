@@ -143,6 +143,16 @@ public fun TeamHomeScreen(state: TeamHomeUi, actions: TeamHomeActions) {
             width = KitScreenWidth.Reading,
             bottom =
                 if (state.phase == TeamPhase.Off) ({ TeamIntroBottom(state.intro, actions) })
+                // A computer's team: the one primary, pinned below the list, only where the phone can give a task.
+                else if (state.phase == TeamPhase.Computer)
+                    (if (state.computer.kind == FleetHomeKind.Ready && state.computer.canGiveTask)
+                        ({
+                            KitActionBlock(
+                                Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S2.dp),
+                                primary = KitAction(stringResource(Res.string.teamUiStartRunFab), actions::startRun, icon = KitIcons.add),
+                            )
+                        })
+                    else null)
                 else if (!ready || !state.canStart) null
                 else
                     ({

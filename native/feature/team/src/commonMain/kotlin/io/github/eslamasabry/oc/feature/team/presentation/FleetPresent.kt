@@ -55,6 +55,8 @@ public data class FleetTaskRow(
     /** The question the row is ("Needs you · <question>"), when one waits on this task. */
     val question: String? = null,
     val questionAtMs: Long? = null,
+    /** The gate behind [question] (or the run's failure): the row opens its Gate sheet. */
+    val gateId: String? = null,
     /** Needs the person without a question of its own (a failed step, a gate bead). */
     val needsYou: Boolean = false,
     val done: Int? = null,
@@ -88,6 +90,8 @@ public data class FleetHomeUi(
     val readAtMs: Long? = null,
     /** The phone can only watch: no control is on (Dart `teamUiReadOnlyBody`). */
     val readOnly: Boolean = false,
+    /** The team takes a task from the phone (Dart `canStart`: `controlMessage` and data read): "Give the team a task". */
+    val canGiveTask: Boolean = false,
     /** Something waits for the person; answering from the phone is not here yet, so the page says where. */
     val needsYou: Boolean = false,
     val questions: ImmutableList<FleetQuestionRow> = persistentListOf(),
@@ -188,6 +192,7 @@ public object FleetPresent {
                     state = run.state,
                     question = gate?.title,
                     questionAtMs = gate?.createdAtMs,
+                    gateId = gate?.id,
                     needsYou = needsYou,
                     done = run.completedSteps,
                     total = run.stepCount,
@@ -206,6 +211,7 @@ public object FleetPresent {
             stale = stale,
             readAtMs = fleet.refreshedAtMs,
             readOnly = !fleet.capabilities.anyControl,
+            canGiveTask = fleet.capabilities.controlMessage,
             needsYou = gates.isNotEmpty(),
             questions = loose.map { FleetQuestionRow(it.id, it.title, it.createdAtMs) }.toImmutableList(),
             rows = (open + shown).toImmutableList(),

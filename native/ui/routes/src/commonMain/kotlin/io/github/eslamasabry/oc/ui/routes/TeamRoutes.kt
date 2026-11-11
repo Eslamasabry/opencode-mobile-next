@@ -44,6 +44,14 @@ public sealed interface TeamRoute : AppRoute {
     @Serializable
     public data class TurnOn(val profileId: ProfileId) : TeamRoute
 
+    /** One question of a computer's team, or a task that stopped (Dart `showGateSheet`): answer it, fix it, stop it. */
+    @Serializable
+    public data class Gate(val profileId: ProfileId, val gateId: String) : TeamRoute
+
+    /** Give a computer's team a task (Dart `showStartRunSheet`); [projectId] is the project chosen at first. */
+    @Serializable
+    public data class StartRun(val profileId: ProfileId, val projectId: String? = null) : TeamRoute
+
     /** Team settings (Dart `TeamSettingsScreen`): the agents, how the team runs here, Turn off. */
     @Serializable
     public data class Settings(val profileId: ProfileId) : TeamRoute

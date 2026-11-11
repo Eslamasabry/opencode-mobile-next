@@ -49,9 +49,9 @@ internal fun computerSubtitle(ui: FleetHomeUi): String {
 
 /**
  * The team page for a team on a computer (Dart `TeamHomeScreen` over Gas City): one list of its tasks, most urgent
- * first, each question on its task's row; the agents and what it spent today; its projects. Answering, the agents'
- * controls, a task's own page and giving a task are the follow-up pages: until they exist the page says where to do
- * those (on the computer), never a dead button.
+ * first, each question on its task's row (a tap opens its Gate sheet); the agents and what it spent today; its
+ * projects. The agents' controls and a task's own page are the follow-up pages: until they exist their rows are plain
+ * rows, never a dead button.
  */
 @Composable
 internal fun TeamComputerHome(ui: FleetHomeUi, nowMs: Long, actions: TeamHomeActions) {
@@ -153,8 +153,8 @@ private fun Ready(ui: FleetHomeUi, nowMs: Long, actions: TeamHomeActions) {
                 )
             }
         }
-        // Answering from the phone is the Gate sheet's (not here yet): say where to answer, once, above the list.
-        if (ui.needsYou) {
+        // A question opens its Gate sheet. Where the phone can only watch, the page says where to answer, once.
+        if (ui.needsYou && ui.readOnly) {
             item(key = "answer-where") {
                 KitNotice(
                     stringResource(
@@ -181,6 +181,7 @@ private fun Ready(ui: FleetHomeUi, nowMs: Long, actions: TeamHomeActions) {
                             titleMaxLines = 2,
                             state = KitRowState(null, KitRowStateTone.NeedsYou),
                             modifier = Modifier.testTag("team-computer-gate-${q.id}"),
+                            onClick = { actions.openGate(q.id) },
                         )
                     }
                     ui.rows.forEach { row ->
@@ -191,6 +192,7 @@ private fun Ready(ui: FleetHomeUi, nowMs: Long, actions: TeamHomeActions) {
                             supportingMaxLines = 2,
                             state = KitRowState(null, row.mark.tone()),
                             modifier = Modifier.testTag("team-computer-run-${row.id}"),
+                            onClick = row.gateId?.let { id -> { actions.openGate(id) } },
                         )
                     }
                     if (ui.hiddenDone > 0) {
