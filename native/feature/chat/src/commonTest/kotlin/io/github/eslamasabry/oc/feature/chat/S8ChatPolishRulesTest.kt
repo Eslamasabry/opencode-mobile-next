@@ -192,7 +192,10 @@ class S8ChatPolishRulesTest {
     @Test
     fun `P-005 a model named before the catalog loads reads as words, not its id`() {
         assertEquals("Crouton Alpha Free", ModelNames.fromId("crouton-alpha-free"))
-        assertEquals("Gpt 5", ModelNames.fromId("openai/gpt-5"))
-        assertEquals("GLM 4.6", ModelNames.fromId("GLM-4.6"))
+        // Changed on purpose (c38e81af3b pinned this copy's own capitals): the chip now uses the app's one rule,
+        // Flutter's modelNameFromId, as the picker and the reply footer do.
+        assertEquals("GPT-5", ModelNames.fromId("openai/gpt-5"))
+        assertEquals("GLM-4.6", ModelNames.fromId("GLM-4.6"))
+        assertEquals("Opus 4.6 · 1M context", ModelNames.fromId("claude-opus-4-6[1m]"))
     }
 }

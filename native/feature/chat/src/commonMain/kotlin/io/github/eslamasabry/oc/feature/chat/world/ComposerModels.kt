@@ -4,6 +4,7 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ok
+import io.github.eslamasabry.oc.core.model.ModelDisplayName
 
 /** Safe catalog projection: never retain raw provider configuration in presentation. */
 public data class ComposerModel(
@@ -102,16 +103,11 @@ public class RecentModels(
  */
 /**
  * P-005: a model named before the catalog has loaded never shows its raw id: "crouton-alpha-free" reads "Crouton
- * Alpha Free" (the catalog's own name replaces it once loaded). A provider prefix ("openai/gpt-5") is dropped;
- * words keep their own capitals and digits ("gpt-5" → "Gpt 5", "GLM-4.6" → "GLM 4.6").
+ * Alpha Free" (the catalog's own name replaces it once loaded). The one rule for that, Flutter's `modelNameFromId`,
+ * lives in `:core:model` [ModelDisplayName] (this was a third, cruder copy: "gpt-5" read "Gpt 5").
  */
 public object ModelNames {
-    public fun fromId(modelId: String): String {
-        val last = modelId.trim().substringAfterLast('/').ifEmpty { return modelId }
-        val words = last.split('-', '_', ' ').filter { it.isNotEmpty() }
-        if (words.isEmpty()) return last
-        return words.joinToString(" ") { word -> word.replaceFirstChar { it.uppercaseChar() } }
-    }
+    public fun fromId(modelId: String): String = ModelDisplayName.fromId(modelId)
 }
 
 public data class SavedSessionModel(

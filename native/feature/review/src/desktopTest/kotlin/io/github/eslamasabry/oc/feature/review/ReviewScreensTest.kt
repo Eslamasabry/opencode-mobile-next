@@ -3,6 +3,8 @@ package io.github.eslamasabry.oc.feature.review
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
@@ -81,6 +83,8 @@ class ReviewScreensTest {
 
         override fun openStaged() { calls += "staged" }
 
+        override fun openGit() { calls += "git" }
+
         override fun sendBack() { calls += "sendBack" }
 
         override fun sendBackNote(note: String?) { calls += "note $note" }
@@ -105,6 +109,38 @@ class ReviewScreensTest {
         assertEquals(listOf("file src/app/Main.kt", "undo", "keep"), actions.calls)
         // Per-file undo is stated plainly, never offered as a dead control.
         onNodeWithText("Undoing one file at a time isn't available yet", substring = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun `the Changes title follows the chip and not-a-Git-project offers the Git page`() = runComposeUiTest {
+        val actions = Changes()
+        val conversation = io.github.eslamasabry.oc.feature.review.presentation.ReviewScope.Conversation
+        val working = io.github.eslamasabry.oc.feature.review.presentation.ReviewScope.WorkingTree
+        var scope by androidx.compose.runtime.mutableStateOf(conversation)
+        setContent {
+            Themed {
+                ChangesScreen(
+                    ChangesUi(
+                        turn = true,
+                        load = ReviewLoad.Ready,
+                        scope = scope,
+                        scopes = persistentListOf(conversation, working),
+                        canPickScope = true,
+                        notRepository = true,
+                    ),
+                    actions,
+                )
+            }
+        }
+        // On the Conversation view the title and the chip both say "Changes in this turn"; on Uncommitted only the chip
+        // does, and the page title is plain "Changes".
+        val onConversation = onAllNodesCount("Changes in this turn")
+        scope = working
+        waitForIdle()
+        assertEquals(onConversation - 1, onAllNodesCount("Changes in this turn"), "title follows the chip")
+        onNodeWithText("Not a Git project").assertIsDisplayed()
+        onNodeWithText("Open the Git page").performClick()
+        assertEquals(listOf("git"), actions.calls, "calls")
     }
 
     @Test

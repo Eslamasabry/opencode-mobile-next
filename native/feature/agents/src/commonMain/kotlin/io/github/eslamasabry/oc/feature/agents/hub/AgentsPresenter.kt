@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.feature.agents.hub
 
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
@@ -40,6 +41,8 @@ public class AgentsPresenter(
     private val drafts: AgentHandoffDrafts? = null,
     /** Opens New conversation on the phone's server with an agent chosen (profile null = the form picks its server). */
     private val openNewChat: (ProfileId?, String) -> Unit = { _, _ -> },
+    /** Opens the agent's sign-in page on the phone's runtime owner. */
+    private val openSignIn: (ProfileId, String) -> Unit = { _, _ -> },
 ) : AgentsActions {
     private val local = MutableStateFlow(AgentsUi(helperOffered = phoneHost != null))
 
@@ -48,8 +51,17 @@ public class AgentsPresenter(
     private var triedFor: Set<String> = emptySet()
     private var restartedStopped = false
     private var connectAgain = false
+
+    /** The one automatic retry of a start that did not start is spent; a start that connects earns it back. */
+    private var startRetried = false
     private var followJob: Job? = null
     private var readJob: Job? = null
+    private var phoneRead: Job? = null
+    private var readPhoneAgain = false
+
+    /** Counts the page's real steps; a read that ends after a newer step began leaves that step's notice alone. */
+    private var steps = 0
+    private var starting: Job? = null
 
     init {
         refreshPhone()
@@ -128,10 +140,15 @@ public class AgentsPresenter(
 
     public val state: StateFlow<AgentsUi> =
         combine(local, computers.computers, phone.state) { own, saved, phoneState ->
+                // The helper connected another way since the page's own start failed (New conversation starts it
+                // too): the failure line would contradict it, so it goes.
+                val live = saved.any { it.id == phoneState.conversations && it.connected }
                 own.copy(
                     computers = saved,
                     // While the page is starting the helper the recorded stop is already being answered.
                     phone = phoneState.withoutStaleStop(own.helperConnectFailed || own.helperConnecting),
+                    helperConnectFailed = own.helperConnectFailed && !live,
+                    helperConnectFailure = if (own.helperConnectFailed && !live) own.helperConnectFailure else null,
                 )
             }
             .stateIn(
@@ -427,17 +444,31 @@ public class AgentsPresenter(
         }
     }
 
-    override fun newConversation(id: ProfileId): Unit = operation {
-        when (val result = computers.newConversation(id)) {
-            is Outcome.Ok -> openChat(result.value)
-            is Outcome.Failed -> failed(AgentsIssue.StartFailed, result.failure)
-        }
+    /**
+     * A computer tile's New chat. Not an operation: the page's one-operation lock is held for as long as a phone step
+     * waits for the phone (up to a minute while a read probes sign-ins), and New chat on a computer has nothing to do
+     * with the phone, so a press there was dropped without a sign. One start at a time: a second press while the
+     * first conversation is being made is the same wish, and the chat it makes opens.
+     */
+    override fun newConversation(id: ProfileId) {
+        if (starting?.isActive == true) return
+        local.update { it.copy(issue = null) }
+        starting =
+            scope.launch {
+                when (val result = computers.newConversation(id)) {
+                    is Outcome.Ok -> openChat(result.value)
+                    is Outcome.Failed -> failed(AgentsIssue.StartFailed, result.failure)
+                }
+            }
     }
 
     override fun openComputer(id: ProfileId): Unit = openComputerPage(id)
 
+    /**
+     * The tile's Install opens the install review at once, also while another step runs: the review's Install then
+     * shows that step working and starts nothing until it ends (a tap is never silently dropped).
+     */
     override fun requestInstall(id: String) {
-        if (local.value.busy) return
         val agent =
             phone.state.value.agents.firstOrNull {
                 it.id == id &&
@@ -447,6 +478,22 @@ public class AgentsPresenter(
         local.update { it.copy(installingAgent = agent, installIssue = null, sheetAgent = null) }
     }
 
+    /**
+     * The tile's Sign in opens the agent's sign-in page. While another step runs (an install starting, a sign-out) the
+     * agent's sheet opens instead, its Sign in showing that step working, so the tap answers at once and the person
+     * signs in from there when it ends.
+     */
+    override fun signInPhone(id: String) {
+        val owner = phone.state.value.owner ?: return
+        if (phone.state.value.agents.none { it.id == id && it.signInAvailable }) return
+        if (local.value.busy) {
+            openAgent(id)
+            return
+        }
+        local.update { it.copy(sheetAgent = null) }
+        openSignIn(owner, id)
+    }
+
     override fun dismissInstall() {
         if (!local.value.busy) local.update { it.copy(installingAgent = null) }
     }
@@ -454,7 +501,14 @@ public class AgentsPresenter(
     override fun installPhone(id: String): Unit = operation {
         // Try again after a failed install is allowed even when the agent is partly there.
         val retrying = phone.state.value.installation?.let { it.id == id && it.phase != PhoneAgentInstallPhase.Installing } == true
-        if (phone.state.value.agents.none { it.id == id && (it.installable || retrying) }) return@operation
+        if (phone.state.value.agents.none { it.id == id && (it.installable || retrying) }) {
+            // Not installable now (another install runs, or the agent is no longer missing): say why, never nothing.
+            val busy = phone.state.value.installation?.phase == PhoneAgentInstallPhase.Installing
+            local.update {
+                it.copy(installIssue = if (busy) PhoneAgentInstallIssue.Busy else PhoneAgentInstallIssue.Unavailable)
+            }
+            return@operation
+        }
         val answer =
             when (val started = phone.install(id)) {
                 is Outcome.Ok -> started.value
@@ -464,8 +518,10 @@ public class AgentsPresenter(
         local.update {
             it.copy(
                 installIssue = (answer as? PhoneAgentInstallResult.Refused)?.issue,
+                // Only this agent's review closes: one opened for another agent meanwhile stays open.
                 installingAgent =
-                    if (answer == PhoneAgentInstallResult.Started) null else it.installingAgent,
+                    if (answer == PhoneAgentInstallResult.Started && it.installingAgent?.id == id) null
+                    else it.installingAgent,
             )
         }
     }
@@ -497,14 +553,38 @@ public class AgentsPresenter(
         }
     }
 
-    override fun refreshPhone(): Unit = operation {
-        when (phone.refresh()) {
-            is Outcome.Ok -> Unit
-            is Outcome.Failed ->
-                local.update {
-                    it.copy(removal = PhoneAgentRemoval.Refused(PhoneAgentRemovalIssue.Unavailable))
-                }
+    /**
+     * Reads this phone's agents again (the page opening, coming back to it, a server switch). A read, not an
+     * operation: it never takes the page's one-operation lock. On a phone it probes every installed agent's sign-in,
+     * which takes up to a minute while the helper does not answer, and while it held the lock every Install and
+     * Sign in tap was dropped without a sign (owner 2026-11-11: "I had to press 4 times"). A read asked for while
+     * one runs runs once more after it.
+     */
+    override fun refreshPhone() {
+        // The page calls this each time it is shown (its resume effect): the moment to try a failed start once more.
+        retryFailedStartOnce()
+        if (!local.value.busy) local.update { it.copy(issue = null) }
+        if (phoneRead?.isActive == true) {
+            readPhoneAgain = true
+            return
         }
+        phoneRead =
+            scope.launch {
+                do {
+                    readPhoneAgain = false
+                    val since = steps
+                    when (phone.refresh()) {
+                        is Outcome.Ok -> Unit
+                        // A read runs beside the page's steps now: one that failed after a removal (or any step)
+                        // began must not put "could not be read or removed" over that step's own answer.
+                        is Outcome.Failed ->
+                            if (since == steps && !local.value.busy)
+                                local.update {
+                                    it.copy(removal = PhoneAgentRemoval.Refused(PhoneAgentRemovalIssue.Unavailable))
+                                }
+                    }
+                } while (readPhoneAgain)
+            }
     }
 
     override fun requestPreviousVersion(id: String) {
@@ -599,8 +679,12 @@ public class AgentsPresenter(
      */
     override fun checkPhoneAgent(id: String) {
         val run = checker ?: return
-        if (local.value.checkingAgent != null || local.value.busy) return
         if (phone.state.value.agents.none { it.id == id && it.status == PhoneAgentStatus.PhoneCheck }) return
+        if (local.value.checkingAgent != null || local.value.busy) {
+            // Another check or step runs: the agent's sheet answers the tap, its Check waiting until that ends.
+            if (local.value.checkingAgent != id) openAgent(id)
+            return
+        }
         local.update { it.copy(checkingAgent = id, checkFailedAgent = null, checkFailure = null) }
         scope.launch {
             val answer =
@@ -619,6 +703,30 @@ public class AgentsPresenter(
             // The check started the helper: the conversations connect as they do after an install.
             if (answer == null && connectable(phone.state.value)) connectHelper()
         }
+    }
+
+    /**
+     * The page is shown again after its own start of the helper did not start: it starts it once more by itself. The
+     * phone's runtime refuses a helper start while another change of that runtime is under way, and that refusal passes
+     * on its own: the start's admission ticket is taken before the start and checked again when the helper is launched
+     * and tracked (BuiltinLinux captureAgentHostStart, withAgentHostStart, trackPrivateAgentService), and the app going
+     * to the background and back, the phone server's own start (setServerWanted) or an idle resume still running
+     * (tokenless admission needs the helper not idle-stopped; PhoneAgentHost refuses a second start while one runs)
+     * makes it stale. Before, nothing but Try again started it again. Once only: a start that fails again keeps the
+     * warning and its Try again, and a helper that needs an update or a phone without its Linux is not retried.
+     */
+    private fun retryFailedStartOnce() {
+        val shown = local.value
+        if (startRetried || !shown.helperConnectFailed || connectJob?.isActive == true) return
+        val failure = shown.helperConnectFailure as? Failure.Runtime ?: return
+        if (failure.problem == RuntimeProblem.NotInstalled || failure.problem == RuntimeProblem.HelperUpdateRequired)
+            return
+        val phoneState = phone.state.value
+        // Connected another way meanwhile (New conversation starts it too): nothing to retry.
+        if (computers.computers.value.any { it.id == phoneState.conversations && it.connected }) return
+        if (phoneHost == null || !connectable(phoneState)) return
+        startRetried = true
+        connectHelper()
     }
 
     private fun connectable(phoneState: PhoneAgentsState): Boolean =
@@ -650,6 +758,7 @@ public class AgentsPresenter(
                         delay(AUTO_RETRY_MS)
                         result = host.connect()
                     }
+                    if (result is Outcome.Ok) startRetried = false
                     local.update {
                         it.copy(
                             helperConnecting = false,
@@ -663,9 +772,9 @@ public class AgentsPresenter(
             }
     }
 
+    /** The ⋯ menu's reset opens its review at once; while a step runs the review's buttons wait for it. */
     override fun requestSignInReset() {
-        if (!local.value.busy)
-            local.update { it.copy(resettingSignIns = true, resetFailed = false) }
+        local.update { it.copy(resettingSignIns = true, resetFailed = false) }
     }
 
     override fun cancelSignInReset() {
@@ -732,6 +841,7 @@ public class AgentsPresenter(
 
     private fun operation(block: suspend () -> Unit) {
         if (local.value.busy) return
+        steps++
         local.update { it.copy(busy = true, issue = null) }
         scope.launch {
             try {

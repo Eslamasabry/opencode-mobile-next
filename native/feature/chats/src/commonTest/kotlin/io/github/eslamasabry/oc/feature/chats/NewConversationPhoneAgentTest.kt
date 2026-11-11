@@ -18,6 +18,8 @@ import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationPhoneM
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationServer
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationSetup
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationViewModel
+import io.github.eslamasabry.oc.feature.chats.presentation.newConversationModelName
+import io.github.eslamasabry.oc.feature.chats.presentation.phoneModelsNeedRecheck
 import io.github.eslamasabry.oc.ui.routes.AgentsRoute
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.AppRoute
@@ -30,6 +32,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -74,24 +77,39 @@ class NewConversationPhoneAgentTest {
     private inner class Host(
         private val directory: String = "/root/projects/app",
         private val saved: String? = null,
+        /** A ready agent not yet certified for chat: offered only once it is the chosen one (Flutter agentChoosable). */
+        private val listedOnceChosen: NewConversationPhoneAgent? = null,
     ) : NewConversationHost {
         val starts = mutableListOf<Started>()
         val chosen = mutableListOf<Pair<ProfileId, String?>>()
         val savedModels = mutableListOf<Triple<ProfileId, String, ModelRef?>>()
         var modelReads = 0
+        /** What the helper lists for the agent on the next read. */
+        var agentModels = listOf(NewConversationModel(claudeModel, "Sonnet"))
         override val servers = MutableStateFlow(listOf(NewConversationServer(server, "This phone", connected = true)))
 
-        override suspend fun setup(profile: ProfileId): Outcome<NewConversationSetup> =
-            Outcome.Ok(
+        /** Holds the agent's model list back until completed (null answers at once). */
+        var modelsGate: CompletableDeferred<Unit>? = null
+
+        override suspend fun setup(profile: ProfileId): Outcome<NewConversationSetup> {
+            val picked = if (listedOnceChosen == null) saved else chosen.lastOrNull()?.second ?: saved
+            return Outcome.Ok(
                 NewConversationSetup(
                     directory = directory,
                     projects = emptyList(),
                     models = listOf(NewConversationModel(serverModel, "Server model")),
                     agents = emptyList(),
                     model = serverModel,
-                    phone = NewConversationPhone(helper, listOf(claude), listOf(codex), selected = saved),
+                    phone =
+                        NewConversationPhone(
+                            helper,
+                            listOf(claude) + listOfNotNull(listedOnceChosen?.takeIf { it.id == picked }),
+                            listOf(codex),
+                            selected = picked,
+                        ),
                 )
             )
+        }
 
         override suspend fun choosePhoneAgent(profile: ProfileId, agentId: String?): Outcome<Unit> {
             chosen += profile to agentId
@@ -100,9 +118,8 @@ class NewConversationPhoneAgentTest {
 
         override suspend fun phoneAgentModels(profile: ProfileId, agentId: String): Outcome<NewConversationPhoneModels> {
             modelReads++
-            return Outcome.Ok(
-                NewConversationPhoneModels(listOf(NewConversationModel(claudeModel, "Sonnet")), claudeModel)
-            )
+            modelsGate?.await()
+            return Outcome.Ok(NewConversationPhoneModels(agentModels, agentModels.firstOrNull()?.model))
         }
 
         override suspend fun savePhoneAgentModel(profile: ProfileId, agentId: String, model: ModelRef?): Outcome<Unit> {
@@ -211,6 +228,79 @@ class NewConversationPhoneAgentTest {
         vm.chooseAgent(null)
         assertNull(vm.state.value.phoneAgent, "the server's own agent is the choice again")
         assertEquals(listOf<Pair<ProfileId, String?>>(server to "claude", server to null), host.chosen)
+    }
+
+    private val antigravity = NewConversationPhoneAgent("antigravity", "Antigravity", "antigravity")
+    private val antigravityModel = ModelRef("antigravity", "gemini-3-pro")
+
+    @Test
+    fun `AGENT-CARD New conversation from an agent's card opens with that agent chosen, not the remembered one`() {
+        val host = Host(saved = "claude", listedOnceChosen = antigravity)
+        host.agentModels = listOf(NewConversationModel(antigravityModel, "Gemini 3 Pro"))
+        val vm = NewConversationViewModel(ChatsRoute.New(server, phoneAgent = "antigravity"), host, Nav(), Clock.System, ListenedReports())
+        assertEquals("antigravity", vm.state.value.phoneAgent)
+        assertEquals("Antigravity", vm.state.value.phoneAgentChoice?.name, "the sheet lists the agent it opened with")
+        assertEquals(listOf<Pair<ProfileId, String?>>(server to "antigravity"), host.chosen, "remembered like a tap")
+        assertEquals(1, host.modelReads, "only the chosen agent's models are read")
+        assertEquals(antigravityModel, vm.state.value.phoneModel)
+    }
+
+    @Test
+    fun `AGENT-CARD the card's agent stays chosen while its models are still being read`() {
+        val host = Host(saved = "claude", listedOnceChosen = antigravity)
+        host.agentModels = listOf(NewConversationModel(antigravityModel, "Gemini 3 Pro"))
+        val gate = CompletableDeferred<Unit>()
+        host.modelsGate = gate
+        val vm = NewConversationViewModel(ChatsRoute.New(server, phoneAgent = "antigravity"), host, Nav(), Clock.System, ListenedReports())
+        assertEquals("antigravity", vm.state.value.phoneAgent)
+        assertTrue(vm.state.value.phoneModelsBusy)
+        assertTrue(vm.state.value.phoneModels.isEmpty())
+        gate.complete(Unit)
+        assertEquals("antigravity", vm.state.value.phoneAgent, "the models arriving do not change the agent")
+        assertEquals(listOf("Gemini 3 Pro"), vm.state.value.phoneModels.map { it.name })
+    }
+
+    @Test
+    fun `MODELS-STALE coming back from the Agents page reads the agent's models again`() {
+        val host = Host(saved = "claude")
+        // Read while the agent was not signed in yet: the helper listed nothing for it.
+        host.agentModels = emptyList()
+        val vm = vm(host)
+        assertEquals(1, host.modelReads)
+        assertTrue(vm.state.value.phoneModels.isEmpty())
+        vm.agents()
+        host.agentModels = listOf(NewConversationModel(claudeModel, "Sonnet"))
+        vm.shown()
+        assertEquals(2, host.modelReads, "the list is read again when the page is shown again")
+        assertEquals(listOf("Sonnet"), vm.state.value.phoneModels.map { it.name })
+        assertEquals(claudeModel, vm.state.value.phoneModel)
+    }
+
+    @Test
+    fun `MODELS-STALE a page shown again without a visit to setup reads nothing`() {
+        val host = Host(saved = "claude")
+        val vm = vm(host)
+        vm.shown()
+        assertEquals(1, host.modelReads, "no polling: only a return from setup reads again")
+    }
+
+    @Test
+    fun `MODELS-STALE the helper is asked to look again only when a ready agent has no real model`() {
+        val default = NewConversationModel(ModelRef("claude", "default"), "Default model")
+        assertTrue(phoneModelsNeedRecheck(agentReady = true, models = emptyList()))
+        assertTrue(phoneModelsNeedRecheck(agentReady = true, models = listOf(default)))
+        assertFalse(phoneModelsNeedRecheck(agentReady = true, models = listOf(NewConversationModel(claudeModel, "Sonnet"))))
+        assertFalse(phoneModelsNeedRecheck(agentReady = false, models = emptyList()), "nothing will change for an agent that is not ready")
+    }
+
+    @Test
+    fun `MODELS-RAW model rows never show the wire id`() {
+        assertEquals("Opus 5.5", newConversationModelName("claude-opus-5-5", null, "claude-opus-5-5"))
+        assertEquals("Fable 5.1", newConversationModelName("claude-fable-5-1", null, null))
+        assertEquals("Haiku 4.5", newConversationModelName("claude-haiku-4-5", "", null))
+        assertEquals("Opus 4.6 · 1M context", newConversationModelName("claude-opus-4-6[1m]", null, "claude-opus-4-6[1m]"))
+        assertEquals("Opus", newConversationModelName("opus", null, "Opus"), "the agent's own name wins")
+        assertEquals("Claude Opus 5.5", newConversationModelName("claude-opus-5-5", "Claude Opus 5.5", "x"), "the catalog's name wins")
     }
 
     private fun named(n: Int) = List(n) { NewConversationModel(ModelRef("p", "m$it"), "Model $it") }

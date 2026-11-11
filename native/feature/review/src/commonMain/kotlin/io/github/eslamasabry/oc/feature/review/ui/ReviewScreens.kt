@@ -151,6 +151,7 @@ import io.github.eslamasabry.oc.ui.words.res.reviewIncomplete
 import io.github.eslamasabry.oc.ui.words.res.reviewLooksGood
 import io.github.eslamasabry.oc.ui.words.res.reviewNoChangesBody
 import io.github.eslamasabry.oc.ui.words.res.reviewProjectNotGitBody
+import io.github.eslamasabry.oc.ui.words.res.reviewProjectOpenGit
 import io.github.eslamasabry.oc.ui.words.res.reviewProjectNotGitTitle
 import io.github.eslamasabry.oc.ui.words.res.e7LibraryNoUncommittedChanges
 import io.github.eslamasabry.oc.ui.words.res.reviewNoDiff
@@ -304,7 +305,9 @@ private fun ChangesContent(state: ChangesUi, actions: ChangesActions) {
         topBar = {
             TopBar(
                 stringResource(
-                    if (state.turn) Res.string.reviewTurnTitle else Res.string.chatUiChanges
+                    // The title follows the chip: "in this turn" only describes the Conversation view.
+                    if (state.turn && state.scope == ReviewScope.Conversation) Res.string.reviewTurnTitle
+                    else Res.string.chatUiChanges
                 ),
                 actions::back,
             )
@@ -400,6 +403,7 @@ private fun ChangesContent(state: ChangesUi, actions: ChangesActions) {
                                         KitStateKind.Empty,
                                         stringResource(Res.string.reviewProjectNotGitTitle),
                                         body = stringResource(Res.string.reviewProjectNotGitBody),
+                                        primary = openGitAction(state, actions),
                                         size = KitStateSize.Inline,
                                     )
                                 state.scope == ReviewScope.WorkingTree ->
@@ -653,6 +657,11 @@ private fun ScopePicker(state: ChangesUi, actions: ChangesActions) {
         }
     }
 }
+
+/** The way out of "Not a Git project": the project's Git page (only where a conversation can open it). */
+@Composable
+private fun openGitAction(state: ChangesUi, actions: ChangesActions): KitAction? =
+    if (state.conversation) KitAction(stringResource(Res.string.reviewProjectOpenGit), actions::openGit) else null
 
 private fun scopeLabel(scope: ReviewScope, turn: Boolean): StringResource =
     when (scope) {

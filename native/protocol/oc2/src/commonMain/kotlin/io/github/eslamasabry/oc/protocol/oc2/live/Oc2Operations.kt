@@ -16,8 +16,6 @@ import io.github.eslamasabry.oc.core.model.McpConfigScope
 import io.github.eslamasabry.oc.core.model.McpServerDraft
 import io.github.eslamasabry.oc.core.model.McpServerKind
 import io.github.eslamasabry.oc.core.model.ServerLocation
-import io.github.eslamasabry.oc.core.model.TerminalShellOption
-import io.github.eslamasabry.oc.core.model.TerminalShellSettings
 import io.github.eslamasabry.oc.core.model.WorktreeInfo
 import io.ktor.http.HttpMethod
 import io.ktor.http.encodeURLPathPart
@@ -25,7 +23,6 @@ import kotlin.time.Duration
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -112,60 +109,6 @@ internal suspend fun Oc2Gateway.worktreeCreate(
             true,
         )
         .ok()
-}
-
-// ---- shellSettings (B-PROTO-035)
-
-private suspend fun Oc2Gateway.shellOptions(
-    at: ServerLocation
-): Outcome<List<TerminalShellOption>> =
-    json("/config/shell", query = loc(at)).map { root ->
-        dataMaps(root).mapNotNull { item ->
-            val path =
-                item.text("path")?.trim()?.takeIf { it.isNotEmpty() } ?: return@mapNotNull null
-            val name =
-                item.text("name")?.trim()?.takeIf { it.isNotEmpty() } ?: return@mapNotNull null
-            TerminalShellOption(path, name, item["acceptable"] == JsonPrimitive(true))
-        }
-    }
-
-internal suspend fun Oc2Gateway.shellSettings(): Outcome<TerminalShellSettings> {
-    val at = location.value
-    val options = shellOptions(at)
-    if (options is Outcome.Failed) return options
-    val config = json("/config", query = loc(at))
-    if (config is Outcome.Failed) return config
-    // Config documents run lowest to highest priority; the last one that sets a shell wins.
-    var selected = ""
-    for (entry in dataMaps((config as Outcome.Ok).value)) {
-        val shell = (entry["info"] as? JsonObject)?.text("shell")?.trim()
-        if (!shell.isNullOrEmpty()) selected = shell
-    }
-    return TerminalShellSettings(selected, (options as Outcome.Ok).value.toImmutableList()).ok()
-}
-
-/**
- * The server accepts any string, so only a listed, acceptable shell is ever sent; empty clears it
- * with null.
- */
-internal suspend fun Oc2Gateway.selectShell(value: String): Outcome<Unit> {
-    val at = location.value
-    val normalized = value.trim()
-    if (normalized.isNotEmpty()) {
-        val options = shellOptions(at)
-        if (options is Outcome.Failed) return options
-        if ((options as Outcome.Ok).value.none { it.path == normalized && it.acceptable })
-            return rejected()
-    }
-    return json(
-            "/experimental/config",
-            HttpMethod.Patch,
-            JsonObject(
-                mapOf("shell" to if (normalized.isEmpty()) JsonNull else JsonPrimitive(normalized))
-            ),
-            loc(at),
-        )
-        .map {}
 }
 
 // ---- managed shells (B-PROTO-059)
