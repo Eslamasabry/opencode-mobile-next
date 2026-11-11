@@ -82,8 +82,10 @@ class AppLocalAgentHostStarter(
                         (stores.prefs.get("oc.phoneAgentOwner.${it.id.raw}") as? PrefValue.Str)?.value,
                     )
             }
-        if (saved) return Outcome.Ok(null)
+        // The rows are read at every start, saved source or not: New conversation lists the phone's agents from them,
+        // and without this read they stayed empty until the Agents page was opened.
         phone.refresh()
+        if (saved) return Outcome.Ok(null)
         val state = phone.state.value
         if (
             !PhoneConversationRules.shouldAdopt(

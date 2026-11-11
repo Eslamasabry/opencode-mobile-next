@@ -494,6 +494,7 @@ class AndroidNewConversationHost(
     private companion object {
         /** The helper's first model list is slow (about ten seconds; longer while it starts). */
         const val PHONE_MODELS_WAIT_MS = 60_000L
+        const val PHONE_ROWS_WAIT_MS = 6_000L
     }
 
     // ---- agents on this phone (Flutter ChatsHost.agents: chatAgentChoices, selectChatAgent, agentModels)
@@ -617,6 +618,10 @@ class AndroidNewConversationHost(
                 val gateway = graph.session.server
                 val ops = gateway.facet<ServerOperationsGateway>()
                 val caps = gateway.capabilities.value
+                // Flutter read the agent rows when New conversation opened. The start-up read usually has them
+                // already; when it has not finished, wait for one read, briefly, so the list is not missing them.
+                if (phoneAgents.state.value.agents.isEmpty())
+                    withTimeoutOrNull(PHONE_ROWS_WAIT_MS) { phoneAgents.refresh() }
                 val projects =
                     if (caps.projectManagement && ops != null)
                         when (val r = ops.listProjects()) {
