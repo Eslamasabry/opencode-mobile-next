@@ -33,6 +33,5 @@
     <string name="collectExit">上次 Android 结束应用的原因（例如崩溃、卡死或内存不足）</string>
     <string name="collectSteps">你最后 30 步操作，以 chat.send 这样的简短词语表示</string>
     <string name="collectCrashKeys">应用版本、安装方式、服务器类型、这部手机上的服务器是否在运行、打开了多少个连接以及服务器版本</string>
-    <string name="collectReport">应用自身日志的最后 500 行，其中的密钥、地址和路径已被抹去。你可以看到全部内容，并选择发送或取消。</string>
     <string name="collectNever">你的提示词和回复、文件名或路径、网址、主机名、IP 地址、错误消息文本、密钥或令牌、广告 ID 或 Android ID</string>
 </resources>

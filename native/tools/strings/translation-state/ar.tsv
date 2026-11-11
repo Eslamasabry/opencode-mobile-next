@@ -2141,7 +2141,7 @@ collectNeverLabel	67bbd8aef0
 collectPages	6f772ff6cd
 collectPhoneSetup	ae724435ee
 collectQueue	408cf673e3
-collectReport	6185a53255
+collectReport	283ae08ce9
 collectReportLabel	87b042b051
 collectRowSummary	021028fb8b
 collectRules	cb60c61eac
@@ -7370,7 +7370,7 @@ native44Output	a063f4c7f9
 native44Price	5cca42a3ab
 nativeAboutProvenance	e0bd072c84
 nativeAboutProvenanceTitle	f97ce82c6e
-nativeBundledPrivacy	140505d17a
+nativeBundledPrivacy	642c8eee35
 nativeCapabilitiesDetail	2fd99510fe
 nativeCapabilitiesTitle	3dd91e1995
 nativeCapabilityAddExternalAgentDetail	4c2eba1208

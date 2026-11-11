@@ -32,6 +32,6 @@
     <string name="collectExit">Why Android ended the app last time (for example a crash, a freeze or low memory)</string>
     <string name="collectSteps">Your last 30 steps, as short words such as chat.send</string>
     <string name="collectCrashKeys">The app version, how it was installed, the kind of server, whether this phone’s server is running, how many connections are open and the server version</string>
-    <string name="collectReport">The last 500 lines of the app’s own log, with keys, addresses and paths blanked. You see all of it and choose Send or Cancel.</string>
+    <string name="collectReport">What you write about the problem, the last time the app closed unexpectedly, the app and Android versions, a memory range and the kind of server, with keys, addresses and paths blanked. No log and no conversation. You see all of it and choose Send or Cancel.</string>
     <string name="collectNever">Your prompts and replies, file names or paths, web addresses, host names, IP addresses, error message text, keys or tokens, the advertising ID or the Android ID</string>
 </resources>
