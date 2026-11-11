@@ -102,7 +102,8 @@ public class FleetEngine(
     private inner class Run(val profileId: String, val config: TeamConfig) {
         val owner = Mutex()
         val reading = Mutex()
-        var gateway: FleetGateway? = null
+        /** Set by the connecting coroutine, read by [control] / [refresh] from other threads. */
+        @kotlin.concurrent.Volatile var gateway: FleetGateway? = null
         val dirty = mutableSetOf<FleetScope>()
         val dirtyLock = Mutex()
         val retries = MutableStateFlow(0)

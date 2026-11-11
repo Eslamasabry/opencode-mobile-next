@@ -15,6 +15,8 @@ import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
+import okhttp3.HttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -41,9 +43,14 @@ private class AppFleetTransport(private val base: String, private val dispatcher
 
     @Volatile private var closed = false
 
-    private fun url(path: String, query: List<Pair<String, String>>): String =
-        if (query.isEmpty()) base + path
-        else base + path + "?" + query.joinToString("&") { (k, v) -> DartJson.encodeComponent(k) + "=" + DartJson.encodeComponent(v) }
+    /**
+     * The request's address, or null when OkHttp cannot parse it (a saved or front-given address the rule allowed but
+     * that is not a valid URL): the caller answers "not reachable" instead of OkHttp throwing out of the team page.
+     */
+    private fun url(path: String, query: List<Pair<String, String>>): HttpUrl? =
+        (if (query.isEmpty()) base + path
+        else base + path + "?" + query.joinToString("&") { (k, v) -> DartJson.encodeComponent(k) + "=" + DartJson.encodeComponent(v) })
+            .toHttpUrlOrNull()
 
     private fun answered(response: Response): FleetReply.Answered {
         val text = response.body.byteStream().use { stream -> String(readBounded(stream), Charsets.UTF_8) }
@@ -83,8 +90,10 @@ private class AppFleetTransport(private val base: String, private val dispatcher
             }
         }
 
-    override suspend fun get(path: String, query: List<Pair<String, String>>, timeoutMs: Long): FleetReply =
-        call(Request.Builder().url(url(path, query)).header("Accept", "application/json").get().build(), timeoutMs)
+    override suspend fun get(path: String, query: List<Pair<String, String>>, timeoutMs: Long): FleetReply {
+        val target = url(path, query) ?: return FleetReply.Unreachable()
+        return call(Request.Builder().url(target).header("Accept", "application/json").get().build(), timeoutMs)
+    }
 
     override suspend fun send(
         method: String,
@@ -93,10 +102,11 @@ private class AppFleetTransport(private val base: String, private val dispatcher
         requestId: String,
         idempotencyKey: String?,
     ): FleetReply {
+        val target = url(path, emptyList()) ?: return FleetReply.Unreachable()
         val payload = body?.let { DartJson.encode(it).toRequestBody(JSON) }
         val request =
             Request.Builder()
-                .url(url(path, emptyList()))
+                .url(target)
                 .header("Accept", "application/json")
                 .header("X-GC-Request", requestId)
                 .apply { idempotencyKey?.let { header("Idempotency-Key", it) } }
@@ -108,10 +118,11 @@ private class AppFleetTransport(private val base: String, private val dispatcher
     override suspend fun stream(path: String, lastEventId: String?, stallMs: Long, onFrame: suspend (FleetFrame) -> Unit): FleetStreamEnd =
         withContext(dispatchers.io) {
             if (closed) return@withContext FleetStreamEnd.Dropped()
+            val target = url(path, emptyList()) ?: return@withContext FleetStreamEnd.Dropped()
             val streaming = client.newBuilder().readTimeout(stallMs, TimeUnit.MILLISECONDS).callTimeout(0, TimeUnit.MILLISECONDS).build()
             val request =
                 Request.Builder()
-                    .url(url(path, emptyList()))
+                    .url(target)
                     .header("Accept", "text/event-stream")
                     .apply { lastEventId?.let { header("Last-Event-ID", it) } }
                     .get()
