@@ -269,6 +269,7 @@ public class ChatHeaderPresenter(
             }
         return ChatHeaderUi(
             branch = facts.branch,
+            git = facts.git,
             title = title,
             serverName = facts.serverName,
             projectName = project,

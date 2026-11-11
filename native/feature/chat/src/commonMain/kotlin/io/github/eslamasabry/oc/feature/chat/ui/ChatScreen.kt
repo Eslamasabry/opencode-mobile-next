@@ -136,7 +136,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatErrorModelNotFound
 import io.github.eslamasabry.oc.ui.words.res.chatErrorOutputLength
 import io.github.eslamasabry.oc.ui.words.res.chatErrorProviderAuth
 import io.github.eslamasabry.oc.ui.words.res.chatErrorUnknown
-import io.github.eslamasabry.oc.ui.words.res.chatFeelDone
+import io.github.eslamasabry.oc.ui.words.res.kitSheetClose
 import io.github.eslamasabry.oc.ui.words.res.chatFeelLinkRefused
 import io.github.eslamasabry.oc.ui.words.res.chatFeelOpenLinkAction
 import io.github.eslamasabry.oc.ui.words.res.chatFeelOpenLinkBody
@@ -1219,7 +1219,7 @@ private fun SelectTextSheet(select: SelectTextUi?, actions: ChatActions) {
         visible = select != null,
         onDismissRequest = actions::closeSelection,
         title = stringResource(Res.string.chatFeelSelectText),
-        closeLabel = stringResource(Res.string.chatFeelDone),
+        closeLabel = stringResource(Res.string.kitSheetClose),
     ) {
         if (select != null) {
             KitMarkdownSelection(Modifier.fillMaxWidth().testTag("chat-select-text")) {
@@ -1239,7 +1239,7 @@ private fun CodeReaderSheet(code: KitMdBlock.Code?, actions: ChatActions, onClos
         visible = code != null,
         onDismissRequest = onClose,
         title = stringResource(Res.string.markdownReaderTitle),
-        closeLabel = stringResource(Res.string.chatFeelDone),
+        closeLabel = stringResource(Res.string.kitSheetClose),
         height = io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight.Full,
     ) {
         if (code != null) {
@@ -1265,7 +1265,7 @@ private fun PictureSheet(picture: PictureUi?, actions: ChatActions) {
         visible = picture != null,
         onDismissRequest = actions::closePicture,
         title = picture?.name ?: stringResource(Res.string.chatFeelPicture),
-        closeLabel = stringResource(Res.string.chatFeelDone),
+        closeLabel = stringResource(Res.string.kitSheetClose),
         height = io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight.Full,
     ) {
         if (picture != null) {

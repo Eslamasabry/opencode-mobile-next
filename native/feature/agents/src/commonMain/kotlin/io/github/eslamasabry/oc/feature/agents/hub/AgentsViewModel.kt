@@ -59,6 +59,7 @@ public class AgentsViewModel(
             openNewChat = { profile, agent ->
                 nav.open(io.github.eslamasabry.oc.ui.routes.ChatsRoute.New(profile = profile, phoneAgent = agent))
             },
+            openSignIn = { owner, agent -> nav.open(AgentsRoute.SignInTerminal(owner, agent)) },
         )
 
     public val state: StateFlow<AgentsUi> = presenter.state
@@ -151,14 +152,7 @@ public class AgentsViewModel(
 
     override fun dismissInstall(): Unit = presenter.dismissInstall()
 
-    override fun signInPhone(id: String) {
-        if (state.value.busy) return
-        val phone = state.value.phone
-        val owner = phone.owner ?: return
-        if (phone.agents.none { it.id == id && it.signInAvailable }) return
-        presenter.closeAgent()
-        nav.open(AgentsRoute.SignInTerminal(owner, id))
-    }
+    override fun signInPhone(id: String): Unit = presenter.signInPhone(id)
 
     override fun installPhone(id: String): Unit = presenter.installPhone(id)
 

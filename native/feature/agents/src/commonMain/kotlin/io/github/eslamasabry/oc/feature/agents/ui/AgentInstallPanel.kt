@@ -32,7 +32,12 @@ internal fun AgentInstallPanel(
         val needsPhoneSetup = !state.phone.available || state.phone.owner == null
         val installEnabled =
             KitEnabled.of(
-                agent.installable && enabled.isEnabled,
+                // The live row, not the one captured when the review opened (another install may have started since);
+                // a failed or cut-short install of this agent may always be tried again (the presenter's own rule).
+                ((state.phone.agents.firstOrNull { it.id == agent.id } ?: agent).installable ||
+                    state.phone.installation?.let {
+                        it.id == agent.id && it.phase != PhoneAgentInstallPhase.Installing
+                    } == true) && enabled.isEnabled,
                 stringResource(Res.string.linuxAgentInstallBusy),
             )
         KitSheet(
@@ -98,8 +103,22 @@ internal fun AgentInstallPanel(
         // The last result stays until Try again or Dismiss; the technical side is under Details.
         PhoneAgentInstallPhase.Failed,
         PhoneAgentInstallPhase.Interrupted -> {
-            val retry = KitLineAction(stringResource(Res.string.kitTryAgain), { actions.installPhone(installation.id) })
-            val dismiss = KitLineAction(stringResource(Res.string.kitSheetDismiss), actions::dismissInstallResult)
+            // Both are page steps: while another step runs they read as waiting for it, never a press that does nothing.
+            val waiting = (enabled as? KitEnabled.Disabled)?.reason
+            val retry =
+                KitLineAction(
+                    stringResource(Res.string.kitTryAgain),
+                    { actions.installPhone(installation.id) },
+                    enabled = enabled.isEnabled,
+                    disabledReason = waiting,
+                )
+            val dismiss =
+                KitLineAction(
+                    stringResource(Res.string.kitSheetDismiss),
+                    actions::dismissInstallResult,
+                    enabled = enabled.isEnabled,
+                    disabledReason = waiting,
+                )
             val words =
                 stringResource(
                     if (installation.phase == PhoneAgentInstallPhase.Interrupted)

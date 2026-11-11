@@ -1,6 +1,10 @@
 package io.github.eslamasabry.oc.feature.chat.presentation
 
+import io.github.eslamasabry.oc.core.domain.events.InterruptReason
+import io.github.eslamasabry.oc.core.domain.events.RunOutcome
+import io.github.eslamasabry.oc.engine.transcript.ledger.LedgerTurn
 import io.github.eslamasabry.oc.engine.transcript.ledger.StepState
+import io.github.eslamasabry.oc.engine.transcript.ledger.endsOnRefusal
 import io.github.eslamasabry.oc.engine.transcript.ledger.TurnStep
 import io.github.eslamasabry.oc.engine.transcript.ledger.TurnWork
 import io.github.eslamasabry.oc.engine.transcript.ledger.WorkLineState
@@ -40,6 +44,26 @@ public object StoppedSteps {
             else work.state
         val settled = work.copy(steps = steps, state = state)
         return settled.copy(counts = WorkLineRules.split(settled).done)
+    }
+
+    /**
+     * The turn ended on a step the person declined, not on a Stop they pressed (Flutter `message_view.dart`
+     * `declinedEnd`). The server ends such a turn as aborted, but it is their answer to a request: the turn says no
+     * "Stopped" of its own, as the home row does not; the step's row says "You declined this".
+     */
+    public fun endedOnRefusal(work: TurnWork?): Boolean =
+        work != null && work.state != WorkLineState.Stopped && work.steps.lastOrNull()?.state == StepState.Declined
+
+    /**
+     * The run's outcome as the transcript should read it: null when the newest turn ended on the person's refusal and
+     * the run was not stopped by a person ([InterruptReason.User]). OpenCode 2 ends a declined run as interrupted and
+     * names it "shutdown" when no reason was given, which read "The server restarted, so this reply stopped." with
+     * Continue (device run-6, the server had not restarted). After a refusal the turn ends on its row "You declined
+     * this"; nothing carries the reply on by itself (the person says what to do instead, as Flutter's Deny sheet asks).
+     */
+    public fun outcomeBesidesRefusal(outcome: RunOutcome?, newest: LedgerTurn?, busy: Boolean): RunOutcome? {
+        if (busy || outcome !is RunOutcome.Interrupted || outcome.reason == InterruptReason.User) return outcome
+        return if (newest != null && endsOnRefusal(newest)) null else outcome
     }
 
     /** The commands a turn really ran: a command the stop ended never ran to an end. */

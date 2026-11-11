@@ -579,7 +579,8 @@ private fun ShellBody(state: ServerSettingsUi, actions: ServerSettingsActions) {
     }
     val settings = state.shells
     if (settings == null) {
-        if (!state.working)
+        // A failed read already shows the page's error notice with its own Try again: one retry, not two.
+        if (!state.working && state.failure == null)
             KitButton(stringResource(Res.string.kitTryAgain), actions::refresh, modifier = gutter())
         return
     }

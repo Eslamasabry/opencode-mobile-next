@@ -93,6 +93,7 @@ public fun GitServerToolsPanel(state: GitServerToolsUi, actions: GitServerToolsA
                         )
                     }
                 }
+                if (state.shellsFailed) KitNotice(stringResource(Res.string.protoGitToolsFailed))
                 if (state.shells == null && !state.busy)
                     KitButton(stringResource(Res.string.commonRetry), actions::readShells)
             }

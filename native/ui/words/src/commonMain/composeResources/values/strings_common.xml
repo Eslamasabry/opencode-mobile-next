@@ -602,6 +602,7 @@
     <string name="chatRequestAskCommand">Run this command?</string>
     <string name="chatRequestAskEdit">Edit this file?</string>
     <string name="chatRequestAskRead">Read this file?</string>
+    <string name="chatRequestAskReadFolder">Read this folder?</string>
     <string name="chatRequestAskDirectory">Work outside this project?</string>
     <string name="inAppServerOwnershipRecoveryBody">The server on this phone couldn't restart safely. In app settings, tap Force stop, then reopen the app; your conversations stay.</string>
     <string name="continueWithMenu">Continue with…</string>

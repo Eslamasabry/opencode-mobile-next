@@ -62,6 +62,16 @@ public data class ToolOutputView(
     val pruned: Boolean = false,
 )
 
+/**
+ * Whether a tool's error is the person's own refusal at its permission card (Dart `ToolState.declined`: OpenCode 2
+ * "The user declined this tool call", OpenCode 1 "The user rejected permission to use this specific tool call"). The
+ * server records it as an error, but it is a choice, not a failure.
+ */
+public fun isDeclinedToolError(text: String?): Boolean {
+    val lower = text?.lowercase() ?: return false
+    return "user declined" in lower || "user rejected permission" in lower
+}
+
 public fun toolOutputView(state: ToolState, toolName: String?): ToolOutputView {
     val text =
         when (state.status) {

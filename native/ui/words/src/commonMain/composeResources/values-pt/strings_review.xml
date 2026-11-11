@@ -14,4 +14,5 @@
     <string name="reviewSendBackFailed">Não foi possível colocar sua nota na mensagem. Tente novamente.</string>
     <string name="reviewProjectNotGitTitle">Não é um projeto Git</string>
     <string name="reviewProjectNotGitBody">As alterações só podem ser listadas para um projeto que está no Git. Comece a acompanhá-lo na página Git do projeto para vê-las aqui.</string>
+    <string name="reviewProjectOpenGit">Abrir a página do Git</string>
 </resources>

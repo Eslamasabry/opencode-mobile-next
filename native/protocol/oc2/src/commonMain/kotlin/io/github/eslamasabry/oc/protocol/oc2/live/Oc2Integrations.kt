@@ -57,7 +57,7 @@ internal class Oc2Integrations(
         val result = gateway.json("/integration", query = query())
         if (result is Outcome.Failed) return result
         val root = (result as Outcome.Ok).value
-        redactor.registerCredentialValues(root)
+        redactor.registerAnswerCredentials(root)
         val rows = data(root) as? JsonArray ?: return unreadable()
         val parsed = rows.mapNotNull { raw ->
             val obj = raw as? JsonObject ?: return@mapNotNull null
@@ -78,13 +78,16 @@ internal class Oc2Integrations(
                                 .mapNotNull fields@{ field ->
                                     val source = field as? JsonObject ?: return@fields null
                                     val fieldKey = source.string("key") ?: return@fields null
-                                    (source["default"] as? JsonPrimitive)
-                                        ?.takeIf { it.isString }
-                                        ?.content
-                                        ?.let(redactor::registerSecret)
                                     if (
                                         (source["hidden"] as? JsonPrimitive)?.booleanOrNull == true
                                     ) {
+                                        // A hidden preset is never shown, so it is registered; a visible
+                                        // default ("global", "https://gitlab.com") is shown in the form
+                                        // in the clear and is no secret (Oc2ProviderSignIn does the same).
+                                        (source["default"] as? JsonPrimitive)
+                                            ?.takeIf { it.isString }
+                                            ?.content
+                                            ?.let(redactor::registerSecret)
                                         source["default"]?.let {
                                             preset[fieldKey] =
                                                 (it as? JsonPrimitive)?.content ?: return@let

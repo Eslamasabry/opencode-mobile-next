@@ -726,4 +726,5 @@
     <string name="browserEditorInsecureOrigin">Эта страница открыта по обычному HTTP с сетевого адреса, поэтому браузер не сохранит пароль сервера. Оставьте пароль пустым для сервера без пароля либо откройте приложение по HTTPS или с localhost, чтобы сохранить его.</string>
     <string name="browserAgentSocketUnavailable">Подключения Codex и Paseo недоступны в браузере. Они входят с заголовком WebSocket, который браузеры не могут отправить, а вход через браузер пока не поддерживается. Используйте для них приложение на телефоне или компьютере; серверы OpenCode здесь работают.</string>
     <string name="phoneServerPortBusy">Другой сервер OpenCode уже использует порт %1$s на этом телефоне.</string>
+    <string name="chatRequestAskReadFolder">Прочитать эту папку?</string>
 </resources>
