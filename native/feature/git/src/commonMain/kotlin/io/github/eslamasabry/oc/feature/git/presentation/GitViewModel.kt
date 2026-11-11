@@ -32,8 +32,10 @@ public class GitViewModel(
     private val repair: GitLinkRepairService,
     private val nav: AppNavigator,
     private val summaries: GitTurnSummary = NoGitTurnSummary(),
+    private val agent: GitAskAgent = NoGitAskAgent(),
 ) : ViewModel(), GitActions {
     private val summary = MutableStateFlow<String?>(null)
+    private val askFailed = MutableStateFlow(false)
 
     private val repairUi = MutableStateFlow(GitRepairUi(available = repair.available(route.ref)))
     private val presenter =
@@ -43,8 +45,8 @@ public class GitViewModel(
         }
 
     public val state: StateFlow<GitUi> =
-        combine(presenter.states, repairUi, summary) { base, repair, said ->
-                base.copy(repair = repair, summary = said)
+        combine(presenter.states, repairUi, summary, askFailed) { base, repair, said, refused ->
+                base.copy(repair = repair, summary = said, canAskAgent = agent.available(route.ref), askFailed = refused)
             }
             .stateIn(
                 viewModelScope,
@@ -171,6 +173,21 @@ public class GitViewModel(
     override fun manageGitHubAccess(): Unit = presenter.manageGitHubAccess()
 
     override fun dismissResult(): Unit = presenter.dismissResult()
+
+    override fun askAgent(prompt: String) {
+        if (prompt.isBlank() || !agent.available(route.ref)) return
+        askFailed.value = false
+        viewModelScope.launch {
+            when (agent.ask(route.ref, prompt)) {
+                is Outcome.Ok -> nav.back()
+                is Outcome.Failed -> askFailed.value = true
+            }
+        }
+    }
+
+    override fun dismissAskFailure() {
+        askFailed.value = false
+    }
 
     @AssistedFactory
     @ManualViewModelAssistedFactoryKey
