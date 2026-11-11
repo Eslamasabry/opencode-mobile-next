@@ -256,7 +256,13 @@ internal fun PhoneAgentConnectLine(state: AgentsUi, actions: AgentsActions, modi
         tone = StatusTone.Attention,
         action =
             if (needsUpdate)
-                KitLineAction(stringResource(Res.string.agentsHelperUpdateAction), actions::updatePhoneHelper)
+                // The update is a page step: while another runs it reads as waiting for it, never a dropped press.
+                KitLineAction(
+                    stringResource(Res.string.agentsHelperUpdateAction),
+                    actions::updatePhoneHelper,
+                    enabled = !state.busy,
+                    disabledReason = if (state.busy) stringResource(Res.string.serversWorking) else null,
+                )
             else KitLineAction(stringResource(Res.string.kitTryAgain), actions::connectPhoneHelper),
         quiet = true,
     )

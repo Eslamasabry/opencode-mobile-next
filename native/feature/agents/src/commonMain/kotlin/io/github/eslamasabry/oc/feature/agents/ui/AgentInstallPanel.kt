@@ -103,8 +103,22 @@ internal fun AgentInstallPanel(
         // The last result stays until Try again or Dismiss; the technical side is under Details.
         PhoneAgentInstallPhase.Failed,
         PhoneAgentInstallPhase.Interrupted -> {
-            val retry = KitLineAction(stringResource(Res.string.kitTryAgain), { actions.installPhone(installation.id) })
-            val dismiss = KitLineAction(stringResource(Res.string.kitSheetDismiss), actions::dismissInstallResult)
+            // Both are page steps: while another step runs they read as waiting for it, never a press that does nothing.
+            val waiting = (enabled as? KitEnabled.Disabled)?.reason
+            val retry =
+                KitLineAction(
+                    stringResource(Res.string.kitTryAgain),
+                    { actions.installPhone(installation.id) },
+                    enabled = enabled.isEnabled,
+                    disabledReason = waiting,
+                )
+            val dismiss =
+                KitLineAction(
+                    stringResource(Res.string.kitSheetDismiss),
+                    actions::dismissInstallResult,
+                    enabled = enabled.isEnabled,
+                    disabledReason = waiting,
+                )
             val words =
                 stringResource(
                     if (installation.phase == PhoneAgentInstallPhase.Interrupted)
