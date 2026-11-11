@@ -101,6 +101,8 @@ internal fun transcriptReading(
     snapshot: LedgerSnapshot,
     busy: Boolean,
     outcome: io.github.eslamasabry.oc.core.domain.events.RunOutcome? = null,
+    /** B8: the server said nothing runs ([io.github.eslamasabry.oc.feature.chat.world.TurnFeed.idleSaid]). */
+    idleSaid: Boolean = false,
 ): TranscriptReadingUi {
     val details = LinkedHashMap<String, TranscriptDetailUi>()
     val hidden = HashSet<String>()
@@ -135,7 +137,7 @@ internal fun transcriptReading(
                 (outcome as? io.github.eslamasabry.oc.core.domain.events.RunOutcome.Interrupted)
                     ?.let { stopNote(it.reason) }
                     ?.takeIf { it.isServerStop }
-            val cutOff = prompt != null && !command && !compact && cutOff(turn, assistants, outcome)
+            val cutOff = prompt != null && !command && !compact && idleSaid && cutOff(turn, assistants, outcome)
             if (cutOff)
                 endNotes[turn.turnId] = if (said) TurnEndNote.CutOff else TurnEndNote.CutOffBeforeReply
             else if (prompt != null && !command && !compact && serverStop != null && said)
@@ -250,12 +252,13 @@ internal fun transcriptReading(
 
 /**
  * B8 (Flutter message_view.dart `looksCut`: a reply still unfinished in a turn that no longer runs, the server asked
- * and idle): the newest turn's reply was cut off before it finished. Nothing is running ([transcriptReading] reads
- * only a turn that is not live: the chat read the server's status before its history), no end was seen here
- * ([outcome] null: after a reopen, or a run that ended while this chat was closed), and the newest model reply has no
- * end of its own (no completion time, no error). OpenCode 2 keeps only what was durable when its process died (the
- * phone's server dies with a force-stopped app): the reply's shell, its streamed words never come back. A turn that
- * ended on the person's refusal is not cut off (W4: OpenCode 2 ends it as an interruption too).
+ * and idle): the newest turn's reply was cut off before it finished. Nothing is running, as the server said after the
+ * newest history was read (`idleSaid` in [transcriptReading]: "not known yet" or a failed status read never counts),
+ * no end was seen here ([outcome] null: after a reopen, or a run that ended while this chat was closed), and the
+ * newest model reply has no end of its own (no completion time, no finish reason, no error). OpenCode 2 keeps only
+ * what was durable when its process died (the phone's server dies with a force-stopped app): the reply's shell, its
+ * streamed words never come back. A turn that ended on the person's refusal is not cut off (W4: OpenCode 2 ends it as
+ * an interruption too).
  */
 private fun cutOff(
     turn: io.github.eslamasabry.oc.engine.transcript.ledger.LedgerTurn,
@@ -266,7 +269,9 @@ private fun cutOff(
     // A model reply names its model; a server notice, switch or compaction written as a message does not.
     val reply = assistants.lastOrNull { !it.info.modelId.isNullOrBlank() || !it.info.providerId.isNullOrBlank() }
     val info = reply?.info ?: return false
-    if (info.time?.completedMs != null || info.errorText != null || info.errorKind != null) return false
+    // A finish reason ends a reply too: Codex keeps no completion time for a turn the person interrupted.
+    if (info.time?.completedMs != null || info.finish != null || info.errorText != null || info.errorKind != null)
+        return false
     return !io.github.eslamasabry.oc.engine.transcript.ledger.endsOnRefusal(turn)
 }
 
