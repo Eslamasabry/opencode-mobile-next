@@ -276,4 +276,26 @@
     <string name="welcomePhoneContinue">继续设置</string>
     <string name="welcomePhoneReady">已安装，可以使用</string>
     <string name="welcomePhoneOpen">在这部手机上开始</string>
+    <string name="phoneSetupRingDownloading">正在下载 %1$s</string>
+    <string name="phoneSetupRingUnpacking">正在解压 %1$s</string>
+    <string name="phoneSetupRingInstalling">正在安装 %1$s</string>
+    <string name="phoneSetupRingChecking">正在检查这部手机</string>
+    <string name="phoneSetupRingPausedTitle">设置已暂停</string>
+    <string name="phoneSetupRingInterruptedTitle">设置被中断</string>
+    <string name="phoneSetupRingStoppedNote">已完成的步骤会保留，下载会从中断处继续。</string>
+    <plurals name="phoneSetupRingMinutesLeft">
+        <item quantity="other">约剩 %1$d 分钟</item>
+    </plurals>
+    <string name="phoneSetupRingMinutesLeft__eq0">约剩 %1$d 分钟</string>
+    <string name="phoneSetupRingMinutesLeft__eq1">约剩 1 分钟</string>
+    <string name="phoneSetupRingMinutesLeft__eq2">约剩 %1$d 分钟</string>
+    <string name="phoneSetupRingUnderMinute">不到 1 分钟</string>
+    <string name="phoneSetupRingWifi">Wi-Fi</string>
+    <string name="phoneSetupRingMobileData">移动数据</string>
+    <string name="phoneSetupRingSafeToLeave">可以先离开。准备好后我们会通知你。</string>
+    <string name="phoneSetupRingSafeToLeaveQuiet">可以先离开。设置会在后台继续进行。</string>
+    <string name="phoneSetupRingPause">暂停设置</string>
+    <string name="phoneSetupRingDetailsTitle">设置详情</string>
+    <string name="browserTransportFailure">浏览器无法连接到服务器。请检查地址，并确认服务器正在运行。位于不同来源的服务器必须允许此页面的来源（CORS），通过 https 加载的页面无法使用 http:// 或 ws:// 服务器。</string>
+    <string name="browserProbeTimeout">连接超时。请检查地址，并确认此浏览器可以访问该服务器。</string>
 </resources>
