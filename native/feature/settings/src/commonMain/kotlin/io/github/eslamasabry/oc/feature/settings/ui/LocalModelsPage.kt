@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.settings.ui
 import androidx.compose.runtime.Composable
 import io.github.eslamasabry.oc.feature.settings.presentation.LocalModelStorageFacts
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsActions
+import io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
@@ -17,6 +18,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.commonRetry
+import io.github.eslamasabry.oc.ui.words.res.filesOpenPhone
 import io.github.eslamasabry.oc.ui.words.res.migrationStorageAssistant
 import io.github.eslamasabry.oc.ui.words.res.migrationStorageDelete
 import io.github.eslamasabry.oc.ui.words.res.migrationStorageDeleteBody
@@ -36,7 +38,20 @@ internal fun LocalModelsBody(state: LocalModelStorageFacts, actions: SettingsAct
             message = stringResource(Res.string.localModelSaveFailed),
             retry = KitLineAction(stringResource(Res.string.commonRetry), actions::onRefreshLocalModels),
         )
-        !state.present -> KitStateView(kind = KitStateKind.Empty, title = stringResource(Res.string.migrationStorageEmpty))
+        // No assistant model: say so, and lead to where the app's storage is measured (This phone ›
+        // App storage) instead of a page with nothing else on it.
+        !state.present ->
+            KitStateView(
+                kind = KitStateKind.Empty,
+                title = stringResource(Res.string.migrationStorageEmpty),
+                primary =
+                    if (state.phoneStorage)
+                        KitAction(
+                            label = stringResource(Res.string.filesOpenPhone),
+                            onClick = { actions.onOutside(SettingsOutside.ThisPhone) },
+                        )
+                    else null,
+            )
         else -> {
             KitRowGroup {
                 KitRow(

@@ -26,18 +26,14 @@ import io.github.eslamasabry.oc.engine.runtime.recovery.PreviousExit
 import io.github.eslamasabry.oc.engine.runtime.recovery.PreviousExitKind
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneStateDetails
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
-import java.io.File
 import java.net.HttpURLConnection
 import java.net.URI
 import java.net.URL
-import java.nio.file.Files
-import java.nio.file.LinkOption
-import java.nio.file.Path
-import java.nio.file.attribute.BasicFileAttributes
 import java.util.Base64
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
 
 /** B-STATE-025/027/028: real read-only observations, reachable on Settings › This phone. */
@@ -200,12 +196,22 @@ class AndroidPhoneStateDetails(
         controller.refresh()
     }
 
+    /**
+     * The same tolerant walk as Export projects (port of Flutter's project_export.dart scanner): an
+     * entry that vanishes or cannot be read while OpenCode works counts as nothing, so a running
+     * server never turns the whole measurement into "could not be measured".
+     */
     override suspend fun measureStorage(): Outcome<AppStorageFacts> =
         withContext(dispatchers.io) {
             attempt({ Failure.StorageRefused() }) {
-                AppStorageScanner.scan(application.filesDir, stores.profiles.profiles.value.size)
+                // Leaving the page cancels the walk at its next folder (never a leaked full-tree walk).
+                runInterruptible {
+                    appStorageFacts(projectFiles.measure(stores.profiles.profiles.value.size))
+                }
             }
         }
+
+    private val projectFiles by lazy { NativeProjectFiles(application, stopWhenInterrupted = true) }
 
     private suspend fun teamHealth(path: String): Outcome<Boolean> =
         withContext(dispatchers.io) {
@@ -248,166 +254,15 @@ class AndroidPhoneStateDetails(
     }
 }
 
-/**
- * No content reads, links followed or path/credential logging. A scan is a transient measurement
- * only.
- */
-internal object AppStorageScanner {
-    private val noLinks = arrayOf(LinkOption.NOFOLLOW_LINKS)
-    private val privateNames =
-        setOf(
-            "auth.json",
-            ".gitconfig",
-            ".git-credentials",
-            ".netrc",
-            "_netrc",
-            ".npmrc",
-            ".pypirc",
-            ".pgpass",
-            ".dockercfg",
-            "credentials",
-            "credentials.json",
-            "id_rsa",
-            "id_dsa",
-            "id_ecdsa",
-            "id_ed25519",
-        )
-    private val privateFolders = setOf(".ssh", ".gnupg", ".aws", ".docker")
-    private val privateExtensions = setOf("pem", "key", "p12", "pfx", "jks", "keystore")
-    private val templates = setOf(".env.example", ".env.sample", ".env.template", ".env.dist")
-
-    private fun attributes(path: Path): BasicFileAttributes? =
-        try {
-            Files.readAttributes(path, BasicFileAttributes::class.java, *noLinks)
-        } catch (_: java.nio.file.NoSuchFileException) {
-            null
-        }
-
-    private fun walk(
-        path: Path,
-        relative: String,
-        skipped: Set<String> = emptySet(),
-        gitRoot: Path? = null,
-        visit: (String, Long) -> Unit,
-    ) {
-        val info = attributes(path) ?: return
-        if (info.isRegularFile) {
-            visit(relative, info.size())
-            return
-        }
-        if (info.isSymbolicLink && gitRoot != null) {
-            linkedObject(path, gitRoot)?.let { target -> visit(relative, Files.size(target)) }
-            return
-        }
-        if (!info.isDirectory) return
-        Files.newDirectoryStream(path).use { children ->
-            for (child in children) if (
-                child.fileName.toString() !in skipped &&
-                    (gitRoot == null || !child.fileName.toString().startsWith(".l2s."))
-            )
-                walk(child, relative + "/" + child.fileName, skipped, gitRoot, visit)
-        }
-    }
-
-    private fun linkedObject(link: Path, root: Path): Path? {
-        val top = root.toRealPath()
-        var current = link
-        repeat(8) {
-            val target = Files.readSymbolicLink(current)
-            val name = target.fileName?.toString() ?: return null
-            if (!name.startsWith(".l2s.")) return null
-            var next = if (target.isAbsolute) target else current.parent.resolve(target)
-            if (attributes(next) == null) next = current.parent.resolve(name)
-            val info = attributes(next) ?: return null
-            when {
-                info.isSymbolicLink -> current = next
-                info.isRegularFile ->
-                    return next.toRealPath().takeIf { it.startsWith(top) && it != top }
-                else -> return null
-            }
-        }
-        return null
-    }
-
-    private fun bytes(path: Path, skipped: Set<String> = emptySet()): Long {
-        var result = 0L
-        walk(path, "", skipped) { _, size -> result = Math.addExact(result, size) }
-        return result
-    }
-
-    private fun privateFile(relative: String): Boolean {
-        val parts = relative.lowercase().split('/')
-        val name = parts.last()
-        return parts.any { it in privateFolders } ||
-            name in privateNames ||
-            (name == ".env" || name.startsWith(".env.") && name !in templates) ||
-            name.substringAfterLast('.', "") in privateExtensions ||
-            ".git" in parts && name in setOf("config", "config.worktree")
-    }
-
-    fun scan(files: File, savedServers: Int): AppStorageFacts {
-        val base = files.toPath()
-        val root = base.resolve("linux/ubuntu/root")
-        // An unsafe ancestor is never traversed, even when the final entry itself is not a link.
-        for (relative in listOf("linux", "linux/ubuntu", "linux/ubuntu/root", "projects")) {
-            val info = attributes(base.resolve(relative))
-            if (info != null && !info.isDirectory) throw java.io.IOException("unavailable")
-        }
-        val projects = mutableListOf<ProjectStorageFacts>()
-        val seen = mutableSetOf<String>()
-        for (folder in listOf(base.resolve("projects"), root.resolve("projects"))) {
-            val info = attributes(folder)
-            if (info == null || !info.isDirectory) continue
-            Files.newDirectoryStream(folder).use { tops ->
-                for (top in tops) {
-                    val topInfo = attributes(top) ?: continue
-                    val name = top.fileName.toString()
-                    if ((!topInfo.isDirectory && !topInfo.isRegularFile) || !seen.add(name))
-                        continue
-                    var size = 0L
-                    var count = 0
-                    var private = 0
-                    walk(top, name, gitRoot = base) { path, bytes ->
-                        size = Math.addExact(size, bytes)
-                        count++
-                        if (privateFile(path)) private++
-                    }
-                    projects += ProjectStorageFacts(name, size, count, private)
-                }
-            }
-        }
-        val all = bytes(base.resolve("linux"))
-        val legacy = bytes(root.resolve("projects"))
-        var privateBytes = 0L
-        for (relative in
-            listOf(
-                ".local/share/opencode",
-                ".config/opencode",
-                ".oc-opencode2/config",
-                ".oc-opencode2/data",
-                ".oc-migration-exports",
-            )) {
-            // Every parent must be a real directory before following a private-data root.
-            var cursor = root
-            var safe = true
-            for (part in relative.split('/')) {
-                cursor = cursor.resolve(part)
-                val info = attributes(cursor)
-                if (info != null && !info.isDirectory) {
-                    safe = false
-                    break
-                }
-            }
-            if (safe)
-                privateBytes =
-                    Math.addExact(privateBytes, bytes(root.resolve(relative), setOf("bin", "log")))
-        }
-        return AppStorageFacts(
-            projects.sortedBy { it.name.lowercase() }.toList(),
-            attributes(base.resolve("linux/ubuntu.ready"))?.isRegularFile == true,
-            (all - legacy).coerceAtLeast(0),
-            privateBytes,
-            savedServers,
-        )
-    }
-}
+/** Export projects' measurement as This phone's App storage reads it (one walk, one set of numbers). */
+internal fun appStorageFacts(
+    facts: io.github.eslamasabry.oc.feature.phone.storage.ProjectStorageFacts
+): AppStorageFacts =
+    AppStorageFacts(
+        projects =
+            facts.projects.map { ProjectStorageFacts(it.name, it.bytes, it.files, it.privateFiles) },
+        serverInstalled = facts.serverInstalled,
+        serverBytes = facts.serverBytes,
+        privateDataBytes = facts.privateDataBytes,
+        savedServers = facts.savedServers,
+    )

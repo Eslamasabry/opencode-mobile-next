@@ -2,7 +2,7 @@
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
     <string name="sharedFoldersTitle">Stockage partagé</string>
-    <string name="sharedFoldersSelected">Linux ne voit que les dossiers de projet que vous ouvrez et Download › OpenCode. L’accès aux fichiers Android permet à l’app de lire ces dossiers\u00A0; il ne partage pas tout votre stockage avec Linux.</string>
+    <string name="sharedFoldersSelected">Sauf choix contraire ci-dessous, Linux ne voit que les dossiers de projet que vous ouvrez et Download › OpenCode, pas tout votre stockage. Pour ouvrir ces dossiers, Android vous demande d’accorder à cette app l’Accès à tous les fichiers, sa seule autorisation pour les fichiers du stockage partagé.</string>
     <string name="sharedFoldersAll">Laisser Linux voir tout le stockage partagé</string>
     <string name="sharedFoldersAllDetail">Utilise l’ancien accès au stockage au lieu des dossiers de projet sélectionnés. Les changements s’appliquent au prochain démarrage du serveur du téléphone.</string>
     <string name="sharedFoldersAllRisk">Les agents exécutés dans Linux pourront lire et modifier des fichiers en dehors de vos projets ouverts.</string>
@@ -10,7 +10,7 @@
     <string name="sharedFoldersRestart">L’accès aux dossiers est enregistré. Redémarrez le serveur du téléphone depuis Ce téléphone quand votre travail est prêt, puis actualisez Fichiers. Aucun serveur n’a été arrêté.</string>
     <string name="sharedFoldersFailed">Impossible de lire ou d’enregistrer l’accès aux dossiers. Réessayez.</string>
     <string name="sharedFoldersAndroid">Accès aux fichiers Android</string>
-    <string name="sharedFoldersAndroidDetail">Autorisez l’accès quand vous ouvrez des projets dans le stockage partagé.</string>
-    <string name="sharedFoldersGranted">Autorisé. Linux suit toujours le choix de dossiers ci-dessous.</string>
+    <string name="sharedFoldersAndroidDetail">Non autorisé. Autorisez l’Accès à tous les fichiers pour ouvrir des projets situés dans le stockage partagé.</string>
+    <string name="sharedFoldersGranted">Autorisé : cette app a l’Accès à tous les fichiers. Pour le désactiver, ouvrez les paramètres d’Android › Accès à tous les fichiers.</string>
     <string name="sharedFoldersWorking">Mise à jour de l’accès aux dossiers…</string>
 </resources>

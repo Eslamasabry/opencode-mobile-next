@@ -56,6 +56,7 @@ public class ThisPhoneModel(
         val lifecycle: io.github.eslamasabry.oc.engine.runtime.lifecycle.LifecycleReport? = null,
         val storage: io.github.eslamasabry.oc.engine.runtime.lifecycle.AppStorageFacts? = null,
         val storageFailed: Boolean = false,
+        val measuringApp: Boolean = false,
         val phoneStorage: io.github.eslamasabry.oc.engine.runtime.storage.PhoneStorageSnapshot? =
             null,
         val measuringStorage: Boolean = false,
@@ -128,6 +129,7 @@ public class ThisPhoneModel(
             lifecycle = l.lifecycle,
             storage = l.storage,
             storageFailed = l.storageFailed,
+            measuringApp = l.measuringApp,
             answer = answer,
             serverRows = serverRows.toImmutableList(),
             version = version(facts),
@@ -193,13 +195,23 @@ public class ThisPhoneModel(
         details.singleOrNull()?.dismissRecovery()
     }
 
+    /**
+     * Measures the app's own storage. Every call really measures again (one at a time): the failure
+     * line gives way to "Measuring…" while it runs, and comes back only if this attempt fails too.
+     */
     override fun refreshStorage() {
         val owner = details.singleOrNull() ?: return
+        if (local.value.measuringApp) return
+        local.update { it.copy(measuringApp = true, storageFailed = false) }
         scope.launch {
-            when (val result = owner.measureStorage()) {
-                is Outcome.Ok ->
-                    local.update { it.copy(storage = result.value, storageFailed = false) }
-                is Outcome.Failed -> local.update { it.copy(storageFailed = true) }
+            try {
+                when (val result = owner.measureStorage()) {
+                    is Outcome.Ok ->
+                        local.update { it.copy(storage = result.value, storageFailed = false) }
+                    is Outcome.Failed -> local.update { it.copy(storageFailed = true) }
+                }
+            } finally {
+                local.update { it.copy(measuringApp = false) }
             }
         }
     }
@@ -247,8 +259,10 @@ public class ThisPhoneModel(
         exits.dismiss()
     }
 
+    /** The page's one measure action: the app's storage and the phone's free space, both again. */
     override fun measureStorage() {
-        readStorage(includeBuiltinHost = true)
+        refreshStorage()
+        readStorage(includeBuiltinHost = details.isEmpty())
     }
 
     private fun readStorage(includeBuiltinHost: Boolean) {
