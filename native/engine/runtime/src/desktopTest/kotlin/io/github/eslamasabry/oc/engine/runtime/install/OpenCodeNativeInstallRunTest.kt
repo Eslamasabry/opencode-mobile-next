@@ -24,6 +24,9 @@ class OpenCodeNativeInstallRunTest {
     private var port = 0
     private val ready = listOf("python3", "curl", "dash", "tar", "sha256sum").all(Sh::has)
 
+    /** The fake programs report the pinned version: the script refuses any other (exit 1, WrongVersion). */
+    private val pinned = ManagedRuntime.OpenCode2.pinnedVersion
+
     @BeforeTest
     fun setUp() {
         dir = Files.createTempDirectory("oc-native-").toFile()
@@ -101,13 +104,13 @@ class OpenCodeNativeInstallRunTest {
     @Test
     fun `B-LINUX-111 ARM64 gets the arm64 archive - installed, proven, linked, the old npm wrapper replaced`() {
         if (!ready) return
-        val sha = archive("arm.tgz", "opencode", fakeProgram("2.2.5"))
+        val sha = archive("arm.tgz", "opencode", fakeProgram(pinned))
         // What an older build left: npm's wrapper, reporting the right version.
         val npm = File(root, "usr/local/lib/node_modules").apply { mkdirs() }
         val wrapper =
             File(npm, "opencode-ai/bin/opencode2").apply {
                 parentFile.mkdirs()
-                writeText("#!/bin/sh\necho 2.2.5\n")
+                writeText("#!/bin/sh\necho $pinned\n")
                 Sh.chmod("+x", this)
             }
         File(npm, "opencode-linux-arm64").mkdir()
@@ -120,7 +123,7 @@ class OpenCodeNativeInstallRunTest {
             install(OpenCodeAssets(arm64 = asset("arm.tgz", sha, "opencode"), x64 = asset("missing-x64.tgz", "0".repeat(64), "opencode")))
         assertEquals(0, result.exitCode, result.stdout + result.stderr)
         assertTrue("::oc stage Checking that OpenCode starts" in result.stdout)
-        assertTrue("::oc version 2.2.5" in result.stdout)
+        assertTrue("::oc version $pinned" in result.stdout)
         assertEquals("${root.path}/opt/opencode2/bin/opencode2", linkTarget("${root.path}/usr/local/bin/opencode2"))
         assertTrue(File(npm, "opencode-ai").exists())
         assertTrue(File(npm, "opencode-linux-arm64").exists())
@@ -129,13 +132,13 @@ class OpenCodeNativeInstallRunTest {
 
         val after = check()
         assertEquals(0, after.exitCode, after.stderr)
-        assertEquals("2.2.5", after.stdout.trim())
+        assertEquals(pinned, after.stdout.trim())
     }
 
     @Test
     fun `B-LINUX-111 x86_64 gets the x64 archive and the npm platform package's program becomes opencode2`() {
         if (!ready) return
-        val sha = archive("x64.tgz", "package/bin/opencode2", fakeProgram("opencode v2.2.5"))
+        val sha = archive("x64.tgz", "package/bin/opencode2", fakeProgram("opencode v$pinned"))
         val result =
             install(
                 OpenCodeAssets(
@@ -145,18 +148,18 @@ class OpenCodeNativeInstallRunTest {
                 machine = "x86_64",
             )
         assertEquals(0, result.exitCode, result.stdout + result.stderr)
-        assertTrue("::oc version 2.2.5" in result.stdout)
+        assertTrue("::oc version $pinned" in result.stdout)
         assertTrue(File(root, "opt/opencode2/bin/opencode2").exists())
         assertFalse(File(root, "opt/opencode2/package").exists())
         val after = check()
         assertEquals(0, after.exitCode, after.stderr)
-        assertEquals("2.2.5", after.stdout.trim())
+        assertEquals(pinned, after.stdout.trim())
     }
 
     @Test
     fun `B-LINUX-112 a checksum mismatch stops before anything is unpacked`() {
         if (!ready) return
-        archive("arm.tgz", "opencode", fakeProgram("2.2.5"))
+        archive("arm.tgz", "opencode", fakeProgram(pinned))
         val wrong = asset("arm.tgz", "f".repeat(64), "opencode")
         val result = install(OpenCodeAssets(arm64 = wrong, x64 = wrong))
         assertNotEquals(0, result.exitCode)
@@ -170,7 +173,7 @@ class OpenCodeNativeInstallRunTest {
     fun `B-LINUX-112 an unauthorized health response does not prove the candidate starts`() {
         if (!ready) return
         val previous = File(root, "opt/opencode2/bin/opencode2").apply { parentFile.mkdirs(); writeText("old") }
-        val sha = archive("reject.tgz", "opencode", fakeProgram("2.2.5", acceptsAuth = false))
+        val sha = archive("reject.tgz", "opencode", fakeProgram(pinned, acceptsAuth = false))
         val pin = asset("reject.tgz", sha, "opencode")
         val result = install(OpenCodeAssets(pin, pin), probeSeconds = 2)
         assertNotEquals(0, result.exitCode)
@@ -184,18 +187,18 @@ class OpenCodeNativeInstallRunTest {
         val previous =
             File(root, "opt/opencode2/bin/opencode2").apply {
                 parentFile.mkdirs()
-                writeText(fakeProgram("2.2.5"))
+                writeText(fakeProgram(pinned))
                 Sh.chmod("755", this)
             }
         File(root, "usr/local/bin").mkdirs()
         val link = File(root, "usr/local/bin/opencode2")
         Files.createSymbolicLink(link.toPath(), previous.toPath())
-        val sha = archive("activation.tgz", "opencode", fakeProgram("2.2.5", activeFails = true))
+        val sha = archive("activation.tgz", "opencode", fakeProgram(pinned, activeFails = true))
         val pin = asset("activation.tgz", sha, "opencode")
         val result = install(OpenCodeAssets(pin, pin))
         assertNotEquals(0, result.exitCode)
         assertEquals("[oc] OpenCode could not finish updating. Run setup again.", result.lastLine)
-        assertEquals(fakeProgram("2.2.5"), previous.readText())
+        assertEquals(fakeProgram(pinned), previous.readText())
         assertEquals(previous.path, linkTarget(link.path))
         assertEquals(0, check().exitCode)
         assertFalse(File(root, "opt/opencode2.oc-pending").exists())
@@ -217,11 +220,11 @@ class OpenCodeNativeInstallRunTest {
         val empty = run(null)
         assertEquals(OpenCodeInstallFailure.NoProgram.line, empty.lastLine)
 
-        val broken = run(fakeProgram("2.2.5", runs = false))
+        val broken = run(fakeProgram(pinned, runs = false))
         assertEquals(OpenCodeInstallFailure.WontRun.line, broken.lastLine)
         assertTrue("Exec format error" in broken.stdout)
 
-        val silent = run(fakeProgram("2.2.5", starts = false))
+        val silent = run(fakeProgram(pinned, starts = false))
         assertNotEquals(0, silent.exitCode)
         assertTrue("database is locked" in silent.stdout + silent.stderr)
         assertEquals(OpenCodeInstallFailure.NoStart.line, silent.lastLine)
