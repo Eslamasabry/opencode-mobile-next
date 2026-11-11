@@ -131,7 +131,7 @@ internal fun kitLiquidFace(
     val backdrop = remember(source, ground, picture) { frostStateBackdrop(source, ground, picture) }
     val flip = liquidFlipFor(source, role) ?: remember { LiquidFlip() }
     val restSpec = kitLiquidPaneSpec(rest, flip, chosen = false, keepRim = false)
-    val grownSpec = kitLiquidPaneSpec(grown, flip, chosen = false, keepRim = false)
+    val grownSpec = kitLiquidPaneSpec(grown, flip, chosen = false, keepRim = false, swell = true)
     val listedSpec = listed?.let { kitLiquidPaneSpec(it, flip, chosen = false, keepRim = false) }
     // The words sample what lies under the body only: the body's bounds stretched over the node's whole area.
     val sampled = remember(backdrop, wordsArea) { areaBackdrop(backdrop, wordsArea) }

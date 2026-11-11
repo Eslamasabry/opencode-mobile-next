@@ -408,7 +408,7 @@ private fun Modifier.liquidPane(
 
 /** [role]'s liquid pane as the look here draws it: its face measured for its words, its recipe, rim and gloss. */
 @Composable
-internal fun kitLiquidPaneSpec(role: LiquidRole, flip: LiquidFlip, chosen: Boolean, keepRim: Boolean): KitLiquidPaneSpec {
+internal fun kitLiquidPaneSpec(role: LiquidRole, flip: LiquidFlip, chosen: Boolean, keepRim: Boolean, swell: Boolean = false): KitLiquidPaneSpec {
     val roles = LocalKitRoles.current
     val platform = LocalKitPlatform.current
     val appearance = LocalKitAppearance.current
@@ -418,7 +418,7 @@ internal fun kitLiquidPaneSpec(role: LiquidRole, flip: LiquidFlip, chosen: Boole
     val picture = kitLivePictureSpots()
     val look = kitGlassLook()
     val spec =
-        remember(roles, role, rtl, appearance.pack, appearance.accent, flip, chosen, keepRim, picture, look, platform.liquidResolution) {
+        remember(roles, role, rtl, appearance.pack, appearance.accent, flip, chosen, keepRim, swell, picture, look, platform.liquidResolution) {
             // The face carries its words itself (no plate): its tint is thickened for the theme's ink over the content
             // that ink lies over; over content of the other brightness the words flip to the other theme's ink and the
             // face to the other theme's face, which carries that ink there.
@@ -440,7 +440,8 @@ internal fun kitLiquidPaneSpec(role: LiquidRole, flip: LiquidFlip, chosen: Boole
             }
             val faceDark = smoke?.dark ?: roles.dark
             val fill = lean(face.fill?.let { Color(it.v) } ?: Color.Transparent, faceDark)
-            val recipe = LiquidEdge.recipe(role, faceDark, look)
+            // The edge dock's grown end is the menu's old glass (6 dp dark, 3 light): menus themselves frost at 12 dp.
+            val recipe = if (swell && role == LiquidRole.Menu) LiquidEdge.swellRecipe(faceDark, look) else LiquidEdge.recipe(role, faceDark, look)
             val rim = LiquidRim.Light
             KitLiquidPaneSpec(
                 recipe = recipe,

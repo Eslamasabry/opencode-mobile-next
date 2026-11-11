@@ -51,6 +51,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatRequestAskOutsideRead
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAskOutsideRun
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAskOutsideWrite
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAskRead
+import io.github.eslamasabry.oc.ui.words.res.chatRequestAskReadFolder
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAskReadNamed
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAskRunAnyIn
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAskRunIn
@@ -110,6 +111,7 @@ internal fun askQuestion(ask: AskView): String {
                 stringResource(Res.string.chatRequestAskDeleteNamed, ltr(name))
             }
         AskVerb.Read -> if (name != null) stringResource(Res.string.chatRequestAskReadNamed, ltr(name)) else stringResource(Res.string.chatRequestAskRead)
+        AskVerb.ReadFolder -> stringResource(Res.string.chatRequestAskReadFolder)
         AskVerb.Fetch -> stringResource(Res.string.chatRequestAskFetch)
         AskVerb.WebSearch -> stringResource(Res.string.chatRequestTitleWebSearch)
         AskVerb.Search -> stringResource(Res.string.chatRequestTitleSearch)
@@ -224,7 +226,7 @@ internal fun askToolLine(ask: AskView): String {
         when (ask.verb) {
             AskVerb.Run -> stringResource(Res.string.approvalToolTerminal)
             AskVerb.Edit, AskVerb.Create, AskVerb.Delete -> stringResource(Res.string.approvalToolEdit)
-            AskVerb.Read -> stringResource(Res.string.approvalToolRead)
+            AskVerb.Read, AskVerb.ReadFolder -> stringResource(Res.string.approvalToolRead)
             AskVerb.Fetch, AskVerb.WebSearch -> stringResource(Res.string.approvalToolWeb)
             AskVerb.OutsideRead, AskVerb.OutsideWrite, AskVerb.OutsideRun, AskVerb.Outside ->
                 stringResource(Res.string.approvalToolOutside)

@@ -90,15 +90,15 @@ class KitLiquidResolutionTest {
     }
 
     @Test
-    fun `B-KIT-018 sheets and dark menus are the panes frosted enough for the reduced resolution`() {
-        // After the blur cut (owner 2026-11-11: bars 3 dp, the message box 2, menus 6 dark and 3 light) only panes
+    fun `B-KIT-018 sheets and menus are the panes frosted enough for the reduced resolution`() {
+        // After the blur cut (owner 2026-11-11: bars 3 dp, the message box 2, menus now 12 in both themes) only panes
         // frosted at least LIQUID_REDUCED_MIN_BLUR_DP keep the reduced resolution.
         for (dark in listOf(false, true)) {
             for (role in LiquidRole.entries) {
                 val expected =
                     when (role) {
                         LiquidRole.Sheet -> .5f
-                        LiquidRole.Menu -> if (dark) .5f else 1f
+                        LiquidRole.Menu -> .5f
                         LiquidRole.Bar, LiquidRole.Dock, LiquidRole.Composer, LiquidRole.Pill, LiquidRole.Status, LiquidRole.Action -> 1f
                     }
                 assertEquals(expected, liquidResolutionOf(LiquidEdge.recipe(role, dark), .5f), "$role dark=$dark")

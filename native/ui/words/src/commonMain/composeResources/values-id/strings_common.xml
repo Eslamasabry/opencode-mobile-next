@@ -692,4 +692,5 @@
     <string name="browserEditorInsecureOrigin">Halaman ini dibuka lewat HTTP biasa dari alamat jaringan, jadi browser tidak akan menyimpan kata sandi server. Kosongkan kata sandi untuk server tanpa kata sandi, atau buka aplikasi lewat HTTPS atau dari localhost untuk menyimpannya.</string>
     <string name="browserAgentSocketUnavailable">Koneksi Codex dan Paseo tidak tersedia di browser. Keduanya masuk dengan header WebSocket yang tidak bisa dikirim browser, dan belum ada proses masuk lewat browser. Gunakan aplikasi ponsel atau desktop untuk keduanya; server OpenCode berfungsi di sini.</string>
     <string name="phoneServerPortBusy">Server OpenCode lain sudah memakai port %1$s di ponsel ini.</string>
+    <string name="chatRequestAskReadFolder">Baca folder ini?</string>
 </resources>

@@ -783,6 +783,8 @@ public fun ServerEditorScreen(
                         state.pairingProblem?.let { KitErrorNotice(pairingProblemText(it)) }
                     val manualFields: @Composable () -> Unit = {
                         Column(verticalArrangement = Arrangement.spacedBy(Space.S4.dp)) {
+                            // W4: the phone's own server shows no address, HTTPS advice, password or user name.
+                            if (ServerEditorRules.showsAddress(state.record))
                             KitField(
                                 address,
                                 stringResource(
@@ -807,6 +809,7 @@ public fun ServerEditorScreen(
                                     else null,
                                 enabled = enabled,
                             )
+                            if (ServerEditorRules.showsPassword(state.record))
                             KitField(
                                 password,
                                 stringResource(
@@ -846,6 +849,7 @@ public fun ServerEditorScreen(
                             val origin = editorOrigin(address.text.toString())
                             if (
                                 backend == BackendKind.OpenCode2 &&
+                                    ServerEditorRules.showsAddress(state.record) &&
                                     origin != null &&
                                     AddressRules.needsCleartextConsent(origin)
                             ) {
@@ -971,7 +975,7 @@ public fun ServerEditorScreen(
                             }
                             if (state.record?.needsSecret == true)
                                 KitNotice(stringResource(Res.string.rows40Secret))
-                            if (backend == BackendKind.OpenCode2) {
+                            if (backend == BackendKind.OpenCode2 && ServerEditorRules.showsAddress(state.record)) {
                                 if (address.text.toString().trim().startsWith("https://")) {
                                     if (pin != null)
                                         KitNotice(stringResource(Res.string.editor40Pinned))
@@ -1037,6 +1041,7 @@ public fun ServerEditorScreen(
                                 role = TypeRole.Secondary,
                                 tone = io.github.eslamasabry.oc.ui.design.type.TextTone.Secondary,
                             )
+                        if (ServerEditorRules.showsUsername(state.record))
                         KitExpandRow(
                             stringResource(Res.string.editor40More),
                             moreOpen,

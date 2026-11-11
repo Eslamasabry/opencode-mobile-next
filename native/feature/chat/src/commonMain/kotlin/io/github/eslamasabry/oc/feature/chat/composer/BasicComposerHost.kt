@@ -27,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
@@ -287,7 +288,10 @@ public fun BasicComposer(
     // N-55: a stray hardware key steers focus here (the chat asks; the field answers).
     DisposableEffect(focus, chrome.typing) {
         chrome.typing.focus = { focus.requestFocus() }
-        onDispose { chrome.typing.focus = null }
+        onDispose {
+            chrome.typing.focus = null
+            chrome.typing.focused = false
+        }
     }
     // "Ready to type" (07 §2.5, B-NAV-005): focus once per arrival, then acknowledge it.
     val focusId = chrome.focusRequest()
@@ -1140,7 +1144,11 @@ public fun BasicComposer(
                                 repeatRevision = null
                                 actions.draftChanged(accepted)
                             },
-                            modifier = Modifier.kitPromptOrigin().testTag("chat-composer-field"),
+                            // w4-focus: the chat asks whether the box had focus when another field opened.
+                            modifier =
+                                Modifier.kitPromptOrigin()
+                                    .onFocusChanged { chrome.typing.focused = it.hasFocus }
+                                    .testTag("chat-composer-field"),
                         )
                     }
                 },

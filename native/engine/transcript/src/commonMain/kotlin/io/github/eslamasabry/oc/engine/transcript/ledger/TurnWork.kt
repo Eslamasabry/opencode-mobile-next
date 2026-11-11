@@ -8,6 +8,7 @@ import io.github.eslamasabry.oc.core.model.transcript.ToolStatus
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolFacts
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolOutputView
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.backgroundShellToolPart
+import io.github.eslamasabry.oc.engine.transcript.turnfacts.isDeclinedToolError
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.isBackgroundTaskNotice
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.settleStaleLive
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.toolDurationMs
@@ -27,6 +28,12 @@ public enum class StepState {
     Failed,
     Stopped,
     NotRun,
+
+    /**
+     * The person refused it at the permission card: a choice, not a failure (Dart `KitToolStatus.declined`). A turn that
+     * ends on it is neither failed nor stopped (Flutter `_WorkGroup._endedFailed`): its row says "You declined this".
+     */
+    Declined,
 }
 
 /**
@@ -159,6 +166,25 @@ private fun work(
     )
 }
 
+/**
+ * Whether [turn]'s last tool call is one the person declined at its permission card ([isDeclinedToolError], the one
+ * place that reads the servers' refusal sentence). OpenCode 2 ends such a run as interrupted with no reason of its own,
+ * and its run lifecycle fills in "shutdown" (`SessionExecution.settled`: `reason ?? "shutdown"`), so the run's own
+ * outcome cannot tell a refusal from a restart: this can.
+ */
+public fun endsOnRefusal(turn: LedgerTurn): Boolean {
+    var last: Part? = null
+    for (m in turn.messages) {
+        if (m.info.role != Role.Assistant) continue
+        for (rawPart in m.parts) {
+            val p = backgroundShellToolPart(rawPart) ?: rawPart
+            if (p.type == PartType.Tool && p.tool != null && !isBackgroundTaskNotice(p.toolName ?: "")) last = p
+        }
+    }
+    val tool = last?.tool ?: return false
+    return tool.status == ToolStatus.Error && isDeclinedToolError(toolOutputView(tool, last.toolName).errorText)
+}
+
 private fun step(p: Part, live: Boolean): TurnStep? {
     val tool = p.tool ?: return null
     val state =
@@ -191,18 +217,22 @@ private fun step(p: Part, live: Boolean): TurnStep? {
         )
             tool.copy(status = ToolStatus.Completed)
         else tool
+    val output = toolOutputView(outputTool, p.toolName)
+    val refused = settled == StepState.Failed && isDeclinedToolError(output.errorText)
     return TurnStep(
         p.id,
         toolFacts(p),
-        settled,
+        if (refused) StepState.Declined else settled,
         toolDurationMs(tool),
         tool.startedAtMs,
-        toolOutputView(outputTool, p.toolName),
+        output,
     )
 }
 
 private fun count(c: WorkCounts, p: Part, step: TurnStep, editedFiles: MutableSet<String>): WorkCounts {
     if (step.state == StepState.NotRun) return c.copy(notRun = c.notRun + 1)
+    // A step the person refused did not do its work: it is not counted as read, edited or ran.
+    if (step.state == StepState.Declined) return c
     return when (p.toolName?.trim()?.lowercase() ?: "") {
         "read" -> c.copy(read = c.read + 1)
         "glob",
