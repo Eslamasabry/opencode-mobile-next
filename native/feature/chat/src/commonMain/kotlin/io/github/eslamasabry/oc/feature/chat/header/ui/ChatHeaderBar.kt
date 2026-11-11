@@ -65,10 +65,6 @@ import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.agentToolsTitle
 import io.github.eslamasabry.oc.ui.words.res.gitSheetTitle
 import io.github.eslamasabry.oc.ui.words.res.handoffUiPhoneTitle
-import io.github.eslamasabry.oc.ui.words.res.handoffUiPhoneIntro
-import io.github.eslamasabry.oc.ui.words.res.handoffUiPhoneLinkLabel
-import io.github.eslamasabry.oc.ui.words.res.handoffUiPhoneCopyLink
-import io.github.eslamasabry.oc.ui.words.res.handoffUiPhoneUnavailable
 import io.github.eslamasabry.oc.ui.words.res.cardsFromAgentsTitle
 import io.github.eslamasabry.oc.ui.words.res.chatHeaderArchiveFailed
 import io.github.eslamasabry.oc.ui.words.res.chatHeaderContext
@@ -664,36 +660,6 @@ private fun DetailsBody(facts: DetailsUi) {
                     modifier = Modifier.testTag("chat-details-cost"),
                 )
             }
-        }
-    }
-}
-
-/** Flutter `_ContinueOnPhoneBody`: the link with its own Copy, or why there is none. */
-@Composable
-private fun PhoneBody(sheet: HeaderSheet.ContinueOnPhone, actions: ChatHeaderActions) {
-    Column(
-        Modifier.fillMaxWidth().testTag("continue-on-phone-sheet"),
-        verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
-    ) {
-        val link = sheet.link
-        if (link != null) {
-            KitText(stringResource(Res.string.handoffUiPhoneIntro))
-            KitSectionLabel(stringResource(Res.string.handoffUiPhoneLinkLabel))
-            KitCodeBlock(
-                source = link,
-                kind = KitCodeKind.Command,
-                maxLines = Int.MAX_VALUE,
-                modifier = Modifier.testTag("continue-on-phone-link"),
-                wrap = true,
-                copyLabel = stringResource(Res.string.handoffUiPhoneCopyLink),
-                copiedLabel = stringResource(Res.string.kitCopied),
-                onCopy = { actions.copyPhoneLink() },
-            )
-        } else {
-            KitNotice(
-                modifier = Modifier.testTag("continue-on-phone-unavailable"),
-                message = stringResource(Res.string.handoffUiPhoneUnavailable),
-            )
         }
     }
 }

@@ -131,7 +131,7 @@ public sealed interface HeaderSheet {
     public data class ContinueOnComputer(val command: SessionResumeCommand) : HeaderSheet
 
     /** The link the app on another phone opens; null when an id is unsafe to put in a link. */
-    public data class ContinueOnPhone(val link: String?) : HeaderSheet
+    public data class ContinueOnPhone(val link: String?, val address: PhoneAddressOffer? = null) : HeaderSheet
 }
 
 /** C4: an accumulated cost and whether the server reported it (else it covers the loaded messages only). */
@@ -256,6 +256,9 @@ public interface ChatHeaderActions {
     public fun copyResumeCommand() {}
 
     public fun copyPhoneLink() {}
+
+    /** Copy the portable link (the one with the server's address): it is built again, not reused. */
+    public fun copyPhoneAddressLink() {}
 }
 
 /** Optional handoff intents; implemented only by the production header with a concrete host. */
