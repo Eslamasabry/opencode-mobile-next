@@ -106,6 +106,14 @@ class SchedulesViewModelTest {
 
     private class Servers(var available: Boolean = true) : ScheduleServers {
         var seed: ConversationSeed? = null
+        var timing = io.github.eslamasabry.oc.feature.schedules.presentation.ScheduleTiming()
+        var exactRequests = 0
+
+        override suspend fun timing() = timing
+
+        override fun allowExactTiming() {
+            exactRequests++
+        }
 
         override suspend fun target(profileId: ProfileId) = ScheduleTarget("Home server", available, "/work/recent")
 
@@ -184,6 +192,20 @@ class SchedulesViewModelTest {
         assertEquals(SchedulesPhase.Unavailable, vm.state.value.phase)
         assertEquals(Unavailable.Server, vm.state.value.unavailable)
         assertTrue(alarms.armed.isEmpty())
+    }
+
+    @Test
+    fun `G2 a phone that holds exact alarms back says runs may be late and can send the person to allow it`() = runTest {
+        servers.timing = io.github.eslamasabry.oc.feature.schedules.presentation.ScheduleTiming(exactAllowed = false, notificationsAllowed = false)
+        val vm = list()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        assertEquals(false, vm.state.value.exactAllowed)
+        vm.allowExactTiming()
+        assertEquals(1, servers.exactRequests)
+        servers.timing = io.github.eslamasabry.oc.feature.schedules.presentation.ScheduleTiming(exactAllowed = true, notificationsAllowed = false)
+        vm.refreshTiming() // back from the phone's settings page
+        assertEquals(true, vm.state.value.exactAllowed)
+        assertEquals(false, vm.state.value.notificationsAllowed)
     }
 
     @Test
