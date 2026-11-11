@@ -63,7 +63,7 @@ class ChatRequestsModelTest {
         override suspend fun pendingQuestions(): Outcome<ImmutableList<PendingQuestion>> = questions.toImmutableList().ok()
 
         override suspend fun replyPermission(session: SessionId, request: RequestId, reply: PermissionReply, note: String?) =
-            record("reply ${request.raw} $reply")
+            record("reply ${request.raw} $reply" + (note?.let { " note=$it" } ?: ""))
 
         override suspend fun answerQuestion(session: SessionId, request: RequestId, answers: ImmutableList<ImmutableList<String>>) =
             record("answer ${request.raw} $answers")
@@ -133,6 +133,28 @@ class ChatRequestsModelTest {
             model.shown(RequestId("p1"))
             runCurrent()
             assertEquals(clock.now.toEpochMilliseconds(), (model.state.value.card as RequestCardUi.Permission).waitingSinceMs)
+        }
+
+    @Test
+    fun `Deny on the card rejects at once with no note, as Flutter's Reject does`() =
+        runTest {
+            val (_, model) = model()
+            ask(shell("p1"))
+
+            model.performReviewed(model.state.value.card!!, ReviewedRequestAction.Reject)
+            passHold()
+            assertEquals(listOf("reply p1 Reject"), port.replies)
+        }
+
+    @Test
+    fun `Deny from the Details sheet carries the typed note`() =
+        runTest {
+            val (_, model) = model()
+            ask(shell("p1"))
+
+            model.performReviewed(model.state.value.card!!, ReviewedRequestAction.RejectWith("  use the tests folder  "))
+            passHold()
+            assertEquals(listOf("reply p1 Reject note=use the tests folder"), port.replies)
         }
 
     @Test
