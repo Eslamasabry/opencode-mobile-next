@@ -16,6 +16,7 @@ import io.github.eslamasabry.oc.feature.settings.presentation.SettingsActions
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage
 import io.github.eslamasabry.oc.feature.settings.presentation.ShortcutDoes
+import io.github.eslamasabry.oc.feature.settings.presentation.ShortcutGroup
 import io.github.eslamasabry.oc.feature.settings.presentation.ShortcutHelp
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
@@ -136,13 +137,23 @@ private fun updateLine(state: UpdateState): String =
  */
 @Composable
 internal fun ColumnScope.ShortcutsBody(about: AboutFacts) {
-    KitRowGroup(Modifier.testTag("shortcuts-list")) {
-        ShortcutHelp.entries(about.shortcutModifier).forEach { entry ->
-            KitRow(
-                title = shortcutWords(entry.does),
-                titleMaxLines = 2,
-                trailing = KitRowTrailing.Value(entry.keys, chevron = false),
-            )
+    val all = ShortcutHelp.entries(about.shortcutModifier)
+    ShortcutGroup.entries.forEach { group ->
+        KitRowGroup(
+            Modifier.testTag(if (group == ShortcutGroup.Anywhere) "shortcuts-list" else "shortcuts-list-conversation"),
+            label =
+                stringResource(
+                    if (group == ShortcutGroup.Anywhere) Res.string.shortcutsHelpAnywhere
+                    else Res.string.shortcutsHelpConversation
+                ),
+        ) {
+            all.filter { it.group == group }.forEach { entry ->
+                KitRow(
+                    title = shortcutWords(entry.does),
+                    titleMaxLines = 2,
+                    trailing = KitRowTrailing.Value(entry.keys, chevron = false),
+                )
+            }
         }
     }
 }
@@ -157,6 +168,14 @@ private fun shortcutWords(does: ShortcutDoes): String =
             ShortcutDoes.CloseScreen -> Res.string.e7LocaleUiCloseScreen
             ShortcutDoes.ThisList -> Res.string.e7LocaleUiThisList
             ShortcutDoes.CloseOverlay -> Res.string.e7LocaleUiCloseOverlay
+            ShortcutDoes.Launcher -> Res.string.e7LocaleUiCommandLauncher
+            ShortcutDoes.Find -> Res.string.e7LocaleUiFindSurface
+            ShortcutDoes.Terminal -> Res.string.e7LocaleUiTerminal
+            ShortcutDoes.SendPrompt -> Res.string.e7LocaleUiSendPrompt
+            ShortcutDoes.RecentModel -> Res.string.e7LocaleUiRecentModel
+            ShortcutDoes.BackgroundWork -> Res.string.backgroundWorkTitle
+            ShortcutDoes.FindMatch -> Res.string.gestureEquivShortcutFindMatch
+            ShortcutDoes.PromptHistory -> Res.string.gestureEquivShortcutPromptHistory
         }
     )
 

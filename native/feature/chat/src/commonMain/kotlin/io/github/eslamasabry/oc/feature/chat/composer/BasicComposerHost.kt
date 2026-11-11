@@ -440,6 +440,14 @@ public fun BasicComposer(
             chrome.modelPickerDone(pickerId)
         }
     }
+    // F2 / Shift+F2: the next or previous recent model, only when there is another one to switch to.
+    val cycle = chrome.modelCycleRequest()
+    LaunchedEffect(cycle?.id) {
+        if (cycle != null) {
+            if (state.models.recent.size > 1) actions.cycleModel(cycle.reverse)
+            chrome.modelCycleDone(cycle.id)
+        }
+    }
     // S24-CHAT story 4: the full-screen editor works on this same field; what it changed becomes the
     // draft when it closes (Cancel puts the words back first, so nothing changes).
     var promptEditorOpen by remember(state.targetKey) { mutableStateOf(false) }
