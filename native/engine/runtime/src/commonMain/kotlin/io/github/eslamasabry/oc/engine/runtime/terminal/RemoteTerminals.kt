@@ -259,6 +259,49 @@ public class RemoteTerminals(
         }
     }
 
+    /**
+     * Removes every ended terminal of the list in one go (Flutter "Remove N ended terminals"); running ones stay.
+     * Stops at the first one the server refuses, keeping the rest listed, so the failure names a real state.
+     */
+    public suspend fun removeEnded(): Unit = lane.withLock {
+        val live = resolve() ?: return@withLock
+        val open = local.value.selected?.id
+        val ended = local.value.terminals.filter { !it.running && it.id != open }
+        if (ended.isEmpty()) return@withLock
+        local.update { it.copy(working = true, failure = null) }
+        val gone = HashSet<String>()
+        for (terminal in ended) {
+            when (val result = live.gateway.removeTerminal(terminal.id)) {
+                is Outcome.Failed -> {
+                    drop(gone)
+                    fail(result.failure)
+                    return@withLock
+                }
+                is Outcome.Ok -> gone += terminal.id
+            }
+        }
+        if (!live.current()) {
+            fail(Failure.Refused(RefusalReason.StaleScope))
+            return@withLock
+        }
+        drop(gone)
+        local.update { it.copy(working = false) }
+        kept?.keep(ref, KeptTerminals.of(local.value.terminals))
+    }
+
+    private fun drop(ids: Set<String>) {
+        if (ids.isEmpty()) return
+        local.update {
+            val selectedGone = it.selected?.id in ids
+            it.copy(
+                terminals = immutable(it.terminals.filter { t -> t.id !in ids }),
+                selected = if (selectedGone) null else it.selected,
+                transcript = if (selectedGone) "" else it.transcript,
+                connected = if (selectedGone) false else it.connected,
+            )
+        }
+    }
+
     public suspend fun remove(id: String): Unit = lane.withLock {
         val live = resolve() ?: return@withLock
         val selected =
