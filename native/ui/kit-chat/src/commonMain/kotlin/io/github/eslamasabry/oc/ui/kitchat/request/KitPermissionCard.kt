@@ -159,11 +159,13 @@ public fun KitPermissionCard(
                 // The standard ask card's quiet line (kit_request_card.dart:1143-1235): "Details" at the far end, small and
                 // plain, space2 under the answers, space3 of air above and below as its own target.
                 if (!question && onDetails != null) {
-                    Box(Modifier.fillMaxWidth().padding(top = Space.S2.dp), contentAlignment = Alignment.CenterEnd) {
-                        KitTappable(onDetails, onClickLabel = stringResource(Res.string.kitDetails)) {
+                    // The touch target is the kit's minimum height by itself (KitTappable); no extra air above or below it,
+                    // so the card does not end in an empty band under the answers.
+                    Box(Modifier.fillMaxWidth().testTag("permission-card-details-row"), contentAlignment = Alignment.CenterEnd) {
+                        KitTappable(onDetails, Modifier.testTag("permission-card-details"), onClickLabel = stringResource(Res.string.kitDetails)) {
                             KitText(
                                 stringResource(Res.string.kitDetails),
-                                Modifier.padding(horizontal = Space.S1.dp, vertical = Space.S3.dp),
+                                Modifier.padding(horizontal = Space.S1.dp),
                                 role = TypeRole.Secondary,
                                 tone = TextTone.Secondary,
                             )

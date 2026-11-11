@@ -38,13 +38,14 @@ public data class AgentTileModel(
 /**
  * The tile for [agent] given the phone's current [installation] (Flutter `agentRowLine` and its one fix chip).
  * [checking] is this agent's phone check running and [resuming] is the helper being started again: both read as
- * "Checking…" and offer no act until they end.
+ * "Checking…" and offer no act until they end. [helperDown] is the page's failed start of the agent helper.
  */
 public fun agentTile(
     agent: PhoneAgentRow,
     installation: PhoneAgentInstallation?,
     checking: Boolean = false,
     resuming: Boolean = false,
+    helperDown: Boolean = false,
 ): AgentTileModel {
     val mine = installation?.takeIf { it.id == agent.id }
     if (mine?.phase == PhoneAgentInstallPhase.Installing)
@@ -61,7 +62,10 @@ public fun agentTile(
                 act = if (agent.signInAvailable) AgentTileAct.SignIn else null,
                 justInstalled = justInstalled,
             )
-        PhoneAgentStatus.Ready -> AgentTileModel(agent, AgentTileState.Ready)
+        // The helper every phone agent runs on did not start: no agent can work, so none reads Ready (Flutter
+        // `hostAvailable == false` → unavailable). The page's failure line carries Try again.
+        PhoneAgentStatus.Ready ->
+            if (helperDown) AgentTileModel(agent, AgentTileState.Unavailable) else AgentTileModel(agent, AgentTileState.Ready)
         PhoneAgentStatus.Checking -> AgentTileModel(agent, AgentTileState.Checking, justInstalled = justInstalled)
         PhoneAgentStatus.PhoneCheck ->
             if (checking) AgentTileModel(agent, AgentTileState.Checking, justInstalled = justInstalled)
@@ -73,3 +77,28 @@ public fun agentTile(
         PhoneAgentStatus.Unavailable -> AgentTileModel(agent, AgentTileState.Unavailable)
     }
 }
+
+/** The page's own start of the agent helper failed and no start runs now: the tiles cannot say Ready. */
+public fun phoneHelperDown(state: AgentsUi): Boolean = state.helperConnectFailed && !state.helperConnecting
+
+/**
+ * Whether a Ready tile offers New conversation: the phone's agents are connected (by this page or another way) and
+ * the page is not showing that the helper did not start. Before, a saved but unconnected helper was enough, so the
+ * tiles offered conversations right under "the agent helper did not start".
+ */
+public fun phoneChatOffered(state: AgentsUi): Boolean {
+    val helper = state.phone.conversations ?: return false
+    if (phoneHelperDown(state)) return false
+    return state.helperConnected || state.computers.any { it.id == helper && it.connected }
+}
+
+/**
+ * The one rule for whether a phone agent can start a conversation now. The Agents page's card offers New conversation
+ * by it ([cardOffersConversation]) and New conversation's "Who works on it" lists by it (the app's phone offer), so
+ * the two can never disagree.
+ */
+public fun phoneAgentStartsConversation(row: PhoneAgentRow): Boolean = row.status == PhoneAgentStatus.Ready
+
+/** Whether [tile]'s card offers New conversation, given [chat] ([phoneChatOffered] for the page). */
+public fun cardOffersConversation(tile: AgentTileModel, chat: Boolean): Boolean =
+    chat && tile.state == AgentTileState.Ready && phoneAgentStartsConversation(tile.agent)

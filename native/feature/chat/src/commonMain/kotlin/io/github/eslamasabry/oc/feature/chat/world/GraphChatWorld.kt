@@ -1411,7 +1411,8 @@ internal class GraphChatWorld(
                 ComposerModel(
                     m.providerId,
                     m.id,
-                    m.name.ifBlank { m.id },
+                    // An unnamed model (or one named only by its id) reads as words, as in Flutter `_choiceName`.
+                    io.github.eslamasabry.oc.core.model.ModelDisplayName.of(m.id, m.name),
                     m.attachments,
                     variants = m.variants.filterNot { it.disabled }.map { it.id },
                     providerName = providerNames[m.providerId] ?: m.providerId,

@@ -661,3 +661,17 @@ rename). The pane is also 280 dp wide in both pictures where 312 dp is expected 
 edgeInset - farInset` was 328: 32 dp of horizontal inset the dock was given, which the kit cannot tell from a host's inset.
 Nothing here makes one movement both open the list and move the dock: the outcomes are exclusive (`PullEnd` or `Place`), and in
 the old code a flick from the head only moved the dock.
+
+**7c. The list is a whole pane (run 5, d and d2: "cut off, runs off the screen").** The opened list was attached to the edge like the
+strip: no border or corners on that side, its body running 40 dp past the screen. Now `listOuterSide(width, growth)` moves box B's
+outer side from `width + OVERHANG` to `width - GUTTER` (16 dp) with the list's own growth, on the same spring and in the pull by its
+growth (it crosses the edge at about 0.5 and holds from 0.71; no second animation, no new spring); all four corners are the pane's
+radius and the rim is drawn all round (the Solid outline closes on the outer side and lets go of the shoulders as the pane comes off
+the edge). The inner side keeps its 48 dp gutter, so the pane is 296 dp wide at 360 dp and 256 dp at 320 dp (before: 312 and 272, running
+to the edge), on either edge and mirrored in RTL; rows keep their own 16 dp gutter inside it. Box A (the strip) rides inside the pane
+while the list opens (its right side follows B's, so no sliver is left at the edge) and the rings and the + stand in by the same
+amount (`stripShift`) to stay inside A. The row title cut at a word break ("Quarterly budget review for the") had no "..." because
+the one-line cut at a space drops the rest without marking it; the rows' names now have no break opportunity (`dockTitleLine`, a
+no-break space) so the overflow ends them in the mark. The desktop harness shows the mark both before and after (it does not
+reproduce the platform's cut), so that part is not proven on a device. Tests: `KitEdgeDockListPaneTest`; the picture is written by
+`KitEdgeDockListPanePicturesTest` (`render-dock5-list-after.png`; CI keeps no files, so the pictures are made where it runs).
