@@ -195,7 +195,11 @@ import io.github.eslamasabry.oc.ui.words.res.commonRetry
 import io.github.eslamasabry.oc.ui.words.res.chatStopAfterStepPending
 import io.github.eslamasabry.oc.ui.words.res.chatStopAfterStepPrompt
 import io.github.eslamasabry.oc.ui.words.res.connectionReconnectingQuiet
+import io.github.eslamasabry.oc.ui.words.res.connectionAgentStartFailed
+import io.github.eslamasabry.oc.ui.words.res.connectionAgentStarting
+import io.github.eslamasabry.oc.ui.words.res.connectionRestartAgent
 import io.github.eslamasabry.oc.ui.words.res.connectionRestartPhoneServer
+import io.github.eslamasabry.oc.ui.words.res.workServerNotAnswering
 import io.github.eslamasabry.oc.ui.words.res.connectionTryNow
 import io.github.eslamasabry.oc.ui.words.res.chatUiDelegatedSession
 import io.github.eslamasabry.oc.ui.words.res.chatUiOpenParentSession
@@ -1345,7 +1349,27 @@ private fun connectionLine(
             more = listOf(details, changeServer),
         )
     }
+    // The phone agents' helper: starting says so; a failed start says why in plain words with the action again.
+    if (line.startingAgent)
+        return KitStatus(
+            KitStatusKind.Connection,
+            stringResource(Res.string.connectionAgentStarting),
+            id = "chat-status-${line.id}",
+            more = listOf(details, changeServer),
+        )
+    val restartAgent =
+        if (line.canRestartAgent)
+            KitLineAction(
+                stringResource(Res.string.connectionRestartAgent),
+                actions::restartAgent,
+                testTag = "chat-connection-restart-agent",
+            )
+        else null
     val message =
+        if (line.agentFailed) stringResource(Res.string.connectionAgentStartFailed)
+        else if (line.canRestartAgent && offline)
+            stringResource(Res.string.workServerNotAnswering, "Claude Code")
+        else
         stringResource(
             when {
                 !offline && seconds != null -> Res.string.connectionReconnectingQuiet
@@ -1355,13 +1379,14 @@ private fun connectionLine(
             }
         )
     val restart =
-        if (line.canRestart)
-            KitLineAction(
-                stringResource(Res.string.connectionRestartPhoneServer),
-                actions::restartPhoneServer,
-                testTag = "chat-connection-restart",
-            )
-        else null
+        restartAgent
+            ?: if (line.canRestart)
+                KitLineAction(
+                    stringResource(Res.string.connectionRestartPhoneServer),
+                    actions::restartPhoneServer,
+                    testTag = "chat-connection-restart",
+                )
+            else null
     val id = "chat-status-${line.id}"
     if (seconds != null)
         return KitStatus(
@@ -1381,7 +1406,7 @@ private fun connectionLine(
         )
     // Already reconnecting with no schedule: waiting is the way out, so nothing is offered.
     if (!offline)
-        return KitStatus(KitStatusKind.Connection, message, id = id, more = listOf(details, changeServer))
+        return KitStatus(KitStatusKind.Connection, message, id = id, more = listOfNotNull(restartAgent, details, changeServer))
     val retry =
         KitLineAction(
             stringResource(Res.string.commonRetry),

@@ -92,6 +92,14 @@ public interface ChatWorld {
     public suspend fun restartPhoneServer(): Outcome<Unit> =
         Outcome.Failed(Failure.Unavailable(FeatureId("restartPhoneServer")))
 
+    /** True when this conversation's server is the phone agents' helper (Restart agent is offered). */
+    public val serverIsAgentHelper: Boolean
+        get() = false
+
+    /** Starts the phone agents' helper when it is not answering; Ok when it already is. */
+    public suspend fun startAgentHelper(): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("startAgentHelper")))
+
     /** Optimistic prompt bubbles not yet in the transcript, oldest first (plan 09 §4.6). */
     public val pending: StateFlow<ImmutableList<PendingSend>>
 

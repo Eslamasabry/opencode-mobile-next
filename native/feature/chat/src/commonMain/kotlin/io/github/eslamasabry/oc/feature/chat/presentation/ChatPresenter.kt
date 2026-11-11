@@ -79,6 +79,8 @@ internal data class ChatLocal(
     val readAloud: ReadAloudUi? = null,
     val arrival: PendingArrival? = null,
     val actionFailure: Failure? = null,
+    val startingAgent: Boolean = false,
+    val agentFailed: Boolean = false,
     val atLiveEdge: Boolean = true,
     val stopping: Boolean = false,
     val stopAfterStep: Boolean = false,
@@ -331,6 +333,13 @@ public class ChatPresenter(
         }
     }
 
+    /** A connection line on the phone agents' server carries the helper's facts (Restart agent, starting, failed). */
+    private fun agentLine(line: ChatStatusUi?, l: ChatLocal): ChatStatusUi? =
+        if (line == null || !world.serverIsAgentHelper ||
+            (line.kind != ChatStatusKind.Offline && line.kind != ChatStatusKind.Connecting)
+        ) line
+        else line.copy(canRestartAgent = true, startingAgent = l.startingAgent, agentFailed = l.agentFailed)
+
     internal fun present(i: ChatInputs, l: ChatLocal, hits: ImmutableList<FindHit>): ChatUi {
         lastHits = hits
         // N-47: when the server goes away after the conversation was read, keep the last transcript and title on
@@ -372,6 +381,7 @@ public class ChatPresenter(
             ref = world.ref,
             title = i.title ?: lastTitle,
             status =
+              agentLine(
                 (if (kept != null) i.retry.line(KEPT_OFFLINE_STATUS, ChatStatusKind.Offline) else null) ?: StatusPick.pick(i.link, i.pending, t.run, t.rows, l.actionFailure, l.linkRefused, i.retry)
                     ?: l.receiptResult?.let {
                         ChatStatusUi(
@@ -382,6 +392,8 @@ public class ChatPresenter(
                     }
                     ?: undoneLine(world.undone.value)
                     ?: world.parent.value?.let { ChatStatusUi(SUBAGENT_STATUS, ChatStatusKind.Subagent) },
+                l,
+              ),
             phase =
                 when (val load = i.load) {
                     // Cache-first: known rows draw the real transcript while the live read is on its way.
@@ -557,12 +569,40 @@ public class ChatPresenter(
     // ---- Load, stop, sends ----
 
     override fun retryLoad() {
+        startHelperThen { reloadNow() }
+    }
+
+    private fun reloadNow() {
         launcher.launch { world.reload() }
     }
 
     override fun tryLinkNow() {
+        startHelperThen(::reconnectNow)
+    }
+
+    private fun reconnectNow() {
         world.tryLinkNow()
-        if (world.load.value is ChatLoad.Failed) retryLoad()
+        if (world.load.value is ChatLoad.Failed) reloadNow()
+    }
+
+    override fun restartAgent() {
+        if (!world.serverIsAgentHelper) return
+        startHelperThen(::reconnectNow)
+    }
+
+    /**
+     * Reconnecting to the phone agents' server while its link is down first makes sure the helper runs (a dead
+     * helper otherwise fails against a closed port). One start per tap, none automatic; [next] runs only after it.
+     */
+    private fun startHelperThen(next: () -> Unit) {
+        if (!world.serverIsAgentHelper || world.link.value == ChatLink.Live) return next()
+        if (local.value.startingAgent) return
+        local.update { it.copy(startingAgent = true, agentFailed = false) }
+        launcher.launch {
+            val started = world.startAgentHelper()
+            local.update { it.copy(startingAgent = false, agentFailed = started is Outcome.Failed) }
+            if (started is Outcome.Ok) next()
+        }
     }
 
     override fun restartPhoneServer() {
