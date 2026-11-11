@@ -5,6 +5,7 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.model.Session
+import io.github.eslamasabry.oc.core.model.SessionRunOutcome
 import io.github.eslamasabry.oc.core.model.SessionStatus
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -116,7 +117,7 @@ public class OpenCodeChatFeedSource(
             when {
                 session.id in listing.needsYou -> ChatStatus.NeedsYou
                 status == SessionStatus.Busy || status == SessionStatus.Retry -> ChatStatus.Running
-                session.lastRunFailed -> ChatStatus.Failed
+                session.lastRunFailed || session.lastRunOutcome == SessionRunOutcome.Failed -> ChatStatus.Failed
                 else -> ChatStatus.Idle
             }
         val directory = session.directory
@@ -139,6 +140,11 @@ public class OpenCodeChatFeedSource(
             sourceLabel = label,
             finishedUnseen = chatStatus == ChatStatus.Idle && session.id in listing.finishedUnseen,
             stoppedByPerson = chatStatus == ChatStatus.Idle && session.id in listing.stoppedByPerson,
+            interrupted =
+                chatStatus == ChatStatus.Idle &&
+                    session.lastRunOutcome == SessionRunOutcome.Interrupted &&
+                    session.id !in listing.stoppedByPerson &&
+                    session.id in listing.finishedUnseen,
             needsNewChat = chatStatus != ChatStatus.Running && needsNewChat(session) == true,
         )
     }

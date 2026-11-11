@@ -297,8 +297,16 @@ internal class GraphChatWorld(
         currentAttached()?.gateway?.events?.retryNow()
     }
 
+    /**
+     * The conversation's own folder (a conversation of another project is opened without moving the connection), else
+     * the connection's.
+     */
+    private var ownDirectory: String? = null
+
     override val directory: String?
-        get() = currentAttached()?.gateway?.location?.value?.directory?.takeIf { it.isNotBlank() }
+        get() =
+            ownDirectory?.takeIf { it.isNotBlank() }
+                ?: currentAttached()?.gateway?.location?.value?.directory?.takeIf { it.isNotBlank() }
 
     override val serverOnThisPhone: Boolean
         get() = phoneServer?.runsHere(ref.profileId) == true
@@ -757,6 +765,7 @@ internal class GraphChatWorld(
         voiceGeneration++
         voiceLiveUsers.clear()
         unbind()
+        ownDirectory = null
         mutableCaps.value = ServerCapabilities()
         // Another server owns another catalog and selection; a stale graph publishes nothing.
         mutableModels.value = ComposerModels()
@@ -1045,6 +1054,7 @@ internal class GraphChatWorld(
                 scope.launch(registry.mainContext) {
                     val session = (graph.session.reads.session(sid) as? Outcome.Ok)?.value
                     session?.title?.let { mutableTitle.value = it }
+                    ownDirectory = session?.directory
                     refreshReadOnly(gateway, session)
                     val statuses = gateway.sessionStatuses()
                     if (statuses is Outcome.Ok && statuses.value[sid] == SessionStatus.Busy) {
@@ -1829,10 +1839,9 @@ internal class GraphChatWorld(
     }
 
     override suspend fun mentionFile(path: String): Outcome<Unit> {
-        val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+        currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
         val directory =
-            a.gateway.location.value.directory
-                ?: return Outcome.Failed(Failure.Unavailable(FeatureId("fileBrowsing")))
+            this.directory ?: return Outcome.Failed(Failure.Unavailable(FeatureId("fileBrowsing")))
         val file = Mentions.projectFile(directory, path)
         val current = mutableDraft.value.attachments
         if (current.any { it.mentionPath == path }) return Outcome.Ok(Unit)

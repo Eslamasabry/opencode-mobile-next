@@ -357,4 +357,22 @@ class ChatsStateTest {
         val api = ui(ChatsFilters(projectDirectory = "/work/api"))
         assertEquals(listOf("near"), (api.rightNow + api.recent).map { it.ref.sessionId.raw })
     }
+
+    @Test
+    fun `a run the server interrupted says Interrupted, a run the person stopped keeps Stopped`() {
+        val cut = item("cut", at = 2_000).copy(interrupted = true, finishedUnseen = true)
+        val stopped = item("stopped", at = 1_000).copy(stoppedByPerson = true, finishedUnseen = true, interrupted = false)
+        val ui = build(cut, stopped)
+        val rows = (ui.rightNow + ui.recent).associateBy { it.ref.sessionId.raw }
+        assertEquals(RowStatus.Interrupted, rows.getValue("cut").status)
+        assertEquals(RowStatus.Stopped, rows.getValue("stopped").status)
+        assertEquals(
+            RowStatus.Stopped,
+            io.github.eslamasabry.oc.feature.chats.presentation.HomeRowStatusRules.idle(
+                finishedUnseen = true,
+                stoppedByPerson = true,
+                interrupted = true,
+            ),
+        )
+    }
 }

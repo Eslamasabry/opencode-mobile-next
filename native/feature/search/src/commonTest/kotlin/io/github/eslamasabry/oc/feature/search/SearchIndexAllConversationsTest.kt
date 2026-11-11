@@ -4,13 +4,13 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
 import io.github.eslamasabry.oc.feature.search.presentation.SearchGoToFacts
 import io.github.eslamasabry.oc.feature.search.presentation.SearchIndex
-import io.github.eslamasabry.oc.ui.routes.SearchRoute
+import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlinx.collections.immutable.persistentListOf
 
-/** The "All conversations" place follows `globalSessionSearch` and opens the cross-project conversation search. */
+/** The "All conversations" place follows `globalSessionSearch` and opens the All conversations page. */
 class SearchIndexAllConversationsTest {
     private val profile = ProfileId("p1")
 
@@ -29,8 +29,8 @@ class SearchIndexAllConversationsTest {
             ?.destination
 
     @Test
-    fun `the place is offered when the server lists across projects, and opens the conversation search`() {
-        assertEquals(SearchRoute.Conversations(profile), destination(true))
+    fun `the place is offered when the server lists across projects, and opens the All conversations page`() {
+        assertEquals(ChatsRoute.All(), destination(true))
         assertNull(destination(false))
     }
 }

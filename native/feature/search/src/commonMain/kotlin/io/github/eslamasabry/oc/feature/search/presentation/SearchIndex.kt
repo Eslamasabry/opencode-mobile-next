@@ -78,7 +78,8 @@ public object SearchIndex {
                 add(
                     "all-conversations",
                     SearchPlace.AllConversations,
-                    SearchRoute.Conversations(profile),
+                    // Flutter opens GlobalSessionsScreen: the All conversations page, not the typed search.
+                    ChatsRoute.All(),
                 )
             if (caps.serverCatalog) {
                 add("settings-models", SearchPlace.Models, SettingsRoute.ModelDefaults(profile))

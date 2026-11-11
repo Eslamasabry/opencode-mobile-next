@@ -439,6 +439,8 @@ private data class AllRowWords(
     val needsYou: String,
     val unread: String,
     val stopped: String,
+    val interrupted: String,
+    val failed: String,
 )
 
 @Composable
@@ -450,6 +452,8 @@ private fun rememberAllRowWords(): AllRowWords =
         needsYou = stringResource(Res.string.chatsHomeNeedsYou),
         unread = stringResource(Res.string.sessionUnread),
         stopped = stringResource(Res.string.chatsHomeStopped),
+        interrupted = stringResource(Res.string.chatsHomeInterrupted),
+        failed = stringResource(Res.string.chatsHomeFailed),
     )
 
 @Composable
@@ -468,6 +472,8 @@ private fun AllRow(row: AllRowUi, selecting: Boolean, words: AllRowWords, nowMs:
         row.running -> running
         row.archived -> words.archivedShort
         row.stopped -> words.stopped
+        row.interrupted -> words.interrupted
+        row.failed -> words.failed
         row.unread -> words.unread
         else -> null
     }

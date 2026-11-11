@@ -29,6 +29,8 @@ public enum class RowStatus {
     Done,
     /** Finished because the person pressed Stop (Flutter: finishedUnseen and stoppedByPerson). */
     Stopped,
+    /** The server ended the run (a restart or a newer prompt); open it and send again. */
+    Interrupted,
     None,
 }
 

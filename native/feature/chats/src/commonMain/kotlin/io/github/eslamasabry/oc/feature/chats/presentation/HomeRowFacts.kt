@@ -14,9 +14,10 @@ public object HomeRowStatusRules {
      * reports a stop as a normal finish, so only this memory knows); "Done" when a run finished after the person
      * last read it; else nothing.
      */
-    public fun idle(finishedUnseen: Boolean, stoppedByPerson: Boolean): RowStatus =
+    public fun idle(finishedUnseen: Boolean, stoppedByPerson: Boolean, interrupted: Boolean = false): RowStatus =
         when {
             stoppedByPerson -> RowStatus.Stopped
+            interrupted -> RowStatus.Interrupted
             finishedUnseen -> RowStatus.Done
             else -> RowStatus.None
         }
@@ -24,7 +25,8 @@ public object HomeRowStatusRules {
     /** H4: a row that opens a new conversation says so ("Can't reopen") unless it is working or failed. */
     public fun saysCantReopen(row: ConversationRowUi): Boolean =
         row.needsNewChat &&
-            (row.status == RowStatus.None || row.status == RowStatus.Done || row.status == RowStatus.Stopped)
+            (row.status == RowStatus.None || row.status == RowStatus.Done || row.status == RowStatus.Stopped ||
+                row.status == RowStatus.Interrupted)
 }
 
 /** The question "Start a new conversation?" for one agent conversation that cannot be reopened. */

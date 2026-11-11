@@ -60,6 +60,11 @@ public data class ChatFeedItem(
      */
     val stoppedByPerson: Boolean = false,
     /**
+     * The server ended the newest run (a restart, a newer prompt) and the person has not opened the conversation
+     * since: the row says "Interrupted". Never set with [stoppedByPerson]; only OpenCode 2 reports it.
+     */
+    val interrupted: Boolean = false,
+    /**
      * An agent conversation the helper no longer holds and cannot resume (Flutter `AgentResumeNotice
      * .requiresAcknowledgement`): a tap offers "Start a new conversation" instead of opening a dead chat. Distinct
      * from `canReopen = false`, which only says the listing is not verified yet.

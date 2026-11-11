@@ -132,4 +132,40 @@ class Oc2GlobalSessionsRowsTest {
             server.gateway.close()
         }
     }
+
+    @Test
+    fun `the session's outcome reaches the core session, an unknown or missing one stays unknown`() = runTest {
+        fun withOutcome(id: String, outcome: String?) =
+            """{"id":"$id","projectID":"prj_a","title":"t","location":{"directory":"/work/app"},""" +
+                (outcome?.let { """"outcome":"$it",""" } ?: "") +
+                """"time":{"created":1,"updated":2}}"""
+        val server =
+            RowServer(location = here) {
+                json(
+                    page(
+                        withOutcome("ses_ok", "succeeded"),
+                        withOutcome("ses_bad", "failed"),
+                        withOutcome("ses_int", "interrupted"),
+                        withOutcome("ses_new", "something-newer"),
+                        withOutcome("ses_none", null),
+                    )
+                )
+            }
+        try {
+            val items =
+                assertIs<Outcome.Ok<ServerPage<GlobalSessionResult>>>(
+                        server.gateway.listGlobalSessions(null, false, null, 50)
+                    )
+                    .value
+                    .items
+                    .associate { it.session.id.raw to it.session.lastRunOutcome }
+            assertEquals(io.github.eslamasabry.oc.core.model.SessionRunOutcome.Succeeded, items["ses_ok"])
+            assertEquals(io.github.eslamasabry.oc.core.model.SessionRunOutcome.Failed, items["ses_bad"])
+            assertEquals(io.github.eslamasabry.oc.core.model.SessionRunOutcome.Interrupted, items["ses_int"])
+            assertNull(items["ses_new"])
+            assertNull(items["ses_none"])
+        } finally {
+            server.gateway.close()
+        }
+    }
 }
