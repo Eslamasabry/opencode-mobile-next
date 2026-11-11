@@ -151,6 +151,8 @@ public object ChatsState {
             ago = RelativeAge.of(item.lastActivityMs, nowMs),
             running = item.running,
             permission = item.permission,
+            question = item.question,
+            form = item.form,
             preview = item.preview.takeIf { it.isNotBlank() }?.let(HomePreviewRules::oneLine),
         )
 

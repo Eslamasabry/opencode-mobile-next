@@ -70,6 +70,8 @@ public data class OpenCodeListing(
     val acrossProjects: Boolean = true,
     val running: Map<SessionId, FeedRunning> = emptyMap(),
     val permissions: Map<SessionId, FeedPermission> = emptyMap(),
+    val questions: Map<SessionId, FeedQuestion> = emptyMap(),
+    val forms: Map<SessionId, FeedForm> = emptyMap(),
 )
 
 /**
@@ -129,6 +131,8 @@ public class OpenCodeChatFeedSource(
             locationKey = locationKey,
             running = listing.running[session.id].takeIf { chatStatus == ChatStatus.Running },
             permission = listing.permissions[session.id],
+            question = listing.questions[session.id],
+            form = listing.forms[session.id],
             profileId = profileId,
             sessionId = session.id,
             title = session.title,

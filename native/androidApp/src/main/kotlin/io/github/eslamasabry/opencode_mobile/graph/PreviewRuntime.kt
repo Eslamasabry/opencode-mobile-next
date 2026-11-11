@@ -1028,6 +1028,50 @@ class PreviewRuntime(
                                     }
                                     .toMap()
                             else listing.value.permissions,
+                        // H1: the first waiting question / form of each conversation, so its row can be answered.
+                        questions =
+                            if (questions is Outcome.Ok)
+                                questions.value
+                                    .groupBy { it.sessionId }
+                                    .mapNotNull { (sid, asks) ->
+                                        asks.firstOrNull()?.let { ask ->
+                                            val first = ask.prompts.firstOrNull()
+                                            sid to
+                                                FeedQuestion(
+                                                    requestId = ask.id.raw,
+                                                    title = redactor.redact(first?.title.orEmpty()),
+                                                    question = redactor.redact(first?.question.orEmpty()),
+                                                    choices =
+                                                        first?.choices.orEmpty().map { redactor.redact(it.label) },
+                                                    prompts = ask.prompts.size,
+                                                    custom = first?.custom == true,
+                                                    inPlace =
+                                                        ask.prompts.size == 1 &&
+                                                            first != null &&
+                                                            !first.multiple &&
+                                                            !first.optional &&
+                                                            first.choices.none { it.description.length > 140 },
+                                                )
+                                        }
+                                    }
+                                    .toMap()
+                            else if (questions == null) emptyMap() else listing.value.questions,
+                        forms =
+                            if (forms is Outcome.Ok)
+                                forms.value
+                                    .groupBy { it.sessionId }
+                                    .mapNotNull { (sid, asks) ->
+                                        asks.firstOrNull()?.let { ask ->
+                                            sid to
+                                                FeedForm(
+                                                    ask.id.raw,
+                                                    ask.title?.let(redactor::redact),
+                                                    ask.fields.size,
+                                                )
+                                        }
+                                    }
+                                    .toMap()
+                            else if (forms == null) emptyMap() else listing.value.forms,
                         needsYou = pending.values.toSet(),
                         finishedUnseen =
                             graph.session.readState.state.value

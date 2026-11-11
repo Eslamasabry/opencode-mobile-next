@@ -88,6 +88,10 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitGrowPage
 import io.github.eslamasabry.oc.ui.words.res.kitRequestAllowOnce
+import io.github.eslamasabry.oc.ui.words.res.kitRequestAnswer
+import io.github.eslamasabry.oc.ui.words.res.kitRequestMoreAnswers
+import io.github.eslamasabry.oc.ui.words.res.chatRequestOtherAnswer
+import io.github.eslamasabry.oc.ui.words.res.chatUiInputRequested
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysConfirm
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysInProject
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysScope
@@ -836,6 +840,10 @@ private data class HomeRowFlags(
     val always: Boolean,
     val answering: Boolean,
     val held: HomeHeldReply?,
+    /** H1: a waiting question's answer inside its undo window (the words chosen), on its way, or refused. */
+    val heldQuestion: String?,
+    val questionSending: Boolean,
+    val questionRefused: Boolean,
     val showProject: Boolean,
     val showAgents: Boolean,
     val nowMs: Long,
@@ -851,6 +859,9 @@ private fun rowFlags(row: ConversationRowUi, state: ChatsUi): HomeRowFlags =
         always = row.key in state.alwaysAllowable,
         answering = row.permission?.requestId?.let { it in state.answering } == true,
         held = row.permission?.requestId?.let { state.held[it] },
+        heldQuestion = row.question?.requestId?.let { state.heldQuestions[it] },
+        questionSending = row.question?.requestId?.let { it in state.sendingQuestions } == true,
+        questionRefused = row.question?.requestId?.let { it in state.refusedQuestions } == true,
         showProject = state.showProjects,
         showAgents = state.showAgents,
         nowMs = state.nowMs,
@@ -908,6 +919,10 @@ private fun ConversationRow(
                 HomePreviewRules.AskKind.Other -> stringResource(Res.string.chatsHomeAsksOther, target)
             }
         }
+            // H1: a waiting question's own words, or the form's title, where no permission speaks first.
+            ?: row.question?.question?.takeIf { it.isNotBlank() }?.let { mask(it) }
+            ?: row.question?.title?.takeIf { it.isNotBlank() }?.let { mask(it) }
+            ?: row.form?.let { mask(it.title?.takeIf { t -> t.isNotBlank() } ?: stringResource(Res.string.chatUiInputRequested)) }
             // H5: the shell command a running row is on ("Running npm test"), read left to right.
             ?: row.running?.command?.takeIf { row.status == RowStatus.Running && it.isNotBlank() }
                 ?.let { stringResource(Res.string.signalRowRunningCommand, KitBidi.ltr(mask(it))) }
@@ -916,9 +931,15 @@ private fun ConversationRow(
     // No line to show: the row says where it lives instead (its project when no dot names it, and its server).
     val meta = HomePreviewRules.fallback(row.project, row.server, projectShown = project != null)
     val permission = row.permission
+    val question = row.question
+    val form = row.form
     val below: (@Composable () -> Unit)? =
-        if (permission == null) null
-        else ({ PermissionAnswers(row, permission, flags.always, flags.answering, flags.held, actions) })
+        when {
+            permission != null -> ({ PermissionAnswers(row, permission, flags.always, flags.answering, flags.held, actions) })
+            question != null -> ({ QuestionAnswers(row, question, flags, mask, actions) })
+            form != null -> ({ FormAnswers(row, actions) })
+            else -> null
+        }
     KitMenu(
         expanded = menuOpen,
         // N-30: the same acts, in the same order, as a row on All conversations (a tap already opens it). Built only
@@ -1025,6 +1046,97 @@ private fun PermissionAnswers(
             )
     }
 }
+
+/**
+ * H1 (F: chats_host.dart:300-310, attention_card.dart): a waiting question under its row. One prompt with one answer
+ * shows its choices (at most [QUESTION_ROW_CHOICES]; the rest are behind "More answers", which opens the
+ * conversation); a tap holds the answer for the undo window, then sends it. Anything else (several prompts, many
+ * answers, "something else") is answered in the conversation: the same Answer button the chat's card has.
+ */
+@Composable
+private fun QuestionAnswers(
+    row: ConversationRowUi,
+    question: io.github.eslamasabry.oc.engine.agents.feed.FeedQuestion,
+    flags: HomeRowFlags,
+    mask: (String) -> String,
+    actions: ChatsActions,
+) {
+    val held = flags.heldQuestion
+    if (held != null) {
+        KitReceipt(
+            state = KitReceiptState.Confirmed,
+            label = mask(held),
+            onUndo = { actions.undoAnswer(row) },
+        )
+        return
+    }
+    if (flags.questionSending) {
+        KitReceipt(state = KitReceiptState.Sending)
+        return
+    }
+    if (flags.questionRefused) {
+        KitReceipt(state = KitReceiptState.Refused(), onRetry = { actions.retryQuestion(row) })
+        return
+    }
+    val enabled = if (row.canOpen) KitEnabled.Enabled else KitEnabled.Disabled(stringResource(Res.string.e7WorkspaceConnecting))
+    val inPlace = question.inPlace && question.choices.isNotEmpty()
+    val shown = if (question.choices.size > QUESTION_ROW_CHOICES) question.choices.take(QUESTION_ROW_CHOICES - 1) else question.choices
+    KitChipWrap {
+        if (inPlace) {
+            shown.forEach { choice ->
+                KitButton(
+                    mask(choice),
+                    { actions.answerQuestion(row, listOf(listOf(choice)), choice) },
+                    role = KitButtonRole.Secondary,
+                    enabled = enabled,
+                    expand = false,
+                )
+            }
+            val remaining = question.choices.size - shown.size
+            if (remaining > 0)
+                KitButton(
+                    pluralStringResource(Res.plurals.kitRequestMoreAnswers, remaining, Numbers.format(remaining)),
+                    { actions.openRequest(row) },
+                    role = KitButtonRole.Tertiary,
+                    enabled = enabled,
+                    expand = false,
+                )
+            if (question.custom)
+                KitButton(
+                    stringResource(Res.string.chatRequestOtherAnswer),
+                    { actions.openRequest(row) },
+                    role = KitButtonRole.Tertiary,
+                    enabled = enabled,
+                    expand = false,
+                )
+        } else {
+            KitButton(
+                stringResource(Res.string.kitRequestAnswer),
+                { actions.openRequest(row) },
+                role = KitButtonRole.Secondary,
+                enabled = enabled,
+                expand = false,
+            )
+        }
+    }
+}
+
+/** H1: a waiting form under its row: the form itself is filled in the conversation, so Answer opens it there. */
+@Composable
+private fun FormAnswers(row: ConversationRowUi, actions: ChatsActions) {
+    KitChipWrap {
+        KitButton(
+            stringResource(Res.string.kitRequestAnswer),
+            { actions.openRequest(row) },
+            role = KitButtonRole.Secondary,
+            enabled = if (row.canOpen) KitEnabled.Enabled else KitEnabled.Disabled(stringResource(Res.string.e7WorkspaceConnecting)),
+            expand = false,
+        )
+    }
+}
+
+/** Choices shown on a row before "More answers" (the chat's question card shows the same five, F: Kit question card). */
+private const val QUESTION_ROW_CHOICES: Int = 5
 
 @Composable
 internal fun agoText(age: RelativeAge): String =

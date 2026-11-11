@@ -567,6 +567,13 @@ class ChatsViewModelTest {
 
     private class Answers : io.github.eslamasabry.oc.feature.chats.presentation.HomePermissionAnswers {
         val sent = mutableListOf<String>()
+        val questions = mutableListOf<String>()
+        var questionResult: Outcome<Unit> = Unit.ok()
+
+        override suspend fun answerQuestion(ref: ConversationRef, requestId: String, answers: List<List<String>>): Outcome<Unit> {
+            questions += "$requestId $answers"
+            return questionResult
+        }
 
         override suspend fun answer(ref: ConversationRef, requestId: String, allow: Boolean): Outcome<Unit> =
             answer(ref, requestId, if (allow) HomePermissionReply.Once else HomePermissionReply.Reject)
@@ -577,13 +584,23 @@ class ChatsViewModelTest {
         }
     }
 
-    private fun asking(grants: Boolean): Pair<ChatsViewModel, Answers> {
+    private fun asking(
+        grants: Boolean,
+        question: io.github.eslamasabry.oc.engine.agents.feed.FeedQuestion? = null,
+        form: io.github.eslamasabry.oc.engine.agents.feed.FeedForm? = null,
+    ): Pair<ChatsViewModel, Answers> {
         val feed = Feed()
+        val plain = question == null && form == null
         feed.snapshot.value =
             ChatFeedSnapshot(
                 persistentListOf(
                     item("ask", status = ChatStatus.NeedsYou)
-                        .copy(permission = io.github.eslamasabry.oc.engine.agents.feed.FeedPermission("req1", "npm test"))
+                        .copy(
+                            permission =
+                                if (plain) io.github.eslamasabry.oc.engine.agents.feed.FeedPermission("req1", "npm test") else null,
+                            question = question,
+                            form = form,
+                        )
                 )
             )
         val gateway = io.github.eslamasabry.oc.core.testing.FakeServerGateway()
@@ -789,5 +806,100 @@ class ChatsViewModelTest {
             Failure.Unexpected(),
             Failure.Refused(io.github.eslamasabry.oc.core.common.RefusalReason.ProfileDeleted),
         ).forEach { assertEquals(it, io.github.eslamasabry.oc.feature.chats.presentation.SourceChoiceRules.sheetFailure(it)) }
+    }
+
+    private val pick =
+        io.github.eslamasabry.oc.engine.agents.feed.FeedQuestion(
+            requestId = "q1",
+            title = "Which one",
+            question = "Use npm or pnpm?",
+            choices = listOf("npm", "pnpm"),
+            inPlace = true,
+        )
+
+    @Test
+    fun `H1 a choice on a question row is held with Undo for three seconds, then sent once`() = runTest {
+        val (vm, answers) = asking(grants = false, question = pick)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val row = vm.state.value.rightNow.single()
+        assertEquals(pick, row.question)
+        vm.answerQuestion(row, listOf(listOf("pnpm")), "pnpm")
+        assertEquals(mapOf("q1" to "pnpm"), vm.state.value.heldQuestions)
+        // A second tap while held changes nothing.
+        vm.answerQuestion(row, listOf(listOf("npm")), "npm")
+        assertEquals(mapOf("q1" to "pnpm"), vm.state.value.heldQuestions)
+        advanceTimeBy(ANSWER_HOLD_MS - 500)
+        runCurrent()
+        assertEquals(emptyList(), answers.questions)
+        advanceTimeBy(1000)
+        runCurrent()
+        assertEquals(listOf("q1 [[pnpm]]"), answers.questions)
+        assertEquals(emptyMap(), vm.state.value.heldQuestions)
+        assertEquals(emptySet(), vm.state.value.sendingQuestions)
+    }
+
+    @Test
+    fun `H1 Undo on a question row sends nothing and the row can be answered again`() = runTest {
+        val (vm, answers) = asking(grants = false, question = pick)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val row = vm.state.value.rightNow.single()
+        vm.answerQuestion(row, listOf(listOf("npm")), "npm")
+        vm.undoAnswer(row)
+        assertEquals(emptyMap(), vm.state.value.heldQuestions)
+        advanceTimeBy(ANSWER_HOLD_MS * 2)
+        runCurrent()
+        assertEquals(emptyList(), answers.questions, "an undone answer is never sent")
+        vm.answerQuestion(row, listOf(listOf("pnpm")), "pnpm")
+        advanceTimeBy(ANSWER_HOLD_MS + 1)
+        runCurrent()
+        assertEquals(listOf("q1 [[pnpm]]"), answers.questions)
+    }
+
+    @Test
+    fun `H1 a refused question answer says so on the row and Try again resends the same answer at once`() = runTest {
+        val (vm, answers) = asking(grants = false, question = pick)
+        answers.questionResult = Outcome.Failed(Failure.Unexpected())
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val row = vm.state.value.rightNow.single()
+        vm.answerQuestion(row, listOf(listOf("pnpm")), "pnpm")
+        advanceTimeBy(ANSWER_HOLD_MS + 1)
+        runCurrent()
+        assertEquals(setOf("q1"), vm.state.value.refusedQuestions)
+        assertEquals(emptySet(), vm.state.value.sendingQuestions)
+        assertEquals(null, vm.state.value.answerFailure, "the failure is on the row, not a page notice")
+        answers.questionResult = Unit.ok()
+        vm.retryQuestion(row)
+        runCurrent()
+        assertEquals(listOf("q1 [[pnpm]]", "q1 [[pnpm]]"), answers.questions)
+        assertEquals(emptySet(), vm.state.value.refusedQuestions)
+    }
+
+    @Test
+    fun `H1 a free-text, multi-prompt or form row is answered in the conversation, never from the row`() = runTest {
+        val text = pick.copy(inPlace = false, choices = emptyList(), custom = true)
+        val (vm, answers) = asking(grants = false, question = text)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val row = vm.state.value.rightNow.single()
+        assertFalse(row.question!!.inPlace)
+        vm.openRequest(row)
+        assertEquals(emptyList(), answers.questions)
+        val (formVm, formAnswers) =
+            asking(grants = false, form = io.github.eslamasabry.oc.engine.agents.feed.FeedForm("f1", "Deploy settings", 3))
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { formVm.state.collect {} }
+        val formRow = formVm.state.value.rightNow.single()
+        assertEquals("f1", formRow.form?.requestId)
+        formVm.openRequest(formRow)
+        assertEquals(emptyList(), formAnswers.questions)
+    }
+
+    @Test
+    fun `H1 the held and refused words are masked by the screen's mask, so the state keeps only the chosen words`() = runTest {
+        // The row masks `shown` with the screen's mask when it draws; the state never holds more than the choice.
+        val (vm, _) = asking(grants = false, question = pick)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val row = vm.state.value.rightNow.single()
+        vm.answerQuestion(row, listOf(listOf("pnpm")), "pnpm")
+        assertEquals(listOf("pnpm"), vm.state.value.heldQuestions.values.toList())
+        assertEquals(emptyMap(), vm.state.value.held, "a question hold is not a permission hold")
     }
 }

@@ -59,4 +59,26 @@ class ListRowFactsTest {
         assertFalse(items.first { it.sessionId.raw == "unknown" }.needsNewChat)
         assertEquals(true, items.all { it.canReopen })
     }
+
+    @Test
+    fun `H1 a waiting question and form ride on their own conversation's row only`() {
+        val ask = FeedQuestion("q1", "Pick", "npm or pnpm?", listOf("npm", "pnpm"), inPlace = true)
+        val form = FeedForm("f1", "Settings", 2)
+        val items =
+            source(
+                    OpenCodeListing(
+                        sessions = listOf(session("a", "/w", 5), session("b", "/w", 4)),
+                        questions = mapOf(SessionId("a") to ask),
+                        forms = mapOf(SessionId("b") to form),
+                    )
+                )
+                .current()
+                .items
+        val a = items.first { it.sessionId.raw == "a" }
+        val b = items.first { it.sessionId.raw == "b" }
+        assertEquals(ask, a.question)
+        assertEquals(null, a.form)
+        assertEquals(form, b.form)
+        assertEquals(null, b.question)
+    }
 }

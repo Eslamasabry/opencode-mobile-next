@@ -134,6 +134,15 @@ public class ChatsViewModel(
     private val heldRows = HashMap<String, Pair<ConversationRef, HomePermissionReply>>()
     private val holdJobs = HashMap<String, kotlinx.coroutines.Job>()
 
+    /**
+     * H1: question answers from a row: held for the undo window ([QuestionAnswersState.held], the words the person
+     * chose), then sent ([QuestionAnswersState.sending]); one the server did not take stays ([refused]) with its answer
+     * kept so Try again resends exactly it.
+     */
+    private val questionState = MutableStateFlow(QuestionAnswersState())
+    private val questionRows = HashMap<String, HeldQuestion>()
+    private val questionJobs = HashMap<String, kotlinx.coroutines.Job>()
+
     /** The row whose Always allow waits on its confirm. */
     private val confirmingAlways = MutableStateFlow<ConversationRowUi?>(null)
 
@@ -212,6 +221,13 @@ public class ChatsViewModel(
             }
             .combine(confirmingAlways) { base, row -> base.copy(confirmAlways = row) }
             .combine(heldAnswers) { base, held -> base.copy(held = held.toImmutableMap()) }
+            .combine(questionState) { base, q ->
+                base.copy(
+                    heldQuestions = q.held.toImmutableMap(),
+                    sendingQuestions = q.sending.toImmutableSet(),
+                    refusedQuestions = q.refused.toImmutableSet(),
+                )
+            }
             .combine(agentNoticeFlow) { base, notices -> base.copy(agentNotices = notices) }
             .combine(newRefused) { base, refused -> base.copy(newBlocked = refused && base.home.opening != null) }
             // B-161 / B-162: each row's branch, and the Usage row's tightest limit.
@@ -386,6 +402,13 @@ public class ChatsViewModel(
     }
 
     override fun undoAnswer(row: ConversationRowUi) {
+        val ask = row.question?.requestId
+        if (ask != null && ask in questionRows) {
+            questionRows.remove(ask)
+            questionJobs.remove(ask)?.cancel()
+            questionState.update { it.copy(held = it.held - ask) }
+            return
+        }
         undoHeld(row.permission?.requestId ?: return)
     }
 
@@ -393,6 +416,61 @@ public class ChatsViewModel(
         if (heldRows.remove(id) == null) return
         holdJobs.remove(id)?.cancel()
         heldAnswers.update { it - id }
+    }
+
+    override fun answerQuestion(row: ConversationRowUi, answers: List<List<String>>, shown: String) {
+        val ask = row.question ?: return
+        if (permissionAnswers.singleOrNull() == null || answers.isEmpty()) return
+        val id = ask.requestId
+        val q = questionState.value
+        if (id in questionRows || id in q.sending) return
+        holdQuestion(id, HeldQuestion(row.ref, answers.map { it.toList() }, shown))
+    }
+
+    private fun holdQuestion(id: String, held: HeldQuestion) {
+        questionRows[id] = held
+        questionState.update { it.copy(held = it.held + (id to held.shown), refused = it.refused - id) }
+        questionJobs[id] =
+            viewModelScope.launch {
+                kotlinx.coroutines.delay(ANSWER_HOLD_MS)
+                releaseQuestion(id)
+            }
+    }
+
+    private fun releaseQuestion(id: String) {
+        val held = questionRows.remove(id) ?: return
+        questionJobs.remove(id)
+        val port = permissionAnswers.singleOrNull() ?: return
+        questionState.update { it.copy(held = it.held - id, sending = it.sending + id) }
+        viewModelScope.launch {
+            val result = port.answerQuestion(held.ref, id, held.answers)
+            questionState.update {
+                it.copy(
+                    sending = it.sending - id,
+                    refused =
+                        if (result is io.github.eslamasabry.oc.core.common.Outcome.Failed) it.refused + id else it.refused,
+                )
+            }
+            if (result is io.github.eslamasabry.oc.core.common.Outcome.Failed) failedQuestions[id] = held
+            else failedQuestions.remove(id)
+            feed.refresh()
+        }
+    }
+
+    /** Answers the server did not take, kept for Try again. */
+    private val failedQuestions = HashMap<String, HeldQuestion>()
+
+    override fun retryQuestion(row: ConversationRowUi) {
+        val id = row.question?.requestId ?: return
+        val held = failedQuestions.remove(id) ?: return
+        questionState.update { it.copy(refused = it.refused - id) }
+        // Try again is a decision just made: it goes out at once, without a second undo window.
+        questionRows[id] = held
+        releaseQuestion(id)
+    }
+
+    override fun openRequest(row: ConversationRowUi) {
+        openConversation(row.ref)
     }
 
     // H3, F: chats_home_screen.dart:511-577 `_incompleteLine` retry: every connection that did not answer is asked
@@ -624,6 +702,9 @@ public class ChatsViewModel(
                 scope.launch { port.answer(ref, id, reply) }
             }
         heldRows.clear()
+        if (port != null && scope != null)
+            questionRows.toList().forEach { (id, held) -> scope.launch { port.answerQuestion(held.ref, id, held.answers) } }
+        questionRows.clear()
         super.onCleared()
     }
 
@@ -920,6 +1001,21 @@ public fun interface HomePermissionAnswers {
     ): io.github.eslamasabry.oc.core.common.Outcome<Unit>
 
     /**
+     * H1: the answer to a waiting question, one list of chosen words (or typed text) per prompt. A port with no
+     * requests engine refuses, so nothing is reported as sent.
+     */
+    public suspend fun answerQuestion(
+        ref: ConversationRef,
+        requestId: String,
+        answers: List<List<String>>,
+    ): io.github.eslamasabry.oc.core.common.Outcome<Unit> =
+        io.github.eslamasabry.oc.core.common.Outcome.Failed(
+            io.github.eslamasabry.oc.core.common.Failure.Unavailable(
+                io.github.eslamasabry.oc.core.common.FeatureId("questionRequests")
+            )
+        )
+
+    /**
      * The row's answer, Always allow included (F: lib/ui/screens/chats/chats_host.dart:258-270). A port that cannot
      * keep a grant refuses Always, so nothing is allowed for longer than the person chose.
      */
@@ -939,6 +1035,15 @@ public fun interface HomePermissionAnswers {
                 )
         }
 }
+
+/** H1: a question answer being held or retried; the conversation, the answers and the words the row repeats. */
+private class HeldQuestion(val ref: ConversationRef, val answers: List<List<String>>, val shown: String)
+
+private data class QuestionAnswersState(
+    val held: Map<String, String> = emptyMap(),
+    val sending: Set<String> = emptySet(),
+    val refused: Set<String> = emptySet(),
+)
 
 /** What a list row answers a waiting permission. */
 public enum class HomePermissionReply { Once, Always, Reject }
