@@ -28,6 +28,12 @@ public class ProjectServer(
     public val attention: StateFlow<ElsewhereSnapshot>? = null,
     /** B-182: the connection's own state, for "Connected" / "Connecting" / "Not connected". Null = answering. */
     public val status: StateFlow<io.github.eslamasabry.oc.core.model.StreamStatus>? = null,
+    /**
+     * The server this connection is part of (This phone's agents are part of This phone; Flutter never lists them
+     * as a server): Projects never offers it as a server of its own while that server is live; the folders its
+     * conversations work in join that server's projects instead. Null = a server of its own.
+     */
+    public val partOf: ProfileId? = null,
 )
 
 /** The live connections and the active one. The app binds the real one (ProjectsWiring). */
