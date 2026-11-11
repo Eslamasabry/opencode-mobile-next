@@ -14,6 +14,8 @@ public object ModelDisplayName {
     private val SHORT_NUMBER = Regex("""^\d{1,2}$""")
     private val LETTER_DIGIT = Regex("""^[a-z]\d""")
     private val ACRONYMS = setOf("gpt", "glm", "qwq")
+    private val BRACKET_TAIL = Regex("""\[([^\[\]]*)\]$""")
+    private val CONTEXT_TAG = Regex("""^(\d{1,4})([kKmM])$""")
 
     /**
      * The name a list shows: the name the server or agent reports, unless it is blank or only the
@@ -24,10 +26,36 @@ public object ModelDisplayName {
         return if (name.isEmpty() || name == modelId.trim()) fromId(modelId) else name
     }
 
+    /**
+     * Different from Flutter `modelNameFromId` on purpose (owner, 2026-11-11, "it's showing raw names"): a bracket tag
+     * at the end of the id is a variant of the same model, not part of its version. Flutter's rule has no case for it
+     * and reads `claude-opus-4-6[1m]` as "Opus 4 6[1m]"; here it reads "Opus 4.6 · 1M context". A context-size tag
+     * (`[1m]`, `[200k]`) names the context; any other tag follows the name in plain parentheses ("Sonnet 5 (beta)").
+     * The words stay as the model's maker names the variant: like the model name itself, they are not translated.
+     */
     public fun fromId(modelId: String): String {
         var id = modelId.trim()
         val slash = id.lastIndexOf('/')
         if (slash >= 0) id = id.substring(slash + 1)
+        val tag = BRACKET_TAIL.find(id)
+        if (tag != null) {
+            val base = id.substring(0, tag.range.first).trim()
+            val variant = tag.groupValues[1].trim()
+            if (base.isNotEmpty()) {
+                val name = words(base, modelId)
+                if (variant.isEmpty()) return name
+                val context = CONTEXT_TAG.matchEntire(variant)
+                return if (context != null)
+                    "$name · ${context.groupValues[1]}${context.groupValues[2].uppercase()} context"
+                else "$name ($variant)"
+            }
+        }
+        return words(id, modelId)
+    }
+
+    /** Flutter `modelNameFromId` from the release-date step on, for an id without its runtime prefix. */
+    private fun words(stripped: String, modelId: String): String {
+        var id = stripped
         // Release dates and moving tags say nothing a person picks by.
         id = id.replaceFirst(DATE_TAIL, "").replaceFirst(LATEST_TAIL, "")
         val tokens = id.split(SPLIT).filter { it.isNotEmpty() }.toMutableList()

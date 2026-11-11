@@ -39,9 +39,37 @@ class ModelDisplayNameTest {
                 "claude-haiku-5-5" to "Haiku 5.5",
                 "claude-opus-4-6" to "Opus 4.6",
                 "claude-opus-4-7" to "Opus 4.7",
-                // Flutter's rule has no case for the bracketed long-context tag: it reads exactly as Flutter reads it.
-                "claude-opus-4-6[1m]" to "Opus 4 6[1m]",
-                "claude-opus-4-7[1m]" to "Opus 4 7[1m]",
+                // Flutter's rule read these "Opus 4 6[1m]": the bracket tag is a variant of the same model.
+                "claude-opus-4-6[1m]" to "Opus 4.6 · 1M context",
+                "claude-opus-4-7[1m]" to "Opus 4.7 · 1M context",
+            )
+        for ((id, name) in cases) assertEquals(name, ModelDisplayName.fromId(id), id)
+    }
+
+    @Test
+    fun `MODELS-RAW a bracket tag is a variant of the model, never part of its version`() {
+        val cases =
+            listOf(
+                "anthropic/claude-sonnet-4-5[1m]" to "Sonnet 4.5 · 1M context",
+                "claude-sonnet-4-5-20250929[1m]" to "Sonnet 4.5 · 1M context",
+                "claude-sonnet-5[200k]" to "Sonnet 5 · 200K context",
+                "claude-sonnet-5[beta]" to "Sonnet 5 (beta)",
+                "claude-sonnet-5[]" to "Sonnet 5",
+                "gpt-6-sol[fast]" to "GPT-6 Sol (fast)",
+            )
+        for ((id, name) in cases) assertEquals(name, ModelDisplayName.fromId(id), id)
+    }
+
+    @Test
+    fun `MODELS-RAW dated and non-Claude ids keep what Flutter gives`() {
+        val cases =
+            listOf(
+                "claude-sonnet-4-5-20250929" to "Sonnet 4.5",
+                "claude-3-5-haiku-20241022" to "3.5 Haiku",
+                "gpt-4o-mini" to "GPT-4o Mini",
+                "deepseek-r1" to "Deepseek R1",
+                "qwen3-coder" to "Qwen3 Coder",
+                "kilo/google/gemini-2.5-flash" to "Gemini 2.5 Flash",
             )
         for ((id, name) in cases) assertEquals(name, ModelDisplayName.fromId(id), id)
     }

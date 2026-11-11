@@ -298,7 +298,7 @@ class NewConversationPhoneAgentTest {
         assertEquals("Opus 5.5", newConversationModelName("claude-opus-5-5", null, "claude-opus-5-5"))
         assertEquals("Fable 5.1", newConversationModelName("claude-fable-5-1", null, null))
         assertEquals("Haiku 4.5", newConversationModelName("claude-haiku-4-5", "", null))
-        assertEquals("Opus 4 6[1m]", newConversationModelName("claude-opus-4-6[1m]", null, "claude-opus-4-6[1m]"))
+        assertEquals("Opus 4.6 · 1M context", newConversationModelName("claude-opus-4-6[1m]", null, "claude-opus-4-6[1m]"))
         assertEquals("Opus", newConversationModelName("opus", null, "Opus"), "the agent's own name wins")
         assertEquals("Claude Opus 5.5", newConversationModelName("claude-opus-5-5", "Claude Opus 5.5", "x"), "the catalog's name wins")
     }
