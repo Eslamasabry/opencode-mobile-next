@@ -9,10 +9,19 @@ public enum class AlertKind(public val wire: String) {
     Quota("quota"),
     QuotaReset("quota_reset"),
     CheckIn("checkin"),
-    Test("test");
+    Test("test"),
+
+    /** AI Team (wire names match the entry router's `team_*` kinds): fixed copy, ids only, no actions. */
+    TeamDecision("team_decision"),
+    TeamReview("team_review"),
+    TeamRunFailed("team_run_failed"),
+    TeamCompleted("team_completed");
 
     public val isRequest: Boolean
         get() = this == Permission || this == Question
+
+    public val isTeam: Boolean
+        get() = this == TeamDecision || this == TeamReview || this == TeamRunFailed || this == TeamCompleted
 
     public val isQuota: Boolean
         get() = this == Quota || this == QuotaReset
@@ -269,7 +278,9 @@ public object AlertPolicy {
             return AlertRoute.Skip(SkipWhy.SubAgent)
         if (alert.kind.isQuota && facts.wifiOnly && facts.onWifi != true)
             return AlertRoute.Skip(SkipWhy.NotOnWifi)
-        val loud = alert.kind.isRequest || alert.kind == AlertKind.Error
+        val loud =
+            alert.kind.isRequest || alert.kind == AlertKind.Error ||
+                alert.kind == AlertKind.TeamDecision || alert.kind == AlertKind.TeamRunFailed
         if (facts.quietHours) {
             // Requests and failures post silently; a finished reply is never posted nor queued
             // (`alerts.dart:292`);

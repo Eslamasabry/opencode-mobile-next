@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="account40Title">Codex 账号</string>
+    <string name="account40ScopeLost">此服务器已变更。请返回服务器页面，打开已连接服务器的账号。</string>
+    <string name="account40Refresh">刷新账号</string>
+    <string name="account40Loading">正在检查主机账号</string>
+    <string name="account40Unavailable">账号面板不可用</string>
+    <string name="account40ReadFailed">无法读取账号</string>
+    <string name="account40Disconnected">连接已中断</string>
+    <string name="account40Connected">已在主机上登录</string>
+    <string name="account40SignedOut">可以登录</string>
+    <string name="account40InProgress">正在登录</string>
+    <string name="account40NeedsAttention">登录需要处理</string>
+    <string name="account40NoAuth">主机无需登录</string>
+    <string name="account40ApiKey">API 密钥</string>
+    <string name="account40HostAuth">主机身份验证</string>
+    <string name="account40HostNote">登录状态由官方运行环境保存。账号更改会影响连接到此主机的所有已保存服务器。</string>
+    <string name="account40UnsupportedDetail">此面板已在 Codex 0.153.4 上验证。所连接的运行环境可能不支持这些账号方法。</string>
+    <string name="account40ReconnectDetail">账号数据和登录码已清除。请重新连接以刷新。登录不会自动重新开始。</string>
+    <string name="account40SignIn">使用 ChatGPT 登录</string>
+    <string name="account40SignInNote">使用你的 ChatGPT 账号登录。你在浏览器中完成登录；此应用不会看到你的密码。</string>
+    <string name="account40Limits">速率限制</string>
+    <string name="account40LimitsUnavailable">此账号或主机的速率限制不可用。</string>
+    <string name="account40Usage">词元用量</string>
+    <string name="account40UsageUnavailable">此账号或主机的词元用量不可用。</string>
+    <string name="account40LifetimeTokens">累计词元</string>
+    <string name="account40PeakTokens">单日词元峰值</string>
+    <string name="account40UsageNote">数值由主机上报。缺失的数值表示未知，而不是零。词元数不是账单，也不是剩余的消息额度。</string>
+    <string name="account40Updated">上次检查于 %1$s</string>
+    <string name="account40Starting">正在请求登录码</string>
+    <string name="account40Waiting">请在浏览器中完成登录</string>
+    <string name="account40Cancelling">正在取消登录</string>
+    <string name="account40Cancelled">登录已取消</string>
+    <string name="account40LoginFailed">登录未完成。请检查主机后重试。</string>
+    <string name="account40LoginUncertain">主机无法确认登录或取消。它可能仍在等待。重新开始前，请先检查官方主机运行环境。</string>
+    <string name="account40LoginCompleted">登录已完成。正在检查账号。</string>
+    <string name="account40CodeHint">请在官方登录页面输入这个一次性验证码，并保密。</string>
+    <string name="account40OpenSignIn">打开官方登录页面</string>
+    <string name="account40Cancel">取消登录</string>
+    <string name="account40Allowance">上报的额度</string>
+    <string name="account40PercentUsed">已用 %1$d%</string>
+    <string name="account40WindowUnknown">时间窗口时长不可用</string>
+    <string name="account40WindowMinutes">%1$d 分钟窗口</string>
+    <string name="account40WindowHours">%1$d 小时窗口</string>
+    <string name="account40WindowDays">%1$d 天窗口</string>
+    <string name="account40ResetUnknown">重置时间不可用</string>
+    <string name="account40ScopeLostTitle">此服务器已变更</string>
+    <string name="account40BackToServers">返回服务器</string>
+    <string name="account40NotConnected">连接到此服务器后，才能查看它的 Codex 账号。</string>
+    <string name="account40SignInMethod">登录方式</string>
+    <string name="account40PlanTitle">套餐</string>
+    <string name="account40CopyCode">复制登录码</string>
+    <string name="account40LimitReached">你已达到 Codex 限制。%1$s</string>
+    <string name="account40ResetDue">即将重置</string>
+    <string name="account40ResetWhen">%1$s（%2$s）</string>
+    <plurals name="account40ResetInDays">
+        <item quantity="other">%1$d 天后重置</item>
+    </plurals>
+    <plurals name="account40ResetInHours">
+        <item quantity="other">%1$d 小时后重置</item>
+    </plurals>
+    <plurals name="account40ResetInMinutes">
+        <item quantity="other">%1$d 分钟后重置</item>
+    </plurals>
+    <string name="account40Back">返回</string>
+    <string name="account40Details">详情</string>
+    <string name="account40CopyDetails">复制详情</string>
+    <string name="account40Copied">验证码已复制</string>
+    <string name="account40OpenQuestion">打开 %1$s 的官方登录页面？</string>
+    <string name="account40OpenPage">打开登录页面</string>
+    <string name="account40OpenFailed">无法打开登录页面或剪贴板。</string>
+    <string name="account40ChatGpt">ChatGPT</string>
+    <string name="account40Bedrock">Amazon Bedrock</string>
+</resources>

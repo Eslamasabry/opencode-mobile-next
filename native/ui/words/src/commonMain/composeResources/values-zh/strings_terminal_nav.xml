@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="terminalNavDevServer">开发服务器运行中</string>
+    <string name="terminalNavOpenPreview">打开预览</string>
+</resources>

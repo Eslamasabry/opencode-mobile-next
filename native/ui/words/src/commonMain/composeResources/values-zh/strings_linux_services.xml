@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxDevPrograms">开发程序</string>
+    <string name="linuxDevProgramsNote">在这部手机的 Linux 中找到的程序。选择一个程序可读取它的输出文件。</string>
+    <string name="linuxDevScanFailed">无法检查开发程序</string>
+    <string name="linuxDevProgram">程序 %1$d</string>
+    <string name="linuxDevPorts">端口：%1$s</string>
+    <string name="linuxDevReadLog">读取日志</string>
+    <string name="linuxDevNoLog">没有可读取的输出文件</string>
+    <string name="linuxDevLog">程序日志</string>
+    <string name="linuxDevLogLoading">正在读取最新输出…</string>
+    <string name="linuxDevLogFailed">无法读取该程序的输出。</string>
+    <string name="linuxDevLogEmpty">还没有输出。</string>
+    <string name="linuxDevStop">停止</string>
+    <string name="linuxDevStopTitle">停止这个程序？</string>
+    <string name="linuxDevStopBody">停止这部手机上的进程 %1$d。停止前会再次检查它的命令。</string>
+    <string name="linuxSvcTitle">开发服务</string>
+    <string name="linuxSvcFailed">操作未完成</string>
+    <string name="linuxSvcUnconfirmed">无法确认当前连接或命令的归属。请先刷新再重试。</string>
+    <string name="linuxSvcCorrupt">无法读取已保存的命令。已保存的数据保持不变。</string>
+    <string name="linuxSvcUnsupported">此连接无法控制开发服务。你仍可保存命令以备日后使用。</string>
+    <string name="linuxSvcAdd">添加命令</string>
+    <string name="linuxSvcRefresh">刷新</string>
+    <string name="linuxSvcSaved">已保存的命令</string>
+    <string name="linuxSvcSavedNote">保存命令不会启动它。只有在这里启动的运行，才能通过其已保存的命令控制。</string>
+    <string name="linuxSvcEmpty">此项目中没有已保存的命令。</string>
+    <string name="linuxSvcNotStarted">未启动</string>
+    <string name="linuxSvcRunning">运行中</string>
+    <string name="linuxSvcStopped">已停止</string>
+    <string name="linuxSvcUnknown">运行状态未确认</string>
+    <string name="linuxSvcDetected">发现正在运行</string>
+    <string name="linuxSvcStart">启动</string>
+    <string name="linuxSvcRestart">重启</string>
+    <string name="linuxSvcReport">故障报告</string>
+    <string name="linuxSvcForget">忘记这次运行</string>
+    <string name="linuxSvcRemove">移除命令</string>
+    <string name="linuxSvcName">名称</string>
+    <string name="linuxSvcNext">下一步</string>
+    <string name="linuxSvcCommand">命令</string>
+    <string name="linuxSvcSave">保存命令</string>
+    <string name="linuxSvcInvalidName">请输入 1–80 个字符的名称。</string>
+    <string name="linuxSvcInvalidCommand">请输入 1–4096 个字符的命令。</string>
+    <string name="linuxSvcRemoveTitle">移除这条命令？</string>
+    <string name="linuxSvcForgetTitle">忘记这次运行？</string>
+    <string name="linuxSvcStopBody">只有在确认所选程序当前的身份后，才会停止它。</string>
+    <string name="linuxSvcRemoveBody">移除这条已保存的命令及其本地回执。这绝不会停止正在运行的程序。</string>
+    <string name="linuxSvcForgetBody">忘记这部手机上不确定的回执。这不会停止该程序；启动另一个副本前，请先查看运行列表。</string>
+</resources>

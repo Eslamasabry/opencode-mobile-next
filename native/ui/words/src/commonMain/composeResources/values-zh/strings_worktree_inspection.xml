@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="worktreeInspectionTitle">查看副本</string>
+    <string name="worktreeInspectionExactScope">更改和对话会按确切的项目、文件夹和工作区读取。</string>
+    <string name="worktreeInspectionReadFailed">无法查看此副本。它的状态未知。</string>
+    <string name="worktreeInspectionWorkspace">工作区：%1$s</string>
+    <string name="worktreeInspectionHostScope">在此服务器上</string>
+    <string name="worktreeInspectionConversations">此副本中的对话</string>
+    <string name="worktreeInspectionNoPageMatches">此页没有匹配的对话。请加载更多以继续查找。</string>
+    <string name="worktreeInspectionNoConversations">此副本中没有匹配的对话。</string>
+</resources>

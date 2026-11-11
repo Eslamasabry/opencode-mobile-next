@@ -20,7 +20,9 @@ import io.github.eslamasabry.oc.feature.chats.presentation.HomeConnectionState
 import io.github.eslamasabry.oc.feature.chats.presentation.PhoneStopWatch
 import io.github.eslamasabry.oc.feature.chats.presentation.HomePermissionReply
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
+import io.github.eslamasabry.oc.feature.chats.presentation.ANSWER_HOLD_MS
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsViewModel
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeHeldReply
 import io.github.eslamasabry.oc.feature.chats.presentation.ConversationsFeed
 import io.github.eslamasabry.oc.feature.chats.presentation.ReturnBriefFeed
 import io.github.eslamasabry.oc.feature.chats.presentation.SettingsDoor
@@ -43,7 +45,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 
@@ -80,7 +84,12 @@ class ChatsViewModelTest {
     private class Feed : ConversationsFeed {
         override val snapshot = MutableStateFlow(ChatFeedSnapshot())
 
-        override suspend fun refresh(): Outcome<Unit> = Unit.ok()
+        var reads = 0
+
+        override suspend fun refresh(): Outcome<Unit> {
+            reads++
+            return Unit.ok()
+        }
     }
 
     private class Briefs : ReturnBriefFeed {
@@ -372,7 +381,12 @@ class ChatsViewModelTest {
             return sourceAnswer
         }
 
-        override suspend fun retrySource(profile: ProfileId): Outcome<Unit> = retryAnswer
+        val retried = mutableListOf<ProfileId>()
+
+        override suspend fun retrySource(profile: ProfileId): Outcome<Unit> {
+            retried += profile
+            return retryAnswer
+        }
 
         override suspend fun retryOpening(): Outcome<Unit> = Unit.ok()
 
@@ -611,11 +625,79 @@ class ChatsViewModelTest {
         assertEquals(emptyList(), answers.sent)
         vm.askAlwaysAllow(row)
         vm.confirmAlwaysAllow()
+        // H1: the answer waits out its undo window first, then leaves once.
+        assertEquals(emptyList(), answers.sent)
+        advanceTimeBy(ANSWER_HOLD_MS + 1)
+        runCurrent()
         assertEquals(listOf("req1 Always"), answers.sent)
         assertEquals(null, vm.state.value.confirmAlways)
         // Allow once and Reject still answer as they did.
         vm.answerPermission(row, false)
+        advanceTimeBy(ANSWER_HOLD_MS + 1)
+        runCurrent()
         assertEquals(listOf("req1 Always", "req1 Reject"), answers.sent)
+    }
+
+    @Test
+    fun `H1 a permission answer is held with Undo for three seconds and Undo sends nothing`() = runTest {
+        val (vm, answers) = asking(grants = true)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val row = vm.state.value.rightNow.single()
+        vm.answerPermission(row, true)
+        assertEquals(mapOf("req1" to HomeHeldReply.Allowed), vm.state.value.held)
+        // A second tap while held changes nothing.
+        vm.answerPermission(row, false)
+        assertEquals(mapOf("req1" to HomeHeldReply.Allowed), vm.state.value.held)
+        advanceTimeBy(ANSWER_HOLD_MS - 500)
+        runCurrent()
+        assertEquals(emptyList(), answers.sent)
+        vm.undoAnswer(row)
+        assertEquals(emptyMap(), vm.state.value.held)
+        advanceTimeBy(ANSWER_HOLD_MS * 2)
+        runCurrent()
+        assertEquals(emptyList(), answers.sent, "an undone answer is never sent")
+        // Answering again after the undo works as before.
+        vm.answerPermission(row, true)
+        advanceTimeBy(ANSWER_HOLD_MS + 1)
+        runCurrent()
+        assertEquals(listOf("req1 Once"), answers.sent)
+        assertEquals(emptyMap(), vm.state.value.held)
+    }
+
+    @Test
+    fun `the switcher's Allow once is the rows' own held answer, sent once after one window`() = runTest {
+        val (vm, answers) = asking(grants = true)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val row = vm.state.value.rightNow.single()
+        vm.allowSwitcherRequest(row.ref, "req1")
+        // One hold, seen in both places; the row cannot answer it a second time.
+        assertEquals(mapOf("req1" to HomeHeldReply.Allowed), vm.state.value.held)
+        assertEquals(mapOf("req1" to HomeHeldReply.Allowed), vm.state.value.switcher.held)
+        vm.answerPermission(row, false)
+        assertEquals(mapOf("req1" to HomeHeldReply.Allowed), vm.state.value.held)
+        // Undo on the row takes back the switcher's answer.
+        vm.undoAnswer(row)
+        assertEquals(emptyMap(), vm.state.value.switcher.held)
+        advanceTimeBy(ANSWER_HOLD_MS * 2)
+        runCurrent()
+        assertEquals(emptyList(), answers.sent)
+        // Not held twice: it leaves right after the one 3 s window.
+        vm.allowSwitcherRequest(row.ref, "req1")
+        advanceTimeBy(ANSWER_HOLD_MS + 1)
+        runCurrent()
+        assertEquals(listOf("req1 Once"), answers.sent)
+        assertEquals(emptyMap(), vm.state.value.switcher.held)
+    }
+
+    @Test
+    fun `H3 Try again asks every connection that did not answer, then reads the list`() = runTest {
+        val home = Home(listOf(source("main", main = true), source("termux").copy(unreachable = true)))
+        val feed = Feed()
+        val vm = ChatsViewModel(feed, Briefs(), Door(false), { Instant.fromEpochMilliseconds(0) }, clock, RecordingNavigator(), home = home)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        vm.retryList()
+        assertEquals(listOf(ProfileId("termux")), home.retried)
+        assertEquals(1, feed.reads)
     }
 
     @Test

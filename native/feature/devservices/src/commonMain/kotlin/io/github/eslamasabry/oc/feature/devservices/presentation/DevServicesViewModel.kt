@@ -12,6 +12,7 @@ import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import io.github.eslamasabry.oc.core.common.pace.Pacer
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.DevServicesRoute
+import io.github.eslamasabry.oc.ui.routes.PreviewRoute
 import kotlinx.coroutines.flow.StateFlow
 
 /** DevServicesRoute.Home: one thin ViewModel over [DevServicesModel]. */
@@ -20,7 +21,7 @@ public class DevServicesViewModel(
     @Assisted route: DevServicesRoute.Home,
     host: DevServicesHost,
     pacer: Pacer,
-    nav: AppNavigator,
+    private val nav: AppNavigator,
 ) : ViewModel(), DevServicesActions {
     private val model =
         DevServicesModel(route.profile, route.directory, host, pacer, viewModelScope, nav::back)
@@ -59,6 +60,10 @@ public class DevServicesViewModel(
 
     override fun visit(id: String): Unit = model.visit(id)
 
+    override fun preview(port: Int) {
+        nav.open(PreviewRoute.Page(port))
+    }
+
     override fun askStopFound(id: String): Unit = model.askStopFound(id)
 
     override fun foundLogs(id: String): Unit = model.foundLogs(id)
@@ -66,6 +71,8 @@ public class DevServicesViewModel(
     override fun refreshLogs(): Unit = model.refreshLogs()
 
     override fun closeLogs(): Unit = model.closeLogs()
+
+    override fun reportFailure(): Unit = model.reportFailure()
 
     override fun confirm(): Unit = model.confirm()
 

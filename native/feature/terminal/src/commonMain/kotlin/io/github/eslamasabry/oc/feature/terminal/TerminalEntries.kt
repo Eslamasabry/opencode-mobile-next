@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.terminal
 
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
@@ -24,7 +25,13 @@ public class TerminalEntries : EntryInstaller {
                     create(route)
                 }
             val state by vm.state.collectAsStateWithLifecycle()
-            TerminalScreen(state, vm)
+            // The project's dev server is watched only while the page is on screen.
+            LifecycleStartEffect(vm) {
+                vm.resumeDevServer()
+                onStopOrDispose { vm.pauseDevServer() }
+            }
+            val devPort by vm.devServerPort.collectAsStateWithLifecycle()
+            TerminalScreen(state, vm, devPort)
         }
     }
 }

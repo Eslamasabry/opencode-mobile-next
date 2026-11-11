@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="composerKeptRestoreTitle">已保留的提示词</string>
+    <string name="composerKeptRestoreRefused">无法恢复这条提示词。它仍在“已保留的提示词”中。再次打开它即可恢复。</string>
+    <string name="composerKeptMissingFiles">无法恢复这些文件：%1$s。它们所属的已保留提示词未改变。</string>
+</resources>

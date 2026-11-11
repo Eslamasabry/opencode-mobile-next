@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="monitor40FormTitle">回复此请求</string>
+    <string name="monitor40FormGone">此请求已变更或不再可用。请从收件箱重新打开。</string>
+    <string name="monitor40FormSent">你的回复已发送。</string>
+    <string name="monitor40FormElsewhere">此请求已在别处回复。</string>
+    <string name="monitor40FormHeld">你的回复即将发送。</string>
+    <string name="monitor40Undo">撤销</string>
+    <string name="monitor40FormFailed">无法发送你的回复。</string>
+    <string name="monitor40Other">其他</string>
+    <string name="monitor40OpenLink">打开页面</string>
+    <string name="monitor40Send">发送回答</string>
+    <string name="monitor40Decline">拒绝请求</string>
+    <string name="monitor40FixFields">发送前，请检查标出的回答。</string>
+    <string name="monitor40NotConfirmed">尚未确认</string>
+    <string name="monitor40Sending">正在发送你的回复</string>
+    <string name="monitor40DeclineQuestion">拒绝此请求？</string>
+    <string name="monitor40DeclineBody">请求将在没有你的回答的情况下关闭。</string>
+    <string name="monitor40LinkQuestion">打开此页面？</string>
+    <string name="monitor40Required">请输入回答。</string>
+    <string name="monitor40Number">请输入数字。</string>
+    <string name="monitor40Integer">请输入整数。</string>
+    <string name="monitor40NotOffered">请选择提供的回答，或输入表单接受的值。</string>
+    <plurals name="monitor40MinLength">
+        <item quantity="other">请至少输入 %1$d 个字符。</item>
+    </plurals>
+    <plurals name="monitor40MaxLength">
+        <item quantity="other">最多使用 %1$d 个字符。</item>
+    </plurals>
+    <string name="monitor40Range">请输入允许范围内的值：%1$s 到 %2$s。</string>
+    <plurals name="monitor40MinItems">
+        <item quantity="other">请至少选择 %1$d 个回答。</item>
+    </plurals>
+    <plurals name="monitor40MaxItems">
+        <item quantity="other">最多选择 %1$d 个回答。</item>
+    </plurals>
+    <string name="monitor40QuestionCount">问题：%1$d</string>
+    <string name="monitor40Answer">回答</string>
+</resources>

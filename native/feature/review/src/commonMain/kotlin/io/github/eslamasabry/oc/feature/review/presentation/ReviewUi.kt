@@ -35,6 +35,20 @@ public fun interface ReviewSendBack {
     public suspend fun send(text: String): Outcome<Unit>
 }
 
+/** What "Add <file> to the prompt" did (Flutter `readerUiReferenceAdded` / `readerUiReferenceDuplicate`). */
+public enum class AddedFile {
+    Added,
+    AlreadyThere,
+}
+
+/**
+ * "Add <file> to the prompt" (Flutter `review_workspace.dart` `_stageFile`): the file goes into this conversation's
+ * message as an `@path` mention and the person stays on the page. Nothing is sent.
+ */
+public fun interface ReviewAddFile {
+    public suspend fun add(path: String): Outcome<AddedFile>
+}
+
 /**
  * The whole branch's changes, compared with the main branch's merge base (Flutter `loadBranchDiffs`, OpenCode 2
  * `GET /vcs/diff?mode=branch`). A [Failure.Unavailable] answer means the server cannot show it, so the scope is not
@@ -173,6 +187,10 @@ public data class FileDiffUi(
     val noDiff: Boolean = false,
     /** Lines can be commented for the agent here (B-156; not on the undo's preview). */
     val canComment: Boolean = false,
+    /** "Add <file> to the prompt" is offered (the conversation's message can take it). */
+    val canAddFile: Boolean = false,
+    /** What the last "Add to the prompt" did; null before it was used or after it was read. */
+    val fileNotice: FileNotice? = null,
     /** This file's comments, in the order written. */
     val comments: ImmutableList<LineComment> = persistentListOf(),
     /** The comment field is open for these lines. */
@@ -185,6 +203,16 @@ public data class FileDiffUi(
     val updating: Boolean = false,
 ) {
     val name: String get() = path.split('/', '\\').lastOrNull { it.isNotEmpty() } ?: path
+}
+
+/** The one line under the diff's bar after "Add <file> to the prompt". */
+public sealed interface FileNotice {
+    public data object Added : FileNotice
+
+    public data object AlreadyThere : FileNotice
+
+    /** The message could not take it; [failure] is for Details only. */
+    public data class Failed(val failure: Failure) : FileNotice
 }
 
 /** Why the undo's primary action is off right now; null when it is on. */

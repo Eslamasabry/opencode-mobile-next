@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="importNativePaste">或粘贴 JSON 导出内容</string>
+    <string name="importNativeReview">查看粘贴的 JSON</string>
+    <string name="importNativeWorkspaceOptional">可选。留空则使用项目文件夹。</string>
+    <string name="importNativeAttemptDone">请关闭并重新打开导入，再审阅另一次尝试。如果结果未得到确认，请先查看“所有对话”。</string>
+</resources>

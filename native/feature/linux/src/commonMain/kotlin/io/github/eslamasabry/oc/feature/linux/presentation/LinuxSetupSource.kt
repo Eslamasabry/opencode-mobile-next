@@ -32,5 +32,8 @@ public interface LinuxSetupSource {
 
     public suspend fun removeComponent(id: String): RemovalResult
 
+    /** What removing [id] gives back, in bytes, or null when it cannot be measured (the figure is then left out). */
+    public suspend fun freedBytes(id: String): Long? = null
+
     public suspend fun openOwnershipSettings(): Outcome<Unit>
 }

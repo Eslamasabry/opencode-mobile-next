@@ -151,18 +151,39 @@ internal fun PaseoGateway.linkMessages(messages: List<MessageWithParts>): Immuta
 
 /** The sub-agents the helper knows for [parentId] (an old conversation's too), read beside its history. */
 internal fun PaseoGateway.loadSubagents(parentId: String) {
-    if (parentId in drafts || !subagentBook.loaded.add(parentId)) return
-    scope.launch {
-        try {
-            val result = transport.request("agent.provider_subagents.list.request", jsonOf("parentAgentId" to real(parentId)), timeoutMs = 8_000)
-            for (raw in paseoList(result["subagents"], max = 500)) raw.objectOrNull()?.let(::upsertSubagent)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (_: PaseoException) {
-            // An older helper, or none yet: the cards stay as they are.
-            subagentBook.loaded.remove(parentId)
-        }
+    if (parentId in drafts || parentId in subagentBook.loaded) return
+    scope.launch { readSubagentList(parentId) }
+}
+
+/**
+ * Reads the helper's sub-agent list for [parentId] once (lane-confined), unless it was read already. A sub-agent's
+ * children come with its top conversation's list, so a sub-agent id reads that one. This is what lets the list of a
+ * conversation never opened in this session (the dock's backfill, the Subagents page) hold its children before any
+ * push names them.
+ */
+internal suspend fun PaseoGateway.readSubagentList(parentId: String) {
+    val top = subagentBook.subagents[parentId]?.let { app(it.parentReal) } ?: parentId
+    if (top in drafts || !subagentBook.loaded.add(top)) return
+    try {
+        val result = transport.request(
+            "agent.provider_subagents.list.request",
+            jsonOf("parentAgentId" to real(top)),
+            timeoutMs = 8_000,
+        )
+        for (raw in paseoList(result["subagents"], max = 500)) raw.objectOrNull()?.let(::upsertSubagent)
+    } catch (e: CancellationException) {
+        subagentBook.loaded.remove(top)
+        throw e
+    } catch (_: PaseoException) {
+        // An older helper, or none yet: the cards stay as they are.
+        subagentBook.loaded.remove(top)
     }
+}
+
+/** [parent]'s sub-agent sessions, its list read from the helper first when this session has not read it yet. */
+internal suspend fun PaseoGateway.subagentChildrenRead(parent: String): ImmutableList<Session> {
+    readSubagentList(parent)
+    return subagentChildren(parent)
 }
 
 /** A sub-agent's own conversation, read from the helper. */

@@ -292,6 +292,15 @@ internal fun ColumnScope.AboutBody(
                     modifier = Modifier.testTag("about-bundled-components"),
                     onClick = { actions.onOpen(SettingsPage.Notices) },
                 )
+                KitRow(
+                    title = stringResource(Res.string.aboutAllLicences),
+                    supporting = stringResource(Res.string.aboutAllLicencesDetail),
+                    supportingMaxLines = 2,
+                    leading = KitRowLeading.Glyph(KitIcons.info),
+                    trailing = KitRowTrailing.Chevron,
+                    modifier = Modifier.testTag("about-all-licences"),
+                    onClick = { actions.onOpen(SettingsPage.Licences) },
+                )
             }
         }
         if (voiceLicenses) {

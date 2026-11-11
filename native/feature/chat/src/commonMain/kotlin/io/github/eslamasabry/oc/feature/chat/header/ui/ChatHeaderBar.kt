@@ -81,6 +81,8 @@ import io.github.eslamasabry.oc.ui.words.res.chatHeaderRenameFailed
 import io.github.eslamasabry.oc.ui.words.res.chatHeaderServer
 import io.github.eslamasabry.oc.ui.words.res.chatHeaderShareFailed
 import io.github.eslamasabry.oc.ui.words.res.chatHeaderTokens
+import io.github.eslamasabry.oc.ui.words.res.e7SharedAccumulatedCostReportedByServer
+import io.github.eslamasabry.oc.ui.words.res.historyLoadedCost
 import io.github.eslamasabry.oc.ui.words.res.chatHeaderUnshareFailed
 import io.github.eslamasabry.oc.ui.words.res.chatProjectChipFilesSemantics
 import io.github.eslamasabry.oc.ui.words.res.chatProjectServerChipFilesSemantics
@@ -648,6 +650,18 @@ private fun DetailsBody(facts: DetailsUi) {
                 KitRow(
                     stringResource(Res.string.chatHeaderTokens),
                     trailing = KitRowTrailing.Value(Numbers.format(it), chevron = false),
+                )
+            }
+            // C4 (Flutter session_context_screen.dart:778-788): what the conversation cost, said by whose figure.
+            facts.cost?.let {
+                KitRow(
+                    stringResource(
+                        if (it.reportedByServer) Res.string.e7SharedAccumulatedCostReportedByServer
+                        else Res.string.historyLoadedCost
+                    ),
+                    trailing =
+                        KitRowTrailing.Value("$" + Numbers.decimal(it.amount, 2), chevron = false),
+                    modifier = Modifier.testTag("chat-details-cost"),
                 )
             }
         }

@@ -31,6 +31,8 @@ import io.github.eslamasabry.oc.feature.devservices.presentation.DevServicesCont
 import io.github.eslamasabry.oc.feature.devservices.presentation.DevServicesHost
 import io.github.eslamasabry.oc.feature.devservices.presentation.NoDevServicesHost
 import io.github.eslamasabry.oc.feature.linux.host.LinuxHost
+import io.github.eslamasabry.oc.ui.routes.AppNavigator
+import io.github.eslamasabry.oc.ui.routes.SettingsRoute
 import java.security.SecureRandom
 import kotlin.time.Clock
 import io.github.eslamasabry.oc.core.model.ManagedShell as WireShell
@@ -54,6 +56,8 @@ class LiveDevServicesHost(
     private val platform: PlatformCapabilities,
     private val linux: LinuxHost,
     private val clock: Clock,
+    private val reports: GitHubProblemReporter,
+    private val nav: AppNavigator,
 ) : DevServicesHost {
     private val random = SecureRandom()
 
@@ -93,6 +97,10 @@ class LiveDevServicesHost(
             newId = ::newId,
             openLink = ::openLink,
             clock = clock,
+            reportFailure = { title, detail, log ->
+                reports.attachFailure(title, detail, "failedJob", log)
+                nav.open(SettingsRoute.ReportProblem)
+            },
         )
     }
 

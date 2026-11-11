@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentProjectWorkspace">更改与工作树</string>
+    <string name="agentProjectReadFailed">无法完成这项项目操作。请先查看最新状态再重试。</string>
+    <string name="agentProjectNoGit">此文件夹不是 Git 仓库。</string>
+    <string name="agentProjectBranch">当前分支</string>
+    <string name="agentProjectBaseBranch">基础分支</string>
+    <string name="agentProjectDetached">分离的检出</string>
+    <string name="agentProjectWorkingTree">工作区</string>
+    <string name="agentProjectBranchChanges">相对基础分支</string>
+    <string name="agentProjectAllFiles">所有已更改的文件</string>
+    <string name="agentProjectNoPatch">此文件没有文本补丁。</string>
+    <string name="agentProjectPreviousLines">上 200 行</string>
+    <string name="agentProjectNextLines">下 200 行</string>
+    <string name="agentProjectChangedFiles">已更改的文件</string>
+    <string name="agentProjectNoChanges">此次比较中没有更改。</string>
+    <string name="agentProjectLineChanges">新增 %1$d · 删除 %2$d</string>
+    <string name="agentProjectWorktrees">工作树</string>
+    <string name="agentProjectNoWorktrees">此项目未报告任何工作树。</string>
+    <string name="agentProjectReady">就绪</string>
+    <string name="agentProjectRemove">移除工作树</string>
+    <string name="agentProjectWorking">请等待此操作完成。</string>
+    <string name="agentProjectNewWorktree">新建命名工作树</string>
+    <string name="agentProjectGenerateWorktree">用自动生成的名称创建</string>
+    <string name="agentProjectRefresh">刷新项目状态</string>
+    <string name="agentProjectNameInvalid">请使用 1–128 个字母、数字、点、下划线或连字符。以字母或数字开头，且不要连续出现两个点。</string>
+    <string name="agentProjectWorktreeName">工作树名称</string>
+    <string name="agentProjectCreate">创建工作树</string>
+    <string name="agentProjectRemoveQuestion">移除“%1$s”？</string>
+    <string name="agentProjectRemoveBody">会归档该工作树及其对话，并移除它的文件夹：%1$s</string>
+    <plurals name="agentProjectRemoveChanges">
+        <item quantity="other">此工作树有 %1$d 个已更改的文件。它们会随文件夹一起被移除。</item>
+    </plurals>
+</resources>

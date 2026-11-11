@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="migration_opening">正在打开…</string>
+    <string name="migration_updating">正在更新你的应用…</string>
+    <string name="migration_still_updating">仍在更新。更新后的首次启动可能需要多一点时间。</string>
+    <string name="migration_try_again">重新尝试迁移你的数据</string>
+    <string name="migration_reenter_title">有几个登录需要你重新处理</string>
+    <string name="migration_reenter_body">更新无法读取这些已保存的登录信息。其余内容都已迁移过来。</string>
+    <string name="migration_reenter_row_password">%1$s · 输入密码</string>
+    <string name="migration_reenter_row_token">%1$s · 输入令牌</string>
+    <string name="migration_reenter_row_github">%1$s · 重新登录 GitHub</string>
+    <string name="migration_reenter_row_byo">%1$s · 重新设置</string>
+    <string name="migration_reenter_unnamed">一个已保存的服务器</string>
+    <string name="migration_reenter_later">稍后再登录这些</string>
+    <string name="migration_reenter_field_password">%1$s 的密码</string>
+    <string name="migration_reenter_field_token">%1$s 的令牌</string>
+    <string name="migration_reenter_save">保存</string>
+    <string name="migration_reenter_save_failed">无法保存到这部手机。请重试。</string>
+    <string name="migration_reenter_back">返回列表</string>
+    <string name="migration_reenter_github_where">要为 %1$s 重新登录 GitHub，请打开它的一个对话，然后进入 Git。</string>
+    <string name="migration_reenter_open_chats">打开对话</string>
+    <string name="migration_reenter_byo_absent">此版本暂不支持重新设置 %1$s。它已保存的信息仍留在这部手机上。</string>
+    <string name="migration_failed_title">更新未能完成数据迁移</string>
+    <string name="migration_failed_body">没有删除任何内容。更新前的数据在这部手机上是安全的。</string>
+    <string name="migration_restore_row">恢复更新前的数据</string>
+    <string name="migration_restore_confirm">这会把你的设置和服务器恢复成更新前的样子。之后的更改会保存在一份副本中。</string>
+    <string name="migration_restore_confirm_title">恢复较早的数据？</string>
+    <string name="migration_restore_confirm_action">恢复更新前的数据</string>
+    <string name="migration_start_fresh_row">重新开始（保留旧数据的副本）</string>
+    <string name="migration_start_fresh_confirm">你将从没有已保存服务器和默认设置的状态开始。旧数据的副本会保留在这部手机上。</string>
+    <string name="migration_start_fresh_confirm_title">重新开始？</string>
+    <string name="migration_start_fresh_confirm_action">重新开始并保留副本</string>
+    <string name="migration_report_row">报告问题</string>
+    <string name="migration_details">详情 · %1$s</string>
+    <string name="migration_space_title">你的手机快满了</string>
+    <string name="migration_space_body">更新需要 %1$s 的可用空间来保存你数据的安全副本。请腾出空间后重试。</string>
+    <string name="migration_save_failed_title">无法保存到这部手机</string>
+    <string name="migration_open_storage_row">打开存储设置</string>
+    <string name="migration_close">关闭</string>
+    <string name="migration_deferred_notice">此版本暂不支持：%1$s。你为它们保存的内容仍原样留在这部手机上。</string>
+    <string name="migration_deferred_ai_team">AI Team</string>
+    <string name="migration_deferred_memory">记忆</string>
+    <string name="migration_deferred_gemma">手机上的 AI 模型</string>
+    <string name="migration_deferred_separator">、</string>
+    <string name="migration_deferred_dismiss">关闭关于此版本暂不支持的功能的提示</string>
+</resources>

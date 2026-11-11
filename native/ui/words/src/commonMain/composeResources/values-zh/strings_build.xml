@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="nativeCapabilitiesDetail">查看此应用能做什么，并在可用时打开相应设置。</string>
+    <string name="nativeCapabilityOpenFailed">无法打开此设置。请检查所选服务器后重试。</string>
+    <string name="nativeCapabilityAddServerTitle">连接服务器</string>
+    <string name="nativeCapabilityAddServerDetail">保存你在电脑上运行的服务器的地址。</string>
+    <string name="nativeCapabilityPhoneSetupTitle">设置这部手机</string>
+    <string name="nativeCapabilityPhoneSetupDetail">在这部手机上安装 Linux 环境和服务器。</string>
+    <string name="nativeCapabilityServerGenerationTitle">使用 OpenCode 2</string>
+    <string name="nativeCapabilityServerGenerationDetail">设置你想使用的服务器代际。</string>
+    <string name="nativeCapabilityAddServerCodexTitle">连接 Codex</string>
+    <string name="nativeCapabilityAddServerCodexDetail">连接你电脑上的 Codex。</string>
+    <string name="nativeCapabilityAddServerPaseoTitle">连接 Paseo</string>
+    <string name="nativeCapabilityAddServerPaseoDetail">连接你 Paseo 电脑上的智能体。</string>
+    <string name="nativeCapabilityModelSignInTitle">登录模型提供方</string>
+    <string name="nativeCapabilityModelSignInDetail">管理所选服务器的提供方账号。</string>
+    <string name="nativeCapabilityTeamTurnOnTitle">设置 AI Team</string>
+    <string name="nativeCapabilityTeamTurnOnDetail">打开你项目的团队设置。</string>
+    <string name="nativeCapabilityTeamHostGuideTitle">连接团队主机</string>
+    <string name="nativeCapabilityTeamHostGuideDetail">打开你团队电脑的设置指南。</string>
+    <string name="nativeCapabilityVoiceModelSetupTitle">设置语音输入</string>
+    <string name="nativeCapabilityVoiceModelSetupDetail">选择并下载设备上的语音模型。</string>
+    <string name="nativeCapabilityMcpAddTitle">添加 MCP 工具</string>
+    <string name="nativeCapabilityMcpAddDetail">把工具连接到所选服务器。</string>
+    <string name="nativeCapabilityProjectChooseTitle">打开项目</string>
+    <string name="nativeCapabilityProjectChooseDetail">选择你想工作的文件夹。</string>
+    <string name="nativeCapabilityProjectGitInitTitle">设置项目的 Git</string>
+    <string name="nativeCapabilityProjectGitInitDetail">打开项目的 Git 设置。</string>
+    <string name="nativeCapabilityAllowNotificationsTitle">允许通知</string>
+    <string name="nativeCapabilityAllowNotificationsDetail">选择你不在时应用可以告诉你什么。</string>
+    <string name="nativeCapabilityAllowBackgroundTitle">保持运行</string>
+    <string name="nativeCapabilityAllowBackgroundDetail">打开 Android 的后台与电池设置。</string>
+    <string name="nativeCapabilityAllowCameraTitle">允许使用相机</string>
+    <string name="nativeCapabilityAllowCameraDetail">允许相机权限，用于配对和拍照。</string>
+    <string name="nativeCapabilityAllowMicrophoneTitle">允许使用麦克风</string>
+    <string name="nativeCapabilityAllowMicrophoneDetail">允许麦克风权限，用于语音输入。</string>
+    <string name="nativeCapabilityTailscaleSetupTitle">通过 Tailscale 连接</string>
+    <string name="nativeCapabilityTailscaleSetupDetail">设置对你电脑的私密访问。</string>
+    <string name="nativeCapabilityQuotaCollectorGuideTitle">设置用量读取</string>
+    <string name="nativeCapabilityQuotaCollectorGuideDetail">打开订阅用量读取的设置。</string>
+    <string name="nativeCapabilityAddExternalAgentTitle">连接外部智能体</string>
+    <string name="nativeCapabilityAddExternalAgentDetail">通过智能体已发布的 agent card 连接。</string>
+    <string name="nativeCapabilityTeamDeferred">AI Team 计划在原生版切换之后推出。现有的团队数据会保留在这部手机上。</string>
+    <string name="nativeCapabilityExternalDropped">来自其他应用的智能体不属于此应用。你保存的数据保持不变。</string>
+</resources>

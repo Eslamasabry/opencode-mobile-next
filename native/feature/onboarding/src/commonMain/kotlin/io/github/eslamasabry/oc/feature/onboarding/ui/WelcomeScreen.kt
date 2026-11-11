@@ -35,7 +35,6 @@ import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.words.res.*
 import kotlin.math.max
 import kotlin.math.roundToInt
-import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -167,17 +166,11 @@ public fun WelcomeScreen(state: WelcomeUi, actions: WelcomeActions) {
 @Composable
 private fun phoneLine(phone: PhoneWelcomeUi): String =
     when (phone.phase) {
+        // The download size only: the registry's "about 4 minutes" ran past 9 on a real phone, so no time is promised.
         WelcomeSetupPhase.Idle -> {
-            val seconds = phone.seconds
-            if (seconds == null) stringResource(Res.string.r40WelcomePhoneBody)
-            else {
-                val minutes = max(1, (seconds / 60.0).roundToInt())
-                val time =
-                    if (minutes == 1) stringResource(Res.string.phoneSetupStartAboutMinutes__eq1)
-                    else pluralStringResource(Res.plurals.phoneSetupStartAboutMinutes, minutes, minutes)
-                val bytes = phone.bytes ?: 0L
-                if (bytes > 0) stringResource(Res.string.welcomePhoneCost, time, sizeText(bytes)) else time
-            }
+            val bytes = phone.bytes ?: 0L
+            if (bytes > 0) stringResource(Res.string.teamDiscoverDownloadTitle, sizeText(bytes))
+            else stringResource(Res.string.r40WelcomePhoneBody)
         }
         WelcomeSetupPhase.Running -> stringResource(Res.string.welcomePhoneSettingUp, phone.percent.coerceIn(0, 99))
         WelcomeSetupPhase.Stopped -> stringResource(Res.string.welcomePhoneStopped, phone.percent.coerceIn(0, 99))

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="secCrashTitle">已保存的崩溃记录</string>
+    <string name="secCrashCapture">在这部手机上保留崩溃类别</string>
+    <string name="secCrashPrivacy">默认关闭。只保存错误类别和时间，绝不保存消息、堆栈或对话。</string>
+    <string name="secCrashClear">清除已保存的记录</string>
+    <string name="secCrashPreview">预览崩溃报告</string>
+    <string name="secCrashEmpty">没有保存任何崩溃记录。</string>
+    <string name="secCrashDisabled">开启崩溃记录，才会保留以后的错误类别。</string>
+    <string name="secCrashStale">记录已变更。分享前请重新预览报告。</string>
+    <string name="secCrashBusy">分享面板已在打开中。</string>
+    <string name="secCrashUnavailable">崩溃记录不可用。请重试。</string>
+    <string name="secCrashShareUnavailable">无法分享。请重试。</string>
+    <string name="secAppExits">Android 应用退出记录</string>
+    <string name="secHelperExits">助手程序退出记录</string>
+    <string name="secHistoryRefresh">刷新退出历史</string>
+    <string name="secHistoryEmpty">没有记录到最近的退出。</string>
+    <string name="secHistoryUnavailable">退出历史不可用。</string>
+    <string name="secHistoryEntry">%1$s · 代码 %2$d</string>
+    <string name="secCrashReportHeader">OpenCode Mobile 崩溃报告\n仅包含捕获的错误类别和时间。\n不包含消息、堆栈或对话。\n\n</string>
+</resources>

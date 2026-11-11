@@ -37,6 +37,19 @@ public enum class SearchPlace {
     Language,
     Tips,
     Shortcuts,
+    Privacy,
+    Voice,
+    Updates,
+    About,
+    ReportProblem,
+    Guide,
+    KeepRunning,
+    Usage,
+    LinuxPorts,
+    LinuxPackages,
+    AddServer,
+    Disconnect,
+    Demo,
 }
 
 public data class SearchIndexEntry(
@@ -90,7 +103,7 @@ public object SearchIndex {
                 )
             }
             if (caps.agentAccount || caps.serverCatalog)
-                add("settings-providers", SearchPlace.Providers, ProvidersRoute(profile))
+                add("settings-providers", SearchPlace.Providers, LibraryRoute("providers", profileId = profile))
             if (caps.setupConfigRead)
                 add("inside-server-ai-setup", SearchPlace.AiSetup, ServersRoute.Setup(profile))
             // F: search_index/places.dart:206 (`hasTeam`): the team page, not the phone's agents.
@@ -150,10 +163,28 @@ public object SearchIndex {
             SettingsRoute.Target("settings-language"),
         )
         add("help-tips", SearchPlace.Tips, TeachingRoute.Tips)
+        // S6: every Settings row and the pages inside them, so Search reaches what walking the hub reaches. Each
+        // opens its own page; Settings itself shows a row only when this phone can serve it, and so do these gates.
+        add("settings-privacy", SearchPlace.Privacy, SettingsRoute.Target("settings-privacy"))
+        if (platform.voice || platform.readAloud)
+            add("settings-voice", SearchPlace.Voice, SettingsRoute.Target("settings-voice"))
+        if (platform.inAppUpdater || platform.desktopReleaseCheck)
+            add("settings-updates", SearchPlace.Updates, SettingsRoute.Target("settings-updates"))
+        add("settings-about", SearchPlace.About, SettingsRoute.Target("settings-about"))
+        add("settings-report-problem", SearchPlace.ReportProblem, SettingsRoute.ReportProblem)
+        add("settings-guide", SearchPlace.Guide, SettingsRoute.Target("settings-guide"))
+        if (platform.backgroundService)
+            add("settings-background", SearchPlace.KeepRunning, PhoneRoute.KeepRunning)
+        add("settings-usage", SearchPlace.Usage, UsageRoute.Hub())
+        add("settings-servers-add", SearchPlace.AddServer, ServersRoute.Edit())
+        add("inside-server-disconnect", SearchPlace.Disconnect, ServersRoute.Home)
+        add("settings-demo", SearchPlace.Demo, DemoRoute)
         if (platform.builtinLinux) {
             add("settings-on-this-phone", SearchPlace.Phone, PhoneRoute.ThisPhone)
             add("inside-phone-running", SearchPlace.Running, PhoneRoute.Running)
             add("inside-phone-storage", SearchPlace.PhoneStorage, PhoneRoute.ManageSpace)
+            add("inside-linux-ports", SearchPlace.LinuxPorts, LinuxRoute.Ports)
+            add("inside-linux-packages", SearchPlace.LinuxPackages, LinuxRoute.Packages)
         }
         if (platform.notifications)
             add(

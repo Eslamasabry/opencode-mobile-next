@@ -2,7 +2,10 @@ package io.github.eslamasabry.oc.feature.git.ui
 
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,6 +20,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -47,6 +51,10 @@ import io.github.eslamasabry.oc.feature.git.presentation.GitActions
 import io.github.eslamasabry.oc.feature.git.presentation.GitConfirm
 import io.github.eslamasabry.oc.feature.git.presentation.GitSheet
 import io.github.eslamasabry.oc.feature.git.presentation.GitUi
+import io.github.eslamasabry.oc.feature.git.presentation.GitWay
+import io.github.eslamasabry.oc.feature.git.presentation.gitSavedNeedsSignIn
+import io.github.eslamasabry.oc.feature.git.presentation.gitWayForward
+import kotlinx.coroutines.launch
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitAction
@@ -309,17 +317,44 @@ private fun Ready(
     // A failed action, or a failed refresh over the last snapshot (B-NAV-020): plain words, Git's
     // text under Details.
     val failed = state.result?.failure
+    val identityView = remember { BringIntoViewRequester() }
+    val scope = rememberCoroutineScope()
     if (failed != null) {
         Gutter {
-            val words = gitProblemText(failed.problem)
+            val place = placeOf(state, snapshot)
+            val words = gitProblemText(failed.problem, state.offersGitHubSignIn)
+            // Flutter `_wayForward`: the one step that fixes it, next to the words.
+            val way =
+                gitWayForward(
+                    failed.problem,
+                    state.offersGitHubSignIn,
+                    canSignIn = state.signIn is GitHubSignIn.SignedOut,
+                )
+            val close = KitLineAction(stringResource(Res.string.kitSheetClose), actions::dismissResult)
+            val step =
+                when (way) {
+                    GitWay.SignIn -> KitLineAction(stringResource(Res.string.gitHubSignIn), actions::signIn)
+                    GitWay.GetLatest -> KitLineAction(stringResource(Res.string.gitGetLatest), actions::pull)
+                    GitWay.SetIdentity ->
+                        KitLineAction(
+                            stringResource(Res.string.gitIdentityTitle),
+                            { scope.launch { identityView.bringIntoView() } },
+                        )
+                    null -> null
+                }
             KitErrorNotice(
-                if (state.savedNotSent) stringResource(Res.string.gitSavedNotSent, words)
-                else words,
+                when {
+                    state.savedNotSent &&
+                        gitSavedNeedsSignIn(failed.problem, state.offersGitHubSignIn, place.isNotEmpty()) ->
+                        stringResource(Res.string.gitSavedSignInFirst, place)
+                    state.savedNotSent -> stringResource(Res.string.gitSavedNotSent, words)
+                    else -> words
+                },
                 details = state.resultDetails,
                 detailsLabel = stringResource(Res.string.kitDetails),
                 copyLabel = stringResource(Res.string.kitCopyDetails),
-                retry =
-                    KitLineAction(stringResource(Res.string.kitSheetClose), actions::dismissResult),
+                retry = step ?: close,
+                dismiss = close.takeIf { step != null },
             )
         }
     }
@@ -491,6 +526,27 @@ private fun Ready(
                     tone = StatusTone.Attention,
                 )
             }
+            // Flutter `_askConflictsRow`: one tap sends the agent the files to resolve, from this conversation.
+            if (state.canAskAgent) {
+                val paths = snapshot.status.files.filter { it.isConflicted }.map { it.path }
+                val prompt = stringResource(Res.string.gitAskAgentFixConflictsPrompt, paths.joinToString(", "))
+                KitRow(
+                    title = stringResource(Res.string.gitAskAgentFixConflicts),
+                    supporting = pluralStringResource(Res.plurals.gitConflictCount, count, count),
+                    leading = KitRowLeading.Glyph(KitIcons.sparkle),
+                    trailing = KitRowTrailing.Chevron,
+                    onClick = { actions.askAgent(prompt) },
+                    modifier = Modifier.testTag("git-row-ask-conflicts"),
+                )
+            }
+            if (state.askFailed) {
+                Gutter {
+                    KitErrorNotice(
+                        stringResource(Res.string.chatSendFailedRefused),
+                        retry = KitLineAction(stringResource(Res.string.kitSheetClose), actions::dismissAskFailure),
+                    )
+                }
+            }
         }
         // The save block. Steer, never queue: every button holds while an action runs.
         Gutter {
@@ -556,7 +612,7 @@ private fun Ready(
     if (
         snapshot.identity?.needsSetup == true || state.result?.problem == GitProblem.IdentityMissing
     )
-        IdentityBlock(snapshot, actions, enabled)
+        Box(Modifier.bringIntoViewRequester(identityView)) { IdentityBlock(snapshot, actions, enabled) }
 
     // Recent saves.
     if (snapshot.commits.isNotEmpty()) {

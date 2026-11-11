@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateSetupTitle">设置历史和注册表</string>
+    <string name="stateSetupNoWrites">可在此查看设置。套用和撤销不可用，因为此服务器没有经过验证的原子恢复接口。</string>
+    <string name="stateSetupUnsupported">请连接到支持查看设置的服务器，以读取其配置来源。</string>
+    <string name="stateSetupSaveFailed">无法保存此更改。请重试。</string>
+    <string name="stateSetupReadFailed">无法读取设置信息。请重试。</string>
+    <string name="stateSetupOffline">请重新连接以刷新设置信息。</string>
+    <string name="stateSetupSources">配置来源</string>
+    <string name="stateSetupMcp">已连接的工具</string>
+    <string name="stateSetupRecordReview">记下我已查看过此设置</string>
+    <string name="stateSetupRefresh">刷新设置</string>
+    <string name="stateSetupHistory">设置历史</string>
+    <string name="stateSetupHistoryUnavailable">已保存的历史记录不可用。它已被保留以便恢复。</string>
+    <string name="stateSetupHistoryEmpty">尚未保存任何设置审阅记录</string>
+    <string name="stateSetupRegistryConsent">浏览公共工具注册表</string>
+    <string name="stateSetupRegistryPrivacy">默认关闭。刷新会发出一次公开请求。搜索词会发送给注册表；你的服务器凭据不会。列表绝不会运行或安装任何内容。</string>
+    <string name="stateSetupRegistrySearch">搜索注册表</string>
+    <string name="stateSetupRegistryRefresh">刷新注册表</string>
+    <string name="stateSetupRegistrySaved">显示已保存的列表</string>
+    <string name="stateSetupRegistryClear">清除注册表许可和已保存的列表</string>
+    <string name="stateSetupRegistryOffline">已离线。显示的是已保存的列表。</string>
+    <string name="stateSetupRegistryFailed">无法加载注册表。你已保存的列表仍然保留。</string>
+    <string name="stateSetupRegistryEmpty">没有可显示的列表。请刷新或换一个搜索词。</string>
+    <string name="stateSetupMcpConnected">已连接</string>
+    <string name="stateSetupMcpPending">连接中</string>
+    <string name="stateSetupMcpDisabled">已关闭</string>
+    <string name="stateSetupMcpFailed">无法连接</string>
+    <string name="stateSetupMcpSignIn">需要登录</string>
+    <string name="stateSetupMcpUnknown">状态未知</string>
+    <string name="stateSetupAuditProposed">已提出更改</string>
+    <string name="stateSetupAuditPending">更改待处理</string>
+    <string name="stateSetupAuditAccepted">更改已接受</string>
+    <string name="stateSetupAuditVerified">审阅已核实</string>
+    <string name="stateSetupAuditUncertain">结果不确定</string>
+    <string name="stateSetupAuditRejected">更改已拒绝</string>
+    <string name="stateServerSchedules">定时提示词</string>
+</resources>

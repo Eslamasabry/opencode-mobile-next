@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="m40AuthTitle">登录 %1$s</string>
+    <string name="m40AuthBack">返回</string>
+    <string name="m40AuthWorking">处理中…</string>
+    <string name="m40AuthPlaces">你想在哪里登录？</string>
+    <string name="m40AuthBest">在这里可以直接读取用量。</string>
+    <string name="m40AuthServer">登录信息保存在此服务器上。</string>
+    <string name="m40AuthPhone">这部手机</string>
+    <string name="m40AuthMethods">选择登录方式</string>
+    <string name="m40AuthNoPlace">没有可登录的地方</string>
+    <string name="m40AuthNoPlaceBody">请添加一个 OpenCode 服务器，或在这部手机上安装此提供方的智能体。</string>
+    <string name="m40AuthUnavailable">此处无法登录</string>
+    <string name="m40AuthUnavailableBody">此连接没有为该提供方提供受支持的登录方式。</string>
+    <string name="m40AuthKey">API 密钥</string>
+    <string name="m40AuthKeyHelp">你的密钥会发送到此连接并保存在那里。</string>
+    <string name="m40AuthSaveKey">保存密钥</string>
+    <string name="m40AuthContinue">继续</string>
+    <string name="m40AuthEnterValue">请输入一个值。</string>
+    <string name="m40AuthSelectValue">请选择一个选项。</string>
+    <string name="m40AuthOpenPage">打开登录页面</string>
+    <string name="m40AuthAskPage">在浏览器中打开 %1$s？</string>
+    <string name="m40AuthOpenBrowser">在浏览器中打开</string>
+    <string name="m40AuthCheck">检查登录</string>
+    <string name="m40AuthWaiting">请先完成登录，然后在这里检查。</string>
+    <string name="m40AuthCommandWaiting">连接正在执行登录。完成后请在这里检查。</string>
+    <string name="m40AuthCode">登录码或回调 URL</string>
+    <string name="m40AuthFinish">完成登录</string>
+    <string name="m40AuthDone">完成</string>
+    <string name="m40AuthComplete">已登录</string>
+    <string name="m40AuthCompleteBody">套餐列表已刷新。</string>
+    <string name="m40AuthFailed">未能完成这一步。请重试。</string>
+    <string name="m40AuthReenter">请在服务器页面重新输入此服务器的密码，然后回到这里。</string>
+    <string name="m40AuthDetails">详情</string>
+    <string name="m40AuthCopyDetails">复制详情</string>
+    <string name="m40AuthDeviceCode">请在登录页面使用验证码 %1$s。</string>
+    <string name="m40AuthCopyCode">复制验证码</string>
+    <string name="m40AuthCopied">验证码已复制</string>
+    <string name="m40AuthBrowserHint">这种方式必须在运行此服务器的机器上的浏览器中完成。</string>
+    <string name="m40AuthDeviceHint">使用设备码登录。</string>
+    <string name="m40AuthAccountHint">使用你的提供方账号登录。</string>
+    <string name="m40AuthCommandHint">由连接执行此登录；手机不运行任何命令。</string>
+    <string name="m40AuthPhoneHint">使用这部手机上已安装的该提供方智能体。</string>
+</resources>

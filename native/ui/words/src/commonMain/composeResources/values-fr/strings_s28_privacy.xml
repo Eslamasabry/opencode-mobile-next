@@ -33,6 +33,5 @@
     <string name="collectExit">Pourquoi Android a arrêté l’application la dernière fois (par exemple un plantage, un blocage ou un manque de mémoire)</string>
     <string name="collectSteps">Vos 30 dernières actions, sous forme de mots courts comme chat.send</string>
     <string name="collectCrashKeys">La version de l’application, son mode d’installation, le type de serveur, si le serveur de ce téléphone est en marche, combien de connexions sont ouvertes et la version du serveur</string>
-    <string name="collectReport">Les 500 dernières lignes du journal de l’application, avec les clés, adresses et chemins masqués. Vous voyez tout et choisissez Envoyer ou Annuler.</string>
     <string name="collectNever">Vos invites et réponses, noms ou chemins de fichiers, adresses web, noms d’hôte, adresses IP, textes de messages d’erreur, clés ou jetons, l’identifiant publicitaire ou l’identifiant Android</string>
 </resources>

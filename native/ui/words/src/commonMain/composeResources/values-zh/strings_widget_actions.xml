@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="widgetActionTitle">向此对话发消息</string>
+    <string name="widgetActionMessage">消息</string>
+    <string name="widgetActionHint">为当前回复提供指引。如果此智能体在工作时无法接受指引，你的消息会排在它的回复之后。</string>
+    <string name="widgetActionSend">发送消息</string>
+    <string name="widgetActionClose">关闭</string>
+    <string name="widgetActionOpen">打开对话</string>
+    <string name="widgetActionAccepted">消息已发送</string>
+    <string name="widgetActionRejected">此对话无法接收这条消息</string>
+    <string name="widgetActionUncertain">无法确认消息</string>
+    <string name="widgetActionCheckFirst">再次发送前，请先查看对话。</string>
+    <string name="widgetActionOpenHint">打开对话即可查看它的最新回复。</string>
+    <string name="widgetActionSending">正在发送消息…</string>
+    <string name="widgetActionEnterMessage">请先输入消息</string>
+    <string name="widgetPanelAllProjects">所有项目</string>
+    <string name="widgetPanelSave">保存选择</string>
+    <string name="widgetPanelRecord">语音输入</string>
+    <string name="widgetPanelFinishRecording">结束语音输入</string>
+    <string name="widgetPanelListening">正在聆听…</string>
+</resources>

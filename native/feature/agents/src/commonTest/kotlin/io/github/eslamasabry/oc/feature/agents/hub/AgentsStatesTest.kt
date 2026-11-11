@@ -173,4 +173,23 @@ class AgentsStatesTest {
         phone.set(stopped)
         assertEquals(2, host.calls, "no restart loop: the person's tap is next")
     }
+
+    @Test
+    fun `New conversation opens on the phone server with the tapped agent chosen, and an unknown agent opens nothing`() =
+        runTest {
+            val opened = mutableListOf<Pair<ProfileId?, String>>()
+            val presenter =
+                AgentsPresenter(
+                    CoroutineScope(backgroundScope.coroutineContext + UnconfinedTestDispatcher(testScheduler)),
+                    NoComputers,
+                    Phone(PhoneAgentRow("codex", "Codex", PhoneAgentStatus.Ready)),
+                    onBack = {},
+                    openChat = {},
+                    openNewChat = { profile, agent -> opened += profile to agent },
+                )
+            presenter.newPhoneConversation("claude")
+            assertTrue(opened.isEmpty(), "an agent the page does not list opens nothing")
+            presenter.newPhoneConversation("codex")
+            assertEquals(listOf<Pair<ProfileId?, String>>(ProfileId("owner") to "codex"), opened)
+        }
 }

@@ -33,6 +33,11 @@ public class DevServicesContext(
     /** Opens a saved preview address through the external link policy; false when it was not opened. */
     public val openLink: (String) -> Boolean,
     public val clock: Clock,
+    /**
+     * Opens Report a problem with a failed service run attached (title, plain detail, redacted log). Null where the
+     * app cannot report (desktop, tests): the page then offers no Report button.
+     */
+    public val reportFailure: ((title: String, detail: String, log: String) -> Unit)? = null,
 )
 
 public fun interface DevServicesHost {

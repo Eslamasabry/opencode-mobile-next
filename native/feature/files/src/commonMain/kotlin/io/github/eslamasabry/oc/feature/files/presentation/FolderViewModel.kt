@@ -93,6 +93,8 @@ public data class FolderUi(
     val storageResult: FilesStorageResult? = null,
     val actionFailure: Failure? = null,
     val canTerminal: Boolean = false,
+    /** Running terminals of this project, for the Terminal action's words; null while unknown. */
+    val runningTerminals: Int? = null,
     /** The project's other pages for the ⋯ menu; none until the project's folder is known. */
     val tools: FilesProjectTools = FilesProjectTools.None,
     /** The project folder's own name ("my-app"), once the server says where the project is; null until then. */
@@ -117,6 +119,9 @@ public data class FolderUi(
 
 public interface FolderActions {
     public fun terminal() {}
+
+    /** The whole conversation's "Changes" review (Flutter project hub `ProjectTool.changes`). */
+    public fun reviewChanges() {}
 
     /** The ⋯ menu's project tools (Flutter project_hub_screen.dart `_toolsMenu`). */
     public fun projectHealth() {}
@@ -235,6 +240,10 @@ public class FolderViewModel(
                     tools = if (projectDirectory != null) files.tools() else FilesProjectTools.None,
                 )
             }
+            if (files.canTerminal()) {
+                val running = files.runningTerminals(projectDirectory)
+                local.update { it.copy(runningTerminals = running) }
+            }
         }
     }
 
@@ -260,6 +269,10 @@ public class FolderViewModel(
 
     override fun switchProject() {
         if (files.tools().switchProject) nav.open(ProjectsRoute.Open)
+    }
+
+    override fun reviewChanges() {
+        ref?.let { nav.open(ReviewRoute.Changes(it)) }
     }
 
     override fun terminal() {

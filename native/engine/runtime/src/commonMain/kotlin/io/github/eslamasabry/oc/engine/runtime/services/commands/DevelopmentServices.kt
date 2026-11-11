@@ -13,6 +13,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
+/** One failed, owned run for "Report this failure": the service's name, the plain outcome line, the log tail. */
+public data class FailedRunReport(val title: String, val detail: String, val logExcerpt: String)
+
 /** What one project's Development services panel shows. */
 public data class DevelopmentServicesState(
     val services: List<DevelopmentService> = emptyList(),
@@ -104,6 +107,30 @@ public class DevelopmentServices(
     }
 
     public fun exitCode(service: DevelopmentService): Int? = observed[service.id]?.exitCode
+
+    /**
+     * What "Report this failure" attaches for [id] (Flutter `FailedJobReport.developmentService`): only a run this app
+     * started (its receipt matches the shell) that ended in a timeout, a kill or a non-zero exit; a deliberate stop or
+     * an unknown exit reports nothing. The log is the tail [readLogs] read from that same shell, else empty. Plain
+     * text; the report path redacts and bounds it.
+     */
+    public fun failedReport(id: String): FailedRunReport? {
+        if (closed || !isCurrent() || !supported() || !readable) return null
+        val service = services.firstOrNull { it.id == id } ?: return null
+        val run = service.run ?: return null
+        val shell = observed[id] ?: return null
+        if (run.stopped || !matches(service, shell)) return null
+        val code = shell.exitCode
+        val failed =
+            shell.status == ManagedShellStatus.Timeout ||
+                shell.status == ManagedShellStatus.Killed ||
+                (shell.status == ManagedShellStatus.Exited && code != null && code != 0)
+        if (!failed) return null
+        val source = logSources[id]
+        val tail = if (source != null && matches(service, source)) logs[id].orEmpty() else ""
+        val outcome = shell.status.name.lowercase() + (code?.let { " (exit $it)" } ?: "")
+        return FailedRunReport(service.name, outcome, tail)
+    }
 
     public fun canStart(service: DevelopmentService): Boolean =
         supported() && !busy && isCurrent() && readable &&

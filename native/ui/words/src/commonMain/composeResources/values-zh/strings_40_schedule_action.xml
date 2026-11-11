@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="scheduleActionWhen">安排在 %1$s</string>
+    <plurals name="scheduleActionHours">
+        <item quantity="other">每 %1$d 小时安排一次</item>
+    </plurals>
+</resources>

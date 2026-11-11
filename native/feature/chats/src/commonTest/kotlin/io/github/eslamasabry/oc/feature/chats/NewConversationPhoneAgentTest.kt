@@ -173,6 +173,23 @@ class NewConversationPhoneAgentTest {
     }
 
     @Test
+    fun `PHONE-AGENT an agent chosen on the Agents page is the one chosen here and is remembered`() {
+        val host = Host()
+        val vm = NewConversationViewModel(ChatsRoute.New(server, phoneAgent = "claude"), host, Nav(), Clock.System, ListenedReports())
+        assertEquals("claude", vm.state.value.phoneAgent)
+        assertEquals(listOf<Pair<ProfileId, String?>>(server to "claude"), host.chosen)
+        assertEquals(1, host.modelReads)
+    }
+
+    @Test
+    fun `PHONE-AGENT a requested agent that is not offered is ignored`() {
+        val host = Host()
+        val vm = NewConversationViewModel(ChatsRoute.New(server, phoneAgent = "codex"), host, Nav(), Clock.System, ListenedReports())
+        assertNull(vm.state.value.phoneAgent)
+        assertTrue(host.chosen.isEmpty())
+    }
+
+    @Test
     fun `PHONE-AGENT an agent that still needs setup cannot be chosen, its row opens setup`() {
         val host = Host()
         val nav = Nav()
@@ -181,7 +198,7 @@ class NewConversationPhoneAgentTest {
         assertNull(vm.state.value.phoneAgent)
         assertTrue(host.chosen.isEmpty(), "nothing is saved for an agent that cannot start")
         vm.setUpPhoneAgent("codex")
-        assertEquals(listOf<AppRoute>(AgentsRoute.Home), nav.opened)
+        assertEquals(listOf<AppRoute>(AgentsRoute.Agent("codex", forNewChat = true)), nav.opened)
     }
 
     @Test

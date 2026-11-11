@@ -194,6 +194,20 @@ private fun ScheduleList(
                 )
             }
         }
+        // G2: F scheduled_prompts_screen.dart:319-329: late runs first, else the notifications note.
+        if (!state.exactAllowed)
+            item(key = "exact") {
+                KitGroupNote(
+                    stringResource(Res.string.scheduleExactNote),
+                    action =
+                        KitAction(
+                            stringResource(Res.string.scheduleExactAllow),
+                            actions::allowExactTiming,
+                        ),
+                )
+            }
+        else if (!state.notificationsAllowed)
+            item(key = "notify") { KitGroupNote(stringResource(Res.string.scheduleNotifyOff)) }
     }
 }
 

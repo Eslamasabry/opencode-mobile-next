@@ -67,6 +67,16 @@ public class ShellNavigator : AppNavigator {
         }
     }
 
+    override fun backToChat(ref: ConversationRef): Unit = mutate { s ->
+        if (s.size > 1 && (s[s.lastIndex - 1] as? ChatRoute)?.ref == ref) {
+            gateListener?.invoke(GateEvent.ButtonBack)
+            s.removeAt(s.lastIndex)
+        } else if ((s.lastOrNull() as? ChatRoute)?.ref != ref) {
+            gateListener?.invoke(GateEvent.TapOpen)
+            s.add(ChatRoute(ref))
+        }
+    }
+
     override fun land(): Unit = mutate { it.replaceWith(ChatsRoute.Home) }
 
     override fun replaceRoot(root: AppRoute): Unit = mutate { it.replaceWith(root) }

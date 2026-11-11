@@ -501,6 +501,9 @@ public interface FileDiffActions {
     /** Removes a draft comment. */
     public fun removeComment(id: String) {}
 
+    /** "Add <file> to the prompt": an `@path` mention in the conversation's message; the person stays here. */
+    public fun addToPrompt() {}
+
     /** "Send N comments": every draft in this conversation, one prompt to its agent. */
     public fun sendComments() {}
 }
@@ -519,6 +522,7 @@ public class FileDiffPresenter(
     agent: ReviewAgentPorts = ReviewAgentPorts(),
     private val branch: ReviewBranchRead? = null,
     private val shelf: ReviewShelf? = null,
+    private val addFile: ReviewAddFile? = null,
 ) : FileDiffActions {
     private val staged = source == FileDiffSource.Staged
     private val workingTree = source == FileDiffSource.WorkingTree
@@ -527,7 +531,7 @@ public class FileDiffPresenter(
     private val itemKey = ReviewShelf.file(source, messageId, path)
     private val mutable =
         MutableStateFlow(
-            shelf?.peek(itemKey)?.file?.let { frame(it) } ?: FileDiffUi(path, canComment = runner != null)
+            shelf?.peek(itemKey)?.file?.let { frame(it) } ?: FileDiffUi(path, canComment = runner != null, canAddFile = addFile != null)
         )
     public val state: StateFlow<FileDiffUi> = mutable.asStateFlow()
 
@@ -539,6 +543,7 @@ public class FileDiffPresenter(
             missing = kept.missing,
             noDiff = kept.noDiff,
             canComment = runner != null,
+            canAddFile = addFile != null,
             updating = true,
         )
 
@@ -599,6 +604,18 @@ public class FileDiffPresenter(
 
     override fun removeComment(id: String) {
         runner?.book?.remove(id)
+    }
+
+    override fun addToPrompt() {
+        val add = addFile ?: return
+        scope.launch {
+            val notice =
+                when (val result = add.add(path)) {
+                    is Outcome.Ok -> if (result.value == AddedFile.Added) FileNotice.Added else FileNotice.AlreadyThere
+                    is Outcome.Failed -> FileNotice.Failed(result.failure)
+                }
+            mutable.update { it.copy(fileNotice = notice) }
+        }
     }
 
     override fun sendComments() {

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="connectionCheckAction">检查连接</string>
+    <string name="connectionCheckTitle">连接检查</string>
+    <string name="connectionCheckAgain">刷新</string>
+    <string name="connectionCheckAddress">地址</string>
+    <string name="connectionCheckSignIn">登录</string>
+    <string name="connectionCheckVersion">服务器版本</string>
+    <string name="connectionCheckLive">实时更新</string>
+    <string name="connectionCheckSpeed">响应时间</string>
+    <string name="connectionCheckWaiting">等待中</string>
+    <string name="connectionCheckRunning">正在检查…</string>
+    <string name="connectionCheckPassed">已通过</string>
+    <string name="connectionCheckVersionValue">版本 %1$s</string>
+    <string name="connectionCheckMillis">%1$s 毫秒</string>
+    <string name="connectionCheckUnreachable">无法连接到服务器。请检查地址，并确认服务器正在运行。</string>
+    <string name="connectionCheckNotServer">此地址的响应不像是受支持的服务器。请检查地址。</string>
+    <string name="connectionCheckNeedsPassword">请重新输入已保存服务器的密码或令牌，然后重试。</string>
+    <string name="connectionCheckPasswordRejected">服务器拒绝了已保存的登录信息。请更新密码或令牌。</string>
+    <string name="connectionCheckUnsupported">不支持此服务器版本。请更新服务器。</string>
+    <string name="connectionCheckNotReady">服务器有响应，但尚未就绪。请稍等片刻后再检查。</string>
+    <string name="connectionCheckStreamUnchecked">请连接此服务器以检查实时更新。</string>
+    <string name="connectionCheckStreamConnecting">实时连接仍在重新连接。请稍后再检查。</string>
+    <string name="connectionCheckStreamDown">现有的实时连接已断开。请重新连接此服务器。</string>
+    <string name="connectionCheckSlow">%1$s 毫秒 — 服务器响应较慢。请检查网络或服务器负载。</string>
+    <string name="connectionCheckSkipped">未检查，因为前一步需要处理。</string>
+    <string name="connectionCheckTrust">再次检查前，请先查看此服务器的连接信任设置。</string>
+    <string name="connectionCheckChanged">已保存的服务器已变更。请关闭此检查并重新打开。</string>
+</resources>

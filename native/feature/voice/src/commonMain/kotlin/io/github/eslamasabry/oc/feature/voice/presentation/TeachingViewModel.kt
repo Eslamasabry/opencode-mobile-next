@@ -26,6 +26,8 @@ public data class TeachingUi(
     val replay: TipDefinition? = null,
     val step: Int = 0,
     val resetFailed: Boolean = false,
+    /** S9: counts completed resets so the screen can confirm each one once ("Tips will show again."). */
+    val resets: Int = 0,
 )
 
 public interface TeachingActions {
@@ -97,7 +99,12 @@ public class TeachingViewModel(private val hub: VoiceTeachingHub, private val na
         val tips = controller ?: return
         viewModelScope.launch {
             val result = tips.reset()
-            mutable.update { it.copy(resetFailed = result is Outcome.Failed) }
+            mutable.update {
+                it.copy(
+                    resetFailed = result is Outcome.Failed,
+                    resets = if (result is Outcome.Failed) it.resets else it.resets + 1,
+                )
+            }
         }
     }
 

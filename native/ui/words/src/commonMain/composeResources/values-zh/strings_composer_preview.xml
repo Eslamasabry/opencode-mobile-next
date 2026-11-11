@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="composerPreviewModelButton">模型</string>
+    <string name="composerPreviewModelDefault">服务器默认</string>
+    <string name="composerPreviewModelDefaultHint">服务器自带的默认模型</string>
+    <string name="composerPreviewModelsTitle">选择模型</string>
+    <string name="composerPreviewModelsLoading">正在加载模型…</string>
+    <string name="composerPreviewModelsEmpty">目前没有可用的模型。</string>
+    <string name="composerPreviewModelsFailed">无法加载模型列表。</string>
+    <string name="composerPreviewModelsRetry">重试</string>
+    <string name="composerPreviewModelsClose">关闭</string>
+    <string name="composerPreviewAttachFile">附加文件</string>
+    <string name="composerPreviewAttachNoPicker">这台设备无法在此附加文件。</string>
+    <string name="composerPreviewAttachModelWithoutFiles">此模型不接收文件。请选择支持文件的模型。</string>
+    <string name="composerPreviewAttachmentRemove">移除</string>
+    <string name="composerPreviewAttachmentFailed">无法附加这个文件。</string>
+    <string name="composerPreviewAttachmentTooLarge">此文件太大，无法附加。</string>
+    <string name="composerPreviewAttachmentUnsupported">无法附加这种类型的文件。</string>
+    <string name="composerPreviewAttachmentStorage">无法将文件保存到这台设备。</string>
+    <string name="composerPreviewAttachmentDismiss">关闭</string>
+    <string name="composerPreviewAttachmentRetry">重试</string>
+</resources>

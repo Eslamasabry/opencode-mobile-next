@@ -141,6 +141,24 @@ import io.github.eslamasabry.oc.ui.words.res.chatsHomeEmptyCalmBody
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeEmptyTitle
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeFailed
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeIncompleteNamed
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeOnlyProject
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeStillLoading
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeUnreachable
+import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
+import io.github.eslamasabry.oc.ui.words.res.agentsRestartLine
+import io.github.eslamasabry.oc.ui.words.res.agentsResumeAction
+import io.github.eslamasabry.oc.ui.words.res.agentsSignInAction
+import io.github.eslamasabry.oc.ui.words.res.agentsSignedOutLine
+import io.github.eslamasabry.oc.ui.words.res.agentsStateLimit
+import io.github.eslamasabry.oc.ui.words.res.agentsStoppedLine
+import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysOn
+import io.github.eslamasabry.oc.ui.words.res.chatRequestAnswerAllowed
+import io.github.eslamasabry.oc.ui.words.res.chatRequestAnswerRejected
+import io.github.eslamasabry.oc.ui.words.res.signalRowRunningCommand
+import io.github.eslamasabry.oc.ui.kit.state.KitReceipt
+import io.github.eslamasabry.oc.ui.kit.state.KitReceiptState
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNoticeKind
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeHeldReply
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNeedsYou
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNewChat
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNoMatchBody
@@ -338,15 +356,69 @@ public fun ChatsScreen(
                         )
                     }
                 }
-            if (state.incomplete.isNotEmpty()) {
-                item(key = "incomplete", contentType = "incomplete") {
+            // S4 / H3 (F: chats_home_screen.dart:511-632): a connection that did not answer says so by name and offers
+            // Try again on the page; the one still opening has its own card. A list that is only partly read says what
+            // is loading, then offers Try again; a server that lists one project says so.
+            val unreachable = state.home.sources.filter { it.shown && it.unreachable && it.profile != state.home.opening?.profile }
+            unreachable.forEach { source ->
+                item(key = "unreachable-${source.profile.raw}", contentType = "unreachable") {
                     Box(kitItemMotion()) {
                         KitNotice(
-                            stringResource(
-                                Res.string.chatsHomeIncompleteNamed,
-                                state.incomplete.joinToString(", "),
-                            )
+                            message = stringResource(Res.string.chatsHomeUnreachable, KitBidi.auto(source.name)),
+                            actions = listOf(KitLineAction(stringResource(Res.string.kitTryAgain), { actions.retrySource(source.profile) })),
                         )
+                    }
+                }
+            }
+            // One place per server: a server with its own line, or the one opening (pill or failure card), is not
+            // named again here.
+            val partial =
+                state.incomplete.filterNot { name ->
+                    unreachable.any { it.name == name } || name == state.home.opening?.serverName
+                }
+            if (partial.isNotEmpty()) {
+                item(key = "incomplete", contentType = "incomplete") {
+                    Box(kitItemMotion()) {
+                        val names = KitBidi.auto(partial.joinToString(", "))
+                        if (state.refreshing) KitNotice(stringResource(Res.string.chatsHomeStillLoading, names), tone = StatusTone.Progress)
+                        else
+                            KitNotice(
+                                stringResource(Res.string.chatsHomeIncompleteNamed, names),
+                                actions = listOf(KitLineAction(stringResource(Res.string.kitTryAgain), actions::retryList)),
+                            )
+                    }
+                }
+            }
+            state.onlyProject?.let { project ->
+                item(key = "only-project", contentType = "only-project") {
+                    Box(kitItemMotion()) { KitNotice(stringResource(Res.string.chatsHomeOnlyProject, KitBidi.auto(project))) }
+                }
+            }
+            // G6 (F: agent_notices.dart:84-157): the phone agents' restart offer, sign-in, stopped and plan-limit lines.
+            if (state.phase != ChatsPhase.Opening) {
+                if (state.agentNotices.restart)
+                    item(key = "agents-restart", contentType = "agent-notice") {
+                        Box(kitItemMotion()) { KitNotice(stringResource(Res.string.agentsRestartLine)) }
+                    }
+                state.agentNotices.lines.forEach { notice ->
+                    item(key = "agent-${notice.agentId}-${notice.kind.name}", contentType = "agent-notice") {
+                        Box(kitItemMotion()) {
+                            val name = KitBidi.auto(notice.agentName)
+                            when (notice.kind) {
+                                HomeAgentNoticeKind.SignedOut ->
+                                    KitNotice(
+                                        stringResource(Res.string.agentsSignedOutLine, name),
+                                        actions = listOf(KitLineAction(stringResource(Res.string.agentsSignInAction, name), actions::openAgents)),
+                                    )
+                                HomeAgentNoticeKind.Stopped ->
+                                    KitNotice(
+                                        stringResource(Res.string.agentsStoppedLine, name),
+                                        actions = listOf(KitLineAction(stringResource(Res.string.agentsResumeAction, name), actions::openAgents)),
+                                    )
+                                HomeAgentNoticeKind.LimitReached ->
+                                    KitNotice("$name · ${stringResource(Res.string.agentsStateLimit)}")
+                            }
+                        }
                     }
                 }
             }
@@ -697,6 +769,8 @@ private data class HomeRowWords(
     val related: String,
     val handoff: String,
     val delete: String,
+    /** "Working", or "Working 34m" once the run's start is known (B-161). */
+    val runningFor: (Long?) -> String,
 )
 
 @Composable
@@ -717,6 +791,7 @@ private fun rememberHomeRowWords(): HomeRowWords =
         related = stringResource(Res.string.sessionOpenRelated),
         handoff = stringResource(Res.string.sessionCopyHandoff),
         delete = stringResource(Res.string.sessionMenuDelete),
+        runningFor = liveRunWords(),
     )
 
 /** What a row needs to know of the whole screen, and nothing else: equal for a row nothing happened to. */
@@ -728,6 +803,7 @@ private data class HomeRowFlags(
     val deletable: Boolean,
     val always: Boolean,
     val answering: Boolean,
+    val held: HomeHeldReply?,
     val showProject: Boolean,
     val showAgents: Boolean,
     val nowMs: Long,
@@ -742,6 +818,7 @@ private fun rowFlags(row: ConversationRowUi, state: ChatsUi): HomeRowFlags =
         deletable = row.key in state.deletable,
         always = row.key in state.alwaysAllowable,
         answering = row.permission?.requestId?.let { it in state.answering } == true,
+        held = row.permission?.requestId?.let { state.held[it] },
         showProject = state.showProjects,
         showAgents = state.showAgents,
         nowMs = state.nowMs,
@@ -766,7 +843,9 @@ private fun ConversationRow(
     val status =
         when (row.status) {
             RowStatus.NeedsYou -> words.needsYou
-            RowStatus.Running -> words.working
+            RowStatus.Running ->
+                // H5 (F: chats_host.dart:188-199): how long the run has gone, when its start is known.
+                words.runningFor(row.running?.sinceMs?.takeIf { flags.nowMs > 0 }?.let { flags.nowMs - it })
             RowStatus.Failed -> words.failed
             RowStatus.Done -> words.done
             RowStatus.None -> null
@@ -785,6 +864,9 @@ private fun ConversationRow(
             ?: row.ago?.let { agoText(it) }
     val preview =
         row.permission?.let { stringResource(Res.string.chatsHomeAsksToRun, KitBidi.ltr(mask(it.command))) }
+            // H5: the shell command a running row is on ("Running npm test"), read left to right.
+            ?: row.running?.command?.takeIf { row.status == RowStatus.Running && it.isNotBlank() }
+                ?.let { stringResource(Res.string.signalRowRunningCommand, KitBidi.ltr(mask(it))) }
             ?: row.preview?.let { mask(it) }
     val project = row.project.takeIf { flags.showProject && it.isNotBlank() }
     // No line to show: the row says where it lives instead (its project when no dot names it, and its server).
@@ -792,7 +874,7 @@ private fun ConversationRow(
     val permission = row.permission
     val below: (@Composable () -> Unit)? =
         if (permission == null) null
-        else ({ PermissionAnswers(row, permission, flags.always, flags.answering, actions) })
+        else ({ PermissionAnswers(row, permission, flags.always, flags.answering, flags.held, actions) })
     KitMenu(
         expanded = menuOpen,
         // N-30: the same acts, in the same order, as a row on All conversations (a tap already opens it). Built only
@@ -848,8 +930,25 @@ private fun PermissionAnswers(
     permission: io.github.eslamasabry.oc.engine.agents.feed.FeedPermission,
     always: Boolean,
     answering: Boolean,
+    held: HomeHeldReply?,
     actions: ChatsActions,
 ) {
+    // H1 (F: chats_host.dart:236-246): the answer waits 3 s; the row says what was chosen and offers Undo.
+    if (held != null) {
+        KitReceipt(
+            state = KitReceiptState.Confirmed,
+            label =
+                stringResource(
+                    when (held) {
+                        HomeHeldReply.Allowed -> Res.string.chatRequestAnswerAllowed
+                        HomeHeldReply.Rejected -> Res.string.chatRequestAnswerRejected
+                        HomeHeldReply.AlwaysAllowed -> Res.string.chatRequestAlwaysOn
+                    }
+                ),
+            onUndo = { actions.undoAnswer(row) },
+        )
+        return
+    }
     val enabled =
         when {
             answering -> KitEnabled.Disabled(stringResource(Res.string.serversWorking))

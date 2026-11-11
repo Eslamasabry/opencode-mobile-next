@@ -508,6 +508,8 @@ public data class TaskControls(
     val restart: Boolean = false,
     val verify: Boolean = false,
     val stop: Boolean = false,
+    /** The task failed: Report this failure is offered. */
+    val report: Boolean = false,
 )
 
 /** The promote card on a task (Dart `_promoteCard`). */
@@ -605,6 +607,9 @@ public interface TeamTaskActions {
     public fun dismissRefusal()
 
     public fun restart() {}
+
+    /** Report this failure: opens Report a problem with the failed task attached. */
+    public fun reportFailure() {}
 
     public fun pause() {}
 

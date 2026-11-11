@@ -33,6 +33,5 @@
     <string name="collectExit">Lý do Android kết thúc ứng dụng lần trước (ví dụ sự cố, treo hoặc thiếu bộ nhớ)</string>
     <string name="collectSteps">30 bước gần nhất của bạn, dưới dạng từ ngắn như chat.send</string>
     <string name="collectCrashKeys">Phiên bản ứng dụng, cách cài đặt, loại máy chủ, máy chủ của điện thoại này có đang chạy không, số kết nối đang mở và phiên bản máy chủ</string>
-    <string name="collectReport">500 dòng gần nhất trong nhật ký của chính ứng dụng, với khóa, địa chỉ và đường dẫn đã được che. Bạn xem được toàn bộ và chọn Gửi hoặc Hủy.</string>
     <string name="collectNever">Lời nhắc và phản hồi, tên hoặc đường dẫn tệp, địa chỉ web, tên máy chủ, địa chỉ IP, nội dung thông báo lỗi, khóa hoặc mã thông báo, ID quảng cáo hay ID Android</string>
 </resources>

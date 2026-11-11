@@ -212,4 +212,9 @@
     <string name="usageDetailLastCheck">上次检查</string>
     <string name="usagePhoneNotRunning">未运行</string>
     <string name="usageBackAt">%1$s 后恢复</string>
+    <string name="quotaInAppFailLinux">%1$s 尚未就绪。请先完成“这部手机”的设置，然后重试。</string>
+    <string name="quotaInAppFailNoNode">%1$s 还没有 Node，而用量功能需要它。请重新运行“这部手机”的设置来添加它，然后重试。</string>
+    <string name="quotaInAppFailNodeOld">%1$s 上的 Node 低于 20 版本。请重新运行“这部手机”的设置来更新它，然后重试。</string>
+    <string name="usageAddNoneBody">保存一个服务器，或设置“这部手机”，它就会出现在这里。</string>
+    <string name="usageReadFromBodyInApp">为了显示它们的上限，应用会在“这部手机”中启动一个小型读取程序。它只读取还剩多少，绝不读取你的对话或密钥。</string>
 </resources>

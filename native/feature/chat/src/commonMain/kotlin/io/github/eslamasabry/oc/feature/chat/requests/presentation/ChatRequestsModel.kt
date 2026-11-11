@@ -236,6 +236,15 @@ public class ChatRequestsModel(
         }
     }
 
+    override fun dismissQuestion(id: RequestId) {
+        val card = questionCard(id) ?: return
+        val reviewed = card.captured ?: return
+        if (reviewed !is PendingRequest.Question || card.state != CardState.Waiting) return
+        if (reviewed.sessionId != session || !engine.isCurrent(reviewed)) return
+        engine.answer(id, RequestAnswer.Decline, reviewed)
+        local.update { if (it.sheet?.id == id) it.copy(sheet = null) else it }
+    }
+
     override fun undo(id: RequestId) {
         current().cardFor(id)?.let { performReviewed(it, ReviewedRequestAction.Undo) }
     }

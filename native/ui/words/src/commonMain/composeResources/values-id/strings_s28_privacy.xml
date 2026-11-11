@@ -33,6 +33,5 @@
     <string name="collectExit">Alasan Android menutup aplikasi terakhir kali (misalnya crash, macet, atau memori rendah)</string>
     <string name="collectSteps">30 langkah terakhir Anda, dalam kata singkat seperti chat.send</string>
     <string name="collectCrashKeys">Versi aplikasi, cara pemasangannya, jenis server, apakah server ponsel ini berjalan, jumlah koneksi yang terbuka, dan versi server</string>
-    <string name="collectReport">500 baris terakhir log aplikasi sendiri, dengan kunci, alamat, dan path dikosongkan. Anda melihat semuanya dan memilih Kirim atau Batal.</string>
     <string name="collectNever">Perintah dan balasan Anda, nama file atau path, alamat web, nama host, alamat IP, teks pesan kesalahan, kunci atau token, ID iklan, atau ID Android</string>
 </resources>

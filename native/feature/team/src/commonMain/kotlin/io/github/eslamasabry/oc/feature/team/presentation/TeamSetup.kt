@@ -79,6 +79,9 @@ public interface TeamSetupActions {
 
     /** Done: back to the team page, which is now the team. */
     public fun openTeam() {}
+
+    /** Report this failure: opens Report a problem with the failed set-up attached. */
+    public fun reportFailure() {}
 }
 
 /** The kinds of place a phone safety check stops at (Dart `PhoneProofStepKind`). */
@@ -202,6 +205,7 @@ public class TeamSetupViewModel(
     private val nav: AppNavigator,
     private val clock: kotlin.time.Clock,
     private val redactor: Redactor,
+    private val failures: TeamFailureReports,
 ) : ViewModel(), TeamSetupActions {
     private val profile = route.profileId.raw
 
@@ -229,6 +233,18 @@ public class TeamSetupViewModel(
 
     override fun answer(yes: Boolean) {
         engine.answerSetup(profile, yes)
+    }
+
+    override fun reportFailure() {
+        val run = engine.setupState(profile).value
+        if (run.phase != SetupPhase.Failed) return
+        failures.report(
+            TeamFailureKind.Setup,
+            run.failedStep?.name.orEmpty(),
+            "AI Team setup",
+            run.problem?.name.orEmpty(),
+            run.details.orEmpty(),
+        )
     }
 
     override fun openTeam() {

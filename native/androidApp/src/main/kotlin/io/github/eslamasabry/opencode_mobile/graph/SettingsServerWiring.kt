@@ -87,6 +87,7 @@ class NativeServerSettings(
                                 loaded.profile.backend == BackendKind.OpenCode2 &&
                                     ManagedLocalServer.isBuiltin(loaded.profile.baseUrl),
                                 connectionFailure = connectionFailure,
+                                updateCommands = updateCommands(loaded.profile),
                             )
                         )
                     else
@@ -115,12 +116,19 @@ class NativeServerSettings(
                                     loaded.profile.backend == BackendKind.OpenCode2 &&
                                         ManagedLocalServer.isBuiltin(loaded.profile.baseUrl),
                                     connectionFailure = failure,
+                                    updateCommands = updateCommands(loaded.profile),
                                 )
                             }
                         }
                 }
         )
     }
+
+    /** The official pinned update, to run in a terminal on the server's computer (OpenCode servers only). */
+    private fun updateCommands(profile: io.github.eslamasabry.oc.engine.profiles.StoredProfile): String? =
+        if (profile.backend == BackendKind.OpenCode2)
+            "npm install -g @opencode/cli@${io.github.eslamasabry.oc.engine.runtime.install.UbuntuHostScript.PINNED_VERSION}"
+        else null
 
     private fun live(profile: ProfileId): Outcome<ConnectionGraph> {
         val loaded =

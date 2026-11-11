@@ -334,6 +334,7 @@ class PlatformHub(
     // s28-app: what a link that cannot complete says (F: link_routes.dart).
     private val linkNotices: AppLinkNotices,
     private val composerFiles: AndroidComposerFiles,
+    private val teamAlerts: TeamAlertsWatcher,
 ) {
     private val mainDispatcher = dispatchers.main
     private val appScope = CoroutineScope(appScope.coroutineContext + mainDispatcher)
@@ -453,7 +454,9 @@ class PlatformHub(
                                     it.status == ChatStatus.NeedsYou)
                         }
                     if (graph == null || !stillRunning) Outcome.Failed(Failure.NotFound())
-                    else graph.session.server.stop(ref.sessionId).map { Unit }
+                    // The chat's own Stop path (the person's Stop recorded, waiting sends called off), not a bare
+                    // server stop.
+                    else stopLikeTheChat(graph, ref)
                 },
             lock =
                 object : DeviceLock {
@@ -472,6 +475,7 @@ class PlatformHub(
         WidgetFeed.backgroundRunner = widgetRunner
         sharedProjectFolders.start()
         monitoring.start()
+        teamAlerts.start()
         channels.ensure()
         // B-L10N-002: channel names follow an acknowledged language save (the stored value, never
         // an attempt).

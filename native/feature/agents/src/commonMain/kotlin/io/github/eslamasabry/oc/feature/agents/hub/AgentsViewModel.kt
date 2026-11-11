@@ -56,6 +56,9 @@ public class AgentsViewModel(
             accounts = accounts,
             clock = clock,
             drafts = drafts,
+            openNewChat = { profile, agent ->
+                nav.open(io.github.eslamasabry.oc.ui.routes.ChatsRoute.New(profile = profile, phoneAgent = agent))
+            },
         )
 
     public val state: StateFlow<AgentsUi> = presenter.state
@@ -87,6 +90,12 @@ public class AgentsViewModel(
     }
 
     override fun back(): Unit = presenter.back()
+
+    /** Leaves this page whatever is open on it (an agent's own page whose set-up just finished). */
+    public fun leave() {
+        presenter.closeAgent()
+        nav.back()
+    }
 
     override fun openAccount(id: ProfileId): Unit = presenter.openAccount(id)
 
@@ -175,7 +184,7 @@ public class AgentsViewModel(
 
     override fun pullRefresh(): Unit = presenter.pullRefresh()
 
-    override fun newPhoneConversation(): Unit = presenter.newPhoneConversation()
+    override fun newPhoneConversation(agent: String): Unit = presenter.newPhoneConversation(agent)
 
     override fun closeAgent(): Unit = presenter.closeAgent()
 

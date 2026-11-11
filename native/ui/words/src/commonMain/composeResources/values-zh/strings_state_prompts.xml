@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="statePromptMigrationPending">部分较早的草稿或附件暂时无法迁移。你已保存的内容会被保留。如有需要请先腾出空间，然后重试。</string>
+    <string name="statePromptFilesUnavailable">这些文件无法在这里恢复：%1$s。已保存的提示词会被保留。</string>
+</resources>

@@ -99,6 +99,30 @@ public data class AllRowUi(
     val readOnly: Boolean = false,
     /** Its server can move it into the project that is open (Flutter "Continue here"). */
     val canContinueHere: Boolean = false,
+    /** Last change the server reported, epoch ms; 0 = not told. The row says how long ago. */
+    val updatedMs: Long = 0L,
+    /** A run finished after the person last opened it ("Unread result"). */
+    val unread: Boolean = false,
+    /** Blocked on a permission, question or form ("Needs you"). */
+    val needsYou: Boolean = false,
+    /** The folder it works in, for the row menu's Copy folder path; null = the server did not say. */
+    val folder: String? = null,
+)
+
+/**
+ * What the home feed knows about a row that the server's session list does not (Flutter
+ * `controller.isSessionUnread`, the needs-you set).
+ */
+public data class RowAttention(val needsYou: Boolean = false, val unread: Boolean = false)
+
+/**
+ * "Import a conversation" from All conversations (Flutter `SessionImportScreen`): [choices] while more than one
+ * connected server can import and none is picked yet, then the reviewed import on [server].
+ */
+public data class ImportUi(
+    val choices: ImmutableList<ServerName> = persistentListOf(),
+    val server: String? = null,
+    val session: io.github.eslamasabry.oc.engine.agents.sessionimport.SessionImportUi? = null,
 )
 
 /**
@@ -163,6 +187,12 @@ public data class AllConversationsUi(
     val renaming: RenameUi? = null,
     val moveHere: MoveHereUi? = null,
     val undo: DeleteUndoUi? = null,
+    /** Some connected server can import a conversation file: the bar offers it. */
+    val canImport: Boolean = false,
+    /** The import sheet while it is open. */
+    val import: ImportUi? = null,
+    /** Now, epoch ms, for the rows' "how long ago"; 0 = unknown. */
+    val nowMs: Long = 0L,
 )
 
 /** Intents, never widget names (ADR §9.1). */
@@ -229,4 +259,22 @@ public interface ChatsAllActions {
     public fun dismissProblem()
 
     public fun openServers()
+
+    /** Opens Import a conversation (the one server that can, else a choice of servers first). */
+    public fun openImport() {}
+
+    public fun importPick(profile: ProfileId) {}
+
+    public fun importChoose() {}
+
+    public fun importReview(text: String) {}
+
+    public fun importDestination(directory: String, workspace: String) {}
+
+    public fun importSend() {}
+
+    /** Opens the imported conversation and closes the sheet. */
+    public fun importOpen() {}
+
+    public fun closeImport() {}
 }

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxHostSetupTitle">设置 Linux 电脑</string>
+    <string name="linuxHostSetupIntro">复制一条命令，粘贴到你的 Ubuntu 或 Linux 电脑的终端中。应用不会替你运行它。</string>
+    <string name="linuxHostSetupSafety">安装程序会先检查固定的下载内容再安装。OpenCode 只在这台电脑上监听；请用 USB 或经过认证的隧道连接你的手机。</string>
+    <string name="linuxHostSetupInstall">安装 OpenCode 及其服务</string>
+    <string name="linuxHostSetupUpdate">更新 OpenCode</string>
+    <string name="linuxHostSetupStart">启动服务</string>
+    <string name="linuxHostSetupStop">停止服务</string>
+    <string name="linuxHostSetupRestart">重启服务</string>
+    <string name="linuxHostSetupStatus">检查服务</string>
+    <string name="linuxHostSetupCopy">复制安装程序和命令</string>
+    <string name="linuxHostSetupCopyDetail">复制内容包含此应用内置的完整安装程序，后面接着所选的命令。它会在当前文件夹中写入 ubuntu-opencode.sh。“安装”会保留已有的 OpenCode 2；“更新”绝不会迁移 OpenCode 1，也不会降级更新的版本。</string>
+    <string name="linuxHostSetupUsb">手机通过 USB 连接后，在电脑上运行这条命令来转发服务器端口。</string>
+    <string name="linuxHostSetupCopyUsb">复制 USB 命令</string>
+</resources>

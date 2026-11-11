@@ -83,6 +83,11 @@ public data class BasicComposerUi(
     val attachmentsSupported: Boolean = true,
     /** E20-S20: the server takes pictures only (Flutter `promptImagesOnly`): the tray has no File. */
     val imagesOnly: Boolean = false,
+    /**
+     * C6: a reply runs on an agent that stops and starts again from a new message (Flutter `MidTurnPrompt.restartsTurn`):
+     * Send reads "Stop and send". Last, so positional constructor calls keep their order.
+     */
+    val restarts: Boolean = false,
 ) {
     override fun toString(): String =
         "BasicComposerUi(available=$available, sending=$sending, steers=$steers, draft=$draft, " +
@@ -324,7 +329,14 @@ public class BasicComposerViewModel(
                                     draft.failure == null &&
                                     !draft.sendBlocked,
                             sending = inFlight,
-                            steers = t.run.busy && caps.promptSteering,
+                            steers =
+                                t.run.busy &&
+                                    (caps.promptSteering ||
+                                        world.midTurn() == io.github.eslamasabry.oc.core.model.MidTurnPrompt.JoinsTurn),
+                            restarts =
+                                t.run.busy &&
+                                    !caps.promptSteering &&
+                                    world.midTurn() == io.github.eslamasabry.oc.core.model.MidTurnPrompt.RestartsTurn,
                             attachmentsSupported = caps.promptAttachments,
                             imagesOnly = caps.promptImagesOnly,
                             draft = draft,

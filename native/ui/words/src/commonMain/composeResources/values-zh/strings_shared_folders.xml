@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="sharedFoldersTitle">共享存储</string>
+    <string name="sharedFoldersSelected">Linux 只能看到你打开的项目文件夹和 Download › OpenCode。Android 文件访问权限让应用能读取这些文件夹；它不会把你的整个存储空间分享给 Linux。</string>
+    <string name="sharedFoldersAll">让 Linux 看到所有共享存储</string>
+    <string name="sharedFoldersAllDetail">使用较旧的存储访问方式，而不是所选的项目文件夹。更改会在手机服务器再次启动时生效。</string>
+    <string name="sharedFoldersAllRisk">在 Linux 中运行的智能体将能读取和更改你已打开的项目之外的文件。</string>
+    <string name="sharedFoldersProtection">保护措施会让 Linux 仅限于所选的项目文件夹。</string>
+    <string name="sharedFoldersRestart">文件夹访问设置已保存。工作就绪后，请在“这部手机”中重启手机服务器，然后刷新“文件”。目前没有停止任何服务器。</string>
+    <string name="sharedFoldersFailed">无法读取或保存文件夹访问设置。请重试。</string>
+    <string name="sharedFoldersAndroid">Android 文件访问权限</string>
+    <string name="sharedFoldersAndroidDetail">在共享存储中打开项目时允许访问。</string>
+    <string name="sharedFoldersGranted">已允许。Linux 仍按下方的文件夹选择执行。</string>
+    <string name="sharedFoldersWorking">正在更新文件夹访问设置…</string>
+</resources>

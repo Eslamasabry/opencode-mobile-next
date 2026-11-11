@@ -56,6 +56,7 @@ import io.github.eslamasabry.oc.feature.linux.host.LinuxPresence
 import io.github.eslamasabry.oc.feature.linux.host.ShellRun
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxLifecycle
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxSetupSource
+import io.github.eslamasabry.oc.feature.phone.presentation.PhoneHeatFacts
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneServerFacts
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneServerSource
 import io.github.eslamasabry.oc.feature.phone.presentation.RecoveryFacts
@@ -136,8 +137,19 @@ object LinuxRuntimeWiring {
     @Provides fun linuxSetupSource(setup: NativePhoneSetup): LinuxSetupSource = setup
 
     @Provides
-    fun phoneServerSource(runtime: BuiltinRuntime, setup: NativePhoneSetup): PhoneServerSource =
-        runtime.serverSource(setup::update)
+    fun phoneServerSource(
+        runtime: BuiltinRuntime,
+        setup: NativePhoneSetup,
+        thermal: ThermalRuntime,
+    ): PhoneServerSource {
+        val base = runtime.serverSource(setup::update)
+        // The heat guard's hold (Flutter `_heat`, "Paused, your phone is warm") is its own flow: [facts] stays the
+        // runtime's own StateFlow, so start/stop and "who stopped it" never read a value one dispatch old, and no
+        // collector is started per injection.
+        return object : PhoneServerSource by base {
+            override val heat: StateFlow<PhoneHeatFacts?> = thermal.heat
+        }
+    }
 }
 
 /**

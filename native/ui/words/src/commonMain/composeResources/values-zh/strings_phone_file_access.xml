@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="phoneSharedAccessTitle">你是否已允许访问这部手机的文件？</string>
+    <string name="phoneSharedAccessBody">请在 Android 的设置中允许访问，然后再次尝试打开该文件。</string>
+</resources>

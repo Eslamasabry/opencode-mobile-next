@@ -17,6 +17,17 @@ import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.core.model.ServerLocation
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.core.common.ids.SessionId
+import dev.zacsweers.metro.ContributesIntoSet
+import io.github.eslamasabry.oc.engine.agents.AgentId
+import io.github.eslamasabry.oc.engine.agents.certification.AgentCertification
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgents
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNotice
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNoticeKind
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNoticeSource
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNotices
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedItem
 import io.github.eslamasabry.oc.engine.agents.feed.ChatStatus
 import io.github.eslamasabry.oc.engine.agents.feed.HomeFeedCache
@@ -127,6 +138,14 @@ class AppChatsHome(
                         main = loaded.id == active,
                         onThisPhone = runtime.sourceOnThisPhone(loaded.profile),
                         unreachable = loaded.id in runtime.sourceFailures,
+                        secret =
+                            when {
+                                loaded.reentry.password ->
+                                    io.github.eslamasabry.oc.feature.chats.presentation.SwitcherSecret.Password
+                                loaded.reentry.agentToken ->
+                                    io.github.eslamasabry.oc.feature.chats.presentation.SwitcherSecret.Token
+                                else -> io.github.eslamasabry.oc.feature.chats.presentation.SwitcherSecret.None
+                            },
                     )
                 }
                 .toImmutableList()
@@ -148,9 +167,15 @@ class AppChatsHome(
                     profile = active,
                     onThisPhone = phoneServer.runsHere(active),
                     phoneOff = phoneServer.runsHere(active) && phone.serverFacts.value.stoppedByPerson,
+                    address = owner.profile.baseUrl,
+                    usesToken = owner.profile.usesAgentSocket,
+                    attempts = openingTries(owner.id),
                 )
             } else null
-        if (opening == null) phoneWatch = null
+        if (opening == null) {
+            phoneWatch = null
+            openingTries = null
+        }
         mutable.value = ChatsHomeExtraState(sources, opening, null, monitor.snapshot.value)
         if (opening?.phase == ChatsOpeningPhase.Starting) keepTryingQuietly()
     }
@@ -214,10 +239,17 @@ class AppChatsHome(
     override suspend fun retrySource(profile: ProfileId): Outcome<Unit> =
         record(runtime.retryListSource(profile))
 
+    // How many times opening the active server has been tried since it first failed (1 = the first try).
+    private var openingTries: Pair<ProfileId, Int>? = null
+
+    private fun openingTries(profile: ProfileId): Int =
+        openingTries?.takeIf { it.first == profile }?.second ?: 1
+
     override suspend fun retryOpening(): Outcome<Unit> {
         val active =
             runtime.profiles.activeId.value
                 ?: return Outcome.Failed(Failure.Refused(RefusalReason.ProfileDeleted))
+        openingTries = active to (openingTries(active) + 1)
         return record(runtime.retryListSource(active))
     }
 
@@ -390,4 +422,44 @@ class AppChatsHome(
             }
         if (result is Outcome.Ok) cachedRevisions[id] = signature to withLines
     }
+}
+
+/**
+ * G6 (F: lib/ui/screens/agents/agent_notices.dart:84-157): the home's lines about the phone's agents, read from the
+ * same state the Agents page shows. A sign-in or plan line only for an agent New conversation offers (certified for
+ * chat); a stopped agent is always worth saying, so Resume is one tap away.
+ */
+@SingleIn(AppScope::class)
+@ContributesIntoSet(AppScope::class)
+@Inject
+class AppHomeAgentNotices(phoneAgents: PhoneAgents, appScope: AppCoroutineScope) : HomeAgentNoticeSource {
+    override val notices: StateFlow<HomeAgentNotices> =
+        phoneAgents.state
+            .map { state ->
+                if (!state.available) HomeAgentNotices()
+                else
+                    HomeAgentNotices(
+                        restart = state.needsRestart,
+                        lines =
+                            state.agents
+                                .mapNotNull { row ->
+                                    val kind =
+                                        when (row.status) {
+                                            PhoneAgentStatus.SignInNeeded -> HomeAgentNoticeKind.SignedOut
+                                            PhoneAgentStatus.Stopped -> HomeAgentNoticeKind.Stopped
+                                            PhoneAgentStatus.Limit -> HomeAgentNoticeKind.LimitReached
+                                            else -> return@mapNotNull null
+                                        }
+                                    if (
+                                        kind != HomeAgentNoticeKind.Stopped &&
+                                            !AgentCertification.bundled.certifiedForChat(AgentId(row.id))
+                                    )
+                                        return@mapNotNull null
+                                    HomeAgentNotice(row.id, row.name, kind)
+                                }
+                                .toImmutableList(),
+                    )
+            }
+            .distinctUntilChanged()
+            .stateIn(appScope, SharingStarted.Eagerly, HomeAgentNotices())
 }

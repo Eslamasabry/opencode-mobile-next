@@ -33,6 +33,5 @@
     <string name="collectExit">Por qué Android cerró la app la última vez (por ejemplo, un fallo, un bloqueo o poca memoria)</string>
     <string name="collectSteps">Tus últimos 30 pasos, como palabras cortas, por ejemplo chat.send</string>
     <string name="collectCrashKeys">La versión de la app, cómo se instaló, el tipo de servidor, si el servidor de este teléfono está en marcha, cuántas conexiones hay abiertas y la versión del servidor</string>
-    <string name="collectReport">Las últimas 500 líneas del registro propio de la app, con claves, direcciones y rutas borradas. Lo ves todo y eliges Enviar o Cancelar.</string>
     <string name="collectNever">Tus mensajes y respuestas, nombres o rutas de archivos, direcciones web, nombres de host, direcciones IP, texto de mensajes de error, claves o tokens, el ID de publicidad o el ID de Android</string>
 </resources>

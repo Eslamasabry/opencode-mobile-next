@@ -23,6 +23,11 @@ import io.github.eslamasabry.oc.core.model.StreamStatus
 import io.github.eslamasabry.oc.core.model.transcript.PartType
 import io.github.eslamasabry.oc.core.model.transcript.ToolStatus
 import io.github.eslamasabry.oc.engine.agents.feed.ChatStatus
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.core.common.ids.SessionId
+import io.github.eslamasabry.oc.engine.attention.dock.DockOutside
+import io.github.eslamasabry.oc.engine.attention.dock.DockOutsideFacts
+import io.github.eslamasabry.oc.engine.attention.dock.DockOutsideGate
 import io.github.eslamasabry.oc.engine.attention.live.LiveStatusComposer
 import io.github.eslamasabry.oc.engine.attention.live.LiveWords
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
@@ -59,6 +64,7 @@ class AttentionRuntime(
     private val background: BackgroundHub,
     private val thermal: ThermalRuntime,
     private val preferences: AppPreferences,
+    private val edgeDock: AppEdgeDock,
     private val clock: Clock,
     private val dispatchers: AppDispatchers,
     appScope: AppCoroutineScope,
@@ -68,7 +74,11 @@ class AttentionRuntime(
     private val statusWords = AndroidStatusWords(words)
     private val toolWords = AndroidLiveWords(words)
     private val renderer = StatusRenderer(application, words)
-    private val throttle = StatusThrottle(120)
+    private val dockWords = AndroidDockWords(words)
+    private val gate = DockOutsideGate()
+
+    /** One post a second at most, the newest always last (the old 120 ms let Android drop the final state). */
+    private val throttle = StatusThrottle(StatusThrottle.DOCK_GAP_MS)
     private val controllers = linkedMapOf<ProfileId, StatusController>()
     private val observers = mutableMapOf<ProfileId, Job>()
     private val observedGraphs = mutableMapOf<ProfileId, ConnectionGraph>()
@@ -89,6 +99,9 @@ class AttentionRuntime(
         if (started) return
         started = true
         thermal.start()
+        // The dock is the one source of conversation states; starting it is idempotent (the in-app dock UI may start
+        // it too and only supplies its own navigation).
+        edgeDock.start()
         scope.launch {
             stores.warm()
             launch {
@@ -97,7 +110,8 @@ class AttentionRuntime(
                         background.live,
                         preferences.localeTag,
                         thermal.pauseActive,
-                    ) { _, _, _, _ ->
+                        edgeDock.ui,
+                    ) { _, _, _, _, _ ->
                         Unit
                     }
                     .collect { refresh() }
@@ -148,6 +162,12 @@ class AttentionRuntime(
             )
             .ensure()
         return render(latest)
+    }
+
+    /** The delete intent of the dock row came back: [turnId] carries the pulse count that was dismissed. */
+    fun onRowDismissed(turnId: String?) {
+        val pulses = dockPulsesOf(turnId) ?: return
+        scope.launch { gate.dismiss(pulses) }
     }
 
     private fun controller(id: ProfileId): StatusController =
@@ -432,25 +452,15 @@ class AttentionRuntime(
             controller.setup = setup
         }
         val inputs = controllers.filterKeys { it in live }.map { it.value.input() }
-        val workingByOwner =
-            inputs
-                .flatMap { owner -> owner.working.map { owner to it } }
-                .sortedByDescending { (owner, chat) ->
-                    feed.items
-                        .firstOrNull {
-                            it.profileId.raw == owner.profileId && it.sessionId.raw == chat.id
-                        }
-                        ?.lastActivityMs ?: 0L
-                }
-        val primary =
-            inputs.firstOrNull { it.pendingCount > 0 }
-                ?: workingByOwner.firstOrNull()?.first
-                ?: inputs.firstOrNull()
+        // The conversations (working, needs you, finished, failed) come from the dock alone. The controllers still
+        // say what the dock cannot: retries, reconnecting, the phone server, setup and the pauses.
+        val primary = inputs.firstOrNull { it.retries.isNotEmpty() } ?: inputs.firstOrNull()
         var input =
             (primary ?: StatusInput()).copy(
-                working = workingByOwner.map { it.second },
-                pendingCount = inputs.sumOf { it.pendingCount },
+                working = emptyList(),
+                pendingCount = 0,
                 retries = inputs.flatMap { it.retries },
+                reconnecting = inputs.any { it.reconnecting },
                 phoneServerRunning = serverRunning,
                 setup = setup,
                 pause =
@@ -461,22 +471,38 @@ class AttentionRuntime(
                         else -> primary?.pause ?: PauseReason.None
                     },
             )
-        if (input.working.size == 1) {
-            val owner = inputs.firstOrNull { it.working.isNotEmpty() }
-            if (owner != null) input = input.copy(profileId = owner.profileId)
-        }
-        if (input.working.isEmpty() && input.pendingCount == 0 && input.retries.isNotEmpty()) {
+        if (input.retries.isNotEmpty()) {
             val retry = input.retries.sortedWith(compareBy(nullsLast()) { it.nextTry }).first()
             val owner = inputs.firstOrNull { retry in it.retries }
             if (owner != null) input = input.copy(profileId = owner.profileId)
         }
-        latest = StatusModel.build(input, statusWords, clock.now(), ::formatTime)
+        val facts =
+            DockOutsideFacts(
+                reconnecting = input.reconnecting,
+                androidLimit = input.pause == PauseReason.AndroidLimit,
+                toolLines =
+                    toolNames.entries.associate { (key, tool) ->
+                        ConversationRef(key.first, SessionId(key.second)) to
+                            LiveStatusComposer.toolSentence(tool, toolWords)
+                    },
+                recency =
+                    feed.items.associate {
+                        ConversationRef(it.profileId, it.sessionId) to it.lastActivityMs
+                    },
+            )
+        val outside = DockOutside.build(edgeDock.ui.value, facts, dockWords)
+        val allowed = gate.allows(outside)
+        latest =
+            if (outside != null) outside.toStatusContent()
+            else StatusModel.build(input, statusWords, clock.now(), ::formatTime)
         if (!background.live.value.active) {
             throttle.reset()
             trailing?.cancel()
             trailing = null
             return
         }
+        // A row the person swiped away stays away until a new request or failure (pulse) raises its count.
+        if (outside != null && !allowed) return
         when (val step = throttle.offer(latest, android.os.SystemClock.elapsedRealtime())) {
             is StatusThrottle.Step.Post -> post(step.content)
             is StatusThrottle.Step.Wait ->

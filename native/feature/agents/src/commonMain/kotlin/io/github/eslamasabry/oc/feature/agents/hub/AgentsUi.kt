@@ -82,8 +82,8 @@ public interface AgentsActions {
     /** Pull to refresh: this phone's agents, and on the computers tab every computer's agents. */
     public fun pullRefresh() {}
 
-    /** A new conversation with the phone's agents (a ready tile's New chat). */
-    public fun newPhoneConversation() {}
+    /** New conversation opened with [agent] chosen (a ready tile's New chat, the sheet's "Use {agent}"; F: `selectChatAgent`). */
+    public fun newPhoneConversation(agent: String) {}
 
     public fun back()
 

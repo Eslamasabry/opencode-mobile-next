@@ -357,10 +357,18 @@ public class ServersViewModel(
         }
     }
 
-    override fun connect(id: ProfileId) = operation {
-        when (val result = connections.connect(id)) {
-            is Outcome.Ok -> local.update { it.copy(issue = ServerIssue.Connected) }
-            is Outcome.Failed -> connectFailed(id, result.failure)
+    override fun connect(id: ProfileId) {
+        // A server whose password or token has to be typed again cannot connect: open its form with the field
+        // focused instead of trying and failing (Flutter servers_actions.dart _connect).
+        if (rows.state.value.facts[id]?.needsSecret == true) {
+            edit(id)
+            return
+        }
+        operation {
+            when (val result = connections.connect(id)) {
+                is Outcome.Ok -> local.update { it.copy(issue = ServerIssue.Connected) }
+                is Outcome.Failed -> connectFailed(id, result.failure)
+            }
         }
     }
 
@@ -461,7 +469,7 @@ public class ServersViewModel(
 
     private fun operation(block: suspend () -> Unit) {
         if (local.value.busy || connections.busy.value) return
-        local.update { it.copy(busy = true, issue = null, failure = null, openCode1 = null, addressProblem = null) }
+        local.update { it.copy(busy = true, issue = null, failure = null, openCode1 = null, signIn = null, addressProblem = null) }
         viewModelScope.launch {
             try {
                 block()
@@ -490,6 +498,8 @@ public class ServersViewModel(
         else {
             failed(ServerIssue.ConnectFailed, failure)
             if (serverRunsOpenCode1(failure)) local.update { it.copy(openCode1 = id) }
+            if (failure is Failure.SecretUnavailable || failure is Failure.SignIn)
+                local.update { it.copy(signIn = id) }
         }
     }
 

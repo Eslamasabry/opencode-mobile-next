@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="b169SwitchModel">切换模型</string>
+    <string name="b169UsedUp">%1$s 暂时已用完</string>
+    <string name="b169UsedUpNoName">此模型暂时已用完</string>
+    <string name="b169ConnectProvider">连接提供方…</string>
+    <plurals name="b169AskTitle">
+        <item quantity="other">已停止的回复已运行了 %1$d 步。用 %2$s 重新发送吗？</item>
+    </plurals>
+    <string name="b169AskSend">发送</string>
+    <string name="b169AttachAgain">重新附加 %1$s 后发送</string>
+    <string name="b169Free">免费 · 可能会使用你的提示词</string>
+    <string name="b169TooLong">对此模型来说太长</string>
+    <string name="b169Suggested">推荐</string>
+    <string name="b169Offline">服务器恢复后即可切换模型。</string>
+</resources>

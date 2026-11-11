@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="codexNativeTitle">Codex 连接检查</string>
+    <string name="codexNativeIntro">在你的电脑上运行这条单行命令。输入它的地址、一个绝对文件夹路径和权限令牌，以检查已认证的连接。</string>
+    <string name="codexNativeCopy">复制启动命令</string>
+    <string name="codexNativeTokenHelp">请使用你自己的令牌文件的绝对路径，并保密。普通 WebSocket 仅允许在本设备上使用；连接其他电脑请使用安全的 WebSocket。</string>
+    <string name="codexNativeAddress">WebSocket 地址</string>
+    <string name="codexNativeDirectory">绝对文件夹路径</string>
+    <string name="codexNativeToken">权限令牌</string>
+    <string name="codexNativeWorking">正在检查连接…</string>
+    <string name="codexNativeProbe">检查连接</string>
+    <string name="codexNativeProbed">已认证的连接对限定在该文件夹内的读取作出了响应。结果为空并不能证明该文件夹存在。</string>
+    <string name="codexNativeFailed">连接检查失败。请确认 Codex 正在运行，然后重试。</string>
+    <string name="codexNativeAuthFailed">Codex 拒绝了权限令牌。请检查后重试。</string>
+    <string name="codexNativeScopeFailed">请检查地址、绝对文件夹路径和允许的连接范围。</string>
+    <string name="codexNativeVersion">此连接无法提供账号用量。读取账号需要经过验证的 Codex 0.153.4 协议。</string>
+    <string name="codexNativeOpen">打开账号读取器</string>
+    <string name="codexNativeReaderOpen">账号读取器已打开。打开“套餐”可刷新账号额度。用完后在这里关闭它。</string>
+    <string name="codexNativePlans">打开套餐</string>
+    <string name="codexNativeClose">关闭账号读取器</string>
+    <string name="codexNativeReadOnly">此页面只检查连接并读取账号用量。它不会开始对话、替你登录或发送提示词。</string>
+</resources>

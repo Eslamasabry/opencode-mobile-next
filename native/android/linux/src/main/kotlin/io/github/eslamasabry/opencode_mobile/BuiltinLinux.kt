@@ -1721,7 +1721,7 @@ class BuiltinLinux(private val context: Context) {
 
     private fun protectedCommand(command: List<String>): List<String> {
         PhoneEngineNative.verifyBundle(context, "libaiteam_sandbox.so")
-        val tmp = File(context.cacheDir, "proot-tmp").apply { mkdirs() }
+        val tmp = prootTmpDir()
         val policy =
             listOf(
                 "$nativeDir/libaiteam_sandbox.so",
@@ -2578,9 +2578,17 @@ class BuiltinLinux(private val context: Context) {
             }
         }
 
+    /**
+     * proot's scratch folder. It lives beside the app's other private files, not in the cache folder: Android clears
+     * a cache folder whenever storage runs low, and a step of minutes (apt) then ended with
+     * "proot error: can't chmod .../proot-tmp/...: No such file or directory". It is created on every launch.
+     */
+    fun prootTmpDir(): File =
+        File(context.noBackupFilesDir, "proot-tmp").apply { mkdirs() }
+
     /** What proot itself needs in its environment, on top of the app's own. */
     fun prootEnvironment(compat: Boolean = false): Map<String, String> {
-        val tmp = File(context.cacheDir, "proot-tmp").apply { mkdirs() }
+        val tmp = prootTmpDir()
         val base =
             mapOf(
                 "PROOT_LOADER" to "$nativeDir/libproot-loader.so",

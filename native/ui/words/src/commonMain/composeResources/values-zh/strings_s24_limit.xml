@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="composerLimitApproaching">接近上限</string>
+    <string name="composerLimitReached">已达上限</string>
+    <string name="composerLimitResetsInHoursMinutes">%1$d 小时 %2$d 分钟后重置</string>
+    <string name="composerLimitResetsInHours">%1$d 小时后重置</string>
+    <string name="composerLimitResetsInMinutes">%1$d 分钟后重置</string>
+    <string name="composerLimitResetsOnDay">%1$s %2$s 重置</string>
+    <string name="composerLimitResetsOnDate">%1$s 重置</string>
+    <string name="composerLimitViewUsage">查看用量</string>
+    <string name="composerLimitDismiss">关闭</string>
+    <string name="composerLimitMonday">周一</string>
+    <string name="composerLimitTuesday">周二</string>
+    <string name="composerLimitWednesday">周三</string>
+    <string name="composerLimitThursday">周四</string>
+    <string name="composerLimitFriday">周五</string>
+    <string name="composerLimitSaturday">周六</string>
+    <string name="composerLimitSunday">周日</string>
+    <string name="composerLimitClock12">%2$s%1$s</string>
+    <string name="composerLimitAm">上午</string>
+    <string name="composerLimitPm">下午</string>
+</resources>

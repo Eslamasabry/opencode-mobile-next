@@ -91,6 +91,8 @@ public data class DevServiceLog(
     val title: String,
     val text: String = "",
     val failed: Boolean = false,
+    /** The run failed (exit, timeout, killed) and the app can open Report a problem for it. */
+    val canReport: Boolean = false,
 )
 
 public data class DevServicesUi(
@@ -158,6 +160,9 @@ public interface DevServicesActions {
 
     public fun visit(id: String)
 
+    /** Opens the in-app preview of a dev server on [port] (Flutter `_preview`). */
+    public fun preview(port: Int) {}
+
     public fun askStopFound(id: String)
 
     public fun foundLogs(id: String)
@@ -165,6 +170,9 @@ public interface DevServicesActions {
     public fun refreshLogs() {}
 
     public fun closeLogs() {}
+
+    /** Report this failure: opens Report a problem with the failed run's log attached. */
+    public fun reportFailure() {}
 
     public fun confirm()
 

@@ -90,6 +90,10 @@ public class ChatHeaderViewModel(
 
     override fun dismissApprovalFailure(): Unit = approvals.dismissApprovalFailure()
 
+    override fun setInheritToChildren(on: Boolean): Unit = approvals.setInheritToChildren(on)
+
+    override fun followParent(): Unit = approvals.followParent()
+
     override fun onCleared() {
         presenter.close()
         worlds.release(world)

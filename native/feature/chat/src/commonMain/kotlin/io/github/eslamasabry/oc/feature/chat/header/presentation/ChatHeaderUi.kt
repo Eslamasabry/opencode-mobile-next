@@ -42,6 +42,9 @@ public data class ChatHeaderUi(
     val renaming: String? = null,
     /** S24-CHAT: a new id each time a transcript file was saved ("Transcript saved", said once). */
     val saved: Long? = null,
+    /** C4: the conversation's totals as the server reported them (cost, tokens); null parts = not reported. */
+    val serverCost: Double? = null,
+    val serverTokens: Long? = null,
 )
 
 /** What the ⋯ menu offers (Flutter `SessionMenuAction`, the native subset with a real path). */
@@ -131,6 +134,22 @@ public sealed interface HeaderSheet {
     public data class ContinueOnPhone(val link: String?) : HeaderSheet
 }
 
+/** C4: an accumulated cost and whether the server reported it (else it covers the loaded messages only). */
+public data class SessionCost(val amount: Double, val reportedByServer: Boolean) {
+    public companion object {
+        /** Flutter shows a server figure from half a cent; below that the row says nothing. */
+        public const val MIN_SHOWN: Double = 0.005
+
+        public fun of(serverCost: Double?, loadedCost: Double?): SessionCost? =
+            when {
+                serverCost != null && serverCost >= MIN_SHOWN -> SessionCost(serverCost, true)
+                serverCost == null && loadedCost != null && loadedCost >= MIN_SHOWN ->
+                    SessionCost(loadedCost, false)
+                else -> null
+            }
+    }
+}
+
 public data class DetailsUi(
     val serverName: String?,
     val projectName: String?,
@@ -142,6 +161,8 @@ public data class DetailsUi(
     val contextPercent: Int?,
     val contextLevel: ContextLevel?,
     val totalTokens: Long?,
+    /** C4: what the conversation cost: the server's figure, else the sum over the loaded replies. */
+    val cost: SessionCost? = null,
     /** Full server-reported folder, alongside the short project name. */
     val directory: String? = null,
 )

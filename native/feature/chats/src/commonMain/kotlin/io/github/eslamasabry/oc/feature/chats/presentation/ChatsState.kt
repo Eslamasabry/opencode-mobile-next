@@ -83,6 +83,12 @@ public object ChatsState {
             filters = filters,
             brief = briefUi,
             incomplete = feed.incompleteSources,
+            onlyProject =
+                if (feed.acrossProjects) null
+                else
+                    projects.firstOrNull { it.directory == filters.projectDirectory }?.name
+                        ?: roots.firstOrNull()?.projectName?.takeIf { it.isNotBlank() }
+                        ?: projects.firstOrNull()?.name,
             settingsAvailable = settingsAvailable,
             projectChoices = projects.toImmutableList(),
             projectNeedsYou =

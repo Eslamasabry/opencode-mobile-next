@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.voice.ui
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -19,6 +20,7 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.modal.LocalKitToasts
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
@@ -32,6 +34,10 @@ import org.jetbrains.compose.resources.stringResource
 /** Every registered tip is visible in Help and replay consumes no automatic-offer count. */
 @Composable
 public fun TeachingScreen(state: TeachingUi, actions: TeachingActions) {
+    // S9 (F: tips_screen.dart:134): the reset says it worked, in the window's toast.
+    val toasts = LocalKitToasts.current
+    val done = stringResource(Res.string.discoverShowTipsDone)
+    LaunchedEffect(state.resets) { if (state.resets > 0) toasts?.show(done) }
     KitScreen(
         topBar = {
             KitTopBar(

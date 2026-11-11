@@ -25,6 +25,12 @@ public data class ModelDefaultsData(
     val current: ModelRef?,
     val defaults: List<ModelRef>,
     val library: ModelLibrary,
+    /** The saved thinking level for [current]; empty = the model's default. */
+    val variant: String = "",
+    /** Provider id -> the name the server gives it, so the picker's groups read "Anthropic", not "anthropic". */
+    val providerNames: Map<String, String> = emptyMap(),
+    /** Nothing is saved on this phone: [current] is only the server's own default. */
+    val usesDefault: Boolean = false,
 )
 
 public interface ModelDefaultsHost {
@@ -33,6 +39,14 @@ public interface ModelDefaultsHost {
     ): Outcome<ModelDefaultsData>
 
     public suspend fun choose(model: ModelRef?): Outcome<Unit>
+
+    /** Saves [model] with its thinking level ([variant] empty = the model's default). */
+    public suspend fun chooseWithVariant(model: ModelRef, variant: String): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(io.github.eslamasabry.oc.core.common.FeatureId("modelDefaults")))
+
+    /** Adds [model] to the favourites, or removes it when it is one (the same shelf the chat's model sheet uses). */
+    public suspend fun toggleFavorite(model: ModelRef): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(io.github.eslamasabry.oc.core.common.FeatureId("modelDefaults")))
 
     /**
      * Cache-first: what the last successful [read] for [profile] (null = the active one) showed, kept per server, so
@@ -51,6 +65,10 @@ public data class ModelDefaultsRow(
     val inputPrice: Double? = null,
     val outputPrice: Double? = null,
     val selected: Boolean = false,
+    /** The thinking levels this model offers (enabled ones only); empty = none. */
+    val variants: List<String> = emptyList(),
+    /** The provider's name as the server gives it; empty = unknown (the kit falls back to the id). */
+    val providerName: String = "",
 )
 
 public data class ModelDefaultsUi(
@@ -61,6 +79,14 @@ public data class ModelDefaultsUi(
     val failure: Failure? = null,
     val recommended: List<ModelDefaultsRow> = emptyList(),
     val models: List<ModelDefaultsRow> = emptyList(),
+    /** The model new conversations start with: the saved one, else the server's default (see [usesDefault]). */
+    val current: ModelRef? = null,
+    /** Nothing is saved on this phone, so the server's default applies. */
+    val usesDefault: Boolean = false,
+    /** The chosen thinking level; empty = the model's default. */
+    val variant: String = "",
+    val favorites: List<ModelRef> = emptyList(),
+    val recent: List<ModelRef> = emptyList(),
 )
 
 public interface ModelDefaultsActions {
@@ -69,6 +95,11 @@ public interface ModelDefaultsActions {
     public fun refresh()
 
     public fun choose(model: ModelRef?)
+
+    /** Keeps the chosen model and sets its thinking level ("" = the model's default). */
+    public fun chooseVariant(variant: String)
+
+    public fun toggleFavorite(model: ModelRef)
 }
 
 @dev.zacsweers.metro.AssistedInject
@@ -121,6 +152,8 @@ public class ModelDefaultsViewModel(
                 model.cost?.inputPerMillion,
                 model.cost?.outputPerMillion,
                 data.current?.sameModel(model.ref) == true,
+                model.variants.filterNot { it.disabled }.map { it.id },
+                data.providerNames[model.providerId].orEmpty(),
             )
         val recommended =
             recommendModels(
@@ -135,6 +168,11 @@ public class ModelDefaultsViewModel(
             data.serverName,
             data.thisPhone,
             loading = false,
+            current = data.current,
+            usesDefault = data.usesDefault,
+            variant = data.variant,
+            favorites = data.library.favorites.toList(),
+            recent = data.library.recent.toList(),
             recommended = recommended,
             models =
                 data.models
@@ -163,6 +201,29 @@ public class ModelDefaultsViewModel(
             when (val saved = host.choose(model)) {
                 is Outcome.Failed ->
                     mutable.value = state.value.copy(saving = false, failure = saved.failure)
+                is Outcome.Ok -> load()
+            }
+        }
+    }
+
+    override fun chooseVariant(variant: String) {
+        val current = state.value.current ?: return
+        val row = state.value.models.firstOrNull { it.model.sameModel(current) } ?: return
+        if (state.value.saving || state.value.loading || (variant.isNotEmpty() && variant !in row.variants)) return
+        mutable.value = state.value.copy(saving = true, failure = null)
+        viewModelScope.launch {
+            when (val saved = host.chooseWithVariant(row.model, variant)) {
+                is Outcome.Failed -> mutable.value = state.value.copy(saving = false, failure = saved.failure)
+                is Outcome.Ok -> load()
+            }
+        }
+    }
+
+    override fun toggleFavorite(model: ModelRef) {
+        if (state.value.saving || state.value.loading) return
+        viewModelScope.launch {
+            when (val saved = host.toggleFavorite(model)) {
+                is Outcome.Failed -> mutable.value = state.value.copy(failure = saved.failure)
                 is Outcome.Ok -> load()
             }
         }

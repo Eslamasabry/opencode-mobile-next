@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="hostSecTitle">你私有网络中的一台机器</string>
+    <string name="hostSecIntro">查看它的 SSH 身份，准备这部手机的公钥，或恢复已保存的主机。</string>
+    <string name="hostSecBundleMissing">在发布经审核的 OpenCode 2 主机安装包之前，无法安装新主机。这些准备命令只有在你复制并在自己的机器上运行时才会执行。</string>
+    <string name="hostSecWorking">处理中…</string>
+    <string name="hostSecRefresh">刷新已保存的机器</string>
+    <string name="hostSecSaved">已保存的机器</string>
+    <string name="hostSecAddress">SSH 账号和 tailnet 地址（user@host）</string>
+    <string name="hostSecPort">SSH 端口</string>
+    <string name="hostSecInspect">查看机器身份</string>
+    <string name="hostSecTrustHelp">请在这台机器上另开一个独立的终端连接，用 ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub -E sha256 核对此指纹。只有完全一致时才继续。</string>
+    <string name="hostSecTrust">指纹一致 — 准备公钥</string>
+    <string name="hostSecPublicHelp">这个公钥可以放心复制。私钥保留在 Android Keystore 中。安装和注册仍需要经审核的主机安装包。</string>
+    <string name="hostSecCopy">复制命令</string>
+    <string name="hostSecResume">验证已保存的连接</string>
+    <string name="hostSecVerified">已通过私有隧道验证固定的 SSH 身份和已保存的监管程序身份。</string>
+    <string name="hostSecNotConnected">没有已验证的主机连接处于打开状态。</string>
+    <string name="hostSecRevoke">撤销这部手机并移除</string>
+    <string name="hostSecForget">忘记本地主机数据</string>
+    <string name="hostSecRemoveConfirm">移除</string>
+    <string name="hostSecRevokeHelp">清除本地访问权限前，应用必须与固定的主机确认撤销。撤销失败时会保留已保存的数据以便重试。机器上的连接会继续运行。</string>
+    <string name="hostSecForgetHelp">移除这部手机本地的隧道、密钥和已保存的主机数据。这不会撤销远程访问，也不会停止机器上的连接。</string>
+    <string name="hostSecTargetFailure">请使用 Tailscale 网络中的机器地址，以及有效的 SSH 账号和端口。公网、本地和混合 DNS 路径都会被拒绝。</string>
+    <string name="hostSecIdentityFailure">机器身份已变更，没有采用任何内容。请先独立验证这台机器，再重试。</string>
+    <string name="hostSecRevokeFailure">无法确认访问权限已被撤销。已保留保存的访问权限，方便你重试。</string>
+    <string name="hostSecStorageFailure">无法安全地读取或更改主机数据。请保留已保存的机器，然后重试。</string>
+    <string name="hostSecFailure">未能完成私有主机操作。请检查手机的 Linux 设置和私有网络，然后重试。</string>
+    <string name="hostSecStepTailnet">将两台设备都连接到你的 Tailscale。这些检查会显示状态和地址，但不能证明 VPN 成员身份。DNS 只解析一次，每个结果都必须在 tailnet 地址范围内，SSH 使用经验证的数字地址和固定的密钥。</string>
+    <string name="hostSecStepAccount">请使用没有 root 权限、单独的 Ubuntu 24.04 账号。先检查这些工具。设置时会检查系统、非 root 的 UID、架构、Python 和用户服务管理器；它不会用 sudo 安装软件包。</string>
+    <string name="hostSecStepNetwork">请保持一个救援连接处于打开状态。将 MACHINE_TAILSCALE_IP 替换为实际的数字地址，并删除公网或通配的 ListenAddress 条目。这些所有者命令会改变整个 SSH 守护进程。安装程序只读取所选 SSH 端口上实际的监听套接字，并拒绝公网、通配或普通局域网监听；它不会更改防火墙或 SSH 绑定。其他 SSH 端口请另行逐一验证。</string>
+    <string name="hostSecStepLinger">请用管理员权限运行第一条命令一次。安装程序会读取 Linger 并要求其为 yes，然后检查 systemctl --user 能否工作。它从不自行启用 linger，也不会索要 sudo 密码。</string>
+    <string name="hostSecStepPolicy">请保持一个管理员连接处于打开状态。将 PHONE_TAILSCALE_IP 和 MACHINE_TAILSCALE_IP 替换为实际的数字地址。重新加载前先校验。更早的 SSH 指令可能覆盖此文件。安装程序会检查本地 TCP 转发、已禁用的反向和套接字转发、无隧道设备、UseDNS no、DisableForwarding no、公钥登录以及标准的 authorized_keys 路径。解析设置并不能证明正在运行的守护进程已加载它们；请自行验证重新加载的结果。</string>
+    <string name="hostSecStepIdentity">信任之前，请在另一个独立的机器连接中，把这里的输出与应用核对。应用会计算 Ed25519 SHA256 指纹，并阻止之后的身份变更。</string>
+    <string name="hostSecRevokeQuestion">撤销这部手机并移除主机？</string>
+    <string name="hostSecForgetQuestion">忘记本地主机数据？</string>
+</resources>

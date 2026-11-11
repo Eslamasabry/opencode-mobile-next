@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="isolatedTaskCreateUnknown">服务器没有确认是否已创建副本。开始另一个之前，请先检查项目。</string>
+    <string name="isolatedTaskOpenUnknown">服务器没有确认该对话。开始另一个之前，请先查看“对话”。你的任务仍保存在这里。</string>
+    <string name="isolatedTaskProgress">第 %1$d 步，共 3 步</string>
+    <string name="isolatedTaskOperationFailed">这一步未能完成。你的任务仍保存在这里。</string>
+    <string name="isolatedTaskCopies">独立副本</string>
+    <string name="isolatedTaskRefreshCopies">刷新副本</string>
+    <string name="isolatedTaskSendUnconfirmed">无法确认你的任务是否已发送。它仍保存在这里。再次发送前，请先打开对话查看。</string>
+</resources>

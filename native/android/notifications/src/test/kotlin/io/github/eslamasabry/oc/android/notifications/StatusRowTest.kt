@@ -162,7 +162,8 @@ class PromotableStatusTest {
         assertEquals(FrozenComponents.STATUS_ACTION_RECEIVER, stop.savedIntent.component!!.className)
         val delete = shadowOf(n.deleteIntent)
         assertEquals(StatusRenderer.DISMISSED_ACTION, delete.savedIntent.getStringExtra(FrozenExtras.EXTRA_STATUS_ACTION))
-        assertEquals("opencode_live_connection", n.channelId)
+        assertEquals("opencode_live_conversations", n.channelId)
+        assertEquals("opencode_live_conversations", n.publicVersion.channelId)
         assertTrue(n.flags and Notification.FLAG_ONGOING_EVENT != 0)
     }
 }

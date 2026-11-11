@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <plurals name="shareInPartial">
+        <item quantity="other">已添加 %2$d 个文件中的 %1$d 个。%3$s</item>
+    </plurals>
+    <string name="shareInReasonLimit">一份草稿最多可包含 5 个文件，共 20 MB。</string>
+    <string name="shareInReasonTooLarge">其余文件太大，无法附加（每个 10 MB）。</string>
+    <string name="shareInReasonUnsupported">其余文件的类型无法附加。</string>
+    <string name="shareInReasonUnreadable">其余文件无法读取。请再次尝试分享它们。</string>
+    <string name="shareInNoneTooLarge">未添加任何内容。它太大，无法附加（每个 10 MB，总共 20 MB）。</string>
+    <string name="shareInNoneUnsupported">未添加任何内容。无法附加这种类型的文件。</string>
+    <string name="shareInNoneUnreadable">未添加任何内容。无法读取该文件。请再次尝试分享。</string>
+    <string name="shareInGotIt">知道了</string>
+</resources>

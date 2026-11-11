@@ -2,6 +2,8 @@ package io.github.eslamasabry.oc.feature.schedules
 
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import dev.zacsweers.metro.AppScope
@@ -24,6 +26,8 @@ public class SchedulesEntries : EntryInstaller {
         entry<SchedulesRoute.List> { route ->
             val vm = assistedMetroViewModel<SchedulesViewModel, SchedulesViewModel.Factory> { create(route) }
             val state by vm.state.collectAsStateWithLifecycle()
+            // The phone's settings page is outside the app: read the allowed timing again on return.
+            LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { vm.refreshTiming() }
             SchedulesScreen(state, vm)
         }
         entry<SchedulesRoute.Edit> { route ->

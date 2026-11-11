@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The conversations row outside the app (DockOutside): one line per running conversation. Names are masked before they reach these templates. -->
+<resources>
+    <string name="notify_dock_channel">Live conversations</string>
+    <string name="notify_dock_channel_description">One quiet row that lists your running conversations while something is working or waiting for you. Names stay hidden on the lock screen.</string>
+    <string name="notify_dock_untitled">Untitled conversation</string>
+    <string name="notify_dock_helper_generic">a subagent</string>
+    <string name="notify_dock_name_needs_you">%1$s needs you</string>
+    <string name="notify_dock_waiting_answer">Waiting for your answer</string>
+    <plurals name="notify_dock_others_working">
+        <item quantity="one">%1$s other working</item>
+        <item quantity="other">%1$s others working</item>
+    </plurals>
+    <string name="notify_dock_helper_asking">Its subagent %1$s is asking</string>
+    <string name="notify_dock_working_on">Working on %1$s</string>
+    <string name="notify_dock_state_working">Working</string>
+    <string name="notify_dock_state_thinking">Thinking</string>
+    <string name="notify_dock_state_needs_you">Needs you</string>
+    <string name="notify_dock_state_done">Done, not opened yet</string>
+    <string name="notify_dock_state_failed">Stopped before finishing</string>
+    <plurals name="notify_dock_helpers">
+        <item quantity="one">%1$s subagent</item>
+        <item quantity="other">%1$s subagents</item>
+    </plurals>
+    <string name="notify_status_action_open_named">Open %1$s</string>
+    <string name="notify_status_action_stop_named">Stop %1$s</string>
+</resources>

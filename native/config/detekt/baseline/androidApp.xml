@@ -1609,7 +1609,6 @@
     <ID>ReturnCount:ProjectSignalsWiring.kt$LiveProjectSignalsHost$override suspend fun applyNewChatDefault( server: io.github.eslamasabry.oc.feature.projects.presentation.ProjectServer, session: io.github.eslamasabry.oc.core.common.ids.SessionId, ): io.github.eslamasabry.oc.core.common.Outcome&lt;Unit&gt;</ID>
     <ID>ReturnCount:ProjectStorageWiring.kt$AndroidProjectStorageAccess$private suspend fun remember( profile: ProfileId, root: String, needsRestart: Boolean, ): Outcome&lt;Unit&gt;</ID>
     <ID>ReturnCount:ProjectsWiring.kt$StoredConversationPins$override suspend fun set( server: ConversationServer, id: io.github.eslamasabry.oc.core.common.ids.SessionId, pinned: Boolean, ): Outcome&lt;Unit&gt;</ID>
-    <ID>ReturnCount:ProtoProviderWiring.kt$ProtoProviderSource$override suspend fun connect(profile: ProfileId): Outcome&lt;ProviderConnection&gt;</ID>
     <ID>ReturnCount:ProtoQuotaWiring.kt$ProtoQuotaSource$private fun consented( id: String, base: String, username: String, provider: QuotaProvider, ): Boolean</ID>
     <ID>ReturnCount:ProtocolsWiring.kt$AppComputerTools$override suspend fun import(profile: ProfileId, item: ImportItem): Outcome&lt;ConversationRef&gt;</ID>
     <ID>ReturnCount:ProtocolsWiring.kt$AppComputerTools$private suspend fun refreshAfterUpdate(profile: ProfileId, gateway: PaseoGateway)</ID>
@@ -2078,11 +2077,6 @@
     <ID>WildcardImport:ProjectStorageWiring.kt$import io.github.eslamasabry.oc.core.data.scope.*</ID>
     <ID>WildcardImport:ProjectStorageWiring.kt$import io.github.eslamasabry.oc.engine.profiles.*</ID>
     <ID>WildcardImport:ProjectStorageWiring.kt$import io.github.eslamasabry.oc.feature.projects.presentation.*</ID>
-    <ID>WildcardImport:ProtoProviderWiring.kt$import dev.zacsweers.metro.*</ID>
-    <ID>WildcardImport:ProtoProviderWiring.kt$import io.github.eslamasabry.oc.core.common.*</ID>
-    <ID>WildcardImport:ProtoProviderWiring.kt$import io.github.eslamasabry.oc.core.domain.*</ID>
-    <ID>WildcardImport:ProtoProviderWiring.kt$import io.github.eslamasabry.oc.core.security.*</ID>
-    <ID>WildcardImport:ProtoProviderWiring.kt$import io.github.eslamasabry.oc.feature.agents.providers.presentation.*</ID>
     <ID>WildcardImport:ProtoQuotaWiring.kt$import io.github.eslamasabry.oc.core.common.*</ID>
     <ID>WildcardImport:ProtoQuotaWiring.kt$import io.github.eslamasabry.oc.core.net.*</ID>
     <ID>WildcardImport:ProtoQuotaWiring.kt$import io.github.eslamasabry.oc.engine.integrations.quota.*</ID>

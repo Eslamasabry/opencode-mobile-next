@@ -116,6 +116,13 @@ public class ProjectsPickerViewModel(
                 canRename =
                     server.operations != null &&
                         server.gateway.capabilities.value.projectManagement,
+                oneFolder =
+                    server.gateway.capabilities.value.let {
+                        it != io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities.Unknown &&
+                            !it.projectManagement &&
+                            !it.fileBrowsing
+                    },
+                configuredFolder = server.gateway.location.value.directory?.trim()?.takeIf { it.isNotEmpty() },
                 canBrowsePhone = server.phoneFolders,
                 canBrowseBuiltin =
                     server.phoneFolders && phoneFolders.builtinAvailable(server.profile),
@@ -201,6 +208,7 @@ public class ProjectsPickerViewModel(
                     it.running,
                     it.isGit,
                     it.id,
+                    worktrees = it.worktrees,
                 )
             }
         )

@@ -2,9 +2,6 @@
 # Never add a line by hand; a new file must follow the rule.
 feature/agents/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/agents/hub/AgentsPresenter.kt
 feature/agents/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/agents/presentation/SignInTerminalViewModel.kt
-feature/agents/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/agents/providers/ProvidersEntries.kt
-feature/agents/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/agents/providers/presentation/ProvidersPresentation.kt
-feature/agents/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/agents/providers/ui/ProvidersScreen.kt
 feature/agents/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/agents/remote_terminal/presentation/RemoteTerminalViewModel.kt
 feature/agents/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/agents/remote_terminal/ui/RemoteTerminalScreen.kt
 feature/agents/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/agents/signin/SignInTerminalSession.kt

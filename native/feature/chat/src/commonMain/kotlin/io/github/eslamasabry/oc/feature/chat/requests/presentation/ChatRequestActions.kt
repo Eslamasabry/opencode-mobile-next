@@ -72,6 +72,9 @@ public interface ChatRequestActions {
 
     public fun sendSheet(id: RequestId)
 
+    /** C1: the agent is told "no answer" and carries on (the screen has confirmed). */
+    public fun dismissQuestion(id: RequestId) {}
+
     /** Inside the 3 s hold only. */
     public fun undo(id: RequestId)
 

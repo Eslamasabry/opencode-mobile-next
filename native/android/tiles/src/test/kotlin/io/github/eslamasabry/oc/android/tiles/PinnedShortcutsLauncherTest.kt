@@ -119,6 +119,20 @@ class PinnedShortcutsLauncherTest {
     }
 
     @Test
+    fun `publishing leaves a dynamic shortcut that is not a pinned session alone`() {
+        val other =
+            ShortcutInfoCompat.Builder(context, "oc.bubble:server-1:s9")
+                .setShortLabel("Other")
+                .setIntent(Intent(Intent.ACTION_MAIN).setClassName(context, TilesComponents.MAIN_ACTIVITY))
+                .build()
+        ShortcutManagerCompat.addDynamicShortcuts(context, listOf(other))
+        PinnedShortcuts.publish(context, "server-1", pins("s1" to "Fix auth"))
+        assertEquals(setOf("oc.bubble:server-1:s9", PinnedShortcuts.shortcutId("server-1", "s1")), byId().keys)
+        PinnedShortcuts.publish(context, "server-1", emptyList())
+        assertEquals(setOf("oc.bubble:server-1:s9"), byId().keys)
+    }
+
+    @Test
     fun `B-ANDR-053 no pins publishes an empty set and forgets the record`() {
         PinnedShortcuts.publish(context, "server-1", pins("s1" to "Fix auth"))
         assertNotNull(record("server-1"))

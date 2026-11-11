@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="projectStorageMeasureFailed">无法统计已存储的文件。请重试。</string>
+    <string name="projectStorageDeleteFailed">Android 无法清除此应用的数据。请重试。</string>
+</resources>

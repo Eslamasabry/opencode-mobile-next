@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="runningOrphanParentGone">它的所有者已停止</string>
+    <string name="runningOrphanCpuWithoutOwner">正忙，但没有对话在等它</string>
+    <string name="linuxStorageScanRunning">正在测量 %1$s</string>
+    <string name="linuxStorageScanDone">存储已测量</string>
+    <string name="linuxStorageScanIdle">没有正在运行的扫描</string>
+    <string name="linuxStorageScanLog">存储扫描</string>
+</resources>

@@ -56,6 +56,8 @@ object SecurityFeatureBindings {
             )
             // REST-1: per-profile monitoring keys.
             AndroidProfileMonitoring.registerKeys(this)
+            // Edge dock nicknames (`oc.dockNames.<profileId>`).
+            io.github.eslamasabry.oc.engine.attention.dock.DockKeys.register(this)
             // AGENT-2: the phone helper's secret, collector rules, widget routing and monitor consent
             // (moved here from PreviewRuntime's local scope; the rest of its list is registered above).
             registerSecret("oc.agentHostSecret.", ":engine:agents")

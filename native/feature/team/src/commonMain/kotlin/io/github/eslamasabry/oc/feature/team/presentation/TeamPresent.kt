@@ -520,6 +520,7 @@ public object TeamPresent {
                             restart = (t.status == "failed" || t.status == "stopped") && can.lanes,
                             verify = t.status == "done" && can.verification,
                             stop = running || t.status == "paused" || requests.isNotEmpty(),
+                            report = t.status == "failed",
                         ),
                     diff = t.diff,
                     branch = t.branch,

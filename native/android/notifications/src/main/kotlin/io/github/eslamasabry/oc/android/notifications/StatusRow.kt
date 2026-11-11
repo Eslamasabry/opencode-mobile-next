@@ -59,6 +59,12 @@ public data class StatusContent(
     val publicTitle: String = "OpenCode",
     /** How many chats work / need you; drives the Live Update chip plural. */
     val count: Int = 1,
+    /** The whole label of the Open button (already names its conversation); empty = the plain "Open". */
+    val openLabel: String = "",
+    /** The one working conversation **Stop** targets when it is not [conversation]; null = [conversation]. */
+    val stopConversation: ConversationRef? = null,
+    /** The whole label of the Stop button (already names its conversation); empty = the plain "Stop the reply". */
+    val stopLabel: String = "",
 ) {
     public val run: ReplyRun?
         get() = conversation?.takeIf {
@@ -84,6 +90,9 @@ public data class StatusContent(
             turnId: String = "",
             publicTitle: String? = null,
             count: Int = 1,
+            openLabel: String = "",
+            stopConversation: ConversationRef? = null,
+            stopLabel: String = "",
         ): StatusContent? {
             val cleanTitle = clip(title)
             if (kind == null || cleanTitle.isNullOrEmpty()) return null
@@ -99,6 +108,9 @@ public data class StatusContent(
                 turnId = turnId,
                 publicTitle = clip(publicTitle)?.takeIf { it.isNotEmpty() } ?: "OpenCode",
                 count = count.coerceAtLeast(1),
+                openLabel = clip(openLabel).orEmpty(),
+                stopConversation = stopConversation,
+                stopLabel = clip(stopLabel).orEmpty(),
             )
         }
 
@@ -110,7 +122,15 @@ public data class StatusContent(
  * The surface throttle (plan 11 §10.3, map T12): one post per 2,000 ms, only on changed content, a trailing post of
  * the newest. Android drops more than about five updates a second. Port of the Flutter `StatusThrottle`.
  */
-public class StatusThrottle(private val minGapMs: Long = 2_000L) {
+public class StatusThrottle(private val minGapMs: Long = DEFAULT_GAP_MS) {
+    public companion object {
+        /** Two seconds, the documented gap; the dock row uses [DOCK_GAP_MS]. */
+        public const val DEFAULT_GAP_MS: Long = 2_000L
+
+        /** The live row of conversations: at most one post a second (Android drops about five a second), newest always last. */
+        public const val DOCK_GAP_MS: Long = 1_000L
+    }
+
     public sealed interface Step {
         public data object Skip : Step
 

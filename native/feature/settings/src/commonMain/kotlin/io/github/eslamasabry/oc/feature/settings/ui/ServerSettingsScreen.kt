@@ -250,8 +250,12 @@ private fun ServerHome(state: ServerSettingsUi, actions: ServerSettingsActions) 
                 !facts.managedOnPhone &&
                     flags?.remoteUpgrade != true &&
                     flags?.hostAgentProviders != true
-            )
-                KitNotice(stringResource(Res.string.e7SettingsUi68), gutter())
+            ) {
+                // The app cannot update a computer's OpenCode; the row copies the pinned command to run there.
+                val commands = facts.updateCommands
+                if (commands == null) KitNotice(stringResource(Res.string.e7SettingsUi68), gutter())
+                else CopyUpdateCommandsRow(facts.name, commands)
+            }
             if (facts.capabilities?.shellSettings == true)
                 KitRow(
                     title = stringResource(Res.string.serverSettingsShell),
@@ -639,6 +643,29 @@ private fun CapabilitiesBody(state: ServerSettingsUi) {
             )
         }
     }
+}
+
+/** Flutter server_page.dart's "Copy update commands for X": tapping copies, and its line then says it was copied. */
+@Composable
+private fun CopyUpdateCommandsRow(name: String, commands: String) {
+    var copied by remember { mutableStateOf<String?>(null) }
+    var copyId by remember { mutableLongStateOf(0) }
+    var done by remember { mutableStateOf(false) }
+    KitClipboardEffect(if (copied == null) null else copyId, copied, onDone = { copied = null })
+    KitRow(
+        title = stringResource(Res.string.serverSettingsCopyUpdateCommands, name),
+        supporting =
+            stringResource(
+                if (done) Res.string.serverSettingsUpdateCommandsCopied
+                else Res.string.serverSettingsUpdateCommandsDetail
+            ),
+        supportingMaxLines = 3,
+        onClick = {
+            copyId++
+            copied = commands
+            done = true
+        },
+    )
 }
 
 @Composable

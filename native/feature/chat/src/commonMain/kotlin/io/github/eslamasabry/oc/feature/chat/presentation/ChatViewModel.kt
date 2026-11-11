@@ -190,7 +190,9 @@ public class ChatViewModel(
     }
 
     override fun openProviders(): Unit =
-        nav.open(io.github.eslamasabry.oc.ui.routes.ProvidersRoute(route.ref.profileId))
+        nav.open(
+            io.github.eslamasabry.oc.ui.routes.LibraryRoute(tab = "providers", profileId = route.ref.profileId)
+        )
 
     override fun useModelAndResend(turnId: String, providerId: String, modelId: String): Unit =
         presenter.useModelAndResend(turnId, providerId, modelId)
@@ -256,6 +258,8 @@ public class ChatViewModel(
     override fun tryLinkNow(): Unit = presenter.tryLinkNow()
 
     override fun stopAfterStep(note: String): Unit = presenter.stopAfterStep(note)
+
+    override fun undoStopAfterStep(): Unit = presenter.undoStopAfterStep()
 
     override fun openPlace(place: ChatPlace): Unit = presenter.openPlace(place)
 

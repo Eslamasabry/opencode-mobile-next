@@ -71,16 +71,16 @@ public class ThisPhoneModel(
     public val state: StateFlow<ThisPhoneUi> =
         combine(
                 source.facts,
+                source.heat,
                 local,
                 exits.notice,
                 phoneDetails?.state ?: flowOf(PhoneDetailsUi()),
-                ::build,
-            )
+            ) { facts, heat, l, notice, reading -> build(facts.copy(heat = heat), l, notice, reading) }
             .stateIn(
                 scope,
                 SharingStarted.Eagerly,
                 build(
-                    source.facts.value,
+                    source.facts.value.copy(heat = source.heat.value),
                     local.value,
                     exits.notice.value,
                     phoneDetails?.state?.value ?: PhoneDetailsUi(),

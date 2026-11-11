@@ -22,6 +22,8 @@ import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.MonitorInboxRoute
 import io.github.eslamasabry.oc.ui.routes.ProjectsRoute
 import io.github.eslamasabry.oc.ui.routes.SearchRoute
+import io.github.eslamasabry.oc.ui.routes.CapabilityServerDoor
+import io.github.eslamasabry.oc.ui.routes.CapabilityServerSetupRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import io.github.eslamasabry.oc.ui.routes.UsageRoute
 import kotlin.time.Clock
@@ -55,6 +57,7 @@ public class ChatsViewModel(
     private val connections: ConversationServers = NoConversationServers(),
     private val appScope: AppCoroutineScope? = null,
     private val pins: ConversationPins = NoConversationPins(),
+    private val agentNotices: Set<HomeAgentNoticeSource> = emptySet(),
     dispatchers: AppDispatchers? = null,
 ) : ViewModel(), ChatsActions {
     /** Where the home's list is built: off the main thread in the app; where the caller stands in a test. */
@@ -116,6 +119,19 @@ public class ChatsViewModel(
 
     /** A pull to refresh in flight (one at a time). */
     private val refreshing = MutableStateFlow(false)
+
+    /** G6: the phone agents' notices, or none where the app binds no source. */
+    private val agentNoticeFlow: StateFlow<HomeAgentNotices> =
+        agentNotices.singleOrNull()?.notices ?: MutableStateFlow(HomeAgentNotices())
+
+    /**
+     * H1: a permission answer waits [ANSWER_HOLD_MS] with Undo before it is sent (F: lib/state/delayed_answers.dart),
+     * by request id. The conversation to answer and the reply are kept beside the words the row shows. The switcher's
+     * Allow once uses the same hold, so a request answered in either place is held once and shows Undo in both.
+     */
+    private val heldAnswers = MutableStateFlow<Map<String, HomeHeldReply>>(emptyMap())
+    private val heldRows = HashMap<String, Pair<ConversationRef, HomePermissionReply>>()
+    private val holdJobs = HashMap<String, kotlinx.coroutines.Job>()
 
     /** The row whose Always allow waits on its confirm. */
     private val confirmingAlways = MutableStateFlow<ConversationRowUi?>(null)
@@ -193,6 +209,8 @@ public class ChatsViewModel(
                 )
             }
             .combine(confirmingAlways) { base, row -> base.copy(confirmAlways = row) }
+            .combine(heldAnswers) { base, held -> base.copy(held = held.toImmutableMap()) }
+            .combine(agentNoticeFlow) { base, notices -> base.copy(agentNotices = notices) }
             .combine(newRefused) { base, refused -> base.copy(newBlocked = refused && base.home.opening != null) }
             // B-161 / B-162: each row's branch, and the Usage row's tightest limit.
             .combine(home.branches) { base, known -> HomeRows.withBranches(base, known) }
@@ -212,6 +230,9 @@ public class ChatsViewModel(
                             now.failure,
                         )
                 )
+            }
+            .combine(heldAnswers) { base, held ->
+                base.copy(switcher = base.switcher.copy(held = held.toImmutableMap()))
             }
             .stateIn(
                 viewModelScope,
@@ -327,7 +348,69 @@ public class ChatsViewModel(
         )
 
     override fun answerPermission(row: ConversationRowUi, allow: Boolean) {
-        sendAnswer(row, if (allow) HomePermissionReply.Once else HomePermissionReply.Reject)
+        hold(row, if (allow) HomePermissionReply.Once else HomePermissionReply.Reject)
+    }
+
+    private fun hold(row: ConversationRowUi, reply: HomePermissionReply) {
+        hold(row.ref, row.permission?.requestId ?: return, reply)
+    }
+
+    /** Holds the answer for the undo window, then sends it once. A second tap on the same request does nothing. */
+    private fun hold(ref: ConversationRef, id: String, reply: HomePermissionReply) {
+        if (permissionAnswers.singleOrNull() == null) return
+        if (id in heldRows || id in answers.value.first) return
+        heldRows[id] = ref to reply
+        heldAnswers.update {
+            it + (id to
+                when (reply) {
+                    HomePermissionReply.Once -> HomeHeldReply.Allowed
+                    HomePermissionReply.Reject -> HomeHeldReply.Rejected
+                    HomePermissionReply.Always -> HomeHeldReply.AlwaysAllowed
+                })
+        }
+        holdJobs[id] =
+            viewModelScope.launch {
+                kotlinx.coroutines.delay(ANSWER_HOLD_MS)
+                release(id)
+            }
+    }
+
+    /** The undo window ended: the answer leaves now. */
+    private fun release(id: String) {
+        val (ref, reply) = heldRows.remove(id) ?: return
+        holdJobs.remove(id)
+        sendAnswer(ref, id, reply)
+        heldAnswers.update { it - id }
+    }
+
+    override fun undoAnswer(row: ConversationRowUi) {
+        undoHeld(row.permission?.requestId ?: return)
+    }
+
+    private fun undoHeld(id: String) {
+        if (heldRows.remove(id) == null) return
+        holdJobs.remove(id)?.cancel()
+        heldAnswers.update { it - id }
+    }
+
+    // H3, F: chats_home_screen.dart:511-577 `_incompleteLine` retry: every connection that did not answer is asked
+    // again, then the list is read once more.
+    override fun retryList() {
+        val failing = state.value.home.sources.filter { it.shown && it.unreachable }.map { it.profile }
+        if (refreshing.value) return
+        refreshing.value = true
+        viewModelScope.launch {
+            try {
+                failing.forEach { home.retrySource(it) }
+                feed.refresh()
+            } finally {
+                refreshing.value = false
+            }
+        }
+    }
+
+    override fun openAgents() {
+        nav.open(io.github.eslamasabry.oc.ui.routes.AgentsRoute.Home)
     }
 
     override fun askAlwaysAllow(row: ConversationRowUi) {
@@ -341,22 +424,21 @@ public class ChatsViewModel(
         // The request it was asked for: a newer one on the same row is not what the person confirmed.
         val now = (state.value.rightNow + state.value.recent + state.value.brief?.rows.orEmpty()).firstOrNull { it.key == row.key }
         if (now?.permission?.requestId != row.permission?.requestId) return
-        sendAnswer(row, HomePermissionReply.Always)
+        hold(row, HomePermissionReply.Always)
     }
 
     override fun cancelAlwaysAllow() {
         confirmingAlways.value = null
     }
 
-    private fun sendAnswer(row: ConversationRowUi, reply: HomePermissionReply) {
-        val permission = row.permission ?: return
+    private fun sendAnswer(ref: ConversationRef, requestId: String, reply: HomePermissionReply) {
         val port = permissionAnswers.singleOrNull() ?: return
-        if (permission.requestId in answers.value.first) return
-        answers.value = (answers.value.first + permission.requestId) to null
+        if (requestId in answers.value.first) return
+        answers.value = (answers.value.first + requestId) to null
         viewModelScope.launch {
-            val result = port.answer(row.ref, permission.requestId, reply)
+            val result = port.answer(ref, requestId, reply)
             answers.value =
-                (answers.value.first - permission.requestId) to
+                (answers.value.first - requestId) to
                     (result as? io.github.eslamasabry.oc.core.common.Outcome.Failed)?.failure
             feed.refresh()
         }
@@ -515,6 +597,15 @@ public class ChatsViewModel(
 
     override fun onCleared() {
         commitArchive()
+        // Leaving the page inside an undo window still sends what the person answered (the app scope outlives it).
+        val port = permissionAnswers.singleOrNull()
+        val scope = appScope
+        if (port != null && scope != null)
+            heldRows.toList().forEach { (id, held) ->
+                val (ref, reply) = held
+                scope.launch { port.answer(ref, id, reply) }
+            }
+        heldRows.clear()
         super.onCleared()
     }
 
@@ -633,6 +724,25 @@ public class ChatsViewModel(
         nav.open(ServersRoute.Edit(profile))
     }
 
+    // The switcher's Allow once is the home's own held answer (one undo window, shared with the rows).
+    override fun allowSwitcherRequest(ref: ConversationRef, requestId: String) {
+        hold(ref, requestId, HomePermissionReply.Once)
+    }
+
+    override fun undoSwitcherRequest(requestId: String) {
+        undoHeld(requestId)
+    }
+
+    override fun openSwitcherRequest(ref: ConversationRef) {
+        // The conversation is on another server: open it from the list the sheet sits on.
+        openConversation(ref)
+    }
+
+    override fun openTailscale() {
+        sheet.value = null
+        nav.open(CapabilityServerSetupRoute(CapabilityServerDoor.Tailscale))
+    }
+
     override fun openServers() {
         sheet.value = null
         nav.open(ServersRoute.Home)
@@ -650,6 +760,12 @@ public class ChatsViewModel(
         // Tapping the server already in use has nowhere to go but back to it (Flutter: reconnecting drops live state).
         if (row.current) {
             sheet.value = null
+            return
+        }
+        // A password or token the app can no longer use is typed in the server's form, not tried again here.
+        if (row.secret != SwitcherSecret.None) {
+            sheet.value = null
+            nav.open(ServersRoute.Edit(profile))
             return
         }
         if (switching.value.to != null) return
@@ -814,3 +930,10 @@ public interface HomePermissionBindings {
     @dev.zacsweers.metro.Multibinds(allowEmpty = true)
     public val homePermissionAnswers: Set<HomePermissionAnswers>
 }
+
+/**
+ * F: lib/state/delayed_answers.dart: how long a permission answer waits with Undo before it is sent. The one undo
+ * window for the home: a row's answers and the switcher's Allow once share it; the port answers at once (no second
+ * hold in the engine).
+ */
+internal const val ANSWER_HOLD_MS: Long = 3_000L

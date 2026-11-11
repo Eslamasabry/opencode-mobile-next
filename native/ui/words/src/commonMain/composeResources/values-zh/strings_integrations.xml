@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="intTitle">提供方与工具</string>
+    <string name="intBack">返回</string>
+    <string name="intRefresh">刷新</string>
+    <string name="intServers">服务器</string>
+    <string name="intNoServer">请先连接服务器</string>
+    <string name="intProviders">提供方</string>
+    <string name="intConnected">已登录</string>
+    <string name="intNotConnected">未登录</string>
+    <string name="intKey">API 密钥</string>
+    <string name="intSaveKey">将密钥保存到服务器</string>
+    <string name="intKeyPage">获取 API 密钥</string>
+    <string name="intOpenSignIn">打开登录页面</string>
+    <string name="intCode">代码或回调 URL</string>
+    <string name="intCompleteSignIn">完成登录</string>
+    <string name="intSignInHelp">请在浏览器中完成，然后把它给出的代码或回调 URL 粘贴到这里。</string>
+    <string name="intConnectors">连接器</string>
+    <string name="intConnectorConnected">已连接</string>
+    <string name="intConnectorNotConnected">需要处理</string>
+    <string name="intConnectorName">连接器名称</string>
+    <string name="intConnectorUrl">HTTPS 地址</string>
+    <string name="intHeaderName">请求头名称（可选）</string>
+    <string name="intHeaderValue">请求头的值</string>
+    <string name="intSaveConnector">添加连接器</string>
+    <string name="intHeaderHelp">请求头的值属于机密。它们只会发送到此服务器，绝不会显示在诊断信息中。</string>
+    <string name="intSkills">编写技能</string>
+    <string name="intRequirements">这个技能应该做什么？</string>
+    <string name="intDraftHelp">智能体会在新对话中起草一份 SKILL.md 供你审阅。不会要求它安装或更改文件。</string>
+    <string name="intAskDraft">让智能体起草</string>
+    <string name="intOpenDraft">打开草稿对话</string>
+    <string name="intSaved">已保存到服务器。</string>
+    <string name="intFailed">操作未完成。请先刷新再重试。</string>
+    <string name="intUnsupported">此服务器不支持这项操作。</string>
+    <string name="intChanged">连接已变更。请重新打开此页面。</string>
+    <string name="intInvalid">请检查必填项，然后重试。</string>
+    <string name="intDraftSent">起草请求已发送。请打开对话跟进。</string>
+    <string name="intDraftUncertain">请求可能已送达。再次发送前，请先查看对话。</string>
+    <string name="intOpenQuestion">打开此页面？</string>
+    <string name="intOpen">打开页面</string>
+    <string name="intInsecure">此地址未加密。</string>
+    <string name="intConnectorReady">已连接，下一条消息即可使用。</string>
+    <string name="intConnectorUnknown">已连接。尚未确认工具发现。</string>
+    <string name="intConnectorAuth">此连接器需要你登录。</string>
+    <string name="intConnecting">正在连接</string>
+    <string name="intConnectorSignIn">登录此连接器</string>
+    <string name="intConnectorCancelSignIn">取消登录</string>
+</resources>

@@ -606,4 +606,11 @@
     <string name="fbReasonKeyLockedNotYet">它包含密码或账号，记忆暂时无法保存这类内容。它仍留在本机。</string>
     <string name="fbListLockedNoteNotYet">含密码或账号的笔记暂不保存。它们会在“尚未保存”中等待。</string>
     <string name="fbReminderNotSoundedYet">本机暂时无法为提醒响铃。它已保存并显示在“提醒”中。</string>
+    <string name="fbNodeRowDetail">把你的记忆保留在这部手机上。任何内容都不会离开手机。</string>
+    <string name="fbNodeUnsupportedBody">这部手机上的记忆需要“这部手机”功能，而只有 Android 手机才有。</string>
+    <string name="fbNodeLinuxBody">记忆在“这部手机”中运行。请先设置它，然后再回来。</string>
+    <string name="fbNodeNoBuildBody">此版本的应用无法安装这部手机上的记忆。请将应用更新到较新的版本，或连接下方你自己的服务器。</string>
+    <string name="fbNodeNotInstalledBody">应用会在“这部手机”中安装记忆，自动启动并连接它。它只在这部手机内部监听。</string>
+    <string name="fbNodeRunningBody">记忆正在“这部手机”中运行，并已连接到此应用。它只在这部手机内部监听。</string>
+    <string name="fbNodeWhatBody">记忆把你的笔记、提醒和事实保存在这部手机上，只属于你。它在这部手机上运行，不会离开手机。</string>
 </resources>

@@ -38,6 +38,7 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.aboutAllLicences
 import io.github.eslamasabry.oc.ui.words.res.aboutBundledComponents
 import io.github.eslamasabry.oc.ui.words.res.aboutTitle
 import io.github.eslamasabry.oc.ui.words.res.appUpdatesTitle
@@ -196,6 +197,16 @@ public fun SettingsScreen(
                 modifier,
             ) {
                 NoticesBody()
+            }
+        SettingsPage.Licences ->
+            SettingsFrame(
+                stringResource(Res.string.aboutAllLicences),
+                back,
+                state,
+                actions,
+                modifier,
+            ) {
+                NoticesBody(file = "files/LICENCES.md")
             }
         SettingsPage.PhraseChips ->
             SettingsFrame(

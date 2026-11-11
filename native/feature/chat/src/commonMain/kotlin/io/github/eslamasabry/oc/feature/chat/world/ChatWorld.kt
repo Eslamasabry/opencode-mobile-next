@@ -217,6 +217,19 @@ public interface ChatWorld {
     public suspend fun sendAgain(text: String): Outcome<Unit> = send(text)
 
     /**
+     * C5 (Flutter `_undoStopAfterStep`): takes back a note that still waits in the server's inbox, unread by the agent.
+     * False when it is not waiting any more (the agent has it) or this server keeps no inbox.
+     */
+    public suspend fun withdrawNote(text: String): Boolean = false
+
+    /**
+     * C6 (Flutter `MidTurnPromptGateway.midTurnPrompt`): what a message sent while the agent works does to the running
+     * turn, for gateways whose agents never hold one. Null: this server steers by capability, or the agent is not
+     * known yet.
+     */
+    public fun midTurn(): io.github.eslamasabry.oc.core.model.MidTurnPrompt? = null
+
+    /**
      * B-169: the prompt that started [turnId] as the transcript holds it (words, files, agent, the model its reply ran
      * on and the tool steps it ran), or null when this conversation cannot read it back.
      */
