@@ -477,13 +477,17 @@ public fun ChatsScreen(
                     if (rightNow.isNotEmpty())
                         item(key = "right-now", contentType = "right-now") {
                             Box(kitItemMotion()) {
-                                KitRowPanel(
-                                    label = stringResource(Res.string.chatsHomeRightNow),
-                                    // A step of air under the chips, as above Recent, so the first label is not pressed up.
-                                    gapBefore = if (above) sectionGap else Space.S4.dp,
-                                    prominentDividers = true,
-                                ) {
-                                    rightNow.forEach { row -> key(row.key) { ConversationRow(row, rowWords, rowFlags(row, state), mask, actions) } }
+                                // P69: the panel is built afresh when the last answers in it go, so it never keeps
+                                // their height (seen: a 55 dp empty band after Allow once).
+                                key(rememberAnswersGoneKey(rightNow)) {
+                                    KitRowPanel(
+                                        label = stringResource(Res.string.chatsHomeRightNow),
+                                        // A step of air under the chips, as above Recent, so the first label is not pressed up.
+                                        gapBefore = if (above) sectionGap else Space.S4.dp,
+                                        prominentDividers = true,
+                                    ) {
+                                        rightNow.forEach { row -> key(row.key) { ConversationRow(row, rowWords, rowFlags(row, state), mask, actions) } }
+                                    }
                                 }
                             }
                         }
@@ -508,7 +512,7 @@ public fun ChatsScreen(
                             ) {
                                 KitPanelLinkRow(
                                     label = stringResource(Res.string.chats_all_title),
-                                    count = Numbers.format(state.allCount),
+                                    count = Numbers.format(state.shownCount ?: state.allCount),
                                     onClick = actions::showAll,
                                 )
                             }
@@ -517,20 +521,10 @@ public fun ChatsScreen(
                 }
             }
         }
-        // The Undo bar sits at the bottom edge; the New button rides above it while it shows.
+        // P20 (F: lib/ui/kit/kit_undo.dart:63, the bar floats above a pinned primary): the Undo bar rides above the New
+        // button, which never moves. Before, the button rode above the bar and dropped into Undo's place as the bar left,
+        // so a late tap meant for Undo opened New conversation.
         Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth(), horizontalAlignment = Alignment.End) {
-            // P-107: Flutter's round 56 dp + on the gutter, 12 dp above the bottom; the words are heard, not drawn, so
-            // it no longer covers a row's time. It fades out while the server cannot start one yet.
-            if (listed) {
-                KitFab(
-                    label = stringResource(Res.string.chatsHomeNewChat),
-                    icon = KitIcons.add,
-                    onClick = actions::newConversation,
-                    modifier = Modifier.padding(end = LocalKitTokens.current.gutter.dp, bottom = Space.S3.dp),
-                    visible = showFab,
-                    backdrop = listGlass,
-                )
-            }
             val undo = state.archiveUndo
             val message =
                 undo?.let {
@@ -545,6 +539,18 @@ public fun ChatsScreen(
                 onTimeout = actions::commitArchive,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
             )
+            // P-107: Flutter's round 56 dp + on the gutter, 12 dp above the bottom; the words are heard, not drawn, so
+            // it no longer covers a row's time. It fades out while the server cannot start one yet.
+            if (listed) {
+                KitFab(
+                    label = stringResource(Res.string.chatsHomeNewChat),
+                    icon = KitIcons.add,
+                    onClick = actions::newConversation,
+                    modifier = Modifier.padding(end = LocalKitTokens.current.gutter.dp, bottom = Space.S3.dp),
+                    visible = showFab,
+                    backdrop = listGlass,
+                )
+            }
         }
         // The edge dock over the list, clear of the floating + at the foot; under Glass it bends the list's recording.
         androidx.compose.runtime.CompositionLocalProvider(io.github.eslamasabry.oc.ui.kit.dock.LocalKitDockGlass provides listGlass) {
@@ -715,8 +721,11 @@ private fun BriefBlock(brief: BriefUi, words: HomeRowWords, mask: (String) -> St
         // On the gutter like the rows under it (its glyph sat on the screen's edge).
         // Headed and grouped like Right now and Recent, so the top group reads as part of the same list.
         if (brief.rows.isNotEmpty())
-            KitRowPanel(label = stringResource(Res.string.teamProjectDigest)) {
-                brief.rows.forEach { row -> key(row.key) { ConversationRow(row, words, rowFlags(row, state), mask, actions) } }
+            // P69: rebuilt when the last answers in it go, as Right now.
+            key(rememberAnswersGoneKey(brief.rows)) {
+                KitRowPanel(label = stringResource(Res.string.teamProjectDigest)) {
+                    brief.rows.forEach { row -> key(row.key) { ConversationRow(row, words, rowFlags(row, state), mask, actions) } }
+                }
             }
         // One line on the gutter: the rest of what finished at the start, marking it all seen at the end.
         if (brief.more > 0 || brief.rows.isNotEmpty())
@@ -768,6 +777,33 @@ private fun AlwaysAllowConfirm(row: ConversationRowUi?, mask: (String) -> String
 
 @Composable
 private fun rowTitleText(t: RowTitle): String = rowTitleWords(t)
+
+/**
+ * P69 (a workaround; the cause, most likely KitRowPanel's eased height under the shell's lookahead, is unproven): a
+ * panel's key, which moves on only when the last answers in it go (a waiting permission, question or form). Rebuilding
+ * a panel drops what its rows hold for the moment (an answer half tapped, an open row menu, a swipe), so the key never
+ * moves while any row in the panel still carries answers, nor when answers arrive: nobody is answering in it then.
+ */
+internal fun answersGoneKey(key: Int, hadAnswers: Boolean, hasAnswers: Boolean): Int =
+    if (hadAnswers && !hasAnswers) key + 1 else key
+
+/** Whether any of [rows] carries answers under its words. */
+internal fun carriesAnswers(rows: List<ConversationRowUi>): Boolean =
+    rows.any { it.permission != null || it.question != null || it.form != null }
+
+private class AnswersGone {
+    var had = false
+    var key = 0
+}
+
+@Composable
+private fun rememberAnswersGoneKey(rows: List<ConversationRowUi>): Int {
+    val seen = remember { AnswersGone() }
+    val has = carriesAnswers(rows)
+    seen.key = answersGoneKey(seen.key, seen.had, has)
+    seen.had = has
+    return seen.key
+}
 
 /**
  * One conversation as A1's roomy row (KitRecentRow): the agent's bare mark, the title, one line of the last message
