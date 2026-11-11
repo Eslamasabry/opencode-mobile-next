@@ -11,6 +11,7 @@ import io.github.eslamasabry.oc.engine.attention.activity.AttentionKeyStore
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
@@ -18,7 +19,14 @@ import kotlinx.serialization.json.JsonPrimitive
 public object DockKeys {
     public const val NAMES_PREFIX: String = "oc.dockNames."
     public const val REMOVED_PREFIX: String = "oc.dockRemoved."
+    public const val PINS_PREFIX: String = "oc.dockPins."
+
+    /** Device-wide placement keys (no profile id, never swept). */
+    public const val SIDE: String = "oc.dockSide"
+    public const val BIAS: String = "oc.dockBias"
     public const val OWNER: String = ":engine:attention"
+
+    public fun pinsKey(profile: ProfileId): String = PINS_PREFIX + profile.raw
 
     public fun removedKey(profile: ProfileId): String = REMOVED_PREFIX + profile.raw
 
@@ -28,6 +36,9 @@ public object DockKeys {
         listOf(
             KeyShape(NAMES_PREFIX, KeyScope.Profile, PrefType.Str, OWNER, "edge dock nicknames, session id to name"),
             KeyShape(REMOVED_PREFIX, KeyScope.Profile, PrefType.Str, OWNER, "edge dock removed conversations, session ids"),
+            KeyShape(PINS_PREFIX, KeyScope.Profile, PrefType.Str, OWNER, "edge dock pinned conversations, session ids in order"),
+            KeyShape(SIDE, KeyScope.App, PrefType.Str, OWNER, "edge dock side, start or end"),
+            KeyShape(BIAS, KeyScope.App, PrefType.Str, OWNER, "edge dock vertical position, 0 to 1"),
         )
 
     /** Registers the key shape so the profile deletion sweep finds it. */
@@ -36,32 +47,68 @@ public object DockKeys {
     }
 }
 
-/** The removed set of the dock, one JSON array of session ids per profile under [DockKeys.removedKey]. */
-public class DockRemovals(private val store: AttentionKeyStore) {
+/** One JSON array of session ids per profile (the removed set, the pins), newest last, at most [max]. */
+internal class DockIdList(private val store: AttentionKeyStore, private val keyOf: (ProfileId) -> String, private val max: Int) {
     private val lock = Mutex()
 
-    /** Unreadable or malformed data reads as none. At most [DockModel.MAX_REMOVED], newest last. */
-    public suspend fun load(profile: ProfileId): List<SessionId> =
+    suspend fun load(profile: ProfileId): List<SessionId> =
         lock.withLock {
-            val raw = runCatching { store.read(DockKeys.removedKey(profile)) }.getOrNull() ?: return@withLock emptyList()
-            val array = runCatching { Json.parseToJsonElement(raw) as? kotlinx.serialization.json.JsonArray }.getOrNull() ?: return@withLock emptyList()
+            val raw = runCatching { store.read(keyOf(profile)) }.getOrNull() ?: return@withLock emptyList()
+            val array = runCatching { Json.parseToJsonElement(raw) as? JsonArray }.getOrNull() ?: return@withLock emptyList()
             array.mapNotNull { (it as? JsonPrimitive)?.takeIf { p -> p.isString }?.content?.takeIf { s -> s.isNotEmpty() } }
-                .distinct().takeLast(DockModel.MAX_REMOVED).map(::SessionId)
+                .distinct().takeLast(max).map(::SessionId)
         }
 
-    /** Saves what [current] returns, read inside the lock so the newest state always wins. An empty set removes the key. */
-    public suspend fun save(profile: ProfileId, current: () -> List<SessionId>): Boolean =
+    suspend fun save(profile: ProfileId, current: () -> List<SessionId>): Boolean =
         lock.withLock {
-            val ids = current().takeLast(DockModel.MAX_REMOVED)
+            val ids = current().takeLast(max)
             runCatching {
-                if (ids.isEmpty()) {
-                    store.remove(DockKeys.removedKey(profile))
-                } else {
-                    store.write(
-                        DockKeys.removedKey(profile),
-                        kotlinx.serialization.json.JsonArray(ids.map { JsonPrimitive(it.raw) }).toString(),
-                    )
-                }
+                if (ids.isEmpty()) store.remove(keyOf(profile)) else store.write(keyOf(profile), JsonArray(ids.map { JsonPrimitive(it.raw) }).toString())
+            }.getOrDefault(false)
+        }
+}
+
+/** The removed set of the dock under [DockKeys.removedKey]. Unreadable or malformed data reads as none. */
+public class DockRemovals(store: AttentionKeyStore) {
+    private val list = DockIdList(store, DockKeys::removedKey, DockModel.MAX_REMOVED)
+
+    public suspend fun load(profile: ProfileId): List<SessionId> = list.load(profile)
+
+    /** Saves what [current] returns, read inside the lock so the newest state always wins. An empty set removes the key. */
+    public suspend fun save(profile: ProfileId, current: () -> List<SessionId>): Boolean = list.save(profile, current)
+}
+
+/** The pinned rings of the dock, in the person's order, under [DockKeys.pinsKey]. */
+public class DockPins(store: AttentionKeyStore) {
+    private val list = DockIdList(store, DockKeys::pinsKey, DockModel.MAX_PINNED)
+
+    public suspend fun load(profile: ProfileId): List<SessionId> = list.load(profile)
+
+    public suspend fun save(profile: ProfileId, current: () -> List<SessionId>): Boolean = list.save(profile, current)
+}
+
+/**
+ * Where the dock sits, device-wide: `oc.dockSide` ("start" or "end") and `oc.dockBias` (a number 0..1 as text). Neither
+ * has a profile id, so the profile deletion sweep leaves them alone, like `oc.appearance`.
+ */
+public class DockPlacementStore(private val store: AttentionKeyStore) {
+    private val lock = Mutex()
+
+    public suspend fun load(): DockPlacement =
+        lock.withLock {
+            val side = runCatching { store.read(DockKeys.SIDE) }.getOrNull()
+            val bias = runCatching { store.read(DockKeys.BIAS) }.getOrNull()?.toFloatOrNull()
+            DockPlacement.of(
+                if (side == "start") DockSide.Start else DockSide.End,
+                bias ?: DockPlacement.DEFAULT_BIAS,
+            )
+        }
+
+    public suspend fun save(placement: DockPlacement): Boolean =
+        lock.withLock {
+            runCatching {
+                store.write(DockKeys.SIDE, if (placement.side == DockSide.Start) "start" else "end") &&
+                    store.write(DockKeys.BIAS, placement.bias.toString())
             }.getOrDefault(false)
         }
 }

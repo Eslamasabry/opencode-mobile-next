@@ -49,13 +49,17 @@ class DockProfileSweepTest {
         }
         val names = DockNicknames(store)
         val removals = DockRemovals(store)
+        val pins = DockPins(store)
+        pins.save(gone) { listOf(SessionId("s")) }
+        pins.save(kept) { listOf(SessionId("s")) }
+        store.write(DockKeys.SIDE, "start")
         removals.save(gone) { listOf(SessionId("s")) }
         removals.save(kept) { listOf(SessionId("s")) }
         names.set(ConversationRef(gone, SessionId("s")), "Mine")
         names.set(ConversationRef(kept, SessionId("s")), "Theirs")
 
         assertEquals(
-            setOf("oc.dockNames.${gone.raw}", "oc.dockRemoved.${gone.raw}"),
+            setOf("oc.dockNames.${gone.raw}", "oc.dockRemoved.${gone.raw}", "oc.dockPins.${gone.raw}"),
             scope.scopedKeys(gone).filter { it.startsWith("oc.dock") }.toSet(),
         )
         assertTrue(DockKeys.SHAPES.all { it in scope.shapes() }, "the key shape is registered")
@@ -64,6 +68,8 @@ class DockProfileSweepTest {
         assertTrue(swept is Outcome.Ok)
         assertEquals(null, kv.get("oc.dockNames.${gone.raw}"))
         assertEquals(null, kv.get("oc.dockRemoved.${gone.raw}"))
+        assertEquals(null, kv.get("oc.dockPins.${gone.raw}"))
+        assertEquals("start", store.read(DockKeys.SIDE), "the device-wide placement is not swept")
         assertEquals(listOf(SessionId("s")), removals.load(kept))
         assertEquals("""{"s":"Theirs"}""", (kv.get("oc.dockNames.${kept.raw}") as io.github.eslamasabry.oc.core.data.kv.PrefValue.Str).value)
     }

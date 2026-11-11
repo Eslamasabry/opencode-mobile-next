@@ -71,6 +71,11 @@ public object DockFeed {
                         },
                     ),
                 )
+            is GatewayEvent.MessageUpserted ->
+                // The agent that answered names the ring's mark when the session record has not said.
+                event.message.agent?.takeIf { it.isNotBlank() && event.message.role == io.github.eslamasabry.oc.core.model.transcript.Role.Assistant }
+                    ?.let { listOf(DockEvent.Meta(ref(SessionId(event.message.sessionId)), null, it)) }
+                    .orEmpty()
             is GatewayEvent.PartUpserted -> partEvents(profile, event.part)
             is GatewayEvent.PartDelta ->
                 listOf(DockEvent.Reasoning(ref(event.sessionId), event.field == DeltaField.Reasoning))
