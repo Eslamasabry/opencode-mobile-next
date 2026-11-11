@@ -27,6 +27,7 @@ kotlin {
     }
     sourceSets.getByName("desktopTest").dependencies {
         implementation(project(":ui:gate")) // the golden-diff gate (order 44)
+        implementation(libs.navigationevent.compose) // Back through a dispatcher, as Android sends it
         implementation(
             libs.compose.desktop.currentos
         ) // skiko natives for the desktop UI tests and goldens

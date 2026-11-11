@@ -26,6 +26,8 @@ public data class StoredProject(
     val bytes: Long,
     val files: Int,
     val privateFiles: Int,
+    /** A project folder; false for a loose file lying in the projects folder (still exported). */
+    val folder: Boolean = true,
 )
 
 public data class ProjectStorageFacts(
@@ -44,6 +46,14 @@ public data class ProjectStorageFacts(
 
     public val canExport: Boolean
         get() = serverInstalled || projects.isNotEmpty()
+
+    /** What Export projects counts and lists as projects: the folders. */
+    public val folders: List<StoredProject>
+        get() = projects.filter { it.folder }
+
+    /** Loose files in the projects folder: exported too, listed apart, never called projects. */
+    public val looseFiles: List<StoredProject>
+        get() = projects.filterNot { it.folder }
 }
 
 public enum class ProjectExportProblem {

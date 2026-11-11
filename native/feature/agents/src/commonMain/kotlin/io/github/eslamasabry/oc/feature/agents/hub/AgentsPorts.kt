@@ -5,6 +5,7 @@ import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.engine.agents.install.AgentInstaller
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.StateFlow
@@ -115,6 +116,12 @@ public interface PhoneAgents {
 
     /** Puts away the notice of the last install that failed or was interrupted. */
     public suspend fun dismissInstallResult(): Outcome<Unit> = Outcome.Ok(Unit)
+
+    /**
+     * The free space installing [id] needs and the space this phone has now, read before the install starts (never
+     * behind a running read: it waits for nothing); null when either is unknown.
+     */
+    public suspend fun installSpace(id: String): PhoneAgentSpace? = null
 
     /**
      * Runs the agent's own logout. `true` only when a fresh status read says it is signed out;
@@ -239,7 +246,63 @@ public data class PhoneAgentInstallation(
     val failure: PhoneAgentInstallFailure? = null,
     /** The technical side, already redacted; shown only under Details. */
     val details: io.github.eslamasabry.oc.core.common.Redacted? = null,
+    /** The step a running install is on; null before the job names one. */
+    val step: PhoneAgentInstallStep? = null,
+    /** Measured bytes of the running step (a download), when the job counts them. */
+    val doneBytes: Long? = null,
+    val totalBytes: Long? = null,
 )
+
+/** The steps of a phone agent install, in order (AgentInstaller.components); the words live in the screen. */
+public enum class PhoneAgentInstallStep {
+    /** The phone's Linux and its shared packages (base, essentials, Python, the agent user). */
+    Linux,
+    /** Node.js, which every phone agent runs on. */
+    Runtime,
+    /** The agent helper (Paseo) the app talks to. */
+    Helper,
+    /** The agent itself. */
+    Agent,
+}
+
+/** The step a setup job's component belongs to ([componentId] as AgentInstaller names them); null when unknown. */
+public fun phoneInstallStep(componentId: String?, agentId: String): PhoneAgentInstallStep? =
+    when (componentId) {
+        null -> null
+        AgentInstaller.LINUX,
+        AgentInstaller.ESSENTIALS,
+        AgentInstaller.PYTHON,
+        AgentInstaller.AGENT_USER -> PhoneAgentInstallStep.Linux
+        AgentInstaller.AGENT_NODE -> PhoneAgentInstallStep.Runtime
+        AgentInstaller.AGENT_PASEO -> PhoneAgentInstallStep.Helper
+        "agent-$agentId" -> PhoneAgentInstallStep.Agent
+        else -> null
+    }
+
+/**
+ * True when an agent the phone's setup installed is present: its install already brought the shared parts (the Linux
+ * packages, Python, Node.js, the agent helper), so a next install adds only its own agent. A row still being read
+ * (Checking) or unavailable proves nothing, so the shared parts are then counted (the figure errs toward warning).
+ */
+public fun phoneSharedPartsInPlace(agents: List<PhoneAgentRow>): Boolean =
+    agents.any {
+        when (it.status) {
+            PhoneAgentStatus.Ready,
+            PhoneAgentStatus.SignInNeeded,
+            PhoneAgentStatus.PhoneCheck,
+            PhoneAgentStatus.Stopped,
+            PhoneAgentStatus.Limit -> true
+            PhoneAgentStatus.NotInstalled,
+            PhoneAgentStatus.Checking,
+            PhoneAgentStatus.Unavailable -> false
+        }
+    }
+
+/** Free space for an install: what it needs (with any shared parts still to add) and what this phone has. */
+public data class PhoneAgentSpace(val neededBytes: Long, val freeBytes: Long) {
+    public val short: Boolean
+        get() = freeBytes < neededBytes
+}
 
 public enum class PhoneAgentInstallFailure {
     Download,
