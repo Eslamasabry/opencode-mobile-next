@@ -665,6 +665,31 @@ class ChatsViewModelTest {
     }
 
     @Test
+    fun `the switcher's Allow once is the rows' own held answer, sent once after one window`() = runTest {
+        val (vm, answers) = asking(grants = true)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val row = vm.state.value.rightNow.single()
+        vm.allowSwitcherRequest(row.ref, "req1")
+        // One hold, seen in both places; the row cannot answer it a second time.
+        assertEquals(mapOf("req1" to HomeHeldReply.Allowed), vm.state.value.held)
+        assertEquals(mapOf("req1" to HomeHeldReply.Allowed), vm.state.value.switcher.held)
+        vm.answerPermission(row, false)
+        assertEquals(mapOf("req1" to HomeHeldReply.Allowed), vm.state.value.held)
+        // Undo on the row takes back the switcher's answer.
+        vm.undoAnswer(row)
+        assertEquals(emptyMap(), vm.state.value.switcher.held)
+        advanceTimeBy(ANSWER_HOLD_MS * 2)
+        runCurrent()
+        assertEquals(emptyList(), answers.sent)
+        // Not held twice: it leaves right after the one 3 s window.
+        vm.allowSwitcherRequest(row.ref, "req1")
+        advanceTimeBy(ANSWER_HOLD_MS + 1)
+        runCurrent()
+        assertEquals(listOf("req1 Once"), answers.sent)
+        assertEquals(emptyMap(), vm.state.value.switcher.held)
+    }
+
+    @Test
     fun `H3 Try again asks every connection that did not answer, then reads the list`() = runTest {
         val home = Home(listOf(source("main", main = true), source("termux").copy(unreachable = true)))
         val feed = Feed()

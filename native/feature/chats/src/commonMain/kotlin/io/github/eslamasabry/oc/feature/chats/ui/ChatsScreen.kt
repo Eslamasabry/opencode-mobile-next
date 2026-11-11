@@ -370,7 +370,12 @@ public fun ChatsScreen(
                     }
                 }
             }
-            val partial = state.incomplete.filterNot { name -> unreachable.any { it.name == name } }
+            // One place per server: a server with its own line, or the one opening (pill or failure card), is not
+            // named again here.
+            val partial =
+                state.incomplete.filterNot { name ->
+                    unreachable.any { it.name == name } || name == state.home.opening?.serverName
+                }
             if (partial.isNotEmpty()) {
                 item(key = "incomplete", contentType = "incomplete") {
                     Box(kitItemMotion()) {

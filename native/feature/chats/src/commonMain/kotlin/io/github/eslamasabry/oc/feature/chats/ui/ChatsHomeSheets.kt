@@ -24,6 +24,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ChatsMonitorStatus
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningPhase
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningUi
 import io.github.eslamasabry.oc.feature.chats.presentation.SwitcherSecret
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeHeldReply
 import io.github.eslamasabry.oc.feature.chats.presentation.ConnectionDiagnosis
 import io.github.eslamasabry.oc.feature.chats.presentation.DiagnosisAction
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi
@@ -233,10 +234,14 @@ private fun ServerSwitcher(
         Spacer(Modifier.height(Space.S3.dp))
     }
     val busy = switcher.switching != null
+    // A command is shown as the home rows show it: secrets masked, read left to right.
+    val mask = io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask()
     KitRowGroup(leadingTiles = true) {
         switcher.servers.forEach { server ->
             val ask = server.ask
-            val held = ask?.requestId != null && ask.requestId in switcher.held
+            val command = ask?.command?.let { io.github.eslamasabry.oc.ui.kit.text.KitBidi.ltr(mask(it)) }
+            val heldReply = ask?.requestId?.let { switcher.held[it] }
+            val held = heldReply != null
             val secretWords =
                 when (server.secret) {
                     SwitcherSecret.Password -> stringResource(Res.string.e7SetupPasswordRequired)
@@ -245,11 +250,19 @@ private fun ServerSwitcher(
                 }
             val words = buildList {
                 if (held)
-                    add(stringResource(Res.string.chatRequestAnswerAllowed) + (ask?.command?.let { " · $it" } ?: ""))
+                    add(
+                        stringResource(
+                            when (heldReply) {
+                                HomeHeldReply.Rejected -> Res.string.chatRequestAnswerRejected
+                                HomeHeldReply.AlwaysAllowed -> Res.string.chatRequestAlwaysOn
+                                else -> Res.string.chatRequestAnswerAllowed
+                            }
+                        ) + (command?.let { " · $it" } ?: "")
+                    )
                 else if (ask?.allowable == true && ask.command != null && secretWords == null)
                     add(
                         pluralStringResource(Res.plurals.kitNeedsYouSpan, 1, Numbers.format(1)).trimEnd().removeSuffix("·").trimEnd() +
-                            " · " + ask.command
+                            " · " + command
                     )
                 else add(
                     when (server.state) {

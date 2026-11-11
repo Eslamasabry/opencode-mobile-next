@@ -71,8 +71,9 @@ public data class ServerSwitcherUi(
     val switching: ProfileId? = null,
     /** Why the last switch did not happen; the sheet stays open to say it. */
     val failure: Failure? = null,
-    /** Request ids whose Allow once is held for a moment so a slip can be undone. */
-    val held: kotlinx.collections.immutable.ImmutableSet<String> = kotlinx.collections.immutable.persistentSetOf(),
+    /** Answers held for the home's undo window, by request id (the same hold the home rows use). */
+    val held: kotlinx.collections.immutable.ImmutableMap<String, HomeHeldReply> =
+        kotlinx.collections.immutable.persistentMapOf(),
 )
 
 /** Plain rules for the switcher's rows; `ServerSwitcherRulesTest` drives them. */

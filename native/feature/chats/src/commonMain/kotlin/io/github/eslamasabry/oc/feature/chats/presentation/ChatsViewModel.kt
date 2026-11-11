@@ -114,10 +114,6 @@ public class ChatsViewModel(
 
     private val switching = MutableStateFlow(Switching())
 
-    /** Allow once answers from the switcher that are held for the undo window, by request id. */
-    private val heldSwitcher = MutableStateFlow<Set<String>>(emptySet())
-    private val heldJobs = mutableMapOf<String, kotlinx.coroutines.Job>()
-
     /** The sheet-level failure of "Connections in this list": the person's choice could not be saved. */
     private val sourceFailure = MutableStateFlow<io.github.eslamasabry.oc.core.common.Failure?>(null)
 
@@ -130,10 +126,11 @@ public class ChatsViewModel(
 
     /**
      * H1: a permission answer waits [ANSWER_HOLD_MS] with Undo before it is sent (F: lib/state/delayed_answers.dart),
-     * by request id. The row to answer and the reply are kept beside the words the row shows.
+     * by request id. The conversation to answer and the reply are kept beside the words the row shows. The switcher's
+     * Allow once uses the same hold, so a request answered in either place is held once and shows Undo in both.
      */
     private val heldAnswers = MutableStateFlow<Map<String, HomeHeldReply>>(emptyMap())
-    private val heldRows = HashMap<String, Pair<ConversationRowUi, HomePermissionReply>>()
+    private val heldRows = HashMap<String, Pair<ConversationRef, HomePermissionReply>>()
     private val holdJobs = HashMap<String, kotlinx.coroutines.Job>()
 
     /** The row whose Always allow waits on its confirm. */
@@ -234,8 +231,8 @@ public class ChatsViewModel(
                         )
                 )
             }
-            .combine(heldSwitcher) { base, held ->
-                base.copy(switcher = base.switcher.copy(held = held.toImmutableSet()))
+            .combine(heldAnswers) { base, held ->
+                base.copy(switcher = base.switcher.copy(held = held.toImmutableMap()))
             }
             .stateIn(
                 viewModelScope,
@@ -354,11 +351,15 @@ public class ChatsViewModel(
         hold(row, if (allow) HomePermissionReply.Once else HomePermissionReply.Reject)
     }
 
-    /** Holds the answer for the undo window, then sends it once. A second tap on the same request does nothing. */
     private fun hold(row: ConversationRowUi, reply: HomePermissionReply) {
-        val id = row.permission?.requestId ?: return
+        hold(row.ref, row.permission?.requestId ?: return, reply)
+    }
+
+    /** Holds the answer for the undo window, then sends it once. A second tap on the same request does nothing. */
+    private fun hold(ref: ConversationRef, id: String, reply: HomePermissionReply) {
+        if (permissionAnswers.singleOrNull() == null) return
         if (id in heldRows || id in answers.value.first) return
-        heldRows[id] = row to reply
+        heldRows[id] = ref to reply
         heldAnswers.update {
             it + (id to
                 when (reply) {
@@ -376,14 +377,17 @@ public class ChatsViewModel(
 
     /** The undo window ended: the answer leaves now. */
     private fun release(id: String) {
-        val (row, reply) = heldRows.remove(id) ?: return
+        val (ref, reply) = heldRows.remove(id) ?: return
         holdJobs.remove(id)
-        sendAnswer(row, reply)
+        sendAnswer(ref, id, reply)
         heldAnswers.update { it - id }
     }
 
     override fun undoAnswer(row: ConversationRowUi) {
-        val id = row.permission?.requestId ?: return
+        undoHeld(row.permission?.requestId ?: return)
+    }
+
+    private fun undoHeld(id: String) {
         if (heldRows.remove(id) == null) return
         holdJobs.remove(id)?.cancel()
         heldAnswers.update { it - id }
@@ -427,15 +431,14 @@ public class ChatsViewModel(
         confirmingAlways.value = null
     }
 
-    private fun sendAnswer(row: ConversationRowUi, reply: HomePermissionReply) {
-        val permission = row.permission ?: return
+    private fun sendAnswer(ref: ConversationRef, requestId: String, reply: HomePermissionReply) {
         val port = permissionAnswers.singleOrNull() ?: return
-        if (permission.requestId in answers.value.first) return
-        answers.value = (answers.value.first + permission.requestId) to null
+        if (requestId in answers.value.first) return
+        answers.value = (answers.value.first + requestId) to null
         viewModelScope.launch {
-            val result = port.answer(row.ref, permission.requestId, reply)
+            val result = port.answer(ref, requestId, reply)
             answers.value =
-                (answers.value.first - permission.requestId) to
+                (answers.value.first - requestId) to
                     (result as? io.github.eslamasabry.oc.core.common.Outcome.Failed)?.failure
             feed.refresh()
         }
@@ -598,9 +601,9 @@ public class ChatsViewModel(
         val port = permissionAnswers.singleOrNull()
         val scope = appScope
         if (port != null && scope != null)
-            heldRows.values.toList().forEach { (row, reply) ->
-                val permission = row.permission ?: return@forEach
-                scope.launch { port.answer(row.ref, permission.requestId, reply) }
+            heldRows.toList().forEach { (id, held) ->
+                val (ref, reply) = held
+                scope.launch { port.answer(ref, id, reply) }
             }
         heldRows.clear()
         super.onCleared()
@@ -721,23 +724,13 @@ public class ChatsViewModel(
         nav.open(ServersRoute.Edit(profile))
     }
 
+    // The switcher's Allow once is the home's own held answer (one undo window, shared with the rows).
     override fun allowSwitcherRequest(ref: ConversationRef, requestId: String) {
-        val port = permissionAnswers.singleOrNull() ?: return
-        if (requestId in heldJobs || requestId in answers.value.first) return
-        heldSwitcher.update { it + requestId }
-        heldJobs[requestId] =
-            viewModelScope.launch {
-                kotlinx.coroutines.delay(SWITCHER_UNDO_WINDOW_MS)
-                port.answer(ref, requestId, HomePermissionReply.Once)
-                heldJobs.remove(requestId)
-                heldSwitcher.update { it - requestId }
-                feed.refresh()
-            }
+        hold(ref, requestId, HomePermissionReply.Once)
     }
 
     override fun undoSwitcherRequest(requestId: String) {
-        heldJobs.remove(requestId)?.cancel()
-        heldSwitcher.update { it - requestId }
+        undoHeld(requestId)
     }
 
     override fun openSwitcherRequest(ref: ConversationRef) {
@@ -938,8 +931,9 @@ public interface HomePermissionBindings {
     public val homePermissionAnswers: Set<HomePermissionAnswers>
 }
 
-/** F: lib/state/delayed_answers.dart: how long a permission answer waits with Undo before it is sent. */
+/**
+ * F: lib/state/delayed_answers.dart: how long a permission answer waits with Undo before it is sent. The one undo
+ * window for the home: a row's answers and the switcher's Allow once share it; the port answers at once (no second
+ * hold in the engine).
+ */
 internal const val ANSWER_HOLD_MS: Long = 3_000L
-
-/** How long the switcher's Allow once can be undone before it is sent (F: DelayedAnswers window, 3 s). */
-private const val SWITCHER_UNDO_WINDOW_MS: Long = 3_000
