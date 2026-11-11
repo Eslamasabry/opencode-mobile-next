@@ -317,7 +317,7 @@ class DockGeometryTest {
     fun `without shoulders the strip runs straight off the screen edge`() {
         val s = scene(412f)
         val o = DockOutline()
-        buildOutline(o, s.strip, null, 0f, 0f, 412f, shoulders = false)
+        buildOutline(o, s.strip, null, 0f, 412f, shoulders = false)
         assertEquals(412f, o.x[0], 0.01f)
         assertEquals(s.strip.top, o.y[0], 0.01f)
         assertEquals(412f, o.x[o.n - 1], 0.01f)
