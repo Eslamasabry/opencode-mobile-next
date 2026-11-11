@@ -656,6 +656,19 @@ internal fun panelBox(width: Float, edgeInset: Float, farInset: Float, strip: Do
 }
 
 /**
+ * The list's outer side (edge frame, dp) at growth [px]: out past the screen edge while the list is a strip's growth
+ * (so it grows from the edge as before), crossing the edge early, and standing [DockDims.GUTTER] in from it once the
+ * list is whole. It moves with the growth on its own spring (no second animation); past 1 it holds.
+ */
+internal fun listOuterSide(width: Float, px: Float): Float {
+    val s = (px * LIST_DETACH_RATE).coerceIn(0f, 1f)
+    return lerp(width + DockDims.OVERHANG, width - DockDims.GUTTER, s)
+}
+
+/** Growth at which the list has let go of the edge entirely (its outer side at the gutter): 1 / this. */
+private const val LIST_DETACH_RATE = 1.4f
+
+/**
  * Box B on its way to the list: the width follows [gx] (it may pass 1 once, the overshoot along the pull), the height
  * follows [gy] (a calm fill). B always holds A, so the body is one box at every step.
  */
@@ -996,12 +1009,18 @@ internal fun buildOutline(
     val top = if (panel) bTop else aTop
     val bottom = if (panel) bBottom else aBottom
     val radius = if (panel) bRadius else aRadius
-    val visible = edgeX - lo
+    // The list standing off the screen edge (see [listOuterSide]): a whole pane, closed on every side, no shoulders.
+    val detached = panel && bRight < edgeX - 0.5f
+    val visible = (if (detached) bRight else edgeX) - lo
     val r = min(radius, min(max(visible, 0f) / 2f, (bottom - top) / 2f)).coerceAtLeast(0f)
-    val ks = if (shoulders) min(shoulderReach, max(0f, visible - r)) else 0f
+    // The shoulders let go of the edge as the list comes away from it: full while it overhangs, none once it is level.
+    val keep = if (panel) ((bRight - edgeX) / DockDims.OVERHANG).coerceIn(0f, 1f) else 1f
+    val ks = if (shoulders) min(shoulderReach * keep, max(0f, visible - r)) else 0f
 
     // The top shoulder: from the screen edge (above) into the top edge.
-    if (ks > 0.5f) {
+    if (detached) {
+        o.add(bRight - r, top)
+    } else if (ks > 0.5f) {
         for (i in 0..FILLET_STEPS) {
             val t = -1f + 2f * i / FILLET_STEPS
             filletPoint(t, ks) { da, db -> o.add(edgeX - da, top - db) }
@@ -1025,7 +1044,12 @@ internal fun buildOutline(
     }
     o.line(lo, bottom - r)
     o.arc(lo + r, bottom - r, r, PI_F, HALF_PI)
-    if (ks > 0.5f) {
+    if (detached) {
+        o.line(bRight - r, bottom)
+        o.arc(bRight - r, bottom - r, r, HALF_PI, 0f)
+        o.line(bRight, top + r)
+        o.arc(bRight - r, top + r, r, 0f, -HALF_PI)
+    } else if (ks > 0.5f) {
         o.line(edgeX - ks, bottom)
         for (i in 0..FILLET_STEPS) {
             val t = 1f - 2f * i / FILLET_STEPS

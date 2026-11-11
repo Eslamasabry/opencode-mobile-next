@@ -5476,6 +5476,17 @@ class BuiltinLinux(private val context: Context) {
     val serverRunning: Boolean
         get() = serviceRunning(SERVER)
 
+    /**
+     * Posts the shared status row with the phone server's own words again, after the app's reply watch showed its
+     * working words there. False when no service of ours holds the row any more (the server is stopping, or its
+     * process outlived its service): the caller then takes its own row away, so no orphaned row stays behind.
+     */
+    fun repostStatusRow(): Boolean {
+        if (!StatusNotification.anyOwner()) return false
+        StatusNotification.refresh(context)
+        return true
+    }
+
     val port: Int?
         get() = servicePort(SERVER)
 

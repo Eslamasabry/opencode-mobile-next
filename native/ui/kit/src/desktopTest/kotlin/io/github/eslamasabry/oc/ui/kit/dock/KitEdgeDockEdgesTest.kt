@@ -40,7 +40,8 @@ class KitEdgeDockEdgesTest {
     /** The text nodes showing a ring's name (the strip's names, the list's rows, the swell's header). */
     private fun ComposeUiTest.names(): List<Pair<String, Rect>> =
         rings.flatMap { ring ->
-            onAllNodes(hasText(ring.name, substring = true), useUnmergedTree = true).fetchSemanticsNodes().map { ring.name to it.boundsInRoot }
+            (onAllNodes(hasText(ring.name, substring = true), useUnmergedTree = true).fetchSemanticsNodes() +
+                onAllNodes(hasText(dockTitleLine(ring.name), substring = true), useUnmergedTree = true).fetchSemanticsNodes()).map { ring.name to it.boundsInRoot }
         }.filter { (_, r) -> r.width > 0f && r.height > 0f }
 
     private fun ComposeUiTest.body(state: KitEdgeDockState): KitDockBody = runOnIdle { state.body() }
