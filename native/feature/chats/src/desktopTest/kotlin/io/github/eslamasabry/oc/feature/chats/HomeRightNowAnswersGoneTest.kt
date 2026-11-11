@@ -22,21 +22,23 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ConversationRowUi
 import io.github.eslamasabry.oc.feature.chats.presentation.RowStatus
 import io.github.eslamasabry.oc.feature.chats.presentation.RowTitle
 import io.github.eslamasabry.oc.feature.chats.ui.ChatsScreen
-import io.github.eslamasabry.oc.feature.chats.ui.answersShape
+import io.github.eslamasabry.oc.feature.chats.ui.answersGoneKey
+import io.github.eslamasabry.oc.feature.chats.ui.carriesAnswers
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 import kotlinx.collections.immutable.persistentListOf
 
 /**
  * P69 (device QA sweep A, 2026-11-11): after Allow once from a home row, the Right now card kept an empty band where
- * the answers had been. The panel is keyed on which rows carry answers, so it is built afresh when they go and never
- * keeps their height.
+ * the answers had been. The panel is built afresh when the last answers in it go, so it never keeps their height, and
+ * stands while another row in it still waits for an answer.
  */
 @OptIn(ExperimentalTestApi::class)
 class HomeRightNowAnswersGoneTest {
@@ -52,8 +54,15 @@ class HomeRightNowAnswersGoneTest {
     private val working = asking.copy(status = RowStatus.Running, permission = null)
 
     @Test
-    fun `P69 a row's answers going changes the panel's key`() {
-        assertNotEquals(answersShape(listOf(asking)), answersShape(listOf(working)))
+    fun `P69 the panel's key moves only when the last answers in it go`() {
+        val other = asking.copy(key = "other", ref = ConversationRef(ProfileId("p"), SessionId("s2")))
+        // Allow once on the only waiting row: the panel is rebuilt.
+        assertNotEquals(0, answersGoneKey(0, carriesAnswers(listOf(asking)), carriesAnswers(listOf(working))))
+        // Another row still waits (the person may be answering it): the panel stands.
+        assertEquals(0, answersGoneKey(0, carriesAnswers(listOf(asking, other)), carriesAnswers(listOf(working, other))))
+        // Answers arriving never rebuild it, nor rows with none coming and going.
+        assertEquals(0, answersGoneKey(0, carriesAnswers(listOf(working)), carriesAnswers(listOf(working, other))))
+        assertEquals(0, answersGoneKey(0, hadAnswers = false, hasAnswers = false))
     }
 
     @Test

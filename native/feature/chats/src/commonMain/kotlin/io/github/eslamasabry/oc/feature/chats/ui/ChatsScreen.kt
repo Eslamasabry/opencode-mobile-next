@@ -477,9 +477,9 @@ public fun ChatsScreen(
                     if (rightNow.isNotEmpty())
                         item(key = "right-now", contentType = "right-now") {
                             Box(kitItemMotion()) {
-                                // P69: the panel is built afresh when a row's answers come or go, so it never keeps the
-                                // height of answers that are gone (seen: a 55 dp empty band after Allow once).
-                                key(answersShape(rightNow)) {
+                                // P69: the panel is built afresh when the last answers in it go, so it never keeps
+                                // their height (seen: a 55 dp empty band after Allow once).
+                                key(rememberAnswersGoneKey(rightNow)) {
                                     KitRowPanel(
                                         label = stringResource(Res.string.chatsHomeRightNow),
                                         // A step of air under the chips, as above Recent, so the first label is not pressed up.
@@ -721,8 +721,8 @@ private fun BriefBlock(brief: BriefUi, words: HomeRowWords, mask: (String) -> St
         // On the gutter like the rows under it (its glyph sat on the screen's edge).
         // Headed and grouped like Right now and Recent, so the top group reads as part of the same list.
         if (brief.rows.isNotEmpty())
-            // P69: rebuilt when a row's answers come or go, as Right now.
-            key(answersShape(brief.rows)) {
+            // P69: rebuilt when the last answers in it go, as Right now.
+            key(rememberAnswersGoneKey(brief.rows)) {
                 KitRowPanel(label = stringResource(Res.string.teamProjectDigest)) {
                     brief.rows.forEach { row -> key(row.key) { ConversationRow(row, words, rowFlags(row, state), mask, actions) } }
                 }
@@ -779,11 +779,31 @@ private fun AlwaysAllowConfirm(row: ConversationRowUi?, mask: (String) -> String
 private fun rowTitleText(t: RowTitle): String = rowTitleWords(t)
 
 /**
- * The rows that carry answers under their words (a waiting permission, question or form). A panel is keyed on it (P69):
- * rows coming and going keep the panel and its height easing; answers going rebuild it.
+ * P69 (a workaround; the cause, most likely KitRowPanel's eased height under the shell's lookahead, is unproven): a
+ * panel's key, which moves on only when the last answers in it go (a waiting permission, question or form). Rebuilding
+ * a panel drops what its rows hold for the moment (an answer half tapped, an open row menu, a swipe), so the key never
+ * moves while any row in the panel still carries answers, nor when answers arrive: nobody is answering in it then.
  */
-internal fun answersShape(rows: List<ConversationRowUi>): List<String> =
-    rows.filter { it.permission != null || it.question != null || it.form != null }.map { it.key }
+internal fun answersGoneKey(key: Int, hadAnswers: Boolean, hasAnswers: Boolean): Int =
+    if (hadAnswers && !hasAnswers) key + 1 else key
+
+/** Whether any of [rows] carries answers under its words. */
+internal fun carriesAnswers(rows: List<ConversationRowUi>): Boolean =
+    rows.any { it.permission != null || it.question != null || it.form != null }
+
+private class AnswersGone {
+    var had = false
+    var key = 0
+}
+
+@Composable
+private fun rememberAnswersGoneKey(rows: List<ConversationRowUi>): Int {
+    val seen = remember { AnswersGone() }
+    val has = carriesAnswers(rows)
+    seen.key = answersGoneKey(seen.key, seen.had, has)
+    seen.had = has
+    return seen.key
+}
 
 /**
  * One conversation as A1's roomy row (KitRecentRow): the agent's bare mark, the title, one line of the last message
