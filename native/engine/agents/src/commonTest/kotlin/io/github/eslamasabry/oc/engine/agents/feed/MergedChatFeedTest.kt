@@ -22,6 +22,24 @@ class MergedChatFeedTest {
     private val other = ProfileId("p2")
 
     @Test
+    fun `a source of an agents server gives each row the agent that runs it`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val listing = MutableStateFlow(OpenCodeListing(sessions = listOf(session("one", "/root/projects/app", 5))))
+            val source =
+                OpenCodeChatFeedSource(
+                    feedProfile,
+                    "Phone agents",
+                    listing,
+                    agentOf = { "claude" to "Claude Code" },
+                )
+            val row = source.current().items.single()
+            assertEquals("claude", row.agentId)
+            assertEquals("Claude Code", row.agentLabel)
+            val plain = OpenCodeChatFeedSource(feedProfile, "Laptop", listing).current().items.single()
+            assertEquals(OPENCODE_AGENT_ID, plain.agentId)
+        }
+
+    @Test
     fun `B-NAV-030 merged rows sort needs-you then running then recent and equal ids from two sources stay apart`() =
         runTest(UnconfinedTestDispatcher()) {
             val one =

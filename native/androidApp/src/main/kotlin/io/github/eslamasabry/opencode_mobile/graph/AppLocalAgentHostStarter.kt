@@ -21,6 +21,7 @@ import io.github.eslamasabry.oc.engine.profiles.SecretEdit
 import io.github.eslamasabry.oc.engine.profiles.StoredProfile
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentHostStarter
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgents
+import io.github.eslamasabry.oc.feature.agents.hub.phoneInstalledAgents
 import io.github.eslamasabry.oc.protocol.paseo.gateway.PaseoProbeResult
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.agentsPhoneHelperProfile
@@ -61,6 +62,42 @@ class AppLocalAgentHostStarter(
                 is Outcome.Ok -> prepared.value
             }
         return connections.connect(id)
+    }
+
+    /**
+     * Cold start (Flutter built its agent sources from the phone profile with no visit to the Agents page): when an
+     * agent is installed and no "Phone agents" source is saved, starts the helper and saves that source, without
+     * connecting it or making it the active server. Ok(null) when nothing needed doing. Reads the install state only.
+     */
+    suspend fun adoptSource(): Outcome<ProfileId?> {
+        when (val warm = stores.warm()) {
+            is Outcome.Failed -> return warm
+            is Outcome.Ok -> Unit
+        }
+        val saved =
+            stores.profiles.profiles.value.any {
+                it.profile.backend == BackendKind.Paseo &&
+                    PhoneAgentRules.isHelperProfile(
+                        it.id.raw,
+                        (stores.prefs.get("oc.phoneAgentOwner.${it.id.raw}") as? PrefValue.Str)?.value,
+                    )
+            }
+        if (saved) return Outcome.Ok(null)
+        phone.refresh()
+        val state = phone.state.value
+        if (
+            !PhoneConversationRules.shouldAdopt(
+                state.available,
+                state.needsRestart,
+                phoneInstalledAgents(state).size,
+                alreadySaved = false,
+            )
+        )
+            return Outcome.Ok(null)
+        return when (val prepared = prepare(save = true, budgetMs = GATE_BUDGET_MS)) {
+            is Outcome.Failed -> prepared
+            is Outcome.Ok -> Outcome.Ok(prepared.value)
+        }
     }
 
     /**
