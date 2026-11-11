@@ -99,6 +99,7 @@ public class TeachingViewModel(private val hub: VoiceTeachingHub, private val na
         val tips = controller ?: return
         viewModelScope.launch {
             val result = tips.reset()
+            if (result is Outcome.Ok) hub.resetNudges()
             mutable.update {
                 it.copy(
                     resetFailed = result is Outcome.Failed,
