@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.*
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.agents.handoff.*
 import io.github.eslamasabry.oc.feature.handoff.presentation.*
@@ -26,7 +27,8 @@ public fun AgentHandoffScreen(state: AgentHandoffUi, actions: AgentHandoffAction
     val sourceReview = state.sourceReview
     val attempt = state.attempt
     val draft = sourceReview?.draft ?: attempt.draft
-    val reviewing = sourceReview != null || attempt.phase == HandoffPhase.Ready
+    val reviewing = attempt.phase == HandoffPhase.Ready
+    val page = state.page()
     val locked = state.busy || state.loading || attempt.phase == HandoffPhase.Uncertain
     val working = stringResource(Res.string.handoffNativeWorking)
     val disabled = if (locked) KitEnabled.Disabled(working) else KitEnabled.Enabled
@@ -40,6 +42,11 @@ public fun AgentHandoffScreen(state: AgentHandoffUi, actions: AgentHandoffAction
     LaunchedEffect(state.prompt) {
         if (field.text.toString() != state.prompt) field.setTextAndPlaceCursorAtEnd(state.prompt)
     }
+    // Back from Agents (the set-up), the list of ready agents must be read again.
+    LifecycleResumeEffect(page) {
+        if (page == HandoffPage.NoAgent) actions.refresh()
+        onPauseOrDispose {}
+    }
     KitScreen(
         topBar = {
             KitTopBar(
@@ -51,11 +58,10 @@ public fun AgentHandoffScreen(state: AgentHandoffUi, actions: AgentHandoffAction
             )
         },
         width = KitScreenWidth.Reading,
-        edges = KitScreenEdges.Bleed,
     ) {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
             if (state.loading) item { KitSkeletonRows(count = 3) }
-            if (!state.loading && !state.connected && sourceReview == null)
+            if (page == HandoffPage.Refused)
                 item {
                     KitStateView(
                         kind = KitStateKind.Calm,
@@ -67,7 +73,18 @@ public fun AgentHandoffScreen(state: AgentHandoffUi, actions: AgentHandoffAction
                                 stringResource(Res.string.handoffNativeRefresh),
                                 actions::refresh,
                             ),
+                        secondary =
+                            if (state.block == HandoffBlock.NotConfirmed)
+                                KitAction(
+                                    stringResource(Res.string.handoffNativeSetup),
+                                    actions::setup,
+                                )
+                            else null,
                     )
+                }
+            if (page == HandoffPage.Refused && sourceReview != null)
+                item {
+                    RecordDisclosure(sourceReview.draft.record.markdown)
                 }
             state.failure?.let { failure ->
                 item {
@@ -79,15 +96,8 @@ public fun AgentHandoffScreen(state: AgentHandoffUi, actions: AgentHandoffAction
                     )
                 }
             }
-            if (state.connected || sourceReview != null) {
+            if (state.connected) {
                 if (state.directory.isNotBlank()) item { KitText(state.directory) }
-                if (sourceReview != null)
-                    item {
-                        KitNotice(
-                            blockWords(state.block)
-                                ?: stringResource(Res.string.handoffNativeSourceReviewOnly)
-                        )
-                    }
                 if (state.links.isNotEmpty())
                     item {
                         KitRowGroup(label = stringResource(Res.string.handoffNativeLinks)) {
@@ -126,34 +136,36 @@ public fun AgentHandoffScreen(state: AgentHandoffUi, actions: AgentHandoffAction
                             }
                         }
                     }
-                if (sourceReview == null && attempt.phase == HandoffPhase.Idle) {
+                if (page == HandoffPage.NoAgent)
+                    item {
+                        KitStateView(
+                            kind = KitStateKind.Calm,
+                            title = stringResource(Res.string.handoffNativeNoReadyTitle),
+                            body = stringResource(Res.string.handoffNativeNoTargets),
+                            primary =
+                                KitAction(
+                                    stringResource(Res.string.handoffNativeSetup),
+                                    actions::setup,
+                                ),
+                        )
+                    }
+                if (page == HandoffPage.Choose) {
                     item { KitNotice(stringResource(Res.string.handoffNativeExplanation)) }
-                    if (state.choices.isEmpty())
-                        item {
-                            KitNotice(stringResource(Res.string.handoffNativeNoTargets))
-                            KitButton(
-                                stringResource(Res.string.handoffNativeSetup),
-                                actions::setup,
-                                role = KitButtonRole.Secondary,
-                                enabled = disabled,
+                    item {
+                        KitRowGroup(label = stringResource(Res.string.handoffNativeChoose)) {
+                            for (choice in state.choices) KitRow(
+                                title = choice.agent,
+                                supporting = choice.model,
+                                selected = choice.id == state.selected,
+                                enabled = !locked && choice.issue == null,
+                                disabledReason =
+                                    if (choice.issue == HandoffChoiceIssue.PhoneCheck)
+                                        stringResource(Res.string.handoffNativePhoneCheck)
+                                    else working,
+                                onClick = { actions.select(choice.id) },
                             )
                         }
-                    else
-                        item {
-                            KitRowGroup(label = stringResource(Res.string.handoffNativeChoose)) {
-                                for (choice in state.choices) KitRow(
-                                    title = choice.agent,
-                                    supporting = choice.model,
-                                    selected = choice.id == state.selected,
-                                    enabled = !locked && choice.issue == null,
-                                    disabledReason =
-                                        if (choice.issue == HandoffChoiceIssue.PhoneCheck)
-                                            stringResource(Res.string.handoffNativePhoneCheck)
-                                        else working,
-                                    onClick = { actions.select(choice.id) },
-                                )
-                            }
-                        }
+                    }
                     item {
                         KitButton(
                             stringResource(Res.string.handoffNativeReview),
@@ -187,22 +199,20 @@ public fun AgentHandoffScreen(state: AgentHandoffUi, actions: AgentHandoffAction
                             multilineLines = 5..12,
                         )
                     }
+                    item { RecordDisclosure(draft?.record?.markdown.orEmpty()) }
                     item {
-                        KitRowGroup(label = stringResource(Res.string.handoffNativeRecord)) {
-                            KitText(draft?.record?.markdown.orEmpty())
-                        }
+                        val target = state.choices.firstOrNull { it.id == state.selected }?.agent
+                        KitButton(
+                            if (target != null)
+                                stringResource(Res.string.handoffNativeContinueWith, target)
+                            else stringResource(Res.string.handoffNativeSend),
+                            actions::send,
+                            enabled =
+                                if (state.prompt.isBlank() || locked)
+                                    KitEnabled.Disabled(working)
+                                else KitEnabled.Enabled,
+                        )
                     }
-                    if (sourceReview == null)
-                        item {
-                            KitButton(
-                                stringResource(Res.string.handoffNativeSend),
-                                actions::send,
-                                enabled =
-                                    if (state.prompt.isBlank() || locked)
-                                        KitEnabled.Disabled(working)
-                                    else KitEnabled.Enabled,
-                            )
-                        }
                 }
                 if (
                     attempt.phase == HandoffPhase.Complete ||
@@ -277,3 +287,16 @@ private fun failureText(kind: HandoffFailureKind): String =
             else -> Res.string.handoffNativeFailed
         }
     )
+
+/** The record is supporting detail: folded by default, never the main content. */
+@Composable
+private fun RecordDisclosure(markdown: String) {
+    var open by remember { mutableStateOf(false) }
+    KitExpandRow(
+        title = stringResource(Res.string.handoffNativeWhatHandedOver),
+        expanded = open,
+        onExpandedChange = { open = it },
+    ) {
+        KitText(markdown)
+    }
+}
