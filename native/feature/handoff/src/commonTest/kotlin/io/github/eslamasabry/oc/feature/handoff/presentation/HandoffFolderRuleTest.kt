@@ -42,6 +42,14 @@ class HandoffFolderRuleTest {
     }
 
     @Test
+    fun `the projects folder itself is a valid working folder, a sub-folder too`() {
+        assertTrue(HandoffFolderRule.isPhoneProject("/root/projects"))
+        assertTrue(HandoffFolderRule.isPhoneProject("/root/projects/app"))
+        assertFalse(HandoffFolderRule.isPhoneProject("/root"))
+        assertFalse(HandoffFolderRule.isPhoneProject("/root/projects/"+"../x"))
+    }
+
+    @Test
     fun `only the phone itself counts as a phone endpoint`() {
         assertTrue(HandoffFolderRule.isPhoneEndpoint("http", "127.0.0.1"))
         assertTrue(HandoffFolderRule.isPhoneEndpoint("https", "localhost"))

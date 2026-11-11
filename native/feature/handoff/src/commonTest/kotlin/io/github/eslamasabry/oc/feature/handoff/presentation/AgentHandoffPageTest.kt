@@ -61,4 +61,23 @@ class AgentHandoffPageTest {
             )
         assertEquals(HandoffPage.Active, ui.page())
     }
+
+    @Test
+    fun `a refusal with no known reason or unconfirmed agents offers Agents`() {
+        assertEquals(true, AgentHandoffUi(loading = false).offersAgents())
+        assertEquals(
+            true,
+            AgentHandoffUi(loading = false, block = HandoffBlock.NotConfirmed).offersAgents(),
+        )
+    }
+
+    @Test
+    fun `a refusal about the conversation itself does not offer Agents`() {
+        for (block in
+            listOf(
+                HandoffBlock.SourceOnComputer,
+                HandoffBlock.FolderNotOnPhone,
+                HandoffBlock.FolderUnknown,
+            )) assertEquals(false, AgentHandoffUi(loading = false, block = block).offersAgents())
+    }
 }

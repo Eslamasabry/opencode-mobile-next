@@ -3,6 +3,7 @@
   <string name="handoffNativeWorking">جارٍ العمل…</string>
   <string name="handoffNativeUnavailable">نقل المحادثة غير متاح هنا</string>
   <string name="handoffNativeUnavailableBody">افتح محادثة في مشروع على هذا الهاتف. يجب أن يتحقق التطبيق من أن الوكيلين يستطيعان الوصول إلى المشروع نفسه.</string>
+  <string name="handoffNativeNotStartedBody">تعذّر بدء نقل المحادثة من هنا الآن. افتح صفحة الوكلاء للتأكد من تثبيت وكيل وجاهزيته على هذا الهاتف، ثم حاول مجدداً.</string>
   <string name="handoffNativeRefresh">التحقق مجدداً</string>
   <string name="handoffNativeFailed">تعذر إكمال نقل المحادثة. تحقق من الاتصال وحاول مجدداً.</string>
   <string name="handoffNativeLinks">المحادثات المرتبطة</string>

@@ -3,6 +3,7 @@
   <string name="handoffNativeWorking">Working…</string>
   <string name="handoffNativeUnavailable">Handoff is unavailable here</string>
   <string name="handoffNativeUnavailableBody">Open a conversation in a project on this phone. The app must verify that both agents can access the same project.</string>
+  <string name="handoffNativeNotStartedBody">Handoff could not start from this conversation just now. Open Agents to check that an agent is installed and ready on this phone, then try again.</string>
   <string name="handoffNativeRefresh">Refresh</string>
   <string name="handoffNativeFailed">The handoff could not finish. Check the connection and try again.</string>
   <string name="handoffNativeLinks">Linked conversations</string>
