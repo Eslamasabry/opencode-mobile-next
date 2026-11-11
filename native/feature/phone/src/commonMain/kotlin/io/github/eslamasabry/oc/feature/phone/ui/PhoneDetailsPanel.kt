@@ -70,7 +70,10 @@ internal fun PhoneInstalledPanel(state: ThisPhoneUi, actions: ThisPhoneActions) 
             title = stringResource(Res.string.thisPhoneInstalled),
             expanded = state.installedOpen,
             modifier = Modifier.testTag("this-phone-installed"),
-            supporting = installedSentence(names),
+            // Try again visibly tries: the line says "Checking…" while the read runs.
+            supporting =
+                if (reading.loading) stringResource(Res.string.r40PhoneChecking)
+                else installedSentence(names),
             onExpandedChange = actions::showInstalled,
             leading = KitIcons.check,
         ) {
@@ -87,7 +90,7 @@ internal fun PhoneInstalledPanel(state: ThisPhoneUi, actions: ThisPhoneActions) 
             }
         }
     }
-    reading.inventoryFailure?.let {
+    reading.inventoryFailure?.takeUnless { reading.loading }?.let {
         KitErrorNotice(
             message = stringResource(Res.string.r40PhoneInventoryFailed),
             failure = it,

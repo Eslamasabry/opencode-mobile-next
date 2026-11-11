@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.phone.presentation
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.Redacted
+import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.StateFlow
 
@@ -63,4 +64,20 @@ public interface PhoneDetailsSource {
     public suspend fun refreshLog()
 
     public suspend fun connect(): Outcome<Unit>
+}
+
+/**
+ * When This phone reads what is installed again. The check runs inside Linux, which runs one phone
+ * task at a time: a check refused because another task held that slot (Add tools' own check, a git
+ * read, an agent probe) is not a failure, so the page keeps saying "Checking…" and asks again, up to
+ * [ATTEMPTS] reads in all. Any other failure gets the one second read it always had.
+ */
+public object InstalledInventoryRetry {
+    public const val ATTEMPTS: Int = 5
+    public const val PAUSE_MS: Long = 1_500
+
+    /** Whether to read again after the [attempt]-th read (1-based) failed with [failure]. */
+    public fun again(attempt: Int, failure: Failure): Boolean =
+        attempt < ATTEMPTS &&
+            (attempt == 1 || (failure as? Failure.Runtime)?.problem == RuntimeProblem.SlotBusy)
 }

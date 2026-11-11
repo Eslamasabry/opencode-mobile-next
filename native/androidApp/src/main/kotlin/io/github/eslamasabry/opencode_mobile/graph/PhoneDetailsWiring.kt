@@ -30,6 +30,7 @@ import io.github.eslamasabry.oc.engine.transcript.turnfacts.ReplyTimingState
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.on
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneDetailsSource
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneDetailsUi
+import io.github.eslamasabry.oc.feature.phone.presentation.InstalledInventoryRetry
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneHistoryInfo
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneHistoryPhase
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneProotMode
@@ -277,10 +278,15 @@ class NativePhoneDetails(
             return
         }
         var inventory = setup.installedInventory()
-        if (inventory is Outcome.Failed) {
-            delay(1_500)
+        var attempt = 1
+        while (
+            inventory is Outcome.Failed &&
+                InstalledInventoryRetry.again(attempt, inventory.failure)
+        ) {
+            delay(InstalledInventoryRetry.PAUSE_MS)
             if (!visible || revision != viewRevision) return
             inventory = setup.installedInventory()
+            attempt++
         }
         if (!visible || revision != viewRevision) return
         when (val result = inventory) {
