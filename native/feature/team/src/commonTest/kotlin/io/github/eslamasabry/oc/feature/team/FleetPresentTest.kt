@@ -93,6 +93,10 @@ class FleetPresentTest {
         assertEquals(FleetHomeKind.Ready, ui.kind)
         assertEquals(listOf("r-ask", "r-work"), ui.rows.map { it.id })
         assertEquals("Keep drafts in SQLite?", ui.rows.first().question)
+        // The row opens its question's Gate sheet; a task with no question opens nothing.
+        assertEquals("q-1", ui.rows.first().gateId)
+        assertNull(ui.rows.last().gateId)
+        assertFalse(ui.canGiveTask)
         assertEquals(FleetMark.NeedsYou, ui.rows.first().mark)
         assertEquals(FleetMark.Working, ui.rows.last().mark)
         // A question with no listed task is a row of its own; a review that is ready is not a question.
@@ -103,6 +107,13 @@ class FleetPresentTest {
         assertEquals(1, ui.agents?.waiting)
         assertEquals(0.5, ui.costToday)
         assertEquals(listOf("app"), ui.projects.map { it.id })
+    }
+
+    @Test
+    fun a_team_that_takes_messages_offers_to_give_it_a_task() {
+        val ui = FleetPresent.home(config, ready(FleetSnapshot(), FleetCapabilities.FRONT), now)
+        assertTrue(ui.canGiveTask)
+        assertFalse(ui.readOnly)
     }
 
     @Test

@@ -90,6 +90,8 @@ public data class FleetHomeUi(
     val readAtMs: Long? = null,
     /** The phone can only watch: no control is on (Dart `teamUiReadOnlyBody`). */
     val readOnly: Boolean = false,
+    /** The team takes a task from the phone (Dart `canStart`: `controlMessage` and data read): "Give the team a task". */
+    val canGiveTask: Boolean = false,
     /** Something waits for the person; answering from the phone is not here yet, so the page says where. */
     val needsYou: Boolean = false,
     val questions: ImmutableList<FleetQuestionRow> = persistentListOf(),
@@ -209,6 +211,7 @@ public object FleetPresent {
             stale = stale,
             readAtMs = fleet.refreshedAtMs,
             readOnly = !fleet.capabilities.anyControl,
+            canGiveTask = fleet.capabilities.controlMessage,
             needsYou = gates.isNotEmpty(),
             questions = loose.map { FleetQuestionRow(it.id, it.title, it.createdAtMs) }.toImmutableList(),
             rows = (open + shown).toImmutableList(),

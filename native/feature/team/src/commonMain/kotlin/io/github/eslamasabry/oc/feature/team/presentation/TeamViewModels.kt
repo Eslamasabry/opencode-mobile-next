@@ -170,6 +170,10 @@ public class TeamHomeViewModel(
         nav.open(TeamRoute.Gate(route.profileId, gateId))
     }
 
+    override fun startRun() {
+        nav.open(TeamRoute.StartRun(route.profileId))
+    }
+
     @AssistedFactory
     @ManualViewModelAssistedFactoryKey
     @ContributesIntoMap(AppScope::class)

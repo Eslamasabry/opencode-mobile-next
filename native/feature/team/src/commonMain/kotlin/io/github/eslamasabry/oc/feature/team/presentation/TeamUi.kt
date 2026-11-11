@@ -121,6 +121,9 @@ public interface TeamHomeActions : TeamIntroActions {
 
     /** A computer's team: a question or a stopped task opens its Gate sheet. */
     public fun openGate(gateId: String) {}
+
+    /** A computer's team: "Give the team a task" opens Start a run. */
+    public fun startRun() {}
 }
 
 /**
