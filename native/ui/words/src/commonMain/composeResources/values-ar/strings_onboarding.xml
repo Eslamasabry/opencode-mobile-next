@@ -258,6 +258,7 @@
     <string name="phoneSetupPreflightMayBeSlow">قد يكون بطيئًا على هذا الهاتف، الذي تتوفّر فيه ذاكرة بسعة %1$s ميغابايت.</string>
     <string name="phoneSetupPreflightLowSpaceHeadline">لا توجد مساحة كافية</string>
     <string name="phoneSetupPreflightLowSpaceBody">حرّر نحو %1$s على هذا الهاتف، ثم عد لإكمال الإعداد.</string>
+    <string name="phoneSetupPreflightSpaceNumbers">يحتاج الإعداد إلى نحو %1$s من المساحة الفارغة. المتوفر على هذا الهاتف %2$s.</string>
     <string name="phoneSetupPreflightOpenStorage">فتح إعدادات التخزين</string>
     <string name="phoneSetupOpenWelcomeShowProgress">عرض التقدّم</string>
     <string name="workLoadingLabel">جارٍ التحميل</string>

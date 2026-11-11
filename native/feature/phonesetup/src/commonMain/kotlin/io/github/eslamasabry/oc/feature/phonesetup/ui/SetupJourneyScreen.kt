@@ -249,6 +249,13 @@ private fun StartHero(state: SetupJourneyUi, actions: SetupJourneyActions) {
                 if (!blocked) KitText(stringResource(Res.string.phoneSetupStartSteps, time), role = TypeRole.Label)
                 includes?.let { KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary) }
                 if (check is SetupPreflightResult.MayBeSlow) KitText(stringResource(Res.string.phoneSetupPreflightMayBeSlow, Numbers.format(check.totalMemoryMb)), role = TypeRole.Secondary)
+                state.spaceTight?.let { (need, free) ->
+                    KitText(
+                        stringResource(Res.string.phoneSetupPreflightSpaceNumbers, journeySize(need), journeySize(free)),
+                        role = TypeRole.Secondary,
+                        tone = TextTone.Secondary,
+                    )
+                }
                 if (state.storageUnopened) KitErrorNotice(stringResource(Res.string.r40SetupStorageUnopened))
                 if (state.failure != null) KitErrorNotice(stringResource(Res.string.r40SetupCouldNotCheck),
                     retry = KitLineAction(stringResource(Res.string.r40SetupRetry), actions::retry))

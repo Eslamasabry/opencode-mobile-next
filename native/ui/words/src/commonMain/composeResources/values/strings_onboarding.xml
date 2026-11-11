@@ -246,6 +246,7 @@
     <string name="phoneSetupPreflightMayBeSlow">It may be slow on this phone, which has %1$s MB of memory.</string>
     <string name="phoneSetupPreflightLowSpaceHeadline">Not enough free space</string>
     <string name="phoneSetupPreflightLowSpaceBody">Free about %1$s on this phone, then come back to set this up.</string>
+    <string name="phoneSetupPreflightSpaceNumbers">Set-up needs about %1$s free. This phone has %2$s.</string>
     <string name="phoneSetupPreflightOpenStorage">Open Storage settings</string>
     <string name="phoneSetupOpenWelcomeShowProgress">Show progress</string>
     <string name="workLoadingLabel">Loading</string>
