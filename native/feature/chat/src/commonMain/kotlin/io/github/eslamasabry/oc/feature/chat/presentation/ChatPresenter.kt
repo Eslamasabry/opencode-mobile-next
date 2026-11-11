@@ -38,6 +38,7 @@ import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentMap
+import kotlinx.collections.immutable.toPersistentSet
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -154,6 +155,7 @@ public class ChatPresenter(
     private val local =
         MutableStateFlow(
             ChatLocal(
+                withdrawn = world.withdrawnPrompts().toPersistentSet(),
                 arrival =
                     if (focusComposer || landOnFailure)
                         PendingArrival(nextId++, focusComposer, landOnFailure)
@@ -719,7 +721,10 @@ public class ChatPresenter(
             if (!asked || !SteerWaitRules.unreadAfterStop(world.transcript.value.rows, promptKey)) return@launch
             val sent = world.sendAgain(words.trim())
             if (sent is Outcome.Failed) local.update { it.copy(actionFailure = sent.failure) }
-            else local.update { it.copy(withdrawn = it.withdrawn.add(promptKey)) }
+            else {
+                local.update { it.copy(withdrawn = it.withdrawn.add(promptKey)) }
+                world.rememberWithdrawn(promptKey)
+            }
         }
     }
 

@@ -23,6 +23,15 @@ internal fun registerStateKeys(scope: ProfileScope) {
     scope.apply {
         register(ReaderPreferencesStore.SHAPE)
         register(SessionPinStore.SHAPE)
+        register(
+            KeyShape(
+                io.github.eslamasabry.oc.engine.connection.adopted.AdoptedChatKeys.WITHDRAWN_PROMPTS_PREFIX,
+                KeyScope.Profile,
+                PrefType.StrList,
+                ":engine:connection",
+                "withdrawn copies left out",
+            )
+        )
         for ((prefix, owner) in
             listOf(
                 "oc.consumptionBudgets." to ":engine:integrations-usage",

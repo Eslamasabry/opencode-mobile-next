@@ -226,6 +226,15 @@ public interface ChatWorld {
     public suspend fun withdrawNote(text: String): Boolean = false
 
     /**
+     * C6: the row keys ("prompt:<id>") of this conversation's copies that were stopped and sent again, remembered
+     * across restarts. Empty when this build keeps no memory.
+     */
+    public fun withdrawnPrompts(): Set<String> = emptySet()
+
+    /** Remembers that the copy under [promptKey] was stopped and sent again (bounded, per server, swept with it). */
+    public suspend fun rememberWithdrawn(promptKey: String) {}
+
+    /**
      * C6 (Flutter `MidTurnPromptGateway.midTurnPrompt`): what a message sent while the agent works does to the running
      * turn, for gateways whose agents never hold one. Null: this server steers by capability, or the agent is not
      * known yet.
