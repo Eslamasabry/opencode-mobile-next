@@ -15,6 +15,7 @@ import io.github.eslamasabry.oc.ui.design.style.SurfaceDecoration
 import io.github.eslamasabry.oc.ui.design.style.SurfaceRequest
 import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
 import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import kotlin.math.exp
 import kotlin.math.roundToInt
 
 /*
@@ -69,7 +70,27 @@ public data class LiquidRecipe(
     val depth: Boolean = false,
     /** How much of the pane's Glass tint lies over the backdrop at least ([LiquidEdge.faceTint] may thicken it). */
     val tint: Float = .2f,
+    /** What the glass holds back of the light and the colour behind a line of words ([LiquidHold]). */
+    val hold: LiquidHold = LiquidHold.Off,
 )
+
+/**
+ * The light and the colour a pane holds back inside its lens so the words on it read over a bright or saturated thing
+ * behind it (docs/designs/glass-in-the-kit.md "words on glass"). [knee]: the luminance knee, [LiquidJoin.held]
+ * (past [LiquidJoin.KNEE] the glass keeps [LiquidJoin.KNEE_SLOPE] of the light). [chroma]: the most colour the glass
+ * lets through, 0 = no limit: a colour's chroma (largest channel minus smallest, 0-1) is left alone up to
+ * [CHROMA_FREE] of this, then eases to this as the colour gets stronger ([LiquidEdge.heldRgb]), the light unchanged,
+ * so a pure green held to .61 of its light by the knee is also a muted green, and a disc of it has no ring. The rim,
+ * where content must show, keeps its colour.
+ */
+public data class LiquidHold(val knee: Boolean, val chroma: Float) {
+    public companion object {
+        public val Off: LiquidHold = LiquidHold(knee = false, chroma = 0f)
+
+        /** The share of the chroma limit up to which colour is left alone. */
+        public const val CHROMA_FREE: Float = .4f
+    }
+}
 
 public object LiquidEdge {
     /** The rim the lens bends in on a large pane: at most this many dp ... */
@@ -91,6 +112,9 @@ public object LiquidEdge {
 
     /** How much colour the glass lifts from what lies behind it (vibrancy; the library's own is 1.5). */
     public const val SATURATION: Float = 1.6f
+
+    /** The most colour a menu or a sheet lets through under its words ([LiquidHold.chroma]); 0: no limit (item 3 sets it). */
+    public const val HOLD_CHROMA: Float = 0f
 
     /** How far the glass presses the backdrop's contrast together (1 keeps it): lightly, so the content shows. */
     public const val PRESS: Float = 1f
@@ -118,20 +142,20 @@ public object LiquidEdge {
 
     /**
      * The menu's glass as the edge dock's swell wears it: the dock grows out of its strip towards this (blur 6 dp dark,
-     * 3 light), then towards the sheet's frost when its list is out ([dockRecipe]). Menus themselves frost at 12 dp
-     * ([recipe]); the dock's strip and swell keep what they were (2026-11-11, "the dock's list frosts as a sheet does":
-     * only the list moved).
+     * 3 light, no hold), then towards the sheet's frost when its list is out ([dockRecipe]). Menus themselves frost at
+     * 12 dp ([recipe]); the dock's strip and swell keep what they were (2026-11-11, "the dock's list frosts as a
+     * sheet does": only the list moved).
      */
     public fun swellRecipe(dark: Boolean, look: GlassLookPreset = GlassLooks.Glossy): LiquidRecipe =
-        recipe(LiquidRole.Menu, dark, look).copy(blurDp = if (dark) 6f else 3f)
+        recipe(LiquidRole.Menu, dark, look).copy(blurDp = if (dark) 6f else 3f, hold = LiquidHold.Off)
 
     private fun baseRecipe(role: LiquidRole, dark: Boolean): LiquidRecipe {
         val lift = if (dark) -PRESS_LIFT_DARK else PRESS_LIFT_LIGHT
         // Crisp edges (owner 2026-11-09, "crisper glossy glass"): no soft shadow halo under any pane; the 1 dp rim light
         // and the specular set it off what lies behind it.
         @Suppress("UNUSED_PARAMETER")
-        fun r(blur: Float, refraction: Float, shadow: Float, tintDark: Float, tintLight: Float, rimMax: Float = RIM_MAX_DP, share: Float = RIM_SHARE, depth: Boolean = false) =
-            LiquidRecipe(SATURATION, PRESS, lift, blur, refraction, NO_SHADOW, rimMax, share, depth, if (dark) tintDark else tintLight)
+        fun r(blur: Float, refraction: Float, shadow: Float, tintDark: Float, tintLight: Float, rimMax: Float = RIM_MAX_DP, share: Float = RIM_SHARE, depth: Boolean = false, hold: LiquidHold = LiquidHold.Off) =
+            LiquidRecipe(SATURATION, PRESS, lift, blur, refraction, NO_SHADOW, rimMax, share, depth, if (dark) tintDark else tintLight, hold)
         // The blur is cut (owner 2026-11-11, docs/designs/liquid-merge-one-body.md "The material": "I think we added too
         // much blur. Cut the blur and leave the saturation as is."): the bars 6 to 3 dp, the message box 4 to 2, menus
         // 12 to 6 (light 6 to 3), the pills and chips 2 to 1. Sheets keep theirs. Bright content behind joined glass is
@@ -141,15 +165,40 @@ public object LiquidEdge {
             // the rim still bends it. The dock at rest is a bar (dockRecipe mixes it towards a menu as it grows).
             LiquidRole.Bar, LiquidRole.Dock -> r(3f, 34f, .14f, .18f, .12f)
             LiquidRole.Composer -> r(2f, 34f, .16f, .20f, .18f)
-            LiquidRole.Sheet -> r(12f, 48f, 0f, .22f, .14f, rimMax = 30f)
-            // Menus frost as sheets do (words on glass 3, 2026-11-11: the page's rows and a dark bubble behind a menu's rows
-            // read as lines and as a highlighted row at 6 dp dark / 3 dp light).
-            LiquidRole.Menu -> r(12f, 48f, .18f, .20f, .10f, rimMax = 26f)
+            // Sheets and menus hold back the light and the colour behind their words (LiquidHold). Both frost at 12 dp
+            // (menus 6 dark / 3 light until 2026-11-11 "words on glass 3": the page's rows and a dark bubble behind a
+            // menu's rows read as lines and as a highlighted row at that blur).
+            LiquidRole.Sheet -> r(12f, 48f, 0f, .22f, .14f, rimMax = 30f, hold = LiquidHold(true, HOLD_CHROMA))
+            LiquidRole.Menu -> r(12f, 48f, .18f, .20f, .10f, rimMax = 26f, hold = LiquidHold(true, HOLD_CHROMA))
             // Small pills (the jump pill, the chips over the message box) are calm glass: a narrow rim and a light bend,
             // no lens to the middle (owner 2026-11-08: the jump pill's lens read swirly over text).
             LiquidRole.Pill, LiquidRole.Status -> r(1f, 12f, .16f, .18f, .28f, rimMax = 12f, share = .28f)
             LiquidRole.Action -> r(1f, 26f, .22f, .55f, .62f, rimMax = 40f, share = .5f, depth = true)
         }
+    }
+
+    /**
+     * [rgb] (0-1 each, the backdrop after the colour controls) as the glass's [hold] leaves it: the light past the knee
+     * held ([LiquidJoin.held]; under dark ink the dark end lifted), then the colour that is left limited: a chroma
+     * above `CHROMA_FREE * cap` eases to [LiquidHold.chroma] (`t + (cap - t) * (1 - exp(-(c - t) / (cap - t)))`), as far
+     * as [inside] says (0 in the rim's outer half, 1 from its inner end: the rim keeps its colour). The light is the
+     * knee's whatever the colour. The shaders do this per pixel with the same formula; this is the reference they are
+     * tested against.
+     */
+    public fun heldRgb(rgb: FloatArray, lightInk: Boolean, hold: LiquidHold, inside: Float = 1f): FloatArray {
+        if (!hold.knee) return rgb.copyOf()
+        val lum = 0.213f * rgb[0] + 0.715f * rgb[1] + 0.072f * rgb[2]
+        val light = if (lightInk) lum else 1f - lum
+        val held = LiquidJoin.held(lum, lightInk)
+        val heldLight = if (lightInk) held else 1f - held
+        val scale = heldLight / maxOf(light, 0.0001f)
+        val scaled = FloatArray(3) { i -> if (lightInk) rgb[i] * scale else 1f - (1f - rgb[i]) * scale }
+        val c = scaled.max() - scaled.min()
+        val cap = hold.chroma
+        val t = LiquidHold.CHROMA_FREE * cap
+        val limited = if (cap > 0f && c > t) (t + (cap - t) * (1f - exp(-(c - t) / (cap - t)))) / c else 1f
+        val f = 1f + (limited - 1f) * inside.coerceIn(0f, 1f)
+        return FloatArray(3) { i -> (held + (scaled[i] - held) * f).coerceIn(0f, 1f) }
     }
 
     /**
@@ -192,6 +241,7 @@ public object LiquidEdge {
             rimShare = m(from.rimShare, to.rimShare),
             depth = if (f < .5f) from.depth else to.depth,
             tint = m(from.tint, to.tint),
+            hold = if (f < .5f) from.hold else to.hold,
         )
     }
 

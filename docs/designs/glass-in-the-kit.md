@@ -684,3 +684,14 @@ the menu's rows come in (`joinedFrost`, the drop's `content` 0 to 1, linear, no 
 join's own band as before), and the lens pass's resolution follows the mixed blur. So the bar's half of the body frosts at
 12 dp while a menu hangs from it (a departure from "no change to bars": it is the one frost of one body); a join with the
 jump pill (blur 1) is untouched, since only a drop frosted more than its body (the menu) moves the body's frost.
+
+### As built: 2. The knee reaches plain panes
+
+The vendored library's pane takes effects: no fork is needed. `AndroidLiquidGlass.pane` adds a runtime-shader effect after
+the lens (`runtimeShaderEffect("OcHold", LiquidHoldShader.SOURCE, "content")`) when `recipe.hold.knee` (the Menu and Sheet
+roles; `LiquidHold`). It is the join shader's knee line for line (`kneeOf`: polarity by ink, following the words' flip),
+written once in `KitLiquidHold.kt` as AGSL/SkSL; every declared uniform (`knee`, `hold`, `box`, `corner`, `cc`) is set in
+every effect run (`KitLiquidHoldShaderTest` compares the declared names with the set ones, for this shader and the join
+shader). Desktop: `kitLiquidPlainStandIn` (colour controls, blur, the hold, the tint; no bend, no rim light) is the
+stand-in the tests draw the real menu/sheet faces through. The luminance of white behind a sheet's words is held to .50
+(`LiquidJoin.held`); a bright white card behind the words: peak luma 207 to 110 (menu), 203 to 109 (sheet), still a grey card, not a white one.
