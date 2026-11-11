@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxQuotaTitle">这部手机上的套餐用量</string>
+    <string name="linuxQuotaSetup">设置套餐用量</string>
+    <string name="linuxQuotaEnabled">套餐用量已设置</string>
+    <string name="linuxQuotaBody">根据这部手机上已有的登录信息，读取 Codex、GLM 和 MiniMax 的额度。助手程序只在读取用量时运行。</string>
+    <string name="linuxQuotaTurnOff">关闭套餐用量</string>
+    <string name="linuxQuotaLinuxNotReady">请先在这部手机上设置 Linux。</string>
+    <string name="linuxQuotaNoNode">请在 Linux 组件中安装 Node，然后重试。</string>
+    <string name="linuxQuotaOldNode">请将 Node 更新到 20 或更高版本，然后重试。</string>
+    <string name="linuxQuotaPrepareFailed">无法准备用量文件。请重试。</string>
+    <string name="linuxQuotaStartFailed">用量助手程序没有响应。请重试。</string>
+    <string name="linuxQuotaRemoveFailed">无法移除用量助手程序。请重试。</string>
+</resources>

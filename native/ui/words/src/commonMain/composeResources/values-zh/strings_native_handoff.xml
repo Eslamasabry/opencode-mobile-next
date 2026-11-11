@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="nativeHandoffTitle">在新智能体中继续</string>
+    <string name="nativeHandoffIntro">在此服务器上选择一个智能体。开始前，请查看已隐藏敏感信息的对话记录和第一条提示词。原对话保持不变。</string>
+    <string name="nativeHandoffPreparing">正在准备对话记录…</string>
+    <string name="nativeHandoffReview">此记录会保存到同一项目中新的被忽略文件夹里。凭据已隐藏；推理过程和附件内容不包含在内。</string>
+    <string name="nativeHandoffPrompt">发给新智能体的第一条消息</string>
+    <string name="nativeHandoffSend">启动新智能体</string>
+    <string name="nativeHandoffSending">正在保存记录并开始新对话…</string>
+    <string name="nativeHandoffSucceeded">新智能体已收到对话记录。</string>
+    <string name="nativeHandoffFailed">无法完成转交。原对话保持不变。请检查连接和项目，然后重新打开此面板。</string>
+    <string name="nativeHandoffUnconfirmed">无法确认新对话。开始另一个之前，请先查看“所有对话”：智能体可能已经收到了。</string>
+    <string name="nativeHandoffLinkFailed">新智能体已收到记录，但无法保存对话链接。请重试保存链接；不会再次发送任何消息。</string>
+    <string name="nativeHandoffSaveLink">保存对话链接</string>
+</resources>

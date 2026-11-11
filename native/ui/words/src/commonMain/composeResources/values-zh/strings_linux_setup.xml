@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxSetupStart">设置 Linux 和 OpenCode</string>
+    <string name="linuxSetupAddPython">添加 Python 工具</string>
+    <string name="linuxSetupContinue">继续设置</string>
+    <string name="linuxSetupStop">停止设置</string>
+    <string name="linuxSetupStopQuestion">停止设置？</string>
+    <string name="linuxSetupStopBody">已安装的工具会保留在手机上。你可以稍后继续设置。</string>
+    <string name="linuxSetupWorking">正在设置手机工具…</string>
+    <string name="linuxSetupAddingPython">正在添加 Python 工具</string>
+    <string name="linuxSetupDone">手机工具已就绪。</string>
+    <string name="linuxSetupFailed">设置在完成前停止了。请继续设置，以检查已安装的工具并重试。</string>
+</resources>

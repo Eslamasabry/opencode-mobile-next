@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="keptSvcTitle">服务</string>
+    <string name="keptSvcFailed">服务未能完成该操作</string>
+    <string name="keptSvcFailedBody">请确认 Linux 已设置好，然后重试。你保存的服务选择会保留。</string>
+    <string name="keptSvcAdd">添加服务</string>
+    <string name="keptSvcKeepsRunning">你启动的服务会在崩溃后或应用再次打开时继续运行，直到你停止它。</string>
+    <string name="keptSvcEmpty">还没有服务。添加你自己的命令，让它保持运行。</string>
+    <string name="keptSvcScreenOff">除非手机正在充电，否则熄屏时服务可能暂停。</string>
+    <string name="keptSvcStartNamed">启动 %1$s</string>
+    <string name="keptSvcStopNamed">停止 %1$s</string>
+    <string name="keptSvcRestartNamed">重启 %1$s</string>
+    <string name="keptSvcOpenNamed">打开 %1$s</string>
+    <string name="keptSvcRemoveNamed">移除 %1$s</string>
+    <string name="keptSvcWorking">正在完成服务操作…</string>
+    <string name="keptSvcCopyLog">复制日志</string>
+    <plurals name="keptSvcRestarts">
+        <item quantity="other">重启 %1$d 次后恢复</item>
+    </plurals>
+    <string name="keptSvcLogTitle">服务日志</string>
+    <string name="keptSvcSearchLog">在日志中查找</string>
+    <string name="keptSvcLogEmpty">还没有输出。</string>
+    <string name="keptSvcRemoveQuestion">移除 %1$s？</string>
+    <string name="keptSvcRemoveBody">服务会先停止，然后才移除它保存的定义和日志。</string>
+    <string name="keptSvcRemoveGoes">它的命令、开关选择和日志都会被移除。</string>
+    <string name="keptSvcRemoveStays">已安装的工具和项目文件会保留。</string>
+    <string name="keptSvcSaveStart">保存并启动服务</string>
+    <string name="keptSvcName">名称</string>
+    <string name="keptSvcNameHint">2–24 个小写字母、数字或连字符；以字母开头。</string>
+    <string name="keptSvcCommand">命令</string>
+    <string name="keptSvcDirectory">Linux 内的文件夹</string>
+    <string name="keptSvcPort">端口（可选）</string>
+    <string name="keptSvcPortHint">1024 到 65535 之间的空闲端口。如果没有网页，请留空。</string>
+    <string name="keptSvcBadName">请按上面的格式选择其他名称。应用的服务名称已被保留。</string>
+    <string name="keptSvcBadCommand">请输入一行命令，最多 4096 个字符。</string>
+    <string name="keptSvcBadDirectory">请使用 Linux 的绝对路径文件夹，且不含上级目录（..）。</string>
+    <string name="keptSvcBadPort">请选择 1024 到 65535 之间未被使用、且不在应用保留端口内的端口。</string>
+    <string name="keptSvcRestart">崩溃后重启</string>
+    <string name="keptSvcRestartBody">失败后重试；反复快速崩溃后则停止。</string>
+    <string name="keptSvcLimit">已经有 16 个服务。添加新的之前请先移除一个。</string>
+    <string name="keptSvcPaused">手机发热期间已暂停</string>
+    <string name="keptSvcOff">已关闭</string>
+    <string name="keptSvcStarting">正在启动…</string>
+    <string name="keptSvcRunning">运行中</string>
+    <string name="keptSvcRunningFor">已运行 %1$d 分钟</string>
+    <string name="keptSvcStopping">正在停止…</string>
+    <string name="keptSvcRetrying">已崩溃（代码 %1$d）。%2$d 秒后重试</string>
+    <string name="keptSvcPortBusy">端口 %1$d 被占用。稍后会重试。</string>
+    <plurals name="keptSvcGaveUp">
+        <item quantity="other">反复崩溃后已停止（重启 %1$d 次）</item>
+    </plurals>
+    <string name="keptSvcExited">已结束（代码 %1$d）</string>
+    <string name="keptSvcPortNumber">端口 %1$d</string>
+    <string name="keptSvcLogStarted">已启动</string>
+    <string name="keptSvcLogExit">已结束（代码 %1$d）</string>
+    <string name="keptSvcLogRetry">%1$d 秒后重试</string>
+    <string name="keptSvcLogGaveUp">反复崩溃后已停止</string>
+</resources>

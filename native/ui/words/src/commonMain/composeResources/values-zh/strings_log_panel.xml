@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="p12LogSearch">在日志中查找</string>
+    <string name="p12LogFollow">跟随</string>
+    <string name="p12LogPause">暂停</string>
+    <string name="p12LogCopy">全部复制</string>
+    <string name="p12LogWrap">自动换行</string>
+    <plurals name="p12LogMatches">
+        <item quantity="other">第 %1$d 行，共 %2$d 行匹配</item>
+    </plurals>
+    <string name="p12LogPrevious">上一个匹配</string>
+    <string name="p12LogNext">下一个匹配</string>
+</resources>

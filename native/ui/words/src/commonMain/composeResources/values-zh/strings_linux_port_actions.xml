@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxPortActions">端口操作</string>
+    <string name="linuxPortCopiedAddress">复制地址</string>
+    <string name="linuxPortOwnerStop">停止 %1$s</string>
+    <string name="linuxPortOwnerQuestion">停止 %1$s？</string>
+    <plurals name="linuxPortOwnerStopBody">
+        <item quantity="other">停止所选程序及其辅助进程（%1$d 个进程）。每个进程仍必须与所显示的身份一致。不会有任何东西重新启动它。</item>
+    </plurals>
+    <string name="linuxPortOwnerResult">已结束：%1$d · 强制：%2$d · 仍在运行：%3$d · 身份已变更而保留：%4$d</string>
+</resources>
