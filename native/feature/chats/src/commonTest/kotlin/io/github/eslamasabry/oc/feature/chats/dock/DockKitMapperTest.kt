@@ -257,4 +257,15 @@ class DockKitMapperTest {
         assertNull(DockKitMapper.markOf("build", null))
         assertNull(DockKitMapper.markOf(" ", " "))
     }
+
+    @Test
+    fun `the dock offers a new conversation unless the screen has its own control`() {
+        val live = ui(entry("a"), entry("b"))
+        assertTrue(DockKitMapper.map(live, emptyMap(), "Untitled").model.offersNew)
+        assertFalse(DockKitMapper.map(live, emptyMap(), "Untitled", offersNew = false).model.offersNew)
+        // With no ring and no "+" there is nothing to draw: the model says so and the kit draws nothing.
+        val empty = DockKitMapper.map(ui(presence = DockPresence.Nub), emptyMap(), "Untitled", offersNew = false).model
+        assertTrue(empty.rings.isEmpty())
+        assertFalse(empty.offersNew)
+    }
 }
