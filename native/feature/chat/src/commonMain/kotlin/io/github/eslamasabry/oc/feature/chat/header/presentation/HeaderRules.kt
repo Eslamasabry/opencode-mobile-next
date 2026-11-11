@@ -55,8 +55,10 @@ public object HeaderRules {
     ): ImmutableList<HeaderAction> =
         buildList {
             add(HeaderAction.Find)
-            // S30 story 3 (Flutter `SessionMenuOffer.of`: `subagents: capabilities.projectManagement`).
-            if (caps.projectManagement) add(HeaderAction.Subagents)
+            // S30 story 3 (Flutter `SessionMenuOffer.of`: `subagents: capabilities.projectManagement`), and only where
+            // the page can list them (`subagentSessions`): OpenCode 2 offered it before it could, and the page failed.
+            // Elsewhere ChatEntries' own Subagents entry covers `subagentSessions && !projectManagement`.
+            if (caps.projectManagement && caps.subagentSessions) add(HeaderAction.Subagents)
             add(HeaderAction.Details)
             if (caps.scheduledPrompts && !directory.isNullOrBlank()) add(HeaderAction.Schedule)
             add(HeaderAction.CardsSettings)
