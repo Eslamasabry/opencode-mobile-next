@@ -56,6 +56,7 @@ import io.github.eslamasabry.oc.feature.linux.host.LinuxPresence
 import io.github.eslamasabry.oc.feature.linux.host.ShellRun
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxLifecycle
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxSetupSource
+import io.github.eslamasabry.oc.feature.phone.presentation.PhoneHeatFacts
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneServerFacts
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneServerSource
 import io.github.eslamasabry.oc.feature.phone.presentation.RecoveryFacts
@@ -79,7 +80,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -141,19 +141,13 @@ object LinuxRuntimeWiring {
         runtime: BuiltinRuntime,
         setup: NativePhoneSetup,
         thermal: ThermalRuntime,
-        appScope: AppCoroutineScope,
     ): PhoneServerSource {
         val base = runtime.serverSource(setup::update)
-        // The heat guard's hold rides on the same facts (Flutter `_heat`): "Paused, your phone is warm".
+        // The heat guard's hold (Flutter `_heat`, "Paused, your phone is warm") is its own flow: [facts] stays the
+        // runtime's own StateFlow, so start/stop and "who stopped it" never read a value one dispatch old, and no
+        // collector is started per injection.
         return object : PhoneServerSource by base {
-            override val facts: StateFlow<PhoneServerFacts> =
-                kotlinx.coroutines.flow
-                    .combine(base.facts, thermal.heat) { f, h -> f.copy(heat = h) }
-                    .stateIn(
-                        kotlinx.coroutines.CoroutineScope(appScope.coroutineContext),
-                        kotlinx.coroutines.flow.SharingStarted.Eagerly,
-                        base.facts.value.copy(heat = thermal.heat.value),
-                    )
+            override val heat: StateFlow<PhoneHeatFacts?> = thermal.heat
         }
     }
 }

@@ -101,6 +101,10 @@ public sealed interface RecoveryFacts {
 public interface PhoneServerSource {
     public val facts: StateFlow<PhoneServerFacts>
 
+    /** What the heat guard holds now (null = nothing); This phone shows it on top of [facts]. */
+    public val heat: StateFlow<PhoneHeatFacts?>
+        get() = NoHeat
+
     /** Reads the status again (page shown, back from Android's settings). */
     public suspend fun refresh()
 
@@ -122,6 +126,8 @@ public interface PhoneServerSource {
      */
     public suspend fun updateOpenCode(): Outcome<Unit>
 }
+
+private val NoHeat: StateFlow<PhoneHeatFacts?> = kotlinx.coroutines.flow.MutableStateFlow(null)
 
 /** Real Android exit metadata, never the OS description or exception text. */
 public enum class PhoneExitKind {
