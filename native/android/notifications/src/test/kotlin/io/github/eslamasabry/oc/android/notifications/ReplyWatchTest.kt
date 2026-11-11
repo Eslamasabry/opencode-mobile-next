@@ -16,6 +16,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -174,10 +175,15 @@ class ReplyWatchServiceTest {
         var quiet = false
         var rowsReturned = 0
 
+        /** The server's service still holds 4747 (its process can outlive it; [serverHoldsRow] is a late poll). */
+        var serviceHoldsRow = true
+
         /** Stands in for the phone server re-posting its own row (`BuiltinLinux.repostStatusRow`). */
-        override fun returnRowToServer() {
+        override fun returnRowToServer(): Boolean {
+            if (!serviceHoldsRow) return false
             rowsReturned++
             manager.notify(NotificationIds.STATUS, StatusRenderer(app, words).build(StatusContent(StatusKind.Idle, "Server ready"), true, null))
+            return true
         }
 
         override fun alertFacts(alert: CodingAlert) =
@@ -477,7 +483,8 @@ class ReplyWatchServiceTest {
             assertTrue(row.flags and Notification.FLAG_ONGOING_EVENT != 0)
             advanceTimeBy(60_000)
             assertTrue(body.active)
-            assertEquals("Still working on your reply", shadowOf(manager).getNotification(NotificationIds.STATUS).extras.getCharSequence(Notification.EXTRA_TITLE).toString())
+            // Unchanged words are never posted again: the same notification stands after a minute of ticks.
+            assertSame(row, shadowOf(manager).getNotification(NotificationIds.STATUS))
             source.progressing.value = false
             advanceTimeBy(11_500)
             assertEquals(ReplyWatchEnd.NoProgress, body.ended.value)
@@ -502,6 +509,45 @@ class ReplyWatchServiceTest {
             assertEquals(ReplyWatchEnd.ServerLeft, body.ended.value)
             assertEquals(0, source.rowsReturned)
             assertNull(shadowOf(manager).getNotification(NotificationIds.STATUS))
+        }
+
+    @Test
+    fun `B1 a joined watch ending while the server's service already let go of the row takes its working row away`() =
+        runTest {
+            // The 5 s poll still says "server running", but its service has ended the row (stopping, or a process
+            // that outlived its service): no orphaned "Still working" row may stay behind.
+            val source = Source().apply { serverHoldsRow.value = true; serviceHoldsRow = false }
+            val body =
+                ReplyWatchServiceBody(
+                    app, words, StatusRenderer(app, words), AndroidAlertShade(app, words, registry), source, owners,
+                    scope = backgroundScope, elapsedMs = { testScheduler.currentTime },
+                )
+            body.joinServerRow()
+            runCurrent()
+            assertNotNull(shadowOf(manager).getNotification(NotificationIds.STATUS))
+            source.appVisible.value = true
+            advanceTimeBy(1_500)
+            assertEquals(ReplyWatchEnd.AppVisible, body.ended.value)
+            assertEquals(0, source.rowsReturned)
+            assertNull(shadowOf(manager).getNotification(NotificationIds.STATUS))
+        }
+
+    @Test
+    fun `B1 a joined watch that yields to live mode leaves live mode's row, not the server's`() =
+        runTest {
+            val source = Source().apply { serverHoldsRow.value = true }
+            val body =
+                ReplyWatchServiceBody(
+                    app, words, StatusRenderer(app, words), AndroidAlertShade(app, words, registry), source, owners,
+                    scope = backgroundScope, elapsedMs = { testScheduler.currentTime },
+                )
+            body.joinServerRow()
+            runCurrent()
+            owners.begin(StatusOwner.Live, StatusContent(StatusKind.Idle, "Connected"))
+            body.yieldToLive()
+            assertEquals(ReplyWatchEnd.LiveModeOn, body.ended.value)
+            assertEquals(0, source.rowsReturned)
+            assertEquals("Connected", shadowOf(manager).getNotification(NotificationIds.STATUS).extras.getCharSequence(Notification.EXTRA_TITLE).toString())
         }
 
     @Test

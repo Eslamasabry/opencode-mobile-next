@@ -126,13 +126,13 @@ class ReplyWatchHub(
                     .stateIn(scope, SharingStarted.Eagerly, visibility.state.value == Visibility.Foreground)
             override val serverHoldsRow: StateFlow<Boolean> = this@ReplyWatchHub.serverHoldsRow
 
-            override fun returnRowToServer() {
+            override fun returnRowToServer(): Boolean =
                 try {
                     BuiltinLinux.get(application).repostStatusRow()
                 } catch (_: RuntimeException) {
-                    // The server's row is cosmetic here; its service keeps its own promise.
+                    // Never into the watch. A cancel cannot remove a row a live foreground service still holds.
+                    false
                 }
-            }
 
             override fun alertFacts(alert: CodingAlert): AlertFacts =
                 AlertFacts(

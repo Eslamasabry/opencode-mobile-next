@@ -164,9 +164,10 @@ public interface ReplyRunSource {
 
     /**
      * A joined watch showed its working row in the server-held row 4747: put the phone server's own row (its words
-     * and its Stop action) back there. Called only while [serverHoldsRow] is true.
+     * and its Stop action) back there. Called only while [serverHoldsRow] is true. False when no service holds the row
+     * any more ([serverHoldsRow] is polled and can be a few seconds late): the watch then takes its own row away.
      */
-    public fun returnRowToServer()
+    public fun returnRowToServer(): Boolean
 
     /** The posting facts at this moment (permission, quiet hours, the server's alert rules, …). */
     public fun alertFacts(alert: CodingAlert): AlertFacts
@@ -199,7 +200,7 @@ public class ReplyWatchServiceBody(
     private var job: Job? = null
     private var service: Service? = null
 
-    /** The current watch joined the server's row: it never posted that row, so its end leaves the row alone. */
+    /** The current watch joined the server's row: it lent that row its working words and gives it back at its end. */
     private var joinedWatch = false
 
     /** Why the last watch ended; null while one runs or before the first. */
@@ -394,9 +395,13 @@ public class ReplyWatchServiceBody(
             owners.end(StatusOwner.Reply) { remaining ->
                 try {
                     when {
-                        source.serverHoldsRow.value -> source.returnRowToServer()
+                        // Live mode or sign-in took the row (yieldToLive): their words, as on the service path.
+                        remaining != null && (owners.has(StatusOwner.Live) || owners.has(StatusOwner.SignIn)) ->
+                            manager.notify(NotificationIds.STATUS, renderer.build(remaining, ongoing = true, chip = null))
+                        source.serverHoldsRow.value && source.returnRowToServer() -> Unit
                         remaining != null ->
                             manager.notify(NotificationIds.STATUS, renderer.build(remaining, ongoing = true, chip = null))
+                        // No service holds 4747 any more (Android never lets an app cancel a live foreground row).
                         else -> manager.cancel(NotificationIds.STATUS)
                     }
                 } catch (_: SecurityException) {
