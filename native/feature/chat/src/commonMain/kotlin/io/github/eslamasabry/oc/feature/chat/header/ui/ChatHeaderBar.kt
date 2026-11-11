@@ -293,32 +293,45 @@ public fun ChatHeaderTopBar(
                         )
                     }
             )
+    // A subagent's conversation names where it came from on the title's own line ("Parent › subagent"), in place of
+    // the project line; the parent is one tap back (pops, never stacks it twice).
+    val parentLine: (@Composable () -> Unit)? =
+        state.parent?.let { _ ->
+            {
+                io.github.eslamasabry.oc.ui.kit.nav.KitBreadcrumb(
+                    rootLabel = state.parentTitle ?: stringResource(Res.string.commandUntitledChat),
+                    segments = listOf(state.title ?: stringResource(Res.string.commandDestination)),
+                    onSelected = { if (it < 0) actions.openParent() },
+                )
+            }
+        }
+    val projectLine: (@Composable () -> Unit)? =
+        state.projectName?.let { project ->
+            {
+                KitTopBarScope(
+                    project = project,
+                    server = state.serverName,
+                    projectLabel =
+                        state.serverName?.let {
+                            stringResource(
+                                Res.string.chatProjectServerChipFilesSemantics,
+                                project,
+                                it,
+                            )
+                        } ?: stringResource(Res.string.chatProjectChipFilesSemantics, project),
+                    onProject = onProject,
+                    // F: chat_top_bar.dart:180-190: the Git chip always shows, the branch once known and
+                    // "Git" (gitSheetTitle) until then; it opens the Git sheet.
+                    branch = onBranch?.let { state.branch ?: stringResource(Res.string.gitSheetTitle) },
+                    onBranch = onBranch,
+                )
+            }
+        }
     KitTopBar(
         // F: chat_top_bar.dart:162-166: an untitled conversation's bar reads "Conversation" (commandDestination).
         title = state.title ?: stringResource(Res.string.commandDestination),
         subtitle = subtitle,
-        scope =
-            state.projectName?.let { project ->
-                {
-                    KitTopBarScope(
-                        project = project,
-                        server = state.serverName,
-                        projectLabel =
-                            state.serverName?.let {
-                                stringResource(
-                                    Res.string.chatProjectServerChipFilesSemantics,
-                                    project,
-                                    it,
-                                )
-                            } ?: stringResource(Res.string.chatProjectChipFilesSemantics, project),
-                        onProject = onProject,
-                        // F: chat_top_bar.dart:180-190: the Git chip always shows, the branch once known and
-                        // "Git" (gitSheetTitle) until then; it opens the Git sheet.
-                        branch = onBranch?.let { state.branch ?: stringResource(Res.string.gitSheetTitle) },
-                        onBranch = onBranch,
-                    )
-                }
-            },
+        scope = parentLine ?: projectLine,
         exit = if (canGoBack) KitTopBarExit.Back else KitTopBarExit.None,
         exitLabel = stringResource(Res.string.kitTopBarBack),
         onExit = onBack,

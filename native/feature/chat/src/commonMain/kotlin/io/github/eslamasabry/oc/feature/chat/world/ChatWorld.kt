@@ -77,6 +77,9 @@ public interface ChatWorld {
     public val parent: StateFlow<ConversationRef?>
         get() = NoParent
 
+    /** Another conversation's title on this conversation's server (the parent's, for the header); null = unknown. */
+    public suspend fun conversationTitle(other: ConversationRef): String? = null
+
     /** Flutter "Try now": cancel the wait and try the link at once. Never resends anything. */
     public fun tryLinkNow() {}
 

@@ -94,6 +94,9 @@ public class ChatHeaderPresenter(
     private val export: io.github.eslamasabry.oc.feature.chat.header.world.TranscriptExport? = null,
 ) : ChatHeaderActions, ChatAgentHandoffActions {
     private val local = MutableStateFlow(HeaderLocal())
+
+    /** The parent conversations' titles as read, once per parent (a sub-agent's chat names where it came from). */
+    private val parentTitles = MutableStateFlow<Map<ConversationRef, String?>>(emptyMap())
     private var nextId = 1L
     private var handoff: io.github.eslamasabry.oc.engine.agents.handoff.HandoffEngine? = null
     private val handoffGeneration = MutableStateFlow(0L)
@@ -106,13 +109,17 @@ public class ChatHeaderPresenter(
 
     public fun current(): ChatHeaderUi =
         present(
-            world.title.value,
-            world.capabilities.value,
-            port.facts.value,
-            world.transcript.value,
-            world.models.value,
-            local.value,
-        )
+                world.title.value,
+                world.capabilities.value,
+                port.facts.value,
+                world.transcript.value,
+                world.models.value,
+                local.value,
+            )
+            .withParent(world.parent.value, parentTitles.value)
+
+    private fun ChatHeaderUi.withParent(parent: ConversationRef?, titles: Map<ConversationRef, String?>): ChatHeaderUi =
+        if (parent == null) this else copy(parent = parent, parentTitle = titles[parent])
 
     public fun states(scope: CoroutineScope, started: SharingStarted): StateFlow<ChatHeaderUi> {
         val serverSide =
@@ -124,11 +131,27 @@ public class ChatHeaderPresenter(
                 m ->
                 ServerSide(t, c, f, tr, m)
             }
-        return combine(serverSide, local, world.readOnly) { s, l, _ ->
-                present(s.title, s.caps, s.facts, s.transcript, s.models, l)
+        return combine(serverSide, local, world.readOnly, world.parent, parentTitles) { s, l, _, parent, titles ->
+                present(s.title, s.caps, s.facts, s.transcript, s.models, l).withParent(parent, titles)
             }
             .stateIn(scope, started, current())
-            .also { launcher.launch { loadFreeFacts() } }
+            .also {
+                launcher.launch { loadFreeFacts() }
+                launcher.launch { readParentTitles() }
+            }
+    }
+
+    /** Reads each parent's title once, when this conversation turns out to be a sub-agent's. */
+    private suspend fun readParentTitles() {
+        world.parent.collect { parent ->
+            if (parent == null || parent in parentTitles.value) return@collect
+            val title = world.conversationTitle(parent)
+            parentTitles.update { it + (parent to title) }
+        }
+    }
+
+    override fun openParent() {
+        world.parent.value?.let { nav.backToChat(it) }
     }
 
     private suspend fun loadFreeFacts() {

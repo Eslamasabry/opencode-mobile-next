@@ -45,6 +45,10 @@ public data class ChatHeaderUi(
     /** C4: the conversation's totals as the server reported them (cost, tokens); null parts = not reported. */
     val serverCost: Double? = null,
     val serverTokens: Long? = null,
+    /** The conversation that delegated this one (a sub-agent's chat); null for a top-level one. */
+    val parent: io.github.eslamasabry.oc.core.common.ids.ConversationRef? = null,
+    /** [parent]'s title as the server names it; null until read or untitled. */
+    val parentTitle: String? = null,
 )
 
 /** What the ⋯ menu offers (Flutter `SessionMenuAction`, the native subset with a real path). */
@@ -221,6 +225,9 @@ public interface ChatHeaderActions {
     public fun openMenu()
 
     public fun closeMenu()
+
+    /** Back to the conversation that delegated this one (pops when it is right below, never stacks it twice). */
+    public fun openParent() {}
 
     public fun choose(action: HeaderAction)
 
