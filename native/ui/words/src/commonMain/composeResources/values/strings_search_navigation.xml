@@ -52,7 +52,12 @@
     <string name="nativeSearchPlaceLanguage">Language</string>
     <string name="nativeSearchAliasesLanguage">Arabic; English; locale</string>
     <string name="nativeSearchPlaceTips">Tips</string>
-    <string name="nativeSearchAliasesTips">Help; tutorials; gestures</string>
+    <string name="nativeSearchAliasesTips">Help; tutorials; gestures; show tips again</string>
+    <string name="nativeSearchAliasesUpdates">Update; upgrade; new version; release; install</string>
+    <string name="nativeSearchAliasesKeepRunning">Background; battery; stay connected; foreground service; keep alive</string>
+    <string name="nativeSearchAliasesLinuxPorts">Linux; open ports; listening; server port</string>
+    <string name="nativeSearchAliasesLinuxPackages">Linux; software; apt; install; programs</string>
+    <string name="nativeSearchAliasesDemo">Demo; try; sample; offline; example</string>
     <string name="nativeSearchPlaceShortcuts">Keyboard shortcuts</string>
     <string name="nativeSearchAliasesShortcuts">Keyboard; desktop; keys</string>
     <string name="nativeSearchShortcutsBody">These keys work in the composer and kit controls when they have focus.</string>

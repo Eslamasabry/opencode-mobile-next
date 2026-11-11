@@ -40,6 +40,9 @@ public sealed interface SettingsPage {
 
     public data object Notices : SettingsPage
 
+    /** About › Open source › All licences: every library in this build with its licence, then the licence texts. */
+    public data object Licences : SettingsPage
+
     public data object PhraseChips : SettingsPage
     public data object WhatsNew : SettingsPage
     public data class VoiceLicense(val id: String) : SettingsPage

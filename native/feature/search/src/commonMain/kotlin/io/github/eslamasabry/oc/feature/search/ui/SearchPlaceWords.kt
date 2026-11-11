@@ -61,6 +61,32 @@ import io.github.eslamasabry.oc.ui.words.res.nativeSearchPlaceShortcuts
 import io.github.eslamasabry.oc.ui.words.res.nativeSearchPlaceSkills
 import io.github.eslamasabry.oc.ui.words.res.nativeSearchPlaceTips
 import io.github.eslamasabry.oc.ui.words.res.nativeSearchPlaceTools
+import io.github.eslamasabry.oc.ui.words.res.aboutTitle
+import io.github.eslamasabry.oc.ui.words.res.appUpdatesTitle
+import io.github.eslamasabry.oc.ui.words.res.e7LibraryReportABug
+import io.github.eslamasabry.oc.ui.words.res.e7SettingsUi8
+import io.github.eslamasabry.oc.ui.words.res.e7SetupAddServer
+import io.github.eslamasabry.oc.ui.words.res.linuxMgrPackages
+import io.github.eslamasabry.oc.ui.words.res.linuxMgrPorts
+import io.github.eslamasabry.oc.ui.words.res.nativeSearchAliasesDemo
+import io.github.eslamasabry.oc.ui.words.res.nativeSearchAliasesKeepRunning
+import io.github.eslamasabry.oc.ui.words.res.nativeSearchAliasesLinuxPackages
+import io.github.eslamasabry.oc.ui.words.res.nativeSearchAliasesLinuxPorts
+import io.github.eslamasabry.oc.ui.words.res.nativeSearchAliasesUpdates
+import io.github.eslamasabry.oc.ui.words.res.onboardingSetupGuide
+import io.github.eslamasabry.oc.ui.words.res.r40RelationsKeepRunning
+import io.github.eslamasabry.oc.ui.words.res.settingsHubGroupUsage
+import io.github.eslamasabry.oc.ui.words.res.settingsHubPrivacyRow
+import io.github.eslamasabry.oc.ui.words.res.settingsHubSearchAboutAliases
+import io.github.eslamasabry.oc.ui.words.res.settingsHubSearchBugAliases
+import io.github.eslamasabry.oc.ui.words.res.settingsHubSearchDisconnectAliases
+import io.github.eslamasabry.oc.ui.words.res.settingsHubSearchGuideAliases
+import io.github.eslamasabry.oc.ui.words.res.settingsHubSearchPrivacyAliases
+import io.github.eslamasabry.oc.ui.words.res.settingsHubSearchSavedServersAliases
+import io.github.eslamasabry.oc.ui.words.res.settingsHubSearchUsageAliases
+import io.github.eslamasabry.oc.ui.words.res.settingsHubSearchVoiceAliases
+import io.github.eslamasabry.oc.ui.words.res.settingsTryDemo
+import io.github.eslamasabry.oc.ui.words.res.settingsV3VoiceTyping
 import org.jetbrains.compose.resources.stringResource
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 
@@ -154,6 +180,46 @@ internal fun searchPlaceWords(place: SearchPlace): Pair<String, String> =
         SearchPlace.Shortcuts ->
             stringResource(Res.string.nativeSearchPlaceShortcuts) to
                 stringResource(Res.string.nativeSearchAliasesShortcuts)
+        // S6: titles and aliases reuse the Settings hub's own words.
+        SearchPlace.Privacy ->
+            stringResource(Res.string.settingsHubPrivacyRow) to
+                stringResource(Res.string.settingsHubSearchPrivacyAliases)
+        SearchPlace.Voice ->
+            stringResource(Res.string.settingsV3VoiceTyping) to
+                stringResource(Res.string.settingsHubSearchVoiceAliases)
+        SearchPlace.Updates ->
+            stringResource(Res.string.appUpdatesTitle) to
+                stringResource(Res.string.nativeSearchAliasesUpdates)
+        SearchPlace.About ->
+            stringResource(Res.string.aboutTitle) to
+                stringResource(Res.string.settingsHubSearchAboutAliases)
+        SearchPlace.ReportProblem ->
+            stringResource(Res.string.e7LibraryReportABug) to
+                stringResource(Res.string.settingsHubSearchBugAliases)
+        SearchPlace.Guide ->
+            stringResource(Res.string.onboardingSetupGuide) to
+                stringResource(Res.string.settingsHubSearchGuideAliases)
+        SearchPlace.KeepRunning ->
+            stringResource(Res.string.r40RelationsKeepRunning) to
+                stringResource(Res.string.nativeSearchAliasesKeepRunning)
+        SearchPlace.Usage ->
+            stringResource(Res.string.settingsHubGroupUsage) to
+                stringResource(Res.string.settingsHubSearchUsageAliases)
+        SearchPlace.LinuxPorts ->
+            stringResource(Res.string.linuxMgrPorts) to
+                stringResource(Res.string.nativeSearchAliasesLinuxPorts)
+        SearchPlace.LinuxPackages ->
+            stringResource(Res.string.linuxMgrPackages) to
+                stringResource(Res.string.nativeSearchAliasesLinuxPackages)
+        SearchPlace.AddServer ->
+            stringResource(Res.string.e7SetupAddServer) to
+                stringResource(Res.string.settingsHubSearchSavedServersAliases)
+        SearchPlace.Disconnect ->
+            stringResource(Res.string.e7SettingsUi8) to
+                stringResource(Res.string.settingsHubSearchDisconnectAliases)
+        SearchPlace.Demo ->
+            stringResource(Res.string.settingsTryDemo) to
+                stringResource(Res.string.nativeSearchAliasesDemo)
     }
 
 /** The glyph each place's row leads with under "Settings and pages" (bare, never in a tile). */
@@ -190,5 +256,18 @@ private val placeIcons by lazy {
         SearchPlace.Language to KitIcons.globe,
         SearchPlace.Tips to KitIcons.guide,
         SearchPlace.Shortcuts to KitIcons.keyboard,
+        SearchPlace.Privacy to KitIcons.privacy,
+        SearchPlace.Voice to KitIcons.mic,
+        SearchPlace.Updates to KitIcons.systemDownload,
+        SearchPlace.About to KitIcons.info,
+        SearchPlace.ReportProblem to KitIcons.bug,
+        SearchPlace.Guide to KitIcons.guide,
+        SearchPlace.KeepRunning to KitIcons.batteryCharging,
+        SearchPlace.Usage to KitIcons.usage,
+        SearchPlace.LinuxPorts to KitIcons.network,
+        SearchPlace.LinuxPackages to KitIcons.packageBox,
+        SearchPlace.AddServer to KitIcons.add,
+        SearchPlace.Disconnect to KitIcons.unlink,
+        SearchPlace.Demo to KitIcons.play,
     )
 }
