@@ -233,7 +233,7 @@ private fun RingRow(ring: KitDockRing, current: Boolean, words: KitDockWords, in
     Row(
         Modifier
             .fillMaxWidth()
-            .heightIn(min = PanelRows.ring(s, ring.server != null).dp)
+            .heightIn(min = PanelRows.ring(s, ring.server != null, words.hasStateLine(ring)).dp)
             .graphicsLayer { alpha = if (dim) 0.6f else 1f }
             .kitTappable(onClick = onOpen, onClickLabel = words.actionOn(words.open, ring.name))
             .semantics {
@@ -258,7 +258,9 @@ private fun RingRow(ring: KitDockRing, current: Boolean, words: KitDockWords, in
         Spacer(Modifier.width(8.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.Center) {
             KitText(ring.name, role = TypeRole.RowTitle, kind = KitTextKind.Frame, maxLines = 1)
-            KitText(words.stateLine(ring), role = TypeRole.Caption, tone = if (alert) TextTone.Attention else TextTone.Accent.takeIf { ring.state.running } ?: TextTone.Secondary, kind = KitTextKind.Frame, maxLines = 1)
+            // A blank state line takes no line: the name and the last line close up.
+            val line = words.stateLine(ring)
+            if (line.isNotBlank()) KitText(line, role = TypeRole.Caption, tone = if (alert) TextTone.Attention else TextTone.Accent.takeIf { ring.state.running } ?: TextTone.Secondary, kind = KitTextKind.Frame, maxLines = 1)
             ring.lastLine?.let { KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Frame, maxLines = 1) }
         }
     }
@@ -295,7 +297,8 @@ private fun ChildRows(state: KitEdgeDockState, ring: KitDockRing, currentChild: 
             }
             KitText(c.name, role = TypeRole.Label, kind = KitTextKind.Frame, maxLines = 1)
             val alert = c.state == KitDockRingState.NeedsYou || c.state == KitDockRingState.Failed
-            KitText(words.stateWord(c.state), role = TypeRole.Caption, tone = if (alert) TextTone.Attention else TextTone.Secondary, kind = KitTextKind.Frame, maxLines = 1)
+            val word = words.stateWord(c.state)
+            if (word.isNotBlank()) KitText(word, role = TypeRole.Caption, tone = if (alert) TextTone.Attention else TextTone.Secondary, kind = KitTextKind.Frame, maxLines = 1)
             c.lastLine?.let { KitText(it, Modifier.weight(1f), role = TypeRole.Caption, tone = TextTone.Tertiary, kind = KitTextKind.Frame, maxLines = 1) }
         }
     }

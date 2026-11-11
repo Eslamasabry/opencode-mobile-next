@@ -185,7 +185,8 @@ public fun KitEdgeDock(
         state.scope = scope
         state.haptic = haptics
         state.intents = intents
-        state.panelContent = panelContentHeight(model.rings, model.hidden, state.hiddenOpen, state.expanded.value, textScale)
+        state.words = words
+        state.panelContent = panelContentHeight(model.rings, model.hidden, state.hiddenOpen, state.expanded.value, textScale) { words.hasStateLine(it) }
 
         // Where it lives: the person's height, clear of the bars, the keyboard and the keep-clear spots.
         val placedTop = placeTop(column.height, model.placement.verticalBias, safeTop, safeBottom, keepClear, w - edgeInset - DockDims.REST_W - DockDims.SHOULDER_REACH, w)

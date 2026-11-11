@@ -130,6 +130,8 @@ public class KitEdgeDockState internal constructor() {
     internal var scope: CoroutineScope? = null
     internal var haptic: (KitHaptic) -> Unit = {}
     internal var intents: KitDockIntents = object : KitDockIntents {}
+    /** The host's words (for the swell's layout: a blank state line takes no row). */
+    internal var words: KitDockWords? = null
 
     // Motion, dp.
     internal val out = Animatable(DockDims.REST_W)
@@ -446,6 +448,7 @@ public class KitEdgeDockState internal constructor() {
             server = ring.server != null,
             s = textScale,
             maxLength = widthDp - edgeInset - DockDims.REST_W - farInset - DockDims.GUTTER,
+            stateLine = words?.hasStateLine(ring) ?: true,
         )
 
     /** Opens (or retargets) box B for ring [i] as [kind]; B grows out with one small overshoot. */

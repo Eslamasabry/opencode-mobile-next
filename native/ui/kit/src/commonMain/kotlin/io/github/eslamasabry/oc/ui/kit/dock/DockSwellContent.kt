@@ -161,7 +161,7 @@ private fun hotFace(): Modifier {
 private fun targetLabel(t: DockTarget, ring: KitDockRing, order: List<Int>, words: KitDockWords): String =
     when (t.kind) {
         DockTargetKind.Header -> words.actionOn(words.open, ring.name)
-        DockTargetKind.Child -> order.getOrNull(t.child)?.let { ring.children[it] }?.let { words.actionOn(words.open, it.name) + ", " + words.stateWord(it.state) } ?: ""
+        DockTargetKind.Child -> order.getOrNull(t.child)?.let { ring.children[it] }?.let { spoken(words.actionOn(words.open, it.name), words.stateWord(it.state)) } ?: ""
         DockTargetKind.More -> words.subAgents(ring.childTotal)
         else -> words.actionOn(words.targetWord(t.kind), ring.name)
     }
@@ -172,8 +172,10 @@ private fun Header(ring: KitDockRing, words: KitDockWords, peek: Boolean) {
     val alert = ring.state == KitDockRingState.NeedsYou || ring.state == KitDockRingState.Failed
     Column(Modifier.fillMaxWidth()) {
         KitText(ring.name, role = if (peek) TypeRole.Headline else TypeRole.RowTitle, kind = KitTextKind.Frame, maxLines = 1)
-        KitText(
-            words.stateLine(ring),
+        // A blank state line (a quiet ring with no state word) takes no line: the name and what follows close up.
+        val line = words.stateLine(ring)
+        if (line.isNotBlank()) KitText(
+            line,
             role = TypeRole.Caption,
             tone = if (alert) TextTone.Attention else TextTone.Secondary,
             kind = KitTextKind.Frame,

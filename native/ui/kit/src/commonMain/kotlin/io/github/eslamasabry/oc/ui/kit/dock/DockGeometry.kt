@@ -372,7 +372,8 @@ internal fun childCells(total: Int, cols: Int): Pair<Int, Int> =
 
 /** Heights of the swell's rows for a frame text scale [s] (already capped at 1.3). */
 internal object SwellRows {
-    fun header(s: Float, server: Boolean): Float = 20f * s + 18f * s * (if (server) 2f else 1f)
+    fun header(s: Float, server: Boolean, stateLine: Boolean = true): Float =
+        20f * s + (if (stateLine) 18f * s * (if (server) 2f else 1f) else 0f)
     fun children(s: Float): Float = 38f + 26f * s
     fun action(s: Float): Float = max(DockDims.MIN_TARGET, 36f + 14f * s)
     fun line(s: Float): Float = 18f * s
@@ -414,6 +415,7 @@ internal fun swellLayout(
     server: Boolean,
     s: Float,
     maxLength: Float,
+    stateLine: Boolean = true,
 ): SwellLayout {
     val pad = DockDims.SW_TIP_PAD + DockDims.SW_BASE_PAD
     if (kind == SwellKind.Rename) {
@@ -435,7 +437,7 @@ internal fun swellLayout(
     val targets = ArrayList<DockTarget>(12)
     val x0 = DockDims.SW_TIP_PAD
     var y = DockDims.SW_PAD_T
-    val headerH = SwellRows.header(s, server)
+    val headerH = SwellRows.header(s, server, stateLine)
     targets += DockTarget(DockTargetKind.Header, -1, DockRect(x0, y, x0 + cw, y + headerH))
     y += headerH
     if (childTotal > 0) {
@@ -566,7 +568,8 @@ internal fun fittedFillet(k: Float, swellTop: Float, swellBottom: Float, stripTo
 
 /** Height of one conversation row in the list, and of a sub-agent row, for frame text scale [s]. */
 internal object PanelRows {
-    fun ring(s: Float, server: Boolean): Float = max(64f, 14f + (20f + 18f + 18f + (if (server) 18f else 0f)) * s)
+    fun ring(s: Float, server: Boolean, stateLine: Boolean = true): Float =
+        max(64f, 14f + (20f + (if (stateLine) 18f else 0f) + 18f + (if (server) 18f else 0f)) * s)
     fun child(s: Float): Float = max(DockDims.CHILD_ROW, 14f + 18f * s)
     fun hidden(s: Float): Float = max(DockDims.HIDDEN_ROW, 14f + 18f * s)
 }
@@ -579,13 +582,20 @@ internal fun panelChildRows(children: List<KitDockChild>, expanded: Boolean): In
 }
 
 /** The list's full content height. */
-internal fun panelContentHeight(rings: List<KitDockRing>, hidden: List<KitDockRing>, hiddenOpen: Boolean, expanded: Set<String>, s: Float): Float {
+internal fun panelContentHeight(
+    rings: List<KitDockRing>,
+    hidden: List<KitDockRing>,
+    hiddenOpen: Boolean,
+    expanded: Set<String>,
+    s: Float,
+    stateLine: (KitDockRing) -> Boolean = { true },
+): Float {
     var h = 0f
-    for (r in rings) h += PanelRows.ring(s, r.server != null) + panelChildRows(r.children, r.key in expanded) * PanelRows.child(s)
+    for (r in rings) h += PanelRows.ring(s, r.server != null, stateLine(r)) + panelChildRows(r.children, r.key in expanded) * PanelRows.child(s)
     if (rings.any { it.pinned }) h += DockDims.PIN_GAP * 2f
     if (hidden.isNotEmpty()) {
         h += PanelRows.hidden(s)
-        if (hiddenOpen) for (r in hidden) h += PanelRows.ring(s, r.server != null)
+        if (hiddenOpen) for (r in hidden) h += PanelRows.ring(s, r.server != null, stateLine(r))
     }
     return h
 }
