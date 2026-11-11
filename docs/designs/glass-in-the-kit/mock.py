@@ -4,7 +4,7 @@ import sys
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
-SRC = "/home/eslam/.claude/uploads/ab988e81-48c1-4ce6-9242-43bf2faf7c71/a9291ace-image.jpg"
+SRC = __import__("os").path.join(__import__("os").path.dirname(__import__("os").path.abspath(__file__)), "phone-home-dark-today.jpg")  # the owner's screenshot, beside this file
 img = Image.open(SRC).convert("RGB")
 W, H = img.size
 A = np.asarray(img, dtype=np.float32) / 255.0

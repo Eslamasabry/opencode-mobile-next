@@ -1,6 +1,6 @@
 # Kit surfaces: every part gets its face from the resolver
 
-Inventory taken read-only from `/home/eslam/Storage2/wt/liquid-merge` (branch `native/liquid-merge-one-body`). Input to the glass
+Inventory taken read-only from `~/Storage2/wt/liquid-merge` (branch `native/liquid-merge-one-body`). Input to the glass
 session's step 3 (`docs/designs/glass-in-the-kit.md`). Paths: `K` = `native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/`,
 `C` = `native/ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/`,
 `T` = `native/ui/kit-content/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/content/`. Line numbers are of that tree.

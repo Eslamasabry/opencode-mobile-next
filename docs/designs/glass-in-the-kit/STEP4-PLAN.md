@@ -5,7 +5,7 @@
 > Built 2026-11-11 on native/glass-floating-bar. Where this plan was wrong or the build departs from it, see "As built,
 > step 4" at the end of `../glass-in-the-kit.md`.
 
-All line numbers refer to `/home/eslam/Storage/wt/rc-master/native` (branch native/fix-3.0.1, HEAD 4995a248f2). I read it and changed nothing.
+All line numbers refer to `~/Storage/wt/rc-master/native` (branch native/fix-3.0.1, HEAD 4995a248f2). I read it and changed nothing.
 
 ## 1. How it works today
 
@@ -160,8 +160,8 @@ These may need review: `HomeJankScreenTest` (composition counts) and `KitScreenR
 7. **Short windows fall back to today's layout?** Yes.
 
 ### Critical Files for Implementation
-- /home/eslam/Storage/wt/rc-master/native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/frame/KitScreen.kt
-- /home/eslam/Storage/wt/rc-master/native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/frame/KitStatusPill.kt
-- /home/eslam/Storage/wt/rc-master/native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/motion/KitRefresh.kt
-- /home/eslam/Storage/wt/rc-master/native/feature/chats/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chats/ui/ChatsScreen.kt
-- /home/eslam/Storage/wt/rc-master/native/feature/settings/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/settings/ui/SettingsScreen.kt
+- ~/Storage/wt/rc-master/native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/frame/KitScreen.kt
+- ~/Storage/wt/rc-master/native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/frame/KitStatusPill.kt
+- ~/Storage/wt/rc-master/native/ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/motion/KitRefresh.kt
+- ~/Storage/wt/rc-master/native/feature/chats/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chats/ui/ChatsScreen.kt
+- ~/Storage/wt/rc-master/native/feature/settings/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/settings/ui/SettingsScreen.kt
