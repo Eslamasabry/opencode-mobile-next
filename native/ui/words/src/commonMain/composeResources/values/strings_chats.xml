@@ -89,7 +89,7 @@
     <string name="globalSessionsFilterActive">Active</string>
     <string name="globalSessionsArchivedNoMatchMessage">No archived conversation has that title. Try a shorter search.</string>
     <string name="globalSessionsArchivedEmptyTitle">No archived conversations</string>
-    <string name="globalSessionsArchivedEmptyMessage">Conversations you archive in Work appear here.</string>
+    <string name="globalSessionsArchivedEmptyMessage">Conversations you archive appear here.</string>
     <string name="globalSessionsShowActive">Show active conversations</string>
     <string name="globalSessionsProjectInUse">%1$s · In use</string>
     <string name="globalSessionsCopyFolder">Copy folder path</string>
