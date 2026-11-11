@@ -1,0 +1,693 @@
+package io.github.eslamasabry.oc.ui.kit.dock
+
+import androidx.compose.animation.core.Animatable
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.geometry.Rect
+import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlin.math.max
+import kotlin.math.min
+
+/**
+ * The dock's body for the host, in pixels of the dock area, PHYSICAL (already mirrored for a dock on the left).
+ * Box A is the strip, box B the swell, the peek card or the list. The glass owner feeds these into the joined-glass
+ * field: the two boxes, their radii, the fillet it wants (as the tightest radius and as the reach of a right-angle cubic
+ * blend), and the growth fraction (0 at rest, 1 fully grown; the list's width may pass 1 once). Read it with
+ * [KitEdgeDockState.body] in a draw or layout phase: it follows the motion frame by frame without recomposition.
+ */
+public class KitDockBody {
+    public var stripLeft: Float = 0f
+    public var stripTop: Float = 0f
+    public var stripRight: Float = 0f
+    public var stripBottom: Float = 0f
+    public var stripRadius: Float = 0f
+
+    /** True while box B is out (swell, peek or list). */
+    public var hasSecond: Boolean = false
+    public var secondLeft: Float = 0f
+    public var secondTop: Float = 0f
+    public var secondRight: Float = 0f
+    public var secondBottom: Float = 0f
+    public var secondRadius: Float = 0f
+
+    /** True when B is the list: B then holds A entirely and the body is B alone (no fillet). */
+    public var secondIsList: Boolean = false
+
+    /** The fillet's tightest radius, px. */
+    public var filletRadius: Float = 0f
+
+    /** The fillet as the reach of a right-angle cubic smooth minimum (the shape the kit draws), px. */
+    public var filletReach: Float = 0f
+
+    /** 0 at rest, 1 fully grown. */
+    public var growth: Float = 0f
+
+    /** The kit draws concave shoulders into the screen edge (off under Glass for now). */
+    public var shoulders: Boolean = false
+
+    /** The dock is on the physical right edge. */
+    public var onRight: Boolean = true
+}
+
+/** One frame of the body in the edge frame, dp; reused (no allocation per frame). */
+internal class DockFrame {
+    var edgeX = 0f
+    var aLeft = 0f
+    var aTop = 0f
+    var aBottom = 0f
+    var aRadius = 0f
+    var hasB = false
+    var panel = false
+    var bLeft = 0f
+    var bTop = 0f
+    var bRight = 0f
+    var bBottom = 0f
+    var bRadius = 0f
+    var grow = 0f
+    var fillet = 0f
+}
+
+/**
+ * The dock's state: its motion values (read in draw and layout phases only, so a moving dock never recomposes), what is
+ * open, and the gesture. Hoist it with [rememberKitEdgeDockState] when the host reads [body] or [gestureExclusion].
+ */
+@Stable
+public class KitEdgeDockState internal constructor() {
+    // Layout, written in composition when the window, insets, model or text scale change (not per frame).
+    internal var widthDp = 0f
+    internal var heightDp = 0f
+    internal var safeTop = 0f
+    internal var safeBottom = 0f
+    internal var edgeInset = 0f
+    internal var farInset = 0f
+    internal var onRight = true
+    internal var density = 1f
+    internal var textScale = 1f
+    internal var column: DockColumn = DockColumn(0, 0, 0, DockDims.PITCH, 0f)
+    internal var keepClear: List<DockRect> = emptyList()
+    internal var panelContent = 0f
+    internal var reduced = false
+    internal var shoulders = true
+    internal var rings: List<KitDockRing> = emptyList()
+    internal var scope: CoroutineScope? = null
+    internal var haptic: (KitHaptic) -> Unit = {}
+    internal var intents: KitDockIntents = object : KitDockIntents {}
+
+    // Motion, dp.
+    internal val out = Animatable(DockDims.REST_W)
+    internal val top = Animatable(0f)
+    internal val lean = Animatable(0f)
+    internal val scroll = Animatable(0f)
+    internal val swellGrow = Animatable(0f)
+    internal val swellCenter = Animatable(0f)
+    internal val swellH = Animatable(DockDims.RENAME_H)
+    internal val swellLen = Animatable(0f)
+    internal val panelX = Animatable(0f)
+    internal val panelY = Animatable(0f)
+    internal val charge = Animatable(0f)
+    internal val ride = Animatable(0f)
+    internal val pulse = Animatable(1f)
+    internal var pulseRing = -1
+
+    /** The finger's height while a ring is carried (reorder) or the dock is moved. */
+    internal var carryY by mutableFloatStateOf(0f)
+
+    // What is open (changes recompose; they change on decisions, not per frame).
+    internal var swell by mutableStateOf<SwellLayout?>(null)
+    internal var swellRing by mutableIntStateOf(-1)
+    internal var target by mutableStateOf<DockTarget?>(null)
+    internal var renaming by mutableStateOf<String?>(null)
+    internal var panelShown by mutableStateOf(false)
+    internal var panelOpen by mutableStateOf(false)
+    internal var carrying by mutableIntStateOf(-1)
+    internal var moving by mutableStateOf(false)
+    internal var placed = false
+    internal val expanded = mutableStateOf(emptySet<String>())
+    internal var hiddenOpen by mutableStateOf(false)
+
+    internal val gesture = DockGesture()
+    internal val frame = DockFrame()
+    internal val outline = DockOutline()
+    internal val pulseDx = FloatArray(outline.x.size)
+    internal val pulseDy = FloatArray(outline.x.size)
+
+    /** The ring under a still press (its charge arc shows), or -1. */
+    internal var pressRing by mutableIntStateOf(-1)
+
+    /** Where a carried ring would land now (the others make room), or -1. */
+    internal var carryTo by mutableIntStateOf(-1)
+
+    /** The touch area's top-left (physical dp), written by its layout. */
+    internal var hitLeft = 0f
+    internal var hitTop = 0f
+
+    /** The rename field's text as typed (saved on a tap outside). */
+    internal var renameText = ""
+    private var panelCache: DockBox? = null
+    private var panelKey = Float.NaN
+    private var panelKeyContent = Float.NaN
+    private var alertJob: Job? = null
+    private var swellJob: Job? = null
+    private var panelJob: Job? = null
+
+    /** Rises after the person drops the dock somewhere, so the placement settles again even if the model ignores it. */
+    internal var placeGeneration by mutableIntStateOf(0)
+    private var pullStart = DockDims.REST_W
+    private var pullFromPanel = false
+
+    /** True while anything is open over the content (a tap outside closes it). */
+    internal val anythingOpen: Boolean get() = swell != null || panelOpen || renaming != null
+
+    /** The strip's column top now (follows the placement, or the finger while the dock is moved). */
+    internal val columnTop: Float get() = top.value
+
+    /** Fills [frame] from the motion values. Reads animated values: call only in draw and layout phases. */
+    internal fun computeFrame(f: DockFrame = frame): DockFrame {
+        val w = widthDp
+        f.edgeX = w - edgeInset
+        val o = out.value + lean.value
+        val cTop = top.value
+        val cBottom = cTop + column.height
+        f.aLeft = w - edgeInset - o
+        f.aTop = cTop
+        f.aBottom = cBottom
+        f.aRadius = min(DockDims.CORNER, min((w - f.aLeft) / 2f, (cBottom - cTop) / 2f)).coerceAtLeast(0f)
+        f.hasB = false
+        f.panel = false
+        f.grow = 0f
+        f.fillet = 0f
+        val px = panelX.value
+        val py = panelY.value
+        val layout = swell
+        if (px > 0.001f || py > 0.001f) {
+            val p = panelBoxNow(cTop)
+            val y = py.coerceIn(0f, 1f)
+            f.hasB = true
+            f.panel = true
+            f.bLeft = min(f.aLeft, lerp(f.aLeft, p.left, px))
+            f.bTop = lerp(f.aTop, p.top, y)
+            f.bBottom = lerp(f.aBottom, p.bottom, y)
+            f.bRight = p.right
+            f.bRadius = lerp(f.aRadius, p.radius, y)
+            f.grow = px
+        } else if (layout != null && swellGrow.value > 0.001f) {
+            val h = swellH.value
+            val len = swellLen.value
+            val k = filletFor(len, h)
+            val sTop = swellTop(h, k, swellCenter.value, cTop, cBottom, safeTop, safeBottom)
+            val g = swellGrow.value
+            val gc = g.coerceIn(0f, 1f)
+            val extTop = extendedStripTop(sTop, k, cTop, safeTop)
+            val extBottom = extendedStripBottom(sTop + h, k, cBottom, safeBottom)
+            f.aTop = lerp(cTop, extTop, gc)
+            f.aBottom = lerp(cBottom, extBottom, gc)
+            f.hasB = true
+            f.bLeft = f.aLeft - len
+            f.bTop = sTop
+            f.bBottom = sTop + h
+            f.bRight = f.aLeft + DockDims.SW_OVERLAP
+            f.bRadius = min(DockDims.SW_END_R, h * 0.3f)
+            f.fillet = fittedFillet(k, sTop, sTop + h, f.aTop, f.aBottom)
+            f.grow = g
+        }
+        return f
+    }
+
+    private fun panelBoxNow(cTop: Float): DockBox {
+        val cached = panelCache
+        if (cached != null && panelKey == cTop && panelKeyContent == panelContent) return cached
+        val strip = DockBox(widthDp - edgeInset - DockDims.REST_W, cTop, widthDp + DockDims.OVERHANG, cTop + column.height, DockDims.CORNER)
+        val p = panelBox(widthDp, edgeInset, farInset, strip, panelContent, safeTop, safeBottom)
+        panelCache = p
+        panelKey = cTop
+        panelKeyContent = panelContent
+        return p
+    }
+
+    /** The list's box at full size (edge frame, dp). */
+    internal fun panelTarget(): DockBox = panelBoxNow(top.value)
+
+    /** Edge-frame x to physical x (dp). */
+    internal fun phys(x: Float): Float = if (onRight) x else mirrorX(x, widthDp)
+
+    /**
+     * The body now, physical px (see [KitDockBody]). Reads animated values: call in a draw or layout phase.
+     * Writes into [into] (no allocation per frame).
+     */
+    public fun body(into: KitDockBody = KitDockBody()): KitDockBody {
+        val f = computeFrame()
+        val d = density
+        fun x(v: Float) = phys(v) * d
+        val aL = x(f.aLeft)
+        val aR = x(widthDp + DockDims.OVERHANG)
+        into.stripLeft = min(aL, aR)
+        into.stripRight = max(aL, aR)
+        into.stripTop = f.aTop * d
+        into.stripBottom = f.aBottom * d
+        into.stripRadius = f.aRadius * d
+        into.hasSecond = f.hasB
+        if (f.hasB) {
+            val bL = x(f.bLeft)
+            val bR = x(f.bRight)
+            into.secondLeft = min(bL, bR)
+            into.secondRight = max(bL, bR)
+            into.secondTop = f.bTop * d
+            into.secondBottom = f.bBottom * d
+            into.secondRadius = f.bRadius * d
+        }
+        into.secondIsList = f.panel
+        into.filletReach = f.fillet * d
+        into.filletRadius = f.fillet * DockDims.FILLET_RADIUS_PER_REACH * d
+        into.growth = f.grow
+        into.shoulders = shoulders
+        into.onRight = onRight
+        return into
+    }
+
+    /**
+     * The rectangle (px, dock-area coordinates) the host should exclude from the system back gesture: the scrub zone
+     * along the dock's edge, at most 200 dp tall (Android honours at most 200 dp per edge), centred on the column; the
+     * nub's touch band when tucked. Null when nothing is shown. Apply it with `Modifier.systemGestureExclusion`.
+     */
+    public fun gestureExclusion(): Rect? {
+        if (column.count == 0) return null
+        val d = density
+        val tucked = out.value < DockDims.REST_W * 0.5f
+        val w = if (tucked) DockDims.NUB_TOUCH else DockDims.REST_W
+        val h = min(EXCLUSION_MAX_DP, column.height)
+        val cy = top.value + column.height / 2f
+        val l = phys(widthDp - edgeInset - w)
+        val r = phys(widthDp)
+        return Rect(min(l, r) * d, (cy - h / 2f) * d, max(l, r) * d, (cy + h / 2f) * d)
+    }
+
+    // -----------------------------------------------------------------------------------------------------------
+    // Hit-testing (edge frame, dp).
+
+    internal val hits: DockHits =
+        object : DockHits {
+            override fun ringAt(y: Float): Int = column.ringAt(y, top.value, scroll.value)
+
+            override fun inStrip(x: Float): Boolean = x >= frame.aLeft - 4f
+
+            override fun targetAt(x: Float, y: Float): DockTarget? {
+                val l = swell ?: return null
+                if (swellGrow.value < 0.7f) return null
+                return l.targetAt(x - frame.bLeft, y - frame.bTop)
+            }
+
+            override fun inSwell(x: Float, y: Float): Boolean =
+                swell != null && frame.hasB && !frame.panel && x >= frame.bLeft && x <= frame.aLeft && y >= frame.bTop && y <= frame.bBottom
+
+            override fun alerting(ring: Int): Boolean =
+                rings.getOrNull(ring)?.state.let { it == KitDockRingState.NeedsYou || it == KitDockRingState.Failed }
+
+            override fun dropIndex(y: Float): Int = column.reorderIndex(y, top.value, scroll.value)
+
+            override fun pinsAt(y: Float): Boolean = column.pinsAt(y, top.value, scroll.value)
+        }
+
+    /** The zone under a finger at ([x], [y]) (edge frame). */
+    internal fun zoneAt(x: Float, y: Float): DockZone {
+        computeFrame()
+        val f = frame
+        val tucked = out.value < DockDims.REST_W * 0.5f
+        if (tucked) {
+            val cTop = top.value
+            return if (x >= widthDp - edgeInset - DockDims.NUB_TOUCH && y >= cTop - 12f && y <= cTop + column.height + 12f) DockZone.Nub else DockZone.Outside
+        }
+        if (swell != null && hits.inSwell(x, y)) return DockZone.Swell
+        if (x < f.aLeft - 4f || y < f.aTop - 8f || y > f.aBottom + 8f) return DockZone.Outside
+        val cTop = top.value
+        if (y < cTop + DockDims.HEAD) return DockZone.Grip
+        if (y >= cTop + DockDims.HEAD + column.viewportHeight) return DockZone.Foot
+        return if (column.ringAt(y, cTop, scroll.value) >= 0) DockZone.Ring else DockZone.Outside
+    }
+
+    // -----------------------------------------------------------------------------------------------------------
+    // Reactions. Everything animates through [scope]; reduced motion turns travel into an instant change.
+
+    private fun launch(block: suspend CoroutineScope.() -> Unit) {
+        scope?.launch(block = block)
+    }
+
+    /** The ring centre y (slot centre) of ring [i] now. */
+    internal fun slotY(i: Int): Float = column.slotCenter(i, top.value, scroll.value)
+
+    /** The swell's centre for a finger at [y]: the finger's height, clamped to the first and last visible ring. */
+    internal fun swellCenterFor(y: Float): Float {
+        if (column.count == 0) return y
+        val first = column.slotCenter(0, top.value, scroll.value).coerceAtLeast(top.value + DockDims.HEAD + column.pitch / 2f)
+        val last = column.slotCenter(column.count - 1, top.value, scroll.value).coerceAtMost(top.value + DockDims.HEAD + column.viewportHeight - column.pitch / 2f)
+        return y.coerceIn(min(first, last), max(first, last))
+    }
+
+    internal fun layoutFor(kind: SwellKind, ring: KitDockRing): SwellLayout =
+        swellLayout(
+            kind = kind,
+            state = ring.state,
+            childTotal = ring.childTotal,
+            peekLines = ring.peek.size,
+            server = ring.server != null,
+            s = textScale,
+            maxLength = widthDp - edgeInset - DockDims.REST_W - farInset - DockDims.EDGE_MARGIN,
+            edgeRoom = DockDims.REST_W,
+        )
+
+    /** Opens (or retargets) box B for ring [i] as [kind]; B grows out with one small overshoot. */
+    internal fun openSwell(kind: SwellKind, i: Int, centerY: Float = slotY(i)) {
+        val ring = rings.getOrNull(i) ?: return
+        val l = layoutFor(kind, ring)
+        val first = swell == null || swellGrow.value < 0.03f
+        swell = l
+        swellRing = i
+        alertJob?.cancel()
+        swellJob?.cancel()
+        swellJob = scope?.launch {
+            if (first) {
+                swellCenter.snapTo(swellCenterFor(centerY))
+                swellH.snapTo(l.height)
+                swellLen.snapTo(l.length)
+            }
+            launch { swellH.animateTo(l.height, DockSprings.fill(reduced)) }
+            launch { swellLen.animateTo(l.length, DockSprings.drop(reduced)) }
+            swellGrow.animateTo(1f, DockSprings.drop(reduced))
+        }
+    }
+
+    /** Closes box B: the words go first, the body follows a beat later, nothing bounces. */
+    internal fun closeSwell() {
+        alertJob?.cancel()
+        gesture.closeKept()
+        target = null
+        swellJob?.cancel()
+        swellJob = scope?.launch {
+            if (!reduced) delay(70)
+            swellGrow.animateTo(0f, DockSprings.close(reduced))
+            if (swellGrow.value < 0.01f) {
+                swell = null
+                swellRing = -1
+            }
+        }
+        launch { ride.animateTo(0f, DockSprings.close(reduced)) }
+    }
+
+    /** The swell follows the finger's height while scrubbing (the finger is the spring). */
+    internal fun followFinger(y: Float) {
+        val c = swellCenterFor(y)
+        launch { swellCenter.snapTo(c) }
+    }
+
+    internal fun startCharge() {
+        launch {
+            charge.snapTo(0f)
+            if (!reduced) delay(90)
+            charge.animateTo(1f, DockSprings.timed(DockRules().holdMs.toInt() - 90))
+        }
+    }
+
+    internal fun stopCharge() {
+        launch { charge.animateTo(0f, DockSprings.timed(if (reduced) 0 else 120)) }
+    }
+
+    internal fun onFeedback(fb: DockFeedback) {
+        when (fb) {
+            DockFeedback.None -> Unit
+            DockFeedback.ShowSwell -> openSwell(SwellKind.Scrub, gesture.ring.coerceAtLeast(0), gesture.y)
+            DockFeedback.RingTick -> {
+                haptic(KitHaptic.Select)
+                openSwell(SwellKind.Scrub, gesture.ring)
+            }
+            DockFeedback.AlertTick -> {
+                haptic(KitHaptic.LongPress)
+                openSwell(SwellKind.Scrub, gesture.ring)
+            }
+            DockFeedback.TargetTick -> haptic(KitHaptic.Select)
+            DockFeedback.Peek -> {
+                haptic(KitHaptic.LongPress)
+                stopCharge()
+                openSwell(SwellKind.Peek, gesture.ring)
+            }
+            DockFeedback.PickUp -> {
+                haptic(KitHaptic.LongPress)
+                carrying = gesture.ring
+                carryTo = gesture.ring
+                carryY = gesture.y
+                closeSwell()
+            }
+        }
+        target = gesture.target
+    }
+
+    /** The gesture's continuous part: called on every move. */
+    internal fun onMove(x: Float, y: Float, startX: Float) {
+        when (gesture.mode) {
+            DockMode.Scrub -> if (hits.inStrip(x)) followFinger(y)
+            DockMode.Reorder -> {
+                carryY = y
+                val to = hits.dropIndex(y)
+                if (to != carryTo) {
+                    carryTo = to
+                    haptic(KitHaptic.Select)
+                }
+            }
+            DockMode.Move -> {
+                moving = true
+                carryY = y
+                val room = DockDims.EDGE_MARGIN + DockDims.SHOULDER_REACH
+                val t = (y - column.height / 2f).coerceIn(safeTop + room, max(safeTop + room, safeBottom - room - column.height))
+                launch { top.snapTo(t) }
+            }
+            DockMode.Pull -> {
+                val panelW = panelTarget().let { widthDp - edgeInset - it.left }
+                val o = pullOut(pullStart, startX - x, panelW)
+                val p = ((o - DockDims.REST_W) / (panelW - DockDims.REST_W)).coerceAtLeast(0f)
+                if (!panelShown && p > 0.02f) panelShown = true
+                panelJob?.cancel()
+                launch {
+                    if (o < DockDims.REST_W) {
+                        out.snapTo(o)
+                        panelX.snapTo(0f)
+                        panelY.snapTo(0f)
+                    } else {
+                        out.snapTo(DockDims.REST_W)
+                        panelX.snapTo(p)
+                        panelY.snapTo(p.coerceAtMost(1f))
+                    }
+                }
+            }
+            else -> Unit
+        }
+        target = gesture.target
+    }
+
+    internal fun onDown(zone: DockZone) {
+        when (zone) {
+            DockZone.Ring -> startCharge()
+            DockZone.Grip, DockZone.Nub -> carryY = top.value + column.height / 2f
+            else -> Unit
+        }
+        pullStart = if (panelOpen) widthDp - edgeInset - panelTarget().left else out.value
+        pullFromPanel = panelOpen
+    }
+
+    internal fun ringKey(i: Int): String? = rings.getOrNull(i)?.key
+
+    internal fun shownChild(ring: KitDockRing, cell: Int): KitDockChild? {
+        val order = childOrder(ring.children)
+        return order.getOrNull(cell)?.let { ring.children[it] }
+    }
+
+    internal fun onOutcome(o: DockOutcome) {
+        stopCharge()
+        when (o) {
+            DockOutcome.None -> Unit
+            is DockOutcome.Open -> {
+                ringKey(o.ring)?.let(intents::onOpen)
+                closeSwell()
+            }
+            is DockOutcome.Target -> runTarget(o.ring, o.kind, o.child)
+            is DockOutcome.Keep -> Unit
+            DockOutcome.Close -> {
+                if (renaming != null) renaming = null
+                closeSwell()
+                if (panelOpen) closePanel()
+            }
+            is DockOutcome.Drop -> {
+                val from = o.from
+                carrying = -1
+                carryTo = -1
+                if (o.to != from) intents.onReorder(from, o.to)
+                val ring = rings.getOrNull(from)
+                if (ring != null && ring.pinned != o.pinned) intents.onPinChange(ring.key, o.pinned)
+            }
+            is DockOutcome.PullEnd -> settlePull(o.velocity)
+            DockOutcome.Untuck -> {
+                moving = false
+                launch { out.animateTo(DockDims.REST_W, DockSprings.drop(reduced)) }
+                intents.onTuckChange(false)
+            }
+            is DockOutcome.Place -> {
+                moving = false
+                placeGeneration++
+                val side = sideAt(phys(o.x), widthDp, rtl = !onRightForEnd)
+                intents.onPlacementChange(side, biasFor(o.y, column.height, safeTop, safeBottom))
+            }
+            DockOutcome.NewConversation -> intents.onNewConversation()
+        }
+    }
+
+    /** Whether the End side is the physical right (LTR); set from the layout direction. */
+    internal var onRightForEnd = true
+
+    internal fun runTarget(i: Int, kind: DockTargetKind, child: Int) {
+        val ring = rings.getOrNull(i) ?: return
+        when (kind) {
+            DockTargetKind.Header, DockTargetKind.Open -> intents.onOpen(ring.key)
+            DockTargetKind.Child -> shownChild(ring, child)?.let { intents.onOpenChild(ring.key, it.key) }
+            DockTargetKind.More -> {
+                expanded.value = expanded.value + ring.key
+                closeSwell()
+                openPanel()
+                return
+            }
+            DockTargetKind.Allow -> intents.onAllow(ring.key)
+            DockTargetKind.Deny -> intents.onDeny(ring.key)
+            DockTargetKind.Stop -> intents.onStop(ring.key)
+            DockTargetKind.Remove -> intents.onRemove(ring.key)
+            DockTargetKind.Rename -> {
+                startRename(i)
+                return
+            }
+        }
+        closeSwell()
+    }
+
+    /** Rename: the ring rides out on the swell's tip and the field sits to its right. */
+    internal fun startRename(i: Int) {
+        val ring = rings.getOrNull(i) ?: return
+        haptic(KitHaptic.LongPress)
+        renaming = ring.key
+        openSwell(SwellKind.Rename, i)
+        launch { ride.animateTo(1f, DockSprings.drop(reduced)) }
+    }
+
+    internal fun endRename(save: Boolean, text: String) {
+        val key = renaming ?: return
+        renaming = null
+        if (save) {
+            val clean = text.trim().replace(Regex("\\s+"), " ")
+            val old = rings.firstOrNull { it.key == key }?.name
+            if (clean != old) intents.onRename(key, clean)
+        }
+        closeSwell()
+    }
+
+    internal fun openPanel() {
+        panelShown = true
+        panelOpen = true
+        panelJob?.cancel()
+        panelJob = scope?.launch {
+            launch { panelY.animateTo(1f, DockSprings.fill(reduced)) }
+            panelX.animateTo(1f, DockSprings.drop(reduced))
+        }
+        launch { out.animateTo(DockDims.REST_W, DockSprings.close(reduced)) }
+    }
+
+    internal fun closePanel() {
+        panelOpen = false
+        panelJob?.cancel()
+        panelJob = scope?.launch {
+            // The rows empty first; the body follows a beat later, with no bounce.
+            if (!reduced) delay(90)
+            launch { panelY.animateTo(0f, DockSprings.close(reduced)) }
+            panelX.animateTo(0f, DockSprings.close(reduced))
+            if (!panelOpen) panelShown = false
+        }
+    }
+
+    /** The open list dragged sideways by [deltaDp] (edge frame: positive toward the edge). */
+    internal fun panelDrag(deltaDp: Float) {
+        val panelW = widthDp - edgeInset - panelTarget().left
+        val p = (panelX.value - deltaDp / (panelW - DockDims.REST_W)).coerceAtLeast(0f)
+        pullFromPanel = true
+        panelJob?.cancel()
+        launch {
+            panelX.snapTo(p)
+            panelY.snapTo(p.coerceAtMost(1f))
+        }
+    }
+
+    /** The list's drag ended with [velocity] dp/s toward the edge. */
+    internal fun panelDragEnd(velocity: Float) {
+        pullFromPanel = true
+        settlePull(velocity)
+    }
+
+    private fun settlePull(velocity: Float) {
+        val panelW = widthDp - edgeInset - panelTarget().left
+        val now = if (panelX.value > 0f) DockDims.REST_W + panelX.value * (panelW - DockDims.REST_W) else out.value
+        when (pullSettle(now, velocity, panelW, pullFromPanel)) {
+            PullSettle.Panel -> openPanel()
+            PullSettle.Rest -> {
+                closePanel()
+                launch { out.animateTo(DockDims.REST_W, DockSprings.drop(reduced)) }
+            }
+            PullSettle.Tuck -> {
+                closePanel()
+                launch { out.animateTo(DockDims.NUB_W, DockSprings.close(reduced)) }
+                intents.onTuckChange(true)
+            }
+        }
+    }
+
+    /**
+     * A ring's alert (its pulse rose): a request leans the dock out and shows the words in the swell for about three
+     * seconds; a failure sends a pulse along the outline. Nothing shows over an open swell, list or a finger.
+     */
+    internal fun alert(i: Int, failed: Boolean) {
+        if (!failed) {
+            launch {
+                if (!reduced) {
+                    lean.animateTo(7f, DockSprings.drop(reduced))
+                    delay(3000)
+                }
+                lean.animateTo(0f, DockSprings.close(reduced))
+            }
+        } else if (!reduced) {
+            pulseRing = i
+            launch {
+                pulse.snapTo(0f)
+                pulse.animateTo(1f, DockSprings.timed(600))
+            }
+        }
+        if (gesture.mode != DockMode.Idle || anythingOpen || out.value < DockDims.REST_W * 0.5f) return
+        alertJob?.cancel()
+        alertJob =
+            scope?.launch {
+                delay(if (reduced) 0L else 200L)
+                openSwell(SwellKind.Scrub, i)
+                gesture.keepOpenForAlert(i)
+                delay(3100)
+                if (gesture.mode == DockMode.Idle) closeSwell()
+            }
+    }
+
+    private companion object {
+        const val EXCLUSION_MAX_DP = 200f
+    }
+}
+
+/** Remembers a [KitEdgeDockState]; hoist it when the host reads [KitEdgeDockState.body] or its gesture exclusion. */
+@Composable
+public fun rememberKitEdgeDockState(): KitEdgeDockState = remember { KitEdgeDockState() }
