@@ -16,8 +16,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
 import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAge
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.chats.presentation.AllConversationsUi
@@ -69,6 +67,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
+import io.github.eslamasabry.oc.ui.kitchat.rememberKitRedactedCopyAction
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeClearFilters
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeIncompleteNamed
@@ -85,6 +84,7 @@ import io.github.eslamasabry.oc.ui.words.res.globalSessionsUnknownLocation
 import io.github.eslamasabry.oc.ui.words.res.globalSessionsWorking
 import io.github.eslamasabry.oc.ui.words.res.globalSessionsArchivedShort
 import io.github.eslamasabry.oc.ui.words.res.kitChoiceSelectedCount
+import io.github.eslamasabry.oc.ui.words.res.kitCopied
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
@@ -522,7 +522,13 @@ private fun AllRow(row: AllRowUi, selecting: Boolean, words: AllRowWords, nowMs:
 @Composable
 private fun allRowMenu(row: AllRowUi, unknownLocation: String, actions: ChatsAllActions): List<KitMenuItem> {
     val archiveReason = stringResource(Res.string.p12ArchiveUnavailable)
-    @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
+    // A folder path is server text: it goes through the one redacting copy like every other copy of server text.
+    val copyFolder =
+        rememberKitRedactedCopyAction(
+            label = stringResource(Res.string.globalSessionsCopyFolder),
+            copiedLabel = stringResource(Res.string.kitCopied),
+            text = { row.folder ?: unknownLocation },
+        )
     return listOfNotNull(
         if (row.pinAvailable) KitMenuItem(
             stringResource(if (row.pinned) Res.string.stateUnpin else Res.string.statePin),
@@ -537,7 +543,7 @@ private fun allRowMenu(row: AllRowUi, unknownLocation: String, actions: ChatsAll
         KitMenuItem(stringResource(Res.string.sessionCopyHandoff), { actions.rowAct(row.key, RowAct.CopyHandoff) }, icon = KitIcons.terminal),
         KitMenuItem(
             stringResource(Res.string.globalSessionsCopyFolder),
-            { clipboard.setText(AnnotatedString(row.folder ?: unknownLocation)) },
+            { copyFolder.onClick?.invoke() },
             icon = KitIcons.copy,
         ),
         KitMenuItem(
