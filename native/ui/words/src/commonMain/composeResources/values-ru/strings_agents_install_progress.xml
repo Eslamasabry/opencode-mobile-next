@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentsTileStepLinux">Подготовка Linux…</string>
+    <string name="agentsTileStepRuntime">Установка Node.js…</string>
+    <string name="agentsTileStepHelper">Установка помощника агентов…</string>
+    <string name="agentsTileStillWorking">Всё ещё работает · %1$s</string>
+    <string name="agentsTileFailedSpace">Не установлено: не хватает места</string>
+    <string name="agentsTileFailedDownload">Не установлено: загрузка не удалась</string>
+    <string name="agentsTileFailedStopped">Не установлено: настройка остановилась</string>
+    <string name="agentsTileFailedOther">Не установлено: настройка не удалась</string>
+    <string name="agentsInstallNeedsSpace">Для установки %1$s нужно около %2$s свободного места, а на телефоне свободно %3$s. Освободите место и установите снова.</string>
+    <string name="agentsInstallSpaceFits">Нужно около %1$s свободного места; на телефоне свободно %2$s.</string>
+</resources>

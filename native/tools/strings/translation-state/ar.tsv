@@ -598,6 +598,8 @@ agentsHubStartFailed	0ba87a6ee8
 agentsHubSwitchFailed	ce1fc30ff6
 agentsInstallAction	f608d56d78
 agentsInstallHint	530a7e7430
+agentsInstallNeedsSpace	2f4ea4e8eb
+agentsInstallSpaceFits	e3ad9f4af8
 agentsInstalling	1648381cd1
 agentsLimitReset	b812cc3bd4
 agentsLimitUnknown	1d3b718c38
@@ -702,7 +704,15 @@ agentsStoppedLine	991351e5c5
 agentsSwitchToBuiltIn	3bac348a7c
 agentsTabComputers	5c94d194d1
 agentsTabsLabel	d5624fde97
+agentsTileFailedDownload	a9f3858496
+agentsTileFailedOther	3eb3a1c4f4
+agentsTileFailedSpace	b071baba91
+agentsTileFailedStopped	d8f27d26d8
 agentsTileInstalling	6cd83530ff
+agentsTileStepHelper	27ffd1db44
+agentsTileStepLinux	44349442f0
+agentsTileStepRuntime	8c66999cc0
+agentsTileStillWorking	a4d052801d
 aiSetupAllSettings	ecf698cd74
 aiSetupAllSources	cb3ef3c564
 aiSetupDefaultAgent	b69240fda0
