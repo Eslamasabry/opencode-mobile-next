@@ -517,20 +517,10 @@ public fun ChatsScreen(
                 }
             }
         }
-        // The Undo bar sits at the bottom edge; the New button rides above it while it shows.
+        // P20 (F: lib/ui/kit/kit_undo.dart:63, the bar floats above a pinned primary): the Undo bar rides above the New
+        // button, which never moves. Before, the button rode above the bar and dropped into Undo's place as the bar left,
+        // so a late tap meant for Undo opened New conversation.
         Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth(), horizontalAlignment = Alignment.End) {
-            // P-107: Flutter's round 56 dp + on the gutter, 12 dp above the bottom; the words are heard, not drawn, so
-            // it no longer covers a row's time. It fades out while the server cannot start one yet.
-            if (listed) {
-                KitFab(
-                    label = stringResource(Res.string.chatsHomeNewChat),
-                    icon = KitIcons.add,
-                    onClick = actions::newConversation,
-                    modifier = Modifier.padding(end = LocalKitTokens.current.gutter.dp, bottom = Space.S3.dp),
-                    visible = showFab,
-                    backdrop = listGlass,
-                )
-            }
             val undo = state.archiveUndo
             val message =
                 undo?.let {
@@ -545,6 +535,18 @@ public fun ChatsScreen(
                 onTimeout = actions::commitArchive,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
             )
+            // P-107: Flutter's round 56 dp + on the gutter, 12 dp above the bottom; the words are heard, not drawn, so
+            // it no longer covers a row's time. It fades out while the server cannot start one yet.
+            if (listed) {
+                KitFab(
+                    label = stringResource(Res.string.chatsHomeNewChat),
+                    icon = KitIcons.add,
+                    onClick = actions::newConversation,
+                    modifier = Modifier.padding(end = LocalKitTokens.current.gutter.dp, bottom = Space.S3.dp),
+                    visible = showFab,
+                    backdrop = listGlass,
+                )
+            }
         }
         // The edge dock over the list, clear of the floating + at the foot; under Glass it bends the list's recording.
         androidx.compose.runtime.CompositionLocalProvider(io.github.eslamasabry.oc.ui.kit.dock.LocalKitDockGlass provides listGlass) {
