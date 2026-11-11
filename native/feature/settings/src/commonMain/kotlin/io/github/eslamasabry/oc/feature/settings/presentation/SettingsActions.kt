@@ -70,6 +70,12 @@ public interface SettingsActions {
      */
     public fun onSearchEntries(entries: List<SettingsSearchEntry>)
 
+    /** S6: the words of every inside page that exists, in the person's language. */
+    public fun onInsideEntries(entries: List<SettingsInsideEntry>) {}
+
+    /** S6: open the page a search result inside a row leads to. */
+    public fun onInside(inside: SettingsInside) {}
+
     public fun onOutside(place: SettingsOutside)
 
     public fun onMode(mode: AppearanceMode)

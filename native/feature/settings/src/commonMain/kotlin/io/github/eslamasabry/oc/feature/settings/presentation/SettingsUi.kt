@@ -70,6 +70,10 @@ public data class HubUi(
     /** Every row that exists now: the screen builds the search entries from these. */
     val searchable: ImmutableList<SettingsRowId> = persistentListOf(),
     val savedServers: ImmutableList<SettingsSavedServer> = persistentListOf(),
+    /** S6: pages inside the rows matching [query] (Linux ports, budgets ...), best first. */
+    val insideResults: ImmutableList<SettingsInside> = persistentListOf(),
+    /** S6: the inside pages this phone offers now; the screen builds their words from these. */
+    val insideSearchable: ImmutableList<SettingsInside> = persistentListOf(),
 )
 
 public data class GroupUi(val id: SettingsGroupId, val rows: ImmutableList<SettingsRowUi>)
