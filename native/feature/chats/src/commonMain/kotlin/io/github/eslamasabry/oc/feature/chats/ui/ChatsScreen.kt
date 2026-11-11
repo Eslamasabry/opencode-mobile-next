@@ -146,7 +146,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatsHomeFailed
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeIncompleteNamed
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeOnlyProject
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeStillLoading
-import io.github.eslamasabry.oc.ui.words.res.chatsHomeUnreachable
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeUnreachableShort
 import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
 import io.github.eslamasabry.oc.ui.words.res.agentsRestartLine
 import io.github.eslamasabry.oc.ui.words.res.agentsResumeAction
@@ -362,12 +362,14 @@ public fun ChatsScreen(
             // S4 / H3 (F: chats_home_screen.dart:511-632): a connection that did not answer says so by name and offers
             // Try again on the page; the one still opening has its own card. A list that is only partly read says what
             // is loading, then offers Try again; a server that lists one project says so.
+            // Flutter shows only "{servers} isn't answering" (chatsHomeUnreachableShort); the longer "conversations
+            // aren't shown" is its screen-reader label, because the visible list may still hold remembered rows.
             val unreachable = state.home.sources.filter { it.shown && it.unreachable && it.profile != state.home.opening?.profile }
             unreachable.forEach { source ->
                 item(key = "unreachable-${source.profile.raw}", contentType = "unreachable") {
                     Box(kitItemMotion()) {
                         KitNotice(
-                            message = stringResource(Res.string.chatsHomeUnreachable, KitBidi.auto(source.name)),
+                            message = stringResource(Res.string.chatsHomeUnreachableShort, KitBidi.auto(source.name)),
                             actions = listOf(KitLineAction(stringResource(Res.string.kitTryAgain), { actions.retrySource(source.profile) })),
                         )
                     }
