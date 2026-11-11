@@ -319,7 +319,7 @@ class ReplyWatchHub(
     private fun ownRequestCovering(): Boolean =
         try {
             application.getSystemService(ActivityManager::class.java)?.appTasks.orEmpty().any { task ->
-                val top = task.taskInfo.topActivity
+                val top = task.taskInfo?.topActivity
                 top != null && top.packageName != application.packageName
             }
         } catch (_: RuntimeException) {
