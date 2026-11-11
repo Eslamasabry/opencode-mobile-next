@@ -1,6 +1,10 @@
+@file:OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+
 package io.github.eslamasabry.oc.protocol.paseo.gateway
 
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.model.ModelRef
 import io.github.eslamasabry.oc.core.model.ModelSelection
@@ -85,6 +89,60 @@ class PaseoBasicJourneysTest {
         assertTrue(daemon.of("resume_agent_request").isEmpty())
         assertTrue(daemon.of("create_agent_request").isEmpty())
         assertTrue(daemon.of("update_agent_request").isEmpty())
+    }
+
+    @Test
+    fun `W4-PASEO-GATE a row that stands for several records opens the newest in place and sends to it`() = runTest {
+        val daemon = FakeDaemon().seedDefaults()
+        daemon.listing(
+            listOf(
+                agent("new", "native-1", title = null, updatedAt = "2026-10-04T08:00:00Z"),
+                agent("old", "native-1", title = "Fix the login bug", updatedAt = "2026-10-03T08:00:00Z"),
+            ),
+        )
+        daemon.handlers["fetch_agent_timeline_request"] = { m ->
+            "fetch_agent_timeline_response" to jsonOf("agentId" to m.str("agentId"), "entries" to emptyList<Any>())
+        }
+        daemon.handlers["send_agent_message_request"] = { m ->
+            "send_agent_message_response" to jsonOf("agentId" to m.str("agentId"), "accepted" to true, "error" to null)
+        }
+        val h = GatewayHarness(this, daemon)
+        val row = h.gateway.sessionPage(null, 50).ok().items.single()
+        assertEquals("new", row.id.raw)
+        h.gateway.messagePage(row.id, null, 100).ok()
+        assertEquals(listOf("new"), daemon.of("fetch_agent_timeline_request").map { it.str("agentId") })
+        assertEquals(PromptAdmission.Confirmed(null), h.gateway.prompt(row.id, OutgoingPrompt("continue")).ok())
+        assertEquals("new", daemon.of("send_agent_message_request").single().str("agentId"))
+        assertTrue(daemon.of("resume_agent_request").isEmpty())
+        assertTrue(daemon.of("create_agent_request").isEmpty())
+        assertTrue(daemon.of("update_agent_request").isEmpty())
+    }
+
+    // ---- a start the daemon did not make
+
+    @Test
+    fun `W4-PASEO-GATE a start answered without an agent record fails at once and the next send starts it`() = runTest {
+        val h = GatewayHarness(this)
+        h.gateway.providers().ok()
+        val draft = h.gateway.createSession(NewSession()).ok().id
+        val prompt = OutgoingPrompt("hello", ModelSelection(ModelRef("claude", "haiku")))
+        // The daemon refuses with its own words, then answers with no record: neither waits out the 90 s create time,
+        // and neither is "maybe started" (that would hold the next send for a reconcile).
+        h.daemon.handlers["create_agent_request"] = {
+            "status" to jsonOf("status" to "agent_create_failed", "error" to "spawn failed")
+        }
+        val refused = assertIs<Outcome.Failed>(h.gateway.prompt(draft, prompt)).failure
+        assertTrue((refused as? Failure.Refused)?.reason != RefusalReason.DispatchUncertain, "$refused")
+        h.daemon.handlers["create_agent_request"] = { "status" to jsonOf("status" to "agent_created") }
+        val empty = assertIs<Outcome.Failed>(h.gateway.prompt(draft, prompt)).failure
+        assertTrue((empty as? Failure.Refused)?.reason != RefusalReason.DispatchUncertain, "$empty")
+        assertTrue(testScheduler.currentTime < PaseoGateway.CREATE_TIMEOUT_MS, "waited ${testScheduler.currentTime} ms")
+        h.daemon.handlers["create_agent_request"] = {
+            "status" to jsonOf("status" to "agent_created", "agent" to agentJson("real-1", status = "initializing"))
+        }
+        assertEquals(PromptAdmission.Confirmed(null), h.gateway.prompt(draft, prompt).ok())
+        assertEquals(3, h.daemon.of("create_agent_request").size)
+        assertTrue(h.daemon.of("resume_agent_request").isEmpty())
     }
 
     // ---- new conversation with a picture
