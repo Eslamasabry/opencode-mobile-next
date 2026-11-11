@@ -76,9 +76,10 @@ internal fun DockPanel(state: KitEdgeDockState, model: KitDockModel, words: KitD
             .layout { measurable, constraints ->
                 val p = state.panelTarget()
                 val d = density
-                // Edge frame [p.left, edge]; mirrored, [edgeInset, width - p.left].
-                val w = state.widthDp - state.edgeInset - p.left
-                val x = if (state.onRight) p.left else state.edgeInset
+                // The whole pane stands a page gutter in from the dock's screen edge: edge frame [p.left, width - gutter];
+                // mirrored, [gutter, width - p.left]. The rows keep their own gutter inside it.
+                val w = state.widthDp - DockDims.GUTTER - p.left
+                val x = if (state.onRight) p.left else DockDims.GUTTER
                 val pl = measurable.measure(Constraints.fixed((w * d).roundToInt().coerceAtLeast(1), ((p.bottom - p.top) * d).roundToInt().coerceAtLeast(1)))
                 layout(constraints.maxWidth, constraints.maxHeight) { pl.place((x * d).roundToInt(), (p.top * d).roundToInt()) }
             }
@@ -259,7 +260,7 @@ private fun RingRow(ring: KitDockRing, current: Boolean, words: KitDockWords, in
         }
         Spacer(Modifier.width(8.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.Center) {
-            KitText(ring.name, role = TypeRole.RowTitle, kind = KitTextKind.Frame, maxLines = 1)
+            KitText(dockTitleLine(ring.name), role = TypeRole.RowTitle, kind = KitTextKind.Frame, maxLines = 1)
             // A blank state line takes no line: the name and the last line close up.
             val line = words.stateLine(ring)
             if (line.isNotBlank()) KitText(line, role = TypeRole.Caption, tone = if (alert) TextTone.Attention else TextTone.Accent.takeIf { ring.state.running } ?: TextTone.Secondary, kind = KitTextKind.Frame, maxLines = 1)
@@ -297,7 +298,7 @@ private fun ChildRows(state: KitEdgeDockState, ring: KitDockRing, currentChild: 
                 )
                 if (c.key == currentChild) drawCircle(inks.ink, 11f * density, alpha = 0.08f)
             }
-            KitText(c.name, role = TypeRole.Label, kind = KitTextKind.Frame, maxLines = 1)
+            KitText(dockTitleLine(c.name), role = TypeRole.Label, kind = KitTextKind.Frame, maxLines = 1)
             val alert = c.state == KitDockRingState.NeedsYou || c.state == KitDockRingState.Failed
             val word = words.stateWord(c.state)
             if (word.isNotBlank()) KitText(word, role = TypeRole.Caption, tone = if (alert) TextTone.Attention else TextTone.Secondary, kind = KitTextKind.Frame, maxLines = 1)
@@ -319,6 +320,13 @@ private fun ChildRows(state: KitEdgeDockState, ring: KitDockRing, currentChild: 
         }
     }
 }
+
+/**
+ * A name shown on one line, with no break opportunity: the platform's one-line cut at a space drops the rest of the
+ * title without marking it (device QA run 5, "Quarterly budget review for the" ended with no "..."), while a line
+ * with nothing to break at is cut by the overflow and ends in the mark.
+ */
+internal fun dockTitleLine(name: String): String = name.replace(' ', '\u00A0')
 
 /** The list's padding on the side toward the screen's middle (dp). */
 private const val PANEL_INNER_PAD = 8f

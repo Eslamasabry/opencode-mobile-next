@@ -618,7 +618,7 @@ private fun ringStands(state: KitEdgeDockState, index: Int, m: RingMotion): Bool
 /** A ring's centre (edge frame, dp, converted to physical x): its slot (a carried ring's is its drop place), the lean, the ride out for rename. */
 private fun ringCenter(state: KitEdgeDockState, index: Int, m: RingMotion): Offset {
     val o = max(state.out.value, DockDims.NUB_W) + state.lean.value
-    val baseX = state.widthDp - state.edgeInset - o / 2f
+    val baseX = state.widthDp - state.edgeInset - o / 2f - state.stripShift()
     var y = state.column.slotCenterAt(m.slot.value.coerceAtLeast(0f), state.top.value, state.scrollNow)
     // A carried ring stands in the gap the others make for it (its slot is the drop place, [visualIndex]), not under
     // the finger between two slots, where it covered its neighbours' rings and names (device QA 2026-11-11, m1).
@@ -672,7 +672,7 @@ private fun DockFootNode(state: KitEdgeDockState, words: KitDockWords, intents: 
         Modifier
             .absoluteOffset {
                 val o = max(state.out.value, DockDims.NUB_W) + state.lean.value
-                val cx = state.phys(state.widthDp - state.edgeInset - o / 2f)
+                val cx = state.phys(state.widthDp - state.edgeInset - o / 2f - state.stripShift())
                 val cy = state.top.value + DockDims.HEAD + state.column.viewportHeight + DockDims.FOOT / 2f
                 IntOffset(((cx - 24f) * density).roundToInt(), ((cy - 24f) * density).roundToInt())
             }
