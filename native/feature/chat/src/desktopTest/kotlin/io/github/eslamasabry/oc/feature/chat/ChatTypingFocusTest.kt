@@ -338,6 +338,23 @@ class ChatTypingFocusTest {
         }
 
     /**
+     * Gate (w4-focus2): the shell's park now steers a letter only while the park itself holds focus, so after one Tab
+     * (focus on the page's own plain stop, not the park) the letter key itself must reach the box. This harness's park
+     * steers nothing: the key is pressed, not simulated.
+     */
+    @Test
+    fun `N-55 a letter key pressed on the page's own stop after a Tab moves focus into the message box`() =
+        runDesktopComposeUiTest(412, 915) {
+            show()
+            walk(FocusDirection.Next, 1)
+            composer().assertIsNotFocused()
+            onRoot().performKeyInput { pressKey(Key.H) }
+            waitForIdle()
+            composer().assertIsFocused()
+            assertEquals("", composer().words(), "the key is used up, as the park's steer uses it")
+        }
+
+    /**
      * The edge dock's rename field as `DockSwellContent.RenameField` takes focus: it clears focus (force), waits a
      * frame, then asks for focus. The dock is drawn inside the conversation, so on the base the N-55 redirect sent
      * that request to the message box.

@@ -14,6 +14,16 @@ import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEvent
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isAltPressed
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.isMetaPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.key.utf16CodePoint
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerTypingTarget
 import io.github.eslamasabry.oc.ui.kit.frame.kitKeyboardVisible
 
@@ -59,7 +69,23 @@ internal fun Modifier.chatTypingLanding(
             steered = false
             if (it.isFocused && steer && !covered()) typing.focus()
         }
+        // N-55 on the page's own stop (gate, w4-focus2): Tab with nothing focused stops here once, and the shell's park
+        // steers a letter only while the park itself holds focus (a focused field keeps its letters), so a letter typed
+        // on this stop would go nowhere. It is used up here and the message box takes focus, as the park's steer does.
+        .onKeyEvent { event ->
+            if (!page.landing || covered() || !event.isStrayLetter()) return@onKeyEvent false
+            if (event.type == KeyEventType.KeyDown) typing.focus()
+            true
+        }
         .focusTarget()
+}
+
+/** A printable character typed with no Ctrl/Alt/Meta (the shell's `StrayKey.Typing`, without Space). */
+private fun KeyEvent.isStrayLetter(): Boolean {
+    if (isCtrlPressed || isAltPressed || isMetaPressed) return false
+    if (key == Key.Spacebar || key == Key.Enter || key == Key.NumPadEnter || key == Key.Tab) return false
+    val code = utf16CodePoint
+    return code > 0x20 && code != 0x7F
 }
 
 /**
