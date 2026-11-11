@@ -145,7 +145,9 @@ internal fun transcriptReading(
                     ?.takeIf { it.isServerStop }
             val cutOff = prompt != null && !command && !compact && idleSaid && cutOff(turn, assistants, outcome)
             // The W4 rule (endsOnRefusal), and no words after the refused step: a reply that went on past a refusal
-            // and finished keeps no such line. A Stop the person pressed keeps "Stopped".
+            // and finished keeps no such line. A Stop the person pressed keeps "Stopped". Only an ended turn gets
+            // here (a live one is skipped above), so a Deny the agent may still answer by trying something else
+            // says nothing yet. One closing line per turn: Declined, else cut off, else the server's own stop.
             val declined =
                 prompt != null && !command && !compact && !cutOff &&
                     !(outcome is io.github.eslamasabry.oc.core.domain.events.RunOutcome.Interrupted &&
@@ -287,7 +289,9 @@ private fun cutOff(
     // A finish reason ends a reply too: Codex keeps no completion time for a turn the person interrupted.
     if (info.time?.completedMs != null || info.finish != null || info.errorText != null || info.errorKind != null)
         return false
-    return !io.github.eslamasabry.oc.engine.transcript.ledger.endsOnRefusal(turn)
+    // A reply that went on in words past the refused step (a refusal with a message lets the agent carry on) and was
+    // then lost is cut off like any other; only a turn that stopped at the refusal is the person's answer.
+    return !(io.github.eslamasabry.oc.engine.transcript.ledger.endsOnRefusal(turn) && noWordsAfterLastStep(assistants))
 }
 
 /** No words came after the turn's last tool step (so the reply did not go on past it and finish). */
