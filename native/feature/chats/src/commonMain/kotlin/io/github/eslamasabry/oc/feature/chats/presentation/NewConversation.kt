@@ -559,8 +559,8 @@ public class NewConversationViewModel(
         }
     }
 
-    // This entry owns its draft in memory while pickers or other pages cover it. A new entry
-    // starts empty; resuming must never import another conversation's old project draft.
+    // This entry owns its draft in memory while pickers or other pages cover it. A new entry with an empty field
+    // shows the words left unsent in this project (P25, F: new_chat_screen.dart:119-175); resuming reads nothing.
     /** Agent setup was opened from here: the agents may have changed when this screen is shown again. */
     private var refreshOnShown = false
 
@@ -767,9 +767,12 @@ public class NewConversationViewModel(
                         }
                 }
             }
-            // Only an unresolved first-send receipt may restore persisted words on a fresh
-            // entry: these belong to the conversation offered for review, not a new prompt.
-            if (before.text.isNotEmpty() || !mutable.value.deliveryUnconfirmed) return
+            // P25 (F: new_chat_screen.dart:119-175, `KitDraft` per project): words typed and left unsent here (Close,
+            // Back) come back when New conversation opens again on this project with an empty field. A sent first
+            // message clears them once its delivery is confirmed; offered words (a starter text) are never replaced.
+            // An unresolved first-send receipt restores the words of the conversation offered for review, as before.
+            if (before.text.isNotEmpty()) return
+            if (route.initialText.isNotEmpty() && !mutable.value.deliveryUnconfirmed) return
             when (val saved = host.draft(profile, directory)) {
                 is Outcome.Failed -> mutable.update { it.copy(draftFailed = true) }
                 is Outcome.Ok ->
