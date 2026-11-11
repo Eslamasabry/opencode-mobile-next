@@ -355,7 +355,7 @@ class KitFloatingBarTest {
     }
 
     @Test
-    fun `B-KIT-FLOAT-005 home's lens budget holds the bar, three pills and the +; a fourth kind of part goes frost`() {
+    fun `B-KIT-FLOAT-005 home's lens budget holds the bar, three pills and the + and a fourth kind of part goes frost`() {
         shot(
             Page.Home,
             floating = true,
