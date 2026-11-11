@@ -119,7 +119,8 @@ import kotlinx.coroutines.launch
  *   draws them, the join does not.
  * - Tucked, the strip's hit area is narrower than the 48 dp band the nub promises (the touch node is the nub's band
  *   only while tucked; the ring nodes are the rest width).
- * - Ring names are one line at most 64 dp wide: a large text size or a long name clips.
+ * - Ring names are one line at most [DockDims.LABEL_MAX] dp wide (6 dp in from the strip's sides): a long name ends in
+ *   an ellipsis.
  * - The pulled-out list composes every row (a scrolling Column, not a lazy list): a cost with many conversations.
  * - Rings have no exit animation: a removed ring disappears at once.
  * - The back-gesture exclusion ([KitEdgeDockState.gestureExclusion]) is the host's job (`systemGestureExclusion`);
@@ -569,7 +570,7 @@ private fun DockRingNode(
         }
         // The name under the ring (hidden while it rides out to be renamed).
         Box(
-            Modifier.align(Alignment.Center).absoluteOffset(y = 21.dp).widthIn(max = 64.dp).graphicsLayer {
+            Modifier.align(Alignment.Center).absoluteOffset(y = 21.dp).widthIn(max = DockDims.LABEL_MAX.dp).graphicsLayer {
                 alpha = 1f - state.ride.value.coerceIn(0f, 1f) * (if (state.renaming == ring.key) 1f else 0f)
             },
         ) {

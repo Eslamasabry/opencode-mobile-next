@@ -59,6 +59,15 @@ internal object DockDims {
     const val MIN_TARGET = 48f
     /** Kept between the body and the safe area's edges (and around keep-clear spots). */
     const val EDGE_MARGIN = 12f
+    /**
+     * The page gutter (the tokens' 16 dp): kept free between the swell, the peek or the list and the far screen edge,
+     * and between the list's words and the dock's own screen edge (device QA 2026-11-11, m2: names to the edge).
+     */
+    const val GUTTER = io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens.GUTTER.toFloat()
+    /** A ring's name keeps this much in from each side of the strip, so it never runs to the screen's edge. */
+    const val LABEL_INSET = 6f
+    /** A ring's name's widest: the strip at rest less [LABEL_INSET] on each side (longer names end in an ellipsis). */
+    const val LABEL_MAX = REST_W - 2f * LABEL_INSET
 
     // The swell (box B while scrubbing).
     const val SW_TIP_PAD = 14f

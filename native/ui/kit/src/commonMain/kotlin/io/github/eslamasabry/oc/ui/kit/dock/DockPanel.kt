@@ -6,6 +6,7 @@ import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -95,7 +96,14 @@ internal fun DockPanel(state: KitEdgeDockState, model: KitDockModel, words: KitD
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(top = (DockDims.HEAD).dp, bottom = 8.dp, start = 8.dp, end = 8.dp)
+                // The dock's own screen edge keeps the page gutter (names end in an ellipsis before it); the side
+                // toward the middle keeps the body's 8 dp. Physical sides: the dock may stand on either edge.
+                .absolutePadding(
+                    left = (if (state.onRight) PANEL_INNER_PAD else DockDims.GUTTER).dp,
+                    top = DockDims.HEAD.dp,
+                    right = (if (state.onRight) DockDims.GUTTER else PANEL_INNER_PAD).dp,
+                    bottom = 8.dp,
+                )
                 .verticalScroll(scroll),
         ) {
             val pinnedCount = model.rings.count { it.pinned }
@@ -306,3 +314,6 @@ private fun ChildRows(state: KitEdgeDockState, ring: KitDockRing, currentChild: 
         }
     }
 }
+
+/** The list's padding on the side toward the screen's middle (dp). */
+private const val PANEL_INNER_PAD = 8f
