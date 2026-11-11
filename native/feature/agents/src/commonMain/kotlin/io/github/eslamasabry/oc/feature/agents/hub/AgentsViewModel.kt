@@ -56,6 +56,9 @@ public class AgentsViewModel(
             accounts = accounts,
             clock = clock,
             drafts = drafts,
+            openNewChat = { profile, agent ->
+                nav.open(io.github.eslamasabry.oc.ui.routes.ChatsRoute.New(profile = profile, phoneAgent = agent))
+            },
         )
 
     public val state: StateFlow<AgentsUi> = presenter.state
@@ -175,7 +178,7 @@ public class AgentsViewModel(
 
     override fun pullRefresh(): Unit = presenter.pullRefresh()
 
-    override fun newPhoneConversation(): Unit = presenter.newPhoneConversation()
+    override fun newPhoneConversation(agent: String): Unit = presenter.newPhoneConversation(agent)
 
     override fun closeAgent(): Unit = presenter.closeAgent()
 

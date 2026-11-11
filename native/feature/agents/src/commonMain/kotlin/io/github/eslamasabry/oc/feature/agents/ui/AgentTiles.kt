@@ -50,6 +50,7 @@ import io.github.eslamasabry.oc.ui.words.res.agentsNewChatWith
 import io.github.eslamasabry.oc.ui.words.res.agentsPreviousVersion
 import io.github.eslamasabry.oc.ui.words.res.agentsSetupSizeNote
 import io.github.eslamasabry.oc.ui.words.res.agentsSignInAction
+import io.github.eslamasabry.oc.ui.words.res.agentsSignInDone
 import io.github.eslamasabry.oc.ui.words.res.agentsSignOutAction
 import io.github.eslamasabry.oc.ui.words.res.agentsStateChecking
 import io.github.eslamasabry.oc.ui.words.res.agentsStateLimit
@@ -207,7 +208,7 @@ private fun AgentTile(tile: AgentTileModel, actions: AgentsActions, chat: Boolea
                             stringResource(Res.string.agentsNewChatWith, agent.name),
                             icon = KitIcons.chat,
                         ) {
-                            actions.newPhoneConversation()
+                            actions.newPhoneConversation(agent.id)
                         }
                     else null
             },
@@ -323,9 +324,18 @@ internal fun PhoneAgentSheet(state: AgentsUi, actions: AgentsActions, enabled: K
                         enabled = can,
                     )
                 null ->
-                    if (tile?.state == AgentTileState.Installing)
-                        KitAction(stringResource(Res.string.linuxAgentInstallCancel), actions::cancelPhoneInstall, enabled = can)
-                    else null
+                    when (tile?.state) {
+                        AgentTileState.Installing ->
+                            KitAction(stringResource(Res.string.linuxAgentInstallCancel), actions::cancelPhoneInstall, enabled = can)
+                        // Flutter's "Use {agent}": choose it and open New conversation with it selected.
+                        AgentTileState.Ready ->
+                            KitAction(
+                                stringResource(Res.string.agentsSignInDone, tile.agent.name),
+                                { actions.newPhoneConversation(tile.agent.id) },
+                                enabled = can,
+                            )
+                        else -> null
+                    }
             },
         tertiary =
             buildList {
