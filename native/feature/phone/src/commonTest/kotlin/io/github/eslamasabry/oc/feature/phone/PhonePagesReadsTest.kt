@@ -165,6 +165,31 @@ class PhonePagesReadsTest {
         assertTrue(InstalledInventoryRetry.pauseMs(2) > InstalledInventoryRetry.pauseMs(1))
     }
 
+    // Gate: reads take time of their own (8.9 s on the device), so five failing reads plus 15 s of pauses could keep a
+    // really broken Linux behind "Checking…" for a minute or more. No read starts later than WINDOW_MS after the first.
+    @Test
+    fun `B18 failing reads stop at the time window, so a broken Linux is said within about 40 s`() {
+        // The device's own sequence (8.9 s fail, 3.4 s fail, then a good read) still reaches its third read.
+        assertTrue(InstalledInventoryRetry.again(2, elapsedMs = 8_900 + 1_500 + 3_400))
+        // Slow failures (9 s each): the third read is the last, and the error shows 31.5 s after the first read began.
+        assertEquals(3 to 31_500L, failingReads(9_000))
+        // Quick failures (1 s each) keep all five reads and end at 20 s.
+        assertEquals(InstalledInventoryRetry.ATTEMPTS to 20_000L, failingReads(1_000))
+        // A read that runs past the window is never followed by another.
+        assertFalse(InstalledInventoryRetry.again(1, elapsedMs = InstalledInventoryRetry.WINDOW_MS))
+    }
+
+    /** Reads that each take [readMs] and fail: how many ran, and when the last one ended (ms after the first began). */
+    private fun failingReads(readMs: Long): Pair<Int, Long> {
+        var clock = readMs
+        var attempt = 1
+        while (InstalledInventoryRetry.again(attempt, elapsedMs = clock)) {
+            clock += InstalledInventoryRetry.pauseMs(attempt) + readMs
+            attempt++
+        }
+        return attempt to clock
+    }
+
     /**
      * PhoneDetailsWiring's read loop over [reads] (a failure, or null for a read that worked): the failure the row is
      * left with, or null when the list was read.

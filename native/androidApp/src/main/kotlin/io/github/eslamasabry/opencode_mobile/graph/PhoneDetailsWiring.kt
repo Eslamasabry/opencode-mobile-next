@@ -1,6 +1,7 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
 import android.app.Application
+import android.os.SystemClock
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.ContributesTo
@@ -299,9 +300,17 @@ class NativePhoneDetails(
             return
         }
         mutable.update { it.copy(addingTools = false) }
+        val firstRead = SystemClock.elapsedRealtime()
         var inventory = setup.installedInventory()
         var attempt = 1
-        while (inventory is Outcome.Failed && InstalledInventoryRetry.again(attempt, addingTools())) {
+        while (
+            inventory is Outcome.Failed &&
+                InstalledInventoryRetry.again(
+                    attempt,
+                    addingTools(),
+                    SystemClock.elapsedRealtime() - firstRead,
+                )
+        ) {
             delay(InstalledInventoryRetry.pauseMs(attempt))
             if (!visible || revision != viewRevision) return
             inventory = setup.installedInventory()
