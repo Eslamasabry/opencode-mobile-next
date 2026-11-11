@@ -154,30 +154,33 @@ Plan: `glass-in-the-kit/STEP4-PLAN.md`. Opt-in, home and the Settings frame only
 **What the person sees, where the lens is drawn** (Glass, a look with a lens, Android 13+, no battery saver, no
 reduced motion, no high contrast, a window at least 480 dp tall):
 
-- Home: the title row ("Conversations", the "need you" line, Search, Settings) is a liquid capsule pinned under the
-  status bar. Under it, outside the capsule, the server pill, the divider and the filter chips float as liquid pills.
-  At rest the list starts exactly where it did (tested to half a dp). Pulled up, the list runs on under the pills, the
-  capsule and the status bar; under the status bar it dissolves into a blur of itself, as the chat does (chat edge A).
-  The title stays large; nothing collapses.
+- Home: the title row ("Conversations", the "need you" line, Search, Settings) and the chips row (server pill,
+  divider, filters) lie on ONE liquid pane pinned under the status bar: one body of glass, the bar's shape and radius,
+  one bottom edge (coordinator 2026-11-11, replacing the first build's separate pills, whose gaps let the list show
+  through). The chips, the status pill and the divider are controls on the pane: no lens and no frost of their own
+  (the pane is the root of their glass stack), their outlined control faces kept. At rest the list starts exactly where
+  it did (tested to half a dp). Pulled up, the list runs on under the pane and the status bar; nothing of it shows
+  above the pane's bottom edge except through the glass (it is cleared beside the pane's rounded ends and in its 6 dp
+  margins); under the status bar it dissolves into a blur of itself, as the chat does (chat edge A). The title stays
+  large; nothing collapses.
 - Settings (every page of the narrow-window Settings frame): the bar with Back and the title is a liquid capsule; the
   page scrolls on under it. The kit records the page for it.
-- The refresh disc comes out below the pills, not under them.
+- The refresh disc comes out below the pane, not under it.
 - A part brought into view while it would rest under the bar (a focused field, a keyboard or TalkBack move) brings the
   page back to its resting layout, so it lies below the bar.
-- A tap on the floating chrome (the title, the gaps beside the pills) is the chrome's: it never reaches a row that has
+- A tap on the floating chrome (the title, the gaps between the chips) is the chrome's: it never reaches a row that has
   scrolled under it. A drag that starts on the chrome does not scroll the page any more.
 
 **Everywhere else** the page is today's: every other style, Glass without a lens (reduced motion, the Frosted look,
 battery saver, high contrast, Android 12 and below, desktop) and short windows. Home's title and chips are then the
 scrolling header again; Settings keeps its pinned bar. Every screen that does not pass the option is unchanged.
 
-**Kit API:** `KitScreen(floatingBar: KitFloatingBar? = null)`; `KitFloatingBar(scrollsElsewhere, source, pills)`
-(`ui/kit/.../frame/KitFloatingBar.kt`); `KitRefresh(indicatorTopPx)`; `KitStatusPill` asks the kit for a `Pill` face
-under `LocalKitLiquidChrome`, as `KitChip` does. No new glass numbers.
+**Kit API:** `KitScreen(floatingBar: KitFloatingBar? = null)`; `KitFloatingBar(scrollsElsewhere, source, below)`
+(`ui/kit/.../frame/KitFloatingBar.kt`; `below` is a second row inside the bar's pane); `KitRefresh(indicatorTopPx)`.
+The first build's liquid branch in `KitStatusPill` is reverted: nothing uses it now. No new glass numbers.
 
-**Lens budget on home** (tested): bar 1, the + 1, three pills 3 = 5 of 5; the list's recording is the feature's and
-costs nothing. A sixth part (the Undo bar's Status role) is held to frost. With two or more servers saved, the
-"Sources" chip makes a fourth pill: then one pill (the one composed last) is frost of the same shape.
+**Lens budget on home** (tested): the pane 1, the + 1 = 2 of 5; the list's recording is the feature's and costs
+nothing. Chips on the pane cost nothing, so a fourth chip (two or more servers saved) changes nothing.
 
 **Departures from the plan, and where the plan was wrong**
 
@@ -186,9 +189,9 @@ costs nothing. A sixth part (the Undo bar's Status role) is held to frost. With 
 - `floats` also requires `frost == null`: a chat (it passes `frost`) never takes the floating path.
 - The status bar's edge cannot simply read `source ?: under`: a feature's recording lies where its list lies, not at
   the body's top, so the frame draws it shifted by the difference of the two origins.
-- Pills are liquid only over a feature's recording (`source`): `LocalKitLiquidChrome` carries a `KitFrostState`, and
-  the kit's own body recording is another type. Settings has no pills, so nothing is lost today.
-- The fallback without a lens and without `scrollsElsewhere` puts pills (if any) at the top of the scrolling header.
+- The plan's separate pills (§2, §3) were built first and replaced by one pane after the scrolled render (see above).
+  `pills` is now `below`.
+- The fallback without a lens and without `scrollsElsewhere` puts `below` (if any) at the top of the scrolling header.
   No page uses that yet.
 - A bar that is the page's own heading (`scrollsElsewhere`) keeps the body's width cap on medium and wider windows (it
   was part of the capped header before). Phones are not affected.
@@ -198,7 +201,9 @@ costs nothing. A sixth part (the Undo bar's Status role) is held to frost. With 
   whole spacer back when the part starts under the chrome.
 - Not in the plan: taps falling through the floating chrome to a row under it (Compose hit-tests siblings and stops at
   the first with pointer input; the title has none). The chrome now takes every touch inside it. Cost: a drag that
-  starts on the title or the pills no longer scrolls the list.
+  starts on the title or the chips no longer scrolls the list (accepted).
+- Large text: the pane is not capped; at text size 2 home's chrome ends at 208 of 800 dp (Settings 160). Noted, not
+  changed.
 - The focus test runs on Report a problem, not Server configuration: Server configuration draws its own `KitScreen`,
   not the Settings frame, so it does not float. The Settings frame's pages with fields are the hub (its search, at the
   top) and Report a problem (a multi-line field). Both float.
@@ -210,50 +215,55 @@ costs nothing. A sixth part (the Undo bar's Status role) is held to frost. With 
 
 **Pictures** (desktop, Glass dark, 412 × 915 dp at 2.5×, a 32 dp status bar; a stand-in lens that blurs what it reads
 under its tint, so no bend, no rim light, no aurora, no ink flip timing and no frame cost can be judged from them):
-`glass-in-the-kit/render-step4-home-rest-before.png`, `render-step4-home-rest.png`,
-`render-step4-home-scrolled-before.png`, `render-step4-home-scrolled.png`.
+`glass-in-the-kit/render-step4-home-rest.png`, `render-step4-home-scrolled.png` (about 120 dp),
+`render-step4-home-scrolled-bright.png` (about 170 dp), and `render-step4-home-rest-before.png`,
+`render-step4-home-scrolled-before.png` (base 7acb5fd8f1).
 
-- Rest, after: every row sits where it sits before ("Right now" and the first panel on the same pixel rows); the title
-  row now sits in a dark capsule 6 dp in from the sides, and the three chips have liquid faces instead of their outlined
-  control faces (the stand-in lens draws no rim light, so on desktop they lose their outline; the phone draws a rim).
-  With nothing under it the capsule reads as a slightly lighter dark rounded panel: the glass shows only once
-  something scrolls under it.
-- Scrolled about 120 dp, after: the "Right now" label shows blurred inside the capsule; the "Explain this project" row
-  is caught between the capsule and the pills, its title sharp in the gap and its preview line hidden behind the pills
-  except for fragments ("ma", "…") that show sharp in the gaps between them; the Running pill picks up the green of
-  "Working" under it; the vertical divider between "This phone" and the filters floats over the row's words; the
-  panel's outline passes behind the pills. Nothing under the status bar yet at this distance.
-- Before (base 7acb5fd8f1, the same test file run there): at rest the title and outlined chips on the page's ground;
-  scrolled the same distance, the title and chips have scrolled away and the first row sits at the same height as in
-  the scrolled "after" picture, with nothing over it.
+- Rest: every row sits where it sits before ("Right now" on the same pixel row). One dark rounded pane, 6 dp in from
+  the sides, holds the title row and the chips row; the chips keep their outlined faces and sit on it, the divider
+  between "This phone" and the filters is on the pane. "Right now" keeps today's gap below the chips row; the pane's
+  bottom edge sits 4 dp inside that row's foot (the bar's pane inset), about 28 dp above the label. With nothing under it the pane reads as a slightly lighter dark panel.
+- Scrolled about 120 dp: the "Right now" label and the title of the running row show blurred inside the pane, between
+  the title and the chips; nothing of the page shows sharp between them, beside the pane or above its bottom edge. The
+  Running chip picks up the green of "Working" under it. Just below the pane's bottom edge the bottom of the running
+  row's panel (its rounded outline) shows as a thin arc, a second edge close under the pane's edge.
+- Scrolled about 170 dp (the running row under the title): its preview line and the green "Working" show blurred in
+  the pane behind "Conversations" and the Search and Settings icons; the title and icons read clearly over them on the
+  desktop stand-in. "Recent" sits whole just below the pane's edge.
+- Before: at rest the title and outlined chips on the page's ground; scrolled the same distance, they have scrolled
+  away and the rows sit at the same heights as in the scrolled "after" picture, with nothing over them.
 
 **What to look at on the phone** (Glass, a look with a lens, Background on, dark):
 
-1. Home at rest: the first panel's label sits where it did; the title row is a capsule; the chips are pills.
-2. Pull the list up slowly: rows pass under the pills and the capsule and bend in the capsule's rim; under the status
+1. Home at rest: the first panel's label sits where it did; the title row and the chips lie on one pane.
+2. Pull the list up slowly: rows pass under the pane and bend in its rim; under the status
    bar they blur into the dim. Judge the words of the title and the chips over bright rows.
-3. The row caught between the capsule and the pills, and the preview words that show between the pills: acceptable,
-   or does the gap need a fade?
-4. The divider between "This phone" and the filters floating over rows (plan question 3).
-5. Pull down at the top: the refresh disc comes out below the pills.
+3. One pane under the title and chips: does it read as one body of glass, and do the outlined chips read as controls
+   on it (not as glass on glass)?
+4. The thin edge of a row's panel just below the pane's bottom edge while scrolling.
+5. Pull down at the top: the refresh disc comes out below the pane.
 6. Tap the title area while rows are under it: nothing opens. Drag starting on the title: the list does not move
    (new; say if that feels wrong).
 7. Settings: hub, a group page, Appearance, Report a problem (tap the field after scrolling it under the bar; it
    should come back below the bar). Then turn on battery saver or reduced motion: both pages go back to today's look.
 8. Frame smoothness while scrolling home and Settings with the aurora on (not measured: no benchmark scene was added).
 
-**Checks run (VPS, desktop tests; no device, no emulator)**
+**Checks run (VPS, desktop tests; no device, no emulator), on the one-pane build 52c24149cc**
 
-- `KitFloatingBarTest` 12 of 12: resting place (home and Settings shapes), scrolled look (blur under the status bar
-  and in the capsule, rows sharp beside it), drag back, the refresh disc below the pills, the lens budget (bar, +, three
-  pills granted; a Status part frost; and `LiquidEdge.grant` alone), pixel equality with and without the option in
-  Solid, Soft, Brutal, Paper, Signal and Glass with no lens, reduced motion and the Frosted look, the short window,
-  right to left, text size 2 (home's chrome ends at 208 of 800 dp, Settings' at 160), a focused part brought back
-  below the bar, taps on the chrome.
-- `FloatingHomeTest` 2 of 2, `FloatingSettingsTest` 2 of 2 (the Report a problem field moved under the bar and
-  focused comes back below it, so the field pages float).
-- The kit's frame tests, all chats and all settings desktop tests (goldens included): every failure there also fails
-  on the base with the same message (66 of 66; gate tests missing Flutter goldens or breaking align/layout rules, a
-  missing redactor in two fixtures, two goldens that already differ). No golden was recorded or changed.
+- `KitFloatingBarTest` 12 of 12: resting place (home and Settings shapes; the pane spans the bar and the chips row, 4 dp
+  in), scrolled look (blur under the status bar and in the pane; the margins beside the pane cleared to the ground above
+  its bottom edge; rows sharp below it), drag back, the refresh disc below the pane, the lens budget (the pane and the +
+  only, with four chips on the pane; and `LiquidEdge.grant` alone), pixel equality with and without the option in Solid,
+  Soft, Brutal, Paper, Signal and Glass with no lens, reduced motion and the Frosted look, the short window, right to
+  left, text size 2, a focused part brought back below the bar, taps on the chrome.
+- `FloatingHomeTest` 2 of 2, `FloatingSettingsTest` 2 of 2 (the Report a problem field moved under the bar and focused
+  comes back below it, so the field pages float).
+- The kit's frame tests (54, 9 failed), the chats and settings golden tests plus `HomeJank`, `S10Home`,
+  `SettingsScreenUi`, `SettingsHubScroll` and `ReportProblem` tests (chats 22, 2 failed; settings 39, 1 failed): every
+  failure also fails on the base 7acb5fd8f1 with the same message (`KitScreenGateTest` missing Flutter goldens and an
+  align rule; `ChatsHeaderGoldensTest` offline variants and one `E20S09OpeningGoldensTest` test, where the base already
+  shows a "server isn't answering" notice the goldens lack; `SettingsGoldensTest` B-SEC-191). Before the one-pane
+  change the whole chats and settings desktop suites ran too (255 and 254 tests), with all 66 failures identical on the
+  base. No golden was recorded or changed.
 - `compileAndroidMain` for ui:kit, feature:chats and feature:settings.
 - Not run: the whole kit suite, the benchmark scene (not built), anything on a device.
