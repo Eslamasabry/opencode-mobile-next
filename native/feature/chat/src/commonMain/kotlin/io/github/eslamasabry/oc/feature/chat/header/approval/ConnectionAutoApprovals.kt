@@ -80,6 +80,7 @@ public class ConnectionAutoApprovals(
                     )
                 },
                 clock = clock,
+                onRecorded = { AutoApprovalRecords.add(profile, it) },
             )
         return combine(
                 engine.pending,

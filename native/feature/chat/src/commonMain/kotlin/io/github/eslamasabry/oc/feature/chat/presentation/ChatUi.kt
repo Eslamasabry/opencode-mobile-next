@@ -205,6 +205,12 @@ public data class LiveTurnUi(
     val stoppingAfterStep: Boolean = false,
     /** Hold Stop offers "Stop after this step": the server steers a running turn and no note went yet. */
     val canStopAfterStep: Boolean = false,
+    /** C5: the stop note may still be taken back (Undo beside "Stopping after this step"). */
+    val canUndoStopAfterStep: Boolean = false,
+    /** C6: a message sent now joins the running turn (the agent reads it at its next step). */
+    val joinsTurn: Boolean = false,
+    /** C6: the agent's name for "{agent} reads this when this step finishes"; null says "The agent". */
+    val agentName: String? = null,
 )
 
 /**
@@ -462,6 +468,9 @@ public interface ChatActions {
      * now…") steers the running turn; the draft stays as it is. A tap on Stop still stops at once.
      */
     public fun stopAfterStep(note: String) {}
+
+    /** C5: Undo on "Stopping after this step": withdraws the waiting [note] so the turn carries on. */
+    public fun undoStopAfterStep() {}
 
     /** S24-CHAT: a commands-launcher place for this conversation (Flutter `_ChatCommandAction`). */
     public fun openPlace(place: ChatPlace) {}

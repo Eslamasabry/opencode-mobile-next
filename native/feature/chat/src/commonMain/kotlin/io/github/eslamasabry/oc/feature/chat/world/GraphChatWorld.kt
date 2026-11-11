@@ -1839,6 +1839,23 @@ internal class GraphChatWorld(
 
     override suspend fun sendAgain(text: String): Outcome<Unit> = send(text, draftFiles = false)
 
+    override fun midTurn(): io.github.eslamasabry.oc.core.model.MidTurnPrompt? =
+        (currentAttached()?.graph as? ChatGraphAccessors)
+            ?.chatGateway
+            ?.facet<io.github.eslamasabry.oc.core.domain.MidTurnPromptGateway>()
+            ?.midTurnPrompt(ref.sessionId)
+
+    override suspend fun withdrawNote(text: String): Boolean {
+        val services = currentAttached()?.graph as? ChatGraphAccessors ?: return false
+        if (!services.chatGateway.capabilities.value.inbox) return false
+        val inbox = services.chatDelivery.inbox
+        val item =
+            inbox.items.value[ref.sessionId].orEmpty().firstOrNull {
+                io.github.eslamasabry.oc.engine.delivery.live.InboxProjection.promptText(it)?.trim() == text.trim()
+            } ?: return false
+        return inbox.cancel(ref.sessionId, item.id) is Outcome.Ok
+    }
+
     override fun stoppedPrompt(turnId: String): StoppedPrompt? {
         val row =
             mutableTranscript.value.rows.firstOrNull { it is PromptRow && it.turnId == turnId } as? PromptRow

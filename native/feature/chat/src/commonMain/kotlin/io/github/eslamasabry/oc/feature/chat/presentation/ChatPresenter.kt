@@ -84,6 +84,9 @@ internal data class ChatLocal(
     val atLiveEdge: Boolean = true,
     val stopping: Boolean = false,
     val stopAfterStep: Boolean = false,
+    /** C5: the words of the note that went, so Undo can find it in the inbox. */
+    val stopNote: String? = null,
+    val undoingStopNote: Boolean = false,
     val leaving: Boolean = false,
     val select: SelectTextUi? = null,
     val insert: ClipUi? = null,
@@ -411,6 +414,13 @@ public class ChatPresenter(
                     LiveTurnUi(
                         l.stopping,
                         stoppingAfterStep = l.stopAfterStep,
+                        joinsTurn =
+                            i.capabilities.promptSteering ||
+                                world.midTurn() == io.github.eslamasabry.oc.core.model.MidTurnPrompt.JoinsTurn,
+                        agentName = world.models.value.agent,
+                        canUndoStopAfterStep =
+                            l.stopAfterStep && l.stopNote != null && !l.undoingStopNote &&
+                                i.capabilities.inbox,
                         canStopAfterStep =
                             !l.stopping && !l.stopAfterStep && i.capabilities.promptSteering,
                     )
@@ -673,18 +683,33 @@ public class ChatPresenter(
             local.update { it.copy(stopping = false) }
         // The turn ended: the stop note did its work (or the turn finished first).
         if (local.value.stopAfterStep && !world.transcript.value.run.busy)
-            local.update { it.copy(stopAfterStep = false) }
+            local.update { it.copy(stopAfterStep = false, stopNote = null) }
     }
 
     override fun stopAfterStep(note: String) {
         val l = local.value
         if (note.isBlank() || l.stopping || l.stopAfterStep) return
         if (!world.transcript.value.run.busy || !world.capabilities.value.promptSteering) return
-        local.update { it.copy(stopAfterStep = true) }
+        local.update { it.copy(stopAfterStep = true, stopNote = note) }
         launcher.launch {
             val sent = world.sendAgain(note)
             if (sent is Outcome.Failed)
-                local.update { it.copy(stopAfterStep = false, actionFailure = sent.failure) }
+                local.update { it.copy(stopAfterStep = false, stopNote = null, actionFailure = sent.failure) }
+        }
+    }
+
+    override fun undoStopAfterStep() {
+        val l = local.value
+        val note = l.stopNote ?: return
+        if (!l.stopAfterStep || l.undoingStopNote) return
+        local.update { it.copy(undoingStopNote = true) }
+        launcher.launch {
+            // True: the agent never read it, the turn carries on. False: too late (or no inbox), the stop stays.
+            val withdrawn = world.withdrawNote(note)
+            local.update {
+                if (withdrawn) it.copy(stopAfterStep = false, stopNote = null, undoingStopNote = false)
+                else it.copy(stopNote = null, undoingStopNote = false)
+            }
         }
     }
 

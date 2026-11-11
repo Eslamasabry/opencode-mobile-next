@@ -257,6 +257,8 @@ public class ChatViewModel(
 
     override fun stopAfterStep(note: String): Unit = presenter.stopAfterStep(note)
 
+    override fun undoStopAfterStep(): Unit = presenter.undoStopAfterStep()
+
     override fun openPlace(place: ChatPlace): Unit = presenter.openPlace(place)
 
     override fun restartPhoneServer(): Unit = presenter.restartPhoneServer()

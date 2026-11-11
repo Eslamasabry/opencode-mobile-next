@@ -13,9 +13,34 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
-import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
-import io.github.eslamasabry.oc.ui.kit.modal.KitMenuGroup
-import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import io.github.eslamasabry.oc.feature.chat.header.approval.ApprovalSetBy
+import io.github.eslamasabry.oc.feature.chat.nudges.permissionWords
+import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.type.TextTone
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.KitButton
+import io.github.eslamasabry.oc.ui.kit.KitButtonRole
+import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.choice.KitChoice
+import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceList
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
+import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
+import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.words.res.approvalModeAskDetail
+import io.github.eslamasabry.oc.ui.words.res.approvalModeAutoDetail
+import io.github.eslamasabry.oc.ui.words.res.approvalModeEverythingDetail
+import io.github.eslamasabry.oc.ui.words.res.approvalsSheetFootnote
+import io.github.eslamasabry.oc.ui.words.res.approvalsSheetHistory
+import io.github.eslamasabry.oc.ui.words.res.approvalsSheetSetByServer
+import io.github.eslamasabry.oc.ui.words.res.approvalsSheetSubagents
+import io.github.eslamasabry.oc.ui.words.res.approvalsUiAutoApproved
+import io.github.eslamasabry.oc.ui.words.res.approvalsUiFollowParent
+import io.github.eslamasabry.oc.ui.words.res.approvalsUiInheritedFrom
+import io.github.eslamasabry.oc.ui.words.res.kitCopy
 import io.github.eslamasabry.oc.ui.kit.row.KitLeadingSwitchRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
@@ -52,22 +77,7 @@ public fun ApprovalChip(slot: ApprovalChipSlot, modifier: Modifier = Modifier) {
     val state = slot.state
     val actions = slot.actions
     if (!state.offered) return
-    val group = KitMenuGroup("modes")
-    fun item(choice: ApprovalChoice, label: String) =
-        KitMenuItem(label = label, onSelect = { actions.chooseApproval(choice) }, group = group, checked = state.choice == choice)
-    val items =
-        listOf(
-            item(ApprovalChoice.Ask, stringResource(Res.string.approvalModeAskTitle)),
-            item(ApprovalChoice.Auto, stringResource(Res.string.approvalModeAutoTitle)),
-            item(ApprovalChoice.Everything, stringResource(Res.string.approvalModeEverythingTitle)),
-        )
-    KitMenu(
-        expanded = state.menuOpen,
-        items = items,
-        onDismissRequest = actions::closeApprovalMenu,
-        modifier = modifier,
-        title = stringResource(Res.string.approvalModeMenuLabel),
-    ) {
+    androidx.compose.foundation.layout.Box(modifier) {
         // Flutter `_AutoApprovalIndicator` (approvals_sheet.dart:257-330), at the start of the strip above the
         // message box: an action chip with the shield, reading "Ask first" while asking and "Auto-approve on" (the
         // kit's selected check) for either automatic mode; the menu says which one.
@@ -102,6 +112,7 @@ public fun ApprovalChip(slot: ApprovalChipSlot, modifier: Modifier = Modifier) {
             modifier = Modifier.testTag("chat-approval-chip"),
         )
     }
+    ApprovalSheet(state, actions)
     KitConfirm(
         spec =
             if (!state.confirmEverything) null
@@ -156,4 +167,95 @@ public fun ApprovalSettingsRows(slot: ApprovalChipSlot, close: () -> Unit) {
         },
         modifier = Modifier.testTag("composer-setting-approval-settings"),
     )
+}
+
+/**
+ * C2 (Flutter `approvals_sheet.dart`): the three modes with a sentence each, where the mode comes from, the switch that
+ * lets sub-agents follow an automatic conversation, "Follow parent again", the record of what was approved on the
+ * person's behalf (last five), and the note that the server's own rules still apply.
+ */
+@Composable
+private fun ApprovalSheet(state: ApprovalChipUi, actions: ApprovalChipActions) {
+    val asks = stringResource(Res.string.approvalModeAskTitle)
+    val auto = stringResource(Res.string.approvalModeAutoTitle)
+    val everything = stringResource(Res.string.approvalModeEverythingTitle)
+    val askDetail = stringResource(Res.string.approvalModeAskDetail)
+    val autoDetail = stringResource(Res.string.approvalModeAutoDetail)
+    val everythingDetail = stringResource(Res.string.approvalModeEverythingDetail)
+    KitSheet(
+        visible = state.menuOpen,
+        onDismissRequest = actions::closeApprovalMenu,
+        title = stringResource(Res.string.approvalModeMenuLabel),
+        icon = KitIcons.shield,
+    ) {
+        Column(Modifier.fillMaxWidth().testTag("approvals-sheet"), verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+            KitChoiceList(
+                choices =
+                    listOf(
+                        KitChoice(ApprovalChoice.Ask, asks, askDetail),
+                        KitChoice(ApprovalChoice.Auto, auto, autoDetail),
+                        KitChoice(ApprovalChoice.Everything, everything, everythingDetail),
+                    ),
+                selected = state.choice,
+                semanticsLabel = stringResource(Res.string.approvalModeMenuLabel),
+                onSelect = actions::chooseApproval,
+            )
+            when (state.setBy) {
+                ApprovalSetBy.Parent ->
+                    KitText(
+                        stringResource(Res.string.approvalsUiInheritedFrom),
+                        role = TypeRole.Secondary,
+                        tone = TextTone.Secondary,
+                        modifier = Modifier.testTag("approvals-set-by"),
+                    )
+                ApprovalSetBy.Server ->
+                    KitText(
+                        stringResource(Res.string.approvalsSheetSetByServer),
+                        role = TypeRole.Secondary,
+                        tone = TextTone.Secondary,
+                        modifier = Modifier.testTag("approvals-set-by"),
+                    )
+                ApprovalSetBy.Itself -> Unit
+            }
+            if (state.choice == ApprovalChoice.Auto) {
+                KitSwitchRow(
+                    title = stringResource(Res.string.approvalsSheetSubagents),
+                    checked = state.inheritToChildren,
+                    onCheckedChange = actions::setInheritToChildren,
+                    modifier = Modifier.testTag("approvals-inherit-switch"),
+                )
+            }
+            if (state.canFollowParent) {
+                KitButton(
+                    stringResource(Res.string.approvalsUiFollowParent),
+                    onClick = actions::followParent,
+                    role = KitButtonRole.Tertiary,
+                    modifier = Modifier.testTag("approvals-follow-parent"),
+                )
+            }
+            if (state.approvedPermissions.isNotEmpty()) {
+                KitDetailsFold(
+                    label = stringResource(Res.string.approvalsSheetHistory),
+                    copyLabel = stringResource(Res.string.kitCopy),
+                    modifier = Modifier.testTag("approvals-record"),
+                    child = {
+                        Column {
+                            state.approvedPermissions.forEach { permission ->
+                                KitRow(
+                                    title = stringResource(Res.string.approvalsUiAutoApproved, permissionWords(permission)),
+                                )
+                            }
+                        }
+                    },
+                )
+            }
+            if (state.choice != ApprovalChoice.Ask) {
+                KitNotice(
+                    stringResource(Res.string.approvalsSheetFootnote),
+                    liveRegion = false,
+                    modifier = Modifier.testTag("approvals-rules-note"),
+                )
+            }
+        }
+    }
 }

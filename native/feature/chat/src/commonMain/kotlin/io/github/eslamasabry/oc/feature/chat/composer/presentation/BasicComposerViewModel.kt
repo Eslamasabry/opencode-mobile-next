@@ -58,6 +58,11 @@ public data class BasicComposerUi(
     val sending: Boolean,
     /** A reply runs and this server steers: a send joins the running turn (plan 09 §4.3). */
     val steers: Boolean,
+    /**
+     * C6: a reply runs on an agent that stops and starts again from a new message (Flutter `MidTurnPrompt.restartsTurn`):
+     * Send reads "Stop and send".
+     */
+    val restarts: Boolean = false,
     val draft: DraftFacts = DraftFacts(),
     val targetKey: String = "",
     val canRepeat: Boolean = false,
@@ -324,7 +329,14 @@ public class BasicComposerViewModel(
                                     draft.failure == null &&
                                     !draft.sendBlocked,
                             sending = inFlight,
-                            steers = t.run.busy && caps.promptSteering,
+                            steers =
+                                t.run.busy &&
+                                    (caps.promptSteering ||
+                                        world.midTurn() == io.github.eslamasabry.oc.core.model.MidTurnPrompt.JoinsTurn),
+                            restarts =
+                                t.run.busy &&
+                                    !caps.promptSteering &&
+                                    world.midTurn() == io.github.eslamasabry.oc.core.model.MidTurnPrompt.RestartsTurn,
                             attachmentsSupported = caps.promptAttachments,
                             imagesOnly = caps.promptImagesOnly,
                             draft = draft,

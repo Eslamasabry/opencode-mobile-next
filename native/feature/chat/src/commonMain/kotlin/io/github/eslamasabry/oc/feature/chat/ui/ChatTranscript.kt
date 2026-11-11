@@ -67,6 +67,11 @@ import io.github.eslamasabry.oc.ui.kitchat.turn.KitTurnLiveLine
 import io.github.eslamasabry.oc.ui.kit.motion.kitItemMotion
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.words.res.chatStalledStop
+import io.github.eslamasabry.oc.ui.words.res.chatStopAfterStepUndo
+import io.github.eslamasabry.oc.ui.words.res.chatSteerAgentFallback
+import io.github.eslamasabry.oc.ui.words.res.chatSteerReadsAfterCommand
+import io.github.eslamasabry.oc.ui.words.res.chatSteerReadsAfterStep
+import io.github.eslamasabry.oc.feature.chat.presentation.SteerWaitRules
 import io.github.eslamasabry.oc.ui.words.res.chatStarAskAction
 import io.github.eslamasabry.oc.ui.words.res.chatStarAskDismiss
 import io.github.eslamasabry.oc.ui.words.res.chatStarAskBody
@@ -350,6 +355,8 @@ internal fun ChatTranscriptList(
     onCompactAgain: (() -> Unit)? = null,
     /** Stop on the live line while a tool call has waited minutes (null hides it). */
     onStopLive: (() -> Unit)? = null,
+    /** C5: Undo on "Stopping after this step". */
+    onUndoStopAfterStep: (() -> Unit)? = null,
     /** A finished turn's "All files" (the project's Files); null hides the link. */
     onAllFiles: (() -> Unit)? = null,
     /** "Send again" under the newest prompt that got no reply (Flutter no_reply_reason.dart:198); null hides it. */
@@ -461,6 +468,19 @@ internal fun ChatTranscriptList(
                         if (starAsk && !streaming && notice == null && !live.stopping && !live.stoppingAfterStep)
                             KitLiveAsk(askTitle, askBody, askAction, onStarTap, askDismiss, onStarDismiss)
                         else null
+                    // C6: under the steered prompt (the live item sits right below the newest row), a quiet note.
+                    val steerWait = SteerWaitRules.wait(unique, facts.work, busy = true, joins = live.joinsTurn)
+                    if (steerWait != null) {
+                        val agent = live.agentName ?: stringResource(Res.string.chatSteerAgentFallback)
+                        KitQuietLine(
+                            stringResource(
+                                if (steerWait.command) Res.string.chatSteerReadsAfterCommand
+                                else Res.string.chatSteerReadsAfterStep,
+                                agent,
+                            ),
+                            Modifier.testTag("chat-steer-wait"),
+                        )
+                    }
                     KitTurnLiveLine(
                         words = line.words,
                         tone = line.tone,
@@ -473,10 +493,12 @@ internal fun ChatTranscriptList(
                             ),
                         modifier = Modifier.padding(horizontal = Space.S4.dp).testTag("chat-live-line"),
                         actionLabel =
-                            if (notice is LiveNoticeUi.ToolWait && onStopLive != null)
+                            if (live.canUndoStopAfterStep && onUndoStopAfterStep != null)
+                                stringResource(Res.string.chatStopAfterStepUndo)
+                            else if (notice is LiveNoticeUi.ToolWait && onStopLive != null)
                                 stringResource(Res.string.chatStalledStop)
                             else null,
-                        onAction = onStopLive,
+                        onAction = if (live.canUndoStopAfterStep) onUndoStopAfterStep else onStopLive,
                         ask = ask,
                     )
                 } else {
