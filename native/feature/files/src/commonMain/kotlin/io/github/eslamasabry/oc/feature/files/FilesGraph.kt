@@ -196,6 +196,17 @@ public class GraphFilesConnections(private val registry: ConnectionRegistry) : F
     override fun canTerminal(ref: ConversationRef): Boolean =
         live(ref)?.capabilities?.value?.terminal == true
 
+    override suspend fun runningTerminals(ref: ConversationRef, directory: String?): Int? {
+        val graph = registry.graphFor(ref) as? FilesGraphAccessors ?: return null
+        if (!graph.filesGateway.capabilities.value.terminal) return null
+        return runningIn(graph, directory)
+    }
+
+    private suspend fun runningIn(graph: FilesGraphAccessors, directory: String?): Int? {
+        val listed = graph.filesOperations.listTerminals() as? Outcome.Ok ?: return null
+        return listed.value.count { it.running && (directory == null || sameFolder(it.directory, directory)) }
+    }
+
     override fun tools(ref: ConversationRef): FilesProjectTools =
         live(ref)?.capabilities?.value?.let(::projectTools) ?: FilesProjectTools.None
 
@@ -228,6 +239,9 @@ public class GraphFilesConnections(private val registry: ConnectionRegistry) : F
             gateway = files ?: UnscopedFiles,
             canBrowse = files != null && caps.fileBrowsing,
             canTerminal = caps.terminal,
+            runningTerminals = {
+                if (!caps.terminal || !current()) null else runningIn(accessors, directory)
+            },
             tools = projectTools(caps),
             canSearchText = files != null && caps.textSearch,
             canSearchSymbols =
