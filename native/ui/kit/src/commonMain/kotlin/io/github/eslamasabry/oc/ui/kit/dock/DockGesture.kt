@@ -243,7 +243,9 @@ internal class DockGesture(private val rules: DockRules = DockRules()) {
     }
 
     private fun peekMove(dx: Float, dy: Float, far: Boolean, hits: DockHits, timed: DockFeedback): DockFeedback {
-        if (!far) return timed
+        // The slop only guards the first move: once the finger has left, coming back near the press point must still
+        // drop the target it left (else lifting on the ring ran the last target crossed, such as Deny).
+        if (!far && !movedInPeek) return timed
         // Still on the strip and moving along it before entering the card: pick the ring up.
         if (!movedInPeek && hits.inStrip(x) && abs(dy) > abs(dx)) {
             mode = DockMode.Reorder
