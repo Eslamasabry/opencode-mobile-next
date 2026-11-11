@@ -9,7 +9,7 @@ import io.github.eslamasabry.oc.engine.requests.ask.AskView
 public object RequestCardRules {
     /** Verbs whose question already names the kind of action ("Edit game.js?", "Run npm test?"). */
     private val selfNaming =
-        setOf(AskVerb.Run, AskVerb.Edit, AskVerb.Create, AskVerb.Delete, AskVerb.Read, AskVerb.Fetch, AskVerb.WebSearch)
+        setOf(AskVerb.Run, AskVerb.Edit, AskVerb.Create, AskVerb.Delete, AskVerb.Read, AskVerb.ReadFolder, AskVerb.Fetch, AskVerb.WebSearch)
 
     private val fileVerbs = setOf(AskVerb.Edit, AskVerb.Create, AskVerb.Delete, AskVerb.Read)
 

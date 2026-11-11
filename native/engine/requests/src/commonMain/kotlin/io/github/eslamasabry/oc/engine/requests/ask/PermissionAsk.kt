@@ -12,7 +12,7 @@ import kotlin.math.roundToInt
 
 /** What the call asks to do (plan 09 §5.2). `:ui:words` has one question per value; nothing here is copy. */
 public enum class AskVerb {
-    Run, Edit, Create, Delete, Read, Fetch, WebSearch, Search, Task, Skill, Mode,
+    Run, Edit, Create, Delete, Read, ReadFolder, Fetch, WebSearch, Search, Task, Skill, Mode,
     OutsideWrite, OutsideRead, OutsideRun, Outside, DoomLoop,
 
     /** Any other tool: the words name it in plain words from [AskView.tool], never the id itself. */
@@ -80,6 +80,13 @@ public object PermissionAsk {
         if (paths.isNotEmpty()) return edit(request, paths, directory)
         if (action == "read") {
             val read = filePath(request)
+            // A listing of the chat's own folder names "." (or nothing): that is the folder, never a file called ".".
+            if (read != null && isOwnFolder(read, directory)) {
+                return AskView(
+                    AskVerb.ReadFolder,
+                    targets = listOfNotNull(project?.trim()?.takeIf { it.isNotEmpty() }?.let { AskTarget(it) }).toImmutableList(),
+                )
+            }
             if (read != null) {
                 return AskView(
                     AskVerb.Read,
@@ -95,6 +102,13 @@ public object PermissionAsk {
             tool = request.permission.takeIf { verb == AskVerb.Use },
             targets = listOfNotNull(shown?.let { AskTarget(it, file = verb in outsideVerbs) }).toImmutableList(),
         )
+    }
+
+    /** "." and its spellings: the folder the conversation works in. */
+    private fun isOwnFolder(path: String, directory: String?): Boolean {
+        val trimmed = path.trim().trimEnd('/')
+        val root = directory?.trim()?.trimEnd('/')
+        return (!root.isNullOrEmpty() && trimmed == root) || trimmed == "." || trimmed.isEmpty() || trimmed.endsWith("/.")
     }
 
     /** The command, file or patterns in one line (lists, sheets): an edit of several files names every one. */

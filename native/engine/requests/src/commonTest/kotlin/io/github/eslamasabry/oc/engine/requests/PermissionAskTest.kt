@@ -176,6 +176,22 @@ class PermissionAskTest {
         assertEquals(listOf("/etc/*"), of(outside).targets.map { it.text })
     }
 
+    @Test
+    fun `W4 a listing of the chat's own folder asks to read the folder, never a file called a dot`() {
+        for (path in listOf(".", "./", dir, "$dir/")) {
+            val ask = of(permission("p", permission = "read", patterns = listOf(path), always = emptyList(), metadata = mapOf("filePath" to path)), project = "neon-breaker")
+            assertEquals(AskVerb.ReadFolder, ask.verb, "path <$path>")
+            assertEquals(listOf(AskTarget("neon-breaker")), ask.targets)
+        }
+    }
+
+    @Test
+    fun `W4 a read of a real file is still a read of that file`() {
+        val ask = of(permission("p", permission = "read", patterns = listOf("$dir/src/a.kt"), always = emptyList(), metadata = mapOf("filePath" to "$dir/src/a.kt")), project = "neon-breaker")
+        assertEquals(AskVerb.Read, ask.verb)
+        assertEquals("a.kt", ask.name)
+    }
+
     private fun permission(
         id: String,
         permission: String = "shell",
