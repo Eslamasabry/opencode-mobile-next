@@ -607,5 +607,43 @@ class ChatTypingFocusTest {
             assertEquals("ze", rename.words(), "the rename field has the keys")
             assertEquals("", composer().words(), "the message box stays as it was")
         }
+
+    @Test
+    fun `B11 device case the box focused earlier, the menu opened and closed, then Find takes typed keys`() =
+        runDesktopComposeUiTest(412, 915) {
+            val screen = HeaderScreen(ChatScene())
+            setContent {
+                E20Scene {
+                    ShellPark {
+                        ChatScreen(
+                            screen.ui, screen.scene.actions, screen.scene.host,
+                            header = ChatHeaderSlot(screen.header, screen.scene.headerActions),
+                            canGoBack = false,
+                        )
+                    }
+                }
+            }
+            waitForIdle()
+            // The box had focus earlier (Back hides the keyboard, the box keeps its focus).
+            composer().performClick()
+            waitForIdle()
+            composer().assertIsFocused()
+            runOnIdle { screen.header = screen.header.copy(menuOpen = true) }
+            waitForIdle()
+            // The menu's Find: the menu closes and Find opens in the same frame.
+            runOnIdle {
+                screen.header = screen.header.copy(menuOpen = false)
+                screen.ui = screen.ui.copy(find = FindUi("", 0, 0, null, -1, false))
+            }
+            waitForIdle()
+            findField().assertIsFocused()
+            onRoot().performKeyInput {
+                pressKey(Key.B)
+                pressKey(Key.G)
+            }
+            waitForIdle()
+            assertEquals("bg", findField().words(), "the search field has the keys")
+            assertEquals("", composer().words(), "the message box stays as it was")
+        }
 }
 
