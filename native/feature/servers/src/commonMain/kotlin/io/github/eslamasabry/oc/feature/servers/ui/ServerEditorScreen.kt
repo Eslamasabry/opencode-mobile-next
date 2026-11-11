@@ -916,14 +916,35 @@ public fun ServerEditorScreen(
                                     )
                             }
                             state.failure?.let { failure ->
-                                KitErrorNotice(
+                                val redactor = io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor.current
+                                val words =
                                     editorFailureWords(
                                         failure,
                                         httpsRequired =
                                             editorOrigin(address.text.toString())
                                                 ?.let(AddressRules::cleartextNeedsHttps) == true,
-                                    ),
+                                    )
+                                // One message for one fact: a server that is saved but did not connect says so
+                                // once, with the way forward, unless the cause has its own more exact words.
+                                val saidOnce =
+                                    state.saved &&
+                                        serverFailureKind(failure).let {
+                                            it == ServerFailureKind.Network ||
+                                                it == ServerFailureKind.Timeout ||
+                                                it == ServerFailureKind.Other
+                                        }
+                                KitErrorNotice(
+                                    if (saidOnce) stringResource(Res.string.editor40SavedFailed) else words,
                                     failure = failure,
+                                    details =
+                                        if (failure is Failure.Refused) failure.details
+                                        else
+                                            redactor.details(
+                                                checkDetailsText(
+                                                    editorOrigin(address.text.toString()),
+                                                    failure,
+                                                )
+                                            ),
                                     detailsLabel = stringResource(Res.string.kitDetails),
                                     copyLabel = stringResource(Res.string.kitCopyDetails),
                                 )
@@ -939,8 +960,6 @@ public fun ServerEditorScreen(
                                         copy,
                                     )
                             }
-                            if (state.saved && state.failure != null)
-                                KitNotice(stringResource(Res.string.editor40SavedFailed))
                             state.checked?.let {
                                 KitNotice(
                                     stringResource(
@@ -984,7 +1003,7 @@ public fun ServerEditorScreen(
                                 enabled = connectionEnabled,
                                 working = state.checking,
                             )
-                            if (state.failedCheck)
+                            if (state.failedCheck && state.failedFromSave)
                                 KitButton(
                                     stringResource(Res.string.editor40SaveAnyway),
                                     { actions.save(input(), true) },
