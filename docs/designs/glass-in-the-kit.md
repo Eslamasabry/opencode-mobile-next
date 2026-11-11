@@ -529,19 +529,42 @@ solid styles) keeps its band. **Test:** `ChatWordsGlassTest` now runs the line w
 none, before the fix the rows added mean 233 of 255 inside the line (failed); after, 0. With the inset: 0 before and
 after.
 
-### Not done yet: the top panes
+### As built: the top panes and the request card's label (2026-11-11, branch native/glass-words2)
 
-The coordinator's rule for the top (2026-11-11, from `16-glass-header`): under every liquid top pane (the chat's bar,
-the floating header on home, the floating bar on Settings) the content its glass sees is whole at the pane's bottom
-edge and gone by the inner end of its lens rim, measured upward; nothing of it remains under the title, the chips or
-the status bar. This build does not do it. What it takes, by the same means as the message box:
-- The chat's bar: a faded copy of the transcript's recording (`KitWordsFade`, cleared above the pane's bottom edge less
-  its rim, `LiquidEdge.rimPx` with the bar's recipe) handed to the bar's face, its words host and the status edge, and
-  the body cleared above the pane's bottom edge.
-- The floating header and bar: the same for a feature's recording (`floatingBar.source`); for the kit's own recording
-  (`KitLiquidSource`) a faded copy of that type, which must also keep the source recording while it is used.
-- Tests: a bright row under each pane adds nothing inside the title's and the chips' bounds and still shows at the
-  pane's bottom edge; failing first.
+**Top panes.** `KitWordsFade` is now one fade with two sides (`KitWordsClear`): `Below` (the message box, as before) and
+`Above` (a pane's bottom edge): the copy of the page recording is whole at the pane's bottom edge and gone by the inner
+end of its lens rim (`LiquidEdge.rimPx`, Bar recipe), on whole pixels. It copies either a feature's recording
+(`KitFrostState`) or the kit's own (`KitLiquidSource`); for the kit's own the copy takes the original's coordinates and
+the frame holds the original open (`users++`) while the copy is used, since the kit records only while a pane reads it.
+The chat's bar: the recorder runs on the body after it has drawn (the body sits in its own layer, so this never
+redraws it); the bar's face and its words host read the copy. Home and Settings: the same on the floating pane's box.
+The status edge keeps the whole recording: `ChatEdgeATest` (chat edge A, the owner's pick) requires the page to blur
+under the status bar, so this is a departure from the rule written above. Draw phase only: no layout, scroll or
+composition change; other styles and Glass without a lens are untouched.
+
+**The request card's label (and anything above the box).** Cause as suspected: under a slab the body was left whole
+behind the whole bottom block, so a label with no glass of its own stood on sharp lines, and the phrase chips' own
+glass read a copy that was whole above the box's top edge. Now the block reports its top (`KitScreenBottom.blockTop`)
+and the frame knows when something stands above the box (`stacked`: the box's top lies more than 24 dp below the
+block's top). Then (a) the body fades out over the last 8 dp above the block's top, as under a block that is not a slab;
+(b) the box's copy is also cleared above its top edge, so chips and controls above it see nothing bright; (c) the jump
+pill is not joined to the box (a joined pill is drawn at the box's top, which lies below the card: that is why the
+tester's picture showed it between the card and the box, while the layout places it above the whole block); it stays
+above the block. With nothing above the box nothing changes.
+
+**Not done: the jump pill's own label with typed text.** The pill reads the transcript list's own inner recording, not
+the screen's copy, so blurred lines show behind "Jump to latest" when the box is typed in and the pill is joined. A
+fix needs a third copy of the list's recording cleared in the pill's label band (its geometry is the join's, which
+moves), recorded each frame for the pill's backdrop in `kit-chat`, or the pill's backdrop switched to the faded copy,
+which is whole above the box's edge and so does not help. Left for a device pass.
+
+**Pictures** (desktop, Glass dark, white rows scrolled under the panes): `glass-in-the-kit/render-words-top-chat-*.png`,
+`render-words-home-*.png`, `render-words-needs-decision-*.png`, `-before` and `-after`.
+
+**Checks** (GitHub, desktop): `ChatWordsGlassTest` (bar title, label, chips), `KitFloatingBarTest` B-KIT-FLOAT-013
+(title and chips of Home and Settings; B-KIT-FLOAT-002's capsule check moved to the pane's rim). Before the fix the four
+new tests failed; after, they pass together with `ChatEdgeATest`, the other `KitFloatingBar*`, `ScrollEdge*` and
+`Jump*` tests. Not run: anything on a device; the lens's bend and rim light.
 
 Last run on the branch tip (VPS desktop): `ChatWordsGlassTest` 5 of 5, `JumpFadeEdgeTest`, `ChatEdgeATest`,
 `KitFloatingBarTest`, `KitFloatingBarRowTest`, `KitScreen*`, `ScrollEdgeWholePixelTest` green; `compileAndroidMain` for
