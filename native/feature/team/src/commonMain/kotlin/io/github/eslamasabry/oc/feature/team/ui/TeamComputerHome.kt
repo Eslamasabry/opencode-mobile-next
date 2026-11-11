@@ -192,6 +192,7 @@ private fun Ready(ui: FleetHomeUi, nowMs: Long, actions: TeamHomeActions) {
                             supportingMaxLines = 2,
                             state = KitRowState(null, row.mark.tone()),
                             modifier = Modifier.testTag("team-computer-run-${row.id}"),
+                            onClick = { actions.openFleetRun(row.id) },
                         )
                     }
                     if (ui.hiddenDone > 0) {

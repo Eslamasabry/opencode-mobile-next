@@ -56,4 +56,7 @@ public sealed interface TeamRoute : AppRoute {
     @Serializable
     public data class FleetAgent(val profileId: ProfileId, val agentId: String) : TeamRoute
 
+    /** One task of a computer's team (Dart Task details + Work sheet): its steps as a graph, and Stop task. */
+    @Serializable
+    public data class FleetRun(val profileId: ProfileId, val runId: String) : TeamRoute
 }

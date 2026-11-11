@@ -271,3 +271,117 @@ public class FleetAgentViewModel(
         public fun create(@Assisted route: TeamRoute.FleetAgent): FleetAgentViewModel
     }
 }
+
+// ---- one task
+
+public data class FleetRunState(
+    val ui: FleetRunUi = FleetRunUi(),
+    val nowMs: Long = 0,
+    val confirmingStop: Boolean = false,
+    /** The step whose sheet is open, if any. */
+    val work: FleetWorkUi? = null,
+)
+
+public interface FleetRunActions {
+    public fun back() {}
+
+    public fun refresh() {}
+
+    public fun openSettings() {}
+
+    /** A step row or graph node: its sheet. A dependency inside the sheet replaces it. */
+    public fun openStep(workId: String) {}
+
+    public fun closeStep() {}
+
+    /** The agent on a step: its page. */
+    public fun openAgent(agentId: String) {}
+
+    public fun askStop() {}
+
+    public fun confirmStop() {}
+
+    public fun cancelStop() {}
+
+    public fun retryStop() {}
+}
+
+/** One task of a computer's team (Dart Task details): its state, its steps as a graph, Stop task. */
+@AssistedInject
+public class FleetRunViewModel(
+    @Assisted private val route: TeamRoute.FleetRun,
+    private val engine: TeamEngine,
+    private val nav: AppNavigator,
+    private val clock: kotlin.time.Clock,
+    private val redactor: Redactor,
+) : ViewModel(), FleetRunActions {
+    private val profile = route.profileId.raw
+    private val fleet = engine.fleetState(profile).stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_AFTER_MS), FleetState())
+
+    private data class Local(val confirming: Boolean = false, val busy: Boolean = false, val sent: FleetRunSent? = null, val step: String? = null)
+
+    private val local = MutableStateFlow(Local())
+
+    public val state: StateFlow<FleetRunState> =
+        combine(engine.state(profile), fleet, local, agedTicks { clock.now().toEpochMilliseconds() }) { team, fleet, mine, now ->
+                val computer = team.phase == TeamPhase.Computer
+                FleetRunState(
+                    ui =
+                        if (computer) FleetRunPresent.run(team.config, fleet, route.runId, now, redactor::details, mine.sent, mine.busy)
+                        else FleetRunUi(FleetRunKind.Missing, id = route.runId),
+                    nowMs = now,
+                    confirmingStop = mine.confirming,
+                    work = mine.step?.takeIf { computer }?.let { FleetRunPresent.work(fleet, it, redactor::details) },
+                )
+            }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_AFTER_MS), FleetRunState())
+
+    override fun back(): Unit = nav.back()
+
+    override fun refresh() {
+        viewModelScope.launch { engine.fleet?.refresh(profile) }
+    }
+
+    override fun openSettings() {
+        nav.open(TeamRoute.Settings(route.profileId))
+    }
+
+    override fun openStep(workId: String) = local.update { it.copy(step = workId) }
+
+    override fun closeStep() = local.update { it.copy(step = null) }
+
+    override fun openAgent(agentId: String) {
+        local.update { it.copy(step = null) }
+        nav.open(TeamRoute.FleetAgent(route.profileId, agentId))
+    }
+
+    override fun askStop() = local.update { if (it.busy) it else it.copy(confirming = true) }
+
+    override fun cancelStop() = local.update { it.copy(confirming = false) }
+
+    override fun confirmStop() {
+        if (!local.value.confirming) return
+        stop()
+    }
+
+    override fun retryStop() {
+        if (local.value.sent?.retryable == true) stop()
+    }
+
+    private fun stop() {
+        val fleet = engine.fleet ?: return
+        if (local.value.busy) return
+        local.update { it.copy(busy = true, confirming = false) }
+        viewModelScope.launch {
+            val receipt = fleet.control(profile, FleetControl.CancelRun(route.runId))
+            local.update { it.copy(busy = false, sent = FleetRunSent(receipt.status, receipt.message, receipt.retryable)) }
+        }
+    }
+
+    @AssistedFactory
+    @ManualViewModelAssistedFactoryKey
+    @ContributesIntoMap(AppScope::class)
+    public fun interface Factory : ManualViewModelAssistedFactory {
+        public fun create(@Assisted route: TeamRoute.FleetRun): FleetRunViewModel
+    }
+}

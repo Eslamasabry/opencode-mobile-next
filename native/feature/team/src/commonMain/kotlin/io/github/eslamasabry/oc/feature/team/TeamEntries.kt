@@ -11,6 +11,7 @@ import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import io.github.eslamasabry.oc.feature.team.presentation.FleetAgentViewModel
 import io.github.eslamasabry.oc.feature.team.presentation.FleetAgentsViewModel
+import io.github.eslamasabry.oc.feature.team.presentation.FleetRunViewModel
 import io.github.eslamasabry.oc.feature.team.presentation.TeamBoardViewModel
 import io.github.eslamasabry.oc.feature.team.presentation.TeamEditorViewModel
 import io.github.eslamasabry.oc.feature.team.presentation.TeamHomeViewModel
@@ -22,6 +23,7 @@ import io.github.eslamasabry.oc.feature.team.presentation.TeamTaskViewModel
 import io.github.eslamasabry.oc.feature.team.presentation.TeamTimelineViewModel
 import io.github.eslamasabry.oc.feature.team.ui.FleetAgentScreen
 import io.github.eslamasabry.oc.feature.team.ui.FleetAgentsScreen
+import io.github.eslamasabry.oc.feature.team.ui.FleetRunScreen
 import io.github.eslamasabry.oc.feature.team.ui.TeamBoardScreen
 import io.github.eslamasabry.oc.feature.team.ui.TeamEditorScreen
 import io.github.eslamasabry.oc.feature.team.ui.TeamHomeScreen
@@ -90,6 +92,11 @@ public class TeamEntries(private val environment: KitChatEnvironment) : EntryIns
             val vm = assistedMetroViewModel<FleetAgentViewModel, FleetAgentViewModel.Factory> { create(route) }
             val state by vm.state.collectAsStateWithLifecycle()
             FleetAgentScreen(state, vm)
+        }
+        entry<TeamRoute.FleetRun> { route ->
+            val vm = assistedMetroViewModel<FleetRunViewModel, FleetRunViewModel.Factory> { create(route) }
+            val state by vm.state.collectAsStateWithLifecycle()
+            FleetRunScreen(state, vm)
         }
         entry<TeamRoute.Task> { route ->
             val vm = assistedMetroViewModel<TeamTaskViewModel, TeamTaskViewModel.Factory> { create(route) }

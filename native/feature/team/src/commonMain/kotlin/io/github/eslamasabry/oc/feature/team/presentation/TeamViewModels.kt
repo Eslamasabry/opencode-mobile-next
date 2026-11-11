@@ -170,6 +170,10 @@ public class TeamHomeViewModel(
         nav.open(TeamRoute.FleetAgents(route.profileId))
     }
 
+    override fun openFleetRun(runId: String) {
+        nav.open(TeamRoute.FleetRun(route.profileId, runId))
+    }
+
     @AssistedFactory
     @ManualViewModelAssistedFactoryKey
     @ContributesIntoMap(AppScope::class)
