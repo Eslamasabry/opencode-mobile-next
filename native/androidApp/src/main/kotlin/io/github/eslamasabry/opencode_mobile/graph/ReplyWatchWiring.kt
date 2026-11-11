@@ -26,11 +26,10 @@ import io.github.eslamasabry.oc.android.notifications.ReplyRun
 import io.github.eslamasabry.oc.android.notifications.ReplyRunFact
 import io.github.eslamasabry.oc.android.notifications.ReplyRunSource
 import io.github.eslamasabry.oc.android.notifications.ReplyWatchPolicy
-import io.github.eslamasabry.oc.android.notifications.ServerRowPolicy
-import io.github.eslamasabry.oc.android.notifications.ServerRowStep
-import io.github.eslamasabry.oc.android.notifications.StatusThrottle
 import io.github.eslamasabry.oc.android.notifications.LiveUpdatePolicy
 import io.github.eslamasabry.oc.android.notifications.NotificationIds
+import io.github.eslamasabry.oc.android.notifications.ServerRowFacts
+import io.github.eslamasabry.oc.android.notifications.ServerRowLender
 import io.github.eslamasabry.oc.android.notifications.ReplyWatchServiceBody
 import io.github.eslamasabry.oc.android.notifications.ReplyWatchStart
 import io.github.eslamasabry.oc.android.notifications.ReplyWatchStartFacts
@@ -187,79 +186,53 @@ class ReplyWatchHub(
     }
 
     /**
-     * Whether the conversations' words stand in the phone server's row now (they replace "Ready · nothing running"
-     * until nothing runs and nothing waits). Only touched on the main dispatcher.
+     * The one decision of what the phone server's row says outside live mode and reply watch: the conversations' words
+     * while the app is hidden and a run works or waits, the server's own words otherwise. The watch hands the row back
+     * through it too. Only touched on the main dispatcher.
      */
-    private var lent = false
-    private val lendThrottle = StatusThrottle(StatusThrottle.DOCK_GAP_MS)
-    private var lendTrailing: Job? = null
-    private val lendRenderer by lazy { StatusRenderer(application, words) }
-
-    /**
-     * Puts the right words into the phone server's row: the conversations' (working, needs you) when any exist, the
-     * server's own otherwise. [watchEnding] is the reply watch giving the row back. False when no service holds the row.
-     */
-    private fun settleServerRow(watchEnding: Boolean): Boolean {
-        val row = attention.conversationsRow.value
-        val visible = source.appVisible.value
-        val step =
-            ServerRowPolicy.step(
-                conversationsShown = row != null,
-                lent = lent,
-                replyWatchActive = !watchEnding && flag.active.value,
-                liveModeActive = background.live.value.active,
-                appVisible = visible,
-            )
-        if (step == ServerRowStep.Leave && !watchEnding) return true
-        return try {
-            val linux = BuiltinLinux.get(application)
-            if (step == ServerRowStep.Lend && row != null) {
-                lendRow(linux, row)
-            } else {
-                lent = false
-                lendTrailing?.cancel()
-                lendTrailing = null
-                lendThrottle.reset()
-                linux.repostStatusRow()
-            }
-        } catch (_: RuntimeException) {
-            // Never into the watch. A cancel cannot remove a row a live foreground service still holds.
-            false
-        }
-    }
-
-    private fun lendRow(linux: BuiltinLinux, row: StatusContent): Boolean {
-        if (!linux.holdsStatusRow()) {
-            lent = false
-            return false
-        }
-        lent = true
-        when (val step = lendThrottle.offer(row, SystemClock.elapsedRealtime())) {
-            is StatusThrottle.Step.Post -> postLent(step.content)
-            is StatusThrottle.Step.Wait ->
-                if (lendTrailing == null)
-                    lendTrailing =
-                        scope.launch {
-                            delay(step.delayMs)
-                            lendTrailing = null
-                            if (lent) lendThrottle.due(SystemClock.elapsedRealtime())?.let(::postLent)
-                        }
-            StatusThrottle.Step.Skip -> Unit
-        }
-        return true
-    }
-
-    private fun postLent(content: StatusContent) {
-        try {
-            application.getSystemService(NotificationManager::class.java)
-                .notify(
-                    NotificationIds.STATUS,
-                    lendRenderer.build(content, ongoing = true, chip = LiveUpdatePolicy.chipFor(content, false)),
+    private val serverRow by lazy {
+        val renderer = StatusRenderer(application, words)
+        val manager = application.getSystemService(NotificationManager::class.java)
+        ServerRowLender(
+            scope = scope,
+            elapsedMs = SystemClock::elapsedRealtime,
+            facts = {
+                ServerRowFacts(
+                    conversations = attention.conversationsRow.value,
+                    replyWatchActive = flag.active.value || body.active,
+                    liveModeActive = background.live.value.active,
+                    appVisible = source.appVisible.value,
                 )
-        } catch (_: SecurityException) {
-            // Permission revoked: nothing of ours can show anyway.
-        }
+            },
+            serverHoldsRow = {
+                try {
+                    BuiltinLinux.get(application).holdsStatusRow()
+                } catch (_: RuntimeException) {
+                    false
+                }
+            },
+            post = { content ->
+                try {
+                    manager.notify(
+                        NotificationIds.STATUS,
+                        renderer.build(content, ongoing = true, chip = LiveUpdatePolicy.chipFor(content, false)),
+                    )
+                } catch (_: SecurityException) {
+                    // Permission revoked: nothing of ours can show anyway.
+                }
+            },
+            restore = {
+                try {
+                    BuiltinLinux.get(application).repostStatusRow()
+                } catch (_: RuntimeException) {
+                    // Never into the watch. A cancel cannot remove a row a live foreground service still holds.
+                    false
+                }
+            },
+        )
     }
+
+    private fun settleServerRow(watchEnding: Boolean): Boolean = serverRow.settle(watchEnding)
 
     /** `BackgroundConnectionService.onStartCommand` for [ACTION_REPLY_WATCH]: the body keeps the promise first. */
     fun onServiceStart(service: Service): Int {
