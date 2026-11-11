@@ -47,6 +47,12 @@ public interface ConversationServers {
     public fun prefetch(ref: ConversationRef) {}
 
     public fun forget(ref: ConversationRef) {}
+
+    /**
+     * The person archived or deleted [ref] and the server took it (after any Undo window). The app tells what follows
+     * conversations by identity (the edge dock drops its ring); the server sends nothing for an archive.
+     */
+    public fun left(ref: ConversationRef) {}
 }
 
 private val NO_WAITING: StateFlow<ImmutableList<ServerName>> = MutableStateFlow(persistentListOf())

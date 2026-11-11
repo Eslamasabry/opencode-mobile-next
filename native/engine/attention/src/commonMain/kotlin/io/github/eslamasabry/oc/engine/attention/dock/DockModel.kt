@@ -314,8 +314,9 @@ public sealed interface DockEvent {
  *   tuck it, and a NEW failure or request untucks it; with nothing live the tuck is forgotten. With no ring at all it
  *   is still the nub while a server is connected (its "+" starts a conversation there). [DockPresence.Hidden] only
  *   when no ring is in the dock and no server is connected (the app hides it too when the person turned it off).
- * - A request or failure belonging to the conversation on screen (or its sub-agents) never counts as the alert that brings
- *   the dock out: the person is looking at it. It counts again once they are on another conversation or the home.
+ * - A request or failure belonging to the conversation on screen never counts as the alert that brings the dock out: the
+ *   person is looking at it. A sub-agent's still counts (the chat shows only its own session's requests), and so does
+ *   the parent's while a sub-agent is on screen. It counts again once they are on another conversation or the home.
  * - [DockEvent.Left]: a conversation that left the home list without being deleted (archived) leaves like a deleted
  *   one, but its saved nickname stays.
  * - Removing (`DockEvent.Remove`): the ring (or sub-agent) leaves at once and stays out while nothing new happens. It
@@ -853,8 +854,10 @@ public class DockModel private constructor(private val s: Snapshot) {
                     )
                 }
             val live = members.count { it.state != DockState.Idle }
-            // The conversation on screen (and its sub-agents) never counts: the person is looking at it.
-            val alert = members.any { (it.state == DockState.NeedsYou || it.state == DockState.Failed) && it.root.ref != openRoot }
+            // A request or failure of the conversation on screen never counts: the person is looking at it. One of its
+            // sub-agent's (or, with a sub-agent open, its parent's) still does: the chat shows only its own requests.
+            fun alerting(t: Tracked) = (t.state() == DockState.NeedsYou || t.state() == DockState.Failed) && t.ref != open
+            val alert = members.any { v -> alerting(v.root) || v.kids.any(::alerting) }
             // Never hidden for lack of live conversations: quiet is the nub, and an empty dock is the nub with its "+"
             // while a server is connected (a new conversation has somewhere to go). Hidden only with nothing connected.
             val presence =

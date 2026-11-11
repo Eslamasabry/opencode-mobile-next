@@ -43,6 +43,14 @@ public interface EdgeDockPort {
 
     public fun rename(ref: ConversationRef, name: String?)
 
+    /**
+     * Renames the conversation itself (one name everywhere); [onFailed] runs on main when the server did not take it
+     * (offline, or a server that cannot rename). A host without that path keeps the plain [rename].
+     */
+    public fun rename(ref: ConversationRef, name: String?, onFailed: () -> Unit) {
+        rename(ref, name)
+    }
+
     public fun remove(ref: ConversationRef)
 
     public fun undoRemove(ref: ConversationRef)

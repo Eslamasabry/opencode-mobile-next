@@ -646,7 +646,10 @@ public class ChatsViewModel(
                     ops?.archiveSession(job.ref.sessionId)
                         ?: io.github.eslamasabry.oc.core.domain.unavailable("sessionArchive")
             when (done) {
-                is io.github.eslamasabry.oc.core.common.Outcome.Ok -> feed.refresh()
+                is io.github.eslamasabry.oc.core.common.Outcome.Ok -> {
+                    connections.left(job.ref)
+                    feed.refresh()
+                }
                 // A refusal (or a server that went away) brings the row back with its reason.
                 is io.github.eslamasabry.oc.core.common.Outcome.Failed ->
                     archiving.update {

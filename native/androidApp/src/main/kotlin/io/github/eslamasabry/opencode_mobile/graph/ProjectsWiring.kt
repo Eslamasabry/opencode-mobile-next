@@ -73,6 +73,7 @@ class LiveConversationServers(
     stores: PreviewStores,
     appScope: AppCoroutineScope,
     runtime: PreviewRuntime,
+    private val conversationsLeft: ConversationsLeft,
 ) : ConversationServers {
     override fun prefetch(ref: io.github.eslamasabry.oc.core.common.ids.ConversationRef) {
         registry.graphFor(ref)?.session?.reads?.prefetch(ref.sessionId)
@@ -81,6 +82,8 @@ class LiveConversationServers(
     override fun forget(ref: io.github.eslamasabry.oc.core.common.ids.ConversationRef) {
         registry.graphFor(ref)?.session?.reads?.forget(ref.sessionId)
     }
+
+    override fun left(ref: io.github.eslamasabry.oc.core.common.ids.ConversationRef) = conversationsLeft.tell(ref)
 
     override val servers: StateFlow<ImmutableList<ConversationServer>> =
         combine(registry.live, stores.profiles.profiles) { live, saved ->

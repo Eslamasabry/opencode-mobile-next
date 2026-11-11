@@ -86,10 +86,10 @@ public class DockController(
     /**
      * Holds a ring and types a name. There is one name per conversation: with the app's [DockActions] this renames the
      * conversation itself (the call its own "Rename conversation" makes) and the ring shows the new title; a failed
-     * call changes nothing. Blank only clears a leftover local nickname so the title shows. Without actions (previews,
-     * tests) it keeps the old local nickname.
+     * call changes nothing and runs [onFailed] (on this controller's dispatcher) so the person is told. Blank only clears
+     * a leftover local nickname so the title shows. Without actions (previews, tests) it keeps the old local nickname.
      */
-    public fun rename(ref: ConversationRef, name: String?) {
+    public fun rename(ref: ConversationRef, name: String?, onFailed: () -> Unit = {}) {
         scope.launch {
             val port = actions
             if (port == null) {
@@ -105,6 +105,8 @@ public class DockController(
             } else if (port.renameConversation(ref, title) is Outcome.Ok) {
                 dropNickname(ref)
                 feed(DockEvent.Meta(ref, title, null))
+            } else {
+                onFailed()
             }
         }
     }

@@ -39,6 +39,32 @@ class DockOpenAlertAndLeaveTest {
         assertEquals(DockPresence.Out, elsewhere.ui.presence)
     }
 
+    @Test
+    fun `a sub-agent's request still counts while its parent is open, and the parent's while the sub-agent is open`() {
+        // The chat shows only its own session's requests, so the dock is the only signal for these.
+        val kid = ref("kid")
+        val family = arrayOf<DockEvent>(DockEvent.RunStarted(a), DockEvent.RunStarted(kid), DockEvent.Link(kid, a.sessionId))
+        val childAsks = model(*family, DockEvent.Opened(a), DockEvent.RequestOpened(kid, "permission:r"))
+        assertEquals(DockPresence.Out, childAsks.ui.presence)
+        val parentAsks = model(*family, DockEvent.Opened(kid), DockEvent.RequestOpened(a, "permission:r"))
+        assertEquals(DockPresence.Out, parentAsks.ui.presence)
+        val kidOwn = model(*family, DockEvent.Opened(kid), DockEvent.RequestOpened(kid, "permission:r"))
+        assertEquals(DockPresence.Nub, kidOwn.ui.presence, "the sub-agent on screen shows its own request")
+    }
+
+    @Test
+    fun `the open conversation follows every navigation report, so it never goes stale`() {
+        val asks = model(DockEvent.Opened(a), DockEvent.RunStarted(a), DockEvent.RequestOpened(a, "permission:r"))
+        // Home (or a page that is not a chat), then back to the same chat: out, then in again.
+        val home = asks.reduce(DockEvent.Opened(null))
+        assertEquals(DockPresence.Out, home.ui.presence)
+        assertEquals(DockPresence.Nub, home.reduce(DockEvent.Opened(a)).ui.presence)
+        // Another chat opened (from a notification or the dock) makes the first one's request count again.
+        val other = asks.reduce(DockEvent.Opened(b))
+        assertEquals(DockPresence.Out, other.ui.presence)
+        assertEquals(b, other.ui.open)
+    }
+
     // ---- archive
 
     @Test
@@ -62,6 +88,26 @@ class DockOpenAlertAndLeaveTest {
         assertTrue(w.events(listOf(a, c), complete = true, listed = all).isEmpty(), "reported once")
         assertTrue(w.events(emptyList(), complete = true, listed = emptySet()).isEmpty(), "a hidden server loses nothing")
         assertTrue(w.events(listOf(a), complete = true, listed = all).isEmpty(), "and is learned again from scratch")
+    }
+
+    @Test
+    fun `a server whose rows are all missing at once, or a list that is not whole, takes no ring away`() {
+        val w = DockHomeWatch()
+        val all = setOf(p)
+        w.events(listOf(a, b), complete = true, listed = all)
+        // The server's list is being replaced (a reconnect, an edit of the server): no row of it at all proves nothing.
+        assertTrue(w.events(emptyList(), complete = true, listed = all).isEmpty())
+        // A list of one project only, or with a source still loading or failed, is passed as not whole.
+        assertTrue(w.events(listOf(a), complete = false, listed = all).isEmpty())
+        // What was seen is kept, so a real archive is still noticed by the next whole list.
+        assertEquals(listOf<DockEvent>(DockEvent.Left(b)), w.events(listOf(a), complete = true, listed = all))
+    }
+
+    @Test
+    fun `a ring that left comes back only when it is live again`() {
+        val m = model(DockEvent.RunStarted(a), DockEvent.RunEnded(a, DockRunEnd.Succeeded), DockEvent.Opened(b))
+        assertTrue(m.ui.entries.any { it.ref == a })
+        assertTrue(m.reduce(DockEvent.Left(a)).ui.entries.none { it.ref == a }, "an archived ring is not offered again")
     }
 
     // ---- one name
@@ -107,8 +153,14 @@ class DockOpenAlertAndLeaveTest {
         dock.feed(DockEvent.RunStarted(a))
         assertEquals("Real title", dock.ui.value.entries.first { it.ref == a }.name, "the home's title shows, not the old nickname")
         assertTrue(DockKeys.namesKey(p) !in disk.data)
-        dock.rename(a, "New")
+        var told = 0
+        dock.rename(a, "New") { told++ }
         testScheduler.advanceUntilIdle()
         assertEquals("Real title", dock.ui.value.entries.first { it.ref == a }.name)
+        assertEquals(1, told, "the person is told the rename did not happen")
+        dock.rename(a, "   ") { told++ }
+        testScheduler.advanceUntilIdle()
+        assertEquals(listOf("a" to "New"), actions.renamed, "a blank name is never sent")
+        assertEquals(1, told)
     }
 }
