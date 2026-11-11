@@ -187,6 +187,10 @@ public class TeamHomeViewModel(
         nav.open(TeamRoute.FleetRun(route.profileId, runId))
     }
 
+    override fun openComputerProject(projectId: String) {
+        nav.open(TeamRoute.FleetRig(route.profileId, projectId))
+    }
+
     @AssistedFactory
     @ManualViewModelAssistedFactoryKey
     @ContributesIntoMap(AppScope::class)

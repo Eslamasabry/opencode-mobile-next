@@ -287,6 +287,49 @@ internal class FleetGateway(
 
     suspend fun scheduledJobs(): List<FleetJob> = FleetMap.orders(J.list(city("/orders"), "orders", { WireOrder.parse(it) }))
 
+    // ---- the host front's own routes (Dart `GasCityControl` merge roles and policy); never on a bare supervisor or loopback
+
+    /** Dart `policy`: `GET /front/policy[?rig=]`. No front, a 404 or a 422 (unusable rig name) answers null; other failures throw. */
+    suspend fun policy(projectId: String?): FleetPolicy? {
+        if (!front) return null
+        return try {
+            FleetPolicyWire.policy(city("/front/policy", if (projectId.isNullOrEmpty()) emptyList() else listOf("rig" to projectId)))
+        } catch (e: FleetHttpError) {
+            if (e.notFound || e.status == 422) null else throw e
+        }
+    }
+
+    /** Dart `mergeReadiness`: `GET /front/merge-readiness/{run}`. No front, a 404 (unknown run) or a 422 (no merge roles) answers null. */
+    suspend fun mergeReadiness(runId: String): MergeReadiness? {
+        if (!front) return null
+        return try {
+            FleetMergeWire.readiness(city("/front/merge-readiness/${FleetAddress.segment(runId)}"), runId)
+        } catch (e: FleetHttpError) {
+            if (e.notFound || e.status == 422) null else throw e
+        }
+    }
+
+    /** Dart `approveMerge`: `POST /front/mr/{bead}/approve`. */
+    suspend fun approveMerge(mergeRequestId: String, requestId: String): FleetMergeResult =
+        mergePost("$cityPath/front/mr/${FleetAddress.segment(mergeRequestId)}/approve", requestId)
+
+    /** Dart `merge`: `POST /front/merge/{run}` (fast-forward or no-ff into the rig's default branch; never force, never deletes). */
+    suspend fun merge(runId: String, requestId: String): FleetMergeResult = mergePost("$cityPath/front/merge/${FleetAddress.segment(runId)}", requestId)
+
+    /** A front write whose answer the page reads more of than the receipt: the merge commit, the branch, the boundary. */
+    private suspend fun mergePost(path: String, requestId: String): FleetMergeResult {
+        if (!front) return FleetMergeResult(FleetReceipt.rejected(requestId, FleetReceipt.FRONT_REQUIRED))
+        val reply = transport.send("POST", path, emptyMap(), requestId, requestId)
+        val receipt = receipt(requestId, reply)
+        val answered = reply as? FleetReply.Answered ?: return FleetMergeResult(receipt)
+        val outer = decode(answered.text)
+        // Dart `_bodyOf`: the `body` inside a front receipt, else the answer itself.
+        val body = if (J.hasMap(outer, "body")) J.field(outer, "body") else outer
+        val boundary =
+            if (J.text(body, "code") == "boundary" || J.text(body, "boundary") != null) J.text(body, "detail") ?: J.text(body, "boundary") ?: receipt.message else null
+        return FleetMergeResult(receipt, mergeCommit = J.text(body, "mergeCommit"), branch = J.text(body, "branch"), boundary = boundary)
+    }
+
     /** `/events/stream` from [lastEventId]; frames go to [onFrame] until it ends. */
     suspend fun events(lastEventId: String?, onFrame: suspend (FleetFrame) -> Unit): FleetStreamEnd =
         transport.stream("$cityPath/events/stream", lastEventId, onFrame = onFrame)

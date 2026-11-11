@@ -13,6 +13,8 @@ import io.github.eslamasabry.oc.feature.team.fleet.FleetConnectScreen
 import io.github.eslamasabry.oc.feature.team.fleet.FleetConnectViewModel
 import io.github.eslamasabry.oc.feature.team.fleet.FleetGateSheet
 import io.github.eslamasabry.oc.feature.team.fleet.FleetGateViewModel
+import io.github.eslamasabry.oc.feature.team.fleet.FleetRigScreen
+import io.github.eslamasabry.oc.feature.team.fleet.FleetRigViewModel
 import io.github.eslamasabry.oc.feature.team.fleet.FleetStartRunSheet
 import io.github.eslamasabry.oc.feature.team.fleet.FleetStartRunViewModel
 import io.github.eslamasabry.oc.feature.team.fleet.rememberFleetNow
@@ -120,6 +122,11 @@ public class TeamEntries(private val environment: KitChatEnvironment) : EntryIns
             val vm = assistedMetroViewModel<FleetRunViewModel, FleetRunViewModel.Factory> { create(route) }
             val state by vm.state.collectAsStateWithLifecycle()
             FleetRunScreen(state, vm)
+        }
+        entry<TeamRoute.FleetRig> { route ->
+            val vm = assistedMetroViewModel<FleetRigViewModel, FleetRigViewModel.Factory> { create(route) }
+            val state by vm.state.collectAsStateWithLifecycle()
+            environment.Provide { FleetRigScreen(state, vm) }
         }
         entry<TeamRoute.Task> { route ->
             val vm = assistedMetroViewModel<TeamTaskViewModel, TeamTaskViewModel.Factory> { create(route) }

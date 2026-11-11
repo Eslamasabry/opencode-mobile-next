@@ -130,6 +130,9 @@ public interface TeamHomeActions : TeamIntroActions {
 
     /** A computer's team: a task's row opens the task's page. */
     public fun openFleetRun(runId: String) {}
+
+    /** A project row of a computer's team: its own page (Dart `openTeamRig`). */
+    public fun openComputerProject(projectId: String) {}
 }
 
 /**

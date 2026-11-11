@@ -52,6 +52,10 @@ public sealed interface TeamRoute : AppRoute {
     @Serializable
     public data class StartRun(val profileId: ProfileId, val projectId: String? = null) : TeamRoute
 
+    /** One project (a rig) of a computer's team (Dart `TeamRigScreen`): pause it, resume it, delete it, its scheduled jobs and the host's rules. */
+    @Serializable
+    public data class FleetRig(val profileId: ProfileId, val projectId: String) : TeamRoute
+
     /** Team settings (Dart `TeamSettingsScreen`): the agents, how the team runs here, Turn off. */
     @Serializable
     public data class Settings(val profileId: ProfileId) : TeamRoute
