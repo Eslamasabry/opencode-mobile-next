@@ -251,7 +251,6 @@ public fun AgentHandoffScreen(state: AgentHandoffUi, actions: AgentHandoffAction
     }
 }
 
-@Composable
 /** The plain words and the way forward for a folder-check reason; null when there is none. */
 @Composable
 private fun blockWords(block: HandoffBlock?): String? =
@@ -264,6 +263,7 @@ private fun blockWords(block: HandoffBlock?): String? =
         null -> null
     }
 
+@Composable
 private fun failureText(kind: HandoffFailureKind): String =
     stringResource(
         when (kind) {
