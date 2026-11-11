@@ -303,18 +303,22 @@ internal fun PhoneAgentSheet(state: AgentsUi, actions: AgentsActions, enabled: K
                         stringResource(Res.string.agentsInstallAction, tile.agent.name),
                         { actions.requestInstall(tile.agent.id) },
                         enabled = can,
+                        working = state.busy,
                     )
                 AgentTileAct.SignIn ->
                     KitAction(
                         stringResource(Res.string.agentsSignInAction, tile.agent.name),
                         { actions.signInPhone(tile.agent.id) },
                         enabled = can,
+                        working = state.busy,
                     )
                 AgentTileAct.Check ->
                     KitAction(
                         stringResource(Res.string.agentsCheckAction, tile.agent.name),
                         { actions.checkPhoneAgent(tile.agent.id) },
-                        enabled = can,
+                        // One phone check at a time: another agent's running check holds this one.
+                        enabled = if (state.checkingAgent != null && state.checkingAgent != tile.agent.id) working else can,
+                        working = state.busy || state.checkingAgent != null,
                     )
                 AgentTileAct.Resume ->
                     KitAction(

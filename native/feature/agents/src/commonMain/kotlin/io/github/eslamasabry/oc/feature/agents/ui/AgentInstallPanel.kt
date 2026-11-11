@@ -32,7 +32,12 @@ internal fun AgentInstallPanel(
         val needsPhoneSetup = !state.phone.available || state.phone.owner == null
         val installEnabled =
             KitEnabled.of(
-                agent.installable && enabled.isEnabled,
+                // The live row, not the one captured when the review opened (another install may have started since);
+                // a failed or cut-short install of this agent may always be tried again (the presenter's own rule).
+                ((state.phone.agents.firstOrNull { it.id == agent.id } ?: agent).installable ||
+                    state.phone.installation?.let {
+                        it.id == agent.id && it.phase != PhoneAgentInstallPhase.Installing
+                    } == true) && enabled.isEnabled,
                 stringResource(Res.string.linuxAgentInstallBusy),
             )
         KitSheet(
