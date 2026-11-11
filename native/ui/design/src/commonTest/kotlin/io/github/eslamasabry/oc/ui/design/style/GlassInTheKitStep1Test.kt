@@ -69,8 +69,11 @@ class GlassInTheKitStep1Test {
     // ---- 1b. A page with light in it
 
     @Test
-    fun `B-KIT-003 1b the dark page's chroma is 20 percent, light and the thumbnails unchanged`() {
-        assertEquals(.20f, AuroraImage.CHROMA_DARK)
+    fun `B-KIT-003 1b the dark page's chroma stays at the quiet plate's, light and the thumbnails unchanged`() {
+        // The note asked .20; measured, any step above .14 costs words on today's clear panes (see AuroraImage.CHROMA_DARK
+        // and the margin table printed below), so it is held until the owner decides whether words may pay.
+        assertEquals(AuroraImage.CHROMA_DARK_QUIET, AuroraImage.CHROMA_DARK)
+        assertEquals(.14f, AuroraImage.CHROMA_DARK_QUIET)
         assertEquals(.12f, AuroraImage.CHROMA_LIGHT)
         assertEquals(.14f, AuroraImage.thumbnailChromaFor(dark = true), "a look's thumbnail keeps the quiet plate")
         assertEquals(.12f, AuroraImage.thumbnailChromaFor(dark = false))
@@ -79,10 +82,9 @@ class GlassInTheKitStep1Test {
 
     @Test
     fun `B-KIT-003 1b two still soft lights in page fractions, dark only, full at the centre and gone at the rim`() {
-        assertEquals(
-            listOf(AuroraImage.Light(.15f, .25f, .45f), AuroraImage.Light(.70f, .55f, .40f)),
-            AuroraImage.lightsFor(dark = true),
-        )
+        assertEquals(listOf(AuroraImage.Light(.15f, .25f, .45f), AuroraImage.Light(.70f, .55f, .40f)), AuroraImage.LIGHTS_DARK)
+        // Drawn only while they add light (none for now, see AuroraImage.LIGHT_PEAK_LUMA).
+        assertEquals(if (AuroraImage.LIGHT_PEAK_LUMA > 0f) AuroraImage.LIGHTS_DARK else emptyList(), AuroraImage.lightsFor(dark = true))
         assertTrue(AuroraImage.lightsFor(dark = false).isEmpty(), "the light theme gets no lights in step 1")
         assertEquals(1f, AuroraImage.lightShare(0f))
         assertEquals(1f, AuroraImage.lightShare(.45f), "full over the inner 45 %")
@@ -95,19 +97,19 @@ class GlassInTheKitStep1Test {
         }
         // In page fractions: the same place on a phone and on a tablet.
         for ((w, h) in listOf(360f to 800f, 1280f to 800f)) {
-            assertEquals(1f, AuroraImage.lightAt(.15f * w, .25f * h, w, h, dark = true), .001f)
-            assertEquals(0f, AuroraImage.lightAt(.15f * w, .25f * h, w, h, dark = false))
+            assertEquals(1f, AuroraImage.lightAt(.15f * w, .25f * h, w, h), .001f)
+            assertEquals(0f, AuroraImage.lightAt(.15f * w, .25f * h, w, h, AuroraImage.lightsFor(dark = false)))
         }
     }
 
     @Test
-    fun `B-KIT-003 1b a light adds about 10 percent luma at its centre, in the accent's hue`() {
+    fun `B-KIT-003 1b the note's light adds about 10 percent luma at its centre, in the accent's hue`() {
         for (pack in PackId.entries) {
             val accent = roles(pack, true).accent.withAlpha(1f)
-            val light = AuroraImage.lightColorFor(accent)
+            val light = AuroraImage.lightColorFor(accent, AuroraImage.NOTE_LIGHT_PEAK_LUMA)
             val luma = (.2126 * light.red + .7152 * light.green + .0722 * light.blue) / 255.0
-            assertTrue(luma <= AuroraImage.LIGHT_PEAK_LUMA + .006, "$pack: at most about .10 ($luma)")
-            assertTrue(luma >= AuroraImage.LIGHT_PEAK_LUMA * .6, "$pack: a light you can see ($luma)")
+            assertTrue(luma <= AuroraImage.NOTE_LIGHT_PEAK_LUMA + .006, "$pack: at most about .10 ($luma)")
+            assertTrue(luma >= AuroraImage.NOTE_LIGHT_PEAK_LUMA * .6, "$pack: a light you can see ($luma)")
             // The accent's hue: the channels keep the accent's order.
             val order = listOf(accent.red, accent.green, accent.blue).withIndex().sortedBy { it.value }.map { it.index }
             val lit = listOf(light.red, light.green, light.blue)
@@ -117,7 +119,6 @@ class GlassInTheKitStep1Test {
 
     @Test
     fun `B-KIT-003 1b words do not pay - the spots stay at the quiet plate's, so no pane or liquid face is thicker`() {
-        assertTrue(AuroraImage.CHROMA_DARK > AuroraImage.CHROMA_DARK_QUIET, "the cap has something to cap")
         for (pack in PackId.entries) for (dark in listOf(true, false)) {
             val r = roles(pack, dark)
             val quiet = if (dark) AuroraImage.CHROMA_DARK_QUIET else AuroraImage.CHROMA_LIGHT
@@ -130,9 +131,9 @@ class GlassInTheKitStep1Test {
             }
             assertEquals(AuroraImage.clearSpotsOf(r.ground, r.accent, dark, chroma = quiet), AuroraImage.clearSpotsOf(r.ground, r.accent, dark))
             if (dark) {
-                // Uncapped, the brighter page would have moved them (so this test fails if the cap goes).
+                // Uncapped, the note's brighter page (.20) would have moved them.
                 assertNotEquals(
-                    AuroraImage.clearSpotsOf(r.ground, r.accent, dark, chroma = AuroraImage.CHROMA_DARK),
+                    AuroraImage.clearSpotsOf(r.ground, r.accent, dark, chroma = .20f),
                     AuroraImage.clearSpotsOf(r.ground, r.accent, dark),
                     "$pack",
                 )
@@ -148,7 +149,7 @@ class GlassInTheKitStep1Test {
             while (y <= h) {
                 var x = 0f
                 while (x <= w) {
-                    most = maxOf(most, AuroraImage.lightAt(x, y, w, h, dark = true))
+                    most = maxOf(most, AuroraImage.lightAt(x, y, w, h))
                     x += 4f
                 }
                 y += 4f
@@ -171,12 +172,12 @@ class GlassInTheKitStep1Test {
      * thickens it (over the capped spots), over the page as drawn (chroma [AuroraImage.CHROMA_DARK]) with [share] of a
      * light's peak added on every spot.
      */
-    private fun clearPaneMargin(pack: PackId, id: GlassLookId, role: SurfaceRole, level: SurfaceLevel, chosen: Boolean, share: Float, chroma: Float = AuroraImage.CHROMA_DARK): Pair<Double, String> {
+    private fun clearPaneMargin(pack: PackId, id: GlassLookId, role: SurfaceRole, level: SurfaceLevel, chosen: Boolean, share: Float, chroma: Float = AuroraImage.CHROMA_DARK, peak: Float = AuroraImage.LIGHT_PEAK_LUMA): Pair<Double, String> {
         val r = roles(pack, true)
         val ground = r.ground.withAlpha(1f)
         val measured = listOf(ground) + AuroraImage.clearSpotsOf(r.ground, r.accent, true)
         val drawn = listOf(ground) + AuroraImage.clearSpotsOf(r.ground, r.accent, true, chroma = chroma)
-        val behind = drawn + drawn.map { AuroraImage.lit(it, r.accent, share) }
+        val behind = drawn + drawn.map { AuroraImage.lit(it, r.accent, share, peak) }
         val request = SurfaceRequest(r, role, Knobs(), level, selected = chosen, look = GlassLooks.of(id).spec)
         val solid = request.levelFill.over(ground)
         val wordsDp = if (role == SurfaceRole.Content) GlassFinish.PANE_WORDS_DP else 0f
@@ -203,7 +204,8 @@ class GlassInTheKitStep1Test {
         println("glass-in-the-kit 1b: the brightest light adds ${"%.2f".format(brightestLight)} of a light's peak")
         // What the page may carry before any clear pane's words or icons fall below their target (the pane as thick as
         // the capped spots make it): per chroma, the worst margin with no light, and the most light (as a share of a
-        // light's peak) every pane still reads under.
+        // light's peak at the note's .10) every pane still reads under. Printed for the owner's call; the assertion below
+        // is on the page as shipped (AuroraImage.CHROMA_DARK, AuroraImage.LIGHT_PEAK_LUMA) at the brightest point.
         val cases = buildList {
             for (pack in PackId.entries) for (id in GlassLookId.entries) for ((role, level) in panes) for (chosen in listOf(false, true)) {
                 if (chosen && role != SurfaceRole.Content && role != SurfaceRole.Control) continue
@@ -211,7 +213,7 @@ class GlassInTheKitStep1Test {
             }
         }
         fun margin(c: List<Any>, share: Float, chroma: Float) =
-            clearPaneMargin(c[0] as PackId, c[1] as GlassLookId, c[2] as SurfaceRole, c[3] as SurfaceLevel, c[4] as Boolean, share, chroma)
+            clearPaneMargin(c[0] as PackId, c[1] as GlassLookId, c[2] as SurfaceRole, c[3] as SurfaceLevel, c[4] as Boolean, share, chroma, AuroraImage.NOTE_LIGHT_PEAK_LUMA)
         for (step in 0..6) {
             val chroma = AuroraImage.CHROMA_DARK_QUIET + step * .01f
             var bare = Double.MAX_VALUE
@@ -233,7 +235,7 @@ class GlassInTheKitStep1Test {
             println(
                 "glass-in-the-kit 1b: chroma ${"%.2f".format(chroma)}: no light, worst margin ${"%.3f".format(bare)} ($bareAt); " +
                     "panes that read with no light read under up to ${"%.4f".format(most)} of a light's peak " +
-                    "(peak luma ${"%.4f".format(most * AuroraImage.LIGHT_PEAK_LUMA / maxOf(brightestLight, 1f))} at the brightest point; tightest $mostAt)",
+                    "(peak luma ${"%.4f".format(most * AuroraImage.NOTE_LIGHT_PEAK_LUMA / maxOf(brightestLight, 1f))} per light; tightest $mostAt)",
             )
         }
         for (pack in PackId.entries) for (id in GlassLookId.entries) for ((role, level) in panes) for (chosen in listOf(false, true)) {
@@ -241,6 +243,39 @@ class GlassInTheKitStep1Test {
             val (m, why) = clearPaneMargin(pack, id, role, level, chosen, brightestLight)
             assertTrue(m >= -1e-3, "$id $pack $role/$level chosen=$chosen at the brightest light: $why, margin $m")
         }
+    }
+
+    /**
+     * What letting the words pay would cost (for the owner's call, not a pass/fail): how much thicker each clear pane's
+     * tint would have to be to read over the page as the design note drew it (chroma .20 and a .10 light at the
+     * brightest point), against the tint it has today.
+     */
+    @Test
+    fun `B-KIT-003 1b report - how much thicker the clear panes would be for the note's page`() {
+        var most = 0f
+        var at = ""
+        val tints = mutableListOf<Float>()
+        for (pack in PackId.entries) for (id in GlassLookId.entries) for ((role, level) in panes) {
+            val r = roles(pack, true)
+            val ground = r.ground.withAlpha(1f)
+            val today = listOf(ground) + AuroraImage.clearSpotsOf(r.ground, r.accent, true)
+            val drawn = listOf(ground) + AuroraImage.clearSpotsOf(r.ground, r.accent, true, chroma = .20f)
+            val noted = drawn + drawn.map { AuroraImage.lit(it, r.accent, brightestLight, AuroraImage.NOTE_LIGHT_PEAK_LUMA) }
+            val request = SurfaceRequest(r, role, Knobs(), level, look = GlassLooks.of(id).spec)
+            val solid = request.levelFill.over(ground)
+            val wordsDp = if (role == SurfaceRole.Content) GlassFinish.PANE_WORDS_DP else 0f
+            fun tint(spots: List<Argb>) =
+                GlassFinish.thickened(GlassSpec.resolveClear(request)!!, r, solid, spots, GlassFinish.paneInks(r, solid), wordsDp = wordsDp).fill!!.alpha / 255f
+            val a = tint(today)
+            val b = tint(noted)
+            if (id == GlassLookId.Glossy && role == SurfaceRole.Content && level == SurfaceLevel.Surface1) tints += b - a
+            if (b - a > most) { most = b - a; at = "$id $pack $role/$level: ${"%.2f".format(a)} -> ${"%.2f".format(b)}" }
+        }
+        tints.sort()
+        println(
+            "glass-in-the-kit 1b report: for the note's page the clear panes would thicken by up to ${"%.2f".format(most)} ($at); " +
+                "the home's list panel (Glossy Content/Surface1) by a median ${"%.2f".format(tints[tints.size / 2])} over the packs",
+        )
     }
 
     @Test
