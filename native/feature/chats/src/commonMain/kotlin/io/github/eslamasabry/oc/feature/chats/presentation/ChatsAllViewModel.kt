@@ -67,6 +67,8 @@ public class ChatsAllViewModel(
         )
     private var servers: List<ConversationServer> = emptyList()
     private var generation = 0
+    /** Servers whose cross-project list answered "cannot": they keep the current project's list. */
+    private val projectOnly = mutableSetOf<ProfileId>()
     private val attemptedPins = mutableSetOf<Pair<ProfileId, SessionId>>()
     private val failedPins = mutableSetOf<Pair<ProfileId, SessionId>>()
     private val tombstones = mutableMapOf<ProfileId, MutableSet<SessionId>>()
@@ -373,9 +375,42 @@ public class ChatsAllViewModel(
         }
     }
 
+    /**
+     * One page of the list. A server that lists across projects (`globalSessionSearch`) gives the conversations of
+     * every project, as Flutter's All conversations page does (`listGlobalSessions`, archived ones included so the
+     * archived switch still works); one that cannot, or whose first answer says so, gives the current project's.
+     */
+    private suspend fun readPage(
+        server: ConversationServer,
+        cursor: String?,
+    ): Outcome<io.github.eslamasabry.oc.core.model.ServerPage<io.github.eslamasabry.oc.core.model.Session>> {
+        val operations = server.operations
+        if (
+            operations == null ||
+                !server.gateway.capabilities.value.globalSessionSearch ||
+                server.profile in projectOnly
+        )
+            return server.gateway.sessionPage(cursor = cursor, limit = AllConversationsRules.PAGE)
+        return when (
+            val page = operations.listGlobalSessions(null, true, cursor, AllConversationsRules.PAGE)
+        ) {
+            is Outcome.Ok -> Outcome.Ok(
+                    io.github.eslamasabry.oc.core.model.ServerPage(
+                        page.value.items.map { it.session }.toImmutableList(),
+                        page.value.nextCursor,
+                    )
+                )
+            is Outcome.Failed ->
+                if (cursor == null && (page.failure is Failure.Unavailable || page.failure is Failure.NotFound)) {
+                    projectOnly += server.profile
+                    server.gateway.sessionPage(cursor = null, limit = AllConversationsRules.PAGE)
+                } else page
+        }
+    }
+
     private suspend fun firstPage(server: ConversationServer, run: Int) {
         val savedScope = previews.scope(server)
-        val page = server.gateway.sessionPage(limit = AllConversationsRules.PAGE)
+        val page = readPage(server, null)
         val statuses = server.gateway.sessionStatuses()
         if (run != generation) return
         model.update { cur ->
@@ -501,8 +536,7 @@ public class ChatsAllViewModel(
         viewModelScope.launch {
             waiting.forEach { server ->
                 val cursor = model.value.sources[server.profile]?.cursor ?: return@forEach
-                val page =
-                    server.gateway.sessionPage(cursor = cursor, limit = AllConversationsRules.PAGE)
+                val page = readPage(server, cursor)
                 if (run != generation) return@launch
                 if (
                     page is Outcome.Failed &&

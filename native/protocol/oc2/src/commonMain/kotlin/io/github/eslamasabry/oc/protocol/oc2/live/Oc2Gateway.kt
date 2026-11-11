@@ -899,6 +899,20 @@ internal class Oc2Gateway(
             )
         }
 
+    /**
+     * Flutter `listGlobalSessions` (ops_projects.dart): `GET /session` with no directory or workspace, roots only
+     * (`parentID=null`), newest first, the server's own title search; a page by cursor sends the cursor alone.
+     * Archived rows are dropped here unless asked for; the continuation is kept either way.
+     */
+    override suspend fun listGlobalSessions(
+        search: String?,
+        includeArchived: Boolean,
+        cursor: String?,
+        limit: Int,
+    ): Outcome<ServerPage<GlobalSessionResult>> =
+        Oc2SearchUsage.searchSessions(this, search, cursor, limit, includeArchived)
+            ?: unavailable("globalSessionSearch")
+
     override suspend fun createSession(spec: NewSession): Outcome<Session> =
         read(
             "/session",
@@ -2451,10 +2465,9 @@ internal class Oc2Gateway(
                 terminal = true,
                 conversationShell = true,
                 projectManagement = true,
-                // False on purpose: the gateway does not implement listGlobalSessions (the default says unavailable),
-                // and the home reads /session with the connection's directory, so it lists one project. The unscoped
-                // call exists only in Oc2SearchUsage (search), which does not go through this flag.
-                globalSessionSearch = false,
+                // listGlobalSessions: the unscoped root list (Flutter ops_projects.dart), so the home and All
+                // conversations read every project.
+                globalSessionSearch = true,
                 sessionDiff = false,
                 sessionFork = true,
                 sessionCompact = false,

@@ -185,4 +185,37 @@ class ChatFeedTest {
         assertEquals(listOf("root"), ChatFeedFilter().apply(items).map { it.sessionId.raw })
         assertEquals(2, ChatFeedFilter(includeSubagents = true).apply(items).size)
     }
+
+    @Test
+    fun `conversations of other projects keep their folder, run and ask facts, and the source says across projects`() {
+        val ask = SessionId("far-ask")
+        val listing =
+            OpenCodeListing(
+                sessions =
+                    listOf(
+                        session("here", "/work/app", 5),
+                        session("far-run", "/work/other", 9),
+                        session("far-ask", "/work/web", 7),
+                        session("far-idle", "/work/other", 3),
+                    ),
+                statuses = mapOf(SessionId("far-run") to SessionStatus.Busy, ask to SessionStatus.Busy),
+                needsYou = setOf(ask),
+                acrossProjects = true,
+            )
+        val state = OpenCodeChatFeedSource(feedProfile, null, MutableStateFlow(listing)).current()
+        assertTrue(state.acrossProjects)
+        val byId = state.items.associateBy { it.sessionId.raw }
+        assertEquals(ChatStatus.Running, byId.getValue("far-run").status)
+        assertEquals(ChatStatus.NeedsYou, byId.getValue("far-ask").status)
+        assertEquals(ChatStatus.Idle, byId.getValue("far-idle").status)
+        assertEquals(
+            setOf("/work/app", "/work/other", "/work/web"),
+            state.items.mapNotNull { it.directory }.toSet(),
+        )
+        // The same project filter narrows to one project's rows.
+        assertEquals(
+            listOf("far-run", "far-idle"),
+            ChatFeedFilter(projectDirectory = "/work/other").apply(state.items).map { it.sessionId.raw },
+        )
+    }
 }

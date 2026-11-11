@@ -883,7 +883,7 @@ class PreviewRuntime(
         val readEventRevision = refreshRevision[id] ?: 0
         val readRunRevision = runRevision[id] ?: 0
         val readRequestRevision = requestRevision[id] ?: 0
-        when (val page = readSessionPages(graph.session.server)) {
+        when (val page = readFeedSessionPages(graph.session.server, graph.operations())) {
             is Outcome.Failed -> {
                 listing.value = listing.value.copy(loading = false, failed = true)
                 return page.atStage(ConnectionStage.LoadConversations)
@@ -907,6 +907,18 @@ class PreviewRuntime(
                     if (caps.legacyQuestionRequests) graph.session.server.pendingQuestions()
                     else null
                 val forms = if (caps.forms) graph.session.server.pendingForms() else null
+                // Across projects the ask lists above cover the connection's own folder only.
+                val others =
+                    if (caps.globalSessionSearch)
+                        readOtherProjectAsks(
+                            graph.session.server,
+                            page.value.sessions,
+                            (statuses as? Outcome.Ok)?.value,
+                            graph.session.server.location.value.directory,
+                        )
+                    else OtherProjectAsks.None
+                val allPermissions = (permissions as? Outcome.Ok)?.value?.plus(others.permissions)
+                val allForms = (forms as? Outcome.Ok)?.value?.plus(others.forms)
                 if (registry.live.value[id] !== graph)
                     return Failure.Refused(RefusalReason.StaleScope).failed()
                 val pending = requests.getOrPut(id) { mutableMapOf() }
@@ -918,7 +930,7 @@ class PreviewRuntime(
                     }
                     replace(
                         "permission",
-                        (permissions as? Outcome.Ok)?.value?.map { it.id.raw to it.sessionId },
+                        allPermissions?.map { it.id.raw to it.sessionId },
                     )
                     replace(
                         "question",
@@ -926,7 +938,7 @@ class PreviewRuntime(
                     )
                     replace(
                         "form",
-                        (forms as? Outcome.Ok)?.value?.map { it.id.raw to it.sessionId },
+                        allForms?.map { it.id.raw to it.sessionId },
                     )
                 }
                 val resolvedStatuses =
@@ -962,8 +974,8 @@ class PreviewRuntime(
                         running = listing.value.running,
                         stoppedByPerson = listing.value.stoppedByPerson,
                         permissions =
-                            if (permissions is Outcome.Ok)
-                                permissions.value
+                            if (allPermissions != null)
+                                allPermissions
                                     .groupBy { it.sessionId }
                                     .mapNotNull { (sid, asks) ->
                                         asks.firstOrNull()?.let { ask ->
