@@ -88,8 +88,8 @@ class KitEdgeDockBlankStateTest {
             runOnIdle { state.openPanel() }
             waitForIdle()
             assertTrue(onAllNodes(blankText, useUnmergedTree = true).fetchSemanticsNodes().isEmpty(), "list: no blank text")
-            val quietGap = bounds("the quiet last words").top - onAllNodes(hasText("Quiet one"), useUnmergedTree = true).fetchSemanticsNodes().minBy { it.boundsInRoot.left }.boundsInRoot.bottom
-            val busyGap = bounds("the busy last words").top - onAllNodes(hasText("Busy one"), useUnmergedTree = true).fetchSemanticsNodes().minBy { it.boundsInRoot.left }.boundsInRoot.bottom
+            val quietGap = bounds("the quiet last words").top - onAllNodes(hasText(dockTitleLine("Quiet one")), useUnmergedTree = true).fetchSemanticsNodes().minBy { it.boundsInRoot.left }.boundsInRoot.bottom
+            val busyGap = bounds("the busy last words").top - onAllNodes(hasText(dockTitleLine("Busy one")), useUnmergedTree = true).fetchSemanticsNodes().minBy { it.boundsInRoot.left }.boundsInRoot.bottom
             assertTrue(quietGap < 2f, "list: the quiet name and its last line close up ($quietGap)")
             assertTrue(busyGap > 10f, "list: the busy ring keeps its state line between ($busyGap)")
         }
