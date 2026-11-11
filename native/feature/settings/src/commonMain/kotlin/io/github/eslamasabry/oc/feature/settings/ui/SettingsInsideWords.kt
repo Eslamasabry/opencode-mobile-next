@@ -46,7 +46,7 @@ private fun insideKeys(inside: SettingsInside): Pair<StringResource, List<String
 
 @Composable
 internal fun insideAliases(inside: SettingsInside): String =
-    insideKeys(inside).second.joinToString(" ") { stringResource(it) }
+    insideKeys(inside).second.map { stringResource(it) }.joinToString(" ")
 
 internal fun insideGlyph(inside: SettingsInside) =
     when (inside) {
