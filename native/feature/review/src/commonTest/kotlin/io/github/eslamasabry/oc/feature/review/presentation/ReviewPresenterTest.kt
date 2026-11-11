@@ -481,17 +481,14 @@ class ReviewPresenterTest {
 
     // The Uncommitted view's empty state: not a repository vs a clean tree vs the agent's reported edits.
 
-    private fun emptyTree(setup: io.github.eslamasabry.oc.core.model.VersionControlSetupState): ChangesPresenter {
+    private fun TestScope.emptyTree(setup: io.github.eslamasabry.oc.core.model.VersionControlSetupState): ChangesPresenter {
         fake.history = listOf(prompt("u1", 1), reply("a1", 2))
         gateways.value = ReviewGateways(VcsFake(fake, emptyList()), FakeOperationsGateway())
-        return ChangesPresenter(review(), null, nav, scopeOf, setup = ReviewProjectSetup { setup })
+        return ChangesPresenter(review(), null, nav, backgroundScope, setup = ReviewProjectSetup { setup })
     }
-
-    private lateinit var scopeOf: kotlinx.coroutines.CoroutineScope
 
     @Test
     fun `an Uncommitted view of a folder that is not a Git repository says so`() = runTest(UnconfinedTestDispatcher()) {
-        scopeOf = backgroundScope
         val p = emptyTree(io.github.eslamasabry.oc.core.model.VersionControlSetupState.Absent)
         p.chooseScope(ReviewScope.WorkingTree)
         val ui = p.state.value
@@ -502,7 +499,6 @@ class ReviewPresenterTest {
 
     @Test
     fun `an Uncommitted view of a clean repository is not the not-Git state`() = runTest(UnconfinedTestDispatcher()) {
-        scopeOf = backgroundScope
         for (setup in listOf(io.github.eslamasabry.oc.core.model.VersionControlSetupState.Git, io.github.eslamasabry.oc.core.model.VersionControlSetupState.Unknown)) {
             val p = emptyTree(setup)
             p.chooseScope(ReviewScope.WorkingTree)
@@ -513,7 +509,6 @@ class ReviewPresenterTest {
 
     @Test
     fun `the Conversation view never claims not-Git, it lists the agent's reported edits`() = runTest(UnconfinedTestDispatcher()) {
-        scopeOf = backgroundScope
         val p = emptyTree(io.github.eslamasabry.oc.core.model.VersionControlSetupState.Absent)
         p.chooseScope(ReviewScope.Conversation)
         assertEquals(ReviewScope.Conversation, p.state.value.scope)
@@ -522,7 +517,6 @@ class ReviewPresenterTest {
 
     @Test
     fun `a view with files is never not-Git`() = runTest(UnconfinedTestDispatcher()) {
-        scopeOf = backgroundScope
         fake.history = listOf(prompt("u1", 1), reply("a1", 2))
         gateways.value = ReviewGateways(VcsFake(fake, listOf(FileDiff("lib/x.kt", patch = "x"))), FakeOperationsGateway())
         val p = ChangesPresenter(review(), null, nav, backgroundScope, setup = ReviewProjectSetup { io.github.eslamasabry.oc.core.model.VersionControlSetupState.Absent })
