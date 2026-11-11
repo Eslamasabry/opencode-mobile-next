@@ -11,6 +11,8 @@ import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import io.github.eslamasabry.oc.feature.review.presentation.ChangesViewModel
 import io.github.eslamasabry.oc.feature.review.presentation.FileDiffViewModel
+import io.github.eslamasabry.oc.feature.review.presentation.ProjectChangesViewModel
+import io.github.eslamasabry.oc.feature.review.presentation.ProjectFileDiffViewModel
 import io.github.eslamasabry.oc.feature.review.presentation.StagedViewModel
 import io.github.eslamasabry.oc.feature.review.presentation.UndoFromHereViewModel
 import io.github.eslamasabry.oc.feature.review.ui.ChangesScreen
@@ -36,6 +38,16 @@ public class ReviewEntries(private val environment: KitChatEnvironment) : EntryI
         }
         entry<ReviewRoute.File> { route ->
             val vm = assistedMetroViewModel<FileDiffViewModel, FileDiffViewModel.Factory> { create(route) }
+            val state by vm.state.collectAsStateWithLifecycle()
+            environment.Provide { FileDiffScreen(state, vm) }
+        }
+        entry<ReviewRoute.Project> { route ->
+            val vm = assistedMetroViewModel<ProjectChangesViewModel, ProjectChangesViewModel.Factory> { create(route) }
+            val state by vm.state.collectAsStateWithLifecycle()
+            ChangesScreen(state, vm)
+        }
+        entry<ReviewRoute.ProjectFile> { route ->
+            val vm = assistedMetroViewModel<ProjectFileDiffViewModel, ProjectFileDiffViewModel.Factory> { create(route) }
             val state by vm.state.collectAsStateWithLifecycle()
             environment.Provide { FileDiffScreen(state, vm) }
         }

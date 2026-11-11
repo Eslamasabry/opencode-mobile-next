@@ -206,3 +206,74 @@ public class StagedViewModel(
         public fun create(@Assisted route: ReviewRoute.Staged): StagedViewModel
     }
 }
+
+/** Maps a project review's destinations to routes: only its working-tree files open. */
+private class ProjectNavigation(private val nav: AppNavigator, private val route: ReviewRoute.Project) : ReviewNavigation {
+    override fun back(): Unit = nav.back()
+
+    override fun openFile(path: String, staged: Boolean): Unit = openWorkingTreeFile(path)
+
+    override fun openWorkingTreeFile(path: String): Unit = nav.open(ReviewRoute.ProjectFile(route.profile, route.directory, path))
+
+    override fun openStaged(): Unit = Unit
+}
+
+/** "Changes" of a whole project opened from Files, with no conversation. */
+@AssistedInject
+public class ProjectChangesViewModel(
+    @Assisted route: ReviewRoute.Project,
+    hub: ReviewHub,
+    nav: AppNavigator,
+) : ViewModel(), ChangesActions {
+    private val presenter = ProjectChangesPresenter(hub.projectTree(route.profile, route.directory), ProjectNavigation(nav, route), viewModelScope)
+    public val state: StateFlow<ChangesUi> = presenter.state
+
+    override fun back(): Unit = presenter.back()
+
+    override fun retry(): Unit = presenter.retry()
+
+    override fun openFile(path: String): Unit = presenter.openFile(path)
+
+    override fun keepAll(): Unit = presenter.keepAll()
+
+    override fun undoAll(): Unit = presenter.undoAll()
+
+    override fun confirmUndoAll(): Unit = presenter.confirmUndoAll()
+
+    override fun dismissConfirm(): Unit = presenter.dismissConfirm()
+
+    override fun openStaged(): Unit = presenter.openStaged()
+
+    override fun sendBack(): Unit = presenter.sendBack()
+
+    override fun sendBackNote(note: String?): Unit = presenter.sendBackNote(note)
+
+    @AssistedFactory
+    @ManualViewModelAssistedFactoryKey
+    @ContributesIntoMap(AppScope::class)
+    public fun interface Factory : ManualViewModelAssistedFactory {
+        public fun create(@Assisted route: ReviewRoute.Project): ProjectChangesViewModel
+    }
+}
+
+/** One file of a project's uncommitted changes. */
+@AssistedInject
+public class ProjectFileDiffViewModel(
+    @Assisted route: ReviewRoute.ProjectFile,
+    hub: ReviewHub,
+    private val nav: AppNavigator,
+) : ViewModel(), FileDiffActions {
+    private val presenter = ProjectFileDiffPresenter(hub.projectTree(route.profile, route.directory), route.path, viewModelScope)
+    public val state: StateFlow<FileDiffUi> = presenter.state
+
+    override fun back(): Unit = nav.back()
+
+    override fun retry(): Unit = presenter.retry()
+
+    @AssistedFactory
+    @ManualViewModelAssistedFactoryKey
+    @ContributesIntoMap(AppScope::class)
+    public fun interface Factory : ManualViewModelAssistedFactory {
+        public fun create(@Assisted route: ReviewRoute.ProjectFile): ProjectFileDiffViewModel
+    }
+}

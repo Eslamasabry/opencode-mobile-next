@@ -120,7 +120,7 @@ public data class FolderUi(
 public interface FolderActions {
     public fun terminal() {}
 
-    /** The whole conversation's "Changes" review (Flutter project hub `ProjectTool.changes`). */
+    /** The whole conversation's (or, for a project opened on its own, the project's) "Changes" review (Flutter project hub `ProjectTool.changes`). */
     public fun reviewChanges() {}
 
     /** The ⋯ menu's project tools (Flutter project_hub_screen.dart `_toolsMenu`). */
@@ -272,7 +272,12 @@ public class FolderViewModel(
     }
 
     override fun reviewChanges() {
-        ref?.let { nav.open(ReviewRoute.Changes(it)) }
+        val place = route.place
+        if (place is FilesPlace.Project) {
+            nav.open(ReviewRoute.Project(place.profile, place.directory))
+        } else {
+            ref?.let { nav.open(ReviewRoute.Changes(it)) }
+        }
     }
 
     override fun terminal() {

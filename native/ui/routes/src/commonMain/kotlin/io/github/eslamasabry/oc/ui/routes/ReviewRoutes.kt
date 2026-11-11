@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.routes
 
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import kotlinx.serialization.Serializable
 
 /**
@@ -24,6 +25,16 @@ public sealed interface ReviewRoute : AppRoute {
         val staged: Boolean = false,
         val workingTree: Boolean = false,
     ) : ReviewRoute
+
+    /**
+     * The uncommitted changes of a whole project folder, with no conversation behind them (Flutter
+     * `pushWorkingTreeReview`, opened from Files). Read-only: no undo, no comments to an agent.
+     */
+    @Serializable public data class Project(val profile: ProfileId, val directory: String) : ReviewRoute
+
+    /** One file's diff from [Project]. */
+    @Serializable
+    public data class ProjectFile(val profile: ProfileId, val directory: String, val path: String) : ReviewRoute
 
     /** "Undo from this prompt?" for the prompt [messageId]. */
     @Serializable

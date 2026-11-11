@@ -9,7 +9,12 @@ import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.model.VcsDiffMode
+import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.domain.LocatedVcsGateway
+import io.github.eslamasabry.oc.core.model.ServerLocation
+import io.github.eslamasabry.oc.feature.review.presentation.ReviewProjectRead
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
@@ -87,6 +92,22 @@ public class ReviewHub(private val registry: ConnectionRegistry) {
             val ops = (registry.graphFor(ref) as? ReviewGraphAccessors)?.reviewOperations
                 ?: return@ReviewBranchRead Failure.Unavailable(FeatureId("vcsBranchDiff")).failed()
             ops.listVcsDiffs(VcsDiffMode.Branch)
+        }
+
+    /**
+     * The uncommitted changes of [directory] on [profile], read through its current connection at read time. A server
+     * that cannot diff a chosen folder nor the session's own answers Unavailable; a closed profile is refused.
+     */
+    public fun projectTree(profile: ProfileId, directory: String): ReviewProjectRead =
+        ReviewProjectRead {
+            val graph = registry.live.value[profile] as? ReviewGraphAccessors
+                ?: return@ReviewProjectRead Failure.Refused(RefusalReason.ProfileClosing).failed()
+            val located = graph.reviewGateway as? LocatedVcsGateway
+            when {
+                located != null -> located.workingTreeAt(ServerLocation(directory, null))
+                graph.reviewGateway.capabilities.value.sessionDiff -> graph.reviewOperations.listVcsDiffs(VcsDiffMode.WorkingTree)
+                else -> Failure.Unavailable(FeatureId("sessionDiff")).failed()
+            }
         }
 
     private fun gatewaysOf(ref: ConversationRef): ReviewGateways? =
