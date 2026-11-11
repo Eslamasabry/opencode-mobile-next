@@ -38,6 +38,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.tokens.Alphas
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
@@ -133,12 +134,15 @@ internal fun DockSwellContent(state: KitEdgeDockState, layout: SwellLayout, ring
     }
 }
 
-/** The hovered target's light: the kit's state layer, not a pane of this part's own. */
+/**
+ * The hovered target's light: the kit's pressed state layer from the resolver; under Solid (which resolves no state
+ * layer) the kit's own pressed fill, the primary ink at [Alphas.PRESSED] as every pressed kit part shows it.
+ */
 @Composable
 private fun hotFace(): Modifier {
     val colors = LocalKitColors.current
     return kitSurfaceLook(
-        KitSurfaceInput(role = SurfaceRole.StateLayer, shape = KitShapeId.Tile, ownFill = colors.text1.copy(alpha = 0.10f), pressed = true),
+        KitSurfaceInput(role = SurfaceRole.StateLayer, shape = KitShapeId.Tile, ownFill = colors.text1.copy(alpha = Alphas.PRESSED), pressed = true),
     ).modifier
 }
 

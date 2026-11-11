@@ -62,11 +62,11 @@ import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
+import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
 import io.github.eslamasabry.oc.ui.kit.agent.AgentMark
 import io.github.eslamasabry.oc.ui.kit.agent.agentMonogram
 import io.github.eslamasabry.oc.ui.kit.choice.rememberKitHaptics
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
-import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
@@ -100,8 +100,28 @@ import kotlinx.coroutines.launch
  * Apply [KitEdgeDockState.gestureExclusion] with `systemGestureExclusion` on the same node so Android's back gesture
  * does not take the scrub zone. Under a lens, read [KitEdgeDockState.body] to draw the joined glass.
  *
- * Motion: springs in the draw and layout phases only; reduced motion turns travel into instant changes and looks into
- * short cross-fades, with no shake, pulse, comet or overshoot. Text: frame (capped at 1.3 x).
+ * Motion: springs in the draw and layout phases only; every spec in [DockSprings] snaps by itself under reduced motion
+ * (no travel, shake, pulse, comet or overshoot). Text: frame (capped at 1.3 x).
+ *
+ * The body: box A (the strip) and box B (the swell, peek or list), as they are now, joined by the cubic smooth-minimum
+ * field ([DockJoinField]); [KitEdgeDockState.body] hands over exactly those boxes and the join's reach, and the Solid face
+ * fills exactly that field's zero line. The face is decided in one place (`rememberDockFace`); a face that draws the
+ * body itself (`DockFace.drawsOwnBody`, a lens) gets no clip and no path from the body node.
+ *
+ * NOTES (known, not fixed yet; from the glass owner's review of 2026-11-11):
+ * - The join field here is a copy of the glass branch's `LiquidJoin.sample` (same definition, from the liquid-glass
+ *   skill's `joined-glass.md` and `join_shape.py`); `LiquidJoin` is not on this branch. When both meet, one of them
+ *   should go, and `DockGeometryTest` should check the outline against `LiquidJoin.sample` itself.
+ * - Shoulders (the concave blends into the screen edge) are a third shape outside the two-box join; the Solid face
+ *   draws them, the join does not.
+ * - Tucked, the strip's hit area is narrower than the 48 dp band the nub promises (the touch node is the nub's band
+ *   only while tucked; the ring nodes are the rest width).
+ * - Ring names are one line at most 64 dp wide: a large text size or a long name clips.
+ * - The pulled-out list composes every row (a scrolling Column, not a lazy list): a cost with many conversations.
+ * - Rings have no exit animation: a removed ring disappears at once.
+ * - The back-gesture exclusion ([KitEdgeDockState.gestureExclusion]) is the host's job (`systemGestureExclusion`);
+ *   check it on a device.
+ * - `panelBoxNow` allocates a box per frame while the dock moves (its cache key is the moving top).
  */
 @Composable
 public fun KitEdgeDock(
@@ -549,10 +569,13 @@ private fun ringActions(state: KitEdgeDockState, ring: KitDockRing, index: Int, 
     return list
 }
 
-/** The round new-conversation button at the dock's foot: part of the same body, a 48 dp target. */
+/**
+ * The round new-conversation button at the dock's foot: the kit's round icon button (its face from the resolver, no
+ * ring of the dock's own), a 48 dp target. Touches reach it through the dock's gesture loop (the foot zone); its own
+ * click serves assistive technology and keys.
+ */
 @Composable
 private fun DockFootNode(state: KitEdgeDockState, words: KitDockWords, intents: KitDockIntents) {
-    val colors = LocalKitColors.current
     Box(
         Modifier
             .absoluteOffset {
@@ -562,19 +585,16 @@ private fun DockFootNode(state: KitEdgeDockState, words: KitDockWords, intents: 
                 IntOffset(((cx - 24f) * density).roundToInt(), ((cy - 24f) * density).roundToInt())
             }
             .size(48.dp)
-            .graphicsLayer { alpha = smoothstep(15f, 58f, state.out.value) * (1f - smoothstep(0.1f, 0.45f, state.panelX.value)) }
-            .semantics {
-                contentDescription = words.newConversation
-                role = Role.Button
-                onClick(words.newConversation) {
-                    intents.onNewConversation()
-                    true
-                }
-            }
-            .drawBehind { drawCircle(colors.text1, 20f * density, alpha = 0.14f, style = Stroke(3f * density)) },
+            .graphicsLayer { alpha = smoothstep(15f, 58f, state.out.value) * (1f - smoothstep(0.1f, 0.45f, state.panelX.value)) },
         contentAlignment = Alignment.Center,
     ) {
-        KitIcon(KitIcons.add, size = KitIconSize.Small, tone = TextTone.Primary)
+        KitIconButton(
+            icon = KitIcons.add,
+            label = words.newConversation,
+            onClick = { intents.onNewConversation() },
+            size = KitIconSize.Small.dp,
+            round = true,
+        )
     }
 }
 
