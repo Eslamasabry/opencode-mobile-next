@@ -105,7 +105,7 @@ class KitEdgeDockGlassTest {
             setContent { KitTheme(appearance, lens(), "en", stillFrame = true) { Scene(state, recorded, tucked) } }
             mainClock.advanceTimeBy(500)
             runOnIdle { act(state) }
-            repeat(30) { mainClock.advanceTimeBy(100) }
+            mainClock.advanceTimeBy(1_500)
             found = onAllNodes(drawn, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
             if (png != null) {
                 png.parentFile.mkdirs()
@@ -133,11 +133,20 @@ class KitEdgeDockGlassTest {
     }
 
     /** The pictures for the glass notes (docs/designs/glass-in-the-kit/), Glass dark over a page of text. */
+    private val docs = File(System.getProperty("user.dir"), "../../../docs/designs/glass-in-the-kit").canonicalFile
+
     @Test
-    fun `dock glass - pictures at rest, with the swell open and with the list out`() {
-        val docs = File(System.getProperty("user.dir"), "../../../docs/designs/glass-in-the-kit").canonicalFile
+    fun `dock glass - picture at rest`() {
         assertTrue(glassBody(glass, png = File(docs, "render-dock-rest.png")))
+    }
+
+    @Test
+    fun `dock glass - picture with the swell open`() {
         assertTrue(glassBody(glass, png = File(docs, "render-dock-swell.png")) { it.openSwell(SwellKind.Scrub, 0) })
+    }
+
+    @Test
+    fun `dock glass - picture with the list out`() {
         assertTrue(glassBody(glass, png = File(docs, "render-dock-list.png")) { it.openPanel() })
     }
 }
