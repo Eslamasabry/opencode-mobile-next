@@ -29,8 +29,8 @@ class PermissionCardSweepBTest {
         }
         val row = onNodeWithTag("permission-card-details-row").getBoundsInRoot()
         val allow = onNodeWithTag("permission-card-allow").getBoundsInRoot()
-        println("sweep-b details row height=${row.height} gap=${row.top - allow.bottom}")
-        assertTrue(row.height.value <= 48.5f, "Details row is one touch target, not a band: ${row.height}")
+        println("sweep-b details row height=${row.bottom - row.top} gap=${row.top - allow.bottom}")
+        assertTrue((row.bottom - row.top).value <= 48.5f, "Details row is one touch target, not a band: ${row.bottom - row.top}")
         assertEquals(0f, (row.top - allow.bottom).value, "no air between the answers and Details")
         onNodeWithTag("permission-card-details").performClick()
         assertEquals(1, opened)

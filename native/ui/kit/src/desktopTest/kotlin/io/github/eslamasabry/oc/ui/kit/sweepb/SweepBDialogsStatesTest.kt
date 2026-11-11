@@ -116,7 +116,7 @@ class SweepBDialogsStatesTest {
     }
 
     @Test
-    fun `sweep-b 3 alone on a page the state is centred; inline it starts at the rail`() {
+    fun `sweep-b 3 alone on a page the state is centred and inline it starts at the rail`() {
         var pageCentre = 0f
         var inlineLeft = 0f
         var width = 0f
@@ -131,7 +131,7 @@ class SweepBDialogsStatesTest {
             waitForIdle()
             val b = onNodeWithText("Nothing here yet").getBoundsInRoot()
             pageCentre = (b.left.value + b.right.value) / 2
-            width = onRoot().getBoundsInRoot().width.value
+            width = onRoot().getBoundsInRoot().let { it.right.value - it.left.value }
         }
         runDesktopComposeUiTest(412, 915) {
             setContent {
