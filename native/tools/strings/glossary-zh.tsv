@@ -1,0 +1,69 @@
+# Glossary for zh (Simplified Chinese, mainland usage). kinds (tab separated):
+#  keep<TAB>term: the English term stays exactly as written wherever it appears
+#  term<TAB>english regex<TAB>target regex: when the English matches, the translation must match (case-insensitive)
+#  forbid<TAB>target regex<TAB>why: the translation must not match
+#  allow<TAB>word: an English word that may stay in the translation (names, units, standards)
+keep	OpenCode
+keep	AI Team
+keep	Gas City
+keep	Tailscale
+keep	Termux
+keep	Ubuntu
+keep	Android
+keep	Wi-Fi
+keep	GitHub
+keep	Codex
+keep	Claude
+keep	Gemma
+keep	Hugging Face
+keep	Shorebird
+keep	Gemini
+keep	Antigravity
+keep	SHA-256
+keep	Markdown
+keep	JSON
+keep	SSH
+keep	HTTPS
+keep	QR
+keep	Claude Code
+keep	Linux
+term	\bThis phone\b	这部手机
+term	\b[Cc]onversations?\b	对话
+term	\bTry again\b	重试
+term	\bSettings\b	设置
+term	\bServers?\b	服务器
+term	\bProjects?\b	项目
+term	\b(?<!Claude )Agents?\b	智能体
+term	^Cancel$	取消
+term	^Allow$	允许
+term	^Deny$	拒绝
+term	^Delete$	删除
+term	^Search$	搜索
+term	^Model$	模型
+term	\bSign in\b	登录
+term	\bSign out\b	退出登录
+forbid	会话	 say 对话, not 会话
+forbid	聊天	say 对话, not 聊天
+forbid	您	use 你, not 您
+allow	OK
+allow	Wi-Fi
+allow	Bluetooth
+allow	URL
+allow	API
+allow	SSH
+allow	QR
+allow	PDF
+allow	GB
+allow	MB
+allow	KB
+allow	Markdown
+allow	terminal
+allow	Terminal
+allow	offline
+allow	online
+allow	email
+allow	Email
+allow	Android
+allow	Linux
+allow	Git
+allow	git

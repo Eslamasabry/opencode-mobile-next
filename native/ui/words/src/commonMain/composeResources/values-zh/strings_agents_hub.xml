@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentsHubOnPhone">在这部手机上</string>
+    <string name="agentsHubOnComputers">在你的电脑上</string>
+    <string name="agentsHubComputersEmpty">还没有添加电脑。添加一台运行 Paseo 的电脑，即可在这部手机上使用 Claude Code 或 Pi。</string>
+    <string name="agentsHubAddComputer">添加电脑</string>
+    <string name="agentsHubCheck">检查连接</string>
+    <string name="agentsHubCheckAgents">检查智能体</string>
+    <string name="agentsHubFolderHint">/home/you/project</string>
+    <string name="agentsHubInvalidAddress">请使用本设备或你的私有网络上的 ws:// 地址，或 wss:// 地址。</string>
+    <string name="agentsHubInvalidFolder">请以完整路径输入项目文件夹，例如 /home/you/project。</string>
+    <string name="agentsHubInvalidPassword">无法使用此密码。请使用不含空格的字母、数字和符号。</string>
+    <string name="agentsHubAdded">已保存。它的对话会显示在“对话”中。</string>
+    <string name="agentsHubAddFailed">无法保存这台电脑。请检查信息后重试。</string>
+    <string name="agentsHubAgentsFailed">无法读取那台电脑上的智能体。请检查 Paseo 是否正在那里运行。</string>
+    <string name="agentsHubStartFailed">无法在那里开始对话。这台电脑仍已保存。</string>
+    <string name="agentsHubSignInFailed">那台电脑不接受这个密码。</string>
+    <string name="agentsHubNotAnswering">那台电脑没有响应。请检查 Paseo 是否在运行，以及这部手机能否访问它。</string>
+    <string name="agentsHubNotConnected">未连接</string>
+    <string name="agentsHubDefaultName">Paseo</string>
+</resources>

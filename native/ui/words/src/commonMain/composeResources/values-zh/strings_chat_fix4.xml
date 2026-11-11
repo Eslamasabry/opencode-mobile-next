@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatReplyFailedNoCredit">模型提供方的账号在此模型上没有额度。请在该提供方处充值，或选择其他模型。</string>
+    <string name="chatReplyFailedConnectionLost">与模型提供方的连接中断，因此回复已停止。请让它继续，或重新发送。</string>
+</resources>

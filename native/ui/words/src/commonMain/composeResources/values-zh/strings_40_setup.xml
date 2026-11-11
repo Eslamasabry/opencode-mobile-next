@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="r40SetupVoiceDownloading">正在下载语音输入</string>
+    <string name="r40SetupVoiceVerifying">正在检查语音输入文件</string>
+    <string name="r40SetupRequired">必需</string>
+    <string name="r40SetupWorking">请等待当前操作完成。</string>
+    <string name="r40SetupTotals">%1$s · 约 %2$s 分钟</string>
+    <string name="r40SetupCouldNotCheck">无法检查已安装的工具或设置。请重试。</string>
+    <string name="r40SetupRetry">重试</string>
+    <string name="r40SetupActionFailed">操作未完成。请重试。</string>
+    <string name="r40SetupCheckDevice">开始前，请先解决上面列出的手机要求。</string>
+    <string name="r40SetupStorageUnopened">无法打开存储设置。请在手机设置中释放空间，然后重试。</string>
+    <string name="r40SetupRemoveVoiceTitle">移除语音输入？</string>
+    <string name="r40SetupRemoveVoiceBody">这会从应用中移除已下载的语音模型。你的对话会保留。你以后可以再次下载语音输入。</string>
+    <string name="r40SetupRemoveVoice">移除语音输入</string>
+    <string name="r40SetupKeepVoice">保留语音输入</string>
+    <string name="r40SetupRemoveVoiceFailed">无法移除语音输入。请先结束正在进行的录音或下载，然后重试。</string>
+    <string name="r40SetupPercent">%1$s%</string>
+    <string name="r40SetupComponentDone">完成</string>
+    <string name="r40SetupComponentInstalled">已安装</string>
+    <string name="r40SetupComponentChecking">正在检查…</string>
+    <string name="r40SetupComponentRunning">正在安装…</string>
+    <string name="r40SetupComponentFailed">未完成</string>
+    <string name="r40SetupComponentPending">等待中</string>
+    <string name="r40WelcomePhone">在这部手机上</string>
+    <string name="r40WelcomePhoneBody">在这里运行 OpenCode，不需要电脑。</string>
+    <string name="r40WelcomeComputer">在我的电脑上</string>
+    <string name="r40WelcomeComputerBody">连接到正在运行 OpenCode 的电脑。</string>
+    <string name="r40WelcomeRunning">设置已完成 %1$s%</string>
+    <string name="r40WelcomeStopped">设置在 %1$s% 处停止</string>
+    <string name="r40WelcomeSetupBody">将下载一个私有的 Linux 工作区和 OpenCode 所需的工具。开始前请选择要安装的内容。</string>
+    <string name="r40WelcomeViewProgress">查看设置进度</string>
+</resources>

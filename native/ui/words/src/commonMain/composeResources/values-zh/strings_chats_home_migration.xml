@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="homeOpeningFailed">%1$s 没有响应</string>
+    <string name="homeOpeningFailedBody">请检查服务器是否已开启，以及这部手机能否访问它，然后重试。</string>
+    <string name="homeWatchedServers">关注的服务器</string>
+    <string name="homeInboxCount">收件箱 · %1$s</string>
+    <string name="homeSourcesFailed">无法更改此列表的连接。请重试。</string>
+    <string name="homeWatchedOpenBody">打开对话前，我们会先确认这个请求仍在此服务器上等待。</string>
+    <string name="homeWatchedOpenFailed">无法打开这个请求。请刷新关注的服务器后重试。</string>
+    <string name="homeRefreshWatched">刷新关注的服务器</string>
+    <string name="homeMonitorOff">已关闭。开启后可检查此服务器的待处理请求。</string>
+    <string name="homeMonitorWaiting">等待下一次检查</string>
+    <string name="homeMonitorChecking">正在检查待处理请求</string>
+    <string name="homeMonitorCurrent">待处理请求已是最新</string>
+    <string name="homeMonitorUnavailable">没有响应。其请求不会显示。</string>
+    <string name="homeMonitorWifi">正在等待 Wi-Fi</string>
+    <string name="homeMonitorPaused">应用和后台服务已停止，检查已暂停。</string>
+    <string name="homeNewBlockedBody">新对话会在 %1$s 上开始。它尚未响应，所以没有开始任何对话。</string>
+    <string name="homeNewBlockedOpening">%1$s 仍在打开。请稍后重试。</string>
+    <string name="homePhoneOffStart">启动这部手机上的 OpenCode</string>
+    <string name="homePhoneOffTitle">这部手机上的 OpenCode 已关闭</string>
+</resources>

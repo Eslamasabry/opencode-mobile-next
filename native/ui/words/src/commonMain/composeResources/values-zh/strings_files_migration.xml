@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="filesViewOptions">查看</string>
+    <string name="filesSearchNames">文件名</string>
+    <string name="filesRowActions">操作</string>
+    <string name="filesChangeDeleted">已删除</string>
+    <string name="filesChangeAdded">已添加</string>
+    <string name="filesChangeModified">已更改</string>
+    <string name="filesWrapCode">自动换行</string>
+    <string name="filesUnwrapCode">横向滚动</string>
+    <string name="filesShowPreview">预览</string>
+    <string name="filesMoreActions">更多文件操作</string>
+    <string name="filesAttachFailed">无法附加此文件。请重试。</string>
+    <string name="filesPreferencesFailed">无法保存这个显示选择。请重试。</string>
+    <string name="filesLinkRefused">无法安全地打开此链接。</string>
+    <string name="filesOpenLinkQuestion">打开 %1$s？</string>
+    <string name="filesOpenLinkBody">此链接会在应用外打开。</string>
+    <string name="filesOpenLink">打开链接</string>
+    <string name="filesAttachmentReady">文件已附加。请返回对话添加你的评论。</string>
+    <string name="filesScopedEmpty">这是此对话所在服务器共享的文件夹。请检查它的文件夹访问权限，然后刷新。</string>
+    <string name="filesStorageFailed">文件夹访问权限没有更改。请重试。</string>
+    <string name="filesStorageRestart">文件夹访问权限已保存。请重启这部手机的服务器，然后刷新。</string>
+    <string name="filesOpenPhone">打开这部手机</string>
+    <string name="filesReviewStorage">查看共享文件夹</string>
+    <string name="filesSelectedStorageBody">允许此项目文件夹，或查看共享文件夹。除非你在那里开启，否则不会允许访问整个存储卷。</string>
+</resources>

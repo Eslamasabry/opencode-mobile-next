@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateDemoTryOffline">离线试用</string>
+    <string name="stateDemoTitle">离线演示</string>
+    <string name="stateDemoDisclosure">这是模拟的对话。不会更改任何服务器、文件或已保存的设置。离开后，这次演示就会被忘掉。</string>
+    <string name="stateDemoPrompt">把欢迎语改得更友好些。</string>
+    <string name="stateDemoReply">我会把 welcome.txt 中的问候语从“%1$s”改为“%2$s”。</string>
+    <string name="stateDemoAllowed">完成。welcome.txt 现在写的是“%1$s”。</string>
+    <string name="stateDemoDenied">好的，我没有改动 welcome.txt。</string>
+    <string name="stateDemoBefore">Hello</string>
+    <string name="stateDemoAfter">Welcome aboard!</string>
+    <string name="stateDemoMore">演示到此结束。连接一个服务器，就可以处理你自己的项目。</string>
+    <string name="stateDemoModel">示例模型</string>
+    <string name="stateDemoReset">重置演示</string>
+    <string name="stateDemoLeave">退出演示</string>
+</resources>

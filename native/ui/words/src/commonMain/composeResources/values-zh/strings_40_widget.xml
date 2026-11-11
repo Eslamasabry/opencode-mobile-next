@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="widgetPanelSaving">正在保存…</string>
+    <string name="widgetPanelClose">关闭</string>
+    <string name="widgetPanelPreview">小组件预览</string>
+    <string name="widgetPanelSquare">方形</string>
+    <string name="widgetPanelWide">宽幅</string>
+    <string name="widgetPanelBackground">背景</string>
+    <string name="widgetPanelSolid">实色</string>
+    <string name="widgetPanelTinted">着色</string>
+    <string name="widgetPanelTransparent">透明</string>
+    <string name="widgetPanelAccent">强调色</string>
+    <string name="widgetPanelActionUnavailable">此小组件需要实时连接才能发送消息。</string>
+    <string name="widgetPanelSending">正在发送…</string>
+    <string name="widgetPanelSent">已发送</string>
+    <string name="widgetPanelBusy">另一个小组件操作仍在运行。你的消息仍保留在这里。</string>
+    <string name="widgetPanelDictate">语音输入</string>
+</resources>

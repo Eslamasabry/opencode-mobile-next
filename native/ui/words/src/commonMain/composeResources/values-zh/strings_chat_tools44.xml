@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="tools44ShowAll">显示全部输出</string>
+    <string name="tools44Lines">行</string>
+    <string name="tools44HiddenLines">隐藏的行</string>
+</resources>

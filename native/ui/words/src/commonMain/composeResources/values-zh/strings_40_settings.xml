@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="settings40_style_default">样式默认值</string>
+    <string name="settings40_reset_question">重置外观？</string>
+    <string name="settings40_reset_body">重置颜色、样式、形状、玻璃效果、文字大小、动效和回复光晕。你的对话、语言和通知选择保持不变。</string>
+    <string name="settings40_local_work">这部手机上未发送的内容</string>
+    <string name="settings40_queue_title">排队的提示词</string>
+    <string name="settings40_drafts_title">对话草稿</string>
+    <plurals name="settings40_storage_size">
+        <item quantity="other">%1$d 项 · %2$s</item>
+    </plurals>
+    <string name="settings40_storage_unknown">无法读取此存储。所有内容都已保留。</string>
+    <string name="settings40_storage_reading">正在读取本地存储…</string>
+    <string name="settings40_discard_queue">删除未发送的排队提示词</string>
+    <string name="settings40_discard_drafts">删除对话草稿</string>
+    <string name="settings40_queue_keeps">删除从未发送过的提示词。带有发送标记或命令回执的提示词会保留，供你查看。</string>
+    <string name="settings40_queue_empty">没有可删除的排队提示词。</string>
+    <string name="settings40_drafts_empty">没有可删除的已保存草稿。</string>
+    <string name="settings40_discard_working">正在删除本地内容…</string>
+    <string name="settings40_queue_question">删除未发送的排队提示词？</string>
+    <string name="settings40_drafts_question">删除对话草稿？</string>
+    <string name="settings40_drafts_body">删除这部手机上保存的文字和草稿附件。已打开的对话也会同步更新。仍在发送或检查中的内容会阻止删除。此操作无法撤销。</string>
+    <string name="settings40_discard_failed">未能完成删除。正在发送的内容、状态不确定的内容、无法读取的存储，或保存时发生的变更，都可能阻止删除。请检查数量后重试。</string>
+    <plurals name="settings40_discard_done">
+        <item quantity="other">已删除 %1$d 项。</item>
+    </plurals>
+    <plurals name="settings40_discard_kept">
+        <item quantity="other">已删除 %1$d 项。保留供查看的提示词：%2$d 条。</item>
+    </plurals>
+    <plurals name="settings40_discard_cleanup">
+        <item quantity="other">已删除 %1$d 份草稿。部分附件文件无法移除。请再次删除草稿以完成清理。</item>
+    </plurals>
+    <string name="settings40_no_answers">此服务器上暂时没有需要回答的问题。</string>
+    <string name="settings40_answer_failed">这一步未完成。你保存的回答与 Android 设置可能不一致。请检查“通知”或“保持运行”，然后重试。</string>
+    <string name="settings40_held_action">一并删除</string>
+    <string name="settings40_held_question">删除保留供查看的提示词？</string>
+    <string name="settings40_held_body">它们可能已经到达服务器。这只会从这部手机上移除它们，不会再发送任何内容。</string>
+    <plurals name="settings40_queue_held_body">
+        <item quantity="other">其中 %1$d 条可能已经到达服务器。删除只会将它们从这部手机上移除，不会再发送任何内容。</item>
+    </plurals>
+</resources>

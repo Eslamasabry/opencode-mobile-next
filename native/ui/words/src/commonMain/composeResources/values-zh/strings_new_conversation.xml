@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="p12NewDefaultModel">默认模型</string>
+    <string name="p12NewDefaultAgent">默认智能体</string>
+    <string name="p12NewAgent">智能体</string>
+    <string name="p12NewFolder">项目文件夹</string>
+    <string name="p12NewUseFolder">使用此文件夹</string>
+    <string name="p12NewDraftFailed">无法把你的消息保存到这部手机。请保持此页面打开并重试。</string>
+    <string name="p12NewCreationUnconfirmed">服务器没有确认是否已创建对话。开始另一个之前，请先查看“对话”。你的消息仍保存在这里。</string>
+    <string name="p12NewBoundProject">此连接使用它已保存的项目文件夹。如需其他文件夹，请添加一个连接。</string>
+    <string name="p12NewDeliveryUnconfirmed">服务器没有确认这条消息。开始另一个之前，请先打开已创建的对话查看。你写的内容仍保存在这里。</string>
+    <string name="p12NewOpenCreated">打开已创建的对话</string>
+    <string name="chatsNewFolderMissing">此项目的文件夹已不在服务器上。可将它重新创建为空项目，或选择其他项目。</string>
+    <string name="chatsNewFolderRemake">重新创建文件夹</string>
+    <string name="chatsNewFolderChooseAnother">选择其他项目</string>
+    <string name="chatSendFolderMissing">此项目的文件夹已不在服务器上，因此消息没有发送。请开始新对话来重新创建文件夹，或选择其他项目。</string>
+</resources>

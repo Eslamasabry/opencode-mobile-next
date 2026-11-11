@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatHistoryReadFailed">无法加载更早的消息。已加载的消息仍在这里。请重试。</string>
+    <string name="chatTranscriptTokens">%1$s 个词元</string>
+    <string name="chatTranscriptCost">估算费用：$%1$s</string>
+    <string name="chatHistoryTitle">重用提示词</string>
+    <string name="chatHistorySubtitle">从此对话或你最近发送的内容中选取文字。它们会加入你的草稿，不会被发送。</string>
+    <string name="chatHistorySearch">搜索最近的提示词</string>
+    <string name="chatHistoryEmpty">还没有最近的提示词。</string>
+    <string name="chatHistoryLoading">正在加载最近的提示词…</string>
+    <string name="chatHistoryLoadFailed">无法加载最近的提示词。你仍可使用此对话中的提示词。</string>
+</resources>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="andrStorageInternal">内部存储</string>
+    <string name="andrStorageUp">返回上一级文件夹</string>
+    <string name="andrStorageUseFolder">打开此文件夹</string>
+    <string name="andrStorageFoldersEmpty">这里没有文件夹。</string>
+    <string name="andrStorageFolderMissing">此文件夹已不在这里。请返回上一级并选择其他文件夹。</string>
+    <string name="andrStorageFolderDenied">请在 Android 设置中允许访问文件夹，然后重试。</string>
+    <string name="andrStorageFolderFailed">无法读取此文件夹。请重试。</string>
+    <string name="andrStorageAccess">允许访问文件夹</string>
+    <string name="andrStorageWorking">请等待文件夹加载完成。</string>
+    <string name="andrStorageTitle">手机存储</string>
+    <string name="andrStorageNearlyFull">存储空间快满了：可用 %1$s。安装工具或开始大型任务前，请先腾出一些空间。</string>
+    <string name="andrStorageAvailable">此应用可用 %1$s。</string>
+    <string name="andrStorageUnknown">无法读取可用空间。请重新测量。</string>
+    <string name="andrStorageMeasure">测量存储和 Linux 文件</string>
+    <string name="andrStorageMeasuring">正在测量存储…</string>
+    <string name="andrStorageHostSizes">Linux 和工具：%1$s · 项目：%2$s。这是文件大小，并非应用的全部存储。</string>
+    <string name="andrStorageHostUnknown">无法测量 Linux 文件大小。你的文件已保留。</string>
+    <string name="andrStorageRootHere">内部存储本身不能作为项目。请打开其中的一个文件夹。</string>
+</resources>

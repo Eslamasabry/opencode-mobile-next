@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="native44AllModels">全部模型（%1$s）</string>
+    <plurals name="native44MoreModels">
+        <item quantity="other">再显示 %1$s 个模型</item>
+    </plurals>
+    <string name="native44Context">上下文 %1$s</string>
+    <string name="native44Output">输出上限 %1$s</string>
+    <string name="native44Price">输入 $%1$s · 输出 $%2$s（每百万词元）</string>
+    <string name="native44ModelShortcuts">切换模型</string>
+    <string name="native44CopyFailed">无法复制模型 ID。请重试。</string>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="monitorInboxTitle">收件箱</string>
+    <string name="monitorInboxEmpty">你关注的服务器现在没有请求或提醒。</string>
+    <string name="monitorInboxFailedRun">有一次运行需要处理</string>
+    <string name="monitorInboxOpening">正在打开请求…</string>
+    <string name="monitorInboxSettings">在“通知”中选择要关注哪些已保存的服务器。</string>
+    <string name="monitorInboxSwitchBody">在此服务器上打开该请求。其他服务器上已在运行的任务会继续。</string>
+</resources>

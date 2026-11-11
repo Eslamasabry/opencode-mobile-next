@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="mcpNativeTitle">连接器目录</string>
+    <string name="mcpNativeConsent">浏览公共 MCP 注册表。只有在你开启后，才会把你的搜索发送给注册表。</string>
+    <string name="mcpNativeTurnOn">开启</string>
+    <string name="mcpNativeTurnOff">关闭目录</string>
+    <string name="mcpNativeRefresh">刷新</string>
+    <string name="mcpNativeSearch">搜索连接器</string>
+    <string name="mcpNativeEmpty">没有找到连接器。</string>
+    <string name="mcpNativeLoadFailed">无法刷新。如有已保存的列表，则显示它们。</string>
+    <string name="mcpNativeUnsupported">此连接无法添加连接器。你仍可查看这些列表。</string>
+    <string name="mcpNativeReview">查看连接器</string>
+    <string name="mcpNativeRuntimeOnly">这会在服务器重启前，把连接器添加到此项目。请先查看地址或命令。</string>
+    <string name="mcpNativeAdd">添加连接器</string>
+    <string name="mcpNativeAdded">服务器已列出此连接器。尚未确认工具是否可用。</string>
+    <string name="mcpNativeCheck">检查连接</string>
+    <string name="mcpNativeAddUncertain">无法确认是否已添加。再次尝试前，请先检查连接。</string>
+    <string name="mcpNativeConflict">该连接器名称已存在。请换一个名称。</string>
+    <string name="mcpNativeName">名称</string>
+    <string name="mcpNativeAddress">地址</string>
+    <string name="mcpNativeCommand">命令</string>
+    <string name="mcpNativeNeedsSettings">此列表还需要更多连接信息或命令参数。请在你的服务器上手动设置。</string>
+    <string name="mcpNativeNotAddable">无法从目录中添加此列表。</string>
+    <string name="mcpNativeBack">返回</string>
+    <string name="mcpNativeSaveFailed">无法保存目录偏好。请重试。</string>
+    <string name="mcpNativeSourceChanged">连接已变更。请重新打开目录。</string>
+    <string name="mcpNativeToolsReady">连接器的工具已为下一轮准备好。</string>
+    <string name="mcpNativeSignIn">登录连接器</string>
+    <string name="mcpNativeCode">返回 URL 或验证码</string>
+    <string name="mcpNativeFinishSignIn">完成登录</string>
+    <string name="mcpNativeCancelSignIn">取消登录</string>
+</resources>

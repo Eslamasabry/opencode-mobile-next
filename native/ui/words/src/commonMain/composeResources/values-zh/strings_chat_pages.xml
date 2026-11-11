@@ -410,4 +410,19 @@
     <string name="isolatedTaskBranchLabel">分支</string>
     <string name="isolatedTaskStageSend">正在打开对话并发送你的任务</string>
     <string name="exportMarkdownUnredacted">记录未被遮蔽。它包含的正是你所看到的内容，包括对话中的密钥或私有路径。</string>
+    <string name="reviewExpandContext">显示周围的行</string>
+    <string name="reviewRevertPutBackQuestion">把“%1$s”之后的一切都恢复原状吗？</string>
+    <plurals name="reviewSummary">
+        <item quantity="other">%1$d 个文件已更改 · +%2$d −%3$d</item>
+    </plurals>
+    <string name="reviewSummary__eq1">1 个文件已更改 · +%2$d −%3$d</string>
+    <string name="reviewAlreadyApplied">智能体已经在你的项目中做了这些更改。</string>
+    <string name="reviewLooksGood">没问题</string>
+    <string name="reviewUndoAll">全部撤销</string>
+    <string name="reviewSendBackWithNote">附上备注退回</string>
+    <plurals name="reviewUndoTitle">
+        <item quantity="other">撤销 %1$d 个已更改的文件？</item>
+    </plurals>
+    <string name="reviewUndoTitle__eq1">撤销 1 个已更改的文件？</string>
+    <string name="reviewUndoBody">你的项目会恢复到智能体开始之前的样子。对话会保留。</string>
 </resources>

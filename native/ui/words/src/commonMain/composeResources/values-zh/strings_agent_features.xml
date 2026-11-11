@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentFeaturesTitle">智能体设置</string>
+    <string name="agentFeaturesEmpty">此智能体没有额外的设置。</string>
+    <string name="agentFeaturesFailed">无法加载智能体设置</string>
+</resources>

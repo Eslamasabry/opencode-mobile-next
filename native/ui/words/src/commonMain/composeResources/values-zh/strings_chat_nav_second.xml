@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatCyclePrevious">上一个最近使用的模型</string>
+    <string name="chatCycleNext">下一个最近使用的模型</string>
+    <string name="chatHomeAllow">允许一次</string>
+    <string name="chatHomeReject">拒绝</string>
+    <string name="chatHomeAnswerFailed">无法发送你的回答。请打开对话查看。</string>
+    <string name="chatHomeRunning">运行中</string>
+    <string name="chatHomeMinutes">%1$s 分钟</string>
+    <string name="chatQueueMoveTitle">移动排队的提示词</string>
+    <string name="chatQueueMoveEmpty">此对话中没有未发送的排队提示词。</string>
+    <string name="chatQueueMoveChoosePrompt">选择一条提示词</string>
+    <string name="chatQueueMoveChooseServer">选择目标服务器</string>
+    <string name="chatQueueMoveChooseDestination">移到某个对话</string>
+    <string name="chatQueueMoveFailure">无法移动提示词。没有发送任何内容。</string>
+    <string name="chatQueueMoveMore">更多对话</string>
+    <string name="chatQueueMoveSelectionNote">提示词仍保持排队。目标不提供的模型或智能体会被移除。</string>
+    <string name="chatPhraseHide">隐藏 %1$s</string>
+    <string name="chatHomeSeconds">%1$s 秒</string>
+</resources>

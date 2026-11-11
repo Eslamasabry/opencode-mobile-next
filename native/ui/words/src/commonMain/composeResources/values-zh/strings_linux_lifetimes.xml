@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxLifetimeTitle">服务运行时长</string>
+    <string name="linuxLifetimeRefresh">检查服务运行时长</string>
+    <string name="linuxLifetimeReading">正在读取服务运行时长…</string>
+    <string name="linuxLifetimeRunning">运行中</string>
+    <string name="linuxLifetimeStopped">未运行</string>
+    <string name="linuxLifetimeUptime">本次运行：%1$d 毫秒</string>
+    <string name="linuxLifetimeLastUptime">上次运行：%1$d 毫秒</string>
+    <string name="linuxLifetimeExit">上次退出：%1$d</string>
+    <string name="linuxLifetimeRestarts">重启次数：%1$d</string>
+    <string name="linuxLifetimeUnknown">退出原因未知</string>
+    <string name="linuxLifetimeExited">程序已退出</string>
+    <string name="linuxLifetimeKilled">内存压力或 Android 进程限制</string>
+    <string name="linuxLifetimeFailed">无法读取服务运行时长。</string>
+    <string name="linuxLifetimeEmpty">没有可用的服务运行时长记录。</string>
+</resources>
