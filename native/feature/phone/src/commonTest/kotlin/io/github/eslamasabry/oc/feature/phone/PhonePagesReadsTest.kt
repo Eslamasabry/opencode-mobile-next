@@ -146,7 +146,7 @@ class PhonePagesReadsTest {
     fun `S15 a check refused because another phone task held the slot is read again, not reported`() {
         val busy = Failure.Runtime(RuntimeProblem.SlotBusy)
         // Busy: read again up to the bound, then say so.
-        assertEquals(busy, settle(List(InstalledInventoryRetry.ATTEMPTS - 1) { busy } + null))
+        assertNull(settle(List(InstalledInventoryRetry.ATTEMPTS - 1) { busy } + null))
         assertEquals(busy, settle(List(InstalledInventoryRetry.ATTEMPTS) { busy }))
         assertFalse(InstalledInventoryRetry.again(InstalledInventoryRetry.ATTEMPTS))
     }
