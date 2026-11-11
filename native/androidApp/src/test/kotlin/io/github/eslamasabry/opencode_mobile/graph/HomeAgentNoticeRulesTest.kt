@@ -32,9 +32,13 @@ class HomeAgentNoticeRulesTest {
         val unexpected =
             PhoneAgentsState(available = true, agents = persistentListOf(fx), helperStoppedUnexpectedly = true)
         assertEquals(listOf(stopped), HomeAgentNoticeRules.notices(unexpected, notCertified).lines)
-        val byAndroid =
-            PhoneAgentsState(available = true, agents = persistentListOf(fx), helperMayHaveBeenStoppedByAndroid = true)
+        // The Android variant is a refinement of a stop, as AppPhoneAgents builds it (HelperStopNews): both flags set.
+        val byAndroid = unexpected.copy(helperMayHaveBeenStoppedByAndroid = true)
         assertEquals(listOf(stopped), HomeAgentNoticeRules.notices(byAndroid, notCertified).lines)
+        // Alone (an exit code 137 on a stop the person asked for) it is not a stop.
+        val killCodeOnly =
+            PhoneAgentsState(available = true, agents = persistentListOf(fx), helperMayHaveBeenStoppedByAndroid = true)
+        assertTrue(HomeAgentNoticeRules.notices(killCodeOnly, notCertified).lines.isEmpty())
     }
 
     @Test
