@@ -83,6 +83,11 @@ public data class BasicComposerUi(
     val attachmentsSupported: Boolean = true,
     /** E20-S20: the server takes pictures only (Flutter `promptImagesOnly`): the tray has no File. */
     val imagesOnly: Boolean = false,
+    /**
+     * C6: a reply runs on an agent that stops and starts again from a new message (Flutter `MidTurnPrompt.restartsTurn`):
+     * Send reads "Stop and send". Last, so positional constructor calls keep their order.
+     */
+    val restarts: Boolean = false,
 ) {
     override fun toString(): String =
         "BasicComposerUi(available=$available, sending=$sending, steers=$steers, draft=$draft, " +
@@ -193,11 +198,6 @@ private data class Suggestions(
     val commands: List<ComposerCommand> = emptyList(),
     val agents: List<io.github.eslamasabry.oc.feature.chat.world.ComposerAgent> = emptyList(),
     val files: List<String> = emptyList(),
-    /**
-     * C6: a reply runs on an agent that stops and starts again from a new message (Flutter `MidTurnPrompt.restartsTurn`):
-     * Send reads "Stop and send".
-     */
-    val restarts: Boolean = false,
 )
 
 /** E04-S01: the sub-agents an `@word` matches, ranked as Flutter ranks them. */
