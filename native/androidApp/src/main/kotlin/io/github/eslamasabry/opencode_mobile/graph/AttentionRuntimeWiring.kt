@@ -101,7 +101,7 @@ class AttentionRuntime(
         thermal.start()
         // The dock is the one source of conversation states; starting it is idempotent (the in-app dock UI may start
         // it too and only supplies its own navigation).
-        edgeDock.start {}
+        edgeDock.start()
         scope.launch {
             stores.warm()
             launch {

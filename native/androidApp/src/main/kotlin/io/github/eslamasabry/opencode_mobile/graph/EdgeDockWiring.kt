@@ -121,8 +121,12 @@ class AppEdgeDock(
     val ui: StateFlow<DockUi> get() = controller.ui
 
     /** Call once from the UI that draws the dock. [navigate] opens a conversation like a tap in the list. */
-    fun start(navigate: (ConversationRef) -> Unit) {
-        this.navigate = navigate
+    /**
+     * Starts the dock once. [navigate] is the in-app dock UI's way to open a conversation; a caller that only reads the
+     * dock (the live notification) passes none, so it never replaces the UI's navigation, whichever starts first.
+     */
+    fun start(navigate: ((ConversationRef) -> Unit)? = null) {
+        if (navigate != null) this.navigate = navigate
         if (started) return
         started = true
         main.launch {
