@@ -65,6 +65,8 @@ class FakeHealingHost : HealingHost {
             phase = RuntimePhase.Ready,
             serverRunning = running,
             serverRestartWanted = wanted,
+            // This fake's `wanted = false` is the person's Stop.
+            serverStoppedByPerson = !wanted,
             serverRecoveryGeneration = generation,
             serverRecoveryAuthority = authority,
             serverRecoveryScheduled = scheduled,

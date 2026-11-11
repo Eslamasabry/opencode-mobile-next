@@ -92,12 +92,13 @@ class AppExitHub(
             if (previous.none { it == "server" || it == "aiteam" }) return@launch
             val stopped =
                 withContext(dispatchers.io) {
-                    val prefs =
+                    // Only the person's own Stop; nothing recorded is not their Stop.
+                    io.github.eslamasabry.opencode_mobile.PhoneServerStopRecord.read(
                         application.getSharedPreferences(
-                            "builtin_server_recovery",
+                            io.github.eslamasabry.opencode_mobile.PhoneServerStopRecord.PREFERENCES,
                             Context.MODE_PRIVATE,
                         )
-                    prefs.getBoolean("userStopped", !prefs.getBoolean("wanted", false))
+                    )
                 }
             if (stopped) return@launch
             val profile =
