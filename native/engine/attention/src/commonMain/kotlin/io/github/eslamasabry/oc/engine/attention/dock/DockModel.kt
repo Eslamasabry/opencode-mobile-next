@@ -413,7 +413,9 @@ public class DockModel private constructor(private val s: Snapshot) {
         private fun untuckFor(ref: ConversationRef): Snapshot = if (ref == open) this else copy(tucked = false)
 
         private fun ended(t: Tracked, end: DockRunEnd): Tracked {
-            val base = t.copy(busy = false, thinking = false)
+            // A run that ended (stopped, failed or finished) holds no question: a request the server dropped with it may
+            // never be announced as settled, so the ring must not keep asking after the end.
+            val base = t.copy(busy = false, thinking = false, requests = emptySet())
             val onScreen = t.ref == open
             return when (end) {
                 DockRunEnd.Failed ->
