@@ -47,13 +47,15 @@ public fun EdgeDockHost(
     insets: KitDockInsets = KitDockInsets(),
     undoBottom: Dp = 0.dp,
     exclusion: (KitEdgeDockState) -> Modifier = { Modifier },
+    /** False on a screen that has its own "new conversation" control: the dock then shows no "+". */
+    offersNew: Boolean = true,
 ) {
     val shown by port.shown.collectAsStateWithLifecycle()
     if (!shown) return
     val ui by port.ui.collectAsStateWithLifecycle()
     val peeks by port.peeks.collectAsStateWithLifecycle()
     val untitled = stringResource(Res.string.r40RelationsUntitled)
-    val frame = remember(ui, peeks, untitled) { DockKitMapper.map(ui, peeks, untitled) }
+    val frame = remember(ui, peeks, untitled, offersNew) { DockKitMapper.map(ui, peeks, untitled, offersNew = offersNew) }
     val latest = rememberUpdatedState(frame)
     val words = rememberDockKitWords(frame.model)
     val toasts = LocalKitToasts.current

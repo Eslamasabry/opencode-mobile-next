@@ -84,6 +84,8 @@ public object DockKitMapper {
         peeks: Map<ConversationRef, DockPeek>,
         untitled: String,
         shown: Boolean = true,
+        /** False where the screen has its own "new conversation" control (the home's green "+"): the dock offers none. */
+        offersNew: Boolean = true,
     ): DockKitFrame {
         // Never hidden for lack of live conversations, nor for having no ring: only switched off, or hidden.
         if (!shown || ui.presence == DockPresence.Hidden) return DockKitFrame.Empty
@@ -146,6 +148,7 @@ public object DockKitMapper {
                         side = if (ui.placement.side == DockSide.Start) KitDockSide.Start else KitDockSide.End,
                         verticalBias = ui.placement.bias,
                     ),
+                offersNew = offersNew,
             )
         return DockKitFrame(model, refs, asks, removable)
     }

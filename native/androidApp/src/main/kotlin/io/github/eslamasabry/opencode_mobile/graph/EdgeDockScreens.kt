@@ -143,6 +143,8 @@ class AppHomeEdgeDock(private val port: AppEdgeDockPort) : HomeEdgeDock {
             insets = KitDockInsets(bottom = clearBottom),
             undoBottom = clearBottom,
             exclusion = ::dockBackGestureExclusion,
+            // The home has its own green "+" a thumb away: the dock's "+" stays for the chat, which has none.
+            offersNew = false,
         )
     }
 }
