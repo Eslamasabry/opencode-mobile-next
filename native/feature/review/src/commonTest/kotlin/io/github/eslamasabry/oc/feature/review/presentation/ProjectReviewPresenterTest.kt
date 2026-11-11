@@ -13,7 +13,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
-private class Nav : ReviewNavigation {
+private class ProjectNav : ReviewNavigation {
     val calls = mutableListOf<String>()
 
     override fun back() { calls += "back" }
@@ -34,7 +34,7 @@ class ProjectReviewPresenterTest {
 
     @Test
     fun `a project's changes list the uncommitted files with no conversation actions`() = runTest(UnconfinedTestDispatcher()) {
-        val presenter = ProjectChangesPresenter({ files.ok() }, Nav(), backgroundScope)
+        val presenter = ProjectChangesPresenter({ files.ok() }, ProjectNav(), backgroundScope)
         val ui = presenter.state.value
         assertEquals(ReviewLoad.Ready, ui.load)
         assertEquals(listOf("lib/a.dart", "README.md"), ui.files.map { it.path })
@@ -48,7 +48,7 @@ class ProjectReviewPresenterTest {
 
     @Test
     fun `a file opens its working-tree diff and Looks good goes back`() = runTest(UnconfinedTestDispatcher()) {
-        val nav = Nav()
+        val nav = ProjectNav()
         val presenter = ProjectChangesPresenter({ files.ok() }, nav, backgroundScope)
         presenter.openFile("lib/a.dart")
         presenter.keepAll()
@@ -61,7 +61,7 @@ class ProjectReviewPresenterTest {
         val presenter =
             ProjectChangesPresenter(
                 { if (fail) Failure.Unavailable(FeatureId("sessionDiff")).failed() else files.ok() },
-                Nav(),
+                ProjectNav(),
                 backgroundScope,
             )
         assertIs<ReviewLoad.Failed>(presenter.state.value.load)
