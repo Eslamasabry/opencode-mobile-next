@@ -14,14 +14,13 @@ import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.platform.LocalFocusManager
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerTypingTarget
 import io.github.eslamasabry.oc.ui.kit.frame.kitKeyboardVisible
 
 /*
  * Who types in a conversation (sweep 2026-11-11, P79/P80). The message box is the conversation's field, but it never
  * takes typing meant for another field (Find, a sheet's or a dialog's field), and it never takes typing while a sheet
- * or a dialog covers it.
+ * or a dialog covers it (the kit's sheet host keeps the page out of focus then).
  */
 
 /**
@@ -58,22 +57,17 @@ internal fun Modifier.chatTypingLanding(typing: ComposerTypingTarget, covered: (
 }
 
 /**
- * While [open] (Find, or a sheet or dialog over the conversation), another field owns typing: if the message box
- * holds focus it lets go ([release]: a covering sheet; Find's field takes focus itself). When [open] ends, the box
- * takes focus back only if it had it when [open] began, and the person had not put the keyboard away: the box keeps
- * its focus when the keyboard is closed with Back, and taking focus again opens the keyboard, which would pop up after
- * a sheet the person opened with the keyboard down. A keyboard never seen in this conversation (a hardware keyboard,
- * a desktop) does not count as put away. [mayTakeBack] is asked at that moment: another field that opened meanwhile
- * (Find opened as a sheet closed; a sheet over Find as it closed) keeps its focus.
+ * While [open] (Find), Find's field owns typing: it takes focus itself. When [open] ends, the message box takes focus
+ * back only if it had it when [open] began, and the person had not put the keyboard away: the box keeps its focus when
+ * the keyboard is closed with Back, and taking focus again opens the keyboard, which would pop up after Find was
+ * opened with the keyboard down. A keyboard never seen in this conversation (a hardware keyboard, a desktop) does not
+ * count as put away. [mayTakeBack] is asked at that moment: a sheet over Find as it closed keeps the focus.
+ *
+ * Sheets and dialogs are the kit's: `KitSheetHost` takes the page's focus when one shows and hands it back on the
+ * same terms when it hides (w4-focus2; this used to be done here too, and the two collided).
  */
 @Composable
-internal fun ComposerYields(
-    open: Boolean,
-    typing: ComposerTypingTarget,
-    release: Boolean,
-    mayTakeBack: () -> Boolean,
-) {
-    val focusManager = LocalFocusManager.current
+internal fun ComposerYields(open: Boolean, typing: ComposerTypingTarget, mayTakeBack: () -> Boolean) {
     val keyboardUp = kitKeyboardVisible()
     var keyboardSeen by remember(typing) { mutableStateOf(false) }
     if (keyboardUp && !keyboardSeen) SideEffect { keyboardSeen = true }
@@ -81,12 +75,10 @@ internal fun ComposerYields(
     // focus only changes it when this composition is applied).
     val hadFocus = remember(open) { open && typing.focused && (keyboardUp || !keyboardSeen) }
     var giveBack by remember(typing) { mutableStateOf(false) }
-    val releases by rememberUpdatedState(release)
     val takeBack by rememberUpdatedState(mayTakeBack)
     LaunchedEffect(open, typing) {
         if (open) {
             if (hadFocus) giveBack = true
-            if (releases && typing.focused) focusManager.clearFocus()
         } else if (giveBack) {
             giveBack = false
             // The closing field's focus leaves the tree first and the shell parks it on the next frame; take it after.

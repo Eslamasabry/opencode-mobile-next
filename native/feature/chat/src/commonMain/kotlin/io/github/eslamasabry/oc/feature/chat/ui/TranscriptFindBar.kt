@@ -13,6 +13,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.focus.onFocusChanged
+import io.github.eslamasabry.oc.ui.kit.modal.LocalKitSheetHost
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -43,10 +48,13 @@ internal fun TranscriptFindBar(find: FindUi, actions: ChatActions, modifier: Mod
     val field = rememberTextFieldState(find.query)
     val focus = remember { FocusRequester() }
     val navigationFocus = remember { FocusRequester() }
-    LaunchedEffect(Unit) {
-        focus.requestFocus()
-        field.edit { selection = androidx.compose.ui.text.TextRange(0, length) }
-    }
+    LaunchedEffect(Unit) { field.edit { selection = androidx.compose.ui.text.TextRange(0, length) } }
+    // Find takes focus when it opens. Opened while a sheet or dialog is up (the kit keeps the page out of focus then),
+    // it asks again once the sheet has gone, unless its field has had focus since (w4-focus2).
+    val sheets = LocalKitSheetHost.current
+    val covered = sheets != null && (sheets.isShowing || sheets.isDialogShowing)
+    var hadFocus by remember { mutableStateOf(false) }
+    LaunchedEffect(covered) { if (!hadFocus) focus.requestFocus() }
     LaunchedEffect(find.query) {
         if (field.text.toString() != find.query) field.edit { replace(0, length, find.query) }
     }
@@ -79,7 +87,8 @@ internal fun TranscriptFindBar(find: FindUi, actions: ChatActions, modifier: Mod
                 state = field,
                 onSearch = { actions.find(it) },
                 onSubmit = { navigationFocus.requestFocus(); actions.findNext() },
-                modifier = Modifier.weight(1f).focusRequester(focus).testTag("transcript-find-input"),
+                modifier = Modifier.weight(1f).focusRequester(focus).onFocusChanged { if (it.hasFocus) hadFocus = true }
+                    .testTag("transcript-find-input"),
             )
             KitIconButton(KitIcons.close, stringResource(Res.string.transcriptFindClose), { actions.find(null) })
         }

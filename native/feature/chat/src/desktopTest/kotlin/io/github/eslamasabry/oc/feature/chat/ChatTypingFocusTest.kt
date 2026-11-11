@@ -44,6 +44,11 @@ import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performSemanticsAction
+import io.github.eslamasabry.oc.feature.chat.header.presentation.ChatHeaderUi
+import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderSlot
 import androidx.compose.ui.test.withKeyDown
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatUi
 import io.github.eslamasabry.oc.feature.chat.presentation.FindUi
@@ -377,4 +382,139 @@ class ChatTypingFocusTest {
             findField().assertIsFocused()
             composer().assertIsNotFocused()
         }
+
+    // --- w4-focus2: the kit's sheet host owns the page's focus around sheets and dialogs; the chat keeps Find's. ---
+
+    private fun ComposeUiTest.dismissSheet(): SemanticsNodeInteraction =
+        onNode(hasContentDescription("Dismiss") and hasAnyAncestor(hasTestTag("kit-sheet")))
+
+    @Test
+    fun `a sheet's row that closes the sheet and opens Find leaves the next typing in Find`() =
+        runDesktopComposeUiTest(412, 915) {
+            val screen = show()
+            composer().performClick()
+            waitForIdle()
+            onRoot().performKeyInput { withKeyDown(Key.CtrlLeft) { pressKey(Key.K) } }
+            waitForIdle()
+            onNodeWithTag("chat-commands-sheet").fetchSemanticsNode()
+            // As the Commands sheet's "Find" row does it: the sheet is asked to close and Find opens in the same
+            // frame, so Find's one request for focus comes while the sheet is still leaving.
+            mainClock.autoAdvance = false
+            dismissSheet().performSemanticsAction(SemanticsActions.OnClick)
+            runOnUiThread { screen.ui = screen.ui.copy(find = FindUi("", 0, 0, null, -1, false)) }
+            mainClock.autoAdvance = true
+            waitForIdle()
+            findField().assertIsFocused()
+            composer().assertIsNotFocused()
+            type("bg5")
+            assertEquals("bg5", findField().words(), "the search field has what was typed")
+            assertEquals("", composer().words(), "no stray words in the message box")
+        }
+
+    @Test
+    fun `the dock's rename field takes the first typing right after a sheet closed`() =
+        runDesktopComposeUiTest(412, 915) {
+            val scene = ChatScene()
+            val dock = RenameDock()
+            val live = scene.live()
+            setContent {
+                E20Scene { Park { ChatScreen(live, scene.actions, scene.host, canGoBack = false, edgeDock = dock) } }
+            }
+            waitForIdle()
+            runOnIdle { park.requestFocus() }
+            waitForIdle()
+            composer().performClick()
+            waitForIdle()
+            onRoot().performKeyInput { withKeyDown(Key.CtrlLeft) { pressKey(Key.K) } }
+            waitForIdle()
+            onNodeWithTag("chat-commands-sheet").fetchSemanticsNode()
+            // The sheet closes and the rename starts while it is still leaving (the kit hands the box its focus back
+            // as it goes; the rename's "clear, wait a frame, ask" must still win).
+            mainClock.autoAdvance = false
+            dismissSheet().performSemanticsAction(SemanticsActions.OnClick)
+            runOnUiThread { dock.renaming = true }
+            mainClock.autoAdvance = true
+            waitForIdle()
+            val rename = onNode(
+                    hasSetTextAction() and (hasTestTag("dock-rename") or hasAnyAncestor(hasTestTag("dock-rename"))),
+                    useUnmergedTree = true,
+                )
+            rename.assertIsFocused()
+            type("Zed")
+            assertEquals("Zed", rename.words(), "the rename field has what was typed")
+            assertEquals("", composer().words(), "no stray words in the message box")
+        }
+
+    /** The chat with a header the test drives (the rename dialog, the ⋯ menu), as the header presenter would. */
+    private class HeaderScreen(val scene: ChatScene) {
+        var ui by mutableStateOf(scene.live())
+        var header by mutableStateOf(ChatHeaderUi(title = "Fix flaky checkout test", projectName = "shopfront"))
+    }
+
+    private fun ComposeUiTest.showWithHeader(): HeaderScreen {
+        val screen = HeaderScreen(ChatScene())
+        setContent {
+            E20Scene {
+                Park {
+                    ChatScreen(
+                        screen.ui, screen.scene.actions, screen.scene.host,
+                        header = ChatHeaderSlot(screen.header, screen.scene.headerActions),
+                        canGoBack = false,
+                    )
+                }
+            }
+        }
+        waitForIdle()
+        runOnIdle { park.requestFocus() }
+        waitForIdle()
+        return screen
+    }
+
+    @Test
+    fun `the rename dialog keeps its own field focused and Cancel gives the message box its focus back`() =
+        runDesktopComposeUiTest(412, 915) {
+            val screen = showWithHeader()
+            composer().performClick()
+            waitForIdle()
+            composer().assertIsFocused()
+            runOnIdle { screen.header = screen.header.copy(renaming = "Fix flaky checkout test") }
+            waitForIdle()
+            composer().assertIsNotFocused()
+            val dialogField = onNode(isFocused() and hasSetTextAction(), useUnmergedTree = true)
+            assertEquals("Fix flaky checkout test", dialogField.words(), "the dialog's field has the focus")
+            type("Checkout")
+            assertEquals("", composer().words(), "no stray words in the message box")
+            onNodeWithText("Cancel").performClick()
+            // Cancel answers null; the header presenter then closes the dialog.
+            runOnIdle { screen.header = screen.header.copy(renaming = null) }
+            waitForIdle()
+            composer().assertIsFocused()
+            assertEquals("", composer().words())
+        }
+
+    @Test
+    fun `the conversation's menu opening and closing moves no focus, from the message box or from Find`() =
+        runDesktopComposeUiTest(412, 915) {
+            val screen = showWithHeader()
+            composer().performClick()
+            waitForIdle()
+            runOnIdle { screen.header = screen.header.copy(menuOpen = true) }
+            waitForIdle()
+            onNodeWithTag("kit-menu").fetchSemanticsNode()
+            composer().assertIsFocused()
+            runOnIdle { screen.header = screen.header.copy(menuOpen = false) }
+            waitForIdle()
+            composer().assertIsFocused()
+            runOnIdle { screen.ui = screen.ui.copy(find = FindUi("", 0, 0, null, -1, false)) }
+            waitForIdle()
+            findField().assertIsFocused()
+            runOnIdle { screen.header = screen.header.copy(menuOpen = true) }
+            waitForIdle()
+            findField().assertIsFocused()
+            runOnIdle { screen.header = screen.header.copy(menuOpen = false) }
+            waitForIdle()
+            findField().assertIsFocused()
+            composer().assertIsNotFocused()
+        }
 }
+

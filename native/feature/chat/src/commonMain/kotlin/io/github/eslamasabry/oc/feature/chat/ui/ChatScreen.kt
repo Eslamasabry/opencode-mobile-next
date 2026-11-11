@@ -605,13 +605,13 @@ public fun ChatScreen(
     // reuses this ancestor rather than creating a host scoped only to its own content.
     KitPromptLiftHost {
         KitSheetHost(modifier.fillMaxSize()) {
-            // w4-focus (sweep P79/P80): a sheet or dialog over the conversation owns typing; the message box under it
-            // lets go and gets its focus back when it closes, if it had it. Find's field takes focus itself.
+            // w4-focus (sweep P79/P80): a sheet or dialog over the conversation owns typing; the kit's sheet host takes
+            // the page's focus and hands it back (KitSheetHost). Find's field takes focus itself; closing Find gives the
+            // message box its focus back if it had it.
             val sheets = LocalKitSheetHost.current
             val covered = sheets != null && (sheets.isShowing || sheets.isDialogShowing)
             val coveredNow by rememberUpdatedState(covered)
-            ComposerYields(covered, chrome.typing, release = true) { latest.find == null }
-            ComposerYields(state.find != null && state.phase == ChatPhase.Live, chrome.typing, release = false) { !coveredNow }
+            ComposerYields(state.find != null && state.phase == ChatPhase.Live, chrome.typing) { !coveredNow }
             // N-55: the shell steers a stray hardware key into the page (FocusDirection.Enter); it lands on the
             // conversation itself, which hands it to the message field, never to the first button
             // ([chatTypingLanding]: a request for a field inside, as Find's, is never redirected).
