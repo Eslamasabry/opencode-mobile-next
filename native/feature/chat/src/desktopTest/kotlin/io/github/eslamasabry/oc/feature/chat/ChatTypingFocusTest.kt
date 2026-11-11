@@ -23,6 +23,14 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isAltPressed
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.isMetaPressed
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.key.utf16CodePoint
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
@@ -515,6 +523,88 @@ class ChatTypingFocusTest {
             waitForIdle()
             findField().assertIsFocused()
             composer().assertIsNotFocused()
+        }
+
+    // --- Device B11 / ring rename: the shell's park as it is (re-parks a frame after focus leaves, steers letters). ---
+
+    /**
+     * The shell's `ShellKeyPark` (ui/shell nav/ShellKeys.kt) in the form this module can use: a frame after focus left
+     * the page it parks again, but only if nothing took focus meanwhile; a letter that reaches it (nothing used it)
+     * steers into the page. Keys are sent as key events, as a hardware keyboard and adb's key injection send them.
+     */
+    @Composable
+    private fun ShellPark(content: @Composable () -> Unit) {
+        val manager = LocalFocusManager.current
+        SideEffect { focusManager = manager }
+        var lost by remember { mutableStateOf(0) }
+        val holds = remember { booleanArrayOf(false) }
+        LaunchedEffect(lost) { if (!holds[0]) park.requestFocus() }
+        Box(
+            Modifier.focusRequester(park)
+                .onFocusChanged {
+                    holds[0] = it.hasFocus
+                    if (!it.hasFocus) lost++
+                }
+                .focusTarget()
+                .onKeyEvent { e ->
+                    val letter = e.utf16CodePoint > 0x1F && !e.isCtrlPressed && !e.isAltPressed && !e.isMetaPressed
+                    if (!letter) return@onKeyEvent false
+                    if (e.type == KeyEventType.KeyDown) {
+                        park.requestFocus()
+                        manager.moveFocus(FocusDirection.Enter)
+                    }
+                    true
+                }
+        ) { content() }
+    }
+
+    @Test
+    fun `B11 Find opened while the message box has focus takes typed keys, the box stays as it was`() =
+        runDesktopComposeUiTest(412, 915) {
+            val scene = ChatScene()
+            val screen = Screen(scene, scene.live())
+            setContent { E20Scene { ShellPark { scene.Screen(screen.ui) } } }
+            waitForIdle()
+            composer().performClick()
+            waitForIdle()
+            composer().assertIsFocused()
+            openFind(screen)
+            findField().assertIsFocused()
+            onRoot().performKeyInput {
+                pressKey(Key.B)
+                pressKey(Key.G)
+            }
+            waitForIdle()
+            assertEquals("bg", findField().words(), "the search field has the keys")
+            assertEquals("", composer().words(), "the message box stays as it was")
+        }
+
+    @Test
+    fun `ring rename the dock's rename field takes typed keys, the box stays as it was`() =
+        runDesktopComposeUiTest(412, 915) {
+            val scene = ChatScene()
+            val dock = RenameDock()
+            val live = scene.live()
+            setContent {
+                E20Scene { ShellPark { ChatScreen(live, scene.actions, scene.host, canGoBack = false, edgeDock = dock) } }
+            }
+            waitForIdle()
+            composer().performClick()
+            waitForIdle()
+            runOnIdle { dock.renaming = true }
+            waitForIdle()
+            val rename = onNode(
+                    hasSetTextAction() and (hasTestTag("dock-rename") or hasAnyAncestor(hasTestTag("dock-rename"))),
+                    useUnmergedTree = true,
+                )
+            rename.assertIsFocused()
+            onRoot().performKeyInput {
+                pressKey(Key.Z)
+                pressKey(Key.E)
+            }
+            waitForIdle()
+            assertEquals("ze", rename.words(), "the rename field has the keys")
+            assertEquals("", composer().words(), "the message box stays as it was")
         }
 }
 

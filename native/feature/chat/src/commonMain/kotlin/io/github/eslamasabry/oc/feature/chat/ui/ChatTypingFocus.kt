@@ -58,10 +58,10 @@ internal fun Modifier.chatTypingLanding(typing: ComposerTypingTarget, covered: (
 
 /**
  * While [open] (Find), Find's field owns typing: it takes focus itself. When [open] ends, the message box takes focus
- * back only if it had it when [open] began, and the person had not put the keyboard away: the box keeps its focus when
- * the keyboard is closed with Back, and taking focus again opens the keyboard, which would pop up after Find was
- * opened with the keyboard down. A keyboard never seen in this conversation (a hardware keyboard, a desktop) does not
- * count as put away. [mayTakeBack] is asked at that moment: a sheet over Find as it closed keeps the focus.
+ * back only if it had it when [open] began, and the person had not put the keyboard away, before Find opened or while
+ * it was open: the box keeps its focus when the keyboard is closed with Back, and taking focus again opens the
+ * keyboard, which would pop up unasked. A keyboard never seen in this conversation (a hardware keyboard, a desktop)
+ * does not count as put away. [mayTakeBack] is asked at that moment: a sheet over Find as it closed keeps the focus.
  *
  * Sheets and dialogs are the kit's: `KitSheetHost` takes the page's focus when one shows and hands it back on the
  * same terms when it hides (w4-focus2; this used to be done here too, and the two collided).
@@ -74,6 +74,9 @@ internal fun ComposerYields(open: Boolean, typing: ComposerTypingTarget, mayTake
     // Read in the composition that opens it: the box's focus is still as it was (a layout switch or a field taking
     // focus only changes it when this composition is applied).
     val hadFocus = remember(open) { open && typing.focused && (keyboardUp || !keyboardSeen) }
+    // Read in the composition that closes it, before the closing field's keyboard starts to go: the person may have
+    // put the keyboard away while Find was open (Back), and focus on the box would bring it up again (device B11).
+    val keyboardAtClose = remember(open) { !open && (keyboardUp || !keyboardSeen) }
     var giveBack by remember(typing) { mutableStateOf(false) }
     val takeBack by rememberUpdatedState(mayTakeBack)
     LaunchedEffect(open, typing) {
@@ -83,7 +86,7 @@ internal fun ComposerYields(open: Boolean, typing: ComposerTypingTarget, mayTake
             giveBack = false
             // The closing field's focus leaves the tree first and the shell parks it on the next frame; take it after.
             repeat(SETTLE_FRAMES) { withFrameNanos {} }
-            if (takeBack()) typing.focus()
+            if (keyboardAtClose && takeBack()) typing.focus()
         }
     }
 }
