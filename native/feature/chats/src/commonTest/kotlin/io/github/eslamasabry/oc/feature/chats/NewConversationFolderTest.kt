@@ -108,8 +108,8 @@ class NewConversationFolderTest {
 
     @AfterTest fun reset() = Dispatchers.resetMain()
 
-    private fun vm(host: Host) =
-        NewConversationViewModel(ChatsRoute.New(phone), host, Nav(), Clock.System, ListenedReports())
+    private fun vm(host: Host, route: ChatsRoute.New = ChatsRoute.New(phone)) =
+        NewConversationViewModel(route, host, Nav(), Clock.System, ListenedReports())
 
     @Test
     fun `B-CHATS-110 B-063 a project whose folder is gone says so and Start sends nothing`() {
@@ -138,5 +138,22 @@ class NewConversationFolderTest {
         second.sheet(NewConversationSheet.Projects)
         second.chooseDirectory(kept)
         assertFalse(second.state.value.folderMissing, "a project that is there needs no step")
+    }
+
+    @Test
+    fun `H4 the form starts in the wanted folder when the server has it`() {
+        val host = Host(mutableSetOf(kept, gone))
+        val vm = vm(host, ChatsRoute.New(phone, directory = kept))
+        assertEquals(kept, vm.state.value.directory)
+        assertFalse(vm.state.value.folderMissing)
+    }
+
+    @Test
+    fun `H4 a wanted folder the server no longer has leaves the usual folder, quietly`() {
+        val host = Host(mutableSetOf(gone))
+        val vm = vm(host, ChatsRoute.New(phone, directory = kept))
+        assertEquals(gone, vm.state.value.directory)
+        assertFalse(vm.state.value.folderMissing)
+        assertEquals(null, vm.state.value.failure)
     }
 }

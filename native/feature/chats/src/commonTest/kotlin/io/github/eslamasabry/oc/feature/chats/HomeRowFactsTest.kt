@@ -54,4 +54,12 @@ class HomeRowFactsTest {
         assertFalse(HomeRowStatusRules.saysCantReopen(working))
         assertFalse(HomeRowStatusRules.saysCantReopen(ChatsState.row(item("c"))))
     }
+
+    @Test
+    fun `H4 start new carries the old conversation's folder, and none when it has none`() {
+        val old = item("old").copy(agentId = "claude", needsNewChat = true, directory = "/root/projects/old")
+        assertEquals("/root/projects/old", AgentResumeRules.route(AgentResumeRules.ask(old, null)!!).directory)
+        val bare = old.copy(directory = " ")
+        assertNull(AgentResumeRules.route(AgentResumeRules.ask(bare, null)!!).directory)
+    }
 }
