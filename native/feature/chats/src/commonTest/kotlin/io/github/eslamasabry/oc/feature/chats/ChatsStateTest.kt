@@ -327,4 +327,13 @@ class ChatsStateTest {
         assertEquals(listOf("seen"), ui.brief?.rows?.map { it.ref.sessionId.raw })
         assertEquals(listOf("old"), ui.recent.map { it.ref.sessionId.raw })
     }
+
+    @Test
+    fun `H3 a server that cannot list across projects names the one project it shows`() {
+        val items = listOf(item("a", at = 2_000)).toImmutableList()
+        fun ui(across: Boolean) =
+            ChatsState.build(ChatFeedSnapshot(items, acrossProjects = across), ReturnBrief.None, ChatsFilters(), today, settingsAvailable = true)
+        assertNull(ui(true).onlyProject)
+        assertEquals("api", ui(false).onlyProject)
+    }
 }
