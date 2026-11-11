@@ -618,3 +618,46 @@ exposes neither its height nor an inset, and each host places it in its own box 
 at the bottom with `undoBottom`, `ChatsScreen.kt` and others likewise). Lifting the dock needs one of: the bar reporting its
 measured height (a new kit local or an `onHeight` callback, a change outside the dock files), and the host adding it to
 `KitDockInsets.bottom` while an offer is shown (`EdgeDockHost.kt`, where `undo` is known and `insets` is passed on).
+
+### Dock follow-ups 2 (run 5), as built (2026-11-11)
+
+**7. The list on the wrong edge (run 5, d).** Driven through the real pointer loop at 360 dp and 320 dp wide, both edges
+(`KitEdgeDockListGestureTest`), the list was never misplaced: a flick inward from a ring (a sideways move before the swell
+shows, then release) opens the list flush with the dock's own edge on every width (`panelBox`: the pane is
+`min(320, width - 48)` wide, its inner edge keeps the 48 dp gutter, the corners on the inner side are rounded, the outer side
+runs `OVERHANG` 40 dp past the screen so no edge or corner shows there). The picture is that list on the LEFT edge (a pane 320 dp
+wide, which at 2.625 px per dp is 840 px, as measured: the screen is about 411 dp wide, not 360), with its overhang past the left
+edge and its rounded right side. The dock was on the left because a flick that starts on the dock's head (the grip, the top 36
+dp of the strip) is a drag of the dock, not a pull: `DockMode.Move` ended in `DockOutcome.Place`, which puts the dock on the
+half of the screen the finger lets go on, so a flick inward crossed the middle and carried the dock to the other edge (the
+rings and names then stand in the left-edge list). Now a drag from the head that lets go at 900 dp/s or more, mostly sideways,
+toward the middle is the list's flick (`DockRules.flickSpeed`, `DockOutcome.PullEnd`): the list opens on the edge the dock was on, the dock
+goes back to its height. Moving the dock to the other edge is a slower drag from the head (or the nub) that lets go on the other half.
+Gestures: from a ring, sideways first, release at any speed that carries the strip past half the list (flick at about 760 dp/s or
+more; slower and short settles back, outward below 62 % of the rest width tucks); from the head, below 900 dp/s: moves the dock,
+release past the middle changes edge; from the head, 900 dp/s or more toward the middle: the list; from the head, fast outward or
+mostly vertical: a placement on the same edge; from the nub: along the edge moves, inward past 24 dp brings it out.
+
+**8. Rename takes the keyboard from another field.** With the keyboard open on the chat's message box, the rename field now first
+clears focus (`clearFocus(force)`), waits a frame and then requests it, so the keyboard's input follows the new field, and when
+the field leaves it clears focus only if it still holds it, so focus ends on nothing and not on the message box. The desktop
+harness could not reproduce the fault (`KitEdgeDockRenameFocusTest` passed on the code before the change: it sets text through
+semantics, which does not go through the keyboard's input session); the change is therefore not proven on a device.
+
+**9. Rings while the keyboard is up.** The column does not scroll by drag: a vertical drag in the strip is the scrub (it moves
+the swell over the rings in view), the dock's main gesture, so a scroll by drag would collide with it. The column scrolls only
+to keep the current conversation, the renamed ring or the ring that needs the person in view (`scrollToShow`); the other rings
+are reached through the list (pull inward). `KitEdgeDockListGestureTest` holds this as a test. Not changed.
+
+**7b. The short list in the second try (run 5, d2).** A flick inward from a ring on the right edge opened the list on the right
+edge, as it should. The pane was 209 dp tall with three rows. Both boxes are as tall as the area the host hands the dock allows
+(`panelBox`: the content's height, at most the area's height minus 100 dp for the shoulders' room; the strip is capped the same way by
+`DockColumn.of`, three whole rings at 62 dp pitch fit 310 to 372 dp of area). A strip of three rings and a pane of the same height,
+centred on the same point, mean the dock's area was about 310 to 372 dp tall that moment, not 800: the kit did not cap the pane,
+and the other four rows are inside it, scrolled (`KitEdgeDockListGestureTest`, "list height", reproduces it with a 448 dp bottom
+inset: the pane takes all the height the area allows and scrolls its seven rows). What took the area is for the host to check
+(the home's `windowInsetsPadding(safeDrawing)` carries the keyboard's inset, which would leave a short area after a search or a
+rename). The pane is also 280 dp wide in both pictures where 312 dp is expected at 360 dp (`min(320, width - 48)`), so `width -
+edgeInset - farInset` was 328: 32 dp of horizontal inset the dock was given, which the kit cannot tell from a host's inset.
+Nothing here makes one movement both open the list and move the dock: the outcomes are exclusive (`PullEnd` or `Place`), and in
+the old code a flick from the head only moved the dock.

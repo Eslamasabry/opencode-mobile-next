@@ -20,7 +20,8 @@ import kotlin.math.hypot
  * - After the peek opened, a deliberate move ALONG the strip (not into the card) picks the ring up: REORDER. Lifting
  *   reports the new index and whether it landed above the pin line. A hold first, so a scrub never reorders by mistake.
  * - The tucked nub: a tap brings the dock back; a drag along the edge MOVES it; a drag across past the screen's middle
- *   flips it to the other edge. The grip at the dock's head moves it the same way.
+ *   flips it to the other edge. The grip at the dock's head moves it the same way. A FLICK from the grip (letting go at
+ *   [DockRules.flickSpeed] or more, mostly sideways) toward the middle opens the list and never changes edge.
  */
 
 /** The thresholds, dp and ms. */
@@ -32,6 +33,12 @@ internal data class DockRules(
     val axisBias: Float = 1.15f,
     /** A drag in from the nub this far brings the dock back out. */
     val nubPullIn: Float = 24f,
+    /**
+     * A drag from the dock's head that lets go at this sideways speed (dp/s) or more, mostly sideways, is a flick: it is
+     * never a change of edge. Toward the middle it opens the list, as a flick from a ring does. The dock changes edge
+     * only by a slower drag that lets go on the other half of the screen.
+     */
+    val flickSpeed: Float = 900f,
 )
 
 /** Where a finger came down. */
@@ -289,7 +296,11 @@ internal class DockGesture(private val rules: DockRules = DockRules()) {
             DockMode.Pull -> DockOutcome.PullEnd(velocityX)
             DockMode.NubPress -> DockOutcome.Untuck
             DockMode.NubDrag -> if (dx < -rules.nubPullIn) DockOutcome.Untuck else DockOutcome.None
-            DockMode.Move -> DockOutcome.Place(x, y)
+            DockMode.Move ->
+                // A fast sideways flick toward the middle is the list's flick, not a move to the other edge (device QA
+                // 2026-11-11, run 5: the flick from the head carried the dock across and no list opened).
+                if (velocityX <= -rules.flickSpeed && abs(dx) > rules.axisBias * abs(y - y0)) DockOutcome.PullEnd(velocityX)
+                else DockOutcome.Place(x, y)
             DockMode.GripPress -> DockOutcome.None
             DockMode.FootPress -> DockOutcome.NewConversation
             DockMode.SwellTap -> if (t != null) DockOutcome.Target(ring, t.kind, t.child).also { pinnedOpen = false } else DockOutcome.None

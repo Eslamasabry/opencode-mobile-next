@@ -219,6 +219,30 @@ class DockGestureTest {
     }
 
     @Test
+    fun `a flick from the grip toward the middle is the list's flick, a flick away, a vertical one or a slow drag is a placement`() {
+        val h = Hits()
+        val flick = DockGesture()
+        flick.down(DockZone.Grip, x, 90f, 0L, h)
+        flick.move(x - 20f, 92f, 40L, h)
+        assertEquals(DockOutcome.PullEnd(-1600f), flick.up(100f, 95f, -1600f, h))
+
+        val away = DockGesture()
+        away.down(DockZone.Grip, x, 90f, 0L, h)
+        away.move(x + 20f, 92f, 40L, h)
+        assertEquals(DockOutcome.Place(405f, 95f), away.up(405f, 95f, 1600f, h))
+
+        val upward = DockGesture()
+        upward.down(DockZone.Grip, x, 90f, 0L, h)
+        upward.move(x - 5f, 140f, 40L, h)
+        assertEquals(DockOutcome.Place(340f, 300f), upward.up(340f, 300f, -1600f, h))
+
+        val slow = DockGesture()
+        slow.down(DockZone.Grip, x, 90f, 0L, h)
+        slow.move(x - 20f, 92f, 400L, h)
+        assertEquals(DockOutcome.Place(40f, 95f), slow.up(40f, 95f, -300f, h))
+    }
+
+    @Test
     fun `the foot's tap starts a new conversation, a drag off it does nothing`() {
         val h = Hits()
         val g = DockGesture()
