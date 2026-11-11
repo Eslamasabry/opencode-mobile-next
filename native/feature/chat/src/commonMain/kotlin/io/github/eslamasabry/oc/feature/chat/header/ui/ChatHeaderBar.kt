@@ -301,6 +301,7 @@ public fun ChatHeaderTopBar(
                 )
             }
         }
+    val showGitChip = state.showsGit
     val projectLine: (@Composable () -> Unit)? =
         state.projectName?.let { project ->
             {
@@ -316,10 +317,14 @@ public fun ChatHeaderTopBar(
                             )
                         } ?: stringResource(Res.string.chatProjectChipFilesSemantics, project),
                     onProject = onProject,
-                    // F: chat_top_bar.dart:180-190: the Git chip always shows, the branch once known and
-                    // "Git" (gitSheetTitle) until then; it opens the Git sheet.
-                    branch = onBranch?.let { state.branch ?: stringResource(Res.string.gitSheetTitle) },
-                    onBranch = onBranch,
+                    // F: chat_top_bar.dart:180-190 shows "Git" until a branch is known; here the chip appears only for
+                    // a folder that is a Git project (one rule with the Git page and Changes): never "Git" for a
+                    // plain folder or before the server has answered.
+                    branch =
+                        onBranch?.takeIf { showGitChip }?.let {
+                            state.branch ?: stringResource(Res.string.gitSheetTitle)
+                        },
+                    onBranch = onBranch?.takeIf { showGitChip },
                 )
             }
         }

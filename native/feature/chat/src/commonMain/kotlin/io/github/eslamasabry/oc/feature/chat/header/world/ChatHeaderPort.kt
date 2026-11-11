@@ -86,6 +86,8 @@ public data class HeaderFacts(
     val totalCost: Double? = null,
     val connected: Boolean = false,
     val branch: String? = null,
+    /** Is the folder a Git project: null until the server answered (the header then says nothing about Git). */
+    val git: Boolean? = null,
 )
 
 /** Builds one port per open conversation. */
