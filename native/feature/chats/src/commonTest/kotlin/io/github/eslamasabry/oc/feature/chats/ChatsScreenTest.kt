@@ -427,6 +427,16 @@ class ChatsScreenTest {
         }
 
     @Test
+    fun `the one-project line names the project in quotes and starts where the brief notice starts`() =
+        runComposeUiTest {
+            val unknown = ReturnBrief.build(emptyList(), false, false, { true }, { false }, { null }, scope = BRIEF_SCOPE)
+            setContent { Themed { ChatsScreen(ui(brief = unknown).copy(onlyProject = "new"), RecordingChatsActions()) } }
+            val project = onNodeWithText("Showing conversations in \u201Cnew\u201D only.", substring = true).fetchSemanticsNode().boundsInRoot
+            val brief = onNodeWithText("Can't tell what's new on this server").fetchSemanticsNode().boundsInRoot
+            assertEquals(brief.left, project.left, "same text column")
+        }
+
+    @Test
     fun `B-CHAT-093 finding 5 overflow has a visible filtered-list action`() = runComposeUiTest {
         val actions = RecordingChatsActions()
         val brief =
