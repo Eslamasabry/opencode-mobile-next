@@ -777,11 +777,15 @@ public class NewConversationViewModel(
                 is Outcome.Failed -> mutable.update { it.copy(draftFailed = true) }
                 is Outcome.Ok ->
                     mutable.update {
-                        it.copy(
-                            text = saved.value,
-                            textRevision = it.textRevision + 1,
-                            draftFailed = false,
-                        )
+                        // The reads above wait on storage and the server: words typed meanwhile (or a server or
+                        // project changed meanwhile) win, and are never replaced by the stored draft.
+                        if (it.text.isNotEmpty() || it.profile != profile || it.directory != directory) it
+                        else
+                            it.copy(
+                                text = saved.value,
+                                textRevision = it.textRevision + 1,
+                                draftFailed = false,
+                            )
                     }
             }
         }

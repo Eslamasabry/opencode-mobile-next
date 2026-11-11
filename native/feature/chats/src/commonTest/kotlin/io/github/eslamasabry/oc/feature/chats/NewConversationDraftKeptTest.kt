@@ -21,6 +21,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.time.Clock
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -59,6 +60,9 @@ class NewConversationDraftKeptTest {
     /** The phone's saved drafts, by project, as the app keeps them (`oc.draft.new-chat.<project>.<profile>`). */
     private inner class Host : NewConversationHost {
         val drafts = mutableMapOf<String?, String>()
+
+        /** When set, reading a draft waits for it (storage is slow on a phone). */
+        var hold: CompletableDeferred<Unit>? = null
         override val servers: StateFlow<List<NewConversationServer>> =
             MutableStateFlow(listOf(NewConversationServer(phone, "This phone", connected = true)))
 
@@ -67,7 +71,10 @@ class NewConversationDraftKeptTest {
 
         override suspend fun folderExists(profile: ProfileId, directory: String): Boolean? = true
 
-        override suspend fun draft(profile: ProfileId, directory: String?): Outcome<String> = Outcome.Ok(drafts[directory].orEmpty())
+        override suspend fun draft(profile: ProfileId, directory: String?): Outcome<String> {
+            hold?.await()
+            return Outcome.Ok(drafts[directory].orEmpty())
+        }
 
         override suspend fun saveDraft(profile: ProfileId, directory: String?, text: String): Outcome<Unit> {
             if (text.isEmpty()) drafts.remove(directory) else drafts[directory] = text
@@ -127,5 +134,20 @@ class NewConversationDraftKeptTest {
         host.drafts[dir] = "old words"
         val offered = open(host, route = ChatsRoute.New(phone, initialText = "Talk about this"))
         assertEquals("Talk about this", offered.state.value.text)
+    }
+
+    @Test
+    fun `P25 words typed while the stored draft is still being read are never replaced by it`() {
+        val reading = CompletableDeferred<Unit>()
+        val host = Host().apply {
+            drafts[dir] = "old words"
+            hold = reading
+        }
+        val vm = open(host)
+        assertEquals("", vm.state.value.text, "the stored draft is still being read")
+        vm.draftChanged("new words")
+        reading.complete(Unit)
+        assertEquals("new words", vm.state.value.text, "what the person typed stays in the field")
+        assertEquals("new words", host.drafts[dir], "and is the project's draft from now on")
     }
 }
