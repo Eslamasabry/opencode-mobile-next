@@ -27,6 +27,9 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
+import io.github.eslamasabry.oc.feature.team.fleet.FleetMergeActions
+import io.github.eslamasabry.oc.feature.team.fleet.FleetMergeKind
+import io.github.eslamasabry.oc.feature.team.fleet.FleetMergeSection
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
@@ -64,7 +67,7 @@ import org.jetbrains.compose.resources.stringResource
  * Technical details last. The questions that wait on the person show as rows; answering them is the question's own page.
  */
 @Composable
-public fun FleetRunScreen(state: FleetRunState, actions: FleetRunActions) {
+public fun FleetRunScreen(state: FleetRunState, actions: FleetRunActions, merge: FleetMergeActions? = null) {
     val ui = state.ui
     KitSheetHost(Modifier.fillMaxSize()) {
         KitScreen(
@@ -102,7 +105,7 @@ public fun FleetRunScreen(state: FleetRunState, actions: FleetRunActions) {
                         icon = KitIcons.cloudOff,
                         primary = KitAction(stringResource(Res.string.teamUiRunBack), actions::back),
                     )
-                FleetRunKind.Ready -> Page(state, actions)
+                FleetRunKind.Ready -> Page(state, actions, merge)
             }
         }
         KitConfirm(
@@ -205,7 +208,7 @@ private fun WorkState.mark(): KitWorkGraphMark =
     }
 
 @Composable
-private fun Page(state: FleetRunState, actions: FleetRunActions) {
+private fun Page(state: FleetRunState, actions: FleetRunActions, merge: FleetMergeActions?) {
     val ui = state.ui
     LazyColumn(
         Modifier.fillMaxSize().testTag("fleet-run"),
@@ -222,7 +225,10 @@ private fun Page(state: FleetRunState, actions: FleetRunActions) {
                             supporting = stringResource(Res.string.teamUiHomeRunNeedsYou),
                             titleMaxLines = 2,
                             state = KitRowState(null, KitRowStateTone.NeedsYou),
+                            trailing = KitRowTrailing.Chevron,
                             modifier = Modifier.testTag("fleet-run-question-${q.id}"),
+                            // The question's own page answers it (the Gate page).
+                            onClick = { actions.openGate(q.id) },
                         )
                     }
                 }
@@ -279,6 +285,12 @@ private fun Page(state: FleetRunState, actions: FleetRunActions) {
                         )
                     },
                 ) {}
+            }
+        }
+        // Approve, then merge into main: only once every step is done and the host's front has merge roles.
+        if (merge != null && state.merge.kind != FleetMergeKind.Hidden) {
+            item(key = "merge") {
+                FleetMergeSection(state.merge, state.nowMs, merge, Modifier.testTag("fleet-run-merge"), onOpenWork = actions::openMergeWork)
             }
         }
     }

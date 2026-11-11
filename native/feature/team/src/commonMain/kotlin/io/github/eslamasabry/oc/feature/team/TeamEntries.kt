@@ -121,7 +121,7 @@ public class TeamEntries(private val environment: KitChatEnvironment) : EntryIns
         entry<TeamRoute.FleetRun> { route ->
             val vm = assistedMetroViewModel<FleetRunViewModel, FleetRunViewModel.Factory> { create(route) }
             val state by vm.state.collectAsStateWithLifecycle()
-            FleetRunScreen(state, vm)
+            FleetRunScreen(state, vm, vm.merge)
         }
         entry<TeamRoute.FleetRig> { route ->
             val vm = assistedMetroViewModel<FleetRigViewModel, FleetRigViewModel.Factory> { create(route) }

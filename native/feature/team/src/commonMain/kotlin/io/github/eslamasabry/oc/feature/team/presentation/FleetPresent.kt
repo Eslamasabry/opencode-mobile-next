@@ -92,7 +92,7 @@ public data class FleetHomeUi(
     val readOnly: Boolean = false,
     /** The team takes a task from the phone (Dart `canStart`: `controlMessage` and data read): "Give the team a task". */
     val canGiveTask: Boolean = false,
-    /** Something waits for the person; answering from the phone is not here yet, so the page says where. */
+    /** Something waits for the person (each question opens its Gate page; a watch-only phone says where to answer). */
     val needsYou: Boolean = false,
     val questions: ImmutableList<FleetQuestionRow> = persistentListOf(),
     val rows: ImmutableList<FleetTaskRow> = persistentListOf(),

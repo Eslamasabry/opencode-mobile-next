@@ -51,9 +51,8 @@ internal fun computerSubtitle(ui: FleetHomeUi): String {
 
 /**
  * The team page for a team on a computer (Dart `TeamHomeScreen` over Gas City): one list of its tasks, most urgent
- * first, each question on its task's row (a tap opens its Gate sheet); the agents and what it spent today; its
- * projects. The agents' controls and a task's own page are the follow-up pages: until they exist their rows are plain
- * rows, never a dead button.
+ * first: a task with a question opens its Gate page, any other task its own page; the agents row opens the agents, a
+ * project its own page; what it spent today is a plain line.
  */
 @Composable
 internal fun TeamComputerHome(ui: FleetHomeUi, nowMs: Long, actions: TeamHomeActions) {

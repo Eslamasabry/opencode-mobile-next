@@ -44,6 +44,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowState
 import io.github.eslamasabry.oc.ui.kit.row.KitRowStateTone
+import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitReceipt
@@ -150,7 +151,10 @@ private fun Page(state: FleetAgentState, actions: FleetAgentActions) {
                         titleMaxLines = 2,
                         supportingMaxLines = 2,
                         state = KitRowState(null, KitRowStateTone.NeedsYou),
+                        trailing = KitRowTrailing.Chevron,
                         modifier = Modifier.testTag("fleet-agent-gate"),
+                        // The question's own page answers it (the Gate page).
+                        onClick = { actions.openGate(gate.id) },
                     )
                 }
             }

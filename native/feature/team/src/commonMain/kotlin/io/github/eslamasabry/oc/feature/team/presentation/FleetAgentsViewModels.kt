@@ -16,6 +16,8 @@ import io.github.eslamasabry.oc.engine.team.fleet.FleetAgentAction
 import io.github.eslamasabry.oc.engine.team.fleet.FleetControl
 import io.github.eslamasabry.oc.engine.team.fleet.FleetState
 import io.github.eslamasabry.oc.engine.team.fleet.ReceiptStatus
+import io.github.eslamasabry.oc.feature.team.fleet.FleetMergeController
+import io.github.eslamasabry.oc.feature.team.fleet.FleetMergeUi
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.TeamRoute
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -144,6 +146,9 @@ public interface FleetAgentActions {
     public fun undoPause() {}
 
     public fun dismissUndo() {}
+
+    /** The question waiting on this agent: its Gate page. */
+    public fun openGate(gateId: String) {}
 }
 
 /** One agent of a computer's team (Dart `AgentScreen`): where it stands, what went wrong, Pause / Nudge / Restart / Stop / Force stop, live output. */
@@ -264,6 +269,10 @@ public class FleetAgentViewModel(
 
     override fun dismissUndo() = local.update { it.copy(undoPause = false) }
 
+    override fun openGate(gateId: String) {
+        nav.open(TeamRoute.Gate(route.profileId, gateId))
+    }
+
     @AssistedFactory
     @ManualViewModelAssistedFactoryKey
     @ContributesIntoMap(AppScope::class)
@@ -280,6 +289,8 @@ public data class FleetRunState(
     val confirmingStop: Boolean = false,
     /** The step whose sheet is open, if any. */
     val work: FleetWorkUi? = null,
+    /** The merge section at the end of the page (Dart `TeamMergeSection`): hidden until the task's work is done. */
+    val merge: FleetMergeUi = FleetMergeUi(),
 )
 
 public interface FleetRunActions {
@@ -293,6 +304,12 @@ public interface FleetRunActions {
     public fun openStep(workId: String) {}
 
     public fun closeStep() {}
+
+    /** A work item named in the merge section's Review changes. */
+    public fun openMergeWork(workId: String) {}
+
+    /** A question waiting on this task: its Gate page. */
+    public fun openGate(gateId: String) {}
 
     /** The agent on a step: its page. */
     public fun openAgent(agentId: String) {}
@@ -322,8 +339,18 @@ public class FleetRunViewModel(
 
     private val local = MutableStateFlow(Local())
 
+    /** Approve, then merge into main, once every step is done (team-eg's section, on this page's lifetime). */
+    public val merge: FleetMergeController? =
+        engine.fleet?.let { FleetMergeController(it, profile, route.runId, fleet, viewModelScope) { clock.now().toEpochMilliseconds() } }
+
     public val state: StateFlow<FleetRunState> =
-        combine(engine.state(profile), fleet, local, agedTicks { clock.now().toEpochMilliseconds() }) { team, fleet, mine, now ->
+        combine(
+                engine.state(profile),
+                fleet,
+                local,
+                agedTicks { clock.now().toEpochMilliseconds() },
+                merge?.state ?: flowOf(FleetMergeUi()),
+            ) { team, fleet, mine, now, merging ->
                 val computer = team.phase == TeamPhase.Computer
                 FleetRunState(
                     ui =
@@ -332,6 +359,7 @@ public class FleetRunViewModel(
                     nowMs = now,
                     confirmingStop = mine.confirming,
                     work = mine.step?.takeIf { computer }?.let { FleetRunPresent.work(fleet, it, redactor::details) },
+                    merge = if (computer) merging else FleetMergeUi(),
                 )
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_AFTER_MS), FleetRunState())
@@ -340,6 +368,7 @@ public class FleetRunViewModel(
 
     override fun refresh() {
         viewModelScope.launch { engine.fleet?.refresh(profile) }
+        merge?.reload()
     }
 
     override fun openSettings() {
@@ -348,7 +377,17 @@ public class FleetRunViewModel(
 
     override fun openStep(workId: String) = local.update { it.copy(step = workId) }
 
+    /** A work item from the merge section's Review changes: that sheet closes and the step's own sheet opens. */
+    override fun openMergeWork(workId: String) {
+        merge?.closeChanges()
+        openStep(workId)
+    }
+
     override fun closeStep() = local.update { it.copy(step = null) }
+
+    override fun openGate(gateId: String) {
+        nav.open(TeamRoute.Gate(route.profileId, gateId))
+    }
 
     override fun openAgent(agentId: String) {
         local.update { it.copy(step = null) }

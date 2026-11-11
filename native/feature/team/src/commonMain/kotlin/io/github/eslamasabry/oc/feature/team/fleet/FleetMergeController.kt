@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -33,7 +32,7 @@ public interface FleetMergeActions {
  * The merge gate of one task on a computer's team (Dart `TeamMergeSection`'s state): reads the host front's readiness once
  * the task's work is done (a task with open work never costs the host a readiness computation), and sends Approve and
  * Merge as one receipt each, never re-sent. The run page owns the lifetime: it creates this with its view-model scope and
- * embeds [FleetMergeSection] with [state].
+ * embeds [FleetMergeSection] with [state] (collected only while the page is shown).
  *
  * [fleet] is the page's own collected fleet state (it keeps the connection alive).
  */
@@ -47,19 +46,25 @@ public class FleetMergeController(
 ) : FleetMergeActions {
     private val local = MutableStateFlow(FleetMergeLocal())
 
+    /** The first readiness read was asked for (once the task's work is done); later reads are Refresh and the writes'. */
+    private var asked = false
+
+    /**
+     * Follows the team only while the page watches (as the page's own state does), so a task page left in the back stack
+     * keeps no connection open; the first time the task's work is all done the readiness is read.
+     */
     public val state: StateFlow<FleetMergeUi> =
-        combine(fleet, local) { team, mine -> FleetMergePresent.section(team, runId, mine, nowMs()) }
-            .stateIn(scope, SharingStarted.Eagerly, FleetMergeUi())
+        combine(fleet, local) { team, mine ->
+                if (!asked && FleetMergePresent.eligible(team, runId)) {
+                    asked = true
+                    scope.launch { read() }
+                }
+                FleetMergePresent.section(team, runId, mine, nowMs())
+            }
+            .stateIn(scope, SharingStarted.WhileSubscribed(5_000), FleetMergeUi())
 
     /** Dart `teamMergeWaitsOnYou`, for the page's header count. */
     public fun waitsOnYou(): Boolean = FleetMergePresent.waitsOnYou(fleet.value, runId, local.value)
-
-    init {
-        scope.launch {
-            fleet.first { FleetMergePresent.eligible(it, runId) }
-            read()
-        }
-    }
 
     private suspend fun read() {
         local.update { it.copy(read = FleetMergeRead.Loading) }
