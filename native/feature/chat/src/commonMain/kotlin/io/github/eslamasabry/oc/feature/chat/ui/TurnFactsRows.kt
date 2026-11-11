@@ -404,6 +404,7 @@ private fun StepState.toKit(): KitToolStatus =
         StepState.Done -> KitToolStatus.Done
         StepState.Failed -> KitToolStatus.Failed
         StepState.Stopped,
+        StepState.Declined,
         StepState.NotRun -> KitToolStatus.Stopped
     }
 
@@ -440,6 +441,7 @@ private fun ToolKind.toKit(): KitToolKind =
 private fun inputHasBody(kind: ToolKind, state: StepState): Boolean =
     state != StepState.NotRun &&
         state != StepState.Stopped &&
+        state != StepState.Declined &&
         kind != ToolKind.Card &&
         kind != ToolKind.Read &&
         kind != ToolKind.Shell &&

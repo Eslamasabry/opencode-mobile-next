@@ -114,6 +114,7 @@ class NativeServerEditor(
                 profile.trust.pin?.origin,
                 profile,
                 reconnectOnSave = stores.profiles.activeId.value == id || p.usesAgentSocket,
+                ownPhone = profile.managedOnPhone,
             )
             .ok()
     }

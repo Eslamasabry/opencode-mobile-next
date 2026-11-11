@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.ui.kit.platform
 
 import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.isSpecified
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.GraphicsLayerScope
@@ -14,12 +15,15 @@ import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.colorControls
 import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.runtimeShaderEffect
 import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.highlight.HighlightStyle
 import com.kyant.backdrop.shadow.Shadow
 import io.github.eslamasabry.oc.ui.design.effects.LiquidEdge
 import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidBackdrop
 import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidPaneSpec
+import io.github.eslamasabry.oc.ui.kit.effects.LiquidHoldShader
+import io.github.eslamasabry.oc.ui.kit.effects.LiquidHoldUniforms
 import io.github.eslamasabry.oc.ui.kit.effects.drawLiquidTint
 
 /**
@@ -49,6 +53,28 @@ internal object AndroidLiquidGlass {
                         depthEffect = recipe.depth,
                     )
                 }
+                // The sheet's and the menu's glass hold back the light and the colour behind their words, after the blur
+                // and the bend (the join shader's knee for the plain pane; LiquidHold). Every uniform, every draw.
+                if (recipe.hold.knee && size.isSpecified) {
+                    val u =
+                        LiquidHoldUniforms.of(
+                            spec = spec,
+                            width = size.width,
+                            height = size.height,
+                            left = padding,
+                            top = padding,
+                            radius = cornerRadiusPx(shape, size, this),
+                            density = density,
+                            colour = LiquidHoldUniforms.IDENTITY_CC,
+                        )
+                    runtimeShaderEffect("OcHold", LiquidHoldShader.SOURCE, "content") {
+                        setFloatUniform("knee", u.knee[0], u.knee[1], u.knee[2])
+                        setFloatUniform("hold", u.hold)
+                        setFloatUniform("box", u.left, u.top, u.halfWidth, u.halfHeight)
+                        setFloatUniform("corner", u.radius, u.rimPx)
+                        setFloatUniform("cc", u.saturation, u.contrast, u.brightness, 0f)
+                    }
+                }
             },
             highlight = {
                 // A crisp rim (owner 2026-11-09): 1 dp, no blur; the library's directional light makes its top-start
@@ -67,6 +93,15 @@ internal object AndroidLiquidGlass {
             resolutionScale = spec.resolution,
         )
     }
+
+    /** The largest corner of [shape] on a pane of [size], px (the hold's inside-the-rim test treats the pane as one rounded box). */
+    private fun cornerRadiusPx(shape: CornerBasedShape, size: Size, density: Density): Float =
+        maxOf(
+            shape.topStart.toPx(size, density),
+            shape.topEnd.toPx(size, density),
+            shape.bottomStart.toPx(size, density),
+            shape.bottomEnd.toPx(size, density),
+        ).coerceAtMost(size.minDimension / 2f)
 
     /** How tightly the rim light gathers at its lit arcs (the library's default is 1): a brighter top-start segment. */
     private const val RIM_FALLOFF: Float = 1.6f

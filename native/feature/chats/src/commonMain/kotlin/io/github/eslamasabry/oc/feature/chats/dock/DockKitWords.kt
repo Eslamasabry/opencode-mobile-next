@@ -10,6 +10,7 @@ import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.approvalAllow
 import io.github.eslamasabry.oc.ui.words.res.approvalDeny
 import io.github.eslamasabry.oc.ui.words.res.chatUiRename
+import io.github.eslamasabry.oc.ui.words.res.chatUiRenameSession
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNewChat
 import io.github.eslamasabry.oc.ui.words.res.dockActionOn
 import io.github.eslamasabry.oc.ui.words.res.dockChildFailed
@@ -20,7 +21,6 @@ import io.github.eslamasabry.oc.ui.words.res.dockHidden
 import io.github.eslamasabry.oc.ui.words.res.dockLabel
 import io.github.eslamasabry.oc.ui.words.res.dockMoveDock
 import io.github.eslamasabry.oc.ui.words.res.dockNeedsYou
-import io.github.eslamasabry.oc.ui.words.res.dockNickname
 import io.github.eslamasabry.oc.ui.words.res.dockOnServer
 import io.github.eslamasabry.oc.ui.words.res.dockOpen
 import io.github.eslamasabry.oc.ui.words.res.dockPin
@@ -150,7 +150,8 @@ internal fun rememberDockKitWords(model: KitDockModel): KitDockWords {
     val unpin = stringResource(Res.string.dockUnpin)
     val restore = stringResource(Res.string.dockRestore)
     val newConversation = stringResource(Res.string.chatsHomeNewChat)
-    val nickname = stringResource(Res.string.dockNickname)
+    // The rename field renames the conversation itself (one name everywhere), so it is named for that.
+    val nickname = stringResource(Res.string.chatUiRenameSession)
     val pinned = stringResource(Res.string.kitPinned)
     val moveDock = stringResource(Res.string.dockMoveDock)
     val showDock = stringResource(Res.string.dockShowDock)

@@ -280,6 +280,9 @@ internal class Oc2LibraryOps(private val owner: Oc2Gateway, private val redactor
 
     override suspend fun integrations(): Outcome<ImmutableList<IntegrationInfo>> =
         read("/integration") { root ->
+            // Not reached through the gateway today (Oc2ProviderSignIn answers integrations()); if it is wired
+            // later it registers what the live reader registers: the answer's credentials and every hidden preset.
+            redactor.registerAnswerCredentials(root)
             rows(root)?.mapNotNull(::integration)?.toImmutableList()
         }
 
@@ -296,6 +299,7 @@ internal class Oc2LibraryOps(private val owner: Oc2Gateway, private val redactor
                         if (form.flag("hidden")) {
                             val key = form.text("key")
                             val value = (form["default"] as? JsonPrimitive)?.contentOrNull
+                            value?.let(redactor::registerSecret)
                             if (key != null && value != null) presets[key] = value
                             null
                         } else normalizePrompt(form)
@@ -452,6 +456,8 @@ internal class Oc2LibraryOps(private val owner: Oc2Gateway, private val redactor
         label: String?,
     ): Outcome<IntegrationAuthLaunch> {
         if (!validId(id) || !validId(methodId)) return invalid()
+        // Dormant like integrations() above: every typed answer is registered whole (the stricter rule).
+        inputs.values.forEach(redactor::registerSecret)
         val at = query()
         val kind = if (command) "command" else "oauth"
         val sent =

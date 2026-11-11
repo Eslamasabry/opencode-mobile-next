@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.feature.review.ReviewAgent
 import io.github.eslamasabry.oc.feature.review.ReviewDrafts
 import io.github.eslamasabry.oc.feature.review.ReviewHub
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
+import io.github.eslamasabry.oc.ui.routes.GitRoute
 import io.github.eslamasabry.oc.ui.routes.ReviewRoute
 import kotlinx.coroutines.flow.StateFlow
 
@@ -29,6 +30,8 @@ private class RouteNavigation(private val nav: AppNavigator, private val ref: Co
     override fun openBranchFile(path: String): Unit = nav.open(ReviewRoute.File(ref, path, BRANCH_FILE))
 
     override fun openStaged(): Unit = nav.open(ReviewRoute.Staged(ref))
+
+    override fun openGit(): Unit = nav.open(GitRoute(ref))
 }
 
 /** The [ReviewRoute.File.messageId] that names the whole branch's diff (never a server message id: they have no NUL). */
@@ -75,6 +78,8 @@ public class ChangesViewModel(
     override fun dismissConfirm(): Unit = presenter.dismissConfirm()
 
     override fun openStaged(): Unit = presenter.openStaged()
+
+    override fun openGit(): Unit = presenter.openGit()
 
     override fun chooseWorkingTree(on: Boolean): Unit = presenter.chooseWorkingTree(on)
 

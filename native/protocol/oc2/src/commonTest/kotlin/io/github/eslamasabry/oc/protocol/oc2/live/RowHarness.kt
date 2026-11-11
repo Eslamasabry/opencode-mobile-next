@@ -46,6 +46,7 @@ internal class RowServer(
     credentials: ConnectionCredentials = ConnectionCredentials("opencode", "fixture"),
     origin: ServerOrigin = ServerOrigin("https", "example.test", 443),
     classify: (Throwable) -> TransportError = { TransportError.Other },
+    val redactor: Redactor = Redactor(),
     answer: suspend MockRequestHandleScope.(Seen) -> HttpResponseData,
 ) {
     val seen = mutableListOf<Seen>()
@@ -69,7 +70,7 @@ internal class RowServer(
             object : Clock {
                 override fun now(): Instant = Instant.fromEpochMilliseconds(1_000)
             },
-            Redactor(),
+            redactor,
             location,
             initialDialect = dialect,
         )

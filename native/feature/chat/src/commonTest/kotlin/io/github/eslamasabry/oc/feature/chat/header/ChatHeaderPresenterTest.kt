@@ -106,6 +106,20 @@ class ChatHeaderPresenterTest {
         )
 
     @Test
+    fun `the Git chip shows for a Git project and never for a plain or unknown folder`() {
+        world.capabilities.value = allCaps
+        fun chip(git: Boolean?, branch: String?): Boolean {
+            port.facts.value = port.facts.value.copy(git = git, branch = branch)
+            return p.current().showsGit
+        }
+        assertTrue(chip(git = true, branch = "main"), "a repository with a branch")
+        assertTrue(chip(git = true, branch = null), "a repository with no branch reported")
+        assertFalse(chip(git = false, branch = null), "not a repository")
+        assertFalse(chip(git = false, branch = "main"), "the server said no: a stale branch does not make it Git")
+        assertFalse(chip(git = null, branch = null), "not loaded yet: nothing, not the word Git")
+    }
+
+    @Test
     fun `B-CHAT-018 project name derives from a path ignoring trailing slashes and Windows separators`() {
         assertEquals("app", HeaderRules.projectName("/home/me/projects/app/"))
         assertEquals("app", HeaderRules.projectName("C:\\Users\\me\\app\\"))

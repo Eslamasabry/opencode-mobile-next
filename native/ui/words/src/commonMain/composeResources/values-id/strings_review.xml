@@ -14,4 +14,5 @@
     <string name="reviewSendBackFailed">Catatan Anda tidak dapat dimasukkan ke pesan. Coba lagi.</string>
     <string name="reviewProjectNotGitTitle">Bukan proyek Git</string>
     <string name="reviewProjectNotGitBody">Perubahan hanya dapat dicantumkan untuk proyek yang dikelola Git. Mulai lacak proyek ini dari halaman Git proyek agar perubahannya tampil di sini.</string>
+    <string name="reviewProjectOpenGit">Buka halaman Git</string>
 </resources>

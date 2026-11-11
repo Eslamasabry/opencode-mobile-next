@@ -493,6 +493,10 @@ public class ChatsViewModel(
         nav.open(io.github.eslamasabry.oc.ui.routes.AgentsRoute.Home)
     }
 
+    override fun openAgent(agentId: String) {
+        nav.open(io.github.eslamasabry.oc.ui.routes.AgentsRoute.Agent(agentId))
+    }
+
     override fun askAlwaysAllow(row: ConversationRowUi) {
         if (row.permission == null || row.key !in state.value.alwaysAllowable) return
         confirmingAlways.value = row
@@ -646,7 +650,10 @@ public class ChatsViewModel(
                     ops?.archiveSession(job.ref.sessionId)
                         ?: io.github.eslamasabry.oc.core.domain.unavailable("sessionArchive")
             when (done) {
-                is io.github.eslamasabry.oc.core.common.Outcome.Ok -> feed.refresh()
+                is io.github.eslamasabry.oc.core.common.Outcome.Ok -> {
+                    connections.left(job.ref)
+                    feed.refresh()
+                }
                 // A refusal (or a server that went away) brings the row back with its reason.
                 is io.github.eslamasabry.oc.core.common.Outcome.Failed ->
                     archiving.update {

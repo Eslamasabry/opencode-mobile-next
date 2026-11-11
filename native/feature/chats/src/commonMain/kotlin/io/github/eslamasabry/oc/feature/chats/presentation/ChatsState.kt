@@ -83,12 +83,10 @@ public object ChatsState {
             filters = filters,
             brief = briefUi,
             incomplete = feed.incompleteSources,
-            onlyProject =
-                if (feed.acrossProjects) null
-                else
-                    projects.firstOrNull { it.directory == filters.projectDirectory }?.name
-                        ?: roots.firstOrNull()?.projectName?.takeIf { it.isNotBlank() }
-                        ?: projects.firstOrNull()?.name,
+            // A source that cannot list every project shows one; the projects chip then names it. When the list
+            // holds several projects anyway (another source reaches further) there is no single project to name.
+            // Only a project the projects menu lists: the chip and the menu name the same one.
+            onlyProject = if (feed.acrossProjects || projects.size != 1) null else projects.single().name.takeIf { it.isNotBlank() },
             settingsAvailable = settingsAvailable,
             projectChoices = projects.toImmutableList(),
             projectNeedsYou =
@@ -224,6 +222,8 @@ public object ChatsState {
                 .mapNotNull(::match)
                 .map { it.identity }
                 .toImmutableSet()
+        // "Can't tell what's new" has nothing to show and nothing to do: with no row and no overflow there is no block.
+        if (rows.isEmpty() && brief.hiddenUnreviewed + brief.hiddenRequests == 0) return null
         return BriefUi(
             rows = rows.toImmutableList(),
             more = brief.hiddenUnreviewed + brief.hiddenRequests,

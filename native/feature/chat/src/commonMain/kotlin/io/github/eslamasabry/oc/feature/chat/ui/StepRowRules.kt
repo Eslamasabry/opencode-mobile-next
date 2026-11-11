@@ -26,7 +26,7 @@ internal fun shownStepDurationMs(
     startedAtMs: Long?,
     nowMs: Long,
 ): Long? {
-    if (state == StepState.Stopped || state == StepState.NotRun) return null
+    if (state == StepState.Stopped || state == StepState.NotRun || state == StepState.Declined) return null
     val runningFor =
         if (state == StepState.Running) startedAtMs?.let { (nowMs - it).coerceAtLeast(0) } else null
     return (durationMs ?: runningFor)?.takeIf { it >= STEP_DURATION_MIN_MS }

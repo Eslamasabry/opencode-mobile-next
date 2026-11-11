@@ -140,7 +140,7 @@ class ChatHeaderUiTest {
     }
 
     private class Port : ChatHeaderPort {
-        override val facts = MutableStateFlow(HeaderFacts(serverName = "Home PC", directory = "/home/me/projects/app/", connected = true))
+        override val facts = MutableStateFlow(HeaderFacts(serverName = "Home PC", directory = "/home/me/projects/app/", connected = true, git = true))
         val calls = mutableListOf<String>()
         var renameResult: Outcome<Unit> = Outcome.Ok(Unit)
 
