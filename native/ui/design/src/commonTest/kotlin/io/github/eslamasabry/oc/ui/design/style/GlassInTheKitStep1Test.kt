@@ -171,11 +171,11 @@ class GlassInTheKitStep1Test {
      * thickens it (over the capped spots), over the page as drawn (chroma [AuroraImage.CHROMA_DARK]) with [share] of a
      * light's peak added on every spot.
      */
-    private fun clearPaneMargin(pack: PackId, id: GlassLookId, role: SurfaceRole, level: SurfaceLevel, chosen: Boolean, share: Float): Pair<Double, String> {
+    private fun clearPaneMargin(pack: PackId, id: GlassLookId, role: SurfaceRole, level: SurfaceLevel, chosen: Boolean, share: Float, chroma: Float = AuroraImage.CHROMA_DARK): Pair<Double, String> {
         val r = roles(pack, true)
         val ground = r.ground.withAlpha(1f)
         val measured = listOf(ground) + AuroraImage.clearSpotsOf(r.ground, r.accent, true)
-        val drawn = listOf(ground) + AuroraImage.clearSpotsOf(r.ground, r.accent, true, chroma = AuroraImage.CHROMA_DARK)
+        val drawn = listOf(ground) + AuroraImage.clearSpotsOf(r.ground, r.accent, true, chroma = chroma)
         val behind = drawn + drawn.map { AuroraImage.lit(it, r.accent, share) }
         val request = SurfaceRequest(r, role, Knobs(), level, selected = chosen, look = GlassLooks.of(id).spec)
         val solid = request.levelFill.over(ground)
@@ -201,24 +201,41 @@ class GlassInTheKitStep1Test {
     @Test
     fun `B-KIT-003 1b on the brighter page, at the brightest light, words and icons on a clear pane still read`() {
         println("glass-in-the-kit 1b: the brightest light adds ${"%.2f".format(brightestLight)} of a light's peak")
-        // The most light every pane still reads under, as a share of a light's peak: what LIGHT_PEAK_LUMA may be at most.
-        var most = Float.MAX_VALUE
-        var at = ""
-        for (pack in PackId.entries) for (id in GlassLookId.entries) for ((role, level) in panes) for (chosen in listOf(false, true)) {
-            if (chosen && role != SurfaceRole.Content && role != SurfaceRole.Control) continue
-            val case = "$id $pack $role/$level chosen=$chosen"
-            val (bare, why) = clearPaneMargin(pack, id, role, level, chosen, 0f)
-            if (bare < -1e-3) { most = 0f; at = "$case without any light (chroma alone): $bare, $why"; continue }
-            var lo = 0f
-            var hi = 4f
-            repeat(16) {
-                val mid = (lo + hi) / 2f
-                if (clearPaneMargin(pack, id, role, level, chosen, mid).first >= -1e-3) lo = mid else hi = mid
+        // What the page may carry before any clear pane's words or icons fall below their target (the pane as thick as
+        // the capped spots make it): per chroma, the worst margin with no light, and the most light (as a share of a
+        // light's peak) every pane still reads under.
+        val cases = buildList {
+            for (pack in PackId.entries) for (id in GlassLookId.entries) for ((role, level) in panes) for (chosen in listOf(false, true)) {
+                if (chosen && role != SurfaceRole.Content && role != SurfaceRole.Control) continue
+                add(listOf(pack, id, role, level, chosen))
             }
-            if (lo < most) { most = lo; at = "$case: ${clearPaneMargin(pack, id, role, level, chosen, hi).second}" }
         }
-        println("glass-in-the-kit 1b: every clear pane reads under up to ${"%.3f".format(most)} of a light's peak " +
-            "(peak luma ${"%.4f".format(most * AuroraImage.LIGHT_PEAK_LUMA)}); tightest: $at")
+        fun margin(c: List<Any>, share: Float, chroma: Float) =
+            clearPaneMargin(c[0] as PackId, c[1] as GlassLookId, c[2] as SurfaceRole, c[3] as SurfaceLevel, c[4] as Boolean, share, chroma)
+        for (step in 0..6) {
+            val chroma = AuroraImage.CHROMA_DARK_QUIET + step * .01f
+            var bare = Double.MAX_VALUE
+            var bareAt = ""
+            var most = Float.MAX_VALUE
+            var mostAt = ""
+            for (c in cases) {
+                val (m, why) = margin(c, 0f, chroma)
+                if (m < bare) { bare = m; bareAt = "$c: $why" }
+                if (m < -1e-3) continue
+                var lo = 0f
+                var hi = 2f
+                repeat(14) {
+                    val mid = (lo + hi) / 2f
+                    if (margin(c, mid, chroma).first >= -1e-3) lo = mid else hi = mid
+                }
+                if (lo < most) { most = lo; mostAt = "$c: ${margin(c, hi, chroma).second}" }
+            }
+            println(
+                "glass-in-the-kit 1b: chroma ${"%.2f".format(chroma)}: no light, worst margin ${"%.3f".format(bare)} ($bareAt); " +
+                    "panes that read with no light read under up to ${"%.4f".format(most)} of a light's peak " +
+                    "(peak luma ${"%.4f".format(most * AuroraImage.LIGHT_PEAK_LUMA / maxOf(brightestLight, 1f))} at the brightest point; tightest $mostAt)",
+            )
+        }
         for (pack in PackId.entries) for (id in GlassLookId.entries) for ((role, level) in panes) for (chosen in listOf(false, true)) {
             if (chosen && role != SurfaceRole.Content && role != SurfaceRole.Control) continue
             val (m, why) = clearPaneMargin(pack, id, role, level, chosen, brightestLight)
