@@ -217,17 +217,15 @@ class NativePhoneWelcome(
                                 SetupPreflight.check(
                                     options.value.device,
                                     SetupSelection.bytes(job),
-                                    job.map { it.installedBytes }
-                                        .takeIf { sizes -> sizes.isNotEmpty() && sizes.all { it != null } }
-                                        ?.sumOf { it ?: 0L },
+                                    SetupSelection.installedBytes(job),
                                 )
                             // A nearly full phone is told what the set-up needs and what it has before it downloads.
                             val tight =
-                                options.value.device.availableStorageBytes?.let { free ->
-                                    free <
-                                        SetupPreflight.requiredFreeBytes(SetupSelection.bytes(job)) +
-                                            1_000_000_000L
-                                } == true
+                                SetupPreflight.spaceTight(
+                                    options.value.device,
+                                    SetupSelection.bytes(job),
+                                    SetupSelection.installedBytes(job),
+                                ) != null
                             if (
                                 tight ||
                                 !preflight.supported ||

@@ -209,6 +209,7 @@
     <string name="phoneSetupStartPromise">لا حاجة إلى حاسوب أو تطبيقات أخرى. ~%1$s للتنزيل في المرة الأولى.</string>
     <string name="phoneSetupStartPromiseNoSize">لا حاجة إلى حاسوب أو تطبيقات أخرى.</string>
     <string name="phoneSetupStartSteps">ثبّت، سمِّ مشروعًا، تحدّث · %1$s</string>
+    <string name="phoneSetupStartStepsNoTime">ثبّت، سمِّ مشروعًا، تحدّث</string>
     <plurals name="phoneSetupStartStepsTime">
         <item quantity="zero">نحو %1$d دقيقة</item>
         <item quantity="one">نحو دقيقة</item>

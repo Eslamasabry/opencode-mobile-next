@@ -72,8 +72,7 @@ public data class SetupJourneyUi(
 
     /** The extracted size of the install, when every part of it reports one (the start check counts it too). */
     val installedBytes: Long?
-        get() = install.map { it.installedBytes }.takeIf { sizes -> sizes.isNotEmpty() && sizes.all { it != null } }
-            ?.sumOf { it ?: 0L }
+        get() = SetupSelection.installedBytes(install)
 
     val preflight: SetupPreflightResult?
         get() = options?.let { SetupPreflight.check(it.device, bytes, installedBytes) }
@@ -83,12 +82,7 @@ public data class SetupJourneyUi(
      * full phone is told before the download, not only when it is already too full). Null when free space is unknown.
      */
     val spaceTight: Pair<Long, Long>?
-        get() {
-            val free = options?.device?.availableStorageBytes ?: return null
-            if (bytes <= 0) return null
-            val need = SetupPreflight.requiredFreeBytes(bytes, installedBytes)
-            return if (free < need + SPACE_MARGIN_BYTES) need to free else null
-        }
+        get() = options?.let { SetupPreflight.spaceTight(it.device, bytes, installedBytes) }
 
     val canConfirm: Boolean
         get() =
@@ -410,5 +404,3 @@ public class SetupJourneyViewModel(
         public fun create(@Assisted route: PhoneSetupRoute): SetupJourneyViewModel
     }
 }
-
-private const val SPACE_MARGIN_BYTES: Long = 1_000_000_000

@@ -243,10 +243,9 @@ private fun StartHero(state: SetupJourneyUi, actions: SetupJourneyActions) {
         },
         content = {
             Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-                val minutes = setupPromiseMinutes(state.seconds) // NV: estimated seconds converted to whole minutes
-                val time = if (minutes == 1) stringResource(Res.string.phoneSetupStartStepsTime__eq1)
-                    else org.jetbrains.compose.resources.pluralStringResource(Res.plurals.phoneSetupStartStepsTime, minutes, minutes)
-                if (!blocked) KitText(stringResource(Res.string.phoneSetupStartSteps, time), role = TypeRole.Label)
+                // No minutes promise: the registry's sum ("about 4 min") ran past 9 minutes on a real phone, and
+                // the running page has its own honest "time left". The steps stay.
+                if (!blocked) KitText(stringResource(Res.string.phoneSetupStartStepsNoTime), role = TypeRole.Label)
                 includes?.let { KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary) }
                 if (check is SetupPreflightResult.MayBeSlow) KitText(stringResource(Res.string.phoneSetupPreflightMayBeSlow, Numbers.format(check.totalMemoryMb)), role = TypeRole.Secondary)
                 state.spaceTight?.let { (need, free) ->
@@ -420,17 +419,9 @@ private fun Choices(state: SetupJourneyUi, actions: SetupJourneyActions) {
             )
         blocked -> Preflight(state, actions)
         else -> {
-            val minutes = setupPromiseMinutes(state.seconds)
-            val duration =
-                if (minutes == 1) stringResource(Res.string.phoneSetupStartAboutMinutes__eq1)
-                else
-                    org.jetbrains.compose.resources.pluralStringResource(
-                        Res.plurals.phoneSetupStartAboutMinutes,
-                        minutes,
-                        minutes,
-                    )
+            // The size only: the minutes estimate was not honest (see StartHero).
             KitText(
-                stringResource(Res.string.phoneSetupStartTotals, duration, journeySize(state.bytes)),
+                stringResource(Res.string.teamDiscoverDownloadTitle, journeySize(state.bytes)),
                 totalsModifier.padding(vertical = Space.S1.dp),
                 role = TypeRole.Secondary,
                 tone = TextTone.Secondary,

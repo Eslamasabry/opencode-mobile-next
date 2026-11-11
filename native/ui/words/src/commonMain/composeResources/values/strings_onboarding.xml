@@ -205,6 +205,7 @@
     <string name="phoneSetupStartPromise">No computer and no other apps. ~%1$s to download the first time.</string>
     <string name="phoneSetupStartPromiseNoSize">No computer and no other apps.</string>
     <string name="phoneSetupStartSteps">Install, name a project, start a conversation · %1$s</string>
+    <string name="phoneSetupStartStepsNoTime">Install, name a project, start a conversation</string>
     <plurals name="phoneSetupStartStepsTime">
         <item quantity="one">about 1 min</item>
         <item quantity="other">about %1$d min</item>
