@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="p12SearchTitle">搜索对话</string>
+    <string name="p12SearchField">搜索对话</string>
+    <string name="p12SearchServer">服务器</string>
+    <string name="p12SearchRecent">最近的搜索</string>
+    <string name="p12SearchRecentEmpty">你在这部手机上的搜索会显示在这里。</string>
+    <string name="p12SearchRecentClear">清除最近的搜索</string>
+    <string name="p12SearchRecentRemove">移除 %1$s</string>
+    <string name="p12SearchRecentFailed">无法更新最近的搜索。搜索仍可使用。</string>
+    <string name="p12SearchInside">同时搜索最近对话的内容</string>
+    <string name="p12SearchInsideHelp">读取此服务器上你最近 20 个对话的最新消息。</string>
+    <string name="p12SearchTitles">标题</string>
+    <string name="p12SearchInsideSection">对话内容</string>
+    <string name="p12SearchInsideReading">正在读取最近的对话…</string>
+    <string name="p12SearchInsideFailed">无法读取最近的对话。标题结果仍会显示。</string>
+    <string name="p12SearchFromYou">你：%1$s</string>
+    <string name="p12SearchFromAgent">回复：%1$s</string>
+    <string name="p12SearchOneProject">只搜索此服务器当前的项目。</string>
+    <string name="p12SearchSearching">正在搜索…</string>
+    <string name="p12SearchFailed">无法搜索对话。</string>
+    <string name="p12SearchTryAgain">重试</string>
+    <string name="p12SearchNoServerTitle">未连接服务器</string>
+    <string name="p12SearchNoServerBody">连接一个服务器即可搜索其对话。</string>
+    <string name="p12SearchOpenServers">打开服务器</string>
+    <string name="p12SearchConversationsWhat">对话</string>
+    <string name="p12UsageCost">预估费用</string>
+    <string name="p12UsageRange">日期范围</string>
+    <string name="p12UsageActivity">每日活动</string>
+    <string name="p12UsageDay">%1$s · %2$s 步</string>
+    <string name="p12UsageProjectsFailed">无法列出项目。“所有项目”仍可使用。</string>
+    <string name="p12UsageNoServerBody">连接一个服务器即可查看其用量和费用。</string>
+    <string name="p12UsageFailed">无法加载用量。</string>
+    <string name="p12UsageTryAgain">重试</string>
+    <string name="p12UsageCounts">活动</string>
+    <string name="p12UsageServer">服务器</string>
+</resources>

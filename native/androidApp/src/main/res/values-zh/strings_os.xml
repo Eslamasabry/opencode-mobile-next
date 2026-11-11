@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <plurals name="notifStatusNeedsYou">
+        <item quantity="other">%1$d 项需要你处理</item>
+    </plurals>
+    <string name="notifStatusReconnectingGeneric">正在重新连接</string>
+    <string name="andr_thermalPaused">你的手机发热，已暂停 AI Team 以便降温。它会自动继续。</string>
+    <string name="andr_thermalStopped">你的手机非常烫，已停止 AI Team 以保护手机。它的工作会保留，手机降温后会再次启动。</string>
+    <string name="andr_thermalResumed">手机已降温，AI Team 已继续。</string>
+</resources>

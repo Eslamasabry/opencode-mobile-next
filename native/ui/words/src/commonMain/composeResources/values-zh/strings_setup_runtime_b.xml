@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="setupRbStatusUnreadable">无法读取已保存的设置。请尝试“继续设置”。</string>
+    <string name="setupRbToolsUncheckable">无法检查已安装的工具。请重试。</string>
+</resources>
