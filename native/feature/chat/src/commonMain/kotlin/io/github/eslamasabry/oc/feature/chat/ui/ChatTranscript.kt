@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.items
@@ -1143,10 +1142,11 @@ private fun ChatRow(
                             // target keeps 4 dp from it (LAYOUT-RULES edge-tap), a shift a person does not see.
                             modifier = Modifier.padding(end = FOOTER_EDGE_INSET_DP.dp).testTag("chat-turn-footer"),
                         ) {
-                            // S24-CHAT: KitReplyFooter insets its line 16 dp from the reply's text edge (room for
-                            // Copy/More at the end); the "Stopped" note belongs on that edge, as in Flutter, so it
-                            // steps back by the inset (offset follows the layout direction, so RTL mirrors).
-                            val note = Modifier.offset(x = -Space.S4.dp).testTag("chat-turn-footer-note")
+                            // KitReplyFooter's line already sits S4 in from the list edge, exactly where the reply's text
+                            // starts (KitReplyBlock pads S4 itself), so the note takes no offset: a -S4 offset put it at
+                            // x = 0, outside the page margin (S24StoppedFooterTest measured the reply's clickable box,
+                            // which starts at 0, instead of its text, and so pinned the bug).
+                            val note = Modifier.testTag("chat-turn-footer-note")
                             val endNote = facts.reading.endNotes[row.turnId]
                             if (row.failed) KitReplyNote(words.footer(true), note)
                             else if (row.stopped && endNote?.isServerStop != true) KitReplyNote(words.stoppedFooter(), note)
