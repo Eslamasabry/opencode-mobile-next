@@ -29,7 +29,8 @@ class LiquidMenuFrostTest {
             assertEquals(3f, LiquidEdge.dockRecipe(dark, 0f).blurDp, "strip (dark=$dark)")
             assertEquals(if (dark) 6f else 3f, LiquidEdge.dockRecipe(dark, 1f).blurDp, "swell (dark=$dark)")
             assertEquals(12f, LiquidEdge.dockRecipe(dark, 1f, GlassLooks.Glossy, list = 1f).blurDp, "list (dark=$dark)")
-            assertEquals(LiquidEdge.recipe(LiquidRole.Menu, dark).copy(blurDp = if (dark) 6f else 3f), LiquidEdge.swellRecipe(dark))
+            assertEquals(3f + if (dark) 3f else 0f, LiquidEdge.swellRecipe(dark).blurDp)
+            assertEquals(LiquidEdge.recipe(LiquidRole.Menu, dark).refractionDp, LiquidEdge.swellRecipe(dark).refractionDp)
         }
     }
 
