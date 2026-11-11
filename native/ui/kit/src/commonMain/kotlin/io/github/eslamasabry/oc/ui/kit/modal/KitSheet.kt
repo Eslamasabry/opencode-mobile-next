@@ -311,7 +311,11 @@ public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -
             Box(
                 (if (modal) Modifier.clearAndSetSemantics {}
                 else Modifier)
-                    .onFocusChanged { held.has = it.hasFocus }
+                    .onFocusChanged {
+                        held.has = it.hasFocus
+                        // Whatever asked for it (a requestFocus on a page field): the page takes no focus under a modal.
+                        if (modal && it.hasFocus) focusManager.clearFocus(force = true)
+                    }
                     .focusRequester(pageFocus)
                     .focusProperties { if (modal) onEnter = { cancelFocusChange() } }
                     .focusGroup()
