@@ -105,8 +105,10 @@ class BuiltinScriptsShellTest {
             "fad8df7c51078b08a12187889227cd83184c15afea9905f1d761b44740114f15",
             sha256(BuiltinScriptTexts.FAST_PREREQUISITES),
         )
+        // The composed script carries OC_REQUESTED_VERSION, so this hash moved with the OpenCode pin
+        // 2.2.5 -> 2.2.6 (93fcf4049); the two texts above, which hold all of its logic, are unchanged.
         assertEquals(
-            "188c2dd4dc867bc329ae3092fc2cffcd5429459c3d8f4b828bf338c7ea321263",
+            "f9e90fceeffdfea5e11b766cc19e52e4d8e74f339b98fd850163c6d8a59c1a72",
             sha256(BuiltinScripts.installOpenCodeScript().getOrNull()!!),
         )
         // Hashed at Flutter's port (BuiltinLinux.serverPort = 4097) so the script stays the Flutter script byte for

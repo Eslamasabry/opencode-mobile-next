@@ -1,11 +1,11 @@
 package io.github.eslamasabry.oc.engine.runtime.install
 
 /**
- * Port of scripts/host/ubuntu-opencode.sh (the Ubuntu/Linux host install script; Flutter's
- * host-setup docs and lib/termux/bridge.dart's pinned version point at it). [TEXT] is the file byte
- * for byte, so the native app can hand out or run the very same script. It installs one pinned
- * OpenCode release, checks its SHA-256 before anything is unpacked, and runs it as a per-user
- * systemd service bound to loopback.
+ * Port of scripts/host/ubuntu-opencode.sh (the Ubuntu/Linux host install script) at the native pin.
+ * [TEXT] is native/scripts/host/ubuntu-opencode.sh byte for byte (the shared file with only the
+ * OpenCode version and its checksums moved), so the native app can hand out or run the very same
+ * script. It installs one pinned OpenCode release, checks its SHA-256 before anything is unpacked,
+ * and runs it as a per-user systemd service bound to loopback.
  *
  * [installDecision] and [updateDecision] are the same rules as data, for callers that explain a
  * run's result.
@@ -149,7 +149,7 @@ public object UbuntuHostScript {
         return 0
     }
 
-    /** scripts/host/ubuntu-opencode.sh, verbatim. */
+    /** native/scripts/host/ubuntu-opencode.sh, verbatim. */
     public const val TEXT: String =
         """#!/usr/bin/env bash
 # ubuntu-opencode.sh — install and manage an OpenCode server on Ubuntu/Linux.

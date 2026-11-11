@@ -34,7 +34,8 @@ internal object JvmPaseoLockCodec : PaseoLockCodec {
 
 /** Port of test/paseo_phone_install_test.dart against [PaseoPhoneScripts]. */
 class PaseoPhoneInstallTest {
-    private val lock = File(repoRoot, PaseoPhoneScripts.PACKAGE_LOCK_ASSET).readText()
+    // The lock the native app ships (NativeAgentSetupJobs opens this asset), not the frozen Flutter app's 0.11.2 copy.
+    private val lock = File(repoRoot, "native/androidApp/src/main/${PaseoPhoneScripts.PACKAGE_LOCK_ASSET}").readText()
     private lateinit var temp: File
     private val fixturePayload = "export const pinnedFixture = true;\n"
     private var fixtureCliSha = ""

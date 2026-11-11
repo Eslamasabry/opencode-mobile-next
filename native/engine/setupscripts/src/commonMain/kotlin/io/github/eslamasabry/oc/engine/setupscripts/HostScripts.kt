@@ -45,7 +45,12 @@ public object HostScripts {
         )
 
     private const val GUIDE_BASE = "https://github.com/$REPOSITORY/blob/master/docs"
-    public const val UBUNTU_GUIDE_URL: String = "$GUIDE_BASE/ubuntu-host.md"
+
+    /**
+     * The native app's own Ubuntu guide (native/docs), which shows [install] at [OPENCODE2_VERSION]; the shared
+     * docs/ubuntu-host.md stays at the frozen Flutter app's pin.
+     */
+    public const val UBUNTU_GUIDE_URL: String = "https://github.com/$REPOSITORY/blob/master/native/docs/ubuntu-host.md"
     public const val TEAM_GUIDE_URL: String = "$GUIDE_BASE/ai-team-host.md"
 
     /** First-time install on the host: the official pinned OpenCode 2 package, listening on [port]. */

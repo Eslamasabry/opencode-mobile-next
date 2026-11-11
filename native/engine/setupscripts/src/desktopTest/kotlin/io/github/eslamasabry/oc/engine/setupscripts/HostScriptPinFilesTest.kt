@@ -37,7 +37,8 @@ class HostScriptPinFilesTest {
 
     @Test
     fun `B-SEC-092 the guides show the same pinned, checked commands`() {
-        val ubuntu = File(root, "docs/ubuntu-host.md").readText()
+        // The native guide: docs/ubuntu-host.md is the frozen Flutter app's, at its own (older) pin.
+        val ubuntu = File(root, "native/docs/ubuntu-host.md").readText()
         assertTrue(ubuntu.contains(HostScripts.install(4096)))
         val team = File(root, "docs/ai-team-host.md").readText()
         assertTrue(team.contains(HostScripts.front.verifiedDownload))
@@ -49,7 +50,8 @@ class HostScriptPinFilesTest {
 
     @Test
     fun `B-SEC-092 the repository script installs a pinned, checked OpenCode`() {
-        val text = File(root, "scripts/host/ubuntu-opencode.sh").readText()
+        // The native copy (the engine's UbuntuHostScript.TEXT); scripts/host is the frozen Flutter app's, at 2.1.1.
+        val text = File(root, "native/scripts/host/ubuntu-opencode.sh").readText()
         assertFalse(HostScripts.PipedToShell.containsMatchIn(text))
         assertFalse(text.contains("opencode.ai/install"))
         assertFalse(text.contains("\" upgrade"))
@@ -73,7 +75,8 @@ class HostScriptPinFilesTest {
                     .forEach(::add)
                 add(File(root, "lib/l10n/app_en.arb"))
                 File(root, "docs").listFiles()!!.filter { it.isFile && it.name.endsWith(".md") }.forEach(::add)
-                for (dir in listOf("scripts", "tool/host")) {
+                add(File(root, "native/docs/ubuntu-host.md"))
+                for (dir in listOf("scripts", "tool/host", "native/scripts")) {
                     File(root, dir).walkTopDown().filter { it.isFile && "__pycache__" !in it.path }.forEach(::add)
                 }
                 // The native app's own copy: every Kotlin source and string resource under native/.
