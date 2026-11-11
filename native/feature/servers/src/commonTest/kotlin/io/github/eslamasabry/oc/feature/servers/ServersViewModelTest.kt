@@ -328,6 +328,7 @@ class ServersViewModelTest {
         val connections = Connections()
         connections.connectResult = Outcome.Failed(Failure.SecretUnavailable())
         val vm = ServersViewModel(null, connections, Navigator(), NoServerRows)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
         vm.connect(id)
         assertEquals(id, vm.state.value.signIn)
         connections.connectResult = Outcome.Failed(Failure.TimedOut())
