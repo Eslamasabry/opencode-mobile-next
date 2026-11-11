@@ -34,6 +34,9 @@ class KitEdgeDockEdgesTest {
     private val bottom = 120f
     private val height = 915
 
+    /** The page gutter (the tokens' 16 dp), as the screens keep it. */
+    private val gutter = io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens.GUTTER.toFloat()
+
     /** The text nodes showing a ring's name (the strip's names, the list's rows, the swell's header). */
     private fun ComposeUiTest.names(): List<Pair<String, Rect>> =
         rings.flatMap { ring ->
@@ -86,13 +89,13 @@ class KitEdgeDockEdgesTest {
                         assertTrue(box.top >= top - .5f && box.bottom <= height - bottom + .5f, "$at, $what: B $box lies inside the area")
                         // B's far end: its left edge on the right, its right edge on the left (the other end meets the strip).
                         val far = if (onRight) box.left else w - box.right
-                        assertTrue(far >= DockDims.GUTTER - .5f, "$at, $what: B $box keeps the gutter from the far edge: $far")
+                        assertTrue(far >= gutter - .5f, "$at, $what: B $box keeps the gutter from the far edge: $far")
                         // Every name shown out of the strip lies on the screen, the gutter kept on both sides.
                         for ((name, r) in names()) {
                             val inStrip = if (onRight) r.left >= w - DockDims.REST_W - 1f else r.right <= DockDims.REST_W + 1f
                             if (inStrip) continue
                             assertTrue(
-                                r.left >= DockDims.GUTTER - .5f && r.right <= w - DockDims.GUTTER + .5f,
+                                r.left >= gutter - .5f && r.right <= w - gutter + .5f,
                                 "$at, $what: the name $name $r keeps the page gutter from both screen edges",
                             )
                         }
