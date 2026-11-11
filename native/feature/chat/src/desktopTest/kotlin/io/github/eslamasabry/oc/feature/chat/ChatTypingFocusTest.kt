@@ -37,7 +37,6 @@ import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.isFocused
 import androidx.compose.ui.test.onAllNodesWithTag
-import androidx.compose.ui.test.onAllNodes
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
@@ -348,5 +347,21 @@ class ChatTypingFocusTest {
             type("Zed")
             assertEquals("Zed", rename.words(), "the rename field has what was typed")
             assertEquals("", composer().words(), "no stray words in the message box")
+        }
+
+    @Test
+    fun `Find opened as a sheet closes keeps its focus when the sheet hands the message box back`() =
+        runDesktopComposeUiTest(412, 915) {
+            val screen = show()
+            composer().performClick()
+            waitForIdle()
+            onRoot().performKeyInput { withKeyDown(Key.CtrlLeft) { pressKey(Key.K) } }
+            waitForIdle()
+            onNodeWithTag("chat-commands-sheet").fetchSemanticsNode()
+            openFind(screen)
+            onNode(hasContentDescription("Dismiss") and hasAnyAncestor(hasTestTag("kit-sheet"))).performClick()
+            waitForIdle()
+            findField().assertIsFocused()
+            composer().assertIsNotFocused()
         }
 }
