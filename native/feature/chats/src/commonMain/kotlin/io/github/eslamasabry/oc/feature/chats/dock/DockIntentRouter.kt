@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chats.dock
 
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.engine.attention.dock.DockRequestKind
 import io.github.eslamasabry.oc.engine.attention.dock.DockSide
 import io.github.eslamasabry.oc.ui.kit.dock.KitDockIntents
@@ -32,6 +33,9 @@ public class DockIntentRouter(
     private val frame: () -> DockKitFrame,
     private val feedback: DockFeedback,
 ) : KitDockIntents {
+    /** Who left the dock, by key: a removed ring is no longer in the frame, so Undo cannot look it up there. */
+    private val removedRefs = HashMap<String, ConversationRef>()
+
     override fun onOpen(key: String) {
         frame().refs[key]?.let(port::open)
     }
@@ -77,13 +81,14 @@ public class DockIntentRouter(
             feedback.staysWhileOpen(name)
             return
         }
+        removedRefs[key] = ref
         port.remove(ref)
         feedback.removed(key, name)
     }
 
     /** The Undo after [onRemove]. */
     public fun undoRemove(key: String) {
-        frame().refs[key]?.let(port::undoRemove)
+        (removedRefs.remove(key) ?: frame().refs[key])?.let(port::undoRemove)
     }
 
     override fun onRestore(key: String) {

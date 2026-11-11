@@ -130,6 +130,32 @@ class DockRemoveTest {
     }
 
     @Test
+    fun `undo of an idle filler brings back that ring in its own place`() {
+        val c = ref("c")
+        val d = ref("d")
+        fun recent(vararg rows: Pair<String, Long>) = DockEvent.Recent(p, rows.map { (id, at) -> DockRecent(SessionId(id), "T-$id", at) })
+        val idle = DockModel.empty(3).reduce(recent("a" to 4L, "b" to 3L, "c" to 2L, "d" to 1L))
+        assertEquals(listOf(a, b, c), idle.ids())
+        val out = idle.reduce(DockEvent.Remove(b))
+        assertEquals(listOf(a, c, d), out.ids(), "the next most recent takes the place")
+        val back = out.reduce(DockEvent.Restore(b))
+        assertEquals(listOf(a, b, c), back.ids(), "undo returns the same ring to its place")
+        assertTrue(back.removedRefs.isEmpty())
+    }
+
+    @Test
+    fun `undo of a live ring and of a sub-agent restores exactly it`() {
+        val kid = model(link(c1), DockEvent.RunStarted(a), DockEvent.RunStarted(c1), DockEvent.RunStarted(b))
+        val live = kid.reduce(DockEvent.Remove(a))
+        assertEquals(listOf(a, b), live.reduce(DockEvent.Restore(a)).ids())
+        val sub = kid.reduce(DockEvent.Remove(c1))
+        assertEquals(listOf(c1), sub.reduce(DockEvent.Restore(c1)).ui.entries.first { it.ref == a }.children.map { it.ref })
+        val pinned = model(DockEvent.PinsLoaded(p, emptyList()), DockEvent.RunStarted(a), DockEvent.RunStarted(b), DockEvent.Pin(b)).reduce(DockEvent.Remove(b))
+        assertFalse(b in pinned.ids())
+        assertEquals(listOf(b, a), pinned.reduce(DockEvent.Restore(b)).ids())
+    }
+
+    @Test
     fun `the removed set is capped, forgets what ended and what was deleted`() {
         val many = (1..DockModel.MAX_REMOVED + 5).map { ref("s$it") }
         var m = many.fold(DockModel.empty()) { acc, r -> acc.reduce(DockEvent.RunStarted(r)) }
