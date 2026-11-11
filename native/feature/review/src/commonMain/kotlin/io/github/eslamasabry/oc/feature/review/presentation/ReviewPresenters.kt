@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.review.presentation
 
+import io.github.eslamasabry.oc.core.model.VersionControlSetupState
 import io.github.eslamasabry.oc.core.common.BusyKind
 import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Failure
@@ -84,6 +85,7 @@ public class ChangesPresenter(
     agent: ReviewAgentPorts = ReviewAgentPorts(),
     private val branch: ReviewBranchRead? = null,
     private val shelf: ReviewShelf? = null,
+    private val setup: ReviewProjectSetup = ReviewProjectSetup { VersionControlSetupState.Unknown },
 ) : ChangesActions {
     private val runner = agent.runner(review)
     private val guideAsk = agent.guideAsk
@@ -195,9 +197,14 @@ public class ChangesPresenter(
                     val rows = markViewed(chosen, scopedFiles)
                     val working = chosen != ReviewScope.Conversation
                     val scopes = scopes()
+                    // An empty folder or branch view says why: not under Git, or a clean tree (the agent's reported
+                    // edits are the Conversation view's own words).
+                    val notRepository =
+                        rows.isEmpty() && working && setup.setup() == VersionControlSetupState.Absent
                     mutable.update {
                         it.copy(
                             load = ReviewLoad.Ready,
+                            notRepository = notRepository,
                             workingTree = chosen == ReviewScope.WorkingTree,
                             scope = chosen,
                             scopes = scopes,

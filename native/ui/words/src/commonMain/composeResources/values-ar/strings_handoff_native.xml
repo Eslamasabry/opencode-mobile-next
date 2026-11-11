@@ -35,5 +35,5 @@
   <string name="handoffNativeBlockUnconfirmed">تعذّر على التطبيق التأكد من أن الوكلاء على هذا الهاتف يستطيعون فتح مجلد هذه المحادثة، لذلك لا يبدأ أي وكيل في مكان خاطئ. افتح الوكلاء للتحقق من أنهم مثبّتون وجاهزون ثم حاول مجدداً.</string>
   <string name="handoffNativeContinueWith">المتابعة مع %1$s</string>
   <string name="handoffNativeWhatHandedOver">ما الذي سيُسلَّم</string>
-  <string name="handoffNativeNoReadyTitle">لا يوجد وكيل جاهز</string>
+  <string name="handoffNativeNoReadyTitle">لا يوجد وكيل جاهز على هذا الهاتف</string>
 </resources>

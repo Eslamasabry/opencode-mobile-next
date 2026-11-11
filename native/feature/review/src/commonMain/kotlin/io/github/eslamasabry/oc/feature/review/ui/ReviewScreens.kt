@@ -384,11 +384,32 @@ private fun ChangesContent(state: ChangesUi, actions: ChangesActions) {
                                 role = TypeRole.Body,
                                 tone = TextTone.Secondary,
                             )
-                            KitStateView(
-                                KitStateKind.Empty,
-                                stringResource(Res.string.kitDiffNoChanges),
-                                body = stringResource(Res.string.reviewNoChangesBody),
-                            )
+                            // Each view says what empty means for it: only the Conversation view lists the agent's
+                            // reported edits; the folder's view is "not a Git project" or a clean tree.
+                            when {
+                                state.scope == ReviewScope.Conversation ->
+                                    KitStateView(
+                                        KitStateKind.Empty,
+                                        stringResource(Res.string.kitDiffNoChanges),
+                                        body = stringResource(Res.string.reviewNoChangesBody),
+                                    )
+                                state.notRepository ->
+                                    KitStateView(
+                                        KitStateKind.Empty,
+                                        stringResource(Res.string.reviewProjectNotGitTitle),
+                                        body = stringResource(Res.string.reviewProjectNotGitBody),
+                                    )
+                                state.scope == ReviewScope.WorkingTree ->
+                                    KitStateView(
+                                        KitStateKind.Empty,
+                                        stringResource(Res.string.e7LibraryNoUncommittedChanges),
+                                    )
+                                else ->
+                                    KitStateView(
+                                        KitStateKind.Empty,
+                                        stringResource(Res.string.kitDiffNoChanges),
+                                    )
+                            }
                         }
                     } else if (!state.conversation && state.notRepository)
                         KitStateView(

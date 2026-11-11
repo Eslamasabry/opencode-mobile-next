@@ -80,4 +80,101 @@ class AgentHandoffPageTest {
                 HandoffBlock.FolderUnknown,
             )) assertEquals(false, AgentHandoffUi(loading = false, block = block).offersAgents())
     }
+
+    private fun view(ui: AgentHandoffUi) = ui.stateView()
+
+    @Test
+    fun `helper not installed is the normal no-agent page with Open Agents first`() {
+        val ui = AgentHandoffUi(loading = false, block = HandoffBlock.NoAgentReady)
+        assertEquals(HandoffPage.NoAgent, ui.page())
+        assertEquals(
+            HandoffStateView(
+                HandoffHeadline.NoAgentReady,
+                HandoffBody.NoAgentReady,
+                HandoffButton.OpenAgents,
+                HandoffButton.Refresh,
+            ),
+            view(ui),
+        )
+    }
+
+    @Test
+    fun `the no-agent tag survives the host failure round trip`() {
+        assertEquals(
+            HandoffBlock.NoAgentReady,
+            HandoffBlock.of(HandoffBlock.NoAgentReady.failure()),
+        )
+    }
+
+    @Test
+    fun `helper installed but not running that cannot start says could not confirm with both buttons`() {
+        val ui = AgentHandoffUi(loading = false, block = HandoffBlock.NotConfirmed)
+        assertEquals(HandoffPage.Refused, ui.page())
+        assertEquals(
+            HandoffStateView(
+                HandoffHeadline.Unavailable,
+                HandoffBody.Unconfirmed,
+                HandoffButton.OpenAgents,
+                HandoffButton.Refresh,
+            ),
+            view(ui),
+        )
+    }
+
+    @Test
+    fun `helper running but no agent signed in is the same no-agent page`() {
+        for (choices in listOf(persistentListOf(), persistentListOf(unchecked))) {
+            val ui = AgentHandoffUi(loading = false, connected = true, choices = choices)
+            assertEquals(
+                HandoffStateView(
+                    HandoffHeadline.NoAgentReady,
+                    HandoffBody.NoAgentReady,
+                    HandoffButton.OpenAgents,
+                    HandoffButton.Refresh,
+                ),
+                view(ui),
+            )
+        }
+    }
+
+    @Test
+    fun `one ready agent shows the choice and no state page`() {
+        val ui =
+            AgentHandoffUi(loading = false, connected = true, choices = persistentListOf(ready))
+        assertEquals(HandoffPage.Choose, ui.page())
+        assertEquals(null, view(ui))
+    }
+
+    @Test
+    fun `an unknown refusal offers Open Agents then Refresh`() {
+        assertEquals(
+            HandoffStateView(
+                HandoffHeadline.Unavailable,
+                HandoffBody.NotStarted,
+                HandoffButton.OpenAgents,
+                HandoffButton.Refresh,
+            ),
+            view(AgentHandoffUi(loading = false)),
+        )
+    }
+
+    @Test
+    fun `a refusal about the conversation has Refresh only`() {
+        val expected =
+            mapOf(
+                HandoffBlock.SourceOnComputer to HandoffBody.Computer,
+                HandoffBlock.FolderNotOnPhone to HandoffBody.Folder,
+                HandoffBlock.FolderUnknown to HandoffBody.FolderUnknown,
+            )
+        for ((block, body) in expected)
+            assertEquals(
+                HandoffStateView(HandoffHeadline.Unavailable, body, HandoffButton.Refresh, null),
+                view(AgentHandoffUi(loading = false, block = block)),
+            )
+    }
+
+    @Test
+    fun `loading and active pages have no state page`() {
+        assertEquals(null, view(AgentHandoffUi()))
+    }
 }

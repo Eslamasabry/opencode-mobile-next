@@ -43,6 +43,7 @@ public enum class HandoffPage {
 public fun AgentHandoffUi.page(): HandoffPage =
     when {
         loading -> HandoffPage.Loading
+        !connected && block == HandoffBlock.NoAgentReady -> HandoffPage.NoAgent
         !connected -> HandoffPage.Refused
         attempt.phase != HandoffPhase.Idle -> HandoffPage.Active
         choices.none { it.issue == null } -> HandoffPage.NoAgent
@@ -56,6 +57,65 @@ public fun AgentHandoffUi.page(): HandoffPage =
  */
 public fun AgentHandoffUi.offersAgents(): Boolean =
     block == null || block == HandoffBlock.NotConfirmed
+
+public enum class HandoffHeadline {
+    Unavailable,
+    NoAgentReady,
+}
+
+public enum class HandoffBody {
+    Computer,
+    Folder,
+    FolderUnknown,
+    Unconfirmed,
+    NotStarted,
+    NoAgentReady,
+}
+
+public enum class HandoffButton {
+    OpenAgents,
+    Refresh,
+}
+
+/** The words and buttons of a state page that has no choice to make: what the screen draws, decided here. */
+public data class HandoffStateView(
+    val headline: HandoffHeadline,
+    val body: HandoffBody,
+    val primary: HandoffButton,
+    val secondary: HandoffButton?,
+)
+
+/**
+ * The page the person sees when nothing can be sent: either the conversation cannot be handed over
+ * ([HandoffPage.Refused]) or no agent on this phone is ready ([HandoffPage.NoAgent]: none installed, the helper not
+ * set up, or none signed in). Null on every other page. When no agent is ready, or agents could not be confirmed, the
+ * one primary button is Open Agents and Refresh is secondary; a refusal about the conversation itself has Refresh only.
+ */
+public fun AgentHandoffUi.stateView(): HandoffStateView? =
+    when (page()) {
+        HandoffPage.NoAgent ->
+            HandoffStateView(
+                HandoffHeadline.NoAgentReady,
+                HandoffBody.NoAgentReady,
+                HandoffButton.OpenAgents,
+                HandoffButton.Refresh,
+            )
+        HandoffPage.Refused ->
+            HandoffStateView(
+                HandoffHeadline.Unavailable,
+                when (block) {
+                    HandoffBlock.SourceOnComputer -> HandoffBody.Computer
+                    HandoffBlock.FolderNotOnPhone -> HandoffBody.Folder
+                    HandoffBlock.FolderUnknown -> HandoffBody.FolderUnknown
+                    HandoffBlock.NotConfirmed -> HandoffBody.Unconfirmed
+                    HandoffBlock.NoAgentReady,
+                    null -> HandoffBody.NotStarted
+                },
+                if (offersAgents()) HandoffButton.OpenAgents else HandoffButton.Refresh,
+                if (offersAgents()) HandoffButton.Refresh else null,
+            )
+        else -> null
+    }
 
 public interface AgentHandoffActions {
     public fun back()
