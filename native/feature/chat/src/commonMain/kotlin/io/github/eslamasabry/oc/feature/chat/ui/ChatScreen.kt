@@ -610,8 +610,8 @@ public fun ChatScreen(
             val sheets = LocalKitSheetHost.current
             val covered = sheets != null && (sheets.isShowing || sheets.isDialogShowing)
             val coveredNow by rememberUpdatedState(covered)
-            ComposerYields(covered, chrome.typing, release = true)
-            ComposerYields(state.find != null && state.phase == ChatPhase.Live, chrome.typing, release = false)
+            ComposerYields(covered, chrome.typing, release = true) { latest.find == null }
+            ComposerYields(state.find != null && state.phase == ChatPhase.Live, chrome.typing, release = false) { !coveredNow }
             // N-55: the shell steers a stray hardware key into the page (FocusDirection.Enter); it lands on the
             // conversation itself, which hands it to the message field, never to the first button
             // ([chatTypingLanding]: a request for a field inside, as Find's, is never redirected).
