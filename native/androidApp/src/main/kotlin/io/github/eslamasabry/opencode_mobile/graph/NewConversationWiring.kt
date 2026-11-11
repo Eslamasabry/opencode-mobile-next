@@ -56,6 +56,7 @@ import io.github.eslamasabry.oc.engine.git.GitLinkRepairReport
 import io.github.eslamasabry.oc.engine.git.GitLinkRepairService
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
+import io.github.eslamasabry.oc.feature.agents.hub.phoneAgentStartsConversation
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgents
 import io.github.eslamasabry.oc.feature.chat.world.RecentModelsBacking
 import io.github.eslamasabry.oc.feature.chats.presentation.*
@@ -517,7 +518,8 @@ class AndroidNewConversationHost(
                 id = descriptor.id,
                 name = row.name,
                 iconKey = descriptor.iconKey,
-                ready = row.status == PhoneAgentStatus.Ready,
+                // The Agents card's own rule, so the card's New conversation and this list agree.
+                ready = phoneAgentStartsConversation(row),
                 // Flutter's fixAction: install, sign in, phone check, resume.
                 fixable =
                     when (row.status) {
@@ -582,7 +584,7 @@ class AndroidNewConversationHost(
         val provider =
             AgentCatalog.builtIn.byId(AgentId(agentId))?.providerId ?: return refused()
         val agentReady =
-            phoneAgents.state.value.agents.any { it.id == agentId && it.status == PhoneAgentStatus.Ready }
+            phoneAgents.state.value.agents.any { it.id == agentId && phoneAgentStartsConversation(it) }
         // The helper's first model list takes about ten seconds: the screen asks while the person types.
         return withTimeoutOrNull(PHONE_MODELS_WAIT_MS) {
                 when (val ready = phoneHelperReady(helper)) {

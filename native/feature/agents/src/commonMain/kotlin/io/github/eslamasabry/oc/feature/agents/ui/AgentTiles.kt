@@ -13,6 +13,7 @@ import io.github.eslamasabry.oc.feature.agents.hub.AgentTileModel
 import io.github.eslamasabry.oc.feature.agents.hub.AgentTileState
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsActions
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsUi
+import io.github.eslamasabry.oc.feature.agents.hub.cardOffersConversation
 import io.github.eslamasabry.oc.feature.agents.hub.phoneChatOffered
 import io.github.eslamasabry.oc.feature.agents.hub.phoneHelperDown
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRow
@@ -203,7 +204,7 @@ private fun AgentTile(tile: AgentTileModel, actions: AgentsActions, chat: Boolea
                         actions.resumePhoneAgent(agent.id)
                     }
                 null ->
-                    if (chat && tile.state == AgentTileState.Ready)
+                    if (cardOffersConversation(tile, chat))
                         KitAgentTileAction(
                             stringResource(Res.string.agentsNewChat),
                             stringResource(Res.string.agentsNewChatWith, agent.name),

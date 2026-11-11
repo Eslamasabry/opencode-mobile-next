@@ -91,3 +91,14 @@ public fun phoneChatOffered(state: AgentsUi): Boolean {
     if (phoneHelperDown(state)) return false
     return state.helperConnected || state.computers.any { it.id == helper && it.connected }
 }
+
+/**
+ * The one rule for whether a phone agent can start a conversation now. The Agents page's card offers New conversation
+ * by it ([cardOffersConversation]) and New conversation's "Who works on it" lists by it (the app's phone offer), so
+ * the two can never disagree.
+ */
+public fun phoneAgentStartsConversation(row: PhoneAgentRow): Boolean = row.status == PhoneAgentStatus.Ready
+
+/** Whether [tile]'s card offers New conversation, given [chat] ([phoneChatOffered] for the page). */
+public fun cardOffersConversation(tile: AgentTileModel, chat: Boolean): Boolean =
+    chat && tile.state == AgentTileState.Ready && phoneAgentStartsConversation(tile.agent)
