@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.team.TeamPhase
 import io.github.eslamasabry.oc.feature.team.presentation.AskAnswer
 import io.github.eslamasabry.oc.feature.team.presentation.EditorKind
+import io.github.eslamasabry.oc.feature.team.presentation.FleetHomeKind
 import io.github.eslamasabry.oc.feature.team.presentation.HomeRow
 import io.github.eslamasabry.oc.feature.team.presentation.PhoneOffKind
 import io.github.eslamasabry.oc.feature.team.presentation.PhoneOffUi
@@ -72,13 +73,30 @@ public fun TeamHomeScreen(state: TeamHomeUi, actions: TeamHomeActions) {
                         when {
                             state.demo -> stringResource(Res.string.teamProjectDemoChip)
                             state.phase == TeamPhase.Off -> stringResource(Res.string.teamUiRowOff)
+                            state.phase == TeamPhase.Computer -> computerSubtitle(state.computer)
                             else -> null
                         },
                     exit = KitTopBarExit.Back,
                     exitLabel = stringResource(Res.string.kitTopBarBack),
                     onExit = actions::back,
                     actions =
-                        if (!ready) emptyList()
+                        if (state.phase == TeamPhase.Computer)
+                        // A computer's team: Team settings (where it runs, Turn off) and Refresh.
+                            listOf(
+                                KitLineAction(
+                                    stringResource(Res.string.teamSettingsOpenTooltip),
+                                    actions::openSettings,
+                                    icon = KitIcons.settingsGear,
+                                    testTag = "team-settings",
+                                ),
+                                KitLineAction(
+                                    stringResource(Res.string.teamUiRefresh),
+                                    actions::refreshComputer,
+                                    icon = KitIcons.retry,
+                                    testTag = "team-refresh",
+                                ),
+                            )
+                        else if (!ready) emptyList()
                         else
                             listOf(
                                 KitLineAction(
@@ -118,8 +136,10 @@ public fun TeamHomeScreen(state: TeamHomeUi, actions: TeamHomeActions) {
                     },
                 )
             },
-            loading = state.phase == TeamPhase.Loading || state.loading,
-            loadingLabel = stringResource(Res.string.teamProjectLoad),
+            loading =
+                state.phase == TeamPhase.Loading || state.loading ||
+                    (state.phase == TeamPhase.Computer && state.computer.kind == FleetHomeKind.Starting),
+            loadingLabel = stringResource(if (state.phase == TeamPhase.Computer) Res.string.teamUiCardLoading else Res.string.teamProjectLoad),
             width = KitScreenWidth.Reading,
             bottom =
                 if (state.phase == TeamPhase.Off) ({ TeamIntroBottom(state.intro, actions) })
@@ -138,12 +158,7 @@ public fun TeamHomeScreen(state: TeamHomeUi, actions: TeamHomeActions) {
             when (state.phase) {
                 TeamPhase.Loading -> Unit
                 TeamPhase.Off -> TeamIntro(state.intro, actions)
-                TeamPhase.Computer ->
-                    KitStateView(
-                        KitStateKind.Missing,
-                        stringResource(Res.string.teamUiHomeTitle),
-                        body = stringResource(Res.string.nativeCapabilityTeamDeferred),
-                    )
+                TeamPhase.Computer -> TeamComputerHome(state.computer, state.nowMs, actions)
                 TeamPhase.PhoneOff -> PhoneOffPage(state.phoneOff, actions)
                 TeamPhase.Ready -> Projects(state, actions) { answering = it }
             }
