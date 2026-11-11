@@ -19,7 +19,12 @@ import io.github.eslamasabry.oc.engine.team.TeamAlertTracker
 import io.github.eslamasabry.oc.engine.team.TeamConfig
 import io.github.eslamasabry.oc.engine.team.TeamEngine
 import io.github.eslamasabry.oc.engine.team.TeamProvider
+import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.attempt
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 /**
@@ -50,34 +55,47 @@ class TeamAlertsWatcher(
     private val trackers = mutableMapOf<String, TeamAlertTracker>()
     private var started = false
 
-    /** Called once from the platform hub's start. */
+    /**
+     * Called once from the platform hub's start. The read runs only while all of these hold, and stops the moment one
+     * does not: the app is away, the live-mode foreground service is running (without it no coding alert may post, see
+     * [AlertPolicy.route], and Android caps that service's hours), and at least one phone team exists. Each stretch
+     * starts from what the person last saw (a baseline, nothing posted), so work seen on screen never notifies.
+     * Plain delays, no alarm or wake lock: a frozen or dozing process simply reads nothing.
+     */
     fun start() {
         if (started) return
         started = true
         scope.launch {
-            while (true) {
-                runCatching { tick() }
-                delay(POLL_MS)
-            }
+            combine(policy.foreground, background.live, stores.profiles.profiles) { foreground, live, profiles ->
+                    if (foreground || !(live.enabled && live.active)) emptyList()
+                    else
+                        profiles
+                            .filter {
+                                TeamConfig.parse(it.profile.orchestration?.encoded)?.provider == TeamProvider.PhoneEngine
+                            }
+                            .map { it.id.raw to it.profile.name }
+                }
+                .distinctUntilChanged()
+                .collectLatest { teams ->
+                    trackers.keys.retainAll(teams.map { it.first }.toSet())
+                    if (teams.isEmpty()) return@collectLatest
+                    teams.forEach { (id, _) -> trackers.getOrPut(id) { TeamAlertTracker(id) }.observe(engine.state(id).value.workspace) }
+                    while (true) {
+                        delay(POLL_MS)
+                        attempt({ Failure.Unexpected() }) { tick(teams) }
+                    }
+                }
         }
     }
 
-    private suspend fun tick() {
-        if (stores.warm() !is io.github.eslamasabry.oc.core.common.Outcome.Ok) return
-        val teams =
-            stores.profiles.profiles.value.filter {
-                TeamConfig.parse(it.profile.orchestration?.encoded)?.provider == TeamProvider.PhoneEngine
-            }
-        trackers.keys.retainAll(teams.map { it.id.raw }.toSet())
-        for (team in teams) {
-            val id = team.id.raw
-            // On screen the pages poll for themselves; away, this read is the only one.
-            if (!policy.foreground.value) engine.refresh(id)
+    private suspend fun tick(teams: List<Pair<String, String>>) {
+        for ((id, server) in teams) {
+            engine.refresh(id)
             val tracker = trackers.getOrPut(id) { TeamAlertTracker(id) }
             val diff = tracker.observe(engine.state(id).value.workspace)
             if (diff.isEmpty || policy.foreground.value) continue
             diff.settled.forEach { shade.dismiss(it) }
-            for (request in diff.alerts) post(request.kind, request.id, request.key, id, team.profile.name)
+            for (request in diff.alerts) post(request.kind, request.id, request.key, id, server)
         }
     }
 
