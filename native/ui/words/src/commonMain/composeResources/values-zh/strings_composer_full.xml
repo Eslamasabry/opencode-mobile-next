@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="composerFullThinking">思考</string>
+    <string name="composerFullThinkingDefault">默认</string>
+    <string name="composerFullAgent">智能体</string>
+    <string name="composerFullModels">模型</string>
+    <string name="composerFullModelChangeFailed">无法确认模型选择。请检查你的选择后重试。</string>
+    <string name="composerFullAttach">附加</string>
+    <string name="composerFullAddTitle">添加到提示词</string>
+    <string name="composerFullPhotoLibrary">照片库</string>
+    <string name="composerFullTakePhoto">拍照</string>
+    <string name="composerFullPasteImage">粘贴剪贴板中的图片</string>
+    <string name="composerFullPasteEmpty">剪贴板中没有图片。</string>
+    <string name="composerFullDraftFull">请先移除一个附件。一份草稿最多可含 5 个文件，总计 20 MB。</string>
+    <string name="composerFullPhotoDenied">照片访问被拒绝。请在 Android 应用设置中允许相机或照片访问，然后重试。</string>
+    <string name="composerFullStale">你选择时对话发生了变化。请重试。</string>
+    <string name="composerFullCommands">命令</string>
+    <string name="composerFullFiles">项目中的文件</string>
+    <string name="composerFullAttachmentsLocal">附件会随此草稿保存在这台设备上。</string>
+    <string name="composerFullSteerHint">运行时引导它…</string>
+</resources>

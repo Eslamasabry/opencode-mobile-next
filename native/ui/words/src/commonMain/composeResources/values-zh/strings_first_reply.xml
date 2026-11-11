@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="setupStepTimedOut">%1$s 花的时间远超预期。请重试，或改用电脑。</string>
+    <string name="setupUseComputerInstead">改用电脑</string>
+    <string name="setupActivityDownloading">正在下载文件</string>
+    <string name="setupActivityUnpacking">正在解压文件</string>
+    <string name="setupActivityConfiguring">正在进行设置</string>
+    <string name="setupActivityChecking">正在检查已安装的内容</string>
+    <string name="setupActivityWorking">处理中</string>
+    <string name="setupHeartbeatLine">%1$s · %2$s</string>
+    <string name="setupHeartbeatQuiet">仍在处理。较长的步骤可能需要几分钟。</string>
+    <string name="chatModelFailRateLimit">模型现在很忙。请切换模型，或几分钟后重试。</string>
+    <string name="chatModelFailDailyLimit">此模型的每日免费额度已用完。请切换模型，或明天再试。</string>
+    <string name="chatModelFailSignIn">使用此模型需要先登录。请登录，或切换模型。</string>
+    <string name="chatModelFailQuota">你的账号在此模型上已没有额度。请充值，或切换模型。</string>
+    <string name="chatModelFailGeneric">模型无法回答。请切换模型，或重试。</string>
+    <string name="chatModelFailSwitch">切换模型</string>
+    <string name="chatModelFailSignInAction">登录</string>
+    <string name="chatStalledOnTool">仍在等待 %1$s。</string>
+    <string name="chatStalledStop">停止</string>
+</resources>

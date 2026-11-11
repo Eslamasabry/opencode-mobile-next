@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="keptPromptsTitle">已保留的提示词</string>
+    <string name="keptPromptsBody">移除服务器时保留下来的提示词。将其恢复到某个对话中，可在发送前先查看。</string>
+    <string name="keptPromptsEmpty">没有已保留的提示词</string>
+    <string name="keptPromptsChoose">选择一个对话</string>
+    <string name="keptPromptsChooseBody">选择已连接服务器上的一个对话。这只会填入它的草稿。</string>
+    <string name="keptPromptsNoTargets">没有已连接的对话</string>
+    <string name="keptPromptsNoTargetsBody">请连接一个已保存的服务器或打开一个对话，然后重试。</string>
+    <string name="keptPromptsConnect">连接服务器</string>
+    <string name="keptPromptsUncertain">这条提示词可能已经发送过。再次发送前，请先查看它原来的对话。</string>
+    <string name="keptPromptsFailed">无法读取或更改已保留的提示词。请重试。</string>
+    <string name="keptPromptsKeptFrom">保留自已移除的服务器</string>
+    <string name="keptPromptsRestoreFailed">已保存的提示词或对话已变更。请在对话中重新打开“已保存的提示词”，然后重试。</string>
+    <string name="keptConversation">对话</string>
+</resources>

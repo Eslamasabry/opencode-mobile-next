@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatHeaderServer">服务器</string>
+    <string name="chatHeaderContext">已用上下文</string>
+    <string name="chatHeaderNotReported">尚未上报</string>
+    <string name="chatHeaderTokens">词元</string>
+    <string name="chatHeaderInUse">使用中</string>
+    <string name="chatHeaderRenameFailed">无法重命名此对话。</string>
+    <string name="chatHeaderShareFailed">无法分享此对话。</string>
+    <string name="chatHeaderUnshareFailed">无法停止分享。</string>
+    <string name="chatHeaderForkFailed">无法分叉此对话。</string>
+    <string name="chatHeaderArchiveFailed">无法归档此对话。</string>
+    <string name="chatHeaderDeleteFailed">无法删除此对话。</string>
+    <string name="chatHeaderFailureDetails">详情</string>
+    <string name="chatHeaderApprovalSaveFailed">无法保存允许设置。</string>
+</resources>
