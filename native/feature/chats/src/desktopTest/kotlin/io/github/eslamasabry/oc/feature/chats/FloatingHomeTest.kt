@@ -23,7 +23,8 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
@@ -194,7 +195,7 @@ class FloatingHomeTest {
             val tags = listOf("kit-liquid-bar", "kit-floating-pills", "kit-status-pill", "kit-page-heading")
             val bounds =
                 tags.associateWith { runCatching { onNodeWithTag(it, useUnmergedTree = true).getBoundsInRoot() }.getOrNull() } +
-                    ("first" to runCatching { onNodeWithText("Explain this project").getBoundsInRoot() }.getOrNull())
+                    ("first" to runCatching { onAllNodesWithText("Explain this project", useUnmergedTree = true).onFirst().getBoundsInRoot() }.getOrNull())
             seen = Seen(bounds, onRoot().captureToImage().toAwtImage())
         }
         return seen
@@ -226,14 +227,14 @@ class FloatingHomeTest {
         val capsule = lens.bounds["kit-liquid-bar"]!!
         val pills = lens.bounds["kit-floating-pills"]!!
         assertTrue(pills.top.value >= capsule.bottom.value - .5f, "the pills $pills lie under the capsule $capsule")
-        val a = lens.bounds["first"]!!
-        val b = flat.bounds["first"]!!
+        val a = assertNotNull(lens.bounds["first"], "the first conversation shows under the lens")
+        val b = assertNotNull(flat.bounds["first"], "the first conversation shows without the lens")
         assertTrue(abs(a.top.value - b.top.value) <= .5f, "the first conversation rests at ${a.top} under the lens, ${b.top} without")
         assertTrue(a.top.value >= pills.bottom.value - .5f, "the first conversation $a rests below the pills $pills")
         // Reduced motion holds the lens: the page is as it was.
         val held = home(LensPlatform(), motion = MotionLevel.Off)
         assertNull(held.bounds["kit-liquid-bar"], "reduced motion: no floating capsule")
-        assertTrue(abs(held.bounds["first"]!!.top.value - b.top.value) <= .5f, "reduced motion: the list rests where it did")
+        assertTrue(abs(assertNotNull(held.bounds["first"], "reduced motion: the first conversation shows").top.value - b.top.value) <= .5f, "reduced motion: the list rests where it did")
     }
 
     @Test

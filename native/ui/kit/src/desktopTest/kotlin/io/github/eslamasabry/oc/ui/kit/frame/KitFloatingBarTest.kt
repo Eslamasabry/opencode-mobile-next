@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PixelMap
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
@@ -122,6 +123,7 @@ class KitFloatingBarTest {
         val statusPart: Boolean = false,
         val field: Boolean = false,
         val clickRows: Boolean = false,
+        val rows: Int = ROWS,
     )
 
     /** What the test reads back from a scene. */
@@ -177,7 +179,7 @@ class KitFloatingBarTest {
                             val scroll = rememberScrollState()
                             seen.scroll = scroll
                             Column(Modifier.fillMaxSize().verticalScroll(scroll).testTag("list")) {
-                                repeat(ROWS) { i ->
+                                repeat(extras.rows) { i ->
                                     if (i == FIELD_AT)
                                         Box(Modifier.fillMaxWidth().height(ROW_DP.dp).background(Color.Red).focusRequester(seen.focus).focusable().testTag("field"))
                                     else BrightRow(i)
@@ -189,7 +191,7 @@ class KitFloatingBarTest {
                                 state = list,
                                 modifier = Modifier.fillMaxSize().then(if (home) Modifier.kitGlassSource(source) else Modifier).testTag("list"),
                             ) {
-                                items(ROWS) { i -> BrightRow(i, if (extras.clickRows) ({ seen.clicks += i }) else null) }
+                                items(extras.rows) { i -> BrightRow(i, if (extras.clickRows) ({ seen.clicks += i }) else null) }
                             }
                         }
                         if (extras.fab)
@@ -281,6 +283,23 @@ class KitFloatingBarTest {
         return l.average().toFloat() to (l.zipWithNext { a, b -> abs(a - b) }.maxOrNull() ?: 0f)
     }
 
+    /** Writes [image] to FLOAT_DEBUG_DIR when it is set, to look at a failure. */
+    private fun debugPng(image: PixelMap, name: String) {
+        val dir = System.getenv("FLOAT_DEBUG_DIR")?.let(::java.io.File) ?: return
+        dir.mkdirs()
+        val out = java.awt.image.BufferedImage(image.width, image.height, java.awt.image.BufferedImage.TYPE_INT_ARGB)
+        for (y in 0 until image.height) for (x in 0 until image.width) out.setRGB(x, y, image[x, y].toArgb())
+        javax.imageio.ImageIO.write(out, "png", java.io.File(dir, "$name.png"))
+    }
+
+    /** The steps over 24 down a column, as "y dp: from → to", for a failure message. */
+    private fun stepsAt(image: PixelMap, xDp: Float, fromDp: Float, toDp: Float): String {
+        val x = (xDp * D).roundToInt()
+        val ys = ((fromDp * D).roundToInt() until (toDp * D).roundToInt())
+        return ys.zipWithNext().filter { (a, b) -> abs(luma(image[x, a]) - luma(image[x, b])) > BLUR_STEP }
+            .joinToString { (a, b) -> "${a / D}: ${luma(image[x, a]).toInt()}→${luma(image[x, b]).toInt()}" }
+    }
+
     /** The bottom of the floating chrome: the pills on Home, the bar on Settings. */
     private fun chromeBottom(s: Shot, page: Page) = (if (page == Page.Home) s.bounds["pills"] else s.bounds["bar"])!!.bottom.value
 
@@ -327,7 +346,9 @@ class KitFloatingBarTest {
             assertTrue(statusStep <= BLUR_STEP, "$page: cleared to a blur under the status bar, a step of $statusStep")
             // Inside the capsule: the rows show through its glass, blurred.
             val capsule = s.bounds["kit-liquid-bar"]!!
+            debugPng(s.image, "scrolled-$page")
             val (capsuleMean, capsuleStep) = column(s.image, W / 2f, capsule.top.value + 8f, capsule.bottom.value - 8f)
+            println("$page capsule $capsule, column at ${W / 2f}: " + stepsAt(s.image, W / 2f, capsule.top.value + 8f, capsule.bottom.value - 8f))
             assertTrue(capsuleMean >= g + 15f, "$page: content behind the capsule, mean $capsuleMean over ground $g")
             assertTrue(capsuleStep <= BLUR_STEP, "$page: blurred behind the capsule, a step of $capsuleStep")
             // Beside the capsule (its 6 dp margin) the rows run on sharp: they really pass under the bar.
@@ -348,10 +369,15 @@ class KitFloatingBarTest {
 
     @Test
     fun `B-KIT-FLOAT-004 the refresh disc comes out below the floating bar, not under it`() {
-        val s = shot(Page.Home, floating = true, extras = Extras(refreshing = true))
-        val disc = s.bounds["kit-refresh"]!!
-        val bottom = chromeBottom(s, Page.Home)
-        assertTrue(disc.top.value >= bottom - .5f, "the refreshing disc $disc lies below the pills ending at $bottom")
+        // The disc moves by a layer translation, which a node's bounds do not show: find it as the pixels that differ
+        // between the page refreshing and the page at rest, with no rows to hide it.
+        val on = shot(Page.Home, floating = true, extras = Extras(refreshing = true, rows = 0))
+        val off = shot(Page.Home, floating = true, extras = Extras(rows = 0))
+        var top = Int.MAX_VALUE
+        for (y in 0 until on.image.height) for (x in 0 until on.image.width) if (on.image[x, y] != off.image[x, y]) top = minOf(top, y)
+        assertTrue(top != Int.MAX_VALUE, "the refreshing disc shows")
+        val bottom = chromeBottom(on, Page.Home)
+        assertTrue(top / D >= bottom - .5f, "the refreshing disc's top at ${top / D} dp lies below the pills ending at $bottom")
     }
 
     @Test
