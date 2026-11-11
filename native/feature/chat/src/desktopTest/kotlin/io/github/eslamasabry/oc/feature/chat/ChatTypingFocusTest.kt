@@ -278,16 +278,29 @@ class ChatTypingFocusTest {
             assertTrue(seen.any { it.bottom <= top }, "Tab never left the composer's pane: $seen")
         }
 
+    /** The semantics ids Tab or Shift+Tab focuses, [steps] presses from the message box. */
+    private fun ComposeUiTest.lap(direction: FocusDirection, steps: Int): List<Int> {
+        composer().performClick()
+        waitForIdle()
+        return buildList {
+            repeat(steps) {
+                runOnIdle { focusManager.moveFocus(direction) }
+                waitForIdle()
+                onAllNodes(isFocused(), useUnmergedTree = true).fetchSemanticsNodes().lastOrNull()?.let { add(it.id) }
+            }
+        }
+    }
+
     @Test
-    fun `Shift+Tab from the message box reaches the controls under it, round the page`() =
+    fun `Shift+Tab from the message box goes round the same controls as Tab`() =
         runDesktopComposeUiTest(412, 915) {
             show()
-            composer().performClick()
-            waitForIdle()
-            val field = composer().fetchSemanticsNode().boundsInRoot
-            val seen = walk(FocusDirection.Previous, 80)
-            assertTrue(seen.any { it.top >= field.bottom }, "Shift+Tab never reached the composer's own row: $seen")
-            assertTrue(seen.any { it.bottom <= paneTop() }, "Shift+Tab never reached the controls above: $seen")
+            // Long enough for several laps either way; each direction must reach every control the other does (with
+            // the page handing every arrival to the box, Tab skipped the controls before it, Shift+Tab those after it).
+            val forward = lap(FocusDirection.Next, 120).toSet()
+            val backward = lap(FocusDirection.Previous, 120).toSet()
+            assertTrue(forward.size > 2, "Tab reached almost nothing: $forward")
+            assertEquals(forward.sorted(), backward.sorted(), "Tab and Shift+Tab reach different controls")
         }
 
     @Test
