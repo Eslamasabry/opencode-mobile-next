@@ -357,10 +357,18 @@ public class ServersViewModel(
         }
     }
 
-    override fun connect(id: ProfileId) = operation {
-        when (val result = connections.connect(id)) {
-            is Outcome.Ok -> local.update { it.copy(issue = ServerIssue.Connected) }
-            is Outcome.Failed -> connectFailed(id, result.failure)
+    override fun connect(id: ProfileId) {
+        // A server whose password or token has to be typed again cannot connect: open its form with the field
+        // focused instead of trying and failing (Flutter servers_actions.dart _connect).
+        if (rows.state.value.facts[id]?.needsSecret == true) {
+            edit(id)
+            return
+        }
+        operation {
+            when (val result = connections.connect(id)) {
+                is Outcome.Ok -> local.update { it.copy(issue = ServerIssue.Connected) }
+                is Outcome.Failed -> connectFailed(id, result.failure)
+            }
         }
     }
 

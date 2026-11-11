@@ -291,4 +291,35 @@ class ServersViewModelTest {
         vm.connect(id)
         assertEquals(null, vm.state.value.openCode1)
     }
+
+    @Test
+    fun `S2 Connect on a server that needs its password again opens its form and does not try`() = runTest {
+        val connections = Connections()
+        val nav = Navigator()
+        val rows =
+            object : io.github.eslamasabry.oc.feature.servers.presentation.ServerRowsPort {
+                override val state =
+                    MutableStateFlow(
+                        io.github.eslamasabry.oc.feature.servers.presentation.ServerRowsState(
+                            facts =
+                                kotlinx.collections.immutable.persistentMapOf(
+                                    id to
+                                        io.github.eslamasabry.oc.feature.servers.presentation.ServerRowFacts(
+                                            backend = io.github.eslamasabry.oc.core.model.BackendKind.OpenCode2,
+                                            version = null,
+                                            directory = "",
+                                            needsSecret = true,
+                                            waiting = null,
+                                            running = null,
+                                            queued = 0,
+                                        )
+                                )
+                        )
+                    )
+            }
+        val vm = ServersViewModel(null, connections, nav, rows)
+        vm.connect(id)
+        assertEquals(0, connections.connects)
+        assertEquals(io.github.eslamasabry.oc.ui.routes.ServersRoute.Edit(id, newConversation = false), nav.top.value)
+    }
 }
