@@ -53,7 +53,7 @@ public class KitScreenBottom internal constructor() {
      * top, as under a block that is not a slab, so what sits above the box stands on the page's ground; and the jump
      * pill, which would join the box's top, stays above the block instead.
      */
-    val stacked: Boolean by derivedStateOf { !wordsTop.isNaN() && !blockTop.isNaN() && wordsTop - blockTop > restGap }
+    internal val stacked: Boolean by derivedStateOf { !wordsTop.isNaN() && !blockTop.isNaN() && wordsTop - blockTop > restGap }
 }
 
 internal val LocalKitScreenBottom = staticCompositionLocalOf<KitScreenBottom?> { null }
