@@ -33,6 +33,7 @@ import java.util.Base64
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
 
 /** B-STATE-025/027/028: real read-only observations, reachable on Settings › This phone. */
@@ -203,11 +204,14 @@ class AndroidPhoneStateDetails(
     override suspend fun measureStorage(): Outcome<AppStorageFacts> =
         withContext(dispatchers.io) {
             attempt({ Failure.StorageRefused() }) {
-                appStorageFacts(projectFiles.measure(stores.profiles.profiles.value.size))
+                // Leaving the page cancels the walk at its next folder (never a leaked full-tree walk).
+                runInterruptible {
+                    appStorageFacts(projectFiles.measure(stores.profiles.profiles.value.size))
+                }
             }
         }
 
-    private val projectFiles by lazy { NativeProjectFiles(application) }
+    private val projectFiles by lazy { NativeProjectFiles(application, stopWhenInterrupted = true) }
 
     private suspend fun teamHealth(path: String): Outcome<Boolean> =
         withContext(dispatchers.io) {
