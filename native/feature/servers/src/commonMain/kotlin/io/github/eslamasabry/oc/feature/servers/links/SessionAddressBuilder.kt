@@ -16,6 +16,7 @@ public object SessionAddressBuilder {
     }
 
     private val originShape = Regex("^https://([A-Za-z0-9.-]+)(?::([0-9]{1,5}))?$", RegexOption.IGNORE_CASE)
+    private val tailnetLabel = Regex("^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$")
 
     /**
      * The host and effective port ("device.tailnet.ts.net:443") of a saved address, or null when it cannot go in a
@@ -59,6 +60,11 @@ public object SessionAddressBuilder {
         if (value.isEmpty() || value.length > SessionAddressLinks.MAX_LENGTH || containsSecret(value)) return null
         val m = originShape.matchEntire(value) ?: return null
         val host = m.groupValues[1].lowercase()
+        // Only `device.tailnet.ts.net` (the receiver's rule, SessionAddressLinks.validOrigin): the switch must not offer
+        // an address the other phone refuses.
+        val labels = host.split('.')
+        if (host.length > 253 || labels.size != 4 || labels[2] != "ts" || labels[3] != "net") return null
+        if (labels.any { !tailnetLabel.matches(it) }) return null
         val port = m.groupValues[2].takeIf { it.isNotEmpty() }?.toIntOrNull() ?: 443
         if (port !in 1..65535) return null
         return "https://" + host + (if (port == 443) "" else ":$port")
