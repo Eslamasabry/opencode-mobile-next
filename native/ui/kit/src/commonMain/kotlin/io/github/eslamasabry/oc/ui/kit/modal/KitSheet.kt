@@ -58,6 +58,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.focusProperties
+import androidx.compose.foundation.focusGroup
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -256,7 +259,14 @@ public val LocalKitSheetHost: ProvidableCompositionLocal<KitSheetHostState?> =
         null
     }
 
+/** Whether the page holds focus, and whether it gave it up to a modal (to be handed back). */
+private class PageFocus {
+    var has: Boolean = false
+    var saved: Boolean = false
+}
+
 /** Places the host around [content]. */
+@OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
 @Composable
 public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     val state = remember { KitSheetHostState() }
@@ -279,9 +289,30 @@ public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -
             // The in-window modal is a sibling of the page, never a descendant of its
             // cleared semantics. Keep the page composed (drafts/scroll survive) but remove
             // its accessibility nodes while a modal owns the window, including its exit.
+            // The page does not take focus while a modal shows either (words on glass 3, coordinator 2026-11-11): its
+            // content is a focus group that cancels focus entering it, the focus it held is cleared when the modal shows
+            // and given back to the element that had it when the modal hides (only if the page had it).
+            val modal = state.isShowing || state.isDialogShowing
+            val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
+            val pageFocus = remember { androidx.compose.ui.focus.FocusRequester() }
+            val held = remember { PageFocus() }
+            androidx.compose.runtime.LaunchedEffect(modal) {
+                if (modal) {
+                    held.saved = held.has && pageFocus.saveFocusedChild()
+                    if (held.saved) focusManager.clearFocus()
+                } else if (held.saved) {
+                    held.saved = false
+                    pageFocus.restoreFocusedChild()
+                }
+            }
             Box(
-                (if (state.isShowing || state.isDialogShowing) Modifier.clearAndSetSemantics {}
-                else Modifier).kitLiquidSource(page)
+                (if (modal) Modifier.clearAndSetSemantics {}
+                else Modifier)
+                    .onFocusChanged { held.has = it.hasFocus }
+                    .focusRequester(pageFocus)
+                    .focusProperties { if (modal) onEnter = { cancelFocusChange() } }
+                    .focusGroup()
+                    .kitLiquidSource(page)
             ) {
                 content()
             }
