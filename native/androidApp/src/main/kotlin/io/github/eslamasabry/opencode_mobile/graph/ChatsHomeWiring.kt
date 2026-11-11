@@ -464,7 +464,8 @@ internal object HomeAgentNoticeRules {
      */
     fun notices(state: PhoneAgentsState, certifiedForChat: (String) -> Boolean): HomeAgentNotices {
         if (!state.available) return HomeAgentNotices()
-        val helperStopped = state.helperStoppedUnexpectedly || state.helperMayHaveBeenStoppedByAndroid
+        // Red proof only: the old rule (every Stopped row is said), reverted in the next commit.
+        val helperStopped = true
         return HomeAgentNotices(
             restart = state.needsRestart,
             lines =
