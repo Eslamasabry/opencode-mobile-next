@@ -124,6 +124,12 @@ public interface TeamHomeActions : TeamIntroActions {
 
     /** A computer's team: "Give the team a task" opens Start a run. */
     public fun startRun() {}
+
+    /** A computer's team: the agents row opens the Agents page. */
+    public fun openFleetAgents() {}
+
+    /** A computer's team: a task's row opens the task's page. */
+    public fun openFleetRun(runId: String) {}
 }
 
 /**

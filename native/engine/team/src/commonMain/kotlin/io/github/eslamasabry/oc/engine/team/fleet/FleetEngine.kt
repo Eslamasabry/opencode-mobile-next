@@ -10,9 +10,11 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -327,6 +329,38 @@ public class FleetEngine(
         }
         return receipt
     }
+
+    /**
+     * An agent's live output (Dart `agentOutput`, merged as the agent page reads it): the transcript so far, again each
+     * time a `turn` frame adds to it (at most [FleetOutput.LIMIT] characters). It follows `/session/<id>/stream`,
+     * reconnecting with back-off and `Last-Event-ID` after a drop. The flow completes when the host no longer serves
+     * the session (404: stopped or recycled), when no team is connected, or when the team is forgotten. Collecting it
+     * opens the stream; cancelling the collector (the page closing) closes it.
+     */
+    public fun agentOutput(profileId: String, sessionId: String): Flow<String> =
+        channelFlow {
+            val gateway = runs.load()[profileId]?.gateway ?: return@channelFlow
+            var text = ""
+            var lastId: String? = null
+            var attempt = 0
+            while (runs.load()[profileId]?.gateway === gateway) {
+                var heard = false
+                val end =
+                    gateway.sessionOutput(sessionId, lastId) { frame ->
+                        heard = true
+                        frame.id?.let { lastId = it }
+                        val chunk = FleetOutput.turnText(frame) ?: return@sessionOutput
+                        val next = FleetOutput.merge(text, chunk)
+                        if (next != text) {
+                            text = next
+                            send(text)
+                        }
+                    }
+                if (end is FleetStreamEnd.Refused && end.status == 404) return@channelFlow
+                if (heard) attempt = 0
+                delay(backoff(attempt++))
+            }
+        }
 
     /** Forgets [profileId]'s team (turned off or deleted): the next page starts from nothing. */
     public fun forget(profileId: String) {

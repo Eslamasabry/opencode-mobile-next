@@ -59,4 +59,16 @@ public sealed interface TeamRoute : AppRoute {
     /** The computer's address (Dart `showTeamHostSheet`): test it, then turn the team on there; also Change address. */
     @Serializable
     public data class Address(val profileId: ProfileId) : TeamRoute
+
+    /** The agents of a computer's team (Dart `TeamAgentsScreen`, over Gas City): most urgent first. */
+    @Serializable
+    public data class FleetAgents(val profileId: ProfileId) : TeamRoute
+
+    /** One agent of a computer's team (Dart `AgentScreen`): Pause, Nudge, Restart, Stop, Force stop and its live output. */
+    @Serializable
+    public data class FleetAgent(val profileId: ProfileId, val agentId: String) : TeamRoute
+
+    /** One task of a computer's team (Dart Task details + Work sheet): its steps as a graph, and Stop task. */
+    @Serializable
+    public data class FleetRun(val profileId: ProfileId, val runId: String) : TeamRoute
 }
