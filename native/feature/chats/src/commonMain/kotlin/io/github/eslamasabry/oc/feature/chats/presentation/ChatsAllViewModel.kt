@@ -67,6 +67,8 @@ public class ChatsAllViewModel(
         )
     private var servers: List<ConversationServer> = emptyList()
     private var generation = 0
+    /** Servers whose cross-project list answered "cannot": they keep the current project's list. */
+    private val projectOnly = mutableSetOf<ProfileId>()
     private val attemptedPins = mutableSetOf<Pair<ProfileId, SessionId>>()
     private val failedPins = mutableSetOf<Pair<ProfileId, SessionId>>()
     private val tombstones = mutableMapOf<ProfileId, MutableSet<SessionId>>()
@@ -371,9 +373,6 @@ public class ChatsAllViewModel(
             )
         }
     }
-
-    /** Servers whose cross-project list answered "cannot": they keep the current project's list. */
-    private val projectOnly = mutableSetOf<ProfileId>()
 
     /**
      * One page of the list. A server that lists across projects (`globalSessionSearch`) gives the conversations of
