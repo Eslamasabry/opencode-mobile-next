@@ -488,6 +488,13 @@ public class KitEdgeDockState internal constructor() {
         launch { ride.animateTo(0f, DockSprings.close(reduced)) }
     }
 
+    /** The carried ring's card rides to the drop place [to] (the slot the carried ring stands in). */
+    private fun followCarry(to: Int) {
+        if (swell == null) return
+        val c = contentY(swellCenterFor(slotY(to)))
+        launch { swellCenter.animateTo(c, DockSprings.follow(reduced)) }
+    }
+
     /** The swell follows the finger's height while scrubbing (the finger is the spring). */
     internal fun followFinger(y: Float) {
         val c = contentY(swellCenterFor(y))
@@ -525,11 +532,13 @@ public class KitEdgeDockState internal constructor() {
                 openSwell(SwellKind.Peek, gesture.ring)
             }
             DockFeedback.PickUp -> {
+                // The held ring's card stays beside it while it is carried (it says which conversation moves; the names
+                // in the strip are short), riding to each drop place; its targets rest until the ring is dropped.
                 haptic(KitHaptic.LongPress)
                 carrying = gesture.ring
                 carryTo = gesture.ring
                 carryY = gesture.y
-                closeSwell()
+                followCarry(gesture.ring)
             }
         }
         target = gesture.target
@@ -545,6 +554,7 @@ public class KitEdgeDockState internal constructor() {
                 if (to != carryTo) {
                     carryTo = to
                     haptic(KitHaptic.Select)
+                    followCarry(to)
                 }
             }
             DockMode.Move -> {
@@ -611,6 +621,7 @@ public class KitEdgeDockState internal constructor() {
             }
             is DockOutcome.Drop -> {
                 val from = o.from
+                closeSwell()
                 carrying = -1
                 carryTo = -1
                 if (o.to != from) intents.onReorder(from, o.to)

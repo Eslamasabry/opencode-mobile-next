@@ -579,13 +579,14 @@ private fun DockRingNode(
     }
 }
 
-/** A ring's centre (edge frame, dp, converted to physical x): its slot, the lean, the ride out for rename, the carry. */
+/** A ring's centre (edge frame, dp, converted to physical x): its slot (a carried ring's is its drop place), the lean, the ride out for rename. */
 private fun ringCenter(state: KitEdgeDockState, index: Int, m: RingMotion): Offset {
     val o = max(state.out.value, DockDims.NUB_W) + state.lean.value
     val baseX = state.widthDp - state.edgeInset - o / 2f
     var y = state.column.slotCenterAt(m.slot.value.coerceAtLeast(0f), state.top.value, state.scrollNow)
+    // A carried ring stands in the gap the others make for it (its slot is the drop place, [visualIndex]), not under
+    // the finger between two slots, where it covered its neighbours' rings and names (device QA 2026-11-11, m1).
     var x = baseX
-    if (state.carrying == index) y = state.carryY
     val ride = state.ride.value
     if (ride > 0f && state.swellRing == index && state.renaming == state.rings.getOrNull(index)?.key) {
         val f = state.computeFrame()
@@ -761,6 +762,8 @@ private fun DockHitNode(state: KitEdgeDockState) {
                         }
                     } finally {
                         if (state.gesture.mode != DockMode.Idle) {
+                            // A carried ring's card closes with the carry.
+                            if (state.carrying >= 0) state.closeSwell()
                             state.gesture.cancel()
                             state.pressRing = -1
                             state.carrying = -1
