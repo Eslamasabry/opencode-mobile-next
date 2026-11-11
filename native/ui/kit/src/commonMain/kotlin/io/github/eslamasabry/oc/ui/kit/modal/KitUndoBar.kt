@@ -3,15 +3,16 @@ package io.github.eslamasabry.oc.ui.kit.modal
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -29,6 +30,7 @@ import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalAccessibilityManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -108,7 +110,17 @@ public object UndoRules {
  * Replaces: showKitUndo (lib/ui/kit/kit_undo.dart)
  */
 @Composable
-public fun KitUndoBar(offer: KitUndoOffer?, onUndo: () -> Unit, onTimeout: () -> Unit, modifier: Modifier = Modifier) {
+public fun KitUndoBar(
+    offer: KitUndoOffer?,
+    onUndo: () -> Unit,
+    onTimeout: () -> Unit,
+    modifier: Modifier = Modifier,
+    /**
+     * The room the bar takes, px (its own padding included), while an offer stands, and 0 once the offer is gone: a page
+     * that scrolls under the bar gives its content that much bottom room, so its last row is never covered.
+     */
+    onHeight: ((Int) -> Unit)? = null,
+) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     val specs = KitMotion.specs
@@ -120,6 +132,10 @@ public fun KitUndoBar(offer: KitUndoOffer?, onUndo: () -> Unit, onTimeout: () ->
     val shown = last.offer
     val live = offer != null
     val liveNow by rememberUpdatedState(live)
+    var barPx by remember { mutableIntStateOf(0) }
+    val heightNow by rememberUpdatedState(onHeight)
+    LaunchedEffect(live, barPx) { heightNow?.invoke(if (live) barPx else 0) }
+    DisposableEffect(Unit) { onDispose { heightNow?.invoke(0) } }
     val timedOut by rememberUpdatedState(onTimeout)
     // A finger on the bar holds the window; each touch and each lift start it again ([touches] keys the timer).
     var touching by remember { mutableStateOf(false) }
@@ -157,6 +173,7 @@ public fun KitUndoBar(offer: KitUndoOffer?, onUndo: () -> Unit, onTimeout: () ->
     val shape = KitShapeId.Panel.shape()
     Row(
         modifier
+            .onSizeChanged { barPx = it.height }
             // The rise is drawn only: the bar is laid out at rest, so its touch place never moves (sweep B: a tap on
             // Undo while the bar rose landed half a bar below it). Outside the fade's layer, so nothing is clipped.
             .drawWithContent {
