@@ -32,6 +32,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.clipRect
@@ -266,6 +267,7 @@ private fun RenameField(state: KitEdgeDockState, layout: SwellLayout, ring: KitD
     val field = rememberTextFieldState(ring.name, TextRange(0, ring.name.length))
     val focus = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
     var focused by remember { mutableStateOf(false) }
     // Another field may hold focus and the keyboard (the chat's message box): the rename field takes both as it appears,
     // the other field first letting go so the keyboard's input follows the new field (device QA 2026-11-11, run 5, c: the
@@ -275,6 +277,8 @@ private fun RenameField(state: KitEdgeDockState, layout: SwellLayout, ring: KitD
         focusManager.clearFocus(force = true)
         withFrameNanos { }
         focus.requestFocus()
+        // The keyboard's input session moves to this field (it may have been on another one; the keyboard stays up).
+        keyboard?.show()
         snapshotFlow { field.text.toString() }.collect { state.renameText = it }
     }
     val x = if (state.onRight) spot.left else boxW - spot.right

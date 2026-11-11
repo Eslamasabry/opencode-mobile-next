@@ -143,4 +143,22 @@ class KitEdgeDockListGestureTest {
             waitForIdle()
             assertEquals(before, runOnIdle { run.state.scrollNow }, "the drag along the strip did not scroll the column")
         }
+
+    @Test
+    fun `list height - in an area that holds three whole rings the list is as tall as the area allows and scrolls its seven rows`() =
+        scene(360, KitDockSide.End, bottom = 48 + 400) { run ->
+            val p = ringPoint(run, 0)
+            onRoot().performTouchInput { swipe(p, Offset(p.x - 200f, p.y), durationMillis = 120) }
+            waitForIdle()
+            val (b, span, content, rows) =
+                runOnIdle {
+                    val body = run.state.body()
+                    val s = run.state
+                    listOf(body.secondBottom - body.secondTop, s.safeBottom - s.safeTop - 2f * (DockDims.EDGE_MARGIN + DockDims.SHOULDER_REACH), s.panelContent, s.rings.size.toFloat())
+                }
+            assertTrue(runOnIdle { run.state.panelOpen }, "the list is open")
+            assertEquals(7f, rows, "the model holds seven rings")
+            assertTrue(content + 2f * DockDims.PANEL_PAD + DockDims.HEAD > span, "seven rows are taller than the area ($content over $span): the list scrolls inside itself")
+            assertEquals(span, b, 0.5f, "the list takes all the height the area allows, $b of $span")
+        }
 }
