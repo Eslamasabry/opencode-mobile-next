@@ -278,7 +278,7 @@ class SetupJourneyGateTest {
                 }
             }
             onNodeWithText("Run Python scripts · ~30\u00a0MB").assertExists()
-            onNodeWithText("About 165\u00a0MB to download").assertExists()
+            onNodeWithText("About 165 MB to download").assertExists()
             onNodeWithText("Python").performClick()
             assertEquals(listOf("python" to false), actions.toggles)
             onNodeWithTag("phone-setup-customize-done").performClick()
