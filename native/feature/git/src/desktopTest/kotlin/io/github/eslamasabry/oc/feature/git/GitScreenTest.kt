@@ -107,6 +107,7 @@ class GitScreenTest {
             override fun openGitHub() {}
             override fun manageGitHubAccess() {}
             override fun dismissResult() {}
+            override fun askAgent(prompt: String) { calls += "ask $prompt" }
             override fun repairObjects() {
                 calls += "repairObjects"
             }
@@ -200,6 +201,35 @@ class GitScreenTest {
         onNodeWithText(gitText).assertDoesNotExist()
         onNodeWithTag("kit-details-toggle").performClick()
         onNodeWithText(gitText).assertExists()
+    }
+
+    @Test
+    fun `G3 conflicted files offer to ask the agent and send it the file list`() = runComposeUiTest {
+        val conflicted =
+            GitSnapshot(
+                status =
+                    GitStatus(
+                        GitBranchState(head = "main", commit = "abc", upstream = "origin/main"),
+                        persistentListOf(GitFileChange("a.kt", conflict = io.github.eslamasabry.oc.engine.git.GitConflictKind.BothModified)),
+                    ),
+            )
+        setContent { Screen(GitUi(view = GitPageView.Ready(conflicted), canAskAgent = true)) }
+        onNodeWithText("Ask the agent to fix conflicts").performScrollTo().performClick()
+        assertTrue(calls.last().startsWith("ask ") && "a.kt" in calls.last())
+    }
+
+    @Test
+    fun `G5 a refused push carries Get latest in the notice`() = runComposeUiTest {
+        setContent {
+            Screen(
+                GitUi(
+                    view = GitPageView.Ready(snapshot),
+                    result = GitActionResult.failure(GitAction.Push, GitFailure(GitProblem.PushRejected)),
+                ),
+            )
+        }
+        // The page's own Get latest row plus the notice's step.
+        assertEquals(2, onAllNodesWithText("Get latest").fetchSemanticsNodes().size)
     }
 
     @Test

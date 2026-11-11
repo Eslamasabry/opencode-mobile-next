@@ -91,6 +91,10 @@ public data class GitUi(
     val repair: GitRepairUi = GitRepairUi(),
     /** The agent's own summary of its last turn: "Write it for me" fills the message with it. Null: not offered. */
     val summary: String? = null,
+    /** This conversation has an agent to ask: "Ask the agent to fix conflicts" is offered. */
+    val canAskAgent: Boolean = false,
+    /** The agent did not take the prompt just asked; nothing was sent. */
+    val askFailed: Boolean = false,
 ) {
     val snapshot: GitSnapshot?
         get() = (view as? GitPageView.Ready)?.snapshot
@@ -184,4 +188,9 @@ public interface GitActions {
     public fun manageGitHubAccess()
 
     public fun dismissResult()
+
+    /** Closes the page and sends [prompt] to the conversation's agent (Flutter `onAskAgent`). */
+    public fun askAgent(prompt: String) {}
+
+    public fun dismissAskFailure() {}
 }

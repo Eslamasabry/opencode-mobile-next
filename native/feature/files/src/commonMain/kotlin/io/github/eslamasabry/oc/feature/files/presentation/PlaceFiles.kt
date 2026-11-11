@@ -54,6 +54,10 @@ internal class PlaceFiles(val place: FilesPlace, private val connections: FilesC
     fun canTerminal(): Boolean =
         conversation?.let { connections.canTerminal(it) } ?: (source()?.canTerminal == true)
 
+    suspend fun runningTerminals(directory: String?): Int? =
+        conversation?.let { connections.runningTerminals(it, directory) }
+            ?: source()?.runningTerminals?.invoke()
+
     fun tools(): FilesProjectTools =
         conversation?.let { connections.tools(it) } ?: (source()?.tools ?: FilesProjectTools.None)
 
