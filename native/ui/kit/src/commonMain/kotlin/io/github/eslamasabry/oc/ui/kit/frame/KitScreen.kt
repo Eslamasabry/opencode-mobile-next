@@ -337,7 +337,12 @@ public fun KitScreen(
             val joinState = remember { KitLiquidJoin() }
             val join = joinState.takeIf { edgesFade && kitChromeIsGlass() && !KitMotion.state.reduced }
             val barBody = rememberKitLiquidJoinBody(join, "bar")
-            val barFace = if (topPart != null) kitLiquidFace(LiquidRole.Bar, frost, LiquidBarShape, join = barBody) else null
+            // Words on the bar's glass (KitWordsFade.kt): where the lens is drawn, the bar's glass, the words beside it and
+            // the status edge see a copy of the recording cleared above the bar's bottom edge less its lens rim.
+            val topPane = remember { KitTopPane() }
+            val topFade = if (edgesFade && topPart != null && kitChromeIsGlass() && kitLiquidGlassOn()) rememberKitWordsFade(frost!!, KitWordsClear.Above) else null
+            val topFrost = topFade?.faded ?: frost
+            val barFace = if (topPart != null) kitLiquidFace(LiquidRole.Bar, topFrost, LiquidBarShape, join = barBody) else null
             // The capsule answers a finger on its controls: a soft light under it, a brighter edge (KitLiquidTouch.kt).
             val barTouch = rememberKitLiquidTouch(on = barFace != null)
             val barInset = with(LocalDensity.current) { { Offset(LIQUID_BAR_INSET_X.dp.toPx(), LIQUID_BAR_INSET_Y.dp.toPx()) } }
@@ -409,6 +414,12 @@ public fun KitScreen(
                 CompositionLocalProvider(LocalChromePadding provides padding, LocalKitScreenScroll provides scroll, LocalKitScreenBottom provides bottomState, LocalKitLiquidJoin provides join) {
                     Box(
                         Modifier.fillMaxSize()
+                            // The bar's copy of the recording is made once the body has drawn (the status edge, drawn next,
+                            // reads it).
+                            .then(
+                                if (topFade == null) Modifier
+                                else Modifier.kitWordsFadeRecorder(topFade, { topPane.bottom }, { topPane.rim }, after = true)
+                            )
                             .then(
                                 if (!edgesFade) Modifier
                                 else
@@ -428,13 +439,23 @@ public fun KitScreen(
                                         // newest line at rest and the jump pill stay whole) over its top 16 dp.
                                         // Under a glass slab the body stays whole; only the sliver between the
                                         // slab's bottom edge and the window's dissolves, so no half line shows there.
+                                        // With something above the box inside the block (a request card and its label),
+                                        // the body fades out from the block's top as it does under a block that is not a
+                                        // slab, so that stands on the page's ground, not on sharp lines.
                                         fadeFromBottom =
                                             when {
                                                 bottomPart == null -> null
-                                                slab -> ({ with(density) { (SLAB_UNDER_FADE_DP + SLAB_UNDER_CLEAR_DP).dp.toPx() } })
+                                                slab ->
+                                                    ({
+                                                        if (bottomState.stacked) bottomPx + with(density) { EDGE_LEAD_DP.dp.toPx() }
+                                                        else with(density) { (SLAB_UNDER_FADE_DP + SLAB_UNDER_CLEAR_DP).dp.toPx() }
+                                                    })
                                                 else -> ({ bottomPx + with(density) { EDGE_LEAD_DP.dp.toPx() } })
                                             },
                                         bottomReach = if (slab) SLAB_UNDER_FADE_DP.dp else (EDGE_LEAD_DP + COMPOSER_FADE_DP).dp,
+                                        bottomReachPx =
+                                            if (!slab) null
+                                            else ({ with(density) { (if (bottomState.stacked) EDGE_LEAD_DP + COMPOSER_FADE_DP else SLAB_UNDER_FADE_DP).dp.toPx() } }),
                                         topReachPx = {
                                             if (linePx > 0) with(density) { HEADER_FADE_DP.dp.toPx() }
                                             else statusPx + reach - statusEdgeSolid(statusPx.toFloat())
@@ -446,7 +467,7 @@ public fun KitScreen(
                 }
                 if (edgesFade && topPart != null && frost != null) {
                     if (look == KitTopEdgeLook.Ground) KitGroundBand(bandPx = { statusPx + topPx }, under = under)
-                    else KitStatusEdge(frost, statusPx, under = under, blur = statusBlur)
+                    else KitStatusEdge(topFrost!!, statusPx, under = under, blur = statusBlur)
                 }
                 // The bar, and under it the one status line: one block whose height is the body's top room, so a line
                 // folding in or out eases the transcript down or up and nothing else moves.
@@ -462,7 +483,11 @@ public fun KitScreen(
                             Box(
                                 Modifier.fillMaxWidth()
                                     .kitLiquidTouchWatch(barTouch)
-                                    .then(if (barFace != null) kitLiquidWordsHost(LiquidRole.Bar, frost) else Modifier)
+                                    .then(
+                                        if (topFade == null) Modifier
+                                        else Modifier.kitTopPaneReport(topPane, LIQUID_BAR_INSET_X, LIQUID_BAR_INSET_Y)
+                                    )
+                                    .then(if (barFace != null) kitLiquidWordsHost(LiquidRole.Bar, topFrost) else Modifier)
                             ) {
                                 CompositionLocalProvider(LocalKitLiquidJoin provides join, io.github.eslamasabry.oc.ui.kit.effects.LocalKitOnLiquidGlass provides (barFace != null)) {
                                     if (barFace != null) KitLiquidBarPane(barFace.kitLiquidTouchLight(barTouch, LiquidBarShape, barInset, barBody), barBody)
@@ -486,7 +511,14 @@ public fun KitScreen(
                         Modifier.align(Alignment.BottomCenter)
                             .fillMaxWidth()
                             .onSizeChanged { bottomPx = it.height }
-                            .then(if (wordsFade != null) Modifier.kitWordsFadeRecorder(wordsFade, bottomState) else Modifier)
+                            .onGloballyPositioned {
+                                bottomState.blockTop = it.positionInRoot().y
+                                bottomState.restGap = with(density) { (Space.S2 * 3).dp.toPx() }
+                            }
+                            .then(
+                                if (wordsFade == null) Modifier
+                                else Modifier.kitWordsFadeRecorder(wordsFade, { bottomState.wordsTop }, { bottomState.wordsRim }, clearAbove = { bottomState.stacked })
+                            )
                             .then(
                                 if (edgesFade) Modifier
                                 else Modifier.kitChromeGround(FrostRole.Composer, frost, reach = insetBottom)
@@ -516,6 +548,12 @@ public fun KitScreen(
             val floats = floatingBar != null && topPart != null && frost == null && lens && !window.short
             // The feature's own recording of its body, which the floating bar bends instead of a kit recording.
             val lifted = if (floats) floatingBar?.source else null
+            // Words on the floating header's glass (KitWordsFade.kt): its glass and the words on it see a copy of the page's
+            // recording cleared above the pane's bottom edge less its lens rim; the original keeps recording.
+            val floatPane = remember { KitTopPane() }
+            val liftedFade = if (lifted != null) rememberKitWordsFade(lifted, KitWordsClear.Above) else null
+            val underFade = if (floats && lifted == null) rememberKitWordsFade(under, KitWordsClear.Above) else null
+            val floatFade = liftedFade ?: underFade
             // No lens (or a short window) with scrollsElsewhere: no pinned bar; the bar and its second row are the
             // scrolling header's first parts, as the page laid them out before it floated.
             val barInHeader = floatingBar != null && floatingBar.scrollsElsewhere && !floats && topPart != null
@@ -536,8 +574,8 @@ public fun KitScreen(
                 when {
                     stackTop == null -> null
                     frost != null -> kitLiquidFace(LiquidRole.Bar, frost, LiquidBarShape)
-                    lifted != null -> kitLiquidFace(LiquidRole.Bar, lifted, LiquidBarShape)
-                    runs -> kitLiquidFace(LiquidRole.Bar, under, LiquidBarShape)
+                    lifted != null -> kitLiquidFace(LiquidRole.Bar, liftedFade?.faded ?: lifted, LiquidBarShape)
+                    runs -> kitLiquidFace(LiquidRole.Bar, underFade?.fadedSource ?: under, LiquidBarShape)
                     else -> null
                 }
             var barPx by remember { mutableIntStateOf(0) }
@@ -600,9 +638,15 @@ public fun KitScreen(
                                     .then(
                                         when {
                                             barFace == null -> Modifier
-                                            lifted != null -> kitLiquidWordsHost(LiquidRole.Bar, lifted)
-                                            else -> kitLiquidWordsHost(LiquidRole.Bar, under)
+                                            lifted != null -> kitLiquidWordsHost(LiquidRole.Bar, liftedFade?.faded ?: lifted)
+                                            else -> kitLiquidWordsHost(LiquidRole.Bar, underFade?.fadedSource ?: under)
                                         }
+                                    )
+                                    .then(
+                                        if (floatFade == null || barFace == null) Modifier
+                                        else
+                                            Modifier.kitTopPaneReport(floatPane, LIQUID_BAR_INSET_X, LIQUID_BAR_INSET_Y)
+                                                .kitWordsFadeRecorder(floatFade, { floatPane.bottom }, { floatPane.rim })
                                     )
                             ) {
                                 CompositionLocalProvider(io.github.eslamasabry.oc.ui.kit.effects.LocalKitOnLiquidGlass provides (barFace != null)) {

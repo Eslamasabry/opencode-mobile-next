@@ -130,6 +130,8 @@ class ChatWordsGlassTest {
         val bar: DpRect,
         /** The "Needs your decision" label above the box (a scene with a card), else null. */
         val label: DpRect?,
+        /** The phrase chip above the box (a scene with chips), else null. */
+        val chip: DpRect?,
         val rows: List<DpRect>,
         val list: String,
         /** Whether the bottom block saw the screen's own recording (the frame handed it nothing else). */
@@ -144,7 +146,7 @@ class ChatWordsGlassTest {
      * that draw nothing) scrolled well away from the newest so it runs under the bar and the message box, and the box.
      */
     @Composable
-    private fun Scene(bright: Boolean, notice: Boolean, seen: Array<Any?>, lazy: Array<LazyListState?>, statusDp: Int, card: Boolean = false) {
+    private fun Scene(bright: Boolean, notice: Boolean, seen: Array<Any?>, lazy: Array<LazyListState?>, statusDp: Int, card: Boolean = false, chips: Boolean = false) {
         CompositionLocalProvider(LocalKitScreenInsets provides WindowInsets(top = statusDp.dp, bottom = NAV_DP.dp)) {
             Box(Modifier.size(W.dp, H.dp).testTag("scene")) {
                 val source = rememberKitFrostState()
@@ -171,6 +173,11 @@ class ChatWordsGlassTest {
                         KitReportBottomSlab(kitComposerSlab())
                         // A request card's label stands above the box inside the same block (ChatScreen): a bar of
                         // the card's size with nothing of its own behind it.
+                        if (chips)
+                            io.github.eslamasabry.oc.ui.kit.chip.KitPhraseChips(
+                                listOf("say hi"), "Phrases", { "Insert $it" }, { "Options for $it" }, "Hide", {}, {},
+                                Modifier.testTag("chat-phrase-chips"),
+                            )
                         if (card) Box(Modifier.fillMaxWidth().height(LABEL_DP.dp).testTag("decision-label"))
                         KitComposerBox(
                             running = false,
@@ -209,7 +216,7 @@ class ChatWordsGlassTest {
         }
     }
 
-    private fun shot(appearance: KitAppearance, platform: KitPlatform, bright: Boolean, notice: Boolean = false, statusDp: Int = STATUS_DP, card: Boolean = false): Shot {
+    private fun shot(appearance: KitAppearance, platform: KitPlatform, bright: Boolean, notice: Boolean = false, statusDp: Int = STATUS_DP, card: Boolean = false, chips: Boolean = false): Shot {
         lateinit var shot: Shot
         runDesktopComposeUiTest((W * D).toInt(), (H * D).toInt()) {
             val seen = arrayOfNulls<Any?>(2)
@@ -217,7 +224,7 @@ class ChatWordsGlassTest {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(D)) {
                     KitTheme(appearance = appearance, platform = platform, localeTag = "en", stillFrame = true) {
-                        Scene(bright, notice, seen, lazy, statusDp, card)
+                        Scene(bright, notice, seen, lazy, statusDp, card, chips)
                     }
                 }
             }
@@ -243,6 +250,7 @@ class ChatWordsGlassTest {
                     pill = boundsOrNull("jump-to-latest"),
                     bar = bounds("bar"),
                     label = if (card) bounds("decision-label") else null,
+                    chip = if (chips) bounds("chat-phrase-chips") else null,
                     rows = visible.map { bounds(it.toString()) },
                     list = list,
                     bottomSawSource = seen[0] === seen[1],
@@ -293,7 +301,7 @@ class ChatWordsGlassTest {
         val bright = shot(dark(Style.Glass), LensPlatform(), bright = true, card = true)
         val none = shot(dark(Style.Glass), LensPlatform(), bright = false, card = true)
         val label = bright.label!!
-        assertTrue(bright.rows.any { it.top < label.top && it.bottom > label.bottom }, "rows run behind the label: ${bright.rows.map { it.top..it.bottom }} label $label")
+        assertTrue(bright.rows.any { it.top < label.bottom && it.bottom > label.top }, "rows run behind the label: ${bright.rows.map { it.top..it.bottom }} label $label")
         val (mean, max) = diff(bright.image, none.image, label.left.value, label.top.value, label.right.value, label.bottom.value)
         println("label: mean $mean max $max over $label, pill ${bright.pill}, box ${bright.box}")
         assertTrue(mean <= NOTICE_MEAN && max <= NOTICE_MAX, "bright rows show behind the label: mean $mean, max $max of 255")
@@ -303,6 +311,18 @@ class ChatWordsGlassTest {
         assertTrue(wordsMean <= WORDS_MEAN && wordsMax <= WORDS_MAX, "bright rows show behind the placeholder: mean $wordsMean, max $wordsMax")
         // The jump pill sits above the card (where the layout puts it), not joined onto the box's top under the label.
         bright.pill?.let { assertTrue(it.bottom <= label.top + 1.dp, "the pill ${it} lies below the label's top ${label.top}") }
+    }
+
+    @Test
+    fun `a bright row never shows behind the phrase chips above the box`() {
+        val bright = shot(dark(Style.Glass), LensPlatform(), bright = true, chips = true)
+        val none = shot(dark(Style.Glass), LensPlatform(), bright = false, chips = true)
+        val chip = bright.chip!!
+        assertTrue(chip.bottom <= bright.box.top + 1.dp, "the chips lie above the box: $chip box ${bright.box}")
+        // The chip's own face lies at the row's start; its label is at its middle.
+        val (mean, max) = diff(bright.image, none.image, chip.left.value + 6f, chip.top.value + 4f, chip.left.value + 60f, chip.bottom.value - 8f)
+        println("chips: mean $mean max $max over $chip")
+        assertTrue(mean <= WORDS_MEAN && max <= WORDS_MAX, "bright rows show behind the phrase chip: mean $mean, max $max of 255")
     }
 
     @Test
@@ -408,6 +428,22 @@ class ChatWordsGlassTest {
             waitForIdle()
             ImageIO.write(onNodeWithTag("scene").captureToImage().toAwtImage(), "png", File(out, "render-words-chat-$tag.png"))
         }
+    }
+
+    /**
+     * Before/after renders of the top bar and of the "Needs your decision" label (off unless WORDS_GLASS_OUT names a
+     * folder; WORDS_GLASS_TAG is "before" or "after"): the small scene, white rows scrolled under the bar and under a
+     * card's label above the message box, liquid Glass dark.
+     */
+    @Test
+    fun `words on glass renders - top bar and the decision label`() {
+        val out = System.getenv("WORDS_GLASS_OUT")?.let(::File) ?: return
+        val tag = System.getenv("WORDS_GLASS_TAG") ?: "render"
+        out.mkdirs()
+        val top = shot(dark(Style.Glass), LensPlatform(), bright = true)
+        ImageIO.write(top.image.toImage(), "png", File(out, "render-words-top-chat-$tag.png"))
+        val card = shot(dark(Style.Glass), LensPlatform(), bright = true, card = true)
+        ImageIO.write(card.image.toImage(), "png", File(out, "render-words-needs-decision-$tag.png"))
     }
 
     private fun PixelMap.toImage(): java.awt.image.BufferedImage {

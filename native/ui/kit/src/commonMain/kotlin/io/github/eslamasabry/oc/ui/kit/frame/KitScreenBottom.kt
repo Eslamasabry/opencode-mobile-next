@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -39,6 +40,20 @@ public class KitScreenBottom internal constructor() {
 
     /** How far that pane's lens rim reaches in from its top edge, px ([LiquidEdge.rimPx] for the pane's size). */
     internal var wordsRim: Float by mutableFloatStateOf(0f)
+
+    /** The top edge, in root px, of the whole bottom block (its padding included); NaN until it is placed. */
+    internal var blockTop: Float by mutableFloatStateOf(Float.NaN)
+
+    /** The room, px, the block keeps above its words pane when nothing else sits there (its padding and the box's own gap). */
+    internal var restGap: Float by mutableFloatStateOf(0f)
+
+    /**
+     * Whether something sits above the words pane inside the block (a request card and its label, Find, a notice): the
+     * pane's top lies more than the block's resting gap below the block's top. The body then fades out from the block's
+     * top, as under a block that is not a slab, so what sits above the box stands on the page's ground; and the jump
+     * pill, which would join the box's top, stays above the block instead.
+     */
+    val stacked: Boolean by derivedStateOf { !wordsTop.isNaN() && !blockTop.isNaN() && wordsTop - blockTop > restGap }
 }
 
 internal val LocalKitScreenBottom = staticCompositionLocalOf<KitScreenBottom?> { null }
@@ -56,6 +71,10 @@ public fun KitReportBottomSlab(slab: Boolean) {
 /** Whether this screen's bottom block is one pane of glass over the body ([KitReportBottomSlab]); false outside one. */
 @Composable
 public fun kitScreenBottomIsSlab(): Boolean = LocalKitScreenBottom.current?.slab == true
+
+/** Whether something stands above the message box inside this screen's bottom block ([KitScreenBottom.stacked]); false outside one. */
+@Composable
+internal fun kitScreenBottomIsStacked(): Boolean = LocalKitScreenBottom.current?.stacked == true
 
 /**
  * Marks this box as the bottom block's liquid pane of [role] that carries words to read or type (the message box), so

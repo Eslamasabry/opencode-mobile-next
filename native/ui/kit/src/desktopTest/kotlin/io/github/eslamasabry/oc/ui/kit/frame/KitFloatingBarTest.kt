@@ -408,6 +408,18 @@ class KitFloatingBarTest {
         }
     }
 
+    /** Before/after render of the Conversations home (off unless WORDS_GLASS_OUT names a folder; WORDS_GLASS_TAG: before or after). */
+    @Test
+    fun `words on the pane render`() {
+        val out = System.getenv("WORDS_GLASS_OUT")?.let(::File) ?: return
+        val tag = System.getenv("WORDS_GLASS_TAG") ?: "render"
+        out.mkdirs()
+        val home = shot(Page.Home, floating = true, act = { drag(-120f - roomBelow(Page.Home)) })
+        val img = BufferedImage(home.image.width, home.image.height, BufferedImage.TYPE_INT_ARGB)
+        for (y in 0 until home.image.height) for (x in 0 until home.image.width) img.setRGB(x, y, home.image[x, y].toArgb())
+        ImageIO.write(img, "png", File(out, "render-words-home-$tag.png"))
+    }
+
     /** The mean and the largest brightness difference (of 255) between [a] and [b] over the dp rectangle. */
     private fun diff(a: PixelMap, b: PixelMap, left: Float, top: Float, right: Float, bottom: Float): Pair<Float, Float> {
         var sum = 0f

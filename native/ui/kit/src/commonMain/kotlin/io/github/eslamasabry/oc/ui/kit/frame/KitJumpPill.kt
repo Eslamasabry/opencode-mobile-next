@@ -142,7 +142,7 @@ public fun KitJumpPill(
     // it. It rests sunk a quarter of its height into the box; it rises out of the box narrow, passes its rest, turns and
     // widens, its words showing once it is 70 % wide; leaving, it narrows and sinks back in.
     val joinBody = io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidJoin.current?.bodies?.get("bottom")
-    val joinable = backdrop != null && edge == KitJumpEdge.Bottom && state.travels && kitScreenBottomIsSlab() && joinBody?.granted == true
+    val joinable = backdrop != null && edge == KitJumpEdge.Bottom && state.travels && kitScreenBottomIsSlab() && !kitScreenBottomIsStacked() && joinBody?.granted == true
     if (joinable && joinBody != null) {
         AnimatedVisibility(
             visible,
