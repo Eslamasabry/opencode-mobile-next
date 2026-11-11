@@ -30,7 +30,7 @@
     <string name="backgroundPauseOpenKeepRunning">Ouvrir les paramètres Garder actif</string>
     <string name="backgroundPauseResumed">Connexion en arrière-plan rétablie.</string>
     <plurals name="notifStatusNeedsYou">
-        <item quantity="one">1 vous attend</item>
+        <item quantity="one">%1$d vous attend</item>
         <item quantity="many">%1$d vous attendent</item>
         <item quantity="other">%1$d vous attendent</item>
     </plurals>
