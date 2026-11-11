@@ -348,10 +348,6 @@ public fun KitScreen(
             val statusBlur = if (edgesFade && look != KitTopEdgeLook.Ground) kitStatusEdgeBlur() else null
             // A bottom block that is one pane of glass (KitReportBottomSlab): the body stays sharp under it.
             val slab = bottomState.slab && bottomPart != null
-            // Words on glass (KitWordsFade.kt): where the lens is drawn, the bottom block's glass sees the body fade out
-            // under its words pane (the message box). Every other style, and Glass without a lens, hand the block the
-            // recording itself, as before.
-            val wordsFade = if (edgesFade && bottomPart != null && kitChromeIsGlass() && kitLiquidGlassOn()) rememberKitWordsFade(frost!!) else null
             val scroll = remember { KitScreenScroll() }
             val under = kitUnderTop(scroll)
             // The window's insets include the keyboard, which moves every frame while it opens: each side is read
@@ -478,7 +474,6 @@ public fun KitScreen(
                         Modifier.align(Alignment.BottomCenter)
                             .fillMaxWidth()
                             .onSizeChanged { bottomPx = it.height }
-                            .then(if (wordsFade != null) Modifier.kitWordsFadeRecorder(wordsFade, bottomState) else Modifier)
                             .then(
                                 if (edgesFade) Modifier
                                 else Modifier.kitChromeGround(FrostRole.Composer, frost, reach = insetBottom)
@@ -490,7 +485,7 @@ public fun KitScreen(
                             )
                             .testTag("kit-screen-bottom")
                     ) {
-                        CompositionLocalProvider(LocalKitLiquidChrome provides (wordsFade?.faded ?: frost), LocalKitScreenBottom provides bottomState, LocalKitLiquidJoin provides join) { it() }
+                        CompositionLocalProvider(LocalKitLiquidChrome provides frost, LocalKitScreenBottom provides bottomState, LocalKitLiquidJoin provides join) { it() }
                     }
                 }
             }
