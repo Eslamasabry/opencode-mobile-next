@@ -87,6 +87,14 @@ class AttentionRuntime(
     private var started = false
     private var trailing: Job? = null
     private var latest = StatusModel.build(StatusInput(), statusWords, clock.now(), ::formatTime)
+    private val mutableRow = kotlinx.coroutines.flow.MutableStateFlow(latest)
+    private val mutableConversationsRow = kotlinx.coroutines.flow.MutableStateFlow<StatusContent?>(null)
+
+    /** The row's content as live mode shows it, kept current while the app is out of sight too. */
+    val row: kotlinx.coroutines.flow.StateFlow<StatusContent> = mutableRow
+
+    /** The conversations row alone (working, needs you), from the dock; null when no conversation shows. */
+    val conversationsRow: kotlinx.coroutines.flow.StateFlow<StatusContent?> = mutableConversationsRow
     private var serverRunning = false
     private var idleStopped = false
     private var setup: StatusSetup? = null
@@ -162,6 +170,15 @@ class AttentionRuntime(
             )
             .ensure()
         return render(latest)
+    }
+
+    /**
+     * Reply watch left a row live mode still holds: post live mode's own row (with its Pause action) again now,
+     * instead of waiting for the next change.
+     */
+    fun repost() {
+        throttle.reset()
+        refresh()
     }
 
     /** The delete intent of the dock row came back: [turnId] carries the pulse count that was dismissed. */
@@ -495,6 +512,8 @@ class AttentionRuntime(
         latest =
             if (outside != null) outside.toStatusContent()
             else StatusModel.build(input, statusWords, clock.now(), ::formatTime)
+        mutableConversationsRow.value = outside?.toStatusContent()
+        mutableRow.value = latest
         if (!background.live.value.active) {
             throttle.reset()
             trailing?.cancel()
