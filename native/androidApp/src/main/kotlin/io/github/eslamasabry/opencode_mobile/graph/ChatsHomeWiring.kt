@@ -138,6 +138,14 @@ class AppChatsHome(
                         main = loaded.id == active,
                         onThisPhone = runtime.sourceOnThisPhone(loaded.profile),
                         unreachable = loaded.id in runtime.sourceFailures,
+                        secret =
+                            when {
+                                loaded.reentry.password ->
+                                    io.github.eslamasabry.oc.feature.chats.presentation.SwitcherSecret.Password
+                                loaded.reentry.agentToken ->
+                                    io.github.eslamasabry.oc.feature.chats.presentation.SwitcherSecret.Token
+                                else -> io.github.eslamasabry.oc.feature.chats.presentation.SwitcherSecret.None
+                            },
                     )
                 }
                 .toImmutableList()
@@ -159,9 +167,15 @@ class AppChatsHome(
                     profile = active,
                     onThisPhone = phoneServer.runsHere(active),
                     phoneOff = phoneServer.runsHere(active) && phone.serverFacts.value.stoppedByPerson,
+                    address = owner.profile.baseUrl,
+                    usesToken = owner.profile.usesAgentSocket,
+                    attempts = openingTries(owner.id),
                 )
             } else null
-        if (opening == null) phoneWatch = null
+        if (opening == null) {
+            phoneWatch = null
+            openingTries = null
+        }
         mutable.value = ChatsHomeExtraState(sources, opening, null, monitor.snapshot.value)
         if (opening?.phase == ChatsOpeningPhase.Starting) keepTryingQuietly()
     }
@@ -225,10 +239,17 @@ class AppChatsHome(
     override suspend fun retrySource(profile: ProfileId): Outcome<Unit> =
         record(runtime.retryListSource(profile))
 
+    // How many times opening the active server has been tried since it first failed (1 = the first try).
+    private var openingTries: Pair<ProfileId, Int>? = null
+
+    private fun openingTries(profile: ProfileId): Int =
+        openingTries?.takeIf { it.first == profile }?.second ?: 1
+
     override suspend fun retryOpening(): Outcome<Unit> {
         val active =
             runtime.profiles.activeId.value
                 ?: return Outcome.Failed(Failure.Refused(RefusalReason.ProfileDeleted))
+        openingTries = active to (openingTries(active) + 1)
         return record(runtime.retryListSource(active))
     }
 

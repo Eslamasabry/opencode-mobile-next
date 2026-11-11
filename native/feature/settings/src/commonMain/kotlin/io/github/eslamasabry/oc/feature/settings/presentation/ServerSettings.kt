@@ -44,6 +44,8 @@ public data class ServerSettingsFacts(
     val tokenSignIn: Boolean = false,
     val managedOnPhone: Boolean = false,
     val connectionFailure: Failure? = null,
+    /** The pinned command that updates this server on its own computer; null when the app cannot tell one. */
+    val updateCommands: String? = null,
 )
 
 public enum class ConnectionStep {

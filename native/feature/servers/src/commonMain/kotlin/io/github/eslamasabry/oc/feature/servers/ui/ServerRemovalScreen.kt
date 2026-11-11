@@ -78,7 +78,11 @@ public fun ServerRemovalScreen(state: ServerRemovalUi, actions: ServerRemovalAct
                 )
             }
             plan?.let { KitText(it.name, role = TypeRole.Headline) }
-            if (plan != null) KitText(stringResource(Res.string.remove40Body), tone = TextTone.Secondary)
+            if (plan != null) {
+                // What goes from this phone, then what stays (Flutter serversRemoveBody + e7SetupDeleteDisclosure).
+                KitText(stringResource(Res.string.serversRemoveBody), tone = TextTone.Secondary)
+                KitText(stringResource(Res.string.serversRemoveServerKeeps), tone = TextTone.Secondary)
+            }
             KitConsequences(consequences)
             if (plan != null)
                 KitButton(
