@@ -350,15 +350,19 @@ private fun PluginDetailSheet(plugin: LibraryPlugin?, onDismiss: () -> Unit) {
             KitText(pluginStatus(p.status))
             if (p.status == LibraryPluginStatus.Failed)
                 KitText(stringResource(Res.string.pluginsFailureDetail))
-            KitText(listOfNotNull(pluginSource(p.source), p.packageName.takeIf { it != p.id }).joinToString(" · "))
+            KitText(pluginSource(p.source))
             if (p.terminalUi) KitText(stringResource(Res.string.pluginsTerminalUi))
+            // A6: the raw id and package name are technical; they live under Details only.
             KitDetailsFold(
                 stringResource(Res.string.kitDetails),
                 stringResource(Res.string.kitCopyDetails),
                 notes =
-                    listOf(
+                    listOfNotNull(
                         "${stringResource(Res.string.pluginsDetailsId)}: " +
-                            (p.id ?: stringResource(Res.string.pluginsUnnamed))
+                            (p.id ?: stringResource(Res.string.pluginsUnnamed)),
+                        p.packageName
+                            ?.takeIf { it != p.id }
+                            ?.let { "${stringResource(Res.string.protoToolsPackage)}: $it" },
                     ),
             )
         }
