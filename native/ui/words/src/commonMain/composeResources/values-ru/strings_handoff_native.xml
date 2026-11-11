@@ -37,4 +37,5 @@
     <string name="handoffNativeContinueWith">Продолжить с %1$s</string>
     <string name="handoffNativeWhatHandedOver">Что будет передано</string>
     <string name="handoffNativeNoReadyTitle">Нет готовых агентов</string>
+    <string name="handoffNativeNotStartedBody">Не удалось начать передачу из этого чата прямо сейчас. Откройте «Агенты», чтобы проверить, что агент установлен и готов на этом телефоне, и повторите попытку.</string>
 </resources>

@@ -15,4 +15,5 @@
     <string name="sendReportDone">完成</string>
     <string name="reportCodeLabel">报告代码</string>
     <string name="reportCodeCopy">复制报告代码</string>
+    <string name="sendReportRowDetail">先查看将要发送的内容，再发送</string>
 </resources>

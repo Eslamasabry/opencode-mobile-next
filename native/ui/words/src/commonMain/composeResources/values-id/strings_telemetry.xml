@@ -15,4 +15,5 @@
     <string name="sendReportDone">Selesai</string>
     <string name="reportCodeLabel">Kode laporan</string>
     <string name="reportCodeCopy">Salin kode laporan</string>
+    <string name="sendReportRowDetail">Tinjau apa yang akan dikirim, lalu kirim</string>
 </resources>

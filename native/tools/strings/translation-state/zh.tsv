@@ -2028,6 +2028,7 @@ chatsHomeEmptyTitle	2270197f3c
 chatsHomeFailed	4078e8e70d
 chatsHomeIncomplete	9b4276a3e2
 chatsHomeIncompleteNamed	aad1cc490d
+chatsHomeInterrupted	efe76a466f
 chatsHomeNeedsYou	3adeb53ae4
 chatsHomeNewChat	7a01dcc0e8
 chatsHomeNewShort	172f8fd530
@@ -4916,6 +4917,7 @@ handoffNativeLinkFailed	f6c2daa7dd
 handoffNativeLinks	6236ed7630
 handoffNativeNoReadyTitle	cc44af6247
 handoffNativeNoTargets	7e41036114
+handoffNativeNotStartedBody	9627ac7aa6
 handoffNativeOpenContinued	7d02e50288
 handoffNativeOpenOriginal	1467f34611
 handoffNativePhoneCheck	b804863ba6
@@ -7439,7 +7441,7 @@ native44Output	a063f4c7f9
 native44Price	5cca42a3ab
 nativeAboutProvenance	e0bd072c84
 nativeAboutProvenanceTitle	f97ce82c6e
-nativeBundledPrivacy	642c8eee35
+nativeBundledPrivacy	1f8c508165
 nativeCapabilitiesDetail	2fd99510fe
 nativeCapabilitiesTitle	3dd91e1995
 nativeCapabilityAddExternalAgentDetail	4c2eba1208
@@ -8169,6 +8171,7 @@ p12ProjectConversations	79780de700
 p12ProjectNoConversations	9509f58404
 p12ProjectsLoadFailed	50e52a77a8
 p12ProjectsOnServer	6b34d77b14
+p12ProjectsOnThisPhone	f814c30432
 p12ProjectsTitle	87d96b8bf7
 p12Rename	e0cf0ffde4
 p12RenameEmpty	6a1b4474ee
@@ -9412,6 +9415,8 @@ reviewLooksGood	0ea2e0f2d7
 reviewNoChangesBody	ff847c3cad
 reviewNoDiff	ccd07eaa41
 reviewOneFileUnavailable	96f4106605
+reviewProjectNotGitBody	93e9ff4530
+reviewProjectNotGitTitle	2e0364b4a1
 reviewRevertBackAction	eff7230b72
 reviewRevertFailed	c4e095c1fa
 reviewRevertFileLines	9ee36258da
@@ -10072,7 +10077,7 @@ secSetupUrlField	ea0c798b37
 sendReportCollecting	503aa68b6c
 sendReportDone	d2cc2f560f
 sendReportFailed	feac5a29cd
-sendReportRowDetail	ece9aae568
+sendReportRowDetail	4f31180a6f
 sendReportSend	7f5ade46f7
 sendReportSentBody	df336379d0
 sendReportSentTitle	61af556e32

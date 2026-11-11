@@ -37,4 +37,5 @@
     <string name="handoffNativeContinueWith">Continuer avec %1$s</string>
     <string name="handoffNativeWhatHandedOver">Ce qui sera transmis</string>
     <string name="handoffNativeNoReadyTitle">Aucun agent n’est prêt</string>
+    <string name="handoffNativeNotStartedBody">Le transfert n’a pas pu démarrer depuis cette conversation pour le moment. Ouvrez Agents pour vérifier qu’un agent est installé et prêt sur ce téléphone, puis réessayez.</string>
 </resources>

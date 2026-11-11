@@ -7371,7 +7371,7 @@ native44Output	a063f4c7f9
 native44Price	5cca42a3ab
 nativeAboutProvenance	e0bd072c84
 nativeAboutProvenanceTitle	f97ce82c6e
-nativeBundledPrivacy	642c8eee35
+nativeBundledPrivacy	1f8c508165
 nativeCapabilitiesDetail	2fd99510fe
 nativeCapabilitiesTitle	3dd91e1995
 nativeCapabilityAddExternalAgentDetail	4c2eba1208
@@ -9963,7 +9963,7 @@ secSetupUrlField	ea0c798b37
 sendReportCollecting	503aa68b6c
 sendReportDone	d2cc2f560f
 sendReportFailed	feac5a29cd
-sendReportRowDetail	ece9aae568
+sendReportRowDetail	4f31180a6f
 sendReportSend	7f5ade46f7
 sendReportSentBody	df336379d0
 sendReportSentTitle	61af556e32

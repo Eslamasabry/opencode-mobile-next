@@ -43,4 +43,5 @@
     <string name="p12ArchivedFilter">Đã lưu trữ</string>
     <string name="p12MoreFor">Thêm tùy chọn cho %1$s</string>
     <string name="p12OpenChat">Mở cuộc trò chuyện</string>
+    <string name="p12ProjectsOnThisPhone">Dự án trên điện thoại này</string>
 </resources>

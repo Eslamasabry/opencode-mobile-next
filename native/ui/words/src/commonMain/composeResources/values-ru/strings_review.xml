@@ -12,4 +12,6 @@
     <string name="reviewUndoUnavailable">Этот сервер не может отменять изменения с запроса.</string>
     <string name="reviewToolEvidence">По данным инструментов агента. Изменения, сделанные командами, не показаны.</string>
     <string name="reviewSendBackFailed">Не удалось добавить вашу заметку в сообщение. Повторите.</string>
+    <string name="reviewProjectNotGitTitle">Проект не в Git</string>
+    <string name="reviewProjectNotGitBody">Изменения можно показать только для проекта, который ведётся в Git. Начните отслеживать его на странице Git проекта, чтобы увидеть их здесь.</string>
 </resources>

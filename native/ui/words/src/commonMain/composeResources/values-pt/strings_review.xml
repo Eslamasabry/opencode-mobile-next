@@ -12,4 +12,6 @@
     <string name="reviewUndoUnavailable">Este servidor não consegue desfazer a partir de uma mensagem.</string>
     <string name="reviewToolEvidence">Com base no que as ferramentas do agente informaram. Alterações feitas por comandos não aparecem.</string>
     <string name="reviewSendBackFailed">Não foi possível colocar sua nota na mensagem. Tente novamente.</string>
+    <string name="reviewProjectNotGitTitle">Não é um projeto Git</string>
+    <string name="reviewProjectNotGitBody">As alterações só podem ser listadas para um projeto que está no Git. Comece a acompanhá-lo na página Git do projeto para vê-las aqui.</string>
 </resources>

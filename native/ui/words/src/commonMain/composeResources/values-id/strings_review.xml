@@ -12,4 +12,6 @@
     <string name="reviewUndoUnavailable">Server ini tidak dapat membatalkan dari sebuah perintah.</string>
     <string name="reviewToolEvidence">Berdasarkan laporan alat agen. Perubahan lewat perintah tidak dicantumkan.</string>
     <string name="reviewSendBackFailed">Catatan Anda tidak dapat dimasukkan ke pesan. Coba lagi.</string>
+    <string name="reviewProjectNotGitTitle">Bukan proyek Git</string>
+    <string name="reviewProjectNotGitBody">Perubahan hanya dapat dicantumkan untuk proyek yang dikelola Git. Mulai lacak proyek ini dari halaman Git proyek agar perubahannya tampil di sini.</string>
 </resources>

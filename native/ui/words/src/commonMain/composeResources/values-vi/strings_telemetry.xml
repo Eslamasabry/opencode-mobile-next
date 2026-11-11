@@ -15,4 +15,5 @@
     <string name="sendReportDone">Xong</string>
     <string name="reportCodeLabel">Mã báo cáo</string>
     <string name="reportCodeCopy">Sao chép mã báo cáo</string>
+    <string name="sendReportRowDetail">Xem lại nội dung sẽ gửi, rồi gửi đi</string>
 </resources>

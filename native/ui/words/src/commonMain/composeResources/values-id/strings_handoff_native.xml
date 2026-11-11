@@ -37,4 +37,5 @@
     <string name="handoffNativeContinueWith">Lanjutkan dengan %1$s</string>
     <string name="handoffNativeWhatHandedOver">Apa yang akan diserahkan</string>
     <string name="handoffNativeNoReadyTitle">Tidak ada agen yang siap</string>
+    <string name="handoffNativeNotStartedBody">Serah terima tidak dapat dimulai dari percakapan ini saat ini. Buka Agen untuk memastikan ada agen yang terpasang dan siap di ponsel ini, lalu coba lagi.</string>
 </resources>

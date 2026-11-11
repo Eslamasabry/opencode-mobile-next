@@ -319,4 +319,5 @@
     <string name="chatsReturnBriefUnknown">Tidak bisa mengetahui apa yang baru di server ini</string>
     <string name="chatsReturnBriefMore">dan %1$d lainnya</string>
     <string name="workRunawayStopFailedRetry">Tidak bisa menghentikan %1$s. Coba lagi.</string>
+    <string name="chatsHomeInterrupted">Terputus</string>
 </resources>

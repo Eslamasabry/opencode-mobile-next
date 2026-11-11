@@ -15,4 +15,5 @@
     <string name="sendReportDone">Concluído</string>
     <string name="reportCodeLabel">Código do relatório</string>
     <string name="reportCodeCopy">Copiar código do relatório</string>
+    <string name="sendReportRowDetail">Revise o que será enviado e depois envie</string>
 </resources>

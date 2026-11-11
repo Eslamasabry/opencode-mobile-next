@@ -15,4 +15,5 @@
     <string name="sendReportDone">Готово</string>
     <string name="reportCodeLabel">Код отчёта</string>
     <string name="reportCodeCopy">Скопировать код отчёта</string>
+    <string name="sendReportRowDetail">Проверьте, что будет отправлено, затем отправьте</string>
 </resources>

@@ -12,4 +12,6 @@
     <string name="reviewUndoUnavailable">Este servidor no puede deshacer desde un mensaje.</string>
     <string name="reviewToolEvidence">Según lo que informaron las herramientas del agente. No se listan los cambios hechos con comandos.</string>
     <string name="reviewSendBackFailed">No se pudo poner tu nota en el mensaje. Inténtalo de nuevo.</string>
+    <string name="reviewProjectNotGitTitle">No es un proyecto Git</string>
+    <string name="reviewProjectNotGitBody">Solo se pueden listar los cambios de un proyecto que está en Git. Empieza a seguirlo desde la página Git del proyecto para verlos aquí.</string>
 </resources>

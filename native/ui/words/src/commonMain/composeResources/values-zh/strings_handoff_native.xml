@@ -37,4 +37,5 @@
     <string name="handoffNativeContinueWith">用 %1$s 继续</string>
     <string name="handoffNativeWhatHandedOver">将移交的内容</string>
     <string name="handoffNativeNoReadyTitle">没有就绪的智能体</string>
+    <string name="handoffNativeNotStartedBody">暂时无法从这个对话开始交接。请打开智能体，确认这部手机上已安装并准备好一个智能体，然后重试。</string>
 </resources>

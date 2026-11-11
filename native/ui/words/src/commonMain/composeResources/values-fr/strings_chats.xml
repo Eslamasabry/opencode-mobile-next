@@ -327,4 +327,5 @@
     <string name="chatsReturnBriefUnknown">Impossible de savoir ce qui est nouveau sur ce serveur</string>
     <string name="chatsReturnBriefMore">et %1$d autres</string>
     <string name="workRunawayStopFailedRetry">Impossible d’arrêter %1$s. Réessayez.</string>
+    <string name="chatsHomeInterrupted">Interrompue</string>
 </resources>
