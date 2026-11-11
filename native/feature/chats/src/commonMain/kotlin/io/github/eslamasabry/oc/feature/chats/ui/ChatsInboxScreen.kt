@@ -152,7 +152,9 @@ private fun InboxRequest(row: ConversationRowUi, state: ChatsUi, actions: ChatsA
     val answering = permission != null && permission.requestId in state.answering
     val enabled = if (answering) KitEnabled.Disabled(stringResource(Res.string.serversWorking))
         else if (!row.canOpen) KitEnabled.Disabled(stringResource(Res.string.e7WorkspaceConnecting)) else KitEnabled.Enabled
-    val source = state.home.sources.firstOrNull { it.profile == row.ref.profileId }?.name
+    // F: inbox_screen.dart:276: an agent's conversation names its agent, not the connection it runs through.
+    val source = state.home.sources.firstOrNull { it.profile == row.ref.profileId }
+        ?.let { if (it.agents) row.agentName ?: it.name else it.name }
     KitInboxRequestRow(
         title = if (permission != null) stringResource(Res.string.chatRequestAskRunNamed, mask(permission.command))
             else stringResource(Res.string.inboxWaitingForAnswer),

@@ -102,7 +102,12 @@ class AndroidNewConversationHost(
     private val serial = dispatchers.serial("new-conversation")
     private val lane = Mutex()
     override val servers: StateFlow<List<NewConversationServer>> =
-        kotlinx.coroutines.flow.combine(connections.servers, phone.serverFacts) { rows, facts ->
+        kotlinx.coroutines.flow.combine(connections.servers, phone.serverFacts, stores.profiles.profiles) {
+                rows,
+                facts,
+                saved ->
+                // The phone agents' helper is not a server here; a page opened for it starts on This phone.
+                val helpers = saved.mapNotNull { p -> stores.phoneOfHelper(p.id)?.let { p.id to it } }
                 rows.map {
                     NewConversationServer(
                         it.id,
@@ -110,6 +115,7 @@ class AndroidNewConversationHost(
                         it.connected,
                         // The person's Stop leaves nothing to wait for: the page says so and offers Start.
                         phoneOff = facts.stoppedByPerson && phoneServer.runsHere(it.id),
+                        standsFor = helpers.filter { (_, owner) -> owner == it.id }.map { (helper, _) -> helper }.toSet(),
                     )
                 }
             }

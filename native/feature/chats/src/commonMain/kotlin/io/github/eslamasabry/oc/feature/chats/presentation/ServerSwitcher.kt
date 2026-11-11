@@ -92,7 +92,8 @@ public object ServerSwitcherRules {
             top.filter { it.status == ChatStatus.NeedsYou || it.permission != null }.groupBy { it.profileId }
         val opening = extra.opening
         val rows =
-            extra.sources.map { source ->
+            // The agents on this phone are part of This phone, not a server (F: the switcher lists saved profiles only).
+            extra.sources.filterNot { it.agents }.map { source ->
                 val state =
                     when {
                         source.main && opening != null && (opening.profile == null || opening.profile == source.profile) ->

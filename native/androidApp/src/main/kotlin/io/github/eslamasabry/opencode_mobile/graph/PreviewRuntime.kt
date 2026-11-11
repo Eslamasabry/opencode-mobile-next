@@ -3,7 +3,6 @@ package io.github.eslamasabry.opencode_mobile.graph
 import dev.zacsweers.metro.*
 import io.github.eslamasabry.oc.core.common.*
 import io.github.eslamasabry.oc.core.common.ids.*
-import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.data.kv.bool
 import io.github.eslamasabry.oc.core.data.scope.ProfileScope
 import io.github.eslamasabry.oc.core.domain.SessionCreationGateway
@@ -174,7 +173,16 @@ class PreviewRuntime(
         if (!restoreRequested.compareAndSet(false, true)) return
         scope.launch {
             if (ready.await() is Outcome.Failed) return@launch
-            val active = profiles.activeId.value ?: profiles.profiles.value.firstOrNull()?.id
+            // The phone agents' helper is part of This phone, never the server the home is on: a saved choice of it
+            // (earlier builds listed it as a server) moves to the phone, and nothing is lost: its conversations stay
+            // in the list beside the phone's own.
+            val chosen = profiles.activeId.value
+            val active =
+                if (chosen != null && !isPhoneHelper(chosen)) chosen
+                else
+                    chosen?.let { stores.phoneOfHelper(it) }
+                        ?: profiles.profiles.value.firstOrNull { !isPhoneHelper(it) }?.id
+            if (chosen != null && active != null && active != chosen) profiles.setActive(active)
             // 47-port-rest-2: the saved session labels show at once, marked unverified, until the
             // server answers.
             if (active != null) seedOpening(active)
@@ -198,6 +206,8 @@ class PreviewRuntime(
     private fun publishServers() {
         mutableServers.value =
             profiles.profiles.value
+                // The phone agents' helper is part of This phone, not a server a person picks, edits or removes.
+                .filterNot { isPhoneHelper(it) }
                 .map {
                     SavedServer(
                         it.id,
@@ -316,15 +326,22 @@ class PreviewRuntime(
     }
 
     override suspend fun connect(id: ProfileId): Outcome<Unit> =
-        connectCommand(id, makeActive = true) { turn ->
-            connectForHome(id, recoverDrafts = true, makeActive = turn.activate, local = turn.local)
-        }
+        // The phone agents' helper never becomes the home's server (a notification, a link or a page that connects
+        // it): it joins the list as part of This phone.
+        if (ready.await() is Outcome.Ok && isPhoneHelper(id)) connectInBackground(id)
+        else
+            connectCommand(id, makeActive = true) { turn ->
+                connectForHome(id, recoverDrafts = true, makeActive = turn.activate, local = turn.local)
+            }
 
     /** The server on the home stays the one the person chose: opening the Agents page used to switch it to "Phone agents". */
-    override suspend fun connectInBackground(id: ProfileId): Outcome<Unit> =
-        connectCommand(id, makeActive = id == profiles.activeId.value) { turn ->
-            connectForHome(id, makeActive = turn.activate && id == profiles.activeId.value, local = turn.local)
+    override suspend fun connectInBackground(id: ProfileId): Outcome<Unit> {
+        // The phone agents' helper never becomes the home's server, even when an earlier build saved it as one.
+        val home = !isPhoneHelper(id)
+        return connectCommand(id, makeActive = home && id == profiles.activeId.value) { turn ->
+            connectForHome(id, makeActive = home && turn.activate && id == profiles.activeId.value, local = turn.local)
         }
+    }
 
     /**
      * [local]: how the wait for this phone's own server ended, when the attempt waited for it outside the lock
@@ -384,12 +401,10 @@ class PreviewRuntime(
         failed ?: Unit.ok()
     }
 
-    private fun isPhoneHelper(profile: LoadedProfile): Boolean =
-        profile.profile.backend == BackendKind.Paseo &&
-            PhoneAgentRules.isHelperProfile(
-                profile.id.raw,
-                (stores.prefs.get("oc.phoneAgentOwner.${profile.id.raw}") as? PrefValue.Str)?.value,
-            )
+    private fun isPhoneHelper(profile: LoadedProfile): Boolean = stores.isPhoneHelper(profile)
+
+    /** The phone agents' helper profile: part of This phone, never listed or chosen as a server. */
+    internal fun isPhoneHelper(id: ProfileId): Boolean = stores.isPhoneHelper(id)
 
     private val joiningHelpers = mutableSetOf<ProfileId>()
 
@@ -1184,8 +1199,12 @@ class PreviewRuntime(
                                 permissions is Outcome.Failed ||
                                 questions is Outcome.Failed ||
                                 forms is Outcome.Failed,
+                        // The phone agents' folder-by-folder list never makes the whole list look single-project.
                         acrossProjects =
-                            graph.session.server.capabilities.value.globalSessionSearch,
+                            PhoneAgentRules.listsAcrossProjects(
+                                graph.session.server.capabilities.value.globalSessionSearch,
+                                isPhoneHelper(id),
+                            ),
                     )
 anySourceLoaded = true
                 loadedSources.update { it + id }
@@ -1393,6 +1412,19 @@ anySourceLoaded = true
      * a send that may already have arrived included, instead of keeping the server forever.
      */
     suspend fun remove(id: ProfileId, discardHeld: Boolean): Outcome<Unit> {
+        // The phone agents' helper is part of This phone and has no row of its own to remove it from: it goes with
+        // the phone (its prompts too: the person removed the phone). Read before the phone's keys are swept.
+        val helpers = profiles.profiles.value.map { it.id }.filter { stores.phoneOfHelper(it) == id }
+        val removed = removeOne(id, discardHeld)
+        if (removed is Outcome.Failed) return removed
+        for (helper in helpers) {
+            val gone = removeOne(helper, discardHeld = true)
+            if (gone is Outcome.Failed) return gone
+        }
+        return removed
+    }
+
+    private suspend fun removeOne(id: ProfileId, discardHeld: Boolean): Outcome<Unit> {
         val result = command {
             when (val queued = OfflineQueueStore(stores.prefs, stores.lanes.app).load()) {
                 QueueRead.Unreadable -> return@command Failure.StorageRefused().failed()

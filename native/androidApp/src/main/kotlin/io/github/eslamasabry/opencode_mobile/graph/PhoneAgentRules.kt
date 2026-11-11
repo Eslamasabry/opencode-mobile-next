@@ -85,6 +85,23 @@ internal object PhoneAgentRules {
         savedOwner != null && Regex("[A-Za-z0-9_-]{1,80}").matches(savedOwner) && id == "$savedOwner-agents"
 
     /**
+     * The saved "This phone" server that helper [id] belongs to, or null when [id] is not the helper or no such phone is
+     * saved. As in Flutter, the helper is part of the phone's profile (`<phone>.agents`, never a server of its own):
+     * anything that pointed at the helper as a server (the home's server, a deletion) means the phone. The phone is
+     * the app's own OpenCode ([builtinOwner], pref `oc.builtinServerOwner`), else the owner the helper was saved for.
+     */
+    fun phoneOf(id: String, savedOwner: String?, builtinOwner: String?, saved: Set<String>): String? =
+        if (!isHelperProfile(id, savedOwner)) null
+        else builtinOwner?.takeIf { it != id && it in saved } ?: savedOwner?.takeIf { it in saved }
+
+    /**
+     * Whether a source's list counts as reaching every project. F: phone_agents.dart:1207-1210: the phone agents' list
+     * is read folder by folder and never makes the whole list look single-project; OpenCode's own answer
+     * ([globalSessionSearch]) decides.
+     */
+    fun listsAcrossProjects(globalSessionSearch: Boolean, helper: Boolean): Boolean = globalSessionSearch || helper
+
+    /**
      * A kept "interrupted" or "failed" install result for an agent whose installed-check now passes is out of date (an
      * earlier run was cut short but the agent is there): it is dropped, not shown. A running or finished-well
      * install, and a result for an agent still missing, stay.

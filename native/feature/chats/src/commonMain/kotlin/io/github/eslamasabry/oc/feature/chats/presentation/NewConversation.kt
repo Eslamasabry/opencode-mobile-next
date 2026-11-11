@@ -53,6 +53,11 @@ public data class NewConversationServer(
     val connected: Boolean,
     /** This phone's own OpenCode is off because the person stopped it. */
     val phoneOff: Boolean = false,
+    /**
+     * Connections that are part of this server and never listed on their own (This phone's agents): a page opened
+     * for one of them (Start new from an agent's conversation) starts here, with that agent chosen.
+     */
+    val standsFor: Set<ProfileId> = emptySet(),
 )
 
 public data class NewConversationProject(
@@ -526,7 +531,9 @@ public class NewConversationViewModel(
                     shown.profile?.let(::chooseServer)
                 if (mutable.value.profile == null) {
                     val target =
-                        route.profile?.takeIf { wanted -> servers.any { it.profile == wanted } }
+                        route.profile?.let { wanted ->
+                            servers.firstOrNull { it.profile == wanted || wanted in it.standsFor }?.profile
+                        }
                             ?: servers.firstOrNull { it.connected }?.profile
                             ?: servers.singleOrNull()?.profile
                     target?.let(::chooseServer)

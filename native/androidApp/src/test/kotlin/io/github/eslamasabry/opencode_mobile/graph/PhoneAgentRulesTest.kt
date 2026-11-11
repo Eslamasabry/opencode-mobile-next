@@ -112,6 +112,30 @@ class PhoneAgentRulesTest {
         assertFalse(PhoneAgentRules.isHelperProfile("abc", "abc"))
     }
 
+    // ONE-PHONE (owner 2026-11-11, "This phone" and "Phone agents" side by side): the helper is part of the phone.
+    @Test
+    fun `ONE-PHONE a saved choice of the helper means the phone it belongs to`() {
+        val saved = setOf("phone", "phone-agents", "laptop")
+        // The app's own OpenCode first, else the owner the helper was saved for.
+        assertEquals("phone", PhoneAgentRules.phoneOf("phone-agents", "phone", "phone", saved))
+        assertEquals("phone", PhoneAgentRules.phoneOf("phone-agents", "phone", null, saved))
+        assertEquals("laptop", PhoneAgentRules.phoneOf("old-agents", "old", "laptop", saved + "old-agents"))
+        // Not the helper, or no phone left to belong to: nothing to map.
+        assertEquals(null, PhoneAgentRules.phoneOf("laptop", "laptop", "phone", saved))
+        assertEquals(null, PhoneAgentRules.phoneOf("phone-agents", null, "phone", saved))
+        assertEquals(null, PhoneAgentRules.phoneOf("gone-agents", "gone", null, setOf("gone-agents")))
+        // The helper never maps to itself.
+        assertEquals(null, PhoneAgentRules.phoneOf("x-agents", "x", "x-agents", setOf("x-agents")))
+    }
+
+    @Test
+    fun `ONE-PHONE the phone agents' folder list never makes the whole list single-project`() {
+        assertTrue(PhoneAgentRules.listsAcrossProjects(globalSessionSearch = false, helper = true))
+        assertTrue(PhoneAgentRules.listsAcrossProjects(globalSessionSearch = true, helper = false))
+        // A real server that cannot list across projects still says so.
+        assertFalse(PhoneAgentRules.listsAcrossProjects(globalSessionSearch = false, helper = false))
+    }
+
     // G3: a Ready tile never changes when the helper is dead.
     @Test
     fun `a proved signed-in agent whose helper is not running is stopped, not ready`() {
