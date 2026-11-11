@@ -69,12 +69,22 @@ public object HomePreviewRules {
 
     /**
      * Whether a row's line must be read (again): never read; or it moved since, unless it is running and was read
-     * less than [LIVE_REREAD_MS] ago. Only OpenCode conversations are read: the other protocols' history reads are not
-     * cheap, so their rows keep project and server.
+     * less than [LIVE_REREAD_MS] ago; or it was read while it ran ([readWhileRunning]) and has stopped since. Only
+     * OpenCode conversations are read: the other protocols' history reads are not cheap, so their rows keep project
+     * and server.
      */
-    public fun needsRead(item: ChatFeedItem, readAtActivityMs: Long?, readAtMs: Long?, nowMs: Long): Boolean {
+    public fun needsRead(
+        item: ChatFeedItem,
+        readAtActivityMs: Long?,
+        readAtMs: Long?,
+        nowMs: Long,
+        readWhileRunning: Boolean = false,
+    ): Boolean {
         if (item.agentId != OPENCODE_AGENT_ID) return false
         if (readAtActivityMs == null || readAtMs == null) return true
+        // B8: read while the reply was still being written, the newest words were the person's own prompt. The run's
+        // end need not move the conversation's time, so a line read mid-run is read again once it stops.
+        if (readWhileRunning && item.status != ChatStatus.Running) return true
         if (readAtActivityMs == item.lastActivityMs) return false
         return item.status != ChatStatus.Running || nowMs - readAtMs >= LIVE_REREAD_MS
     }
@@ -111,7 +121,7 @@ internal class HomePreviews(
     private val servers: () -> List<ConversationServer>,
     private val nowMs: () -> Long,
 ) {
-    private class Read(val activityMs: Long, val atMs: Long)
+    private class Read(val activityMs: Long, val atMs: Long, val running: Boolean)
 
     private val reads = HashMap<String, Read>()
     private val inFlight = HashSet<String>()
@@ -126,14 +136,24 @@ internal class HomePreviews(
         if (saved.isNotEmpty()) mutable.update { saved + it }
     }
 
+    /** The rows last asked for, so a refresh can read them again. */
+    private var wanted: List<ChatFeedItem> = emptyList()
+
+    /** A pull to refresh: every shown row's line is read again; the line shown stays until the new read answers. */
+    fun refresh() {
+        reads.clear()
+        want(wanted)
+    }
+
     /** The rows the home shows now; reads what is missing or stale. */
     fun want(items: List<ChatFeedItem>) {
+        wanted = items
         val now = nowMs()
         val byProfile = servers().associateBy { it.profile }
         for (item in items) {
             if (item.preview.isNotBlank() || item.identity in inFlight) continue
             val known = reads[item.identity]
-            if (!HomePreviewRules.needsRead(item, known?.activityMs, known?.atMs, now)) continue
+            if (!HomePreviewRules.needsRead(item, known?.activityMs, known?.atMs, now, known?.running == true)) continue
             val server = byProfile[item.profileId] ?: continue
             inFlight += item.identity
             scope.launch {
@@ -144,7 +164,7 @@ internal class HomePreviews(
                             is Outcome.Ok -> HomePreviewRules.lastText(page.value.items)
                             is Outcome.Failed -> null
                         }
-                    reads[item.identity] = Read(item.lastActivityMs, nowMs())
+                    reads[item.identity] = Read(item.lastActivityMs, nowMs(), item.status == ChatStatus.Running)
                     // A failed or empty read keeps the line read before, if any.
                     if (text != null) mutable.update { it + (item.identity to text) }
                 } finally {

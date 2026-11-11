@@ -537,6 +537,8 @@ public class ChatsViewModel(
             try {
                 // A source that fails says so in its own line, as after any read.
                 feed.refresh()
+                // B8: the rows' last words are read again too, so a refreshed list never keeps an old line.
+                previews.refresh()
             } finally {
                 refreshing.value = false
             }
