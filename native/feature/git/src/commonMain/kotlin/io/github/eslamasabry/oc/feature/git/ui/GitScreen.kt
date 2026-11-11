@@ -2,10 +2,7 @@ package io.github.eslamasabry.oc.feature.git.ui
 
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.relocation.BringIntoViewRequester
-import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,9 +17,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.git.GitAction
@@ -54,7 +51,6 @@ import io.github.eslamasabry.oc.feature.git.presentation.GitUi
 import io.github.eslamasabry.oc.feature.git.presentation.GitWay
 import io.github.eslamasabry.oc.feature.git.presentation.gitSavedNeedsSignIn
 import io.github.eslamasabry.oc.feature.git.presentation.gitWayForward
-import kotlinx.coroutines.launch
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitAction
@@ -317,8 +313,8 @@ private fun Ready(
     // A failed action, or a failed refresh over the last snapshot (B-NAV-020): plain words, Git's
     // text under Details.
     val failed = state.result?.failure
-    val identityView = remember { BringIntoViewRequester() }
-    val scope = rememberCoroutineScope()
+    // Set identity puts the person in the identity block's first empty field; a focused field scrolls into view.
+    val identityField = remember { FocusRequester() }
     if (failed != null) {
         Gutter {
             val place = placeOf(state, snapshot)
@@ -338,7 +334,7 @@ private fun Ready(
                     GitWay.SetIdentity ->
                         KitLineAction(
                             stringResource(Res.string.gitIdentityTitle),
-                            { scope.launch { identityView.bringIntoView() } },
+                            { identityField.requestFocus() },
                         )
                     null -> null
                 }
@@ -612,7 +608,7 @@ private fun Ready(
     if (
         snapshot.identity?.needsSetup == true || state.result?.problem == GitProblem.IdentityMissing
     )
-        Box(Modifier.bringIntoViewRequester(identityView)) { IdentityBlock(snapshot, actions, enabled) }
+        IdentityBlock(snapshot, actions, enabled, identityField)
 
     // Recent saves.
     if (snapshot.commits.isNotEmpty()) {
@@ -646,12 +642,13 @@ private fun placeOf(state: GitUi, snapshot: GitSnapshot): String {
 }
 
 @Composable
-private fun IdentityBlock(snapshot: GitSnapshot, actions: GitActions, enabled: KitEnabled) {
+private fun IdentityBlock(snapshot: GitSnapshot, actions: GitActions, enabled: KitEnabled, focus: FocusRequester) {
     val name = remember { TextFieldState(snapshot.identity?.name.orEmpty()) }
     val email = remember { TextFieldState(snapshot.identity?.email.orEmpty()) }
     val typedName = name.text.toString().trim()
     val typedEmail = email.text.toString().trim()
     val ready = typedName.isNotEmpty() && '@' in typedEmail
+    val toEmail = remember { snapshot.identity?.name.isNullOrBlank().not() && snapshot.identity?.email.isNullOrBlank() }
     Gutter {
         Column(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
             KitText(stringResource(Res.string.gitIdentityTitle), role = KitTextRole.Title)
@@ -661,6 +658,7 @@ private fun IdentityBlock(snapshot: GitSnapshot, actions: GitActions, enabled: K
                 stringResource(Res.string.gitIdentityName),
                 enabled = enabled,
                 modifier = Modifier.testTag("git-identity-name"),
+                focusRequester = focus.takeUnless { toEmail },
             )
             KitField(
                 email,
@@ -668,6 +666,7 @@ private fun IdentityBlock(snapshot: GitSnapshot, actions: GitActions, enabled: K
                 modifier = Modifier.testTag("git-identity-email"),
                 kind = KitFieldKind.Text,
                 enabled = enabled,
+                focusRequester = focus.takeIf { toEmail },
             )
             KitButton(
                 stringResource(Res.string.gitActionSaveIdentity),
