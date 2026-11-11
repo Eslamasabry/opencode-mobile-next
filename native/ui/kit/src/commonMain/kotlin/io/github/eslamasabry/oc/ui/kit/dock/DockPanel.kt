@@ -76,9 +76,10 @@ internal fun DockPanel(state: KitEdgeDockState, model: KitDockModel, words: KitD
             .layout { measurable, constraints ->
                 val p = state.panelTarget()
                 val d = density
-                // Edge frame [p.left, edge]; mirrored, [edgeInset, width - p.left].
-                val w = state.widthDp - state.edgeInset - p.left
-                val x = if (state.onRight) p.left else state.edgeInset
+                // The whole pane stands a page gutter in from the dock's screen edge: edge frame [p.left, width - gutter];
+                // mirrored, [gutter, width - p.left]. The rows keep their own gutter inside it.
+                val w = state.widthDp - DockDims.GUTTER - p.left
+                val x = if (state.onRight) p.left else DockDims.GUTTER
                 val pl = measurable.measure(Constraints.fixed((w * d).roundToInt().coerceAtLeast(1), ((p.bottom - p.top) * d).roundToInt().coerceAtLeast(1)))
                 layout(constraints.maxWidth, constraints.maxHeight) { pl.place((x * d).roundToInt(), (p.top * d).roundToInt()) }
             }

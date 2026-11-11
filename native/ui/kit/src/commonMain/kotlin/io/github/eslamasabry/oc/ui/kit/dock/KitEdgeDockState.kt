@@ -256,7 +256,10 @@ public class KitEdgeDockState internal constructor() {
             f.bRestLeft = p.left
             f.bTop = lerp(f.aTop, p.top, y)
             f.bBottom = lerp(f.aBottom, p.bottom, y)
-            f.bRight = p.right
+            // The pane comes off the screen edge as it grows (a strip is attached; a whole list stands a gutter in). The
+            // strip's box rides inside it: nothing of the strip is left at the edge once the list is whole.
+            f.bRight = listOuterSide(w, px)
+            f.aRight = min(f.aRight, f.bRight)
             f.bRadius = lerp(f.aRadius, p.radius, y)
             f.grow = px
         } else if (layout != null && swellGrow.value > 0.001f) {
