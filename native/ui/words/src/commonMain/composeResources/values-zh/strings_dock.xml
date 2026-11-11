@@ -8,7 +8,6 @@
     <string name="dockNeedsYou">需要你处理</string>
     <string name="dockFinished">已完成</string>
     <string name="dockFailed">失败</string>
-    <string name="dockIdle">空闲</string>
     <string name="dockChildNeedsYou">%1$s 需要你处理</string>
     <string name="dockChildFailed">%1$s 失败</string>
     <plurals name="dockSubagents">

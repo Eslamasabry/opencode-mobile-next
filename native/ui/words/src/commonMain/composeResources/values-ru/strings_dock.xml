@@ -8,7 +8,6 @@
     <string name="dockNeedsYou">Ждёт вас</string>
     <string name="dockFinished">Завершено</string>
     <string name="dockFailed">Не удалось</string>
-    <string name="dockIdle">Простаивает</string>
     <string name="dockChildNeedsYou">%1$s ждёт вас</string>
     <string name="dockChildFailed">%1$s: не удалось</string>
     <plurals name="dockSubagents">

@@ -8,7 +8,6 @@
     <string name="dockNeedsYou">Precisa de você</string>
     <string name="dockFinished">Concluída</string>
     <string name="dockFailed">Falhou</string>
-    <string name="dockIdle">Parada</string>
     <string name="dockChildNeedsYou">%1$s precisa de você</string>
     <string name="dockChildFailed">%1$s falhou</string>
     <plurals name="dockSubagents">

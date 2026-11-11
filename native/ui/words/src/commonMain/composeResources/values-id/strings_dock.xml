@@ -8,7 +8,6 @@
     <string name="dockNeedsYou">Butuh Anda</string>
     <string name="dockFinished">Selesai</string>
     <string name="dockFailed">Gagal</string>
-    <string name="dockIdle">Diam</string>
     <string name="dockChildNeedsYou">%1$s membutuhkan Anda</string>
     <string name="dockChildFailed">%1$s gagal</string>
     <plurals name="dockSubagents">

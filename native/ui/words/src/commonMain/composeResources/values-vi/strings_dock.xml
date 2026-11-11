@@ -8,7 +8,6 @@
     <string name="dockNeedsYou">Cần bạn</string>
     <string name="dockFinished">Đã xong</string>
     <string name="dockFailed">Thất bại</string>
-    <string name="dockIdle">Nhàn rỗi</string>
     <string name="dockChildNeedsYou">%1$s cần bạn</string>
     <string name="dockChildFailed">%1$s thất bại</string>
     <plurals name="dockSubagents">

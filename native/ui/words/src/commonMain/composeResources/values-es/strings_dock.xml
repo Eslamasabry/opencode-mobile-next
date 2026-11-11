@@ -8,7 +8,6 @@
     <string name="dockNeedsYou">Te necesita</string>
     <string name="dockFinished">Terminada</string>
     <string name="dockFailed">Fallida</string>
-    <string name="dockIdle">Inactiva</string>
     <string name="dockChildNeedsYou">%1$s te necesita</string>
     <string name="dockChildFailed">%1$s falló</string>
     <plurals name="dockSubagents">
