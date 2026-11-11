@@ -99,6 +99,18 @@ class GlassInTheKitStep1KitTest {
         }
     }
 
+    @Test
+    fun `B-KIT-003 1b' the page's ink lift and a liquid pane's second-line lift never stack - the larger applies`() {
+        val liquid = io.github.eslamasabry.oc.ui.design.effects.LiquidJoin.SECOND_INK_ON_GLASS
+        val tone = io.github.eslamasabry.oc.ui.design.type.TextTone.Secondary
+        assertEquals(liquid, io.github.eslamasabry.oc.ui.kit.kitToneLift(tone, .3f, onLiquid = true))
+        assertEquals(.7f, io.github.eslamasabry.oc.ui.kit.kitToneLift(tone, .7f, onLiquid = true))
+        assertEquals(.3f, io.github.eslamasabry.oc.ui.kit.kitToneLift(tone, .3f, onLiquid = false))
+        assertEquals(.3f, io.github.eslamasabry.oc.ui.kit.kitToneLift(io.github.eslamasabry.oc.ui.design.type.TextTone.Tertiary, .3f, onLiquid = true))
+        assertEquals(0f, io.github.eslamasabry.oc.ui.kit.kitToneLift(io.github.eslamasabry.oc.ui.design.type.TextTone.Primary, .3f, onLiquid = true))
+        assertEquals(0f, io.github.eslamasabry.oc.ui.kit.kitToneLift(tone, 0f, onLiquid = false), "no page light, no liquid pane: the plain ink")
+    }
+
     /** [d] drawn alone on black, a 200 x 200 px square (density 1). */
     private fun drawn(d: SurfaceDecoration): PixelMap {
         lateinit var map: PixelMap

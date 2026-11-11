@@ -376,6 +376,26 @@ class GlassInTheKitStep1Test {
         }
     }
 
+    @Test
+    fun `B-KIT-003 1b' the page's ink lift applies only on a dark Glass page painted clear, and keeps the hierarchy`() {
+        assertEquals(GlassSpec.PAGE_SECOND_INK_LIFT, GlassSpec.pageInkLift(dark = true, paintedClear = true))
+        assertEquals(0f, GlassSpec.pageInkLift(dark = true, paintedClear = false), "the fallback keeps its inks")
+        assertEquals(0f, GlassSpec.pageInkLift(dark = false, paintedClear = true), "the light page has no light to answer")
+        assertTrue(GlassSpec.PAGE_SECOND_INK_LIFT in 0f..LiftLimit, "at most half way to the primary ink")
+        // The secondary words stay visibly below the primary ones on every clear pane's face.
+        for (p in clearPanes) for (f in listOfNotNull(p.d.fill, p.d.fillStart)) {
+            val face = f.over(p.roles.ground.withAlpha(1f))
+            val inks = GlassSpec.liftedInks(p.roles, GlassSpec.PAGE_SECOND_INK_LIFT)
+            val ratio = wcagContrast(inks[0], inks[1].over(face))
+            assertTrue(ratio >= 1.3 - 1e-3, "${p.name}: text1 / lifted text2 only $ratio")
+        }
+        // The lifted inks are the plain ones at no lift.
+        val r = roles(PackId.Opencode, true)
+        assertEquals(listOf(r.text1, r.text2, r.text3), GlassSpec.liftedInks(r, 0f))
+    }
+
+    private val LiftLimit = .5f
+
     // ---- 1c. Dividers stop before the rim under Glass
 
     @Test

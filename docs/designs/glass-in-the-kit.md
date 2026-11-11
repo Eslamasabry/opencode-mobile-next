@@ -1,6 +1,6 @@
 # Glass in the kit: the surface system applies the recipes, not each component
 
-Status: v2, 2026-11-11, after three reviews of v1 (code accuracy, architecture, scope). Step 1 is cleared to build.
+Status: v2, 2026-11-11, after three reviews of v1 (code accuracy, architecture, scope). Step 1 built (see "As built, step 1"; 1b held).
 
 ## What the owner asked
 
@@ -113,6 +113,56 @@ light theme's edge, the + button (it already has a lens and waits for content un
    panel with rows, dark), before and after, saved as PNGs next to this note. Desktop has no lens; that is fine for
    in-flow panes. If the clear state cannot be forced on desktop within half an hour, say so and skip it.
 4. The APK is built by the coordinator on GitHub from the combined line; the owner's phone is the first real look.
+
+### As built, step 1 (2026-11-11, branch `native/liquid-merge-one-body`)
+
+**1a, as the note says.** `SurfaceDecoration.edgeRest` holds the rim between its two lit ends (null: the old straight
+fade); `drawGlassFace` and `kitDecorated` draw start, rest, end as three stops along the same top-start to bottom-end
+gradient; `SurfaceFade.between` fades a rest to and from a straight rim through the straight rim's own middle (a rim
+change also restarts `rememberSurfaceFade`, which compares whole decorations, so it needed no code of its own). The
+`PANE_RIM_*` constants are gone: `GlassLook` has `paneRimStart/Rest/End` for dark and light. Default: dark .24 / .10 /
+.30, light .60 / straight / .16. Frosted: dark .24 / straight / .07, light .60 / straight / .16 (the old numbers).
+Smoked is `GlassLook.Default` with Frosted's rim, so it keeps the old rim too. Chosen rows keep their accent rim (no
+rest). Seen in the desktop render: the list panel's bottom-end corner and edge are now lit, the top-end and bottom-start
+corners quiet. On a wide short pane (All conversations) the fade runs almost straight across, so both round ends light
+up, the right one along its top as well; that is the gradient's geometry, not a new number.
+
+**1b, not shipped as the note's numbers: the rule it carries does not allow them.** Built and wired: `CHROMA_DARK`
+separate from `CHROMA_DARK_QUIET` (.14, Flutter's) which the look thumbnails keep; `spotsChromaFor` caps the spots at the
+quiet plate's; the two lights (`AuroraImage.LIGHTS_DARK`, 15 % / 25 % r 45 %, 70 % / 55 % r 40 %), full over the inner
+45 % with a smoothstep fade, in the accent's hue, drawn additively over the plate in page fractions and still while it
+drifts. Measured on the VPS (`GlassInTheKitStep1Test`): today's clear panes have 0.012 of contrast to spare at chroma .14.
+At .15 a Frosted Opencode pane's secondary words read 4.51 against 4.54, at .20 4.43; with chroma .20 and the .10 lights
+(1.32 of one light's peak where they meet on a wide page) the home's Glossy list panel's secondary words read 3.63
+against 4.54. The most light every pane reads under is about .001 of luma. The plate adds colour, not brightness, so
+the panes' tint is fitted to the ground's brightness and any brightness behind them costs words. Following "lower the
+light, do not thicken a pane", `CHROMA_DARK` stays .14 and `LIGHT_PEAK_LUMA` is 0: the page looks as before. Turning
+either on is one number, and is the owner's call: a brighter page needs thicker panes. The test's report: for the
+note's page the home's list panel (Glossy Content/Surface1) would thicken by a median .42 of tint over the packs, and
+some pane by up to .60 (Glossy Solarized Content/Surface2, .16 to .76): no longer clear glass. So the light, if wanted,
+needs another answer for the words than a thicker tint. `render-1b-as-noted-dark.png` shows the page with the note's
+numbers, for that call; its words fail the floor over the brightest point.
+
+**1b', brighter secondary ink (coordinator, 2026-11-11), measured and held.** Wired: `GlassSpec.PAGE_SECOND_INK_LIFT`
+moves text2 and text3 toward text1 (`GlassSpec.liftedInks`), only on a dark Glass page whose painted aurora the panes
+are clear over (`GlassSpec.pageInkLift`, provided by `KitLiveBackground` as `LocalKitPageInkLift`, applied by KitText's
+tone ink); a liquid pane's `SECOND_INK_ON_GLASS` and the page lift never stack, the larger applies. Pane tints are still
+measured with the plain inks, so no pane changes thickness. Measured at chroma .20 and the brightest point (1.32 of a
+light's peak), with the panes as thick as today: the words read under a light peak of at most .011 at a lift of .05,
+.026 at .20, .040 at .30, .051 at .40, .061 at .50; the secondary ink stays at least 1.3 times below the primary on the
+pane's face only up to a lift of .40 (1.30; 1.27 at .45, 1.23 at .50). The icons and track edges, which keep their
+inks (3:1 floor), read under a peak of at most .030 (tightest: Glossy Ocean Control/Surface3, `#6D7B8A` over
+`#194B65`, 2.23 against 3.04 at .10). So no (lift, light) pair reaches a .05 light with every clear pane's words and
+icons at the floor; words alone allow lift .40 with a .05 light, at the edge of the hierarchy limit. Per the
+coordinator's rule (nothing passes at .05: stop and report), the lift ships at 0 with the page held. Raising the page
+needs an answer for the icons and track edges too.
+
+**1c, as the note says.** `StyleTokens.dividerEndGutters` (Glass 1, every other style 0) sets `KitRowPanel`'s hairline
+end inset to one gutter. In the render the lines end where the time column ends, clear of the rim.
+
+**Checks.** Design and kit tests on the VPS; renders `render-before-dark.png` (base numbers) and
+`render-after-dark.png` (as built), both forced clear on desktop (Motion Calm, not Off, which is reduced motion and holds
+the frost) by `GlassRecipeRenders`. No golden compared anywhere uses Glass with these parts, so no golden changed.
 
 ## Step 2 (after the owner has judged step 1)
 

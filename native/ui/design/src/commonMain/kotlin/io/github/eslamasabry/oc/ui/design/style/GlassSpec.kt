@@ -361,10 +361,14 @@ public object GlassSpec : StyleSpec {
 
     /**
      * How far a Glass page painted with light moves its secondary and tertiary words toward its primary ink
-     * (glass-in-the-kit 1b'): the least lift that lets the dark aurora page carry its lights ([pageInkLift]).
-     * Measured by GlassInTheKitStep1Test over every clear pane, pack and glass look at the brightest point.
+     * (glass-in-the-kit 1b', coordinator 2026-11-11). Held at 0 with the page (AuroraImage.CHROMA_DARK .14, no lights):
+     * measured by GlassInTheKitStep1Test at chroma .20 and the brightest point, the words read under a light of at most
+     * .051 luma at a lift of .40 (.061 at .50), while the secondary ink stays 1.30 times below the primary only up to .40;
+     * and the icons and track edges, which keep their inks, read under at most .030, so no pair reaches a .05 light.
+     * The lift is wired (KitText's tone ink, the larger of it and a liquid pane's second-line lift); it ships with the
+     * page light once the icons have an answer too.
      */
-    public const val PAGE_SECOND_INK_LIFT: Float = .30f
+    public const val PAGE_SECOND_INK_LIFT: Float = 0f
 
     /**
      * The lift for words on this page: [PAGE_SECOND_INK_LIFT] on a dark Glass page whose painted aurora the panes are
