@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -289,6 +290,8 @@ public data class FleetRunState(
     val work: FleetWorkUi? = null,
     /** The merge section at the end of the page (Dart `TeamMergeSection`): hidden until the task's work is done. */
     val merge: FleetMergeUi = FleetMergeUi(),
+    /** The host front's supervision rules (Dart `controller.policy`); null where the host has none. */
+    val policy: io.github.eslamasabry.oc.engine.team.fleet.FleetPolicy? = null,
 )
 
 public interface FleetRunActions {
@@ -333,9 +336,19 @@ public class FleetRunViewModel(
     private val profile = route.profileId.raw
     private val fleet = engine.fleetState(profile).stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_AFTER_MS), FleetState())
 
-    private data class Local(val confirming: Boolean = false, val busy: Boolean = false, val sent: FleetRunSent? = null, val step: String? = null)
+    private data class Local(val confirming: Boolean = false, val busy: Boolean = false, val sent: FleetRunSent? = null, val step: String? = null, val policy: io.github.eslamasabry.oc.engine.team.fleet.FleetPolicy? = null)
 
     private val local = MutableStateFlow(Local())
+
+    init {
+        viewModelScope.launch {
+            val ready = fleet.first { it.phase == io.github.eslamasabry.oc.engine.team.fleet.FleetPhase.Ready && it.hasData }
+            if (ready.capabilities.mergeReadiness) {
+                val policy = engine.fleet?.policy(profile)
+                local.update { it.copy(policy = policy) }
+            }
+        }
+    }
 
     /** Approve, then merge into main, once every step is done (team-eg's section, on this page's lifetime). */
     public val merge: FleetMergeController? =
@@ -358,6 +371,7 @@ public class FleetRunViewModel(
                     confirmingStop = mine.confirming,
                     work = mine.step?.takeIf { computer }?.let { FleetRunPresent.work(fleet, it, redactor::details) },
                     merge = if (computer) merging else FleetMergeUi(),
+                    policy = if (computer) mine.policy else null,
                 )
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_AFTER_MS), FleetRunState())

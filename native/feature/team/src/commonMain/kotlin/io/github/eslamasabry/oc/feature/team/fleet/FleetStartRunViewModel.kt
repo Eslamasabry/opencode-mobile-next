@@ -12,6 +12,7 @@ import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import io.github.eslamasabry.oc.engine.team.TeamEngine
 import io.github.eslamasabry.oc.engine.team.fleet.FleetAgentAction
 import io.github.eslamasabry.oc.engine.team.fleet.FleetControl
+import io.github.eslamasabry.oc.engine.team.fleet.FleetPhase
 import io.github.eslamasabry.oc.engine.team.fleet.ReceiptStatus
 import io.github.eslamasabry.oc.feature.team.presentation.fleetState
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -73,6 +75,17 @@ public class FleetStartRunViewModel(
     public val state: StateFlow<FleetStartUi> =
         combine(engine.fleetState(profile), local) { fleet, mine -> FleetStartPresent.present(fleet, mine) }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), FleetStartUi())
+
+    init {
+        // Dart `OrchestrationController.policy`: read once the team answers; a bare supervisor has none (the engine answers null).
+        viewModelScope.launch {
+            val ready = engine.fleetState(profile).first { it.phase == FleetPhase.Ready && it.hasData }
+            if (ready.capabilities.mergeReadiness) {
+                val policy = engine.fleet?.policy(profile)
+                local.update { it.copy(policy = policy) }
+            }
+        }
+    }
 
     override fun back(): Unit = nav.back()
 

@@ -74,6 +74,8 @@ public data class FleetStartLocal(
     /** The host's words for the direct task's problem: Details only. */
     val directWords: String? = null,
     val wake: FleetWakeLocal = FleetWakeLocal(),
+    /** The host front's rules, read once the team answers; null where the host has none (Dart `controller.policy`). */
+    val policy: io.github.eslamasabry.oc.engine.team.fleet.FleetPolicy? = null,
 )
 
 public enum class FleetDirectStage { Creating, Sending }

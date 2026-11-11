@@ -30,6 +30,7 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.feature.team.fleet.FleetMergeActions
 import io.github.eslamasabry.oc.feature.team.fleet.FleetMergeKind
 import io.github.eslamasabry.oc.feature.team.fleet.FleetMergeSection
+import io.github.eslamasabry.oc.feature.team.fleet.FleetPolicyBlock
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
@@ -247,6 +248,7 @@ private fun Page(state: FleetRunState, actions: FleetRunActions, merge: FleetMer
             }
         }
         ui.sent?.let { sent -> item(key = "receipt") { StopReceipt(sent.status, sent.retryable, actions) } }
+        state.policy?.let { policy -> item(key = "policy") { FleetPolicyBlock(policy) } }
         item(key = "technical") {
             val values =
                 ui.facts.map { fact ->

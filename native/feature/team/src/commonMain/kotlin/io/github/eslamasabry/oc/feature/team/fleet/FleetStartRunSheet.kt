@@ -117,6 +117,7 @@ private fun PlannerForm(ui: FleetStartUi, actions: FleetStartRunActions) {
             modifier = Modifier.testTag("fleet-start-supervision"),
             onSelect = actions::chooseSupervision,
         )
+        mine.policy?.let { FleetBoundariesRow(it) }
         if (mine.waking) KitNotice(stringResource(Res.string.teamUiStartRunWaking), Modifier.testTag("fleet-start-waking"), tone = StatusTone.Progress)
         mine.refused?.let { words ->
             KitNotice(

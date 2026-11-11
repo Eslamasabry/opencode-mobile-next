@@ -61,3 +61,31 @@ public fun FleetPolicyBlock(policy: FleetPolicy, modifier: Modifier = Modifier) 
         }
     }
 }
+
+/**
+ * Only the host's boundaries, for the Start a run page (Dart `TeamBoundariesRow`): the rules each on a row in the host's
+ * words and the line that says they are set on the host. The supervision level is the page's own choice there, so it is
+ * not repeated.
+ */
+@Composable
+public fun FleetBoundariesRow(policy: FleetPolicy, modifier: Modifier = Modifier) {
+    val none = stringResource(Res.string.teamUiPolicyBoundariesNone)
+    KitRowGroup(
+        modifier.testTag("fleet-start-boundaries"),
+        label = stringResource(Res.string.teamUiPolicyBoundariesLabel),
+        note = stringResource(Res.string.teamUiPolicyFromHost),
+    ) {
+        if (policy.boundaries.isEmpty()) {
+            KitRow(title = none, modifier = Modifier.testTag("fleet-start-boundaries-none"))
+        } else {
+            policy.boundaries.forEach { b ->
+                KitRow(
+                    title = b.text,
+                    titleMaxLines = 2,
+                    leading = KitRowLeading.Glyph(KitIcons.shield),
+                    modifier = Modifier.testTag("fleet-start-boundary-${b.key}"),
+                )
+            }
+        }
+    }
+}

@@ -138,7 +138,9 @@ object CapabilityFlowsWiring {
                                         )
                                     CapabilityEnableFlow.QuotaCollectorGuide -> nav.open(PlansRoute)
                                     // Flutter's teamTurnOn opens the team page (it says what to do when off).
-                                    CapabilityEnableFlow.TeamTurnOn ->
+                                    // The team page says what to do when off and offers the host guide (the team now exists).
+                                    CapabilityEnableFlow.TeamTurnOn,
+                                    CapabilityEnableFlow.TeamHostGuide ->
                                         if (profile != null) nav.open(TeamRoute.Home(profile))
                                         else
                                             nav.open(
@@ -146,7 +148,6 @@ object CapabilityFlowsWiring {
                                                     CapabilityServerDoor.AddServer
                                                 )
                                             )
-                                    CapabilityEnableFlow.TeamHostGuide,
                                     CapabilityEnableFlow.AddExternalAgent ->
                                         return@withContext Outcome.Failed(
                                             Failure.Unavailable(
@@ -165,7 +166,6 @@ object CapabilityFlowsWiring {
 
     private val unavailable =
         mapOf(
-            CapabilityEnableFlow.TeamHostGuide to CapabilityFlowLimit.TeamAfterSwitch,
             CapabilityEnableFlow.AddExternalAgent to CapabilityFlowLimit.ExternalAgentsDropped,
         )
 }
