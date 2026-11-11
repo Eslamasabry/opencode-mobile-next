@@ -111,8 +111,40 @@ internal fun StartNewConversationConfirm(ask: StartNewUi?, onConfirm: () -> Unit
     )
 }
 
+/**
+ * P14: a row's Details over the home, the facts the list knows (F: lib/ui/widgets/session_menu.dart:42-48, Details
+ * does not need the open conversation). The conversation's own Details (model, context, cost) stays in the
+ * conversation; a tap on the row opens it.
+ */
+@Composable
+private fun RowDetailsSheet(details: io.github.eslamasabry.oc.feature.chats.presentation.RowDetailsUi?, actions: ChatsActions) {
+    // The facts stay drawn while the sheet slides away.
+    val last = remember { arrayOfNulls<io.github.eslamasabry.oc.feature.chats.presentation.RowDetailsUi>(1) }
+    if (details != null) last[0] = details
+    val shown = last[0]
+    KitSheet(
+        visible = details != null,
+        onDismissRequest = actions::closeRowDetails,
+        title = stringResource(Res.string.sessionMenuDetails),
+        subtitle = shown?.let { rowTitleWords(it.title) },
+        closeLabel = stringResource(Res.string.kitSheetClose),
+    ) {
+        val facts = shown ?: return@KitSheet
+        Column(Modifier.testTag("chats-row-details")) {
+            KitRowGroup {
+                facts.server?.let { KitRow(stringResource(Res.string.chatHeaderServer), trailing = KitRowTrailing.Value(KitBidi.auto(it), chevron = false)) }
+                facts.project?.let { KitRow(stringResource(Res.string.continueWithFactProject), trailing = KitRowTrailing.Value(KitBidi.auto(it), chevron = false)) }
+                facts.directory?.let { KitRow(stringResource(Res.string.mentionProjectFolder), supporting = KitBidi.ltr(it)) }
+                facts.branch?.let { KitRow(stringResource(Res.string.isolatedTaskBranchLabel), trailing = KitRowTrailing.Value(KitBidi.ltr(it), chevron = false)) }
+                facts.agent?.let { KitRow(stringResource(Res.string.chatUiAgent), trailing = KitRowTrailing.Value(KitBidi.auto(it), chevron = false)) }
+            }
+        }
+    }
+}
+
 @Composable
 internal fun ChatsHomeSheets(state: ChatsUi, actions: ChatsActions) {
+    RowDetailsSheet(state.rowDetails, actions)
     val sheet = state.sheet
     // The in-use server the person asked to disconnect from, waiting for their yes.
     var askDisconnect by remember { mutableStateOf<Pair<io.github.eslamasabry.oc.core.common.ids.ProfileId, String>?>(null) }

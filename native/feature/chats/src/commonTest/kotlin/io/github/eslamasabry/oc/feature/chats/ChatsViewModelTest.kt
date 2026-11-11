@@ -730,6 +730,45 @@ class ChatsViewModelTest {
     }
 
     @Test
+    fun `P14 Details from a row shows its facts over the home and opens nothing`() = runTest {
+        val nav = RecordingNavigator()
+        val home = Home(listOf(ChatsListSourceUi(P1, "Laptop", shown = true, main = true, onThisPhone = false, unreachable = false)))
+        val feed = Feed().apply { snapshot.value = ChatFeedSnapshot(persistentListOf(item("s1", "/work/api"))) }
+        val vm = ChatsViewModel(feed, Briefs(), Door(false), { Instant.fromEpochMilliseconds(0) }, clock, nav, home = home)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val row = vm.state.value.recent.single()
+        vm.rowAct(row, io.github.eslamasabry.oc.feature.chats.presentation.RowAct.Details)
+        assertEquals(emptyList(), nav.calls, "the person asked about the row; nothing opens under the sheet")
+        val details = vm.state.value.rowDetails!!
+        assertEquals(row.key, details.key)
+        assertEquals("Laptop", details.server, "the server named as the home's sources name it")
+        assertEquals("api", details.project)
+        assertEquals("/work/api", details.directory)
+        vm.closeRowDetails()
+        assertEquals(null, vm.state.value.rowDetails, "closing it leaves the person on the list")
+        assertEquals(emptyList(), nav.calls)
+        // The acts that do need the conversation still open it.
+        vm.rowAct(row, io.github.eslamasabry.oc.feature.chats.presentation.RowAct.Share)
+        assertEquals(1, nav.routes.size)
+    }
+
+    @Test
+    fun `P5 All conversations opens with the home's project, else Running, as its count says`() {
+        val nav = RecordingNavigator()
+        val vm = ChatsViewModel(Feed(), Briefs(), Door(false), { Instant.fromEpochMilliseconds(0) }, clock, nav)
+        vm.showAll()
+        vm.chooseProject("/work/web")
+        vm.showAll()
+        vm.chooseProject("/work/web")
+        vm.toggleRunning()
+        vm.showAll()
+        assertEquals(
+            listOf<AppRoute>(ChatsRoute.All(null), ChatsRoute.All("/work/web"), ChatsRoute.All("running")),
+            nav.routes,
+        )
+    }
+
+    @Test
     fun `B-182 Open a project from the project chip opens the real flow, not a path box`() {
         val nav = RecordingNavigator()
         val vm = ChatsViewModel(Feed(), Briefs(), Door(available = false), { Instant.fromEpochMilliseconds(0) }, clock, nav)
