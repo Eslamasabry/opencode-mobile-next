@@ -252,6 +252,8 @@ public class KitEdgeDockState internal constructor() {
             val y = py.coerceIn(0f, 1f)
             f.hasB = true
             f.panel = true
+            // The strip's box and its rings come in with the pane's outer side (see [stripShift]).
+            f.aLeft -= stripShift()
             f.bLeft = min(f.aLeft, lerp(f.aLeft, p.left, px))
             f.bRestLeft = p.left
             f.bTop = lerp(f.aTop, p.top, y)
