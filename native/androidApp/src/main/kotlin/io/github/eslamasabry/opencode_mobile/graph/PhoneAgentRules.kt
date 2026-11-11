@@ -102,6 +102,41 @@ internal object PhoneAgentRules {
     fun listsAcrossProjects(globalSessionSearch: Boolean, helper: Boolean): Boolean = globalSessionSearch || helper
 
     /**
+     * The server the home opens on at start, from the saved choice [chosen]. A saved choice of the phone agents'
+     * helper (earlier builds listed it as a server) means the phone it belongs to ([phoneOf]); with no such phone,
+     * the first saved server that is not a helper; with none, null (nothing to open). Any other choice stays.
+     */
+    fun homeServer(
+        chosen: String?,
+        saved: List<String>,
+        isHelper: (String) -> Boolean,
+        phoneOf: (String) -> String?,
+    ): String? =
+        if (chosen != null && !isHelper(chosen)) chosen
+        else chosen?.let(phoneOf) ?: saved.firstOrNull { !isHelper(it) }
+
+    /**
+     * The saved helpers that go when [removed] goes: those whose phone ([phoneOf]) it is. The helper is part of This
+     * phone and has no row of its own to be removed from (Flutter: `<phone>.agents` dies with the phone's profile).
+     */
+    fun removedWith(removed: String, saved: List<String>, phoneOf: (String) -> String?): List<String> =
+        saved.filter { it != removed && phoneOf(it) == removed }
+
+    /**
+     * The name each saved helper must carry so that every place that names a connection (a chat's header, an alert,
+     * All conversations, a widget) calls its conversations This phone's: its phone's own name. [saved] is (id, name);
+     * the result lists only the helpers whose name differs, as (id, phone's name). A helper with no phone keeps its
+     * name.
+     */
+    fun helperNames(saved: List<Pair<String, String>>, phoneOf: (String) -> String?): List<Pair<String, String>> {
+        val names = saved.toMap()
+        return saved.mapNotNull { (id, name) ->
+            val phone = phoneOf(id)?.let(names::get)?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+            if (phone == name) null else id to phone
+        }
+    }
+
+    /**
      * A kept "interrupted" or "failed" install result for an agent whose installed-check now passes is out of date (an
      * earlier run was cut short but the agent is there): it is dropped, not shown. A running or finished-well
      * install, and a result for an agent still missing, stay.

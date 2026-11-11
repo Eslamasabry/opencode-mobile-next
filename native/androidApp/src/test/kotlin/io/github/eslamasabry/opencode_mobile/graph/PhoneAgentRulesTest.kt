@@ -128,6 +128,49 @@ class PhoneAgentRulesTest {
         assertEquals(null, PhoneAgentRules.phoneOf("x-agents", "x", "x-agents", setOf("x-agents")))
     }
 
+    // The owner's phone today: "phone" (This phone), its helper "phone-agents" saved as "Phone agents", and a laptop.
+    private val saved = listOf("phone", "phone-agents", "laptop")
+    private val helpers = mapOf("phone-agents" to "phone", "old-agents" to null)
+
+    private fun isHelper(id: String) = id in helpers
+
+    private fun phoneOf(id: String) = helpers[id]
+
+    @Test
+    fun `ONE-PHONE at start a saved choice of the helper opens on its phone, any other choice stays`() {
+        assertEquals("phone", PhoneAgentRules.homeServer("phone-agents", saved, ::isHelper, ::phoneOf))
+        assertEquals("laptop", PhoneAgentRules.homeServer("laptop", saved, ::isHelper, ::phoneOf))
+        assertEquals("phone", PhoneAgentRules.homeServer("phone", saved, ::isHelper, ::phoneOf))
+        // Nothing chosen: the first saved server, never the helper even when it was saved first.
+        assertEquals("phone", PhoneAgentRules.homeServer(null, listOf("phone-agents", "phone"), ::isHelper, ::phoneOf))
+        // A helper whose phone is gone: the first real server; with none, nothing to open (never the helper).
+        assertEquals("laptop", PhoneAgentRules.homeServer("old-agents", listOf("old-agents", "laptop"), ::isHelper, ::phoneOf))
+        assertNull(PhoneAgentRules.homeServer("old-agents", listOf("old-agents"), ::isHelper, ::phoneOf))
+        assertNull(PhoneAgentRules.homeServer(null, emptyList(), ::isHelper, ::phoneOf))
+    }
+
+    @Test
+    fun `ONE-PHONE removing This phone removes its helper, removing anything else leaves it`() {
+        assertEquals(listOf("phone-agents"), PhoneAgentRules.removedWith("phone", saved, ::phoneOf))
+        assertEquals(emptyList<Any>(), PhoneAgentRules.removedWith("laptop", saved, ::phoneOf))
+        // The helper's own id never lists itself (a direct removal of it is the one removal).
+        assertEquals(emptyList<Any>(), PhoneAgentRules.removedWith("phone-agents", saved, ::phoneOf))
+        // A helper with no phone is not swept by some other removal.
+        assertEquals(emptyList<Any>(), PhoneAgentRules.removedWith("laptop", saved + "old-agents", ::phoneOf))
+    }
+
+    @Test
+    fun `ONE-PHONE the helper carries its phone's name, so nothing names it Phone agents`() {
+        val names = listOf("phone" to "This phone", "phone-agents" to "Phone agents", "laptop" to "Laptop", "old-agents" to "Phone agents")
+        assertEquals(listOf("phone-agents" to "This phone"), PhoneAgentRules.helperNames(names, ::phoneOf))
+        // The person renamed the phone: the helper follows; already named: nothing to write.
+        assertEquals(
+            listOf("phone-agents" to "Pixel"),
+            PhoneAgentRules.helperNames(listOf("phone" to "Pixel", "phone-agents" to "This phone"), ::phoneOf),
+        )
+        assertEquals(emptyList<Any>(), PhoneAgentRules.helperNames(listOf("phone" to "Pixel", "phone-agents" to "Pixel"), ::phoneOf))
+    }
+
     @Test
     fun `ONE-PHONE the phone agents' folder list never makes the whole list single-project`() {
         assertTrue(PhoneAgentRules.listsAcrossProjects(globalSessionSearch = false, helper = true))

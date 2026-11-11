@@ -33,5 +33,27 @@ internal fun PreviewStores.phoneOfHelper(id: ProfileId): ProfileId? {
         ?.let(::ProfileId)
 }
 
+/**
+ * Gives each saved helper its phone's name ([PhoneAgentRules.helperNames]): earlier builds saved it as "Phone agents",
+ * and every place that names a connection (a chat's header and Details, an alert, All conversations, a widget, the
+ * Inbox) read that name. Run before the helper connects (a renamed profile reopens its connection). A failed write
+ * leaves the old name until the next start; nothing else depends on it.
+ */
+internal suspend fun PreviewStores.nameHelpersAfterPhones() {
+    val saved = profiles.profiles.value
+    val renames =
+        PhoneAgentRules.helperNames(saved.map { it.id.raw to it.profile.name }) { id ->
+            phoneOfHelper(ProfileId(id))?.raw
+        }
+    for ((id, name) in renames) {
+        val helper = profiles.profile(ProfileId(id)) ?: continue
+        profiles.upsert(helper.profile.copy(name = name), expected = helper)
+    }
+}
+
+/** The name a helper is saved under: its phone's ([phone]), as everywhere else; [fallback] only with no phone name. */
+internal fun PreviewStores.helperName(phone: ProfileId, fallback: String): String =
+    profiles.profile(phone)?.profile?.name?.takeIf { it.isNotBlank() } ?: fallback
+
 private fun PreviewStores.helperOwner(id: ProfileId): String? =
     (prefs.get("oc.phoneAgentOwner.${id.raw}") as? PrefValue.Str)?.value

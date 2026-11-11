@@ -178,11 +178,17 @@ class PreviewRuntime(
             // in the list beside the phone's own.
             val chosen = profiles.activeId.value
             val active =
-                if (chosen != null && !isPhoneHelper(chosen)) chosen
-                else
-                    chosen?.let { stores.phoneOfHelper(it) }
-                        ?: profiles.profiles.value.firstOrNull { !isPhoneHelper(it) }?.id
+                PhoneAgentRules.homeServer(
+                        chosen?.raw,
+                        profiles.profiles.value.map { it.id.raw },
+                        isHelper = { isPhoneHelper(ProfileId(it)) },
+                        phoneOf = { stores.phoneOfHelper(ProfileId(it))?.raw },
+                    )
+                    ?.let(::ProfileId)
             if (chosen != null && active != null && active != chosen) profiles.setActive(active)
+            // Before any connection opens: the helper carries its phone's name, so every place that names a
+            // connection (a chat's header, an alert, All conversations) reads This phone, never "Phone agents".
+            stores.nameHelpersAfterPhones()
             // 47-port-rest-2: the saved session labels show at once, marked unverified, until the
             // server answers.
             if (active != null) seedOpening(active)
@@ -335,13 +341,10 @@ class PreviewRuntime(
             }
 
     /** The server on the home stays the one the person chose: opening the Agents page used to switch it to "Phone agents". */
-    override suspend fun connectInBackground(id: ProfileId): Outcome<Unit> {
-        // The phone agents' helper never becomes the home's server, even when an earlier build saved it as one.
-        val home = !isPhoneHelper(id)
-        return connectCommand(id, makeActive = home && id == profiles.activeId.value) { turn ->
-            connectForHome(id, makeActive = home && turn.activate && id == profiles.activeId.value, local = turn.local)
+    override suspend fun connectInBackground(id: ProfileId): Outcome<Unit> =
+        connectCommand(id, makeActive = id == profiles.activeId.value) { turn ->
+            connectForHome(id, makeActive = turn.activate && id == profiles.activeId.value, local = turn.local)
         }
-    }
 
     /**
      * [local]: how the wait for this phone's own server ended, when the attempt waited for it outside the lock
@@ -1414,7 +1417,11 @@ anySourceLoaded = true
     suspend fun remove(id: ProfileId, discardHeld: Boolean): Outcome<Unit> {
         // The phone agents' helper is part of This phone and has no row of its own to remove it from: it goes with
         // the phone (its prompts too: the person removed the phone). Read before the phone's keys are swept.
-        val helpers = profiles.profiles.value.map { it.id }.filter { stores.phoneOfHelper(it) == id }
+        val helpers =
+            PhoneAgentRules.removedWith(id.raw, profiles.profiles.value.map { it.id.raw }) {
+                    stores.phoneOfHelper(ProfileId(it))?.raw
+                }
+                .map(::ProfileId)
         val removed = removeOne(id, discardHeld)
         if (removed is Outcome.Failed) return removed
         for (helper in helpers) {
