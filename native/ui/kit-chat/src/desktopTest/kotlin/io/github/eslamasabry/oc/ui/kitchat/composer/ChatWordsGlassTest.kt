@@ -345,8 +345,8 @@ class ChatWordsGlassTest {
         val rim = minOf(22f, 0.4f * (bar.bottom - bar.top).value)
         val clearTo = paneBottom - rim - 1f
         assertTrue(bright.rows.any { it.top < bar.top }, "rows run under the bar: ${bright.rows.map { it.top..it.bottom }} bar $bar")
-        // The status bar's band and the bar's title line.
-        val (mean, max) = diff(bright.image, none.image, bar.left.value + 30f, bar.top.value, bar.right.value - 30f, clearTo)
+        // The bar's title line, below the status edge (which keeps its blur of the page: chat edge A).
+        val (mean, max) = diff(bright.image, none.image, bar.left.value + 30f, bar.top.value + STATUS_EDGE_DP, bar.right.value - 30f, clearTo)
         println("bar words: mean $mean max $max over 0..$clearTo, bar $bar")
         assertTrue(mean <= WORDS_MEAN && max <= WORDS_MAX, "bright rows show behind the bar's title: mean $mean, max $max of 255\n" + map(bright.image, none.image, 0f, 0f, bar.right.value, bar.bottom.value))
         // In the rim above the bar's bottom edge the glass still bends real rows.
@@ -528,6 +528,9 @@ class ChatWordsGlassTest {
         const val BAR_DP = 56
         const val ROW_DP = 40
         const val LABEL_DP = 64
+
+        /** The status edge's dissolve reaches this far under the bar's top (24 dp inset plus its blur's reach). */
+        const val STATUS_EDGE_DP = 10f
         const val ROWS = 60
         const val SCROLLED_TO = 20
 

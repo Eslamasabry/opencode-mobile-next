@@ -397,7 +397,7 @@ class KitFloatingBarTest {
             val clear = capsule.bottom.value - rimDp - 1f
             val lines = listOfNotNull(bar, bright.bounds["pills"])
             for (line in lines) {
-                val (mean, max) = diff(bright.image, none.image, line.left.value + 8f, line.top.value + 2f, line.right.value - 8f, minOf(line.bottom.value - 2f, clear))
+                val (mean, max) = diff(bright.image, none.image, line.left.value + 8f, line.top.value + 10f, line.right.value - 8f, minOf(line.bottom.value - 2f, clear))
                 println("$page words over $line: mean $mean max $max")
                 assertTrue(mean <= WORDS_MEAN && max <= WORDS_MAX, "$page: bright rows show behind the words on the pane at $line: mean $mean, max $max of 255, pane $capsule\n" + map(bright.image, none.image, 0f, 0f, W.toFloat(), capsule.bottom.value + 4f))
             }
