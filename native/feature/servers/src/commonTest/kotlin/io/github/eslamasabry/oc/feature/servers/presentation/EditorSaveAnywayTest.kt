@@ -38,7 +38,14 @@ class EditorSaveAnywayTest {
         override fun tailscaleState() = EditorTailscaleState.Unavailable
         override fun openTailscale(): Outcome<Unit> = Outcome.Ok(Unit)
         override fun installTailscale(): Outcome<Unit> = Outcome.Ok(Unit)
-        override suspend fun read(id: ProfileId): Outcome<ServerEditorRecord> = error("new server")
+        override suspend fun read(id: ProfileId): Outcome<ServerEditorRecord> =
+            Outcome.Ok(
+                ServerEditorRecord(
+                    id, "Home", "http://192.0.2.10:4096", "opencode", BackendKind.OpenCode2, "",
+                    hasSecret = false, needsSecret = false, tailscale = false,
+                    cleartextOrigin = "http://192.0.2.10:4096", certificatePin = null, certificateOrigin = null,
+                )
+            )
         override suspend fun check(input: ServerEditorInput): Outcome<ServerEditorProbe> =
             Outcome.Failed(Failure.TimedOut())
         override suspend fun save(input: ServerEditorInput, version: String?): Outcome<ProfileId> {
