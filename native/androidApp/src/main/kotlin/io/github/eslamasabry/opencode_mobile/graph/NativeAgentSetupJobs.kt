@@ -244,18 +244,12 @@ class NativeAgentSetupJobs(
             stores.profiles.profile(profile) != null &&
             (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value == profile.raw
 
-    private fun failure(snapshot: JSONObject): AgentSetupFailure {
-        val text = snapshot.optString("error") + " " + snapshot.optString("logTail")
-        return when {
-            "terminated with signal" in text -> AgentSetupFailure.Interrupted
-            "checksum" in text.lowercase() -> AgentSetupFailure.Checksum
-            "space" in text.lowercase() || "storage" in text.lowercase() ->
-                AgentSetupFailure.Storage
-            "version" in text.lowercase() -> AgentSetupFailure.Version
-            "download" in text.lowercase() -> AgentSetupFailure.Download
-            else -> AgentSetupFailure.Unknown
-        }
-    }
+    private fun failure(snapshot: JSONObject): AgentSetupFailure =
+        AgentInstallFailureRules.of(
+            snapshot.optString("error"),
+            snapshot.optString("logTail"),
+            snapshot.optString("errorCode").takeIf { !snapshot.isNull("errorCode") },
+        )
 
     override fun stopAdmission(profile: ProfileId) {
         synchronized(admission) { denied.add(profile) }

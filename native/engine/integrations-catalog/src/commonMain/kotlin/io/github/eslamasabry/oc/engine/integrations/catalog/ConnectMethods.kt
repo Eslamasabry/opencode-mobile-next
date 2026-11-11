@@ -1,6 +1,9 @@
 package io.github.eslamasabry.oc.engine.integrations.catalog
 
 import io.github.eslamasabry.oc.core.model.IntegrationMethodInfo
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 // Flutter lib/ui/widgets/connect_methods.dart (connectMethodNeedsServerBrowser, orderConnectMethods,
 // connectMethodHint, keyLedConnectMethods) and lib/ui/screens/library/integrations_connect.dart
@@ -57,7 +60,7 @@ public fun connectMethodHint(method: IntegrationMethodInfo): ConnectHint =
         method.type == "key" -> ConnectHint.Key
         method.type == "command" -> ConnectHint.Command
         connectMethodNeedsServerBrowser(method) -> ConnectHint.Browser
-        method.label.lowercase().contains("headless") -> ConnectHint.Device
+        method.label.lowercase().let { "headless" in it || "device code" in it } -> ConnectHint.Device
         else -> ConnectHint.Account
     }
 
@@ -69,3 +72,27 @@ public fun connectMethodHint(method: IntegrationMethodInfo): ConnectHint =
 public fun connectMethodHasOwnLabel(method: IntegrationMethodInfo): Boolean =
     method.type != "key" ||
         (method.label.isNotBlank() && !method.label.equals(method.type, ignoreCase = true))
+
+/**
+ * Whether a sign-in question is shown for the answers so far (Flutter `_isPromptVisible`). The
+ * server's `when` is one `{key, op, value}` condition or a list of them; every one must hold, and
+ * `op` is `eq` or `neq`. A question without a readable condition is always shown.
+ */
+public fun connectPromptVisible(prompt: JsonObject, answers: Map<String, String>): Boolean {
+    val conditions =
+        when (val raw = prompt["when"]) {
+            is JsonObject -> listOf(raw)
+            is JsonArray -> raw.filterIsInstance<JsonObject>()
+            else -> return true
+        }
+    fun JsonObject.text(key: String) = (this[key] as? JsonPrimitive)?.content
+    return conditions.all { condition ->
+        val key = condition.text("key") ?: return@all true
+        val value = condition.text("value") ?: return@all true
+        when (condition.text("op")) {
+            "eq" -> answers[key] == value
+            "neq" -> answers[key] != value
+            else -> true
+        }
+    }
+}

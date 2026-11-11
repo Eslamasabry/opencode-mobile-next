@@ -265,7 +265,11 @@ internal object PhoneSizes {
     fun text(bytes: Long): String {
         val mb = bytes / (1024.0 * 1024.0)
         val body =
-            if (mb < 1000) {
+            // Flutter formatPhoneStorage (phone_server_card.dart): a small file reads "12 B" or "3.4 KB",
+            // never "0 MB" (a measured size that looked unmeasured on Export projects).
+            if (bytes < 1024) "${Numbers.format(bytes.coerceAtLeast(0))}${NBSP}B"
+            else if (bytes < 1024L * 1024) "${Numbers.decimal(bytes / 1024.0, 1)}${NBSP}KB"
+            else if (mb < 1000) {
                 val rounded =
                     if (mb < 100) kotlin.math.round(mb).toLong()
                     else kotlin.math.round(mb / 10).toLong() * 10
