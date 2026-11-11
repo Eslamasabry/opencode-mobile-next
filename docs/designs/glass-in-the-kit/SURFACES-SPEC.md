@@ -256,3 +256,118 @@ the Solid look in all styles. Sizes and shapes are unchanged by every row (the r
 
 Glass goldens may change (desktop renders the thick fallback); look at every one that does. Tests prove shape and compile, not the
 look: judge Glass on a device.
+
+## After batch 1 (2026-11-11, the sweep builder, branch `native/kit-surfaces-sweep`)
+
+### What landed
+
+- **The guard (§5).** `K20 kit parts paint no surface of their own, and the count only falls` in
+  `native/quality/.../KonsistRulesTest.kt`, the counter in `KitSurfaces.kt`, planted tests in `KitSurfacesPlantedTest.kt`,
+  allowlist `native/quality/config/kit-surfaces-allow.txt` (55 entries, a reason each), baseline
+  `native/quality/config/rule-baseline/K20-kit-surfaces.txt`: **77 counted lines in 43 files**. Two-sided: a file over
+  its number or a new file fails; a file under its number fails until the number is lowered; an allowlist entry that
+  matches nothing fails. `-Poc.ruleBaseline=write` rewrites the baseline (review the diff: numbers only fall).
+- **K1** (§5 item 7): a feature importing `kitLiquidFace`, `kitGlassSheet` or `LocalKitGlassBackdrop` fails; the
+  recording markers `kitFrostSource` / `kitGlassSource` stay allowed. No feature imports them today.
+- **No site was moved.** See O1 below.
+
+### O1, decided by the coordinator: the other styles must not change in this sweep
+
+A site moves only if, after the move, Solid, Soft, Brutal, Paper and Signal render it exactly as today and only Glass
+changes. Checked against the specs (`ui/design/.../style/*Spec.kt` at 298328f854): **Soft, Brutal, Paper and Signal
+never return null from `resolve`** (Brutal, Paper and Signal are typed non-null; Soft falls through to `shaped()`), so
+once a part asks `kitSurfaceLook` its `ownFill` is used by Solid only and the four styles paint their own face. Every
+batch-1 site today paints a plain fill (plus a hairline) in every style, so every move changes those four styles. With
+each style's default knobs (Soft: Raised, no edges; Brutal: Raised, Hairline, Soft corners; Paper and Signal: Flat,
+Hairline, Sharp corners), dark theme, at rest:
+
+| Role asked | Soft | Brutal | Paper | Signal |
+|---|---|---|---|---|
+| `Floating` (P01-P04, P16, P30) | ground lifted by white .05, rim .16 to 0, paired shadows 6/16 dp | level fill, 2 dp ink edge, 6 dp hard shadow | ground, 1 dp ink box, square corners | ground, 1.5 dp text2 outline, corners at most 4 |
+| `Sheet` (P05) | ground + white .03, top rim, 28 dp shadow | level fill, 2 dp ink edge, 4 dp hard shadow | level fill, 1 dp ink box | level fill, hairline edge |
+| `Content` (P06, P08, P13-P15) | paired shadows and rim (Surface2: a prompt tint) | 2 dp ink edge, 4 dp hard shadow | Surface1: **no fill**; Surface2: ground + ink box | Surface1: **no fill**; Surface2: surface2 + hairline |
+| `Code` (P09-P12) | a pressed-in well (black .18 over ground) | 2 dp ink edge instead of the hairline | 1 dp ink box (.6 alpha) instead of the hairline, square | 1 dp hairline drawn centred on the outline, corners at most 4 |
+| `Control` (P17-P19) | paired shadows 3/8 dp | surface2 (not surface3), 2 dp ink edge, 3 dp hard shadow | ground + ink box | clear + 1.5 dp outline (an opaque action colour: a raised key) |
+
+Result: **0 of the 21 batch-1 sites pass O1** (20 "changes other styles" by the table; P32 below). That is more than a
+third, so the sweep stopped after the guard as the brief says, and nothing in `ui/kit*` main code changed.
+
+**P32** (`KitTerminalKeyBar.terminalSurfaceLook`) is the closest: it already resolves `state.spec.resolve(request)` in
+every style, so the fill, edge and corners would be identical with `kitSurfaceLook(... exactRadius = <the same
+StyleResolver.corner value>)`. Two differences remain: `kitSurfaceLook` applies hook H2 (Brutal's pressed cap sinks by
+its 3 dp offset, `faceShiftDp`; the copy never sinks) and the 200 ms style cross-fade. The pressed Brutal key would
+render differently: changes other styles. Its Glass side is real (the copy skips clear panes and thickening).
+
+### What would unblock batch 1 (for the resolver's owner, not done here)
+
+**N7, "hold the other styles":** a request field (for example `KitSurfaceInput.holdOtherStyles: Boolean`, or one rule
+in the four specs) under which Soft, Brutal, Paper and Signal return null, so the part keeps `ownFill`, and Glass
+resolves the role as usual. With N2 (`ownEdge`, drawn in every style but Glass) every batch-1 site becomes a mechanical
+`kitSurfaceLook(KitSurfaceInput(role, shape, level, ownFill = <today's fill>, ownEdge = <today's hairline>, hold...))`
+with zero change outside Glass, provable by a pin test on the null decorations. N1 (`Inset`) already proposes exactly
+this null for its own role; N7 generalises it. The other way is to reopen O1 (accept the four styles' faces), which the
+coordinator ruled out for this sweep.
+
+### Left for later (list C)
+
+**Batch 1, "changes other styles"** (role as the spec proposed; all need N7 + N2, or O1 reopened):
+P01 `KitToast`, P02 `KitUndoBar`, P03 `KitTip`, P04 `KitIconButton` tooltip, P05 `KitSideSheet`, P06 `KitSummaryCard`
+card, P08 `KitAgentChoice`, P09 `KitCommandBox`, P10 `KitToolOutput`, P11 `KitRequestTargets` (2), P12
+`KitPermissionCard`, P13 `KitFormSheet`, P14 `KitRequestFrame`, P15 `KitAgentCard` list slot, P16 `KitVoicePill`, P17
+`KitStopAndSendPill`, P18 `KitAgentStrip`, P19 `KitComposerBox` stop disc, P30 `KitRefresh`, P32 `KitTerminalKeyBar`.
+P11/P12 could ask role `Ground` and change in no style at all (Ground is `styleGround` everywhere, Glass included), but
+that names a well the page plate only to lower a count: not done.
+
+**Need a new role or parameter (N1, N2, N4, N6):** P07, P21, P23, P24, P25, P29 (N1); S01-S11 and P33 (N2); P27 (N4,
+owner call); P31 (N6). Found by the guard, not in §2: `modal/KitSheet.kt:707` (a framed entry's surface1 panel inside a
+sheet: N1), `C transcript/KitPromptBubble.kt:194` (attachment pill, surface3) and `:251` (photo tile, surface3): N1;
+`C card/KitAgentCard.kt:282`, `K foundation/KitPanel.kt:124`, `K team/TeamParts.kt:325` (an own hairline in every
+style right after a resolver call: N2); `K choice/KitWheel.kt:101` (Solid-only accent band, belongs with S07: N2).
+
+**LENS (N5 and the lens path):** L01-L07, L09, P26, and the second pass of P01, P02, P16. Counted by K20 today:
+`KitComposerBox:187`, `KitFab:136`, `KitChip:131`, `KitJumpPill:291-292,320,344`, `KitScreen:321,484,485,518`,
+`KitMenu:616-617`, `KitSheet:574,591`.
+
+**Unsure, what I found:**
+- P20 `KitComposerTray`: the Glass branch (`:128`) tests the style and shows a bare `KitIconButton`; the other styles
+  paint a surface3 disc (`:154`). Moving the disc to `Control, Circle` changes the four styles (table). Whether Glass
+  keeps the bare glyph is the owner's 2026-11-08 call; untouched.
+- P22 `KitComposerLimitStrip:133`: a surface1 band set inside the composer's bottom block, its corner derived from the
+  composer's. A well, not a track: N1 `Inset`.
+- P28 `KitOpenSwitchRow:47`: surface3 band when highlighted, every style. `KitRow:239` and `KitChoiceList:245` do the
+  chosen row as `kitGlassChosenRow() ?: <own band>` (`effects/KitGlassPanes.kt:108`, null outside Glass), which would
+  keep the four styles and change Glass only. It is not a `kitSurfaceLook` request and its fallback stays a counted
+  paint, so it was not done; it is the right shape for an O1-safe chosen row until the resolver has a chosen-row role.
+- P31 `KitAnimatedBox` (`motion/KitMotionBuilders.kt:115`): fill and edge chosen by its callers; needs N6.
+
+**Inside the fence:** L08 (`kitGlassSheet`), the F-MOVE rows (`KitRowGroup` `HairlineColumn`, `KitRecentRow:327`) and
+everything in `KitSurface.kt`, `KitSurfaceGlass.kt`, `KitDivider.kt`, `KitGlassPanes.kt`, `live/**`. K20 counts no line
+in a fenced file: `KitSurface.kt:199,330` are allowlisted as the resolver itself, and the row lines are drawn with
+`drawLine`, which K20 does not see.
+
+### Where §2-§5 were wrong or incomplete
+
+1. §4 and §6 assumed a move changes the other styles only "where there is no golden"; under O1 that is a fail, and
+   it applies to every MOVE-role site (above). The spec's request rows are right for Glass; they cannot be built
+   O1-safe with today's resolver.
+2. P32 "same inputs": `kitSurfaceLook` adds hook H2 (pressed sink) and the style fade the copy lacks.
+3. P11's precedent `KitInboxRequestRow.kt:92` is in `C request/`; it asks `Code` and so already shows the four
+   styles' faces (Soft's well, Brutal's ink edge), i.e. the precedent is not O1-safe either.
+4. A04 names `qr/KitScanner.kt:251`; the painting line K20 finds is `K scanner/KitScanner.kt:89` (`ground` behind the
+   camera). Both files exist.
+5. A12 names `KitAgentCard.kt:288` (the attention ring, a fill of `attention`, not counted); the card's own hairline
+   at `:282` is a separate N2 site, missing from §2.
+6. §2 misses `KitSheet:707`, `KitPromptBubble:194,251`, `KitPanel:124`, `TeamParts:325`, `KitWheel:101` (counted, list
+   above) and `KitComposerBox:523` (the Stop glyph's square, a mark), `setup/KitServersLink.kt:85,92` (illustration),
+   `foundation/KitFrost.kt:141` (frost engine), the accent halos `KitAskField:174,181`, `KitStartBox:98,104`,
+   `C composer/ComposerGlow.kt:171` (allowlisted; the halos are my addition: the style's glow, not a pane shadow; §2b
+   had KitStartBox's halo under S03; veto it by deleting the entry and raising nothing).
+7. §5's fill pattern `[^)]*` misses `background(if (x) colors.surface3 else ...)` (P19, P16's fill, KitCarousel's
+   dots); K20 allows two levels of nested parentheses instead.
+
+### What K20 does not see (the count is a floor)
+
+A fill passed through a local value (`val fill = colors.surface2` then `.background(fill)`, e.g. P13's wash at
+`KitFormSheet:129`, KitMotionBuilders), the attention colours (`attentionSurface`, `attentionFill`: P15's fill at
+`KitAgentCard:857`, P17 entirely), the kit's own edge helpers (`kitHairlineBorder`, `exactEdge`), lines drawn with
+`drawLine`, and fills nested three parentheses deep (`KitWidgetPreview:165`, a preview).
