@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.feature.plans.presentation.PlanSignInPort
 import io.github.eslamasabry.oc.feature.plans.presentation.PlanSignInStep
 import io.github.eslamasabry.oc.feature.plans.presentation.PlanSignInViewModel
 import io.github.eslamasabry.oc.feature.plans.presentation.PlansSource
+import io.github.eslamasabry.oc.feature.plans.presentation.planPromptVisible
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -46,6 +47,7 @@ class PlanSignInMethodsTest {
 
     private class Port(val rows: List<IntegrationInfo>) : PlanSignInPort {
         val started = mutableListOf<String>()
+        val sent = mutableListOf<Map<String, String>>()
         private fun no(): Outcome.Failed = Outcome.Failed(Failure.Unavailable(FeatureId("test")))
         override suspend fun choices(provider: String) =
             Outcome.Ok(persistentListOf(PlanSignInChoice("conn", "Server")))
@@ -60,6 +62,7 @@ class PlanSignInMethodsTest {
             inputs: ImmutableMap<String, String>,
         ): Outcome<IntegrationAuthLaunch> {
             started += methodId
+            sent += inputs
             return no()
         }
         override suspend fun startCommand(connectionId: String, integrationId: String, methodId: String): Outcome<IntegrationAuthLaunch> {
@@ -152,5 +155,79 @@ class PlanSignInMethodsTest {
         val vm = PlanSignInViewModel(port, Source())
         vm.open("acme")
         assertEquals(listOf("login"), port.started)
+    }
+
+    private fun copilot() =
+        IntegrationMethodInfo(
+            "oauth",
+            "device",
+            "Login with GitHub Copilot",
+            persistentListOf(
+                buildJsonObject {
+                    put("key", "deploymentType")
+                    put("message", "Deployment type")
+                    put("type", "select")
+                    put("required", true)
+                    put("default", "github.com")
+                    put(
+                        "options",
+                        kotlinx.serialization.json.JsonArray(
+                            listOf("github.com", "enterprise").map {
+                                buildJsonObject { put("value", it); put("label", it) }
+                            }
+                        ),
+                    )
+                },
+                buildJsonObject {
+                    put("key", "enterpriseUrl")
+                    put("message", "Enterprise URL")
+                    put("type", "text")
+                    put("required", true)
+                    put(
+                        "when",
+                        kotlinx.serialization.json.JsonArray(
+                            listOf(
+                                buildJsonObject {
+                                    put("key", "deploymentType")
+                                    put("op", "eq")
+                                    put("value", "enterprise")
+                                }
+                            )
+                        ),
+                    )
+                },
+            ),
+            persistentListOf(),
+            persistentMapOf(),
+        )
+
+    @Test
+    fun `W4-29 Copilot asks its choice first and the address only for the enterprise answer`() = runTest {
+        val port = Port(listOf(info("github-copilot", copilot())))
+        val vm = PlanSignInViewModel(port, Source())
+        vm.open("github-copilot")
+        assertEquals(PlanSignInStep.Form, vm.state.value.step)
+        val prompts = vm.state.value.method!!.prompts
+        assertEquals(false, planPromptVisible(prompts[1], mapOf("deploymentType" to "github.com")))
+        assertEquals(true, planPromptVisible(prompts[1], mapOf("deploymentType" to "enterprise")))
+
+        // The default alone is enough: the hidden address is neither required nor sent.
+        vm.submitForm(persistentMapOf("deploymentType" to "github.com", "enterpriseUrl" to "stale.example"))
+        assertEquals(listOf(mapOf("deploymentType" to "github.com")), port.sent)
+    }
+
+    @Test
+    fun `W4-29 the enterprise answer needs its address and sends both under their keys`() = runTest {
+        val port = Port(listOf(info("github-copilot", copilot())))
+        val vm = PlanSignInViewModel(port, Source())
+        vm.open("github-copilot")
+        vm.submitForm(persistentMapOf("deploymentType" to "enterprise", "enterpriseUrl" to ""))
+        assertEquals(emptyList(), port.sent)
+        assertEquals(setOf("enterpriseUrl"), vm.state.value.missingFields)
+        vm.submitForm(persistentMapOf("deploymentType" to "enterprise", "enterpriseUrl" to "company.ghe.com"))
+        assertEquals(
+            listOf(mapOf("deploymentType" to "enterprise", "enterpriseUrl" to "company.ghe.com")),
+            port.sent,
+        )
     }
 }
