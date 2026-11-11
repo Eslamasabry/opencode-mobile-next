@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,6 +47,7 @@ import io.github.eslamasabry.oc.feature.review.presentation.CommentSide
 import io.github.eslamasabry.oc.feature.review.presentation.CommentStatus
 import io.github.eslamasabry.oc.feature.review.presentation.FileDiffActions
 import io.github.eslamasabry.oc.feature.review.presentation.FileDiffUi
+import io.github.eslamasabry.oc.feature.review.presentation.FileNotice
 import io.github.eslamasabry.oc.feature.review.presentation.GuideUi
 import io.github.eslamasabry.oc.feature.review.presentation.LineComment
 import io.github.eslamasabry.oc.feature.review.presentation.ReviewGuide
@@ -110,6 +112,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
@@ -187,6 +190,13 @@ import io.github.eslamasabry.oc.ui.words.res.reviewRevertStageFailed
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertStaleTitle
 import io.github.eslamasabry.oc.ui.words.res.reviewSendBackFailed
 import io.github.eslamasabry.oc.ui.words.res.reviewSendBackWithNote
+import io.github.eslamasabry.oc.ui.words.res.reviewWorkspaceSlowTitle
+import io.github.eslamasabry.oc.ui.words.res.reviewWorkspaceSlowBody
+import io.github.eslamasabry.oc.ui.words.res.reviewAlreadyApplied
+import io.github.eslamasabry.oc.ui.words.res.reviewWorkspaceAddFileToPrompt
+import io.github.eslamasabry.oc.ui.words.res.readerUiReferenceAdded
+import io.github.eslamasabry.oc.ui.words.res.readerUiReferenceDuplicate
+import io.github.eslamasabry.oc.ui.words.res.filesMentionFailed
 import io.github.eslamasabry.oc.ui.words.res.reviewSummary
 import io.github.eslamasabry.oc.ui.words.res.reviewToolEvidence
 import io.github.eslamasabry.oc.ui.words.res.reviewTurnTitle
@@ -262,6 +272,27 @@ public fun ChangesScreen(state: ChangesUi, actions: ChangesActions) {
     KitSheetHost(Modifier.fillMaxSize()) { ChangesContent(state, actions) }
 }
 
+/** After [SLOW_READ] of waiting: "Still reading the changes", why, and Try again (F `review-slow`). */
+@Composable
+private fun SlowRead(retry: () -> Unit) {
+    var slow by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(SLOW_READ)
+        slow = true
+    }
+    if (slow)
+        KitStateView(
+            KitStateKind.Working,
+            stringResource(Res.string.reviewWorkspaceSlowTitle),
+            Modifier.testTag("review-slow"),
+            body = stringResource(Res.string.reviewWorkspaceSlowBody),
+            icon = KitIcons.review,
+            tertiary = listOf(KitAction(stringResource(Res.string.kitTryAgain), retry)),
+        )
+}
+
+private val SLOW_READ = kotlin.time.Duration.parse("8s") // F: KitSince.isSlow, lib/ui/kit/kit_since.dart
+
 @Composable
 private fun ChangesContent(state: ChangesUi, actions: ChangesActions) {
     val busyReason = stringResource(Res.string.revertBusy)
@@ -327,7 +358,8 @@ private fun ChangesContent(state: ChangesUi, actions: ChangesActions) {
         edges = KitScreenEdges.Bleed,
     ) {
         when (val load = state.load) {
-            ReviewLoad.Loading -> Unit
+            // Flutter `review-slow`: after a few seconds the wait is explained, with Try again.
+            ReviewLoad.Loading -> if (!state.updating) SlowRead(actions::retry)
             is ReviewLoad.Failed ->
                 KitStateView(
                     KitStateKind.Error,
@@ -377,6 +409,14 @@ private fun ChangesContent(state: ChangesUi, actions: ChangesActions) {
                                 role = TypeRole.Title,
                             )
                         }
+                        // Flutter `reviewAlreadyApplied`: says what "Undo all" undoes.
+                        if (state.undoAll == UndoAllUi.Offered || state.undoAll == UndoAllUi.Waiting)
+                            KitText(
+                                stringResource(Res.string.reviewAlreadyApplied),
+                                Modifier.testTag("review-already-applied"),
+                                role = TypeRole.Body,
+                                tone = TextTone.Secondary,
+                            )
                         if (state.canPickScope) ScopePicker(state, actions)
                         if (state.scope != ReviewScope.Conversation) {
                             KitNotice(
@@ -604,7 +644,9 @@ public fun FileDiffScreen(state: FileDiffUi, actions: FileDiffActions) {
     val onRetry = actions::retry
     var fullContext by remember(state.path) { mutableStateOf(false) }
     KitScreen(
-        topBar = { FileTopBar(state, fullContext, { fullContext = !fullContext }, actions::back) },
+        topBar = {
+            FileTopBar(state, fullContext, { fullContext = !fullContext }, actions::back, actions::addToPrompt)
+        },
         loading = state.load == ReviewLoad.Loading || state.updating,
         bottom = if (state.canComment && state.drafts > 0) ({ SendCommentsBlock(state, actions) }) else null,
         edges = KitScreenEdges.Bleed,
@@ -649,7 +691,13 @@ private fun SendCommentsBlock(state: FileDiffUi, actions: FileDiffActions) {
 
 /** The file's name with Copy patch, Copy updated file and the surrounding-lines switch, where each applies. */
 @Composable
-private fun FileTopBar(state: FileDiffUi, fullContext: Boolean, onToggleContext: () -> Unit, onBack: () -> Unit) {
+private fun FileTopBar(
+    state: FileDiffUi,
+    fullContext: Boolean,
+    onToggleContext: () -> Unit,
+    onBack: () -> Unit,
+    onAddToPrompt: () -> Unit,
+) {
     val current = state.diff
     // Copy is verbatim (a diff is the person's own content): the patch, and the updated file.
     val copyPatch =
@@ -671,6 +719,7 @@ private fun FileTopBar(state: FileDiffUi, fullContext: Boolean, onToggleContext:
         stringResource(
             if (fullContext) Res.string.kitDiffHideUnchanged else Res.string.reviewExpandContext
         )
+    val addToPromptLabel = stringResource(Res.string.reviewWorkspaceAddFileToPrompt, state.name)
     KitTopBar(
         title = state.name,
         exit = KitTopBarExit.Back,
@@ -683,6 +732,8 @@ private fun FileTopBar(state: FileDiffUi, fullContext: Boolean, onToggleContext:
                 if (current != null && !current.after.isNullOrEmpty())
                     add(KitLineAction(copyFile.label, { copyFile.onClick?.invoke() }))
                 if (canExpand) add(KitLineAction(expandLabel, onToggleContext))
+                if (state.canAddFile)
+                    add(KitLineAction(addToPromptLabel, onAddToPrompt))
             },
     )
 }
@@ -720,6 +771,16 @@ private fun DiffBody(diff: FileDiff, fullContext: Boolean, state: FileDiffUi, ac
     ) {
         Column(Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)) {
             KitText(diff.file, role = TypeRole.Body, tone = TextTone.Secondary, maxLines = 2)
+        }
+        state.fileNotice?.let { notice ->
+            when (notice) {
+                FileNotice.Added ->
+                    KitNotice(stringResource(Res.string.readerUiReferenceAdded, state.name), tone = StatusTone.Ok)
+                FileNotice.AlreadyThere ->
+                    KitNotice(stringResource(Res.string.readerUiReferenceDuplicate, state.name))
+                is FileNotice.Failed ->
+                    FailedNotice(stringResource(Res.string.filesMentionFailed), notice.failure)
+            }
         }
         when {
             file.binary ->
