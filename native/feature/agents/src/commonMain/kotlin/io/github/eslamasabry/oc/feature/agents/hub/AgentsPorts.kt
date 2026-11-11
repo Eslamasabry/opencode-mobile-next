@@ -282,7 +282,7 @@ public fun phoneInstallStep(componentId: String?, agentId: String): PhoneAgentIn
 /**
  * True when an agent the phone's setup installed is present: its install already brought the shared parts (the Linux
  * packages, Python, Node.js, the agent helper), so a next install adds only its own agent. A row still being read
- * (Checking) or unavailable proves nothing, so the shared parts are then counted (the space figure errs toward warning).
+ * (Checking) or unavailable proves nothing, so the shared parts are then counted (the figure errs toward warning).
  */
 public fun phoneSharedPartsInPlace(agents: List<PhoneAgentRow>): Boolean =
     agents.any {
