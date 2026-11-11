@@ -1,6 +1,16 @@
 package io.github.eslamasabry.oc.feature.chat
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
@@ -27,6 +37,7 @@ import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.isFocused
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodes
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
@@ -38,6 +49,8 @@ import androidx.compose.ui.test.withKeyDown
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatUi
 import io.github.eslamasabry.oc.feature.chat.presentation.FindUi
 import io.github.eslamasabry.oc.feature.chat.rb.o42.ChatScene
+import io.github.eslamasabry.oc.feature.chat.ui.ChatEdgeDock
+import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -226,5 +239,114 @@ class ChatTypingFocusTest {
             onNode(hasContentDescription("Dismiss") and hasAnyAncestor(hasTestTag("kit-sheet"))).performClick()
             waitForIdle()
             composer().assertIsFocused()
+        }
+
+    // --- Gate (w4-focus): keyboard traversal, and the dock's rename field, with the page as N-55's landing spot. ---
+
+    /** The focused control's bounds, or null while only a plain focus target (the park, the page) holds focus. */
+    private fun ComposeUiTest.focusedBounds(): Rect? =
+        onAllNodes(isFocused(), useUnmergedTree = true).fetchSemanticsNodes().lastOrNull()?.boundsInRoot
+
+    /** Tab ([FocusDirection.Next]) or Shift+Tab ([FocusDirection.Previous]) [steps] times; where focus went each time. */
+    private fun ComposeUiTest.walk(direction: FocusDirection, steps: Int): List<Rect> = buildList {
+        repeat(steps) {
+            runOnIdle { focusManager.moveFocus(direction) }
+            waitForIdle()
+            focusedBounds()?.let { add(it) }
+        }
+    }
+
+    private fun ComposeUiTest.paneTop(): Float = onNodeWithTag("chat-composer-pane").fetchSemanticsNode().boundsInRoot.top
+
+    @Test
+    fun `Tab with nothing focused goes to the page's controls, not into the message box`() =
+        runDesktopComposeUiTest(412, 915) {
+            show()
+            // One plain stop on the page itself (as on the park), then the first control.
+            val seen = walk(FocusDirection.Next, 2)
+            composer().assertIsNotFocused()
+            assertTrue(seen.isNotEmpty(), "two Tabs focused no control at all")
+        }
+
+    @Test
+    fun `Tab from the message box reaches the controls above it, round the page`() =
+        runDesktopComposeUiTest(412, 915) {
+            show()
+            composer().performClick()
+            waitForIdle()
+            val top = paneTop()
+            val seen = walk(FocusDirection.Next, 80)
+            assertTrue(seen.any { it.bottom <= top }, "Tab never left the composer's pane: $seen")
+        }
+
+    @Test
+    fun `Shift+Tab from the message box reaches the controls under it, round the page`() =
+        runDesktopComposeUiTest(412, 915) {
+            show()
+            composer().performClick()
+            waitForIdle()
+            val field = composer().fetchSemanticsNode().boundsInRoot
+            val seen = walk(FocusDirection.Previous, 80)
+            assertTrue(seen.any { it.top >= field.bottom }, "Shift+Tab never reached the composer's own row: $seen")
+            assertTrue(seen.any { it.bottom <= paneTop() }, "Shift+Tab never reached the controls above: $seen")
+        }
+
+    @Test
+    fun `N-55 a letter typed after a Tab still lands in the message box`() =
+        runDesktopComposeUiTest(412, 915) {
+            show()
+            walk(FocusDirection.Next, 1)
+            strayKey()
+            composer().assertIsFocused()
+        }
+
+    /**
+     * The edge dock's rename field as `DockSwellContent.RenameField` takes focus: it clears focus (force), waits a
+     * frame, then asks for focus. The dock is drawn inside the conversation, so on the base the N-55 redirect sent
+     * that request to the message box.
+     */
+    private class RenameDock : ChatEdgeDock {
+        var renaming by mutableStateOf(false)
+
+        @Composable
+        override fun Content(chrome: PaddingValues) {
+            if (!renaming) return
+            val field = rememberTextFieldState("")
+            val focus = remember { FocusRequester() }
+            val focusManager = LocalFocusManager.current
+            LaunchedEffect(Unit) {
+                focusManager.clearFocus(force = true)
+                withFrameNanos {}
+                focus.requestFocus()
+            }
+            BasicTextField(field, Modifier.size(200.dp, 48.dp).focusRequester(focus).testTag("dock-rename"))
+        }
+    }
+
+    @Test
+    fun `the dock's rename field takes the first typing, not the message box`() =
+        runDesktopComposeUiTest(412, 915) {
+            val scene = ChatScene()
+            val dock = RenameDock()
+            val live = scene.live()
+            setContent {
+                E20Scene { Park { ChatScreen(live, scene.actions, scene.host, canGoBack = false, edgeDock = dock) } }
+            }
+            waitForIdle()
+            runOnIdle { park.requestFocus() }
+            waitForIdle()
+            composer().performClick()
+            waitForIdle()
+            composer().assertIsFocused()
+            runOnIdle { dock.renaming = true }
+            waitForIdle()
+            val rename = onNode(
+                    hasSetTextAction() and (hasTestTag("dock-rename") or hasAnyAncestor(hasTestTag("dock-rename"))),
+                    useUnmergedTree = true,
+                )
+            rename.assertIsFocused()
+            type("Zed")
+            assertEquals("Zed", rename.words(), "the rename field has what was typed")
+            assertEquals("", composer().words(), "no stray words in the message box")
         }
 }
