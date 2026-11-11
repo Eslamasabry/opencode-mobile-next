@@ -41,7 +41,10 @@ public class Redactor {
         }
     }
 
-    /** Registers every credential-named string in a config tree (Dart registerCredentialValues; B-PROTO-104). */
+    /**
+     * Registers every credential-named string in a config tree (Dart registerCredentialValues; B-PROTO-104), and every
+     * MCP server's environment and header values whatever their names ([registerMcpServers]).
+     */
     public fun registerCredentialValues(value: JsonElement) {
         when (value) {
             is JsonArray -> value.forEach(::registerCredentialValues)
@@ -55,6 +58,8 @@ public class Redactor {
                             if (space >= 0) registerSecret(field.content.substring(space + 1))
                         }
                     }
+                    // MCP server values are secrets whatever they are named (McpConfigSecrets.kt).
+                    if (field is JsonObject && name in MCP_CONTAINERS) registerMcpServers(field)
                     if (field is JsonObject || field is JsonArray) registerCredentialValues(field)
                 }
             else -> Unit
@@ -289,6 +294,9 @@ public class Redactor {
                 "key", "apikey", "password", "passwd", "secret", "clientsecret", "token", "accesstoken", "refreshtoken",
                 "access", "refresh", "authorization", "proxyauthorization", "xapikey", "cookie", "setcookie",
             )
+
+        /** `mcp` (OpenCode), `mcpServers` / `mcp_servers` (other agents' config files), after lowercasing and `-`/`_` removal. */
+        private val MCP_CONTAINERS = setOf("mcp", "mcpservers")
 
         private val AUTH_HEADER =
             Regex("""(["']?)\b(?:(?:Proxy-)?Authorization|(?:Set-)?Cookie|x-api-key)(["']?)\s*[:=]\s*""", RegexOption.IGNORE_CASE)
