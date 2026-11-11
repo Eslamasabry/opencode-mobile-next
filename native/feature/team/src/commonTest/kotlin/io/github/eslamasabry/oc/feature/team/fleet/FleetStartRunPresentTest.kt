@@ -113,4 +113,12 @@ class FleetStartRunPresentTest {
         assertTrue(FleetStartPresent.objectiveMissing(FleetStartLocal(objective = "  ")))
         assertFalse(FleetStartPresent.taskMissing(FleetStartLocal(task = "Fix it")))
     }
+
+    @Test
+    fun the_hosts_rules_ride_with_the_form_only_when_the_host_gave_some() {
+        val state = fleet(FleetSnapshot(agents = listOf(awake), projects = listOf(rig)))
+        assertNull(FleetStartPresent.present(state).local.policy)
+        val policy = io.github.eslamasabry.oc.engine.team.fleet.FleetPolicy(rig = "rig-a")
+        assertEquals(policy, FleetStartPresent.present(state, FleetStartLocal(policy = policy)).local.policy)
+    }
 }

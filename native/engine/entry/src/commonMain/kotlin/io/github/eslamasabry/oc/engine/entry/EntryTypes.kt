@@ -188,6 +188,12 @@ public sealed interface EntryTarget {
 
     public data object NeedsYou : EntryTarget
 
+    /**
+     * A computer team's alert: the Gate page of one question ([gate] true) or the task page of one run. [id] is the gate's
+     * or the run's id as the host names it.
+     */
+    public data class TeamPage(val profileId: ProfileId, val gate: Boolean, val id: String) : EntryTarget
+
     public data class Servers(val request: ServersRequestTarget?) : EntryTarget
 
     public data class PhoneSetup(val stage: SetupStage) : EntryTarget

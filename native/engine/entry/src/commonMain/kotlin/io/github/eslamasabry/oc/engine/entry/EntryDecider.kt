@@ -172,6 +172,7 @@ public object EntryDecider {
                 listOf(EntryEffect.ResolveMonitoredRequest(token, profile, session, Fallback(null, EntryNotice.RequestGone))),
             )
         }
+        teamPage(request, world)?.let { return it }
         return when (request.kind) {
             AlertKind.Test -> Drop()
             AlertKind.TeamDecision, AlertKind.TeamReview -> withProfile(world) { Go(EntryTarget.NeedsYou) }
@@ -186,6 +187,28 @@ public object EntryDecider {
             AlertKind.Permission, AlertKind.Question, AlertKind.Complete, AlertKind.Error, AlertKind.Checkin ->
                 chatAlert(request, world)
         }
+    }
+
+    /**
+     * A computer team's alert names its page in the id it carries: `gate:<id>` is the Gate page, `run:<id>` the task page.
+     * A phone team's alert has a bare id and keeps going to the lists. Another saved server asks before switching.
+     */
+    private fun teamPage(request: EntryRequest.AlertOpen, world: EntryWorld): EntryDecision? {
+        val team =
+            when (request.kind) {
+                AlertKind.TeamDecision, AlertKind.TeamReview, AlertKind.TeamRunFailed, AlertKind.TeamCompleted -> true
+                else -> false
+            }
+        if (!team) return null
+        val raw = request.sessionId?.raw ?: return null
+        val gate = raw.startsWith("gate:")
+        if (!gate && !raw.startsWith("run:")) return null
+        val id = raw.substringAfter(':')
+        if (id.isEmpty()) return null
+        val active = world.activeProfileId
+        val owner = request.profileId ?: active ?: return noProfile(world)
+        val page = EntryTarget.TeamPage(owner, gate, id)
+        return Go(if (active != null && owner != active) EntryTarget.SwitchServerThen(owner, SwitchReason.Alert, page) else page)
     }
 
     private fun chatAlert(request: EntryRequest.AlertOpen, world: EntryWorld): EntryDecision {

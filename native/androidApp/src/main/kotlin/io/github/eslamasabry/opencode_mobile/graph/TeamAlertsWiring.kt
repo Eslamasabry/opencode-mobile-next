@@ -21,6 +21,9 @@ import io.github.eslamasabry.oc.engine.team.TeamEngine
 import io.github.eslamasabry.oc.engine.team.TeamProvider
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.attempt
+import io.github.eslamasabry.oc.engine.team.fleet.FleetAlertTracker
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -29,7 +32,7 @@ import kotlinx.coroutines.launch
 
 /**
  * AI Team notifications (Flutter `_syncTeamAlerts`): while the app is away, each phone team is read every
- * [POLL_MS] and a new decision, a task that failed, work ready to review and a finished project each raise one
+ * [POLL_MS] and each computer team is followed through its event stream and a new decision, a task that failed, work ready to review and a finished project each raise one
  * notification. Ids only (the copy is fixed in the notifications module), under the same rules as every other coding
  * alert: not while the app is on screen, quiet hours post decisions and failures silently and hold the rest, and the
  * requests / finished-runs switches in Settings apply. Nothing here answers anything.
@@ -53,6 +56,7 @@ class TeamAlertsWatcher(
             ChannelRegistry(application.getSystemService(android.app.NotificationManager::class.java), words),
         )
     private val trackers = mutableMapOf<String, TeamAlertTracker>()
+    private val fleetTrackers = mutableMapOf<String, FleetAlertTracker>()
     private var started = false
 
     /**
@@ -69,26 +73,51 @@ class TeamAlertsWatcher(
             combine(policy.foreground, background.live, stores.profiles.profiles) { foreground, live, profiles ->
                     if (foreground || !(live.enabled && live.active)) emptyList()
                     else
-                        profiles
-                            .filter {
-                                TeamConfig.parse(it.profile.orchestration?.encoded)?.provider == TeamProvider.PhoneEngine
-                            }
-                            .map { it.id.raw to it.profile.name }
+                        profiles.mapNotNull {
+                            val provider = TeamConfig.parse(it.profile.orchestration?.encoded)?.provider
+                            if (provider == TeamProvider.PhoneEngine || provider == TeamProvider.GasCity) Team(it.id.raw, it.profile.name, provider) else null
+                        }
                 }
                 .distinctUntilChanged()
                 .collectLatest { teams ->
-                    trackers.keys.retainAll(teams.map { it.first }.toSet())
+                    val phone = teams.filter { it.provider == TeamProvider.PhoneEngine }
+                    val computers = teams.filter { it.provider == TeamProvider.GasCity }
+                    trackers.keys.retainAll(phone.map { it.id }.toSet())
+                    fleetTrackers.keys.retainAll(computers.map { it.id }.toSet())
                     if (teams.isEmpty()) return@collectLatest
-                    teams.forEach { (id, _) -> trackers.getOrPut(id) { TeamAlertTracker(id) }.observe(engine.state(id).value.workspace) }
-                    while (true) {
-                        delay(POLL_MS)
-                        attempt({ Failure.Unexpected() }) { tick(teams) }
+                    // A computer's team is followed through its event stream for exactly as long as this block lives: the app is
+                    // away and the live-mode service runs (the bounded mechanism above). Leaving either cancels the stream.
+                    coroutineScope {
+                        computers.forEach { team -> launch { follow(team) } }
+                        phone.forEach { (id, _) -> trackers.getOrPut(id) { TeamAlertTracker(id) }.observe(engine.state(id).value.workspace) }
+                        while (phone.isNotEmpty()) {
+                            delay(POLL_MS)
+                            attempt({ Failure.Unexpected() }) { tick(phone) }
+                        }
+                        awaitCancellation()
                     }
                 }
         }
     }
 
-    private suspend fun tick(teams: List<Pair<String, String>>) {
+    /** One computer team: keep it connected, take its first answer as the baseline, then post each change as it arrives. */
+    private suspend fun follow(team: Team) {
+        val fleet = engine.fleet ?: return
+        engine.refresh(team.id)
+        val config = engine.state(team.id).value.config?.takeIf { it.provider == TeamProvider.GasCity } ?: return
+        val tracker = fleetTrackers.getOrPut(team.id) { FleetAlertTracker(team.id) }
+        coroutineScope {
+            launch { fleet.live(team.id, config) }
+            fleet.state(team.id).collect { state ->
+                val diff = tracker.observe(state)
+                if (diff.isEmpty || policy.foreground.value) return@collect
+                diff.settled.forEach { shade.dismiss(it) }
+                for (request in diff.alerts) post(request.kind, request.id, request.key, team.id, team.name)
+            }
+        }
+    }
+
+    private suspend fun tick(teams: List<Team>) {
         for ((id, server) in teams) {
             engine.refresh(id)
             val tracker = trackers.getOrPut(id) { TeamAlertTracker(id) }
@@ -98,6 +127,8 @@ class TeamAlertsWatcher(
             for (request in diff.alerts) post(request.kind, request.id, request.key, id, server)
         }
     }
+
+    private data class Team(val id: String, val name: String, val provider: TeamProvider)
 
     private fun post(kind: TeamAlertKind, id: String, key: String, profile: String, server: String) {
         val alertKind =
