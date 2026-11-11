@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentsTileStepLinux">Đang chuẩn bị Linux…</string>
+    <string name="agentsTileStepRuntime">Đang cài đặt Node.js…</string>
+    <string name="agentsTileStepHelper">Đang cài đặt trình hỗ trợ tác nhân…</string>
+    <string name="agentsTileStillWorking">Vẫn đang chạy · %1$s</string>
+    <string name="agentsTileFailedSpace">Chưa cài đặt: không đủ dung lượng</string>
+    <string name="agentsTileFailedDownload">Chưa cài đặt: tải xuống thất bại</string>
+    <string name="agentsTileFailedStopped">Chưa cài đặt: thiết lập đã dừng</string>
+    <string name="agentsTileFailedOther">Chưa cài đặt: thiết lập thất bại</string>
+    <string name="agentsInstallNeedsSpace">%1$s cần %2$s dung lượng trống để cài đặt, còn điện thoại này có %3$s trống. Hãy giải phóng dung lượng rồi cài đặt.</string>
+</resources>

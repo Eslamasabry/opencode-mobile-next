@@ -16,6 +16,9 @@ import io.github.eslamasabry.oc.feature.agents.hub.AgentsUi
 import io.github.eslamasabry.oc.feature.agents.hub.cardOffersConversation
 import io.github.eslamasabry.oc.feature.agents.hub.phoneChatOffered
 import io.github.eslamasabry.oc.feature.agents.hub.phoneHelperDown
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallFailure
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallPhase
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallStep
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRow
 import io.github.eslamasabry.oc.feature.agents.hub.agentTile
 import io.github.eslamasabry.oc.feature.agents.hub.phoneInstalledAgents
@@ -31,6 +34,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusLine
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitProgress
 import io.github.eslamasabry.oc.ui.kit.state.KitProgressView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -64,7 +68,19 @@ import io.github.eslamasabry.oc.ui.words.res.agentsStateReady
 import io.github.eslamasabry.oc.ui.words.res.agentsStateSignInNeeded
 import io.github.eslamasabry.oc.ui.words.res.agentsStateStopped
 import io.github.eslamasabry.oc.ui.words.res.agentsStateUnavailable
+import io.github.eslamasabry.oc.ui.words.res.agentsCheckDownload
+import io.github.eslamasabry.oc.ui.words.res.agentsCheckDownloadUnknown
+import io.github.eslamasabry.oc.ui.words.res.agentsInstalling
+import io.github.eslamasabry.oc.ui.words.res.agentsTileFailedDownload
+import io.github.eslamasabry.oc.ui.words.res.agentsTileFailedOther
+import io.github.eslamasabry.oc.ui.words.res.agentsTileFailedSpace
+import io.github.eslamasabry.oc.ui.words.res.agentsTileFailedStopped
 import io.github.eslamasabry.oc.ui.words.res.agentsTileInstalling
+import io.github.eslamasabry.oc.ui.words.res.agentsTileStepHelper
+import io.github.eslamasabry.oc.ui.words.res.agentsTileStepLinux
+import io.github.eslamasabry.oc.ui.words.res.agentsTileStepRuntime
+import io.github.eslamasabry.oc.ui.words.res.agentsTileStillWorking
+import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
 import io.github.eslamasabry.oc.ui.words.res.linuxAgentInstallBackground
 import io.github.eslamasabry.oc.ui.words.res.linuxAgentInstallCancel
@@ -146,6 +162,7 @@ private fun tileOf(agent: PhoneAgentRow, state: AgentsUi): AgentTileModel =
         checking = state.checkingAgent == agent.id,
         resuming = state.helperConnecting,
         helperDown = phoneHelperDown(state),
+        quiet = state.installQuiet,
     )
 
 @Composable
@@ -159,7 +176,8 @@ private fun AgentTile(tile: AgentTileModel, actions: AgentsActions, chat: Boolea
         tone =
             when (tile.state) {
                 AgentTileState.SignInNeeded,
-                AgentTileState.PhoneCheck -> KitAgentTileTone.NeedsYou
+                AgentTileState.PhoneCheck,
+                AgentTileState.InstallFailed -> KitAgentTileTone.NeedsYou
                 AgentTileState.CannotRun,
                 AgentTileState.Unavailable -> KitAgentTileTone.Dimmed
                 else -> KitAgentTileTone.Calm
@@ -203,6 +221,16 @@ private fun AgentTile(tile: AgentTileModel, actions: AgentsActions, chat: Boolea
                     ) {
                         actions.resumePhoneAgent(agent.id)
                     }
+                // Try again opens the install review (as Install does), so it answers at once even while a step runs.
+                AgentTileAct.Retry ->
+                    KitAgentTileAction(
+                        stringResource(Res.string.kitTryAgain),
+                        stringResource(Res.string.agentsInstallAction, agent.name),
+                        icon = KitIcons.retry,
+                        prominent = true,
+                    ) {
+                        actions.requestInstall(agent.id)
+                    }
                 null ->
                     if (cardOffersConversation(tile, chat))
                         KitAgentTileAction(
@@ -225,7 +253,8 @@ private fun tileProgress(tile: AgentTileModel): KitProgress =
 internal fun tileWords(tile: AgentTileModel): String {
     val agent = tile.agent
     return when (tile.state) {
-        AgentTileState.Installing -> stringResource(Res.string.agentsTileInstalling)
+        AgentTileState.Installing -> installingWords(tile)
+        AgentTileState.InstallFailed -> stringResource(installFailedWords(tile))
         AgentTileState.NotInstalled ->
             agent.downloadBytes?.let { stringResource(Res.string.agentsStateNotInstalled, agentPayloadSize(it)) }
                 ?: stringResource(Res.string.agentsStateNotInstalledNoSize)
@@ -237,6 +266,47 @@ internal fun tileWords(tile: AgentTileModel): String {
         AgentTileState.Stopped -> stringResource(Res.string.agentsStateStopped)
         AgentTileState.Limit -> stringResource(Res.string.agentsStateLimit)
         AgentTileState.Unavailable -> stringResource(Res.string.agentsStateUnavailable)
+    }
+}
+
+/**
+ * What a running install is doing: its step, the bytes of a download when the job counts them, and after a quiet while
+ * that it is still working. Before the job names a step it reads "Installing…".
+ */
+@Composable
+private fun installingWords(tile: AgentTileModel): String {
+    val install = tile.install
+    val done = install?.doneBytes
+    val total = install?.totalBytes
+    // Bytes are named for the agent's own download; the shared steps say which step runs.
+    val thing = if (install?.step == PhoneAgentInstallStep.Agent) tile.agent.name else null
+    val step =
+        when {
+            thing != null && done != null && total != null ->
+                stringResource(Res.string.agentsCheckDownload, thing, agentPayloadSize(done), agentPayloadSize(total))
+            thing != null && done != null ->
+                stringResource(Res.string.agentsCheckDownloadUnknown, thing, agentPayloadSize(done))
+            else ->
+                when (install?.step) {
+                    null -> stringResource(Res.string.agentsTileInstalling)
+                    PhoneAgentInstallStep.Linux -> stringResource(Res.string.agentsTileStepLinux)
+                    PhoneAgentInstallStep.Runtime -> stringResource(Res.string.agentsTileStepRuntime)
+                    PhoneAgentInstallStep.Helper -> stringResource(Res.string.agentsTileStepHelper)
+                    PhoneAgentInstallStep.Agent -> stringResource(Res.string.agentsInstalling, tile.agent.name)
+                }
+        }
+    return if (tile.quiet) stringResource(Res.string.agentsTileStillWorking, step) else step
+}
+
+/** The short reason on a tile whose last install failed (the full sentence is in its sheet and the page's notice). */
+internal fun installFailedWords(tile: AgentTileModel): org.jetbrains.compose.resources.StringResource {
+    val install = tile.install
+    if (install?.phase == PhoneAgentInstallPhase.Interrupted) return Res.string.agentsTileFailedStopped
+    return when (install?.failure) {
+        PhoneAgentInstallFailure.Storage -> Res.string.agentsTileFailedSpace
+        PhoneAgentInstallFailure.Download -> Res.string.agentsTileFailedDownload
+        PhoneAgentInstallFailure.Interrupted -> Res.string.agentsTileFailedStopped
+        else -> Res.string.agentsTileFailedOther
     }
 }
 
@@ -335,6 +405,14 @@ internal fun PhoneAgentSheet(state: AgentsUi, actions: AgentsActions, enabled: K
                         { actions.resumePhoneAgent(tile.agent.id) },
                         enabled = can,
                     )
+                // The failed install's way forward: the install review again (it reads the space again first).
+                AgentTileAct.Retry ->
+                    KitAction(
+                        stringResource(Res.string.agentsInstallAction, tile.agent.name),
+                        { actions.requestInstall(tile.agent.id) },
+                        enabled = can,
+                        working = state.busy,
+                    )
                 null ->
                     when (tile?.state) {
                         AgentTileState.Installing ->
@@ -379,6 +457,15 @@ internal fun PhoneAgentSheet(state: AgentsUi, actions: AgentsActions, enabled: K
                 KitProgressView(tileProgress(tile))
                 KitText(stringResource(Res.string.linuxAgentInstallBackground))
             }
+            // Why it did not install, in full, with what the phone reported under Details.
+            tile.state == AgentTileState.InstallFailed ->
+                tile.install?.let { install ->
+                    KitErrorNotice(
+                        installResultWords(install, tile.agent.name),
+                        details = install.details,
+                        detailsLabel = stringResource(Res.string.kitDetails),
+                    )
+                }
             state.checkingAgent == tile.agent.id -> {
                 KitProgressView(KitProgress.Waiting())
                 KitText(stringResource(Res.string.agentsCheckRunning, tile.agent.name))

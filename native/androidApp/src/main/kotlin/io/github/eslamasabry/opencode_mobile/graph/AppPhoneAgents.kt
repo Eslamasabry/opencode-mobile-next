@@ -58,10 +58,12 @@ import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallation
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRemoval
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRemovalIssue
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRow
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentSpace
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgents
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentsState
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneDevice
+import io.github.eslamasabry.oc.feature.agents.hub.phoneInstallStep
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
 import io.github.eslamasabry.opencode_mobile.PhoneAgentPayloads
 import io.github.eslamasabry.opencode_mobile.SetupRunner
@@ -298,6 +300,9 @@ class AppPhoneAgents(
                                     (setupJobs.lastFailureText()?.let { text -> "; $text" } ?: "")
                             )
                         else null,
+                    step = phoneInstallStep(data.componentId, id.raw),
+                    doneBytes = data.downloadedBytes,
+                    totalBytes = data.totalBytes,
                 )
             }
         }
@@ -470,6 +475,18 @@ class AppPhoneAgents(
             }
         refreshLocked()
         Outcome.Ok(answer)
+    }
+
+    /**
+     * What installing [id] needs free (the agent's download and unpacked files, the same rule the installer refuses
+     * by) and what the phone has. It reads no Linux and takes no lane, so the review can say it at once.
+     */
+    override suspend fun installSpace(id: String): PhoneAgentSpace? {
+        val owner = ownerId() ?: return null
+        val abi = architecture() ?: return null
+        val needed = installation(owner).requiredBytes(AgentId(id), abi) ?: return null
+        val free = setupJobs.freeBytes() ?: return null
+        return PhoneAgentSpace(needed, free)
     }
 
     override suspend fun cancelInstall(): Outcome<Unit> = lane.withLock {

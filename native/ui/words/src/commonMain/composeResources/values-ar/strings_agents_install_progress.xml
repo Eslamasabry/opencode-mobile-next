@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentsTileStepLinux">جارٍ تجهيز Linux…</string>
+    <string name="agentsTileStepRuntime">جارٍ تثبيت Node.js…</string>
+    <string name="agentsTileStepHelper">جارٍ تثبيت مساعد الوكلاء…</string>
+    <string name="agentsTileStillWorking">لا يزال يعمل · %1$s</string>
+    <string name="agentsTileFailedSpace">لم يُثبَّت: المساحة غير كافية</string>
+    <string name="agentsTileFailedDownload">لم يُثبَّت: تعذّر التنزيل</string>
+    <string name="agentsTileFailedStopped">لم يُثبَّت: توقّف الإعداد</string>
+    <string name="agentsTileFailedOther">لم يُثبَّت: فشل الإعداد</string>
+    <string name="agentsInstallNeedsSpace">يحتاج %1$s إلى %2$s من المساحة الفارغة للتثبيت، وفي هذا الهاتف %3$s فارغة. أفرِغ بعض المساحة ثم ثبّته.</string>
+</resources>

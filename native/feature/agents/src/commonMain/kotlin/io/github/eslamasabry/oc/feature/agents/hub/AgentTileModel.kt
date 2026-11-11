@@ -6,6 +6,8 @@ public enum class AgentTileState {
     SignInNeeded,
     NotInstalled,
     Installing,
+    /** The last install of this agent failed or was cut short: the reason and Try again stay until either is used. */
+    InstallFailed,
     CannotRun,
     Checking,
     PhoneCheck,
@@ -22,6 +24,8 @@ public enum class AgentTileAct {
     Check,
     /** Start the stopped agent helper again (Flutter's "Resume" chip). */
     Resume,
+    /** Install again after a failed or interrupted install: opens the install review, as Install does. */
+    Retry,
 }
 
 /** One phone agent as the bento grid draws it: its state, the install's measured share, and at most one act. */
@@ -33,12 +37,18 @@ public data class AgentTileModel(
     val act: AgentTileAct? = null,
     /** Installed in this visit but not yet usable: the sheet says sign-in and the phone check are still needed. */
     val justInstalled: Boolean = false,
+    /** This agent's install while it runs (its step and bytes) or after it failed (its reason); else null. */
+    val install: PhoneAgentInstallation? = null,
+    /** The running install has shown nothing new for a while: the tile says it is still working. */
+    val quiet: Boolean = false,
 )
 
 /**
  * The tile for [agent] given the phone's current [installation] (Flutter `agentRowLine` and its one fix chip).
  * [checking] is this agent's phone check running and [resuming] is the helper being started again: both read as
  * "Checking…" and offer no act until they end. [helperDown] is the page's failed start of the agent helper.
+ * [quiet] is a running install that has shown nothing new for a while. A failed or cut-short install of an agent that
+ * is still not installed reads as that failure, with Try again, never as a plain "Not installed".
  */
 public fun agentTile(
     agent: PhoneAgentRow,
@@ -46,10 +56,20 @@ public fun agentTile(
     checking: Boolean = false,
     resuming: Boolean = false,
     helperDown: Boolean = false,
+    quiet: Boolean = false,
 ): AgentTileModel {
     val mine = installation?.takeIf { it.id == agent.id }
     if (mine?.phase == PhoneAgentInstallPhase.Installing)
-        return AgentTileModel(agent, AgentTileState.Installing, fraction = mine.fraction?.coerceIn(0.0, 1.0))
+        return AgentTileModel(
+            agent,
+            AgentTileState.Installing,
+            fraction = mine.fraction?.coerceIn(0.0, 1.0),
+            install = mine,
+            quiet = quiet,
+        )
+    val ended = mine?.phase == PhoneAgentInstallPhase.Failed || mine?.phase == PhoneAgentInstallPhase.Interrupted
+    if (ended && agent.status == PhoneAgentStatus.NotInstalled && agent.supportedInstallation)
+        return AgentTileModel(agent, AgentTileState.InstallFailed, act = AgentTileAct.Retry, install = mine)
     val justInstalled = mine?.phase == PhoneAgentInstallPhase.Done && agent.status != PhoneAgentStatus.Ready
     return when (agent.status) {
         PhoneAgentStatus.NotInstalled ->
