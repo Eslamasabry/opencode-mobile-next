@@ -1979,7 +1979,7 @@ internal class Oc2Gateway(
         val providerReply = json("/provider", query = scope)
         if (providerReply is Outcome.Failed) return providerReply
         val providerJson = (providerReply as Outcome.Ok).value
-        redactor.registerCredentialValues(providerJson)
+        redactor.registerAnswerCredentials(providerJson)
         val providerPayload = data(providerJson)
         // Older provider inventories include their models and an explicit connected list. An empty
         // connected list is authoritative, never a reason to offer the catalog's models.
@@ -1994,7 +1994,7 @@ internal class Oc2Gateway(
         if (defaultReply is Outcome.Failed) return defaultReply
         val modelJson = (modelReply as Outcome.Ok).value
         val defaultJson = (defaultReply as Outcome.Ok).value
-        redactor.registerCredentialValues(providerJson)
+        redactor.registerAnswerCredentials(providerJson)
         val providerRows =
             data(providerJson) as? JsonArray ?: return Failure.UnreadableReply().failed()
         val modelRows = data(modelJson) as? JsonArray ?: return Failure.UnreadableReply().failed()
@@ -2075,7 +2075,7 @@ internal class Oc2Gateway(
         val providerJson = (providerReply as Outcome.Ok).value
         val modelJson = (modelReply as Outcome.Ok).value
         val agentJson = (agentReply as Outcome.Ok).value
-        redactor.registerCredentialValues(providerJson)
+        redactor.registerAnswerCredentials(providerJson)
         val providerRows =
             data(providerJson) as? JsonArray ?: return Failure.UnreadableReply().failed()
         val modelRows = data(modelJson) as? JsonArray ?: return Failure.UnreadableReply().failed()

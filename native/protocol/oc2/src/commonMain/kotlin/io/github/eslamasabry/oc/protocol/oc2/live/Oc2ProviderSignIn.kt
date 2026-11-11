@@ -53,7 +53,7 @@ internal class Oc2ProviderSignIn(
         val result = gateway.json("/integration", query = scope)
         if (result is Outcome.Failed) return result
         val root = (result as Outcome.Ok).value
-        redactor.registerCredentialValues(root)
+        redactor.registerAnswerCredentials(root)
         val rows = data(root) as? JsonArray ?: return failed()
         if (rows.size > 1000) return failed()
         val list = mutableListOf<IntegrationInfo>()
