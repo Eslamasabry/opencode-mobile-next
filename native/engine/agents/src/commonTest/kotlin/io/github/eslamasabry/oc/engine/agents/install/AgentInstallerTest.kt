@@ -166,6 +166,48 @@ class AgentInstallerTest {
     }
 
     @Test
+    fun `a followed install whose job disappears is kept as interrupted, never a silent not installed`() = runTest {
+        // Device QA B16: the tile read "Installing…", then plain "Not installed" with nothing said.
+        for (gone in listOf(null, AgentSetupJob(AgentId("gemini"), AgentSetupJobState.Done, null, null, null, null))) {
+            val jobs = FakeJobs()
+            val prefs = FakeAgentPrefs()
+            val installer = AgentInstaller(prefs, jobs)
+            val started = installer.install(owner, codex, AgentArchitecture.Arm64)
+            assertEquals(InstallStart.Started, (started as Outcome.Ok).value)
+            assertEquals(AgentSetupPhase.Installing, (installer.restore(owner) as Outcome.Ok).value.phase)
+            jobs.job = gone
+            val ended = (installer.restore(owner) as Outcome.Ok).value
+            assertEquals(AgentSetupPhase.Interrupted, ended.phase, gone.toString())
+            assertEquals(codex, ended.agentId)
+            assertNull(prefs.string("oc.agentInstall.owner"))
+            // Every later read, by this installer or a new one after a restart, still shows it until it is dismissed.
+            assertEquals(AgentSetupPhase.Interrupted, (installer.restore(owner) as Outcome.Ok).value.phase)
+            val restarted = AgentInstaller(prefs, jobs).restore(owner)
+            assertEquals(AgentSetupPhase.Interrupted, (restarted as Outcome.Ok).value.phase)
+            installer.dismissResult(owner)
+            assertEquals(AgentSetupPhase.Idle, (installer.restore(owner) as Outcome.Ok).value.phase)
+        }
+    }
+
+    @Test
+    fun `a job that fails while followed keeps its kind across every later read`() = runTest {
+        val jobs = FakeJobs()
+        val prefs = FakeAgentPrefs()
+        val installer = AgentInstaller(prefs, jobs)
+        installer.install(owner, codex, AgentArchitecture.Arm64)
+        jobs.job = AgentSetupJob(codex, AgentSetupJobState.Running, "agent-node", 5, 50, null)
+        val running = (installer.observe(owner, jobs.job) as Outcome.Ok).value
+        assertEquals("agent-node", running.componentId)
+        assertEquals(5L, running.downloadedBytes)
+        jobs.job = AgentSetupJob(codex, AgentSetupJobState.Failed, "agent-codex", null, null, AgentSetupFailure.Storage)
+        repeat(3) {
+            val read = (installer.restore(owner) as Outcome.Ok).value
+            assertEquals(AgentSetupPhase.Failed, read.phase)
+            assertEquals(AgentSetupFailure.Storage, read.failure)
+        }
+    }
+
+    @Test
     fun `B-LINUX-135 cancel stops only the owned job and is a no-op without a marker`() = runTest {
         val jobs = FakeJobs()
         AgentInstaller(FakeAgentPrefs(), jobs).cancel(owner)

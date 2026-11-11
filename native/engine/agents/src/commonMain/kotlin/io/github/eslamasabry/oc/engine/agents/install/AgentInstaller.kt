@@ -205,11 +205,26 @@ public class AgentInstaller(
                 is Outcome.Failed -> return@withLock read
                 is Outcome.Ok -> read.value
             }
-        if (!ownJob(marker, job)) return@withLock dropStale(owner)
+        if (!ownJob(marker, job)) return@withLock vanished(owner, marker) ?: dropStale(owner)
         endIfOver(owner, marker, job)?.let {
             return@withLock it
         }
         project(marker, job).also { state.value = it }.ok()
+    }
+
+    /**
+     * The job this installer started and was following is gone (no job record, or another job's record in its
+     * place): the install ended without a result. That is an interruption the person must see, never a silent return
+     * to "not installed". A marker this installer never followed (left by the Flutter app, or from before a restart
+     * whose job record says nothing) is still dropped silently by [dropStale]. Null when it was not ours to follow.
+     */
+    private suspend fun vanished(owner: OwnerId, marker: AgentId): Outcome<AgentSetupProgress>? {
+        val followed = state.value.phase == AgentSetupPhase.Installing && state.value.agentId == marker
+        if (!followed) return null
+        endIfOver(owner, marker, null)?.let {
+            return it
+        }
+        return project(marker, null).also { state.value = it }.ok()
     }
 
     /**
@@ -233,7 +248,7 @@ public class AgentInstaller(
             val marker =
                 prefs.string(AgentKeys.agentInstall(owner))?.let(::AgentId)
                     ?: return@withLock state.value.ok()
-            if (!ownJob(marker, job)) return@withLock dropStale(owner)
+            if (!ownJob(marker, job)) return@withLock vanished(owner, marker) ?: dropStale(owner)
             endIfOver(owner, marker, job)?.let {
                 return@withLock it
             }
