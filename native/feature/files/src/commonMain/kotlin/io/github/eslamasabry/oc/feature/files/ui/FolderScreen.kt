@@ -113,6 +113,8 @@ import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
 import io.github.eslamasabry.oc.ui.words.res.libraryTerminalTitle
 import io.github.eslamasabry.oc.ui.words.res.readerUiAttachPrompt
 import io.github.eslamasabry.oc.ui.words.res.readerUiChangedCount
+import io.github.eslamasabry.oc.ui.words.res.filesMenuChanges
+import io.github.eslamasabry.oc.ui.words.res.projectHubTerminalsRunning
 import io.github.eslamasabry.oc.ui.words.res.readerUiCopyPath
 import io.github.eslamasabry.oc.ui.words.res.readerUiIndicatorsFailed
 import io.github.eslamasabry.oc.ui.words.res.readerUiNoFiles
