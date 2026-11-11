@@ -122,24 +122,25 @@ class FleetAgentsPresentTest {
                 FleetAgent("gastown.deacon", "gastown.deacon", AgentState.Idle, pool = "gastown.deacon"),
                 FleetAgent("a/gastown.boot", "a/gastown.boot", AgentState.Idle, pool = "gastown.boot"),
                 FleetAgent("gastown.boot", "gastown.boot", AgentState.Idle, pool = "gastown.boot"),
-                FleetAgent("w1", "w1", AgentState.Idle, pool = "gastown.polecat"),
-                FleetAgent("w2", "w2", AgentState.Idle, pool = "gastown.polecat"),
+                FleetAgent("gastown.polecat-1", "gastown.polecat-1", AgentState.Idle, pool = "gastown.polecat"),
+                FleetAgent("gastown.polecat-2", "gastown.polecat-2", AgentState.Idle, pool = "gastown.polecat"),
             )
         val titles = FleetAgentsPresent.titles(agents)
         assertEquals("demo", titles.getValue("demo/gastown.witness").project)
         assertEquals("shop", titles.getValue("shop/gastown.witness").project)
         assertNull(titles.getValue("gastown.deacon").project)
-        assertEquals(1, titles.getValue("w1").number)
-        assertEquals(2, titles.getValue("w2").number)
+        assertEquals(1, titles.getValue("gastown.polecat-1").number)
+        assertEquals(2, titles.getValue("gastown.polecat-2").number)
         assertEquals(agents.size, titles.values.toSet().size)
     }
 
     @Test
     fun agents_still_alike_after_their_project_say_what_they_look_after_then_take_a_number() {
-        val deacons = listOf("d1", "d2").map { FleetAgent(it, it, AgentState.Idle, pool = "gastown.deacon") }
+        // Names that only repeat the role (no nickname of their own), with no project to tell them apart.
+        val deacons = listOf("gastown.deacon-1", "gastown.deacon-2").map { FleetAgent(it, it, AgentState.Idle, pool = "gastown.deacon") }
         val titles = FleetAgentsPresent.titles(deacons)
-        assertEquals(FleetLooksAfter.Team, titles.getValue("d1").looksAfter)
-        assertEquals(listOf(1, 2), listOf(titles.getValue("d1").number, titles.getValue("d2").number))
+        assertEquals(FleetLooksAfter.Team, titles.getValue("gastown.deacon-1").looksAfter)
+        assertEquals(listOf(1, 2), listOf(titles.getValue("gastown.deacon-1").number, titles.getValue("gastown.deacon-2").number))
     }
 
     @Test
@@ -150,8 +151,8 @@ class FleetAgentsPresentTest {
         val readOnly = page(running, FleetCapabilities.READ)
         assertFalse(readOnly.controls.pause || readOnly.controls.nudge || readOnly.controls.stop || readOnly.controls.forceStop)
         assertTrue(readOnly.controlsElsewhere)
-        // The loopback team takes controls but no hard kill.
-        assertFalse(page(running, FleetCapabilities.LOOPBACK).controls.forceStop)
+        // A host that takes controls but no hard kill (Flutter's loopback set has the kill, so it is made up here).
+        assertFalse(page(running, FleetCapabilities.LOOPBACK.copy(controlAgentKill = false)).controls.forceStop)
     }
 
     @Test
@@ -174,7 +175,7 @@ class FleetAgentsPresentTest {
         val unanswered = page(running, sent = FleetAgentSent(FleetAgentAction.Stop, ReceiptStatus.Pending))
         assertEquals(FleetAgentNotice.StopStuck, unanswered.notice)
         // No hard kill on this host: the plain stop is all there is, so the page does not promise one.
-        assertEquals(FleetAgentNotice.None, page(running, FleetCapabilities.LOOPBACK, sent = FleetAgentSent(FleetAgentAction.Stop, ReceiptStatus.Rejected)).notice)
+        assertEquals(FleetAgentNotice.None, page(running, FleetCapabilities.LOOPBACK.copy(controlAgentKill = false), sent = FleetAgentSent(FleetAgentAction.Stop, ReceiptStatus.Rejected)).notice)
         assertEquals(FleetAgentNotice.None, page(running, sent = FleetAgentSent(FleetAgentAction.Pause, ReceiptStatus.Rejected)).notice)
     }
 

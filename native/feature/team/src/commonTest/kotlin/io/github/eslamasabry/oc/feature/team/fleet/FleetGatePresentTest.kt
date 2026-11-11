@@ -94,7 +94,7 @@ class FleetGatePresentTest {
 
     @Test
     fun a_failed_task_is_titled_after_its_task_and_offers_fix_retry_and_stop() {
-        val ui = FleetGatePresent.present(fleet(failedSnapshot("connection timed out")), "run-failed:r1")
+        val ui = FleetGatePresent.present(fleet(failedSnapshot("connection refused")), "run-failed:r1")
         assertEquals("Sync engine", ui.stoppedTask)
         assertEquals(FleetFailureClass.Infrastructure, ui.failure)
         assertEquals(FleetGateAgent("rig/polecat-1", "polecat-1"), ui.fix)
@@ -102,7 +102,7 @@ class FleetGatePresentTest {
         assertEquals("r1", ui.cancelRunId)
         // Stuck work first, finished work not listed.
         assertEquals(listOf("w1", "w2"), ui.affected.map { it.id })
-        assertTrue(ui.errorText.contains("connection timed out"))
+        assertTrue(ui.errorText.contains("connection refused"))
     }
 
     @Test

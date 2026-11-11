@@ -24,7 +24,7 @@ class FleetStartRunPresentTest {
     @Test
     fun the_planner_is_found_by_id_then_by_name() {
         assertEquals("gastown.mayor", FleetStartPresent.planner(listOf(FleetAgent("x", "x", AgentState.Idle), awake))?.id)
-        assertEquals("city/mayor", FleetStartPresent.planner(listOf(FleetAgent("city/mayor", "city/mayor", AgentState.Idle)))?.id)
+        assertEquals("city.mayor", FleetStartPresent.planner(listOf(FleetAgent("city.mayor", "city.mayor", AgentState.Idle)))?.id)
         assertNull(FleetStartPresent.planner(listOf(FleetAgent("x", "x", AgentState.Idle))))
     }
 
