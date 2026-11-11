@@ -65,6 +65,22 @@ class NativeShipGateTest {
     }
 
     @Test
+    fun `the phone server's port has one source on every flavour`() {
+        // Wave 3 conn: the phase-0 gate, the waits outside the connection lock, the healing and the profile store's
+        // "this is the phone's own server" rule all read the port BuiltinLinux selected for this package (4098, the
+        // preview package 4100, or the port it moved to). Without this call they would keep 4098 on preview builds.
+        val application = File(appMain, "kotlin/io/github/eslamasabry/opencode_mobile/OcApplication.kt").readText()
+        val configured = application.indexOf("PhoneServerScripts.configurePort { BuiltinLinux.get(this).selectedServerPort }")
+        assertTrue(configured >= 0, "OcApplication must configure the phone server port from BuiltinLinux")
+        assertTrue(configured < application.indexOf("step(\"graph\")"), "the port is configured before the graph is built")
+        val wiring = File(appMain, "kotlin/io/github/eslamasabry/opencode_mobile/graph/LinuxVoiceWiring.kt").readText()
+        assertTrue("ManagedLocalServer.configureNativePort(" in wiring, "the gate's port follows the selected port")
+        assertTrue("PhoneOwnServers.configureNativePort(read)" in wiring)
+        val stores = File(appMain, "kotlin/io/github/eslamasabry/opencode_mobile/graph/PreviewStores.kt").readText()
+        assertTrue("PhoneServerProfile.managedOnPhone(it, PhoneServerScripts.PORT)" in stores)
+    }
+
+    @Test
     fun `the built-in Linux libraries are present for both ABIs and 16 KB aligned`() {
         for (abi in abis) for (name in linuxLibraries) {
             val lib = File(linuxJni, "$abi/$name")

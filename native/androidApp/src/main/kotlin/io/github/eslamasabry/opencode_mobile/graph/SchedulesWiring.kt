@@ -159,7 +159,10 @@ class AppScheduleProfiles(
 
     override suspend fun fingerprint(profileId: String): String? {
         stores.warm()
-        val server = stores.profiles.profile(ProfileId(profileId))?.toServerProfile() ?: return null
+        // The phone-server flag is derived from the address already in this fingerprint; it stays false here so the
+        // fingerprints saved before the profile store derived it still match.
+        val server =
+            stores.profiles.profile(ProfileId(profileId))?.toServerProfile(managedOnPhone = false) ?: return null
         // Everything that names the server and the account, never the display name or a secret.
         return ScheduleEngine.fingerprint(
             listOf(

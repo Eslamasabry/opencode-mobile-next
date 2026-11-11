@@ -16,6 +16,7 @@ import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.connection.ConnectionCredentialSource
 import io.github.eslamasabry.oc.engine.delivery.DeliveryStorage
 import io.github.eslamasabry.oc.engine.delivery.receipts.ProfileDirectory
+import io.github.eslamasabry.oc.engine.profiles.PhoneServerProfile
 import io.github.eslamasabry.oc.engine.profiles.ProfileStore
 import io.github.eslamasabry.oc.engine.profiles.StoredProfileJson
 import java.security.SecureRandom
@@ -44,7 +45,16 @@ class PreviewStores(
     val secrets =
         migration.ledgered(AndroidDataStores.secrets(application, gate, redactor, dispatchers.io))
     val lanes = DefaultWriterLanes()
-    val profiles = ProfileStore(prefs, secrets, lanes, redactor)
+    // This phone's own server is recognised by this build's managed port (the connect path used to build it as a
+    // computer, so the AI Team page, Phone files and Plans treated This phone as one).
+    val profiles =
+        ProfileStore(
+            prefs,
+            secrets,
+            lanes,
+            redactor,
+            phoneServer = { PhoneServerProfile.managedOnPhone(it, PhoneServerScripts.PORT) },
+        )
     val profileScope =
         io.github.eslamasabry.oc.core.data.scope.DefaultProfileScope(prefs, secrets, lanes.app)
     private val warming = Mutex()
