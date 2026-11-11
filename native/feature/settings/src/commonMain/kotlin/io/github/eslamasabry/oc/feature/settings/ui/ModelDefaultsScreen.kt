@@ -26,6 +26,9 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.feature.settings.presentation.ModelDefaultsMode
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.words.res.*
@@ -37,6 +40,7 @@ public fun ModelDefaultsScreen(state: ModelDefaultsUi, actions: ModelDefaultsAct
         if (state.thisPhone) stringResource(Res.string.modelDefaultsPhoneTitle)
         else stringResource(Res.string.modelDefaultsNamedTitle, state.serverName)
     var picking by remember { mutableStateOf(false) }
+    var choosingMode by remember { mutableStateOf(false) }
     val known = state.models.isNotEmpty() || state.recommended.isNotEmpty()
     KitScreen(
         topBar = {
@@ -83,6 +87,19 @@ public fun ModelDefaultsScreen(state: ModelDefaultsUi, actions: ModelDefaultsAct
                     onClick = { picking = true },
                     modifier = Modifier.testTag("model-defaults-open-picker"),
                 )
+                // Only when the server offers modes to choose from: no dead row otherwise.
+                if (state.modes.isNotEmpty())
+                    KitRow(
+                        title = stringResource(Res.string.upgradeMode),
+                        supporting =
+                            if (state.mode.isEmpty()) stringResource(Res.string.e7ModelUiServerDefault)
+                            else modeName(state.mode),
+                        supportingMaxLines = 2,
+                        enabled = !state.saving && !state.loading,
+                        disabledReason = busyReason(state),
+                        onClick = { choosingMode = true },
+                        modifier = Modifier.testTag("model-defaults-open-mode"),
+                    )
                 if (currentRow != null && currentRow.variants.isNotEmpty())
                     KitRow(
                         title = stringResource(Res.string.composerFullThinking),
@@ -93,6 +110,37 @@ public fun ModelDefaultsScreen(state: ModelDefaultsUi, actions: ModelDefaultsAct
                         disabledReason = busyReason(state),
                         onClick = { picking = true },
                     )
+            }
+        }
+    }
+    KitSheet(
+        visible = choosingMode && state.modes.isNotEmpty(),
+        onDismissRequest = { choosingMode = false },
+        title = stringResource(Res.string.upgradeMode),
+    ) {
+        Column(Modifier.fillMaxWidth().testTag("model-defaults-modes")) {
+            KitRow(
+                title = stringResource(Res.string.e7ModelUiServerDefault),
+                selected = state.mode.isEmpty(),
+                trailing = if (state.mode.isEmpty()) KitRowTrailing.Check else KitRowTrailing.None,
+                onClick = {
+                    actions.chooseMode("")
+                    choosingMode = false
+                },
+            )
+            state.modes.forEach { mode ->
+                KitRow(
+                    title = modeName(mode.id),
+                    supporting = modeWords(mode).ifEmpty { null },
+                    supportingMaxLines = 3,
+                    selected = state.mode == mode.id,
+                    trailing = if (state.mode == mode.id) KitRowTrailing.Check else KitRowTrailing.None,
+                    onClick = {
+                        actions.chooseMode(mode.id)
+                        choosingMode = false
+                    },
+                    modifier = Modifier.testTag("model-defaults-mode-${mode.id}"),
+                )
             }
         }
     }
@@ -138,6 +186,26 @@ public fun ModelDefaultsScreen(state: ModelDefaultsUi, actions: ModelDefaultsAct
 
 private fun kitOption(row: ModelDefaultsRow): KitModelOption =
     KitModelOption(row.model.providerId, row.model.modelId, row.name, providerName = row.providerName)
+
+/** Build and Plan by name; any other mode as the server names it. */
+@Composable
+private fun modeName(id: String): String =
+    when (id.lowercase()) {
+        "build" -> stringResource(Res.string.modelPickerAgentBuildName)
+        "plan" -> stringResource(Res.string.modelPickerAgentPlanName)
+        else -> id
+    }
+
+/** What a mode does: the server's own words, else the built-in line for Build and Plan, else nothing. */
+@Composable
+private fun modeWords(mode: ModelDefaultsMode): String {
+    if (mode.description.isNotBlank()) return mode.description
+    return when (mode.id.lowercase()) {
+        "build" -> stringResource(Res.string.modelPickerAgentBuild)
+        "plan" -> stringResource(Res.string.modelPickerAgentPlan)
+        else -> ""
+    }
+}
 
 /** A thinking level as people read it: "Extra high" for `xhigh`; unknown ids as they are. */
 @Composable

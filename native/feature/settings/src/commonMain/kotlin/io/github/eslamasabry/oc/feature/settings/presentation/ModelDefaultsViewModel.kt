@@ -18,6 +18,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+/** One mode (agent) the server lets a conversation start in; [description] is the server's own words, if any. */
+@kotlinx.serialization.Serializable
+public data class ModelDefaultsMode(val id: String, val description: String = "")
+
 public data class ModelDefaultsData(
     val serverName: String,
     val thisPhone: Boolean,
@@ -31,6 +35,10 @@ public data class ModelDefaultsData(
     val providerNames: Map<String, String> = emptyMap(),
     /** Nothing is saved on this phone: [current] is only the server's own default. */
     val usesDefault: Boolean = false,
+    /** The modes this server offers to start in (primary, not hidden); empty = the server offers none to choose. */
+    val modes: List<ModelDefaultsMode> = emptyList(),
+    /** The mode saved for new conversations (`oc.agent.<profile>`); empty = the server's default. */
+    val mode: String = "",
 )
 
 public interface ModelDefaultsHost {
@@ -42,6 +50,10 @@ public interface ModelDefaultsHost {
 
     /** Saves [model] with its thinking level ([variant] empty = the model's default). */
     public suspend fun chooseWithVariant(model: ModelRef, variant: String): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(io.github.eslamasabry.oc.core.common.FeatureId("modelDefaults")))
+
+    /** Saves the mode new conversations start in ("" = the server's default). */
+    public suspend fun chooseMode(mode: String): Outcome<Unit> =
         Outcome.Failed(Failure.Unavailable(io.github.eslamasabry.oc.core.common.FeatureId("modelDefaults")))
 
     /** Adds [model] to the favourites, or removes it when it is one (the same shelf the chat's model sheet uses). */
@@ -87,6 +99,10 @@ public data class ModelDefaultsUi(
     val variant: String = "",
     val favorites: List<ModelRef> = emptyList(),
     val recent: List<ModelRef> = emptyList(),
+    /** The modes to choose from; empty hides the Mode row. */
+    val modes: List<ModelDefaultsMode> = emptyList(),
+    /** The saved mode; empty = the server's default. */
+    val mode: String = "",
 )
 
 public interface ModelDefaultsActions {
@@ -100,6 +116,9 @@ public interface ModelDefaultsActions {
     public fun chooseVariant(variant: String)
 
     public fun toggleFavorite(model: ModelRef)
+
+    /** Sets the mode new conversations start in ("" = the server's default). */
+    public fun chooseMode(mode: String)
 }
 
 @dev.zacsweers.metro.AssistedInject
@@ -173,6 +192,8 @@ public class ModelDefaultsViewModel(
             variant = data.variant,
             favorites = data.library.favorites.toList(),
             recent = data.library.recent.toList(),
+            modes = data.modes,
+            mode = data.mode,
             recommended = recommended,
             models =
                 data.models
@@ -213,6 +234,19 @@ public class ModelDefaultsViewModel(
         mutable.value = state.value.copy(saving = true, failure = null)
         viewModelScope.launch {
             when (val saved = host.chooseWithVariant(row.model, variant)) {
+                is Outcome.Failed -> mutable.value = state.value.copy(saving = false, failure = saved.failure)
+                is Outcome.Ok -> load()
+            }
+        }
+    }
+
+    override fun chooseMode(mode: String) {
+        val shown = state.value
+        if (shown.saving || shown.loading || shown.modes.isEmpty()) return
+        if (mode.isNotEmpty() && shown.modes.none { it.id == mode }) return
+        mutable.value = shown.copy(saving = true, failure = null)
+        viewModelScope.launch {
+            when (val saved = host.chooseMode(mode)) {
                 is Outcome.Failed -> mutable.value = state.value.copy(saving = false, failure = saved.failure)
                 is Outcome.Ok -> load()
             }

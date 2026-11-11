@@ -22,6 +22,7 @@ import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.feature.settings.presentation.ModelDefaultsData
 import io.github.eslamasabry.oc.feature.settings.presentation.ModelDefaultsHost
+import io.github.eslamasabry.oc.feature.settings.presentation.ModelDefaultsMode
 import io.github.eslamasabry.oc.feature.settings.presentation.NoModelDefaultsHost
 import io.github.eslamasabry.oc.feature.settings.presentation.KeptModelDefaults
 
@@ -103,6 +104,20 @@ class LiveModelDefaultsHost(
                     providers.defaultModelId?.let { ModelRef(provider, it) }
                 },
             )
+        // Modes (agents) a conversation can start in: gated on the capability, never on the flavour. Primary and
+        // not hidden, as Flutter's picker lists them.
+        val modes =
+            if (!gateway.capabilities.value.agentSelection) emptyList()
+            else
+                catalog
+                    ?.agents
+                    ?.filter { !it.hidden && it.mode != "subagent" }
+                    ?.map { ModelDefaultsMode(it.id, it.description.orEmpty().trim()) }
+                    ?: (gateway.agents() as? Outcome.Ok)
+                        ?.value
+                        ?.filter { it.mode != "subagent" }
+                        ?.map { ModelDefaultsMode(it.name) }
+                        .orEmpty()
         val data =
             ModelDefaultsData(
                 graph.profile.name,
@@ -115,6 +130,8 @@ class LiveModelDefaultsHost(
                 // The chat's sheet groups by the server's provider names; the ids are the fallback.
                 providers.providers.filter { it.name.isNotBlank() }.associate { it.id to it.name },
                 usesDefault = stored == null,
+                modes = modes.distinctBy { it.id },
+                mode = stores.prefs.string("oc.agent.${profile.raw}").orEmpty(),
             )
         shelf.keep(profile, value = KeptModelDefaults.of(data))
         return Outcome.Ok(data)
@@ -130,7 +147,12 @@ class LiveModelDefaultsHost(
                 ?.split('|')
                 ?.takeIf { it.size >= 2 }
                 ?.let { ModelRef(it[0], it[1]) }
-        return kept.data(library, stored, stores.prefs.string("oc.variant.${id.raw}").orEmpty())
+        return kept.data(
+            library,
+            stored,
+            stores.prefs.string("oc.variant.${id.raw}").orEmpty(),
+            stores.prefs.string("oc.agent.${id.raw}").orEmpty(),
+        )
     }
 
     companion object {
@@ -176,6 +198,21 @@ class LiveModelDefaultsHost(
             if (variant.isEmpty()) remove("oc.variant.${profile.raw}")
             else putString("oc.variant.${profile.raw}", variant)
             putString(ModelKeys.modelLibrary(profile), library.toJson().toString())
+        }
+    }
+
+    override suspend fun chooseMode(mode: String): Outcome<Unit> {
+        val (profile, graph) = captured ?: return stale()
+        if (
+            registry.live.value[profile] !== graph ||
+                graph.session.server.location.value != capturedLocation ||
+                graph.session.server.scopeRevision != capturedRevision ||
+                stores.profiles.profile(profile) == null
+        )
+            return stale()
+        // The same key Flutter used, so a migrated profile keeps its choice; swept with the profile.
+        return stores.prefs.commit(stores.lanes.forProfile(profile)) {
+            if (mode.isEmpty()) remove("oc.agent.${profile.raw}") else putString("oc.agent.${profile.raw}", mode)
         }
     }
 
