@@ -158,6 +158,16 @@ internal fun mirrorX(x: Float, width: Float): Float = width - x
 
 internal fun mirrorRect(r: DockRect, width: Float): DockRect = DockRect(width - r.right, r.top, width - r.left, r.bottom)
 
+/**
+ * Whether a ring whose slot is centred at [centerY] stands whole inside the strip's ring viewport [viewTop]..[viewBottom]
+ * (dp). A ring only part in view is not in the strip at all (it stays in the list): a half ring peeping out above the
+ * "+" when the keyboard left room for one (device QA 2026-11-11, run 4, 1b).
+ */
+internal fun ringStandsWhole(centerY: Float, pitch: Float, viewTop: Float, viewBottom: Float): Boolean =
+    centerY - pitch / 2f >= viewTop - WHOLE_SLACK && centerY + pitch / 2f <= viewBottom + WHOLE_SLACK
+
+private const val WHOLE_SLACK = 0.5f
+
 /** True when [side] is on the physical right for the layout direction. */
 internal fun physicallyRight(side: KitDockSide, rtl: Boolean): Boolean = (side == KitDockSide.End) != rtl
 
