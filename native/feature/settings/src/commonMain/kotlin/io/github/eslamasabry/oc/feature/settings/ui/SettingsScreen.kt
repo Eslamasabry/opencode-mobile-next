@@ -32,6 +32,7 @@ import io.github.eslamasabry.oc.ui.kit.capability.KitCapabilityExplainer
 import io.github.eslamasabry.oc.ui.kit.capability.KitCapabilityVariant
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
+import io.github.eslamasabry.oc.ui.kit.frame.KitFloatingBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
@@ -382,6 +383,9 @@ internal fun SettingsFrame(
             else KitScreenWidth.Reading,
         page = true,
         edges = KitScreenEdges.Bleed,
+        // Glass step 4: where the lens is drawn the page scrolls on under its bar, a floating liquid capsule; the kit
+        // records the page for it. Everywhere else the bar is pinned as before.
+        floatingBar = KitFloatingBar(),
     ) {
         Column(Modifier.fillMaxSize()) {
             Column(
