@@ -237,6 +237,8 @@ public class ChatViewModel(
 
     override fun stop(): Unit = presenter.stop()
 
+    override fun stopForSteer(promptKey: String, words: String): Unit = presenter.stopForSteer(promptKey, words)
+
     override fun find(query: String?): Unit = presenter.find(query)
 
     override fun findNext(): Unit = presenter.findNext()

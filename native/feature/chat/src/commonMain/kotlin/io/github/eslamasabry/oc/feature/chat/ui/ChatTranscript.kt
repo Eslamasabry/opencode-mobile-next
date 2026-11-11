@@ -71,6 +71,9 @@ import io.github.eslamasabry.oc.ui.words.res.chatStopAfterStepUndo
 import io.github.eslamasabry.oc.ui.words.res.chatSteerAgentFallback
 import io.github.eslamasabry.oc.ui.words.res.chatSteerReadsAfterCommand
 import io.github.eslamasabry.oc.ui.words.res.chatSteerReadsAfterStep
+import io.github.eslamasabry.oc.ui.words.res.chatSteerStopCommand
+import io.github.eslamasabry.oc.ui.words.res.chatSteerStopStep
+import io.github.eslamasabry.oc.ui.kitchat.transcript.KitSteerNote
 import io.github.eslamasabry.oc.feature.chat.presentation.SteerWaitRules
 import io.github.eslamasabry.oc.ui.words.res.chatStarAskAction
 import io.github.eslamasabry.oc.ui.words.res.chatStarAskDismiss
@@ -357,6 +360,8 @@ internal fun ChatTranscriptList(
     onStopLive: (() -> Unit)? = null,
     /** C5: Undo on "Stopping after this step". */
     onUndoStopAfterStep: (() -> Unit)? = null,
+    /** C6: Stop on the steer note, given the steered message's key and words. */
+    onStopForSteer: ((String, String) -> Unit)? = null,
     /** A finished turn's "All files" (the project's Files); null hides the link. */
     onAllFiles: (() -> Unit)? = null,
     /** "Send again" under the newest prompt that got no reply (Flutter no_reply_reason.dart:198); null hides it. */
@@ -472,13 +477,24 @@ internal fun ChatTranscriptList(
                     val steerWait = SteerWaitRules.wait(unique, facts.work, busy = true, joins = live.joinsTurn)
                     if (steerWait != null) {
                         val agent = live.agentName ?: stringResource(Res.string.chatSteerAgentFallback)
-                        KitQuietLine(
-                            stringResource(
-                                if (steerWait.command) Res.string.chatSteerReadsAfterCommand
-                                else Res.string.chatSteerReadsAfterStep,
-                                agent,
-                            ),
-                            Modifier.testTag("chat-steer-wait"),
+                        KitSteerNote(
+                            text =
+                                stringResource(
+                                    if (steerWait.command) Res.string.chatSteerReadsAfterCommand
+                                    else Res.string.chatSteerReadsAfterStep,
+                                    agent,
+                                ),
+                            stopLabel =
+                                stringResource(
+                                    if (steerWait.command) Res.string.chatSteerStopCommand
+                                    else Res.string.chatSteerStopStep
+                                ),
+                            onStop =
+                                if (onStopForSteer != null && SteerWaitRules.showsStop(steerWait, facts.nowMs))
+                                    ({ onStopForSteer(steerWait.promptKey, steerWait.text) })
+                                else null,
+                            stopping = live.stopping,
+                            modifier = Modifier.testTag("chat-steer-wait"),
                         )
                     }
                     KitTurnLiveLine(

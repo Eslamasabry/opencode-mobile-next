@@ -948,6 +948,7 @@ public fun ChatScreen(
                                             onOpenSession = onOpenSession,
                                             onStopLive = actions::stop,
                                             onUndoStopAfterStep = actions::undoStopAfterStep,
+                                            onStopForSteer = actions::stopForSteer,
                                             starAsk = state.starAsk,
                                             onStarTap = actions::starTapped,
                                             onStarDismiss = actions::starDismissed,
