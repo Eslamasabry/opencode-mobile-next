@@ -2403,15 +2403,6 @@ internal class Oc2Gateway(
     private fun forkOf(wire: Oc2Session): SessionId? =
         wire.fork?.let { fork -> (fork.sessionID?.takeIf { it.isNotEmpty() } ?: wire.parentID)?.let(::SessionId) }
 
-    private fun runOutcomeOf(outcome: Oc2SessionOutcome?): SessionRunOutcome? =
-        when (outcome) {
-            Oc2SessionOutcome.Succeeded -> SessionRunOutcome.Succeeded
-            Oc2SessionOutcome.Failed -> SessionRunOutcome.Failed
-            Oc2SessionOutcome.Interrupted -> SessionRunOutcome.Interrupted
-            Oc2SessionOutcome.Unknown,
-            null -> null
-        }
-
     internal fun sessionValue(value: JsonElement): Session? {
         val wire = Oc2Session.fromJson(value as? JsonObject ?: return null) ?: return null
         return Session(
