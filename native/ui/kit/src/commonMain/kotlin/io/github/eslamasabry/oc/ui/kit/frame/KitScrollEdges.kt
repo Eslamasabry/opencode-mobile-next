@@ -104,7 +104,7 @@ internal fun Modifier.kitScrollEdges(
 }
 
 /** One edge's clearing gradient, kept until its strength or its span changes. */
-private class EdgeBrush {
+internal class EdgeBrush {
     private var k = Float.NaN
     private var start = Float.NaN
     private var end = Float.NaN
