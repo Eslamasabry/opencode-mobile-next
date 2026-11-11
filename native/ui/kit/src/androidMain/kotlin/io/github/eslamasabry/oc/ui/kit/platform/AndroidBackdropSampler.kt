@@ -99,7 +99,8 @@ internal class AndroidBackdropSampler : KitBackdropSampler {
     /** GPU thread: draws [request] into a [targetWidth]×[targetHeight] target, then hands the guard back. */
     private fun syncOnGpu(targetWidth: Int, targetHeight: Int, request: InkRequest) {
         try {
-            val hw = targetOnGpu(targetWidth, targetHeight)
+            // Nothing thrown here may reach the thread's loop (it would end the app): a failure is a missed sample.
+            val hw = runCatching { targetOnGpu(targetWidth, targetHeight) }.getOrNull()
             val sync = hw?.let { r -> runCatching { r.createRenderRequest().syncAndDraw() }.getOrDefault(NOT_DRAWN) } ?: NOT_DRAWN
             if (sync and NOT_DRAWN != 0) {
                 pending.compareAndSet(request, null)
@@ -176,7 +177,7 @@ internal class AndroidBackdropSampler : KitBackdropSampler {
     override fun release() {
         size.reset()
         pending.getAndSet(null)?.result?.complete(null)
-        gpuHandler.post { dropOnGpu() }
+        gpuHandler.post { runCatching { dropOnGpu() } }
     }
 
     private class InkRequest(val width: Int, val height: Int, val result: CompletableDeferred<IntArray?>)
