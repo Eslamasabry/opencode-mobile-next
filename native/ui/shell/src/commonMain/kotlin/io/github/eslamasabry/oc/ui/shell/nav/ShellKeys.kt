@@ -116,14 +116,23 @@ public fun ShellKeyPark(onChat: () -> Boolean, content: @Composable () -> Unit) 
     val park = remember { FocusRequester() }
     val focus = LocalFocusManager.current
     val chat by rememberUpdatedState(onChat)
-    // Re-park after focus left the tree (a field cleared its focus); asked outside the focus change itself.
+    // Re-park after focus left the tree (a field cleared its focus); asked outside the focus change itself, and only if
+    // nothing has taken focus meanwhile: a field that asked for it in between (Find opening as the message box left
+    // the layout; the dock's rename "clear focus, wait a frame, ask") keeps it. Parking over it took its focus, so the
+    // next typed key reached the park and was steered into the message box (w4-focus2, device B11 / ring rename).
     var lost by remember { mutableIntStateOf(0) }
-    LaunchedEffect(lost) { park.tryPark() }
+    // [0]: something under the park (or the park) holds focus; [1]: the park itself holds it (nothing inside does).
+    val holds = remember { booleanArrayOf(false, false) }
+    LaunchedEffect(lost) { if (!holds[0]) park.tryPark() }
     Box(
         Modifier.focusRequester(park)
-            .onFocusChanged { if (!it.hasFocus) lost++ }
+            .onFocusChanged {
+                holds[0] = it.hasFocus
+                holds[1] = it.isFocused
+                if (!it.hasFocus) lost++
+            }
             .focusTarget()
-            .onKeyEvent { event -> handle(event, chat(), park, focus) }
+            .onKeyEvent { event -> handle(event, chat(), park, focus, parked = holds[1]) }
     ) {
         content()
     }
@@ -143,6 +152,7 @@ private fun handle(
     onChat: Boolean,
     park: FocusRequester,
     focus: androidx.compose.ui.focus.FocusManager,
+    parked: Boolean,
 ): Boolean {
     val kind =
         ShellKeys.classify(
@@ -154,6 +164,9 @@ private fun handle(
         )
     val action = ShellKeys.decide(kind, onChat)
     if (action == StrayKeyAction.Pass) return false
+    // A letter is steered into the message field only when nothing on the page holds focus. With a field focused it
+    // is that field's (a desktop field types on a separate typed event, so the press itself passes by unused here).
+    if (action == StrayKeyAction.FocusComposer && !parked) return false
     // Both halves of a swallowed key are used up, so neither can become a fallback Back.
     if (event.type != KeyEventType.KeyDown) return true
     park.tryPark()
