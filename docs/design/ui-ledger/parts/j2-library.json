@@ -1182,12 +1182,255 @@
           ],
           "destructive": false,
           "file": "lib/ui/screens/library/integrations_page.dart"
+        },
+        {
+          "id": "integrations-add-provider",
+          "type": "icon-button",
+          "label": "Add provider",
+          "key": "add-provider",
+          "line": 49,
+          "action": "navigate",
+          "target": "custom-provider",
+          "targetWidget": "CustomProviderScreen",
+          "effect": "_openCustomProviderSetup(): pushes CustomProviderScreen; on a saved result _load().",
+          "gates": [
+            "controller.capabilities.customProviders (the app owns the server config: the phone engine)"
+          ],
+          "destructive": false,
+          "file": "lib/ui/screens/library/integrations_page.dart"
+        },
+        {
+          "id": "integrations-add-provider-in-list",
+          "type": "button",
+          "label": "Add provider",
+          "key": "add-provider-in-list",
+          "line": 113,
+          "action": "navigate",
+          "target": "custom-provider",
+          "targetWidget": "CustomProviderScreen",
+          "effect": "_openCustomProviderSetup(): same page, as a visible head-of-list button in a Tools tab.",
+          "gates": [
+            "widget.embedded",
+            "controller.capabilities.customProviders",
+            "the providers list is not empty"
+          ],
+          "destructive": false,
+          "file": "lib/ui/screens/library/integrations_page.dart"
+        },
+        {
+          "id": "integrations-add-provider-empty",
+          "type": "button",
+          "label": "Add provider",
+          "key": "add-provider-empty",
+          "line": 278,
+          "action": "navigate",
+          "target": "custom-provider",
+          "targetWidget": "CustomProviderScreen",
+          "effect": "_openCustomProviderSetup(): same page, from the empty providers state.",
+          "gates": [
+            "controller.capabilities.customProviders",
+            "integrations.isEmpty"
+          ],
+          "destructive": false,
+          "file": "lib/ui/screens/library/integrations_page.dart"
         }
       ],
       "variants": [
         "IntegrationsMode.providers: title 'Providers', provider section only",
         "IntegrationsMode.mcp: title 'MCP', MCP servers + resources, app-bar add button",
         "IntegrationsMode.all (default, from chat): title 'MCP and integrations', everything"
+      ]
+    },
+    {
+      "id": "custom-provider",
+      "title": "Add a provider",
+      "kind": "screen",
+      "file": "lib/ui/screens/custom_provider_screen.dart",
+      "widget": "CustomProviderScreen",
+      "presentedBy": [],
+      "line": 34,
+      "purpose": "Declares an endpoint the server's own catalogue does not list (id, name, base URL, model ids) by writing the providers block of the server config, then offers the restart that loads it. Offered only where the app owns that file (the phone engine); the key is connected afterwards on the provider row, never written here.",
+      "reachedFrom": [
+        {
+          "page": "integrations",
+          "element": "integrations-add-provider"
+        },
+        {
+          "page": "integrations",
+          "element": "integrations-add-provider-in-list"
+        },
+        {
+          "page": "integrations",
+          "element": "integrations-add-provider-empty"
+        }
+      ],
+      "gates": [
+        "controller.capabilities.customProviders, else the page shows provider-setup-unavailable"
+      ],
+      "elements": [
+        {
+          "id": "custom-provider-id",
+          "type": "text-field",
+          "label": "Provider ID",
+          "key": "provider-id",
+          "line": 304,
+          "action": "other",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Lowercase id, validated by CustomProviderDraft.isValidID; becomes providers.<id>.",
+          "gates": [
+            "enabled only while _editable (!_saving && !_saved)"
+          ],
+          "destructive": false,
+          "file": "lib/ui/screens/custom_provider_screen.dart"
+        },
+        {
+          "id": "custom-provider-name",
+          "type": "text-field",
+          "label": "Name",
+          "key": "provider-name",
+          "line": 316,
+          "action": "other",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Display name for providers.<id>.name.",
+          "gates": [
+            "enabled only while _editable"
+          ],
+          "destructive": false,
+          "file": "lib/ui/screens/custom_provider_screen.dart"
+        },
+        {
+          "id": "custom-provider-url",
+          "type": "text-field",
+          "label": "Endpoint address",
+          "key": "provider-url",
+          "line": 330,
+          "action": "other",
+          "target": null,
+          "targetWidget": null,
+          "effect": "http(s) base URL without userinfo; becomes settings.baseURL.",
+          "gates": [
+            "enabled only while _editable"
+          ],
+          "destructive": false,
+          "file": "lib/ui/screens/custom_provider_screen.dart"
+        },
+        {
+          "id": "custom-provider-models",
+          "type": "text-field",
+          "label": "Models",
+          "key": "provider-models",
+          "line": 344,
+          "action": "other",
+          "target": null,
+          "targetWidget": null,
+          "effect": "One model id per line, deduplicated; becomes models.",
+          "gates": [
+            "enabled only while _editable"
+          ],
+          "destructive": false,
+          "file": "lib/ui/screens/custom_provider_screen.dart"
+        },
+        {
+          "id": "custom-provider-save",
+          "type": "button",
+          "label": "Add provider",
+          "key": "provider-setup-save",
+          "line": 444,
+          "action": "submit",
+          "target": null,
+          "targetWidget": null,
+          "effect": "_save(): validates, then declareCustomProvider(draft) writes the config and reports whether the server must restart; failures land on the status line.",
+          "gates": [
+            "enabled only while _editable; an empty field set marks what is missing instead of saving"
+          ],
+          "destructive": false,
+          "file": "lib/ui/screens/custom_provider_screen.dart"
+        },
+        {
+          "id": "custom-provider-restart",
+          "type": "button",
+          "label": "Restart",
+          "key": "provider-setup-restart",
+          "line": 384,
+          "action": "mutate",
+          "target": null,
+          "targetWidget": null,
+          "effect": "_restart(): confirmPhoneServerRestart, then restart the phone's server and read the provider list again; a provider the server still does not list is reported.",
+          "gates": [
+            "_restarted == false (hidden once the server came back with it)"
+          ],
+          "destructive": false,
+          "file": "lib/ui/screens/custom_provider_screen.dart"
+        },
+        {
+          "id": "custom-provider-close",
+          "type": "button",
+          "label": "Close",
+          "key": "provider-setup-close",
+          "line": 375,
+          "action": "dismiss",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Navigator.pop(context, true): the caller reloads the provider list.",
+          "gates": [
+            "the saved state only"
+          ],
+          "destructive": false,
+          "file": "lib/ui/screens/custom_provider_screen.dart"
+        }
+      ]
+    },
+    {
+      "id": "custom-provider-discard-sheet",
+      "title": "Discard this provider?",
+      "kind": "sheet",
+      "file": "lib/ui/screens/custom_provider_screen.dart",
+      "widget": "_confirmLeave",
+      "presentedBy": [
+        "showKitConfirm"
+      ],
+      "line": 230,
+      "purpose": "Confirms leaving the declaration form with input that was never saved.",
+      "reachedFrom": [
+        {
+          "page": "custom-provider",
+          "element": "custom-provider-id"
+        }
+      ],
+      "gates": [
+        "the PopScope guard: _hasInput"
+      ],
+      "elements": [
+        {
+          "id": "custom-provider-discard-sheet-confirm",
+          "type": "button",
+          "label": "Discard provider",
+          "key": null,
+          "line": 238,
+          "action": "dismiss",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Pops the form; nothing is written.",
+          "gates": [],
+          "destructive": true,
+          "file": "lib/ui/screens/custom_provider_screen.dart"
+        },
+        {
+          "id": "custom-provider-discard-sheet-cancel",
+          "type": "button",
+          "label": "Cancel",
+          "key": null,
+          "line": 236,
+          "action": "dismiss",
+          "target": null,
+          "targetWidget": null,
+          "effect": "Pops false; the form stays as typed.",
+          "gates": [],
+          "destructive": false,
+          "file": "lib/ui/screens/custom_provider_screen.dart"
+        }
       ]
     },
     {
@@ -2221,7 +2464,7 @@
         "showKitChoiceSheet"
       ],
       "line": 36,
-      "purpose": "MCP \u203a Add: choose the public catalogue or the manual form.",
+      "purpose": "MCP › Add: choose the public catalogue or the manual form.",
       "reachedFrom": [
         {
           "page": "integrations",

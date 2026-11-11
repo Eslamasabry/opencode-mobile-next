@@ -334,6 +334,19 @@ extension _IntegrationsMcp on _IntegrationsScreenState {
     }
   }
 
+  /// Providers › Add: declaring an endpoint the catalog does not list. Only
+  /// offered where the app owns the server's config file (the phone engine),
+  /// because elsewhere there is nowhere to write it.
+  Future<void> _openCustomProviderSetup() async {
+    final saved = await Navigator.of(context).push<bool>(
+      KitPageRoute<bool>(
+        builder: (_) => CustomProviderScreen(controller: widget.controller),
+      ),
+    );
+    if (!mounted || saved != true) return;
+    await _load();
+  }
+
   Future<void> _openMcpSetup() async {
     final location = widget.controller.locationRevision;
     final runtime =

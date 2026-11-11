@@ -19,6 +19,10 @@
         "kind": "boolean"
       },
       {
+        "path": "customProviders",
+        "kind": "boolean"
+      },
+      {
         "path": "setupConfigRead",
         "kind": "boolean"
       },

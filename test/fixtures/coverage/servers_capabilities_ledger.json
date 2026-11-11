@@ -9,6 +9,7 @@
   "capability.configuredProviderFallback": "ignored: plumbing the app handles itself; it changes how the app talks to the server, not what a person can do",
   "capability.consoleOrganizations": "ignored: adds an advanced entry to the command sheet only on servers that have organizations",
   "capability.conversationShell": "ignored: controls shell commands within a conversation; the composer explains availability",
+  "capability.customProviders": "ignored: adds Add provider to the connections page only on the phone's own server, whose configuration the app writes; the page states that in words",
   "capability.developmentServices": "shown",
   "capability.experimentalCapabilities": "ignored: plumbing the app handles itself; it changes how the app talks to the server, not what a person can do",
   "capability.fileBrowsing": "shown",

@@ -26,6 +26,7 @@ import '../widgets/command_sheet.dart';
 import '../widgets/run_command_dialog.dart';
 import 'mcp_catalog_screen.dart';
 import 'mcp_setup_screen.dart';
+import 'custom_provider_screen.dart';
 
 part 'library/integrations_screen.dart';
 part 'library/integrations_mcp.dart';

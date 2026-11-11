@@ -193,9 +193,14 @@ class IntegrationsRepository implements ProductRepository {
 
 /// Authorization scenarios may opt into the scripted repository capabilities.
 class _IntegrationsController extends ConnectionController {
-  _IntegrationsController(super.store, {required this.withAuthorization});
+  _IntegrationsController(
+    super.store, {
+    required this.withAuthorization,
+    required this.withCustomProviders,
+  });
 
   final bool withAuthorization;
+  final bool withCustomProviders;
 
   /// Swaps the transport the way a reconnect or a wake does, and tells
   /// the screens listening.
@@ -207,6 +212,8 @@ class _IntegrationsController extends ConnectionController {
   @override
   ServerCapabilities get capabilities => withAuthorization
       ? const ServerCapabilities(mcpOAuth: true, providerRuntimeRefresh: true)
+      : withCustomProviders
+      ? const ServerCapabilities(customProviders: true)
       : super.capabilities;
 }
 
@@ -220,6 +227,7 @@ void reconnectIntegrations(
 Future<ConnectionController> integrationsController(
   ProductRepository? repository, {
   bool withAuthorization = false,
+  bool withCustomProviders = false,
 }) async {
   SharedPreferences.setMockInitialValues({});
   final preferences = await SharedPreferences.getInstance();
@@ -232,7 +240,11 @@ Future<ConnectionController> integrationsController(
     ),
   );
   await store.setActiveId('integrations-test');
-  return _IntegrationsController(store, withAuthorization: withAuthorization)
+  return _IntegrationsController(
+      store,
+      withAuthorization: withAuthorization,
+      withCustomProviders: withCustomProviders,
+    )
     ..repository = repository
     ..status = StreamStatus.connected;
 }

@@ -128,6 +128,105 @@ class McpServerDraft {
   }
 }
 
+/// The one runtime package the app declares: an API that speaks the OpenAI
+/// request format. Other packages (Azure, Anthropic) are catalog providers
+/// with their own settings, not endpoints a person types in.
+const customProviderPackage = '@opencode/ai/providers/openai-compatible';
+
+/// A provider the person adds by hand: an endpoint OpenCode's catalog does not
+/// have, declared in the server's `opencode.json` under `providers.<id>`.
+///
+/// Never carries a credential: a key is connected afterwards through the
+/// server's own credential store, so it cannot end up in a config file the
+/// export and the logs can read.
+class CustomProviderDraft {
+  /// The provider ID used in model references (`<id>/<model>`).
+  final String id;
+
+  /// The display name.
+  final String name;
+
+  /// The OpenAI-compatible endpoint, ending in `/v1` for most runtimes.
+  final String baseURL;
+
+  /// Model IDs to declare under this provider, as the endpoint names them.
+  final List<String> models;
+
+  const CustomProviderDraft({
+    required this.id,
+    required this.name,
+    required this.baseURL,
+    this.models = const [],
+  });
+
+  static final RegExp _validID = RegExp(r'^[a-z0-9][a-z0-9._-]{0,63}$');
+
+  /// Whether [value] can be a provider ID: one rule for the form and for
+  /// [toConfigJson].
+  static bool isValidID(String value) => _validID.hasMatch(value);
+
+  String get normalizedID => id.trim().toLowerCase();
+
+  String get normalizedName => name.trim();
+
+  /// The `providers.<id>` block, or a [ProductException] naming the first
+  /// field that cannot be written.
+  Map<String, Object?> toConfigJson() {
+    final providerID = normalizedID;
+    if (!_validID.hasMatch(providerID)) {
+      throw const ProductException(
+        'Enter a provider ID of lowercase letters, digits, dot, dash or underscore',
+      );
+    }
+    final displayName = normalizedName;
+    if (displayName.isEmpty || displayName.contains(RegExp(r'[\r\n]'))) {
+      throw const ProductException('Enter a provider name');
+    }
+    final value = baseURL.trim();
+    final uri = Uri.tryParse(value);
+    if (uri == null ||
+        !uri.hasScheme ||
+        !uri.hasAuthority ||
+        (uri.scheme != 'https' && uri.scheme != 'http') ||
+        uri.userInfo.isNotEmpty) {
+      throw const ProductException(
+        'Enter the endpoint as an HTTP or HTTPS URL without credentials',
+      );
+    }
+    final modelIDs = <String>[];
+    for (final raw in models) {
+      final model = raw.trim();
+      if (model.isEmpty || model.contains(RegExp(r'[\r\n]'))) {
+        throw const ProductException(
+          'Enter a model ID or remove the empty one',
+        );
+      }
+      if (!modelIDs.contains(model)) modelIDs.add(model);
+    }
+    if (modelIDs.isEmpty) {
+      // An OpenAI-compatible endpoint that declares no model offers nothing
+      // to pick, so the write would look done and change nothing usable.
+      throw const ProductException('Add at least one model ID');
+    }
+    return {
+      'name': displayName,
+      'package': customProviderPackage,
+      'settings': {'baseURL': uri.toString()},
+      'models': {
+        for (final model in modelIDs) model: const <String, Object?>{},
+      },
+    };
+  }
+}
+
+/// What a custom-provider write left to do: the server read its config at
+/// startup, so the new provider is listed only after it restarts.
+class CustomProviderSaveResult {
+  final bool restartRequired;
+
+  const CustomProviderSaveResult({required this.restartRequired});
+}
+
 class McpResourceInfo {
   final String name;
   final String server;

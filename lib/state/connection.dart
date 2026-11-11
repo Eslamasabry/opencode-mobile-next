@@ -100,6 +100,7 @@ import '../diagnostics/perf_trace.dart';
 // A plain value type (no widgets): the person's effect choices.
 import 'effects.dart' show KitEffects, KitTextSize;
 import '../builtin/builtin_linux.dart';
+import '../builtin/custom_provider_write.dart';
 import '../builtin/quota_collector_host.dart';
 import '../builtin/builtin_server.dart' show startBuiltinServer;
 import 'delayed_answers.dart';
@@ -198,6 +199,7 @@ part 'connection/activity.dart';
 part 'connection/deletion.dart';
 part 'connection/integration_auth.dart';
 part 'connection/integration_commands.dart';
+part 'connection/custom_providers.dart';
 part 'connection/prompt_shelf.dart';
 part 'connection/worktrees.dart';
 part 'connection/chat_feed.dart';
@@ -311,6 +313,7 @@ class ConnectionController extends ChangeNotifier
         _ConnectionControllerDeletion,
         _ConnectionControllerIntegrationAuth,
         _ConnectionControllerIntegrationCommands,
+        _ConnectionControllerCustomProviders,
         _ConnectionControllerPromptShelf,
         _ConnectionControllerWorktrees,
         _ConnectionControllerChatFeed,
@@ -660,6 +663,7 @@ class ConnectionController extends ChangeNotifier
         main.store,
         isSideBackend: true,
         genUiInstaller: main._genUiInstaller,
+        customProviderWriter: main._customProviderWriter,
         browserClaudeLaunchRegistry: main._browserLaunches,
         apiFactory: main._apiFactory,
         repositoryFactory: main._repositoryFactory,
@@ -714,6 +718,7 @@ class ConnectionController extends ChangeNotifier
     PhoneAgentHostPort Function(ServerProfile profile)? phoneAgentHostFactory,
     AgentSignInHost Function()? agentSignInHostFactory,
     GenUiInstaller? genUiInstaller,
+    CustomProviderWriter? customProviderWriter,
     GenUiSearchPublisher? genUiSearchPublisher,
     BrowserClaudeLaunchRegistry? browserClaudeLaunchRegistry,
   }) : _browserLaunches =
@@ -747,6 +752,7 @@ class ConnectionController extends ChangeNotifier
        diagnostics = diagnostics ?? AppDiagnosticsController(),
        _ownsDiagnostics = diagnostics == null {
     _genUiInstaller = genUiInstaller;
+    _customProviderWriter = customProviderWriter;
     _genUiSearchPublisher = genUiSearchPublisher;
     appLocale = ValueNotifier(store.appPreferences.value.locale);
     appearance = ValueNotifier(store.appearance);

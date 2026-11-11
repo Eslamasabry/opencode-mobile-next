@@ -917,6 +917,8 @@ graph LR
   commands["commands"]
   credential_management_sheet(["credential-management-sheet"])
   credential_management_sheet_remove_sheet(["credential-management-sheet-remove-sheet"])
+  custom_provider["custom-provider"]
+  custom_provider_discard_sheet(["custom-provider-discard-sheet"])
   embedded_composer["embedded-composer"]:::ext
   embedded_file_preview_body["embedded-file-preview-body"]:::ext
   embedded_markdown_text["embedded-markdown-text"]:::ext
@@ -1037,6 +1039,7 @@ graph LR
   integrations --> credential_management_sheet
   integrations --> integrations_remove_mcp_sheet
   integrations --> mcp_setup
+  integrations --> custom_provider
   credential_management_sheet --> credential_management_sheet_remove_sheet
   mcp_add_sheet --> mcp_catalog
   mcp_add_sheet --> mcp_setup
@@ -1049,6 +1052,7 @@ graph LR
   server_page --> ai_setup
   settings --> team_settings
   appearance_settings --> theme_pack_preview_sheet
+  custom_provider --> custom_provider_discard_sheet
   integrations --> command_auth_sheet
   integrations_connect_method_sheet --> command_auth_sheet
   mcp_catalog --> mcp_catalog_node_sheet
@@ -1464,6 +1468,8 @@ graph LR
 | `app-diagnostics-kept` | screen | 2 / 4 | `app-diagnostics` / app-diagnostics-kept | _none_ |
 | `app-diagnostics` | screen | 1 / 3 | `settings`<br>`chat`<br>`command-palette-dialog` / command-palette-dialog-cmd-diagnostics<br>`system` / system-named-route-debug-via-desktop-command-diagnostics-lib-main-d-to-app-diagnostics<br>`command-launcher-sheet` / chat-command-debug<br>`team-conversation` / team-conversation-no-progress-report | app-diagnostics-clear -> `app-diagnostics-clear-sheet`<br>app-diagnostics-kept -> `app-diagnostics-kept` |
 | `app-diagnostics-clear-sheet` | sheet | 2 / 4 | `app-diagnostics` / app-diagnostics-clear | _none_ |
+| `custom-provider` | screen | 2 / 3 | `integrations` / integrations-add-provider<br>`integrations` / integrations-add-provider-in-list<br>`integrations` / integrations-add-provider-empty | custom-provider-id -> `custom-provider-discard-sheet` |
+| `custom-provider-discard-sheet` | sheet | 3 / 4 | `custom-provider` / custom-provider-id | _none_ |
 | `command-auth-sheet` | sheet | 2 / 3 | `integrations` / integrations-provider-connect<br>`integrations` / integrations-provider-server-signin<br>`integrations-connect-method-sheet` / integrations-connect-method-sheet-method | _none_ |
 | `commands` | screen | 2 / 2 | `capabilities` / capabilities-tab-commands | commands-row -> `run-command-dialog`<br>commands-row-open-chat -> `chat` |
 | `credential-management-sheet` | sheet | 2 / 3 | `integrations` / integrations-provider-manage-accounts | credential-management-sheet-rename -> `credential-management-sheet-rename-dialog`<br>credential-management-sheet-remove -> `credential-management-sheet-remove-sheet` |
@@ -1474,7 +1480,7 @@ graph LR
 | `integrations-disconnect-provider-sheet` | sheet | 2 / 3 | `integrations` / integrations-provider-disconnect | _none_ |
 | `integrations-oauth-code-dialog` | dialog | 2 / 3 | `integrations` / integrations-legacy-oauth-action<br>`integrations` / integrations-pending-enter-code | _none_ |
 | `integrations-mcp-oauth-code-dialog` | dialog | 2 / 3 | `integrations` / integrations-mcp-pending-enter-code | _none_ |
-| `integrations` | screen | 1 / 2 | `capabilities` / capabilities-tab-mcp<br>`chat` / chat-message-error-open-providers<br>`command-launcher-sheet` / chat-command-mcps<br>`command-launcher-sheet` / chat-command-connect<br>`embedded-message-view` / embedded-message-view-error-open-providers<br>`settings` / settings-providers | integrations-add-mcp -> `mcp-add-sheet`<br>integrations-uncertain-forget -> `integrations-forget-pending-auth-sheet`<br>integrations-pending-enter-code -> `integrations-oauth-code-dialog`<br>integrations-pending-forget -> `integrations-forget-pending-auth-sheet`<br>integrations-legacy-oauth-action -> `integrations-oauth-code-dialog`<br>integrations-provider-connect -> `integrations-connect-method-sheet`<br>integrations-provider-disconnect -> `integrations-disconnect-provider-sheet`<br>integrations-provider-server-signin -> `integrations-connect-method-sheet`<br>integrations-provider-manage-accounts -> `credential-management-sheet`<br>integrations-mcp-empty-add -> `mcp-add-sheet`<br>integrations-mcp-server-action -> `integrations-authorization-launch-dialog`<br>integrations-mcp-remove -> `integrations-remove-mcp-sheet`<br>integrations-mcp-pending-enter-code -> `integrations-mcp-oauth-code-dialog`<br>integrations-resources-empty-add -> `mcp-setup`<br>integrations-provider-connect -> `integrations-connect-key-dialog`<br>integrations-provider-connect -> `integrations-oauth-inputs-dialog`<br>integrations-provider-connect -> `integrations-authorization-launch-dialog`<br>integrations-provider-connect -> `command-auth-sheet`<br>integrations-provider-server-signin -> `command-auth-sheet`<br>-> `external-link-dialog` |
+| `integrations` | screen | 1 / 2 | `capabilities` / capabilities-tab-mcp<br>`chat` / chat-message-error-open-providers<br>`command-launcher-sheet` / chat-command-mcps<br>`command-launcher-sheet` / chat-command-connect<br>`embedded-message-view` / embedded-message-view-error-open-providers<br>`settings` / settings-providers | integrations-add-mcp -> `mcp-add-sheet`<br>integrations-uncertain-forget -> `integrations-forget-pending-auth-sheet`<br>integrations-pending-enter-code -> `integrations-oauth-code-dialog`<br>integrations-pending-forget -> `integrations-forget-pending-auth-sheet`<br>integrations-legacy-oauth-action -> `integrations-oauth-code-dialog`<br>integrations-provider-connect -> `integrations-connect-method-sheet`<br>integrations-provider-disconnect -> `integrations-disconnect-provider-sheet`<br>integrations-provider-server-signin -> `integrations-connect-method-sheet`<br>integrations-provider-manage-accounts -> `credential-management-sheet`<br>integrations-mcp-empty-add -> `mcp-add-sheet`<br>integrations-mcp-server-action -> `integrations-authorization-launch-dialog`<br>integrations-mcp-remove -> `integrations-remove-mcp-sheet`<br>integrations-mcp-pending-enter-code -> `integrations-mcp-oauth-code-dialog`<br>integrations-resources-empty-add -> `mcp-setup`<br>integrations-add-provider -> `custom-provider`<br>integrations-add-provider-in-list -> `custom-provider`<br>integrations-add-provider-empty -> `custom-provider`<br>integrations-provider-connect -> `integrations-connect-key-dialog`<br>integrations-provider-connect -> `integrations-oauth-inputs-dialog`<br>integrations-provider-connect -> `integrations-authorization-launch-dialog`<br>integrations-provider-connect -> `command-auth-sheet`<br>integrations-provider-server-signin -> `command-auth-sheet`<br>-> `external-link-dialog` |
 | `integrations-connect-method-sheet` | sheet | 2 / 3 | `integrations` / integrations-provider-connect<br>`integrations` / integrations-provider-server-signin | integrations-connect-method-sheet-method -> `integrations-connect-key-dialog`<br>integrations-connect-method-sheet-method -> `integrations-oauth-inputs-dialog`<br>integrations-connect-method-sheet-method -> `integrations-authorization-launch-dialog`<br>integrations-connect-method-sheet-method -> `command-auth-sheet` |
 | `integrations-remove-mcp-sheet` | sheet | 2 / 3 | `integrations` / integrations-mcp-remove | _none_ |
 | `integrations-connect-key-dialog` | dialog | 2 / 3 | `integrations` / integrations-provider-connect<br>`integrations-connect-method-sheet` / integrations-connect-method-sheet-method | _none_ |
