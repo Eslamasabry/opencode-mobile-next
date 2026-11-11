@@ -2,6 +2,9 @@
 
 # Step 4 build plan: the body runs under a floating liquid bar
 
+> Built 2026-11-11 on native/glass-floating-bar. Where this plan was wrong or the build departs from it, see "As built,
+> step 4" at the end of `../glass-in-the-kit.md`.
+
 All line numbers refer to `/home/eslam/Storage/wt/rc-master/native` (branch native/fix-3.0.1, HEAD 4995a248f2). I read it and changed nothing.
 
 ## 1. How it works today
