@@ -82,6 +82,8 @@ public data class HeaderFacts(
     val contextTokens: Long? = null,
     val contextLimit: Long? = null,
     val totalTokens: Long? = null,
+    /** C4: the conversation's cost as the server reported it; null when it sent none. */
+    val totalCost: Double? = null,
     val connected: Boolean = false,
     val branch: String? = null,
 )

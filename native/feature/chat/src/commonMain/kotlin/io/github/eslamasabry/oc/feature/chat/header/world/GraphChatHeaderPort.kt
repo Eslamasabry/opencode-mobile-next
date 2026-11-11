@@ -241,6 +241,7 @@ internal class GraphChatHeaderPort(
             contextTokens = s.contextUse?.tokens,
             contextLimit = s.contextUse?.limit,
             totalTokens = s.tokens?.total,
+            totalCost = s.cost,
         )
 
     override suspend fun refresh(): Outcome<Unit> {

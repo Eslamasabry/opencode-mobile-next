@@ -189,6 +189,12 @@ public class ChatHeaderPresenter(
                             facts.contextTokens ?: reading?.tokens,
                             facts.contextLimit ?: reading?.limit,
                         )
+                    val loadedCost =
+                        feed
+                            ?.ledger
+                            ?.messages
+                            ?.filter { it.info.role == Role.Assistant }
+                            ?.sumOf { it.info.cost }
                     val replyTokens =
                         feed
                             ?.ledger
@@ -205,6 +211,7 @@ public class ChatHeaderPresenter(
                             contextPercent = percent,
                             contextLevel = HeaderRules.contextLevel(percent),
                             totalTokens = (facts.totalTokens ?: replyTokens)?.takeIf { it > 0 },
+                            cost = SessionCost.of(facts.totalCost, loadedCost),
                         )
                     )
                 }
@@ -265,6 +272,8 @@ public class ChatHeaderPresenter(
             failure = l.failure,
             clip = l.clip,
             saved = l.saved,
+            serverCost = facts.totalCost,
+            serverTokens = facts.totalTokens,
             renaming = l.renaming,
             agentName =
                 if (caps.hostAgentProviders)
