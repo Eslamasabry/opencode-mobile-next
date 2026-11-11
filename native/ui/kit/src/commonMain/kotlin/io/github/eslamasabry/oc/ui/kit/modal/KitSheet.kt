@@ -298,8 +298,11 @@ public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -
             val held = remember { PageFocus() }
             androidx.compose.runtime.LaunchedEffect(modal) {
                 if (modal) {
-                    held.saved = held.has && pageFocus.saveFocusedChild()
-                    if (held.saved) focusManager.clearFocus()
+                    held.saved = held.has
+                    if (held.saved) {
+                        pageFocus.saveFocusedChild()
+                        focusManager.clearFocus(force = true)
+                    }
                 } else if (held.saved) {
                     held.saved = false
                     pageFocus.restoreFocusedChild()
