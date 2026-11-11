@@ -576,6 +576,16 @@ class PlatformHub(
             openPinnedSession(tap)
             return
         }
+        // AI Team alerts carry a team id, not a conversation: their tap opens the team's Gate, task or team page.
+        teamAlertRoute(
+            AlertKind.fromWire(intent.getStringExtra(FrozenExtras.EXTRA_CODING_ALERT_KIND)),
+            intent.getStringExtra(FrozenExtras.EXTRA_CODING_ALERT_SESSION_ID),
+            intent.getStringExtra(FrozenExtras.EXTRA_CODING_ALERT_PROFILE_ID),
+        )?.let { team ->
+            alertTap(intent) // consumes the extras
+            if (trusted) navigator.open(team)
+            return
+        }
         alertTap(intent)?.takeIf { trusted }?.let { ref ->
             shade.dismiss(AlertKeys.status(ref.profileId.raw, ref.sessionId.raw))
             navigator.openChat(ref)
