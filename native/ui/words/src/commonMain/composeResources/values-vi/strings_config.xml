@@ -2,7 +2,11 @@
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
     <string name="configInspectionTitle">Cấu hình máy chủ</string>
-    <string name="configInspectionExplanation">Xem các nguồn cấu hình của máy chủ theo thứ tự ưu tiên. Khóa, mã thông báo, giá trị môi trường, tiêu đề, lệnh và lời nhắc đều được ẩn. Trang này không thay đổi gì.</string>
+    <string name="configInspectionExplanation">Các tệp cấu hình mà máy chủ này đọc, quan trọng nhất trước. Khóa, mật khẩu và các bí mật khác đều được ẩn. Trang này không thay đổi gì.</string>
     <string name="configInspectionUnavailable">Không tải được cấu hình của máy chủ. Hãy kết nối lại và thử lại.</string>
     <string name="configInspectionRefresh">Làm mới cấu hình</string>
+    <string name="configFilesLabel">Tệp cấu hình</string>
+    <string name="configFoldersLabel">Các thư mục máy chủ tìm trong đó</string>
+    <string name="configNoFileTitle">Chưa có tệp cấu hình</string>
+    <string name="configNoFileBody">Máy chủ này đang dùng cài đặt có sẵn. Một tệp cấu hình trong một trong các thư mục bên dưới sẽ thay đổi chúng. Trang này chỉ đọc tệp đó.</string>
 </resources>

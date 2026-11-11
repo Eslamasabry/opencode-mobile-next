@@ -509,7 +509,7 @@
     <string name="agentComputerCodex">Codex</string>
     <string name="agentComputerCodexNote">Подключитесь к официальному серверу приложения Codex по WebSocket. Введите его адрес и полный путь к папке проекта на этом компьютере.</string>
     <string name="agentErrorOpenSettings">Открыть настройки</string>
-    <string name="agentDraftTitle">Записи чатов</string>
+    <string name="agentDraftTitle">Копировать чат</string>
     <string name="agentDraftReadOnly">Просмотрите запись, прежде чем копировать её другому агенту. Это не запускает, не возобновляет и не изменяет чат.</string>
     <string name="agentDraftGuide">1. Выберите чат ниже.\n2. Просмотрите запись и уведомление о пропущенных старых ходах, если оно есть.\n3. Копируйте, только когда будете готовы поделиться.</string>
     <string name="agentDraftLoading">Чтение чата</string>
@@ -528,4 +528,5 @@
     <string name="agentDraftTooLarge">Самый новый ход этого чата слишком велик, чтобы включить его без потери текста.</string>
     <string name="agentPhoneCheck">Проверить агентов на телефоне</string>
     <string name="agentsCatalogNeedsPhoneSetup">Сначала настройте встроенный сервер на этом телефоне. Затем вернитесь сюда, чтобы установить этого агента.</string>
+    <string name="agentDraftAsCopied">Запись в том виде, в каком она будет скопирована</string>
 </resources>

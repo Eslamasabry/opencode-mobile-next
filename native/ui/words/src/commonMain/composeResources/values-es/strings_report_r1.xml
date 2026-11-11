@@ -11,7 +11,7 @@
     <string name="reportR1Send">Enviar informe</string>
     <string name="reportR1CopyText">Copiar texto</string>
     <string name="reportR1PostGitHub">Publicar en GitHub</string>
-    <string name="reportR1NoSend">Esta versión no puede enviar informes. Copia el texto o publícalo en GitHub.</string>
+    <string name="reportR1NoSend">Esta versión no puede enviar informes desde la app. Copia el texto para compartirlo en un mensaje o publícalo en GitHub, donde todos lo verán.</string>
     <string name="reportR1SheetSubtitle">Esto es exactamente lo que se envía.</string>
     <string name="reportR1Words">Tus palabras</string>
     <string name="reportR1NoWords">No escribiste nada</string>
@@ -49,4 +49,5 @@
     <string name="reportR1KindOther">Otro problema</string>
     <string name="reportKeptCopyErrors">Copiar registro de errores</string>
     <string name="reportKeptClearErrors">Borrar errores</string>
+    <string name="reportKeptErrorsNote">Errores que la app detectó por su cuenta. Se quedan en este teléfono y no se añaden al informe. Cópialos en él si ayudan a explicar qué pasó.</string>
 </resources>

@@ -831,4 +831,7 @@
     <string name="appearancePreviewReply">Listo. Cambiaron tres archivos y todas las comprobaciones pasan.</string>
     <string name="appearancePreviewAction">Revisar cambios</string>
     <string name="appearancePreviewSpoken">Una muestra de la app con estas opciones</string>
+    <string name="consentWhyNeedsYouBlocked">Android bloquea las notificaciones de esta app. Toca para arreglarlo en Notificaciones.</string>
+    <string name="consentWhyNeedsYouWhileOpen">Solo recibes avisos mientras la app está abierta. Toca para mantener activa la conexión en segundo plano.</string>
+    <string name="consentWhyNeedsYouChannelOff">Android tiene desactivadas las notificaciones de preguntas de esta app. Toca para activarlas en los ajustes de Android.</string>
 </resources>

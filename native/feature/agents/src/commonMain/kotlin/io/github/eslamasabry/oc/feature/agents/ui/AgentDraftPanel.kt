@@ -8,10 +8,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsActions
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsUi
+import io.github.eslamasabry.oc.feature.agents.hub.HandoffReading
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.KitTextKind
+import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
+import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
+import io.github.eslamasabry.oc.ui.kit.text.KitRedact
+import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdown
+import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownActions
+import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdSource
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
@@ -69,7 +80,24 @@ internal fun AgentDraftPanel(state: AgentsUi, actions: AgentsActions) {
                         )
                     )
                 if (record.redacted) KitNotice(stringResource(Res.string.agentDraftMasked))
-                KitText(record.markdown)
+                // AG5: what was said, drawn as Markdown under the conversation's title; the record exactly as it
+                // will be copied (with the source's labels and ids) only under Details. The record was masked when
+                // it was built; both views pass the display redactor again, so nothing it knows can be drawn.
+                val you = stringResource(Res.string.chatUiYou)
+                val agent = stringResource(Res.string.chatUiAgent)
+                val shown = remember(record) { KitRedact.text(record.markdown) }
+                val reading = remember(shown, you, agent) { HandoffReading.of(shown, you, agent) }
+                reading.title?.let { KitText(it, role = TypeRole.Title, kind = KitTextKind.Frame) }
+                val blocks =
+                    remember(reading.body) { KitMdSource.blocks("handoff-record", reading.body, streaming = false) }
+                if (blocks.isNotEmpty())
+                    KitMarkdown(blocks, KitMarkdownActions(onLink = {}), Modifier.testTag("agent-draft-reading"))
+                KitDetailsFold(
+                    label = stringResource(Res.string.agentDraftAsCopied),
+                    copyLabel = stringResource(Res.string.kitCopyDetails),
+                    modifier = Modifier.testTag("agent-draft-record"),
+                    child = { KitText(shown, role = TypeRole.Mono, kind = KitTextKind.Reading) },
+                )
                 KitButton(
                     stringResource(Res.string.agentDraftCopy),
                     actions::copyDraft,
@@ -85,6 +113,7 @@ internal fun AgentDraftPanel(state: AgentsUi, actions: AgentsActions) {
             for (conversation in state.draftConversations) {
                 KitRow(
                     title = conversation.title.ifBlank { untitled },
+                    trailing = KitRowTrailing.Chevron,
                     enabled = !state.draftLoading,
                     disabledReason =
                         if (state.draftLoading) stringResource(Res.string.agentDraftLoading)

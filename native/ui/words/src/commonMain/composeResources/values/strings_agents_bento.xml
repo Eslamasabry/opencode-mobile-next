@@ -26,7 +26,7 @@
     <string name="agentsComputerReadFailed">This computer’s agents could not be read. Pull down to try again.</string>
     <string name="agentsNewChat">New conversation</string>
     <string name="agentsNewChatWith">New conversation with %1$s</string>
-    <string name="agentsConversationsStored">Where conversations are stored</string>
-    <string name="agentsConversationsStoredOn">Where conversations are stored: %1$s</string>
+    <string name="agentsConversationsStored">Copy a conversation for another agent</string>
+    <string name="agentsConversationsStoredOn">Copy a conversation from %1$s</string>
     <string name="agentsHostAccount">Host account: %1$s</string>
 </resources>

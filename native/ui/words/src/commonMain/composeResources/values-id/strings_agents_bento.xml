@@ -18,8 +18,8 @@
     <string name="agentsComputerReadFailed">Agen di komputer ini tidak dapat dibaca. Tarik ke bawah untuk mencoba lagi.</string>
     <string name="agentsNewChat">Percakapan baru</string>
     <string name="agentsNewChatWith">Percakapan baru dengan %1$s</string>
-    <string name="agentsConversationsStored">Tempat percakapan disimpan</string>
-    <string name="agentsConversationsStoredOn">Tempat percakapan disimpan: %1$s</string>
+    <string name="agentsConversationsStored">Salin percakapan untuk agen lain</string>
+    <string name="agentsConversationsStoredOn">Salin percakapan dari %1$s</string>
     <string name="agentsHostAccount">Akun host: %1$s</string>
     <string name="agentsHelperUpdateRequired">Agen ponsel tidak terhubung: pembantu agen tidak ada atau terlalu lama untuk dijalankan.</string>
     <string name="agentsHelperUpdateAction">Perbarui pembantu agen</string>

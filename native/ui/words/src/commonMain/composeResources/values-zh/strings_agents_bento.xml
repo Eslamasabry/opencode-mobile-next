@@ -26,7 +26,7 @@
     <string name="agentsComputerReadFailed">无法读取这台电脑的智能体。下拉可重试。</string>
     <string name="agentsNewChat">新对话</string>
     <string name="agentsNewChatWith">与 %1$s 开始新对话</string>
-    <string name="agentsConversationsStored">对话的存放位置</string>
-    <string name="agentsConversationsStoredOn">对话的存放位置：%1$s</string>
+    <string name="agentsConversationsStored">复制对话给另一个智能体</string>
+    <string name="agentsConversationsStoredOn">从 %1$s 复制对话</string>
     <string name="agentsHostAccount">主机账号：%1$s</string>
 </resources>

@@ -18,8 +18,8 @@
     <string name="agentsComputerReadFailed">Không đọc được các tác nhân của máy tính này. Hãy kéo xuống để thử lại.</string>
     <string name="agentsNewChat">Cuộc trò chuyện mới</string>
     <string name="agentsNewChatWith">Cuộc trò chuyện mới với %1$s</string>
-    <string name="agentsConversationsStored">Nơi lưu các cuộc trò chuyện</string>
-    <string name="agentsConversationsStoredOn">Nơi lưu các cuộc trò chuyện: %1$s</string>
+    <string name="agentsConversationsStored">Sao chép cuộc trò chuyện cho tác nhân khác</string>
+    <string name="agentsConversationsStoredOn">Sao chép cuộc trò chuyện từ %1$s</string>
     <string name="agentsHostAccount">Tài khoản trên máy chủ: %1$s</string>
     <string name="agentsHelperUpdateRequired">Các tác nhân trên điện thoại chưa được kết nối: trình hỗ trợ tác nhân bị thiếu hoặc quá cũ để chạy.</string>
     <string name="agentsHelperUpdateAction">Cập nhật trình hỗ trợ tác nhân</string>

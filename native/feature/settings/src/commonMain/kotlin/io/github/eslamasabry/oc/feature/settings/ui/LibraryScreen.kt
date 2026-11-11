@@ -56,6 +56,15 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
     fun match(vararg values: String?) =
         query.isEmpty() || values.any { it?.contains(query, ignoreCase = true) == true }
     val inventory = state.inventory
+    // A2: each provider's model names, joined once per catalog, not once per provider on every frame.
+    val modelTerms =
+        remember(inventory.catalog) {
+            inventory.catalog
+                ?.models
+                ?.groupBy { it.providerId }
+                ?.mapValues { (_, models) -> models.joinToString(" ") { it.name + " " + it.id } }
+                .orEmpty()
+        }
     val selectedSection =
         when (state.tab) {
             LibraryTab.Commands -> "commands"
@@ -280,88 +289,8 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                             }
                         }
                     }
-                    LibraryTab.Providers -> {
-                        KitRowGroup {
-                            inventory.attempts.forEach { attempt ->
-                                val provider =
-                                    inventory.providers.firstOrNull { it.id == attempt.integration }
-                                KitRow(
-                                    provider?.name ?: attempt.integration,
-                                    supporting = authLabel(attempt.state),
-                                    trailing = KitRowTrailing.Chevron,
-                                    onClick = { actions.show(LibrarySheet.SignIn(attempt)) },
-                                )
-                            }
-                            inventory.uncertain.forEach { id ->
-                                KitRow(
-                                    inventory.providers.firstOrNull { it.id == id }?.name ?: id,
-                                    supporting = stringResource(Res.string.nlibUncertain),
-                                    onClick = { actions.show(LibrarySheet.Uncertain(id)) },
-                                )
-                            }
-                            val rows =
-                                inventory.providers
-                                    .filter {
-                                        match(
-                                            it.name,
-                                            it.id,
-                                            providerSearchTerms(it.id),
-                                            inventory.catalog
-                                                ?.models
-                                                ?.filter { m -> m.providerId == it.id }
-                                                ?.joinToString(" ") { m -> m.name + " " + m.id },
-                                        ) &&
-                                            inventory.attempts.none { pending ->
-                                                pending.integration == it.id
-                                            } &&
-                                            it.id !in inventory.uncertain
-                                    }
-                                    .sortedWith(
-                                        compareByDescending<IntegrationInfo> {
-                                                it.connections.isNotEmpty()
-                                            }
-                                            .thenBy { providerRank(it.id) }
-                                            .thenBy { it.name.lowercase() }
-                                    )
-                            LibraryEmpty(
-                                rows.isEmpty() && inventory.attempts.isEmpty(),
-                                query,
-                                inventory.coldLoading,
-                                selectedSection in inventory.failedSections,
-                                state.tab,
-                            )
-                            rows.forEach { provider ->
-                                KitRow(
-                                    provider.name,
-                                    leading = KitRowLeading.Logo(provider.id, provider.name),
-                                    supporting =
-                                        if (provider.connections.isEmpty())
-                                            stringResource(Res.string.nlibDisconnected)
-                                        else if (
-                                            inventory.catalog?.providers?.none {
-                                                it.id == provider.id && it.enabled
-                                            } == true
-                                        )
-                                            stringResource(Res.string.nlibUnusable)
-                                        else stringResource(Res.string.nlibConnected),
-                                    trailing = KitRowTrailing.Chevron,
-                                    onClick = {
-                                        focus.clearFocus()
-                                        val only =
-                                            soleMethodToConnect(
-                                                provider,
-                                                state.inventory.capabilities
-                                                    ?.integrationCommandAuth == true,
-                                            )
-                                        actions.show(
-                                            if (only != null) LibrarySheet.Method(provider, only)
-                                            else LibrarySheet.Provider(provider)
-                                        )
-                                    },
-                                )
-                            }
-                        }
-                    }
+                    // A2: the providers are lazy rows of their own below (one composed per visible row).
+                    LibraryTab.Providers -> Unit
                     LibraryTab.Mcp -> {
                         if (
                             inventory.capabilities?.let {
@@ -434,6 +363,79 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                     }
                 }
             }
+            if (state.tab == LibraryTab.Providers) {
+                val pending =
+                    inventory.attempts.map { attempt ->
+                        attempt to inventory.providers.firstOrNull { it.id == attempt.integration }
+                    }
+                val rows = providerRows(inventory, { values -> match(*values) }, modelTerms)
+                val empty = rows.isEmpty() && inventory.attempts.isEmpty()
+                if (empty)
+                    item {
+                        LibraryEmpty(
+                            true,
+                            query,
+                            inventory.coldLoading,
+                            selectedSection in inventory.failedSections,
+                            state.tab,
+                        )
+                    }
+                kitSliverRowGroup(
+                    children =
+                        pending.map { (attempt, provider) ->
+                            @Composable {
+                                KitRow(
+                                    provider?.name ?: attempt.integration,
+                                    supporting = authLabel(attempt.state),
+                                    trailing = KitRowTrailing.Chevron,
+                                    onClick = { actions.show(LibrarySheet.SignIn(attempt)) },
+                                )
+                            }
+                        } +
+                            inventory.uncertain.map { id ->
+                                @Composable {
+                                    KitRow(
+                                        inventory.providers.firstOrNull { it.id == id }?.name ?: id,
+                                        supporting = stringResource(Res.string.nlibUncertain),
+                                        onClick = { actions.show(LibrarySheet.Uncertain(id)) },
+                                    )
+                                }
+                            },
+                    itemCount = rows.size,
+                    itemKey = { "provider-" + rows[it].id },
+                    itemContent = { index ->
+                        val provider = rows[index]
+                        KitRow(
+                            provider.name,
+                            leading = KitRowLeading.Logo(provider.id, provider.name),
+                            supporting =
+                                if (provider.connections.isEmpty())
+                                    stringResource(Res.string.nlibDisconnected)
+                                else if (
+                                    inventory.catalog?.providers?.none {
+                                        it.id == provider.id && it.enabled
+                                    } == true
+                                )
+                                    stringResource(Res.string.nlibUnusable)
+                                else stringResource(Res.string.nlibConnected),
+                            trailing = KitRowTrailing.Chevron,
+                            onClick = {
+                                focus.clearFocus()
+                                val only =
+                                    soleMethodToConnect(
+                                        provider,
+                                        state.inventory.capabilities?.integrationCommandAuth ==
+                                            true,
+                                    )
+                                actions.show(
+                                    if (only != null) LibrarySheet.Method(provider, only)
+                                    else LibrarySheet.Provider(provider)
+                                )
+                            },
+                        )
+                    },
+                )
+            }
             item { Spacer(Modifier.height(Space.S5.dp)) }
         }
         state.sheet?.let { LibrarySheetBody(it, state, actions) }
@@ -453,6 +455,27 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
         )
     }
 }
+
+/**
+ * The providers a search keeps, connected first, then the usual order (A2: a plain function, so the lazy list
+ * filters once per change and composes only the rows on screen).
+ */
+internal fun providerRows(
+    inventory: LibraryInventory,
+    match: (Array<out String?>) -> Boolean,
+    modelTerms: Map<String, String>,
+): List<IntegrationInfo> =
+    inventory.providers
+        .filter {
+            match(arrayOf(it.name, it.id, providerSearchTerms(it.id), modelTerms[it.id])) &&
+                inventory.attempts.none { pending -> pending.integration == it.id } &&
+                it.id !in inventory.uncertain
+        }
+        .sortedWith(
+            compareByDescending<IntegrationInfo> { it.connections.isNotEmpty() }
+                .thenBy { providerRank(it.id) }
+                .thenBy { it.name.lowercase() }
+        )
 
 @Composable
 private fun LibraryEmpty(
