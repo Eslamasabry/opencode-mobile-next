@@ -402,6 +402,9 @@ public interface ChatsActions {
 
     /** Edit the sign-in (password or token) of the server that is failing to open, inline in its form. */
     public fun editOpeningServer() {}
+
+    /** The opening-failure card's "Set up Tailscale" (the address is a Tailscale one and nothing answered). */
+    public fun openTailscale() {}
     /** First run: add a computer (the server form). */
     public fun connectComputer() {}
 

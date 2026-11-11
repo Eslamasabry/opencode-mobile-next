@@ -22,6 +22,8 @@ import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.MonitorInboxRoute
 import io.github.eslamasabry.oc.ui.routes.ProjectsRoute
 import io.github.eslamasabry.oc.ui.routes.SearchRoute
+import io.github.eslamasabry.oc.ui.routes.CapabilityServerDoor
+import io.github.eslamasabry.oc.ui.routes.CapabilityServerSetupRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import io.github.eslamasabry.oc.ui.routes.UsageRoute
 import kotlin.time.Clock
@@ -631,6 +633,11 @@ public class ChatsViewModel(
         val profile = state.value.home.opening?.profile ?: return
         sheet.value = null
         nav.open(ServersRoute.Edit(profile))
+    }
+
+    override fun openTailscale() {
+        sheet.value = null
+        nav.open(CapabilityServerSetupRoute(CapabilityServerDoor.Tailscale))
     }
 
     override fun openServers() {
