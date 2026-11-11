@@ -210,4 +210,7 @@ public interface ScheduleEditActions {
      * (B-STATE-024).
      */
     public fun edited(input: EditorFields) {}
+
+    /** Opens the conversation the last run used (Flutter schedule_sheet `ScheduleSheetExit.openRun`). */
+    public fun openConversation(sessionId: String) {}
 }
