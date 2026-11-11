@@ -6,6 +6,7 @@
     <string name="p12PhoneFolder">مجلد على هذا الهاتف</string>
     <string name="p12PhoneFolderUnavailable">لم يُجهَّز OpenCode على هذا الهاتف في هذا الإصدار بعد.</string>
     <string name="p12ProjectsOnServer">المشاريع على %1$s</string>
+    <string name="p12ProjectsOnThisPhone">المشاريع على هذا الهاتف</string>
     <string name="p12ProjectsLoadFailed">تعذّر تحميل مشاريع هذا الخادم.</string>
     <string name="p12NoServerTitle">لا يوجد خادم متصل</string>
     <string name="p12NoServerBody">اتصل بخادم لترى مشاريعه ومحادثاته.</string>

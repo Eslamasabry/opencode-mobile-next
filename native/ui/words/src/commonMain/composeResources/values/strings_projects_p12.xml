@@ -6,6 +6,7 @@
     <string name="p12PhoneFolder">Folder on this phone</string>
     <string name="p12PhoneFolderUnavailable">OpenCode on this phone isn’t set up in this version yet.</string>
     <string name="p12ProjectsOnServer">Projects on %1$s</string>
+    <string name="p12ProjectsOnThisPhone">Projects on this phone</string>
     <string name="p12ProjectsLoadFailed">Couldn’t load this server’s projects.</string>
     <string name="p12NoServerTitle">No server connected</string>
     <string name="p12NoServerBody">Connect a server to see its projects and conversations.</string>

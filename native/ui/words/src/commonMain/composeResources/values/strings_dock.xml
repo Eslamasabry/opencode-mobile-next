@@ -8,7 +8,6 @@
     <string name="dockNeedsYou">Needs you</string>
     <string name="dockFinished">Finished</string>
     <string name="dockFailed">Failed</string>
-    <string name="dockIdle">Idle</string>
     <string name="dockChildNeedsYou">%1$s needs you</string>
     <string name="dockChildFailed">%1$s failed</string>
     <plurals name="dockSubagents">
