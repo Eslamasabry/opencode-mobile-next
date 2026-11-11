@@ -546,3 +546,49 @@ the status bar. This build does not do it. What it takes, by the same means as t
 Last run on the branch tip (VPS desktop): `ChatWordsGlassTest` 5 of 5, `JumpFadeEdgeTest`, `ChatEdgeATest`,
 `KitFloatingBarTest`, `KitFloatingBarRowTest`, `KitScreen*`, `ScrollEdgeWholePixelTest` green; `compileAndroidMain` for
 ui:kit, ui:kit-chat and feature:chat green. Nothing was run on a device.
+
+## Dock follow-ups, as built (2026-11-11)
+
+From the emulator run of 2026-11-11 (run 4). Six items; the first five are in the kit, the sixth needs a frame or feature
+change and is not built.
+
+**1. Whole rings only (1b).** With the keyboard up the strip is one ring tall, and while the column scrolled (or the area
+changed under it) the next ring stood half in view above the "+". A ring now takes room and draws only when its whole slot
+lies inside the column's viewport (`ringStandsWhole`, applied in the ring's layout); otherwise it is not in the strip (it
+stays in the list), in every frame, so no ring ever overlaps the "+". The ring riding out to be renamed is exempt (it
+stands in box B). Picture: `glass-in-the-kit/render-dock3-1-before.png` and `render-dock3-1-after.png` (keyboard up, the
+column caught between two rings).
+
+**2. `KitDockModel.offersNew` (default true).** False: no "+" in the strip and the strip has no foot (it is 60 dp shorter,
+`DockColumn.foot`), no "New conversation" row in the list (and the list's box is as much shorter), and the foot zone takes
+no touches. With no rings and `offersNew == false` the dock composes nothing at all (no node, no touches, no back-gesture
+exclusion) and closes anything it had open. The tucked nub never had a "+".
+
+**3. Rename (3a).** The field showed two lines of a long name because the swell was sized for at most three and only after
+the name had been laid out as a guess. The field now grows with what the name measures, one to four lines
+(`DockDims.RENAME_LINES` 3 to 4), the swell's height following on the dock's fill spring (`renameMeasured`), then scrolls
+inside itself with the caret kept in view. In a short area (the keyboard up) lines are taken off so the swell, its fillets
+and the strip's corners stay inside the area above the keyboard. The empty body came from scrolling the column to the ring
+that rides out, leaving no ring in the one slot of room; while renaming, the column now keeps another ring in view and the
+strip's rings are dimmed (45 %). The strip still grows above and below the swell by the fillet and the corner, as for every
+swell (see Limits above): that is the dock's geometry. Picture: `render-dock3-3-before.png`, `render-dock3-3-after.png`.
+
+**4. The list lets the page through (4b).** The grown dock used the Menu's glass: blur 6 dp dark (3 dp light), bend 48 dp.
+For the list only the blur and the bend now move to the Sheet's (`LiquidEdge.baseRecipe`: blur 12 dp, bend 48 dp; the bend
+is the same number, so the change is the blur: dark 6 to 12 dp, light 3 to 12 dp) by the list's own growth
+(`LiquidEdge.toward`, `KitLiquidBodyBoxes.listShare`): zero while a swell or peek is out, rising with the list from zero, so
+no step in either direction. Strip and swell keep their numbers (3 dp at rest, 6 dp dark grown). Tint (.20 dark, .10 light),
+rim, saturation, the luminance knee and the brighter second ink are unchanged. Picture: `render-dock3-4-before.png`,
+`render-dock3-4-after.png` (desktop's Skia blur; not seen on a phone).
+
+**5. Names off the screen edge (4a, 4c).** A ring's name sat in a 56 dp box centred on the ring, so a long name's ellipsis
+ended 6 dp from the screen edge. It now ends the page gutter (the design tokens' 16 dp, `DockDims.GUTTER`) from the dock's own
+screen edge and keeps 6 dp from the strip's inner side: the box is 46 dp wide and centred 5 dp toward the middle from the
+ring (`DockDims.labelMax`, `labelShift`), mirrored for a dock on the left edge, so for both edges and in RTL. A short name
+therefore stands 5 dp off its ring's centre.
+
+**6. The Undo bar over the dock's foot (5a): not built.** `KitUndoBar` (`modal/KitUndoBar.kt`, the composable at line 91)
+exposes neither its height nor an inset, and each host places it in its own box (`feature/chats` `EdgeDockHost.kt` places it
+at the bottom with `undoBottom`, `ChatsScreen.kt` and others likewise). Lifting the dock needs one of: the bar reporting its
+measured height (a new kit local or an `onHeight` callback, a change outside the dock files), and the host adding it to
+`KitDockInsets.bottom` while an offer is shown (`EdgeDockHost.kt`, where `undo` is known and `insets` is passed on).

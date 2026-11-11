@@ -49,7 +49,7 @@ class KitEdgeDockWholeRingsTest {
                 }
             }
             val d = 1f
-            fun check(what: String) {
+            fun check(what: String, needOne: Boolean = true) {
                 val plus = onAllNodes(hasContentDescription(TestDockWords.newConversation), useUnmergedTree = true).fetchSemanticsNodes().first().boundsInRoot
                 val col = state.column
                 val viewTop = runOnIdle { state.top.value } + DockDims.HEAD
@@ -63,7 +63,8 @@ class KitEdgeDockWholeRingsTest {
                     assertTrue(r.top >= viewTop - 1f && r.bottom <= viewBottom + 1f, "$what: ring ${ring.name} $r lies inside the viewport $viewTop..$viewBottom")
                     assertTrue(!r.overlaps(plus), "$what: ring ${ring.name} $r stays clear of the + $plus")
                 }
-                assertTrue(shown >= 1, "$what: at least one whole ring shows")
+                // Caught between two rings with room for one, no ring is whole: none shows (not half of two).
+                if (needOne) assertTrue(shown >= 1, "$what: at least one whole ring shows")
             }
             // The keyboard comes up and goes, a few dp at a time (the frames in between).
             var b = 120f
@@ -76,10 +77,11 @@ class KitEdgeDockWholeRingsTest {
             // The room for one ring, with the column caught between two rings (a scroll still on its way).
             bottom = 580f
             waitForIdle()
+            val col1 = 64f
             for (scroll in listOf(14f, 30f, 47f, 64f)) {
                 runOnIdle { runBlocking { state.scroll.snapTo(scroll) } }
                 waitForIdle()
-                check("one ring of room, scroll $scroll")
+                check("one ring of room, scroll $scroll", needOne = scroll % col1 == 0f)
             }
         }
     }

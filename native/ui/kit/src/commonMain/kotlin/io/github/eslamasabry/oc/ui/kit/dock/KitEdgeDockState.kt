@@ -711,7 +711,7 @@ public class KitEdgeDockState internal constructor() {
     }
 
     /** The field measured its name as [lines] lines: the swell grows or shrinks to hold them (up to four). */
-    internal fun setRenameLines(lines: Int) {
+    internal fun renameMeasured(lines: Int) {
         if (renaming == null) return
         val n = lines.coerceIn(1, DockDims.RENAME_LINES)
         if (n == renameLines) return
