@@ -29,4 +29,7 @@
     <string name="agentsInstallFailedVersion">Não foi possível instalar %1$s: a versão recebida não é a que o app espera. Tente novamente.</string>
     <string name="agentsInstallFailedUnknown">Não foi possível instalar %1$s. Tente novamente; os Detalhes mostram o que o celular informou.</string>
     <string name="agentsInstallInterruptedNow">A instalação de %1$s foi interrompida antes de terminar. Tente novamente para continuar.</string>
+    <string name="agentsInstallFailedVersionOther">Não foi possível instalar %1$s: o download diz ser a versão %2$s, e este app funciona com a %3$s. Tentar novamente não muda isso; uma atualização deste app muda.</string>
+    <string name="agentsInstallFailedNotStarted">%1$s foi baixado, mas não iniciou neste celular, então não foi possível verificar a versão. Tente novamente; se acontecer de novo, os Detalhes mostram o que o celular informou.</string>
+    <string name="agentsInstallFailedWithdrawn">Não foi possível instalar %1$s: a versão %2$s, a que este app instala, não está mais disponível para download. Tentar novamente não muda isso; uma atualização deste app muda.</string>
 </resources>

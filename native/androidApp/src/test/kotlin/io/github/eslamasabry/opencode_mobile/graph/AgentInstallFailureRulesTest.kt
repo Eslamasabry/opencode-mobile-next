@@ -1,6 +1,7 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
 import io.github.eslamasabry.oc.engine.agents.install.AgentSetupFailure
+import io.github.eslamasabry.oc.engine.agents.install.AgentVersionCheck
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -48,9 +49,15 @@ class AgentInstallFailureRulesTest {
             AgentSetupFailure.Checksum,
             AgentInstallFailureRules.of("[oc] The agent download did not match its checksum", ""),
         )
+        // Another version, as the agent's version check names it (since native/w4-agent-version a06ed7ac1e the
+        // program's silent or failed read-back is NotStarted, see the next test), and Paseo's own check.
         assertEquals(
             AgentSetupFailure.Version,
-            AgentInstallFailureRules.of("[oc] The agent did not pass its version check", ""),
+            AgentInstallFailureRules.of("[oc] The agent reported version 0.65.0; this app installs 0.66.0", ""),
+        )
+        assertEquals(
+            AgentSetupFailure.Version,
+            AgentInstallFailureRules.of("[oc] Paseo did not pass its version check", ""),
         )
         assertEquals(
             AgentSetupFailure.Interrupted,
@@ -78,5 +85,56 @@ class AgentInstallFailureRulesTest {
             AgentSetupFailure.Interrupted,
             AgentInstallFailureRules.of("proot info: vpid 1: terminated with signal 9", "npm ERR! code ENOSPC\n"),
         )
+    }
+
+    @Test
+    fun `the agent's version check is read first, so a slow or silent read-back never reads as a failed install`() {
+        // Each line holds a word a later rule would take ("version", "download"), and the log tail holds a stop, a
+        // full disk and a failed lookup: the version check's own line still decides.
+        val tail = "proot info: vpid 1: terminated with signal 9\nnpm ERR! code ENOSPC\nCould not resolve host\n"
+        assertEquals(AgentSetupFailure.NotStarted, AgentInstallFailureRules.of(AgentVersionCheck.SLOW_LINE, tail))
+        assertEquals(AgentSetupFailure.NotStarted, AgentInstallFailureRules.of(AgentVersionCheck.SILENT_LINE, tail))
+        assertEquals(AgentSetupFailure.NotStarted, AgentInstallFailureRules.of(AgentVersionCheck.SLOW_LINE, null))
+        assertEquals(
+            AgentSetupFailure.Withdrawn,
+            AgentInstallFailureRules.of(
+                AgentVersionCheck.WITHDRAWN_PREFIX + "0.66.0",
+                "[oc] Download failed (curl exit 22)\n",
+            ),
+        )
+        assertEquals(
+            AgentSetupFailure.Version,
+            AgentInstallFailureRules.of(
+                AgentVersionCheck.OTHER_PREFIX + "0.65.0" + AgentVersionCheck.OTHER_MIDDLE + "0.66.0",
+                "npm ERR! code ENOSPC\n",
+            ),
+        )
+    }
+
+    @Test
+    fun `an install that really failed is never read as a version problem, even after a version line in the log`() {
+        // An earlier attempt's version-check line in the log tail does not speak for the step that failed now.
+        val earlier = AgentVersionCheck.SLOW_LINE + "\n==> Retrying\n"
+        assertEquals(
+            AgentSetupFailure.Storage,
+            AgentInstallFailureRules.of("exit 1", earlier + "npm ERR! code ENOSPC\n"),
+        )
+        assertEquals(
+            AgentSetupFailure.Download,
+            AgentInstallFailureRules.of("[oc] Download failed (curl exit 6)", earlier),
+        )
+        assertEquals(
+            AgentSetupFailure.Checksum,
+            AgentInstallFailureRules.of("[oc] The agent download did not match its checksum", earlier),
+        )
+        assertEquals(
+            AgentSetupFailure.Storage,
+            AgentInstallFailureRules.of("There is not enough free space on this phone. Free some storage.", earlier),
+        )
+        assertEquals(
+            AgentSetupFailure.Interrupted,
+            AgentInstallFailureRules.of("proot info: vpid 1: terminated with signal 9", earlier),
+        )
+        assertEquals(AgentSetupFailure.Unknown, AgentInstallFailureRules.of("exit 1", earlier))
     }
 }

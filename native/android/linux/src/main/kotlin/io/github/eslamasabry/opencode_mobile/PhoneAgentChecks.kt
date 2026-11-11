@@ -9,6 +9,7 @@ private const val DRAIN_CHUNK = 4096
 private const val WORKSPACE_TIMEOUT_S = 15L
 private const val VERSION_TIMEOUT_S = 30L
 private const val VERSION_JOIN_MS = 2000L
+private const val NO_RELAUNCH = "export GEMINI_CLI_NO_RELAUNCH=true\n"
 
 /** The agent host's read-only checks: the shared project bind and the installed program versions. */
 class PhoneAgentChecks internal constructor(private val linux: BuiltinLinux) {
@@ -65,10 +66,12 @@ class PhoneAgentChecks internal constructor(private val linux: BuiltinLinux) {
     internal fun runVersion(profile: String, path: String, stop: ProbeStop? = null): String? {
         if (stop?.isStopped == true) return null
         val child = try {
-            // The same Node.js safe mode the launch script gets, so the check sees what a launch would.
+            // The same Node.js safe mode the launch script gets, so the check sees what a launch would. Gemini CLI is
+            // asked not to start a second Node.js just to print its version (its own switch; others ignore it): that
+            // doubled the time of this check, which a busy phone ran past (the install's check does the same).
             linux.startAgentProcess(
                 profile,
-                listOf("/bin/sh", "-c", NodeCompatState.SERVER_ENV + "exec \"\$0\" --version", path),
+                listOf("/bin/sh", "-c", NodeCompatState.SERVER_ENV + NO_RELAUNCH + "exec \"\$0\" --version", path),
             )
         } catch (_: Exception) { null } ?: return null
         val output = StringBuilder()

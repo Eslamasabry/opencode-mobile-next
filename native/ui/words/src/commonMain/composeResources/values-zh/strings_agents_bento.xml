@@ -29,4 +29,7 @@
     <string name="agentsConversationsStored">复制对话给另一个智能体</string>
     <string name="agentsConversationsStoredOn">从 %1$s 复制对话</string>
     <string name="agentsHostAccount">主机账号：%1$s</string>
+    <string name="agentsInstallFailedVersionOther">无法安装 %1$s：下载的程序报告版本为 %2$s，而此应用适用的是 %3$s。重试不会改变这一点；更新此应用才行。</string>
+    <string name="agentsInstallFailedNotStarted">%1$s 已下载，但未能在此手机上启动，因此无法检查其版本。请重试；如果再次发生，详情中有手机上报的信息。</string>
+    <string name="agentsInstallFailedWithdrawn">无法安装 %1$s：此应用安装的版本 %2$s 已不再提供下载。重试不会改变这一点；更新此应用才行。</string>
 </resources>

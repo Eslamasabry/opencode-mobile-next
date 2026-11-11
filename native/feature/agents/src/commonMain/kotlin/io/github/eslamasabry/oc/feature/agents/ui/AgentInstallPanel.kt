@@ -165,12 +165,10 @@ internal fun AgentInstallPanel(
 
 /** The full sentence for a failed or cut-short install of [name]: what happened and the way forward. */
 @Composable
-internal fun installResultWords(installation: PhoneAgentInstallation, name: String): String =
-    stringResource(
-        if (installation.phase == PhoneAgentInstallPhase.Interrupted) Res.string.agentsInstallInterruptedNow
-        else failedWords(installation.failure),
-        name,
-    )
+internal fun installResultWords(installation: PhoneAgentInstallation, name: String): String {
+    val message = installFailedMessage(installation, name)
+    return stringResource(message.words.resource(), *message.args.toTypedArray())
+}
 
 /** "Free up space": this phone's page, where its storage is measured and cleared. */
 @Composable
@@ -183,14 +181,68 @@ private fun freeUpSpace(actions: AgentsActions): KitLineAction =
         },
     )
 
-private fun failedWords(failure: PhoneAgentInstallFailure?) =
+private fun failedWords(failure: PhoneAgentInstallFailure?): InstallFailedWords =
     when (failure) {
-        PhoneAgentInstallFailure.Download -> Res.string.agentsInstallFailedDownload
-        PhoneAgentInstallFailure.Checksum -> Res.string.agentsInstallFailedChecksum
-        PhoneAgentInstallFailure.Storage -> Res.string.agentsInstallFailedStorage
-        PhoneAgentInstallFailure.Version -> Res.string.agentsInstallFailedVersion
-        else -> Res.string.agentsInstallFailedUnknown
+        PhoneAgentInstallFailure.Download -> InstallFailedWords.Download
+        PhoneAgentInstallFailure.Checksum -> InstallFailedWords.Checksum
+        PhoneAgentInstallFailure.Storage -> InstallFailedWords.Storage
+        PhoneAgentInstallFailure.Version -> InstallFailedWords.Version
+        PhoneAgentInstallFailure.NotStarted -> InstallFailedWords.NotStarted
+        else -> InstallFailedWords.Unknown
     }
+
+/** Which sentence a failed or cut-short install shows; [resource] picks its words. */
+internal enum class InstallFailedWords {
+    Interrupted,
+    Download,
+    Checksum,
+    Storage,
+    /** Another version, without the versions to name (Paseo's own check, or a line that did not name them). */
+    Version,
+    /** Another version, naming the one that arrived and the one this app installs. */
+    VersionOther,
+    NotStarted,
+    Withdrawn,
+    Unknown,
+}
+
+internal fun InstallFailedWords.resource() =
+    when (this) {
+        InstallFailedWords.Interrupted -> Res.string.agentsInstallInterruptedNow
+        InstallFailedWords.Download -> Res.string.agentsInstallFailedDownload
+        InstallFailedWords.Checksum -> Res.string.agentsInstallFailedChecksum
+        InstallFailedWords.Storage -> Res.string.agentsInstallFailedStorage
+        InstallFailedWords.Version -> Res.string.agentsInstallFailedVersion
+        InstallFailedWords.VersionOther -> Res.string.agentsInstallFailedVersionOther
+        InstallFailedWords.NotStarted -> Res.string.agentsInstallFailedNotStarted
+        InstallFailedWords.Withdrawn -> Res.string.agentsInstallFailedWithdrawn
+        InstallFailedWords.Unknown -> Res.string.agentsInstallFailedUnknown
+    }
+
+/** A failed install's sentence and its arguments (the agent's name first). */
+internal data class InstallFailedMessage(val words: InstallFailedWords, val args: List<String>)
+
+/**
+ * The sentence for a failed or cut-short install of [name]. Another version than the app's, or a pinned version no
+ * longer offered, names the versions (left to right in any language), because trying again cannot change either;
+ * without them it falls back to the kind's own sentence.
+ */
+internal fun installFailedMessage(installation: PhoneAgentInstallation, name: String): InstallFailedMessage {
+    val versions = installation.versions
+    val found = versions?.found
+    return when {
+        installation.phase == PhoneAgentInstallPhase.Interrupted ->
+            InstallFailedMessage(InstallFailedWords.Interrupted, listOf(name))
+        installation.failure == PhoneAgentInstallFailure.Version && versions != null && found != null ->
+            InstallFailedMessage(
+                InstallFailedWords.VersionOther,
+                listOf(name, KitBidi.ltr(found), KitBidi.ltr(versions.expected)),
+            )
+        installation.failure == PhoneAgentInstallFailure.Withdrawn && versions != null ->
+            InstallFailedMessage(InstallFailedWords.Withdrawn, listOf(name, KitBidi.ltr(versions.expected)))
+        else -> InstallFailedMessage(failedWords(installation.failure), listOf(name))
+    }
+}
 
 /** Pinned payload only. Unknown sizes stay absent; bytes are never borrowed from another CPU. */
 internal fun agentPayloadSize(bytes: Long): String =

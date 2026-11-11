@@ -244,6 +244,7 @@ class NativeAgentSetupJobs(
             stores.profiles.profile(profile) != null &&
             (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value == profile.raw
 
+    // AgentInstallFailureRules reads the agent's own version check first (AgentVersionCheck), then the job's words.
     private fun failure(snapshot: JSONObject): AgentSetupFailure =
         AgentInstallFailureRules.of(
             snapshot.optString("error"),
