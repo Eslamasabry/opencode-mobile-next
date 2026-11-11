@@ -7,6 +7,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.model.IntegrationInfo
@@ -119,6 +120,26 @@ class SettingsTruthUiTest {
         onNodeWithText("opencode.json", substring = true).assertExists()
         onAllNodesWithText("No configuration file yet").assertCountEquals(0)
         onAllNodesWithText("SECRETVALUE", substring = true).assertCountEquals(0)
+    }
+
+    @Test
+    fun `S4 Details shows the source through the redactor, a key masked and a folder path whole`() = runComposeUiTest {
+        // A fake key (never a real one), left raw in the answer on purpose: the fold must mask it by its shape.
+        val fakeKey = "sk-ant-api03-FAKEFIXTUREVALUE0123456789"
+        val ready =
+            ConfigurationSources.ready(
+                """{"sources":[{"type":"directory","path":"/root/projects"},""" +
+                    """{"type":"document","path":"/root/projects/opencode.json",""" +
+                    """"info":{"provider":{"anthropic":{"options":{"apiKey":"$fakeKey"}}}}}]}"""
+            )
+        setContent { SettingsThemed { ServerConfigurationScreen(ready, ServerConfigurationActions {}) {} } }
+        onNodeWithText("Details").performScrollTo().performClick()
+        waitForIdle()
+        onNodeWithText("\"sources\"", substring = true).assertExists()
+        onAllNodesWithText("FAKEFIXTUREVALUE", substring = true).assertCountEquals(0)
+        // Masking is by value and shape, never by a word inside a path (w4-redact).
+        onAllNodesWithText("/root/•••", substring = true).assertCountEquals(0)
+        assertTrue(onAllNodesWithText("/root/projects", substring = true).fetchSemanticsNodes().size >= 2)
     }
 
     @Test
