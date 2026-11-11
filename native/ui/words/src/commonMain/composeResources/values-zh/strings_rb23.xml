@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="rb23_devPreviewUnsupportedTitle">此处无法使用预览</string>
+    <string name="rb23_devPreviewUnsupportedBody">此设备无法在应用内显示该页面。请改为在浏览器中打开。</string>
+</resources>

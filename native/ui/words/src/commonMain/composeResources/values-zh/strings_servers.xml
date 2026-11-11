@@ -474,4 +474,33 @@
     <string name="welcomeComputerConnect">连接到我的电脑</string>
     <string name="welcomeMoreWays">其他设置方式</string>
     <string name="welcomeDemoLine">模拟对话</string>
+    <string name="connectionRestartAgent">重启 Claude Code</string>
+    <string name="connectionAgentStarting">正在启动 Claude Code…</string>
+    <string name="connectionAgentStartFailed">Claude Code 未能启动。点按“重启 Claude Code”再试一次。</string>
+    <string name="connectionRestartPhoneServer">重启 OpenCode</string>
+    <string name="serverSwitcherAddServer">添加服务器</string>
+    <string name="serverSwitcherNotAnswering">没有响应</string>
+    <plurals name="serverSwitcherChecksAgain">
+        <item quantity="other">%1$d 分钟后再次检查</item>
+    </plurals>
+    <string name="serverSwitcherChecksAgain__eq1">1 分钟后再次检查</string>
+    <string name="serverSwitcherChecksAgain__eq2">%1$d 分钟后再次检查</string>
+    <string name="serverSwitcherTryAgainLabel">重试 %1$s</string>
+    <string name="serverSwitcherOpenRequest">打开</string>
+    <string name="serverSwitcherOpenRequestLabel">打开 %1$s</string>
+    <string name="serverSwitcherAllowLabel">在 %2$s 上允许 %1$s 一次</string>
+    <string name="serverSwitcherUndoLabel">撤销在 %1$s 上的回答</string>
+    <string name="connectionTryingAgainIn">%1$d 秒后重试</string>
+    <string name="connectionTryingAgainNow">正在重试…</string>
+    <string name="agentKilledByAndroid">由于运行的程序过多，Android 停止了智能体。正在重新启动…</string>
+    <string name="agentBackAfterKill">由于运行的程序过多，Android 停止了智能体。它已恢复，你的对话会继续。</string>
+    <string name="browserPairingPasteHint">复制配对命令打印出的代码，并用键盘粘贴到服务器地址栏中。“粘贴”按钮需要在安全（HTTPS 或 localhost）页面上使用。</string>
+    <string name="browserAgentSocketRowUnavailable">在浏览器中不可用</string>
+    <string name="serverDetailsDisconnectedUnknown">此服务器已断开连接。请连接以检查它的地址和登录。</string>
+    <string name="serverDetailsPasswordMissing">此服务器需要密码。请在“登录”中添加。</string>
+    <string name="serverDetailsTokenMissing">此服务器需要令牌。请在“登录”中添加。</string>
+    <string name="serverDetailsTokenRejected">服务器不接受该令牌。请在“登录”中替换它。</string>
+    <string name="serverDetailsAccessDenied">服务器拒绝了访问。请检查哪个账号可以使用此服务器。</string>
+    <string name="serverDetailsFixSignIn">修复登录</string>
+    <string name="serverDetailsLastAttempt">上次连接尝试：%1$s</string>
 </resources>

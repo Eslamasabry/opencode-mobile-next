@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="tipTerminalLinksTitle">终端链接</string>
+    <string name="tipTerminalLinks">点按链接，或使用“打开链接”。</string>
+</resources>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateReaderWrap">代码自动换行</string>
+    <string name="stateReaderNoWrap">代码保持单行</string>
+    <string name="stateReaderSaveFailed">无法保存显示方式的选择。请重试。</string>
+    <string name="stateUsageBudgets">个人用量预算</string>
+    <string name="stateUsageUsd">美元</string>
+</resources>

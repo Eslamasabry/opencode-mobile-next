@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="serversTitle">服务器</string>
+    <string name="serversNewTitle">新对话</string>
+    <string name="serversSaved">已保存的服务器</string>
+    <string name="serversEmpty">添加一个 OpenCode 2 服务器即可开始对话。</string>
+    <string name="serversAdd">添加服务器</string>
+    <string name="serversName">名称</string>
+    <string name="serversAddress">服务器地址</string>
+    <string name="serversUsername">用户名</string>
+    <string name="serversPassword">密码</string>
+    <string name="serversCleartext">允许此地址使用 HTTP</string>
+    <string name="serversCleartextHelp">HTTP 不会加密你的密码或对话。请只在你信任的网络上使用。</string>
+    <string name="serversCleartextRequired">连接前，请确认此地址使用 HTTP。</string>
+    <string name="serversConnect">连接</string>
+    <string name="serversConnected">已连接</string>
+    <string name="serversCreate">开始对话</string>
+    <string name="serversSave">保存并连接</string>
+    <string name="serversRemove">移除服务器</string>
+    <string name="serversCancel">取消</string>
+    <string name="serversRemoveConfirm">从此应用中移除 %1$s 及其已保存的连接信息？</string>
+    <string name="serversWorking">请等待当前操作完成。</string>
+    <string name="serversInvalidAddress">请输入服务器地址。</string>
+    <string name="serversSaveFailed">无法保存此服务器。请检查地址后重试。</string>
+    <string name="serversConnectFailed">无法连接。请检查服务器地址和网络，然后重试。</string>
+    <string name="serversCreateFailed">无法开始对话。你的服务器仍已保存。</string>
+    <string name="serversRemoveFailed">无法移除此服务器。它已保存的信息保持不变。</string>
+    <string name="serversSignInFailed">服务器不接受这些登录信息。请检查用户名和密码。</string>
+    <string name="serverHttpsRequired">此地址位于公共互联网上，所以需要使用 HTTPS。普通 HTTP 会以未加密的方式发送你的密码。请把地址改为以 https:// 开头，或通过 Tailscale 或你自己的网络访问服务器。</string>
+</resources>

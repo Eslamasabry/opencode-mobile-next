@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="upgradeComposerAsk">向 %1$s 提问…</string>
+    <string name="upgradeComposerFree"> · 免费</string>
+    <string name="upgradeComposerVoiceHoldTitle">和智能体说话</string>
+    <string name="upgradeComposerVoiceHold">按住麦克风说话；松开后你的话会放进输入框。要进行语音对话，请打开 + 并选择“语音对话”。</string>
+    <string name="upgradeComposerHoldDictate">按住听写</string>
+</resources>

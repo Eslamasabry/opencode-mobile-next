@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="upgradeStartSending">正在发送…</string>
+    <string name="upgradeStartFailed">你的消息已保存。准备好后请重试。</string>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="rb44AboutCheckUpdates">检查更新</string>
+    <string name="rb44AboutUpdateIdle">查找此应用的较新版本</string>
+    <string name="rb44AboutUpdateChecking">正在检查…</string>
+    <string name="rb44AboutUpdateCurrent">你使用的已是最新版本</string>
+    <string name="rb44AboutUpdateDownloading">正在下载更新…</string>
+    <string name="rb44AboutUpdateFailed">无法检查更新。请检查网络连接后重试。</string>
+</resources>

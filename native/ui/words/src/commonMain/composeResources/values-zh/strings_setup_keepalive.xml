@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="setupKilled">设置期间，你的手机关闭了 OpenCode。已完成的步骤会保留。点击继续即可从中断处接着进行。</string>
+    <string name="setupKilledMemory">设置期间，你的手机内存不足，关闭了 OpenCode。已完成的步骤会保留。点击继续即可从中断处接着进行。</string>
+    <string name="setupBatteryTitle">让 OpenCode 保持运行</string>
+    <string name="setupBatteryBody">有些手机会为了省电而关闭应用。请更改这些设置，以免设置过程被中断。</string>
+    <string name="setupBatteryStepUnrestricted">打开应用的电池设置，选择“不受限制”（有些手机称为“无限制”）。</string>
+    <string name="setupBatteryStepAutostart">为 OpenCode 开启自启动。</string>
+    <string name="setupBatteryStepNeverSleeping">把 OpenCode 加入“永不休眠的应用”。</string>
+    <string name="setupBatteryOpenApp">打开应用设置</string>
+    <string name="setupBatteryOpenAutostart">打开自启动</string>
+    <string name="setupBatteryOpenSamsung">打开电池设置</string>
+    <string name="setupBatteryOpenFailed">这部手机无法打开该页面。请在“设置”中手动按步骤操作。</string>
+</resources>

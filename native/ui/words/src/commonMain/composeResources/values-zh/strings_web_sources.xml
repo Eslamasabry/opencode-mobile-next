@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="webSourcesDuplicateNative">此网址已在你的审阅列表中。</string>
+    <string name="webSourcesFullNative">最多可审阅 10 个来源。请先移除一个再添加。</string>
+    <string name="webSourcesChooseNative">请至少选择一个已审阅的来源。</string>
+</resources>

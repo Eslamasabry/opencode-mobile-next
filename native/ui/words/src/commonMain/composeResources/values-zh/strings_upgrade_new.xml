@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="upgradeNewStart">开始</string>
+    <string name="upgradeAgentReady">就绪</string>
+    <string name="upgradeMode">模式</string>
+    <string name="upgradeModeBuild">构建</string>
+    <string name="upgradeModePlan">计划</string>
+</resources>

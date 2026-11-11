@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateLifecycleChecking">Android 停止了应用。正在重新检查哪些在运行…</string>
+    <string name="stateLifecycleUnavailable">Android 停止了应用。无法检查恢复情况。</string>
+    <string name="stateLifecycleStopped">Android 停止了应用。OpenCode 已停止。</string>
+    <string name="stateLifecycleUnreachable">Android 停止了应用。OpenCode 暂时没有响应。</string>
+    <string name="stateLifecyclePartial">OpenCode 有响应。之前运行的部分服务尚未就绪。</string>
+    <string name="stateLifecycleReady">OpenCode 及其之前运行的服务已再次响应。被中断的任务可能需要你处理。</string>
+    <string name="stateStorageTitle">应用存储</string>
+    <string name="stateStorageServer">Linux 和 OpenCode</string>
+    <string name="stateStoragePrivate">已保存的登录、设置和对话</string>
+    <plurals name="stateStorageProject">
+        <item quantity="other">%1$s · %2$d 个文件 · %3$d 个私密</item>
+    </plurals>
+    <plurals name="stateStorageSavedServers">
+        <item quantity="other">%1$d 个已保存的服务器</item>
+    </plurals>
+    <string name="stateStorageEmpty">这部手机上没有存储 Linux 或项目。</string>
+    <string name="stateStorageFailed">无法统计存储空间。请重试。</string>
+    <string name="stateStorageRefresh">重新统计存储空间</string>
+</resources>

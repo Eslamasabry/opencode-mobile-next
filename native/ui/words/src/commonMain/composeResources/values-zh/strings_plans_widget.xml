@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="plansWidgetSettings">用量小组件</string>
+    <string name="plansWidgetSetupRows">显示需要设置的套餐</string>
+    <string name="plansWidgetBoth">同时显示两个周期</string>
+    <string name="plansWidgetFiveHour">显示 5 小时周期</string>
+    <string name="plansWidgetWeekly">显示每周周期</string>
+    <string name="plansWidgetSelected">已选</string>
+    <string name="plansWidgetVisible">在小组件中显示此套餐</string>
+</resources>

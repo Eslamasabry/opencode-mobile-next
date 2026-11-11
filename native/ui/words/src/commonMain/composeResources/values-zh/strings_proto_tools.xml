@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="protoToolsTitle">工具</string>
+    <string name="protoToolsRefresh">刷新</string>
+    <string name="protoToolsPlugins">插件</string>
+    <string name="protoToolsSkills">技能</string>
+    <string name="protoToolsMcp">MCP 服务器</string>
+    <string name="protoToolsLoadFailed">无法加载此列表。请点击刷新。</string>
+    <string name="protoToolsUnavailable">此连接不支持工具。请连接到支持工具的服务器。</string>
+    <string name="protoToolsEmpty">这里还没有内容。</string>
+    <string name="protoToolsUnnamedPlugin">未命名的插件</string>
+    <string name="protoToolsSkillNeedsChat">请从某个对话中打开“工具”，才能向其添加技能。</string>
+    <string name="protoToolsSkillReview">把此技能添加到当前对话。请选择智能体是否现在继续。</string>
+    <string name="protoToolsResume">立即继续对话</string>
+    <string name="protoToolsActivate">添加技能</string>
+    <string name="protoToolsDisconnect">断开 %1$s</string>
+    <string name="protoToolsAddMcp">添加 MCP 服务器</string>
+    <string name="protoToolsRuntimeScope">这会为当前项目添加该服务器，直到服务器重启。已有的名称不会被替换。</string>
+    <string name="protoToolsName">服务器名称</string>
+    <string name="protoToolsLocal">运行本地命令</string>
+    <string name="protoToolsCommand">命令和参数，每行一个</string>
+    <string name="protoToolsUrl">HTTP 或 HTTPS 地址</string>
+    <string name="protoToolsAdd">添加服务器</string>
+    <string name="protoToolsChanged">此连接或项目已变更。请先刷新再重试。</string>
+    <string name="protoToolsInvalidDraft">请检查服务器名称和地址或命令，然后重试。</string>
+    <string name="protoToolsAddFailed">无法添加服务器。请先刷新列表再重试。</string>
+    <string name="protoToolsDisconnectFailed">无法确认连接状态。请先刷新列表再重试。</string>
+    <string name="protoToolsActivateFailed">无法添加该技能。请检查它是否仍然可用。</string>
+    <string name="protoToolsStaged">添加技能之前，请先完成或取消已暂存的还原。</string>
+    <string name="protoToolsUncertain">服务器可能已收到此操作。请先查看对话再重试。</string>
+    <string name="protoToolsDone">完成。</string>
+    <string name="protoToolsActive">启用中</string>
+    <string name="protoToolsFailed">需要处理</string>
+    <string name="protoToolsUnknown">状态未知</string>
+    <string name="protoToolsBuiltin">内置</string>
+    <string name="protoToolsPackage">软件包</string>
+    <string name="protoToolsLocalSource">本地</string>
+    <string name="protoToolsSdk">SDK</string>
+    <string name="protoToolsUnknownSource">来源未知</string>
+    <string name="protoToolsConnected">已连接</string>
+    <string name="protoToolsDisabled">已关闭</string>
+    <string name="protoToolsSignIn">需要登录</string>
+    <string name="protoToolsDisconnected">已断开</string>
+    <string name="protoToolsConnecting">连接中</string>
+    <string name="protoWorktreeInvalid">请输入 1–120 个字符的工作树名称，不含控制字符。</string>
+    <string name="protoWebInvalid">请输入 1–1000 个字符的网络搜索内容。</string>
+    <string name="protoToolsProviders">提供商</string>
+    <string name="protoToolsConnect">连接 %1$s</string>
+</resources>

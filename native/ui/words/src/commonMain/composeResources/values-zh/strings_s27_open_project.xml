@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="openProjectWhereTitle">项目在哪里？</string>
+    <string name="openProjectWhereBody">请选择存放它的手机或电脑。</string>
+    <string name="openProjectStatusConnected">已连接</string>
+    <string name="openProjectStatusConnecting">连接中</string>
+    <string name="openProjectStatusNotConnected">未连接</string>
+    <string name="openProjectTypePath">输入路径</string>
+    <string name="openProjectTypePathBody">通过完整路径打开文件夹</string>
+    <string name="openProjectNewFolder">新建文件夹</string>
+    <string name="openProjectNewFolderBody">在 %1$s 中创建文件夹并打开</string>
+    <string name="openProjectCloneBody">把仓库复制到 %1$s 并打开</string>
+    <string name="openProjectCloneFailed">无法复制该仓库。请检查它的地址，并确认服务器能访问它。</string>
+    <string name="openProjectSlowBody">服务器的响应比平时慢。</string>
+    <string name="openProjectProjectsEmptyBody">克隆一个仓库或新建一个文件夹即可开始。</string>
+    <string name="openProjectServerNotConnected">此服务器当前未连接。连接后再试。</string>
+</resources>

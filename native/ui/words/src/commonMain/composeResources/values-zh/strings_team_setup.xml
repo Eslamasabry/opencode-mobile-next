@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="phoneTeamProofSignal">安全测试在完成前被 Android 关闭（信号 %1$d）。</string>
+    <string name="phoneTeamProofCheckSignal">安全检查“%1$s”被 Android 关闭（信号 %2$d）。</string>
+    <string name="phoneTeamProofNotBlocked">安全检查“%1$s”失败：这部手机没有按团队沙盒所需的方式阻止它。</string>
+    <string name="phoneTeamProofSandbox">团队的沙盒无法在这部手机上启动。</string>
+    <string name="phoneTeamProofUbuntu">Ubuntu 步骤“%1$s”在团队的沙盒中失败。</string>
+    <string name="phoneTeamProofFixture">安全检查所用的私有测试文件已变更或无法设置。</string>
+    <string name="phoneTeamProofNoAnswer">安全测试未能及时响应。</string>
+    <string name="phoneTeamProofProot">proot 安全检查“%1$s”未通过。</string>
+    <string name="phoneTeamProofOther">安全检查在“%1$s”处停止。</string>
+</resources>
