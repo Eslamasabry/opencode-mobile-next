@@ -555,9 +555,12 @@ change and is not built.
 **1. Whole rings only (1b).** With the keyboard up the strip is one ring tall, and while the column scrolled (or the area
 changed under it) the next ring stood half in view above the "+". A ring now takes room and draws only when its whole slot
 lies inside the column's viewport (`ringStandsWhole`, applied in the ring's layout); otherwise it is not in the strip (it
-stays in the list), in every frame, so no ring ever overlaps the "+". The ring riding out to be renamed is exempt (it
+stays in the list), in every frame, so no ring ever overlaps the "+" (a ring that does not stand is measured at no size and
+draws nothing, so it has no bounds). The ring riding out to be renamed is exempt (it
 stands in box B). Picture: `glass-in-the-kit/render-dock3-1-before.png` and `render-dock3-1-after.png` (keyboard up, the
-column caught between two rings).
+column caught between two rings: before, three rings in slices; after, the one whole ring). The pictures come from
+`KitEdgeDockFollowUpPicturesTest` (desktop's Skia, Glass dark); the "before" ones from the same scenes on the commit before the
+follow-ups.
 
 **2. `KitDockModel.offersNew` (default true).** False: no "+" in the strip and the strip has no foot (it is 60 dp shorter,
 `DockColumn.foot`), no "New conversation" row in the list (and the list's box is as much shorter), and the foot zone takes
