@@ -884,8 +884,9 @@ private fun ConversationRow(
     val title = rowTitleText(row.title)
     val canArchive = flags.canArchive
     val status =
-        // While the person's answer is held ("Allowed · Undo" under the row) the state word must not say "Needs you".
-        if (flags.held != null) null
+        // While the person's answer is held ("Allowed · Undo" under the row) or a chosen answer to a question is held or
+        // on its way, the state word must not say "Needs you".
+        if (flags.held != null || flags.heldQuestion != null || flags.questionSending) null
         // H4 (F: chats_home_screen.dart:901): a finished conversation that cannot reopen says so before Done/Stopped.
         else if (HomeRowStatusRules.saysCantReopen(row)) words.cantReopen
         else when (row.status) {
@@ -900,7 +901,7 @@ private fun ConversationRow(
             RowStatus.None -> null
         }
     val tone =
-        if (flags.held != null) KitRowStateTone.Quiet
+        if (flags.held != null || flags.heldQuestion != null || flags.questionSending) KitRowStateTone.Quiet
         else when (row.status) {
             RowStatus.NeedsYou -> KitRowStateTone.NeedsYou
             RowStatus.Running -> KitRowStateTone.Running
