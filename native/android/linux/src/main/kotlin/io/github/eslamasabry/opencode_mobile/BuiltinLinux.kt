@@ -1516,8 +1516,12 @@ class BuiltinLinux(private val context: Context) {
         )
     }
 
-    /** Private auth output bypasses neither the generic receipt filter nor owner checks. */
-    fun agentAuthProbe(arguments: Map<*, *>): Map<String, Any?> = privateAgentAuth.run(arguments)
+    /**
+     * Private auth output bypasses neither the generic receipt filter nor owner checks. [stop] lets a person's step
+     * end a read's probe instead of waiting for it.
+     */
+    fun agentAuthProbe(arguments: Map<*, *>, stop: ProbeStop? = null): Map<String, Any?> =
+        privateAgentAuth.run(arguments, stop)
 
     val agentSignIn by lazy { PhoneAgentSignIn(this) }
     val agentHost by lazy { PhoneAgentHost(this) }
