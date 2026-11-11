@@ -166,36 +166,63 @@ class GlassInTheKitStep1Test {
             SurfaceRole.Field to SurfaceLevel.Surface1,
         )
 
+    /**
+     * The worst margin (contrast less its target) of a clear pane's words and icons, the pane thickened as the kit
+     * thickens it (over the capped spots), over the page as drawn (chroma [AuroraImage.CHROMA_DARK]) with [share] of a
+     * light's peak added on every spot.
+     */
+    private fun clearPaneMargin(pack: PackId, id: GlassLookId, role: SurfaceRole, level: SurfaceLevel, chosen: Boolean, share: Float): Pair<Double, String> {
+        val r = roles(pack, true)
+        val ground = r.ground.withAlpha(1f)
+        val measured = listOf(ground) + AuroraImage.clearSpotsOf(r.ground, r.accent, true)
+        val drawn = listOf(ground) + AuroraImage.clearSpotsOf(r.ground, r.accent, true, chroma = AuroraImage.CHROMA_DARK)
+        val behind = drawn + drawn.map { AuroraImage.lit(it, r.accent, share) }
+        val request = SurfaceRequest(r, role, Knobs(), level, selected = chosen, look = GlassLooks.of(id).spec)
+        val solid = request.levelFill.over(ground)
+        val wordsDp = if (role == SurfaceRole.Content) GlassFinish.PANE_WORDS_DP else 0f
+        val d = GlassFinish.thickened(GlassSpec.resolveClear(request)!!, r, solid, measured, GlassFinish.paneInks(r, solid), wordsDp = wordsDp)
+        val sheen = GlassFinish.sheenAt(d.sheen, wordsDp)
+        var worst = Double.MAX_VALUE
+        var what = ""
+        for (face in listOfNotNull(d.fill, d.fillStart)) for (spot in behind) {
+            val bare = face.over(spot)
+            for (seen in listOf(bare, sheen.over(bare))) for ((ink, target) in GlassFinish.textInks(r, solid)) {
+                val m = wcagContrast(ink, seen) - target
+                if (m < worst) { worst = m; what = "words $ink over $spot (target $target)" }
+            }
+            for ((ink, target) in GlassFinish.glyphInks(r, solid)) {
+                val m = wcagContrast(ink.withAlpha(1f), bare) - target
+                if (m < worst) { worst = m; what = "icon $ink over $spot (target $target)" }
+            }
+        }
+        return worst to what
+    }
+
     @Test
     fun `B-KIT-003 1b on the brighter page, at the brightest light, words and icons on a clear pane still read`() {
         println("glass-in-the-kit 1b: the brightest light adds ${"%.2f".format(brightestLight)} of a light's peak")
-        for (pack in PackId.entries) for (id in GlassLookId.entries) {
-            val r = roles(pack, true)
-            val ground = r.ground.withAlpha(1f)
-            // What the kit thickens over (capped), and what is really behind the pane: the page as drawn (chroma .20),
-            // each spot also under the brightest light.
-            val measured = listOf(ground) + AuroraImage.clearSpotsOf(r.ground, r.accent, true)
-            val drawn = listOf(ground) + AuroraImage.clearSpotsOf(r.ground, r.accent, true, chroma = AuroraImage.CHROMA_DARK)
-            val behind = drawn + drawn.map { AuroraImage.lit(it, r.accent, brightestLight) }
-            for ((role, level) in panes) for (chosen in listOf(false, true)) {
-                if (chosen && role != SurfaceRole.Content && role != SurfaceRole.Control) continue
-                val request = SurfaceRequest(r, role, Knobs(), level, selected = chosen, look = GlassLooks.of(id).spec)
-                val solid = request.levelFill.over(ground)
-                val wordsDp = if (role == SurfaceRole.Content) GlassFinish.PANE_WORDS_DP else 0f
-                val d = GlassFinish.thickened(GlassSpec.resolveClear(request)!!, r, solid, measured, GlassFinish.paneInks(r, solid), wordsDp = wordsDp)
-                val sheen = GlassFinish.sheenAt(d.sheen, wordsDp)
-                for (face in listOfNotNull(d.fill, d.fillStart)) for (spot in behind) {
-                    val bare = face.over(spot)
-                    for (seen in listOf(bare, sheen.over(bare))) for ((ink, target) in GlassFinish.textInks(r, solid)) {
-                        val c = wcagContrast(ink, seen)
-                        assertTrue(c >= target - 1e-3, "$id $pack $role/$level chosen=$chosen over $spot: words $c < $target")
-                    }
-                    for ((ink, target) in GlassFinish.glyphInks(r, solid)) {
-                        val c = wcagContrast(ink.withAlpha(1f), bare)
-                        assertTrue(c >= target - 1e-3, "$id $pack $role/$level over $spot: icon $c < $target")
-                    }
-                }
+        // The most light every pane still reads under, as a share of a light's peak: what LIGHT_PEAK_LUMA may be at most.
+        var most = Float.MAX_VALUE
+        var at = ""
+        for (pack in PackId.entries) for (id in GlassLookId.entries) for ((role, level) in panes) for (chosen in listOf(false, true)) {
+            if (chosen && role != SurfaceRole.Content && role != SurfaceRole.Control) continue
+            val case = "$id $pack $role/$level chosen=$chosen"
+            val (bare, why) = clearPaneMargin(pack, id, role, level, chosen, 0f)
+            if (bare < -1e-3) { most = 0f; at = "$case without any light (chroma alone): $bare, $why"; continue }
+            var lo = 0f
+            var hi = 4f
+            repeat(16) {
+                val mid = (lo + hi) / 2f
+                if (clearPaneMargin(pack, id, role, level, chosen, mid).first >= -1e-3) lo = mid else hi = mid
             }
+            if (lo < most) { most = lo; at = "$case: ${clearPaneMargin(pack, id, role, level, chosen, hi).second}" }
+        }
+        println("glass-in-the-kit 1b: every clear pane reads under up to ${"%.3f".format(most)} of a light's peak " +
+            "(peak luma ${"%.4f".format(most * AuroraImage.LIGHT_PEAK_LUMA)}); tightest: $at")
+        for (pack in PackId.entries) for (id in GlassLookId.entries) for ((role, level) in panes) for (chosen in listOf(false, true)) {
+            if (chosen && role != SurfaceRole.Content && role != SurfaceRole.Control) continue
+            val (m, why) = clearPaneMargin(pack, id, role, level, chosen, brightestLight)
+            assertTrue(m >= -1e-3, "$id $pack $role/$level chosen=$chosen at the brightest light: $why, margin $m")
         }
     }
 
