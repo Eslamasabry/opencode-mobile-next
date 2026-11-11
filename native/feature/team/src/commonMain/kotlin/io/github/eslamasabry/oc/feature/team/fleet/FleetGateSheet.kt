@@ -51,8 +51,6 @@ import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.state.KitTechnicalValue
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import io.github.eslamasabry.oc.ui.words.res.*
-import org.jetbrains.compose.resources.StringResource
-import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
 
 private const val SEP = " · "
@@ -63,7 +61,7 @@ public fun rememberFleetNow(): Long {
     var now by remember { mutableLongStateOf(io.github.eslamasabry.oc.core.common.CommonBindings.clock().now().toEpochMilliseconds()) }
     LaunchedEffect(Unit) {
         while (true) {
-            delay(30_000)
+            kotlinx.coroutines.delay(30_000)
             now = io.github.eslamasabry.oc.core.common.CommonBindings.clock().now().toEpochMilliseconds()
         }
     }
@@ -128,7 +126,7 @@ private fun kicker(ui: FleetGateUi, nowMs: Long): String {
     return listOfNotNull(stringResource(kindWord(ui.kind)), link, ageWords(ui.createdAtMs, nowMs)).joinToString(SEP)
 }
 
-private fun kindWord(kind: GateKind): StringResource =
+private fun kindWord(kind: GateKind): org.jetbrains.compose.resources.StringResource =
     when (kind) {
         GateKind.Choice -> Res.string.teamUiHomeGateKindChoice
         GateKind.Confirmation -> Res.string.teamUiHomeGateKindConfirmation
@@ -330,7 +328,7 @@ private fun WorkRows(items: List<FleetGateWork>, label: String, tag: String) {
     }
 }
 
-private fun failureWords(cls: FleetFailureClass): Pair<StringResource, StringResource> =
+private fun failureWords(cls: FleetFailureClass) =
     when (cls) {
         FleetFailureClass.Agent -> Res.string.teamUiGateFailureClassAgent to Res.string.teamUiGateFailureActionAgent
         FleetFailureClass.Execution -> Res.string.teamUiGateFailureClassExecution to Res.string.teamUiGateFailureActionExecution
@@ -343,7 +341,7 @@ private fun failureWords(cls: FleetFailureClass): Pair<StringResource, StringRes
         FleetFailureClass.Unknown -> Res.string.teamUiGateFailureClassUnknown to Res.string.teamUiGateFailureActionUnknown
     }
 
-private fun workStateWord(state: WorkState): StringResource =
+private fun workStateWord(state: WorkState): org.jetbrains.compose.resources.StringResource =
     when (state) {
         WorkState.Queued -> Res.string.teamUiWorkStateQueued
         WorkState.Ready -> Res.string.teamUiWorkStateReady

@@ -9,7 +9,6 @@ import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
-import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.team.TeamEngine
 import io.github.eslamasabry.oc.engine.team.TeamPhase
 import io.github.eslamasabry.oc.engine.team.fleet.FleetAgentAction
@@ -20,7 +19,6 @@ import io.github.eslamasabry.oc.feature.team.fleet.FleetMergeController
 import io.github.eslamasabry.oc.feature.team.fleet.FleetMergeUi
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.TeamRoute
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -158,7 +156,7 @@ public class FleetAgentViewModel(
     private val engine: TeamEngine,
     private val nav: AppNavigator,
     private val clock: kotlin.time.Clock,
-    private val redactor: Redactor,
+    private val redactor: io.github.eslamasabry.oc.core.security.Redactor,
 ) : ViewModel(), FleetAgentActions {
     private val profile = route.profileId.raw
     private val agentId = route.agentId
@@ -174,7 +172,7 @@ public class FleetAgentViewModel(
     private val local = MutableStateFlow(Local())
 
     /** The agent's session once the team names it; the output is followed for as long as the page is shown. */
-    @OptIn(ExperimentalCoroutinesApi::class)
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     private val feed: Flow<FleetOutputFeed> =
         fleet
             .map { f ->
@@ -330,7 +328,7 @@ public class FleetRunViewModel(
     private val engine: TeamEngine,
     private val nav: AppNavigator,
     private val clock: kotlin.time.Clock,
-    private val redactor: Redactor,
+    private val redactor: io.github.eslamasabry.oc.core.security.Redactor,
 ) : ViewModel(), FleetRunActions {
     private val profile = route.profileId.raw
     private val fleet = engine.fleetState(profile).stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_AFTER_MS), FleetState())

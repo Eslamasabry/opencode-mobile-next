@@ -9,7 +9,6 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.team.ui.HostGuide
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
@@ -88,7 +87,7 @@ public fun FleetConnectScreen(state: FleetConnectUi, actions: FleetConnectAction
                             inset.testTag("team-address-url"),
                             kind = KitFieldKind.Url,
                             placeholder = stringResource(Res.string.teamUiAddAddressHint),
-                            imeAction = ImeAction.Next,
+                            imeAction = androidx.compose.ui.text.input.ImeAction.Next,
                             onTextChanged = { actions.edited() },
                         )
                     }
@@ -99,7 +98,7 @@ public fun FleetConnectScreen(state: FleetConnectUi, actions: FleetConnectAction
                             inset.testTag("team-address-city"),
                             kind = KitFieldKind.Mono,
                             helper = stringResource(Res.string.teamHostFormTeamHelper),
-                            imeAction = ImeAction.Done,
+                            imeAction = androidx.compose.ui.text.input.ImeAction.Done,
                             onSubmit = submit,
                             onTextChanged = { actions.edited() },
                         )
