@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.model.StreamStatus
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
+import io.github.eslamasabry.oc.engine.runtime.lifecycle.ReadyReconnect
 import io.github.eslamasabry.oc.engine.runtime.lifecycle.ReturnToForeground
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
@@ -55,7 +56,10 @@ class NativePhoneHealing(
     fun start() {
         if (started) return
         started = true
-        runtime.onManualReady = { connect(automatic = false) }
+        // Never awaited inside the start: the start may be the connection gate's restart, which holds the locks this
+        // connect needs (M1, "Connecting" for good after a phone restart).
+        val afterStart = ReadyReconnect(scope) { connect(automatic = false) }
+        runtime.onManualReady = { afterStart.announce() }
         app.registerActivityLifecycleCallbacks(
             object : Application.ActivityLifecycleCallbacks {
                 override fun onActivityResumed(activity: Activity) {
