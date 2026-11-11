@@ -53,7 +53,13 @@ public enum class TurnEndNote {
     CutOff,
 
     /** [CutOff] before any words came: the way on is to send the prompt again. */
-    CutOffBeforeReply;
+    CutOffBeforeReply,
+
+    /**
+     * The person pressed Deny on the step that ended the reply and the agent stopped there (Flutter hides this inside
+     * the step row; the surface says it in the row's own words, "You declined this").
+     */
+    Declined;
 
     /** The server's own stop, which says why in its own words instead of the generic "Stopped". */
     public val isServerStop: Boolean
@@ -138,11 +144,22 @@ internal fun transcriptReading(
                     ?.let { stopNote(it.reason) }
                     ?.takeIf { it.isServerStop }
             val cutOff = prompt != null && !command && !compact && idleSaid && cutOff(turn, assistants, outcome)
-            if (cutOff)
+            // The W4 rule (endsOnRefusal), and no words after the refused step: a reply that went on past a refusal
+            // and finished keeps no such line. A Stop the person pressed keeps "Stopped". Only an ended turn gets
+            // here (a live one is skipped above), so a Deny the agent may still answer by trying something else
+            // says nothing yet. One closing line per turn: Declined, else cut off, else the server's own stop.
+            val declined =
+                prompt != null && !command && !compact && !cutOff &&
+                    !(outcome is io.github.eslamasabry.oc.core.domain.events.RunOutcome.Interrupted &&
+                        outcome.reason == io.github.eslamasabry.oc.core.domain.events.InterruptReason.User) &&
+                    io.github.eslamasabry.oc.engine.transcript.ledger.endsOnRefusal(turn) &&
+                    noWordsAfterLastStep(assistants)
+            if (declined) endNotes[turn.turnId] = TurnEndNote.Declined
+            else if (cutOff)
                 endNotes[turn.turnId] = if (said) TurnEndNote.CutOff else TurnEndNote.CutOffBeforeReply
             else if (prompt != null && !command && !compact && serverStop != null && said)
                 endNotes[turn.turnId] = serverStop
-            if (!cutOff && prompt != null && !command && !compact && !said) {
+            if (!declined && !cutOff && prompt != null && !command && !compact && !said) {
                 val last = assistants.lastOrNull()?.info
                 val end =
                     when {
@@ -272,7 +289,18 @@ private fun cutOff(
     // A finish reason ends a reply too: Codex keeps no completion time for a turn the person interrupted.
     if (info.time?.completedMs != null || info.finish != null || info.errorText != null || info.errorKind != null)
         return false
-    return !io.github.eslamasabry.oc.engine.transcript.ledger.endsOnRefusal(turn)
+    // A reply that went on in words past the refused step (a refusal with a message lets the agent carry on) and was
+    // then lost is cut off like any other; only a turn that stopped at the refusal is the person's answer.
+    return !(io.github.eslamasabry.oc.engine.transcript.ledger.endsOnRefusal(turn) && noWordsAfterLastStep(assistants))
+}
+
+/** No words came after the turn's last tool step (so the reply did not go on past it and finish). */
+private fun noWordsAfterLastStep(
+    assistants: List<io.github.eslamasabry.oc.core.model.transcript.MessageWithParts>,
+): Boolean {
+    val parts = assistants.flatMap { it.parts }
+    val lastTool = parts.indexOfLast { it.type == PartType.Tool }
+    return parts.drop(lastTool + 1).none { it.type == PartType.Text && it.text.isNotBlank() }
 }
 
 private fun passingWords(text: String): Boolean {

@@ -392,6 +392,8 @@ private fun TurnEndLine(note: io.github.eslamasabry.oc.feature.chat.presentation
                     Res.string.kitToolStopped
                 io.github.eslamasabry.oc.feature.chat.presentation.TurnEndNote.Failed ->
                     Res.string.chatReplyFailedOther
+                io.github.eslamasabry.oc.feature.chat.presentation.TurnEndNote.Declined ->
+                    Res.string.kitToolDeclined
                 // F: kit_turn.dart:648-652 `KitTurnPhase.interrupted` → kitTurnInterrupted.
                 io.github.eslamasabry.oc.feature.chat.presentation.TurnEndNote.CutOff,
                 io.github.eslamasabry.oc.feature.chat.presentation.TurnEndNote.CutOffBeforeReply ->
