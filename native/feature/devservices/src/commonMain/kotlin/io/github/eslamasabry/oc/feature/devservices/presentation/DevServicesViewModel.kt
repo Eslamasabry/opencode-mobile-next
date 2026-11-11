@@ -67,6 +67,8 @@ public class DevServicesViewModel(
 
     override fun closeLogs(): Unit = model.closeLogs()
 
+    override fun reportFailure(): Unit = model.reportFailure()
+
     override fun confirm(): Unit = model.confirm()
 
     override fun cancel(): Unit = model.cancel()

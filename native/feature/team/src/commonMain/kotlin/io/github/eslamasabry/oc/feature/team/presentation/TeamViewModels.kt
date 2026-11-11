@@ -347,6 +347,7 @@ public class TeamTaskViewModel(
     private val engine: TeamEngine,
     private val nav: AppNavigator,
     private val clock: kotlin.time.Clock,
+    private val failures: TeamFailureReports,
 ) : ViewModel(), TeamTaskActions {
     private val profile = route.profileId.raw
 
@@ -463,6 +464,13 @@ public class TeamTaskViewModel(
 
     override fun retry() {
         viewModelScope.launch { engine.refresh(profile) }
+    }
+
+    /** Only a failed task is reported, and only with its own id and title (never another task's log). */
+    override fun reportFailure() {
+        val task = engine.state(profile).value.workspace?.project(route.projectId)?.tasks?.firstOrNull { it.id == route.taskId } ?: return
+        if (task.status != "failed") return
+        failures.report(TeamFailureKind.Work, task.id, task.title, "", "")
     }
 
     override fun dismissRefusal() {

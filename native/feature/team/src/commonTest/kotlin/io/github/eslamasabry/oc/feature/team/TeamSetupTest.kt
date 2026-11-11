@@ -17,6 +17,9 @@ import io.github.eslamasabry.oc.engine.team.TeamConfig
 import io.github.eslamasabry.oc.engine.team.TeamEngine
 import io.github.eslamasabry.oc.engine.team.TeamHost
 import io.github.eslamasabry.oc.engine.team.TeamRead
+import io.github.eslamasabry.oc.feature.team.presentation.NoTeamFailureReports
+import io.github.eslamasabry.oc.feature.team.presentation.TeamFailureKind
+import io.github.eslamasabry.oc.feature.team.presentation.TeamFailureReports
 import io.github.eslamasabry.oc.feature.team.presentation.PhoneOffKind
 import io.github.eslamasabry.oc.feature.team.presentation.SetupMark
 import io.github.eslamasabry.oc.feature.team.presentation.SetupNote
@@ -63,7 +66,7 @@ class TeamSetupTest {
     private val redactor = Redactor()
     private val redact: (String) -> Redacted = redactor::details
 
-    private class Phone(var serverRunning: Boolean = false) : PhoneSetupPorts {
+    private class Phone(var serverRunning: Boolean = false, var engineFails: Boolean = false) : PhoneSetupPorts {
         var kept = false
         val calls = mutableListOf<String>()
 
@@ -77,7 +80,9 @@ class TeamSetupTest {
 
         override suspend fun closeTerminals(): Outcome<Unit> = Outcome.Ok(Unit)
 
-        override suspend fun startEngine(): Outcome<SetupHealth> = Outcome.Ok(SetupHealth(boundary = true, canExecute = true, boundaryTier = "proot"))
+        override suspend fun startEngine(): Outcome<SetupHealth> =
+            if (engineFails) Outcome.Failed(io.github.eslamasabry.oc.core.common.Failure.Unexpected())
+            else Outcome.Ok(SetupHealth(boundary = true, canExecute = true, boundaryTier = "proot"))
 
         override suspend fun stopEngine() = Unit
 
@@ -109,7 +114,7 @@ class TeamSetupTest {
     }
 
     private fun viewModel(phone: Phone, nav: FakeNav = FakeNav()) =
-        TeamSetupViewModel(TeamRoute.TurnOn(pid), TeamEngine(Host(phone)), nav, FIXED_CLOCK, Redactor())
+        TeamSetupViewModel(TeamRoute.TurnOn(pid), TeamEngine(Host(phone)), nav, FIXED_CLOCK, Redactor(), NoTeamFailureReports())
 
     @Test
     fun `B-AGENT-294 opening the page starts the run and shows the four steps done with their times`() =
@@ -233,4 +238,39 @@ class TeamSetupTest {
         assertEquals(3, working.step)
         assertEquals(4, working.of)
     }
+
+    @Test
+    fun `G5 a failed set-up reports itself once, and a finished one reports nothing`() =
+        runTest(dispatcher) {
+            val sent = mutableListOf<TeamFailureKind>()
+            val failing = Phone(engineFails = true)
+            val vm =
+                TeamSetupViewModel(
+                    TeamRoute.TurnOn(pid),
+                    TeamEngine(Host(failing)),
+                    FakeNav(),
+                    FIXED_CLOCK,
+                    Redactor(),
+                    TeamFailureReports { kind, _, _, _, _ -> sent += kind },
+                )
+            watch(vm.state)
+            runCurrent()
+            assertEquals(SetupPhase.Failed, vm.state.value.phase)
+            vm.reportFailure()
+            assertEquals(listOf(TeamFailureKind.Setup), sent)
+
+            val ok =
+                TeamSetupViewModel(
+                    TeamRoute.TurnOn(pid),
+                    TeamEngine(Host(Phone())),
+                    FakeNav(),
+                    FIXED_CLOCK,
+                    Redactor(),
+                    TeamFailureReports { kind, _, _, _, _ -> sent += kind },
+                )
+            watch(ok.state)
+            runCurrent()
+            ok.reportFailure()
+            assertEquals(1, sent.size)
+        }
 }

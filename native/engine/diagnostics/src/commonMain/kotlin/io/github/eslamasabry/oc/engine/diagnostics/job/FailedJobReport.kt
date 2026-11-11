@@ -85,6 +85,27 @@ public class FailedJobReport private constructor(
             )
         }
 
+        /**
+         * A failed AI Team job or development service of [kind] (port of `teamSetup`, `teamWork`, `teamGate` and
+         * `developmentService`): the caller has already decided the job failed. Every field is redacted and bounded
+         * here; [log] is empty when the job kept none.
+         */
+        public fun job(
+            redactor: Redactor,
+            kind: FailedJobKind,
+            jobId: String,
+            title: String,
+            detail: String = "",
+            log: String = "",
+        ): FailedJobReport =
+            FailedJobReport(
+                kind = kind,
+                jobId = bounded(redactor, jobId.ifBlank { "unknown" }, 256),
+                title = bounded(redactor, title, 256),
+                detail = bounded(redactor, detail, 2048),
+                logExcerpt = redactor.excerpt(log, MAX_LOG_LINES, MAX_LOG_CHARACTERS),
+            )
+
         private val ANSI_OSC = Regex("""\u001B][^\u0007]*(?:\u0007|\u001B\\)""")
         private val ANSI_CSI = Regex("""\u001B\[[0-?]*[ -/]*[@-~]""")
 

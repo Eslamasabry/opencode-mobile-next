@@ -119,4 +119,16 @@ class FailedJobReportTest {
         assertEquals(FailedJobReport.MAX_LOG_CHARACTERS, large.logExcerpt.length)
         assertTrue(large.logExcerpt.endsWith("END"))
     }
+
+    @Test
+    fun `a failed team job of any kind carries its own id, title and no invented log`() {
+        val report = FailedJobReport.job(redactor, FailedJobKind.TeamWork, "task-7", "Build the cart", "Stopped", "")
+        assertEquals(FailedJobKind.TeamWork, report.kind)
+        assertEquals("task-7", report.jobId)
+        assertFalse(report.hasLog)
+        val attachment = report.toAttachment()
+        assertEquals("failed job · teamWork · task-7", attachment.source)
+        assertEquals("Build the cart", attachment.title)
+        assertEquals("unknown", FailedJobReport.job(redactor, FailedJobKind.TeamSetup, " ", "AI Team setup").jobId)
+    }
 }

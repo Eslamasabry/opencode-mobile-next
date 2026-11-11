@@ -258,6 +258,19 @@ public fun DevServicesScreen(state: DevServicesUi, actions: DevServicesActions) 
                             icon = KitIcons.restart,
                         )
                     },
+            tertiary =
+                if (state.log?.canReport == true)
+                    listOf(
+                        KitAction(
+                            stringResource(Res.string.failedJobReport),
+                            {
+                                actions.reportFailure()
+                                actions.closeLogs()
+                            },
+                            icon = KitIcons.bug,
+                        )
+                    )
+                else emptyList(),
             closeLabel = stringResource(Res.string.kitSheetClose),
         ) {
             state.log?.let { log ->

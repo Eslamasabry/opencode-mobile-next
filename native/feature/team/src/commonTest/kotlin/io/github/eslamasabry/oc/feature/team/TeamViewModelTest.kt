@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.engine.team.TeamHostMode
 import io.github.eslamasabry.oc.engine.team.TeamPhase
 import io.github.eslamasabry.oc.engine.team.TeamProvider
 import io.github.eslamasabry.oc.engine.team.TeamWorkspace
+import io.github.eslamasabry.oc.feature.team.presentation.NoTeamFailureReports
 import io.github.eslamasabry.oc.feature.team.presentation.BoardColumn
 import io.github.eslamasabry.oc.feature.team.presentation.TeamBoardViewModel
 import io.github.eslamasabry.oc.feature.team.presentation.TeamHomeViewModel
@@ -203,7 +204,7 @@ class TeamViewModelTest {
             TeamProjectViewModel(TeamRoute.Project(pid, "shop"), engine, nav, clock).openTask("t2")
             TeamBoardViewModel(TeamRoute.Board(pid, "shop"), engine, nav, clock).openTask("t5")
             assertEquals(listOf<AppRoute>(TeamRoute.Task(pid, "shop", "t2"), TeamRoute.Task(pid, "shop", "t5")), nav.opened)
-            val vm = TeamTaskViewModel(TeamRoute.Task(pid, "shop", "t2"), engine, nav, clock)
+            val vm = TeamTaskViewModel(TeamRoute.Task(pid, "shop", "t2"), engine, nav, clock, NoTeamFailureReports())
             watch(vm.state)
             runCurrent()
             vm.message("  try the sandbox key ")
