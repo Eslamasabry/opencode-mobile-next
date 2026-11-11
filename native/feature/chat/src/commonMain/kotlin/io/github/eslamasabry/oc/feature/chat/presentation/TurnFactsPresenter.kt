@@ -177,17 +177,19 @@ public class TurnFactsPresenter(private val clock: Clock) {
      */
     public fun present(feed: TurnFeed, nowMs: Long, waitingForYou: Boolean = false): TurnFactsUi {
         val snapshot = feed.ledger
+        // W4: a run the person's refusal ended is not a stop, nor a server restart (OC2 reports it as "shutdown").
+        val outcome = StoppedSteps.outcomeBesidesRefusal(feed.lastOutcome, snapshot.turns.lastOrNull(), feed.busy)
         if (
             readingSnapshot !== snapshot ||
                 readingBusy != feed.busy ||
-                readingOutcome != feed.lastOutcome
+                readingOutcome != outcome
         ) {
-            reading = transcriptReading(snapshot, feed.busy, feed.lastOutcome)
+            reading = transcriptReading(snapshot, feed.busy, outcome)
             readingSnapshot = snapshot
             readingBusy = feed.busy
-            readingOutcome = feed.lastOutcome
+            readingOutcome = outcome
         }
-        val stopped = feed.lastOutcome is RunOutcome.Interrupted
+        val stopped = outcome is RunOutcome.Interrupted
         // P-102: a step the stop ended reads Stopped, not Failed, live and after a relaunch.
         val work =
             turnWork(snapshot, feed.busy, stopped = stopped, waitingForYou = waitingForYou)

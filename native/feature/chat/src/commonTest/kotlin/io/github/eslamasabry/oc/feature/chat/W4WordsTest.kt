@@ -13,6 +13,9 @@ import io.github.eslamasabry.oc.engine.transcript.ledger.WorkLineState
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.isDeclinedToolError
 import io.github.eslamasabry.oc.core.common.text.PlainMarkdown
 import io.github.eslamasabry.oc.feature.chat.presentation.StoppedSteps
+import io.github.eslamasabry.oc.feature.chat.presentation.TurnEndNote
+import io.github.eslamasabry.oc.core.domain.events.InterruptReason
+import io.github.eslamasabry.oc.core.domain.events.RunOutcome
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsPresenter
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestCardRules
 import io.github.eslamasabry.oc.feature.chat.ui.shownStepDurationMs
@@ -100,6 +103,42 @@ class W4WordsTest {
             assertEquals(WorkLineState.Done, work.state, refusal)
             assertTrue(StoppedSteps.endedOnRefusal(work), refusal)
         }
+    }
+
+    @Test
+    fun `W4 gate a refusal the server ends as shutdown never reads as a restart, and offers no Continue`() {
+        // Device run-6: OpenCode 2 ends a declined run as interrupted with reason "shutdown" (its default).
+        val k = TurnFeedKeeper(sid)
+        k.history(listOf(userMessage("write a file"), reply(tool(ToolStatus.Error, "write", "The user declined this tool call", mapOf("filePath" to "/p/d3.txt")))))
+        val feed = k.feed.value.copy(lastOutcome = RunOutcome.Interrupted(InterruptReason.Shutdown))
+        val facts = TurnFactsPresenter(FixedClock).present(feed, 60_000)
+        val work = assertNotNull(facts.work["m1"])
+        assertEquals(StepState.Declined, work.steps.single().state)
+        assertEquals(WorkLineState.Done, work.state)
+        assertTrue(StoppedSteps.endedOnRefusal(work))
+        assertEquals(null, facts.reading.endNotes["m1"])
+    }
+
+    @Test
+    fun `W4 gate a real server restart still says restart and offers Continue`() {
+        val k = TurnFeedKeeper(sid)
+        val words = Part("w1", "m2", sid, PartType.Text, "text", text = "I'll write these to a file.")
+        k.history(listOf(userMessage("write a file"), reply(words, tool(ToolStatus.Error, "write", "Tool execution interrupted", mapOf("filePath" to "/p/d3.txt")))))
+        val feed = k.feed.value.copy(lastOutcome = RunOutcome.Interrupted(InterruptReason.Shutdown))
+        val facts = TurnFactsPresenter(FixedClock).present(feed, 60_000)
+        assertEquals(TurnEndNote.StoppedServerRestart, facts.reading.endNotes["m1"])
+        assertTrue(TurnEndNote.StoppedServerRestart.canContinue)
+        assertEquals(false, StoppedSteps.endedOnRefusal(facts.work["m1"]))
+    }
+
+    @Test
+    fun `W4 gate a Stop the person pressed after a refusal still reads Stopped`() {
+        val k = TurnFeedKeeper(sid)
+        k.history(listOf(userMessage("write a file"), reply(tool(ToolStatus.Error, "write", "The user declined this tool call", mapOf("filePath" to "/p/d3.txt")))))
+        val feed = k.feed.value.copy(lastOutcome = RunOutcome.Interrupted(InterruptReason.User))
+        val work = assertNotNull(TurnFactsPresenter(FixedClock).present(feed, 60_000).work["m1"])
+        assertEquals(WorkLineState.Stopped, work.state)
+        assertEquals(false, StoppedSteps.endedOnRefusal(work))
     }
 
     @Test

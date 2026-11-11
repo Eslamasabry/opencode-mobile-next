@@ -166,6 +166,25 @@ private fun work(
     )
 }
 
+/**
+ * Whether [turn]'s last tool call is one the person declined at its permission card ([isDeclinedToolError], the one
+ * place that reads the servers' refusal sentence). OpenCode 2 ends such a run as interrupted with no reason of its own,
+ * and its run lifecycle fills in "shutdown" (`SessionExecution.settled`: `reason ?? "shutdown"`), so the run's own
+ * outcome cannot tell a refusal from a restart: this can.
+ */
+public fun endsOnRefusal(turn: LedgerTurn): Boolean {
+    var last: Part? = null
+    for (m in turn.messages) {
+        if (m.info.role != Role.Assistant) continue
+        for (rawPart in m.parts) {
+            val p = backgroundShellToolPart(rawPart) ?: rawPart
+            if (p.type == PartType.Tool && p.tool != null && !isBackgroundTaskNotice(p.toolName ?: "")) last = p
+        }
+    }
+    val tool = last?.tool ?: return false
+    return tool.status == ToolStatus.Error && isDeclinedToolError(toolOutputView(tool, last.toolName).errorText)
+}
+
 private fun step(p: Part, live: Boolean): TurnStep? {
     val tool = p.tool ?: return null
     val state =
