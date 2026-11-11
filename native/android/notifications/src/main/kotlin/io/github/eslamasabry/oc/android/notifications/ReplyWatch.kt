@@ -283,6 +283,9 @@ public class ReplyWatchServiceBody(
 
     /** The person swiped the row away while `reply` was its only owner: the watch ends for that run only. */
     public fun onRowDismissed(run: ReplyRun) {
+        // A joined watch shows its words in the phone server's own foreground row and spends no budget: swiping that
+        // row away (Android 14+) clears it until the words change, and never ends the watch (its Finished alert stays).
+        if (joinedWatch) return
         if (!active || !owners.isOnly(StatusOwner.Reply) || displayedRun != run || run !in source.runs.value) return
         synchronized(dismissedRuns) { dismissedRuns += run }
         // Keep collecting for the other runs, including ones in another profile with the same session id.
