@@ -326,7 +326,7 @@ public fun ChatsScreen(
             state.brief?.let { brief -> item(key = "brief", contentType = "brief") { Box(kitItemMotion()) { BriefBlock(brief, rowWords, mask, actions, state) } } }
             if (state.archiveFailure != null)
                 item(key = "archive-failure", contentType = "archive-failure") {
-                  Box(kitItemMotion()) {
+                  Box(kitItemMotion().padding(horizontal = LocalKitTokens.current.gutter.dp)) {
                     // E04-S05: the row is already back in the list, so closing the notice changes nothing real.
                     KitNotice(
                         message =
@@ -372,7 +372,7 @@ public fun ChatsScreen(
             val unreachable = state.home.sources.filter { it.shown && it.unreachable && it.profile != state.home.opening?.profile }
             unreachable.forEach { source ->
                 item(key = "unreachable-${source.profile.raw}", contentType = "unreachable") {
-                    Box(kitItemMotion()) {
+                    Box(kitItemMotion().padding(horizontal = LocalKitTokens.current.gutter.dp)) {
                         KitNotice(
                             message = stringResource(Res.string.chatsHomeUnreachableShort, KitBidi.auto(source.name)),
                             actions = listOf(KitLineAction(stringResource(Res.string.kitTryAgain), { actions.retrySource(source.profile) })),
@@ -388,7 +388,7 @@ public fun ChatsScreen(
                 }
             if (partial.isNotEmpty()) {
                 item(key = "incomplete", contentType = "incomplete") {
-                    Box(kitItemMotion()) {
+                    Box(kitItemMotion().padding(horizontal = LocalKitTokens.current.gutter.dp)) {
                         val names = KitBidi.auto(partial.joinToString(", "))
                         if (state.refreshing) KitNotice(stringResource(Res.string.chatsHomeStillLoading, names), tone = StatusTone.Progress)
                         else
@@ -411,11 +411,11 @@ public fun ChatsScreen(
             if (state.phase != ChatsPhase.Opening) {
                 if (state.agentNotices.restart)
                     item(key = "agents-restart", contentType = "agent-notice") {
-                        Box(kitItemMotion()) { KitNotice(stringResource(Res.string.agentsRestartLine)) }
+                        Box(kitItemMotion().padding(horizontal = LocalKitTokens.current.gutter.dp)) { KitNotice(stringResource(Res.string.agentsRestartLine)) }
                     }
                 state.agentNotices.lines.forEach { notice ->
                     item(key = "agent-${notice.agentId}-${notice.kind.name}", contentType = "agent-notice") {
-                        Box(kitItemMotion()) {
+                        Box(kitItemMotion().padding(horizontal = LocalKitTokens.current.gutter.dp)) {
                             val name = KitBidi.auto(notice.agentName)
                             when (notice.kind) {
                                 HomeAgentNoticeKind.SignedOut ->
