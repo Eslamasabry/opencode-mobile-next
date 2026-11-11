@@ -134,4 +134,33 @@ class ConnectMethodsTest {
         assertTrue(connectPromptVisible(q("key" to "a", "op" to "neq", "value" to "x"), mapOf("a" to "y")))
         assertTrue(connectPromptVisible(buildJsonObject { put("key", "plain") }, emptyMap()))
     }
+
+    @Test
+    fun `W4-PROVFORMS-GATE every condition in the list must hold, and a boolean or number value compares as text`() {
+        val prompt =
+            kotlinx.serialization.json.JsonObject(
+                mapOf(
+                    "key" to kotlinx.serialization.json.JsonPrimitive("region"),
+                    "when" to
+                        kotlinx.serialization.json.JsonArray(
+                            listOf(
+                                buildJsonObject { put("key", "mode"); put("op", "eq"); put("value", "advanced") },
+                                buildJsonObject { put("key", "managed"); put("op", "neq"); put("value", true) },
+                            )
+                        ),
+                )
+            )
+        assertTrue(connectPromptVisible(prompt, mapOf("mode" to "advanced", "managed" to "false")))
+        assertFalse(connectPromptVisible(prompt, mapOf("mode" to "advanced", "managed" to "true")))
+        assertFalse(connectPromptVisible(prompt, mapOf("mode" to "basic", "managed" to "false")))
+        // An operator the recording does not have leaves the field shown rather than hiding it for good.
+        val unknown =
+            kotlinx.serialization.json.JsonObject(
+                mapOf(
+                    "key" to kotlinx.serialization.json.JsonPrimitive("x"),
+                    "when" to buildJsonObject { put("key", "mode"); put("op", "in"); put("value", "a") },
+                )
+            )
+        assertTrue(connectPromptVisible(unknown, mapOf("mode" to "b")))
+    }
 }
