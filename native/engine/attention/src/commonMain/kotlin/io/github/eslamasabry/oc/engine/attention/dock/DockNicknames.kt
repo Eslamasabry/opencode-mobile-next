@@ -17,17 +17,53 @@ import kotlinx.serialization.json.JsonPrimitive
 /** The one key the dock keeps: `oc.dockNames.<profileId>`, a JSON object of session id to nickname. */
 public object DockKeys {
     public const val NAMES_PREFIX: String = "oc.dockNames."
+    public const val REMOVED_PREFIX: String = "oc.dockRemoved."
     public const val OWNER: String = ":engine:attention"
+
+    public fun removedKey(profile: ProfileId): String = REMOVED_PREFIX + profile.raw
 
     public fun namesKey(profile: ProfileId): String = NAMES_PREFIX + profile.raw
 
     public val SHAPES: List<KeyShape> =
-        listOf(KeyShape(NAMES_PREFIX, KeyScope.Profile, PrefType.Str, OWNER, "edge dock nicknames, session id to name"))
+        listOf(
+            KeyShape(NAMES_PREFIX, KeyScope.Profile, PrefType.Str, OWNER, "edge dock nicknames, session id to name"),
+            KeyShape(REMOVED_PREFIX, KeyScope.Profile, PrefType.Str, OWNER, "edge dock removed conversations, session ids"),
+        )
 
     /** Registers the key shape so the profile deletion sweep finds it. */
     public fun register(scope: ProfileScope) {
         SHAPES.forEach(scope::register)
     }
+}
+
+/** The removed set of the dock, one JSON array of session ids per profile under [DockKeys.removedKey]. */
+public class DockRemovals(private val store: AttentionKeyStore) {
+    private val lock = Mutex()
+
+    /** Unreadable or malformed data reads as none. At most [DockModel.MAX_REMOVED], newest last. */
+    public suspend fun load(profile: ProfileId): List<SessionId> =
+        lock.withLock {
+            val raw = runCatching { store.read(DockKeys.removedKey(profile)) }.getOrNull() ?: return@withLock emptyList()
+            val array = runCatching { Json.parseToJsonElement(raw) as? kotlinx.serialization.json.JsonArray }.getOrNull() ?: return@withLock emptyList()
+            array.mapNotNull { (it as? JsonPrimitive)?.takeIf { p -> p.isString }?.content?.takeIf { s -> s.isNotEmpty() } }
+                .distinct().takeLast(DockModel.MAX_REMOVED).map(::SessionId)
+        }
+
+    /** Saves what [current] returns, read inside the lock so the newest state always wins. An empty set removes the key. */
+    public suspend fun save(profile: ProfileId, current: () -> List<SessionId>): Boolean =
+        lock.withLock {
+            val ids = current().takeLast(DockModel.MAX_REMOVED)
+            runCatching {
+                if (ids.isEmpty()) {
+                    store.remove(DockKeys.removedKey(profile))
+                } else {
+                    store.write(
+                        DockKeys.removedKey(profile),
+                        kotlinx.serialization.json.JsonArray(ids.map { JsonPrimitive(it.raw) }).toString(),
+                    )
+                }
+            }.getOrDefault(false)
+        }
 }
 
 public sealed interface NicknameResult {

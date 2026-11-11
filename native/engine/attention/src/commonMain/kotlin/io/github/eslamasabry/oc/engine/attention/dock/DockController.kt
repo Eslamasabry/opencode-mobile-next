@@ -20,6 +20,7 @@ public class DockController(
     private val nicknames: DockNicknames,
     private val navigate: (ConversationRef) -> Unit,
     cap: Int = DockModel.DEFAULT_CAP,
+    private val removals: DockRemovals? = null,
 ) {
     private var model = DockModel.empty(cap)
     private val state = MutableStateFlow(model.ui)
@@ -29,8 +30,17 @@ public class DockController(
     public fun feed(event: DockEvent) {
         val next = model.reduce(event)
         if (next === model) return
+        val before = model.removedRefs
         model = next
         state.value = next.ui
+        val after = next.removedRefs
+        if (removals != null && before != after) {
+            for (profile in (before.toSet() - after.toSet() + (after.toSet() - before.toSet())).map { it.profileId }.toSet()) {
+                scope.launch {
+                    removals.save(profile) { model.removedRefs.filter { it.profileId == profile }.map { it.sessionId } }
+                }
+            }
+        }
         if (event is DockEvent.Deleted) scope.launch { nicknames.clear(event.ref) }
         if (event is DockEvent.ProfileGone) nicknames.forget(event.profile)
     }
@@ -54,6 +64,30 @@ public class DockController(
                 NicknameResult.Refused -> Unit
             }
         }
+    }
+
+    /**
+     * The person removes a ring (or a sub-agent). It stays out until it needs them or fails, or until [restore]; the
+     * conversation on screen cannot be removed. See [DockModel] for the full rule.
+     */
+    public fun remove(ref: ConversationRef) {
+        feed(DockEvent.Remove(ref))
+    }
+
+    /** The short Undo after [remove]. The model keeps no timer: the UI decides how long to offer it. */
+    public fun undoRemove(ref: ConversationRef) {
+        feed(DockEvent.Restore(ref))
+    }
+
+    /** Brings one conversation back from the hidden list. */
+    public fun restore(ref: ConversationRef) {
+        feed(DockEvent.Restore(ref))
+    }
+
+    /** Reads the removed set saved for a profile. Call when its connection goes live, before the first reconcile. */
+    public suspend fun loadRemoved(profile: ProfileId) {
+        val saved = removals?.load(profile).orEmpty()
+        if (saved.isNotEmpty()) feed(DockEvent.RemovedLoaded(profile, saved))
     }
 
     /** Clears Finished or Failed without opening the conversation. */

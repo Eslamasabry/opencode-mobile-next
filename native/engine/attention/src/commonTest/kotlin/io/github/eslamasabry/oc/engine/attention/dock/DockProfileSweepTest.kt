@@ -40,24 +40,31 @@ class DockProfileSweepTest {
         DockKeys.register(scope)
         val gone = ProfileId("1735000000000001")
         val kept = ProfileId("1735000000000002")
-        val names = DockNicknames(
-            object : AttentionKeyStore {
-                override suspend fun read(key: String): String? = (kv.get(key) as? io.github.eslamasabry.oc.core.data.kv.PrefValue.Str)?.value
+        val store = object : AttentionKeyStore {
+            override suspend fun read(key: String): String? = (kv.get(key) as? io.github.eslamasabry.oc.core.data.kv.PrefValue.Str)?.value
 
-                override suspend fun write(key: String, value: String): Boolean = kv.commit(lanes.app) { putString(key, value) } is Outcome.Ok
+            override suspend fun write(key: String, value: String): Boolean = kv.commit(lanes.app) { putString(key, value) } is Outcome.Ok
 
-                override suspend fun remove(key: String): Boolean = kv.commit(lanes.app) { remove(key) } is Outcome.Ok
-            },
-        )
+            override suspend fun remove(key: String): Boolean = kv.commit(lanes.app) { remove(key) } is Outcome.Ok
+        }
+        val names = DockNicknames(store)
+        val removals = DockRemovals(store)
+        removals.save(gone) { listOf(SessionId("s")) }
+        removals.save(kept) { listOf(SessionId("s")) }
         names.set(ConversationRef(gone, SessionId("s")), "Mine")
         names.set(ConversationRef(kept, SessionId("s")), "Theirs")
 
-        assertEquals(setOf("oc.dockNames.${gone.raw}"), scope.scopedKeys(gone).filter { it.startsWith("oc.dockNames.") }.toSet())
+        assertEquals(
+            setOf("oc.dockNames.${gone.raw}", "oc.dockRemoved.${gone.raw}"),
+            scope.scopedKeys(gone).filter { it.startsWith("oc.dock") }.toSet(),
+        )
         assertTrue(DockKeys.SHAPES.all { it in scope.shapes() }, "the key shape is registered")
 
         val swept = scope.sweep(gone)
         assertTrue(swept is Outcome.Ok)
         assertEquals(null, kv.get("oc.dockNames.${gone.raw}"))
+        assertEquals(null, kv.get("oc.dockRemoved.${gone.raw}"))
+        assertEquals(listOf(SessionId("s")), removals.load(kept))
         assertEquals("""{"s":"Theirs"}""", (kv.get("oc.dockNames.${kept.raw}") as io.github.eslamasabry.oc.core.data.kv.PrefValue.Str).value)
     }
 }

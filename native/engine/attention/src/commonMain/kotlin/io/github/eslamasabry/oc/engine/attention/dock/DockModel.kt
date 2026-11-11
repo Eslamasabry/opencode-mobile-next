@@ -61,8 +61,29 @@ public data class DockEntry(
     val children: ImmutableList<DockChild> = persistentListOf(),
     /** Sub-agents that did not fit [DockModel.childCap]. */
     val childOverflow: Int = 0,
+    /** This conversation's own pending requests, oldest first (a sub-agent's are on its [DockChild]). */
+    val requests: ImmutableList<DockRequestRef> = persistentListOf(),
+    /** False for the conversation on screen (or the one whose sub-agent is on screen). */
+    val removable: Boolean = true,
 ) {
     val name: String? get() = nickname ?: title
+}
+
+public enum class DockRequestKind { Permission, Question, Form }
+
+/**
+ * A request waiting on the person, as the stream and the reconcile read named it: enough for the UI to call the
+ * existing answer path later (the conversation ref is on the entry or child that carries it).
+ */
+public data class DockRequestRef(val kind: DockRequestKind, val id: String) {
+    internal val key: String get() = "${kind.name.lowercase()}:$id"
+
+    internal companion object {
+        fun parse(key: String): DockRequestRef? {
+            val kind = DockRequestKind.entries.firstOrNull { key.startsWith(it.name.lowercase() + ":") } ?: return null
+            return DockRequestRef(kind, key.substringAfter(':'))
+        }
+    }
 }
 
 /** One sub-agent under a ring. Never a ring of its own. [name] is its agent when known, else its title. */
@@ -72,8 +93,25 @@ public data class DockChild(
     val agent: String?,
     val state: DockState,
     val pulse: Int,
+    /** The requests this sub-agent waits on (NeedsYou), oldest first. */
+    val requests: ImmutableList<DockRequestRef> = persistentListOf(),
+    /** False only for the sub-agent on screen. */
+    val removable: Boolean = true,
 ) {
     val name: String? get() = agent ?: title
+}
+
+/** A conversation the person removed that is still live (running, waiting or unseen). It can be brought back. */
+public data class DockHidden(
+    val ref: ConversationRef,
+    val title: String?,
+    val nickname: String?,
+    val agent: String?,
+    val state: DockState,
+    /** The ring this sub-agent belongs to; null for a conversation that is a ring itself. */
+    val parent: ConversationRef?,
+) {
+    val name: String? get() = nickname ?: title
 }
 
 public enum class DockPresence {
@@ -99,7 +137,11 @@ public data class DockUi(
     val tucked: Boolean = false,
     /** Entries that are not Idle once sub-agents are counted. */
     val liveCount: Int = 0,
-)
+    /** Removed conversations that are still live, for the "N hidden" list. */
+    val hidden: ImmutableList<DockHidden> = persistentListOf(),
+) {
+    val hiddenCount: Int get() = hidden.size
+}
 
 /** How a run ended, as far as the dock cares. */
 public enum class DockRunEnd {
@@ -161,6 +203,18 @@ public sealed interface DockEvent {
     /** Clears Finished or Failed without opening the conversation. */
     public data class Seen(val ref: ConversationRef) : DockEvent
 
+    /** The person removed this ring (or sub-agent). Ignored for the conversation on screen. */
+    public data class Remove(val ref: ConversationRef) : DockEvent
+
+    /** Brings a removed conversation back (the Undo, or a pick from the hidden list). */
+    public data class Restore(val ref: ConversationRef) : DockEvent
+
+    /** The removed set saved for one profile, merged into the model after a restart. */
+    public data class RemovedLoaded(val profile: ProfileId, val sessions: List<SessionId>) : DockEvent
+
+    /** Says whose child a session is. Comes from a [DockChildSource]; the model does not care which provider said it. */
+    public data class Link(val child: ConversationRef, val parent: SessionId) : DockEvent
+
     public data object Tuck : DockEvent
 
     public data object Untuck : DockEvent
@@ -176,6 +230,12 @@ public sealed interface DockEvent {
  *   stable order, and [DockUi.overflow] counts the rest.
  * - [DockPresence.Out] needs two or more live (anything but Idle), or an unanswered failure or request; the person
  *   can tuck it, and a NEW failure or request untucks it. With nothing live the dock is hidden and the tuck forgotten.
+ * - Removing (`DockEvent.Remove`): the ring (or sub-agent) leaves at once and stays out while nothing new happens. It
+ *   comes back by itself only when it needs the person or fails AFTER the removal (a rise in its `pulse`, or a
+ *   sub-agent's for a removed parent), or when the person opens it while it is still live. Plain working or finished
+ *   does not bring it back. A removed parent takes its sub-agents with it; a removed sub-agent hides only itself.
+ *   The conversation on screen cannot be removed. The set drops a conversation when its record leaves the dock (idle)
+ *   or it is deleted, and keeps at most [MAX_REMOVED]. Removed-but-live ones are listed in [DockUi.hidden].
  * - Opening a conversation (or [DockEvent.Seen]) clears its Finished and Failed. A run that ends in the open
  *   conversation is seen at once. A seen conversation leaves the dock when idle, so the session record cannot raise an old failure again.
  */
@@ -186,9 +246,14 @@ public class DockModel private constructor(private val s: Snapshot) {
 
     public val ui: DockUi by lazy(LazyThreadSafetyMode.NONE) { s.toUi() }
 
+    /** The removed set, oldest first, parents and sub-agents alike. The controller saves it. */
+    public val removedRefs: List<ConversationRef> get() = s.removed
+
     public fun reduce(event: DockEvent): DockModel {
         val next = s.step(event)
-        return if (next === s) this else DockModel(next.settled())
+        if (next === s) return this
+        val settled = next.unmuteAlerts(s).settled()
+        return DockModel(settled.pruneRemoved(s, event))
     }
 
     private enum class Outcome { None, Finished, Failed }
@@ -207,6 +272,8 @@ public class DockModel private constructor(private val s: Snapshot) {
         val pulse: Int = 0,
         val parent: SessionId? = null,
     ) {
+        fun requestRefs(): ImmutableList<DockRequestRef> = requests.mapNotNull { DockRequestRef.parse(it) }.toImmutableList()
+
         fun state(): DockState =
             when {
                 requests.isNotEmpty() -> DockState.NeedsYou
@@ -222,6 +289,8 @@ public class DockModel private constructor(private val s: Snapshot) {
     private data class Snapshot(
         val cap: Int,
         val childCap: Int,
+        /** Removed conversations, oldest first. A removed parent hides its sub-agents; a removed sub-agent hides itself. */
+        val removed: List<ConversationRef> = emptyList(),
         val tracked: Map<ConversationRef, Tracked> = emptyMap(),
         val names: Map<ConversationRef, String> = emptyMap(),
         val order: List<ConversationRef> = emptyList(),
@@ -300,9 +369,10 @@ public class DockModel private constructor(private val s: Snapshot) {
                             ifTracked(e.ref) { alerted(it).copy(outcome = Outcome.Failed) }.untuckFor(e.ref)
                         } else this
                     } else this
-                is DockEvent.Deleted -> copy(known = known.remove(e.ref), tracked = tracked.filter { (r, t) -> r != e.ref && !(r.profileId == e.ref.profileId && t.parent == e.ref.sessionId) }, names = names - e.ref, open = open.takeIf { it != e.ref })
+                is DockEvent.Deleted -> copy(removed = removed.filter { it != e.ref }, known = known.remove(e.ref), tracked = tracked.filter { (r, t) -> r != e.ref && !(r.profileId == e.ref.profileId && t.parent == e.ref.sessionId) }, names = names - e.ref, open = open.takeIf { it != e.ref })
                 is DockEvent.ProfileGone ->
                     copy(
+                        removed = removed.filter { it.profileId != e.profile },
                         known = known.filterKeys { it.profileId != e.profile }.toPersistentMap(),
                         tracked = tracked.filterKeys { it.profileId != e.profile },
                         names = names.filterKeys { it.profileId != e.profile },
@@ -326,10 +396,20 @@ public class DockModel private constructor(private val s: Snapshot) {
                                 if (r.profileId == parent.profileId && t.parent == parent.sessionId && t.outcome == Outcome.Finished) t.copy(outcome = Outcome.None) else t
                             },
                         )
-                        cleared.withTracked(parent) { it }.seen(parent)
+                        cleared.withTracked(parent) { it }.seen(parent).reopened(parent)
                     }
                 }
                 is DockEvent.Seen -> seen(e.ref)
+                is DockEvent.Remove -> remove(e.ref)
+                is DockEvent.Restore -> if (e.ref in removed) copy(removed = removed - e.ref) else this
+                is DockEvent.RemovedLoaded -> {
+                    val loaded = e.sessions.map { ConversationRef(e.profile, it) }
+                    val merged = (loaded + removed).distinct().takeLast(MAX_REMOVED)
+                    if (merged == removed) this else copy(removed = merged)
+                }
+                is DockEvent.Link ->
+                    copy(known = known.put(e.child, (known[e.child] ?: Triple(null, null, null)).copy(third = e.parent)))
+                        .ifTracked(e.child) { it.copy(parent = e.parent) }
                 DockEvent.Tuck -> copy(tucked = true)
                 DockEvent.Untuck -> copy(tucked = false)
             }
@@ -382,6 +462,60 @@ public class DockModel private constructor(private val s: Snapshot) {
             return copy(known = if (next.size > KNOWN_LIMIT) next.remove(next.keys.first()) else next)
         }
 
+        private fun canRemove(ref: ConversationRef): Boolean {
+            val on = open ?: return true
+            return ref != on && ref != rootOf(on)
+        }
+
+        private fun remove(ref: ConversationRef): Snapshot {
+            if (ref in removed || ref !in tracked || !canRemove(ref)) return this
+            // A removed parent takes its sub-agents with it, so their own entries are subsumed.
+            val kept = removed.filter { it == ref || rootOf(it) != ref }
+            return copy(removed = (kept + ref).takeLast(MAX_REMOVED))
+        }
+
+        /** True while [ref], or the conversation it belongs to, is removed. */
+        private fun hiddenRef(ref: ConversationRef): Boolean = ref in removed || rootOf(ref) in removed
+
+        private fun liveNow(ref: ConversationRef): Boolean {
+            val t = tracked[ref] ?: return false
+            return if (rootOf(ref) == ref) view(t, includeRemoved = true).state != DockState.Idle else t.state() != DockState.Idle
+        }
+
+        /** Opening a removed conversation that is still live brings it (and the ring it hangs under) back. */
+        fun reopened(ref: ConversationRef): Snapshot {
+            val back = listOf(ref, rootOf(ref)).filter { it in removed && liveNow(it) }
+            return if (back.isEmpty()) this else copy(removed = removed - back.toSet())
+        }
+
+        /**
+         * A new failure or request after the removal brings the conversation back: an alert is never hidden. Seen as a
+         * rise in a record's pulse across one step.
+         */
+        fun unmuteAlerts(prev: Snapshot): Snapshot {
+            if (removed.isEmpty()) return this
+            val back = mutableSetOf<ConversationRef>()
+            for ((ref, t) in tracked) if (t.pulse > (prev.tracked[ref]?.pulse ?: 0)) {
+                back += ref
+                back += rootOf(ref)
+            }
+            return if (back.any { it in removed }) copy(removed = removed.filter { it !in back }) else this
+        }
+
+        /** The removed set only holds conversations that are still around: it drops one when its record leaves. */
+        fun pruneRemoved(prev: Snapshot, event: DockEvent): Snapshot {
+            if (removed.isEmpty()) return this
+            fun kids(of: Snapshot, r: ConversationRef) = of.tracked.values.filter { it.parent == r.sessionId && it.ref.profileId == r.profileId }
+            val gone =
+                removed.filter { r ->
+                    // A removed parent stays while a hidden sub-agent is still live.
+                    r !in tracked && kids(this, r).none { it.state() != DockState.Idle } &&
+                        (r in prev.tracked || kids(prev, r).isNotEmpty() ||
+                            (event is DockEvent.RequestsRead && r.profileId == event.profile))
+                }
+            return if (gone.isEmpty()) this else copy(removed = removed - gone.toSet())
+        }
+
         private fun parentOf(ref: ConversationRef): ConversationRef? =
             (tracked[ref]?.parent ?: known[ref]?.third)?.let { ConversationRef(ref.profileId, it) }
 
@@ -401,6 +535,7 @@ public class DockModel private constructor(private val s: Snapshot) {
             var seq = nextSeq
             val needed = LinkedHashMap<ConversationRef, Tracked>()
             for (ref in kept.keys) {
+                if (hiddenRef(ref)) continue
                 val root = rootOf(ref)
                 if (root !in kept && root !in needed) {
                     needed[root] = tracked[root] ?: Tracked(root, seq++, known[root]?.first, known[root]?.second)
@@ -408,7 +543,7 @@ public class DockModel private constructor(private val s: Snapshot) {
             }
             val all = kept + needed
             val base = copy(tracked = all, nextSeq = seq)
-            val roots = all.values.filter { base.rootOf(it.ref) == it.ref }
+            val roots = all.values.filter { base.rootOf(it.ref) == it.ref && it.ref !in removed }
             val openRoot = open?.let { base.rootOf(it) }
             val live = roots.filter { base.view(it).state != DockState.Idle }
             val members = roots.filter { base.view(it).state != DockState.Idle || (it.ref == openRoot && live.any { l -> l.ref != it.ref }) }
@@ -420,8 +555,11 @@ public class DockModel private constructor(private val s: Snapshot) {
         /** A root with its sub-agents rolled in. */
         private class View(val root: Tracked, val kids: List<Tracked>, val state: DockState, val causedBy: ConversationRef?)
 
-        private fun view(root: Tracked): View {
-            val kids = tracked.values.filter { it.ref != root.ref && rootOf(it.ref) == root.ref }.sortedBy { it.seq }
+        private fun view(root: Tracked, includeRemoved: Boolean = false): View {
+            val kids =
+                tracked.values
+                    .filter { it.ref != root.ref && rootOf(it.ref) == root.ref && (includeRemoved || it.ref !in removed) }
+                    .sortedBy { it.seq }
             val own = root.state()
             val needs = kids.firstOrNull { it.state() == DockState.NeedsYou }
             val failed = kids.firstOrNull { it.state() == DockState.Failed }
@@ -484,8 +622,13 @@ public class DockModel private constructor(private val s: Snapshot) {
                         pulse = r.pulse + v.kids.sumOf { it.pulse },
                         ownState = r.state(),
                         causedBy = v.causedBy,
-                        children = kept.map { DockChild(it.ref, it.title, it.agent, it.state(), it.pulse) }.toImmutableList(),
+                        children =
+                            kept.map {
+                                DockChild(it.ref, it.title, it.agent, it.state(), it.pulse, it.requestRefs(), it.ref != open)
+                            }.toImmutableList(),
                         childOverflow = v.kids.size - kept.size,
+                        requests = r.requestRefs(),
+                        removable = r.ref != openRoot,
                     )
                 }
             val live = members.count { it.state != DockState.Idle }
@@ -496,7 +639,20 @@ public class DockModel private constructor(private val s: Snapshot) {
                     !tucked && (live >= 2 || alert) -> DockPresence.Out
                     else -> DockPresence.Nub
                 }
-            return DockUi(entries.toImmutableList(), presence, members.size - shown.size, openRoot, open.takeIf { it != openRoot }, tucked, live)
+            val hidden =
+                removed.mapNotNull { ref ->
+                    val t = tracked[ref] ?: return@mapNotNull null
+                    val state = if (rootOf(ref) == ref) view(t, includeRemoved = true).state else t.state()
+                    if (state == DockState.Idle) {
+                        null
+                    } else {
+                        DockHidden(ref, t.title, names[ref], t.agent, state, rootOf(ref).takeIf { it != ref })
+                    }
+                }
+            return DockUi(
+                entries.toImmutableList(), presence, members.size - shown.size, openRoot, open.takeIf { it != openRoot },
+                tucked, live, hidden.toImmutableList(),
+            )
         }
     }
 
@@ -509,6 +665,9 @@ public class DockModel private constructor(private val s: Snapshot) {
 
         private const val KNOWN_LIMIT: Int = 256
         private const val MAX_DEPTH: Int = 8
+
+        /** The most removed conversations kept (and saved) at once; the oldest is forgotten first. */
+        public const val MAX_REMOVED: Int = 100
 
         public fun empty(cap: Int = DEFAULT_CAP, childCap: Int = DEFAULT_CHILD_CAP): DockModel {
             require(cap >= 1 && childCap >= 1) { "the dock needs at least one ring" }

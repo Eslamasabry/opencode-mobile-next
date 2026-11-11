@@ -17,6 +17,26 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 /**
+ * Says whose child a session is. The dock does not care how a provider knows: the default reads the session record's
+ * parent id; a provider-neutral source can be swapped in without touching the model.
+ */
+public fun interface DockChildSource {
+    public fun links(profile: ProfileId, event: GatewayEvent): List<DockEvent.Link>
+}
+
+/** The session record's `parentId` (OpenCode 1 and 2). */
+public object SessionParentChildSource : DockChildSource {
+    override fun links(profile: ProfileId, event: GatewayEvent): List<DockEvent.Link> =
+        if (event is GatewayEvent.SessionUpserted) {
+            event.session.parentId
+                ?.let { listOf(DockEvent.Link(ConversationRef(profile, event.session.id), it)) }
+                .orEmpty()
+        } else {
+            emptyList()
+        }
+}
+
+/**
  * Turns the facts the app already receives (the neutral gateway event stream and the reconcile reads) into
  * [DockEvent]s. Pure: it adds no network call and no polling. Request ids are prefixed by kind so a permission and a
  * question that happen to share an id never settle each other.
@@ -25,12 +45,14 @@ public object DockFeed {
     private const val GLOBAL_FORM = "global"
     private val TODO_TOOLS = setOf("todowrite", "todo")
 
-    public fun events(profile: ProfileId, event: GatewayEvent): List<DockEvent> {
+    public fun events(profile: ProfileId, event: GatewayEvent, children: DockChildSource = SessionParentChildSource): List<DockEvent> = base(profile, event) + children.links(profile, event)
+
+    private fun base(profile: ProfileId, event: GatewayEvent): List<DockEvent> {
         fun ref(session: SessionId) = ConversationRef(profile, session)
         return when (event) {
             is GatewayEvent.SessionUpserted ->
                 listOf(
-                    DockEvent.Meta(ref(event.session.id), event.session.title, event.session.agent, event.session.parentId),
+                    DockEvent.Meta(ref(event.session.id), event.session.title, event.session.agent),
                     DockEvent.LastRunFailed(ref(event.session.id), event.session.lastRunFailed),
                 )
             is GatewayEvent.SessionChanged ->

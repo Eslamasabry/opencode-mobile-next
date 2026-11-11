@@ -15,6 +15,7 @@ import io.github.eslamasabry.oc.engine.attention.dock.DockEvent
 import io.github.eslamasabry.oc.engine.attention.dock.DockFeed
 import io.github.eslamasabry.oc.engine.attention.dock.DockKeys
 import io.github.eslamasabry.oc.engine.attention.dock.DockNicknames
+import io.github.eslamasabry.oc.engine.attention.dock.DockRemovals
 import io.github.eslamasabry.oc.engine.attention.dock.DockUi
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
@@ -43,14 +44,13 @@ class AppEdgeDock(
 ) {
     private val main: CoroutineScope = CoroutineScope(appScope.coroutineContext + dispatchers.main)
     private var navigate: (ConversationRef) -> Unit = {}
-    private val nicknames =
-        DockNicknames(
+    private val keyStore =
             object : AttentionKeyStore {
                 override suspend fun read(key: String): String? =
                     (stores.prefs.get(key) as? PrefValue.Str)?.value
 
                 override suspend fun write(key: String, value: String): Boolean {
-                    val id = ProfileId(key.removePrefix(DockKeys.NAMES_PREFIX))
+                    val id = ProfileId(key.removePrefix(DockKeys.NAMES_PREFIX).removePrefix(DockKeys.REMOVED_PREFIX))
                     // A profile that is being deleted takes no new data.
                     if (stores.profiles.profile(id) == null || !stores.lanes.forProfile(id).isAdmitting) return false
                     return stores.prefs.commit(stores.lanes.forProfile(id)) { putString(key, value) } is Outcome.Ok
@@ -59,8 +59,8 @@ class AppEdgeDock(
                 override suspend fun remove(key: String): Boolean =
                     stores.prefs.commit(stores.lanes.app) { remove(key) } is Outcome.Ok
             }
-        )
-    private val controller = DockController(main, nicknames, { navigate(it) })
+    private val nicknames = DockNicknames(keyStore)
+    private val controller = DockController(main, nicknames, { navigate(it) }, removals = DockRemovals(keyStore))
     private val attached = mutableMapOf<ProfileId, ConnectionGraph>()
     private val savedBefore = mutableSetOf<ProfileId>()
     private var started = false
@@ -97,6 +97,13 @@ class AppEdgeDock(
 
     fun dismissSeen(ref: ConversationRef) = controller.dismissSeen(ref)
 
+    /** Removes a ring (or sub-agent) from the dock; see `DockModel` for when it comes back by itself. */
+    fun remove(ref: ConversationRef) = controller.remove(ref)
+
+    fun undoRemove(ref: ConversationRef) = controller.undoRemove(ref)
+
+    fun restore(ref: ConversationRef) = controller.restore(ref)
+
     fun tuck() = controller.tuck()
 
     fun untuck() = controller.untuck()
@@ -109,7 +116,6 @@ class AppEdgeDock(
         detach(id)
         attached[id] = graph
         val server = graph.session.server
-        graph.scope.launch(dispatchers.main) { controller.loadNicknames(id) }
         graph.scope.launch(dispatchers.main) {
             server.events.all.collect { envelope ->
                 if (attached[id] !== graph) return@collect
@@ -117,7 +123,12 @@ class AppEdgeDock(
                 for (event in DockFeed.events(id, envelope.event)) controller.feed(event)
             }
         }
-        graph.scope.launch(dispatchers.main) { reconcile(id, graph) }
+        graph.scope.launch(dispatchers.main) {
+            // Saved names and the removed set first, so the first reconcile lands on a model that already knows them.
+            controller.loadNicknames(id)
+            controller.loadRemoved(id)
+            reconcile(id, graph)
+        }
     }
 
     private suspend fun reconcile(id: ProfileId, graph: ConnectionGraph) {
