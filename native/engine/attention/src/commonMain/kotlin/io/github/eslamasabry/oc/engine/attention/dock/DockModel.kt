@@ -301,7 +301,13 @@ public class DockModel private constructor(private val s: Snapshot) {
 
     public fun reduce(event: DockEvent): DockModel {
         val next = s.step(event)
-        if (next === s) return this
+        if (next === s) {
+            // A full read of the requests that changes no record still settles the removed set: a removed conversation
+            // the server no longer reports leaves it (a saved set meeting the first read after a restart).
+            if (event !is DockEvent.RequestsRead) return this
+            val pruned = s.pruneRemoved(s, event)
+            return if (pruned === s) this else DockModel(pruned)
+        }
         val settled = next.unmuteAlerts(s).settled()
         return DockModel(settled.pruneRemoved(s, event))
     }
