@@ -77,13 +77,12 @@ internal class Oc2HostTools(private val gateway: Oc2Gateway, private val locatio
         }
         val config = gateway.json("/config", query = query)
         if (config is Outcome.Failed) return config
-        val layers =
-            data((config as Outcome.Ok).value) as? JsonArray
-                ?: return Failure.UnreadableReply().failed()
+        // The saved choice is optional: a config answer of another shape, or a layer without `info`, means "no
+        // saved shell", not a failure of the whole sheet (the shell list itself is what must be readable).
+        val layers = data((config as Outcome.Ok).value) as? JsonArray ?: JsonArray(emptyList())
         var selected = ""
         for (layer in layers) {
-            val obj = layer as? JsonObject ?: return Failure.UnreadableReply().failed()
-            val info = obj.obj("info") ?: return Failure.UnreadableReply().failed()
+            val info = (layer as? JsonObject)?.obj("info") ?: continue
             info.str("shell")?.let { selected = it }
         }
         return TerminalShellSettings(selected, options.toImmutableList()).ok()

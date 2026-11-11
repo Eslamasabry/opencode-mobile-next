@@ -35,6 +35,21 @@ public data class VersionControlHealth(
     val setupState: VersionControlSetupState,
 )
 
+/**
+ * The one rule for "is this a Git project" that the chat header, the Changes page and the new-chat start share:
+ * the server's own setup state first, then the project record's flag, then a branch name or a `.git` entry in the
+ * folder as proof of Git. null = not known (not loaded yet, or the server did not say): callers show nothing
+ * about Git then, never "Git".
+ */
+public fun gitProjectState(health: VersionControlHealth?, projectIsGit: Boolean? = null, hasDotGit: Boolean? = null): Boolean? =
+    when (health?.setupState) {
+        VersionControlSetupState.Git -> true
+        VersionControlSetupState.Absent -> false
+        else ->
+            projectIsGit
+                ?: true.takeIf { !health?.branch.isNullOrBlank() || hasDotGit == true }
+    }
+
 public data class LanguageServiceHealth(val id: String, val name: String, val root: String, val status: String)
 
 public data class FormatterHealth(val name: String, val extensions: ImmutableList<String>, val enabled: Boolean)

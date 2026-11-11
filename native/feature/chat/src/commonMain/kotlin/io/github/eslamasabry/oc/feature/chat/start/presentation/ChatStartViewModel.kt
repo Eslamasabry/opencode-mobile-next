@@ -168,16 +168,11 @@ public class ChatStartViewModel(
                         fallback.cancel()
                         if (!current()) return@coroutineScope
                         val git =
-                            when (health?.setupState) {
-                                VersionControlSetupState.Git -> true
-                                VersionControlSetupState.Absent -> false
-                                else ->
-                                    projectFacts?.isGit
-                                        ?: true.takeIf {
-                                            !health?.branch.isNullOrBlank() ||
-                                                rootFiles?.any { it.name == ".git" } == true
-                                        }
-                            }
+                            io.github.eslamasabry.oc.core.model.gitProjectState(
+                                health,
+                                projectFacts?.isGit,
+                                rootFiles?.any { it.name == ".git" } == true,
+                            )
                         val branch = health?.branch?.trim().orEmpty()
                         facts.value =
                             bare.copy(

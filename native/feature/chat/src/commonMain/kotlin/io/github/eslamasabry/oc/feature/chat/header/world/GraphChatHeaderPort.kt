@@ -169,13 +169,14 @@ internal class GraphChatHeaderPort(
                 directory = gateway.location.value.directory,
                 connected = true,
                 branch = branches[ref.profileId.raw to gateway.location.value.directory],
+                git = gitKnown[ref.profileId.raw to gateway.location.value.directory],
             )
         val jobs =
             listOf(
                 graph.scope.launch(registry.mainContext) {
                     gateway.location.collectLatest { location ->
                         val key = ref.profileId.raw to location.directory
-                        mutableFacts.update { it.copy(branch = branches[key]) }
+                        mutableFacts.update { it.copy(branch = branches[key], git = gitKnown[key]) }
                         val health =
                             (graph as ChatGraphAccessors).chatOperations.versionControlHealth()
                         if (
@@ -188,7 +189,10 @@ internal class GraphChatHeaderPort(
                                     it.isNotEmpty() && it != "HEAD"
                                 }
                             if (branch == null) branches.remove(key) else branches[key] = branch
-                            mutableFacts.update { it.copy(branch = branch) }
+                            val git =
+                                io.github.eslamasabry.oc.core.model.gitProjectState(health.value)
+                            if (git == null) gitKnown.remove(key) else gitKnown[key] = git
+                            mutableFacts.update { it.copy(branch = branch, git = git) }
                         }
                     }
                 },
@@ -366,3 +370,4 @@ private const val MAX_PARENT_DEPTH = 8
  * Process-local branch read cache: a reopened header can render its last known branch immediately.
  */
 private val branches = mutableMapOf<Pair<String, String?>, String>()
+private val gitKnown = mutableMapOf<Pair<String, String?>, Boolean>()

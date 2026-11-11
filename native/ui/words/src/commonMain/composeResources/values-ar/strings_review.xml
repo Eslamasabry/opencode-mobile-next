@@ -12,4 +12,5 @@
     <string name="reviewSendBackFailed">تعذّر وضع ملاحظتك في الرسالة. حاول مرة أخرى.</string>
     <string name="reviewProjectNotGitTitle">ليس مشروع Git</string>
     <string name="reviewProjectNotGitBody">لا يمكن عرض التغييرات إلا لمشروع تحت Git. ابدأ تتبّعه من صفحة Git للمشروع لتظهر هنا.</string>
+    <string name="reviewProjectOpenGit">افتح صفحة Git</string>
 </resources>

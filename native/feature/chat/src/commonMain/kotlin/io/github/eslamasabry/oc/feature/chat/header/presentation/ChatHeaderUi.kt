@@ -18,6 +18,10 @@ public data class ChatHeaderUi(
     val serverName: String? = null,
     val projectName: String? = null,
     val branch: String? = null,
+    /** The one "is this a Git project" answer; null = not known yet. The Git chip shows only for true. */
+    val git: Boolean? = null,
+    /** The Git chip shows for a Git project (or an old branch read while Git is not yet confirmed), never otherwise. */
+    val showsGit: Boolean get() = git == true || (git == null && branch != null)
     /**
      * The ⋯ menu's entries in order (Go to, then Do; destructive last), built from capabilities.
      */

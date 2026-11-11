@@ -81,6 +81,8 @@ class ReviewScreensTest {
 
         override fun openStaged() { calls += "staged" }
 
+        override fun openGit() { calls += "git" }
+
         override fun sendBack() { calls += "sendBack" }
 
         override fun sendBackNote(note: String?) { calls += "note $note" }
@@ -105,6 +107,33 @@ class ReviewScreensTest {
         assertEquals(listOf("file src/app/Main.kt", "undo", "keep"), actions.calls)
         // Per-file undo is stated plainly, never offered as a dead control.
         onNodeWithText("Undoing one file at a time isn't available yet", substring = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun `the Changes title follows the chip and not-a-Git-project offers the Git page`() = runComposeUiTest {
+        val actions = Changes()
+        setContent {
+            Themed {
+                ChangesScreen(
+                    ChangesUi(
+                        turn = true,
+                        load = ReviewLoad.Ready,
+                        scope = io.github.eslamasabry.oc.feature.review.presentation.ReviewScope.WorkingTree,
+                        scopes = persistentListOf(
+                            io.github.eslamasabry.oc.feature.review.presentation.ReviewScope.Conversation,
+                            io.github.eslamasabry.oc.feature.review.presentation.ReviewScope.WorkingTree,
+                        ),
+                        notRepository = true,
+                    ),
+                    actions,
+                )
+            }
+        }
+        // Only the chip says "Changes in this turn" now; the page title is plain "Changes".
+        assertEquals(1, onAllNodesCount("Changes in this turn"))
+        onNodeWithText("Not a Git project").assertIsDisplayed()
+        onNodeWithText("Open the Git page").performClick()
+        assertEquals(listOf("git"), actions.calls)
     }
 
     @Test
