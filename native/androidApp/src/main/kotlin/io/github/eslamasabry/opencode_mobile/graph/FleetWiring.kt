@@ -12,9 +12,13 @@ import io.github.eslamasabry.oc.engine.team.fleet.FleetTransports
 import java.io.IOException
 import java.net.SocketTimeoutException
 import java.util.concurrent.TimeUnit
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.Call
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.MediaType.Companion.toMediaType
@@ -79,14 +83,35 @@ private class AppFleetTransport(private val base: String, private val dispatcher
             if (closed) return@withContext FleetReply.Unreachable()
             val bounded = client.newBuilder().readTimeout(timeoutMs, TimeUnit.MILLISECONDS).callTimeout(timeoutMs + 8_000, TimeUnit.MILLISECONDS).build()
             val call = bounded.newCall(request)
-            val cancel = coroutineContext[Job]?.invokeOnCompletion { call.cancel() }
+            cancelledWith(call) {
+                try {
+                    call.execute().use(::answered)
+                } catch (e: IOException) {
+                    ensureActive()
+                    FleetReply.Unreachable(timedOut = e is SocketTimeoutException)
+                }
+            }
+        }
+
+    /**
+     * Runs [block] (a blocking OkHttp [call] on this IO thread) and cancels the call the moment the caller is cancelled. A
+     * completion handler would only run once the blocked read returned (up to the stall timeout, 90 s on a stream), so a
+     * page that closed kept its connection open; the watcher runs on another thread and closes the socket at once.
+     */
+    private suspend fun <T> cancelledWith(call: Call, block: suspend () -> T): T =
+        coroutineScope {
+            val watcher =
+                launch(start = CoroutineStart.UNDISPATCHED) {
+                    try {
+                        awaitCancellation()
+                    } finally {
+                        call.cancel()
+                    }
+                }
             try {
-                call.execute().use(::answered)
-            } catch (e: IOException) {
-                ensureActive()
-                FleetReply.Unreachable(timedOut = e is SocketTimeoutException)
+                block()
             } finally {
-                cancel?.dispose()
+                watcher.cancel()
             }
         }
 
@@ -128,18 +153,17 @@ private class AppFleetTransport(private val base: String, private val dispatcher
                     .get()
                     .build()
             val call = streaming.newCall(request)
-            val cancel = coroutineContext[Job]?.invokeOnCompletion { call.cancel() }
-            try {
+            cancelledWith(call) {
                 val response =
                     try {
                         call.execute()
                     } catch (e: IOException) {
                         ensureActive()
-                        return@withContext FleetStreamEnd.Dropped(e is SocketTimeoutException)
+                        return@cancelledWith FleetStreamEnd.Dropped(e is SocketTimeoutException)
                     }
                 response.use { r ->
                     val type = r.header("Content-Type").orEmpty().lowercase()
-                    if (!r.isSuccessful || !type.startsWith("text/event-stream")) return@withContext FleetStreamEnd.Refused(r.code)
+                    if (!r.isSuccessful || !type.startsWith("text/event-stream")) return@cancelledWith FleetStreamEnd.Refused(r.code)
                     val pending = ArrayList<SseFrame>()
                     val parser = SseParser { pending += it }
                     val input = r.body.byteStream()
@@ -160,8 +184,6 @@ private class AppFleetTransport(private val base: String, private val dispatcher
                         FleetStreamEnd.Dropped(e is SocketTimeoutException)
                     }
                 }
-            } finally {
-                cancel?.dispose()
             }
         }
 
