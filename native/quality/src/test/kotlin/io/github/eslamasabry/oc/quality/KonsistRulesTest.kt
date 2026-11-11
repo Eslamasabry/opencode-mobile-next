@@ -225,6 +225,47 @@ class KonsistRulesTest {
             }
     }
 
+    /**
+     * K20 (docs/designs/glass-in-the-kit/SURFACES-SPEC.md §5): kit parts get their face from `kitSurfaceLook`. The
+     * hand-painted surface lines per kit file ([KitSurfaces]) may only fall: a file over its number, or a new file,
+     * fails; a file under its number fails too until the baseline is lowered (the list stays honest). The allowlist
+     * needs a reason per line and drops entries that no longer allow anything.
+     */
+    @Test
+    fun `K20 kit parts paint no surface of their own, and the count only falls`() {
+        val files =
+            KitSurfaces.MODULES.flatMap { m -> File(root, m).walkTopDown().filter { it.isFile }.toList() }
+                .map { it.relativeTo(root).invariantSeparatorsPath to it }
+                .filter { (path, _) -> KitSurfaces.inScope(path) }
+                .associate { (path, file) -> path to file.readText() }
+        kAssertTrue(files.size > 300, "K20 scanned only ${files.size} kit files; the scope is wrong")
+        val (allow, malformed) = KitSurfaces.parseAllow(File(root, "quality/config/kit-surfaces-allow.txt").readText())
+        kotlin.test.assertEquals(emptyList(), malformed, "K20: malformed allowlist lines")
+        val result = KitSurfaces.count(files, allow)
+        kotlin.test.assertEquals(
+            emptyList(),
+            result.stale.map { it.source },
+            "K20: these allowlist entries no longer match a painting line; delete them",
+        )
+        val now = result.perFile
+        val baseline = File(root, "quality/config/rule-baseline/K20-kit-surfaces.txt")
+        if (System.getProperty("oc.ruleBaseline") == "write") {
+            baseline.writeText(KitSurfaces.writeBaseline(now))
+            return
+        }
+        val listed = KitSurfaces.parseBaseline(baseline.readText())
+        fun lines(path: String) = result.counted[path].orEmpty().joinToString("") { "\n    ${it.line}: ${it.code}" }
+        val over = now.filter { (p, n) -> n > (listed[p] ?: 0) }.map { (p, n) -> "$p: $n, baseline ${listed[p] ?: 0}${lines(p)}" }
+        kotlin.test.assertEquals(
+            emptyList(),
+            over,
+            "K20: kit files paint more surfaces by hand than their baseline; ask kitSurfaceLook (or, for a mark, a " +
+                "preview or a document ground, add an allowlist line with its reason)",
+        )
+        val under = listed.filter { (p, n) -> (now[p] ?: 0) < n }.map { (p, n) -> "$p: ${now[p] ?: 0}, baseline $n" }
+        kotlin.test.assertEquals(emptyList(), under, "K20: fixed; lower these numbers in ${baseline.name}")
+    }
+
     @Test
     fun `K19 a feature never imports another feature`() {
         scope("feature").files.assertFalse { f ->

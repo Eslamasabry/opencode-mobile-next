@@ -22,6 +22,19 @@ class KitOnlyPlantedTest {
     }
 
     @Test
+    fun `K1 rejects a glass face built in a feature, and keeps the recording markers`() {
+        val glass =
+            listOf(
+                "io.github.eslamasabry.oc.ui.kit.effects.kitLiquidFace",
+                "io.github.eslamasabry.oc.ui.kit.foundation.kitGlassSheet",
+                "io.github.eslamasabry.oc.ui.kit.foundation.LocalKitGlassBackdrop",
+            )
+        assertEquals(glass, KitOnly.violations(pkg, "SpikeScreen", glass))
+        val markers = listOf("io.github.eslamasabry.oc.ui.kit.effects.kitGlassSource", "io.github.eslamasabry.oc.ui.kit.foundation.kitFrostSource")
+        assertTrue(KitOnly.violations(pkg, "SpikeScreen", markers).isEmpty())
+    }
+
+    @Test
     fun `K1 accepts kit, words, layout and Nav3 in Entries`() {
         val ok =
             listOf(

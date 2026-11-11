@@ -1,0 +1,80 @@
+# K20 kit surfaces allowlist (SURFACES-SPEC.md §2d, §5): lines that may paint a surface by hand.
+# One line per entry: `path | regex the painting code line matches | reason`. No ` | ` inside the regex.
+# A reason is required; an entry that no longer matches a painting line fails K20 (delete it).
+# Paths are relative to native/. Only add an entry for a mark, a preview, a document or camera ground, a focus ring
+# or the engine itself; a pane asks kitSurfaceLook.
+
+
+# A01 swipe rows: the backing must cover the action behind the row
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/row/KitSwipeRow.kt | background\(colors\.surface3\) | A01 the swipe row's backing, which must cover the action behind it
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/row/KitSwipeRow.kt | background\(colors\.ground\) | A01 the dragged row's own ground, which must hide the action under it
+
+# A03 code, diff and log grounds: read-still code, not a pane
+ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/diff/KitDiffView.kt | background\(colors\.(surface1|surface2|ground)\) | A03 the diff view's code ground and its header and footer bars (diff chrome, read still)
+ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/diff/KitDiffPreview.kt | background\(colors\.surface1\) | A03 the diff preview's code ground
+
+# A04 documents, pictures and the camera: the page of a document, not chrome
+ui/kit-content/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/content/viewer/KitPdfPage.kt | \.border\(Dp\.Hairline, colors\.hairline | A04 a PDF page's paper edge
+ui/kit-content/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/content/viewer/KitPdfPage.kt | background\(colors\.surface[12]\) | A04 a PDF page's paper and its loading ground
+ui/kit-content/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/content/viewer/KitViewerFrame.kt | background\(colors\.ground\) | A04 the viewer's page ground behind the document
+ui/kit-content/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/content/viewer/KitViewerTableBody.kt | background\(colors\.surface2\) | A04 a table document's header band (document content)
+ui/kit-content/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/content/image/KitImageView.kt | background\(colors\.(surface2|surface3|ground)\) | A04 the picture's ground and the loading or failed mark on the picture
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/scanner/KitScanner.kt | background\(colors\.ground\) | A04 the camera's ground behind its preview
+ui/kit-content/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/content/qr/KitQr.kt | \.border\(Dp\.Hairline | A04 the QR code's edge around its fixed light quiet zone
+
+# A05 previews that must show colours or looks the current style would not give
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/theme/KitThemePreview.kt | background\(colors\.(ground|surface2|surface3) | A05 the theme preview paints another theme's colours
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/choice/KitSwatch.kt | background\(colors\.surface3\) | A05 a swatch shows a colour, not a pane
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/choice/KitOptionCard.kt | \.border\(ringWidth, ringColor, radius\) | A05 the theme sample's chosen ring (a selection ring on a preview)
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/choice/KitOptionCard.kt | dropShadow\( | A05 the glow option card previews the style's glow
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/choice/KitOptionCard.kt | background\(colors\.ground, shape\) | A05 the glow option card's sample field
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/choice/KitOptionCard.kt | background\(colors\.surface1, cardShape\) | A05 the style sample's Solid card (a preview of one style inside another)
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/choice/KitOptionCard.kt | kitSurfaceGlass\(face\.copy | A05 the style sample's Glass card (L11)
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/choice/KitGlassLookPicker.kt | kitFrostPane\( | A05 the glass look picker previews a look (L11)
+
+# A06 progress and gauge tracks, page dots and skeletons: data marks, not surfaces
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/state/KitProgress.kt | drawRoundRect\(colors\.surface3 | A06 the progress bar's track
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/state/KitStepProgress.kt | drawRoundRect\(colors\.surface3 | A06 the step progress track
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/state/KitProgressRow.kt | drawRoundRect\(colors\.surface3 | A06 the progress row's track
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/state/KitWindowRow.kt | drawRoundRect\(colors\.surface3 | A06 the context window gauge's track
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/state/KitLoadingBar.kt | drawRect\(colors\.surface3\) | A06 the loading bar's track
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/state/KitChecklist.kt | drawRoundRect\(colors\.surface3 | A06 the checklist's progress track
+ui/kit-content/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/content/usage/KitLimitBar.kt | drawRoundRect\(colors\.surface3 | A06 the usage limit bar's track
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/team/TeamParts.kt | drawRect\(colors\.surface3\) | A06 the team row's progress track
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/frame/KitCarousel.kt | colors\.surface3, RoundedCornerShape\(Space\.S2\.dp\) | A06 the carousel's page dots and its scroll track
+ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/card/KitAgentCard.kt | \.height\(Space\.S1\.dp\)\.clip\(KitShapeId\.Pill\.shape\(\)\)\.background\(colors\.surface2\) | A06 the agent card's progress track
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/state/KitSkeletonTranscript.kt | background\(roles\.surface3, barShape\) | A06 a skeleton bar (a loading placeholder)
+
+# A07 dots, rings, check marks and glyphs: marks, not surfaces
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/state/KitInboxEmptyAnswer.kt | \.border\(kitFocusRingWidth\(\), colors\.text3, CircleShape\) | A07 the empty answer's dot ring
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/row/KitRowParts.kt | \.border\(2\.dp, colors\.live, CircleShape\) | A07 the running state's ring mark
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/row/KitNumberedStep.kt | background\(colors\.surface3, CircleShape\) | A07 the step number's disc
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/status/KitTaskMark.kt | \.border\(kitHairline\(\), TaskMarkRules\.ringColor | A07 the task mark's ring
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/choice/KitChoiceList.kt | \.border\(2\.dp, edge, boxShape\) | A07 the check box mark
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/choice/KitOptionCard.kt | background\(colors\.surface1\.copy\(alpha = 1f\), CircleShape\) | A07 the picture option's check mark disc
+ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/composer/KitComposerLimitStrip.kt | \.border\(kitHairline\(\) \* 2, colors\.text3, CircleShape\) | A07 the limit strip's ring mark
+ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/composer/KitComposerBox.kt | background\(colors\.ground, RoundedCornerShape\(2\.dp\)\) | A07 the Stop glyph, a square mark inside the stop disc
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/setup/KitServersLink.kt | drawRoundRect\(colors\.surface3\.copy | A11 the setup illustration's phone and laptop drawings (a picture, not a pane)
+
+# A08 focus and selection rings: focus is not a surface
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/modal/KitContextRegion.kt | if \(focused\) Modifier\.border | A08 focus ring
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/action/KitIconButton.kt | if \(focused\) Modifier\.border | A08 focus ring
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/frame/KitTopBar.kt | if \(focused\) Modifier\.border | A08 focus ring
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/choice/KitWheel.kt | if \(focused\) Modifier\.border | A08 focus ring
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/style/KitSignalSlip.kt | if \(focused\) Modifier\.border | A08 focus ring
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/input/KitAskField.kt | if \(focused\) Modifier\.border | A08 focus ring
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/guide/KitGuide.kt | Modifier\.border\(kitFocusRingWidth\(\), colors\.accent, KitShapeId\.Card\.shape\(\)\) | A08 the marked step's selection ring
+ui/kit-content/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/content/terminal/KitTerminalKeyBar.kt | ring -> Modifier\.border\(focusRingWidth | A08 a key's focus ring
+
+# A12 rules: a line between table cells, not a pane edge
+ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/markdown/KitMarkdown.kt | \.border\(\(1f / LocalDensity | A12 the markdown table's cell rules
+
+# Glow: the style's accent glow (StyleGlow, fieldHalo), not a pane's shadow (added by the sweep, not in SURFACES-SPEC 2d)
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/input/KitAskField.kt | ^\.dropShadow\($ | Glow: the ask field's accent halo (fieldHalo)
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/input/KitStartBox.kt | dropShadow\( | Glow: the start box's accent halo (fieldHalo)
+ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/composer/ComposerGlow.kt | \.dropShadow\(shape, shadow\) | Glow: the composer's running glow halo
+
+# Engine: the resolver and the frost it paints with
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/foundation/KitSurface.kt | kitSurfaceGlass\(if \(glass\) | Engine: the resolver's own frost (kitSurfaceLook)
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/foundation/KitSurface.kt | m\.dropShadow\( | Engine: the resolver's painter (kitDecorated's soft shadows)
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/foundation/KitFrost.kt | drawRect\(colors\.ground\.copy | Engine: the frost engine's opaque ground under its blurred copy (L10)
