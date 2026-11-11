@@ -1,0 +1,485 @@
+@file:OptIn(androidx.compose.ui.test.ExperimentalTestApi::class)
+
+package io.github.eslamasabry.oc.ui.kit.frame
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.shape.CornerBasedShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlurEffect
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PixelMap
+import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.test.ComposeUiTest
+import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.v2.runDesktopComposeUiTest
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.DpRect
+import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
+import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
+import io.github.eslamasabry.oc.ui.design.effects.LiquidClaim
+import io.github.eslamasabry.oc.ui.design.effects.LiquidEdge
+import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
+import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.design.style.GlassLookId
+import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.FakeKitPlatform
+import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.KitTheme
+import io.github.eslamasabry.oc.ui.kit.action.KitFab
+import io.github.eslamasabry.oc.ui.kit.chip.KitChip
+import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
+import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidBackdrop
+import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidBudget
+import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidPaneSpec
+import io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidBudget
+import io.github.eslamasabry.oc.ui.kit.effects.kitGlassSource
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidFace
+import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitFrostState
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
+import io.github.eslamasabry.oc.ui.kit.theme.KitWindowInfo
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
+import kotlin.math.abs
+import kotlin.math.roundToInt
+import kotlin.math.sign
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+
+/**
+ * Glass in the kit, step 4 (docs/designs/glass-in-the-kit/STEP4-PLAN.md): with [KitFloatingBar] the body of a page runs
+ * under a floating liquid bar. At rest nothing moves from where it was; scrolled, the content passes under the pills,
+ * the capsule and the status bar; without the lens (every other style, reduced motion, the Frosted look, no lens, a
+ * short window) the page draws exactly as it did without the option.
+ */
+class KitFloatingBarTest {
+    /** Desktop with the lens and a blur: liquid panes draw their backdrop blurred, as Android's lens does (ChatEdgeATest). */
+    private class LensPlatform(private val base: FakeKitPlatform = FakeKitPlatform(frost = true, liquidGlass = true)) :
+        KitPlatform by base {
+        override fun liquidPane(spec: KitLiquidPaneSpec, backdrop: KitLiquidBackdrop, shape: CornerBasedShape, transform: () -> Float): Modifier {
+            val at = arrayOfNulls<LayoutCoordinates>(1)
+            return Modifier.onGloballyPositioned { at[0] = it }
+                .clip(shape)
+                .drawWithCache {
+                    val layer = obtainGraphicsLayer()
+                    val r = LENS_BLUR_DP.dp.toPx()
+                    onDrawBehind {
+                        val c = at[0] ?: return@onDrawBehind
+                        layer.renderEffect = BlurEffect(r, r)
+                        layer.record { backdrop.draw(this, c) }
+                        drawLayer(layer)
+                        drawRect(spec.fill)
+                    }
+                }
+        }
+    }
+
+    /** The two pages that use the option: the Conversations home and a Settings page. */
+    private enum class Page { Home, Settings }
+
+    /** What a scene was asked to show beyond the rows. */
+    private data class Extras(
+        val refreshing: Boolean = false,
+        val fab: Boolean = false,
+        val statusPart: Boolean = false,
+        val field: Boolean = false,
+    )
+
+    /** What the test reads back from a scene. */
+    private class Seen {
+        var ground: Color = Color.Unspecified
+        var budget: KitLiquidBudget? = null
+        var scroll: ScrollState? = null
+        val focus = FocusRequester()
+    }
+
+    /**
+     * A page: the bar (a large title, [BAR_DP] tall at least) and on Home the three pills (a status pill and two chips)
+     * over [ROWS] bright rows; Home's list is recorded by the feature (its own `KitFrostState`, as the home's list is for
+     * its +), Settings' body by the kit. [floating] false lays the page out as it was before the option.
+     */
+    @Composable
+    private fun Scene(page: Page, floating: Boolean, seen: Seen, extras: Extras) {
+        CompositionLocalProvider(LocalKitScreenInsets provides WindowInsets(top = STATUS_DP.dp, bottom = NAV_DP.dp)) {
+            Box(Modifier.size(W.dp, LocalKitWindow.current.heightDp.dp).testTag("scene")) {
+                seen.ground = LocalKitColors.current.ground
+                val source = rememberKitFrostState()
+                val bar: @Composable () -> Unit = {
+                    Box(Modifier.fillMaxWidth().heightIn(min = BAR_DP.dp).padding(horizontal = 16.dp).testTag("bar"), contentAlignment = Alignment.CenterStart) {
+                        KitText("Conversations", role = TypeRole.LargeTitle, maxLines = 2)
+                    }
+                }
+                val pills: @Composable () -> Unit = {
+                    Row(Modifier.fillMaxWidth().padding(start = 16.dp).testTag("pills"), verticalAlignment = Alignment.CenterVertically) {
+                        KitStatusPill("This phone", KitConnectionTone.Ok, "This phone, connected", {}, Modifier.testTag("pill-status"))
+                        KitChip("All projects", Modifier.testTag("pill-projects"), kind = KitChipKind.Action, opensMenu = true, onClick = {})
+                        KitChip("Running", Modifier.testTag("pill-running"), kind = KitChipKind.Action, onClick = {})
+                    }
+                }
+                val home = page == Page.Home
+                val refresh = if (extras.refreshing) KitScreenRefresh(refreshing = true, onRefresh = {}) else null
+                KitScreen(
+                    page = true,
+                    topBar = if (home && !floating) null else bar,
+                    header = if (home && !floating) ({ bar(); pills() }) else null,
+                    floatingBar =
+                        when {
+                            !floating -> null
+                            home -> KitFloatingBar(scrollsElsewhere = true, source = source, pills = pills)
+                            else -> KitFloatingBar()
+                        },
+                    refresh = refresh,
+                    edges = KitScreenEdges.Bleed,
+                ) {
+                    seen.budget = LocalKitLiquidBudget.current
+                    Box(Modifier.fillMaxSize()) {
+                        if (extras.field) {
+                            val scroll = rememberScrollState()
+                            seen.scroll = scroll
+                            Column(Modifier.fillMaxSize().verticalScroll(scroll).testTag("list")) {
+                                repeat(ROWS) { i ->
+                                    if (i == FIELD_AT)
+                                        Box(Modifier.fillMaxWidth().height(ROW_DP.dp).background(Color.Red).focusRequester(seen.focus).focusable().testTag("field"))
+                                    else BrightRow(i)
+                                }
+                            }
+                        } else {
+                            val list = rememberLazyListState()
+                            LazyColumn(
+                                state = list,
+                                modifier = Modifier.fillMaxSize().then(if (home) Modifier.kitGlassSource(source) else Modifier).testTag("list"),
+                            ) {
+                                items(ROWS) { i -> BrightRow(i) }
+                            }
+                        }
+                        if (extras.fab)
+                            KitFab("New conversation", KitIcons.add, {}, Modifier.align(Alignment.BottomEnd).padding(16.dp), backdrop = source)
+                        // A fourth kind of part over the list: a status line (the Undo bar's role) asking for the lens.
+                        if (extras.statusPart) {
+                            val face = kitLiquidFace(LiquidRole.Status, source, RoundedCornerShape(16.dp))
+                            Box(Modifier.align(Alignment.BottomStart).padding(16.dp).size(120.dp, 40.dp).then(face ?: Modifier))
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Composable
+    private fun BrightRow(i: Int) {
+        Box(Modifier.fillMaxWidth().height(ROW_DP.dp).padding(bottom = GAP_DP.dp).background(Color.White).testTag("row-$i"))
+    }
+
+    private class Shot(val image: PixelMap, val bounds: Map<String, DpRect?>)
+
+    private val tags = listOf("bar", "pills", "pill-status", "pill-projects", "pill-running", "row-0", "kit-liquid-bar", "kit-refresh", "field")
+
+    private fun shot(
+        page: Page,
+        floating: Boolean,
+        appearance: KitAppearance = dark(Style.Glass),
+        platform: KitPlatform = LensPlatform(),
+        extras: Extras = Extras(),
+        heightDp: Float = H.toFloat(),
+        fontScale: Float = 1f,
+        locale: String = "en",
+        act: ComposeUiTest.(Seen) -> Unit = {},
+        check: (Seen) -> Unit = {},
+    ): Shot {
+        lateinit var shot: Shot
+        val seen = Seen()
+        runDesktopComposeUiTest((W * D).toInt(), (heightDp * D).toInt()) {
+            setContent {
+                CompositionLocalProvider(LocalDensity provides Density(D, fontScale)) {
+                    KitTheme(appearance = appearance, platform = platform, localeTag = locale, stillFrame = true) {
+                        CompositionLocalProvider(LocalKitWindow provides KitWindowInfo(W.toFloat(), heightDp)) {
+                            Scene(page, floating, seen, extras)
+                        }
+                    }
+                }
+            }
+            waitForIdle()
+            act(seen)
+            waitForIdle()
+            val bounds = tags.associateWith { tag -> runCatching { onNodeWithTag(tag, useUnmergedTree = true).getBoundsInRoot() }.getOrNull() }
+            shot = Shot(onNodeWithTag("scene").captureToImage().toPixelMap(), bounds)
+            check(seen)
+        }
+        return shot
+    }
+
+    /** A slow drag of [dyDp] (negative: the content moves up), held still before the finger lifts, so nothing flings. */
+    private fun ComposeUiTest.drag(dyDp: Float) {
+        onNodeWithTag("scene").performTouchInput {
+            val total = dyDp * D
+            down(Offset(width / 2f, if (total < 0) height * 0.8f else height * 0.25f))
+            moveBy(Offset(0f, viewConfiguration.touchSlop * sign(total)))
+            repeat(STEPS) {
+                advanceEventTime(16)
+                moveBy(Offset(0f, total / STEPS))
+            }
+            advanceEventTime(200)
+            up()
+        }
+        waitForIdle()
+    }
+
+    private fun dark(style: Style, look: GlassLookId = GlassLookId.Glossy, motion: MotionLevel = MotionLevel.Full) =
+        KitAppearance(style = style, mode = AppearanceMode.Dark, glassLook = look, motion = motion)
+
+    private fun luma(c: Color): Float = (0.2126f * c.red + 0.7152f * c.green + 0.0722f * c.blue) * 255f
+
+    /** Brightness down column [xDp] from [fromDp] to [toDp]: the mean and the steepest row-to-row step. */
+    private fun column(image: PixelMap, xDp: Float, fromDp: Float, toDp: Float): Pair<Float, Float> {
+        val x = (xDp * D).roundToInt().coerceIn(0, image.width - 1)
+        val ys = ((fromDp * D).roundToInt() until (toDp * D).roundToInt()).filter { it in 0 until image.height }
+        val l = ys.map { luma(image[x, it]) }
+        return l.average().toFloat() to (l.zipWithNext { a, b -> abs(a - b) }.maxOrNull() ?: 0f)
+    }
+
+    /** The bottom of the floating chrome: the pills on Home, the bar on Settings. */
+    private fun chromeBottom(s: Shot, page: Page) = (if (page == Page.Home) s.bounds["pills"] else s.bounds["bar"])!!.bottom.value
+
+    private fun assertSamePixels(a: PixelMap, b: PixelMap, what: String) {
+        assertEquals(a.width to a.height, b.width to b.height, "$what: size")
+        var diff = 0
+        var first: Pair<Int, Int>? = null
+        for (y in 0 until a.height) for (x in 0 until a.width) if (a[x, y] != b[x, y]) {
+            diff++
+            if (first == null) first = x to y
+        }
+        assertEquals(0, diff, "$what: $diff pixels differ with the option, the first at $first")
+    }
+
+    @Test
+    fun `B-KIT-FLOAT-001 at rest the first row rests right below the bar and pills, where it rested before`() {
+        for (page in Page.entries) {
+            val float = shot(page, floating = true)
+            val before = shot(page, floating = false, platform = FakeKitPlatform())
+            val row = float.bounds["row-0"]!!
+            val bottom = chromeBottom(float, page)
+            // The loading line's room (it always keeps its 2 dp) lies between them, as before.
+            assertTrue(row.top.value >= bottom - .5f, "$page: the first row $row starts under the chrome ending at $bottom")
+            assertTrue(row.top.value <= bottom + LOADING_BAR_DP + .5f, "$page: the first row $row rests right below the chrome ending at $bottom")
+            assertTrue(abs(row.top.value - before.bounds["row-0"]!!.top.value) <= .5f, "$page: rests where it did, ${before.bounds["row-0"]} then, $row now")
+            assertTrue(float.bounds["kit-liquid-bar"] != null, "$page: the bar is a liquid capsule")
+            if (page == Page.Home) {
+                // The pills lie outside the capsule, under it.
+                val capsule = float.bounds["kit-liquid-bar"]!!
+                assertTrue(float.bounds["pills"]!!.top.value >= capsule.bottom.value - .5f, "Home: the pills ${float.bounds["pills"]} sit under the capsule $capsule")
+            }
+        }
+    }
+
+    @Test
+    fun `B-KIT-FLOAT-002 scrolled, the content passes under the bar and is blurred and cleared under the status bar`() {
+        for (page in Page.entries) {
+            var ground = Color.Unspecified
+            val s = shot(page, floating = true, act = { drag(-120f) }, check = { ground = it.ground })
+            val g = luma(ground)
+            // Under the status bar, above where the edge's dissolve starts: blur only, no sharp row edge.
+            val (statusMean, statusStep) = column(s.image, W / 2f, 1f, STATUS_DP * STATUS_EDGE_SOLID_SHARE - 1f)
+            assertTrue(statusMean >= g + 20f, "$page: content under the status bar, mean $statusMean over ground $g")
+            assertTrue(statusStep <= BLUR_STEP, "$page: cleared to a blur under the status bar, a step of $statusStep")
+            // Inside the capsule: the rows show through its glass, blurred.
+            val capsule = s.bounds["kit-liquid-bar"]!!
+            val (capsuleMean, capsuleStep) = column(s.image, W / 2f, capsule.top.value + 8f, capsule.bottom.value - 8f)
+            assertTrue(capsuleMean >= g + 15f, "$page: content behind the capsule, mean $capsuleMean over ground $g")
+            assertTrue(capsuleStep <= BLUR_STEP, "$page: blurred behind the capsule, a step of $capsuleStep")
+            // Beside the capsule (its 6 dp margin) the rows run on sharp: they really pass under the bar.
+            val (_, sideStep) = column(s.image, 2f, capsule.top.value, capsule.bottom.value)
+            assertTrue(sideStep >= 100f, "$page: the rows run on beside the capsule, steepest step $sideStep")
+            println("$page scrolled: status mean $statusMean step $statusStep, capsule mean $capsuleMean step $capsuleStep, ground $g")
+        }
+    }
+
+    @Test
+    fun `B-KIT-FLOAT-003 dragging back down brings the first row back to its resting place`() {
+        for (page in Page.entries) {
+            val rest = shot(page, floating = true).bounds["row-0"]!!
+            val back = shot(page, floating = true, act = { drag(-200f); drag(400f) }).bounds["row-0"]!!
+            assertTrue(abs(back.top.value - rest.top.value) <= .5f, "$page: back at rest $back, was $rest")
+        }
+    }
+
+    @Test
+    fun `B-KIT-FLOAT-004 the refresh disc comes out below the floating bar, not under it`() {
+        val s = shot(Page.Home, floating = true, extras = Extras(refreshing = true))
+        val disc = s.bounds["kit-refresh"]!!
+        val bottom = chromeBottom(s, Page.Home)
+        assertTrue(disc.top.value >= bottom - .5f, "the refreshing disc $disc lies below the pills ending at $bottom")
+    }
+
+    @Test
+    fun `B-KIT-FLOAT-005 home's lens budget holds the bar, three pills and the +; a fourth kind of part goes frost`() {
+        shot(
+            Page.Home,
+            floating = true,
+            extras = Extras(fab = true, statusPart = true),
+            check = { seen ->
+                val budget = seen.budget!!
+                val claims = budget.claims.toList()
+                val granted = budget.granted
+                val liquid = claims.filter { it.key in granted }.map { it.role }.sortedBy { it.rank }
+                val frost = claims.filter { it.key !in granted }.map { it.role }
+                assertEquals(listOf(LiquidRole.Pill, LiquidRole.Pill, LiquidRole.Pill, LiquidRole.Action, LiquidRole.Bar), liquid, "granted")
+                assertEquals(listOf(LiquidRole.Status), frost, "held to frost")
+            },
+        )
+        // The same as LiquidEdge counts it: feature recordings are free; five panes fill the page's budget.
+        val claims =
+            listOf(LiquidRole.Bar, LiquidRole.Action, LiquidRole.Pill, LiquidRole.Pill, LiquidRole.Pill, LiquidRole.Status)
+                .mapIndexed { i, role -> LiquidClaim(i, role, source = null, order = i) }
+        assertEquals(setOf(0, 1, 2, 3, 4), LiquidEdge.grant(claims))
+    }
+
+    @Test
+    fun `B-KIT-FLOAT-006 every other style and Glass without a lens draw the same pixels with and without the option`() {
+        val cases =
+            Style.entries.filter { it != Style.Glass }.map { "$it" to (dark(it) to (FakeKitPlatform() as KitPlatform)) } +
+                listOf(
+                    "Glass, no lens" to (dark(Style.Glass) to FakeKitPlatform(frost = true)),
+                    "Glass, reduced motion" to (dark(Style.Glass, motion = MotionLevel.Off) to LensPlatform()),
+                    "Glass, Frosted look" to (dark(Style.Glass, GlassLookId.Frosted) to LensPlatform()),
+                )
+        for ((what, look) in cases) for (page in Page.entries) {
+            val with = shot(page, floating = true, appearance = look.first, platform = look.second)
+            val without = shot(page, floating = false, appearance = look.first, platform = look.second)
+            assertSamePixels(without.image, with.image, "$what, $page")
+        }
+    }
+
+    @Test
+    fun `B-KIT-FLOAT-007 a short window keeps the page as it was`() {
+        for (page in Page.entries) {
+            val with = shot(page, floating = true, heightDp = SHORT_H)
+            val without = shot(page, floating = false, heightDp = SHORT_H)
+            assertTrue(with.bounds["kit-liquid-bar"] == null, "$page: no floating capsule on a short window")
+            assertSamePixels(without.image, with.image, "short window, $page")
+        }
+    }
+
+    @Test
+    fun `B-KIT-FLOAT-008 right to left the pills run from the right and the capsule stays centred`() {
+        val ltr = shot(Page.Home, floating = true)
+        val rtl = shot(Page.Home, floating = true, locale = "ar")
+        val status = rtl.bounds["pill-status"]!!
+        val projects = rtl.bounds["pill-projects"]!!
+        assertTrue(status.left > projects.left, "RTL: the status pill $status leads from the right, before $projects")
+        val capsule = rtl.bounds["kit-liquid-bar"]!!
+        assertTrue(abs(capsule.left.value - (W - capsule.right.value)) <= .5f, "RTL: the capsule $capsule sits centred")
+        assertTrue(abs(rtl.bounds["row-0"]!!.top.value - ltr.bounds["row-0"]!!.top.value) <= .5f, "RTL: the first row rests where it does LTR")
+    }
+
+    @Test
+    fun `B-KIT-FLOAT-009 at text size 2 the bar and pills grow, stay apart and the first row still rests below them`() {
+        for (page in Page.entries) {
+            val s = shot(page, floating = true, fontScale = 2f, heightDp = TALL_H)
+            val capsule = s.bounds["kit-liquid-bar"]!!
+            val bar = s.bounds["bar"]!!
+            val bottom = chromeBottom(s, page)
+            val row = s.bounds["row-0"]!!
+            assertTrue(capsule.top >= bar.top - 4.5.dp && capsule.bottom <= bar.bottom + .5.dp, "$page: the capsule $capsule holds the bar $bar")
+            if (page == Page.Home) assertTrue(s.bounds["pills"]!!.top.value >= capsule.bottom.value - .5f, "Home: the pills stay under the capsule")
+            assertTrue(row.top.value >= bottom - .5f && row.top.value <= bottom + LOADING_BAR_DP + .5f, "$page: the first row $row rests right below $bottom")
+            // The pinned chrome keeps most of the window for the body.
+            println("$page at text size 2: the floating chrome ends at $bottom of $TALL_H dp")
+            assertTrue(bottom <= TALL_H * .4f, "$page: the floating chrome ends at $bottom of $TALL_H dp")
+        }
+    }
+
+    @Test
+    fun `B-KIT-FLOAT-010 a part brought into view on a floating page rests below the bar, never under it`() {
+        val s =
+            shot(
+                Page.Settings,
+                floating = true,
+                extras = Extras(field = true),
+                act = { seen ->
+                    // Scroll the spacer away and on, then put the field just under the status bar, behind the bar.
+                    drag(-200f)
+                    val field = onNodeWithTag("field").getBoundsInRoot()
+                    val target = STATUS_DP + 8f
+                    runOnIdle { seen.scroll!!.dispatchRawDelta((field.top.value - target) * D) }
+                    waitForIdle()
+                    val placed = onNodeWithTag("field").getBoundsInRoot()
+                    assertTrue(abs(placed.top.value - target) <= 1f, "the field was placed under the bar at $placed")
+                    runOnIdle { seen.focus.requestFocus() }
+                },
+            )
+        val field = s.bounds["field"]!!
+        val bar = s.bounds["bar"]!!
+        assertTrue(field.top >= bar.bottom - .5.dp, "the focused field $field rests below the bar $bar")
+        assertTrue(field.bottom.value <= H, "the focused field $field stays in the window")
+    }
+
+    @Test
+    fun `B-KIT-FLOAT-011 bring into view counts the bar's room as hidden`() {
+        // A part 50 px down, 40 px tall, in an 800 px scroller whose top 100 px lie under the bar: Compose's own rule
+        // leaves it (it is inside the scroller); the floating page's scrolls it 50 px back to rest below the bar.
+        assertEquals(0f, bringIntoViewDistance(50f, 40f, 800f))
+        assertEquals(-50f, FloatingBarBringIntoView { 100 }.calculateScrollDistance(50f, 40f, 800f))
+        // Already below the bar: nothing moves; at rest (nothing hidden) it is Compose's rule.
+        assertEquals(0f, FloatingBarBringIntoView { 100 }.calculateScrollDistance(120f, 40f, 800f))
+        assertEquals(30f, FloatingBarBringIntoView { 0 }.calculateScrollDistance(790f, 40f, 800f))
+    }
+
+    private companion object {
+        const val W = 360
+        const val H = 640
+        const val SHORT_H = 400f
+        const val TALL_H = 800f
+        const val D = 2f
+        const val STATUS_DP = 24
+        const val NAV_DP = 16
+        const val BAR_DP = 56
+        const val ROW_DP = 48
+        const val GAP_DP = 8
+        const val ROWS = 40
+        const val FIELD_AT = 14
+        const val STEPS = 20
+        const val LENS_BLUR_DP = 6f
+
+        /** The loading line's room, kept even when it shows nothing (KitLoadingBar). */
+        const val LOADING_BAR_DP = 2f
+
+        /** The most brightness may step between two rows where the content is blurred (a sharp row edge is ~200). */
+        const val BLUR_STEP = 24f
+    }
+}
