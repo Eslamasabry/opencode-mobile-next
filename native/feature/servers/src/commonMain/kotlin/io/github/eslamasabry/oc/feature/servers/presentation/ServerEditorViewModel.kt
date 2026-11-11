@@ -35,6 +35,8 @@ public data class ServerEditorUi(
     val slow: Boolean = false,
     val checked: ServerEditorProbe? = null,
     val failedCheck: Boolean = false,
+    /** The failed check ran inside Save and connect, so "Save anyway" is offered (Flutter `_verdictFromSave`). */
+    val failedFromSave: Boolean = false,
     val saved: Boolean = false,
     val failure: Failure? = null,
     val certificate: ServerCertificate? = null,
@@ -223,6 +225,7 @@ public class ServerEditorViewModel(
                 slow = false,
                 checked = null,
                 failedCheck = false,
+                failedFromSave = false,
                 failure = null,
                 certificate = null,
             )
@@ -270,7 +273,13 @@ public class ServerEditorViewModel(
             var checked = mutable.value.checked.takeIf { resultFor == input }
             if (!anyway && checked == null && (!saveAfter || mutable.value.connectOnSave)) {
                 mutable.update {
-                    it.copy(checking = true, failure = null, failedCheck = false, slow = false)
+                    it.copy(
+                        checking = true,
+                        failure = null,
+                        failedCheck = false,
+                        failedFromSave = false,
+                        slow = false,
+                    )
                 }
                 val slow = launch {
                     delay(8_000)
@@ -287,7 +296,13 @@ public class ServerEditorViewModel(
                 when (answer) {
                     is Outcome.Failed -> {
                         resultFor = null
-                        mutable.update { it.copy(failure = answer.failure, failedCheck = true) }
+                        mutable.update {
+                            it.copy(
+                                failure = answer.failure,
+                                failedCheck = true,
+                                failedFromSave = saveAfter,
+                            )
+                        }
                         offerCertificate(input.address, answer.failure)
                         return@launch
                     }
