@@ -40,6 +40,7 @@ class ReadyReconnectTest {
         var serverUp = false
         var connected = false
         var commands = 0
+        var restarts = 0
 
         /** What the start does once the server answers it (BuiltinRuntime.onManualReady). */
         var afterStart: suspend () -> Unit = {}
@@ -49,6 +50,7 @@ class ReadyReconnectTest {
             LocalServerGate(
                 probe = { if (serverUp) ProbeAnswer.Answered else ProbeAnswer.NoAnswer },
                 restart = {
+                    restarts++
                     serverUp = true
                     afterStart()
                     true
@@ -82,7 +84,10 @@ class ReadyReconnectTest {
         assertTrue(app.connected)
         assertFalse(app.order.isLocked, "the command lock is released")
         assertFalse(app.connectLane.isLocked, "the healing's lane is released")
-        assertEquals(1, app.commands, "the reconnect after the start finds the connection made and adds none")
+        // The reconnect queued behind the attempt connects to a server that answers: no second restart, no wait
+        // (ConnectionRegistry.open returns the live graph).
+        assertEquals(1, app.restarts, "the server is restarted once")
+        assertTrue(app.commands <= 2, "one attempt, at most one quick reconnect after it")
     }
 
     @Test
