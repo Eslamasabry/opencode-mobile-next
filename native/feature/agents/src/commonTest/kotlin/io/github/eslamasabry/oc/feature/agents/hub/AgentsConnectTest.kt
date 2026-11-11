@@ -324,4 +324,54 @@ class AgentsConnectTest {
         assertEquals(listOf("desk", "desk"), read) // a pull does
         assertFalse(presenter.state.value.refreshing)
     }
+
+    @Test
+    fun `HELPER-DOWN no tile says Ready or offers New conversation beside "the agent helper did not start"`() = runTest {
+        val helperId = ProfileId("owner-agents")
+        val unconnected = AgentComputer(helperId, "Phone agents", "ws://127.0.0.1:4099", "/root/projects", connected = false)
+        val computers =
+            object : AgentComputers by NoComputers {
+                override val computers = MutableStateFlow<ImmutableList<AgentComputer>>(persistentListOf(unconnected))
+            }
+        val phone = Phone(listOf(claudeReady))
+        phone.state.value = phone.state.value.copy(conversations = helperId)
+        val host = Host(Outcome.Failed(Failure.Runtime(RuntimeProblem.ServerStartUnavailable)))
+        val presenter =
+            AgentsPresenter(
+                CoroutineScope(backgroundScope.coroutineContext + UnconfinedTestDispatcher(testScheduler)),
+                computers,
+                phone,
+                onBack = {},
+                openChat = {},
+                phoneHost = host,
+            )
+        val state = presenter.state.value
+        assertTrue(state.helperConnectFailed, "the page says the helper did not start")
+        assertTrue(phoneHelperDown(state))
+        assertEquals(AgentTileState.Unavailable, agentTile(claudeReady, null, helperDown = phoneHelperDown(state)).state)
+        assertFalse(phoneChatOffered(state), "a saved but unconnected helper offers no conversation")
+
+        // The helper connects another way (New conversation starts it too): the failure line goes, the tiles are Ready.
+        computers.computers.value = persistentListOf(unconnected.copy(connected = true))
+        val live = presenter.state.value
+        assertFalse(live.helperConnectFailed)
+        assertNull(live.helperConnectFailure)
+        assertEquals(AgentTileState.Ready, agentTile(claudeReady, null, helperDown = phoneHelperDown(live)).state)
+        assertTrue(phoneChatOffered(live))
+    }
+
+    @Test
+    fun `HELPER-DOWN Try again that starts the helper brings the tiles back to Ready`() = runTest {
+        val host = Host(Outcome.Failed(Failure.Runtime(RuntimeProblem.ServerStartUnavailable)))
+        val phone = Phone(listOf(claudeReady))
+        phone.state.value = phone.state.value.copy(conversations = ProfileId("owner-agents"))
+        val presenter = presenter(this, phone, host)
+        assertTrue(phoneHelperDown(presenter.state.value))
+        host.answer = Unit.ok()
+        presenter.connectPhoneHelper()
+        val state = presenter.state.value
+        assertFalse(phoneHelperDown(state))
+        assertTrue(state.helperConnected)
+        assertTrue(phoneChatOffered(state))
+    }
 }

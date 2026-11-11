@@ -128,10 +128,15 @@ public class AgentsPresenter(
 
     public val state: StateFlow<AgentsUi> =
         combine(local, computers.computers, phone.state) { own, saved, phoneState ->
+                // The helper connected another way since the page's own start failed (New conversation starts it
+                // too): the failure line would contradict it, so it goes.
+                val live = saved.any { it.id == phoneState.conversations && it.connected }
                 own.copy(
                     computers = saved,
                     // While the page is starting the helper the recorded stop is already being answered.
                     phone = phoneState.withoutStaleStop(own.helperConnectFailed || own.helperConnecting),
+                    helperConnectFailed = own.helperConnectFailed && !live,
+                    helperConnectFailure = if (own.helperConnectFailed && !live) own.helperConnectFailure else null,
                 )
             }
             .stateIn(

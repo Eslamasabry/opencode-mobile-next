@@ -13,6 +13,8 @@ import io.github.eslamasabry.oc.feature.agents.hub.AgentTileModel
 import io.github.eslamasabry.oc.feature.agents.hub.AgentTileState
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsActions
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsUi
+import io.github.eslamasabry.oc.feature.agents.hub.phoneChatOffered
+import io.github.eslamasabry.oc.feature.agents.hub.phoneHelperDown
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRow
 import io.github.eslamasabry.oc.feature.agents.hub.agentTile
 import io.github.eslamasabry.oc.feature.agents.hub.phoneInstalledAgents
@@ -100,9 +102,8 @@ internal fun PhoneAgentTiles(state: AgentsUi, actions: AgentsActions, modifier: 
         return
     }
     val tiles = state.phone.agents.map { tileOf(it, state) }
-    // A ready agent starts a conversation once the phone's agents are connected.
-    val chat = state.phone.conversations != null &&
-        (state.helperConnected || state.computers.any { it.id == state.phone.conversations })
+    // A ready agent starts a conversation once the phone's agents are connected (never beside "did not start").
+    val chat = phoneChatOffered(state)
     KitAgentTiles(
         tiles.map { tile -> @Composable { AgentTile(tile, actions, chat, state.checkFailedAgent == tile.agent.id) } },
         modifier.then(gutter),
@@ -143,6 +144,7 @@ private fun tileOf(agent: PhoneAgentRow, state: AgentsUi): AgentTileModel =
         state.phone.installation,
         checking = state.checkingAgent == agent.id,
         resuming = state.helperConnecting,
+        helperDown = phoneHelperDown(state),
     )
 
 @Composable
