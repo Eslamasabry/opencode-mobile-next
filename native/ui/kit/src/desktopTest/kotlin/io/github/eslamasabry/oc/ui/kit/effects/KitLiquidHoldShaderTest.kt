@@ -119,6 +119,16 @@ class KitLiquidHoldShaderTest {
     }
 
     @Test
+    fun `a pure green and a pure orange keep at most a third of their chroma in the middle of the pane, in both shaders`() {
+        for (rgb in listOf(intArrayOf(0, 255, 0), intArrayOf(255, 128, 0))) {
+            // Today's: the colour controls at 1.6 make green (0,255,0) and orange (255,117,0) the glass's own colour.
+            for (got in listOf(joinPixel(rgb, knee, LiquidEdge.HOLD_CHROMA, centre), plainPixel(rgb, knee, LiquidEdge.HOLD_CHROMA, centre))) {
+                assertTrue((got.max() - got.min()) <= 255 / 3, "${rgb.toList()} -> ${got.toList()}")
+            }
+        }
+    }
+
+    @Test
     fun `knee off holds nothing - a pure green passes whole`() {
         val got = plainPixel(intArrayOf(0, 255, 0), KNEE_OFF, LiquidEdge.HOLD_CHROMA, centre)
         assertEquals(listOf(0, 255, 0), got.toList())

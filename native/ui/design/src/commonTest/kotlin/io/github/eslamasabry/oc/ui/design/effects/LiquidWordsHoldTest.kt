@@ -57,6 +57,29 @@ class LiquidWordsHoldTest {
     }
 
     @Test
+    fun `the held colour - pure green and pure orange lose most of their light and colour`() {
+        val hold = LiquidEdge.recipe(LiquidRole.Menu, true).hold
+        fun chroma(c: FloatArray) = c.max() - c.min()
+        // After the colour controls at 1.6 (what the knee sees): pure green stays (0,1,0); orange (1,.5,0) becomes (1,.458,0).
+        val green = floatArrayOf(0f, 1f, 0f)
+        val orange = floatArrayOf(1f, .458f, 0f)
+        val knee = LiquidHold(true, 0f)
+        val greenKnee = chroma(LiquidEdge.heldRgb(green, true, knee))
+        val greenHeld = chroma(LiquidEdge.heldRgb(green, true, hold))
+        val orangeKnee = chroma(LiquidEdge.heldRgb(orange, true, knee))
+        val orangeHeld = chroma(LiquidEdge.heldRgb(orange, true, hold))
+        println("held chroma: green today 1.00, knee only %.3f, with hold %.3f; orange today 1.00, knee only %.3f, with hold %.3f".format(greenKnee, greenHeld, orangeKnee, orangeHeld))
+        assertTrue(greenHeld <= 1f / 3f && orangeHeld <= 1f / 3f, "at most a third of today's chroma: green $greenHeld orange $orangeHeld")
+        assertTrue(greenKnee > 1f / 3f && orangeKnee > 1f / 3f, "the knee alone leaves more than a third (green $greenKnee orange $orangeKnee)")
+        // The rim keeps the knee's colour.
+        close(chroma(LiquidEdge.heldRgb(green, true, hold, inside = 0f)), greenKnee, "rim keeps colour")
+        // Below the knee and below the colour limit nothing changes.
+        val dim = floatArrayOf(.1f, .15f, .1f)
+        val out = LiquidEdge.heldRgb(dim, true, hold)
+        for (i in 0..2) close(out[i], dim[i], "below the knee: unchanged ($i)", 1e-5f)
+    }
+
+    @Test
     fun `the held colour is mirrored under dark ink and never leaves 0 to 1`() {
         val hold = LiquidEdge.recipe(LiquidRole.Sheet, false).hold
         for (r in 0..4) for (g in 0..4) for (b in 0..4) for (ink in listOf(true, false)) {
@@ -69,6 +92,22 @@ class LiquidWordsHoldTest {
             // The light is the knee's.
             val l = { x: FloatArray -> 0.213f * x[0] + 0.715f * x[1] + 0.072f * x[2] }
             if (out.all { it > 0.001f && it < 0.999f }) close(l(out), l(knee), "light for ${c.toList()}", 2e-3f)
+        }
+    }
+
+    @Test
+    fun `a disc of colour fading into the ground has no ring - the chroma never falls as the colour gets stronger`() {
+        val hold = LiquidEdge.recipe(LiquidRole.Menu, true).hold
+        fun chroma(c: FloatArray) = c.max() - c.min()
+        for (hue in listOf(floatArrayOf(0f, 1f, 0f), floatArrayOf(1f, .458f, 0f), floatArrayOf(.2f, .78f, .35f))) {
+            var last = 0f
+            for (i in 1..200) {
+                val a = i / 200f
+                val now = chroma(LiquidEdge.heldRgb(floatArrayOf(hue[0] * a, hue[1] * a, hue[2] * a), true, hold))
+                assertTrue(now >= last - 1e-4f, "a ring: the chroma fell from $last to $now at strength $a for ${hue.toList()}")
+                last = now
+            }
+            assertTrue(last <= LiquidEdge.HOLD_CHROMA + 1e-3f, "never past the limit: $last")
         }
     }
 

@@ -113,8 +113,13 @@ public object LiquidEdge {
     /** How much colour the glass lifts from what lies behind it (vibrancy; the library's own is 1.5). */
     public const val SATURATION: Float = 1.6f
 
-    /** The most colour a menu or a sheet lets through under its words ([LiquidHold.chroma]); 0: no limit (item 3 sets it). */
-    public const val HOLD_CHROMA: Float = 0f
+    /**
+     * The most colour a menu or a sheet lets through under its words ([LiquidHold.chroma]): .26 of the full range.
+     * Measured in `GlassWordsMenuSheetTest` on a pure green and a pure orange circle: the colour under the words is
+     * .05 (green) and .26 (orange) of today's at the circle's core (the knee alone leaves .60 and .77; saturation 1.0
+     * with it .59 and .70).
+     */
+    public const val HOLD_CHROMA: Float = .26f
 
     /** How far the glass presses the backdrop's contrast together (1 keeps it): lightly, so the content shows. */
     public const val PRESS: Float = 1f

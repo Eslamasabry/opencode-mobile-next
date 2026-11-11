@@ -683,7 +683,7 @@ bar, which is the case in the pictures. While a menu is joined the body's blur n
 the menu's rows come in (`joinedFrost`, the drop's `content` 0 to 1, linear, no step; bend, rim and tint ease by the
 join's own band as before), and the lens pass's resolution follows the mixed blur. So the bar's half of the body frosts at
 12 dp while a menu hangs from it (a departure from "no change to bars": it is the one frost of one body); a join with the
-jump pill (blur 1) is untouched, since only a drop frosted more than its body (the menu) moves the body's frost.
+jump pill (blur 1) is untouched, since only the menu (a drop whose glass holds, `LiquidHold`) moves the body's frost.
 
 ### As built: 2. The knee reaches plain panes
 
@@ -695,3 +695,35 @@ every effect run (`KitLiquidHoldShaderTest` compares the declared names with the
 shader). Desktop: `kitLiquidPlainStandIn` (colour controls, blur, the hold, the tint; no bend, no rim light) is the
 stand-in the tests draw the real menu/sheet faces through. The luminance of white behind a sheet's words is held to .50
 (`LiquidJoin.held`); a bright white card behind the words: peak luma 207 to 110 (menu), 203 to 109 (sheet), still a grey card, not a white one.
+
+### As built: 3. Colour held back
+
+Measured on a pure green (0,255,0) and a pure orange (255,128,0) 56 dp circle behind the words' band (a menu and a sheet,
+dark, desktop stand-in, mean chroma over the circle's core, over the empty pane, of 255): today 199 / 198 (menu), 191 / 190
+(sheet); knee alone 119 / 152 (.60 / .77 of today's) and 115 / 146 (sheet); (a) saturation 1.0 for the Sheet and Menu roles
+with the knee 118 / 139 (.59 / .70), sheet 114 / 134 (.60 / .70); (b) shipped 47 / 46 (.24 / .23), sheet 45 / 43 (.24 / .23).
+(a) cannot work: a pure colour is already saturated at 1.0, and saturation 1.6 only lifts mixed colours (the app's own
+green, #34C759: 166 today, 77 with (a), 46 with (b)). So (b): after the knee the colour that is left is limited
+(`LiquidHold.chroma` = `LiquidEdge.HOLD_CHROMA` = .26): a chroma (largest minus smallest channel) up to .4 of that is
+left alone, above it eases to .26 (`t + (cap - t)(1 - exp(-(c - t)/(cap - t)))`), the light the knee's, in the lens's inner
+part only (`smoothstep(rim/2, rim, depth)`), so the rim keeps its colour (a green block behind a pane's edge: chroma 121
+in the rim band, 51 at the middle). The first try scaled the colour by `(knee / light)^3` above the knee: its core was as
+quiet (.08 / .22) but the sub-knee halo kept its full colour, so a green disc read as a green ring round a grey centre
+(`render-words3-sheet-exponent-ring.png`); the limiter has no ring (the chroma never falls as the colour gets stronger,
+a unit test). Both shaders; the join shader gets it only for a body joined to a menu (the bar's half too: one body).
+
+### 4. A dark bubble is still a plateau
+
+Behind a menu's row a dark bubble (and the mid ground it sits on) keeps its plateau: contrast between the bubble and its
+ground 40 of 255 before and after (a frost cannot remove an area), the steepest edge 16.3 to 9.6 of 255 per 4 dp (a line of text behind the menu: peak 95 to 72, steepest edge 1.9 to 0.0, contrast 68 to 18). Under
+light words in a dark theme the knee holds back the bright end only. If the picture on the device still shows a
+highlighted row, the next lever is a floor for the dark end (the mirror of the knee), not more blur.
+
+**Pictures** (desktop, Glass dark, stand-in lens: no bend, no rim light): `glass-in-the-kit/render-words3-menu-before.png`
+and `-after.png`, `render-words3-sheet-before.png` and `-after.png`.
+
+**Checks** (GitHub, desktop): `LiquidWordsHoldTest` (recipes, the reference colour), `GlassWordsMenuSheetTest` (the real
+menu and sheet faces over a line of text, a dark bubble, a bright card, a green and an orange circle: before and after
+numbers, the rim, the other looks), `KitLiquidHoldShaderTest` (both shaders against the reference, the uniforms),
+`LiquidEdgeDockTest` and `LiquidJoinTest` (the dock keeps its numbers). Not run: anything on a device; the lens's bend and
+rim light, the Android runtime shader (compiled as SkSL on desktop from the same text).

@@ -264,6 +264,23 @@ class GlassWordsMenuSheetTest {
     }
 
     @Test
+    fun `the colour held back - the chroma under the words is at most a third of today's for a pure green and a pure orange, on a menu and a sheet`() {
+        for (kind in Kind.entries) {
+            val t = table(kind, true, listOf(Content.Green, Content.Orange, Content.AppGreen), Variant.entries)
+            for (c in listOf(Content.Green, Content.Orange)) {
+                val today = t.getValue(c to Variant.Before).blob
+                val knee = t.getValue(c to Variant.KneeOnly).blob
+                val a = t.getValue(c to Variant.SaturationOne).blob
+                val b = t.getValue(c to Variant.Shipped).blob
+                val peak = t.getValue(c to Variant.Before).chromaOver to t.getValue(c to Variant.Shipped).chromaOver
+                println("CHROMA $kind $c (blob core mean): today %.1f, knee only %.1f (%.2f), (a) saturation 1.0 + knee %.1f (%.2f), (b) shipped %.1f (%.2f); band peak today %.1f shipped %.1f".format(today, knee, knee / today, a, a / today, b, b / today, peak.first, peak.second))
+                assertTrue(b <= today / 3f, "$kind $c: shipped blob chroma $b is more than a third of today's $today")
+                assertTrue(a > today / 3f, "$kind $c: saturation 1.0 with the knee alone already reached a third ($a of $today): the colour hold would not be needed")
+            }
+        }
+    }
+
+    @Test
     fun `the rim still bends real content - a bright block and a green block behind a pane's edge show in its rim`() {
         for (kind in Kind.entries) {
             val p = place(kind)
@@ -279,6 +296,19 @@ class GlassWordsMenuSheetTest {
                 else assertTrue(a.peakLuma - b.peakLuma >= 20f, "$kind: the bright block shows in the rim: ${a.peakLuma} vs ${b.peakLuma}")
             }
         }
+    }
+
+    @Test
+    fun `the rim keeps its colour - a pane edge over green keeps more chroma than the same pane's middle`() {
+        val p = place(Kind.Sheet)
+        // The block lies behind the pane's left edge (rimContent): the rim band keeps colour, the middle of the pane
+        // (a circle there) is held to a third of today's.
+        val rim = shot(Kind.Sheet, Content.Green, Variant.Shipped, rimBlock = true)
+        val left = max(p.x, 0f) + 4f
+        val inRim = measure(rim, left, p.cy - 30f, left + 14f, p.cy + 30f)
+        val middle = blobChroma(shot(Kind.Sheet, Content.Green, Variant.Shipped), Kind.Sheet)
+        println("RIM COLOUR: rim peak ${inRim.peakChroma} (mean ${inRim.meanChroma}), middle core mean $middle")
+        assertTrue(inRim.peakChroma > 2f * middle, "the rim keeps more colour than the words' middle: ${inRim.peakChroma} vs $middle")
     }
 
     @Test
@@ -345,7 +375,7 @@ class GlassWordsMenuSheetTest {
             val want = LiquidEdge.recipe(role, dark)
             assertEquals(12f, seen.last().recipe.blurDp, "$kind dark=$dark blur")
             assertEquals(want.hold, seen.last().recipe.hold, "$kind dark=$dark hold")
-            assertTrue(seen.last().recipe.hold.knee)
+            assertTrue(seen.last().recipe.hold.knee && seen.last().recipe.hold.chroma > 0f)
         }
     }
 
