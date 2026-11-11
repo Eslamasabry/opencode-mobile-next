@@ -76,7 +76,7 @@ public fun KitPageState(
                 ),
             contentAlignment = Alignment.Center,
         ) {
-            Column(Modifier.kitMaxWidth(CapRole.State).fillMaxWidth()) {
+            Column(Modifier.kitMaxWidth(CapRole.State).fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                 // The bare glyph on the title's rail: no tile behind it (audit 2026-11-09 C01).
                 KitGlyph(
                     icon,
@@ -91,7 +91,7 @@ public fun KitPageState(
                     Modifier.testTag("kit-state-icon"),
                 )
                 Spacer(Modifier.height(Space.S5.dp))
-                KitText(title, Modifier.semantics { heading() }, role = TypeRole.Title)
+                KitText(title, Modifier.fillMaxWidth().semantics { heading() }, role = TypeRole.Title, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                 val words =
                     if (slow && since != null)
                         stringResource(
@@ -104,7 +104,7 @@ public fun KitPageState(
                     else body
                 if (words != null) {
                     Spacer(Modifier.height(Space.S2.dp))
-                    KitText(words, tone = TextTone.Secondary)
+                    KitText(words, Modifier.fillMaxWidth(), tone = TextTone.Secondary, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                 }
                 if (progress != null) {
                     Spacer(Modifier.height(Space.S5.dp))
