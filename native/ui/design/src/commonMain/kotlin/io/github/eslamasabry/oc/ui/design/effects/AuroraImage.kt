@@ -32,13 +32,94 @@ public object AuroraImage {
     public const val FRAMES_PER_SECOND: Int = 6 // FG: lib/ui/kit/live_background/styles/kit_live_aurora_image.dart:94
 
     public const val CHROMA_LIGHT: Float = .12f // FG: lib/ui/kit/live_background/styles/kit_live_aurora_image.dart:104
-    public const val CHROMA_DARK: Float = .14f // FG: lib/ui/kit/live_background/styles/kit_live_aurora_image.dart:105
+
+    /**
+     * The dark page's colour (glass-in-the-kit 1b, 2026-11-11; the owner on the dark home: "Is this supposed to be
+     * glass?"): a page with light in it, so the clear panes have something to show. Flutter's was [CHROMA_DARK_QUIET].
+     */
+    public const val CHROMA_DARK: Float = .20f
+
+    /**
+     * The dark plate's colour as Flutter drew it (FG: lib/ui/kit/live_background/styles/kit_live_aurora_image.dart:105):
+     * what the look thumbnails still show, and the most the spots measure ([spotsChromaFor]).
+     */
+    public const val CHROMA_DARK_QUIET: Float = .14f
 
     /** After this long with no touch the look rests on its frame (Dart `KitLiveClock.idleAfter`). */
     public const val IDLE_AFTER_MS: Long = 30_000 // FG: lib/ui/kit/live_background/kit_live_clock.dart:44
 
-    /** How much of the picture's colour shows. */
+    /** How much of the picture's colour shows on the page. */
     public fun chromaFor(dark: Boolean): Float = if (dark) CHROMA_DARK else CHROMA_LIGHT
+
+    /** How much of it a look's thumbnail shows: unchanged by the page's light (glass-in-the-kit 1b). */
+    public fun thumbnailChromaFor(dark: Boolean): Float = if (dark) CHROMA_DARK_QUIET else CHROMA_LIGHT
+
+    /**
+     * The chroma the spots are measured at ([spotsOf], [clearSpotsOf]): the page's, capped at the quiet plate's
+     * (glass-in-the-kit 1b, "words do not pay"). The spots set how thick a pane or a liquid face grows
+     * ([io.github.eslamasabry.oc.ui.design.style.GlassFinish.thickened]), so the brighter page leaves every pane and every
+     * liquid face exactly as thick as before; the words over the brighter page are checked by test instead.
+     */
+    public fun spotsChromaFor(dark: Boolean): Float = minOf(chromaFor(dark), if (dark) CHROMA_DARK_QUIET else CHROMA_LIGHT)
+
+    /**
+     * A soft light fixed on the dark page (glass-in-the-kit 1b): its centre at [x] across and [y] down the page and its
+     * [radius] a share of the page's width, so it holds on every screen and width. It stays still while the aurora
+     * drifts under it.
+     */
+    public data class Light(val x: Float, val y: Float, val radius: Float)
+
+    /** The dark page's two lights, in the accent's hue: upper start (behind the list) and middle end (the mock's). */
+    public val LIGHTS_DARK: List<Light> = listOf(Light(.15f, .25f, .45f), Light(.70f, .55f, .40f))
+
+    /** What a light adds to the page's brightness at its centre (Rec. 709 luma, 0..1): about .10, the mock's glow. */
+    public const val LIGHT_PEAK_LUMA: Float = .10f
+
+    /** The share of a light's radius it stays full over; it fades out over the rest (the outer 55 %). */
+    public const val LIGHT_CORE: Float = .45f
+
+    /** The lights on a page of this brightness: the dark page's two; the light theme has none in step 1. */
+    public fun lightsFor(dark: Boolean): List<Light> = if (dark) LIGHTS_DARK else emptyList()
+
+    /**
+     * How strong a light is at [distance] from its centre, as a share of its radius: full over its [LIGHT_CORE], then
+     * a smooth fade (smoothstep, no ring at the core's edge) to nothing at its rim.
+     */
+    public fun lightShare(distance: Float): Float {
+        if (distance <= LIGHT_CORE) return 1f
+        if (distance >= 1f) return 0f
+        val u = (distance - LIGHT_CORE) / (1f - LIGHT_CORE)
+        return 1f - u * u * (3f - 2f * u)
+    }
+
+    /** The lights' summed share at ([px], [py]) on a [width] x [height] page. */
+    public fun lightAt(px: Float, py: Float, width: Float, height: Float, dark: Boolean): Float =
+        lightsFor(dark).sumOf { l ->
+            val dx = px - l.x * width
+            val dy = py - l.y * height
+            lightShare(kotlin.math.sqrt(dx * dx + dy * dy) / (l.radius * width)).toDouble()
+        }.toFloat()
+
+    /**
+     * The colour a light adds at its centre (drawn additively): [accent]'s hue, scaled so it adds [LIGHT_PEAK_LUMA] of
+     * brightness. A colour too dark to scale that far (a channel would pass 1) adds a little less. A grey accent adds
+     * grey light.
+     */
+    public fun lightColorFor(accent: Argb): Argb {
+        val r = accent.red / 255f
+        val g = accent.green / 255f
+        val b = accent.blue / 255f
+        val luma = LR * r + LG * g + LB * b
+        fun ch(v: Float) = ((if (luma <= 0f) LIGHT_PEAK_LUMA else v * LIGHT_PEAK_LUMA / luma).coerceIn(0f, 1f) * 255f).roundToInt()
+        return Argb((0xFF shl 24) or (ch(r) shl 16) or (ch(g) shl 8) or ch(b))
+    }
+
+    /** [spot] with [share] of [accent]'s light added on it (the lights' blend: plus, clamped). */
+    public fun lit(spot: Argb, accent: Argb, share: Float): Argb {
+        val l = lightColorFor(accent)
+        fun ch(s: Int, a: Int) = (s + a * share).roundToInt().coerceIn(0, 255)
+        return Argb((0xFF shl 24) or (ch(spot.red, l.red) shl 16) or (ch(spot.green, l.green) shl 8) or ch(spot.blue, l.blue))
+    }
 
     /**
      * The person's Intensity (Dart `KitLiveIntensity.strength`): Subtle .7, Normal 1, Bold 1.6
@@ -69,8 +150,8 @@ public object AuroraImage {
      * The 4x5 colour matrix (row-major, offsets 0..255, as Android's and Compose's `ColorMatrix`) that turns the plate to
      * [accent]'s hue and tints it onto [ground] (Dart `_matrixFor`, `kit_live_aurora_image.dart:141-145`).
      */
-    public fun matrixFor(ground: Argb, accent: Argb, dark: Boolean): FloatArray {
-        val tint = tintOn(ground, chromaFor(dark))
+    public fun matrixFor(ground: Argb, accent: Argb, dark: Boolean, chroma: Float = chromaFor(dark)): FloatArray {
+        val tint = tintOn(ground, chroma)
         val hue = hueFor(accent)
         return if (hue == null) tint else compose(hue, tint)
     }
@@ -78,10 +159,11 @@ public object AuroraImage {
     /**
      * The picture's darkest and brightest spots as shown on [ground] ([frosted]: under a Glass pane's blur), each moved
      * 3 % past itself towards black or white, so a pane over the picture never thickens too little
-     * (`kit_live_aurora_image.dart:174-198`).
+     * (`kit_live_aurora_image.dart:174-198`). Measured at [spotsChromaFor] unless [chroma] says otherwise (a test
+     * measuring the page as drawn); the page's lights are not in them.
      */
-    public fun spotsOf(ground: Argb, accent: Argb, dark: Boolean, frosted: Boolean): Pair<Argb, Argb> {
-        val shown = matrixFor(ground, accent, dark)
+    public fun spotsOf(ground: Argb, accent: Argb, dark: Boolean, frosted: Boolean, chroma: Float = spotsChromaFor(dark)): Pair<Argb, Argb> {
+        val shown = matrixFor(ground, accent, dark, chroma)
         val (darkest, brightest) =
             when {
                 dark && frosted -> darkPlateFrostedDarkest to darkPlateFrostedBrightest
@@ -98,9 +180,9 @@ public object AuroraImage {
      * to the picture's raw darkest and brightest. Conservative: Flutter measured the frost under a 40 px Gaussian, and
      * Glass's clear panes still blur 10-12 dp.
      */
-    public fun clearSpotsOf(ground: Argb, accent: Argb, dark: Boolean): List<Argb> {
-        val (fd, fb) = spotsOf(ground, accent, dark, frosted = true)
-        val (rd, rb) = spotsOf(ground, accent, dark, frosted = false)
+    public fun clearSpotsOf(ground: Argb, accent: Argb, dark: Boolean, chroma: Float = spotsChromaFor(dark)): List<Argb> {
+        val (fd, fb) = spotsOf(ground, accent, dark, frosted = true, chroma = chroma)
+        val (rd, rb) = spotsOf(ground, accent, dark, frosted = false, chroma = chroma)
         return listOf(
             io.github.eslamasabry.oc.ui.design.color.lerp(fd, rd, LIGHT_FROST_SHARE),
             io.github.eslamasabry.oc.ui.design.color.lerp(fb, rb, LIGHT_FROST_SHARE),

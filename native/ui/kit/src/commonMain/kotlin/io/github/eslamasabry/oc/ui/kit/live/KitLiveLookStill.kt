@@ -66,15 +66,48 @@ internal fun DrawScope.drawAuroraPlate(image: ImageBitmap, filter: ColorFilter, 
     )
 }
 
-/** The plate for this brightness, turned to the accent and tinted onto the ground; null for a look the app does not draw. */
+/**
+ * Draws the page's soft lights ([AuroraImage.lightsFor]) over the plate, in [accent]'s hue, added to what is there, at
+ * [alpha] (the plate's own). Fixed in page fractions: the aurora drifts under them (glass-in-the-kit 1b).
+ */
+internal fun DrawScope.drawAuroraLights(accent: io.github.eslamasabry.oc.ui.design.color.Argb, dark: Boolean, alpha: Float) {
+    val lights = AuroraImage.lightsFor(dark)
+    if (lights.isEmpty() || alpha <= 0f || size.width <= 0f || size.height <= 0f) return
+    val color = Color(AuroraImage.lightColorFor(accent).v)
+    // The light's fall-off, sampled finely enough that the gradient's straight pieces do not show as rings.
+    val stops = Array(LIGHT_STOPS + 1) { i ->
+        val d = i.toFloat() / LIGHT_STOPS
+        d to color.copy(alpha = AuroraImage.lightShare(d))
+    }
+    for (l in lights) {
+        val center = androidx.compose.ui.geometry.Offset(size.width * l.x, size.height * l.y)
+        val radius = size.width * l.radius
+        drawCircle(
+            androidx.compose.ui.graphics.Brush.radialGradient(*stops, center = center, radius = radius),
+            radius = radius,
+            center = center,
+            alpha = alpha,
+            blendMode = androidx.compose.ui.graphics.BlendMode.Plus,
+        )
+    }
+}
+
+/** How many pieces a light's radial fall-off is drawn in. */
+private const val LIGHT_STOPS = 24
+
+/**
+ * The plate for this brightness, turned to the accent and tinted onto the ground; null for a look the app does not draw.
+ * A [thumbnail] (a look's choice card) keeps the quiet plate's chroma ([AuroraImage.thumbnailChromaFor]).
+ */
 @Composable
-internal fun rememberAuroraPlate(look: String?): Pair<ImageBitmap, ColorFilter>? {
+internal fun rememberAuroraPlate(look: String?, thumbnail: Boolean = false): Pair<ImageBitmap, ColorFilter>? {
     if (look != AuroraImage.ID) return null
     val roles = LocalKitRoles.current
     val image = imageResource(if (roles.dark) Res.drawable.aurora_dark else Res.drawable.aurora_light)
     val filter =
-        remember(roles.ground, roles.accent, roles.dark) {
-            ColorFilter.colorMatrix(ColorMatrix(AuroraImage.matrixFor(roles.ground, roles.accent, roles.dark)))
+        remember(roles.ground, roles.accent, roles.dark, thumbnail) {
+            val chroma = if (thumbnail) AuroraImage.thumbnailChromaFor(roles.dark) else AuroraImage.chromaFor(roles.dark)
+            ColorFilter.colorMatrix(ColorMatrix(AuroraImage.matrixFor(roles.ground, roles.accent, roles.dark, chroma)))
         }
     return if (image.width > 1 && image.height > 1) image to filter else null
 }
@@ -92,7 +125,7 @@ internal fun rememberAuroraPlate(look: String?): Pair<ImageBitmap, ColorFilter>?
 @Composable
 internal fun KitLiveLookStill(look: String?, modifier: Modifier = Modifier) {
     val ground = LocalKitColors.current.ground
-    val plate = rememberAuroraPlate(look)
+    val plate = rememberAuroraPlate(look, thumbnail = true)
     val alpha = AuroraImage.alphaFor(SAMPLE_STRENGTH)
     val corner = (FlutterKitTokens.ICON_TILE_RADIUS + Space.S1).dp // FG: lib/ui/kit/kit_option_card.dart:766
     val shaderLook = LiveLooks.shader(look)

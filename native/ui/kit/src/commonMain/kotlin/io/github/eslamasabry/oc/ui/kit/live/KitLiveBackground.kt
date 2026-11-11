@@ -145,6 +145,8 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, shared: Boolean = fa
                     drawRect(ground)
                     val at = if (animates) drift.value.toDouble() else 0.0
                     drawAuroraPlate(image, filter, alpha, AuroraImage.driftAt(at))
+                    // The page's soft lights (dark only), still while the plate drifts under them.
+                    drawAuroraLights(accent, roles.dark, alpha)
                 }
             }
             shaderPicture != null -> Modifier.kitGlassBackdropSource(backdrop, pictures, shaderPicture)
