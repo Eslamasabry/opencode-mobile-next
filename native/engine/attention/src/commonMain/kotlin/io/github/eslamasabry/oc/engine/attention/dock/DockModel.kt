@@ -137,10 +137,13 @@ public data class DockHidden(
 }
 
 public enum class DockPresence {
-    /** Nothing to offer at all (no live, pinned, open or recent conversation): no dock, no nub. */
+    /** No server is connected and nothing is in the dock (first run): no dock, no nub. */
     Hidden,
 
-    /** Tucked to the thin edge nub: quiet (fewer than two live and no unanswered failure or request), or tucked. */
+    /**
+     * Tucked to the thin edge nub: quiet (fewer than two live and no unanswered failure or request), or tucked. Also
+     * with no ring at all while a server is connected: the dock then offers only its new-conversation control.
+     */
     Nub,
 
     /** Out: two or more live, or an unanswered failure or request, and the person has not tucked it. */
@@ -296,8 +299,9 @@ public sealed interface DockEvent {
  *   (pinned, NeedsYou, Failed, working, Finished), still in their stable order, and [DockUi.overflow] counts the rest.
  * - The dock is never hidden for lack of live conversations. [DockPresence.Out] needs two or more live (anything but
  *   Idle), or an unanswered failure or request; otherwise it is [DockPresence.Nub] (the thin edge nub). The person can
- *   tuck it, and a NEW failure or request untucks it; with nothing live the tuck is forgotten. [DockPresence.Hidden]
- *   only when there is nothing at all to offer (the app hides it too when the person turned the dock off).
+ *   tuck it, and a NEW failure or request untucks it; with nothing live the tuck is forgotten. With no ring at all it
+ *   is still the nub while a server is connected (its "+" starts a conversation there). [DockPresence.Hidden] only
+ *   when no ring is in the dock and no server is connected (the app hides it too when the person turned it off).
  * - Removing (`DockEvent.Remove`): the ring (or sub-agent) leaves at once and stays out while nothing new happens. It
  *   comes back by itself only when it needs the person or fails AFTER the removal (a rise in its `pulse`, or a
  *   sub-agent's for a removed parent), or when the person opens it. Plain working or finished does not bring it back. A removed parent takes its sub-agents with it; a removed sub-agent hides only itself.
@@ -819,10 +823,11 @@ public class DockModel private constructor(private val s: Snapshot) {
                 }
             val live = members.count { it.state != DockState.Idle }
             val alert = members.any { it.state == DockState.NeedsYou || it.state == DockState.Failed }
-            // Never hidden for lack of live conversations: quiet is the nub, nothing at all to offer is hidden.
+            // Never hidden for lack of live conversations: quiet is the nub, and an empty dock is the nub with its "+"
+            // while a server is connected (a new conversation has somewhere to go). Hidden only with nothing connected.
             val presence =
                 when {
-                    members.isEmpty() -> DockPresence.Hidden
+                    members.isEmpty() -> if (online.isNotEmpty()) DockPresence.Nub else DockPresence.Hidden
                     !tucked && (live >= 2 || alert) -> DockPresence.Out
                     else -> DockPresence.Nub
                 }

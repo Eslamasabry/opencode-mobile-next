@@ -70,7 +70,8 @@ class DockModelTest {
         data class Case(val label: String, val events: List<DockEvent>, val expect: DockPresence)
         val cases =
             listOf(
-                Case("nothing at all", emptyList(), DockPresence.Hidden),
+                Case("nothing in the dock and nothing connected", emptyList(), DockPresence.Hidden),
+                Case("nothing in the dock but a server connected: the nub with its +", listOf(DockEvent.PinsLoaded(p, emptyList())), DockPresence.Nub),
                 Case("one live retreats to the nub", listOf(DockEvent.RunStarted(a)), DockPresence.Nub),
                 Case("nothing live is still the nub, never hidden", listOf(DockEvent.RunStarted(a), DockEvent.RunEnded(a, DockRunEnd.Stopped)), DockPresence.Nub),
                 Case("an idle open conversation alone is the nub", listOf(DockEvent.Opened(a)), DockPresence.Nub),

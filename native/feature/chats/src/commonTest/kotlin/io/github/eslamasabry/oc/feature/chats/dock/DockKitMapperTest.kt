@@ -57,6 +57,25 @@ class DockKitMapperTest {
     }
 
     @Test
+    fun a_dock_with_no_ring_is_a_real_frame_unless_hidden() {
+        // Connected, nothing to offer yet: the strip or nub with its "+", tucked as the presence says.
+        val hiddenOne = DockHidden(ref("h"), title = "Old work", nickname = null, agent = null, state = DockState.Working, parent = null)
+        val empty = DockUi(presence = DockPresence.Nub, hidden = persistentListOf(hiddenOne), placement = DockPlacement(DockSide.Start, 0.2f))
+        val frame = DockKitMapper.map(empty, emptyMap(), "U")
+        assertNotEquals(DockKitFrame.Empty, frame)
+        assertTrue(frame.model.rings.isEmpty())
+        assertTrue(frame.model.tucked)
+        assertEquals(KitDockSide.Start, frame.model.placement.side)
+        assertEquals(0.2f, frame.model.placement.verticalBias)
+        assertEquals("Old work", frame.model.hidden.single().name)
+        assertNull(frame.model.current)
+        assertFalse(DockKitMapper.map(empty.copy(presence = DockPresence.Out), emptyMap(), "U").model.tucked)
+        // Hidden (nothing connected) or switched off: nothing.
+        assertEquals(DockKitFrame.Empty, DockKitMapper.map(empty.copy(presence = DockPresence.Hidden), emptyMap(), "U"))
+        assertEquals(DockKitFrame.Empty, DockKitMapper.map(empty, emptyMap(), "U", shown = false))
+    }
+
+    @Test
     fun a_quiet_dock_with_only_idle_recent_rings_is_drawn_tucked_not_hidden() {
         // The owner's "always available": nothing live is the nub with the recent conversations, never no dock.
         val quiet = DockUi(entries = persistentListOf(entry("a", DockState.Idle), entry("b", DockState.Idle)), presence = DockPresence.Nub, liveCount = 0)
