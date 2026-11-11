@@ -15,6 +15,7 @@ import io.github.eslamasabry.oc.engine.attention.activity.AttentionKeyStore
 import io.github.eslamasabry.oc.engine.attention.dock.DockActions
 import io.github.eslamasabry.oc.engine.attention.dock.DockController
 import io.github.eslamasabry.oc.engine.attention.dock.DockEvent
+import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.engine.attention.dock.DockFeed
 import io.github.eslamasabry.oc.engine.attention.dock.DockKeys
 import io.github.eslamasabry.oc.engine.attention.dock.DockNicknames
@@ -160,7 +161,21 @@ class AppEdgeDock(
             combine(connections.live, stores.profiles.profiles) { live, saved -> live to saved }
                 .collect { (live, loaded) ->
                     val saved = loaded.map { it.id }.toSet()
-                    for (profile in loaded) controller.feed(DockEvent.ServerName(profile.id, profile.profile.name))
+                    for (profile in loaded) {
+                        controller.feed(DockEvent.ServerName(profile.id, profile.profile.name))
+                        // The mark the home row shows: OpenCode's for an OpenCode server, Codex's for Codex; an agents
+                        // server names its agent per conversation (the ring's own agent id), else no mark.
+                        controller.feed(
+                            DockEvent.ServerMark(
+                                profile.id,
+                                when (profile.profile.backend) {
+                                    BackendKind.OpenCode2 -> "opencode"
+                                    BackendKind.Codex -> "codex"
+                                    BackendKind.Paseo -> null
+                                },
+                            )
+                        )
+                    }
                     for (gone in (savedBefore - saved).toList()) {
                         detach(gone)
                         controller.profileGone(gone)

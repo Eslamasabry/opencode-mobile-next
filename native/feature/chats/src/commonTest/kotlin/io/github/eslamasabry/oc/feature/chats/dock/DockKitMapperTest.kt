@@ -243,4 +243,18 @@ class DockKitMapperTest {
         assertEquals("Old", frame.nameOf(DockKitMapper.key(ref("h"))))
         assertNull(frame.nameOf("nothing"))
     }
+
+    @Test
+    fun `a ring draws the mark the home row shows for its conversation`() {
+        // An OpenCode conversation: its mode ("build") is no mark, so the server's OpenCode mark is used.
+        assertEquals("opencode", DockKitMapper.markOf("build", "opencode"))
+        assertEquals("opencode", DockKitMapper.markOf(null, "opencode"))
+        // A phone agent names itself.
+        assertEquals("claude", DockKitMapper.markOf("claude", null))
+        assertEquals("codex", DockKitMapper.markOf("Codex", null))
+        // Nothing known: the kit draws the monogram.
+        assertNull(DockKitMapper.markOf(null, null))
+        assertNull(DockKitMapper.markOf("build", null))
+        assertNull(DockKitMapper.markOf(" ", " "))
+    }
 }
