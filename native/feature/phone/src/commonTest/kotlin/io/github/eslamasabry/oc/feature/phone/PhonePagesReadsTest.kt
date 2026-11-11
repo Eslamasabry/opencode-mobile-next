@@ -9,6 +9,10 @@ import io.github.eslamasabry.oc.engine.runtime.storage.HostStorageAvailability
 import io.github.eslamasabry.oc.engine.runtime.storage.PhoneStorageSnapshot
 import io.github.eslamasabry.oc.engine.runtime.storage.StoragePressure
 import io.github.eslamasabry.oc.feature.phone.presentation.InstalledInventoryRetry
+import io.github.eslamasabry.oc.feature.phone.presentation.InstalledLine
+import io.github.eslamasabry.oc.feature.phone.presentation.PhoneDetailsUi
+import io.github.eslamasabry.oc.feature.phone.presentation.installedFailureShown
+import io.github.eslamasabry.oc.feature.phone.presentation.installedLine
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneServerFacts
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneStateDetails
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneStorageReadings
@@ -19,6 +23,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CompletableDeferred
@@ -147,6 +152,28 @@ class PhonePagesReadsTest {
         // Any other failure keeps its one second read, then says so.
         assertTrue(InstalledInventoryRetry.again(1, broken))
         assertFalse(InstalledInventoryRetry.again(2, broken))
+    }
+
+    @Test
+    fun `S15 while Add tools' install runs no check is retried and the row says Installing, not a failure`() {
+        val busy = Failure.Runtime(RuntimeProblem.SlotBusy)
+        // The install holds the one task slot for minutes: waiting reads would only end as "busy".
+        assertFalse(InstalledInventoryRetry.again(1, busy, addingTools = true))
+        assertFalse(InstalledInventoryRetry.again(2, busy, addingTools = true))
+        val names = persistentListOf("Linux base", "Git and SSH")
+        val installing =
+            PhoneDetailsUi(installed = true, installedNames = names, addingTools = true, inventoryFailure = busy)
+        assertEquals(InstalledLine.Installing, installedLine(installing))
+        assertNull(installedFailureShown(installing))
+        // The previous list is kept under the Installing line.
+        assertEquals(names, installing.installedNames)
+        // A read in flight says Checking and hides the old failure; only a settled failure is shown.
+        val checking = installing.copy(addingTools = false, loading = true)
+        assertEquals(InstalledLine.Checking, installedLine(checking))
+        assertNull(installedFailureShown(checking))
+        val settled = checking.copy(loading = false)
+        assertEquals(InstalledLine.Names, installedLine(settled))
+        assertEquals(busy, installedFailureShown(settled))
     }
 
     @Test

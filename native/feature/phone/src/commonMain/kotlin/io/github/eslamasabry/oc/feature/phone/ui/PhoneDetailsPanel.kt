@@ -6,7 +6,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import io.github.eslamasabry.oc.core.common.text.Numbers
+import io.github.eslamasabry.oc.feature.phone.presentation.InstalledLine
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneProotMode
+import io.github.eslamasabry.oc.feature.phone.presentation.installedFailureShown
+import io.github.eslamasabry.oc.feature.phone.presentation.installedLine
 import io.github.eslamasabry.oc.feature.phone.presentation.ThisPhoneActions
 import io.github.eslamasabry.oc.feature.phone.presentation.ThisPhoneUi
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
@@ -56,24 +59,33 @@ internal fun installedSentence(names: List<String>): String =
         )
 
 @Composable
+private fun installedBusyWords(line: InstalledLine): String =
+    stringResource(
+        if (line == InstalledLine.Installing) Res.string.r40SetupComponentRunning
+        else Res.string.r40PhoneChecking
+    )
+
+@Composable
 internal fun PhoneInstalledPanel(state: ThisPhoneUi, actions: ThisPhoneActions) {
     val reading = state.details
     if (!reading.installed) return
     val names = reading.installedNames
-    if (names == null && reading.loading) {
+    val line = installedLine(reading)
+    if (names == null && line != InstalledLine.Names) {
         KitRow(
             title = stringResource(Res.string.thisPhoneInstalled),
-            supporting = stringResource(Res.string.r40PhoneChecking),
+            supporting = installedBusyWords(line),
         )
     } else if (names != null) {
         KitExpandRow(
             title = stringResource(Res.string.thisPhoneInstalled),
             expanded = state.installedOpen,
             modifier = Modifier.testTag("this-phone-installed"),
-            // Try again visibly tries: the line says "Checking…" while the read runs.
+            // Try again visibly tries: the line says "Checking…" while the read runs, and
+            // "Installing…" while Add tools' job runs (the previous list stays in the fold).
             supporting =
-                if (reading.loading) stringResource(Res.string.r40PhoneChecking)
-                else installedSentence(names),
+                if (line == InstalledLine.Names) installedSentence(names)
+                else installedBusyWords(line),
             onExpandedChange = actions::showInstalled,
             leading = KitIcons.check,
         ) {
@@ -90,7 +102,7 @@ internal fun PhoneInstalledPanel(state: ThisPhoneUi, actions: ThisPhoneActions) 
             }
         }
     }
-    reading.inventoryFailure?.takeUnless { reading.loading }?.let {
+    installedFailureShown(reading)?.let {
         KitErrorNotice(
             message = stringResource(Res.string.r40PhoneInventoryFailed),
             failure = it,

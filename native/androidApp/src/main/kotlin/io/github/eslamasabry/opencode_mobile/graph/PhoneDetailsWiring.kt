@@ -24,6 +24,7 @@ import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.connection.ServerConnections
+import io.github.eslamasabry.oc.engine.runtime.setup.SetupState
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ReplyTiming
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ReplyTimingEvent
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ReplyTimingState
@@ -49,6 +50,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -150,7 +152,19 @@ class NativePhoneDetails(
                 if (visible) refresh()
             }
         }
+        // A setup job that starts while This phone shows turns the Installed row to "Installing…" at
+        // once, and its end reads the list again (toolsChanged above may arrive before the job's
+        // progress says it ended, so the end is read from here too).
+        scope.launch {
+            setup.progress
+                .map { it.state == SetupState.Running }
+                .distinctUntilChanged()
+                .drop(1)
+                .collect { if (visible) refresh() }
+        }
     }
+
+    private fun addingTools(): Boolean = setup.progress.value.state == SetupState.Running
 
     private fun owner(): ProfileId? =
         (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)
@@ -277,11 +291,19 @@ class NativePhoneDetails(
             }
             return
         }
+        // Add tools' install holds Linux's one task slot for minutes: no check is tried while it
+        // runs (it could only end as "busy"); the row says Installing and the job's end reads again.
+        if (addingTools()) {
+            mutable.update { it.copy(loading = false, inventoryFailure = null, addingTools = true) }
+            refreshLog()
+            return
+        }
+        mutable.update { it.copy(addingTools = false) }
         var inventory = setup.installedInventory()
         var attempt = 1
         while (
             inventory is Outcome.Failed &&
-                InstalledInventoryRetry.again(attempt, inventory.failure)
+                InstalledInventoryRetry.again(attempt, inventory.failure, addingTools())
         ) {
             delay(InstalledInventoryRetry.PAUSE_MS)
             if (!visible || revision != viewRevision) return
@@ -289,6 +311,12 @@ class NativePhoneDetails(
             attempt++
         }
         if (!visible || revision != viewRevision) return
+        if (inventory is Outcome.Failed && addingTools()) {
+            // A job began while this read waited: its busy answer is not a failure.
+            mutable.update { it.copy(loading = false, inventoryFailure = null, addingTools = true) }
+            refreshLog()
+            return
+        }
         when (val result = inventory) {
             is Outcome.Ok ->
                 mutable.update {

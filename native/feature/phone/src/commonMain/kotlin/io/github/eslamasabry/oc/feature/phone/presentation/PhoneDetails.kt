@@ -49,7 +49,36 @@ public data class PhoneDetailsUi(
     val loading: Boolean = false,
     val inventoryFailure: Failure? = null,
     val logFailure: Failure? = null,
+    /**
+     * A setup job (Add tools' install) runs now. It holds Linux's one task slot for minutes, so the
+     * installed check is not tried: the row says "Installing…" over the previous list, and the job's
+     * end reads again.
+     */
+    val addingTools: Boolean = false,
 )
+
+/** What the Installed row's line says. */
+public enum class InstalledLine {
+    /** The installed list (or nothing yet). */
+    Names,
+
+    /** A read runs now ("Checking…"). */
+    Checking,
+
+    /** A setup job runs now ("Installing…"); no read is tried and no failure is shown. */
+    Installing,
+}
+
+public fun installedLine(details: PhoneDetailsUi): InstalledLine =
+    when {
+        details.addingTools -> InstalledLine.Installing
+        details.loading -> InstalledLine.Checking
+        else -> InstalledLine.Names
+    }
+
+/** The "Could not check what is installed" line shows only when nothing runs and nothing installs. */
+public fun installedFailureShown(details: PhoneDetailsUi): Failure? =
+    details.inventoryFailure?.takeIf { installedLine(details) == InstalledLine.Names }
 
 /** Android binds the native runtime and setup checker; reply timing starts with the application. */
 public interface PhoneDetailsSource {
@@ -76,8 +105,13 @@ public object InstalledInventoryRetry {
     public const val ATTEMPTS: Int = 5
     public const val PAUSE_MS: Long = 1_500
 
-    /** Whether to read again after the [attempt]-th read (1-based) failed with [failure]. */
-    public fun again(attempt: Int, failure: Failure): Boolean =
-        attempt < ATTEMPTS &&
+    /**
+     * Whether to read again after the [attempt]-th read (1-based) failed with [failure]. Never while a
+     * setup job runs ([addingTools]): the job holds the slot for minutes, so waiting reads would end in
+     * a false "Could not check"; the job's end reads again instead.
+     */
+    public fun again(attempt: Int, failure: Failure, addingTools: Boolean = false): Boolean =
+        !addingTools &&
+            attempt < ATTEMPTS &&
             (attempt == 1 || (failure as? Failure.Runtime)?.problem == RuntimeProblem.SlotBusy)
 }
