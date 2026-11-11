@@ -33,7 +33,7 @@ class KitEdgeDockListGestureTest {
 
     private class Run(val state: KitEdgeDockState, val sideNow: () -> KitDockSide, val placements: MutableList<KitDockSide>)
 
-    private fun scene(widthDp: Int, side: KitDockSide, block: ComposeUiTest.(Run) -> Unit) =
+    private fun scene(widthDp: Int, side: KitDockSide, bottom: Int = 48, block: ComposeUiTest.(Run) -> Unit) =
         runDesktopComposeUiTest(widthDp, 800) {
             var now by mutableStateOf(side)
             val placements = mutableListOf<KitDockSide>()
@@ -50,7 +50,7 @@ class KitEdgeDockListGestureTest {
                                 }
                             },
                             TestDockWords,
-                            insets = KitDockInsets(top = 24.dp, bottom = 48.dp),
+                            insets = KitDockInsets(top = 24.dp, bottom = bottom.dp),
                             state = state,
                         )
                     }
@@ -68,31 +68,79 @@ class KitEdgeDockListGestureTest {
             Offset(x, run.state.slotY(i))
         }
 
-    private fun ComposeUiTest.describe(run: Run): String =
-        runOnIdle {
-            val b = run.state.body()
-            "right=${run.state.onRight} open=${run.state.panelOpen} second=${b.hasSecond} list=${b.secondIsList} " +
-                "A=[${b.stripLeft},${b.stripRight}] B=[${b.secondLeft},${b.secondRight}] growth=${b.growth} placements=${run.placements}"
-        }
+    private fun ComposeUiTest.headPoint(run: Run): Offset = runOnIdle { ringPoint(run, 0).copy(y = run.state.columnTop + 12f) }
 
-    @Test
-    fun `list flick - diagnostics`() {
-        for (w in listOf(360, 320)) for (side in listOf(KitDockSide.End, KitDockSide.Start)) {
-            scene(w, side) { run ->
-                val p = ringPoint(run, 2)
-                val inward = if (side == KitDockSide.End) -1f else 1f
-                onRoot().performTouchInput { swipe(p, Offset(p.x + inward * 200f, p.y), durationMillis = 120) }
-                waitForIdle()
-                println("DIAG w=$w side=$side flick-from-ring: ${describe(run)}")
-            }
-            scene(w, side) { run ->
-                val p = ringPoint(run, 2)
-                val inward = if (side == KitDockSide.End) -1f else 1f
-                val head = Offset(p.x, runOnIdle { run.state.columnTop + 12f })
-                onRoot().performTouchInput { swipe(head, Offset(head.x + inward * 200f, head.y), durationMillis = 120) }
-                waitForIdle()
-                println("DIAG w=$w side=$side flick-from-head: ${describe(run)}")
-            }
+    private fun inward(side: KitDockSide) = if (side == KitDockSide.End) -1f else 1f
+
+    /** After the list opened: flush with the dock's own edge, a gutter on the inner side, rounded there, dock unmoved. */
+    private fun ComposeUiTest.assertListOpenOnItsOwnEdge(run: Run, w: Int, side: KitDockSide, how: String) {
+        val at = "$how, $w dp, $side"
+        val b = runOnIdle { run.state.body() }
+        assertTrue(runOnIdle { run.state.panelOpen }, "$at: the list is open")
+        assertTrue(b.hasSecond && b.secondIsList, "$at: box B is the list")
+        assertEquals(emptyList(), run.placements, "$at: the dock did not change edge")
+        assertEquals(side == KitDockSide.End, runOnIdle { run.state.onRight }, "$at: the dock stands on its edge")
+        assertTrue(b.secondRadius > 0f, "$at: the corners are rounded")
+        if (side == KitDockSide.End) {
+            assertTrue(b.secondRight >= w.toFloat(), "$at: the pane reaches the right edge (${b.secondRight})")
+            assertTrue(b.secondLeft >= DockDims.PANEL_MIN_GAP - 0.5f && b.secondLeft < w - DockDims.REST_W, "$at: the page gutter on the inner side (${b.secondLeft})")
+        } else {
+            assertTrue(b.secondLeft <= 0f, "$at: the pane reaches the left edge (${b.secondLeft})")
+            assertTrue(b.secondRight <= w - DockDims.PANEL_MIN_GAP + 0.5f && b.secondRight > DockDims.REST_W, "$at: the page gutter on the inner side (${b.secondRight})")
         }
     }
+
+    @Test
+    fun `list flick - a flick inward from a ring opens the list on the dock's own edge`() {
+        for (w in listOf(360, 320)) for (side in listOf(KitDockSide.End, KitDockSide.Start)) scene(w, side) { run ->
+            val p = ringPoint(run, 2)
+            onRoot().performTouchInput { swipe(p, Offset(p.x + inward(side) * 200f, p.y), durationMillis = 120) }
+            waitForIdle()
+            assertListOpenOnItsOwnEdge(run, w, side, "flick from a ring")
+        }
+    }
+
+    @Test
+    fun `list flick - a flick inward from the head opens the list and does not carry the dock to the other edge`() {
+        for (w in listOf(360, 320)) for (side in listOf(KitDockSide.End, KitDockSide.Start)) scene(w, side) { run ->
+            val p = headPoint(run)
+            onRoot().performTouchInput { swipe(p, Offset(p.x + inward(side) * 200f, p.y), durationMillis = 120) }
+            waitForIdle()
+            assertListOpenOnItsOwnEdge(run, w, side, "flick from the head")
+        }
+    }
+
+    @Test
+    fun `list flick - a slow drag from the head across the middle still moves the dock to the other edge`() {
+        for (w in listOf(360, 320)) for (side in listOf(KitDockSide.End, KitDockSide.Start)) scene(w, side) { run ->
+            val p = headPoint(run)
+            onRoot().performTouchInput { swipe(p, Offset(p.x + inward(side) * (w - 120f), p.y), durationMillis = 2500) }
+            waitForIdle()
+            val other = if (side == KitDockSide.End) KitDockSide.Start else KitDockSide.End
+            assertEquals(listOf(other), run.placements, "$w dp, $side: the slow drag asks for the other edge")
+            assertTrue(!runOnIdle { run.state.panelOpen }, "$w dp, $side: no list opens")
+        }
+    }
+
+    @Test
+    fun `list flick - a slow drag from the head that stays on its half keeps the edge and opens nothing`() {
+        for (w in listOf(360, 320)) for (side in listOf(KitDockSide.End, KitDockSide.Start)) scene(w, side) { run ->
+            val p = headPoint(run)
+            onRoot().performTouchInput { swipe(p, Offset(p.x + inward(side) * 40f, p.y + 60f), durationMillis = 1500) }
+            waitForIdle()
+            assertTrue(run.placements.all { it == side }, "$w dp, $side: stays on its edge ${run.placements}")
+            assertTrue(!runOnIdle { run.state.panelOpen }, "$w dp, $side: no list opens")
+        }
+    }
+
+    @Test
+    fun `ring column - a vertical drag in the strip scrubs the rings and does not scroll the column`() =
+        scene(360, KitDockSide.End, bottom = 48 + 378) { run ->
+            val (maxScroll, before) = runOnIdle { run.state.column.maxScroll to run.state.scrollNow }
+            assertTrue(maxScroll > 0f, "the column holds more rings than whole slots (maxScroll $maxScroll)")
+            val p = ringPoint(run, 0)
+            onRoot().performTouchInput { swipe(p, Offset(p.x, p.y + 150f), durationMillis = 400) }
+            waitForIdle()
+            assertEquals(before, runOnIdle { run.state.scrollNow }, "the drag along the strip did not scroll the column")
+        }
 }
