@@ -7,6 +7,7 @@ import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -70,8 +71,8 @@ internal object DockDims {
     const val SW_END_R = 24f
     /**
      * The root fillet's EFFECTIVE BLEND WIDTH: the `k` of the cubic smooth minimum `min(da, db) - h^3 k / 6` where the
-     * two edges meet at a right angle. Its tightest radius is blend x 0.354 = 22.7 dp (the peek's taller box widens it
-     * to 86.4, radius 30.6 dp). The join field's reach is twice this ([JOIN_REACH_PER_BLEND]).
+     * two edges meet at a right angle. Its tightest radius is blend x 0.354 = 22.7 dp (taller boxes widen it for the
+     * base rule, [filletFor]: the 288 dp peek to 94.4, radius 33.4 dp). The join field's reach is twice this ([JOIN_REACH_PER_BLEND]).
      */
     const val SW_FILLET_BLEND = 64f
     /**
@@ -447,13 +448,39 @@ internal fun swellLayout(
 
 /**
  * The fillet's effective blend width for a swell [length] by [height]: the design blend, widened on tall swells so the
- * base stays at least 1.3 x the height (blend >= 0.3 x height), and never more than the swell's straight top edge can
- * take.
+ * base stays at least [BASE_PER_HEIGHT] x the height, and never more than the swell's straight top edge can take.
+ *
+ * The base is measured where the fillet stands [BASE_FOOT] dp off the strip. A cubic fillet of blend k is that far off
+ * only [filletFoot] (about 0.46 k at 64 dp) beyond B, not k, so "blend >= 0.3 x height" left 190 and 213 dp tall swells
+ * (sub-agents) with a base of 1.27 and 1.25 x their height: the narrow pill the owner rejected.
  */
 internal fun filletFor(length: Float, height: Float): Float {
-    val k = max(DockDims.SW_FILLET_BLEND, 0.3f * height)
+    val want = (BASE_PER_HEIGHT - 1f) / 2f * height
+    var k = DockDims.SW_FILLET_BLEND
+    if (filletFoot(k) < want) {
+        // filletFoot rises with k (from k > 4 dp): bisect between a blend that falls short and one that is ample.
+        var lo = k
+        var hi = k + 4f * want
+        repeat(20) {
+            val m = (lo + hi) / 2f
+            if (filletFoot(m) >= want) hi = m else lo = m
+        }
+        k = hi
+    }
     return min(k, length - min(DockDims.SW_END_R, height * 0.3f) - 2f).coerceAtLeast(0f)
 }
+
+/** The base's least width per unit of the swell's height (the owner's limit is 1.3; this keeps the drawn outline above it). */
+internal const val BASE_PER_HEIGHT = 1.34f
+
+/** The base is measured this far off the strip, where the fillet first visibly leaves it. */
+internal const val BASE_FOOT = 2f
+
+/**
+ * How far beyond B's side the right-angle cubic fillet of blend [k] still stands [BASE_FOOT] dp off the strip: on edge
+ * A's side d = da - h^3 k / 6 with h = (k - |da - db|) / k, so da = e at db = x where (k - x + e)^3 = 6 k^2 e.
+ */
+internal fun filletFoot(k: Float): Float = k + BASE_FOOT - (6f * k * k * BASE_FOOT).pow(1f / 3f)
 
 /**
  * Box B placed for a ring at [centerY] (at full growth), with the strip's ends extended as far as the join needs.

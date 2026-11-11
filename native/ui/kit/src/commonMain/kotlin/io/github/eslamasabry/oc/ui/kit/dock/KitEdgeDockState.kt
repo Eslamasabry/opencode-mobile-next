@@ -44,7 +44,7 @@ public class KitDockBody {
     /** True when B is the list: B then holds A entirely and the body is B alone (no fillet). */
     public var secondIsList: Boolean = false
 
-    /** The fillet's tightest radius now, px (the design targets: 22.7 dp for the swell, 30.6 dp for the peek). */
+    /** The fillet's tightest radius now, px (the design targets: 22.7 dp for the swell, 33.4 dp for the peek). */
     public var filletRadius: Float = 0f
 
     /**

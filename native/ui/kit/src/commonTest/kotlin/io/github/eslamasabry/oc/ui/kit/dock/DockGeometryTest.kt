@@ -151,9 +151,9 @@ class DockGeometryTest {
             // Near both ends of the fillet the radius is huge (curvature runs out to zero: no step in the rim light).
             assertTrue(threePointRadius(o, o.swellFrom + 1, 1) > 4f * want, "$kind: the walk starts on A's straight side")
         }
-        // The design targets: 22.7 dp at the swell's blend, 30.6 dp at the peek's.
-        assertEquals(22.7f, DockDims.SW_FILLET_BLEND * DockDims.FILLET_RADIUS_PER_BLEND, 0.05f)
-        assertEquals(30.6f, 0.3f * 288f * DockDims.FILLET_RADIUS_PER_BLEND, 0.05f)
+        // The design targets: 22.7 dp at the swell's blend, 33.4 dp at the peek's (widened for the base rule).
+        assertEquals(22.7f, filletFor(224f, 118f) * DockDims.FILLET_RADIUS_PER_BLEND, 0.05f)
+        assertEquals(33.45f, filletFor(DockDims.PEEK_MAX_LEN, 288f) * DockDims.FILLET_RADIUS_PER_BLEND, 0.05f)
     }
 
     @Test
