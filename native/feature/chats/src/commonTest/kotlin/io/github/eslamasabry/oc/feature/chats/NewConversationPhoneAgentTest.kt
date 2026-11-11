@@ -32,6 +32,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -76,6 +77,8 @@ class NewConversationPhoneAgentTest {
     private inner class Host(
         private val directory: String = "/root/projects/app",
         private val saved: String? = null,
+        /** A ready agent not yet certified for chat: offered only once it is the chosen one (Flutter agentChoosable). */
+        private val listedOnceChosen: NewConversationPhoneAgent? = null,
     ) : NewConversationHost {
         val starts = mutableListOf<Started>()
         val chosen = mutableListOf<Pair<ProfileId, String?>>()
@@ -85,17 +88,28 @@ class NewConversationPhoneAgentTest {
         var agentModels = listOf(NewConversationModel(claudeModel, "Sonnet"))
         override val servers = MutableStateFlow(listOf(NewConversationServer(server, "This phone", connected = true)))
 
-        override suspend fun setup(profile: ProfileId): Outcome<NewConversationSetup> =
-            Outcome.Ok(
+        /** Holds the agent's model list back until completed (null answers at once). */
+        var modelsGate: CompletableDeferred<Unit>? = null
+
+        override suspend fun setup(profile: ProfileId): Outcome<NewConversationSetup> {
+            val picked = if (listedOnceChosen == null) saved else chosen.lastOrNull()?.second ?: saved
+            return Outcome.Ok(
                 NewConversationSetup(
                     directory = directory,
                     projects = emptyList(),
                     models = listOf(NewConversationModel(serverModel, "Server model")),
                     agents = emptyList(),
                     model = serverModel,
-                    phone = NewConversationPhone(helper, listOf(claude), listOf(codex), selected = saved),
+                    phone =
+                        NewConversationPhone(
+                            helper,
+                            listOf(claude) + listOfNotNull(listedOnceChosen?.takeIf { it.id == picked }),
+                            listOf(codex),
+                            selected = picked,
+                        ),
                 )
             )
+        }
 
         override suspend fun choosePhoneAgent(profile: ProfileId, agentId: String?): Outcome<Unit> {
             chosen += profile to agentId
@@ -104,6 +118,7 @@ class NewConversationPhoneAgentTest {
 
         override suspend fun phoneAgentModels(profile: ProfileId, agentId: String): Outcome<NewConversationPhoneModels> {
             modelReads++
+            modelsGate?.await()
             return Outcome.Ok(NewConversationPhoneModels(agentModels, agentModels.firstOrNull()?.model))
         }
 
@@ -213,6 +228,36 @@ class NewConversationPhoneAgentTest {
         vm.chooseAgent(null)
         assertNull(vm.state.value.phoneAgent, "the server's own agent is the choice again")
         assertEquals(listOf<Pair<ProfileId, String?>>(server to "claude", server to null), host.chosen)
+    }
+
+    private val antigravity = NewConversationPhoneAgent("antigravity", "Antigravity", "antigravity")
+    private val antigravityModel = ModelRef("antigravity", "gemini-3-pro")
+
+    @Test
+    fun `AGENT-CARD New conversation from an agent's card opens with that agent chosen, not the remembered one`() {
+        val host = Host(saved = "claude", listedOnceChosen = antigravity)
+        host.agentModels = listOf(NewConversationModel(antigravityModel, "Gemini 3 Pro"))
+        val vm = NewConversationViewModel(ChatsRoute.New(server, phoneAgent = "antigravity"), host, Nav(), Clock.System, ListenedReports())
+        assertEquals("antigravity", vm.state.value.phoneAgent)
+        assertEquals("Antigravity", vm.state.value.phoneAgentChoice?.name, "the sheet lists the agent it opened with")
+        assertEquals(listOf<Pair<ProfileId, String?>>(server to "antigravity"), host.chosen, "remembered like a tap")
+        assertEquals(1, host.modelReads, "only the chosen agent's models are read")
+        assertEquals(antigravityModel, vm.state.value.phoneModel)
+    }
+
+    @Test
+    fun `AGENT-CARD the card's agent stays chosen while its models are still being read`() {
+        val host = Host(saved = "claude", listedOnceChosen = antigravity)
+        host.agentModels = listOf(NewConversationModel(antigravityModel, "Gemini 3 Pro"))
+        val gate = CompletableDeferred<Unit>()
+        host.modelsGate = gate
+        val vm = NewConversationViewModel(ChatsRoute.New(server, phoneAgent = "antigravity"), host, Nav(), Clock.System, ListenedReports())
+        assertEquals("antigravity", vm.state.value.phoneAgent)
+        assertTrue(vm.state.value.phoneModelsBusy)
+        assertTrue(vm.state.value.phoneModels.isEmpty())
+        gate.complete(Unit)
+        assertEquals("antigravity", vm.state.value.phoneAgent, "the models arriving do not change the agent")
+        assertEquals(listOf("Gemini 3 Pro"), vm.state.value.phoneModels.map { it.name })
     }
 
     @Test

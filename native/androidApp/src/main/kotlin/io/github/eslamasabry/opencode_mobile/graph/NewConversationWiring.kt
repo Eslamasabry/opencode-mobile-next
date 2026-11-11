@@ -536,9 +536,11 @@ class AndroidNewConversationHost(
         // The helper's own profile is where phone agents run; it offers no further agents.
         if (!state.available || helper == null || profile == helper) return null
         val facts = phoneFacts()
-        val offer = PhoneChatAgents.offer(facts, AgentId.OPENCODE)
-        val selected =
-            selection(profile).selectedAmong(profile, offer.choices.map { it.id }.toSet(), true)
+        // The remembered agent is any ready one (Flutter selectChatAgent), and the offer lists it even before it is
+        // certified for chat (Flutter agentChoosable: certified or already chosen). Passing OpenCode here instead left
+        // an agent chosen from its Agents card (Antigravity) out of the list, and the page fell back to another.
+        val selected = selection(profile).selectedAmong(profile, readyPhoneAgents(facts), true)
+        val offer = PhoneChatAgents.offer(facts, selected)
         return NewConversationPhone(
             helper = helper,
             choices = offer.choices.map { NewConversationPhoneAgent(it.id.raw, it.name, it.iconKey) },
@@ -547,8 +549,12 @@ class AndroidNewConversationHost(
         )
     }
 
+    /** The agents that can start a conversation now: ready, certified or not (Flutter `selectChatAgent`). */
+    private fun readyPhoneAgents(facts: List<PhoneChatFact>): Set<AgentId> =
+        facts.filter { it.ready }.map { it.id }.toSet()
+
     override suspend fun choosePhoneAgent(profile: ProfileId, agentId: String?): Outcome<Unit> {
-        val choosable = PhoneChatAgents.offer(phoneFacts(), AgentId.OPENCODE).choices.map { it.id }.toSet()
+        val choosable = readyPhoneAgents(phoneFacts())
         return selection(profile)
             .selectAmong(
                 profile,

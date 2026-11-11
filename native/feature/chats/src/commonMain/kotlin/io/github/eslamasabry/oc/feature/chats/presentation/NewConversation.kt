@@ -671,6 +671,21 @@ public class NewConversationViewModel(
                             )
                         }
                         val wanted = route.phoneAgent
+                        val offer = setup.phone
+                        if (
+                            wanted != null && !wantedApplied && offer != null &&
+                                offer.choices.none { c -> c.id == wanted } &&
+                                offer.needsSetup.none { c -> c.id == wanted }
+                        ) {
+                            // A ready agent the offer lists only once chosen (not yet certified for chat, as Flutter's
+                            // agentChoosable): the Agents card's choice is saved like a tap and the offer read again,
+                            // now listing it. Before, the page dropped it and showed the remembered agent instead.
+                            wantedApplied = true
+                            if (host.choosePhoneAgent(profile, wanted) is Outcome.Ok && ticket == generation) {
+                                chooseServer(profile)
+                                return@launch
+                            }
+                        }
                         if (
                             wanted != null && !wantedApplied &&
                                 setup.phone?.choices?.any { c -> c.id == wanted } == true
