@@ -29,6 +29,7 @@ class ChannelsTest {
         assertEquals(
             listOf(
                 "opencode_live_connection" to NotificationManager.IMPORTANCE_LOW,
+                "opencode_live_conversations" to NotificationManager.IMPORTANCE_LOW,
                 "opencode_coding_action" to NotificationManager.IMPORTANCE_HIGH,
                 "opencode_coding_action_quiet" to NotificationManager.IMPORTANCE_LOW,
                 "opencode_coding_status" to NotificationManager.IMPORTANCE_DEFAULT,
@@ -46,7 +47,7 @@ class ChannelsTest {
     @Test
     fun `H3 ensure creates only missing ids of shipped features and never team progress or QA`() {
         val report = registry.ensure()
-        assertEquals(8, report.created.size)
+        assertEquals(9, report.created.size)
         assertNull(manager.getNotificationChannel("opencode_team_progress"))
         assertNull(manager.getNotificationChannel("bb9_qa_producer"))
         val live = manager.getNotificationChannel("opencode_live_connection")
@@ -55,6 +56,29 @@ class ChannelsTest {
         assertEquals(Notification.VISIBILITY_PRIVATE, manager.getNotificationChannel("opencode_coding_action").lockscreenVisibility)
         // A second run creates nothing.
         assertEquals(emptyList(), registry.ensure().created)
+    }
+
+    @Test
+    fun `the conversations row has its own channel, private on the lock screen and quiet`() {
+        registry.ensure()
+        val dock = manager.getNotificationChannel("opencode_live_conversations")
+        assertEquals(Notification.VISIBILITY_PRIVATE, dock.lockscreenVisibility)
+        assertEquals(NotificationManager.IMPORTANCE_LOW, dock.importance)
+        assertFalse(dock.canShowBadge())
+        // The old channel was created without the private setting and a channel cannot gain it later: it stays
+        // as it was and no longer carries the row.
+        assertEquals(Notification.VISIBILITY_NO_OVERRIDE, manager.getNotificationChannel("opencode_live_connection").lockscreenVisibility)
+    }
+
+    @Test
+    fun `a person who turned the old live channel off finds the conversations channel off too`() {
+        manager.createNotificationChannel(NotificationChannel("opencode_live_connection", "Live", NotificationManager.IMPORTANCE_LOW))
+        manager.getNotificationChannel("opencode_live_connection").let {
+            it.importance = NotificationManager.IMPORTANCE_NONE
+            manager.createNotificationChannel(it)
+        }
+        registry.ensure()
+        assertEquals(NotificationManager.IMPORTANCE_NONE, manager.getNotificationChannel("opencode_live_conversations").importance)
     }
 
     @Test
@@ -81,7 +105,7 @@ class ChannelsTest {
             manager.createNotificationChannel(it)
         }
         tag = "ar"
-        assertEquals(8, registry.relocalize())
+        assertEquals(9, registry.relocalize())
         val status = manager.getNotificationChannel("opencode_coding_status")
         assertEquals(arabic(R.string.notify_coding_status_channel), status.name)
         assertEquals(NotificationManager.IMPORTANCE_NONE, status.importance)

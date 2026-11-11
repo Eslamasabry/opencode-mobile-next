@@ -35,6 +35,15 @@ public enum class NotifyChannel(
         "opencode_live_connection", NotificationManager.IMPORTANCE_LOW,
         R.string.notify_live_channel, R.string.notify_live_description, false, ChannelFeature.Core, false,
     ),
+    /**
+     * The conversations row (4747) on the lock screen: created with the channel-level PRIVATE setting, which a channel
+     * cannot change after it exists, so [LiveConnection] (created without it) is no longer used for that row. The
+     * person's importance choice on [LiveConnection] carries over once (see [ChannelRegistry.ensure]).
+     */
+    LiveConversations(
+        "opencode_live_conversations", NotificationManager.IMPORTANCE_LOW,
+        R.string.notify_dock_channel, R.string.notify_dock_channel_description, false, ChannelFeature.Core, true,
+    ),
     CodingAction(
         "opencode_coding_action", NotificationManager.IMPORTANCE_HIGH,
         R.string.notify_coding_requests_channel, R.string.notify_coding_requests_description, true, ChannelFeature.Core, true,
@@ -130,8 +139,18 @@ public class ChannelRegistry(private val manager: NotificationManager, private v
     public fun isOff(channel: NotifyChannel): Boolean =
         manager.getNotificationChannel(channel.id)?.importance?.let { it == NotificationManager.IMPORTANCE_NONE } ?: true
 
+    /**
+     * The new conversations channel starts where the person left the old live channel when they turned it down or
+     * off (MIN, NONE); a raised importance is not carried (this row never makes sound). Every other channel is as declared.
+     */
+    private fun importanceFor(spec: NotifyChannel): Int {
+        if (spec != NotifyChannel.LiveConversations) return spec.importance
+        val old = manager.getNotificationChannel(NotifyChannel.LiveConnection.id)?.importance ?: return spec.importance
+        return if (old in 0 until spec.importance) old else spec.importance
+    }
+
     private fun build(spec: NotifyChannel): NotificationChannel =
-        NotificationChannel(spec.id, words.text(spec.nameRes), spec.importance).apply {
+        NotificationChannel(spec.id, words.text(spec.nameRes), importanceFor(spec)).apply {
             spec.descriptionRes?.let { description = words.text(it) }
             setShowBadge(spec.showBadge)
             if (spec.privateOnLockScreen) lockscreenVisibility = Notification.VISIBILITY_PRIVATE
