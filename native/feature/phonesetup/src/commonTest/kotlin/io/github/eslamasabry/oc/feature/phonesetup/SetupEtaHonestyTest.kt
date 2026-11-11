@@ -73,7 +73,7 @@ class SetupEtaCountdownTest {
                     ComponentProgress(
                         "abc"[i].toString(),
                         s,
-                        fraction = if (s == ComponentState.Running) fraction else null,
+                        percent = if (s == ComponentState.Running) fraction?.times(100) else null,
                     )
                 },
             overall = 0.3,

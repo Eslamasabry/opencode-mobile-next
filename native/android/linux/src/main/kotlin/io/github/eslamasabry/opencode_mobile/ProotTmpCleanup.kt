@@ -59,15 +59,21 @@ internal object ProotTmpCleanup {
         // A link in the folder's place is never walked: walkFileTree would visit the link itself as a file and delete it.
         if (Files.isSymbolicLink(root) || !Files.isDirectory(root, LinkOption.NOFOLLOW_LINKS)) return 0
         var deleted = 0
+        // A folder's age is its age before its children went: deleting them touches it.
+        val ages = ArrayDeque<Long>()
         Files.walkFileTree(
             root,
             object : SimpleFileVisitor<Path>() {
                 override fun preVisitDirectory(directory: Path, attrs: BasicFileAttributes): FileVisitResult {
+                    ages.addLast(attrs.lastModifiedTime().toMillis())
                     // A folder a live proot process made is its own, whatever its age: it stays whole, even if the
                     // check that started this pass ran before that process did.
                     if (directory.parent == root) {
                         val pid = ownerPid(directory.fileName.toString())
-                        if (pid != null && pidAlive(pid)) return FileVisitResult.SKIP_SUBTREE
+                        if (pid != null && pidAlive(pid)) {
+                            ages.removeLast()
+                            return FileVisitResult.SKIP_SUBTREE
+                        }
                     }
                     return FileVisitResult.CONTINUE
                 }
@@ -79,10 +85,10 @@ internal object ProotTmpCleanup {
                 }
 
                 override fun postVisitDirectory(directory: Path, error: IOException?): FileVisitResult {
+                    val age = ages.removeLastOrNull()
                     if (deleted >= MAX_DELETIONS) return FileVisitResult.TERMINATE
                     // Only an emptied, old folder goes; delete refuses a non-empty one.
-                    if (directory != root &&
-                        old(Files.getLastModifiedTime(directory, LinkOption.NOFOLLOW_LINKS).toMillis(), now) &&
+                    if (directory != root && age != null && old(age, now) &&
                         tryDelete(directory)
                     ) {
                         deleted++
