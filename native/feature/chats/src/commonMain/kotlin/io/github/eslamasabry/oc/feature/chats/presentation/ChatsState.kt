@@ -85,12 +85,8 @@ public object ChatsState {
             incomplete = feed.incompleteSources,
             // A source that cannot list every project shows one; the projects chip then names it. When the list
             // holds several projects anyway (another source reaches further) there is no single project to name.
-            onlyProject =
-                if (feed.acrossProjects || projects.size > 1) null
-                else
-                    projects.firstOrNull { it.directory == filters.projectDirectory }?.name
-                        ?: roots.firstOrNull()?.projectName?.takeIf { it.isNotBlank() }
-                        ?: projects.firstOrNull()?.name,
+            // Only a project the projects menu lists: the chip and the menu name the same one.
+            onlyProject = if (feed.acrossProjects || projects.size != 1) null else projects.single().name.takeIf { it.isNotBlank() },
             settingsAvailable = settingsAvailable,
             projectChoices = projects.toImmutableList(),
             projectNeedsYou =
