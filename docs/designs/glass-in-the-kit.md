@@ -317,3 +317,79 @@ under its tint, so no bend, no rim light, no aurora, no ink flip timing and no f
   base. No golden was recorded or changed.
 - `compileAndroidMain` for ui:kit, feature:chats and feature:settings.
 - Not run: the whole kit suite, the benchmark scene (not built), anything on a device.
+
+## Dock glass, as built (2026-11-11)
+
+The owner, on the phone, Glass dark, the dock's swell open over a chat: "Why isn't it glass?" The dock was an opaque
+dark slab while the bar, the message box and the menu were liquid glass.
+
+**What it is now.** Under Glass, with a lens (the same holds as every liquid pane: Glass style, a look with a lens, not
+Frosted, no battery saver, motion not reduced, no high contrast, Android 13 or later) and a recording of what lies behind
+the dock in scope, the dock is ONE body of liquid glass: the strip (box A) and the swell, peek or list (box B) joined by
+the joined-glass field with the dock's own `joinReach`, drawn by one node (`effects/KitLiquidBody.kt`). The lens pass,
+the tint, the cover and one rim light follow the body's outline. Otherwise `rememberDockFace` returns today's face,
+unchanged (the dock's looks pictures and tests did not change).
+
+**The recipe.** A new liquid role, `LiquidRole.Dock`, ranked between the + (Action) and the bars. At rest it is the
+bar's recipe (blur 3 dp, bend 34 dp, rim 22 dp, tint .18 dark / .12 light); fully grown it is the menu's (blur 6 dp dark
+/ 3 light, bend 48 dp, rim 26 dp, tint .20 / .10); in between every number is mixed by the body's growth with no step
+(`LiquidEdge.dockRecipe`, `LiquidEdge.mix`). The tint colour is mixed the same way between the bar's face and the menu's
+face. One resolution for the whole growth (the grown end's), so the sharpness never steps while the swell grows. The
+words' ink is the bar's: the theme's text, flipping to the other theme's over content of the other brightness (sampled
+under the body's bounds only), the second line drawn brighter on glass; the canvas marks (grip, charge arc, "+n")
+follow the same flip.
+
+**How one node draws both sides.** The join shader is unchanged (not one character): the node hands it box A as its own
+side and a box far outside the window as B's side box, so every pixel of the body counts as its own and its material
+ramp stays at its own end. The bar + menu and box + pill joins draw exactly as before (their shader tests pass
+unchanged). The dock's copy of the field (`DockJoinField`) is kept: replacing it with `LiquidJoin.sample` would allocate
+on every sample of the outline trace (it is called thousands of times a frame by the Solid face).
+
+**Where the recording comes from.** A new composition local, `LocalKitDockGlass`, provided by the two host screens:
+
+- In a chat, the transcript's recording (`frost`, the one the bar and the message box read). The dock used to sit INSIDE
+  that recorded box, so it would have bent itself; it now stands beside it, in the same body box, with the same size and
+  place.
+- On home, the list's recording (`listGlass`, the one the floating + reads).
+
+**What loses its lens when the dock appears.** The dock costs one pane of the window's five (a feature's recording costs
+nothing). In a chat the message box, the bar and the dock take three, so two pills keep their lens: the jump pill and
+the first chip over the message box; the next chip (the last to claim) is drawn as frost of the same shape. With only
+the jump pill out nothing loses its lens. On home the floating bar (its page recording counts too), the + and the dock
+fit; nothing loses its lens. The owner's rule that the dock is always present means this claim is permanent on both
+screens (`LiquidEdgeDockTest`). If chips matter more than the dock, ranking the dock below the pills while it is tucked
+is a one-line change.
+
+**Limits.**
+- No shoulders into the screen edge under Glass (the two-box join does not draw a third shape).
+- No touch light inside the dock, no shadow.
+- The strip grows above and below an open swell or peek by the fillet's blend plus the corner (so the fillet has a
+  straight side to meet); with the tall peek that is about 120 dp of strip with nothing in it (device QA M3). This is the
+  dock's geometry, not the glass.
+- The words' flip samples the body's bounds as one mean; a body over half-bright, half-dark content flips by the mean.
+- The desktop pictures run the real join shader and lens pass (desktop's Skia), so they show the bend and the rim, at
+  desktop's blur; nothing was run on a phone.
+
+**Pictures** (desktop, Glass dark, a page of text with bright bands, 412 dp; the real join shader at desktop's blur):
+`glass-in-the-kit/render-dock-rest.png`, `render-dock-swell.png`, `render-dock-list.png`. What they show:
+- At rest: the strip is glass; the lines behind it are blurred to grey bars and the bright bands show through as a lighter
+  patch; one thin light rim along the outline; the rings, names and the + read.
+- Swell open: strip and swell are one body, the fillets above and below the swell round with no seam or line where they
+  meet; the strip runs on above the swell (the extension noted under Limits). The blurred text lines behind the swell
+  show as stripes under its words; "Thinking" is weaker over them. The action words keep their gap now, but in the
+  scrub swell's narrow cells "Rename" and "Remove" are cut to "Rena..." and "Rem..." (the cells are too narrow for
+  them; before the gap fix they read "RenameRemove").
+- List out: the whole list is one pane of the same glass; the bright bands behind show through as pale bars, and the
+  rows over them ("Docs", its second line) read with less contrast than over the dark lines; the words did not flip
+  (the body's mean stays dark).
+
+**What to check on the phone.**
+1. Open a chat in Glass, dark and light: the dock's strip shows the transcript blurred and bent at its rim, one thin rim
+   light, no dark slab.
+2. Scrub a ring: the swell grows out of the strip as one body; no seam or line where the swell meets the strip, the
+   fillets round, the frost thickening a little as it grows.
+3. Hold a ring for the peek and pull the list out: same glass, words readable over bright and dark rows.
+4. Scroll bright content (an image, a white code block) under the dock: the words flip to dark ink and back.
+5. With the dock out in a chat, count the lenses: the bar, the message box, the jump pill and one chip stay liquid; a
+   second chip turns to frost.
+6. Battery saver, reduced motion, the Frosted look and the Solid style: the dock is today's solid face.
