@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chat.presentation
 
+import io.github.eslamasabry.oc.core.common.text.PlainMarkdown
 import io.github.eslamasabry.oc.core.model.transcript.PartType
 import io.github.eslamasabry.oc.core.model.transcript.Role
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptState

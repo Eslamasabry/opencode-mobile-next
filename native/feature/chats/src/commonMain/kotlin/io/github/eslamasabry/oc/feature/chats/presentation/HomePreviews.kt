@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chats.presentation
 
+import io.github.eslamasabry.oc.core.common.text.PlainMarkdown
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.model.transcript.MessageWithParts
 import io.github.eslamasabry.oc.core.model.transcript.PartType
@@ -40,27 +41,16 @@ public object HomePreviewRules {
     /** A running conversation moves all the time: its line is read again at most this often. */
     public const val LIVE_REREAD_MS: Long = 15_000
 
-    private val lineLead = Regex("^\\s{0,3}(?:#{1,6}\\s+|>\\s?|[-*+]\\s+(?:\\[[ xX]]\\s+)?|```\\S*)")
-    private val link = Regex("!?\\[([^\\]]*)]\\([^)]*\\)")
-    private val strong = Regex("(\\*\\*|__|~~)(?=\\S)(.+?)(?<=\\S)\\1")
-    private val code = Regex("`+([^`]*)`+")
-
     /**
      * [text] without the marks a reply is written with: the list shows words, not "**bold**", "`paths`", "# headings"
      * or "[labels](links)" (seen raw on the owner's phone). Headings, quotes, bullets and code fences lose their lead,
      * a link keeps its label, emphasis and code keep their words; emoji and everything else stay.
      */
-    public fun plain(text: String): String =
-        text.lineSequence()
-            .joinToString("\n") { it.replace(lineLead, "") }
-            .replace(link, "$1")
-            .replace(strong, "$2")
-            .replace(code, "$1")
-            .replace("**", "")
+    public fun plain(text: String): String = PlainMarkdown.plain(text)
 
     /** [text] on one line: marks removed, whitespace folded, trimmed, cut at [MAX_CHARS] with an ellipsis; null when empty. */
     public fun oneLine(text: String): String? {
-        val folded = plain(text).replace(Regex("\\s+"), " ").trim()
+        val folded = PlainMarkdown.oneLine(text)
         if (folded.isEmpty()) return null
         return if (folded.length <= MAX_CHARS) folded else folded.substring(0, MAX_CHARS - 1).trimEnd() + "…"
     }
