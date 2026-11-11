@@ -176,6 +176,58 @@ class PermissionAskTest {
         assertEquals(listOf("/etc/*"), of(outside).targets.map { it.text })
     }
 
+    @Test
+    fun `W4 a listing of the chat's own folder asks to read the folder, never a file called a dot`() {
+        for (path in listOf(".", "./", dir, "$dir/")) {
+            val ask = of(permission("p", permission = "read", patterns = listOf(path), always = emptyList(), metadata = mapOf("filePath" to path)), project = "neon-breaker")
+            assertEquals(AskVerb.ReadFolder, ask.verb, "path <$path>")
+            assertEquals(listOf(AskTarget("neon-breaker")), ask.targets)
+        }
+    }
+
+    @Test
+    fun `W4 gate a folder named by a trailing dot is that folder, and the filesystem root is not the chat's folder`() {
+        val sub = of(permission("p", permission = "read", patterns = listOf("$dir/src/."), always = emptyList(), metadata = mapOf("filePath" to "$dir/src/.")), project = "neon-breaker")
+        assertEquals(AskVerb.ReadFolder, sub.verb)
+        assertEquals(listOf("src"), sub.targets.map { it.text })
+        val root = of(permission("p", permission = "read", patterns = listOf("/"), always = emptyList(), metadata = mapOf("filePath" to "/")), project = "neon-breaker")
+        assertEquals(AskVerb.Read, root.verb)
+    }
+
+    @Test
+    fun `W4 gate a listing asks to read the folder, named by the project or by its own path, never by the tool's id`() {
+        for (path in listOf(".", dir)) {
+            val own = of(permission("p", permission = "list", patterns = listOf(path), always = listOf("*"), metadata = mapOf("path" to path)), project = "neon-breaker")
+            assertEquals(AskVerb.ReadFolder, own.verb, "path <$path>")
+            assertEquals(listOf("neon-breaker"), own.targets.map { it.text })
+            assertNull(own.tool)
+        }
+        val other = of(permission("p", permission = "list", patterns = listOf("$dir/src"), always = listOf("*"), metadata = mapOf("path" to "$dir/src")), project = "neon-breaker")
+        assertEquals(AskVerb.ReadFolder, other.verb)
+        assertEquals(listOf("src"), other.targets.map { it.text })
+    }
+
+    @Test
+    fun `W4 gate a search names its pattern, not the folder it searches`() {
+        val ask = of(permission("p", permission = "grep", patterns = listOf("TODO"), always = listOf("*"), metadata = mapOf("pattern" to "TODO", "path" to ".")), project = "neon-breaker")
+        assertEquals(AskVerb.Search, ask.verb)
+        assertEquals(listOf("TODO"), ask.targets.map { it.text })
+    }
+
+    @Test
+    fun `W4 gate a repeated-failure ask shows no tool id under its question`() {
+        val ask = of(permission("p", permission = "doom_loop", patterns = listOf("read"), always = listOf("read"), metadata = mapOf("tool" to "read")), project = "neon-breaker")
+        assertEquals(AskVerb.DoomLoop, ask.verb)
+        assertEquals(emptyList(), ask.targets)
+    }
+
+    @Test
+    fun `W4 a read of a real file is still a read of that file`() {
+        val ask = of(permission("p", permission = "read", patterns = listOf("$dir/src/a.kt"), always = emptyList(), metadata = mapOf("filePath" to "$dir/src/a.kt")), project = "neon-breaker")
+        assertEquals(AskVerb.Read, ask.verb)
+        assertEquals("a.kt", ask.name)
+    }
+
     private fun permission(
         id: String,
         permission: String = "shell",

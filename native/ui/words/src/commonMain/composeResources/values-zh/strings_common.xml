@@ -693,4 +693,5 @@
     <string name="browserEditorInsecureOrigin">此页面是通过网络地址以普通 HTTP 打开的，因此浏览器不会保存服务器密码。如果服务器没有密码，请将密码留空；要保存密码，请通过 HTTPS 或 localhost 打开应用。</string>
     <string name="browserAgentSocketUnavailable">浏览器中无法使用 Codex 和 Paseo 连接。它们通过浏览器无法发送的 WebSocket 请求头登录，而且目前不支持浏览器登录。请使用手机或桌面应用；OpenCode 服务器可在这里使用。</string>
     <string name="phoneServerPortBusy">这部手机上的端口 %1$s 已被另一个 OpenCode 服务器占用。</string>
+    <string name="chatRequestAskReadFolder">读取此文件夹？</string>
 </resources>

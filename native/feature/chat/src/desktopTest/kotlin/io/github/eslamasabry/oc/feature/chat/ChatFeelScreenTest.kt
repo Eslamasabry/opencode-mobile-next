@@ -177,8 +177,8 @@ class ChatFeelScreenTest {
             onNodeWithText("Select text").performClick()
             waitForIdle()
             onNodeWithTag("chat-select-text").assertIsDisplayed()
-            // The sheet's Done is its close glyph; its words are what a screen reader says.
-            onNodeWithContentDescription("Done").performClick()
+            // The sheet closes with its close glyph; a screen reader says Close, as on every other sheet (W4 P-034).
+            onNodeWithContentDescription("Close").performClick()
             waitForIdle()
             assertEquals(null, p.current().select)
         }

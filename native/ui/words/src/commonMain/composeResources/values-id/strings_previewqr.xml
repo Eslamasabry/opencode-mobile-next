@@ -3,7 +3,7 @@
 <resources>
     <string name="previewQrLeaveTitle">Buka tautan ini di browser Anda?</string>
     <string name="previewQrPortLabel">Nomor port</string>
-    <string name="previewQrPortHelp">Atau ketik port yang didengarkan server pengembangan.</string>
+    <string name="previewQrPortHelp">Atau ketik nomor port aplikasi yang sedang berjalan.</string>
     <string name="previewQrPortInvalid">Masukkan port dari 1 sampai 65535.</string>
     <string name="previewQrPortOpen">Buka port</string>
     <string name="previewQrPairFilled">Terisi dari kode pemasangan. Periksa, lalu simpan.</string>

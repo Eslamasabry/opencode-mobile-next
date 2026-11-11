@@ -41,6 +41,11 @@ public interface TerminalActions {
 
     public fun create()
 
+    /** A new terminal named [title] ("Terminal 2", Flutter's numbering); an implementation without names makes it plain. */
+    public fun create(title: String) {
+        create()
+    }
+
     public fun select(id: String)
 
     public fun showList()
@@ -152,6 +157,10 @@ public class TerminalViewModel(
 
     override fun create() {
         viewModelScope.launch { terminals.create() }
+    }
+
+    override fun create(title: String) {
+        viewModelScope.launch { terminals.create(title) }
     }
 
     override fun select(id: String) {
