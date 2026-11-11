@@ -5476,6 +5476,12 @@ class BuiltinLinux(private val context: Context) {
     val serverRunning: Boolean
         get() = serviceRunning(SERVER)
 
+    /**
+     * Posts the shared status row with the phone server's own words again (only while a service of ours holds it),
+     * after the app's reply watch showed its working words there.
+     */
+    fun repostStatusRow() = StatusNotification.refresh(context)
+
     val port: Int?
         get() = servicePort(SERVER)
 

@@ -74,6 +74,12 @@ class ReplyWatchPolicyTest {
         assertEquals(ReplyWatchEnd.ServerLeft, ReplyWatchPolicy.end(base.copy(joined = true, serverStillHoldsRow = false)))
         assertNull(ReplyWatchPolicy.end(base.copy(joined = true, serverStillHoldsRow = true)))
     }
+
+    @Test
+    fun `B1 only a watch that ran out of progress starts again when a run moves while the app stays hidden`() {
+        assertTrue(ReplyWatchPolicy.rearms(ReplyWatchEnd.NoProgress))
+        for (end in ReplyWatchEnd.entries - ReplyWatchEnd.NoProgress) assertFalse(ReplyWatchPolicy.rearms(end), end.name)
+    }
 }
 
 /** `ReplyProgressTracker` (plan 11 §9.3): what "a run is progressing" means for the start and the end rules. */
@@ -166,6 +172,13 @@ class ReplyWatchServiceTest {
         override val appVisible = MutableStateFlow(false)
         override val serverHoldsRow = MutableStateFlow(false)
         var quiet = false
+        var rowsReturned = 0
+
+        /** Stands in for the phone server re-posting its own row (`BuiltinLinux.repostStatusRow`). */
+        override fun returnRowToServer() {
+            rowsReturned++
+            manager.notify(NotificationIds.STATUS, StatusRenderer(app, words).build(StatusContent(StatusKind.Idle, "Server ready"), true, null))
+        }
 
         override fun alertFacts(alert: CodingAlert) =
             AlertFacts(
@@ -417,14 +430,15 @@ class ReplyWatchServiceTest {
             source.emit(finished)
             runCurrent()
             assertNotNull(shadowOf(manager).getNotification(NotificationIds.alert(finished.key)))
-            assertNull(shadowOf(manager).getNotification(NotificationIds.STATUS))
+            // dd80caae38 pinned "no row" here; that was the B1 fault (no "Still working" while the server ran).
+            assertEquals("Working", shadowOf(manager).getNotification(NotificationIds.STATUS).extras.getCharSequence(Notification.EXTRA_TITLE).toString())
             source.serverHoldsRow.value = false
             advanceTimeBy(1_500)
             assertEquals(ReplyWatchEnd.ServerLeft, body.ended.value)
         }
 
     @Test
-    fun `S11-4 a watch joined to the phone server's own row leaves that row untouched when it ends`() =
+    fun `S11-4 a watch joined to the phone server's own row gives that row back when it ends`() =
         runTest {
             // The server's service (:android:linux) holds row 4747 outside this owner set.
             val source = Source().apply { serverHoldsRow.value = true }
@@ -442,6 +456,52 @@ class ReplyWatchServiceTest {
             assertEquals(ReplyWatchEnd.AppVisible, body.ended.value)
             assertFalse(owners.has(StatusOwner.Reply))
             assertEquals("Server ready", shadowOf(manager).getNotification(NotificationIds.STATUS).extras.getCharSequence(Notification.EXTRA_TITLE).toString())
+            assertEquals(1, source.rowsReturned)
+        }
+
+    @Test
+    fun `B1 with the phone server running a joined watch shows Still working at once and the server's row comes back after`() =
+        runTest {
+            // Device run 5 (B1): the server's own row was not showing (posted before notifications were allowed).
+            val source = Source().apply { serverHoldsRow.value = true; status.value = null }
+            val body =
+                ReplyWatchServiceBody(
+                    app, words, StatusRenderer(app, words), AndroidAlertShade(app, words, registry), source, owners,
+                    scope = backgroundScope, elapsedMs = { testScheduler.currentTime },
+                )
+            body.joinServerRow()
+            runCurrent()
+            val row = shadowOf(manager).getNotification(NotificationIds.STATUS)
+            assertNotNull(row)
+            assertEquals("Still working on your reply", row.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
+            assertTrue(row.flags and Notification.FLAG_ONGOING_EVENT != 0)
+            advanceTimeBy(60_000)
+            assertTrue(body.active)
+            assertEquals("Still working on your reply", shadowOf(manager).getNotification(NotificationIds.STATUS).extras.getCharSequence(Notification.EXTRA_TITLE).toString())
+            source.progressing.value = false
+            advanceTimeBy(11_500)
+            assertEquals(ReplyWatchEnd.NoProgress, body.ended.value)
+            assertEquals(1, source.rowsReturned)
+            assertEquals("Server ready", shadowOf(manager).getNotification(NotificationIds.STATUS).extras.getCharSequence(Notification.EXTRA_TITLE).toString())
+        }
+
+    @Test
+    fun `B1 a joined watch whose server left takes its working row away`() =
+        runTest {
+            val source = Source().apply { serverHoldsRow.value = true }
+            val body =
+                ReplyWatchServiceBody(
+                    app, words, StatusRenderer(app, words), AndroidAlertShade(app, words, registry), source, owners,
+                    scope = backgroundScope, elapsedMs = { testScheduler.currentTime },
+                )
+            body.joinServerRow()
+            runCurrent()
+            assertNotNull(shadowOf(manager).getNotification(NotificationIds.STATUS))
+            source.serverHoldsRow.value = false
+            advanceTimeBy(1_500)
+            assertEquals(ReplyWatchEnd.ServerLeft, body.ended.value)
+            assertEquals(0, source.rowsReturned)
+            assertNull(shadowOf(manager).getNotification(NotificationIds.STATUS))
         }
 
     @Test

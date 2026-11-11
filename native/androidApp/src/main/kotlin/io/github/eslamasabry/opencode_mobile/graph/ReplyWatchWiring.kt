@@ -46,6 +46,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
@@ -70,7 +71,8 @@ class ReplyWatchFlag {
  * "Stay connected" is off: a short `dataSync` foreground service in the frozen `BackgroundConnectionService` keeps the
  * process (and so the event stream) alive until the reply settles, so the finished reply, a request or a failure
  * reaches them as an alert (posted by [PlatformHub], which treats an active watch as it treats live mode). When the
- * phone server's own `specialUse` service already keeps the process, the watch joins that row and spends no budget.
+ * phone server's own `specialUse` service already keeps the process, the watch joins that row and spends no budget:
+ * it shows its working words there while it runs and gives the server's own row back at the end.
  *
  * Starts on the last activity's `onStop` ([ReplyWatchPolicy.onStop]); ends 10 s after nothing progresses, at the 2 h
  * cap, when the app shows again, when the row is swiped away, on Android's `onTimeout`, or when live mode takes over
@@ -99,6 +101,7 @@ class ReplyWatchHub(
     private var hubStarted = false
     private var decision: Job? = null
     private var follow: Job? = null
+    private var rearmJob: Job? = null
 
     /** The one owner set of row 4747 that the reply-watch body and the service shell share (plan 11 §9.2 rule 2). */
     val owners = StatusOwners()
@@ -122,6 +125,14 @@ class ReplyWatchHub(
                     .map { it == Visibility.Foreground }
                     .stateIn(scope, SharingStarted.Eagerly, visibility.state.value == Visibility.Foreground)
             override val serverHoldsRow: StateFlow<Boolean> = this@ReplyWatchHub.serverHoldsRow
+
+            override fun returnRowToServer() {
+                try {
+                    BuiltinLinux.get(application).repostStatusRow()
+                } catch (_: RuntimeException) {
+                    // The server's row is cosmetic here; its service keeps its own promise.
+                }
+            }
 
             override fun alertFacts(alert: CodingAlert): AlertFacts =
                 AlertFacts(
@@ -163,6 +174,7 @@ class ReplyWatchHub(
                 follow = null
                 // Live mode still holds the row: its own content and Pause action come back at once.
                 if (background.live.value.active) attention.repost()
+                if (ReplyWatchPolicy.rearms(end)) rearm()
             }
         }
         scope.launch { background.live.collect { if (it.active && flag.active.value) body.yieldToLive() } }
@@ -196,6 +208,8 @@ class ReplyWatchHub(
         started += activity
         decision?.cancel()
         decision = null
+        rearmJob?.cancel()
+        rearmJob = null
     }
 
     override fun onActivityStopped(activity: Activity) {
@@ -204,33 +218,53 @@ class ReplyWatchHub(
         val changing = activity.isChangingConfigurations
         val covering = ownRequestCovering()
         decision?.cancel()
-        decision =
+        decision = scope.launch { decide(changing, covering) }
+    }
+
+    private suspend fun decide(changing: Boolean, covering: Boolean) {
+        // A short read off the main thread; Android allows the start for a few seconds after the app hides.
+        val server = withTimeoutOrNull(SERVER_READ_MS) { serverRunning() } == true
+        if (started.isNotEmpty()) return
+        val now = SystemClock.elapsedRealtime()
+        progressing.value = measure(now)
+        serverHoldsRow.value = server
+        val live = background.live.value
+        val facts =
+            ReplyWatchStartFacts(
+                changingConfigurations = changing,
+                runProgressing = progressing.value,
+                wouldAlert = application.platformHub.backgroundAlertsPossible(),
+                liveModeActive = live.enabled && live.active,
+                userPaused = live.pause?.reason == PauseReason.UserStopped,
+                ownRequestCovering = covering,
+                serverHoldsRow = server,
+            )
+        when (ReplyWatchPolicy.onStop(facts)) {
+            ReplyWatchStart.StartService -> startService()
+            ReplyWatchStart.JoinServerRow -> {
+                body.joinServerRow()
+                activated()
+            }
+            is ReplyWatchStart.Skip -> Unit
+        }
+    }
+
+    /**
+     * The watch ended because nothing progressed (a request alert was shown, say) while the app stayed hidden: when a
+     * run moves again (the person answered from the shade), the same start decision runs again, so its finished reply
+     * is still announced. Only a flow collection, no service; it stops when the app shows or at the 2 h cap.
+     */
+    private fun rearm() {
+        rearmJob?.cancel()
+        if (started.isNotEmpty()) return
+        rearmJob =
             scope.launch {
-                // A short read off the main thread; Android allows the start for a few seconds after the app hides.
-                val server = withTimeoutOrNull(SERVER_READ_MS) { serverRunning() } == true
-                if (started.isNotEmpty()) return@launch
-                val now = SystemClock.elapsedRealtime()
-                progressing.value = measure(now)
-                serverHoldsRow.value = server
-                val live = background.live.value
-                val facts =
-                    ReplyWatchStartFacts(
-                        changingConfigurations = changing,
-                        runProgressing = progressing.value,
-                        wouldAlert = application.platformHub.backgroundAlertsPossible(),
-                        liveModeActive = live.enabled && live.active,
-                        userPaused = live.pause?.reason == PauseReason.UserStopped,
-                        ownRequestCovering = covering,
-                        serverHoldsRow = server,
-                    )
-                when (ReplyWatchPolicy.onStop(facts)) {
-                    ReplyWatchStart.StartService -> startService()
-                    ReplyWatchStart.JoinServerRow -> {
-                        body.joinServerRow()
-                        activated()
+                withTimeoutOrNull(ReplyWatchPolicy.HARD_CAP_MS) {
+                    runtime.snapshot.first {
+                        started.isEmpty() && !body.active && measure(SystemClock.elapsedRealtime())
                     }
-                    is ReplyWatchStart.Skip -> Unit
-                }
+                } ?: return@launch
+                if (started.isEmpty() && !body.active) decide(changing = false, covering = false)
             }
     }
 
