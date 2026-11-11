@@ -3,6 +3,7 @@ package io.github.eslamasabry.opencode_mobile.graph
 import dev.zacsweers.metro.*
 import io.github.eslamasabry.oc.core.common.*
 import io.github.eslamasabry.oc.core.common.ids.*
+import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.data.kv.bool
 import io.github.eslamasabry.oc.core.data.scope.ProfileScope
 import io.github.eslamasabry.oc.core.domain.SessionCreationGateway
@@ -12,6 +13,7 @@ import io.github.eslamasabry.oc.core.domain.facet
 import io.github.eslamasabry.oc.core.domain.events.RunOutcome
 import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.core.model.NewSession
+import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.core.model.transcript.ToolStatus
 import io.github.eslamasabry.oc.core.model.SessionStatus
 import io.github.eslamasabry.oc.core.model.StreamStatus
@@ -170,6 +172,7 @@ class PreviewRuntime(
                 if (active != null) command { connectForHome(active) } else Unit.ok()
             )
             synchronizeListSources()
+            adoptPhoneAgents()
         }
     }
 
@@ -254,6 +257,11 @@ class PreviewRuntime(
         connectForHome(id, recoverDrafts = true)
     }
 
+    /** The server on the home stays the one the person chose: opening the Agents page used to switch it to "Phone agents". */
+    override suspend fun connectInBackground(id: ProfileId): Outcome<Unit> = command {
+        connectForHome(id, makeActive = id == profiles.activeId.value)
+    }
+
     private suspend fun connectForHome(
         id: ProfileId,
         recoverDrafts: Boolean = false,
@@ -288,12 +296,58 @@ class PreviewRuntime(
                     listSourceShown(profile.id) &&
                     profile.id !in listings
             ) {
+                // The phone's agent helper may need a start of up to 30 s: it joins later and never holds the
+                // OpenCode list (or any other command) while it starts.
+                if (isPhoneHelper(profile)) {
+                    joinPhoneHelper(profile.id)
+                    continue
+                }
                 val result = connectForHome(profile.id, makeActive = false)
                 if (result is Outcome.Failed) failed = result
             }
         }
         rebuildFeed()
         failed ?: Unit.ok()
+    }
+
+    private fun isPhoneHelper(profile: LoadedProfile): Boolean =
+        profile.profile.backend == BackendKind.Paseo &&
+            PhoneAgentRules.isHelperProfile(
+                profile.id.raw,
+                (stores.prefs.get("oc.phoneAgentOwner.${profile.id.raw}") as? PrefValue.Str)?.value,
+            )
+
+    private val joiningHelpers = mutableSetOf<ProfileId>()
+
+    /** Starts the helper outside the command lock, then adds its conversations to the list. */
+    private fun joinPhoneHelper(id: ProfileId) {
+        if (!synchronized(joiningHelpers) { joiningHelpers.add(id) }) return
+        scope.launch {
+            try {
+                if (phoneHelper.value.ensureHelper(id) is Outcome.Ok) {
+                    command {
+                        if (id !in listings && listSourceShown(id)) {
+                            connectForHome(id, makeActive = false)
+                            rebuildFeed()
+                        }
+                        Unit.ok()
+                    }
+                }
+            } finally {
+                synchronized(joiningHelpers) { joiningHelpers.remove(id) }
+            }
+        }
+    }
+
+    /**
+     * Cold start: with a phone agent installed, the "Phone agents" source is saved and joins the list on its own,
+     * with no visit to the Agents page. Never raises a failure: the OpenCode list shows either way.
+     */
+    private fun adoptPhoneAgents() {
+        scope.launch {
+            val adopted = phoneHelper.value.adoptSource()
+            if (adopted is Outcome.Ok && adopted.value != null) synchronizeListSources()
+        }
     }
 
     internal suspend fun showListSource(id: ProfileId, shown: Boolean): Outcome<Unit> = command {
@@ -706,6 +760,11 @@ class PreviewRuntime(
                         registry.live.value[id]?.let {
                             sessionReads.locationKey(it.profile, it.session.server.location.value)
                         },
+                    // An agents server's rows say which agent runs them (Claude Code, Codex, ...).
+                    agentOf =
+                        if (profiles.profile(id)?.profile?.backend == BackendKind.Paseo)
+                            PhoneConversationRules::agentOf
+                        else ({ _: Session -> null }),
                     refresh = { refreshOne(id) },
                 )
             }

@@ -302,6 +302,22 @@ public class PaseoGateway(
 
     // ---- state (lane-confined; Dart field names)
     internal var directoryValue: String? = directory
+
+    /**
+     * The phone helper's gateway is pinned to the folder that holds all the agents' projects, and its list shows the
+     * conversations of every project folder under it (Flutter opened one source per project folder). Other servers
+     * keep the exact folder.
+     */
+    public var includeSubfolders: Boolean = false
+
+    /** Whether a conversation that runs in [directory] belongs to the folder [scope] this gateway is pinned to. */
+    internal fun holds(scope: String?, directory: String?): Boolean =
+        directory == scope ||
+            (includeSubfolders &&
+                scope != null &&
+                directory != null &&
+                directory.startsWith(scope.trimEnd('/') + "/") &&
+                directory.split('/').none { it == ".." || it == "." })
     internal var closed = false
     internal var locationEpoch = 0
     internal val agents = LinkedHashMap<String, JsonObject>()
@@ -823,7 +839,7 @@ public class PaseoGateway(
             val agent = read.obj("agent") ?: paseoFail(PaseoFailureKind.NotFound)
             if (agent.str("id") != real(id)) paseoFail(PaseoFailureKind.InvalidResponse)
             if (
-                paseoSession(agent).directory != directory ||
+                !holds(directory, paseoSession(agent).directory) ||
                     agent["archivedAt"].stringOrNull() != null
             )
                 paseoFail(PaseoFailureKind.ScopeMismatch)
@@ -1941,7 +1957,7 @@ public class PaseoGateway(
         val time = mapped.time
         val session =
             if (time == null) mapped else mapped.copy(time = time.copy(updatedMs = settled))
-        if (session.directory != directoryValue || agent["archivedAt"].stringOrNull() != null)
+        if (!holds(directoryValue, session.directory) || agent["archivedAt"].stringOrNull() != null)
             return null
         val id = session.id.raw
         agents[id] = agent

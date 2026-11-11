@@ -135,6 +135,12 @@ public data class ChatStatusUi(
     val retryInSeconds: Int? = null,
     /** This conversation's server runs on this phone: the line offers Restart (after a confirm). */
     val canRestart: Boolean = false,
+    /** The server is the phone agents' helper: the line offers Restart agent (no confirm, as Flutter). */
+    val canRestartAgent: Boolean = false,
+    /** The helper is being started right now. */
+    val startingAgent: Boolean = false,
+    /** Starting the helper failed; the line says so in plain words and offers the action again. */
+    val agentFailed: Boolean = false,
 )
 
 /** A receipt check is only a read. Its timestamp is intentionally not persisted. */
@@ -507,6 +513,9 @@ public interface ChatActions {
 
     /** Flutter "Restart OpenCode" on the connection line: asks first ([ChatConfirm.RestartPhoneServer]). */
     public fun restartPhoneServer() {}
+
+    /** Flutter "Restart agent" on the connection line: starts the phone agents' helper, then reconnects. */
+    public fun restartAgent() {}
 
     public fun confirmRestartPhoneServer() {}
 

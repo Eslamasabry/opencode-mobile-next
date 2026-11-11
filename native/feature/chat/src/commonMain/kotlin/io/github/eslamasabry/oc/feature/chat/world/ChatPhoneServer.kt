@@ -18,6 +18,12 @@ public interface ChatPhoneServer {
 
     /** Stop then start it again; a person's restart spends no recovery attempt. */
     public suspend fun restart(profile: ProfileId): Outcome<Unit>
+
+    /** True when [profile] is the saved "Phone agents" server, whose helper the app starts (Flutter `recoverAgentBackend`). */
+    public fun isAgentHelper(profile: ProfileId): Boolean = false
+
+    /** Makes sure that helper runs and answers, starting it when it does not. Ok for any other server. */
+    public suspend fun startAgentHelper(profile: ProfileId): Outcome<Unit> = Outcome.Ok(Unit)
 }
 
 @ContributesTo(AppScope::class)

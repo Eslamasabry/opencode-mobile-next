@@ -34,6 +34,12 @@ public interface ServerConnections {
 
     public suspend fun connect(id: ProfileId): Outcome<Unit>
 
+    /**
+     * Connects [id] without changing which server the home shows: for a server another page needs (the phone agents'
+     * helper, from the Agents page or a new conversation). The default is [connect], for runtimes with one server.
+     */
+    public suspend fun connectInBackground(id: ProfileId): Outcome<Unit> = connect(id)
+
     /** Ends only this live connection; saved metadata, drafts and queued prompts are retained. */
     public suspend fun disconnect(id: ProfileId): Outcome<Unit> =
         Outcome.Failed(

@@ -30,6 +30,11 @@ import io.github.eslamasabry.oc.core.model.ModelSelection
 import io.github.eslamasabry.oc.core.model.NewSession
 import io.github.eslamasabry.oc.core.model.ServerLocation
 import io.github.eslamasabry.oc.core.model.ServerProfile
+import io.github.eslamasabry.oc.engine.agents.AgentId
+import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
+import io.github.eslamasabry.oc.engine.agents.selection.AgentSelection
+import io.github.eslamasabry.oc.engine.agents.selection.PhoneChatAgents
+import io.github.eslamasabry.oc.engine.agents.selection.PhoneChatFact
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.connection.DirectoryPaths
@@ -50,8 +55,11 @@ import io.github.eslamasabry.oc.engine.delivery.receipts.CommandReceiptState
 import io.github.eslamasabry.oc.engine.git.GitLinkRepairReport
 import io.github.eslamasabry.oc.engine.git.GitLinkRepairService
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgents
 import io.github.eslamasabry.oc.feature.chat.world.RecentModelsBacking
 import io.github.eslamasabry.oc.feature.chats.presentation.*
+import io.github.eslamasabry.oc.protocol.paseo.gateway.PaseoGateway
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.io.encoding.Base64
 import kotlinx.coroutines.CoroutineStart
@@ -86,6 +94,8 @@ class AndroidNewConversationHost(
     private val modelLibraries: Set<RecentModelsBacking>,
     private val phone: BuiltinRuntime,
     private val phoneServer: AndroidChatPhoneServer,
+    private val phoneAgents: PhoneAgents,
+    private val phoneHelper: AppLocalAgentHostStarter,
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
 ) : NewConversationHost {
@@ -481,6 +491,121 @@ class AndroidNewConversationHost(
         }
     }
 
+    private companion object {
+        /** The helper's first model list is slow (about ten seconds; longer while it starts). */
+        const val PHONE_MODELS_WAIT_MS = 60_000L
+        const val PHONE_ROWS_WAIT_MS = 6_000L
+    }
+
+    // ---- agents on this phone (Flutter ChatsHost.agents: chatAgentChoices, selectChatAgent, agentModels)
+
+    private fun selection(profile: ProfileId) =
+        AgentSelection(KvAgentPrefs(stores.prefs, stores.lanes.forProfile(profile)))
+
+    /** Where phone agents' conversations live: the saved helper profile, else the one the Agents page will save. */
+    private fun phoneHelperId(): ProfileId? {
+        val state = phoneAgents.state.value
+        return state.conversations
+            ?: state.owner?.let { ProfileId("${it.raw}${AppLocalAgentHostStarter.SUFFIX}") }
+    }
+
+    private fun phoneFacts(): List<PhoneChatFact> =
+        phoneAgents.state.value.agents.mapNotNull { row ->
+            val descriptor = AgentCatalog.builtIn.byId(AgentId(row.id)) ?: return@mapNotNull null
+            PhoneChatFact(
+                id = descriptor.id,
+                name = row.name,
+                iconKey = descriptor.iconKey,
+                ready = row.status == PhoneAgentStatus.Ready,
+                // Flutter's fixAction: install, sign in, phone check, resume.
+                fixable =
+                    when (row.status) {
+                        PhoneAgentStatus.NotInstalled -> row.supportedInstallation
+                        PhoneAgentStatus.SignInNeeded,
+                        PhoneAgentStatus.PhoneCheck,
+                        PhoneAgentStatus.Stopped -> true
+                        else -> false
+                    },
+            )
+        }
+
+    private fun phoneOffer(profile: ProfileId): NewConversationPhone? {
+        val state = phoneAgents.state.value
+        val helper = phoneHelperId()
+        // The helper's own profile is where phone agents run; it offers no further agents.
+        if (!state.available || helper == null || profile == helper) return null
+        val facts = phoneFacts()
+        val offer = PhoneChatAgents.offer(facts, AgentId.OPENCODE)
+        val selected =
+            selection(profile).selectedAmong(profile, offer.choices.map { it.id }.toSet(), true)
+        return NewConversationPhone(
+            helper = helper,
+            choices = offer.choices.map { NewConversationPhoneAgent(it.id.raw, it.name, it.iconKey) },
+            needsSetup = offer.needsSetup.map { NewConversationPhoneAgent(it.id.raw, it.name, it.iconKey) },
+            selected = selected.takeIf { it != AgentId.OPENCODE }?.raw,
+        )
+    }
+
+    override suspend fun choosePhoneAgent(profile: ProfileId, agentId: String?): Outcome<Unit> {
+        val choosable = PhoneChatAgents.offer(phoneFacts(), AgentId.OPENCODE).choices.map { it.id }.toSet()
+        return selection(profile)
+            .selectAmong(
+                profile,
+                agentId?.let(::AgentId) ?: AgentId.OPENCODE,
+                choosable,
+                phoneAgents.state.value.available,
+            )
+    }
+
+    /** Makes the helper behind phone agents run and connected: it is saved on first use, started when stopped. */
+    private suspend fun phoneHelperReady(helper: ProfileId): Outcome<Unit> {
+        if (registry.live.value[helper] != null) return Outcome.Ok(Unit)
+        if (stores.profiles.profile(helper) == null) return phoneHelper.connect()
+        return when (val connected = connections.connectInBackground(helper)) {
+            is Outcome.Failed -> connected
+            is Outcome.Ok -> Outcome.Ok(Unit)
+        }
+    }
+
+    override suspend fun phoneAgentModels(
+        profile: ProfileId,
+        agentId: String,
+    ): Outcome<NewConversationPhoneModels> {
+        val helper = phoneHelperId() ?: return refused()
+        val provider =
+            AgentCatalog.builtIn.byId(AgentId(agentId))?.providerId ?: return refused()
+        // The helper's first model list takes about ten seconds: the screen asks while the person types.
+        return withTimeoutOrNull(PHONE_MODELS_WAIT_MS) {
+                when (val ready = phoneHelperReady(helper)) {
+                    is Outcome.Failed -> ready
+                    is Outcome.Ok -> setup(helper)
+                }
+            }
+            ?.let { read ->
+                when (read) {
+                    is Outcome.Failed -> read
+                    is Outcome.Ok -> {
+                        val models = read.value.models.filter { it.model.providerId == provider }
+                        val saved = selection(profile).selectedModel(profile, AgentId(agentId))
+                        Outcome.Ok(
+                            NewConversationPhoneModels(
+                                models,
+                                models.firstOrNull { it.model.modelId == saved }?.model
+                                    ?: read.value.model?.takeIf { it.providerId == provider }
+                                    ?: models.firstOrNull()?.model,
+                            )
+                        )
+                    }
+                }
+            } ?: Outcome.Failed(Failure.Unavailable(FeatureId("phoneAgentModels")))
+    }
+
+    override suspend fun savePhoneAgentModel(
+        profile: ProfileId,
+        agentId: String,
+        model: ModelRef?,
+    ): Outcome<Unit> = selection(profile).selectModel(profile, AgentId(agentId), model?.modelId)
+
     override suspend fun setup(profile: ProfileId): Outcome<NewConversationSetup> =
         withContext(serial) {
             lane.withLock {
@@ -493,6 +618,10 @@ class AndroidNewConversationHost(
                 val gateway = graph.session.server
                 val ops = gateway.facet<ServerOperationsGateway>()
                 val caps = gateway.capabilities.value
+                // Flutter read the agent rows when New conversation opened. The start-up read usually has them
+                // already; when it has not finished, wait for one read, briefly, so the list is not missing them.
+                if (phoneAgents.state.value.agents.isEmpty())
+                    withTimeoutOrNull(PHONE_ROWS_WAIT_MS) { phoneAgents.refresh() }
                 val projects =
                     if (caps.projectManagement && ops != null)
                         when (val r = ops.listProjects()) {
@@ -643,6 +772,7 @@ class AndroidNewConversationHost(
                                     ?.name ?: "OpenCode"
                             else "OpenCode",
                         favorites = favoriteModels(profile),
+                        phone = phoneOffer(profile),
                     )
                 )
             }
@@ -675,6 +805,12 @@ class AndroidNewConversationHost(
     ): NewConversationAttempt =
         withContext(serial) {
             lane.withLock {
+                // A phone agent's conversation starts on the helper's profile: started when it is stopped.
+                if (registry.live.value[profile] == null && profile == phoneHelperId()) {
+                    val ready = phoneHelperReady(profile)
+                    if (ready is Outcome.Failed)
+                        return@withLock NewConversationAttempt(directory, failure = ready.failure)
+                }
                 val graph =
                     registry.live.value[profile]
                         ?: return@withLock NewConversationAttempt(
@@ -731,6 +867,13 @@ class AndroidNewConversationHost(
                         target(graph, directory) != expectedTarget
                 )
                     return@withLock attempt.copy(failure = refused().failure)
+                // The helper keeps one folder at a time: the agent works in the project that was chosen.
+                (gateway as? PaseoGateway)?.let { paseo ->
+                    if (paseo.location.value.directory != directory) {
+                        val moved = paseo.changeLocation(ServerLocation(directory = directory))
+                        if (moved is Outcome.Failed) return@withLock attempt.copy(failure = moved.failure)
+                    }
+                }
                 // Separate-copy creation belongs to the readiness-checked isolated-task owner.
                 if (separateCopy) return@withLock attempt.copy(failure = refused().failure)
                 if (attempt.ref == null) {

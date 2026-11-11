@@ -38,6 +38,7 @@ public class AgentsViewModel(
     private val nav: AppNavigator,
     private val hub: AgentsHubConnection,
     phoneHosts: Set<PhoneAgentHostStarter>,
+    phoneCheckers: Set<PhoneAgentChecker>,
     accounts: AgentAccounts,
     drafts: AgentHandoffDrafts,
     clock: Clock,
@@ -51,6 +52,7 @@ public class AgentsViewModel(
             openChat = { nav.openChat(it, focusComposer = true) },
             openComputerPage = { nav.open(ComputerRoute(it)) },
             phoneHost = phoneHosts.singleOrNull(),
+            checker = phoneCheckers.singleOrNull(),
             accounts = accounts,
             clock = clock,
             drafts = drafts,
@@ -162,6 +164,10 @@ public class AgentsViewModel(
     override fun confirmPreviousVersion(): Unit = presenter.confirmPreviousVersion()
 
     override fun connectPhoneHelper(): Unit = presenter.connectPhoneHelper()
+
+    override fun checkPhoneAgent(id: String): Unit = presenter.checkPhoneAgent(id)
+
+    override fun resumePhoneAgent(id: String): Unit = presenter.resumePhoneAgent(id)
 
     override fun openAgent(id: String): Unit = presenter.openAgent(id)
 

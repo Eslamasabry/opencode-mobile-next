@@ -49,6 +49,29 @@ public class AgentSelection(
         return prefs.commit { putString(AgentKeys.chatAgent(profile), agent.raw) }
     }
 
+    /**
+     * The chip's agent when the offer is already known ([choosable] = the ready agents, `null` until the first read):
+     * the saved agent while it can still start a conversation, else OpenCode. Same fall-back as [selected].
+     */
+    public fun selectedAmong(profile: ProfileId, choosable: Set<AgentId>?, phoneAgentsAvailable: Boolean): AgentId {
+        val saved = prefs.string(AgentKeys.chatAgent(profile))?.let(::AgentId) ?: return AgentId.OPENCODE
+        if (saved == AgentId.OPENCODE || !phoneAgentsAvailable) return AgentId.OPENCODE
+        if (choosable == null) return saved
+        return if (saved in choosable) saved else AgentId.OPENCODE
+    }
+
+    /** Saves a choice from the offer; an agent that is not in [choosable] is refused and nothing is written. */
+    public suspend fun selectAmong(
+        profile: ProfileId,
+        agent: AgentId,
+        choosable: Set<AgentId>,
+        phoneAgentsAvailable: Boolean,
+    ): Outcome<Unit> {
+        if (agent != AgentId.OPENCODE && (!phoneAgentsAvailable || agent !in choosable))
+            return AgentHostProblem.AgentUnavailable.asFailure().failed()
+        return prefs.commit { putString(AgentKeys.chatAgent(profile), agent.raw) }
+    }
+
     public fun selectedModel(profile: ProfileId, agent: AgentId): String? = savedModels(profile)[agent.raw]
 
     /** Saves (or with a null/empty [modelId], forgets) the model for [agent]. */

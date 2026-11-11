@@ -13,6 +13,7 @@ import io.github.eslamasabry.oc.feature.agents.hub.AgentTileModel
 import io.github.eslamasabry.oc.feature.agents.hub.AgentTileState
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsActions
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsUi
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRow
 import io.github.eslamasabry.oc.feature.agents.hub.agentTile
 import io.github.eslamasabry.oc.feature.agents.hub.phoneInstalledAgents
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
@@ -66,6 +67,24 @@ import io.github.eslamasabry.oc.ui.words.res.linuxAgentInstallCancel
 import io.github.eslamasabry.oc.ui.words.res.linuxAgentInstallDone
 import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadRemove
 import io.github.eslamasabry.oc.ui.words.res.serversWorking
+import io.github.eslamasabry.oc.engine.agents.check.PhoneCheckFailure
+import org.jetbrains.compose.resources.StringResource
+import io.github.eslamasabry.oc.ui.words.res.agentsChipCheck
+import io.github.eslamasabry.oc.ui.words.res.agentsCheckAction
+import io.github.eslamasabry.oc.ui.words.res.agentsChipResume
+import io.github.eslamasabry.oc.ui.words.res.agentsResumeAction
+import io.github.eslamasabry.oc.ui.words.res.agentsCheckRunning
+import io.github.eslamasabry.oc.ui.words.res.agentsCheckTitle
+import io.github.eslamasabry.oc.ui.words.res.agentsFailBusy
+import io.github.eslamasabry.oc.ui.words.res.agentsFailInstall
+import io.github.eslamasabry.oc.ui.words.res.agentsFailVersion
+import io.github.eslamasabry.oc.ui.words.res.agentsFailDaemon
+import io.github.eslamasabry.oc.ui.words.res.agentsFailTimeout
+import io.github.eslamasabry.oc.ui.words.res.agentsFailHelperVersion
+import io.github.eslamasabry.oc.ui.words.res.agentsFailNeedsSignIn
+import io.github.eslamasabry.oc.ui.words.res.agentsFailUnavailable
+import io.github.eslamasabry.oc.ui.words.res.agentsFailStorage
+import io.github.eslamasabry.oc.ui.words.res.agentsFailStale
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -80,12 +99,12 @@ internal fun PhoneAgentTiles(state: AgentsUi, actions: AgentsActions, modifier: 
         KitText(stringResource(Res.string.agentsChecking), modifier.then(gutter))
         return
     }
-    val tiles = state.phone.agents.map { agentTile(it, state.phone.installation) }
+    val tiles = state.phone.agents.map { tileOf(it, state) }
     // A ready agent starts a conversation once the phone's agents are connected.
     val chat = state.phone.conversations != null &&
         (state.helperConnected || state.computers.any { it.id == state.phone.conversations })
     KitAgentTiles(
-        tiles.map { tile -> @Composable { AgentTile(tile, actions, chat) } },
+        tiles.map { tile -> @Composable { AgentTile(tile, actions, chat, state.checkFailedAgent == tile.agent.id) } },
         modifier.then(gutter),
     )
 }
@@ -117,8 +136,17 @@ internal fun ComputerAgentTiles(id: ProfileId, agents: List<String>, actions: Ag
     )
 }
 
+/** The tile for [agent] on this page: a check or a restart that runs now reads "Checking…" on that tile. */
+private fun tileOf(agent: PhoneAgentRow, state: AgentsUi): AgentTileModel =
+    agentTile(
+        agent,
+        state.phone.installation,
+        checking = state.checkingAgent == agent.id,
+        resuming = state.helperConnecting,
+    )
+
 @Composable
-private fun AgentTile(tile: AgentTileModel, actions: AgentsActions, chat: Boolean) {
+private fun AgentTile(tile: AgentTileModel, actions: AgentsActions, chat: Boolean, checkFailed: Boolean) {
     val agent = tile.agent
     KitAgentTile(
         name = agent.name,
@@ -153,6 +181,24 @@ private fun AgentTile(tile: AgentTileModel, actions: AgentsActions, chat: Boolea
                         prominent = true,
                     ) {
                         actions.signInPhone(agent.id)
+                    }
+                AgentTileAct.Check ->
+                    KitAgentTileAction(
+                        stringResource(if (checkFailed) Res.string.kitTryAgain else Res.string.agentsChipCheck),
+                        stringResource(Res.string.agentsCheckAction, agent.name),
+                        icon = KitIcons.check,
+                        prominent = true,
+                    ) {
+                        actions.checkPhoneAgent(agent.id)
+                    }
+                AgentTileAct.Resume ->
+                    KitAgentTileAction(
+                        stringResource(Res.string.agentsChipResume),
+                        stringResource(Res.string.agentsResumeAction, agent.name),
+                        icon = KitIcons.play,
+                        prominent = true,
+                    ) {
+                        actions.resumePhoneAgent(agent.id)
                     }
                 null ->
                     if (chat && tile.state == AgentTileState.Ready)
@@ -242,7 +288,7 @@ private fun connectFailureWords(failure: Failure?): String =
 @Composable
 internal fun PhoneAgentSheet(state: AgentsUi, actions: AgentsActions, enabled: KitEnabled) {
     val agent = state.sheetAgent?.let { id -> state.phone.agents.firstOrNull { it.id == id } }
-    val tile = agent?.let { agentTile(it, state.phone.installation) }
+    val tile = agent?.let { tileOf(it, state) }
     val working = KitEnabled.Disabled(stringResource(Res.string.serversWorking))
     val can = if (state.busy) working else enabled
     KitSheet(
@@ -262,6 +308,18 @@ internal fun PhoneAgentSheet(state: AgentsUi, actions: AgentsActions, enabled: K
                     KitAction(
                         stringResource(Res.string.agentsSignInAction, tile.agent.name),
                         { actions.signInPhone(tile.agent.id) },
+                        enabled = can,
+                    )
+                AgentTileAct.Check ->
+                    KitAction(
+                        stringResource(Res.string.agentsCheckAction, tile.agent.name),
+                        { actions.checkPhoneAgent(tile.agent.id) },
+                        enabled = can,
+                    )
+                AgentTileAct.Resume ->
+                    KitAction(
+                        stringResource(Res.string.agentsResumeAction, tile.agent.name),
+                        { actions.resumePhoneAgent(tile.agent.id) },
                         enabled = can,
                     )
                 null ->
@@ -299,10 +357,34 @@ internal fun PhoneAgentSheet(state: AgentsUi, actions: AgentsActions, enabled: K
                 KitProgressView(tileProgress(tile))
                 KitText(stringResource(Res.string.linuxAgentInstallBackground))
             }
+            state.checkingAgent == tile.agent.id -> {
+                KitProgressView(KitProgress.Waiting())
+                KitText(stringResource(Res.string.agentsCheckRunning, tile.agent.name))
+            }
+            tile.state == AgentTileState.PhoneCheck && state.checkFailedAgent == tile.agent.id ->
+                state.checkFailure?.let { KitText(stringResource(checkFailureWords(it))) }
             tile.justInstalled -> KitText(stringResource(Res.string.linuxAgentInstallDone, tile.agent.name))
+            tile.state == AgentTileState.PhoneCheck ->
+                KitText(stringResource(Res.string.agentsCheckTitle))
             tile.state == AgentTileState.NotInstalled ->
                 tile.agent.downloadBytes?.let { KitText(stringResource(Res.string.agentsSetupSizeNote, agentPayloadSize(it))) }
             else -> Unit
         }
     }
 }
+
+/** Why a phone check did not pass, in plain words (Flutter `AgentHostFailure` sentences). */
+internal fun checkFailureWords(failure: PhoneCheckFailure): StringResource =
+    when (failure) {
+        PhoneCheckFailure.Busy -> Res.string.agentsFailBusy
+        PhoneCheckFailure.WrongArchitecture -> Res.string.agentsFailArchitecture
+        PhoneCheckFailure.Install -> Res.string.agentsFailInstall
+        PhoneCheckFailure.Version -> Res.string.agentsFailVersion
+        PhoneCheckFailure.Daemon -> Res.string.agentsFailDaemon
+        PhoneCheckFailure.Timeout -> Res.string.agentsFailTimeout
+        PhoneCheckFailure.HelperVersion -> Res.string.agentsFailHelperVersion
+        PhoneCheckFailure.NeedsSignIn -> Res.string.agentsFailNeedsSignIn
+        PhoneCheckFailure.Unavailable -> Res.string.agentsFailUnavailable
+        PhoneCheckFailure.Storage -> Res.string.agentsFailStorage
+        PhoneCheckFailure.Stale -> Res.string.agentsFailStale
+    }
