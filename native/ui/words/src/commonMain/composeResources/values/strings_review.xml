@@ -9,6 +9,6 @@
     <string name="reviewWaiting">An undo is waiting for your review. Messages after its prompt are hidden until you choose.</string>
     <string name="reviewUndoUnknown">Undo all needs the prompt these changes started from, and it couldn't be read.</string>
     <string name="reviewUndoUnavailable">This server can't undo from a prompt.</string>
-    <string name="reviewToolEvidence">From what the agent's tools reported. Changes made by commands aren't listed.</string>
+    <string name="reviewToolEvidence">Only what this conversation's agent changed with its tools. Files made by commands, new files not yet tracked and changes from other conversations aren't listed. Uncommitted lists what Git sees in the folder.</string>
     <string name="reviewSendBackFailed">Couldn't put your note into the message. Try again.</string>
 </resources>
