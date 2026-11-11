@@ -116,12 +116,19 @@ public fun ShellKeyPark(onChat: () -> Boolean, content: @Composable () -> Unit) 
     val park = remember { FocusRequester() }
     val focus = LocalFocusManager.current
     val chat by rememberUpdatedState(onChat)
-    // Re-park after focus left the tree (a field cleared its focus); asked outside the focus change itself.
+    // Re-park after focus left the tree (a field cleared its focus); asked outside the focus change itself, and only if
+    // nothing has taken focus meanwhile: a field that asked for it in between (Find opening as the message box left
+    // the layout; the dock's rename "clear focus, wait a frame, ask") keeps it. Parking over it took its focus, so the
+    // next typed key reached the park and was steered into the message box (w4-focus2, device B11 / ring rename).
     var lost by remember { mutableIntStateOf(0) }
-    LaunchedEffect(lost) { park.tryPark() }
+    val holds = remember { booleanArrayOf(false) }
+    LaunchedEffect(lost) { if (!holds[0]) park.tryPark() }
     Box(
         Modifier.focusRequester(park)
-            .onFocusChanged { if (!it.hasFocus) lost++ }
+            .onFocusChanged {
+                holds[0] = it.hasFocus
+                if (!it.hasFocus) lost++
+            }
             .focusTarget()
             .onKeyEvent { event -> handle(event, chat(), park, focus) }
     ) {
