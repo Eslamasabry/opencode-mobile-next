@@ -84,27 +84,27 @@ public object DockKitMapper {
             }
         fun named(name: String?): String = name?.trim()?.takeIf { it.isNotEmpty() } ?: untitled
         fun child(c: DockChild): KitDockChild {
-            val key = key(c.ref)
-            refs[key] = c.ref
-            if (c.removable) removable += key
-            return KitDockChild(key, named(c.name), state(c.state), c.pulse, lines(c.ref).lastOrNull()?.text)
+            val k = key(c.ref)
+            refs[k] = c.ref
+            if (c.removable) removable += k
+            return KitDockChild(k, named(c.name), state(c.state), c.pulse, lines(c.ref).lastOrNull()?.text)
         }
         val rings =
             ui.entries.map { e ->
-                val key = key(e.ref)
-                refs[key] = e.ref
-                if (e.removable) removable += key
-                askOf(e)?.let { asks[key] = it }
+                val k = key(e.ref)
+                refs[k] = e.ref
+                if (e.removable) removable += k
+                askOf(e)?.let { asks[k] = it }
                 val tail = lines(e.ref)
                 KitDockRing(
-                    key = key,
+                    key = k,
                     name = named(e.name),
                     markId = e.agent?.takeIf { it.isNotBlank() },
                     state = state(e.state),
                     pulse = e.pulse,
                     children = e.children.map(::child),
                     childOverflow = e.childOverflow,
-                    causedBy = e.causedBy?.let(::key),
+                    causedBy = e.causedBy?.let { key(it) },
                     server = e.serverName.takeIf { ui.severalServers },
                     lastLine = tail.lastOrNull()?.text,
                     peek = tail,
@@ -113,16 +113,16 @@ public object DockKitMapper {
             }
         val hidden =
             ui.hidden.map { h ->
-                val key = key(h.ref)
-                refs[key] = h.ref
-                KitDockRing(key = key, name = named(h.name), markId = h.agent?.takeIf { it.isNotBlank() }, state = state(h.state))
+                val k = key(h.ref)
+                refs[k] = h.ref
+                KitDockRing(key = k, name = named(h.name), markId = h.agent?.takeIf { it.isNotBlank() }, state = state(h.state))
             }
         val model =
             KitDockModel(
                 rings = rings,
                 hidden = hidden,
-                current = ui.open?.let(::key),
-                currentChild = ui.openChild?.let(::key),
+                current = ui.open?.let { key(it) },
+                currentChild = ui.openChild?.let { key(it) },
                 tucked = ui.tucked || ui.presence == DockPresence.Nub,
                 placement =
                     KitDockPlacement(

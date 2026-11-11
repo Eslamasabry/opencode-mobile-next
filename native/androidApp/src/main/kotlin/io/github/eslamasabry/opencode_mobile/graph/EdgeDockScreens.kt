@@ -76,7 +76,7 @@ class AppEdgeDockPort(
             .map { ui -> ui.entries.flatMap { e -> listOf(e.ref) + e.children.map { it.ref } } }
             .distinctUntilChanged()
             .flatMapLatest { refs ->
-                if (refs.isEmpty()) flowOf(emptyMap())
+                if (refs.isEmpty()) flowOf(emptyMap<ConversationRef, DockPeek>())
                 else combine(refs.map { ref -> dock.peek(ref).map { ref to it } }) { it.toMap() }
             }
             .stateIn(main, SharingStarted.WhileSubscribed(PEEK_KEEP_MS), emptyMap())
