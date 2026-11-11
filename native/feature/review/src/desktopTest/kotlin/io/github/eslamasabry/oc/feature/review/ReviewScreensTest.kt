@@ -131,10 +131,10 @@ class ReviewScreensTest {
             }
         }
         // Only the chip says "Changes in this turn" now; the page title is plain "Changes".
-        assertEquals(1, onAllNodesCount("Changes in this turn"))
+        assertEquals(1, onAllNodesCount("Changes in this turn"), "turn-text nodes")
         onNodeWithText("Not a Git project").assertIsDisplayed()
         onNodeWithText("Open the Git page").performClick()
-        assertEquals(listOf("git"), actions.calls)
+        assertEquals(listOf("git"), actions.calls, "calls")
     }
 
     @Test
