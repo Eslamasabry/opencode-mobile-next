@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.core.security.*
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.integrations.catalog.connectMethods
+import io.github.eslamasabry.oc.engine.integrations.catalog.providerKeyPageUrl
 import io.github.eslamasabry.oc.engine.integrations.usage.canonicalUsageProviderId
 import io.github.eslamasabry.oc.engine.profiles.LoadedProfile
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
@@ -320,6 +321,17 @@ class AndroidPlanSignInPort(
                     if (current(source)) opener.open(decision.link).map { PlanSignInLink.Opened }
                     else stale()
                 } else PlanSignInLink.Ask(decision.shownHost).ok()
+        }
+    }
+
+    override fun openKeyPage(integrationId: String): Outcome<Unit> {
+        // Only the app's own page list (anthropic, google), opened as an app-authored link.
+        val url =
+            providerKeyPageUrl(integrationId)
+                ?: return Failure.Unavailable(FeatureId("providerKeyPage")).failed()
+        return when (val decision = policy.check(url, LinkOrigin.AppAuthored)) {
+            is LinkDecision.Open -> opener.open(decision.link)
+            else -> Failure.Refused(RefusalReason.InvalidAddress).failed()
         }
     }
 

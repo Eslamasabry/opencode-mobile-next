@@ -282,6 +282,12 @@ public class PlanSignInViewModel(
 
     override fun confirmPage(): Unit = page(true)
 
+    override fun openKeyPage() {
+        val integration = local.value.integration ?: return
+        val opened = port.openKeyPage(integration.id)
+        if (opened is Outcome.Failed) local.update { it.copy(failure = opened.failure) }
+    }
+
     private fun page(confirmed: Boolean) {
         val launch = local.value.launch ?: return
         val place = local.value.place ?: return

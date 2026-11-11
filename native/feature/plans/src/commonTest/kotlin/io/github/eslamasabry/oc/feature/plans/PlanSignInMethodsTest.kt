@@ -71,6 +71,11 @@ class PlanSignInMethodsTest {
         override suspend fun cancel(connectionId: String, integrationId: String, attemptId: String, command: Boolean) = Outcome.Ok(Unit)
         override fun copyCode(connectionId: String, code: String) = Outcome.Ok(Unit)
         override fun openLink(connectionId: String, url: String, confirmed: Boolean): Outcome<PlanSignInLink> = Outcome.Ok(PlanSignInLink.Opened)
+        val keyPages = mutableListOf<String>()
+        override fun openKeyPage(integrationId: String): Outcome<Unit> {
+            keyPages += integrationId
+            return Outcome.Ok(Unit)
+        }
     }
 
     private fun m(type: String, id: String? = null, label: String = type, ask: Boolean = false) =
@@ -120,6 +125,16 @@ class PlanSignInMethodsTest {
         val vm = PlanSignInViewModel(Port(listOf(rows)), Source())
         vm.open("anthropic")
         assertEquals(PlanSignInStep.Key, vm.state.value.step)
+    }
+
+    @Test
+    fun `W4-25 the key step opens the provider's own key page, never a server link`() = runTest {
+        val port = Port(listOf(info("anthropic", m("key"))))
+        val vm = PlanSignInViewModel(port, Source())
+        vm.open("anthropic")
+        assertEquals(PlanSignInStep.Key, vm.state.value.step)
+        vm.openKeyPage()
+        assertEquals(listOf("anthropic"), port.keyPages)
     }
 
     @Test

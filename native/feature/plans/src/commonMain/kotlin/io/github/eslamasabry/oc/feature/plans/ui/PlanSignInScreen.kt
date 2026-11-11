@@ -21,6 +21,7 @@ import io.github.eslamasabry.oc.core.model.IntegrationAuthMode
 import io.github.eslamasabry.oc.engine.integrations.catalog.ConnectHint
 import io.github.eslamasabry.oc.engine.integrations.catalog.connectMethodHasOwnLabel
 import io.github.eslamasabry.oc.engine.integrations.catalog.connectMethodHint
+import io.github.eslamasabry.oc.engine.integrations.catalog.providerKeyPageUrl
 import io.github.eslamasabry.oc.feature.plans.presentation.PlanAuthenticationUi
 import io.github.eslamasabry.oc.feature.plans.presentation.PlanSignInActions
 import io.github.eslamasabry.oc.feature.plans.presentation.PlanSignInStep
@@ -182,6 +183,15 @@ public fun PlanSignInScreen(state: PlanAuthenticationUi, actions: PlanSignInActi
                         working = state.busy,
                         enabled = enabled,
                     )
+                    // Flutter's key dialog: providers whose terms allow only a key link their
+                    // own page for creating one.
+                    if (state.integration?.let { providerKeyPageUrl(it.id) } != null)
+                        KitButton(
+                            stringResource(Res.string.nlibGetKey),
+                            actions::openKeyPage,
+                            role = KitButtonRole.Tertiary,
+                            enabled = enabled,
+                        )
                 }
                 PlanSignInStep.Form -> OAuthForm(state, actions, enabled)
                 PlanSignInStep.OAuth -> {
