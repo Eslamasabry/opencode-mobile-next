@@ -23,46 +23,58 @@ class DockOpenAlertAndLeaveTest {
 
     private fun model(vararg events: DockEvent): DockModel = events.fold(DockModel.empty()) { m, e -> m.reduce(e) }
 
-    // ---- the open conversation is not an alert
+    // ---- the open conversation is not an alert (its ring raises no pulse; the dock never comes out by itself)
 
     @Test
-    fun `the open conversation's own request or failure does not bring the dock out, another one's does`() {
+    fun `the open conversation's own request raises no alert, another one's does, and neither brings the dock out`() {
         val own = model(DockEvent.Opened(a), DockEvent.RunStarted(a), DockEvent.RequestOpened(a, "permission:r"))
         assertEquals(DockPresence.Nub, own.ui.presence, "the person is looking at it")
         assertEquals(0, own.ui.entries.first { it.ref == a }.pulse)
-        assertEquals(DockPresence.Nub, model(DockEvent.Opened(a), DockEvent.RunStarted(a), DockEvent.RunEnded(a, DockRunEnd.Failed)).ui.presence)
-        // The same request counts once the person is on the home or on another conversation (today's rule).
-        assertEquals(DockPresence.Out, own.reduce(DockEvent.Opened(null)).ui.presence)
-        assertEquals(DockPresence.Out, own.reduce(DockEvent.Opened(b)).ui.presence)
-        // An alert elsewhere still brings it out while a conversation is open.
+        assertEquals(DockPresence.Nub, own.reduce(DockEvent.Opened(null)).ui.presence, "leaving it does not bring the dock out")
         val elsewhere = model(DockEvent.Opened(a), DockEvent.RunStarted(b), DockEvent.RequestOpened(b, "permission:r"))
-        assertEquals(DockPresence.Out, elsewhere.ui.presence)
+        assertEquals(1, elsewhere.ui.entries.first { it.ref == b }.pulse, "the nub's dot for it changes")
+        assertEquals(DockPresence.Nub, elsewhere.ui.presence, "and nothing opens")
     }
 
     @Test
-    fun `a sub-agent's request still counts while its parent is open, and the parent's while the sub-agent is open`() {
+    fun `a sub-agent's request still alerts while its parent is open, and the parent's while the sub-agent is open`() {
         // The chat shows only its own session's requests, so the dock is the only signal for these.
         val kid = ref("kid")
         val family = arrayOf<DockEvent>(DockEvent.RunStarted(a), DockEvent.RunStarted(kid), DockEvent.Link(kid, a.sessionId))
         val childAsks = model(*family, DockEvent.Opened(a), DockEvent.RequestOpened(kid, "permission:r"))
-        assertEquals(DockPresence.Out, childAsks.ui.presence)
+        assertEquals(1, childAsks.ui.entries.single().pulse)
         val parentAsks = model(*family, DockEvent.Opened(kid), DockEvent.RequestOpened(a, "permission:r"))
-        assertEquals(DockPresence.Out, parentAsks.ui.presence)
+        assertEquals(1, parentAsks.ui.entries.single().pulse)
         val kidOwn = model(*family, DockEvent.Opened(kid), DockEvent.RequestOpened(kid, "permission:r"))
-        assertEquals(DockPresence.Nub, kidOwn.ui.presence, "the sub-agent on screen shows its own request")
+        assertEquals(0, kidOwn.ui.entries.single().pulse, "the sub-agent on screen shows its own request")
+        for (m in listOf(childAsks, parentAsks, kidOwn)) assertEquals(DockPresence.Nub, m.ui.presence)
     }
 
     @Test
-    fun `the open conversation follows every navigation report, so it never goes stale`() {
-        val asks = model(DockEvent.Opened(a), DockEvent.RunStarted(a), DockEvent.RequestOpened(a, "permission:r"))
-        // Home (or a page that is not a chat), then back to the same chat: out, then in again.
+    fun `the open conversation follows every navigation report, and a pulled-out dock stays out across them`() {
+        val asks = model(DockEvent.Untuck, DockEvent.Opened(a), DockEvent.RunStarted(a), DockEvent.RequestOpened(a, "permission:r"))
+        assertEquals(DockPresence.Out, asks.ui.presence)
         val home = asks.reduce(DockEvent.Opened(null))
+        assertNull(home.ui.open)
         assertEquals(DockPresence.Out, home.ui.presence)
-        assertEquals(DockPresence.Nub, home.reduce(DockEvent.Opened(a)).ui.presence)
-        // Another chat opened (from a notification or the dock) makes the first one's request count again.
+        val back = home.reduce(DockEvent.Opened(a))
+        assertEquals(a, back.ui.open)
+        assertEquals(DockPresence.Out, back.ui.presence)
         val other = asks.reduce(DockEvent.Opened(b))
-        assertEquals(DockPresence.Out, other.ui.presence)
         assertEquals(b, other.ui.open)
+        assertEquals(DockPresence.Out, other.ui.presence)
+        assertEquals(DockPresence.Nub, other.reduce(DockEvent.Tuck).ui.presence, "until the person tucks it")
+    }
+
+    @Test
+    fun `a fresh start is the nub, and a new request or failure elsewhere never untucks`() {
+        val fresh = model(DockEvent.PinsLoaded(p, emptyList()), DockEvent.RunStarted(a), DockEvent.RunStarted(b))
+        assertTrue(fresh.ui.tucked)
+        assertEquals(DockPresence.Nub, fresh.ui.presence)
+        val alerts = fresh.reduce(DockEvent.RequestOpened(a, "permission:r")).reduce(DockEvent.RunEnded(b, DockRunEnd.Failed))
+        assertTrue(alerts.ui.tucked)
+        assertEquals(DockPresence.Nub, alerts.ui.presence)
+        assertEquals(listOf(1, 1), alerts.ui.entries.map { it.pulse }, "each ring's dot says it")
     }
 
     // ---- archive

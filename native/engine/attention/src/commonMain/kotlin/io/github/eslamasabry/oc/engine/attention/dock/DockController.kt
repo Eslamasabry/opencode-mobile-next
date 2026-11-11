@@ -14,7 +14,8 @@ import kotlinx.coroutines.launch
  *
  * Confined to one dispatcher (the app's main): every call mutates [DockModel] in place of a lock, like the app's other
  * main-thread state holders. [navigate] opens a conversation the way a tap in the conversation list does; the UI
- * layer supplies it. The tuck is not persisted: it lasts until a new failure or request, or until nothing is live.
+ * layer supplies it. The dock starts tucked and comes out only when the person pulls it out; that choice is not
+ * persisted (it lasts for the session) and nothing the conversations do changes it.
  */
 public class DockController(
     private val scope: CoroutineScope,
