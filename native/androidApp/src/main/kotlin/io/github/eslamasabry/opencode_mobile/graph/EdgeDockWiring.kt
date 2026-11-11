@@ -23,6 +23,7 @@ import io.github.eslamasabry.oc.engine.attention.dock.DockPeekFallback
 import io.github.eslamasabry.oc.engine.attention.dock.DockPeeks
 import io.github.eslamasabry.oc.engine.attention.dock.DockPins
 import io.github.eslamasabry.oc.engine.attention.dock.DockPlacementStore
+import io.github.eslamasabry.oc.engine.attention.dock.DockRecent
 import io.github.eslamasabry.oc.engine.attention.dock.DockRemovals
 import io.github.eslamasabry.oc.engine.attention.dock.DockRequestRef
 import io.github.eslamasabry.oc.engine.attention.dock.DockSide
@@ -247,12 +248,15 @@ class AppEdgeDock(
             controller.loadNicknames(id)
             controller.loadRemoved(id)
             val pinned = controller.loadPins(id).toSet()
+            val rows = home.cachedRows(id)
             // A pinned ring that is idle has no event to name it: the home list's saved titles do.
             if (pinned.isNotEmpty()) {
-                for (row in home.cachedRows(id)) if (row.sessionId in pinned) {
+                for (row in rows) if (row.sessionId in pinned) {
                     controller.feed(DockEvent.Meta(ConversationRef(id, row.sessionId), row.title, null))
                 }
             }
+            // The dock is always available: it offers the recent conversations the home list knows as quiet rings.
+            controller.feed(DockEvent.Recent(id, rows.map { DockRecent(it.sessionId, it.title, it.lastActivityMs, it.parentId) }))
             reconcile(id, graph)
         }
     }

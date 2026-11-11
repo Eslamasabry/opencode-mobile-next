@@ -94,8 +94,9 @@ public data class OutsideRow(
     /** Only when exactly one conversation is working and it does not need the person. */
     val stop: OutsideAction?,
     /**
-     * The sum of every ring's and sub-agent's `pulse`. It only goes up when a request or failure is new, so a row the
-     * person swiped away comes back only when this exceeds the number they dismissed at.
+     * The sum of every live ring's and its sub-agents' `pulse` (quiet idle rings are not counted). It only goes up when
+     * a request or failure is new, so a row the person swiped away comes back only when this exceeds the number they
+     * dismissed at.
      */
     val pulses: Int,
 )
@@ -110,7 +111,11 @@ public object DockOutside {
 
     private fun DockState.isLive(): Boolean = isWorking() || this == DockState.NeedsYou
 
-    /** Null when the row should not speak: nothing is live, or the app's own pause/reconnecting row is more true. */
+    /**
+     * Null when the row should not speak: nothing works or needs the person (read from each ring's state, never from
+     * whether the dock has rings: it always offers quiet recent ones), or the app's own pause/reconnecting row is more
+     * true.
+     */
     public fun build(ui: DockUi, facts: DockOutsideFacts, words: DockOutsideWords): OutsideRow? {
         val entries = ui.entries
         val needs = entries.filter { it.state == DockState.NeedsYou }
@@ -226,7 +231,8 @@ public object DockOutside {
             subText = server?.let { words.onServer(NotificationText.redact(it, MAX_NAME)) }.orEmpty(),
             open = OutsideAction(openEntry.ref, words.openNamed(entryName(openEntry))),
             stop = stopEntry?.let { OutsideAction(it.ref, words.stopNamed(entryName(it))) },
-            pulses = entries.sumOf { e -> e.pulse + e.children.sumOf { it.pulse } },
+            // Live facts only: quiet recent rings (the dock is always available) come and go without new alerts.
+            pulses = entries.filter { it.state != DockState.Idle }.sumOf { e -> e.pulse + e.children.sumOf { it.pulse } },
         )
     }
 }

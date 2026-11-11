@@ -41,13 +41,13 @@ class DockPinsPlacementTest {
         assertEquals(listOf(c, b, a), m.ui.entries.map { it.ref }, "pinned in pin order, then the stable rest")
         assertEquals(listOf(true, true, false), m.ui.entries.map { it.pinned })
         val idle = m.reduce(DockEvent.RunEnded(c, DockRunEnd.Stopped)).reduce(DockEvent.RunEnded(a, DockRunEnd.Stopped))
-        assertEquals(listOf(c, b), idle.ui.entries.map { it.ref }, "c is idle but pinned; a is idle and gone")
+        assertEquals(listOf(c, b, a), idle.ui.entries.map { it.ref }, "c is idle but pinned; a is idle and stays as a recent ring after them")
         assertEquals(DockState.Idle, idle.ui.entries.first().state)
         // Only idle pinned rings: a nub, not nothing.
         val only = model(online, DockEvent.RunStarted(a), DockEvent.Pin(a), DockEvent.RunEnded(a, DockRunEnd.Stopped))
         assertEquals(DockPresence.Nub, only.ui.presence)
         assertEquals(0, only.ui.liveCount)
-        assertEquals(DockPresence.Hidden, model(online, DockEvent.RunStarted(a), DockEvent.RunEnded(a, DockRunEnd.Stopped)).ui.presence)
+        assertEquals(DockPresence.Nub, model(online, DockEvent.RunStarted(a), DockEvent.RunEnded(a, DockRunEnd.Stopped)).ui.presence, "one idle recent ring: the nub, never hidden")
     }
 
     @Test
