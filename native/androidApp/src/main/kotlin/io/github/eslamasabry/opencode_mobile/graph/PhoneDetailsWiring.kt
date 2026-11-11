@@ -301,11 +301,8 @@ class NativePhoneDetails(
         mutable.update { it.copy(addingTools = false) }
         var inventory = setup.installedInventory()
         var attempt = 1
-        while (
-            inventory is Outcome.Failed &&
-                InstalledInventoryRetry.again(attempt, inventory.failure, addingTools())
-        ) {
-            delay(InstalledInventoryRetry.PAUSE_MS)
+        while (inventory is Outcome.Failed && InstalledInventoryRetry.again(attempt, addingTools())) {
+            delay(InstalledInventoryRetry.pauseMs(attempt))
             if (!visible || revision != viewRevision) return
             inventory = setup.installedInventory()
             attempt++
