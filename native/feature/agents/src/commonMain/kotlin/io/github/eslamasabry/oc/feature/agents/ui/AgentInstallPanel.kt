@@ -7,6 +7,7 @@ import io.github.eslamasabry.oc.feature.agents.hub.AgentsUi
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallFailure
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallIssue
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallPhase
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallation
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
@@ -17,6 +18,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.text.KitBidi
 import io.github.eslamasabry.oc.ui.words.res.*
 import kotlin.math.roundToLong
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
 /** A durable install is never shown as runtime qualification or sign-in. */
@@ -119,13 +121,11 @@ internal fun AgentInstallPanel(
                     enabled = enabled.isEnabled,
                     disabledReason = waiting,
                 )
-            val words =
-                stringResource(
-                    if (installation.phase == PhoneAgentInstallPhase.Interrupted)
-                        Res.string.agentsInstallInterruptedNow
-                    else failedWords(installation.failure),
-                    name,
-                )
+            val message =
+                if (installation.phase == PhoneAgentInstallPhase.Interrupted)
+                    InstallFailedMessage(Res.string.agentsInstallInterruptedNow, listOf(name))
+                else installFailedMessage(installation, name)
+            val words = stringResource(message.words, *message.args.toTypedArray())
             KitErrorNotice(
                 words,
                 modifier,
@@ -144,8 +144,32 @@ private fun failedWords(failure: PhoneAgentInstallFailure?) =
         PhoneAgentInstallFailure.Checksum -> Res.string.agentsInstallFailedChecksum
         PhoneAgentInstallFailure.Storage -> Res.string.agentsInstallFailedStorage
         PhoneAgentInstallFailure.Version -> Res.string.agentsInstallFailedVersion
+        PhoneAgentInstallFailure.NotStarted -> Res.string.agentsInstallFailedNotStarted
         else -> Res.string.agentsInstallFailedUnknown
     }
+
+/** A failed install's sentence and its arguments (the agent's name first). */
+internal data class InstallFailedMessage(val words: StringResource, val args: List<String>)
+
+/**
+ * The sentence for a failed install of [name]. Another version than the app's, or a pinned version no longer offered,
+ * names the versions (left to right in any language), because trying again cannot change either; without them it
+ * falls back to the kind's own sentence.
+ */
+internal fun installFailedMessage(installation: PhoneAgentInstallation, name: String): InstallFailedMessage {
+    val versions = installation.versions
+    val found = versions?.found
+    return when {
+        installation.failure == PhoneAgentInstallFailure.Version && versions != null && found != null ->
+            InstallFailedMessage(
+                Res.string.agentsInstallFailedVersionOther,
+                listOf(name, KitBidi.ltr(found), KitBidi.ltr(versions.expected)),
+            )
+        installation.failure == PhoneAgentInstallFailure.Withdrawn && versions != null ->
+            InstallFailedMessage(Res.string.agentsInstallFailedWithdrawn, listOf(name, KitBidi.ltr(versions.expected)))
+        else -> InstallFailedMessage(failedWords(installation.failure), listOf(name))
+    }
+}
 
 /** Pinned payload only. Unknown sizes stay absent; bytes are never borrowed from another CPU. */
 internal fun agentPayloadSize(bytes: Long): String =

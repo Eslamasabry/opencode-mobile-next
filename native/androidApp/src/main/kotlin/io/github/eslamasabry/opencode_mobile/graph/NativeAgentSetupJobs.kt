@@ -22,6 +22,7 @@ import io.github.eslamasabry.oc.engine.agents.install.AgentSetupFailure
 import io.github.eslamasabry.oc.engine.agents.install.AgentSetupJob
 import io.github.eslamasabry.oc.engine.agents.install.AgentSetupJobState
 import io.github.eslamasabry.oc.engine.agents.install.AgentSetupJobs
+import io.github.eslamasabry.oc.engine.agents.install.AgentVersionCheck
 import io.github.eslamasabry.oc.engine.agents.scripts.AgentPhoneScripts
 import io.github.eslamasabry.oc.engine.agents.scripts.PaseoLockCodec
 import io.github.eslamasabry.oc.engine.agents.scripts.PaseoPhoneScripts
@@ -245,6 +246,8 @@ class NativeAgentSetupJobs(
             (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value == profile.raw
 
     private fun failure(snapshot: JSONObject): AgentSetupFailure {
+        // The agent's own version check speaks first: its lines name the version and must not read as anything else.
+        AgentVersionCheck.failure(snapshot.optString("error"))?.let { return it }
         val text = snapshot.optString("error") + " " + snapshot.optString("logTail")
         return when {
             "terminated with signal" in text -> AgentSetupFailure.Interrupted

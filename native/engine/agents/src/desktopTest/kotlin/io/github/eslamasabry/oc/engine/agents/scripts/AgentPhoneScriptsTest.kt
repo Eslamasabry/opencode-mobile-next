@@ -11,6 +11,9 @@ import io.github.eslamasabry.oc.engine.agents.catalog.AgentLimitation
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentResumeReason
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentRoute
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentSignInMethod
+import io.github.eslamasabry.oc.engine.agents.install.AgentSetupFailure
+import io.github.eslamasabry.oc.engine.agents.install.AgentVersionCheck
+import io.github.eslamasabry.oc.engine.agents.install.ReportedVersion
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -421,10 +424,140 @@ with tarfile.open(sys.argv[1], 'w:gz') as t:
     fun `B-LINUX-121 the ported raw script blocks equal the Flutter source byte for byte`() {
         val dart = dartRawStrings("lib/builtin/agents/agent_scripts.dart")
         assertEquals(dart.getValue("bootstrapUser"), AgentPhoneScripts.bootstrapUser)
-        assertEquals(dart.getValue("_probe"), AgentPhoneScripts.PROBE)
+        assertEquals(nativeProbe(dart.getValue("_probe")), AgentPhoneScripts.PROBE)
         assertEquals(dart.getValue("_claudeUpdateProbe"), AgentPhoneScripts.CLAUDE_UPDATE_PROBE)
         assertEquals(dart.getValue("_terminalLauncher"), AgentPhoneScripts.TERMINAL_LAUNCHER)
         assertEquals(dart.getValue("_extract"), AgentPhoneScripts.EXTRACT_PY)
+    }
+
+    /**
+     * Flutter's `_probe` with the native changes of 2026-11-12 (branch native/w4-agent-version; see
+     * [AgentPhoneScripts.PROBE] and [AgentVersionCheck]), each applied exactly where it was made: a 120 s limit, Gemini
+     * CLI's no-relaunch switch on the Node.js run, the run's exit status kept, and why it failed left for the install.
+     */
+    private fun nativeProbe(flutter: String): String {
+        var probe = flutter
+        fun change(old: String, new: String, times: Int = 1) {
+            assertEquals(times, probe.split(old).size - 1, old)
+            probe = probe.replace(old, new)
+        }
+        change("  oc_tree=\$1\n", "  oc_tree=\$1\n  oc_probe_why=missing\n  oc_probe_found=\n")
+        change(
+            "/.probe.XXXXXX)\n",
+            "/.probe.XXXXXX)\n  oc_version_rc=0\n",
+        )
+        change("timeout 30s", "timeout ${AgentVersionCheck.PROBE_SECONDS}s", times = 2)
+        change(
+            "PATH=\"\$PATH\" \\\n      /home/oc/.local/node/bin/node",
+            "PATH=\"\$PATH\" GEMINI_CLI_NO_RELAUNCH=true \\\n      /home/oc/.local/node/bin/node",
+        )
+        change("--version 2>/dev/null) || oc_output=\n", "--version 2>/dev/null) || { oc_version_rc=\$?; oc_output=; }\n", 2)
+        change(
+            "  printf '%s' \"\$oc_output\" | grep -Eq \"\$oc_version_pattern\"\n}",
+            "  printf '%s' \"\$oc_output\" | grep -Eq \"\$oc_version_pattern\" && return 0\n" +
+                "  oc_probe_found=\$(printf '%s\\n' \"\$oc_output\" | grep -Eo '${AgentVersionCheck.FOUND_PATTERN}' | " +
+                "head -n 1 | cut -c 1-${AgentVersionCheck.FOUND_MAX})\n" +
+                "  case \"\$oc_version_rc\" in\n" +
+                "    0) if [ -n \"\$oc_probe_found\" ]; then oc_probe_why=other; else oc_probe_why=silent; fi ;;\n" +
+                "    124|137) oc_probe_why=slow ;;\n" +
+                "    *) oc_probe_why=failed ;;\n" +
+                "  esac\n" +
+                "  return 1\n}",
+        )
+        return probe
+    }
+
+    /** The last fixed `[oc] ` line of a run: what the setup job keeps as the step's error. */
+    private fun lastMarker(result: ShResult): String? =
+        (result.stdout + "\n" + result.stderr).lines().map { it.trim() }.lastOrNull { it.startsWith("[oc] ") }
+
+    @Test
+    fun `B-AGENT-VER a pinned download that names another version fails with both versions, not its output`() {
+        guest.prepare(version = "synthetic-secret 1.2.30")
+        val result = guest.run(AgentPhoneScripts.install(fixtureAgent(guest.hash)))
+        assertEquals(1, result.exitCode)
+        assertEquals("[oc] The agent reported version 1.2.30; this app installs 1.2.3", lastMarker(result))
+        assertEquals(AgentSetupFailure.Version, AgentVersionCheck.failure(lastMarker(result)))
+        assertEquals(ReportedVersion("1.2.30", "1.2.3"), AgentVersionCheck.reported(lastMarker(result)))
+        assertFalse("synthetic-secret" in result.stdout + result.stderr)
+        assertFalse(isLink("${guest.bin}/fixture"))
+    }
+
+    @Test
+    fun `B-AGENT-VER each real version output format installs`() {
+        for (output in listOf("1.2.3", "codex-cli 1.2.3", "1.2.3 (Claude Code)", " 1.2.3", "fx 1.2.3")) {
+            guest.prepare(version = output)
+            File("${guest.home}/.local/share/oc-agents/fixture").deleteRecursively()
+            val result = guest.run(AgentPhoneScripts.install(fixtureAgent(guest.hash)))
+            assertEquals(0, result.exitCode, "$output: ${result.stderr}")
+            assertEquals("$agents/fixture/1.2.3/launch", linkTarget("${guest.bin}/fixture"), output)
+        }
+    }
+
+    @Test
+    fun `B-AGENT-VER a program too slow to answer fails as not answering, with the limit in its line`() {
+        File(guest.payload).writeText("#!/bin/sh\nsleep 5\nprintf '%s\\n' 1.2.3\n")
+        val script = AgentPhoneScripts.install(fixtureAgent(guest.hash))
+        assertTrue("timeout ${AgentVersionCheck.PROBE_SECONDS}s" in script)
+        val result = guest.run(script.replace("timeout ${AgentVersionCheck.PROBE_SECONDS}s", "timeout 1s"))
+        assertEquals(1, result.exitCode)
+        assertEquals(AgentVersionCheck.SLOW_LINE, lastMarker(result))
+        assertEquals(AgentSetupFailure.NotStarted, AgentVersionCheck.failure(lastMarker(result)))
+        assertFalse(isLink("${guest.bin}/fixture"))
+    }
+
+    @Test
+    fun `B-AGENT-VER a program that prints no version or fails keeps the Flutter line and reads as not answering`() {
+        for (body in listOf("echo hello", "exit 3", "printf '%s\\n' 1.2.3; exit 2")) {
+            File(guest.payload).writeText("#!/bin/sh\n$body\n")
+            val result = guest.run(AgentPhoneScripts.install(fixtureAgent(guest.hash)))
+            assertEquals(1, result.exitCode, body)
+            assertEquals(AgentVersionCheck.SILENT_LINE, lastMarker(result), body)
+            assertEquals(AgentSetupFailure.NotStarted, AgentVersionCheck.failure(lastMarker(result)), body)
+            assertFalse("hello" in result.stdout + result.stderr, body)
+        }
+    }
+
+    @Test
+    fun `B-AGENT-VER a pinned download whose address answers 404 or 410 is withdrawn, with the downloader's status`() {
+        for (code in listOf("404", "410")) {
+            val result = guest.run(
+                AgentPhoneScripts.install(fixtureAgent(guest.hash)),
+                downloader = "oc_download() { oc_http=$code; echo '[oc] Download failed (curl exit 22): x' >&2; return 22; }",
+            )
+            assertEquals(22, result.exitCode, code)
+            assertEquals(AgentVersionCheck.WITHDRAWN_PREFIX + "1.2.3", lastMarker(result), code)
+            assertEquals(AgentSetupFailure.Withdrawn, AgentVersionCheck.failure(lastMarker(result)), code)
+            assertFalse(exists(guest.ran))
+        }
+        // A dropped connection stays the downloader's own line.
+        val dropped = guest.run(
+            AgentPhoneScripts.install(fixtureAgent(guest.hash)),
+            downloader = "oc_download() { oc_http=000; echo '[oc] Download failed (curl exit 7): x' >&2; return 7; }",
+        )
+        assertEquals(7, dropped.exitCode)
+        assertEquals("[oc] Download failed (curl exit 7): x", lastMarker(dropped))
+        assertEquals(null, AgentVersionCheck.failure(lastMarker(dropped)))
+    }
+
+    @Test
+    fun `B-AGENT-VER an npm bundle's version check asks Gemini CLI not to start a second Node`() {
+        val node = File("${guest.home}/.local/node/bin/node")
+        node.parentFile.mkdirs()
+        node.writeText("#!/bin/sh\nif [ \"\$1\" = --version ]; then echo v24.22.2; else exec /bin/sh \"\$@\"; fi\n")
+        run(listOf("chmod", "700", node.path))
+        // The entry answers only when asked not to relaunch, as a stand-in for the second Node.js it would start.
+        archive(
+            """import io, sys, tarfile
+with tarfile.open(sys.argv[1], 'w:gz') as t:
+ data=b'#!/bin/sh\n[ "${'$'}GEMINI_CLI_NO_RELAUNCH" = true ] && echo 1.2.3\n'
+ m=tarfile.TarInfo('package/bundle/gemini.js'); m.size=len(data); m.mode=0o700; t.addfile(m, io.BytesIO(data))
+""",
+        )
+        val agent = fixtureAgent(guest.hash, format = AgentArtifactFormat.NpmTarGz, member = "package/bundle/gemini.js")
+        val installed = guest.run(AgentPhoneScripts.install(agent))
+        assertEquals(0, installed.exitCode, installed.stderr)
+        assertEquals(0, guest.run(AgentPhoneScripts.check(agent)).exitCode)
     }
 
     @Test

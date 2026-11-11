@@ -7,6 +7,7 @@ import io.github.eslamasabry.oc.engine.agents.catalog.AgentAvailability
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentDescriptor
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentInstallRecipe
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentPins
+import io.github.eslamasabry.oc.engine.agents.install.AgentVersionCheck
 
 private const val D = "$"
 
@@ -83,6 +84,7 @@ esac
 oc_final=/home/oc/.local/share/oc-agents/${agent.id}/${recipe.version}
 oc_bin=/home/oc/.local/bin/${recipe.executable}
 oc_pin=${quote("${recipe.version}|")}"${D}oc_arch|${D}oc_sha"
+oc_pin_version=${quote(recipe.version)}
 """
     }
 
@@ -267,7 +269,16 @@ fi
 rm -rf "${D}oc_stage"
 mkdir -p "${D}oc_stage/payload"
 oc_stage 'Downloading agent'
-oc_download "${D}oc_url" "${D}oc_artifact" "${D}oc_sha" "${D}oc_bytes"
+oc_download_rc=0
+oc_download "${D}oc_url" "${D}oc_artifact" "${D}oc_sha" "${D}oc_bytes" || oc_download_rc=${D}?
+if [ "${D}oc_download_rc" != 0 ]; then
+  # A pinned release its publisher took down is not a dropped connection: say so (AgentVersionCheck). The exit status
+  # stays the downloader's, which the setup runner reads (a crash is tried again).
+  case "${D}{oc_http:-}" in
+    404|410) echo "${AgentVersionCheck.WITHDRAWN_PREFIX}${D}oc_pin_version" >&2 ;;
+  esac
+  exit "${D}oc_download_rc"
+fi
 # Independently enforce the pin even if the shared downloader changes.
 [ "${D}(sha256sum "${D}oc_artifact" | cut -d ' ' -f1)" = "${D}oc_sha" ] || {
   echo '[oc] The agent download did not match its checksum' >&2; exit 1
@@ -280,6 +291,7 @@ then
 fi
 if [ "${D}oc_format" != npmTarGz ]; then chmod 700 "${D}oc_stage/payload/${D}oc_member"; fi
 if ! oc_probe_version "${D}oc_stage"; then
+$PROBE_FAILED
   echo '[oc] The agent did not pass its version check' >&2; exit 1
 fi
 printf '%s' "${D}oc_pin" > "${D}oc_stage/.oc-pin"
@@ -321,23 +333,53 @@ done
 install -d -o 1000 -g 1000 /home/oc/.local /home/oc/.local/bin /home/oc/.local/share
 """
 
+    /**
+     * The Flutter `_probe` (byte for byte until 2026-11-12) with two deliberate changes, recorded in
+     * AgentPhoneScriptsTest: a program gets [AgentVersionCheck.PROBE_SECONDS] (was 30 s) to print its version, and
+     * Gemini CLI is asked not to start a second Node.js just for that (`GEMINI_CLI_NO_RELAUNCH`, its own switch; other
+     * programs ignore it). Gemini CLI 0.66.0 starts two Node.js processes over its ~100 MB bundle, and on a busy phone
+     * that ran past 30 s, so a checksum-verified download failed as "the version that arrived is not the one the app
+     * expects". It also leaves why it failed in `oc_probe_why` and the version-shaped text it printed in
+     * `oc_probe_found` for [PROBE_FAILED]; nothing else the program printed survives.
+     */
     internal val PROBE: String =
         """oc_probe_version() {
   oc_tree=${'$'}1
+  oc_probe_why=missing
+  oc_probe_found=
   [ -d "${'$'}oc_tree" ] && [ ! -L "${'$'}oc_tree" ] &&
     [ -z "${'$'}(find "${'$'}oc_tree" -type l -print -quit)" ] || return 1
   oc_probe=${'$'}(mktemp -d /home/oc/.local/share/oc-agents/.probe.XXXXXX)
+  oc_version_rc=0
   if [ "${'$'}oc_format" = npmTarGz ]; then
-    oc_output=${'$'}(cd "${'$'}oc_probe" && timeout 30s env -i HOME="${'$'}oc_probe" XDG_CONFIG_HOME="${'$'}oc_probe" PATH="${'$'}PATH" \
-      /home/oc/.local/node/bin/node "${'$'}oc_tree/payload/${'$'}oc_member" --version 2>/dev/null) || oc_output=
+    oc_output=${'$'}(cd "${'$'}oc_probe" && timeout ${AgentVersionCheck.PROBE_SECONDS}s env -i HOME="${'$'}oc_probe" XDG_CONFIG_HOME="${'$'}oc_probe" PATH="${'$'}PATH" GEMINI_CLI_NO_RELAUNCH=true \
+      /home/oc/.local/node/bin/node "${'$'}oc_tree/payload/${'$'}oc_member" --version 2>/dev/null) || { oc_version_rc=${'$'}?; oc_output=; }
   else
-    oc_output=${'$'}(cd "${'$'}oc_probe" && timeout 30s env -i HOME="${'$'}oc_probe" XDG_CONFIG_HOME="${'$'}oc_probe" PATH="${'$'}PATH" \
-      "${'$'}oc_tree/payload/${'$'}oc_member" --version 2>/dev/null) || oc_output=
+    oc_output=${'$'}(cd "${'$'}oc_probe" && timeout ${AgentVersionCheck.PROBE_SECONDS}s env -i HOME="${'$'}oc_probe" XDG_CONFIG_HOME="${'$'}oc_probe" PATH="${'$'}PATH" \
+      "${'$'}oc_tree/payload/${'$'}oc_member" --version 2>/dev/null) || { oc_version_rc=${'$'}?; oc_output=; }
   fi
   rm -rf "${'$'}oc_probe"
-  printf '%s' "${'$'}oc_output" | grep -Eq "${'$'}oc_version_pattern"
+  printf '%s' "${'$'}oc_output" | grep -Eq "${'$'}oc_version_pattern" && return 0
+  oc_probe_found=${'$'}(printf '%s\n' "${'$'}oc_output" | grep -Eo '${AgentVersionCheck.FOUND_PATTERN}' | head -n 1 | cut -c 1-${AgentVersionCheck.FOUND_MAX})
+  case "${'$'}oc_version_rc" in
+    0) if [ -n "${'$'}oc_probe_found" ]; then oc_probe_why=other; else oc_probe_why=silent; fi ;;
+    124|137) oc_probe_why=slow ;;
+    *) oc_probe_why=failed ;;
+  esac
+  return 1
 }
 """
+
+    /**
+     * Why a fresh download did not pass [PROBE], as one fixed `[oc] ` line the setup job keeps (the program's own
+     * output never does). [AgentVersionCheck.failure] reads it back. A run that printed nothing usable ends on the
+     * Flutter line after this block.
+     */
+    internal val PROBE_FAILED: String =
+        """  case "${'$'}oc_probe_why" in
+    slow) echo '${AgentVersionCheck.SLOW_LINE}' >&2; exit 1 ;;
+    other) echo "${AgentVersionCheck.OTHER_PREFIX}${'$'}oc_probe_found${AgentVersionCheck.OTHER_MIDDLE}${'$'}oc_pin_version" >&2; exit 1 ;;
+  esac"""
 
     internal val CLAUDE_UPDATE_PROBE: String =
         """oc_claude_probe_active() {

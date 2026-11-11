@@ -32,6 +32,7 @@ import io.github.eslamasabry.oc.engine.agents.host.AuthState
 import io.github.eslamasabry.oc.engine.agents.install.AgentInstaller
 import io.github.eslamasabry.oc.engine.agents.install.AgentSetupFailure
 import io.github.eslamasabry.oc.engine.agents.install.AgentSetupPhase
+import io.github.eslamasabry.oc.engine.agents.install.AgentVersionCheck
 import io.github.eslamasabry.oc.engine.agents.install.InstallRefusal
 import io.github.eslamasabry.oc.engine.agents.install.InstallStart
 import io.github.eslamasabry.oc.engine.agents.probe.AgentAuthScripts
@@ -59,6 +60,7 @@ import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRemoval
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRemovalIssue
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRow
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentVersions
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgents
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentsState
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneDevice
@@ -296,6 +298,7 @@ class AppPhoneAgents(
             val ended =
                 phase == PhoneAgentInstallPhase.Failed || phase == PhoneAgentInstallPhase.Interrupted
             phase?.let {
+                val failureText = if (ended) setupJobs.lastFailureText() else null
                 PhoneAgentInstallation(
                     id.raw,
                     it,
@@ -305,8 +308,13 @@ class AppPhoneAgents(
                         if (ended)
                             redactor.details(
                                 "install ${id.raw}: ${data.failure ?: "unknown"}" +
-                                    (setupJobs.lastFailureText()?.let { text -> "; $text" } ?: "")
+                                    (failureText?.let { text -> "; $text" } ?: "")
                             )
+                        else null,
+                    // Both versions of another version, the pinned one of a withdrawn download: from the step's line.
+                    versions =
+                        if (data.failure == AgentSetupFailure.Version || data.failure == AgentSetupFailure.Withdrawn)
+                            AgentVersionCheck.reported(failureText)?.let { PhoneAgentVersions(it.found, it.expected) }
                         else null,
                 )
             }
@@ -1027,6 +1035,8 @@ class AppPhoneAgents(
             AgentSetupFailure.Storage -> PhoneAgentInstallFailure.Storage
             AgentSetupFailure.Interrupted -> PhoneAgentInstallFailure.Interrupted
             AgentSetupFailure.Version -> PhoneAgentInstallFailure.Version
+            AgentSetupFailure.NotStarted -> PhoneAgentInstallFailure.NotStarted
+            AgentSetupFailure.Withdrawn -> PhoneAgentInstallFailure.Withdrawn
             AgentSetupFailure.Unknown,
             null -> PhoneAgentInstallFailure.Unknown
         }

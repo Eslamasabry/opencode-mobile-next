@@ -597,6 +597,9 @@ agentsHubSignInFailed	f6fefd83cb
 agentsHubStartFailed	0ba87a6ee8
 agentsHubSwitchFailed	ce1fc30ff6
 agentsInstallAction	f608d56d78
+agentsInstallFailedNotStarted	1f9ffff0b4
+agentsInstallFailedVersionOther	0fcf11fb3e
+agentsInstallFailedWithdrawn	b14507443d
 agentsInstallHint	530a7e7430
 agentsInstalling	1648381cd1
 agentsLimitReset	b812cc3bd4
