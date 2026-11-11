@@ -21,6 +21,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -431,6 +432,7 @@ public fun ChatScreen(
             )
         }
     val list = rememberTranscriptListState()
+    var dockRoomPx by remember { mutableIntStateOf(0) }
     val reveal = rememberRevealRegistry()
     val motion = kitChatMotion()
     val latest by rememberUpdatedState(state)
@@ -989,6 +991,7 @@ public fun ChatScreen(
                                             onCheckReceipt = actions::checkReceipt,
                                             onReviewPending = onReviewPending,
                                             modifier = Modifier.fillMaxSize().chatPane(),
+                                            extraBottomPx = dockRoomPx,
                                             facts = facts,
                                             display = transcriptDisplay,
                                             onOpenSession = onOpenSession,
@@ -1058,7 +1061,7 @@ public fun ChatScreen(
                         androidx.compose.runtime.CompositionLocalProvider(
                             io.github.eslamasabry.oc.ui.kit.dock.LocalKitDockGlass provides frost
                         ) {
-                            edgeDock?.Content(kitScreenChromePadding())
+                            edgeDock?.Content(kitScreenChromePadding(), onBottomRoom = { dockRoomPx = it })
                         }
                 }
 

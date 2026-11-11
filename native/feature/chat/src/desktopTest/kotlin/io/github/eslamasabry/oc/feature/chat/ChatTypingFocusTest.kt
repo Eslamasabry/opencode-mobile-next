@@ -321,7 +321,7 @@ class ChatTypingFocusTest {
         var renaming by mutableStateOf(false)
 
         @Composable
-        override fun Content(chrome: PaddingValues) {
+        override fun Content(chrome: PaddingValues, onBottomRoom: (Int) -> Unit) {
             if (!renaming) return
             val field = rememberTextFieldState("")
             val focus = remember { FocusRequester() }

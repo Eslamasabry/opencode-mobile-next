@@ -59,13 +59,14 @@ class DockUndoOverReplyTest {
     /** The dock host's own arrangement (EdgeDockHost): a full-size box, the Undo bar at its bottom centre. */
     private class UndoDock(private val onUndo: () -> Unit) : ChatEdgeDock {
         @Composable
-        override fun Content(chrome: PaddingValues) {
+        override fun Content(chrome: PaddingValues, onBottomRoom: (Int) -> Unit) {
             Box(Modifier.fillMaxSize()) {
                 KitUndoBar(
                     offer = KitUndoOffer("dock-removed-a", "Alpha left the dock"),
                     onUndo = onUndo,
                     onTimeout = {},
                     modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = chrome.calculateBottomPadding()),
+                    onHeight = onBottomRoom,
                 )
             }
         }

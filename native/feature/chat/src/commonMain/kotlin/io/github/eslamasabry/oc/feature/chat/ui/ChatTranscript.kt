@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.chat.ui
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -20,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
@@ -378,6 +380,8 @@ internal fun ChatTranscriptList(
     starAsk: Boolean = false,
     onStarTap: () -> Unit = {},
     onStarDismiss: () -> Unit = {},
+    /** Extra room (px) under the newest content: the edge dock's Undo bar while it shows. */
+    extraBottomPx: Int = 0,
 ) {
     val currentRows by rememberUpdatedState(rows)
     // B-SEC-094 / R18: a code block's Copy hands over what the block shows (redacted), never the
@@ -424,6 +428,16 @@ internal fun ChatTranscriptList(
     var stepsShown by remember { mutableStateOf(false) }
     if (live == null && stepsShown) stepsShown = false
     val runningSteps: Boolean? = if (live == null) null else stepsShown
+    // At the end the newest content rides up with the room (reverse layout). Away from it the room would push what the
+    // person reads, so the list scrolls by the same amount.
+    val lastRoom = remember { intArrayOf(0) }
+    LaunchedEffect(extraBottomPx) {
+        val delta = extraBottomPx - lastRoom[0]
+        lastRoom[0] = extraBottomPx
+        if (delta != 0 && (list.lazy.firstVisibleItemIndex > 0 || list.lazy.firstVisibleItemScrollOffset > 0)) {
+            list.lazy.scrollBy(delta.toFloat())
+        }
+    }
     KitTranscriptList(
         state = list,
         newestKey = newestKey,
@@ -432,7 +446,7 @@ internal fun ChatTranscriptList(
         modifier = modifier,
         // F: chat_transcript.dart:160-165 and kit_turn.dart:591: the newest turn ends space2 + space2 above the
         // composer's clearance; the composer pane already keeps its own space2 on top (ChatScreen), the rest here.
-        contentPadding = PaddingValues(top = Space.S4.dp, bottom = Space.S2.dp),
+        contentPadding = PaddingValues(top = Space.S4.dp, bottom = Space.S2.dp + with(LocalDensity.current) { extraBottomPx.toDp() }),
     ) {
         if (live != null && listWords != null) {
             item(key = ListKeys.LIVE, contentType = "live") {
