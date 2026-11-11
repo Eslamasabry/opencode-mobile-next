@@ -252,11 +252,16 @@ public class KitEdgeDockState internal constructor() {
             val y = py.coerceIn(0f, 1f)
             f.hasB = true
             f.panel = true
+            // The strip's box and its rings come in with the pane's outer side (see [stripShift]).
+            f.aLeft -= stripShift()
             f.bLeft = min(f.aLeft, lerp(f.aLeft, p.left, px))
             f.bRestLeft = p.left
             f.bTop = lerp(f.aTop, p.top, y)
             f.bBottom = lerp(f.aBottom, p.bottom, y)
-            f.bRight = p.right
+            // The pane comes off the screen edge as it grows (a strip is attached; a whole list stands a gutter in). The
+            // strip's box rides inside it: nothing of the strip is left at the edge once the list is whole.
+            f.bRight = listOuterSide(w, px)
+            f.aRight = min(f.aRight, f.bRight)
             f.bRadius = lerp(f.aRadius, p.radius, y)
             f.grow = px
         } else if (layout != null && swellGrow.value > 0.001f) {
@@ -321,6 +326,12 @@ public class KitEdgeDockState internal constructor() {
         )
         return outline
     }
+
+    /**
+     * How far the strip's own parts (rings, the +) stand in from the edge while the list comes off it, so they stay
+     * inside box A, which rides inside the pane (dp, toward the middle).
+     */
+    internal fun stripShift(): Float = if (panelX.value > 0.001f) max(0f, widthDp - listOuterSide(widthDp, panelX.value)) else 0f
 
     /** The list's box at full size (edge frame, dp). */
     internal fun panelTarget(): DockBox = panelBoxNow(top.value)
