@@ -305,7 +305,9 @@ public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -
                     }
                 } else if (held.saved) {
                     held.saved = false
-                    pageFocus.restoreFocusedChild()
+                    // The kit yields: a page field that took focus as the modal left (Find opening from a sheet's
+                    // row) keeps it; the old holder gets focus back only when nothing on the page has it.
+                    if (!held.has) pageFocus.restoreFocusedChild()
                 }
             }
             Box(
