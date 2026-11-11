@@ -141,8 +141,8 @@ class ChatWordsGlassTest {
      * that draw nothing) scrolled well away from the newest so it runs under the bar and the message box, and the box.
      */
     @Composable
-    private fun Scene(bright: Boolean, notice: Boolean, seen: Array<Any?>, lazy: Array<LazyListState?>) {
-        CompositionLocalProvider(LocalKitScreenInsets provides WindowInsets(top = STATUS_DP.dp, bottom = NAV_DP.dp)) {
+    private fun Scene(bright: Boolean, notice: Boolean, seen: Array<Any?>, lazy: Array<LazyListState?>, statusDp: Int) {
+        CompositionLocalProvider(LocalKitScreenInsets provides WindowInsets(top = statusDp.dp, bottom = NAV_DP.dp)) {
             Box(Modifier.size(W.dp, H.dp).testTag("scene")) {
                 val source = rememberKitFrostState()
                 val state = rememberTranscriptListState()
@@ -203,7 +203,7 @@ class ChatWordsGlassTest {
         }
     }
 
-    private fun shot(appearance: KitAppearance, platform: KitPlatform, bright: Boolean, notice: Boolean = false): Shot {
+    private fun shot(appearance: KitAppearance, platform: KitPlatform, bright: Boolean, notice: Boolean = false, statusDp: Int = STATUS_DP): Shot {
         lateinit var shot: Shot
         runDesktopComposeUiTest((W * D).toInt(), (H * D).toInt()) {
             val seen = arrayOfNulls<Any?>(2)
@@ -211,7 +211,7 @@ class ChatWordsGlassTest {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(D)) {
                     KitTheme(appearance = appearance, platform = platform, localeTag = "en", stillFrame = true) {
-                        Scene(bright, notice, seen, lazy)
+                        Scene(bright, notice, seen, lazy, statusDp)
                     }
                 }
             }
@@ -282,14 +282,18 @@ class ChatWordsGlassTest {
 
     @Test
     fun `a bright row never shows inside the waiting to send line under the bar`() {
-        val bright = shot(dark(Style.Glass), LensPlatform(), bright = true, notice = true)
-        val none = shot(dark(Style.Glass), LensPlatform(), bright = false, notice = true)
-        val line = bright.status!!
-        assertTrue(line.bottom - line.top > 8.dp, "the line shows: $line")
-        assertTrue(bright.rows.any { it.top < line.bottom }, "rows scrolled under the line: ${bright.rows.map { it.top..it.bottom }} line $line")
-        val (mean, max) = diff(bright.image, none.image, line.left.value, line.top.value, line.right.value, line.bottom.value)
-        println("notice: mean $mean max $max over $line")
-        assertTrue(mean <= NOTICE_MEAN && max <= NOTICE_MAX, "bright rows show inside the notice line: mean $mean, max $max of 255")
+        // With the page under the status bar (24 dp inset) and without (a window whose status bar the system draws: no
+        // top inset, as on the 2026-11-11 emulator, where the line was crossed by sharp transcript text).
+        for (statusDp in listOf(STATUS_DP, 0)) {
+            val bright = shot(dark(Style.Glass), LensPlatform(), bright = true, notice = true, statusDp = statusDp)
+            val none = shot(dark(Style.Glass), LensPlatform(), bright = false, notice = true, statusDp = statusDp)
+            val line = bright.status!!
+            assertTrue(line.bottom - line.top > 8.dp, "status $statusDp dp: the line shows: $line")
+            assertTrue(bright.rows.any { it.top < line.bottom }, "status $statusDp dp: rows scrolled under the line: ${bright.rows.map { it.top..it.bottom }} line $line")
+            val (mean, max) = diff(bright.image, none.image, line.left.value, line.top.value, line.right.value, line.bottom.value)
+            println("notice (status $statusDp dp): mean $mean max $max over $line")
+            assertTrue(mean <= NOTICE_MEAN && max <= NOTICE_MAX, "status $statusDp dp: bright rows show inside the notice line: mean $mean, max $max of 255")
+        }
     }
 
     @Test
