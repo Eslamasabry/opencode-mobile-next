@@ -20,7 +20,6 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiFileSaved
 import io.github.eslamasabry.oc.ui.words.res.chatUiGeneratedFile
 import io.github.eslamasabry.oc.ui.words.res.chatUiSaveFile
 import io.github.eslamasabry.oc.ui.words.res.filesSaveFailed
-import io.github.eslamasabry.oc.ui.words.res.kitSheetDismiss
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
@@ -45,7 +44,6 @@ internal fun ToolFileSheet(
         visible = file != null,
         onDismissRequest = onDismiss,
         title = name,
-        closeLabel = stringResource(Res.string.kitSheetDismiss),
     ) {
         if (file == null) return@KitSheet
         when (result) {

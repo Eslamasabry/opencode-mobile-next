@@ -186,7 +186,7 @@ private fun Identity(panel: AccountPanelState, actions: AgentAccountActions) {
             }
         )
     when (panel.status) {
-        AccountPanelStatus.Loading -> KitStateView(KitStateKind.Loading, headline)
+        AccountPanelStatus.Loading -> KitStateView(KitStateKind.Loading, headline, size = KitStateSize.Inline)
         AccountPanelStatus.Error ->
             KitErrorNotice(
                 headline,
@@ -198,12 +198,14 @@ private fun Identity(panel: AccountPanelState, actions: AgentAccountActions) {
                 KitStateKind.Calm,
                 headline,
                 body = stringResource(Res.string.account40UnsupportedDetail),
+                size = KitStateSize.Inline,
             )
         AccountPanelStatus.Disconnected ->
             KitStateView(
                 KitStateKind.Calm,
                 headline,
                 body = stringResource(Res.string.account40ReconnectDetail),
+                size = KitStateSize.Inline,
             )
         AccountPanelStatus.Ready ->
             if (account?.signedIn == true) {
@@ -236,6 +238,7 @@ private fun Identity(panel: AccountPanelState, actions: AgentAccountActions) {
                     body =
                         if (panel.canSignIn) stringResource(Res.string.account40SignInNote)
                         else null,
+                    size = KitStateSize.Inline,
                 )
     }
 }
@@ -296,7 +299,7 @@ private fun Limits(state: AgentAccountUi) {
     KitRowGroup(label = stringResource(Res.string.account40Limits)) {
         when {
             panel.metricsLoading && panel.limits == null ->
-                KitStateView(KitStateKind.Loading, stringResource(Res.string.account40Allowance))
+                KitStateView(KitStateKind.Loading, stringResource(Res.string.account40Allowance), size = KitStateSize.Inline)
             windows.isEmpty() ->
                 KitRow(
                     stringResource(Res.string.account40LimitsUnavailable),
@@ -339,7 +342,7 @@ private fun Limits(state: AgentAccountUi) {
 private fun Usage(state: AgentAccountUi) {
     KitRowGroup(label = stringResource(Res.string.account40Usage)) {
         if (state.panel.metricsLoading && state.lifetime == null && state.peak == null)
-            KitStateView(KitStateKind.Loading, stringResource(Res.string.account40Usage))
+            KitStateView(KitStateKind.Loading, stringResource(Res.string.account40Usage), size = KitStateSize.Inline)
         else if (state.lifetime == null && state.peak == null)
             KitRow(
                 stringResource(Res.string.account40UsageUnavailable),

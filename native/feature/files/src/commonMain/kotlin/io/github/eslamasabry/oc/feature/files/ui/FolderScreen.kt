@@ -54,6 +54,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kitchat.header.KitClipboardEffect
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -276,6 +277,7 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                                     stringResource(Res.string.filesReviewStorage),
                                     actions::reviewStorage,
                                 ),
+                            size = KitStateSize.Inline,
                         )
                     }
                 if (state.storageResult == FilesStorageResult.RestartRequired)
@@ -292,6 +294,7 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                                 listOf(
                                     KitAction(stringResource(Res.string.fileReload), actions::retry)
                                 ),
+                            size = KitStateSize.Inline,
                         )
                     }
                 if (state.offline)
@@ -407,6 +410,7 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                                             actions::retry,
                                         )
                                     ),
+                                size = KitStateSize.Inline,
                             )
                         }
                     state.onlyHidden ->
@@ -612,6 +616,7 @@ private fun LazyListScope.searchItems(
                     KitStateKind.Empty,
                     stringResource(Res.string.readerUiNoFiles),
                     body = stringResource(Res.string.readerUiTryFileName),
+                    size = KitStateSize.Inline,
                 )
             }
         else ->

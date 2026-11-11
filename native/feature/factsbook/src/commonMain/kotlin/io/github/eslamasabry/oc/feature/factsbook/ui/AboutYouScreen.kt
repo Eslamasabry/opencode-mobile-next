@@ -32,6 +32,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
@@ -164,6 +165,7 @@ private fun ThingList(state: AboutYouUi, actions: AboutYouActions) {
                 stringResource(Res.string.fbErrorTitle),
                 body = failureWords(state.listError) + (failureDetails(state.listError)?.let { "\n\n$it" } ?: ""),
                 primary = KitAction(stringResource(Res.string.commonRetry), actions::reload),
+                size = KitStateSize.Inline,
             )
         things == null -> KitSkeletonRows()
         things.isEmpty() ->
@@ -172,6 +174,7 @@ private fun ThingList(state: AboutYouUi, actions: AboutYouActions) {
                 stringResource(Res.string.fbEmptyTitle),
                 body = stringResource(Res.string.fbEmptyBody),
                 icon = KitIcons.database,
+                size = KitStateSize.Inline,
             )
         else -> KitRowGroup { things.forEach { ThingRow(it, actions) } }
     }

@@ -82,7 +82,7 @@ public fun KeptPromptsScreen(state: KeptPromptsUi, actions: KeptPromptsActions) 
                 state.loading -> KitSkeletonRows(count = 3)
                 state.failure != null && state.prompts.isEmpty() -> Unit
                 state.prompts.isEmpty() ->
-                    KitStateView(KitStateKind.Empty, stringResource(Res.string.keptPromptsEmpty))
+                    KitStateView(KitStateKind.Empty, stringResource(Res.string.keptPromptsEmpty), size = KitStateSize.Inline)
                 else -> {
                     KitField(
                         search,
@@ -140,7 +140,6 @@ public fun KeptPromptsScreen(state: KeptPromptsUi, actions: KeptPromptsActions) 
             visible = state.choosing != null,
             onDismissRequest = actions::closePicker,
             title = stringResource(Res.string.keptPromptsChoose),
-            closeLabel = stringResource(Res.string.kitConfirmCancel),
             height = KitSheetHeight.Half,
         ) {
             Column(
@@ -159,6 +158,7 @@ public fun KeptPromptsScreen(state: KeptPromptsUi, actions: KeptPromptsActions) 
                                 stringResource(Res.string.keptPromptsConnect),
                                 actions::openServers,
                             ),
+                        size = KitStateSize.Inline,
                     )
                 else
                     KitRowGroup {

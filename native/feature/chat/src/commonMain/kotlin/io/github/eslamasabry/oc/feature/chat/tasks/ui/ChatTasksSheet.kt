@@ -11,7 +11,6 @@ import io.github.eslamasabry.oc.ui.kit.state.KitTaskItemState
 import io.github.eslamasabry.oc.ui.kit.state.KitTaskLines
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.chatUiTodos
-import io.github.eslamasabry.oc.ui.words.res.kitSheetDismiss
 import io.github.eslamasabry.oc.ui.words.res.mobileTaskCancelled
 import io.github.eslamasabry.oc.ui.words.res.mobileTaskCompleted
 import io.github.eslamasabry.oc.ui.words.res.mobileTaskInProgress
@@ -31,7 +30,6 @@ public fun ChatTasksSheet(
         visible = visible && tasks != null,
         onDismissRequest = onDismiss,
         title = stringResource(Res.string.chatUiTodos),
-        closeLabel = stringResource(Res.string.kitSheetDismiss),
         subtitle = tasks?.let { stringResource(Res.string.mobileTasksProgress, it.done, it.total) },
     ) {
         KitTaskLines(

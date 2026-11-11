@@ -51,6 +51,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitLocaleTag
@@ -182,6 +183,7 @@ public fun RemindersScreen(state: RemindersUi, actions: RemindersActions) {
                                 stringResource(Res.string.fbRemindersEmptyTitle),
                                 body = stringResource(Res.string.fbRemindersEmptyBody),
                                 icon = KitIcons.clock,
+                                size = KitStateSize.Inline,
                             )
                         }
                     }
