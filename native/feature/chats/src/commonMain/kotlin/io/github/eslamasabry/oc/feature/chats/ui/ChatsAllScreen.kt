@@ -298,7 +298,6 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
                             icon = if (state.archived) KitIcons.archive else KitIcons.searchList,
                             secondary = if (state.archived) KitAction(stringResource(Res.string.globalSessionsShowActive), actions::toggleArchived) else null,
                             tertiary = if (state.archived) emptyList() else listOf(KitAction(stringResource(Res.string.globalSessionsRefresh), actions::retry)),
-                            size = KitStateSize.Inline,
                         )
                     }
                 AllPhase.NoMatch ->
