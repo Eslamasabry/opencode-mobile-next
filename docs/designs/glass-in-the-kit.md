@@ -558,6 +558,17 @@ fix needs a third copy of the list's recording cleared in the pill's label band 
 moves), recorded each frame for the pill's backdrop in `kit-chat`, or the pill's backdrop switched to the faded copy,
 which is whole above the box's edge and so does not help. Left for a device pass.
 
+**The jump pill above a stacked block (branch native/frame-pill-clear).** With chips or a request card above the box the
+pill stands above the block, and its words had transcript text running through them: the body was whole up to 8 dp
+above the block and the pill's glass read the list's whole recording. Now, while the pill is shown in that case, the pill
+reports its target's height times its show fraction (`KitScreenBottom.pillClear`, animated on the pill's own STANDARD in /
+QUICK out spec, instant when motion is reduced), and the body's bottom fade starts that much higher, so the body is gone
+at the pill's top and the pill stands on the page's ground like the chips and the label. The pill's glass also reads a copy
+of the list's recording cleared from its top edge down (`KitWordsFade`), since the body's fade never reaches a recording;
+the fade alone would leave the blurred rows in its face. Draw phase only; hidden pill, or a pill joined to the box (nothing
+above the box): nothing changes. Tests: `ChatWordsGlassTest` (label band, the body beside the pill, hidden, not stacked).
+Device: the pill's rest 8 dp above the block is the host's (`jumpPillLift`); the fade's look on a real transcript.
+
 **Pictures** (desktop, Glass dark, white rows scrolled under the panes): `glass-in-the-kit/render-words-top-chat-*.png`,
 `render-words-home-*.png`, `render-words-needs-decision-*.png`, `-before` and `-after`.
 
