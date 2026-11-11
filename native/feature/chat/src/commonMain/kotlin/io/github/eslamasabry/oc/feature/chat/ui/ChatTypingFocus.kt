@@ -39,16 +39,22 @@ import io.github.eslamasabry.oc.ui.kit.frame.kitKeyboardVisible
  * multiline field then types a tab), and Tab and Shift+Tab each reached only one side of the box. The plain group
  * around the target says how focus arrives: its `onEnter` runs just before the target takes focus.
  */
-internal fun Modifier.chatTypingLanding(typing: ComposerTypingTarget, covered: () -> Boolean): Modifier {
+internal fun Modifier.chatTypingLanding(
+    typing: ComposerTypingTarget,
+    page: ChatPageFocus,
+    covered: () -> Boolean,
+): Modifier {
     // Set by the group's onEnter and read in the same focus change; every focus change of the target clears it, so a
     // field inside that asked through the group never leaves it set.
     var steered = false
-    return focusProperties {
+    return onFocusChanged { page.has = it.hasFocus }
+        .focusProperties {
             canFocus = false
             onEnter = { steered = requestedFocusDirection == FocusDirection.Enter }
         }
         .focusTarget()
         .onFocusChanged {
+            page.landing = it.isFocused
             val steer = steered
             steered = false
             if (it.isFocused && steer && !covered()) typing.focus()
@@ -87,6 +93,44 @@ internal fun ComposerYields(open: Boolean, typing: ComposerTypingTarget, mayTake
             // The closing field's focus leaves the tree first and the shell parks it on the next frame; take it after.
             repeat(SETTLE_FRAMES) { withFrameNanos {} }
             if (keyboardAtClose && takeBack()) typing.focus()
+        }
+    }
+}
+
+/** Where focus is on the conversation page: anywhere in it ([has]), or on the landing spot itself ([landing]). */
+internal class ChatPageFocus {
+    var has: Boolean = false
+    var landing: Boolean = false
+}
+
+/**
+ * The kit's sheet host takes the page's focus while a sheet or dialog shows and hands it back when it has gone
+ * (KitSheetHost). Its hand-back finds the element by its place in the composition; the message box can move while it
+ * is covered (the conversation's layout changes once the box loses focus), and then nothing gets focus back. So when
+ * [covered] ends, the box takes focus back, a few frames later, only if it had it when the cover came (with the
+ * keyboard up, or none ever seen) and NOTHING on the page holds focus by then (the kit's hand-back worked, or Find or
+ * a rename that opened meanwhile has it: they keep it), and [mayTakeBack] agrees.
+ */
+@Composable
+internal fun ComposerAfterCover(
+    covered: Boolean,
+    typing: ComposerTypingTarget,
+    page: ChatPageFocus,
+    mayTakeBack: () -> Boolean,
+) {
+    val keyboardUp = kitKeyboardVisible()
+    var keyboardSeen by remember(typing) { mutableStateOf(false) }
+    if (keyboardUp && !keyboardSeen) SideEffect { keyboardSeen = true }
+    val hadFocus = remember(covered) { covered && typing.focused && (keyboardUp || !keyboardSeen) }
+    var giveBack by remember(typing) { mutableStateOf(false) }
+    val takeBack by rememberUpdatedState(mayTakeBack)
+    LaunchedEffect(covered, typing) {
+        if (covered) {
+            if (hadFocus) giveBack = true
+        } else if (giveBack) {
+            giveBack = false
+            repeat(SETTLE_FRAMES) { withFrameNanos {} }
+            if (!typing.focused && (!page.has || page.landing) && takeBack()) typing.focus()
         }
     }
 }

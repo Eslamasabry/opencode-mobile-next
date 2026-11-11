@@ -542,26 +542,28 @@ class ChatTypingFocusTest {
 
     /**
      * The shell's `ShellKeyPark` (ui/shell nav/ShellKeys.kt) in the form this module can use: a frame after focus left
-     * the page it parks again, but only if nothing took focus meanwhile; a letter that reaches it (nothing used it)
-     * steers into the page. Keys are sent as key events, as a hardware keyboard and adb's key injection send them.
+     * the page it parks again, but only if nothing took focus meanwhile; a letter that reaches it while it holds focus
+     * itself (nothing on the page does) steers into the page. Keys are sent as key events, as a hardware keyboard and adb's key injection send them.
      */
     @Composable
     private fun ShellPark(content: @Composable () -> Unit) {
         val manager = LocalFocusManager.current
         SideEffect { focusManager = manager }
         var lost by remember { mutableStateOf(0) }
-        val holds = remember { booleanArrayOf(false) }
+        val holds = remember { booleanArrayOf(false, false) }
         LaunchedEffect(lost) { if (!holds[0]) park.requestFocus() }
         Box(
             Modifier.focusRequester(park)
                 .onFocusChanged {
                     holds[0] = it.hasFocus
+                    holds[1] = it.isFocused
                     if (!it.hasFocus) lost++
                 }
                 .focusTarget()
                 .onKeyEvent { e ->
                     val letter = e.utf16CodePoint > 0x1F && !e.isCtrlPressed && !e.isAltPressed && !e.isMetaPressed
-                    if (!letter) return@onKeyEvent false
+                    // As the shell: only when nothing on the page holds focus (a focused field's letters are its own).
+                    if (!letter || !holds[1]) return@onKeyEvent false
                     if (e.type == KeyEventType.KeyDown) {
                         steered++
                         park.requestFocus()
