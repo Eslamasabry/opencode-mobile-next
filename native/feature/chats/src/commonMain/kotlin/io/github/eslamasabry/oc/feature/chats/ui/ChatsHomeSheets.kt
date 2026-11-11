@@ -421,7 +421,10 @@ private fun SourceChoices(state: ChatsUi, actions: ChatsActions) {
         state.home.sources.forEach { source ->
             KitSwitchRow(
                 title = source.name,
-                leading = KitRowLeading.Glyph(if (source.onThisPhone) KitIcons.phone else KitIcons.server),
+                // F: chats_sources_sheet.dart:26-48: the agents on this phone are one switch, marked as Claude Code's.
+                leading =
+                    if (source.agents) KitRowLeading.Logo("claude", source.name, agent = true)
+                    else KitRowLeading.Glyph(if (source.onThisPhone) KitIcons.phone else KitIcons.server),
                 checked = source.shown,
                 locked = source.main,
                 lockedLabel = if (source.main) stringResource(Res.string.chatsSourcesAlways) else null,
@@ -431,6 +434,7 @@ private fun SourceChoices(state: ChatsUi, actions: ChatsActions) {
                 supporting =
                     when {
                         source.main -> stringResource(Res.string.chatsSourcesMain)
+                        source.agents -> stringResource(Res.string.chatsSourcesAgents)
                         source.unreachable -> stringResource(Res.string.chatsSourcesUnreachable)
                         source.onThisPhone -> stringResource(Res.string.chatsSourcesOnPhone)
                         else -> stringResource(Res.string.chatsSourcesElsewhere)

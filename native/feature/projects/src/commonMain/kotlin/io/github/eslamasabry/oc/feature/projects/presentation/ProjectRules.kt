@@ -189,6 +189,15 @@ public object ProjectRules {
         }
     }
 
+    /**
+     * One server's projects with the folders of the connections that are part of it (This phone's agents): the
+     * server's own rows first, as they are, then each other folder once. A folder both work in is the server's row.
+     */
+    public fun joined(own: List<FolderRowUi>, others: List<FolderRowUi>): List<FolderRowUi> {
+        val seen = own.mapTo(HashSet()) { normalize(it.directory) }
+        return own + others.filter { seen.add(normalize(it.directory)) }
+    }
+
     /** This project's conversations, newest first; subagents stay with their parent. */
     public fun inProject(sessions: List<Session>, directory: String): List<Session> {
         val here = setOf(normalize(directory))

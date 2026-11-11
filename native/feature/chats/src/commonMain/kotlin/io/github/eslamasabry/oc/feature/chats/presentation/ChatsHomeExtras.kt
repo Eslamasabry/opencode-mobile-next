@@ -79,6 +79,11 @@ public data class ChatsListSourceUi(
     val unreachable: Boolean,
     /** Its saved password or token must be typed again. */
     val secret: SwitcherSecret = SwitcherSecret.None,
+    /**
+     * The agents on this phone (Flutter `ChatListSourceKind.agents`): their conversations join the list beside This
+     * phone's, with their own switch in "Connections in this list", but they are never a server to switch to.
+     */
+    val agents: Boolean = false,
 )
 
 public data class ChatsHomeExtraState(

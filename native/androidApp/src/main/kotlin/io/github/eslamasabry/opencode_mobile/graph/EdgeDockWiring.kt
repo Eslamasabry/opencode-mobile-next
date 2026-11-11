@@ -214,7 +214,9 @@ class AppEdgeDock(
                 .collect { (live, loaded) ->
                     val saved = loaded.map { it.id }.toSet()
                     for (profile in loaded) {
-                        controller.feed(DockEvent.ServerName(profile.id, profile.profile.name))
+                        // The phone agents' rings are This phone's: their server is named as the phone is.
+                        val phone = stores.phoneOfHelper(profile.id)?.let { id -> loaded.firstOrNull { it.id == id } }
+                        controller.feed(DockEvent.ServerName(profile.id, (phone ?: profile).profile.name))
                         // The mark the home row shows: OpenCode's for an OpenCode server, Codex's for Codex; an agents
                         // server names its agent per conversation (the ring's own agent id), else no mark.
                         controller.feed(

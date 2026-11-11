@@ -71,6 +71,8 @@ class AppChatsMonitor(
         val sources =
             runtime.profiles.profiles.value
                 .filter { it.profile.backend != BackendKind.Codex }
+                // The phone agents are part of This phone, not a server of their own to watch (F: saved profiles only).
+                .filterNot { runtime.isPhoneHelper(it.id) }
                 .map { loaded ->
                     val state = monitor.snapshotFor(loaded.id.raw)
                     ChatsMonitorSourceUi(

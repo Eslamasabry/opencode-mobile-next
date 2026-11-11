@@ -115,7 +115,7 @@ class LiveConversationServers(
 @Inject
 class LiveProjectServers(
     registry: ConnectionRegistry,
-    stores: PreviewStores,
+    private val stores: PreviewStores,
     appScope: AppCoroutineScope,
     attention: AppElsewhereAttention,
 ) : ProjectServers {
@@ -135,6 +135,9 @@ class LiveProjectServers(
                                 ManagedLocalServer.isBuiltin(graph.profile.origin.toString()),
                         attention = trackers[id]?.state,
                         status = graph.session.status,
+                        // This phone's agents are part of This phone: their folders join its projects (Flutter never
+                        // lists them as a server).
+                        partOf = stores.phoneOfHelper(id),
                     )
                 }
             }
