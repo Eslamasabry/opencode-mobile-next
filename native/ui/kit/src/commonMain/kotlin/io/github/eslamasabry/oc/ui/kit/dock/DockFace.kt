@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
+import io.github.eslamasabry.oc.ui.design.effects.LiquidEdge
 import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
 import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
@@ -66,12 +67,15 @@ internal class DockFace(
  * THE ONE PLACE the dock's face is decided.
  *
  * Under Glass, with a lens (the same conditions as every liquid pane), a recording in scope ([LocalKitDockGlass]) and
- * the window's liquid budget granting it, the dock is ONE body of liquid glass (role [LiquidRole.Dock]: the bar's recipe
+ * a place in the window's liquid budget, the dock is ONE body of liquid glass (role [LiquidRole.Dock]: the bar's recipe
  * at rest, the menu's fully grown, mixed by the growth): its face draws the strip and the swell, the peek or the list
  * joined by the join field from [KitEdgeDockState.body], with no clip ([DockFace.drawsOwnBody]); the words and marks
  * take the bar's ink on glass and flip with it.
  *
- * Otherwise (every other style, Glass without a lens or a recording, beyond the budget) it asks the resolver for the
+ * Tucked or at rest the dock ranks below the pills in the window's budget, grown it takes its own rank
+ * ([LiquidEdge.dockRank]); a dock short of a lens is frost of the same shape, as every liquid pane is.
+ *
+ * Otherwise (every other style, Glass without a lens or a recording) it asks the resolver for the
  * nearest existing floating role, as a square face that the body clips to its own outline: the kit's rule (a part gets
  * its face from `kitSurfaceLook` by role; it never paints its own surface, border or shadow).
  *
@@ -93,8 +97,13 @@ internal fun rememberDockFace(state: KitEdgeDockState): DockFace {
     val shoulders = LocalKitStyle.current.style != Style.Glass
     val boxes = remember(state) { dockBodyBoxes(state) }
     val area = remember(state) { dockBodyArea(state) }
+    // Tucked or at rest the dock yields its lens to the pills; grown it takes its own rank (LiquidEdge.dockRank).
+    val grownNow = state.swell != null || state.panelShown
     val glass =
-        kitLiquidFace(LiquidRole.Dock, LocalKitDockGlass.current, rest = LiquidRole.Dock, grown = LiquidRole.Menu, boxes = boxes, wordsArea = area)
+        kitLiquidFace(
+            LiquidRole.Dock, LocalKitDockGlass.current, rest = LiquidRole.Dock, grown = LiquidRole.Menu, boxes = boxes, wordsArea = area,
+            rank = LiquidEdge.dockRank(grownNow),
+        )
     if (glass != null) {
         // Read in composition: the dock's marks follow the ink flip (180 ms, only when the content behind changes).
         val f = glass.flip.progress.value

@@ -102,7 +102,8 @@ public val KitLiquidBodyDrawn: SemanticsPropertyKey<String> = SemanticsPropertyK
  * returns false when there is no body to draw); null where it may not be liquid glass: not Glass, no lens (Frosted, saver,
  * reduced motion, high contrast, below Android 13, desktop), no recording, no join shader on the platform, or beyond the
  * window's budget. The material is [rest]'s at rest and [grown]'s fully grown. The words' area for the ink flip is the
- * body's bounds ([wordsArea], node px; null: the whole node).
+ * body's bounds ([wordsArea], node px; null: the whole node). [rank] is the body's place in the window's budget now;
+ * beyond the budget the body is frost of the same shape (no bend, the rim kept), as every liquid pane is.
  */
 @Composable
 internal fun kitLiquidFace(
@@ -112,12 +113,13 @@ internal fun kitLiquidFace(
     grown: LiquidRole,
     boxes: (KitLiquidBodyBoxes) -> Boolean,
     wordsArea: () -> Rect?,
+    rank: Int = role.rank,
 ): KitLiquidBodyFace? {
     val platform = LocalKitPlatform.current
     val programs = remember(platform) { KitLiquidJoin() }.programs(platform)
     val asking = kitLiquidOn() && source != null && programs != null
-    val granted = kitLiquidClaim(role, source, asking)
-    if (!asking || !granted || source == null) return null
+    val granted = kitLiquidClaim(role, source, asking, rank)
+    if (!asking || source == null) return null
     val roles = LocalKitRoles.current
     val appearance = LocalKitAppearance.current
     val ground = LocalKitColors.current.ground.copy(alpha = 1f)
@@ -134,7 +136,8 @@ internal fun kitLiquidFace(
     val ink = Color(roles.text1.v)
     val flipInk = Color(other.text1.v)
     return KitLiquidBodyFace(
-        face = Modifier.semantics { this[KitLiquidBodyDrawn] = role.name } then LiquidBodyElement(boxes, restSpec, grownSpec, backdrop),
+        face = Modifier.semantics { this[KitLiquidBodyDrawn] = if (granted) role.name else "${role.name} frost" } then
+            LiquidBodyElement(boxes, restSpec, grownSpec, backdrop, lens = granted),
         words = Modifier.kitLiquidPlateHost(words),
         ink = ink,
         ink2 = lerp(Color(roles.text2.v), ink, second),
@@ -161,14 +164,16 @@ private data class LiquidBodyElement(
     val rest: KitLiquidPaneSpec,
     val grown: KitLiquidPaneSpec,
     val backdrop: KitLiquidBackdrop,
+    val lens: Boolean,
 ) : ModifierNodeElement<LiquidBodyNode>() {
-    override fun create(): LiquidBodyNode = LiquidBodyNode(boxes, rest, grown, backdrop)
+    override fun create(): LiquidBodyNode = LiquidBodyNode(boxes, rest, grown, backdrop, lens)
 
     override fun update(node: LiquidBodyNode) {
         node.boxes = boxes
         node.rest = rest
         node.grown = grown
         node.backdrop = backdrop
+        node.lens = lens
         node.invalidateDraw()
     }
 
@@ -182,6 +187,8 @@ private class LiquidBodyNode(
     var rest: KitLiquidPaneSpec,
     var grown: KitLiquidPaneSpec,
     var backdrop: KitLiquidBackdrop,
+    /** False beyond the window's budget: frost of the same shape (no bend; the blur, tint, cover and rim kept). */
+    var lens: Boolean,
 ) : androidx.compose.ui.Modifier.Node(), DrawModifierNode, GlobalPositionAwareModifierNode, CompositionLocalConsumerModifierNode {
     private val join = KitLiquidJoin()
     private val frame = KitLiquidBodyBoxes()
@@ -243,7 +250,7 @@ private class LiquidBodyNode(
         val geometry = LiquidBodyGeometry.of(f, hasB).relativeTo(area.topLeft)
         val shortSide = if (hasB) min(min(f.a.width, f.a.height), min(f.b.width, f.b.height)) else min(f.a.width, f.a.height)
         val rim = LiquidEdge.rimPx(shortSide, density, recipe)
-        val refraction = recipe.refractionDp.dp.toPx()
+        val refraction = if (lens) recipe.refractionDp.dp.toPx() else 0f
         val tint = lerp(tintNow(rest), tintNow(grown), g)
         val u =
             JoinUniforms(
