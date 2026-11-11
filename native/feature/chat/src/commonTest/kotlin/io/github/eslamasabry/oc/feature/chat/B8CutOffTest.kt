@@ -150,7 +150,7 @@ class B8CutOffTest {
             MessageWithParts(
                 MessageInfo(
                     "m2", sid, Role.Assistant, providerId = "opencode", modelId = "big-pickle",
-                    time = MsgTime(1_000, 17_000), errorText = "Step interrupted",
+                    time = MsgTime(516_100, 532_000), errorText = "Step interrupted",
                     errorKind = io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind.Aborted, finish = "error",
                 ),
                 listOf(declined).toImmutableList(),
