@@ -69,6 +69,16 @@ internal object DockDims {
     /** A ring's name's widest: the strip at rest less [LABEL_INSET] on each side (longer names end in an ellipsis). */
     const val LABEL_MAX = REST_W - 2f * LABEL_INSET
 
+    /**
+     * A ring's name's widest with the page gutter kept from the screen's own edge (device QA 2026-11-11, run 4, 4a and 4c:
+     * names started about 5 dp from the edge): from [LABEL_INSET] in from the strip's inner side to [GUTTER] short of the
+     * screen edge, which lies [edgeInset] beyond the strip's visible edge (a cutout).
+     */
+    fun labelMax(edgeInset: Float): Float = min(LABEL_MAX, REST_W - LABEL_INSET - GUTTER + edgeInset)
+
+    /** How far the name's box moves from the ring's centre toward the screen edge (edge frame; negative: toward the middle). */
+    fun labelShift(edgeInset: Float): Float = ((REST_W / 2f + edgeInset - GUTTER) - (REST_W / 2f - LABEL_INSET)) / 2f
+
     // The swell (box B while scrubbing).
     const val SW_TIP_PAD = 14f
     const val SW_BASE_PAD = 10f

@@ -491,6 +491,9 @@ private fun DockRingNode(
     val label = words.ringLabel(ring)
     val actions = ringActions(state, ring, index, words, intents)
     val towardLeft = state.onRight
+    // The name keeps the page gutter from the screen's own edge, and its inner margin from the strip's other side.
+    val labelMax = DockDims.labelMax(state.edgeInset)
+    val labelDx = DockDims.labelShift(state.edgeInset) * (if (state.onRight) 1f else -1f)
     Box(
         Modifier
             .absoluteOffset {
@@ -595,7 +598,7 @@ private fun DockRingNode(
         }
         // The name under the ring (hidden while it rides out to be renamed).
         Box(
-            Modifier.align(Alignment.Center).absoluteOffset(y = 21.dp).widthIn(max = DockDims.LABEL_MAX.dp).graphicsLayer {
+            Modifier.align(Alignment.Center).absoluteOffset(x = labelDx.dp, y = 21.dp).widthIn(max = labelMax.dp).graphicsLayer {
                 alpha = 1f - state.ride.value.coerceIn(0f, 1f) * (if (state.renaming == ring.key) 1f else 0f)
             },
         ) {

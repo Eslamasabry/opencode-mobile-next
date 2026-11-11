@@ -71,7 +71,7 @@ class KitEdgeDockEdgesTest {
                     // The pulled-out strip at rest: every name keeps in from the screen's edge.
                     for ((name, r) in names()) {
                         assertTrue(r.left >= 0f && r.right <= w, "$at, strip: the name $name $r lies on the screen")
-                        assertTrue(if (onRight) r.right <= w - 4f else r.left >= 4f, "$at, strip: the name $name $r keeps clear of the dock's screen edge")
+                        assertTrue(if (onRight) r.right <= w - gutter + .5f else r.left >= gutter - .5f, "$at, strip: the name $name $r keeps the page gutter from the dock's screen edge")
                     }
 
                     // The list, the peek and the scrub swell.
