@@ -370,7 +370,7 @@ class AppPhoneAgents(
         if (stop.isStopped || PhoneAgentRules.present(payload, version) != true) return true
         signInPhase(owner, agent, installing = false, stop = stop)
         if (agent.id == AgentId.CLAUDE && !stop.isStopped)
-            previousOf(owner, agent, PhoneAgentRules.foundVersion(version))
+            previousOf(owner, agent, PhoneAgentRules.foundVersion(version), stop)
         return true
     }
 
@@ -535,14 +535,15 @@ class AppPhoneAgents(
     /**
      * Whether Claude Code's previous version is kept, for the copy found now. Its check hashes the kept program and
      * runs it, so it runs once per version found (it used to run on every read), and only an install, a removal or
-     * going back to the previous version asks again.
+     * going back to the previous version asks again. Like the read's other checks, [stop] ends it at once.
      */
-    private fun previousOf(owner: ProfileId, agent: AgentDescriptor, found: String?) {
+    private fun previousOf(owner: ProfileId, agent: AgentDescriptor, found: String?, stop: ProbeStop) {
         val key = owner to agent.id
         val cached = synchronized(admission) { rollbacks[key] }
         if (cached != null && cached.first == found) return
-        // A check that could not run (the phone busy, its time limit) is asked again by the next read.
-        val available = previousCheck(agent) ?: return
+        // A check that did not finish (phone busy, time limit, a person's step) is asked again by the next read.
+        val available = previousCheck(agent, stop) ?: return
+        if (stop.isStopped) return
         synchronized(admission) { rollbacks[key] = found to available }
     }
 
@@ -719,10 +720,10 @@ class AppPhoneAgents(
 
     private fun previousAvailable(agent: AgentDescriptor): Boolean = previousCheck(agent) == true
 
-    /** Null when the check did not finish (refused, or cut at its time limit: `run` answers -1). */
-    private fun previousCheck(agent: AgentDescriptor): Boolean? =
+    /** Null when the check did not finish (refused, cut at its time limit or by [stop]: `run` answers -1). */
+    private fun previousCheck(agent: AgentDescriptor, stop: ProbeStop? = null): Boolean? =
         try {
-            linux.run(AgentPhoneScripts.previousVersion(agent), 30, agentUser = true).exitCode
+            linux.run(AgentPhoneScripts.previousVersion(agent), 30, agentUser = true, stop = stop).exitCode
                 .takeIf { it != -1 }
                 ?.let { it == 0 }
         } catch (_: Exception) {
