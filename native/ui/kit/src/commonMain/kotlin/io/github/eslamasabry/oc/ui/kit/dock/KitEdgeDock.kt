@@ -474,7 +474,8 @@ private fun DockRingNode(
         if (!rose) return@LaunchedEffect
         val failed = ring.state == KitDockRingState.Failed
         state.alert(index, failed)
-        if (reduced) return@LaunchedEffect
+        // Tucked: the ring's dot only changes colour; no pop, flash or shake on the nub.
+        if (reduced || state.tucked) return@LaunchedEffect
         if (failed) {
             launch {
                 m.flash.snapTo(1f)

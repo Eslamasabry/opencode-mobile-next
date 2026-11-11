@@ -201,6 +201,9 @@ public class KitEdgeDockState internal constructor() {
     private var pullStart = DockDims.REST_W
     private var pullFromPanel = false
 
+    /** True while the dock is tucked to its nub (or on its way there). */
+    internal val tucked: Boolean get() = out.value < DockDims.REST_W * 0.5f
+
     /** True while anything is open over the content (a tap outside closes it). */
     internal val anythingOpen: Boolean get() = swell != null || panelOpen || renaming != null
 
@@ -841,9 +844,11 @@ public class KitEdgeDockState internal constructor() {
 
     /**
      * A ring's alert (its pulse rose): a request leans the dock out and shows the words in the swell for about three
-     * seconds; a failure sends a pulse along the outline. Nothing shows over an open swell, list or a finger.
+     * seconds; a failure sends a pulse along the outline. Nothing shows over an open swell, list or a finger. A tucked
+     * dock neither leans nor pulses: only that ring's dot on the nub changes colour (the kit's owner, 2026-11-11).
      */
     internal fun alert(i: Int, failed: Boolean) {
+        if (tucked) return
         if (!failed) {
             launch {
                 if (!reduced) {
