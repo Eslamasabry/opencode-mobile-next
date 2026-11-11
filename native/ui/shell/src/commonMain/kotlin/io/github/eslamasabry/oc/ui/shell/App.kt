@@ -121,7 +121,9 @@ public fun NavShell(
                         event.isAltPressed,
                         event.isShiftPressed,
                     ) ?: return@onPreviewKeyEvent false
-                ShellShortcuts.perform(shortcut, deps.navigator, backStack.lastOrNull() as? AppRoute)
+                val top = backStack.lastOrNull() as? AppRoute
+                if (!ShellShortcuts.claims(shortcut, top)) return@onPreviewKeyEvent false
+                ShellShortcuts.perform(shortcut, deps.navigator, top)
                 true
             }
         ) {

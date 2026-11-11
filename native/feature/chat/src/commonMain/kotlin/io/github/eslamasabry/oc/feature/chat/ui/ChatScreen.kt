@@ -3,6 +3,14 @@ package io.github.eslamasabry.oc.feature.chat.ui
 import androidx.compose.runtime.saveable.rememberSaveable
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.focusGroup
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isAltPressed
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.isMetaPressed
+import androidx.compose.ui.input.key.isShiftPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.foundation.layout.Box
@@ -49,6 +57,7 @@ import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderSlot
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderTopBar
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatActions
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatConfirm
+import io.github.eslamasabry.oc.feature.chat.presentation.ChatPlace
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatPhase
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatStatusKind
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatStatusUi
@@ -356,6 +365,7 @@ public fun ChatScreen(
         }
     var commandInsertId by remember(state.ref) { mutableStateOf(0L) }
     var modelPicker by remember(state.ref) { mutableStateOf<Long?>(null) }
+    var modelCycle by remember(state.ref) { mutableStateOf<io.github.eslamasabry.oc.feature.chat.composer.ModelCycleRequest?>(null) }
     var editorRequest by remember(state.ref) { mutableStateOf<Long?>(null) }
     var sentPicture by remember(state.ref) { mutableStateOf<PictureRequest?>(null) }
     var pictureSeq by remember(state.ref) { mutableStateOf(0L) }
@@ -536,6 +546,8 @@ public fun ChatScreen(
                 pictureDone = { id -> if (sentPicture?.id == id) sentPicture = null },
                 editorDone = { id -> if (editorRequest == id) editorRequest = null },
                 modelPickerDone = { id -> if (modelPicker == id) modelPicker = null },
+                modelCycleRequest = { modelCycle },
+                modelCycleDone = { id -> if (modelCycle?.id == id) modelCycle = null },
             )
         }
 
@@ -599,6 +611,38 @@ public fun ChatScreen(
             // here it lands in the message field, never on the first button.
             Box(
                 Modifier.fillMaxSize()
+                    .onPreviewKeyEvent { event ->
+                        if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                        val key =
+                            ChatKeys.of(event.key, event.isCtrlPressed, event.isMetaPressed, event.isAltPressed, event.isShiftPressed)
+                                ?: return@onPreviewKeyEvent false
+                        val scene =
+                            ChatKeyScene(
+                                demo = demoMode,
+                                overlayOpen =
+                                    commandsOpen || workOpen || contextOpen || tasksOpen || connectionDetails || barMenuOpen,
+                                findOpen = latest.find != null,
+                                terminal = latest.capabilities.terminal,
+                                canBackground = latest.canBackground,
+                            )
+                        if (!ChatKeys.available(key, scene)) return@onPreviewKeyEvent false
+                        when (key) {
+                            ChatKey.Launcher -> {
+                                onLoadServerCommands()
+                                commandsOpen = true
+                            }
+                            ChatKey.Find -> actions.find(latest.find?.query ?: "")
+                            ChatKey.FindNext -> actions.findNext()
+                            ChatKey.FindPrevious -> actions.findPrevious()
+                            ChatKey.Terminal -> actions.openPlace(ChatPlace.Terminal)
+                            ChatKey.Background -> actions.backgroundWork()
+                            ChatKey.ModelNext ->
+                                modelCycle = io.github.eslamasabry.oc.feature.chat.composer.ModelCycleRequest((modelCycle?.id ?: 0L) + 1L, false)
+                            ChatKey.ModelPrevious ->
+                                modelCycle = io.github.eslamasabry.oc.feature.chat.composer.ModelCycleRequest((modelCycle?.id ?: 0L) + 1L, true)
+                        }
+                        true
+                    }
                     .focusProperties {
                         onEnter = {
                             if (requestedFocusDirection == FocusDirection.Enter && chrome.typing.focus())

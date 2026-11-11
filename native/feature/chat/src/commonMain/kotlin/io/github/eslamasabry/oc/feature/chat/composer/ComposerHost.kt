@@ -22,6 +22,9 @@ public interface ComposerHost {
         get() = false
 }
 
+/** One F2 press: [id] is unique per press; [reverse] = Shift+F2. */
+@Immutable public data class ModelCycleRequest(val id: Long, val reverse: Boolean)
+
 /** Plain ids: the profile, and the session (null = a new conversation that has none yet). */
 @Immutable public data class ComposerTarget(val profileId: String, val sessionId: String?)
 
@@ -88,6 +91,9 @@ public class ComposerChrome(
     /** An error card's "Choose another model" asks the composer to open its model list once. */
     public val modelPickerRequest: () -> Long? = { null },
     public val modelPickerDone: (id: Long) -> Unit = {},
+    /** F2 / Shift+F2 (Flutter `ModelShortcuts`): asks the composer to switch to the next or previous recent model once. */
+    public val modelCycleRequest: () -> ModelCycleRequest? = { null },
+    public val modelCycleDone: (id: Long) -> Unit = {},
     /** The commands launcher (a Commands row in the attach tray); null = not offered. */
     public val openCommands: (() -> Unit)? = null,
     /**
