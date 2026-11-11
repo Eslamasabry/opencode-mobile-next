@@ -19,7 +19,7 @@ class HandoffFolderRuleTest {
     fun `a conversation on a computer never starts an agent on the phone`() {
         assertEquals(
             HandoffBlock.SourceOnComputer,
-            HandoffFolderRule.judge(false, "/home/me/app"),
+            HandoffFolderRule.judge(false, "/srv/app"),
         )
         // Even when the computer's path happens to look like a phone path: the machine decides, not the string.
         assertEquals(
