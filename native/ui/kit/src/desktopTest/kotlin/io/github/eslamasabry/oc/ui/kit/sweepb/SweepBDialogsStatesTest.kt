@@ -10,6 +10,7 @@ import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.printToString
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import io.github.eslamasabry.oc.ui.design.color.wcagContrast
@@ -79,6 +80,7 @@ class SweepBDialogsStatesTest {
                 }
             }
             waitForIdle()
+            println("sweep-b-tree " + onRoot().printToString().replace("\n", " | "))
             val del = onNode(hasText("Delete fox") and hasClickAction())
             val cancel = onNode(hasText("Cancel") and hasClickAction())
             assertTrue(del.getBoundsInRoot().top < cancel.getBoundsInRoot().top, "order stays: act first")
