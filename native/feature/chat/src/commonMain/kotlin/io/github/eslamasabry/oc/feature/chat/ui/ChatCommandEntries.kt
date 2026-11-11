@@ -91,6 +91,8 @@ import io.github.eslamasabry.oc.ui.words.res.commandSheetNoteDescription
 import io.github.eslamasabry.oc.ui.words.res.approvalsUiMenu
 import io.github.eslamasabry.oc.ui.words.res.commandSheetApprovalsDescription
 import io.github.eslamasabry.oc.ui.words.res.chatUiCompose
+import io.github.eslamasabry.oc.ui.words.res.chatUiHideTimestamps
+import io.github.eslamasabry.oc.ui.words.res.chatUiShowTimestamps
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -114,6 +116,8 @@ internal fun rememberChatCommandEntries(
     header: ChatHeaderSlot? = null,
     onContext: (() -> Unit)? = null,
     onEditor: (() -> Unit)? = null,
+    /** C10: null where the device cannot save the choice; true = timestamps shown now. */
+    timestamps: Pair<Boolean, () -> Unit>? = null,
 ): List<ChatCommandEntry> {
     val navigate = stringResource(Res.string.chatUiNavigate)
     val current = stringResource(Res.string.chatUiCurrentSession)
@@ -144,6 +148,11 @@ internal fun rememberChatCommandEntries(
             else Res.string.chatUiExpandReasoning
         )
     val thinkingBody = stringResource(Res.string.chatUiToggleLongReasoningDetailsAcrossTheTranscript)
+    val timestampsTitle =
+        stringResource(
+            if (timestamps?.first == true) Res.string.chatUiHideTimestamps
+            else Res.string.chatUiShowTimestamps
+        )
     val undoTitle = stringResource(Res.string.chatUiRevertLastPrompt)
     val undoBody = stringResource(Res.string.revertUndoDescription)
     val redoTitle = stringResource(Res.string.chatUiRestoreRevertedPrompt)
@@ -247,6 +256,9 @@ internal fun rememberChatCommandEntries(
         if (caps.compact && idle && hasPrompt)
             add(ChatCommandEntry("compact", "compact", compactTitle, compactBody, current, KitIcons.layers, listOf("summarize"), actions::compactRequested))
         add(ChatCommandEntry("thinking", "thinking", thinkingTitle, thinkingBody, display, KitIcons.idea, listOf("toggle-thinking"), actions::toggleReasoning))
+        // C10 (Flutter `timestamps` command): the same choice as Settings, one tap from the chat.
+        if (timestamps != null)
+            add(ChatCommandEntry("timestamps", "timestamps", timestampsTitle, null, display, KitIcons.clock, emptyList(), timestamps.second))
         if (caps.undo && hasPrompt && idle)
             add(ChatCommandEntry("undo", "undo", undoTitle, undoBody, current, KitIcons.undo, listOf("revert"), actions::undoLastPrompt))
         // S28 story 3 (Flutter `/redo`): undone turns come back (a staged undo opens its review page).

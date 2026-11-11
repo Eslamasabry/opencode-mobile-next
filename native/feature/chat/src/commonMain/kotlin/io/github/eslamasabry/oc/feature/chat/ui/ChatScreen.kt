@@ -313,6 +313,8 @@ public fun ChatScreen(
     monitoredForm: (@Composable () -> Unit)? = null,
     transcriptDisplay: io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices =
         io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices(),
+    /** C10: flips message timestamps (the Settings choice); null where it cannot be saved. */
+    onToggleTimestamps: (() -> Unit)? = null,
     /** The models the error card may suggest ("Use {model} and resend"). */
     modelChoices: List<io.github.eslamasabry.oc.feature.chat.world.ComposerModel> = emptyList(),
     /** Background commands, Stop command and Run shell command (null = not offered here). */
@@ -556,6 +558,8 @@ public fun ChatScreen(
             },
             header = header,
             onContext = facts.context?.let { { contextOpen = true } },
+            timestamps =
+                onToggleTimestamps?.let { toggle -> transcriptDisplay.timestampsVisible to toggle },
             onEditor =
                 if (composerHost.hasPromptEditor) {
                     { editorRequest = (editorRequest ?: 0L) + 1L }

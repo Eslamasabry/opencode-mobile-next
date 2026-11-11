@@ -635,6 +635,13 @@ public class ChatEntries(
                                     prompts = prompts,
                                     facts = facts,
                                     transcriptDisplay = display,
+                                    onToggleTimestamps =
+                                        transcriptPreferences
+                                            .singleOrNull()
+                                            ?.takeIf { it.canSetTimestamps }
+                                            ?.let { prefs ->
+                                                { prefs.setTimestamps(!display.timestampsVisible) }
+                                            },
                                     onOpenSession = vm::openSession,
                                     header =
                                         ChatHeaderSlot(

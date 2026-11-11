@@ -13,6 +13,12 @@ public data class TranscriptDisplayChoices(
 
 public interface TranscriptDisplayPreferences {
     public val value: StateFlow<TranscriptDisplayChoices>
+
+    /** C10: the person's "Show timestamps" from the chat; false where the device cannot save the choice. */
+    public val canSetTimestamps: Boolean
+        get() = false
+
+    public fun setTimestamps(visible: Boolean) {}
 }
 
 @ContributesTo(AppScope::class)
