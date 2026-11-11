@@ -33,7 +33,8 @@ class LaunchSurfacesNativeContractTest {
     fun `B-ANDR-031 stale entries are disabled before the new set is published and pinned copies are matched too`() {
         val publish = shortcuts.substring(shortcuts.indexOf("fun publish("))
         val disable = publish.indexOf("disable(context, staleIds(")
-        val set = publish.indexOf("setDynamicShortcuts(")
+        val set = publish.indexOf("addDynamicShortcuts(")
+        assertTrue("replacing the whole dynamic set wipes shortcuts that are not ours", !publish.contains("setDynamicShortcuts("))
         assertTrue(disable >= 0)
         assertTrue("disable must come before the publish", set > disable)
         assertTrue(shortcuts.contains("FLAG_MATCH_PINNED"))
