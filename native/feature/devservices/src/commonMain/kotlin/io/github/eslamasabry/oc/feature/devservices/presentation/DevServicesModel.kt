@@ -411,7 +411,8 @@ public class DevServicesModel(
                 is Outcome.Ok -> {
                     if (shown.found) foundLogs[shown.id] = read.value
                     val text = read.value
-                    ui.update { it.copy(log = it.log?.copy(text = text, failed = false)) }
+                    val reportable = !shown.found && context?.reportFailure != null && services?.failedReport(shown.id) != null
+                    ui.update { it.copy(log = it.log?.copy(text = text, failed = false, canReport = reportable)) }
                 }
                 is Outcome.Failed -> ui.update { it.copy(log = it.log?.copy(failed = true)) }
             }
@@ -422,6 +423,13 @@ public class DevServicesModel(
 
     override fun refreshLogs() {
         scope.launch { readOpenLogs() }
+    }
+
+    override fun reportFailure() {
+        val shown = ui.value.log ?: return
+        if (shown.found) return
+        val report = services?.failedReport(shown.id) ?: return
+        context?.reportFailure?.invoke(report.title, report.detail, report.logExcerpt)
     }
 
     override fun closeLogs() {

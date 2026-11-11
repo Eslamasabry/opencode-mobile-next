@@ -20,6 +20,8 @@ import io.github.eslamasabry.oc.engine.team.TeamState
 import io.github.eslamasabry.oc.engine.team.TeamTask
 import io.github.eslamasabry.oc.engine.team.TeamTimelineEvent
 import io.github.eslamasabry.oc.engine.team.TeamWorkspace
+import io.github.eslamasabry.oc.feature.team.presentation.NoTeamFailureReports
+import io.github.eslamasabry.oc.feature.team.presentation.TeamFailureReports
 import io.github.eslamasabry.oc.feature.team.presentation.AskAnswer
 import io.github.eslamasabry.oc.feature.team.presentation.EditorKind
 import io.github.eslamasabry.oc.feature.team.presentation.EditorProblem
@@ -410,7 +412,7 @@ class TeamFinishTest {
                 )
             val p = TeamProject(id = "a", simulated = false, tasks = listOf(t), requests = listOf(TeamRequest("q", "findings", "Review", taskId = "t")))
             val host = FakeHost(team(p))
-            val vm = TeamTaskViewModel(TeamRoute.Task(pid, "a", "t"), TeamEngine(host), FakeNav(), FIXED_CLOCK)
+            val vm = TeamTaskViewModel(TeamRoute.Task(pid, "a", "t"), TeamEngine(host), FakeNav(), FIXED_CLOCK, NoTeamFailureReports())
             watch(vm.state)
             runCurrent()
             assertEquals(listOf(TaskAskAction.ReviewFindings), vm.state.value.task!!.asks.single().actions)
@@ -447,7 +449,7 @@ class TeamFinishTest {
                     requests = listOf(TeamRequest("c", "conflict", "Conflict", taskId = "t")),
                 )
             val host = FakeHost(team(p))
-            val vm = TeamTaskViewModel(TeamRoute.Task(pid, "a", "t"), TeamEngine(host), FakeNav(), FIXED_CLOCK)
+            val vm = TeamTaskViewModel(TeamRoute.Task(pid, "a", "t"), TeamEngine(host), FakeNav(), FIXED_CLOCK, NoTeamFailureReports())
             watch(vm.state)
             runCurrent()
             val controls = vm.state.value.task!!.controls
@@ -486,7 +488,7 @@ class TeamFinishTest {
                     tasks = listOf(TeamTask("t", "T", "ph", status = "merged")),
                 )
             val host = FakeHost(team(p))
-            val vm = TeamTaskViewModel(TeamRoute.Task(pid, "a", "t"), TeamEngine(host), FakeNav(), FIXED_CLOCK)
+            val vm = TeamTaskViewModel(TeamRoute.Task(pid, "a", "t"), TeamEngine(host), FakeNav(), FIXED_CLOCK, NoTeamFailureReports())
             watch(vm.state)
             runCurrent()
             assertTrue(vm.state.value.task!!.phase!!.canAccept)
@@ -587,4 +589,29 @@ class TeamFinishTest {
             roles = listOf(TeamRole("backend", "Backend"), TeamRole("frontend", "Frontend"), TeamRole("planner", "Planner", readOnly = true)),
             defaultSettings = TeamProjectSettings(),
         )
+
+    @Test
+    fun `G5 only a failed task offers and sends Report this failure, with its own id and title`() =
+        runTest(dispatcher) {
+            val sent = mutableListOf<Pair<String, String>>()
+            val reports = TeamFailureReports { _, id, title, _, _ -> sent += id to title }
+            val p =
+                TeamProject(
+                    id = "a",
+                    simulated = false,
+                    tasks = listOf(TeamTask("bad", "Pay form", status = "failed"), TeamTask("ok", "Cart", status = "running")),
+                )
+            val host = FakeHost(team(p))
+            val bad = TeamTaskViewModel(TeamRoute.Task(pid, "a", "bad"), TeamEngine(host), FakeNav(), FIXED_CLOCK, reports)
+            val fine = TeamTaskViewModel(TeamRoute.Task(pid, "a", "ok"), TeamEngine(host), FakeNav(), FIXED_CLOCK, reports)
+            watch(bad.state)
+            watch(fine.state)
+            runCurrent()
+            assertTrue(bad.state.value.task!!.controls.report)
+            assertFalse(fine.state.value.task!!.controls.report)
+            fine.reportFailure()
+            assertTrue(sent.isEmpty())
+            bad.reportFailure()
+            assertEquals(listOf("bad" to "Pay form"), sent)
+        }
 }

@@ -246,6 +246,9 @@ class NativePhoneSetup(
             }
         }
 
+    override suspend fun freedBytes(id: String): Long? =
+        withContext(serial) { lane.withLock { removal.freedBytes(id) } }
+
     override suspend fun openOwnershipSettings(): Outcome<Unit> =
         if (settings.open(KeepAliveSetting.AppDetails)) Outcome.Ok(Unit)
         else Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))

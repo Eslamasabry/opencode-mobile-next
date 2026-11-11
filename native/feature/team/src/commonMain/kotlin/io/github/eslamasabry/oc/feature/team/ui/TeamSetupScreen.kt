@@ -144,6 +144,9 @@ private fun SetupHeader(state: TeamSetupUi, actions: TeamSetupActions) {
                 body = words.second,
                 icon = if (state.calm) KitIcons.phone else KitIcons.warning,
                 primary = action,
+                secondary =
+                    if (state.calm) null
+                    else KitAction(stringResource(Res.string.failedJobReport), actions::reportFailure, icon = KitIcons.bug),
                 details = state.details,
                 size = KitStateSize.Inline,
             )

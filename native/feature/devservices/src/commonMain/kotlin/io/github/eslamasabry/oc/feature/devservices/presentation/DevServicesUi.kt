@@ -91,6 +91,8 @@ public data class DevServiceLog(
     val title: String,
     val text: String = "",
     val failed: Boolean = false,
+    /** The run failed (exit, timeout, killed) and the app can open Report a problem for it. */
+    val canReport: Boolean = false,
 )
 
 public data class DevServicesUi(
@@ -165,6 +167,9 @@ public interface DevServicesActions {
     public fun refreshLogs() {}
 
     public fun closeLogs() {}
+
+    /** Report this failure: opens Report a problem with the failed run's log attached. */
+    public fun reportFailure() {}
 
     public fun confirm()
 
