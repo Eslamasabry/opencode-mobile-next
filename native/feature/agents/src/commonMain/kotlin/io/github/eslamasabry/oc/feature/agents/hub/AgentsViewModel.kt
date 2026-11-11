@@ -91,6 +91,12 @@ public class AgentsViewModel(
 
     override fun back(): Unit = presenter.back()
 
+    /** Leaves this page whatever is open on it (an agent's own page whose set-up just finished). */
+    public fun leave() {
+        presenter.closeAgent()
+        nav.back()
+    }
+
     override fun openAccount(id: ProfileId): Unit = presenter.openAccount(id)
 
     override fun closeAccount(): Unit = presenter.closeAccount()

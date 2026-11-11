@@ -95,8 +95,9 @@ public class AgentsEntries(private val arrivals: ShowMeTargets) : EntryInstaller
                     opened = true
                     vm.openAgent(route.agentId)
                 } else if (route.forNewChat && ready && wasNotReady) {
-                    // Set up finished: back to New conversation, which rereads its agents.
-                    vm.back()
+                    // Set up finished: back to New conversation, which rereads its agents. Not back(): with the
+                    // agent's sheet (or an install panel) open that only closes the sheet and leaves this page up.
+                    vm.leave()
                 }
             }
             AgentsScreen(state, vm, hubState, vm)
