@@ -156,13 +156,14 @@ class AppHomeEdgeDock(private val port: AppEdgeDockPort) : HomeEdgeDock {
 @Inject
 class AppChatEdgeDock(private val port: AppEdgeDockPort) : ChatEdgeDock {
     @Composable
-    override fun Content(chrome: PaddingValues) {
+    override fun Content(chrome: PaddingValues, onBottomRoom: (Int) -> Unit) {
         EdgeDockHost(
             port,
             Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)),
             insets = KitDockInsets(top = chrome.calculateTopPadding(), bottom = chrome.calculateBottomPadding()),
             undoBottom = chrome.calculateBottomPadding(),
             exclusion = ::dockBackGestureExclusion,
+            onUndoHeight = onBottomRoom,
         )
     }
 }

@@ -51,6 +51,8 @@ public fun EdgeDockHost(
     exclusion: (KitEdgeDockState) -> Modifier = { Modifier },
     /** False on a screen that has its own "new conversation" control: the dock then shows no "+". */
     offersNew: Boolean = true,
+    /** The room (px) the Undo bar takes while an offer stands, 0 when it goes; the screen keeps that much room clear. */
+    onUndoHeight: ((Int) -> Unit)? = null,
 ) {
     val shown by port.shown.collectAsStateWithLifecycle()
     if (!shown) return
@@ -116,6 +118,7 @@ public fun EdgeDockHost(
             },
             onTimeout = { undo = null },
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = undoBottom),
+            onHeight = onUndoHeight,
         )
     }
 }
