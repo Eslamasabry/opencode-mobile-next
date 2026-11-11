@@ -49,8 +49,9 @@ public data class DockKitFrame(
 
 /**
  * Maps the engine's [DockUi] onto the kit's [KitDockModel]. Pure: no Compose, no copy beyond [untitled] (the name of a
- * conversation the server has not titled yet). States map one to one. The dock is always available: quiet (idle recent
- * rings, or one live) is the tucked nub, never nothing; a dock with no ring is still a real model (the strip or nub with
+ * conversation the server has not titled yet). States map one to one. The dock is always available and tucked by
+ * default: the nub (its dots carry each ring's state colour, so an alert elsewhere shows on it) is the resting form,
+ * and the dock is drawn out only after the person pulled it out ([DockPresence.Out]); a dock with no ring is still a real model (the strip or nub with
  * its "+"). Only a switched-off dock, or a hidden one (no server connected), is [DockKitFrame.Empty], which the kit
  * draws as nothing.
  */

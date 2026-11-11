@@ -5,6 +5,8 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
+import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -17,6 +19,7 @@ import io.github.eslamasabry.oc.engine.attention.dock.DockController
 import io.github.eslamasabry.oc.engine.attention.dock.DockEvent
 import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.engine.attention.dock.DockFeed
+import io.github.eslamasabry.oc.engine.attention.dock.DockHomeWatch
 import io.github.eslamasabry.oc.engine.attention.dock.DockKeys
 import io.github.eslamasabry.oc.engine.attention.dock.DockNicknames
 import io.github.eslamasabry.oc.engine.attention.dock.DockPeek
@@ -68,6 +71,7 @@ class AppEdgeDock(
     private val home: AppChatsHome,
     private val permissionAnswers: HomePermissionAnswerWiring,
     private val navigator: AppNavigator,
+    private val runtime: PreviewRuntime,
 ) {
     private val main: CoroutineScope = CoroutineScope(appScope.coroutineContext + dispatchers.main)
     private var navigate: (ConversationRef) -> Unit = { navigator.backToChat(it) }
@@ -116,6 +120,13 @@ class AppEdgeDock(
                 permissionAnswers.answer(ref, requestId, allow)
 
             override suspend fun stop(ref: ConversationRef): Outcome<Unit> = stopLikeTheChat(connections.graphFor(ref), ref)
+
+            // The same call the conversation's own "Rename conversation" makes, then the home list is read again so
+            // the home, the chat header and the dock show one title.
+            override suspend fun renameConversation(ref: ConversationRef, title: String): Outcome<Unit> {
+                val graph = connections.graphFor(ref) ?: return Outcome.Failed(Failure.Unavailable(FeatureId("dockRename")))
+                return graph.session.server.renameSession(ref.sessionId, title).also { if (it is Outcome.Ok) runtime.refresh() }
+            }
         }
     private val controller =
         DockController(
@@ -153,6 +164,17 @@ class AppEdgeDock(
         main.launch {
             // The conversation on screen, however it was reached (a list row, a notification, the dock).
             navigator.top.map { (it as? ChatRoute)?.ref }.distinctUntilChanged().collect { conversationShown(it) }
+        }
+        main.launch {
+            // A conversation archived from the home leaves the list without any event the dock hears: its ring goes
+            // when the list stops showing it (the home's own Undo window is over by then, so an undone archive never
+            // leaves). A conversation that comes back is listed again and returns as a quiet recent ring.
+            val watch = DockHomeWatch()
+            runtime.snapshot.collect { list ->
+                val listed = attached.keys.filter(runtime::listSourceShown).toSet()
+                val roots = list.items.filter { it.parentId == null }.map { it.ref }
+                for (event in watch.events(roots, list.complete && list.acrossProjects && !list.loading, listed)) controller.feed(event)
+            }
         }
         main.launch {
             if (stores.warm() !is Outcome.Ok) return@launch

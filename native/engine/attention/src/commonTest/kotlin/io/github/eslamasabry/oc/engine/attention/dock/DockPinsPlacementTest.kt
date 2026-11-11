@@ -201,7 +201,8 @@ class DockPinsPlacementTest {
             .fold(DockModel.empty()) { m, e -> m.reduce(e) }.ui
         assertEquals("explore", ui.entries.single().agent)
         val user = MessageInfo(id = "m2", sessionId = a.sessionId.raw, role = Role.User, agent = "build")
-        assertTrue(DockFeed.events(p, GatewayEvent.MessageUpserted(user)).isEmpty())
+        // Changed on purpose: the person's own message is a send (it tucks the dock), no longer "nothing".
+        assertEquals(listOf<DockEvent>(DockEvent.Sent(a)), DockFeed.events(p, GatewayEvent.MessageUpserted(user)))
     }
 
     // ---- peek
