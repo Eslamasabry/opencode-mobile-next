@@ -9,14 +9,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
@@ -35,7 +34,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -211,35 +209,31 @@ private fun ActionCell(kind: DockTargetKind, words: KitDockWords) {
 /** The nickname field, right of the ridden-out ring, over the strip, under the thumb. Enter or a tap away saves. */
 @Composable
 private fun RenameField(state: KitEdgeDockState, layout: SwellLayout, ring: KitDockRing, words: KitDockWords, boxW: Float) {
-    val field = layout.field ?: return
+    val spot = layout.field ?: return
     val colors = LocalKitColors.current
     val style = LocalKitTypography.current.style(TypeRole.RowTitle).copy(color = colors.text1)
-    var value by remember(ring.key) { mutableStateOf(TextFieldValue(ring.name, TextRange(0, ring.name.length))) }
+    val field = rememberTextFieldState(ring.name, TextRange(0, ring.name.length))
     val focus = remember { FocusRequester() }
     LaunchedEffect(ring.key) {
-        state.renameText = ring.name
         focus.requestFocus()
+        snapshotFlow { field.text.toString() }.collect { state.renameText = it }
     }
-    val x = if (state.onRight) field.left else boxW - field.right
+    val x = if (state.onRight) spot.left else boxW - spot.right
     KitFrameText {
         BasicTextField(
-            value = value,
-            onValueChange = {
-                value = it
-                state.renameText = it.text
-            },
+            state = field,
             modifier =
                 Modifier
-                    .absoluteOffset(x.dp, field.top.dp)
-                    .size(field.width.dp, field.height.dp)
+                    .absoluteOffset(x.dp, spot.top.dp)
+                    .size(spot.width.dp, spot.height.dp)
                     .graphicsLayer { alpha = ((state.ride.value - 0.55f) / 0.35f).coerceIn(0f, 1f) }
                     .focusRequester(focus)
                     .semantics { contentDescription = words.nickname },
             textStyle = style,
-            singleLine = true,
+            lineLimits = TextFieldLineLimits.SingleLine,
             cursorBrush = SolidColor(colors.accent),
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = { state.endRename(save = true, text = value.text) }),
+            onKeyboardAction = { state.endRename(save = true, text = field.text.toString()) },
         )
     }
 }

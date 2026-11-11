@@ -119,7 +119,7 @@ class DockGeometryTest {
     }
 
     @Test
-    fun `the outline has no kink anywhere: rest, swell, peek, rename and list`() {
+    fun `the outline has no kink anywhere - rest, swell, peek, rename and list`() {
         val s = scene(412f)
         val o = DockOutline()
         buildOutline(o, s.strip, null, 0f, 0f, 412f, shoulders = true)

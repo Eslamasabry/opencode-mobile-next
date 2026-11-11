@@ -87,7 +87,7 @@ class DockGestureTest {
     }
 
     @Test
-    fun `sliding onto a swell target and lifting runs it; a mini ring opens that sub-agent`() {
+    fun `sliding onto a swell target and lifting runs it, a mini ring opens that sub-agent`() {
         val h = Hits(swellOpen = true)
         val g = DockGesture()
         g.down(DockZone.Ring, x, 260f, 0L, h)
@@ -107,7 +107,7 @@ class DockGestureTest {
     }
 
     @Test
-    fun `lifting in the swell's empty part keeps it open for taps; a tap on a target then runs it`() {
+    fun `lifting in the swell's empty part keeps it open for taps, a tap on a target then runs it`() {
         val h = Hits(swellOpen = true)
         val g = DockGesture()
         g.down(DockZone.Ring, x, 260f, 0L, h)
@@ -124,7 +124,7 @@ class DockGestureTest {
     }
 
     @Test
-    fun `a still hold shows the swell, then opens the peek; lifting without moving keeps the peek and changes nothing`() {
+    fun `a still hold shows the swell, then opens the peek, lifting without moving keeps the peek and changes nothing`() {
         val h = Hits()
         val g = DockGesture()
         g.down(DockZone.Ring, x, 132f, 0L, h)
@@ -160,7 +160,7 @@ class DockGestureTest {
     }
 
     @Test
-    fun `after the peek, a move along the strip picks the ring up; the drop reports the index and the pin`() {
+    fun `after the peek, a move along the strip picks the ring up, the drop reports the index and the pin`() {
         val h = Hits()
         val g = DockGesture()
         g.down(DockZone.Ring, x, 260f, 0L, h)
@@ -178,7 +178,7 @@ class DockGestureTest {
     }
 
     @Test
-    fun `a scrub never reorders: only a hold first picks a ring up`() {
+    fun `a scrub never reorders - only a hold first picks a ring up`() {
         val h = Hits()
         val g = DockGesture()
         g.down(DockZone.Ring, x, 260f, 0L, h)
@@ -188,7 +188,7 @@ class DockGestureTest {
     }
 
     @Test
-    fun `the nub: a tap brings the dock back, a drag along the edge moves it, a drag in brings it out`() {
+    fun `the nub - a tap brings the dock back, a drag along the edge moves it, a drag in brings it out`() {
         val h = Hits()
         val tap = DockGesture()
         tap.down(DockZone.Nub, 405f, 300f, 0L, h)
@@ -219,7 +219,7 @@ class DockGestureTest {
     }
 
     @Test
-    fun `the foot's tap starts a new conversation; a drag off it does nothing`() {
+    fun `the foot's tap starts a new conversation, a drag off it does nothing`() {
         val h = Hits()
         val g = DockGesture()
         g.down(DockZone.Foot, x, 500f, 0L, h)

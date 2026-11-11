@@ -159,7 +159,7 @@ class KitEdgeDockLooksTest {
     }
 
     @Test
-    fun `the swell while scrubbing: a middle ring, the first and the last, with 3 and 5 sub-agents, a request`() {
+    fun `the swell while scrubbing - a middle ring, the first and the last, with 3 and 5 sub-agents, a request`() {
         for (w in listOf(360, 412)) {
             shoot(Shot("scrub-middle", w) { it.openSwell(SwellKind.Scrub, 1) })
             shoot(Shot("scrub-first-subs3", w) { it.openSwell(SwellKind.Scrub, 0) })
