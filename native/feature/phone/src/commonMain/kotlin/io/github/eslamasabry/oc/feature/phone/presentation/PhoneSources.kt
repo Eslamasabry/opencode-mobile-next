@@ -63,6 +63,19 @@ public data class PhoneServerFacts(
      * 2 has not confirmed them yet (the profile's two migration marks). The page offers the move.
      */
     val needsOpenCode2Move: Boolean = false,
+    /** The heat guard holds the AI Team / server of this phone, or null when it holds nothing. */
+    val heat: PhoneHeatFacts? = null,
+)
+
+/**
+ * What the heat guard holds on this phone (Flutter `_heat`): [stopped] = very hot, the server itself was stopped;
+ * otherwise paused. [resumesByItself]: the person's automation setting lets the guard give it back. [resumeAt]: when the
+ * cool-down wait ends, null while the phone is still hot.
+ */
+public data class PhoneHeatFacts(
+    val stopped: Boolean,
+    val resumesByItself: Boolean,
+    val resumeAt: kotlin.time.Instant? = null,
 )
 
 /** Where the native crash recovery stands (plan 11 §6.3: attempt N of 3, 1 s doubling to 60 s). */

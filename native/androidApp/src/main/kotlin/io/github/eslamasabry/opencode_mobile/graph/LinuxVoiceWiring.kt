@@ -79,6 +79,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -136,8 +137,25 @@ object LinuxRuntimeWiring {
     @Provides fun linuxSetupSource(setup: NativePhoneSetup): LinuxSetupSource = setup
 
     @Provides
-    fun phoneServerSource(runtime: BuiltinRuntime, setup: NativePhoneSetup): PhoneServerSource =
-        runtime.serverSource(setup::update)
+    fun phoneServerSource(
+        runtime: BuiltinRuntime,
+        setup: NativePhoneSetup,
+        thermal: ThermalRuntime,
+        appScope: AppCoroutineScope,
+    ): PhoneServerSource {
+        val base = runtime.serverSource(setup::update)
+        // The heat guard's hold rides on the same facts (Flutter `_heat`): "Paused, your phone is warm".
+        return object : PhoneServerSource by base {
+            override val facts: StateFlow<PhoneServerFacts> =
+                kotlinx.coroutines.flow
+                    .combine(base.facts, thermal.heat) { f, h -> f.copy(heat = h) }
+                    .stateIn(
+                        kotlinx.coroutines.CoroutineScope(appScope.coroutineContext),
+                        kotlinx.coroutines.flow.SharingStarted.Eagerly,
+                        base.facts.value.copy(heat = thermal.heat.value),
+                    )
+        }
+    }
 }
 
 /**
