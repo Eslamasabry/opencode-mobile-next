@@ -424,7 +424,7 @@ public fun ThisPhoneScreen(
             }
             Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
             PhoneDetailsPanel(state, actions)
-            if (state.storage != null || state.storageSupported || state.storageFailed) KitExpandRow(
+            if (state.storage != null || state.storageSupported || state.storageFailed || state.measuringApp) KitExpandRow(
                 title = stringResource(Res.string.stateStorageTitle), expanded = storageOpen,
                 onExpandedChange = { storageOpen = it }, leading = KitIcons.storage,
             ) {
@@ -463,19 +463,21 @@ public fun ThisPhoneScreen(
                                 storage.savedServers,
                             )
                     )
-                    KitRow(
-                        title = stringResource(Res.string.stateStorageRefresh),
-                        onClick = actions::refreshStorage,
-                    )
                 }
             }
-            if (state.storageFailed)
+            // The first reading is still running: say so instead of an empty fold.
+            if (state.storage == null && state.measuringApp)
+                KitNotice(message = stringResource(Res.string.andrStorageMeasuring), liveRegion = false)
+            // A real failure says what could not be done, with a Try again that measures again (not a dismiss X).
+            if (state.storageFailed && !state.measuringApp)
                 KitNotice(
                     message = stringResource(Res.string.stateStorageFailed),
-                    dismiss =
-                        KitLineAction(
-                            stringResource(Res.string.stateStorageRefresh),
-                            actions::refreshStorage,
+                    actions =
+                        listOf(
+                            KitLineAction(
+                                stringResource(Res.string.stateStorageRefresh),
+                                actions::refreshStorage,
+                            )
                         ),
                 )
             if (state.storageSupported) {
@@ -507,6 +509,8 @@ public fun ThisPhoneScreen(
                         else StatusTone.Neutral,
                     notes =
                         when {
+                            // The fold's rows above already give Ubuntu's and each project's size.
+                            state.storage != null -> emptyList()
                             host != null ->
                                 listOf(
                                     stringResource(
@@ -522,11 +526,11 @@ public fun ThisPhoneScreen(
                     actions =
                         listOf(
                             KitLineAction(
-                                if (state.measuringStorage)
+                                if (state.measuringStorage || state.measuringApp)
                                     stringResource(Res.string.andrStorageMeasuring)
                                 else stringResource(Res.string.andrStorageMeasure),
                                 actions::measureStorage,
-                                enabled = !state.measuringStorage,
+                                enabled = !state.measuringStorage && !state.measuringApp,
                                 disabledReason = stringResource(Res.string.andrStorageMeasuring),
                             )
                         ),
