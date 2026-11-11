@@ -61,6 +61,10 @@ public data class AgentsUi(
     val unreadComputers: kotlinx.collections.immutable.ImmutableSet<ProfileId> = kotlinx.collections.immutable.persistentSetOf(),
     /** The agent whose sheet is open (its actions: install, sign in, sign out, earlier version, remove). */
     val sheetAgent: String? = null,
+    /** The agent whose phone check is running now, and the agent whose last check failed with why. */
+    val checkingAgent: String? = null,
+    val checkFailedAgent: String? = null,
+    val checkFailure: io.github.eslamasabry.oc.engine.agents.check.PhoneCheckFailure? = null,
     val resettingSignIns: Boolean = false,
     val resetFailed: Boolean = false,
     val signingOutAgent: PhoneAgentRow? = null,
@@ -135,6 +139,12 @@ public interface AgentsActions {
     public fun dismissInstall() {}
 
     public fun signInPhone(id: String) {}
+
+    /** Runs the phone check for [id] (the tile's "Check" and the sheet's primary). */
+    public fun checkPhoneAgent(id: String) {}
+
+    /** Starts the stopped agent helper again by hand ("Resume {agent}"). */
+    public fun resumePhoneAgent(id: String) {}
 
     public fun installPhone(id: String) {}
 

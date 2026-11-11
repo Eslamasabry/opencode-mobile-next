@@ -21,6 +21,7 @@ import io.github.eslamasabry.oc.engine.agents.auth.AuthProjectionJson
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentArchitecture
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentAvailability
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
+import io.github.eslamasabry.oc.engine.agents.catalog.AgentPins
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentDescriptor
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentSignInMethod
 import io.github.eslamasabry.oc.engine.agents.diagnostics.AgentHelperStatus
@@ -72,6 +73,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -115,6 +117,59 @@ class AppPhoneAgents(
                 guard = setupJobs.guard,
             )
         }
+
+    /** What the phone check needs to know about this phone, or null when it cannot run here. */
+    internal class CheckSite(
+        val owner: ProfileId,
+        val agent: AgentDescriptor,
+        val architecture: AgentArchitecture,
+    )
+
+    internal fun checkSite(id: String): CheckSite? {
+        val owner = agentOwner(ownerId()) ?: return null
+        val agent = catalog.byId(AgentId(id))?.takeIf { it.recipe != null } ?: return null
+        return CheckSite(owner, agent, architecture() ?: return null)
+    }
+
+    private fun gatePrefs(owner: ProfileId) = KvAgentPrefs(stores.prefs, stores.lanes.forProfile(owner))
+
+    /** The proof stored for [site]'s agent is dropped before a check, as Flutter did (a failed check proves nothing). */
+    internal suspend fun clearGate(site: CheckSite): Outcome<Unit> {
+        val prefs = gatePrefs(site.owner)
+        val gates = LinkedHashMap<String, JsonElement>(PhoneGate.read(prefs, site.owner)).apply { remove(site.agent.id.raw) }
+        forgetVersion(site)
+        return PhoneGate.write(prefs, site.owner, gates)
+    }
+
+    /** `oc.agentPhoneGate.<owner>` entry for a passed check, the way Flutter stored it. */
+    internal suspend fun writeGate(site: CheckSite): Outcome<Unit> {
+        val prefs = gatePrefs(site.owner)
+        val gates = LinkedHashMap<String, JsonElement>(PhoneGate.read(prefs, site.owner))
+        gates[site.agent.id.raw] =
+            PhoneGate.entry(
+                PhoneGate.fingerprint(site.agent, site.architecture, AgentPins.builtIn),
+                site.architecture,
+                site.agent.recipe!!.version,
+            )
+        return PhoneGate.write(prefs, site.owner, gates)
+    }
+
+    internal fun forgetVersion(site: CheckSite) {
+        synchronized(admission) { versions.remove(site.owner to site.agent.id) }
+    }
+
+    /** The pinned version runs and the shared project folder is usable: the check's Version step. */
+    internal suspend fun pinnedRuns(site: CheckSite): Boolean {
+        forgetVersion(site)
+        val recipe = site.agent.recipe ?: return false
+        val read =
+            native {
+                val version = linux.agentHost.checks.version(site.owner.raw, recipe.executable, recipe.version)
+                val shared = linux.agentHost.checks.workspace(site.owner.raw)["shared"] == true
+                version["installed"] == true && shared
+            }
+        return (read as? Outcome.Ok)?.value == true
+    }
 
     private fun ownerId(): ProfileId? =
         try {
@@ -249,9 +304,11 @@ class AppPhoneAgents(
         val installing = shown?.phase == PhoneAgentInstallPhase.Installing
         val rows = native {
             val installed = linux.installed
+            var helperRunning: Boolean? = null
             val helper =
                 if (authOwner != null && synchronized(admission) { authOwner !in denied }) {
                     val record = linux.agentHost.status(authOwner.raw)
+                    helperRunning = record["running"] as? Boolean
                     AgentHelperStatus.fromRecord(
                         JsonObject(
                             record.mapValues { (_, value) ->
@@ -319,6 +376,7 @@ class AppPhoneAgents(
                                                             PhoneAgentRules.foundVersion(version),
                                                         ),
                                                 signIn = signIn,
+                                                helperRunning = helperRunning,
                                             )
                                         } ?: PhoneAgentStatus.Unavailable
                                 }

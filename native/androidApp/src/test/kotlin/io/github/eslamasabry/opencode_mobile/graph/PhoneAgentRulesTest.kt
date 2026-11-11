@@ -111,4 +111,21 @@ class PhoneAgentRulesTest {
         assertFalse(PhoneAgentRules.isHelperProfile("abc-agents", "other"))
         assertFalse(PhoneAgentRules.isHelperProfile("abc", "abc"))
     }
+
+    // G3: a Ready tile never changes when the helper is dead.
+    @Test
+    fun `a proved signed-in agent whose helper is not running is stopped, not ready`() {
+        val q = PhoneAgentRules.qualified(codex, arm, null, codex.recipe!!.version)
+        assertEquals(PhoneAgentStatus.Stopped, PhoneAgentRules.status(codex, arm, true, true, q, AgentSignInPhase.SignedIn, helperRunning = false))
+        assertEquals(PhoneAgentStatus.Ready, PhoneAgentRules.status(codex, arm, true, true, q, AgentSignInPhase.SignedIn, helperRunning = true))
+        assertEquals(PhoneAgentStatus.Ready, PhoneAgentRules.status(codex, arm, true, true, q, AgentSignInPhase.SignedIn, helperRunning = null))
+    }
+
+    @Test
+    fun `an agent without proof asks for the phone check before it can be called stopped`() {
+        assertEquals(
+            PhoneAgentStatus.PhoneCheck,
+            PhoneAgentRules.status(claude, arm, true, true, false, AgentSignInPhase.SignedIn, helperRunning = false),
+        )
+    }
 }

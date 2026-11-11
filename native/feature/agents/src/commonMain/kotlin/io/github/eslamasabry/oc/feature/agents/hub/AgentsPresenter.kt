@@ -6,6 +6,7 @@ import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.engine.agents.account.AgentAccountController
+import io.github.eslamasabry.oc.engine.agents.check.PhoneCheckFailure
 import kotlin.time.Clock
 import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.collections.immutable.toPersistentSet
@@ -33,6 +34,7 @@ public class AgentsPresenter(
     private val openChat: (ConversationRef) -> Unit,
     private val openComputerPage: (ProfileId) -> Unit = {},
     private val phoneHost: PhoneAgentHostStarter? = null,
+    private val checker: PhoneAgentChecker? = null,
     private val accounts: AgentAccounts? = null,
     private val clock: Clock? = null,
     private val drafts: AgentHandoffDrafts? = null,
@@ -568,10 +570,52 @@ public class AgentsPresenter(
      * helper is never restarted in a loop.
      */
     private fun restartStoppedOnce(phoneState: PhoneAgentsState) {
-        val stopped = phoneState.helperStoppedUnexpectedly || phoneState.helperMayHaveBeenStoppedByAndroid
+        val stopped =
+            phoneState.helperStoppedUnexpectedly ||
+                phoneState.helperMayHaveBeenStoppedByAndroid ||
+                phoneState.agents.any { it.status == PhoneAgentStatus.Stopped }
         if (!stopped || restartedStopped || connectJob?.isActive == true || local.value.helperConnectFailed) return
         restartedStopped = true
         connectHelper()
+    }
+
+    /**
+     * "Resume {agent}": the person's own tap starts the helper again, whatever the page tried before (the one automatic
+     * restart is spent or not, this is the way forward after it).
+     */
+    override fun resumePhoneAgent(id: String) {
+        if (phoneHost == null || !connectable(phone.state.value)) return
+        if (phone.state.value.agents.none { it.id == id && it.status == PhoneAgentStatus.Stopped }) return
+        local.update { it.copy(sheetAgent = null) }
+        connectHelper()
+    }
+
+    /**
+     * "Check {agent}": the phone check for one agent that is not yet qualified. One check runs at a time; a failed one
+     * names why (the sheet shows it) and the same act tries again. Nothing else on the page waits for it.
+     */
+    override fun checkPhoneAgent(id: String) {
+        val run = checker ?: return
+        if (local.value.checkingAgent != null || local.value.busy) return
+        if (phone.state.value.agents.none { it.id == id && it.status == PhoneAgentStatus.PhoneCheck }) return
+        local.update { it.copy(checkingAgent = id, checkFailedAgent = null, checkFailure = null) }
+        scope.launch {
+            val answer =
+                when (val result = run.check(id)) {
+                    is Outcome.Ok -> result.value
+                    is Outcome.Failed -> PhoneCheckFailure.Unavailable
+                }
+            local.update {
+                it.copy(
+                    checkingAgent = null,
+                    checkFailedAgent = if (answer != null) id else null,
+                    checkFailure = answer,
+                )
+            }
+            phone.refresh()
+            // The check started the helper: the conversations connect as they do after an install.
+            if (answer == null && connectable(phone.state.value)) connectHelper()
+        }
     }
 
     private fun connectable(phoneState: PhoneAgentsState): Boolean =

@@ -104,6 +104,8 @@ internal object PhoneAgentRules {
         payloadPresent: Boolean,
         qualified: Boolean,
         signIn: AgentSignInPhase?,
+        /** Whether the agent helper runs now; null when it was not read (then nothing says it stopped). */
+        helperRunning: Boolean? = null,
     ): PhoneAgentStatus {
         val row =
             AgentReadiness.row(
@@ -118,6 +120,8 @@ internal object PhoneAgentRules {
                     hostAvailable = true,
                     architectureQualified = qualified,
                     signInPhase = signIn,
+                    // Flutter `inspect`: an agent the phone already proved, whose helper is not running.
+                    stoppedInBackground = qualified && helperRunning == false,
                 ),
             )
         return when (row.status) {
