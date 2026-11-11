@@ -3,16 +3,16 @@ package io.github.eslamasabry.oc.ui.kitchat.transcript
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.text.BasicText
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.design.type.TextTone
+import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
+import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 
 /**
@@ -35,14 +35,8 @@ public fun KitSteerNote(
         verticalArrangement = Arrangement.spacedBy(0.dp),
         itemVerticalAlignment = Alignment.CenterVertically,
     ) {
-        BasicText(
-            text,
-            style =
-                MaterialTheme.typography.bodyMedium.copy(
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textDirection = TextDirection.Content,
-                ),
-        )
+        // A note of the transcript: the kit's secondary type and tone (KitText sets the direction from the words).
+        KitText(text, role = TypeRole.Secondary, tone = TextTone.Secondary)
         if (onStop != null)
             KitButton(
                 stopLabel,
