@@ -274,7 +274,7 @@ class ChatWordsGlassTest {
         assertTrue(wordsMean <= WORDS_MEAN && wordsMax <= WORDS_MAX, "bright rows show behind the placeholder: mean $wordsMean, max $wordsMax of 255")
         // At the box's top edge, beside the jump pill: the glass still bends real content.
         val left = box.left.value + 12f
-        val right = box.left.value + box.width.value / 4f
+        val right = box.left.value + (box.right - box.left).value / 4f
         val (edgeMean, _) = diff(bright.image, none.image, left, box.top.value + 1f, right, box.top.value + 5f)
         println("top edge: mean $edgeMean")
         assertTrue(edgeMean >= EDGE_MEAN, "the box's top edge shows nothing of the rows behind it: mean $edgeMean of 255")
@@ -285,7 +285,7 @@ class ChatWordsGlassTest {
         val bright = shot(dark(Style.Glass), LensPlatform(), bright = true, notice = true)
         val none = shot(dark(Style.Glass), LensPlatform(), bright = false, notice = true)
         val line = bright.status!!
-        assertTrue(line.height > 8.dp, "the line shows: $line")
+        assertTrue(line.bottom - line.top > 8.dp, "the line shows: $line")
         assertTrue(bright.rows.any { it.top < line.bottom }, "rows scrolled under the line: ${bright.rows.map { it.top..it.bottom }} line $line")
         val (mean, max) = diff(bright.image, none.image, line.left.value, line.top.value, line.right.value, line.bottom.value)
         println("notice: mean $mean max $max over $line")
