@@ -518,7 +518,10 @@ extension _ConnectionControllerStatusImpl on ConnectionController {
                 ServerBackend.paseo => paseoServerCapabilities,
                 _ => api2ServerCapabilities,
               })
-          .withGenUi(_genUiEffective);
+          .withGenUi(
+            _genUiEffective,
+            customProviders: _customProvidersEffective,
+          );
 
   void _acceptRunningServerVersion(String? rawVersion) {
     final next = rawVersion?.trim() ?? '';

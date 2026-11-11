@@ -11,6 +11,7 @@ import 'chat/work_steps.dart';
 import 'guide/guide.dart';
 import 'preview/dev_preview.dart';
 import 'servers/capabilities.dart';
+import 'servers/custom_provider.dart';
 import 'servers/phone_setup_progress.dart';
 import 'servers/server_trust.dart';
 import 'servers/setup_inventory.dart';
@@ -38,6 +39,7 @@ List<CatalogComponent> allComponents() => [
   usageWidgetSettings(),
   kitWindowRow(),
   serverCapabilities(),
+  customProviderScreen(),
   devPreview(),
   serverTrustEditor(),
   serverTrustWarning(),

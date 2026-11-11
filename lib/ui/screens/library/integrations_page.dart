@@ -15,6 +15,14 @@ extension _IntegrationsPage on _IntegrationsScreenState {
         _showMcp &&
         _catalogAvailable &&
         !(_servers != null && _servers!.isEmpty);
+    // Declaring an endpoint the catalog does not list: only where the app owns
+    // the server's configuration (the phone engine), so the action exists at
+    // all only when the capability does.
+    final canAddProvider = _canAddProvider;
+    final providerAddInList =
+        widget.embedded &&
+        canAddProvider &&
+        !(_integrations != null && _integrations!.isEmpty);
     return KitScreen(
       width: KitScreenWidth.list,
       topBar: widget.embedded
@@ -36,6 +44,13 @@ extension _IntegrationsPage on _IntegrationsScreenState {
                     )
                   : null,
               actions: [
+                if (canAddProvider)
+                  KitAction(
+                    key: const ValueKey('add-provider'),
+                    label: l10n.providerSetupAdd,
+                    icon: AppIconography.add,
+                    onPressed: _openCustomProviderSetup,
+                  ),
                 if (_showMcp && _catalogAvailable)
                   KitAction(
                     key: const ValueKey('add-mcp-server'),
@@ -82,6 +97,24 @@ extension _IntegrationsPage on _IntegrationsScreenState {
                       icon: AppIconography.add,
                       expand: false,
                       onPressed: _openMcpAdd,
+                    ),
+                  ),
+                ),
+              if (providerAddInList)
+                Padding(
+                  padding: EdgeInsetsDirectional.only(
+                    start: tokens.gutter,
+                    end: tokens.gutter,
+                    top: tokens.space3,
+                  ),
+                  child: Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: KitButton.secondary(
+                      key: const ValueKey('add-provider-in-list'),
+                      label: l10n.providerSetupAdd,
+                      icon: AppIconography.add,
+                      expand: false,
+                      onPressed: _openCustomProviderSetup,
                     ),
                   ),
                 ),
@@ -240,6 +273,13 @@ extension _IntegrationsPage on _IntegrationsScreenState {
           title: l10n.e7LibraryNoProviderConnectionsAvailable,
           body: l10n.e7LibraryThisServerDidNotReturnAnyProvider,
           tertiary: [
+            if (_canAddProvider)
+              KitAction(
+                key: const ValueKey('add-provider-empty'),
+                label: l10n.providerSetupAdd,
+                icon: AppIconography.add,
+                onPressed: _openCustomProviderSetup,
+              ),
             KitAction(
               label: l10n.globalSessionsRefresh,
               onPressed: _retryIntegrations,

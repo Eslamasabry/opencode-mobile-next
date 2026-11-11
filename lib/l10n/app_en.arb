@@ -41744,5 +41744,139 @@
   "teamRefusalRestartResendNext": "Nothing to do. Work already done is kept.",
   "@teamRefusalRestartResendNext": {
     "description": "Way forward for engine code restartResend"
+  },
+  "providerSetupTitle": "Add a provider",
+  "@providerSetupTitle": {
+    "description": "Add a provider: the screen title for declaring an endpoint OpenCode's catalog does not list."
+  },
+  "providerSetupIntro": "Describe an endpoint OpenCode's catalog doesn't list. Its key is added afterwards on the provider's own row.",
+  "@providerSetupIntro": {
+    "description": "Add a provider: why this page exists and what it does not do (no key is typed here)."
+  },
+  "providerSetupID": "Provider ID",
+  "@providerSetupID": {
+    "description": "Add a provider: label of the ID field, used in model names."
+  },
+  "providerSetupIDHelper": "Lowercase letters, digits, dot, dash or underscore.",
+  "@providerSetupIDHelper": {
+    "description": "Add a provider: which characters the ID may hold."
+  },
+  "providerSetupIDRequired": "Enter a provider ID",
+  "@providerSetupIDRequired": {
+    "description": "Add a provider: the ID field is empty."
+  },
+  "providerSetupIDInvalid": "Use lowercase letters, digits, dot, dash or underscore",
+  "@providerSetupIDInvalid": {
+    "description": "Add a provider: the ID has a character that cannot be written to the configuration."
+  },
+  "providerSetupNameRequired": "Enter a name",
+  "@providerSetupNameRequired": {
+    "description": "Add a provider: the name field is empty."
+  },
+  "providerSetupNameHint": "My endpoint",
+  "@providerSetupNameHint": {
+    "description": "Field example: the name of the provider being added."
+  },
+  "providerSetupBaseURL": "Endpoint address",
+  "@providerSetupBaseURL": {
+    "description": "Add a provider: label of the address field."
+  },
+  "providerSetupBaseURLHelper": "The base address of an OpenAI-compatible API. Most end in v1.",
+  "@providerSetupBaseURLHelper": {
+    "description": "Add a provider: what kind of address belongs in the field."
+  },
+  "providerSetupModels": "Models",
+  "@providerSetupModels": {
+    "description": "Add a provider: label of the model IDs field."
+  },
+  "providerSetupModelsHint": "llama-3.1-70b",
+  "@providerSetupModelsHint": {
+    "description": "Field example: a model ID the endpoint names."
+  },
+  "providerSetupModelsHelper": "The model IDs this endpoint answers to, one per line.",
+  "@providerSetupModelsHelper": {
+    "description": "Add a provider: how to enter several model IDs."
+  },
+  "providerSetupModelsRequired": "Add at least one model ID",
+  "@providerSetupModelsRequired": {
+    "description": "Add a provider: a provider with no model would offer nothing to pick."
+  },
+  "providerSetupAdd": "Add provider",
+  "@providerSetupAdd": {
+    "description": "Add a provider: the primary button before a name is typed."
+  },
+  "providerSetupSaveFailed": "Couldn't add the provider",
+  "@providerSetupSaveFailed": {
+    "description": "Add a provider: status line when saving failed; the reason follows."
+  },
+  "providerSetupDiscardTitle": "Discard this provider?",
+  "@providerSetupDiscardTitle": {
+    "description": "Add a provider: question when leaving with unsaved input."
+  },
+  "providerSetupDiscardBody": "What you typed here isn't saved and will be lost.",
+  "@providerSetupDiscardBody": {
+    "description": "Add a provider: body of the discard question."
+  },
+  "providerSetupDiscardConfirm": "Discard provider",
+  "@providerSetupDiscardConfirm": {
+    "description": "Add a provider: confirm button of the discard question."
+  },
+  "providerSetupRestartBody": "OpenCode reads its configuration when it starts, so it restarts to load the provider.",
+  "@providerSetupRestartBody": {
+    "description": "Add a provider: why a restart is needed after the declaration is written."
+  },
+  "providerSetupRestartNeeded": "Restart OpenCode on this phone to load it.",
+  "@providerSetupRestartNeeded": {
+    "description": "Add a provider: no server owner to restart with, so the person has to do it."
+  },
+  "providerSetupRestarting": "Restarting the server",
+  "@providerSetupRestarting": {
+    "description": "Add a provider: the close button's reason while a restart runs."
+  },
+  "providerSetupSaved": "Saved {name}",
+  "@providerSetupSaved": {
+    "description": "Add a provider: the declaration is written, the server has not restarted yet.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "the provider name typed"
+      }
+    }
+  },
+  "providerSetupSavedLoaded": "Added {name}",
+  "@providerSetupSavedLoaded": {
+    "description": "Add a provider: the server restarted and now lists the provider.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "the provider name typed"
+      }
+    }
+  },
+  "providerSetupNextStep": "It now shows in Providers. Connect its key there to use it.",
+  "@providerSetupNextStep": {
+    "description": "Add a provider: what is left after the provider is loaded."
+  },
+  "providerSetupConnectHint": "Find {id} in Providers and connect its key there. The key is never written to the configuration.",
+  "@providerSetupConnectHint": {
+    "description": "Add a provider: where the credential goes, and that it is not in the file.",
+    "placeholders": {
+      "id": {
+        "type": "String",
+        "example": "the provider ID typed"
+      }
+    }
+  },
+  "providerSetupNotLoaded": "OpenCode came back but doesn't list the provider yet. Restart it again.",
+  "@providerSetupNotLoaded": {
+    "description": "Add a provider: the restart finished without a loaded provider."
+  },
+  "providerSetupUnavailableTitle": "Can't add providers",
+  "@providerSetupUnavailableTitle": {
+    "description": "Add a provider: the server keeps its own configuration, so the app cannot declare one."
+  },
+  "providerSetupUnavailableBody": "This server keeps its own configuration. Declare the provider in its opencode.json on the computer; it then shows under Providers.",
+  "@providerSetupUnavailableBody": {
+    "description": "Add a provider: what to do instead on a server the app does not own."
   }
 }

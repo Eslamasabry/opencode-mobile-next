@@ -855,4 +855,75 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  group('declaring a provider the catalog does not list', () {
+    // OpenCode 2 has no endpoint that adds a provider: it is declared in the
+    // server's own opencode.json, a file the app only owns on the phone's
+    // engine. Elsewhere there is nowhere to write it, so there is no offer.
+    testWidgets('the offer exists only where the app can write the config', (
+      tester,
+    ) async {
+      final repository = IntegrationsRepository()
+        ..integrations = const [
+          IntegrationInfo(
+            id: 'cloud',
+            name: 'Cloud Provider',
+            methods: [IntegrationMethodInfo(type: 'key', label: 'API key')],
+            connectionCount: 0,
+          ),
+        ];
+      final supported = await integrationsController(
+        repository,
+        withCustomProviders: true,
+      );
+      addTearDown(supported.dispose);
+      await tester.pumpWidget(app(supported));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('add-provider')), findsOneWidget);
+
+      final unsupported = await integrationsController(repository);
+      addTearDown(unsupported.dispose);
+      await tester.pumpWidget(app(unsupported));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('add-provider')), findsNothing);
+      // The ordinary provider list is still there: nothing else is gated.
+      expect(find.text('Cloud Provider'), findsOneWidget);
+    });
+
+    testWidgets('an empty list offers it too, not only a refresh', (
+      tester,
+    ) async {
+      final controller = await integrationsController(
+        IntegrationsRepository(),
+        withCustomProviders: true,
+      );
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(app(controller));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('providers-empty')), findsOneWidget);
+      expect(find.byKey(const ValueKey('add-provider-empty')), findsOneWidget);
+    });
+
+    testWidgets('opening it shows the declaration form', (tester) async {
+      final controller = await integrationsController(
+        IntegrationsRepository()
+          ..integrations = const [
+            IntegrationInfo(
+              id: 'cloud',
+              name: 'Cloud Provider',
+              methods: [IntegrationMethodInfo(type: 'key', label: 'API key')],
+              connectionCount: 0,
+            ),
+          ],
+        withCustomProviders: true,
+      );
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(app(controller));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('add-provider')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('provider-setup-form')), findsOneWidget);
+      expect(find.text('Add provider'), findsWidgets);
+    });
+  });
 }

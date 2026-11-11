@@ -34136,4 +34136,108 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get teamRefusalRestartResendNext =>
       'Nothing to do. Work already done is kept.';
+
+  @override
+  String get providerSetupTitle => 'Add a provider';
+
+  @override
+  String get providerSetupIntro =>
+      'Describe an endpoint OpenCode\'s catalog doesn\'t list. Its key is added afterwards on the provider\'s own row.';
+
+  @override
+  String get providerSetupID => 'Provider ID';
+
+  @override
+  String get providerSetupIDHelper =>
+      'Lowercase letters, digits, dot, dash or underscore.';
+
+  @override
+  String get providerSetupIDRequired => 'Enter a provider ID';
+
+  @override
+  String get providerSetupIDInvalid =>
+      'Use lowercase letters, digits, dot, dash or underscore';
+
+  @override
+  String get providerSetupNameRequired => 'Enter a name';
+
+  @override
+  String get providerSetupNameHint => 'My endpoint';
+
+  @override
+  String get providerSetupBaseURL => 'Endpoint address';
+
+  @override
+  String get providerSetupBaseURLHelper =>
+      'The base address of an OpenAI-compatible API. Most end in v1.';
+
+  @override
+  String get providerSetupModels => 'Models';
+
+  @override
+  String get providerSetupModelsHint => 'llama-3.1-70b';
+
+  @override
+  String get providerSetupModelsHelper =>
+      'The model IDs this endpoint answers to, one per line.';
+
+  @override
+  String get providerSetupModelsRequired => 'Add at least one model ID';
+
+  @override
+  String get providerSetupAdd => 'Add provider';
+
+  @override
+  String get providerSetupSaveFailed => 'Couldn\'t add the provider';
+
+  @override
+  String get providerSetupDiscardTitle => 'Discard this provider?';
+
+  @override
+  String get providerSetupDiscardBody =>
+      'What you typed here isn\'t saved and will be lost.';
+
+  @override
+  String get providerSetupDiscardConfirm => 'Discard provider';
+
+  @override
+  String get providerSetupRestartBody =>
+      'OpenCode reads its configuration when it starts, so it restarts to load the provider.';
+
+  @override
+  String get providerSetupRestartNeeded =>
+      'Restart OpenCode on this phone to load it.';
+
+  @override
+  String get providerSetupRestarting => 'Restarting the server';
+
+  @override
+  String providerSetupSaved(String name) {
+    return 'Saved $name';
+  }
+
+  @override
+  String providerSetupSavedLoaded(String name) {
+    return 'Added $name';
+  }
+
+  @override
+  String get providerSetupNextStep =>
+      'It now shows in Providers. Connect its key there to use it.';
+
+  @override
+  String providerSetupConnectHint(String id) {
+    return 'Find $id in Providers and connect its key there. The key is never written to the configuration.';
+  }
+
+  @override
+  String get providerSetupNotLoaded =>
+      'OpenCode came back but doesn\'t list the provider yet. Restart it again.';
+
+  @override
+  String get providerSetupUnavailableTitle => 'Can\'t add providers';
+
+  @override
+  String get providerSetupUnavailableBody =>
+      'This server keeps its own configuration. Declare the provider in its opencode.json on the computer; it then shows under Providers.';
 }

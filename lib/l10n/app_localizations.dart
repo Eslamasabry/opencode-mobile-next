@@ -53803,6 +53803,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Nothing to do. Work already done is kept.'**
   String get teamRefusalRestartResendNext;
+
+  /// Add a provider: the screen title for declaring an endpoint OpenCode's catalog does not list.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a provider'**
+  String get providerSetupTitle;
+
+  /// Add a provider: why this page exists and what it does not do (no key is typed here).
+  ///
+  /// In en, this message translates to:
+  /// **'Describe an endpoint OpenCode\'s catalog doesn\'t list. Its key is added afterwards on the provider\'s own row.'**
+  String get providerSetupIntro;
+
+  /// Add a provider: label of the ID field, used in model names.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider ID'**
+  String get providerSetupID;
+
+  /// Add a provider: which characters the ID may hold.
+  ///
+  /// In en, this message translates to:
+  /// **'Lowercase letters, digits, dot, dash or underscore.'**
+  String get providerSetupIDHelper;
+
+  /// Add a provider: the ID field is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a provider ID'**
+  String get providerSetupIDRequired;
+
+  /// Add a provider: the ID has a character that cannot be written to the configuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Use lowercase letters, digits, dot, dash or underscore'**
+  String get providerSetupIDInvalid;
+
+  /// Add a provider: the name field is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a name'**
+  String get providerSetupNameRequired;
+
+  /// Field example: the name of the provider being added.
+  ///
+  /// In en, this message translates to:
+  /// **'My endpoint'**
+  String get providerSetupNameHint;
+
+  /// Add a provider: label of the address field.
+  ///
+  /// In en, this message translates to:
+  /// **'Endpoint address'**
+  String get providerSetupBaseURL;
+
+  /// Add a provider: what kind of address belongs in the field.
+  ///
+  /// In en, this message translates to:
+  /// **'The base address of an OpenAI-compatible API. Most end in v1.'**
+  String get providerSetupBaseURLHelper;
+
+  /// Add a provider: label of the model IDs field.
+  ///
+  /// In en, this message translates to:
+  /// **'Models'**
+  String get providerSetupModels;
+
+  /// Field example: a model ID the endpoint names.
+  ///
+  /// In en, this message translates to:
+  /// **'llama-3.1-70b'**
+  String get providerSetupModelsHint;
+
+  /// Add a provider: how to enter several model IDs.
+  ///
+  /// In en, this message translates to:
+  /// **'The model IDs this endpoint answers to, one per line.'**
+  String get providerSetupModelsHelper;
+
+  /// Add a provider: a provider with no model would offer nothing to pick.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least one model ID'**
+  String get providerSetupModelsRequired;
+
+  /// Add a provider: the primary button before a name is typed.
+  ///
+  /// In en, this message translates to:
+  /// **'Add provider'**
+  String get providerSetupAdd;
+
+  /// Add a provider: status line when saving failed; the reason follows.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t add the provider'**
+  String get providerSetupSaveFailed;
+
+  /// Add a provider: question when leaving with unsaved input.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard this provider?'**
+  String get providerSetupDiscardTitle;
+
+  /// Add a provider: body of the discard question.
+  ///
+  /// In en, this message translates to:
+  /// **'What you typed here isn\'t saved and will be lost.'**
+  String get providerSetupDiscardBody;
+
+  /// Add a provider: confirm button of the discard question.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard provider'**
+  String get providerSetupDiscardConfirm;
+
+  /// Add a provider: why a restart is needed after the declaration is written.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenCode reads its configuration when it starts, so it restarts to load the provider.'**
+  String get providerSetupRestartBody;
+
+  /// Add a provider: no server owner to restart with, so the person has to do it.
+  ///
+  /// In en, this message translates to:
+  /// **'Restart OpenCode on this phone to load it.'**
+  String get providerSetupRestartNeeded;
+
+  /// Add a provider: the close button's reason while a restart runs.
+  ///
+  /// In en, this message translates to:
+  /// **'Restarting the server'**
+  String get providerSetupRestarting;
+
+  /// Add a provider: the declaration is written, the server has not restarted yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {name}'**
+  String providerSetupSaved(String name);
+
+  /// Add a provider: the server restarted and now lists the provider.
+  ///
+  /// In en, this message translates to:
+  /// **'Added {name}'**
+  String providerSetupSavedLoaded(String name);
+
+  /// Add a provider: what is left after the provider is loaded.
+  ///
+  /// In en, this message translates to:
+  /// **'It now shows in Providers. Connect its key there to use it.'**
+  String get providerSetupNextStep;
+
+  /// Add a provider: where the credential goes, and that it is not in the file.
+  ///
+  /// In en, this message translates to:
+  /// **'Find {id} in Providers and connect its key there. The key is never written to the configuration.'**
+  String providerSetupConnectHint(String id);
+
+  /// Add a provider: the restart finished without a loaded provider.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenCode came back but doesn\'t list the provider yet. Restart it again.'**
+  String get providerSetupNotLoaded;
+
+  /// Add a provider: the server keeps its own configuration, so the app cannot declare one.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t add providers'**
+  String get providerSetupUnavailableTitle;
+
+  /// Add a provider: what to do instead on a server the app does not own.
+  ///
+  /// In en, this message translates to:
+  /// **'This server keeps its own configuration. Declare the provider in its opencode.json on the computer; it then shows under Providers.'**
+  String get providerSetupUnavailableBody;
 }
 
 class _AppLocalizationsDelegate

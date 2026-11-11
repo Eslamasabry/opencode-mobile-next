@@ -323,6 +323,17 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
   bool get _showMcp => widget.mode != IntegrationsMode.providers;
   bool get _showProviders => widget.mode != IntegrationsMode.mcp;
 
+  /// This server's configuration is one the app can write, so a provider the
+  /// catalog lacks can be declared from here.
+  bool get _customProviders => widget.controller.capabilities.customProviders;
+
+  /// A provider the catalog lacks can be declared from here: the provider
+  /// section shows, the catalog reads, and the server's config is writable.
+  bool get _canAddProvider =>
+      widget.mode != IntegrationsMode.mcp &&
+      _catalogAvailable &&
+      _customProviders;
+
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: Listenable.merge([

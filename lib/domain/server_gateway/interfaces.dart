@@ -414,6 +414,16 @@ abstract interface class McpRemovalGateway {
   Future<void> removeMcpServer(String name);
 }
 
+/// Optional custom-provider authoring for a server whose config the app can
+/// write (the built-in phone engine). Adding a provider is a config write;
+/// connecting its key stays with [IntegrationGateway].
+abstract interface class CustomProviderGateway {
+  /// Declares `providers.<id>` in the server's configuration. Does not touch
+  /// credentials, and does not prove the provider is loaded: a server that
+  /// must restart first reports [CustomProviderSaveResult.restartRequired].
+  Future<CustomProviderSaveResult> addCustomProvider(CustomProviderDraft draft);
+}
+
 /// Optional stored-credential management using IDs from integration metadata.
 /// Successful mutations do not establish which credential is active.
 abstract interface class IntegrationCredentialGateway {
