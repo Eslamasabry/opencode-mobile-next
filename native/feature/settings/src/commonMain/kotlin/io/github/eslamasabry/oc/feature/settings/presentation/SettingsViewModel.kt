@@ -79,6 +79,10 @@ public interface SettingsHost {
     /** R1: Report a problem's report and Send report (it says itself whether this build can send). */
     public val problemReport: ProblemReportSender?
         get() = null
+
+    /** The edge dock's on/off switch; null where the app draws no dock (no row). */
+    public val edgeDock: EdgeDockSetting?
+        get() = null
 }
 
 /**
@@ -113,6 +117,7 @@ public class SettingsViewModel(host: SettingsHost, private val nav: AppNavigator
             memoryPreview = host.memoryPreview,
             healthConsent = host.healthConsent,
             problemReport = host.problemReport,
+            edgeDock = host.edgeDock,
         )
 
     public val state: StateFlow<SettingsUi> = presenter.state

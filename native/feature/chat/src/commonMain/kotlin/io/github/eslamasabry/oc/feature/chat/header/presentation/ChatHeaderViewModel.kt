@@ -101,6 +101,8 @@ public class ChatHeaderViewModel(
 
     override fun openMenu(): Unit = presenter.openMenu()
 
+    override fun openParent(): Unit = presenter.openParent()
+
     override fun closeMenu(): Unit = presenter.closeMenu()
 
     override fun choose(action: HeaderAction): Unit = presenter.choose(action)

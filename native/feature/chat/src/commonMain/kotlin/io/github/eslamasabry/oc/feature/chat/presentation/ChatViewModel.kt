@@ -270,7 +270,8 @@ public class ChatViewModel(
     override fun restartAgent(): Unit = presenter.restartAgent()
 
     override fun openParent() {
-        world.parent.value?.let { nav.open(ChatRoute(it)) }
+        // Back to the parent: pops when it is right below (opened from its card), never stacks it twice.
+        world.parent.value?.let { nav.backToChat(it) }
     }
 
     override fun showSubagents(): Unit = nav.open(io.github.eslamasabry.oc.ui.routes.SessionRelationsRoute(world.ref))
