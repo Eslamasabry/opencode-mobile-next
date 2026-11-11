@@ -607,7 +607,8 @@ agentsInstallFailedUnknown	ae69ecfd4b
 agentsInstallFailedVersion	40a9a26978
 agentsInstallHint	530a7e7430
 agentsInstallInterruptedNow	f72ba95f4b
-agentsInstallNeedsSpace	8b76009563
+agentsInstallNeedsSpace	2f4ea4e8eb
+agentsInstallSpaceFits	e3ad9f4af8
 agentsInstalling	1648381cd1
 agentsLimitReset	b812cc3bd4
 agentsLimitUnknown	1d3b718c38

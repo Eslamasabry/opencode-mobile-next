@@ -64,6 +64,7 @@ import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgents
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentsState
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneDevice
 import io.github.eslamasabry.oc.feature.agents.hub.phoneInstallStep
+import io.github.eslamasabry.oc.feature.agents.hub.phoneSharedPartsInPlace
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
 import io.github.eslamasabry.opencode_mobile.PhoneAgentPayloads
 import io.github.eslamasabry.opencode_mobile.SetupRunner
@@ -478,13 +479,18 @@ class AppPhoneAgents(
     }
 
     /**
-     * What installing [id] needs free (the agent's download and unpacked files, the same rule the installer refuses
-     * by) and what the phone has. It reads no Linux and takes no lane, so the review can say it at once.
+     * What installing [id] needs free before it starts (the agent's own room, which every step of the job checks, plus
+     * the shared parts not yet on this phone at the job's per-step floor each) and what the phone has. It reads no
+     * Linux and takes no lane (the last read's rows say whether the shared parts are in place), so the review can say
+     * it at once.
      */
     override suspend fun installSpace(id: String): PhoneAgentSpace? {
         val owner = ownerId() ?: return null
         val abi = architecture() ?: return null
-        val needed = installation(owner).requiredBytes(AgentId(id), abi) ?: return null
+        val needed =
+            installation(owner)
+                .requiredBytesBeforeStart(AgentId(id), abi, phoneSharedPartsInPlace(state.value.agents))
+                ?: return null
         val free = setupJobs.freeBytes() ?: return null
         return PhoneAgentSpace(needed, free)
     }

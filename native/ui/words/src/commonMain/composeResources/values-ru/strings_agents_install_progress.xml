@@ -9,5 +9,6 @@
     <string name="agentsTileFailedDownload">Не установлено: загрузка не удалась</string>
     <string name="agentsTileFailedStopped">Не установлено: настройка остановилась</string>
     <string name="agentsTileFailedOther">Не установлено: настройка не удалась</string>
-    <string name="agentsInstallNeedsSpace">Для установки %1$s нужно %2$s свободного места, а на телефоне свободно %3$s. Освободите место и установите снова.</string>
+    <string name="agentsInstallNeedsSpace">Для установки %1$s нужно около %2$s свободного места, а на телефоне свободно %3$s. Освободите место и установите снова.</string>
+    <string name="agentsInstallSpaceFits">Нужно около %1$s свободного места; на телефоне свободно %2$s.</string>
 </resources>

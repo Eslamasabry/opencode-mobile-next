@@ -9,5 +9,6 @@
     <string name="agentsTileFailedDownload">Chưa cài đặt: tải xuống thất bại</string>
     <string name="agentsTileFailedStopped">Chưa cài đặt: thiết lập đã dừng</string>
     <string name="agentsTileFailedOther">Chưa cài đặt: thiết lập thất bại</string>
-    <string name="agentsInstallNeedsSpace">%1$s cần %2$s dung lượng trống để cài đặt, còn điện thoại này có %3$s trống. Hãy giải phóng dung lượng rồi cài đặt.</string>
+    <string name="agentsInstallNeedsSpace">%1$s cần khoảng %2$s dung lượng trống để cài đặt, còn điện thoại này có %3$s trống. Hãy giải phóng dung lượng rồi cài đặt.</string>
+    <string name="agentsInstallSpaceFits">Cần khoảng %1$s dung lượng trống; điện thoại này có %2$s trống.</string>
 </resources>

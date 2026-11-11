@@ -9,5 +9,6 @@
     <string name="agentsTileFailedDownload">Non installé : le téléchargement a échoué</string>
     <string name="agentsTileFailedStopped">Non installé : la configuration s’est arrêtée</string>
     <string name="agentsTileFailedOther">Non installé : la configuration a échoué</string>
-    <string name="agentsInstallNeedsSpace">%1$s a besoin de %2$s d’espace libre pour s’installer, et ce téléphone en a %3$s. Libérez de l’espace, puis installez-le.</string>
+    <string name="agentsInstallNeedsSpace">%1$s a besoin d’environ %2$s d’espace libre pour s’installer, et ce téléphone en a %3$s. Libérez de l’espace, puis installez-le.</string>
+    <string name="agentsInstallSpaceFits">Il faut environ %1$s d’espace libre ; ce téléphone en a %2$s.</string>
 </resources>

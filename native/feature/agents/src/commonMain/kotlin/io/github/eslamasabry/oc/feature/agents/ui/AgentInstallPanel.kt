@@ -87,6 +87,16 @@ internal fun AgentInstallPanel(
             if (agent.id == "gemini") KitNotice(stringResource(Res.string.agentsGeminiMigrationNote))
             if (size != null) KitText(stringResource(Res.string.agentsSetupSizeNote, size))
             if (needsPhoneSetup) KitNotice(stringResource(Res.string.agentsCatalogNeedsPhoneSetup))
+            // What the install needs, the shared parts this phone does not have yet included, and what it has.
+            val space = state.installSpace
+            if (space != null && !space.short)
+                KitText(
+                    stringResource(
+                        Res.string.agentsInstallSpaceFits,
+                        agentPayloadSize(space.neededBytes),
+                        agentPayloadSize(space.freeBytes),
+                    )
+                )
             if (short != null)
                 KitNotice(
                     stringResource(

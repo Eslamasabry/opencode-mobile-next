@@ -9,5 +9,6 @@
     <string name="agentsTileFailedDownload">لم يُثبَّت: تعذّر التنزيل</string>
     <string name="agentsTileFailedStopped">لم يُثبَّت: توقّف الإعداد</string>
     <string name="agentsTileFailedOther">لم يُثبَّت: فشل الإعداد</string>
-    <string name="agentsInstallNeedsSpace">يحتاج %1$s إلى %2$s من المساحة الفارغة للتثبيت، وفي هذا الهاتف %3$s فارغة. أفرِغ بعض المساحة ثم ثبّته.</string>
+    <string name="agentsInstallNeedsSpace">يحتاج %1$s إلى نحو %2$s من المساحة الفارغة للتثبيت، وفي هذا الهاتف %3$s فارغة. أفرِغ بعض المساحة ثم ثبّته.</string>
+    <string name="agentsInstallSpaceFits">يحتاج إلى نحو %1$s من المساحة الفارغة، وفي هذا الهاتف %2$s فارغة.</string>
 </resources>

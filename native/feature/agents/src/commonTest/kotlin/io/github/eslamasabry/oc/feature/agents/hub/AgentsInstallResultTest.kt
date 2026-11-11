@@ -214,6 +214,52 @@ class AgentsInstallResultTest {
         assertEquals(listOf("gemini"), phone.installs)
     }
 
+    /**
+     * B16's own numbers: 730 MB free, Gemini CLI's own room 300 MB, no phone agent installed yet. The shared parts
+     * (Linux packages, Node.js, the helper) are still to come, so the review must say it cannot fit and keep Install
+     * from starting; once another agent is installed only Gemini's own room is needed.
+     */
+    @Test
+    fun `B16 numbers - 730 MB free and nothing shared installed keeps Install from starting, with the reason`() = runTest {
+        val geminiOwn = 300_000_000L
+        val free = 730_000_000L
+        val fresh = persistentListOf(gemini, gemini.copy(id = "codex", name = "Codex"))
+        assertFalse(phoneSharedPartsInPlace(fresh))
+        val needed = io.github.eslamasabry.oc.engine.agents.install.AgentInstaller.withSharedParts(
+            geminiOwn,
+            phoneSharedPartsInPlace(fresh),
+        )
+        assertEquals(1_200_000_000L, needed)
+        val phone = JobPhone(gemini).apply { space = PhoneAgentSpace(needed, free) }
+        val presenter = presenter(phone)
+        presenter.requestInstall("gemini")
+        assertTrue(presenter.state.value.installSpace!!.short, "the review knows before the press")
+        presenter.installPhone("gemini")
+        assertTrue(phone.installs.isEmpty())
+        assertEquals(PhoneAgentInstallIssue.Space, presenter.state.value.installIssue)
+
+        // A row still being read proves nothing; an installed agent (any state past install) brought the shared parts.
+        assertFalse(phoneSharedPartsInPlace(persistentListOf(gemini.copy(status = PhoneAgentStatus.Checking))))
+        for (installed in
+            listOf(
+                PhoneAgentStatus.Ready,
+                PhoneAgentStatus.SignInNeeded,
+                PhoneAgentStatus.PhoneCheck,
+                PhoneAgentStatus.Stopped,
+                PhoneAgentStatus.Limit,
+            )) {
+            val rows = persistentListOf(gemini, gemini.copy(id = "codex", status = installed))
+            assertTrue(phoneSharedPartsInPlace(rows), installed.name)
+            assertFalse(
+                PhoneAgentSpace(
+                        io.github.eslamasabry.oc.engine.agents.install.AgentInstaller.withSharedParts(geminiOwn, true),
+                        free,
+                    )
+                    .short
+            )
+        }
+    }
+
     @Test
     fun `the running step and its bytes reach the tile, and a long quiet step says it is still working`() = runTest {
         val (phone, presenter) = installing()

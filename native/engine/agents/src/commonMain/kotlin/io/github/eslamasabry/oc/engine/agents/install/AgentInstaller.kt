@@ -381,6 +381,22 @@ public class AgentInstaller(
         return requiredSetupFreeBytes(download, artifact.installedBytes)
     }
 
+    /**
+     * What installing [agentId] needs free before the job starts, honestly: the setup job checks [requiredBytes] is
+     * free when each of its steps starts, so by the agent's own (last) step that much must still be left after the
+     * shared parts have taken theirs. When [sharedPartsInPlace] is false the shared parts (the Linux packages with
+     * Python, Node.js, and the agent helper) are counted at [SHARED_PART_BYTES] each: their sizes are not pinned, so
+     * each takes the job's own per-step floor and the figure can only err toward warning. Null when unknown.
+     */
+    public fun requiredBytesBeforeStart(
+        agentId: AgentId,
+        architecture: AgentArchitecture,
+        sharedPartsInPlace: Boolean,
+    ): Long? {
+        val own = requiredBytes(agentId, architecture) ?: return null
+        return withSharedParts(own, sharedPartsInPlace)
+    }
+
     private fun project(agent: AgentId, job: AgentSetupJob?): AgentSetupProgress {
         val phase =
             when (job?.state) {
@@ -413,5 +429,21 @@ public class AgentInstaller(
         public const val AGENT_USER: String = "agent-user"
         public const val AGENT_NODE: String = "agent-node"
         public const val AGENT_PASEO: String = "agent-paseo"
+
+        /** The shared parts an install may still have to add: Linux packages (with Python), Node.js, the helper. */
+        public const val SHARED_PARTS: Long = 3L
+
+        /**
+         * One shared part's room before it starts: the setup job's per-step floor (`SetupDiskSpace.MIN_INSTALL_BYTES`),
+         * used because the parts' installed sizes are not pinned.
+         */
+        public const val SHARED_PART_BYTES: Long = 300_000_000L
+
+        /** [own] (an agent's [requiredBytes]) plus the shared parts' room when they are not in place yet. */
+        public fun withSharedParts(own: Long, sharedPartsInPlace: Boolean): Long {
+            if (sharedPartsInPlace) return own
+            val shared = SHARED_PARTS * SHARED_PART_BYTES
+            return if (own >= Long.MAX_VALUE - shared) Long.MAX_VALUE else own + shared
+        }
     }
 }

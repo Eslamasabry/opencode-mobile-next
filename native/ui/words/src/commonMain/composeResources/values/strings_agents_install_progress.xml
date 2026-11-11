@@ -9,5 +9,6 @@
     <string name="agentsTileFailedDownload">Not installed: the download failed</string>
     <string name="agentsTileFailedStopped">Not installed: setup stopped</string>
     <string name="agentsTileFailedOther">Not installed: setup failed</string>
-    <string name="agentsInstallNeedsSpace">%1$s needs %2$s of free space to install, and this phone has %3$s free. Free up space, then install it.</string>
+    <string name="agentsInstallNeedsSpace">%1$s needs about %2$s of free space to install, and this phone has %3$s free. Free up space, then install it.</string>
+    <string name="agentsInstallSpaceFits">Needs about %1$s of free space; this phone has %2$s free.</string>
 </resources>

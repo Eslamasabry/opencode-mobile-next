@@ -9,5 +9,6 @@
     <string name="agentsTileFailedDownload">未安装：下载失败</string>
     <string name="agentsTileFailedStopped">未安装：设置已停止</string>
     <string name="agentsTileFailedOther">未安装：设置失败</string>
-    <string name="agentsInstallNeedsSpace">安装 %1$s 需要 %2$s 可用空间，这部手机只有 %3$s 可用。请先腾出空间，再安装。</string>
+    <string name="agentsInstallNeedsSpace">安装 %1$s 大约需要 %2$s 可用空间，这部手机只有 %3$s 可用。请先腾出空间，再安装。</string>
+    <string name="agentsInstallSpaceFits">大约需要 %1$s 可用空间；这部手机有 %2$s 可用。</string>
 </resources>

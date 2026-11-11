@@ -279,7 +279,26 @@ public fun phoneInstallStep(componentId: String?, agentId: String): PhoneAgentIn
         else -> null
     }
 
-/** Free space for an install: what it needs and what this phone has. */
+/**
+ * True when an agent the phone's setup installed is present: its install already brought the shared parts (the Linux
+ * packages, Python, Node.js, the agent helper), so a next install adds only its own agent. A row still being read
+ * (Checking) or unavailable proves nothing, so the shared parts are then counted (the space figure errs toward warning).
+ */
+public fun phoneSharedPartsInPlace(agents: List<PhoneAgentRow>): Boolean =
+    agents.any {
+        when (it.status) {
+            PhoneAgentStatus.Ready,
+            PhoneAgentStatus.SignInNeeded,
+            PhoneAgentStatus.PhoneCheck,
+            PhoneAgentStatus.Stopped,
+            PhoneAgentStatus.Limit -> true
+            PhoneAgentStatus.NotInstalled,
+            PhoneAgentStatus.Checking,
+            PhoneAgentStatus.Unavailable -> false
+        }
+    }
+
+/** Free space for an install: what it needs (with any shared parts still to add) and what this phone has. */
 public data class PhoneAgentSpace(val neededBytes: Long, val freeBytes: Long) {
     public val short: Boolean
         get() = freeBytes < neededBytes

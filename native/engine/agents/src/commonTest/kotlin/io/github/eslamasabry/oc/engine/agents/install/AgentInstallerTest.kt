@@ -98,6 +98,29 @@ class AgentInstallerTest {
         assertEquals(InstallStart.Started, (AgentInstaller(FakeAgentPrefs(), exact).install(owner, codex, AgentArchitecture.Arm64) as Outcome.Ok).value)
     }
 
+    /**
+     * Device QA B16 (2026-11-11): Gemini CLI's own room (300 MB) fitted in the emulator's 730 MB, but the shared parts
+     * the job installs first were not counted, each later step refused below its floor, and the install failed two
+     * minutes in. The figure checked before starting counts every shared part not in place at the job's floor.
+     */
+    @Test
+    fun `before starting, the shared parts not yet on the phone are counted at the job's floor each`() {
+        val installer = AgentInstaller(FakeAgentPrefs(), FakeJobs())
+        val gemini = AgentId("gemini")
+        for (arch in AgentArchitecture.entries) {
+            val own = installer.requiredBytes(gemini, arch)!!
+            assertEquals(own, installer.requiredBytesBeforeStart(gemini, arch, sharedPartsInPlace = true))
+            val fresh = installer.requiredBytesBeforeStart(gemini, arch, sharedPartsInPlace = false)!!
+            assertEquals(own + 3 * 300_000_000L, fresh, arch.name)
+            // The device's numbers: the old figure let the install start; the honest one does not.
+            val deviceFree = 730_000_000L
+            assertTrue(own <= deviceFree, "the agent's own room fitted, which is why the old review said yes")
+            assertTrue(fresh > deviceFree, "with Linux packages, Node.js and the helper still to come it does not")
+        }
+        assertEquals(Long.MAX_VALUE, AgentInstaller.withSharedParts(Long.MAX_VALUE - 1, sharedPartsInPlace = false))
+        assertNull(installer.requiredBytesBeforeStart(AgentId("nope"), AgentArchitecture.Arm64, sharedPartsInPlace = false))
+    }
+
     @Test
     fun `B-LINUX-135 restore re-attaches to the same owner's running job and clears a marker pointing at nothing`() = runTest {
         val jobs = FakeJobs()

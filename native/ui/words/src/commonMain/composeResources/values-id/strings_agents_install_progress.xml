@@ -9,5 +9,6 @@
     <string name="agentsTileFailedDownload">Tidak terpasang: unduhan gagal</string>
     <string name="agentsTileFailedStopped">Tidak terpasang: penyiapan berhenti</string>
     <string name="agentsTileFailedOther">Tidak terpasang: penyiapan gagal</string>
-    <string name="agentsInstallNeedsSpace">%1$s memerlukan ruang kosong %2$s untuk dipasang, dan ponsel ini punya %3$s kosong. Kosongkan ruang, lalu pasang.</string>
+    <string name="agentsInstallNeedsSpace">%1$s memerlukan sekitar %2$s ruang kosong untuk dipasang, dan ponsel ini punya %3$s kosong. Kosongkan ruang, lalu pasang.</string>
+    <string name="agentsInstallSpaceFits">Memerlukan sekitar %1$s ruang kosong; ponsel ini punya %2$s kosong.</string>
 </resources>
