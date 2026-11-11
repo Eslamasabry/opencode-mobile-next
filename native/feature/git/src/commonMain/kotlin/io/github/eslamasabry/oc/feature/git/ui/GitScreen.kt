@@ -89,6 +89,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.status.KitStatus
 import io.github.eslamasabry.oc.ui.kit.text.KitBidi
@@ -176,12 +177,14 @@ public fun GitScreen(state: GitUi, actions: GitActions, serverTools: @Composable
                         title = stringResource(Res.string.gitSheetTitle),
                         body = gitUnavailableText(view.reason),
                         modifier = Modifier.testTag("git-unavailable"),
+                        size = KitStateSize.Inline,
                     )
                 GitPageView.NotRepository -> {
                     KitStateView(
                         kind = KitStateKind.Empty,
                         title = stringResource(Res.string.gitNotRepositoryTitle),
                         body = stringResource(Res.string.gitNotRepositoryBody),
+                        size = KitStateSize.Inline,
                     )
                     KitRowGroup {
                         // Acts in place (no page opens), so no chevron.

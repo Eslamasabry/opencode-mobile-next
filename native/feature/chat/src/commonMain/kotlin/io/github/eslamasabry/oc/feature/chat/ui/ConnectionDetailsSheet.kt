@@ -15,7 +15,6 @@ import io.github.eslamasabry.oc.ui.words.res.e7BannerCheckingExplanation
 import io.github.eslamasabry.oc.ui.words.res.e7BannerLost
 import io.github.eslamasabry.oc.ui.words.res.e7BannerStaleExplanation
 import io.github.eslamasabry.oc.ui.words.res.isolatedTaskRetryOpen
-import io.github.eslamasabry.oc.ui.words.res.kitSheetDismiss
 import io.github.eslamasabry.oc.ui.words.res.mcpReconnecting
 import io.github.eslamasabry.oc.ui.words.res.productStatesSwitchServer
 import org.jetbrains.compose.resources.stringResource
@@ -36,7 +35,6 @@ internal fun ConnectionDetailsSheet(
         visible = visible,
         onDismissRequest = onDismiss,
         title = stringResource(if (reconnecting) Res.string.mcpReconnecting else Res.string.e7BannerLost),
-        closeLabel = stringResource(Res.string.kitSheetDismiss),
         primary =
             if (reconnecting) null
             else

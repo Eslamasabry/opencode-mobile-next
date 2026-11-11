@@ -2,7 +2,7 @@
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
     <string name="sharedFoldersTitle">Общее хранилище</string>
-    <string name="sharedFoldersSelected">Linux видит только открытые вами папки проектов и Download › OpenCode. Доступ к файлам Android позволяет приложению читать эти папки, но не открывает Linux всё ваше хранилище.</string>
+    <string name="sharedFoldersSelected">Если ниже не выбрано иное, Linux видит только открытые вами папки проектов и Download › OpenCode, а не всё хранилище. Чтобы открыть эти папки, Android просит дать этому приложению «Доступ ко всем файлам» — его единственное разрешение для файлов в общей памяти.</string>
     <string name="sharedFoldersAll">Открыть Linux всё общее хранилище</string>
     <string name="sharedFoldersAllDetail">Использовать прежний доступ к хранилищу вместо выбранных папок проектов. Изменения применятся при следующем запуске сервера на телефоне.</string>
     <string name="sharedFoldersAllRisk">Агенты, работающие в Linux, смогут читать и изменять файлы за пределами открытых вами проектов.</string>
@@ -10,7 +10,7 @@
     <string name="sharedFoldersRestart">Доступ к папкам сохранён. Когда закончите работу, перезапустите сервер на телефоне в разделе «Этот телефон», затем обновите «Файлы». Ни один сервер не остановлен.</string>
     <string name="sharedFoldersFailed">Не удалось прочитать или сохранить доступ к папкам. Повторите.</string>
     <string name="sharedFoldersAndroid">Доступ к файлам Android</string>
-    <string name="sharedFoldersAndroidDetail">Разрешайте доступ, когда открываете проекты в общем хранилище.</string>
-    <string name="sharedFoldersGranted">Разрешено. Linux по-прежнему следует выбору папок ниже.</string>
+    <string name="sharedFoldersAndroidDetail">Не разрешено. Разрешите «Доступ ко всем файлам», чтобы открывать проекты в общей памяти.</string>
+    <string name="sharedFoldersGranted">Разрешено: у приложения есть «Доступ ко всем файлам». Чтобы отключить, откройте настройки Android › «Доступ ко всем файлам».</string>
     <string name="sharedFoldersWorking">Обновление доступа к папкам…</string>
 </resources>

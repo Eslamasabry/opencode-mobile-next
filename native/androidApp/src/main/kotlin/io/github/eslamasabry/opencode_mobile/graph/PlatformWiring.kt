@@ -634,7 +634,9 @@ class PlatformHub(
             if (generation != pinnedLaunchGeneration) return@launch
             val saved = stores.profiles.profile(id)
             val graph = registry.live.value[id]
-            if (stores.profiles.activeId.value != id || saved == null ||
+            // This phone's agents are never the active server: their pinned conversation opens while This phone is.
+            val home = stores.profiles.activeId.value
+            if ((home != id && (home == null || stores.phoneOfHelper(id) != home)) || saved == null ||
                 saved.reentry.password || saved.reentry.agentToken ||
                 graph?.session?.status?.value != io.github.eslamasabry.oc.core.model.StreamStatus.Connected
             ) {

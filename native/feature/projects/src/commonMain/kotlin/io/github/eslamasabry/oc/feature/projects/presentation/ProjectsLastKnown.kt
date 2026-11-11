@@ -79,6 +79,8 @@ public data class KeptFolderRow(
     val isGit: Boolean? = null,
     val id: String? = null,
     val kind: String? = null,
+    /** [FolderRowUi.opensOn]: a folder only This phone's agents work in opens on their connection. */
+    val opensOn: String? = null,
 )
 
 @kotlinx.serialization.Serializable
@@ -95,6 +97,7 @@ public data class KeptProjectList(val rows: List<KeptFolderRow>) {
                 it.kind?.let { k ->
                     io.github.eslamasabry.oc.engine.files.PhoneProjectKind.entries.firstOrNull { e -> e.name == k }
                 },
+                opensOn = it.opensOn?.let { p -> io.github.eslamasabry.oc.core.common.ids.ProfileId(p) },
             )
         }
 
@@ -102,7 +105,16 @@ public data class KeptProjectList(val rows: List<KeptFolderRow>) {
         public fun of(rows: List<FolderRowUi>): KeptProjectList =
             KeptProjectList(
                 rows.map {
-                    KeptFolderRow(it.directory, it.name, it.conversations, it.running, it.isGit, it.id, it.kind?.name)
+                    KeptFolderRow(
+                        it.directory,
+                        it.name,
+                        it.conversations,
+                        it.running,
+                        it.isGit,
+                        it.id,
+                        it.kind?.name,
+                        it.opensOn?.raw,
+                    )
                 }
             )
     }

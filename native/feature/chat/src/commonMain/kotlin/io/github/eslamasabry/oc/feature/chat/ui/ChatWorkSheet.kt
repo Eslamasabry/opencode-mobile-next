@@ -98,7 +98,6 @@ internal fun ChatWorkSheet(
             output?.shell?.command?.lineSequence()?.firstOrNull().orEmpty().ifBlank {
                 stringResource(Res.string.runningWorkTitle)
             },
-        closeLabel = stringResource(Res.string.kitSheetDismiss),
         subtitle = output?.shell?.let { stateWords(it) },
     ) {
         Column(

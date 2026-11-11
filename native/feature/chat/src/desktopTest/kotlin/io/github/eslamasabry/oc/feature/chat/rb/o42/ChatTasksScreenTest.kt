@@ -49,7 +49,7 @@ class ChatTasksScreenTest {
             onNodeWithContentDescription("In progress").assertExists()
             onNodeWithContentDescription("Cancelled").assertExists()
             onNodeWithText("Rewrite the page").assertExists()
-            onNodeWithContentDescription("Dismiss").performClick()
+            onNodeWithContentDescription("Close").performClick()
             runOnIdle { assertEquals(1, closes) }
         }
 

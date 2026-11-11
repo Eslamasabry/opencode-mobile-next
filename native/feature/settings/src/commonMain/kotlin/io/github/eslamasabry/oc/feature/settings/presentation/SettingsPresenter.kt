@@ -348,7 +348,12 @@ public class SettingsPresenter(
             phraseChips = l.phraseChips,
             focusedRow = l.focusedRow,
             focusedAnchor = l.focusedAnchor,
-            localModels = e.localModels?.copy(confirmDelete = l.confirmLocalModels),
+            localModels =
+                e.localModels?.copy(
+                    confirmDelete = l.confirmLocalModels,
+                    phoneStorage =
+                        f.platform.builtinLinux && f.canOpen(SettingsOutside.ThisPhone),
+                ),
             note = l.note,
             voiceLicenses = licenses != null,
             license = l.license,

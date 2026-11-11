@@ -551,6 +551,35 @@ class ReplyWatchServiceTest {
         }
 
     @Test
+    fun `a swipe of the phone server's row never ends a joined watch, and the row comes back with the next change`() =
+        runTest {
+            // Android 14+ lets the person swipe a foreground row away. The joined row is the server's own: the watch
+            // spends no budget there and must stay on, or the reply's Finished alert would be lost.
+            val source = Source().apply { serverHoldsRow.value = true }
+            val body =
+                ReplyWatchServiceBody(
+                    app, words, StatusRenderer(app, words), AndroidAlertShade(app, words, registry), source, owners,
+                    scope = backgroundScope, elapsedMs = { testScheduler.currentTime },
+                )
+            body.joinServerRow()
+            runCurrent()
+            val delete = shadowOf(shadowOf(manager).getNotification(NotificationIds.STATUS).deleteIntent).savedIntent
+            manager.cancel(NotificationIds.STATUS)
+            body.onRowDismissed(delete)
+            assertTrue(body.active)
+            // Unchanged words stay away ...
+            advanceTimeBy(5_000)
+            assertNull(shadowOf(manager).getNotification(NotificationIds.STATUS))
+            // ... the next change brings the row back.
+            source.status.value = content(run()).copy(title = "Working on step 2")
+            advanceTimeBy(1_500)
+            assertEquals("Working on step 2", shadowOf(manager).getNotification(NotificationIds.STATUS).extras.getCharSequence(Notification.EXTRA_TITLE).toString())
+            source.emit(finished)
+            runCurrent()
+            assertNotNull(shadowOf(manager).getNotification(NotificationIds.alert(finished.key)))
+        }
+
+    @Test
     fun `S11-4 no join without a server holding the row`() =
         runTest {
             val body =

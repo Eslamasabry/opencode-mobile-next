@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -35,7 +36,13 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.pointer.PointerEvent
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.node.ModifierNodeElement
+import androidx.compose.ui.node.PointerInputModifierNode
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
@@ -154,8 +161,18 @@ public fun KitEdgeDock(
     val haptics = rememberKitHaptics()
     val scope = rememberCoroutineScope()
     val textScale = kitTextScale().coerceIn(1f, TextScalePolicy.FRAME_CAP)
+    // Tucked, or showing an alert's look-only swell, the dock lets the page under it see every touch too (dock study,
+    // findings 1 and 2): its area shares touches with the screen's other layers instead of taking them.
+    val shares by remember(state) {
+        androidx.compose.runtime.derivedStateOf {
+            (state.out.value < DockDims.REST_W * 0.5f && !state.anythingOpen) || (state.swellLookOnly && state.swell != null)
+        }
+    }
     // Under a glass face the dock's area hosts the words on the glass (their ink flips with it), as a bar's row does.
-    BoxWithConstraints(modifier.fillMaxSize().then(face.words).semantics { isTraversalGroup = true }.testTag("kit-edge-dock")) {
+    BoxWithConstraints(
+        modifier.fillMaxSize().then(if (shares) DockSharesTouches(state) else Modifier).then(face.words)
+            .semantics { isTraversalGroup = true }.testTag("kit-edge-dock"),
+    ) {
         val w = maxWidth.value
         val h = maxHeight.value
         val right = physicallyRight(model.placement.side, rtl)
@@ -457,7 +474,8 @@ private fun DockRingNode(
         if (!rose) return@LaunchedEffect
         val failed = ring.state == KitDockRingState.Failed
         state.alert(index, failed)
-        if (reduced) return@LaunchedEffect
+        // Tucked: the ring's dot only changes colour; no pop, flash or shake on the nub.
+        if (reduced || state.tucked) return@LaunchedEffect
         if (failed) {
             launch {
                 m.flash.snapTo(1f)
@@ -700,7 +718,7 @@ private fun DockHitNode(state: KitEdgeDockState) {
         Modifier
             .layout { measurable, constraints ->
                 val d = density
-                val full = state.anythingOpen || state.gesture.mode != DockMode.Idle
+                val full = state.takesWholeArea || state.gesture.mode != DockMode.Idle
                 val f = state.computeFrame()
                 val tucked = state.out.value < DockDims.REST_W * 0.5f
                 val l: Float
@@ -750,7 +768,13 @@ private fun DockHitNode(state: KitEdgeDockState) {
                         }
                         return@awaitEachGesture
                     }
-                    down.consume()
+                    // The tucked band acts only on a tap and on a mostly-sideways drag; until it knows, it takes nothing,
+                    // so a scroll or a long press that starts on it stays the page's (dock study, finding 1).
+                    val band = zone == DockZone.Nub
+                    if (!band) down.consume()
+                    // The page shares the band's touches and sees them after the dock only in the Initial pass: the band
+                    // reads (and takes) its tap's lift and its sideways drag there, before the page could act on them.
+                    val pass = if (band) PointerEventPass.Initial else PointerEventPass.Main
                     val t0 = down.uptimeMillis
                     state.gesture.down(zone, x0, y0, t0, state.hits)
                     state.pressRing = if (zone == DockZone.Ring) state.gesture.ring else -1
@@ -764,9 +788,18 @@ private fun DockHitNode(state: KitEdgeDockState) {
                                 if (state.gesture.holding) {
                                     val held = now - t0
                                     (if (held < rules.swellDelayMs) rules.swellDelayMs else rules.holdMs) - held
+                                } else if (band && state.gesture.mode == DockMode.NubPress) {
+                                    viewConfiguration.longPressTimeoutMillis - (now - t0)
                                 } else -1L
                             val event =
-                                if (wait > 0) withTimeoutOrNull(wait) { awaitPointerEvent() } else awaitPointerEvent()
+                                if (wait > 0) withTimeoutOrNull(wait) { awaitPointerEvent(pass) }
+                                else if (band && state.gesture.mode == DockMode.NubPress) null
+                                else awaitPointerEvent(pass)
+                            if (event == null && band) {
+                                // A long press on the band is the page's.
+                                state.gesture.cancel()
+                                break
+                            }
                             if (event == null) {
                                 now = t0 + (if (now - t0 < rules.swellDelayMs) rules.swellDelayMs else rules.holdMs)
                                 state.onFeedback(state.gesture.elapsed(now))
@@ -786,9 +819,14 @@ private fun DockHitNode(state: KitEdgeDockState) {
                                 break
                             }
                             tracker.addPosition(change.uptimeMillis, change.position)
-                            change.consume()
+                            if (!band) change.consume()
                             state.computeFrame()
                             val fb = state.gesture.move(x, y, now, state.hits)
+                            if (band) {
+                                // Not sideways: the page's scroll (the band gave the gesture up). Sideways: the dock's.
+                                if (state.gesture.mode == DockMode.Idle) break
+                                if (state.gesture.mode == DockMode.NubDrag) change.consume()
+                            }
                             if (!state.gesture.holding) {
                                 state.pressRing = -1
                                 state.stopCharge()
@@ -810,4 +848,30 @@ private fun DockHitNode(state: KitEdgeDockState) {
                 }
             },
     )
+}
+
+/**
+ * The dock's area sharing touches with the screen's other layers (the page under it): attached only while the dock is
+ * tucked or shows an alert's look-only swell, so the page sees every touch that starts there as if the dock were not
+ * there, and the dock's own band still sees its taps and sideways drags. A touch that is not the dock's closes the
+ * alert's swell, without taking the touch.
+ */
+private data class DockSharesTouches(val state: KitEdgeDockState) : ModifierNodeElement<DockSharesTouchesNode>() {
+    override fun create(): DockSharesTouchesNode = DockSharesTouchesNode(state)
+
+    override fun update(node: DockSharesTouchesNode) {
+        node.state = state
+    }
+}
+
+private class DockSharesTouchesNode(var state: KitEdgeDockState) : Modifier.Node(), PointerInputModifierNode {
+    override fun onPointerEvent(pointerEvent: PointerEvent, pass: PointerEventPass, bounds: IntSize) {
+        // Main runs from the dock's own touch area up to here: a press the dock took has set its gesture by now.
+        if (pass != PointerEventPass.Main || pointerEvent.type != PointerEventType.Press) return
+        if (state.swellLookOnly && state.swell != null && state.gesture.mode == DockMode.Idle) state.closeSwell()
+    }
+
+    override fun onCancelPointerInput() = Unit
+
+    override fun sharePointerInputWithSiblings(): Boolean = true
 }

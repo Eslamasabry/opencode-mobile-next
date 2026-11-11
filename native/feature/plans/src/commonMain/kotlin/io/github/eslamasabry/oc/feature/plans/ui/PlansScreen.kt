@@ -194,7 +194,6 @@ public fun PlansContent(
         visible = card != null,
         onDismissRequest = { opened = null },
         title = card?.let { words.cardTitle(it.name, it.connection) } ?: words.title,
-        closeLabel = words.back,
         height = KitSheetHeight.Full,
         primary = KitAction(words.refresh, actions::refresh, working = state.refreshing),
     ) {

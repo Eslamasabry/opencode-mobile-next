@@ -352,7 +352,6 @@ public class ChatEntries(
                             visible = offerDetails,
                             onDismissRequest = { offerDetails = false },
                             title = stringResource(Res.string.firstRunNotifyTitle),
-                            closeLabel = offer.declineLabel,
                         ) {
                             KitNotice(
                                 message = offer.message,

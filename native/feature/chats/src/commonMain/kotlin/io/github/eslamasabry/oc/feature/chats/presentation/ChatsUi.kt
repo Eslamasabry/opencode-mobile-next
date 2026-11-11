@@ -133,7 +133,8 @@ public data class HomeConnectionUi(val server: String, val state: HomeConnection
                     else HomeConnectionState.Connecting,
                 )
             }
-            val main = extra.sources.firstOrNull { it.main } ?: extra.sources.firstOrNull() ?: return null
+            val servers = extra.sources.filterNot { it.agents }
+            val main = servers.firstOrNull { it.main } ?: servers.firstOrNull() ?: return null
             return HomeConnectionUi(
                 main.name,
                 if (main.unreachable) HomeConnectionState.NotAnswering else HomeConnectionState.Connected,

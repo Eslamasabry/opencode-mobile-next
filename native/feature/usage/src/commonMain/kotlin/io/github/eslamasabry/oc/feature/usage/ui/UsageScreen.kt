@@ -68,6 +68,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
@@ -613,6 +614,7 @@ private fun Status(state: UsageUi, actions: UsageActions) {
             KitStateView(
                 kind = KitStateKind.Calm,
                 title = stringResource(Res.string.usageUnsupported),
+                size = KitStateSize.Inline,
             )
         UsagePhase.NoTimeZone ->
             KitNotice(stringResource(Res.string.usageTimezoneUnavailable), actions = listOf(retry))

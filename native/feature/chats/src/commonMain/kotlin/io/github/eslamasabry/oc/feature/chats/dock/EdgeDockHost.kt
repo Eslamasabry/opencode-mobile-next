@@ -35,6 +35,7 @@ private const val NAME = "\u0000"
 /**
  * The edge dock on a screen: the kit's [KitEdgeDock] fed from [port], over the screen's content, under its sheets,
  * dialogs and menus (the host places it inside the screen's own modal host). Arranges kit parts only; paints nothing.
+ * It places two layers in the caller's box (the dock, then the Undo bar), so call it where the page is a sibling.
  *
  * The model is mapped once per change of the dock's flows (collected once at app scope by the port; here only read).
  * [insets] keeps the dock clear of the bars, the keyboard and the screen's own foot; [undoBottom] lifts the Undo bar
@@ -95,15 +96,17 @@ public fun EdgeDockHost(
             )
         }
     val state = rememberKitEdgeDockState()
+    // Two layers of the screen side by side, not one box: the dock's area stands beside the page, so a touch it lets
+    // through (a scroll from the tucked band, a tap during an alert) reaches the page; the Undo bar's layer is above it.
+    KitEdgeDock(
+        model = frame.model,
+        intents = router,
+        words = words,
+        modifier = modifier.fillMaxSize().then(exclusion(state)),
+        insets = insets,
+        state = state,
+    )
     Box(modifier.fillMaxSize()) {
-        KitEdgeDock(
-            model = frame.model,
-            intents = router,
-            words = words,
-            modifier = Modifier.fillMaxSize().then(exclusion(state)),
-            insets = insets,
-            state = state,
-        )
         val offer = undo
         KitUndoBar(
             offer = offer?.second,

@@ -98,6 +98,7 @@ public fun AgentHandoffScreen(state: AgentHandoffUi, actions: AgentHandoffAction
                         primary = if (view.primary == HandoffButton.OpenAgents) agents else refresh,
                         // The calm state draws its primary and its quiet (tertiary) actions only.
                         tertiary = if (view.secondary == null) emptyList() else listOf(refresh),
+                        size = KitStateSize.Inline,
                     )
                 }
             if (!state.connected && sourceReview != null && view != null)

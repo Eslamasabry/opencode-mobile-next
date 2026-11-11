@@ -19,7 +19,14 @@ internal data class NativeExportEntry(val name: String, val source: File, val by
  * Port of the Flutter project-export planner: regular files only, private exports opt in, proot Git
  * objects retained.
  */
-internal class NativeProjectFiles(private val app: Application) {
+internal class NativeProjectFiles(
+    private val app: Application,
+    /**
+     * This phone's App storage walks the whole Ubuntu tree (tens of thousands of files): run inside
+     * runInterruptible, its walk stops at the next folder once the page that asked is gone.
+     */
+    private val stopWhenInterrupted: Boolean = false,
+) {
     private val files = app.filesDir
     private val linux = File(files, "linux")
     private val guest = File(linux, "ubuntu/root")
@@ -38,7 +45,7 @@ internal class NativeProjectFiles(private val app: Application) {
                         count++
                         if (isPrivate(name)) private++
                     }
-                    StoredProject(top.name, bytes, count, private)
+                    StoredProject(top.name, bytes, count, private, folder = directory(top))
                 }
                 .sortedBy { it.name.lowercase() }
         var serverBytes = 0L
@@ -111,6 +118,8 @@ internal class NativeProjectFiles(private val app: Application) {
             OsConstants.S_ISLNK(mode) && gitObjects ->
                 linkedObject(file)?.let { visit(name, it, it.length()) }
             OsConstants.S_ISDIR(mode) -> {
+                if (stopWhenInterrupted && Thread.currentThread().isInterrupted)
+                    throw InterruptedException("measurement stopped")
                 val children =
                     file.listFiles()
                         ?: if (strict) throw IOException("unreadable folder") else return

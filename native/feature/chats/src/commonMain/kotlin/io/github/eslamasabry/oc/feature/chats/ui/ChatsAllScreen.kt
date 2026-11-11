@@ -65,6 +65,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
@@ -307,6 +308,7 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
                             body = stringResource(if (state.archived) Res.string.globalSessionsArchivedNoMatchMessage else Res.string.globalSessionsNoMatchMessage),
                             icon = KitIcons.searchList,
                             secondary = KitAction(stringResource(Res.string.commonClearSearch), { actions.search("") }),
+                            size = KitStateSize.Inline,
                         )
                         else if (state.archived && project == null && !state.running) KitStateView(
                             kind = KitStateKind.Empty,
@@ -314,11 +316,13 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
                             body = stringResource(Res.string.globalSessionsArchivedEmptyMessage),
                             icon = KitIcons.archive,
                             secondary = KitAction(stringResource(Res.string.globalSessionsShowActive), actions::toggleArchived),
+                            size = KitStateSize.Inline,
                         )
                         else KitStateView(
                             kind = KitStateKind.Empty,
                             title = stringResource(Res.string.globalSessionsNoMatchTitle),
                             primary = KitAction(stringResource(Res.string.chatsHomeClearFilters), actions::clearFilters),
+                            size = KitStateSize.Inline,
                         )
                     }
                 AllPhase.List ->

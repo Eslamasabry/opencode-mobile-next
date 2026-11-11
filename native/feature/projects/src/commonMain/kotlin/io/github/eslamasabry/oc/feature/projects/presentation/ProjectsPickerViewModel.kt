@@ -57,11 +57,11 @@ public class ProjectsPickerViewModel(
         viewModelScope.launch {
             connections.servers.collect { live ->
                 servers = live
-                val keep = chosen?.takeIf { c -> live.any { it.profile == c } }
+                val keep = chosen?.let(::listedFor)
                 val next =
                     keep
-                        ?: connections.active.value?.takeIf { a -> live.any { it.profile == a } }
-                        ?: live.firstOrNull()?.profile
+                        ?: connections.active.value?.let(::listedFor)
+                        ?: listed().firstOrNull()?.profile
                 val changed = next != chosen || state.value.phase == ProjectsPhase.NoServer
                 chosen = next
                 if (changed) load()
@@ -89,6 +89,17 @@ public class ProjectsPickerViewModel(
         before.firstOrNull()?.substringBeforeLast('/', "")?.ifEmpty { null }?.plus("/").orEmpty()
 
     private fun current(): ProjectServer? = servers.firstOrNull { it.profile == chosen }
+
+    /** The servers offered: a connection that is part of a live server (This phone's agents) is not one of its own. */
+    private fun listed(): List<ProjectServer> =
+        servers.filter { s -> s.partOf == null || servers.none { it.profile == s.partOf } }
+
+    /** The offered server that stands for live connection [id]: itself, or the server it is part of. */
+    private fun listedFor(id: ProfileId): ProfileId? {
+        val server = servers.firstOrNull { it.profile == id } ?: return null
+        val shown = listed()
+        return if (shown.any { it.profile == id }) id else server.partOf?.takeIf { p -> shown.any { it.profile == p } }
+    }
 
     private fun load() {
         scanJob?.cancel()
@@ -155,16 +166,57 @@ public class ProjectsPickerViewModel(
     }
 
     private fun choices(): ImmutableList<ServerChoiceUi> =
-        (if (servers.size > 1)
-                servers.map { ServerChoiceUi(it.profile, it.name, it.profile == chosen) }
-            else emptyList())
+        listed()
+            .let { shown ->
+                if (shown.size > 1) shown.map { ServerChoiceUi(it.profile, it.name, it.profile == chosen) }
+                else emptyList()
+            }
             .toImmutableList()
 
     /**
      * Conversations first (for counts and for servers without a project list), then the project
      * list.
      */
-    private suspend fun readProjects(server: ProjectServer): Outcome<List<FolderRowUi>> {
+    private suspend fun readProjects(server: ProjectServer): Outcome<List<FolderRowUi>> =
+        when (val own = readOwnProjects(server)) {
+            is Outcome.Failed -> own
+            // The folders This phone's agents work in join the phone's projects (one row per folder); their read
+            // failing leaves the phone's own projects as they are.
+            is Outcome.Ok ->
+                Outcome.Ok(
+                    servers
+                        .filter { it.partOf == server.profile }
+                        .fold(own.value) { rows, part -> ProjectRules.joined(rows, partFolders(part)) }
+                )
+        }
+
+    /** The folders [part]'s conversations work in, each opening on [part]; empty when it does not answer. */
+    private suspend fun partFolders(part: ProjectServer): List<FolderRowUi> {
+        val sessions = mutableListOf<Session>()
+        var cursor: String? = null
+        var pages = 0
+        do {
+            when (val page = part.gateway.sessionPage(cursor = cursor)) {
+                is Outcome.Failed -> return emptyList()
+                is Outcome.Ok -> {
+                    sessions += page.value.items
+                    cursor = page.value.nextCursor
+                }
+            }
+            pages++
+        } while (cursor != null && pages < ProjectRules.PROJECT_PAGES)
+        val running: Set<SessionId> =
+            (part.gateway.sessionStatuses() as? Outcome.Ok)
+                ?.value
+                ?.filterValues(ProjectRules::isRunning)
+                ?.keys
+                .orEmpty()
+        return ProjectRules.fromSessions(sessions, running).map {
+            FolderRowUi(it.directory, it.name, it.conversations, it.running, opensOn = part.profile)
+        }
+    }
+
+    private suspend fun readOwnProjects(server: ProjectServer): Outcome<List<FolderRowUi>> {
         val sessions = mutableListOf<Session>()
         var cursor: String? = null
         var pages = 0
@@ -499,9 +551,11 @@ public class ProjectsPickerViewModel(
     }
 
     override fun openProject(directory: String) {
-        val profile = chosen ?: return
+        val normal = ProjectRules.normalize(directory)
+        // A folder only This phone's agents work in opens on their connection, where its conversations are.
+        val profile = all.firstOrNull { ProjectRules.normalize(it.directory) == normal }?.opensOn ?: chosen ?: return
         // The project page owns the shared-storage gate (SharedStorageAccess) and asks there.
-        nav.open(ProjectsRoute.Project(profile, ProjectRules.normalize(directory)))
+        nav.open(ProjectsRoute.Project(profile, normal))
     }
 
     override fun search(query: String) {

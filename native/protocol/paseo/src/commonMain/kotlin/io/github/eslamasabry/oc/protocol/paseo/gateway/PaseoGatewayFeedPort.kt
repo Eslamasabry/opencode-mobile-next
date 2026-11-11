@@ -20,7 +20,6 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * The gateway as one chat-feed scope (slice D's [PaseoFeedPort]; Dart reads these off
@@ -59,14 +58,7 @@ private class GatewayFeedPort(private val g: PaseoGateway) : PaseoFeedPort {
      * The title a resume lost; nothing is written to the helper (an update would move the row to
      * the top).
      */
-    override fun keepTitle(session: SessionId, title: String) {
-        if (title.isBlank()) return
-        val id = session.raw
-        g.titleHints[id] = title
-        if (hasOwnTitle(session)) return
-        g.agents[id]?.let { g.agents[id] = it.with("title", JsonPrimitive(title)) }
-        g.sessions[id]?.let { g.sessions[id] = it.copy(title = title) }
-    }
+    override fun keepTitle(session: SessionId, title: String) = g.keepTitle(session.raw, title)
 
     override fun providerIdForSession(session: SessionId): String? = g.providerIdForSession(session)
 

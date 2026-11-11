@@ -26,6 +26,10 @@ import io.github.eslamasabry.oc.android.notifications.ReplyRun
 import io.github.eslamasabry.oc.android.notifications.ReplyRunFact
 import io.github.eslamasabry.oc.android.notifications.ReplyRunSource
 import io.github.eslamasabry.oc.android.notifications.ReplyWatchPolicy
+import io.github.eslamasabry.oc.android.notifications.LiveUpdatePolicy
+import io.github.eslamasabry.oc.android.notifications.NotificationIds
+import io.github.eslamasabry.oc.android.notifications.ServerRowFacts
+import io.github.eslamasabry.oc.android.notifications.ServerRowLender
 import io.github.eslamasabry.oc.android.notifications.ReplyWatchServiceBody
 import io.github.eslamasabry.oc.android.notifications.ReplyWatchStart
 import io.github.eslamasabry.oc.android.notifications.ReplyWatchStartFacts
@@ -44,6 +48,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -126,13 +131,7 @@ class ReplyWatchHub(
                     .stateIn(scope, SharingStarted.Eagerly, visibility.state.value == Visibility.Foreground)
             override val serverHoldsRow: StateFlow<Boolean> = this@ReplyWatchHub.serverHoldsRow
 
-            override fun returnRowToServer(): Boolean =
-                try {
-                    BuiltinLinux.get(application).repostStatusRow()
-                } catch (_: RuntimeException) {
-                    // Never into the watch. A cancel cannot remove a row a live foreground service still holds.
-                    false
-                }
+            override fun returnRowToServer(): Boolean = this@ReplyWatchHub.settleServerRow(watchEnding = true)
 
             override fun alertFacts(alert: CodingAlert): AlertFacts =
                 AlertFacts(
@@ -178,7 +177,62 @@ class ReplyWatchHub(
             }
         }
         scope.launch { background.live.collect { if (it.active && flag.active.value) body.yieldToLive() } }
+        // The server's own row must not say "nothing running" while a conversation works or waits for the person.
+        // A flow collection in the app process only (no service, no timer of its own): it follows the dock's state.
+        scope.launch {
+            combine(attention.conversationsRow, source.appVisible, flag.active, background.live) { _, _, _, _ -> Unit }
+                .collect { settleServerRow(watchEnding = false) }
+        }
     }
+
+    /**
+     * The one decision of what the phone server's row says outside live mode and reply watch: the conversations' words
+     * while the app is hidden and a run works or waits, the server's own words otherwise. The watch hands the row back
+     * through it too. Only touched on the main dispatcher.
+     */
+    private val serverRow by lazy {
+        val renderer = StatusRenderer(application, words)
+        val manager = application.getSystemService(NotificationManager::class.java)
+        ServerRowLender(
+            scope = scope,
+            elapsedMs = SystemClock::elapsedRealtime,
+            facts = {
+                ServerRowFacts(
+                    conversations = attention.conversationsRow.value,
+                    replyWatchActive = flag.active.value || body.active,
+                    liveModeActive = background.live.value.active,
+                    appVisible = source.appVisible.value,
+                )
+            },
+            serverHoldsRow = {
+                try {
+                    BuiltinLinux.get(application).holdsStatusRow()
+                } catch (_: RuntimeException) {
+                    false
+                }
+            },
+            post = { content ->
+                try {
+                    manager.notify(
+                        NotificationIds.STATUS,
+                        renderer.build(content, ongoing = true, chip = LiveUpdatePolicy.chipFor(content, false)),
+                    )
+                } catch (_: SecurityException) {
+                    // Permission revoked: nothing of ours can show anyway.
+                }
+            },
+            restore = {
+                try {
+                    BuiltinLinux.get(application).repostStatusRow()
+                } catch (_: RuntimeException) {
+                    // Never into the watch. A cancel cannot remove a row a live foreground service still holds.
+                    false
+                }
+            },
+        )
+    }
+
+    private fun settleServerRow(watchEnding: Boolean): Boolean = serverRow.settle(watchEnding)
 
     /** `BackgroundConnectionService.onStartCommand` for [ACTION_REPLY_WATCH]: the body keeps the promise first. */
     fun onServiceStart(service: Service): Int {

@@ -160,7 +160,12 @@ public fun RunningScreen(state: RunningUi, actions: RunningActions) {
                         ),
                 )
             }
-            state.status?.let { KitGroupNote(it.words()) }
+            // This phone's row line ("4 running · 582 MB") counts processes from its own reading; here the
+            // summary over the list says how many run (Flutter running_on_phone_screen.dart shows only that), so
+            // the plain count is not repeated. Left behind, heavy and near-limit lines still lead the page.
+            state.status
+                ?.takeUnless { it is io.github.eslamasabry.oc.engine.runtime.procs.RunningRowStatus.Normal }
+                ?.let { KitGroupNote(it.words()) }
             val count = state.count
             if (state.nearLimit && count != null) {
                 KitNotice(

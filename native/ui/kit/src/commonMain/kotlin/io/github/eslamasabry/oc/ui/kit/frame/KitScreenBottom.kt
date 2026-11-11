@@ -53,6 +53,13 @@ public class KitScreenBottom internal constructor() {
      * top, as under a block that is not a slab, so what sits above the box stands on the page's ground; and the jump
      * pill, which would join the box's top, stays above the block instead.
      */
+    /**
+     * How far above the block's top the jump pill's target reaches while the pill stands above a stacked block, px, times
+     * the pill's own show fraction (0 with no pill, or a pill joined to the box). The body then fades out that much
+     * higher, so the pill stands on the page's ground ([KitJumpPill]).
+     */
+    internal var pillClear: Float by mutableFloatStateOf(0f)
+
     internal val stacked: Boolean by derivedStateOf { !wordsTop.isNaN() && !blockTop.isNaN() && wordsTop - blockTop > restGap }
 }
 

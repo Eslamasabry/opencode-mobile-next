@@ -12,6 +12,8 @@ public data class LocalModelStorageFacts(
     val deleting: Boolean = false,
     val failed: Boolean = false,
     val confirmDelete: Boolean = false,
+    /** This phone's App storage can be opened from here (the app's own sizes live there). */
+    val phoneStorage: Boolean = false,
 )
 
 public interface LocalModelStorage {

@@ -55,6 +55,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitInlineStateView
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.state.KitTechnicalValue
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
@@ -311,6 +312,7 @@ private fun OneFolder(state: ProjectsPickerUi) {
             title = stringResource(Res.string.projectsOneFolderTitle),
             body = stringResource(Res.string.e7ProjectProjectSwitchUnavailableDetail),
             icon = KitIcons.folderOpen,
+            size = KitStateSize.Inline,
         )
         KitRowGroup {
             KitRow(
@@ -385,6 +387,7 @@ private fun ServerProjects(state: ProjectsPickerUi, actions: ProjectsPickerActio
                     kind = KitStateKind.Empty,
                     title = stringResource(Res.string.e7ProjectProjectsEmpty),
                     body = stringResource(Res.string.e7ProjectProjectsEmptyDetail),
+                    size = KitStateSize.Inline,
                 )
         }
     }

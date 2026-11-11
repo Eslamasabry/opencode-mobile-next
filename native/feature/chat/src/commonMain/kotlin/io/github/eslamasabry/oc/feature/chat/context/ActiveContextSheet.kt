@@ -169,7 +169,7 @@ internal fun ActiveContextScreen(visible: Boolean, state: ActiveContextUi, onClo
                                 )
                                 KitText(stringResource(Res.string.activeContextIntro), Modifier.padding(horizontal = tokens.gutter.dp, vertical = Space.S2.dp), role = TypeRole.Secondary, tone = TextTone.Secondary)
                                 when {
-                                    state.messages.isEmpty() -> KitStateView(KitStateKind.Empty, stringResource(Res.string.activeContextEmpty), body = stringResource(Res.string.activeContextEmptyDetail), icon = KitIcons.layers)
+                                    state.messages.isEmpty() -> KitStateView(KitStateKind.Empty, stringResource(Res.string.activeContextEmpty), body = stringResource(Res.string.activeContextEmptyDetail), icon = KitIcons.layers, size = KitStateSize.Inline)
                                     shown.isEmpty() -> KitSearchNoMatch(field.text.toString().trim().ifEmpty { typeLabel.orEmpty() }, {
                                         field.edit { replace(0, length, "") }; type = null
                                     }, what = stringResource(Res.string.activeContextWhat))
