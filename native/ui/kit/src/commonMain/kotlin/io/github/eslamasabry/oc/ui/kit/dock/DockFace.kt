@@ -7,28 +7,49 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.ProvidableCompositionLocal
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
+import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
 import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidBodyBoxes
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidFace
+import io.github.eslamasabry.oc.ui.kit.foundation.KitFrostState
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.motion.KitEasing
 import io.github.eslamasabry.oc.ui.kit.theme.KitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
+import kotlin.math.max
+import kotlin.math.min
+
+/**
+ * The recording of what lies behind the dock, provided by the screen that hosts it: the chat's transcript recording
+ * (the one its bar and message box read), the conversations list's (the one its floating + reads). Null: none in scope,
+ * and the dock keeps its solid face under every style. The dock is never inside this recording (it would bend itself).
+ */
+public val LocalKitDockGlass: ProvidableCompositionLocal<KitFrostState?> = staticCompositionLocalOf { null }
 
 /**
  * How the dock's body is painted: the face's [modifier], the ink of the words on it, and whether the outline has
  * shoulders into the screen edge.
  *
- * - [drawsOwnBody] false (Solid, the only face today): the body node clips [modifier] to the body's outline, the join
- *   field's zero line built from the frame ([KitEdgeDockState.bodyOutline]).
- * - [drawsOwnBody] true (a lens face, the glass owner's): the body node applies NO clip and draws NO path; [modifier]
- *   is drawn over the whole dock area and must draw the body itself from [KitEdgeDockState.body] (box A, box B as it is
- *   now, and `joinReach`), read in its draw phase. The marks and the failure pulse still draw over it.
+ * - [drawsOwnBody] false (Solid, Soft, Brutal, Paper, Signal, and Glass without a lens or a recording): the body node
+ *   clips [modifier] to the body's outline, the join field's zero line built from the frame
+ *   ([KitEdgeDockState.bodyOutline]).
+ * - [drawsOwnBody] true (Glass with a lens over a recording): the body node applies NO clip and draws NO path;
+ *   [modifier] is drawn over the whole dock area and draws the body itself from [KitEdgeDockState.body] (box A, box B as
+ *   it is now, and `joinReach`), read in its draw phase. The marks and the failure pulse still draw over it. [words]
+ *   goes on the dock's own area, the ancestor of every word, ring and control on the body: their ink flips with the
+ *   glass over bright and dark content as the bar's words do ([onGlass]: their second line reads brighter on glass).
  */
 @Immutable
 internal class DockFace(
@@ -37,21 +58,26 @@ internal class DockFace(
     val ink2: Color,
     val shoulders: Boolean,
     val drawsOwnBody: Boolean = false,
+    val words: Modifier = Modifier,
+    val onGlass: Boolean = false,
 )
 
 /**
- * THE ONE PLACE the dock's face is decided (for the design/glass owner to switch).
+ * THE ONE PLACE the dock's face is decided.
  *
- * Today it asks the resolver for the nearest existing floating role, as a square face that the body clips to its own
- * outline: the kit's rule (a part gets its face from `kitSurfaceLook` by role; it never paints its own surface, border or
- * shadow). When the owner adds a `Dock` surface role and its recipe, this becomes a one-line switch of [SurfaceRole];
- * under a lens this function returns a face with [DockFace.drawsOwnBody] set, whose modifier draws the joined glass
- * from [state]'s [KitEdgeDockState.body] (the state is passed in for that; Solid does not read it).
+ * Under Glass, with a lens (the same conditions as every liquid pane), a recording in scope ([LocalKitDockGlass]) and
+ * the window's liquid budget granting it, the dock is ONE body of liquid glass (role [LiquidRole.Dock]: the bar's recipe
+ * at rest, the menu's fully grown, mixed by the growth): its face draws the strip and the swell, the peek or the list
+ * joined by the join field from [KitEdgeDockState.body], with no clip ([DockFace.drawsOwnBody]); the words and marks
+ * take the bar's ink on glass and flip with it.
+ *
+ * Otherwise (every other style, Glass without a lens or a recording, beyond the budget) it asks the resolver for the
+ * nearest existing floating role, as a square face that the body clips to its own outline: the kit's rule (a part gets
+ * its face from `kitSurfaceLook` by role; it never paints its own surface, border or shadow).
  *
  * Shoulders (the concave blends into the screen edge) are a third shape the two-box join does not draw yet: on for the
- * non-lens looks, off under Glass for now, decided here so turning them on later is one line.
+ * non-lens looks, off under Glass, decided here so turning them on later is one line.
  */
-@Suppress("UNUSED_PARAMETER")
 @Composable
 internal fun rememberDockFace(state: KitEdgeDockState): DockFace {
     val colors = LocalKitColors.current
@@ -64,9 +90,55 @@ internal fun rememberDockFace(state: KitEdgeDockState): DockFace {
                 ownFill = colors.surface2,
             ),
         )
-    val ink = look.words ?: colors.text1
     val shoulders = LocalKitStyle.current.style != Style.Glass
+    val boxes = remember(state) { dockBodyBoxes(state) }
+    val area = remember(state) { dockBodyArea(state) }
+    val glass =
+        kitLiquidFace(LiquidRole.Dock, LocalKitDockGlass.current, rest = LiquidRole.Dock, grown = LiquidRole.Menu, boxes = boxes, wordsArea = area)
+    if (glass != null) {
+        // Read in composition: the dock's marks follow the ink flip (180 ms, only when the content behind changes).
+        val f = glass.flip.progress.value
+        return DockFace(
+            glass.face,
+            lerp(glass.ink, glass.flipInk, f),
+            lerp(glass.ink2, glass.flipInk2, f),
+            shoulders = false,
+            drawsOwnBody = true,
+            words = glass.words,
+            onGlass = true,
+        )
+    }
+    val ink = look.words ?: colors.text1
     return DockFace(look.modifier, ink, colors.text2, shoulders, drawsOwnBody = false)
+}
+
+/** The dock's body as the glass draws it: [KitEdgeDockState.body], unchanged (dock-area px). */
+private fun dockBodyBoxes(state: KitEdgeDockState): (KitLiquidBodyBoxes) -> Boolean {
+    val body = KitDockBody()
+    return { out ->
+        state.body(body)
+        out.a = Rect(body.stripLeft, body.stripTop, body.stripRight, body.stripBottom)
+        out.aRadius = body.stripRadius
+        out.hasB = body.hasSecond
+        out.b = if (body.hasSecond) Rect(body.secondLeft, body.secondTop, body.secondRight, body.secondBottom) else Rect.Zero
+        out.bRadius = body.secondRadius
+        out.reach = body.joinReach
+        out.growth = body.growth
+        true
+    }
+}
+
+/** The body's bounds now (dock-area px): what the words' ink flip samples. */
+private fun dockBodyArea(state: KitEdgeDockState): () -> Rect? {
+    val body = KitDockBody()
+    return {
+        state.body(body)
+        var r = Rect(body.stripLeft, body.stripTop, body.stripRight, body.stripBottom)
+        if (body.hasSecond) r = Rect(min(r.left, body.secondLeft), min(r.top, body.secondTop), max(r.right, body.secondRight), max(r.bottom, body.secondBottom))
+        // The strip runs past the screen edge: only what shows is sampled.
+        val w = state.widthDp * state.density
+        Rect(max(r.left, 0f), r.top, min(r.right, w), r.bottom)
+    }
 }
 
 /**

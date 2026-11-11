@@ -543,8 +543,10 @@ public fun ChatsScreen(
                 modifier = Modifier.align(Alignment.CenterHorizontally),
             )
         }
-        // The edge dock over the list, clear of the floating + at the foot.
-        edgeDock?.Content(clearBottom = if (listed) KIT_FAB_CLEARANCE.dp else 0.dp)
+        // The edge dock over the list, clear of the floating + at the foot; under Glass it bends the list's recording.
+        androidx.compose.runtime.CompositionLocalProvider(io.github.eslamasabry.oc.ui.kit.dock.LocalKitDockGlass provides listGlass) {
+            edgeDock?.Content(clearBottom = if (listed) KIT_FAB_CLEARANCE.dp else 0.dp)
+        }
       }
         ChatsHomeSheets(state, actions)
         ConversationRenameDialog(state.renaming, actions::finishRename)

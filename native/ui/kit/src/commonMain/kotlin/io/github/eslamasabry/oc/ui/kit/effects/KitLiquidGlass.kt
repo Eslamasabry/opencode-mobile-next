@@ -206,7 +206,7 @@ private fun costed(source: Any?): Any? = source as? KitLiquidSource
 
 /** Asks the window's budget for [role]'s liquid face over [source]; true when granted (always, without a budget). */
 @Composable
-private fun kitLiquidClaim(role: LiquidRole, source: Any?, asking: Boolean): Boolean {
+internal fun kitLiquidClaim(role: LiquidRole, source: Any?, asking: Boolean): Boolean {
     val budget = LocalKitLiquidBudget.current ?: return asking
     val key = remember { Any() }
     val order = remember(budget) { budget.order() }
@@ -759,7 +759,7 @@ private fun DrawScope.drawGroundUnder(ground: Color, picture: KitGlassBackdrop?,
 }
 
 /** A feature's [KitFrostState] (its content recorded by [kitFrostSource]) seen from a pane in the same window. */
-private fun frostStateBackdrop(state: KitFrostState, ground: Color, picture: KitGlassBackdrop?): KitLiquidBackdrop =
+internal fun frostStateBackdrop(state: KitFrostState, ground: Color, picture: KitGlassBackdrop?): KitLiquidBackdrop =
     KitLiquidBackdrop({ state.version }) { c ->
         // Read here so the pane draws again when the content behind it records again (a scroll under the bar).
         state.version
