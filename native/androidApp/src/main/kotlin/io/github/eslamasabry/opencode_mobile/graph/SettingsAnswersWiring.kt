@@ -38,7 +38,12 @@ class NativeSettingsAnswers(
     override val changes: Flow<Unit> = flow {
         if (stores.warm() is Outcome.Ok)
             emitAll(
-                combine(stores.prefs.changes.onStart { emit(emptySet()) }, registry.live) { _, _ ->
+                combine(
+                        stores.prefs.changes.onStart { emit(emptySet()) },
+                        registry.live,
+                        notifications.facts,
+                        background.facts,
+                    ) { _, _, _, _ ->
                         Unit
                     }
                     .conflate()
@@ -51,9 +56,15 @@ class NativeSettingsAnswers(
             if (stores.warm() is Outcome.Failed) return@withLock Failure.StorageRefused().failed()
             val handle = lifetime.handle(profile) ?: return@withLock stale()
             val readable = handle.consent.storageAvailable(profile)
+            // N1: "Notify me when the agent needs me" reads the same live facts as the
+            // Notifications page (its switches, Android's state) and the background connection,
+            // never only the answer given when the question was first asked.
+            notifications.refresh()
+            background.refresh()
+            val needsYou = needsYouAlerts(notifications.facts.value, background.facts.value.enabled)
             val answers =
                 InFlowConsentKind.entries
-                    .map { handle.consent.row(profile, it) }
+                    .map { handle.consent.row(profile, it).followingLive(needsYou) }
                     .filter { it.choice != ConsentChoice.Unseen }
                     .sortedBy {
                         when (it.choice) {
@@ -75,6 +86,7 @@ class NativeSettingsAnswers(
                     readable,
                     count,
                     graph?.session?.capabilities?.value?.savedPermissionList == true,
+                    needsYou,
                 )
                 .ok()
         }

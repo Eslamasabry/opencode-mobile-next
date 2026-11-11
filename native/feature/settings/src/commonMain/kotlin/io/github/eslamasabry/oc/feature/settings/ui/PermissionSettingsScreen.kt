@@ -101,12 +101,12 @@ internal fun PermissionSettingsContent(
                         answers
                             .filter { it.choice == ConsentChoice.Offered }
                             .forEach {
-                                PermissionAnswer(it, facts.writable, ui.busy, onAnswer)
+                                PermissionAnswer(it, facts.writable, ui.busy, onAnswer, facts.needsYou)
                             }
                         answers
                             .filter { it.choice == ConsentChoice.Denied }
                             .forEach {
-                                PermissionAnswer(it, facts.writable, ui.busy, onAnswer)
+                                PermissionAnswer(it, facts.writable, ui.busy, onAnswer, facts.needsYou)
                             }
                         if (declined > 0)
                             KitRow(
@@ -131,7 +131,7 @@ internal fun PermissionSettingsContent(
                         answers
                             .filter { it.choice == ConsentChoice.Accepted }
                             .forEach {
-                                PermissionAnswer(it, facts.writable, ui.busy, onAnswer)
+                                PermissionAnswer(it, facts.writable, ui.busy, onAnswer, facts.needsYou)
                             }
                     }
                 if (facts.savedGrants)
@@ -220,6 +220,7 @@ private fun PermissionAnswer(
     writable: Boolean,
     busy: Boolean,
     onAnswer: (InFlowConsentKind) -> Unit,
+    needsYou: NeedsYouAlerts? = null,
 ) {
     val accepted = row.choice == ConsentChoice.Accepted
     val tag =
@@ -246,6 +247,15 @@ private fun PermissionAnswer(
                         Res.string.consentAllowedNeedsYou
                     else Res.string.consentAllowedSystem
                 )
+            else if (row.kind == InFlowConsentKind.NeedsYouNotifications)
+                // N1: say which switch is off, in the words of the page that holds it.
+                stringResource(
+                    when (needsYou) {
+                        NeedsYouAlerts.AndroidBlocks -> Res.string.consentWhyNeedsYouBlocked
+                        NeedsYouAlerts.OnlyWhileOpen -> Res.string.consentWhyNeedsYouWhileOpen
+                        else -> Res.string.consentWhyNeedsYou
+                    }
+                )
             else answerWhy(row.kind),
         supportingMaxLines = 3, // F: lib/ui/screens/automation_settings_screen.dart:491
         trailing =
@@ -261,7 +271,12 @@ private fun PermissionAnswer(
                         }
                 )
             ),
-        enabled = !busy && (accepted || writable),
+        enabled =
+            !busy &&
+                (accepted ||
+                    writable ||
+                    (row.kind == InFlowConsentKind.NeedsYouNotifications &&
+                        needsYou == NeedsYouAlerts.AndroidBlocks)),
         disabledReason =
             stringResource(
                 if (busy) Res.string.automationSaving else Res.string.consentStorageFailed
