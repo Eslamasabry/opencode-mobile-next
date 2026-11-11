@@ -22,7 +22,6 @@ import io.github.eslamasabry.oc.engine.agents.install.AgentSetupFailure
 import io.github.eslamasabry.oc.engine.agents.install.AgentSetupJob
 import io.github.eslamasabry.oc.engine.agents.install.AgentSetupJobState
 import io.github.eslamasabry.oc.engine.agents.install.AgentSetupJobs
-import io.github.eslamasabry.oc.engine.agents.install.AgentVersionCheck
 import io.github.eslamasabry.oc.engine.agents.scripts.AgentPhoneScripts
 import io.github.eslamasabry.oc.engine.agents.scripts.PaseoLockCodec
 import io.github.eslamasabry.oc.engine.agents.scripts.PaseoPhoneScripts
@@ -245,20 +244,13 @@ class NativeAgentSetupJobs(
             stores.profiles.profile(profile) != null &&
             (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value == profile.raw
 
-    private fun failure(snapshot: JSONObject): AgentSetupFailure {
-        // The agent's own version check speaks first: its lines name the version and must not read as anything else.
-        AgentVersionCheck.failure(snapshot.optString("error"))?.let { return it }
-        val text = snapshot.optString("error") + " " + snapshot.optString("logTail")
-        return when {
-            "terminated with signal" in text -> AgentSetupFailure.Interrupted
-            "checksum" in text.lowercase() -> AgentSetupFailure.Checksum
-            "space" in text.lowercase() || "storage" in text.lowercase() ->
-                AgentSetupFailure.Storage
-            "version" in text.lowercase() -> AgentSetupFailure.Version
-            "download" in text.lowercase() -> AgentSetupFailure.Download
-            else -> AgentSetupFailure.Unknown
-        }
-    }
+    // AgentInstallFailureRules reads the agent's own version check first (AgentVersionCheck), then the job's words.
+    private fun failure(snapshot: JSONObject): AgentSetupFailure =
+        AgentInstallFailureRules.of(
+            snapshot.optString("error"),
+            snapshot.optString("logTail"),
+            snapshot.optString("errorCode").takeIf { !snapshot.isNull("errorCode") },
+        )
 
     override fun stopAdmission(profile: ProfileId) {
         synchronized(admission) { denied.add(profile) }
