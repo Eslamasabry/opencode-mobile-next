@@ -134,6 +134,8 @@ public fun KitButton(
     role: KitButtonRole = KitButtonRole.Primary,
     icon: ImageVector? = null,
     destructive: Boolean = false,
+    /** A quiet (tertiary) button whose words are the kit's warning ink: the destructive answer beside a filled safe one. */
+    danger: Boolean = false,
     maxLines: Int = 2,
     semanticsLabel: String? = null,
     enabled: KitEnabled = KitEnabled.Enabled,
@@ -179,6 +181,7 @@ public fun KitButton(
             !on -> if (heroWaits) heroWords else if (hero) colors.text2 else colors.text3
             role == KitButtonRole.Primary && destructive -> colors.ground
             role == KitButtonRole.Primary -> colors.onAccent
+            role == KitButtonRole.Tertiary && danger -> colors.attention
             // Green is the one accent for the primary action only: a tertiary action is neutral text1, which still
             // reads apart from disabled text3 (R5).
             else -> colors.text1 // F: lib/ui/kit/kit_buttons.dart:732

@@ -79,7 +79,8 @@ class ConfirmLayoutTest {
         }
         val confirm = onNode(hasText("Discard changes") and hasClickAction()).fetchSemanticsNode().boundsInRoot
         val cancel = onNode(hasText("Keep editing") and hasClickAction()).fetchSemanticsNode().boundsInRoot
-        assertEquals(confirm.top, cancel.top)
+        // The quiet confirm is shorter than the filled safe answer, so the pair shares a centre line, not a top edge.
+        assertTrue(kotlin.math.abs(confirm.center.y - cancel.center.y) < 1f)
         assertTrue(cancel.right < confirm.left)
     }
 }
