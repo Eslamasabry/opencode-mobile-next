@@ -325,10 +325,14 @@ class StatusModelParityTest {
         val s = build(StatusInput(working = listOf(tests), profileId = "p1"))
         assertEquals("working", s.kind.wire)
         assertEquals(listOf("open", "stop_reply"), s.actions.map { it.wire })
-        // The fields of the Flutter payload, plus the profile the renderer's Stop intent needs.
+        // The fields of the Flutter payload, plus the profile the renderer's Stop intent needs, plus the dock row's named
+        // Open/Stop labels and Stop's own conversation (b83e3d70c6: the row outside the app is fed by the dock).
         assertEquals("p1", s.conversation?.profileId?.raw)
         assertEquals(
-            setOf("kind", "title", "text", "lines", "subText", "progress", "actions", "conversation", "turnId", "publicTitle", "count"),
+            setOf(
+                "kind", "title", "text", "lines", "subText", "progress", "actions", "conversation", "turnId", "publicTitle", "count",
+                "openLabel", "stopConversation", "stopLabel",
+            ),
             StatusContent::class.java.declaredFields.filterNot { java.lang.reflect.Modifier.isStatic(it.modifiers) }.map { it.name }.toSet(),
         )
     }
