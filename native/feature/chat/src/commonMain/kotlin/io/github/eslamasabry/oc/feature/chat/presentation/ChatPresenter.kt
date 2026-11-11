@@ -1484,7 +1484,7 @@ public class ChatPresenter(
         if (!world.capabilities.value.fileBrowsing) return
         val name = clean.substringAfterLast('/')
         if (PICTURE_NAME.containsMatchIn(name)) openPicture(clean, name)
-        else nav.open(FilesRoute.File(world.ref, clean, line))
+        else nav.open(FilesRoute.File(world.ref, projectRelativePath(clean, world.directory), line))
     }
 
     override fun closePicture() {
@@ -1538,6 +1538,21 @@ public class ChatPresenter(
             }
         }
         return null
+    }
+}
+
+/**
+ * The path Files opens: relative to the conversation's own project folder. A tool reports a file by its absolute path
+ * ("/work/app/notes.txt"); Files takes paths below the project, so a path under [directory] loses that prefix. A path
+ * that is already relative, or that lies outside the project, is left as it is.
+ */
+internal fun projectRelativePath(path: String, directory: String?): String {
+    val root = directory?.trimEnd('/')?.takeIf { it.isNotEmpty() } ?: return path
+    if (!path.startsWith("/")) return path
+    return when {
+        path == root -> ""
+        path.startsWith("$root/") -> path.removePrefix("$root/")
+        else -> path
     }
 }
 

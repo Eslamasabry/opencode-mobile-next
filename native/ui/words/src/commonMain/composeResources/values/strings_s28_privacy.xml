@@ -5,7 +5,7 @@
     <string name="telemetryCrashesTitle">Crash reports</string>
     <string name="telemetryCrashesDetail">Sends crash reports to Google Firebase Crashlytics: the kind of error and where in the app's code it happened, never its message, the last steps you took as short words, and why Android ended the app last time. No code, conversations, files, addresses, keys or advertising ID.</string>
     <string name="collectTitle">What we collect</string>
-    <string name="collectRowSummary">Both switches start off. See exactly what each one sends.</string>
+    <string name="collectRowSummary">Usage and Crash reports stay off unless you said yes when asked. See exactly what each one sends.</string>
     <string name="collectUsageNotSentYet">This version does not send usage and app health yet. Your answer is kept and used once it does.</string>
     <string name="collectRules">Only fixed words and number ranges are sent, never free text. Turning a switch off deletes what was not sent yet.</string>
     <string name="collectUsageLabel">With Usage and app health</string>

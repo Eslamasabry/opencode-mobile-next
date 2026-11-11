@@ -120,7 +120,9 @@ public fun TeamHomeScreen(state: TeamHomeUi, actions: TeamHomeActions) {
                             ),
                     // A phone's bar holds two; Team settings waits in the menu there.
                     more = { hidden ->
-                        KitMenu(
+                        // The bar calls this even with nothing past its limit (the Off page has no action): a menu with
+                        // no item would be a dead tap, so it is not drawn.
+                        if (hidden.isNotEmpty()) KitMenu(
                             expanded = barMenuOpen,
                             items = hidden.map { KitMenuItem(it.label, it.onClick, icon = it.icon) },
                             onDismissRequest = { barMenuOpen = false },

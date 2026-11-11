@@ -4,7 +4,7 @@
     <string name="telemetryCrashesTitle">تقارير الأعطال</string>
     <string name="telemetryCrashesDetail">يرسل تقارير الأعطال إلى Google Firebase Crashlytics: نوع الخطأ ومكانه في شيفرة التطبيق دون نصّ رسالته، وآخر خطواتك ككلمات قصيرة، وسبب إنهاء أندرويد للتطبيق آخر مرة. لا شيفرة ولا محادثات ولا ملفات ولا عناوين ولا مفاتيح ولا معرّف إعلانات.</string>
     <string name="collectTitle">ما الذي نجمعه</string>
-    <string name="collectRowSummary">المفتاحان مطفآن في البداية. اطّلع على ما يرسله كل منهما بالضبط.</string>
+    <string name="collectRowSummary">الاستخدام وتقارير الأعطال يبقيان مطفأين ما لم توافق عند السؤال. اطّلع على ما يرسله كل منهما بالضبط.</string>
     <string name="collectUsageNotSentYet">هذا الإصدار لا يرسل الاستخدام وصحة التطبيق بعد. نحتفظ بإجابتك ونعمل بها حين يبدأ الإرسال.</string>
     <string name="collectRules">لا يُرسل إلا كلمات ثابتة ونطاقات أرقام، ولا يُرسل نصّ حرّ أبداً. إطفاء المفتاح يحذف ما لم يُرسل بعد.</string>
     <string name="collectUsageLabel">مع الاستخدام وصحة التطبيق</string>

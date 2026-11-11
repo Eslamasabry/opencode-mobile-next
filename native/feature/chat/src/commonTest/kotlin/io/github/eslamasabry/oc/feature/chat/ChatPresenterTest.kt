@@ -440,6 +440,28 @@ class ChatPresenterTest {
     }
 
     @Test
+    fun `a file card opens the file the way Files names it, below the conversation's own folder`() {
+        val inFolder = object : FakeChatWorld() {
+            override val directory: String? get() = "/root/projects"
+        }
+        val p = ChatPresenter(inFolder, nav, Immediate, false, false)
+        p.openPath("/root/projects/proof.txt", null)
+        p.openPath("notes/a.txt", null)
+        p.openPath("/root/projects/sub/b.txt", 3)
+        assertEquals(
+            listOf<io.github.eslamasabry.oc.ui.routes.AppRoute>(
+                io.github.eslamasabry.oc.ui.routes.FilesRoute.File(Ref, "proof.txt", null),
+                io.github.eslamasabry.oc.ui.routes.FilesRoute.File(Ref, "notes/a.txt", null),
+                io.github.eslamasabry.oc.ui.routes.FilesRoute.File(Ref, "sub/b.txt", 3),
+            ),
+            nav.opened,
+        )
+        assertEquals("/elsewhere/c.txt", io.github.eslamasabry.oc.feature.chat.presentation.projectRelativePath("/elsewhere/c.txt", "/root/projects"))
+        assertEquals("/root/projects-2/c.txt", io.github.eslamasabry.oc.feature.chat.presentation.projectRelativePath("/root/projects-2/c.txt", "/root/projects/"))
+        assertEquals("/root/x.txt", io.github.eslamasabry.oc.feature.chat.presentation.projectRelativePath("/root/x.txt", null))
+    }
+
+    @Test
     fun `B-CHAT-064 nothing is checked or opened where the server has no file browsing`() {
         world.capabilities.value = io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities(fileBrowsing = false)
         val p = presenter()
