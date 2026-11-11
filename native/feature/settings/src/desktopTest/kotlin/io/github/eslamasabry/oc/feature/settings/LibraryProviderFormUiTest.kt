@@ -24,6 +24,8 @@ import androidx.navigationevent.NavigationEventDispatcher
 import androidx.navigationevent.NavigationEventDispatcherOwner
 import androidx.navigationevent.NavigationEventInput
 import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
+import io.github.eslamasabry.oc.ui.kit.input.KitSecretSink
+import io.github.eslamasabry.oc.ui.kit.input.LocalKitSecretSink
 import java.lang.reflect.Proxy
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -248,7 +250,11 @@ class LibraryProviderFormUiTest {
                 }
             } as LibraryActions
         setContent {
-            CompositionLocalProvider(LocalNavigationEventDispatcherOwner provides owner) {
+            // The key step's field reports keystrokes to the app's redactor; nothing is typed here.
+            CompositionLocalProvider(
+                LocalNavigationEventDispatcherOwner provides owner,
+                LocalKitSecretSink provides KitSecretSink {},
+            ) {
                 SettingsThemed { LibraryScreen(providers(go).copy(sheet = sheet), live) }
             }
         }
