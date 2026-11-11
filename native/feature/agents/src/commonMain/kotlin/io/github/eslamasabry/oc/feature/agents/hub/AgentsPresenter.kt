@@ -61,6 +61,7 @@ public class AgentsPresenter(
 
     /** Counts the page's real steps; a read that ends after a newer step began leaves that step's notice alone. */
     private var steps = 0
+    private var starting: Job? = null
 
     init {
         refreshPhone()
@@ -443,11 +444,22 @@ public class AgentsPresenter(
         }
     }
 
-    override fun newConversation(id: ProfileId): Unit = operation {
-        when (val result = computers.newConversation(id)) {
-            is Outcome.Ok -> openChat(result.value)
-            is Outcome.Failed -> failed(AgentsIssue.StartFailed, result.failure)
-        }
+    /**
+     * A computer tile's New chat. Not an operation: the page's one-operation lock is held for as long as a phone step
+     * waits for the phone (up to a minute while a read probes sign-ins), and New chat on a computer has nothing to do
+     * with the phone, so a press there was dropped without a sign. One start at a time: a second press while the
+     * first conversation is being made is the same wish, and the chat it makes opens.
+     */
+    override fun newConversation(id: ProfileId) {
+        if (starting?.isActive == true) return
+        local.update { it.copy(issue = null) }
+        starting =
+            scope.launch {
+                when (val result = computers.newConversation(id)) {
+                    is Outcome.Ok -> openChat(result.value)
+                    is Outcome.Failed -> failed(AgentsIssue.StartFailed, result.failure)
+                }
+            }
     }
 
     override fun openComputer(id: ProfileId): Unit = openComputerPage(id)
