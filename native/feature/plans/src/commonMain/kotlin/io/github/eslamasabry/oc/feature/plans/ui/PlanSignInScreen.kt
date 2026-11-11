@@ -18,6 +18,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.model.IntegrationAuthMode
+import io.github.eslamasabry.oc.engine.integrations.catalog.ConnectHint
+import io.github.eslamasabry.oc.engine.integrations.catalog.connectMethodHasOwnLabel
+import io.github.eslamasabry.oc.engine.integrations.catalog.connectMethodHint
 import io.github.eslamasabry.oc.feature.plans.presentation.PlanAuthenticationUi
 import io.github.eslamasabry.oc.feature.plans.presentation.PlanSignInActions
 import io.github.eslamasabry.oc.feature.plans.presentation.PlanSignInStep
@@ -136,17 +139,17 @@ public fun PlanSignInScreen(state: PlanAuthenticationUi, actions: PlanSignInActi
                     KitRowGroup(label = stringResource(Res.string.m40AuthMethods)) {
                         for (integration in state.integrations) for (method in
                             integration.methods) KitRow(
-                            title = method.label,
+                            title =
+                                if (connectMethodHasOwnLabel(method)) method.label
+                                else stringResource(Res.string.m40AuthKey),
                             supporting =
                                 stringResource(
-                                    when {
-                                        method.type == "key" -> Res.string.m40AuthKeyHelp
-                                        method.type == "command" -> Res.string.m40AuthCommandHint
-                                        method.label.lowercase().contains("browser") ->
-                                            Res.string.m40AuthBrowserHint
-                                        method.label.lowercase().contains("headless") ->
-                                            Res.string.m40AuthDeviceHint
-                                        else -> Res.string.m40AuthAccountHint
+                                    when (connectMethodHint(method)) {
+                                        ConnectHint.Key -> Res.string.m40AuthKeyHelp
+                                        ConnectHint.Command -> Res.string.m40AuthCommandHint
+                                        ConnectHint.Browser -> Res.string.m40AuthBrowserHint
+                                        ConnectHint.Device -> Res.string.m40AuthDeviceHint
+                                        ConnectHint.Account -> Res.string.m40AuthAccountHint
                                     }
                                 ),
                             supportingMaxLines = 3,

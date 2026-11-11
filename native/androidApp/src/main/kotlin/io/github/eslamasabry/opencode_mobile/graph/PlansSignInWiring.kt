@@ -18,6 +18,7 @@ import io.github.eslamasabry.oc.core.model.*
 import io.github.eslamasabry.oc.core.security.*
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
+import io.github.eslamasabry.oc.engine.integrations.catalog.connectMethods
 import io.github.eslamasabry.oc.engine.integrations.usage.canonicalUsageProviderId
 import io.github.eslamasabry.oc.engine.profiles.LoadedProfile
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
@@ -160,37 +161,17 @@ class AndroidPlanSignInPort(
             gateway.integrations().map { all ->
                 all.filter { canonicalUsageProviderId(it.id) == provider || it.id == provider }
                     .map { integration ->
-                        val supported =
-                            integration.methods.filter {
-                                it.type == "key" ||
-                                    (it.type == "oauth" && it.id != null) ||
-                                    (it.type == "command" &&
-                                        it.id != null &&
-                                        graph.session.capabilities.value.integrationCommandAuth &&
-                                        gateway is IntegrationCommandGateway)
-                            }
-                        // Same key-led provider policy as Flutter connect_methods.dart: never
-                        // invent a key method.
-                        val keys = supported.filter { it.type == "key" }
-                        val offered =
-                            if (
-                                integration.id.lowercase() in setOf("anthropic", "google") &&
-                                    keys.isNotEmpty()
-                            )
-                                keys
-                            else supported
+                        // One shared rule with the other connect pages (ConnectMethods.kt).
                         integration.copy(
                             methods =
-                                offered
-                                    .sortedBy { method ->
-                                        when (method.type) {
-                                            "oauth" ->
-                                                if (method.label.lowercase().contains("browser")) 2
-                                                else 0
-                                            "key" -> 1
-                                            else -> 3
-                                        }
-                                    }
+                                connectMethods(
+                                        integration.id,
+                                        integration.methods,
+                                        commandSupported =
+                                            graph.session.capabilities.value
+                                                .integrationCommandAuth &&
+                                                gateway is IntegrationCommandGateway,
+                                    )
                                     .toImmutableList()
                         )
                     }

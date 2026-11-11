@@ -11,6 +11,7 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.SignInWhy
 import io.github.eslamasabry.oc.core.model.IntegrationAuthState
+import io.github.eslamasabry.oc.engine.integrations.catalog.connectMethods
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableList
@@ -35,6 +36,7 @@ public class PlanSignInViewModel(
     private val local = MutableStateFlow(PlanAuthenticationUi())
     public val state: StateFlow<PlanAuthenticationUi> = local.asStateFlow()
     private var generation = 0
+    private var followUp: (() -> Unit)? = null
 
     public fun open(providerId: String, connectionId: String? = null, pinned: Boolean = false) {
         if (local.value.busy || local.value.active) return
@@ -126,17 +128,39 @@ public class PlanSignInViewModel(
         operation { mine ->
             when (val result = port.integrations(place.id, before.provider)) {
                 is Outcome.Failed -> failed(mine, result.failure)
-                is Outcome.Ok ->
+                is Outcome.Ok -> {
+                    // The wiring already dropped what the server cannot run (command sign-ins
+                    // without the capability); this puts the choices in Flutter's order.
+                    val offered =
+                        result.value
+                            .map { i ->
+                                i.copy(
+                                    methods =
+                                        connectMethods(i.id, i.methods, commandSupported = true)
+                                            .toImmutableList()
+                                )
+                            }
+                            .filter { it.methods.isNotEmpty() }
+                            .toImmutableList()
                     if (mine == generation)
                         local.update {
                             it.copy(
                                 place = place,
-                                integrations = result.value,
+                                integrations = offered,
                                 step =
-                                    if (result.value.isEmpty()) PlanSignInStep.Unavailable
+                                    if (offered.isEmpty()) PlanSignInStep.Unavailable
                                     else PlanSignInStep.Methods,
                             )
                         }
+                    // One usable method goes straight to it (Flutter _connectIntegration); the
+                    // method's own step is the first screen and Back leaves the flow.
+                    val only =
+                        offered.singleOrNull()?.let { i ->
+                            i.methods.singleOrNull()?.let { i to it }
+                        }
+                    if (mine == generation && only != null)
+                        followUp = { chooseMethod(only.first.id, only.second.id, only.second.type) }
+                }
             }
         }
     }
@@ -357,6 +381,9 @@ public class PlanSignInViewModel(
                 action(mine)
             } finally {
                 if (mine == generation) local.update { it.copy(busy = false) }
+                val next = followUp
+                followUp = null
+                if (mine == generation) next?.invoke()
             }
         }
     }

@@ -852,17 +852,17 @@ private fun ProviderSheet(provider: IntegrationInfo, state: LibraryUi, actions: 
             },
     ) {
         val methods =
-            current.methods.filter {
-                it.type == "key" ||
-                    it.type == "oauth" ||
-                    (it.type == "command" &&
-                        state.inventory.capabilities?.integrationCommandAuth == true)
-            }
+            connectMethods(
+                current.id,
+                current.methods,
+                commandSupported = state.inventory.capabilities?.integrationCommandAuth == true,
+            )
         if (methods.isEmpty()) KitText(stringResource(Res.string.nlibServerManaged))
         KitRowGroup {
             methods.forEach { method ->
                 KitRow(
-                    method.label,
+                    if (connectMethodHasOwnLabel(method)) method.label
+                    else stringResource(Res.string.m40AuthKey),
                     trailing = KitRowTrailing.Chevron,
                     onClick = { actions.show(LibrarySheet.Method(current, method)) },
                 )
