@@ -11,5 +11,5 @@
     <string name="setupBatteryOpenApp">Открыть настройки приложения</string>
     <string name="setupBatteryOpenAutostart">Открыть автозапуск</string>
     <string name="setupBatteryOpenSamsung">Открыть настройки батареи</string>
-    <string name="setupBatteryOpenFailed">Телефон не открыл этот экран. Выполните шаги в Настройках вручную.</string>
+    <string name="setupBatteryOpenFailed">Этот телефон не смог открыть этот экран. Выполните шаги в Настройках вручную.</string>
 </resources>

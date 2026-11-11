@@ -78,6 +78,7 @@ localTerminalShellName
 m40PlansDurationHoursMinutes
 m40PlansDurationMinutes
 m40PlansPlan
+m40UsageReadCommand
 managedWorkspacesBranchLabel
 nativeSearchAliasesProjectChanges
 nativeSearchHealthBranch

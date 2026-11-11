@@ -36,6 +36,6 @@
     <string name="dockStaysWhileOpen">%1$s est ouverte, elle reste donc</string>
     <string name="dockStopFailed">Impossible d’arrêter %1$s</string>
     <string name="dockAnswerFailed">Impossible de répondre à %1$s</string>
-    <string name="dockSettingTitle">Dock sur le bord de l’écran</string>
+    <string name="dockSettingTitle">Dock de bord</string>
     <string name="dockSettingBody">Les conversations en cours sur le bord de l’écran. Faites glisser son haut pour le passer de l’autre côté.</string>
 </resources>

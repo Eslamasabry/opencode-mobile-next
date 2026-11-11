@@ -8,7 +8,7 @@
         <item quantity="other">%1$d 项运行中</item>
     </plurals>
     <string name="native_live_channel">实时编码连接</string>
-    <string name="native_live_description">OpenCode 在后台保持服务器会话在线时显示</string>
+    <string name="native_live_description">OpenCode 在后台保持与服务器的连接时显示</string>
     <string name="native_phone_server_body">你使用其他应用时，智能体仍在继续工作。</string>
     <string name="native_phone_server_channel">这部手机上的 OpenCode</string>
     <string name="native_phone_server_description">手机服务器或项目引擎运行时显示</string>
