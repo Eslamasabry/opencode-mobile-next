@@ -14,6 +14,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 
 /** Only masked configuration crosses the gateway. This port never writes, copies or shares it. */
 public interface ConfigurationInspection {
@@ -31,7 +36,39 @@ public sealed interface ServerConfigurationUi {
 
     public data object Unavailable : ServerConfigurationUi
 
-    public data class Ready(val text: String) : ServerConfigurationUi
+    /**
+     * [files] are the configuration files the server read, in its priority order; [folders] are
+     * where it looked. [text] is the masked source, shown only under Details.
+     */
+    public data class Ready(
+        val text: String,
+        val files: List<String> = emptyList(),
+        val folders: List<String> = emptyList(),
+    ) : ServerConfigurationUi
+}
+
+/**
+ * S4 (sweep-b 2026-11-11): the page shows which configuration files exist, never the source as the
+ * page. OpenCode 2's `/config` answers one `directory` entry for each folder it searched and a
+ * `document` entry only for a real file (w4-git-gate); only `type` and `path` are read here, so a
+ * document's contents (its `info`) can never reach the list.
+ */
+public object ConfigurationSources {
+    public fun ready(text: String): ServerConfigurationUi.Ready {
+        val sources =
+            runCatching {
+                    (Json.parseToJsonElement(text) as? JsonObject)?.get("sources") as? JsonArray
+                }
+                .getOrNull()
+                ?.mapNotNull { it as? JsonObject }
+                .orEmpty()
+        fun paths(type: String) =
+            sources
+                .filter { (it["type"] as? JsonPrimitive)?.contentOrNull == type }
+                .mapNotNull { (it["path"] as? JsonPrimitive)?.contentOrNull?.takeIf(String::isNotBlank) }
+                .distinct()
+        return ServerConfigurationUi.Ready(text, paths("document"), paths("directory"))
+    }
 }
 
 public fun interface ServerConfigurationActions {
@@ -65,7 +102,7 @@ public class ServerConfigurationViewModel(host: SettingsHost) :
             if (ticket != generation) return@launch
             mutable.value =
                 when (result) {
-                    is Outcome.Ok -> ServerConfigurationUi.Ready(result.value.text)
+                    is Outcome.Ok -> ConfigurationSources.ready(result.value.text)
                     is Outcome.Failed -> ServerConfigurationUi.Unavailable
                 }
         }
