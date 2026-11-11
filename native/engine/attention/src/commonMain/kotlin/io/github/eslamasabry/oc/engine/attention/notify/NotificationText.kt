@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.engine.attention.notify
 
+import io.github.eslamasabry.oc.core.common.KnownSecrets
+
 /**
  * Words that may reach the notification shade, kept safe (port of `notification_text.dart`, B-SEC-105/106). The shade
  * (not the lock screen, which gets a count-only public version) shows a command or the first line of a reply; keys,
@@ -38,9 +40,12 @@ public object NotificationText {
     private val SUB_COMMAND = Regex("""^[a-z][a-z0-9:_-]*$""")
     private val PATH_SEPARATORS = Regex("""[\\/]+""")
 
-    /** One short line of [input] with secrets masked, at most [maxLength] long. */
+    /**
+     * One short line of [input] with secrets masked, at most [maxLength] long: the values the app registered with its
+     * Redactor first ([KnownSecrets]: an MCP env value has no telltale shape), then the secret shapes.
+     */
     public fun redact(input: String, maxLength: Int = MAX_LENGTH): String {
-        var text = input.replace(WHITESPACE, " ").trim()
+        var text = KnownSecrets.mask(input).replace(WHITESPACE, " ").trim()
         for ((pattern, replace) in SECRET_PATTERNS) text = pattern.replace(text, replace)
         if (text.length > maxLength) text = text.substring(0, maxLength - 1).trimEnd() + "…"
         return text

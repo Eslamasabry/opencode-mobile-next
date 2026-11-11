@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.android.notifications
 
+import io.github.eslamasabry.oc.core.common.KnownSecrets
+
 /**
  * Words that may reach the notification shade, kept safe (plan 16 §1.8, B-SEC-105, B-SEC-106, B-SEC-149).
  *
@@ -39,9 +41,12 @@ public object NotificationText {
             Regex("[A-Za-z0-9+/_=-]{32,}") to { _ -> MASK },
         )
 
-    /** One short line of [input] with secrets masked, at most [maxLength] long (ellipsised). */
+    /**
+     * One short line of [input] with secrets masked, at most [maxLength] long (ellipsised): the values the app
+     * registered with its Redactor first ([KnownSecrets]: an MCP env value has no telltale shape), then the shapes.
+     */
     public fun redact(input: String, maxLength: Int = MAX_LINE): String {
-        var text = input.replace(whitespace, " ").trim()
+        var text = KnownSecrets.mask(input).replace(whitespace, " ").trim()
         for ((pattern, replace) in secretPatterns) text = pattern.replace(text, replace)
         if (text.length > maxLength) text = text.substring(0, maxLength - 1).trimEnd() + "…"
         return text

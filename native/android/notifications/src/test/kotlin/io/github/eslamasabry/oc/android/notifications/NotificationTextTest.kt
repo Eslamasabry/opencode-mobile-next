@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.android.notifications
 
+import io.github.eslamasabry.oc.core.common.KnownSecretMask
+import io.github.eslamasabry.oc.core.common.KnownSecrets
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -92,5 +94,20 @@ class NotificationTextTest {
         assertEquals(StopReason.Other, NotificationText.stoppedReason("MessageAbortedError"))
         assertEquals(StopReason.Other, NotificationText.stoppedReason("Something the server said: secret"))
         assertEquals(StopReason.Other, NotificationText.stoppedReason(null))
+    }
+
+    @Test
+    fun `W4-MCP-GATE a value the app registered is masked on the shade though it has no secret shape`() {
+        // The app installs its Redactor's registered values here (OcApplication); a fake mask stands in for it.
+        val value = "sv-" + "ShadeHeaderValue" + "6n7p"
+        assertEquals("echo $value", redact("echo $value"), "the shade's own patterns are not the guard here")
+        try {
+            KnownSecrets.install(KnownSecretMask { it.replace(value, NotificationText.MASK) })
+            assertEquals("The workspace is •••", NotificationText.firstReplyLine(listOf("The workspace is $value")))
+            assertFalse(value in NotificationText.commandHead("$value --flag"), "a registered value reaches the command head")
+            assertEquals("git push origin main", redact("git push origin main"))
+        } finally {
+            KnownSecrets.install(null)
+        }
     }
 }

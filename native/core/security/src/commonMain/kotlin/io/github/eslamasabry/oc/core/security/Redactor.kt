@@ -41,7 +41,12 @@ public class Redactor {
         }
     }
 
-    /** Registers every credential-named string in a config tree (Dart registerCredentialValues; B-PROTO-104). */
+    /**
+     * Registers every credential-named string in a config tree (Dart registerCredentialValues; B-PROTO-104), every
+     * MCP server's environment and header values whatever their names ([registerMcpServers]), the same values of LSP
+     * servers and formatters ([registerToolServers]), and the custom headers of providers, models and agents
+     * ([registerHeaderMaps]); ordinary values under ordinary names stay readable (McpConfigSecrets.kt).
+     */
     public fun registerCredentialValues(value: JsonElement) {
         when (value) {
             is JsonArray -> value.forEach(::registerCredentialValues)
@@ -55,6 +60,10 @@ public class Redactor {
                             if (space >= 0) registerSecret(field.content.substring(space + 1))
                         }
                     }
+                    // MCP server values are secrets whatever they are named (McpConfigSecrets.kt).
+                    if (field is JsonObject && name in MCP_CONTAINERS) registerMcpServers(field)
+                    if (field is JsonObject && name in TOOL_CONTAINERS) registerToolServers(field)
+                    if (field is JsonObject && name in HEADER_HOLDERS) registerHeaderMaps(field)
                     if (field is JsonObject || field is JsonArray) registerCredentialValues(field)
                 }
             else -> Unit
@@ -76,6 +85,17 @@ public class Redactor {
     }
 
     public fun containsSecret(text: String): Boolean = redact(text) != text
+
+    /**
+     * Only the registered secrets of [text] masked, none of [redact]'s patterns: for text that has its own pattern
+     * rules and only lacks the values the app knows (the notification shade, through core common's KnownSecrets).
+     */
+    public fun maskKnown(text: String): String {
+        if (text.isEmpty()) return text
+        var out = text
+        for (secret in secrets.load()) out = out.replace(secret, MASK)
+        return out
+    }
 
     /** Long digit-bearing tokens (≥ 32 chars) → mask; letters-only code names stay. */
     public fun opaqueTokens(text: String): String = OPAQUE_TOKEN.replace(text, MASK)
@@ -289,6 +309,15 @@ public class Redactor {
                 "key", "apikey", "password", "passwd", "secret", "clientsecret", "token", "accesstoken", "refreshtoken",
                 "access", "refresh", "authorization", "proxyauthorization", "xapikey", "cookie", "setcookie",
             )
+
+        /** `mcp` (OpenCode), `mcpServers` / `mcp_servers` (other agents' config files), after lowercasing and `-`/`_` removal. */
+        private val MCP_CONTAINERS = setOf("mcp", "mcpservers")
+
+        /** `lsp` and `formatter` maps (2.2.5 Config.InfoEncoded): each entry has a command and an env map. */
+        private val TOOL_CONTAINERS = setOf("lsp", "formatter")
+
+        /** `providers`/`agents` (2.2.5) and `provider`/`agent` (older) maps, whose entries carry custom `headers`. */
+        private val HEADER_HOLDERS = setOf("providers", "provider", "agents", "agent")
 
         private val AUTH_HEADER =
             Regex("""(["']?)\b(?:(?:Proxy-)?Authorization|(?:Set-)?Cookie|x-api-key)(["']?)\s*[:=]\s*""", RegexOption.IGNORE_CASE)
