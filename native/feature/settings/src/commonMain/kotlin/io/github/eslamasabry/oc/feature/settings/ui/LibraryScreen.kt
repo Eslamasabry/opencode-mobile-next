@@ -6,6 +6,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.SessionId
@@ -48,6 +49,9 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
     val tabs = listOf(LibraryTab.Mcp, LibraryTab.Commands, LibraryTab.Skills, LibraryTab.References)
     val searches = remember { mutableMapOf<LibraryTab, TextFieldState>() }
     val search = searches.getOrPut(state.tab) { TextFieldState() }
+    // A provider tap opens a sheet over the list: the search box's keyboard goes away with it, so one Back
+    // closes that sheet instead of first only lowering a keyboard the sheet does not use (device basics B19).
+    val focus = LocalFocusManager.current
     val query = search.text.toString().trim()
     fun match(vararg values: String?) =
         query.isEmpty() || values.any { it?.contains(query, ignoreCase = true) == true }
@@ -415,7 +419,19 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                                     stringResource(Res.string.nlibUnusable)
                                 else stringResource(Res.string.nlibConnected),
                             trailing = KitRowTrailing.Chevron,
-                            onClick = { actions.show(LibrarySheet.Provider(provider)) },
+                            onClick = {
+                                focus.clearFocus()
+                                val only =
+                                    soleMethodToConnect(
+                                        provider,
+                                        state.inventory.capabilities?.integrationCommandAuth ==
+                                            true,
+                                    )
+                                actions.show(
+                                    if (only != null) LibrarySheet.Method(provider, only)
+                                    else LibrarySheet.Provider(provider)
+                                )
+                            },
                         )
                     },
                 )
@@ -845,6 +861,20 @@ private fun ConversationChoice(
     )
 }
 
+/**
+ * The one method to open directly: a provider with no connection yet, nothing to read about its
+ * environment and exactly one usable method has nothing to manage, so the sheet that would list
+ * that single row is skipped.
+ */
+internal fun soleMethodToConnect(
+    provider: IntegrationInfo,
+    commandSupported: Boolean,
+): IntegrationMethodInfo? {
+    if (provider.connections.isNotEmpty()) return null
+    if (provider.methods.any { it.type == "env" && it.environmentNames.isNotEmpty() }) return null
+    return connectMethods(provider.id, provider.methods, commandSupported).singleOrNull()
+}
+
 @Composable
 private fun ProviderSheet(provider: IntegrationInfo, state: LibraryUi, actions: LibraryActions) {
     var disconnect by remember { mutableStateOf(false) }
@@ -971,16 +1001,7 @@ private fun MethodSheet(
         }
     var missing by remember { mutableStateOf(false) }
     val prompts =
-        method.prompts.filter { prompt ->
-            val whenValue = prompt["when"] as? JsonObject
-            val name = (whenValue?.get("key") as? JsonPrimitive)?.content
-            val expected = (whenValue?.get("value") as? JsonPrimitive)?.content
-            when ((whenValue?.get("op") as? JsonPrimitive)?.content) {
-                "eq" -> answers[name] == expected
-                "neq" -> answers[name] != expected
-                else -> true
-            }
-        }
+        method.prompts.filter { prompt -> connectPromptVisible(prompt, answers) }
     val label =
         if (method.type == "key") stringResource(Res.string.nlibSaveKey)
         else stringResource(Res.string.nlibStartSignIn)
@@ -1054,7 +1075,17 @@ private fun MethodSheet(
                     )
                 } else
                     fields[id]?.let { field ->
-                        KitField(field, title, onTextChanged = { answers[id] = it })
+                        KitField(
+                            field,
+                            title,
+                            kind =
+                                if ((prompt["format"] as? JsonPrimitive)?.content == "uri")
+                                    KitFieldKind.Url
+                                else KitFieldKind.Text,
+                            placeholder = (prompt["placeholder"] as? JsonPrimitive)?.content,
+                            helper = (prompt["description"] as? JsonPrimitive)?.content,
+                            onTextChanged = { answers[id] = it },
+                        )
                     }
             }
         }

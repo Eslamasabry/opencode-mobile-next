@@ -108,4 +108,59 @@ class ConnectMethodsTest {
         assertTrue(connectMethodHasOwnLabel(m("oauth", "a")))
         assertTrue(connectMethodHasOwnLabel(m("command", "c")))
     }
+
+    @Test
+    fun `W4-27 a device-code label gets the device-code hint, the other OpenAI rows do not`() {
+        assertEquals(ConnectHint.Device, connectMethodHint(m("oauth", "a", "Codex device code (legacy)")))
+        assertEquals(ConnectHint.Account, connectMethodHint(m("oauth", "b", "Sign in with ChatGPT")))
+    }
+
+    private fun q(vararg parts: Pair<String, String>) =
+        buildJsonObject {
+            put("key", "enterpriseUrl")
+            put(
+                "when",
+                kotlinx.serialization.json.JsonArray(
+                    listOf(buildJsonObject { parts.forEach { (k, v) -> put(k, v) } })
+                ),
+            )
+        }
+
+    @Test
+    fun `W4-28 a question with a condition shows only while the condition holds`() {
+        val enterprise = q("key" to "deploymentType", "op" to "eq", "value" to "enterprise")
+        assertFalse(connectPromptVisible(enterprise, mapOf("deploymentType" to "github.com")))
+        assertTrue(connectPromptVisible(enterprise, mapOf("deploymentType" to "enterprise")))
+        assertTrue(connectPromptVisible(q("key" to "a", "op" to "neq", "value" to "x"), mapOf("a" to "y")))
+        assertTrue(connectPromptVisible(buildJsonObject { put("key", "plain") }, emptyMap()))
+    }
+
+    @Test
+    fun `W4-PROVFORMS-GATE every condition in the list must hold, and a boolean or number value compares as text`() {
+        val prompt =
+            kotlinx.serialization.json.JsonObject(
+                mapOf(
+                    "key" to kotlinx.serialization.json.JsonPrimitive("region"),
+                    "when" to
+                        kotlinx.serialization.json.JsonArray(
+                            listOf(
+                                buildJsonObject { put("key", "mode"); put("op", "eq"); put("value", "advanced") },
+                                buildJsonObject { put("key", "managed"); put("op", "neq"); put("value", true) },
+                            )
+                        ),
+                )
+            )
+        assertTrue(connectPromptVisible(prompt, mapOf("mode" to "advanced", "managed" to "false")))
+        assertFalse(connectPromptVisible(prompt, mapOf("mode" to "advanced", "managed" to "true")))
+        assertFalse(connectPromptVisible(prompt, mapOf("mode" to "basic", "managed" to "false")))
+        // An operator the recording does not have leaves the field shown rather than hiding it for good.
+        val unknown =
+            kotlinx.serialization.json.JsonObject(
+                mapOf(
+                    "key" to kotlinx.serialization.json.JsonPrimitive("x"),
+                    "when" to buildJsonObject { put("key", "mode"); put("op", "in"); put("value", "a") },
+                )
+            )
+        assertTrue(connectPromptVisible(unknown, mapOf("mode" to "b")))
+    }
 }

@@ -73,6 +73,8 @@ public data class ThisPhoneUi(
     val lifecycle: io.github.eslamasabry.oc.engine.runtime.lifecycle.LifecycleReport? = null,
     val storage: io.github.eslamasabry.oc.engine.runtime.lifecycle.AppStorageFacts? = null,
     val storageFailed: Boolean = false,
+    /** The app's own storage is being measured now (on open, or after Try again / Measure). */
+    val measuringApp: Boolean = false,
     val answer: ThisPhoneAnswer = ThisPhoneAnswer(AnswerTone.Working, AnswerHeadline.Checking),
     val serverRows: ImmutableList<ServerRow> = persistentListOf(),
     val version: VersionRowUi? = null,

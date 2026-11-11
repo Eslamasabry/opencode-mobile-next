@@ -735,4 +735,21 @@ class SetupEngineTest {
         assertEquals(emptySet(), (engine.installedOptional() as Outcome.Ok).value)
         engine.dispose()
     }
+
+    @Test
+    fun `S15 installedOptional says busy when another phone task held the check slot`() = runTest {
+        linux.checks["python"] = true to "3.12.3"
+        val engine = engine()
+        // The one check slot was taken: busy, so This phone waits and reads again.
+        linux.checkError = Failure.Runtime(RuntimeProblem.SlotBusy)
+        val busy = engine.installedOptional() as Outcome.Failed
+        assertEquals(RuntimeProblem.SlotBusy, (busy.failure as Failure.Runtime).problem)
+        // Any other refusal stays a plain failure.
+        linux.checkError = Failure.Runtime(RuntimeProblem.Generic)
+        val broken = engine.installedOptional() as Outcome.Failed
+        assertEquals(RuntimeProblem.Generic, (broken.failure as Failure.Runtime).problem)
+        linux.checkError = null
+        assertEquals(setOf("python"), (engine.installedOptional() as Outcome.Ok).value)
+        engine.dispose()
+    }
 }
