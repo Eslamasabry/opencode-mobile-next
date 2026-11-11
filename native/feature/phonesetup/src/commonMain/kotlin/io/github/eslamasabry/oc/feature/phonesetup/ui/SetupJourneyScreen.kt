@@ -521,7 +521,10 @@ private fun Job(state: SetupJourneyUi, actions: SetupJourneyActions) {
         progress.components.ifEmpty {
             state.install.map { ComponentProgress(it.id, ComponentState.Pending) }
         }
-    val memory = remember(progress.jobId ?: rows.joinToString { it.id }) { JourneyProgressMemory() }
+    val memory =
+        remember(progress.jobId ?: rows.joinToString { it.id }) {
+            progress.jobId?.let { journeyMemory(it) } ?: JourneyProgressMemory()
+        }
     fun finished(row: ComponentProgress) =
         row.state == ComponentState.Done || row.state == ComponentState.Skipped
     val done = rows.count(::finished)
@@ -961,6 +964,20 @@ internal fun nodeCannotRun(progress: SetupProgress): Boolean =
         (progress.error == SetupError.NodeCannotRun ||
             progress.components.any { it.error == SetupError.NodeCannotRun })
 
+private const val OVERDUE_FLOOR_SECONDS = 180
+
+/**
+ * The memories outlive the screen: leaving the set-up page and coming back must not restart the "time left" at a
+ * larger number. Few jobs ever run, so the map is capped.
+ */
+private val journeyMemories = LinkedHashMap<String, JourneyProgressMemory>()
+
+internal fun journeyMemory(jobId: String): JourneyProgressMemory =
+    journeyMemories.getOrPut(jobId) {
+        if (journeyMemories.size >= 4) journeyMemories.remove(journeyMemories.keys.first())
+        JourneyProgressMemory()
+    }
+
 /** UI memory from Flutter's _track / _measuredOf: a new job resets it; a new stage resets only its arc. */
 internal class JourneyProgressMemory {
     private var measuredKey: Pair<String, String?>? = null
@@ -978,6 +995,12 @@ internal class JourneyProgressMemory {
 
     fun eta(progress: SetupProgress, registry: List<SetupComponent>): Int? {
         if (progress.state != SetupState.Running) return null
+        // A step far past its own estimate has no honest "minutes left": show none (the step clock and the
+        // still-working line remain) instead of a number that was wrong and then grows.
+        val running = progress.components.firstOrNull { it.state == ComponentState.Running }
+        val promised = running?.let { row -> registry.firstOrNull { it.id == row.id }?.estimatedSeconds }
+        val onStep = progress.stepElapsedSeconds
+        if (promised != null && onStep != null && onStep > maxOf(promised * 2, OVERDUE_FLOOR_SECONDS)) return null
         progress.etaSeconds?.let { raw ->
             val pending = progress.components.filter { it.state == ComponentState.Pending }.sumOf { row ->
                 registry.firstOrNull { it.id == row.id }?.estimatedSeconds ?: 0
