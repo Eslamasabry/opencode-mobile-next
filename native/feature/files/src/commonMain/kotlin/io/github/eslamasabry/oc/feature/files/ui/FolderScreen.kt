@@ -410,6 +410,7 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                                             actions::retry,
                                         )
                                     ),
+                                size = KitStateSize.Inline,
                             )
                         }
                     state.onlyHidden ->
@@ -615,6 +616,7 @@ private fun LazyListScope.searchItems(
                     KitStateKind.Empty,
                     stringResource(Res.string.readerUiNoFiles),
                     body = stringResource(Res.string.readerUiTryFileName),
+                    size = KitStateSize.Inline,
                 )
             }
         else ->

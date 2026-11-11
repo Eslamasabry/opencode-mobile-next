@@ -75,6 +75,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
@@ -186,6 +187,7 @@ private fun LazyListScope.triggerList(state: TriggersUi, actions: TriggersAction
                 stringResource(Res.string.fbTriggersEmptyTitle),
                 body = stringResource(Res.string.fbTriggersEmptyBody),
                 icon = KitIcons.sparkle,
+                size = KitStateSize.Inline,
             )
         }
     }

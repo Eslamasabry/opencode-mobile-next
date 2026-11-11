@@ -45,6 +45,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.team.KitProjectRow
 import io.github.eslamasabry.oc.ui.kit.team.KitTeamState
@@ -253,7 +254,7 @@ private fun Projects(state: TeamHomeUi, actions: TeamHomeActions, text: (HomeRow
             }
         }
         if (state.rows.isEmpty() && !state.stale) {
-            item(key = "empty") { KitStateView(KitStateKind.Empty, stringResource(Res.string.teamProjectEmpty)) }
+            item(key = "empty") { KitStateView(KitStateKind.Empty, stringResource(Res.string.teamProjectEmpty), size = KitStateSize.Inline) }
         }
         items(state.rows, key = { it.key }) { row ->
             when (row) {
