@@ -1143,9 +1143,10 @@ private fun ChatRow(
                             // target keeps 4 dp from it (LAYOUT-RULES edge-tap), a shift a person does not see.
                             modifier = Modifier.padding(end = FOOTER_EDGE_INSET_DP.dp).testTag("chat-turn-footer"),
                         ) {
-                            // KitReplyFooter's line already sits S4 in from the list edge, exactly where the reply text
-                            // starts, so the note takes no offset (a -S4 offset pushed it to x = 0, outside the margin).
-                            val note = Modifier.testTag("chat-turn-footer-note")
+                            // S24-CHAT: KitReplyFooter insets its line 16 dp from the reply's text edge (room for
+                            // Copy/More at the end); the "Stopped" note belongs on that edge, as in Flutter, so it
+                            // steps back by the inset (offset follows the layout direction, so RTL mirrors).
+                            val note = Modifier.offset(x = -Space.S4.dp).testTag("chat-turn-footer-note")
                             val endNote = facts.reading.endNotes[row.turnId]
                             if (row.failed) KitReplyNote(words.footer(true), note)
                             else if (row.stopped && endNote?.isServerStop != true) KitReplyNote(words.stoppedFooter(), note)
