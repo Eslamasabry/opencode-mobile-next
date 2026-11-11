@@ -154,7 +154,7 @@ class AgentsReadOrderTest {
     private val codexSignIn = PhoneAgentRow("codex", "Codex", PhoneAgentStatus.SignInNeeded, signInAvailable = true)
 
     @Test
-    fun `a read that fails while a removal runs never shows "could not be read or removed" over it`() = runTest {
+    fun `a read that fails while a removal runs never shows the read refusal over it`() = runTest {
         val rig = Rig(this, LanePhone(claudeRemovable))
         rig.phone.removing = CompletableDeferred()
         // The page's own read (on opening) is still running when the person removes Claude Code: the removal waits for
