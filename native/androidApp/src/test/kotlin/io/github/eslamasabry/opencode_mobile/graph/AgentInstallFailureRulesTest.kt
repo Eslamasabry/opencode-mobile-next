@@ -61,4 +61,22 @@ class AgentInstallFailureRulesTest {
             AgentInstallFailureRules.of("The setup step could not finish. Try again.", ""),
         )
     }
+
+    @Test
+    fun `a proot signal from an earlier retried attempt does not hide a later full disk or failed lookup`() {
+        val retried = "proot info: vpid 1: terminated with signal 9\n==> Retrying\n"
+        assertEquals(
+            AgentSetupFailure.Storage,
+            AgentInstallFailureRules.of("exit 1", retried + "npm ERR! code ENOSPC\n"),
+        )
+        assertEquals(
+            AgentSetupFailure.Download,
+            AgentInstallFailureRules.of("exit 1", retried + "Temporary failure resolving 'ports.ubuntu.com'\n"),
+        )
+        // The step's own words still say a stop first.
+        assertEquals(
+            AgentSetupFailure.Interrupted,
+            AgentInstallFailureRules.of("proot info: vpid 1: terminated with signal 9", "npm ERR! code ENOSPC\n"),
+        )
+    }
 }

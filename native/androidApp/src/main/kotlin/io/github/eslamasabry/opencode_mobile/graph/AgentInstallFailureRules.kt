@@ -39,13 +39,16 @@ internal object AgentInstallFailureRules {
         val tail = logTail.orEmpty().lowercase()
         return when {
             code == PERSISTENCE_CODE -> AgentSetupFailure.Storage
-            "terminated with signal" in said || "terminated with signal" in tail -> AgentSetupFailure.Interrupted
+            "terminated with signal" in said -> AgentSetupFailure.Interrupted
             "checksum" in said -> AgentSetupFailure.Checksum
             storage.any { it in said } -> AgentSetupFailure.Storage
             "version" in said -> AgentSetupFailure.Version
             download.any { it in said } -> AgentSetupFailure.Download
             tailStorage.any { it in tail } -> AgentSetupFailure.Storage
             tailDownload.any { it in tail } -> AgentSetupFailure.Download
+            // After the clear signs only: a proot signal an earlier, retried attempt left in the log is not the cause
+            // of a later full disk or failed lookup.
+            "terminated with signal" in tail -> AgentSetupFailure.Interrupted
             "checksum" in tail -> AgentSetupFailure.Checksum
             else -> AgentSetupFailure.Unknown
         }

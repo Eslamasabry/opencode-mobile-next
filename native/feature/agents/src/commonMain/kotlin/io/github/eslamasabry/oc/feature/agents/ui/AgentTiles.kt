@@ -304,7 +304,9 @@ internal fun installFailedWords(tile: AgentTileModel): org.jetbrains.compose.res
     if (install?.phase == PhoneAgentInstallPhase.Interrupted) return Res.string.agentsTileFailedStopped
     return when (install?.failure) {
         PhoneAgentInstallFailure.Storage -> Res.string.agentsTileFailedSpace
-        PhoneAgentInstallFailure.Download -> Res.string.agentsTileFailedDownload
+        // A download that was not the expected file is a failed download to the person (the sheet says which).
+        PhoneAgentInstallFailure.Download,
+        PhoneAgentInstallFailure.Checksum -> Res.string.agentsTileFailedDownload
         PhoneAgentInstallFailure.Interrupted -> Res.string.agentsTileFailedStopped
         else -> Res.string.agentsTileFailedOther
     }
