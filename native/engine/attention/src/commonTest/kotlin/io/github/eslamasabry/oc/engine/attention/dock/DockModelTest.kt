@@ -75,25 +75,18 @@ class DockModelTest {
                 Case("one live retreats to the nub", listOf(DockEvent.RunStarted(a)), DockPresence.Nub),
                 Case("nothing live is still the nub, never hidden", listOf(DockEvent.RunStarted(a), DockEvent.RunEnded(a, DockRunEnd.Stopped)), DockPresence.Nub),
                 Case("an idle open conversation alone is the nub", listOf(DockEvent.Opened(a)), DockPresence.Nub),
-                // Changed on purpose (the dock never comes out by itself): these three were pinned as Out.
-                Case("two live stay tucked", listOf(DockEvent.RunStarted(a), DockEvent.RunStarted(b)), DockPresence.Nub),
-                Case("an unanswered request elsewhere stays tucked", listOf(DockEvent.RunStarted(a), DockEvent.RequestOpened(a, "r")), DockPresence.Nub),
-                Case("a failure elsewhere stays tucked", listOf(DockEvent.RunStarted(a), DockEvent.RunEnded(a, DockRunEnd.Failed)), DockPresence.Nub),
-                Case("the person pulls it out with two live", listOf(DockEvent.RunStarted(a), DockEvent.RunStarted(b), DockEvent.Untuck), DockPresence.Out),
-                Case("the person pulls it out with nothing live", listOf(DockEvent.Opened(a), DockEvent.Untuck, DockEvent.Opened(null)), DockPresence.Out),
-                Case("entering a conversation tucks it", listOf(DockEvent.RunStarted(a), DockEvent.Untuck, DockEvent.Opened(b)), DockPresence.Nub),
-                Case("leaving to the list does not tuck it", listOf(DockEvent.RunStarted(a), DockEvent.Opened(b), DockEvent.Untuck, DockEvent.Opened(null)), DockPresence.Out),
-                Case("sending in the open conversation tucks it", listOf(DockEvent.Opened(a), DockEvent.Untuck, DockEvent.Sent(a)), DockPresence.Nub),
-                Case("a send in another conversation changes nothing", listOf(DockEvent.Opened(a), DockEvent.Untuck, DockEvent.Sent(b)), DockPresence.Out),
+                Case("two live come out", listOf(DockEvent.RunStarted(a), DockEvent.RunStarted(b)), DockPresence.Out),
+                Case("one of two stops: back to the nub", listOf(DockEvent.RunStarted(a), DockEvent.RunStarted(b), DockEvent.RunEnded(b, DockRunEnd.Stopped)), DockPresence.Nub),
+                Case("an unanswered request alone brings it out", listOf(DockEvent.RunStarted(a), DockEvent.RequestOpened(a, "r")), DockPresence.Out),
+                Case("a failure alone brings it out", listOf(DockEvent.RunStarted(a), DockEvent.RunEnded(a, DockRunEnd.Failed)), DockPresence.Out),
                 Case("a plain finish alone stays a nub", listOf(DockEvent.RunStarted(a), DockEvent.RunEnded(a, DockRunEnd.Succeeded)), DockPresence.Nub),
                 Case("the person tucked it", listOf(DockEvent.RunStarted(a), DockEvent.RunStarted(b), DockEvent.Tuck), DockPresence.Nub),
-                Case("untuck then tuck", listOf(DockEvent.RunStarted(a), DockEvent.RunStarted(b), DockEvent.Untuck, DockEvent.Tuck), DockPresence.Nub),
-                // Changed on purpose: a new failure or request used to untuck a tucked dock.
-                Case("a new failure does not pull it out", listOf(DockEvent.RunStarted(a), DockEvent.RunStarted(b), DockEvent.Tuck, DockEvent.RunEnded(a, DockRunEnd.Failed)), DockPresence.Nub),
-                Case("a new request does not pull it out", listOf(DockEvent.RunStarted(a), DockEvent.RunStarted(b), DockEvent.Tuck, DockEvent.RequestOpened(b, "r")), DockPresence.Nub),
-                Case("a pulled-out dock stays out through a failure", listOf(DockEvent.RunStarted(a), DockEvent.RunStarted(b), DockEvent.Untuck, DockEvent.RunEnded(a, DockRunEnd.Failed)), DockPresence.Out),
-                Case("a request in the open conversation changes nothing", listOf(DockEvent.Opened(a), DockEvent.RunStarted(a), DockEvent.RunStarted(b), DockEvent.RequestOpened(a, "r")), DockPresence.Nub),
-                Case("the open conversation's request does not tuck a pulled-out dock", listOf(DockEvent.Opened(a), DockEvent.RunStarted(b), DockEvent.Untuck, DockEvent.RequestOpened(a, "r")), DockPresence.Out),
+                Case("tuck then untuck", listOf(DockEvent.RunStarted(a), DockEvent.RunStarted(b), DockEvent.Tuck, DockEvent.Untuck), DockPresence.Out),
+                Case("a new failure untucks", listOf(DockEvent.RunStarted(a), DockEvent.RunStarted(b), DockEvent.Tuck, DockEvent.RunEnded(a, DockRunEnd.Failed)), DockPresence.Out),
+                Case("a new request untucks", listOf(DockEvent.RunStarted(a), DockEvent.RunStarted(b), DockEvent.Tuck, DockEvent.RequestOpened(b, "r")), DockPresence.Out),
+                Case("a finish does not untuck", listOf(DockEvent.RunStarted(a), DockEvent.RunStarted(b), DockEvent.Tuck, DockEvent.RunEnded(a, DockRunEnd.Succeeded)), DockPresence.Nub),
+                Case("tuck is forgotten when nothing is live", listOf(DockEvent.RunStarted(a), DockEvent.Tuck, DockEvent.RunEnded(a, DockRunEnd.Stopped), DockEvent.RunStarted(a), DockEvent.RunStarted(b)), DockPresence.Out),
+                Case("a request in the open conversation does not untuck", listOf(DockEvent.Opened(a), DockEvent.RunStarted(a), DockEvent.RunStarted(b), DockEvent.Tuck, DockEvent.RequestOpened(a, "r")), DockPresence.Nub),
             )
         for (case in cases) assertEquals(case.expect, run(*case.events.toTypedArray()).presence, case.label)
     }
@@ -121,7 +114,7 @@ class DockModelTest {
         val x = ref("x", other)
         val ui = run(DockEvent.RunStarted(a), DockEvent.RunStarted(x))
         assertEquals(listOf(a, x), ui.entries.map { it.ref })
-        assertEquals(DockPresence.Nub, ui.presence, "two live servers do not pull the dock out")
+        assertEquals(DockPresence.Out, ui.presence)
         val gone = DockModel.empty().reduce(DockEvent.RunStarted(a)).reduce(DockEvent.RunStarted(x)).reduce(DockEvent.ProfileGone(other))
         assertEquals(listOf(a), gone.ui.entries.map { it.ref })
         val deleted = gone.reduce(DockEvent.Deleted(a))
@@ -207,7 +200,7 @@ class DockModelTest {
     @Test
     fun `a status read adds busy sessions and finishes the ones that stopped without an event`() {
         val m = DockModel.empty().reduce(DockEvent.StatusesRead(p, setOf(a.sessionId, b.sessionId)))
-        assertEquals(DockPresence.Nub, m.ui.presence)
+        assertEquals(DockPresence.Out, m.ui.presence)
         val after = m.reduce(DockEvent.StatusesRead(p, setOf(a.sessionId)))
         assertEquals(DockState.Working, after.ui.state(a))
         assertEquals(DockState.Finished, after.ui.state(b))

@@ -144,14 +144,12 @@ public enum class DockPresence {
     Hidden,
 
     /**
-     * Tucked to the thin edge nub, which is the dock's default and its resting form: it stays here however many
-     * conversations are live and whatever needs the person (the nub's dots carry each ring's state colour, so a
-     * request or failure elsewhere stays noticeable). Also the form with no ring at all while a server is connected:
-     * the dock then offers only its new-conversation control.
+     * Tucked to the thin edge nub: quiet (fewer than two live and no unanswered failure or request), or tucked. Also
+     * with no ring at all while a server is connected: the dock then offers only its new-conversation control.
      */
     Nub,
 
-    /** Out: only because the person pulled it out ([DockEvent.Untuck]). Entering a conversation or sending tucks it again. */
+    /** Out: two or more live, or an unanswered failure or request in a conversation that is not on screen, and the person has not tucked it. */
     Out,
 }
 
@@ -235,9 +233,6 @@ public sealed interface DockEvent {
      */
     public data class Left(val ref: ConversationRef) : DockEvent
 
-    /** The person sent a message in [ref]. When it is the open conversation the dock tucks (they are in a chat). */
-    public data class Sent(val ref: ConversationRef) : DockEvent
-
     public data class ProfileGone(val profile: ProfileId) : DockEvent
 
     /** The connection to a server closed: its conversations leave the dock (nothing is known about them now). Names stay. */
@@ -314,14 +309,13 @@ public sealed interface DockEvent {
  * - The order is stable: a conversation keeps its place until it leaves; a newcomer goes last (fillers that join
  *   together go most recent first). A state change never reshuffles. Above [cap] rings the ones that matter most stay
  *   (pinned, NeedsYou, Failed, working, Finished), still in their stable order, and [DockUi.overflow] counts the rest.
- * - The dock is never hidden for lack of live conversations, and it never comes out by itself. It is tucked by default
- *   ([DockPresence.Nub], the thin edge nub); [DockPresence.Out] only after the person pulls it out ([DockEvent.Untuck]).
- *   Two live conversations, a new failure or a new request change nothing about that. It goes back to tucked when the
- *   person enters a conversation (any non-null [DockEvent.Opened]) and when they send a message in the open one
- *   ([DockEvent.Sent]). The tuck is not persisted. With no ring at all it is still the nub while a server is connected
- *   (its "+" starts a conversation there). [DockPresence.Hidden] only when no ring is in the dock and no server is
- *   connected (the app hides it too when the person turned it off).
- * - A request or failure in the conversation on screen raises no `pulse` (the person is looking at it).
+ * - The dock is never hidden for lack of live conversations. [DockPresence.Out] needs two or more live (anything but
+ *   Idle), or an unanswered failure or request; otherwise it is [DockPresence.Nub] (the thin edge nub). The person can
+ *   tuck it, and a NEW failure or request untucks it; with nothing live the tuck is forgotten. With no ring at all it
+ *   is still the nub while a server is connected (its "+" starts a conversation there). [DockPresence.Hidden] only
+ *   when no ring is in the dock and no server is connected (the app hides it too when the person turned it off).
+ * - A request or failure belonging to the conversation on screen (or its sub-agents) never counts as the alert that brings
+ *   the dock out: the person is looking at it. It counts again once they are on another conversation or the home.
  * - [DockEvent.Left]: a conversation that left the home list without being deleted (archived) leaves like a deleted
  *   one, but its saved nickname stays.
  * - Removing (`DockEvent.Remove`): the ring (or sub-agent) leaves at once and stays out while nothing new happens. It
@@ -409,7 +403,7 @@ public class DockModel private constructor(private val s: Snapshot) {
         val names: Map<ConversationRef, String> = emptyMap(),
         val order: List<ConversationRef> = emptyList(),
         val open: ConversationRef? = null,
-        val tucked: Boolean = true,
+        val tucked: Boolean = false,
         val nextSeq: Long = 0,
         /** Titles and agents heard before a conversation joined the dock, so a newcomer arrives with its name. */
         val known: PersistentMap<ConversationRef, Triple<String?, String?, SessionId?>> = persistentMapOf(),
@@ -430,8 +424,10 @@ public class DockModel private constructor(private val s: Snapshot) {
         private fun ifTracked(ref: ConversationRef, change: (Tracked) -> Tracked): Snapshot =
             if (ref in tracked) copy(tracked = tracked + (ref to change(tracked.getValue(ref)))) else this
 
-        /** A new failure or request: the ring pulses (never the open one). The dock itself does not come out for it. */
+        /** A new failure or request: the ring pulses and a tucked dock comes back out. */
         private fun alerted(t: Tracked): Tracked = if (t.ref == open) t else t.copy(pulse = t.pulse + 1)
+
+        private fun untuckFor(ref: ConversationRef): Snapshot = if (ref == open) this else copy(tucked = false)
 
         private fun ended(t: Tracked, end: DockRunEnd): Tracked {
             // A run that ended (stopped, failed or finished) holds no question: a request the server dropped with it may
@@ -466,7 +462,7 @@ public class DockModel private constructor(private val s: Snapshot) {
                     if (e.ref !in tracked && e.end != DockRunEnd.Failed) {
                         this
                     } else {
-                        withTracked(e.ref) { ended(it, e.end) }
+                        withTracked(e.ref) { ended(it, e.end) }.let { if (e.end == DockRunEnd.Failed) it.untuckFor(e.ref) else it }
                     }
                 is DockEvent.Reasoning ->
                     if ((tracked[e.ref]?.thinking ?: false) == e.active) this else withTracked(e.ref) { it.copy(thinking = e.active) }
@@ -479,7 +475,7 @@ public class DockModel private constructor(private val s: Snapshot) {
                     withTracked(e.ref) {
                         val next = it.copy(requests = it.requests + e.requestId)
                         if (before.isEmpty()) alerted(next) else next
-                    }
+                    }.let { if (before.isEmpty()) it.untuckFor(e.ref) else it }
                 }
                 is DockEvent.RequestSettled -> ifTracked(e.ref) { it.copy(requests = it.requests - e.requestId) }
                 is DockEvent.RequestsRead -> readRequests(e)
@@ -488,12 +484,11 @@ public class DockModel private constructor(private val s: Snapshot) {
                     if (e.failed) {
                         val t = tracked[e.ref]
                         if (t != null && !t.busy && t.outcome == Outcome.Finished && e.ref != open) {
-                            ifTracked(e.ref) { alerted(it).copy(outcome = Outcome.Failed) }
+                            ifTracked(e.ref) { alerted(it).copy(outcome = Outcome.Failed) }.untuckFor(e.ref)
                         } else this
                     } else this
                 is DockEvent.Deleted -> copy(pinned = pinned.filter { it != e.ref }, removed = removed.filter { it != e.ref }, known = known.remove(e.ref), tracked = tracked.filter { (r, t) -> r != e.ref && !(r.profileId == e.ref.profileId && t.parent == e.ref.sessionId) }, names = names - e.ref, open = open.takeIf { it != e.ref }, recent = recent - e.ref)
                 is DockEvent.Left -> step(DockEvent.Deleted(e.ref)).copy(names = names)
-                is DockEvent.Sent -> if (e.ref == open) copy(tucked = true) else this
                 is DockEvent.ProfileGone ->
                     copy(
                         removed = removed.filter { it.profileId != e.profile },
@@ -514,8 +509,7 @@ public class DockModel private constructor(private val s: Snapshot) {
                     copy(names = names.filterKeys { it.profileId != e.profile } + e.names.mapKeys { ConversationRef(e.profile, it.key) })
                 is DockEvent.NicknameSet -> copy(names = if (e.name == null) names - e.ref else names + (e.ref to e.name))
                 is DockEvent.Opened -> {
-                    // Entering a conversation tucks the dock: the person is reading, not choosing where to go.
-                    val moved = copy(open = e.ref, tucked = tucked || e.ref != null)
+                    val moved = copy(open = e.ref)
                     if (e.ref == null) {
                         moved
                     } else {
@@ -624,6 +618,7 @@ public class DockModel private constructor(private val s: Snapshot) {
             val before = tracked[ref]?.requests.orEmpty()
             if (read.isEmpty()) return ifTracked(ref) { it.copy(requests = emptySet()) }
             return withTracked(ref) { t -> t.copy(requests = read).let { if (before.isEmpty()) alerted(it) else it } }
+                .let { if (before.isEmpty()) it.untuckFor(ref) else it }
         }
 
         private fun readStatuses(e: DockEvent.StatusesRead): Snapshot {
@@ -758,6 +753,7 @@ public class DockModel private constructor(private val s: Snapshot) {
                 }
             val all = core + fillers.associateBy { it.ref }
             val base = copy(tracked = all, nextSeq = seq)
+            val live = coreMembers.filter { base.view(it).state != DockState.Idle }
             val members = coreMembers + fillers
             val ids = members.map { it.ref }.toSet()
             // Newcomers go last: live, pinned and open ones by arrival, then idle fillers most recent first.
@@ -769,7 +765,7 @@ public class DockModel private constructor(private val s: Snapshot) {
             val back = newcomers.filter { it in slots }
             placed += newcomers.filter { it !in slots }
             for (ref in back) placed.add(slots.getValue(ref).coerceIn(0, placed.size), ref)
-            return base.copy(order = placed, slots = slots.filterKeys { it in removed })
+            return base.copy(order = placed, tucked = tucked && live.isNotEmpty(), slots = slots.filterKeys { it in removed })
         }
 
         /** A root with its sub-agents rolled in. */
@@ -857,12 +853,14 @@ public class DockModel private constructor(private val s: Snapshot) {
                     )
                 }
             val live = members.count { it.state != DockState.Idle }
+            // The conversation on screen (and its sub-agents) never counts: the person is looking at it.
+            val alert = members.any { (it.state == DockState.NeedsYou || it.state == DockState.Failed) && it.root.ref != openRoot }
             // Never hidden for lack of live conversations: quiet is the nub, and an empty dock is the nub with its "+"
             // while a server is connected (a new conversation has somewhere to go). Hidden only with nothing connected.
             val presence =
                 when {
                     members.isEmpty() -> if (online.isNotEmpty()) DockPresence.Nub else DockPresence.Hidden
-                    !tucked -> DockPresence.Out
+                    !tucked && (live >= 2 || alert) -> DockPresence.Out
                     else -> DockPresence.Nub
                 }
             val hidden =

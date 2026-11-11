@@ -84,14 +84,9 @@ public object DockFeed {
                 )
             is GatewayEvent.MessageUpserted ->
                 // The agent that answered names the ring's mark when the session record has not said.
-                if (event.message.role == io.github.eslamasabry.oc.core.model.transcript.Role.User) {
-                    // The person's own message: a send. The dock tucks if that conversation is the one on screen.
-                    listOf(DockEvent.Sent(ref(SessionId(event.message.sessionId))))
-                } else {
-                    event.message.agent?.takeIf { it.isNotBlank() && event.message.role == io.github.eslamasabry.oc.core.model.transcript.Role.Assistant }
-                        ?.let { listOf(DockEvent.Meta(ref(SessionId(event.message.sessionId)), null, it)) }
-                        .orEmpty()
-                }
+                event.message.agent?.takeIf { it.isNotBlank() && event.message.role == io.github.eslamasabry.oc.core.model.transcript.Role.Assistant }
+                    ?.let { listOf(DockEvent.Meta(ref(SessionId(event.message.sessionId)), null, it)) }
+                    .orEmpty()
             is GatewayEvent.PartUpserted -> partEvents(profile, event.part)
             is GatewayEvent.PartDelta ->
                 listOf(DockEvent.Reasoning(ref(event.sessionId), event.field == DeltaField.Reasoning))

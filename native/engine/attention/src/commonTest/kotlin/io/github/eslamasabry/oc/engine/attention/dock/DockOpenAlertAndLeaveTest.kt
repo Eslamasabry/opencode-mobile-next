@@ -6,9 +6,6 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
-import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
-import io.github.eslamasabry.oc.core.model.transcript.MessageInfo
-import io.github.eslamasabry.oc.core.model.transcript.Role
 import io.github.eslamasabry.oc.engine.attention.activity.FakeAttentionKeyStore
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -17,7 +14,7 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 
-class DockTuckAndLeaveTest {
+class DockOpenAlertAndLeaveTest {
     private val p = ProfileId("p1")
     private fun ref(n: String) = ConversationRef(p, SessionId(n))
     private val a = ref("a")
@@ -26,43 +23,20 @@ class DockTuckAndLeaveTest {
 
     private fun model(vararg events: DockEvent): DockModel = events.fold(DockModel.empty()) { m, e -> m.reduce(e) }
 
-    // ---- the dock never comes out by itself
+    // ---- the open conversation is not an alert
 
     @Test
-    fun `tucked by default, two live and an alert elsewhere keep it tucked, the person pulls it out`() {
-        val busy = model(DockEvent.RunStarted(a), DockEvent.RunStarted(b), DockEvent.RequestOpened(b, "permission:r"))
-        assertEquals(DockPresence.Nub, busy.ui.presence)
-        assertTrue(busy.ui.tucked)
-        // The alert is still carried: the ring's state (the tucked form draws one dot per ring in its state colour).
-        assertEquals(DockState.NeedsYou, busy.ui.entries.first { it.ref == b }.state)
-        assertEquals(1, busy.ui.entries.first { it.ref == b }.pulse)
-        val out = busy.reduce(DockEvent.Untuck)
-        assertEquals(DockPresence.Out, out.ui.presence)
-        assertEquals(DockPresence.Out, out.reduce(DockEvent.RunEnded(a, DockRunEnd.Failed)).ui.presence, "stays where the person put it")
-    }
-
-    @Test
-    fun `entering a conversation and sending tuck it, the open conversation's own request changes nothing`() {
-        val out = model(DockEvent.RunStarted(a), DockEvent.RunStarted(b), DockEvent.Untuck)
-        assertEquals(DockPresence.Out, out.ui.presence)
-        assertEquals(DockPresence.Nub, out.reduce(DockEvent.Opened(c)).ui.presence, "entering a conversation")
-        assertEquals(DockPresence.Out, out.reduce(DockEvent.Opened(null)).ui.presence, "going back to the list does not")
-        val inChat = out.reduce(DockEvent.Opened(a))
-        assertEquals(DockPresence.Nub, inChat.ui.presence)
-        val pulled = inChat.reduce(DockEvent.Untuck)
-        assertEquals(DockPresence.Out, pulled.ui.presence)
-        assertEquals(DockPresence.Out, pulled.reduce(DockEvent.RequestOpened(a, "permission:r")).ui.presence, "the open one's request")
-        assertEquals(0, pulled.reduce(DockEvent.RequestOpened(a, "permission:r")).ui.entries.first { it.ref == a }.pulse)
-        assertEquals(DockPresence.Out, pulled.reduce(DockEvent.Sent(b)).ui.presence, "a send elsewhere")
-        assertEquals(DockPresence.Nub, pulled.reduce(DockEvent.Sent(a)).ui.presence, "sending in the open one")
-    }
-
-    @Test
-    fun `a message of the person is a send, an assistant message is not`() {
-        val user = MessageInfo(id = "m", sessionId = "a", role = Role.User)
-        assertEquals(listOf<DockEvent>(DockEvent.Sent(a)), DockFeed.events(p, GatewayEvent.MessageUpserted(user)))
-        val reply = MessageInfo(id = "m2", sessionId = "a", role = Role.Assistant)
-        assertTrue(DockFeed.events(p, GatewayEvent.MessageUpserted(reply)).none { it is DockEvent.Sent })
+    fun `the open conversation's own request or failure does not bring the dock out, another one's does`() {
+        val own = model(DockEvent.Opened(a), DockEvent.RunStarted(a), DockEvent.RequestOpened(a, "permission:r"))
+        assertEquals(DockPresence.Nub, own.ui.presence, "the person is looking at it")
+        assertEquals(0, own.ui.entries.first { it.ref == a }.pulse)
+        assertEquals(DockPresence.Nub, model(DockEvent.Opened(a), DockEvent.RunStarted(a), DockEvent.RunEnded(a, DockRunEnd.Failed)).ui.presence)
+        // The same request counts once the person is on the home or on another conversation (today's rule).
+        assertEquals(DockPresence.Out, own.reduce(DockEvent.Opened(null)).ui.presence)
+        assertEquals(DockPresence.Out, own.reduce(DockEvent.Opened(b)).ui.presence)
+        // An alert elsewhere still brings it out while a conversation is open.
+        val elsewhere = model(DockEvent.Opened(a), DockEvent.RunStarted(b), DockEvent.RequestOpened(b, "permission:r"))
+        assertEquals(DockPresence.Out, elsewhere.ui.presence)
     }
 
     // ---- archive
