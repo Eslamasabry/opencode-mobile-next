@@ -22,7 +22,14 @@ public object GlassSpec : StyleSpec {
             // sheen and the lens, with corners grown to stay concentric.
             paneInsetDp = PANE_INSET,
             paneCornerBoostDp = PANE_CORNER_BOOST,
+            dividerEndGutters = DIVIDER_END_GUTTERS,
         )
+
+    /**
+     * A list panel's row lines stop this many gutters before the pane's end edge, so they end where the rows' words end
+     * and never run into the rim (glass-in-the-kit 1c, 2026-11-11: on the owner's dark home the lines met the rim).
+     */
+    public const val DIVIDER_END_GUTTERS: Float = 1f
 
     /** The extra inner inset of a Glass pane beyond its own padding, in dp ([StyleTokens.paneInsetDp]). */
     public const val PANE_INSET: Float = 6f

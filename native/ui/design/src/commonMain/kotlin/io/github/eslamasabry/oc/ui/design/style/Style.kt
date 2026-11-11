@@ -130,6 +130,11 @@ public data class StyleTokens(
     val paneInsetDp: Float = 0f,
     /** What a pane's corner radius grows by to stay concentric with [paneInsetDp] (not under Sharp corners). */
     val paneCornerBoostDp: Float = 0f,
+    /**
+     * How many page gutters a list panel's row lines stop short of the panel's end edge (Glass: one, so a line never
+     * runs into the lit rim; docs/designs/glass-in-the-kit.md 1c). 0 runs them to the edge.
+     */
+    val dividerEndGutters: Float = 0f,
 ) {
     public val fieldHaloShown: Boolean get() = fieldHalo ?: glow.halo
 }

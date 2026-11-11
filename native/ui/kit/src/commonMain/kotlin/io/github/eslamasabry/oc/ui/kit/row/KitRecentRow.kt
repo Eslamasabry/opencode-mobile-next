@@ -55,6 +55,7 @@ import io.github.eslamasabry.oc.ui.kit.motion.kitGrowSource
 import io.github.eslamasabry.oc.ui.kit.motion.kitGrowTitle
 import io.github.eslamasabry.oc.ui.kit.theme.KitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -324,7 +325,9 @@ public fun KitRowPanel(
             // A panel is a surface of its own: its rows keep their gutter inside it.
             CompositionLocalProvider(LocalKitOnRail provides false) {
                 val inset = if (leadingMarks) KitRecentRowRules.textStartDp(tokens.gutter) else tokens.gutter
-                KitHairlineColumn(inset.dp, 0.dp, colors.hairline, if (prominentDividers) kitProminentRule() else null, rows)
+                // The lines stop short of the end edge where the style asks (Glass: one gutter, clear of the rim).
+                val endInset = tokens.gutter * LocalKitStyle.current.spec.tokens.dividerEndGutters
+                KitHairlineColumn(inset.dp, endInset.dp, colors.hairline, if (prominentDividers) kitProminentRule() else null, rows)
             }
         }
     }
