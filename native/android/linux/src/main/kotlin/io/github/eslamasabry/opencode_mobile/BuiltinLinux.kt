@@ -5481,6 +5481,9 @@ class BuiltinLinux(private val context: Context) {
      * working words there. False when no service of ours holds the row any more (the server is stopping, or its
      * process outlived its service): the caller then takes its own row away, so no orphaned row stays behind.
      */
+    /** The phone server's own service holds the shared status row now (so the app may lend it its words). */
+    fun holdsStatusRow(): Boolean = StatusNotification.isOwned(StatusNotification.OWNER_SERVER)
+
     fun repostStatusRow(): Boolean {
         if (!StatusNotification.anyOwner()) return false
         StatusNotification.refresh(context)

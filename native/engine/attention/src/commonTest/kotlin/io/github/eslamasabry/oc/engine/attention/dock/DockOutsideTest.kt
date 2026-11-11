@@ -310,4 +310,28 @@ class DockOutsideTest {
         val child = DockChild(ref("k"), null, "x", working, 4)
         assertEquals(7, build(ui(entry("a", working, pulse = 1, children = listOf(child)), entry("b", working, pulse = 2)))!!.pulses)
     }
+
+    // ---- the phone server's row: the same words stand in it while anything runs or waits (never "nothing running")
+
+    @Test
+    fun `shade states - nothing, running, waiting for a permission, both, and after the answer`() {
+        // Nothing running, nothing waiting: no conversations row, so the server's own "Ready" row is true.
+        assertNull(build(ui(entry("a", DockState.Idle))))
+        // A run in progress.
+        val running = build(ui(entry("a", working)))!!
+        assertEquals(OutsideKind.Working, running.kind)
+        assertEquals("Working on Chat a", running.title)
+        // A run waiting for a permission: the row says so.
+        val waiting = build(ui(entry("a", DockState.NeedsYou)))!!
+        assertEquals(OutsideKind.NeedsYou, waiting.kind)
+        assertEquals("Chat a needs you", waiting.title)
+        assertEquals("Waiting for your answer", waiting.text)
+        // One waits and another runs.
+        val both = build(ui(entry("a", DockState.NeedsYou), entry("b", working)))!!
+        assertEquals(OutsideKind.NeedsYou, both.kind)
+        assertEquals("Waiting for your answer · 1 others working", both.text)
+        // After the answer the run works again, then finishes: back to no row.
+        assertEquals(OutsideKind.Working, build(ui(entry("a", working)))!!.kind)
+        assertNull(build(ui(entry("a", DockState.Finished))))
+    }
 }
