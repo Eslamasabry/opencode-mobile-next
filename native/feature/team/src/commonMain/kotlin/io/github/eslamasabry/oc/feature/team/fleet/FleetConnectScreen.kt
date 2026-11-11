@@ -17,7 +17,6 @@ import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
-import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
@@ -39,7 +38,6 @@ import org.jetbrains.compose.resources.stringResource
  */
 @Composable
 public fun FleetConnectScreen(state: FleetConnectUi, actions: FleetConnectActions) {
-    val inset = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
     KitSheetHost(Modifier.fillMaxSize()) {
         // The fields are drawn once the saved address is read, so they start with it and not with a blank.
         if (state.ready) {
@@ -73,7 +71,6 @@ public fun FleetConnectScreen(state: FleetConnectUi, actions: FleetConnectAction
                     )
                 },
                 width = KitScreenWidth.Reading,
-                edges = KitScreenEdges.Bleed,
             ) {
                 LazyColumn(
                     Modifier.fillMaxSize().testTag("team-address"),
@@ -84,7 +81,7 @@ public fun FleetConnectScreen(state: FleetConnectUi, actions: FleetConnectAction
                         KitField(
                             url,
                             stringResource(Res.string.teamUiAddAddressLabel),
-                            inset.testTag("team-address-url"),
+                            Modifier.testTag("team-address-url"),
                             kind = KitFieldKind.Url,
                             placeholder = stringResource(Res.string.teamUiAddAddressHint),
                             imeAction = androidx.compose.ui.text.input.ImeAction.Next,
@@ -95,7 +92,7 @@ public fun FleetConnectScreen(state: FleetConnectUi, actions: FleetConnectAction
                         KitField(
                             city,
                             stringResource(Res.string.teamHostFormTeamLabel),
-                            inset.testTag("team-address-city"),
+                            Modifier.testTag("team-address-city"),
                             kind = KitFieldKind.Mono,
                             helper = stringResource(Res.string.teamHostFormTeamHelper),
                             imeAction = androidx.compose.ui.text.input.ImeAction.Done,
@@ -107,7 +104,7 @@ public fun FleetConnectScreen(state: FleetConnectUi, actions: FleetConnectAction
                         item(key = "problem") {
                             KitNotice(
                                 stringResource(problemWords(problem)),
-                                inset.testTag("team-address-verdict"),
+                                Modifier.testTag("team-address-verdict"),
                                 tone = StatusTone.Failure,
                                 notes = if (state.canSaveAnyway) listOf(stringResource(Res.string.teamHostFormSaveAnywayNote)) else emptyList(),
                                 actions =
@@ -125,7 +122,7 @@ public fun FleetConnectScreen(state: FleetConnectUi, actions: FleetConnectAction
                             KitDetailsFold(
                                 label = stringResource(Res.string.teamHostFormConnectionDetails),
                                 copyLabel = stringResource(Res.string.kitCopyDetails),
-                                modifier = inset.testTag("team-address-details"),
+                                modifier = Modifier.testTag("team-address-details"),
                                 values = listOf(KitTechnicalValue(stringResource(Res.string.teamUiLabelAddress), asked)),
                             )
                         }
@@ -147,7 +144,6 @@ public fun FleetConnectScreen(state: FleetConnectUi, actions: FleetConnectAction
                 loading = true,
                 loadingLabel = stringResource(Res.string.teamProjectLoad),
                 width = KitScreenWidth.Reading,
-                edges = KitScreenEdges.Bleed,
             ) {}
         }
     }
