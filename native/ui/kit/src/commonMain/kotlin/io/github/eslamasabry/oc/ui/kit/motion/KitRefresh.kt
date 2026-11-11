@@ -105,6 +105,12 @@ public fun KitRefresh(
     enabled: Boolean = true,
     /** The pull's state, when a host wants to read it; by default the part keeps its own. */
     hostState: PullToRefreshState? = null,
+    /**
+     * How far below the top of this part, in px, the disc starts its travel: the chrome that floats over the top of
+     * the content (a floating liquid bar, KitFloatingBar.kt), so the disc comes out below it instead of under it.
+     * Null: from the top, as before.
+     */
+    indicatorTopPx: (() -> Int)? = null,
     content: @Composable BoxScope.() -> Unit,
 ) {
     val label = stringResource(Res.string.workRefresh)
@@ -122,14 +128,14 @@ public fun KitRefresh(
                     key && enabled
                 },
         state = state,
-        indicator = { if (enabled) RefreshIndicator(state, refreshing) },
+        indicator = { if (enabled) RefreshIndicator(state, refreshing, indicatorTopPx) },
         content = content,
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun BoxScope.RefreshIndicator(state: PullToRefreshState, refreshing: Boolean) {
+private fun BoxScope.RefreshIndicator(state: PullToRefreshState, refreshing: Boolean, topPx: (() -> Int)?) {
     val motion = KitMotion.state
     val specs = KitMotion.specs
     val colors = LocalKitColors.current
@@ -168,7 +174,7 @@ private fun BoxScope.RefreshIndicator(state: PullToRefreshState, refreshing: Boo
             .testTag("kit-refresh")
             .graphicsLayer {
                 val f = if (phase == RefreshPhase.Refreshing || phase == RefreshPhase.Done) 1f else state.distanceFraction
-                translationY = f * threshold.toPx() - disc.toPx()
+                translationY = f * threshold.toPx() - disc.toPx() + (topPx?.invoke() ?: 0)
                 val l = leaving.value
                 alpha = if (phase == RefreshPhase.Idle) 0f else l
                 val s = MotionTokens.MARK_FROM + (1f - MotionTokens.MARK_FROM) * l
