@@ -24,6 +24,7 @@ import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.graphicsLayer
@@ -117,7 +118,7 @@ public fun KitEdgeDock(
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val motion = LocalKitMotion.current
     val colors = LocalKitColors.current
-    val face = rememberDockFace()
+    val face = rememberDockFace(state)
     val inks = remember(colors, face.ink, face.ink2) { DockInks.from(colors, face.ink, face.ink2) }
     val haptics = rememberKitHaptics()
     val scope = rememberCoroutineScope()
@@ -216,7 +217,11 @@ public fun KitEdgeDock(
     }
 }
 
-/** The body: the face clipped to the outline, then the failure pulse and the marks (grip, pin line). */
+/**
+ * The body: the face clipped to the outline (the join field's zero line), then the failure pulse and the marks (grip,
+ * pin line). A face that draws the body itself ([DockFace.drawsOwnBody]) is drawn as it is, with no clip and no path:
+ * it reads [KitEdgeDockState.body] (the same boxes and reach) in its own draw.
+ */
 @Composable
 private fun DockBodyNode(state: KitEdgeDockState, face: DockFace, inks: DockInks) {
     val path = remember { Path() }
@@ -226,24 +231,32 @@ private fun DockBodyNode(state: KitEdgeDockState, face: DockFace, inks: DockInks
             .drawWithContent {
                 if (state.column.count == 0) return@drawWithContent
                 val f = state.computeFrame()
-                val o = state.outline
-                buildOutline(o, f.aLeft, f.aTop, f.aBottom, f.aRadius, f.hasB, f.bLeft, f.bTop, f.bBottom, f.bRadius, f.grow, f.fillet, f.edgeX, state.shoulders)
-                val d = density
                 val pt = state.pulse.value
                 val pulsing = pt < 1f && state.pulseRing >= 0 && !state.reduced
+                if (face.drawsOwnBody) {
+                    this@drawWithContent.drawContent()
+                    if (!pulsing) {
+                        drawMarks(state, f, inks)
+                        return@drawWithContent
+                    }
+                }
+                val o = state.bodyOutline(f)
+                val d = density
                 if (pulsing) {
                     val start = o.indexNearY(state.slotY(state.pulseRing), f.aLeft + 2f)
                     pulseOffsets(o, start, pt * 900f, 3.4f * kotlin.math.exp(-pt * 3.3f), state.pulseDx, state.pulseDy)
                 }
                 fun px(i: Int): Float = state.phys(o.x[i] + (if (pulsing) state.pulseDx[i] else 0f)) * d
                 fun py(i: Int): Float = (o.y[i] + (if (pulsing) state.pulseDy[i] else 0f)) * d
-                val beyond = state.phys(f.edgeX + DockDims.OVERHANG) * d
-                path.rewind()
-                path.moveTo(beyond, py(0))
-                for (i in 0 until o.n) path.lineTo(px(i), py(i))
-                path.lineTo(beyond, py(o.n - 1))
-                path.close()
-                clipPath(path) { this@drawWithContent.drawContent() }
+                if (!face.drawsOwnBody) {
+                    val beyond = state.phys(f.edgeX + DockDims.OVERHANG) * d
+                    path.rewind()
+                    path.moveTo(beyond, py(0))
+                    for (i in 0 until o.n) path.lineTo(px(i), py(i))
+                    path.lineTo(beyond, py(o.n - 1))
+                    path.close()
+                    clipPath(path) { this@drawWithContent.drawContent() }
+                }
                 if (pulsing) {
                     pulsePath.rewind()
                     val s0 = o.s[o.indexNearY(state.slotY(state.pulseRing), f.aLeft + 2f)]
@@ -268,30 +281,36 @@ private fun DockBodyNode(state: KitEdgeDockState, face: DockFace, inks: DockInks
                     val a = (1f - pt).coerceIn(0f, 1f)
                     drawPath(pulsePath, inks.failure, alpha = a * a, style = Stroke(2.6f * d, cap = StrokeCap.Round))
                 }
-                // Tucked: the rings shrink into dots of their state colour along the nub.
-                val out = state.out.value
-                val vis = smoothstep(15f, 58f, out)
-                if (vis < 1f) {
-                    val nx = state.phys(f.edgeX - max(out, DockDims.NUB_W) / 2f) * d
-                    state.rings.forEachIndexed { i, r ->
-                        val cy = state.slotY(i) - DockDims.RING_LIFT
-                        drawCircle(inks.of(r.state), 3f * d, Offset(nx, cy * d), alpha = 1f - vis)
-                    }
-                }
-                // The grip at the dock's head: a short bar (a mark, not a surface).
-                if (out > DockDims.REST_W * 0.5f && !f.panel) {
-                    val cx = state.phys(f.aLeft + (out + state.lean.value) / 2f) * d
-                    val gy = (state.top.value + DockDims.HEAD / 2f + 2f) * d
-                    drawLine(inks.ink2, Offset(cx - 8f * d, gy), Offset(cx + 8f * d, gy), 3f * d, StrokeCap.Round, alpha = 0.35f)
-                    val col = state.column
-                    if (col.pinGap > 0f) {
-                        val ly = col.pinLineY(state.top.value, state.scroll.value) * d
-                        drawLine(inks.ink2, Offset(cx - 14f * d, ly), Offset(cx + 14f * d, ly), 1.5f * d, StrokeCap.Round, alpha = 0.5f)
-                    }
-                }
+                drawMarks(state, f, inks)
             }
             .then(face.modifier),
     )
+}
+
+/** The marks on the body: the nub's dots while tucked, the grip at the dock's head and the pin line (not surfaces). */
+private fun DrawScope.drawMarks(state: KitEdgeDockState, f: DockFrame, inks: DockInks) {
+    val d = density
+    // Tucked: the rings shrink into dots of their state colour along the nub.
+    val out = state.out.value
+    val vis = smoothstep(15f, 58f, out)
+    if (vis < 1f) {
+        val nx = state.phys(f.edgeX - max(out, DockDims.NUB_W) / 2f) * d
+        state.rings.forEachIndexed { i, r ->
+            val cy = state.slotY(i) - DockDims.RING_LIFT
+            drawCircle(inks.of(r.state), 3f * d, Offset(nx, cy * d), alpha = 1f - vis)
+        }
+    }
+    // The grip at the dock's head: a short bar (a mark, not a surface).
+    if (out > DockDims.REST_W * 0.5f && !f.panel) {
+        val cx = state.phys(f.aLeft + (out + state.lean.value) / 2f) * d
+        val gy = (state.top.value + DockDims.HEAD / 2f + 2f) * d
+        drawLine(inks.ink2, Offset(cx - 8f * d, gy), Offset(cx + 8f * d, gy), 3f * d, StrokeCap.Round, alpha = 0.35f)
+        val col = state.column
+        if (col.pinGap > 0f) {
+            val ly = col.pinLineY(state.top.value, state.scroll.value) * d
+            drawLine(inks.ink2, Offset(cx - 14f * d, ly), Offset(cx + 14f * d, ly), 1.5f * d, StrokeCap.Round, alpha = 0.5f)
+        }
+    }
 }
 
 /** One ring: its art, its mark, its name, its semantics and keys. Moves by its offset; never recomposes per frame. */
@@ -496,7 +515,7 @@ private fun ringCenter(state: KitEdgeDockState, index: Int, m: RingMotion): Offs
     if (ride > 0f && state.swellRing == index && state.renaming == state.rings.getOrNull(index)?.key) {
         val f = state.computeFrame()
         val rideX = (state.swell?.rideX ?: 0f)
-        x = lerp(baseX, f.bLeft + rideX, ride)
+        x = lerp(baseX, f.bRestLeft + rideX, ride)
         y = lerp(y, (f.bTop + f.bBottom) / 2f + DockDims.RING_LIFT, ride)
     }
     return Offset(state.phys(x), y)

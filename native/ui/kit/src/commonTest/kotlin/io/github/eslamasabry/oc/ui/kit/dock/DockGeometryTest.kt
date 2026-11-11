@@ -33,7 +33,7 @@ class DockGeometryTest {
         val cy = s.column.slotCenter(ring, s.strip.top, 0f)
         val placed = placeSwell(layout, cy, s.strip, safeTop, safeBottom)
         val a = s.strip.copy(top = placed.stripTop, bottom = placed.stripBottom)
-        buildOutline(o, a, placed.b, 1f, placed.fillet, s.width, shoulders = true)
+        buildOutline(o, a, placed.b, joinReachFor(placed.blend, 1f), s.width, shoulders = true)
         assertTrue(o.swellFrom >= 0, "the outline has a swell part")
         val lo = a.left
         var tip = Float.POSITIVE_INFINITY
@@ -104,11 +104,11 @@ class DockGeometryTest {
             val o = DockOutline()
             val (m, placed) = swellBody(s, layout, ring, o)
             // The fillet keeps its full reach on both sides: the swell never pools into the dock's end.
-            assertEquals(layout.filletReach, placed.fillet, 0.01f, "ring $ring")
+            assertEquals(layout.filletBlend, placed.blend, 0.01f, "ring $ring")
             val b = placed.b
             val above = b.top - (placed.stripTop + DockDims.CORNER)
             val below = (placed.stripBottom - DockDims.CORNER) - b.bottom
-            assertTrue(above >= layout.filletReach && below >= layout.filletReach, "ring $ring: room above $above, below $below")
+            assertTrue(above >= layout.filletBlend && below >= layout.filletBlend, "ring $ring: room above $above, below $below")
             assertTrue(m.base >= 1.3f * m.height)
             // The ring's own band stays beside the swell.
             val cy = s.column.slotCenter(ring, s.strip.top, 0f)
@@ -122,7 +122,7 @@ class DockGeometryTest {
     fun `the outline has no kink anywhere - rest, swell, peek, rename and list`() {
         val s = scene(412f)
         val o = DockOutline()
-        buildOutline(o, s.strip, null, 0f, 0f, 412f, shoulders = true)
+        buildOutline(o, s.strip, null, 0f, 412f, shoulders = true)
         assertTrue(maxTurnDegrees(o) < 15f, "rest: ${maxTurnDegrees(o)}")
         for (kind in SwellKind.entries) {
             val layout = swellLayout(kind, KitDockRingState.NeedsYou, 3, 6, false, 1f, 330f)
@@ -130,22 +130,30 @@ class DockGeometryTest {
             assertTrue(maxTurnDegrees(o) < 15f, "$kind: ${maxTurnDegrees(o)}")
         }
         val panel = panelBox(412f, 0f, 0f, s.strip, 600f, safeTop, safeBottom)
-        buildOutline(o, s.strip, panelAt(s.strip, panel, 1f, 1f), 1f, 0f, 412f, shoulders = true)
+        buildOutline(o, s.strip, panelAt(s.strip, panel, 1f, 1f), 0f, 412f, shoulders = true)
         assertTrue(maxTurnDegrees(o) < 15f, "list: ${maxTurnDegrees(o)}")
     }
 
     @Test
-    fun `the root fillet's tightest radius follows its reach and its ends meet the edges with no curvature`() {
+    fun `the root fillet's tightest radius follows its blend and its ends meet the edges with no curvature`() {
         val s = scene(412f)
-        val layout = swellLayout(SwellKind.Scrub, KitDockRingState.Working, 0, 0, false, 1f, 330f)
-        val o = DockOutline()
-        swellBody(s, layout, 2, o)
-        var tightest = Float.POSITIVE_INFINITY
-        for (i in o.swellFrom + 2..o.swellFrom + 22) tightest = minOf(tightest, threePointRadius(o, i, 1))
-        val want = layout.filletReach * DockDims.FILLET_RADIUS_PER_REACH
-        assertTrue(abs(tightest - want) < want * 0.2f, "tightest $tightest, wanted about $want")
-        // Near both ends of the fillet the radius is huge (curvature runs out to zero: no step in the rim light).
-        assertTrue(threePointRadius(o, o.swellFrom + 1, 1) > 4f * want)
+        for (kind in listOf(SwellKind.Scrub, SwellKind.Peek)) {
+            val layout = swellLayout(kind, KitDockRingState.Working, 0, 4, false, 1f, 330f)
+            val o = DockOutline()
+            val (_, placed) = swellBody(s, layout, 2, o)
+            // The top fillet: the traced points between A's side and B's top edge.
+            var tightest = Float.POSITIVE_INFINITY
+            for (i in o.swellFrom + 1 until o.swellTo) {
+                if (o.y[i] < placed.b.top - 0.05f && o.x[i] < s.strip.left - 0.05f) tightest = minOf(tightest, threePointRadius(o, i, 1))
+            }
+            val want = layout.filletBlend * DockDims.FILLET_RADIUS_PER_BLEND
+            assertTrue(abs(tightest - want) < want * 0.2f, "$kind: tightest $tightest, wanted about $want")
+            // Near both ends of the fillet the radius is huge (curvature runs out to zero: no step in the rim light).
+            assertTrue(threePointRadius(o, o.swellFrom + 1, 1) > 4f * want, "$kind: the walk starts on A's straight side")
+        }
+        // The design targets: 22.7 dp at the swell's blend, 30.6 dp at the peek's.
+        assertEquals(22.7f, DockDims.SW_FILLET_BLEND * DockDims.FILLET_RADIUS_PER_BLEND, 0.05f)
+        assertEquals(30.6f, 0.3f * 288f * DockDims.FILLET_RADIUS_PER_BLEND, 0.05f)
     }
 
     @Test
@@ -285,7 +293,7 @@ class DockGeometryTest {
         // Mirroring a whole outline keeps every distance (the same shape on the other edge).
         val s = scene(412f)
         val o = DockOutline()
-        buildOutline(o, s.strip, null, 0f, 0f, 412f, shoulders = true)
+        buildOutline(o, s.strip, null, 0f, 412f, shoulders = true)
         for (i in 0 until o.n) assertEquals(412f - o.x[i], mirrorX(o.x[i], 412f), 1e-3f)
     }
 
@@ -313,7 +321,7 @@ class DockGeometryTest {
         assertEquals(412f, o.x[0], 0.01f)
         assertEquals(s.strip.top, o.y[0], 0.01f)
         assertEquals(412f, o.x[o.n - 1], 0.01f)
-        buildOutline(o, s.strip, null, 0f, 0f, 412f, shoulders = true)
+        buildOutline(o, s.strip, null, 0f, 412f, shoulders = true)
         assertTrue(o.y[0] < s.strip.top, "the shoulder starts above the strip on the screen edge")
     }
 
@@ -323,9 +331,39 @@ class DockGeometryTest {
         val layout = swellLayout(SwellKind.Scrub, KitDockRingState.Working, 0, 0, false, 1f, 330f)
         val placed = placeSwell(layout, s.column.slotCenter(2, s.strip.top, 0f), s.strip, safeTop, safeBottom)
         val o = DockOutline()
-        buildOutline(o, s.strip, placed.b, 0.25f, placed.fillet, 412f, shoulders = true)
-        val tip = o.minX
-        assertEquals(s.strip.left - 0.25f * layout.length, tip, 0.5f)
+        for (g in listOf(0.25f, 0.6f, 1.08f)) {
+            val b = grownSwell(placed.b, s.strip.left, g)
+            // B is the box as it is now: growth x length out of the strip, its end corner fixed (no squeeze).
+            assertEquals(s.strip.left - g * layout.length, b.left, 0.01f)
+            assertEquals(layout.radius, b.radius, 0.01f, "g $g")
+            buildOutline(o, s.strip, b, joinReachFor(placed.blend, g), 412f, shoulders = true)
+            assertEquals(b.left, o.minX, 0.05f, "g $g: the drawn tip is B's left edge")
+            assertTrue(o.x.take(o.n).all { it <= 412f + 0.01f }, "g $g: nothing past the screen edge")
+        }
+        // The join's reach is twice the blend once grown, and arrives with the swell.
+        assertEquals(2f * placed.blend, joinReachFor(placed.blend, 1f), 0.01f)
+        assertEquals(DockDims.JOIN_MIN_REACH, joinReachFor(placed.blend, 0f), 0.01f)
+        assertTrue(joinReachFor(placed.blend, 0.1f) < joinReachFor(placed.blend, 0.2f))
+    }
+
+    @Test
+    fun `the join field is each box's own distance away from the join, and a reach of twice the blend makes the blend's fillet`() {
+        val a = DockBox(344f, 200f, 452f, 700f, 28f)
+        val b = DockBox(120f, 400f, 344f + DockDims.SW_OVERLAP, 520f, 24f)
+        val reach = 2f * DockDims.SW_FILLET_BLEND
+        // Far from the join: the exact distance to the nearer box.
+        assertEquals(-20f, dockJoinDistance(364f, 300f, a, b, reach), 0.01f)
+        assertEquals(10f, dockJoinDistance(110f, 460f, a, b, reach), 0.01f)
+        assertEquals(30f, dockJoinDistance(200f, 370f, a, b, reach), 0.01f)
+        // On the corner's diagonal (da = db = t) the cubic kernel subtracts blend / 6: the outline crosses at t = blend / 6.
+        val t = DockDims.SW_FILLET_BLEND / 6f
+        assertEquals(0f, dockJoinDistance(344f - t, 400f - t, a, b, reach), 0.01f)
+        // Projection lands on the zero line and walks down A's side with the body on its right.
+        val f = DockJoinField().set(a.left, a.top, a.right, a.bottom, a.radius, b.left, b.top, b.right, b.bottom, b.radius, reach)
+        f.project(330f, 250f)
+        assertEquals(344f, f.px, 0.01f)
+        assertEquals(0f, f.tx, 0.01f)
+        assertEquals(1f, f.ty, 0.01f)
     }
 
     @Test

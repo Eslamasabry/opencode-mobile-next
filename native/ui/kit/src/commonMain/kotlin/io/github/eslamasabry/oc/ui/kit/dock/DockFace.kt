@@ -21,11 +21,23 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 
 /**
- * How the dock's body is painted: the face's [modifier] (applied to a node clipped to the body's outline), the ink of
- * the words on it, and whether the outline has shoulders into the screen edge.
+ * How the dock's body is painted: the face's [modifier], the ink of the words on it, and whether the outline has
+ * shoulders into the screen edge.
+ *
+ * - [drawsOwnBody] false (Solid, the only face today): the body node clips [modifier] to the body's outline, the join
+ *   field's zero line built from the frame ([KitEdgeDockState.bodyOutline]).
+ * - [drawsOwnBody] true (a lens face, the glass owner's): the body node applies NO clip and draws NO path; [modifier]
+ *   is drawn over the whole dock area and must draw the body itself from [KitEdgeDockState.body] (box A, box B as it is
+ *   now, and `joinReach`), read in its draw phase. The marks and the failure pulse still draw over it.
  */
 @Immutable
-internal class DockFace(val modifier: Modifier, val ink: Color, val ink2: Color, val shoulders: Boolean)
+internal class DockFace(
+    val modifier: Modifier,
+    val ink: Color,
+    val ink2: Color,
+    val shoulders: Boolean,
+    val drawsOwnBody: Boolean = false,
+)
 
 /**
  * THE ONE PLACE the dock's face is decided (for the design/glass owner to switch).
@@ -33,14 +45,15 @@ internal class DockFace(val modifier: Modifier, val ink: Color, val ink2: Color,
  * Today it asks the resolver for the nearest existing floating role, as a square face that the body clips to its own
  * outline: the kit's rule (a part gets its face from `kitSurfaceLook` by role; it never paints its own surface, border or
  * shadow). When the owner adds a `Dock` surface role and its recipe, this becomes a one-line switch of [SurfaceRole];
- * under a lens the body is drawn by the joined-glass field from [KitEdgeDockState.body] instead, and this function
- * returns that face.
+ * under a lens this function returns a face with [DockFace.drawsOwnBody] set, whose modifier draws the joined glass
+ * from [state]'s [KitEdgeDockState.body] (the state is passed in for that; Solid does not read it).
  *
  * Shoulders (the concave blends into the screen edge) are a third shape the two-box join does not draw yet: on for the
  * non-lens looks, off under Glass for now, decided here so turning them on later is one line.
  */
+@Suppress("UNUSED_PARAMETER")
 @Composable
-internal fun rememberDockFace(): DockFace {
+internal fun rememberDockFace(state: KitEdgeDockState): DockFace {
     val colors = LocalKitColors.current
     val look =
         kitSurfaceLook(
@@ -53,7 +66,7 @@ internal fun rememberDockFace(): DockFace {
         )
     val ink = look.words ?: colors.text1
     val shoulders = LocalKitStyle.current.style != Style.Glass
-    return DockFace(look.modifier, ink, colors.text2, shoulders)
+    return DockFace(look.modifier, ink, colors.text2, shoulders, drawsOwnBody = false)
 }
 
 /**

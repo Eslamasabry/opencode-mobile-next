@@ -17,9 +17,10 @@ import kotlin.math.sqrt
  * mirrored ([mirrorX]); text is never mirrored, only placed.
  *
  * The body is two rounded boxes (the glass owner's joined-glass model, `liquid-glass/references/joined-glass.md`):
- * box A is the strip, box B the swell (or the peek card, or the pulled-out list at full size). They are joined by a
- * cubic smooth-minimum fillet whose curvature runs out to zero where it meets each straight edge. The non-lens looks
- * draw that union themselves ([buildOutline]); under a lens the host reads the boxes ([KitDockBody]) and joins them.
+ * box A is the strip, box B the swell (or the peek card, or the pulled-out list at full size). They are joined by the
+ * cubic smooth-minimum field ([DockJoinField]), whose fillet's curvature runs out to zero where it meets each straight
+ * edge. The non-lens looks draw that field's zero line ([buildOutline]); under a lens the host reads the same boxes and
+ * the same reach ([KitDockBody]) and joins them itself. One field, one outline, for both.
  */
 
 /** The dock's numbers, in dp. */
@@ -31,7 +32,10 @@ internal object DockDims {
     const val NUB_TOUCH = 48f
     /** The strip's convex corners (A's radius). */
     const val CORNER = 28f
-    /** The concave shoulders into the screen edge: cubic blend reach (tightest radius = reach x [FILLET_RADIUS_PER_REACH]). */
+    /**
+     * The concave shoulders into the screen edge: the effective blend width of a right-angle cubic blend (tightest
+     * radius = this x [FILLET_RADIUS_PER_BLEND]). Shoulders are a third shape the two-box join does not draw.
+     */
     const val SHOULDER_REACH = 38f
     /** Boxes run this far past the screen edge so their outer corners never show. */
     const val OVERHANG = 40f
@@ -64,10 +68,19 @@ internal object DockDims {
     const val SW_COLS = 4
     /** The swell's end corner: well under half its height (the owner rejected the capsule). */
     const val SW_END_R = 24f
-    /** The root fillet's reach in a right-angle cubic blend; its tightest radius is reach x 0.354 = 22.7 dp. */
-    const val SW_FILLET_REACH = 64f
-    /** B reaches this far into A so the two boxes overlap (no gap, no seam, even without the join). */
-    const val SW_OVERLAP = 20f
+    /**
+     * The root fillet's EFFECTIVE BLEND WIDTH: the `k` of the cubic smooth minimum `min(da, db) - h^3 k / 6` where the
+     * two edges meet at a right angle. Its tightest radius is blend x 0.354 = 22.7 dp (the peek's taller box widens it
+     * to 86.4, radius 30.6 dp). The join field's reach is twice this ([JOIN_REACH_PER_BLEND]).
+     */
+    const val SW_FILLET_BLEND = 64f
+    /**
+     * B reaches this far into A so the two boxes overlap (no gap, no seam, even without the join). At least B's end
+     * corner (24 dp): B's corner arcs then lie inside A, its top and bottom edges run straight up to A's side, the
+     * field's `facing` is exactly 0.5 all along the fillet, and the fillet ends one blend width from B as the strip's
+     * extension budgets for (at 20 dp the arc started 4 dp outside A: a 0.3 dp notch and a 4 % wider blend).
+     */
+    const val SW_OVERLAP = 28f
     const val SW_PAD_T = 12f
     const val SW_PAD_B = 10f
     const val SW_GAP = 8f
@@ -86,8 +99,24 @@ internal object DockDims {
     const val CHILD_ROW = 48f
     const val HIDDEN_ROW = 48f
 
-    /** Tightest radius of a right-angle cubic smooth-minimum fillet per unit of reach (measured: 0.3541). */
-    const val FILLET_RADIUS_PER_REACH = 0.3541525f
+    /** Tightest radius of a right-angle cubic smooth-minimum fillet per unit of effective blend width (measured: 0.3541). */
+    const val FILLET_RADIUS_PER_BLEND = 0.3541525f
+
+    /**
+     * The join's reach per unit of effective blend width. The joined-glass field blends with `k = reach x facing x
+     * inside`, and `facing = 0.5 - 0.5 dot(ga, gb)` is 0.5 all along a right-angle fillet (the two edges' outward
+     * directions are perpendicular; `inside` is 1 there). So a fillet of blend width k needs a join reach of 2 k.
+     */
+    const val JOIN_REACH_PER_BLEND = 2f
+
+    /**
+     * The join's reach rises from nothing over the first part of B's growth (0 to this), so the fillet arrives with
+     * the swell instead of showing as a small bump on the strip's side in the first frame.
+     */
+    const val JOIN_FADE_IN = 0.2f
+
+    /** The smallest join reach drawn while B is out (a near-sharp root); keeps the traced field well defined. */
+    const val JOIN_MIN_REACH = 1f
 }
 
 /** A rounded box in the edge frame, dp. */
@@ -336,7 +365,8 @@ internal data class SwellLayout(
     val length: Float,
     val height: Float,
     val radius: Float,
-    val filletReach: Float,
+    /** The root fillet's effective blend width (see [DockDims.SW_FILLET_BLEND]). */
+    val filletBlend: Float,
     val targets: List<DockTarget>,
     /** The peek's lines block, or null. */
     val lines: DockRect?,
@@ -416,16 +446,20 @@ internal fun swellLayout(
 }
 
 /**
- * The fillet reach for a swell [length] by [height]: the design reach, widened on tall swells so the base stays at
- * least 1.3 x the height (reach >= 0.3 x height), and never more than the swell's straight top edge can take.
+ * The fillet's effective blend width for a swell [length] by [height]: the design blend, widened on tall swells so the
+ * base stays at least 1.3 x the height (blend >= 0.3 x height), and never more than the swell's straight top edge can
+ * take.
  */
 internal fun filletFor(length: Float, height: Float): Float {
-    val k = max(DockDims.SW_FILLET_REACH, 0.3f * height)
+    val k = max(DockDims.SW_FILLET_BLEND, 0.3f * height)
     return min(k, length - min(DockDims.SW_END_R, height * 0.3f) - 2f).coerceAtLeast(0f)
 }
 
-/** Box B placed for a ring at [centerY], with the strip's ends extended as far as the join needs. */
-internal data class PlacedSwell(val b: DockBox, val stripTop: Float, val stripBottom: Float, val fillet: Float)
+/**
+ * Box B placed for a ring at [centerY] (at full growth), with the strip's ends extended as far as the join needs.
+ * [blend] is the fillet's effective blend width once fitted.
+ */
+internal data class PlacedSwell(val b: DockBox, val stripTop: Float, val stripBottom: Float, val blend: Float)
 
 /**
  * Places B (of [layout]) beside the ring at [centerY] (the finger's height, clamped to the first and last ring by the
@@ -441,7 +475,7 @@ internal fun placeSwell(
     safeBottom: Float,
 ): PlacedSwell {
     val h = layout.height
-    val k = layout.filletReach
+    val k = layout.filletBlend
     val top = swellTop(h, k, centerY, strip.top, strip.bottom, safeTop, safeBottom)
     val b = DockBox(strip.left - layout.length, top, strip.left + DockDims.SW_OVERLAP, top + h, layout.radius)
     val sTop = extendedStripTop(top, k, strip.top, safeTop)
@@ -449,7 +483,7 @@ internal fun placeSwell(
     return PlacedSwell(b, sTop, sBottom, fittedFillet(k, top, top + h, sTop, sBottom))
 }
 
-/** B's top for a box of height [h] with fillet reach [k] beside a ring at [centerY] (see [placeSwell]). */
+/** B's top for a box of height [h] with fillet blend [k] beside a ring at [centerY] (see [placeSwell]). */
 internal fun swellTop(h: Float, k: Float, centerY: Float, stripTop: Float, stripBottom: Float, safeTop: Float, safeBottom: Float): Float {
     val r = DockDims.CORNER
     var top = centerY - h / 2f
@@ -538,22 +572,183 @@ internal fun panelAt(strip: DockBox, panel: DockBox, gx: Float, gy: Float): Dock
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// The outline: the union of A and B with cubic fillets, plus the shoulders into the screen edge.
+// The join field: two rounded boxes joined by a cubic smooth minimum.
+
+/** One sample of a rounded box's exact signed distance [d] (negative inside) and its outward unit direction. */
+internal class DockSd {
+    var d = 0f
+    var gx = 0f
+    var gy = 0f
+}
 
 /**
- * One point of a right-angle cubic smooth-minimum fillet of [reach], at parameter [t] in -1..1: returns how far the
- * point lies outside each of the two edges, (da, db). t = -1 is on edge A at [reach] from the corner; t = +1 is on edge
- * B. Tangent and curvature both run out to zero at the ends (the glass skill's cubic kernel, d = min - h^3 k / 6).
+ * The exact signed distance from ([px], [py]) to the rounded box [left]..[right] x [top]..[bottom] with corner
+ * [radius] (clamped to the half sides, as the field does), and its outward direction, into [out].
  */
-internal inline fun filletPoint(t: Float, reach: Float, out: (da: Float, db: Float) -> Unit) {
+internal fun roundedBoxSd(px: Float, py: Float, left: Float, top: Float, right: Float, bottom: Float, radius: Float, out: DockSd) {
+    val hx = max((right - left) / 2f, 0f)
+    val hy = max((bottom - top) / 2f, 0f)
+    val r = min(radius, min(hx, hy)).coerceAtLeast(0f)
+    val qx = px - (left + right) / 2f
+    val qy = py - (top + bottom) / 2f
+    val wx = abs(qx) - (hx - r)
+    val wy = abs(qy) - (hy - r)
+    val sx = if (qx < 0f) -1f else 1f
+    val sy = if (qy < 0f) -1f else 1f
+    val g = max(wx, wy)
+    if (g > 0f) {
+        val ox = max(wx, 0f)
+        val oy = max(wy, 0f)
+        val l = sqrt(ox * ox + oy * oy).coerceAtLeast(1e-6f)
+        out.d = l - r
+        out.gx = sx * ox / l
+        out.gy = sy * oy / l
+    } else {
+        out.d = g - r
+        out.gx = if (wx > wy) sx else 0f
+        out.gy = if (wx > wy) 0f else sy
+    }
+}
+
+/**
+ * The joined body's field: box A (the strip) and box B (the swell) as one body, the same field as the glass owner's
+ * `LiquidJoin.sample` (that lives on the glass branch; this is the same definition, from
+ * `liquid-glass/references/joined-glass.md` and its `scripts/join_shape.py`):
+ *
+ * ```
+ * facing = clamp(0.5 - 0.5 dot(ga, gb), 0, 1)
+ * inside = (1 - smoothstep(m/2, m, -da)) (1 - smoothstep(m/2, m, -db))      m = each box's corner radius
+ * k      = max(reach x facing x inside, 0.001)
+ * h      = max(k - |da - db|, 0) / k
+ * d      = min(da, db) - h^3 k / 6
+ * ```
+ *
+ * Its zero line is the body's outline. Reused: [set] the boxes, then sample [d] or [project] points onto the line.
+ */
+internal class DockJoinField {
+    private var aL = 0f
+    private var aT = 0f
+    private var aR = 0f
+    private var aB = 0f
+    private var aRad = 0f
+    private var bL = 0f
+    private var bT = 0f
+    private var bR = 0f
+    private var bB = 0f
+    private var bRad = 0f
+    private var reach = 0f
+    private val sa = DockSd()
+    private val sb = DockSd()
+
+    /** The last [project]ed point and the outline's unit tangent there (walking down the inner side). */
+    var px = 0f
+        private set
+    var py = 0f
+        private set
+    var tx = 0f
+        private set
+    var ty = 1f
+        private set
+
+    fun set(
+        aLeft: Float, aTop: Float, aRight: Float, aBottom: Float, aRadius: Float,
+        bLeft: Float, bTop: Float, bRight: Float, bBottom: Float, bRadius: Float,
+        joinReach: Float,
+    ): DockJoinField {
+        aL = aLeft; aT = aTop; aR = aRight; aB = aBottom; aRad = aRadius
+        bL = bLeft; bT = bTop; bR = bRight; bB = bBottom; bRad = bRadius
+        reach = joinReach
+        return this
+    }
+
+    /** The field's signed distance at ([x], [y]): negative inside the body, zero on its outline. */
+    fun d(x: Float, y: Float): Float {
+        roundedBoxSd(x, y, aL, aT, aR, aB, aRad, sa)
+        roundedBoxSd(x, y, bL, bT, bR, bB, bRad, sb)
+        val da = sa.d
+        val db = sb.d
+        val facing = (0.5f - 0.5f * (sa.gx * sb.gx + sa.gy * sb.gy)).coerceIn(0f, 1f)
+        val ma = min(aRad, min((aR - aL) / 2f, (aB - aT) / 2f)).coerceAtLeast(1e-3f)
+        val mb = min(bRad, min((bR - bL) / 2f, (bB - bT) / 2f)).coerceAtLeast(1e-3f)
+        val inside = (1f - smoothstep(0.5f * ma, ma, -da)) * (1f - smoothstep(0.5f * mb, mb, -db))
+        val k = max(reach * facing * inside, 1e-3f)
+        val h = max(k - abs(da - db), 0f) / k
+        return min(da, db) - h * h * h * k / 6f
+    }
+
+    /**
+     * Moves ([x0], [y0]) onto the zero line along the field's gradient (Newton steps, gradient by central differences)
+     * and leaves the point in [px]/[py] and the outline's unit tangent in [tx]/[ty]: the direction that walks down the
+     * dock's inner side with the body on the right (the gradient turned a quarter: (gy, -gx)).
+     */
+    fun project(x0: Float, y0: Float) {
+        var x = x0
+        var y = y0
+        var gx = -1f
+        var gy = 0f
+        for (i in 0 until PROJECT_STEPS) {
+            val dv = d(x, y)
+            gx = (d(x + GRAD_EPS, y) - d(x - GRAD_EPS, y)) / (2f * GRAD_EPS)
+            gy = (d(x, y + GRAD_EPS) - d(x, y - GRAD_EPS)) / (2f * GRAD_EPS)
+            val g2 = gx * gx + gy * gy
+            if (g2 < 1e-8f || abs(dv) < PROJECT_TOLERANCE) break
+            x -= dv * gx / g2
+            y -= dv * gy / g2
+        }
+        val gl = sqrt(gx * gx + gy * gy).coerceAtLeast(1e-6f)
+        px = x
+        py = y
+        tx = gy / gl
+        ty = -gx / gl
+    }
+
+    private companion object {
+        const val PROJECT_STEPS = 10
+        const val PROJECT_TOLERANCE = 2e-4f
+        const val GRAD_EPS = 0.02f
+    }
+}
+
+/** The field of the two boxes [a] and [b] joined with [joinReach] at ([x], [y]), for checks (allocates). */
+internal fun dockJoinDistance(x: Float, y: Float, a: DockBox, b: DockBox, joinReach: Float): Float =
+    DockJoinField().set(a.left, a.top, a.right, a.bottom, a.radius, b.left, b.top, b.right, b.bottom, b.radius, joinReach).d(x, y)
+
+/** B's left edge now: it stands [growth] x [length] out of the strip (growth may pass 1 once, the drop's overshoot). */
+internal fun grownLeft(aLeft: Float, length: Float, growth: Float): Float = aLeft - growth * length
+
+/** B's corner radius: fixed (the end corner), only clamped to B's half sides as the field clamps it. */
+internal fun swellRadius(height: Float, width: Float): Float = min(min(DockDims.SW_END_R, height * 0.3f), max(width, 0f) / 2f)
+
+/** The join's reach now, for a fitted fillet [blend] and B's [growth] (see [DockDims.JOIN_FADE_IN]). */
+internal fun joinReachFor(blend: Float, growth: Float): Float =
+    max(DockDims.JOIN_MIN_REACH, DockDims.JOIN_REACH_PER_BLEND * blend * smoothstep(0f, DockDims.JOIN_FADE_IN, growth))
+
+/** Box B at [growth] for the full-grown box [full] beside a strip whose inner edge is [aLeft]: the box as it IS now. */
+internal fun grownSwell(full: DockBox, aLeft: Float, growth: Float): DockBox {
+    val left = grownLeft(aLeft, aLeft - full.left, growth)
+    return DockBox(left, full.top, full.right, full.bottom, swellRadius(full.height, full.right - left))
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// The outline: the field's zero line, plus the shoulders into the screen edge.
+
+/**
+ * One point of a right-angle cubic smooth-minimum fillet of effective blend width [blend], at parameter [t] in -1..1:
+ * returns how far the point lies outside each of the two edges, (da, db). t = -1 is on edge A at [blend] from the
+ * corner; t = +1 is on edge B. Tangent and curvature both run out to zero at the ends (the glass skill's cubic kernel,
+ * d = min - h^3 k / 6). Used for the shoulders, which are not part of the two-box join.
+ */
+internal inline fun filletPoint(t: Float, blend: Float, out: (da: Float, db: Float) -> Unit) {
     val h = 1f - abs(t)
-    val m = h * h * h * reach / 6f
-    val u = t * reach
+    val m = h * h * h * blend / 6f
+    val u = t * blend
     if (u >= 0f) out(m + u, m) else out(m, m - u)
 }
 
 /** A body outline in reusable arrays (no allocation per frame): points in the edge frame, dp, top to bottom. */
-internal class DockOutline(capacity: Int = 720) {
+internal class DockOutline(capacity: Int = 1024) {
+    /** The join field the swell's part is traced from (reused). */
+    val field = DockJoinField()
     val x = FloatArray(capacity)
     val y = FloatArray(capacity)
     /** Arc length from the first point. */
@@ -642,31 +837,37 @@ private const val FILLET_STEPS = 24
 private const val HALF_PI = (PI / 2).toFloat()
 private const val PI_F = PI.toFloat()
 
+/** The walk along the field's zero line: a step of at most this many dp, halved while the line turns more than 8 deg. */
+private const val TRACE_STEP = 4f
+private const val TRACE_MIN_STEP = 0.25f
+private const val TRACE_TURN_COS = 0.9902681f
+private const val TRACE_MAX_STEPS = 700
+
 /**
  * Builds the body's outline into [o], from the screen edge above the body, down the inner side, to the screen edge
  * below it (the caller closes it beyond the screen edge at [edgeX]).
  *
- * - With [b] null (or [grow] ~ 0): the strip [a] alone.
+ * - With [b] null: the strip [a] alone.
  * - With [b] holding [a] (the list): [b] alone.
- * - Otherwise [b] is a swell beside [a]: A's side, a fillet of [fillet] into B's top edge, B's end corners, a fillet back.
- *   [grow] (0..1) scales the swell's protrusion only, so it emerges as a soft bump and keeps its tangents (an affine
- *   squeeze keeps tangent and the zero curvature at the fillet ends).
+ * - Otherwise [b] is the swell AS IT IS NOW (see [grownSwell]) beside [a]: the zero line of the two boxes joined by the
+ *   field ([DockJoinField]) with [joinReach], traced from A's inner edge above B round B and back. There is no other
+ *   construction: the glass owner's join of the same two boxes with the same reach draws the same outline.
  * - [shoulders]: concave cubic blends of [shoulderReach] from the body's top and bottom edges into the screen edge.
  */
 internal fun buildOutline(
     o: DockOutline,
     a: DockBox,
     b: DockBox?,
-    grow: Float,
-    fillet: Float,
+    joinReach: Float,
     edgeX: Float,
     shoulders: Boolean,
     shoulderReach: Float = DockDims.SHOULDER_REACH,
 ) {
+    val panel = b != null && b.top <= a.top + 0.5f && b.bottom >= a.bottom - 0.5f && b.left <= a.left + 0.5f
     buildOutline(
-        o, a.left, a.top, a.bottom, a.radius,
-        b != null, b?.left ?: 0f, b?.top ?: 0f, b?.bottom ?: 0f, b?.radius ?: 0f,
-        grow, fillet, edgeX, shoulders, shoulderReach,
+        o, a.left, a.top, a.right, a.bottom, a.radius,
+        b != null, panel, b?.left ?: 0f, b?.top ?: 0f, b?.right ?: 0f, b?.bottom ?: 0f, b?.radius ?: 0f,
+        joinReach, edgeX, shoulders, shoulderReach,
     )
 }
 
@@ -675,22 +876,23 @@ internal fun buildOutline(
     o: DockOutline,
     aLeft: Float,
     aTop: Float,
+    aRight: Float,
     aBottom: Float,
     aRadius: Float,
     hasB: Boolean,
+    panel: Boolean,
     bLeft: Float,
     bTop: Float,
+    bRight: Float,
     bBottom: Float,
     bRadius: Float,
-    grow: Float,
-    fillet: Float,
+    joinReach: Float,
     edgeX: Float,
     shoulders: Boolean,
     shoulderReach: Float = DockDims.SHOULDER_REACH,
 ) {
     o.clear()
-    val panel = hasB && bTop <= aTop + 0.5f && bBottom >= aBottom - 0.5f && bLeft <= aLeft + 0.5f
-    val swell = hasB && !panel && grow > 0.001f && bLeft < aLeft
+    val swell = hasB && !panel && bLeft < aLeft - 0.01f
     val lo = if (panel) bLeft else aLeft
     val top = if (panel) bTop else aTop
     val bottom = if (panel) bBottom else aBottom
@@ -712,31 +914,14 @@ internal fun buildOutline(
     o.arc(lo + r, top + r, r, -HALF_PI, -PI_F)
 
     if (swell) {
-        val g = grow.coerceIn(0f, 1.2f)
-        val k = fillet
-        val rb = min(bRadius, min((bBottom - bTop) / 2f, (lo - bLeft) / 2f))
-        o.line(lo, bTop - k)
+        val reach = max(joinReach, DockDims.JOIN_MIN_REACH)
+        val field = o.field.set(aLeft, aTop, aRight, aBottom, aRadius, bLeft, bTop, bRight, bBottom, bRadius, reach)
+        // Beyond one reach from B the field is A's own distance, so A's straight side is exact up to there.
+        val yStart = max(top + r, bTop - reach - 2f)
+        val yEnd = min(bottom - r, bBottom + reach + 2f)
+        o.line(lo, yStart)
         val from = o.n - 1
-        // Every swell point is squeezed toward A's side by the growth: x = lo - g * (lo - x).
-        for (i in 0..FILLET_STEPS) {
-            val t = -1f + 2f * i / FILLET_STEPS
-            filletPoint(t, k) { da, db -> o.add(lo - g * da, bTop - db) }
-        }
-        o.line(lo - g * (lo - bLeft - rb), bTop)
-        for (i in 1..16) {
-            val ang = -HALF_PI - HALF_PI * i / 16
-            o.add(lo - g * (lo - (bLeft + rb + rb * cos(ang))), bTop + rb + rb * sin(ang))
-        }
-        o.line(lo - g * (lo - bLeft), bBottom - rb)
-        for (i in 1..16) {
-            val ang = PI_F - HALF_PI * i / 16
-            o.add(lo - g * (lo - (bLeft + rb + rb * cos(ang))), bBottom - rb + rb * sin(ang))
-        }
-        o.line(lo - g * k, bBottom)
-        for (i in 0..FILLET_STEPS) {
-            val t = 1f - 2f * i / FILLET_STEPS
-            filletPoint(t, k) { da, db -> o.add(lo - g * da, bBottom + db) }
-        }
+        traceZeroLine(o, field, lo, yStart, yEnd)
         o.markSwell(from, o.n - 1)
     }
     o.line(lo, bottom - r)
@@ -751,6 +936,38 @@ internal fun buildOutline(
         o.line(edgeX, bottom)
     }
     o.finish()
+}
+
+/**
+ * Walks the field's zero line from A's inner side at ([x0], [yStart]) down and round B until it is back on A's side at
+ * [yEnd] (y never decreases along the way: B is a bump on a vertical side). Predictor-corrector: a step along the
+ * tangent, then Newton back onto the line; the step halves while the line turns more than 8 deg per step.
+ */
+private fun traceZeroLine(o: DockOutline, field: DockJoinField, x0: Float, yStart: Float, yEnd: Float) {
+    field.project(x0, yStart)
+    var x = field.px
+    var y = field.py
+    var tx = field.tx
+    var ty = field.ty
+    o.add(x, y)
+    var steps = 0
+    while (y < yEnd && steps < TRACE_MAX_STEPS) {
+        var step = TRACE_STEP
+        while (true) {
+            field.project(x + tx * step, y + ty * step)
+            if (tx * field.tx + ty * field.ty >= TRACE_TURN_COS || step <= TRACE_MIN_STEP) break
+            step *= 0.5f
+        }
+        // Never past the end (A's corner is drawn as its arc), never into the strip, never back up: the walk stops and
+        // A's straight side is drawn on from here.
+        if (field.py > yEnd || field.px > x0 + 0.5f || field.py < y - 1f) break
+        x = field.px
+        y = field.py
+        tx = field.tx
+        ty = field.ty
+        o.add(x, y)
+        steps++
+    }
 }
 
 /**

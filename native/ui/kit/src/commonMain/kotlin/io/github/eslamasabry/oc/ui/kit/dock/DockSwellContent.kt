@@ -55,9 +55,9 @@ import kotlin.math.roundToInt
 
 /**
  * What box B holds: the ring's name over its state, its sub-agents as mini rings with legible names, the peek's lines,
- * the action targets, or the rename field. Placed on B's own position (layout phase only), shown once the body has
- * reached it (alpha follows B's growth, and the words are cut at the moving tip). The words lie on the dock's own
- * body: no pane of their own.
+ * the action targets, or the rename field. Laid out on B's full-grown box (layout phase only), shown once the body has
+ * reached it (alpha follows B's growth, and the words are cut at B's tip as it is now, the very edge the body has). The
+ * words lie on the dock's own body: no pane of their own.
  */
 @Composable
 internal fun DockSwellContent(state: KitEdgeDockState, layout: SwellLayout, ring: KitDockRing, words: KitDockWords, inks: DockInks) {
@@ -68,15 +68,16 @@ internal fun DockSwellContent(state: KitEdgeDockState, layout: SwellLayout, ring
         Modifier
             .absoluteOffset {
                 val f = state.computeFrame()
-                val left = if (state.onRight) f.bLeft else state.widthDp - (f.bLeft + boxW)
+                val left = if (state.onRight) f.bRestLeft else state.widthDp - (f.bRestLeft + boxW)
                 IntOffset((left * density).roundToInt(), (f.bTop * density).roundToInt())
             }
             .size(boxW.dp, layout.height.dp)
             .graphicsLayer { alpha = smoothstep(0.62f, 0.92f, state.swellGrow.value) }
             .drawWithContent {
-                // Words never stand outside the body: cut them at the tip while it is still coming out.
-                val g = state.swellGrow.value.coerceIn(0f, 1f)
-                val cut = ((1f - g) * state.swellLen.value + 5f * (1f - g)) * density
+                // Words never stand outside the body: cut them at B's tip now (plus a margin that closes as it grows).
+                val f = state.computeFrame()
+                val g = f.grow.coerceIn(0f, 1f)
+                val cut = ((f.bLeft - f.bRestLeft).coerceAtLeast(0f) + 5f * (1f - g)) * density
                 if (state.onRight) clipRect(left = cut) { this@drawWithContent.drawContent() }
                 else clipRect(right = size.width - cut) { this@drawWithContent.drawContent() }
             },

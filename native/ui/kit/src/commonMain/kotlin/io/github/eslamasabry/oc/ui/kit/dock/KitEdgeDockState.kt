@@ -20,9 +20,10 @@ import kotlin.math.min
 
 /**
  * The dock's body for the host, in pixels of the dock area, PHYSICAL (already mirrored for a dock on the left).
- * Box A is the strip, box B the swell, the peek card or the list. The glass owner feeds these into the joined-glass
- * field: the two boxes, their radii, the fillet it wants (as the tightest radius and as the reach of a right-angle cubic
- * blend), and the growth fraction (0 at rest, 1 fully grown; the list's width may pass 1 once). Read it with
+ * Box A is the strip, box B the swell, the peek card or the list. Both boxes are AS THEY ARE NOW: B's width already
+ * follows the growth (B stands growth x its length out of the strip, its corner radius fixed), so the host scales
+ * nothing. The glass owner feeds the two boxes, their radii and [joinReach] into the joined-glass field; the Solid face
+ * fills that same field's zero line ([DockJoinField]), so both draw one outline at every moment. Read it with
  * [KitEdgeDockState.body] in a draw or layout phase: it follows the motion frame by frame without recomposition.
  */
 public class KitDockBody {
@@ -43,13 +44,24 @@ public class KitDockBody {
     /** True when B is the list: B then holds A entirely and the body is B alone (no fillet). */
     public var secondIsList: Boolean = false
 
-    /** The fillet's tightest radius, px. */
+    /** The fillet's tightest radius now, px (the design targets: 22.7 dp for the swell, 30.6 dp for the peek). */
     public var filletRadius: Float = 0f
 
-    /** The fillet as the reach of a right-angle cubic smooth minimum (the shape the kit draws), px. */
-    public var filletReach: Float = 0f
+    /**
+     * The fillet's EFFECTIVE BLEND WIDTH now, px: the `k` of the cubic smooth minimum `min(da, db) - h^3 k / 6` where
+     * B's top (or bottom) edge meets A's side at a right angle. Not the join's reach: see [joinReach].
+     */
+    public var filletBlend: Float = 0f
 
-    /** 0 at rest, 1 fully grown. */
+    /**
+     * The reach to hand the joined-glass field (`KitLiquidJoin`), px: 2 x [filletBlend]. The field blends with `k =
+     * reach x facing x inside`, and `facing` (0.5 - 0.5 x the dot of the two boxes' outward directions) is 0.5 all
+     * along a right-angle fillet, `inside` 1; so the reach that yields this fillet is twice its blend width. It rises
+     * from nothing over the first fifth of B's growth (the fillet arrives with the swell). 0 when B is the list.
+     */
+    public var joinReach: Float = 0f
+
+    /** 0 at rest, 1 fully grown (B's width already follows it; for timing words and the like). */
     public var growth: Float = 0f
 
     /** The kit draws concave shoulders into the screen edge (off under Glass for now). */
@@ -64,17 +76,24 @@ internal class DockFrame {
     var edgeX = 0f
     var aLeft = 0f
     var aTop = 0f
+    var aRight = 0f
     var aBottom = 0f
     var aRadius = 0f
     var hasB = false
     var panel = false
+    /** B's left edge now (the swell's tip follows its growth). */
     var bLeft = 0f
+    /** B's left edge at full growth: what the swell's words and targets are laid out from. */
+    var bRestLeft = 0f
     var bTop = 0f
     var bRight = 0f
     var bBottom = 0f
     var bRadius = 0f
     var grow = 0f
-    var fillet = 0f
+    /** The fitted fillet's effective blend width (dp). */
+    var blend = 0f
+    /** The join field's reach now (dp; see [KitDockBody.joinReach]). */
+    var joinReach = 0f
 }
 
 /**
@@ -180,12 +199,15 @@ public class KitEdgeDockState internal constructor() {
         val cBottom = cTop + column.height
         f.aLeft = w - edgeInset - o
         f.aTop = cTop
+        f.aRight = w + DockDims.OVERHANG
         f.aBottom = cBottom
-        f.aRadius = min(DockDims.CORNER, min((w - f.aLeft) / 2f, (cBottom - cTop) / 2f)).coerceAtLeast(0f)
+        // The visible width (to the screen edge) bounds the corner, as the outline draws it.
+        f.aRadius = min(DockDims.CORNER, min((f.edgeX - f.aLeft) / 2f, (cBottom - cTop) / 2f)).coerceAtLeast(0f)
         f.hasB = false
         f.panel = false
         f.grow = 0f
-        f.fillet = 0f
+        f.blend = 0f
+        f.joinReach = 0f
         val px = panelX.value
         val py = panelY.value
         val layout = swell
@@ -195,6 +217,7 @@ public class KitEdgeDockState internal constructor() {
             f.hasB = true
             f.panel = true
             f.bLeft = min(f.aLeft, lerp(f.aLeft, p.left, px))
+            f.bRestLeft = p.left
             f.bTop = lerp(f.aTop, p.top, y)
             f.bBottom = lerp(f.aBottom, p.bottom, y)
             f.bRight = p.right
@@ -212,12 +235,15 @@ public class KitEdgeDockState internal constructor() {
             f.aTop = lerp(cTop, extTop, gc)
             f.aBottom = lerp(cBottom, extBottom, gc)
             f.hasB = true
-            f.bLeft = f.aLeft - len
+            // B as it is now: growth x length out of the strip, the end corner fixed (no squeeze).
+            f.bRestLeft = f.aLeft - len
+            f.bLeft = grownLeft(f.aLeft, len, g)
             f.bTop = sTop
             f.bBottom = sTop + h
             f.bRight = f.aLeft + DockDims.SW_OVERLAP
-            f.bRadius = min(DockDims.SW_END_R, h * 0.3f)
-            f.fillet = fittedFillet(k, sTop, sTop + h, f.aTop, f.aBottom)
+            f.bRadius = swellRadius(h, f.bRight - f.bLeft)
+            f.blend = fittedFillet(k, sTop, sTop + h, f.aTop, f.aBottom)
+            f.joinReach = joinReachFor(f.blend, g)
             f.grow = g
         }
         return f
@@ -232,6 +258,19 @@ public class KitEdgeDockState internal constructor() {
         panelKey = cTop
         panelKeyContent = panelContent
         return p
+    }
+
+    /**
+     * Builds the body's outline from the frame now into [outline]: the path the Solid face fills and the failure
+     * pulse runs along. The same boxes and reach as [body]; the swell's part is the join field's zero line.
+     */
+    internal fun bodyOutline(f: DockFrame = computeFrame()): DockOutline {
+        buildOutline(
+            outline, f.aLeft, f.aTop, f.aRight, f.aBottom, f.aRadius,
+            f.hasB, f.panel, f.bLeft, f.bTop, f.bRight, f.bBottom, f.bRadius,
+            f.joinReach, f.edgeX, shoulders,
+        )
+        return outline
     }
 
     /** The list's box at full size (edge frame, dp). */
@@ -249,7 +288,7 @@ public class KitEdgeDockState internal constructor() {
         val d = density
         fun x(v: Float) = phys(v) * d
         val aL = x(f.aLeft)
-        val aR = x(widthDp + DockDims.OVERHANG)
+        val aR = x(f.aRight)
         into.stripLeft = min(aL, aR)
         into.stripRight = max(aL, aR)
         into.stripTop = f.aTop * d
@@ -266,8 +305,10 @@ public class KitEdgeDockState internal constructor() {
             into.secondRadius = f.bRadius * d
         }
         into.secondIsList = f.panel
-        into.filletReach = f.fillet * d
-        into.filletRadius = f.fillet * DockDims.FILLET_RADIUS_PER_REACH * d
+        val blendNow = f.joinReach / DockDims.JOIN_REACH_PER_BLEND
+        into.joinReach = if (f.hasB && !f.panel) f.joinReach * d else 0f
+        into.filletBlend = if (f.hasB && !f.panel) blendNow * d else 0f
+        into.filletRadius = into.filletBlend * DockDims.FILLET_RADIUS_PER_BLEND
         into.growth = f.grow
         into.shoulders = shoulders
         into.onRight = onRight
@@ -303,7 +344,7 @@ public class KitEdgeDockState internal constructor() {
             override fun targetAt(x: Float, y: Float): DockTarget? {
                 val l = swell ?: return null
                 if (swellGrow.value < 0.7f) return null
-                return l.targetAt(x - frame.bLeft, y - frame.bTop)
+                return l.targetAt(x - frame.bRestLeft, y - frame.bTop)
             }
 
             override fun inSwell(x: Float, y: Float): Boolean =
