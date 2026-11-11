@@ -161,7 +161,7 @@ needs an answer for the icons and track edges too.
 end inset to one gutter. In the render the lines end where the time column ends, clear of the rim.
 
 **Checks.** Design and kit tests on the VPS; renders `render-before-dark.png` (base numbers) and
-`render-after-dark.png` (as built), both forced clear on desktop (Motion Calm, not Off, which is reduced motion and holds
+`render-after-dark.png` (as built: 1a and 1c, the page held), both forced clear on desktop (Motion Calm, not Off, which is reduced motion and holds
 the frost) by `GlassRecipeRenders`. No golden compared anywhere uses Glass with these parts, so no golden changed.
 
 ## Step 2 (after the owner has judged step 1)
