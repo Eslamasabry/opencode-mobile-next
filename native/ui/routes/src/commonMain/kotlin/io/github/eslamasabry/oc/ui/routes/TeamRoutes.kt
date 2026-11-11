@@ -47,4 +47,8 @@ public sealed interface TeamRoute : AppRoute {
     /** Team settings (Dart `TeamSettingsScreen`): the agents, how the team runs here, Turn off. */
     @Serializable
     public data class Settings(val profileId: ProfileId) : TeamRoute
+
+    /** The computer's address (Dart `showTeamHostSheet`): test it, then turn the team on there; also Change address. */
+    @Serializable
+    public data class Address(val profileId: ProfileId) : TeamRoute
 }

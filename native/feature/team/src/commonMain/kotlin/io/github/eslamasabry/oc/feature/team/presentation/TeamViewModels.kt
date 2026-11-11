@@ -99,6 +99,11 @@ public class TeamHomeViewModel(
         intro.update { it.copy(guide = false) }
     }
 
+    override fun enterAddress() {
+        intro.update { it.copy(guide = false) }
+        nav.open(TeamRoute.Address(route.profileId))
+    }
+
     private fun send(projectId: String, build: (TeamProject) -> TeamCommand) {
         val project = engine.state(profile).value.workspace?.project(projectId) ?: return
         viewModelScope.launch { engine.execute(profile, build(project)) }

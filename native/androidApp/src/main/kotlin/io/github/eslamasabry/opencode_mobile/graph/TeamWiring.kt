@@ -46,14 +46,18 @@ import org.json.JSONObject
 object TeamBindings {
     @Provides
     @SingleIn(AppScope::class)
-    fun engine(host: AppTeamHost, kept: Set<TeamLastKnown>, clock: kotlin.time.Clock, dispatchers: AppDispatchers): TeamEngine =
-        TeamEngine(
+    fun engine(host: AppTeamHost, kept: Set<TeamLastKnown>, clock: kotlin.time.Clock, dispatchers: AppDispatchers): TeamEngine {
+        val transports = AppFleetTransports(dispatchers)
+        return TeamEngine(
             host,
             kept = kept.firstOrNull(),
             clock = clock,
             // A team on a computer (Gas City): plain HTTP and its event stream, no credential (G2).
-            fleet = io.github.eslamasabry.oc.engine.team.fleet.FleetEngine(AppFleetTransports(dispatchers), clock),
+            fleet = io.github.eslamasabry.oc.engine.team.fleet.FleetEngine(transports, clock),
+            // The address form tests an address with the same transports, so "found" means the page can read it.
+            computerTransports = transports,
         )
+    }
 }
 
 /**
@@ -111,6 +115,32 @@ class AppTeamHost(
         stores.warm()
         val loaded = stores.profiles.profile(ProfileId(profileId)) ?: return Outcome.Failed(Failure.Unexpected())
         return when (val saved = stores.profiles.upsert(loaded.profile.copy(orchestration = null), SecretEdit.Keep, expected = loaded)) {
+            is Outcome.Ok -> Outcome.Ok(Unit)
+            is Outcome.Failed -> saved
+        }
+    }
+
+    /**
+     * Flutter `saveTeamHost` for a computer's team: the address goes into the profile's one `orchestration` object, in
+     * Flutter's own shape and key (`provider, url, city, hostMode, hostKind, front, enabledAt`), so a profile moved over
+     * from Flutter keeps working and Flutter could read it back. Nothing else is stored: the host takes no credential, and
+     * there is no second place for the address. A kind of computer the person chose in Flutter is kept; else a desktop.
+     */
+    override suspend fun saveComputerTeam(profileId: String, config: TeamConfig): Outcome<Unit> {
+        stores.warm()
+        val loaded = stores.profiles.profile(ProfileId(profileId)) ?: return Outcome.Failed(Failure.Unexpected())
+        val before = loaded.profile.orchestration?.encoded?.let(DartJson::decodeOrNull) as? Map<*, *>
+        val kind = (before?.get("hostKind") as? String)?.takeIf { it == "pc" || it == "laptop" || it == "wsl" } ?: "pc"
+        val written =
+            OpaqueJson.parse(
+                DartJson.encode(
+                    mapOf(
+                        "provider" to "gascity", "url" to config.url, "city" to config.city, "hostMode" to "computer",
+                        "hostKind" to kind, "front" to config.front, "enabledAt" to java.time.Instant.now().toString(),
+                    ),
+                ),
+            ) ?: return Outcome.Failed(Failure.Unexpected())
+        return when (val saved = stores.profiles.upsert(loaded.profile.copy(orchestration = written), SecretEdit.Keep, expected = loaded)) {
             is Outcome.Ok -> Outcome.Ok(Unit)
             is Outcome.Failed -> saved
         }

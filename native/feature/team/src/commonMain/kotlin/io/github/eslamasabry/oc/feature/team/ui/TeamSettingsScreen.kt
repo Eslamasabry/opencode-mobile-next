@@ -106,6 +106,17 @@ public fun TeamSettingsScreen(state: TeamSettingsUi, actions: TeamSettingsAction
                             )
                         },
                     ) {
+                        // Flutter's Change address: a computer's team moves to another address, tested first.
+                        if (state.canChangeAddress) {
+                            KitRow(
+                                title = stringResource(Res.string.teamHomeChangeAddress),
+                                leading = KitRowLeading.Glyph(KitIcons.edit),
+                                trailing = KitRowTrailing.Chevron,
+                                enabled = !state.working,
+                                modifier = Modifier.testTag("team-settings-change-address"),
+                                onClick = actions::changeAddress,
+                            )
+                        }
                         if (state.canCheck) {
                             KitRow(
                                 title = stringResource(Res.string.teamIntroTurnOnPhone),
@@ -120,7 +131,7 @@ public fun TeamSettingsScreen(state: TeamSettingsUi, actions: TeamSettingsAction
                         // How fast it runs where it runs; the address, version and protection are behind it.
                         KitRow(
                             title = stringResource(Res.string.teamUiTechnicalDetails),
-                            supporting = stringResource(if (state.computer) Res.string.teamUiDisclaimerComputer else Res.string.teamUiDisclaimerPhone),
+                            supporting = stringResource(if (state.computer && !state.onPhone) Res.string.teamUiDisclaimerComputer else Res.string.teamUiDisclaimerPhone),
                             supportingMaxLines = 2,
                             leading = KitRowLeading.Glyph(KitIcons.speed),
                             trailing = KitRowTrailing.Chevron,
@@ -173,11 +184,11 @@ private fun HostDetails(state: TeamSettingsUi, actions: TeamSettingsActions) {
             KitRowGroup {
                 KitRow(
                     title = stringResource(Res.string.teamUiLabelHost),
-                    supporting = stringResource(if (state.computer) Res.string.teamUiHostModeComputer else Res.string.teamUiHostModePhone),
+                    supporting = stringResource(if (state.computer && !state.onPhone) Res.string.teamUiHostModeComputer else Res.string.teamUiHostModePhone),
                 )
             }
             KitText(
-                stringResource(if (state.computer) Res.string.teamUiDisclaimerComputer else Res.string.teamUiDisclaimerPhone),
+                stringResource(if (state.computer && !state.onPhone) Res.string.teamUiDisclaimerComputer else Res.string.teamUiDisclaimerPhone),
                 Modifier.testTag("team-host-disclaimer"),
                 role = TypeRole.Secondary,
                 tone = TextTone.Secondary,
