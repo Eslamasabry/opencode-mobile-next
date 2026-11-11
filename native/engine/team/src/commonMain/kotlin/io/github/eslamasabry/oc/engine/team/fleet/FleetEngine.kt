@@ -310,6 +310,58 @@ public class FleetEngine(
         return quiet { gateway.policy(projectId) }
     }
 
+    /** What a merge readiness read found (Dart `mergeReadiness` + `mergeReadinessError`). */
+    public sealed interface MergeRead {
+        /** The host's document. */
+        public data class Found(val readiness: MergeReadiness) : MergeRead
+
+        /** The host has no merge roles for this run (no front, 404 or 422), or no team is connected. */
+        public data object NoRoles : MergeRead
+
+        /** The read failed: the host refused or did not answer. */
+        public data object Failed : MergeRead
+    }
+
+    /** Dart `mergeReadiness`: reads the front's readiness document for [runId] now. Never throws. */
+    public suspend fun mergeReadiness(profileId: String, runId: String): MergeRead {
+        val gateway = runs.load()[profileId]?.gateway ?: return MergeRead.NoRoles
+        if (!gateway.capabilities.mergeReadiness) return MergeRead.NoRoles
+        return try {
+            gateway.mergeReadiness(runId)?.let { MergeRead.Found(it) } ?: MergeRead.NoRoles
+        } catch (_: FleetHttpError) {
+            MergeRead.Failed
+        } catch (_: FleetUnreachableError) {
+            MergeRead.Failed
+        }
+    }
+
+    /** Dart `approveMergeRequest`: approves the merge request [mergeRequestId]. Front only; one receipt, never re-sent. */
+    public suspend fun approveMerge(profileId: String, mergeRequestId: String): FleetMergeResult = mergeWrite(profileId) { gateway, id -> gateway.approveMerge(mergeRequestId, id) }
+
+    /** Dart `mergeRun`: merges [runId] into the rig's default branch. Only a person's confirmed tap calls this. Front only. */
+    public suspend fun merge(profileId: String, runId: String): FleetMergeResult = mergeWrite(profileId) { gateway, id -> gateway.merge(runId, id) }
+
+    private suspend fun mergeWrite(profileId: String, send: suspend (FleetGateway, String) -> FleetMergeResult): FleetMergeResult {
+        val requestId = newRequestId()
+        val run = runs.load()[profileId]
+        val gateway = run?.gateway
+        if (run == null || gateway == null) return FleetMergeResult(FleetReceipt.rejected(requestId, FleetReceipt.FRONT_REQUIRED))
+        run.state.update { it.copy(sending = it.sending + requestId) }
+        val result =
+            try {
+                send(gateway, requestId)
+            } catch (e: CancellationException) {
+                run.state.update { it.copy(sending = it.sending - requestId) }
+                throw e
+            }
+        run.state.update { it.copy(sending = it.sending - requestId, receipts = it.receipts + (requestId to result.receipt)) }
+        if (result.receipt.status != ReceiptStatus.Rejected) {
+            markAll(run)
+            readDirty(run)
+        }
+        return result
+    }
+
     /**
      * Sends one write (Dart `mutate`): refused without a request when the capability is off or no team is connected,
      * else one call whose receipt lands in [FleetState.receipts]; the team is read again after it. Never re-sent.
