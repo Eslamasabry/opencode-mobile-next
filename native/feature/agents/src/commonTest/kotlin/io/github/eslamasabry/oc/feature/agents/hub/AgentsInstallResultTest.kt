@@ -63,9 +63,15 @@ class AgentsInstallResultTest {
         var dismissed = 0
         var cancels = 0
 
+        /**
+         * How many next reads give way to a step (AppPhoneAgents since w4-probes): they return Ok and publish nothing,
+         * so "refresh returned Ok" does not mean the rows are final.
+         */
+        var giveWay = 0
+
         override suspend fun refresh(): Outcome<Unit> =
             lane.withLock {
-                state.value = disk
+                if (giveWay > 0) giveWay-- else state.value = disk
                 Unit.ok()
             }
 
@@ -186,6 +192,37 @@ class AgentsInstallResultTest {
         assertNull(presenter.state.value.phone.installation)
         assertEquals(AgentTileState.NotInstalled, presenter.geminiTile().state)
     }
+
+    @Test
+    fun `a failed result reaches the tile after reads that gave way, and a read that gives way never erases it`() =
+        runTest {
+            val (phone, presenter) = installing()
+            phone.disk =
+                phone.endJob(
+                    phone.disk,
+                    PhoneAgentInstallation(
+                        "gemini",
+                        PhoneAgentInstallPhase.Failed,
+                        null,
+                        failure = PhoneAgentInstallFailure.Download,
+                    ),
+                )
+            // Two reads stopped by steps publish nothing: the tile still says installing, never a silent Not installed.
+            phone.giveWay = 2
+            advanceTimeBy(4_100)
+            runCurrent()
+            assertEquals(AgentTileState.Installing, presenter.geminiTile().state)
+            assertNull(presenter.state.value.lostInstall)
+            // The next read that finishes shows the failure the installer kept.
+            advanceTimeBy(2_100)
+            runCurrent()
+            assertEquals(AgentTileState.InstallFailed, presenter.geminiTile().state)
+            assertEquals(PhoneAgentInstallFailure.Download, presenter.state.value.phone.installation?.failure)
+            // A later read that gives way leaves it as it is.
+            phone.giveWay = 1
+            presenter.refreshPhone()
+            assertEquals(AgentTileState.InstallFailed, presenter.geminiTile().state)
+        }
 
     @Test
     fun `a cancel the person asked for is not shown as a lost install`() = runTest {
