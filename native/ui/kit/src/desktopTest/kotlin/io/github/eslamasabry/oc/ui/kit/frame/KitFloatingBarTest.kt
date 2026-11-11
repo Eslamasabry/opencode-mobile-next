@@ -78,6 +78,9 @@ import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.KitWindowInfo
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
+import java.awt.image.BufferedImage
+import java.io.File
+import javax.imageio.ImageIO
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlin.math.sign
@@ -285,11 +288,11 @@ class KitFloatingBarTest {
 
     /** Writes [image] to FLOAT_DEBUG_DIR when it is set, to look at a failure. */
     private fun debugPng(image: PixelMap, name: String) {
-        val dir = System.getenv("FLOAT_DEBUG_DIR")?.let(::java.io.File) ?: return
+        val dir = System.getenv("FLOAT_DEBUG_DIR")?.let { File(it) } ?: return
         dir.mkdirs()
-        val out = java.awt.image.BufferedImage(image.width, image.height, java.awt.image.BufferedImage.TYPE_INT_ARGB)
+        val out = BufferedImage(image.width, image.height, BufferedImage.TYPE_INT_ARGB)
         for (y in 0 until image.height) for (x in 0 until image.width) out.setRGB(x, y, image[x, y].toArgb())
-        javax.imageio.ImageIO.write(out, "png", java.io.File(dir, "$name.png"))
+        ImageIO.write(out, "png", File(dir, "$name.png"))
     }
 
     /** The steps over 24 down a column, as "y dp: from → to", for a failure message. */
