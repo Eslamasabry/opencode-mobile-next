@@ -6,7 +6,6 @@
     <string name="telemetryConsentChoose">Chọn</string>
     <string name="telemetryConsentSave">Lưu lựa chọn của tôi</string>
     <string name="sendReportTitle">Gửi báo cáo sự cố</string>
-    <string name="sendReportRowDetail">Xem nhật ký đã ẩn thông tin nhạy cảm rồi gửi</string>
     <string name="sendReportSubtitle">Đây là toàn bộ nội dung của báo cáo. Sẽ không gửi gì cho đến khi bạn nhấn Gửi.</string>
     <string name="sendReportSend">Gửi</string>
     <string name="sendReportCollecting">Đang thu thập báo cáo…</string>

@@ -6,7 +6,6 @@
     <string name="telemetryConsentChoose">Choisir</string>
     <string name="telemetryConsentSave">Enregistrer mes choix</string>
     <string name="sendReportTitle">Envoyer un rapport de problème</string>
-    <string name="sendReportRowDetail">Relisez un journal expurgé, puis envoyez-le</string>
     <string name="sendReportSubtitle">Voici tout ce que contient le rapport. Rien n'est envoyé tant que vous n'appuyez pas sur Envoyer.</string>
     <string name="sendReportSend">Envoyer</string>
     <string name="sendReportCollecting">Préparation du rapport…</string>

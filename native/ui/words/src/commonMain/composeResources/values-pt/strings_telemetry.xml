@@ -6,7 +6,6 @@
     <string name="telemetryConsentChoose">Escolher</string>
     <string name="telemetryConsentSave">Salvar minhas escolhas</string>
     <string name="sendReportTitle">Enviar um relatório de problema</string>
-    <string name="sendReportRowDetail">Revise um registro com dados ocultos e depois envie</string>
     <string name="sendReportSubtitle">Isto é tudo o que o relatório contém. Nada é enviado até você tocar em Enviar.</string>
     <string name="sendReportSend">Enviar</string>
     <string name="sendReportCollecting">Reunindo o relatório…</string>
