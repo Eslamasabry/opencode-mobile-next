@@ -41,4 +41,17 @@ class ProotTmpCleanupTest {
         assertTrue(dir.exists())
         dir.deleteRecursively()
     }
+
+    @Test
+    fun `a link in the folder's place is left alone, and so is what it points to`() {
+        val base = Files.createTempDirectory("proot-link").toFile()
+        val target = File(base, "elsewhere").apply { mkdirs() }
+        val kept = File(target, "keep.txt").apply { writeText("z"); setLastModified(System.currentTimeMillis() - 600_000L) }
+        val link = File(base, "proot-tmp")
+        Files.createSymbolicLink(link.toPath(), target.toPath())
+        assertEquals(0, ProotTmpCleanup.clean(link))
+        assertTrue(Files.isSymbolicLink(link.toPath()))
+        assertTrue(kept.exists())
+        base.deleteRecursively()
+    }
 }

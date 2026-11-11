@@ -42,8 +42,9 @@ internal object ProotTmpCleanup {
      * folder at all is thrown for the caller to log.
      */
     fun clean(dir: File, now: Long = System.currentTimeMillis()): Int {
-        if (!dir.isDirectory) return 0
         val root: Path = dir.toPath()
+        // A link in the folder's place is never walked: walkFileTree would visit the link itself as a file and delete it.
+        if (Files.isSymbolicLink(root) || !Files.isDirectory(root, LinkOption.NOFOLLOW_LINKS)) return 0
         var deleted = 0
         Files.walkFileTree(
             root,
