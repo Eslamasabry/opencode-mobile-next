@@ -26,6 +26,25 @@ public data class FeedRunning(val sinceMs: Long?, val command: String? = null)
 public data class FeedPermission(val requestId: String, val command: String, val kind: String = "bash")
 
 /**
+ * A question waiting on the person (H1, Flutter `questionForFeedItem`): the first prompt's words and choices, which
+ * the home row shows so a one-answer question is answered from the list. [prompts] is how many prompts it holds;
+ * [inPlace] says one tap on a choice answers it (one prompt, one answer, short choices); anything else is answered
+ * in the conversation.
+ */
+public data class FeedQuestion(
+    val requestId: String,
+    val title: String,
+    val question: String,
+    val choices: List<String>,
+    val prompts: Int = 1,
+    val custom: Boolean = false,
+    val inPlace: Boolean = false,
+)
+
+/** A form waiting on the person: the row says what it is and opens the conversation at it (H1). */
+public data class FeedForm(val requestId: String, val title: String?, val fields: Int)
+
+/**
  * One conversation row on Conversations (Dart `ChatFeedItem`, 17 §1.6). Immutable, and it holds
  * **only what a row shows**: equality is what decides whether the feed revision moves (B-CHAT-014).
  * Compare and key by [identity]; session ids collide across sources.
@@ -72,6 +91,8 @@ public data class ChatFeedItem(
     val locationKey: String? = null,
     val running: FeedRunning? = null,
     val permission: FeedPermission? = null,
+    val question: FeedQuestion? = null,
+    val form: FeedForm? = null,
 ) {
     /** The list key: profile, source, session, folder and captured location. */
     val identity: String

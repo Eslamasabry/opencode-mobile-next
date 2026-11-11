@@ -46,6 +46,9 @@ public data class ConversationRowUi(
     val ago: RelativeAge? = null,
     val running: io.github.eslamasabry.oc.engine.agents.feed.FeedRunning? = null,
     val permission: io.github.eslamasabry.oc.engine.agents.feed.FeedPermission? = null,
+    /** H1: a waiting question (answered from the row where one tap answers it) or form (opens the conversation). */
+    val question: io.github.eslamasabry.oc.engine.agents.feed.FeedQuestion? = null,
+    val form: io.github.eslamasabry.oc.engine.agents.feed.FeedForm? = null,
     val updatedAtMs: Long? = null,
     val canOpen: Boolean = true,
     /** H4: an agent conversation that cannot be reopened; a tap asks "Start a new conversation?" first. */
@@ -241,6 +244,13 @@ public data class ChatsUi(
      */
     val held: kotlinx.collections.immutable.ImmutableMap<String, HomeHeldReply> =
         kotlinx.collections.immutable.persistentMapOf(),
+    /** H1: question answers inside their undo window, by request id, with the words the person chose. */
+    val heldQuestions: kotlinx.collections.immutable.ImmutableMap<String, String> =
+        kotlinx.collections.immutable.persistentMapOf(),
+    /** H1: question requests whose answer the server did not take; the row says so and offers Try again. */
+    val refusedQuestions: ImmutableSet<String> = persistentSetOf(),
+    /** H1: question answers on their way to the server (after the undo window). */
+    val sendingQuestions: ImmutableSet<String> = persistentSetOf(),
     /**
      * H3: set when no connection can list across projects: the one project the list shows, so "my other
      * conversations vanished" reads as the server's limit (F: chats_home_screen.dart:333-337).
@@ -297,6 +307,18 @@ public interface ChatsActions {
 
     /** H1: takes back a permission answer still inside its undo window; nothing was sent. */
     public fun undoAnswer(row: ConversationRowUi) {}
+
+    /**
+     * H1: answers the row's waiting question with [answers] (one list per prompt). Held [ANSWER_HOLD_MS] with Undo,
+     * then sent through the conversation's own requests engine. [shown] is the words the held row repeats.
+     */
+    public fun answerQuestion(row: ConversationRowUi, answers: List<List<String>>, shown: String) {}
+
+    /** H1: resend the question answer the server did not take. */
+    public fun retryQuestion(row: ConversationRowUi) {}
+
+    /** H1: a question or form that is answered in the conversation: opens it. */
+    public fun openRequest(row: ConversationRowUi) {}
 
     /** H3: "Try again" on the list's quiet line: asks every connection that did not answer, then reads the list. */
     public fun retryList() {}
