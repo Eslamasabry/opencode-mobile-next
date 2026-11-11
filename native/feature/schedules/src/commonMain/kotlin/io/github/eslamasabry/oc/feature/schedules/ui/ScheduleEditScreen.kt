@@ -239,8 +239,13 @@ private fun EditorForm(state: ScheduleEditUi, draft: EditorDraft, words: Schedul
             KitRow(
                 title = lastLine(run, state.nowMs, words),
                 leading = KitRowLeading.Glyph(KitIcons.clock),
-                supporting = run.errorCode?.let(words::why),
+                supporting =
+                    run.errorCode?.let(words::why)
+                        ?: run.sessionId?.let { words.openConversation },
                 supportingMaxLines = 3,
+                trailing =
+                    if (run.sessionId != null) KitRowTrailing.Chevron else KitRowTrailing.None,
+                onClick = run.sessionId?.let { id -> { actions.openConversation(id) } },
             )
         }
         Spacer(Modifier.height(Space.S3.dp))

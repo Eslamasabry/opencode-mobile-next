@@ -235,6 +235,10 @@ public class ScheduleEditViewModel(
 
     override fun back(): Unit = nav.back()
 
+    override fun openConversation(sessionId: String) {
+        nav.openChat(io.github.eslamasabry.oc.core.common.ids.ConversationRef(route.profileId, io.github.eslamasabry.oc.core.common.ids.SessionId(sessionId)))
+    }
+
     override fun edited(input: EditorFields) {
         if (mutable.value.phase != EditPhase.Ready) return
         typedByPerson = true
