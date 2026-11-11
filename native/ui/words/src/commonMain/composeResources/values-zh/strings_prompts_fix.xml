@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="promptFixFilesStay">此提示词包含文件或审阅备注，此版本无法放入消息中。它们仍保存在这里。</string>
+    <string name="promptFixWordsOnly">仅添加文字</string>
+</resources>

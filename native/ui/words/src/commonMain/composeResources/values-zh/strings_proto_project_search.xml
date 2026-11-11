@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="protoProjectTools">服务器项目工具</string>
+    <string name="protoWorking">处理中…</string>
+    <string name="protoGitInitialized">此文件夹是一个 Git 仓库。</string>
+    <string name="protoWorktreeCreated">工作树已在下方的文件夹中就绪。</string>
+    <string name="protoShellSaved">默认 shell 已保存。</string>
+    <string name="protoGitInitialize">在此文件夹中初始化 Git</string>
+    <string name="protoWorktreeName">新工作树名称</string>
+    <string name="protoWorktreeCreate">创建工作树</string>
+    <string name="protoShellTitle">默认终端 shell</string>
+    <string name="protoShellDefault">使用服务器默认值</string>
+    <string name="protoShellUnavailable">此服务器无法使用该 shell。</string>
+    <string name="protoWebSearch">搜索网络</string>
+    <string name="protoWebSearchHelp">使用此服务器的提供商进行搜索。搜索内容不会记入对话历史。</string>
+    <string name="protoWebUnavailable">此服务器无法搜索网络。</string>
+    <string name="protoWebFailed">网络搜索未能完成。请重新获取提供商列表，或再搜索一次。</string>
+    <string name="protoWebQuery">网络搜索关键词</string>
+    <string name="protoWebProvider">搜索提供商</string>
+    <string name="protoWebEmpty">没有返回网络搜索结果。</string>
+    <string name="protoWebOpenQuestion">在浏览器中打开 %1$s？</string>
+    <string name="protoWebOpenBrowser">打开浏览器</string>
+    <string name="protoWebInsecure">此链接使用未加密的连接。</string>
+    <string name="protoWebLeaveApp">这会在应用之外打开一个网站。</string>
+    <string name="protoGitToolsFailed">未能完成。请检查服务器后重试。</string>
+    <string name="protoPairingCheck">%1$s：%2$s</string>
+</resources>

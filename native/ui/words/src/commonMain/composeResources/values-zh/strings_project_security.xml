@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="secBuiltinFolders">内置 Linux 文件夹</string>
+    <string name="secBuiltinFoldersBody">浏览这部手机上的项目存储和 Linux 文件夹。</string>
+    <string name="secBuiltinFolderLinked">此文件夹是一个链接。请选择真正的文件夹。</string>
+    <string name="secBuiltinFolderNotInstalled">请先在这部手机上安装 Linux，才能浏览这些文件夹。</string>
+</resources>
