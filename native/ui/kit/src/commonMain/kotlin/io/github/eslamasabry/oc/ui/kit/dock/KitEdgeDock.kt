@@ -505,19 +505,16 @@ private fun DockRingNode(
             // Whole rings only: a ring not wholly inside the viewport takes no room and draws nothing (the others do not
             // slide under the "+" while the column scrolls or the area changes).
             .layout { measurable, constraints ->
-                if (ringStands(state, index, m)) {
-                    val p = measurable.measure(constraints)
-                    layout(p.width, p.height) { p.place(0, 0) }
-                } else {
-                    layout(0, 0) {}
-                }
+                // Measured at no size when it does not stand (so its bounds are empty and nothing of it draws).
+                val p = measurable.measure(if (ringStands(state, index, m)) constraints else Constraints.fixed(0, 0))
+                layout(p.width, p.height) { p.place(0, 0) }
             }
             .size(DockDims.REST_W.dp, state.column.pitch.dp)
             .graphicsLayer {
                 val vis = smoothstep(15f, 58f, state.out.value) * (1f - smoothstep(0.1f, 0.45f, state.panelX.value))
                 // While another ring is renamed the strip's rings stay, dimmed.
                 val dim = if (state.renaming != null && state.renaming != ring.key) 0.45f else 1f
-                alpha = vis * m.presence.value.coerceIn(0f, 1f) * dim
+                alpha = if (ringStands(state, index, m)) vis * m.presence.value.coerceIn(0f, 1f) * dim else 0f
                 val s = lerp(0.3f, 1f, vis) * (1f + m.pop.value) * (if (state.carrying == index) 1.1f else 1f)
                 scaleX = s
                 scaleY = s

@@ -94,7 +94,7 @@ class KitEdgeDockRenameLongTest {
         // The keyboard and the bar leave a span of 291 dp: room for one ring in the column.
         val bottom = 600f
         for (side in KitDockSide.entries) {
-            rename(side, bottom = bottom) { _, a, b, field, ui ->
+            rename(side, bottom = bottom) { state, a, b, field, ui ->
                 val areaBottom = height - bottom
                 assertTrue(b.top >= top - .5f && b.bottom <= areaBottom + .5f, "$side: the swell $b stays inside the area $top..$areaBottom")
                 inside("$side: the field", field, b)
@@ -102,8 +102,10 @@ class KitEdgeDockRenameLongTest {
                 for ((i, ring) in rings.withIndex()) {
                     val r = ui.onAllNodes(hasContentDescription(TestDockWords.ringLabel(ring)), useUnmergedTree = true).fetchSemanticsNodes().first().boundsInRoot
                     if (r.width <= 0f || r.height <= 0f || i == 2) continue
-                    others++
                     inside("$side: ring ${ring.name}", r, a)
+                    // A ring stands whole in the strip or not at all (not a slice of one beside the swell).
+                    assertTrue(r.height >= state.column.pitch - 1f, "$side: ring ${ring.name} $r is a whole slot (${state.column.pitch} dp)")
+                    others++
                     assertTrue(!r.overlaps(field), "$side: ring ${ring.name} stays clear of the field")
                 }
                 assertTrue(others >= 1, "$side: the strip keeps a ring besides the renamed one (not an empty body)")
