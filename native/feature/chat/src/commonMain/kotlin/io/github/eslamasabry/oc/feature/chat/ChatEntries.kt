@@ -138,6 +138,8 @@ public class ChatEntries(
         emptySet(),
     private val activeContextKept: Set<io.github.eslamasabry.oc.feature.chat.context.ActiveContextLastKnown> =
         emptySet(),
+    /** The edge dock over the conversation, where the app binds one. */
+    private val edgeDocks: Set<io.github.eslamasabry.oc.feature.chat.ui.ChatEdgeDock> = emptySet(),
 ) : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
         entry<ConnectionFormRoute> { route ->
@@ -691,6 +693,7 @@ public class ChatEntries(
                                         offerContent?.invoke()
                                     },
                                     encodePng = pictureEncoders.firstOrNull()?.encodePng,
+                                    edgeDock = edgeDocks.firstOrNull(),
                                 )
                             }
                             ChatInboxSlot(

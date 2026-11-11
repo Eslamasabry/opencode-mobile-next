@@ -215,6 +215,8 @@ public fun ChatsScreen(
      * as its goldens show it, is this screen with [shellBar] false. The page's ground is the same either way.
      */
     shellBar: Boolean = true,
+    /** The edge dock over the list, under the home's sheets and dialogs; null = none. */
+    edgeDock: io.github.eslamasabry.oc.feature.chats.dock.HomeEdgeDock? = null,
 ) {
     // E05-S21: on the bare list (the whole back stack) the first Back says "Press back again to exit" in the one
     // status line; called first so sheets, dialogs and a filled search registered below close before it.
@@ -527,6 +529,8 @@ public fun ChatsScreen(
                 modifier = Modifier.align(Alignment.CenterHorizontally),
             )
         }
+        // The edge dock over the list, clear of the floating + at the foot.
+        edgeDock?.Content(clearBottom = if (listed) KIT_FAB_CLEARANCE.dp else 0.dp)
       }
         ChatsHomeSheets(state, actions)
         ConversationRenameDialog(state.renaming, actions::finishRename)

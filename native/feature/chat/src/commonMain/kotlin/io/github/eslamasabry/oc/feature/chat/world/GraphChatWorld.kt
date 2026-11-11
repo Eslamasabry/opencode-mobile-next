@@ -285,6 +285,12 @@ internal class GraphChatWorld(
     override val link: StateFlow<ChatLink> = mutableLink.asStateFlow()
     override val linkRetryAtMs: StateFlow<Long?> = mutableRetryAt.asStateFlow()
     override val parent: StateFlow<ConversationRef?> = mutableParent.asStateFlow()
+
+    override suspend fun conversationTitle(other: ConversationRef): String? {
+        if (other.profileId != ref.profileId) return null
+        val a = currentAttached() ?: return null
+        return (a.graph.session.reads.session(other.sessionId) as? Outcome.Ok)?.value?.title
+    }
     override val linkStopped: StateFlow<Failure?> = mutableStopped.asStateFlow()
 
     override fun tryLinkNow() {
