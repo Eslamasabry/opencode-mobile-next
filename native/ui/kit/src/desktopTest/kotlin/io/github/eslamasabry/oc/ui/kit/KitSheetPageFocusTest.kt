@@ -41,6 +41,7 @@ class KitSheetPageFocusTest {
         var keyboard by mutableStateOf(false)
         var dialog by mutableStateOf(false)
         val request = FocusRequester()
+        var manager: androidx.compose.ui.focus.FocusManager? = null
     }
 
     private fun runPage(block: androidx.compose.ui.test.ComposeUiTest.(page: Page) -> Unit) =
@@ -50,6 +51,8 @@ class KitSheetPageFocusTest {
                 KitTheme(KitAppearance(motion = MotionLevel.Off), DesktopKitPlatform()) {
                     CompositionLocalProvider(LocalKitKeyboardShown provides page.keyboard) {
                         KitSheetHost {
+                            val manager = androidx.compose.ui.platform.LocalFocusManager.current
+                            androidx.compose.runtime.SideEffect { page.manager = manager }
                             Column {
                                 BasicTextField("page", {}, Modifier.testTag("page-field").focusRequester(page.request).onFocusChanged { pageFocused = it.isFocused })
                                 if (page.second) {
@@ -168,5 +171,80 @@ class KitSheetPageFocusTest {
             mainClock.advanceTimeBy(2000)
             waitForIdle()
             assertTrue(pageFocused, "focus came back to the page field")
+        }
+
+    // --- Gate (w4-focus2), asked by the kit owner: one save per modal, and nothing saved or restored without focus. ---
+
+    @Test
+    fun `one modal saves the page's holder once: a field that asked under the sheet does not replace it`() =
+        runPage { page ->
+            runOnIdle { page.request.requestFocus() }
+            waitForIdle()
+            runOnIdle { page.shown = true }
+            waitForIdle()
+            // The second field appears under the shown sheet and asks for focus: refused, and never saved as the holder.
+            runOnIdle { page.second = true }
+            mainClock.advanceTimeBy(2000)
+            waitForIdle()
+            assertTrue(!secondFocused && !pageFocused, "nothing on the page took focus under the sheet")
+            runOnIdle { page.shown = false }
+            mainClock.advanceTimeBy(2000)
+            waitForIdle()
+            assertTrue(pageFocused, "the holder from when the sheet showed got focus back")
+            assertTrue(!secondFocused, "the field that asked under the sheet did not")
+        }
+
+    @Test
+    fun `each modal saves its own holder: the second sheet gives focus back to the field focused when it showed`() =
+        runPage { page ->
+            runOnIdle { page.request.requestFocus() }
+            waitForIdle()
+            runOnIdle { page.shown = true }
+            waitForIdle()
+            runOnIdle { page.shown = false }
+            mainClock.advanceTimeBy(2000)
+            waitForIdle()
+            assertTrue(pageFocused, "first sheet: focus came back")
+            // The second field takes focus now (it asks when it appears), then a second sheet comes and goes.
+            runOnIdle { page.second = true }
+            waitForIdle()
+            assertTrue(secondFocused && !pageFocused, "the second field holds focus")
+            runOnIdle { page.shown = true }
+            waitForIdle()
+            runOnIdle { page.shown = false }
+            mainClock.advanceTimeBy(2000)
+            waitForIdle()
+            assertTrue(secondFocused, "the second sheet gave focus back to its own holder")
+            assertTrue(!pageFocused, "not to the first sheet's holder")
+        }
+
+    @Test
+    fun `a modal that came while nothing on the page had focus restores nothing, even after an earlier one did`() =
+        runPage { page ->
+            runOnIdle { page.request.requestFocus() }
+            waitForIdle()
+            runOnIdle { page.shown = true }
+            waitForIdle()
+            runOnIdle { page.shown = false }
+            mainClock.advanceTimeBy(2000)
+            waitForIdle()
+            assertTrue(pageFocused, "first sheet: focus came back")
+            runOnIdle { page.manager!!.clearFocus(force = true) }
+            waitForIdle()
+            assertTrue(!pageFocused, "focus cleared")
+            runOnIdle { page.shown = true }
+            waitForIdle()
+            runOnIdle { page.shown = false }
+            mainClock.advanceTimeBy(2000)
+            waitForIdle()
+            assertTrue(!pageFocused, "the sheet that never took the page's focus gave none back")
+            // The same with a dialog whose own field takes focus.
+            runOnIdle { page.dialog = true }
+            mainClock.advanceTimeBy(2000)
+            waitForIdle()
+            runOnIdle { page.dialog = false }
+            mainClock.advanceTimeBy(2000)
+            waitForIdle()
+            assertTrue(!pageFocused, "the dialog that never took the page's focus gave none back")
         }
 }
