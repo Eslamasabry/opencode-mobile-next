@@ -140,6 +140,14 @@ public object ConfirmRules {
         if (kind == KitConfirmKind.Neutral) null else KitHaptic.Commit
 }
 
+/** The roles a confirm's two answers take: the confirm and the safe answer. */
+public data class ConfirmAnswerRoles(val confirm: KitButtonRole, val safe: KitButtonRole, val confirmIsDanger: Boolean)
+
+public fun ConfirmRules.answerRoles(kind: KitConfirmKind): ConfirmAnswerRoles =
+    if (kind == KitConfirmKind.Neutral) ConfirmAnswerRoles(KitButtonRole.Primary, KitButtonRole.Secondary, false)
+    // A stop, destructive or discard act is the quiet answer in warning ink; the safe answer is the filled one.
+    else ConfirmAnswerRoles(KitButtonRole.Tertiary, KitButtonRole.Primary, true)
+
 /**
  * A confirmation as screen state (Dart `showKitConfirm`, `KitConfirmSheet`, `KitConsequences`; plan
  * 06 §7.4): shown while [spec] is non-null. A sheet on compact windows, a 480 dp dialog on wide
@@ -283,6 +291,7 @@ public fun KitConfirm(
             }
             Spacer(Modifier.height(Space.S5.dp))
             ConfirmAnswers(
+                roles = ConfirmRules.answerRoles(shown.kind),
                 confirm =
                     KitAction(
                         label = shown.confirmLabel,
@@ -329,7 +338,7 @@ public fun KitConfirm(
 /** Flutter kit_confirm_sheet.dart: compact answers stack, wide answers wrap at the window's end. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ConfirmAnswers(confirm: KitAction, cancel: KitAction, alternatives: List<KitAction>) {
+private fun ConfirmAnswers(roles: ConfirmAnswerRoles, confirm: KitAction, cancel: KitAction, alternatives: List<KitAction>) {
     val wide = LocalKitWindow.current.modal.isWide
     if (wide) {
         Column(Modifier.fillMaxWidth()) {
@@ -339,9 +348,9 @@ private fun ConfirmAnswers(confirm: KitAction, cancel: KitAction, alternatives: 
                 verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
                 itemVerticalAlignment = Alignment.CenterVertically,
             ) {
-                KitButton(cancel, role = KitButtonRole.Secondary)
+                KitButton(cancel, role = roles.safe)
                 alternatives.forEach { KitButton(it, role = KitButtonRole.Tertiary) }
-                KitButton(confirm)
+                ConfirmAnswerButton(confirm, roles)
             }
             confirm.enabled.reason?.let {
                 Spacer(Modifier.height(Space.S2.dp))
@@ -351,7 +360,7 @@ private fun ConfirmAnswers(confirm: KitAction, cancel: KitAction, alternatives: 
     } else {
         // Flutter stretches the column and each button holds its control cap (KitMaxWidth.control, 400 dp) centred, so
         // on a medium window the confirm and Cancel sit in the middle of the sheet, not at its start edge.
-        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { KitButton(confirm, Modifier.fillMaxWidth()) }
+        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { ConfirmAnswerButton(confirm, roles, Modifier.fillMaxWidth()) }
         confirm.enabled.reason?.let {
             Spacer(Modifier.height(Space.S2.dp))
             KitText(it, role = TypeRole.Secondary)
@@ -367,9 +376,26 @@ private fun ConfirmAnswers(confirm: KitAction, cancel: KitAction, alternatives: 
         }
         Spacer(Modifier.height(Space.S3.dp))
         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-            KitButton(cancel, Modifier.fillMaxWidth(), role = KitButtonRole.Secondary)
+            KitButton(cancel, Modifier.fillMaxWidth(), role = roles.safe)
         }
     }
+}
+
+@Composable
+private fun ConfirmAnswerButton(action: KitAction, roles: ConfirmAnswerRoles, modifier: Modifier = Modifier) {
+    if (!roles.confirmIsDanger) return KitButton(action, modifier)
+    val run = action.onClick
+    KitButton(
+        label = action.label,
+        onClick = { run?.invoke() },
+        modifier = modifier,
+        role = roles.confirm,
+        danger = true,
+        semanticsLabel = action.semanticsLabel,
+        enabled = if (run == null && action.enabled.isEnabled) KitEnabled.Disabled(action.label) else action.enabled,
+        working = action.working,
+        haptic = action.haptic,
+    )
 }
 
 /** What a fact in a [KitMarkedConsequences] panel says about the thing (Dart `KitConsequenceMark`, kit_consequences.dart). */

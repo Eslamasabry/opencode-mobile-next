@@ -11,15 +11,12 @@ import kotlinx.coroutines.flow.StateFlow
 
 public data class IntegrationServer(val id: ProfileId, val name: String)
 
-public data class ProviderMethodUi(val id: String, val label: String, val oauth: Boolean)
-
+/** A provider row; connecting it is the shared sign-in page's job (ServerProviderAuthRoute). */
 public data class ProviderUi(
     val id: String,
     val name: String,
     val connected: Boolean,
-    val methods: ImmutableList<ProviderMethodUi>,
     val logo: String? = null,
-    val keyPage: Boolean = false,
 )
 
 public data class ConnectorUi(val name: String, val connected: Boolean)
@@ -30,8 +27,6 @@ public data class IntegrationsData(
     val providerSupported: Boolean = false,
     val connectorSupported: Boolean = false,
 )
-
-public data class ProviderAuthorization(val attempt: String, val url: String)
 
 public data class IntegrationLinkPrompt(val host: String, val insecure: Boolean)
 
@@ -46,12 +41,6 @@ public interface IntegrationSession {
     public val connector: StateFlow<McpChatSnapshot?>
 
     public suspend fun read(): Outcome<IntegrationsData>
-
-    public suspend fun saveKey(provider: String, key: String): Outcome<Unit>
-
-    public suspend fun startOAuth(provider: String, method: String): Outcome<ProviderAuthorization>
-
-    public suspend fun completeOAuth(attempt: String, input: String): Outcome<Unit>
 
     public suspend fun saveConnector(
         name: String,
@@ -79,8 +68,6 @@ public interface IntegrationsSource {
     public fun open(profile: ProfileId): IntegrationSession?
 
     public fun openLink(url: String, confirmed: Boolean = false): Outcome<IntegrationLinkPrompt?>
-
-    public fun keyPage(provider: String): String?
 }
 
 public enum class IntegrationsNotice {
@@ -99,8 +86,6 @@ public data class IntegrationsUi(
     val data: IntegrationsData = IntegrationsData(),
     val busy: Boolean = false,
     val notice: IntegrationsNotice? = null,
-    val selected: String? = null,
-    val authorization: ProviderAuthorization? = null,
     val connector: McpChatSnapshot? = null,
     val draft: ConversationRef? = null,
     val linkPrompt: IntegrationLinkPrompt? = null,
@@ -112,18 +97,6 @@ public interface IntegrationsActions {
     public fun refresh()
 
     public fun chooseServer(id: ProfileId)
-
-    public fun chooseProvider(id: String)
-
-    public fun saveKey(key: String)
-
-    public fun startOAuth(method: String)
-
-    public fun completeOAuth(code: String)
-
-    public fun openAuthorization()
-
-    public fun openKeyPage()
 
     public fun confirmLink()
 
