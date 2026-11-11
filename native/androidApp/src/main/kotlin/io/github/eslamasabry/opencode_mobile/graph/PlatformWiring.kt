@@ -454,7 +454,9 @@ class PlatformHub(
                                     it.status == ChatStatus.NeedsYou)
                         }
                     if (graph == null || !stillRunning) Outcome.Failed(Failure.NotFound())
-                    else graph.session.server.stop(ref.sessionId).map { Unit }
+                    // The chat's own Stop path (the person's Stop recorded, waiting sends called off), not a bare
+                    // server stop.
+                    else stopLikeTheChat(graph, ref)
                 },
             lock =
                 object : DeviceLock {

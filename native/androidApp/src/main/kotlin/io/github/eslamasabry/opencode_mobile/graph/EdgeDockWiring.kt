@@ -5,9 +5,7 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
-import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
-import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
@@ -32,7 +30,6 @@ import io.github.eslamasabry.oc.engine.attention.dock.SubAgentChildSource
 import io.github.eslamasabry.oc.engine.attention.dock.DockUi
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
-import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -106,12 +103,7 @@ class AppEdgeDock(
             override suspend fun answerPermission(ref: ConversationRef, requestId: String, allow: Boolean): Outcome<Unit> =
                 permissionAnswers.answer(ref, requestId, allow)
 
-            override suspend fun stop(ref: ConversationRef): Outcome<Unit> {
-                val delivery =
-                    (connections.graphFor(ref) as? ChatGraphAccessors)?.chatDelivery?.engine
-                        ?: return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
-                return delivery.stop(ref)
-            }
+            override suspend fun stop(ref: ConversationRef): Outcome<Unit> = stopLikeTheChat(connections.graphFor(ref), ref)
         }
     private val controller =
         DockController(

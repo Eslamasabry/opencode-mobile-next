@@ -75,6 +75,8 @@ class DockRowRendererTest {
         assertEquals("busy", stopIntent.data?.getQueryParameter("session"))
         assertEquals("busy", stopIntent.getStringExtra(FrozenExtras.EXTRA_STATUS_SESSION))
         assertNotEquals(openIntent.data, stopIntent.data)
+        // Stop acts on the person's work: like the request alert's Allow, Android asks to unlock first.
+        assertTrue(n.actions[1].isAuthenticationRequired)
     }
 
     @Test

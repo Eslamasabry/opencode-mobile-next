@@ -160,7 +160,7 @@ public class StatusRenderer(private val context: Context, private val words: Not
             StatusAction.StopReply -> {
                 // The Stop button targets the one working conversation, which is not always the one Open names.
                 val stopTarget = content.stopConversation ?: content.conversation
-                NotificationCompat.Action(
+                NotificationCompat.Action.Builder(
                     icon,
                     content.stopLabel.ifEmpty { words.text(R.string.notify_status_action_stop_reply) },
                     PendingIntent.getBroadcast(
@@ -179,6 +179,10 @@ public class StatusRenderer(private val context: Context, private val words: Not
                         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
                     ),
                 )
+                    // Like the request alert's Allow: a lock-screen Stop acts on the person's work, so Android 12+
+                    // asks to unlock first; on API 26-30 NotificationActionBody checks the lock itself.
+                    .setAuthenticationRequired(true)
+                    .build()
             }
             StatusAction.StopServer ->
                 NotificationCompat.Action(

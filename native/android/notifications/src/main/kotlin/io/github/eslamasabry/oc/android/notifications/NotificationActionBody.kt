@@ -114,6 +114,9 @@ public class NotificationActionBody(
         if (intent.getStringExtra(FrozenExtras.EXTRA_STATUS_ACTION) != StatusAction.StopReply.wire)
             return ShadeOutcome.Ignored
         val conversation = intent.statusConversation() ?: return ShadeOutcome.Ignored
+        // Stop needs the phone unlocked, as Allow once does: Android 12+ asks through the action's
+        // setAuthenticationRequired; below that nothing is stopped while locked (the row stays, its tap opens the chat).
+        if (lock.sdkInt < Build.VERSION_CODES.S && lock.isLocked()) return ShadeOutcome.Ignored
         val outcome = withTimeoutOrNull(answerDeadline) { stopper.stop(conversation) }
         // On failure the row stays; its content tap (an activity PendingIntent) opens that chat.
         return if (
