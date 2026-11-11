@@ -116,6 +116,15 @@ public object LiquidEdge {
         return if (tint == base.tint) base else base.copy(tint = tint)
     }
 
+    /**
+     * The menu's glass as the edge dock's swell wears it: the dock grows out of its strip towards this (blur 6 dp dark,
+     * 3 light), then towards the sheet's frost when its list is out ([dockRecipe]). Menus themselves frost at 12 dp
+     * ([recipe]); the dock's strip and swell keep what they were (2026-11-11, "the dock's list frosts as a sheet does":
+     * only the list moved).
+     */
+    public fun swellRecipe(dark: Boolean, look: GlassLookPreset = GlassLooks.Glossy): LiquidRecipe =
+        recipe(LiquidRole.Menu, dark, look).copy(blurDp = if (dark) 6f else 3f)
+
     private fun baseRecipe(role: LiquidRole, dark: Boolean): LiquidRecipe {
         val lift = if (dark) -PRESS_LIFT_DARK else PRESS_LIFT_LIGHT
         // Crisp edges (owner 2026-11-09, "crisper glossy glass"): no soft shadow halo under any pane; the 1 dp rim light
@@ -133,7 +142,9 @@ public object LiquidEdge {
             LiquidRole.Bar, LiquidRole.Dock -> r(3f, 34f, .14f, .18f, .12f)
             LiquidRole.Composer -> r(2f, 34f, .16f, .20f, .18f)
             LiquidRole.Sheet -> r(12f, 48f, 0f, .22f, .14f, rimMax = 30f)
-            LiquidRole.Menu -> r(if (dark) 6f else 3f, 48f, .18f, .20f, .10f, rimMax = 26f)
+            // Menus frost as sheets do (words on glass 3, 2026-11-11: the page's rows and a dark bubble behind a menu's rows
+            // read as lines and as a highlighted row at 6 dp dark / 3 dp light).
+            LiquidRole.Menu -> r(12f, 48f, .18f, .20f, .10f, rimMax = 26f)
             // Small pills (the jump pill, the chips over the message box) are calm glass: a narrow rim and a light bend,
             // no lens to the middle (owner 2026-11-08: the jump pill's lens read swirly over text).
             LiquidRole.Pill, LiquidRole.Status -> r(1f, 12f, .16f, .18f, .28f, rimMax = 12f, share = .28f)
@@ -147,7 +158,7 @@ public object LiquidEdge {
      * the whole body, its blur, bend, rim and tint moving together as it grows.
      */
     public fun dockRecipe(dark: Boolean, growth: Float, look: GlassLookPreset = GlassLooks.Glossy, list: Float = 0f): LiquidRecipe =
-        toward(mix(recipe(LiquidRole.Dock, dark, look), recipe(LiquidRole.Menu, dark, look), growth), recipe(LiquidRole.Sheet, dark, look), list)
+        toward(mix(recipe(LiquidRole.Dock, dark, look), swellRecipe(dark, look), growth), recipe(LiquidRole.Sheet, dark, look), list)
 
     /**
      * [from] with its blur and its bend moved towards [sheet]'s by [t] (0 keeps [from], 1 has the sheet's): the pulled-out

@@ -385,7 +385,7 @@ the tint, the cover and one rim light follow the body's outline. Otherwise `reme
 unchanged (the dock's looks pictures and tests did not change).
 
 **The recipe.** A new liquid role, `LiquidRole.Dock`, ranked between the + (Action) and the bars. At rest it is the
-bar's recipe (blur 3 dp, bend 34 dp, rim 22 dp, tint .18 dark / .12 light); fully grown it is the menu's (blur 6 dp dark
+bar's recipe (blur 3 dp, bend 34 dp, rim 22 dp, tint .18 dark / .12 light); fully grown it is the menu's glass as it was until words on glass 3 (`LiquidEdge.swellRecipe`: blur 6 dp dark
 / 3 light, bend 48 dp, rim 26 dp, tint .20 / .10); in between every number is mixed by the body's growth with no step
 (`LiquidEdge.dockRecipe`, `LiquidEdge.mix`). The tint colour is mixed the same way between the bar's face and the menu's
 face. One resolution for the whole growth (the grown end's), so the sharpness never steps while the swell grows. The
@@ -599,7 +599,7 @@ that rides out, leaving no ring in the one slot of room; while renaming, the col
 strip's rings are dimmed (45 %). The strip still grows above and below the swell by the fillet and the corner, as for every
 swell (see Limits above): that is the dock's geometry. Picture: `render-dock3-3-before.png`, `render-dock3-3-after.png`.
 
-**4. The list lets the page through (4b).** The grown dock used the Menu's glass: blur 6 dp dark (3 dp light), bend 48 dp.
+**4. The list lets the page through (4b).** The grown dock used the Menu's glass: blur 6 dp dark (3 dp light), bend 48 dp (since words on glass 3 menus frost at 12 dp in both themes; the dock keeps this glass as `LiquidEdge.swellRecipe`).
 For the list only the blur and the bend now move to the Sheet's (`LiquidEdge.baseRecipe`: blur 12 dp, bend 48 dp; the bend
 is the same number, so the change is the blur: dark 6 to 12 dp, light 3 to 12 dp) by the list's own growth
 (`LiquidEdge.toward`, `KitLiquidBodyBoxes.listShare`): zero while a swell or peek is out, rising with the list from zero, so
@@ -661,3 +661,26 @@ rename). The pane is also 280 dp wide in both pictures where 312 dp is expected 
 edgeInset - farInset` was 328: 32 dp of horizontal inset the dock was given, which the kit cannot tell from a host's inset.
 Nothing here makes one movement both open the list and move the dock: the outcomes are exclusive (`PullEnd` or `Place`), and in
 the old code a flick from the head only moved the dock.
+
+## Words on glass 3: menus and sheets (2026-11-11, branch native/glass-words3)
+
+From the emulator sweep (Glass dark): behind "Rename conversation" in the chat bar's menu a dark user bubble read as a
+highlighted row; a menu title was overprinted by text behind it; a reply's menu was translucent over body text; the green
+"Ask about this file" button was a bright blurry blob behind a sheet's "Copy path", and the green mic button glowed beside
+"Cancel". Finish line: on Glass with the lens on, behind the words of a menu and a sheet nothing reads as a shape, a line
+of text or a bright or coloured blob, and their rims still bend real content. No change to bars, the message box, chips,
+pills, the dock or the action button, to any other look, to the menu's drop and fill.
+
+### As built: 1. Menus frost as the dock's list does
+
+`LiquidEdge.baseRecipe`: the Menu role's blur is 12 dp in both themes (was 6 dark, 3 light); bend (48), rim (26 dp), tint
+(.20 / .10) and saturation (1.6) are unchanged. Two things derive from the Menu recipe and are handled so nothing steps:
+the edge dock's swell (the grown end of the dock's mix) keeps the old glass as `LiquidEdge.swellRecipe` (blur 6 / 3, no
+hold), selected by `kitLiquidPaneSpec(swell = true)` in `KitLiquidBody`, so the dock's strip, swell and list are the
+numbers they were (its list still moves to the sheet's 12 dp by `toward`); and the joined menu. The joined body draws
+ONE frost, the body's (the bar's 3 dp), so a Menu recipe alone would never have reached a menu that opens out of the chat
+bar, which is the case in the pictures. While a menu is joined the body's blur now moves from the bar's to the menu's as
+the menu's rows come in (`joinedFrost`, the drop's `content` 0 to 1, linear, no step; bend, rim and tint ease by the
+join's own band as before), and the lens pass's resolution follows the mixed blur. So the bar's half of the body frosts at
+12 dp while a menu hangs from it (a departure from "no change to bars": it is the one frost of one body); a join with the
+jump pill (blur 1) is untouched, since only a drop frosted more than its body (the menu) moves the body's frost.

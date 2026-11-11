@@ -363,7 +363,15 @@ private class JoinedPaneNode(
         val area = Rect(floor(mine.left - grow), floor(mine.top - grow), ceil(mine.right + grow), ceil(mine.bottom + grow))
         val local = area.topLeft - origin
         val full = IntSize(area.width.toInt().coerceAtLeast(1), area.height.toInt().coerceAtLeast(1))
-        val recipe = bodySpec.recipe
+        // One frost for the body, but a menu frosts as a sheet does (words on glass 3): while a menu is joined, the body's
+        // frost moves from the bar's towards the menu's as the menu's rows come in (the drop's content, 0 to 1), so the
+        // bar and the menu stay one body of glass and nothing steps as the menu opens or closes. Only a drop frosted more
+        // than its body does (the menu; the jump pill, frosted less, leaves the box's frost as it is).
+        val dropSpec = if (part is KitLiquidJoinDrop) spec else if (partner is KitLiquidJoinDrop) theirSpec else null
+        val frostsBody = theirs != null && dropSpec != null && drop != null && dropSpec.recipe.blurDp > bodySpec.recipe.blurDp
+        val recipe =
+            if (frostsBody) joinedFrost(bodySpec.recipe, dropSpec!!.recipe, drop!!.content())
+            else bodySpec.recipe
         val res = liquidResolutionOf(recipe, platform.liquidResolution)
         val small = IntSize(ceil(full.width * res).toInt().coerceAtLeast(1), ceil(full.height * res).toInt().coerceAtLeast(1))
         val u =
@@ -433,6 +441,13 @@ private class JoinedPaneNode(
         }
     }
 }
+
+/**
+ * The frost of a body joined to a menu: the body's [body] moved towards the menu's [menu] by [t] (0 to 1), blur and
+ * nothing else (the bend, rim and tint ease by the join's own band): linear in [t], so it has no step.
+ */
+internal fun joinedFrost(body: io.github.eslamasabry.oc.ui.design.effects.LiquidRecipe, menu: io.github.eslamasabry.oc.ui.design.effects.LiquidRecipe, t: Float): io.github.eslamasabry.oc.ui.design.effects.LiquidRecipe =
+    body.copy(blurDp = body.blurDp + (menu.blurDp - body.blurDp) * t.coerceIn(0f, 1f))
 
 /**
  * The knee that holds back bright content in [spec]'s lens (LiquidJoin.held): it holds the bright end under light words
