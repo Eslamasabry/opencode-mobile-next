@@ -3,6 +3,8 @@ package io.github.eslamasabry.oc.feature.review
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
@@ -112,17 +114,17 @@ class ReviewScreensTest {
     @Test
     fun `the Changes title follows the chip and not-a-Git-project offers the Git page`() = runComposeUiTest {
         val actions = Changes()
+        val conversation = io.github.eslamasabry.oc.feature.review.presentation.ReviewScope.Conversation
+        val working = io.github.eslamasabry.oc.feature.review.presentation.ReviewScope.WorkingTree
+        var scope by androidx.compose.runtime.mutableStateOf(conversation)
         setContent {
             Themed {
                 ChangesScreen(
                     ChangesUi(
                         turn = true,
                         load = ReviewLoad.Ready,
-                        scope = io.github.eslamasabry.oc.feature.review.presentation.ReviewScope.WorkingTree,
-                        scopes = persistentListOf(
-                            io.github.eslamasabry.oc.feature.review.presentation.ReviewScope.Conversation,
-                            io.github.eslamasabry.oc.feature.review.presentation.ReviewScope.WorkingTree,
-                        ),
+                        scope = scope,
+                        scopes = persistentListOf(conversation, working),
                         canPickScope = true,
                         notRepository = true,
                     ),
@@ -130,8 +132,12 @@ class ReviewScreensTest {
                 )
             }
         }
-        // Only the chip says "Changes in this turn" now; the page title is plain "Changes".
-        assertEquals(1, onAllNodesCount("Changes in this turn"), "turn-text nodes")
+        // On the Conversation view the title and the chip both say "Changes in this turn"; on Uncommitted only the chip
+        // does, and the page title is plain "Changes".
+        val onConversation = onAllNodesCount("Changes in this turn")
+        scope = working
+        waitForIdle()
+        assertEquals(onConversation - 1, onAllNodesCount("Changes in this turn"), "title follows the chip")
         onNodeWithText("Not a Git project").assertIsDisplayed()
         onNodeWithText("Open the Git page").performClick()
         assertEquals(listOf("git"), actions.calls, "calls")
