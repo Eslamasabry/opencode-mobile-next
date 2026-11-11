@@ -17,6 +17,17 @@ import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.core.model.ServerLocation
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.core.common.ids.SessionId
+import dev.zacsweers.metro.ContributesIntoSet
+import io.github.eslamasabry.oc.engine.agents.AgentId
+import io.github.eslamasabry.oc.engine.agents.certification.AgentCertification
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgents
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNotice
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNoticeKind
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNoticeSource
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNotices
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedItem
 import io.github.eslamasabry.oc.engine.agents.feed.ChatStatus
 import io.github.eslamasabry.oc.engine.agents.feed.HomeFeedCache
@@ -390,4 +401,44 @@ class AppChatsHome(
             }
         if (result is Outcome.Ok) cachedRevisions[id] = signature to withLines
     }
+}
+
+/**
+ * G6 (F: lib/ui/screens/agents/agent_notices.dart:84-157): the home's lines about the phone's agents, read from the
+ * same state the Agents page shows. A sign-in or plan line only for an agent New conversation offers (certified for
+ * chat); a stopped agent is always worth saying, so Resume is one tap away.
+ */
+@SingleIn(AppScope::class)
+@ContributesIntoSet(AppScope::class)
+@Inject
+class AppHomeAgentNotices(phoneAgents: PhoneAgents, appScope: AppCoroutineScope) : HomeAgentNoticeSource {
+    override val notices: StateFlow<HomeAgentNotices> =
+        phoneAgents.state
+            .map { state ->
+                if (!state.available) HomeAgentNotices()
+                else
+                    HomeAgentNotices(
+                        restart = state.needsRestart,
+                        lines =
+                            state.agents
+                                .mapNotNull { row ->
+                                    val kind =
+                                        when (row.status) {
+                                            PhoneAgentStatus.SignInNeeded -> HomeAgentNoticeKind.SignedOut
+                                            PhoneAgentStatus.Stopped -> HomeAgentNoticeKind.Stopped
+                                            PhoneAgentStatus.Limit -> HomeAgentNoticeKind.LimitReached
+                                            else -> return@mapNotNull null
+                                        }
+                                    if (
+                                        kind != HomeAgentNoticeKind.Stopped &&
+                                            !AgentCertification.bundled.certifiedForChat(AgentId(row.id))
+                                    )
+                                        return@mapNotNull null
+                                    HomeAgentNotice(row.id, row.name, kind)
+                                }
+                                .toImmutableList(),
+                    )
+            }
+            .distinctUntilChanged()
+            .stateIn(appScope, SharingStarted.Eagerly, HomeAgentNotices())
 }

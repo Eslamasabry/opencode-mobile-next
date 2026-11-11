@@ -55,6 +55,7 @@ public class ChatsViewModel(
     private val connections: ConversationServers = NoConversationServers(),
     private val appScope: AppCoroutineScope? = null,
     private val pins: ConversationPins = NoConversationPins(),
+    private val agentNotices: Set<HomeAgentNoticeSource> = emptySet(),
     dispatchers: AppDispatchers? = null,
 ) : ViewModel(), ChatsActions {
     /** Where the home's list is built: off the main thread in the app; where the caller stands in a test. */
@@ -116,6 +117,18 @@ public class ChatsViewModel(
 
     /** A pull to refresh in flight (one at a time). */
     private val refreshing = MutableStateFlow(false)
+
+    /** G6: the phone agents' notices, or none where the app binds no source. */
+    private val agentNoticeFlow: StateFlow<HomeAgentNotices> =
+        agentNotices.singleOrNull()?.notices ?: MutableStateFlow(HomeAgentNotices())
+
+    /**
+     * H1: a permission answer waits [ANSWER_HOLD_MS] with Undo before it is sent (F: lib/state/delayed_answers.dart),
+     * by request id. The row to answer and the reply are kept beside the words the row shows.
+     */
+    private val heldAnswers = MutableStateFlow<Map<String, HomeHeldReply>>(emptyMap())
+    private val heldRows = HashMap<String, Pair<ConversationRowUi, HomePermissionReply>>()
+    private val holdJobs = HashMap<String, kotlinx.coroutines.Job>()
 
     /** The row whose Always allow waits on its confirm. */
     private val confirmingAlways = MutableStateFlow<ConversationRowUi?>(null)
@@ -193,6 +206,8 @@ public class ChatsViewModel(
                 )
             }
             .combine(confirmingAlways) { base, row -> base.copy(confirmAlways = row) }
+            .combine(heldAnswers) { base, held -> base.copy(held = held.toImmutableMap()) }
+            .combine(agentNoticeFlow) { base, notices -> base.copy(agentNotices = notices) }
             .combine(newRefused) { base, refused -> base.copy(newBlocked = refused && base.home.opening != null) }
             // B-161 / B-162: each row's branch, and the Usage row's tightest limit.
             .combine(home.branches) { base, known -> HomeRows.withBranches(base, known) }
@@ -327,7 +342,62 @@ public class ChatsViewModel(
         )
 
     override fun answerPermission(row: ConversationRowUi, allow: Boolean) {
-        sendAnswer(row, if (allow) HomePermissionReply.Once else HomePermissionReply.Reject)
+        hold(row, if (allow) HomePermissionReply.Once else HomePermissionReply.Reject)
+    }
+
+    /** Holds the answer for the undo window, then sends it once. A second tap on the same request does nothing. */
+    private fun hold(row: ConversationRowUi, reply: HomePermissionReply) {
+        val id = row.permission?.requestId ?: return
+        if (id in heldRows || id in answers.value.first) return
+        heldRows[id] = row to reply
+        heldAnswers.update {
+            it + (id to
+                when (reply) {
+                    HomePermissionReply.Once -> HomeHeldReply.Allowed
+                    HomePermissionReply.Reject -> HomeHeldReply.Rejected
+                    HomePermissionReply.Always -> HomeHeldReply.AlwaysAllowed
+                })
+        }
+        holdJobs[id] =
+            viewModelScope.launch {
+                kotlinx.coroutines.delay(ANSWER_HOLD_MS)
+                release(id)
+            }
+    }
+
+    /** The undo window ended: the answer leaves now. */
+    private fun release(id: String) {
+        val (row, reply) = heldRows.remove(id) ?: return
+        holdJobs.remove(id)
+        sendAnswer(row, reply)
+        heldAnswers.update { it - id }
+    }
+
+    override fun undoAnswer(row: ConversationRowUi) {
+        val id = row.permission?.requestId ?: return
+        if (heldRows.remove(id) == null) return
+        holdJobs.remove(id)?.cancel()
+        heldAnswers.update { it - id }
+    }
+
+    // H3, F: chats_home_screen.dart:511-577 `_incompleteLine` retry: every connection that did not answer is asked
+    // again, then the list is read once more.
+    override fun retryList() {
+        val failing = state.value.home.sources.filter { it.shown && it.unreachable }.map { it.profile }
+        if (refreshing.value) return
+        refreshing.value = true
+        viewModelScope.launch {
+            try {
+                failing.forEach { home.retrySource(it) }
+                feed.refresh()
+            } finally {
+                refreshing.value = false
+            }
+        }
+    }
+
+    override fun openAgents() {
+        nav.open(io.github.eslamasabry.oc.ui.routes.AgentsRoute.Home)
     }
 
     override fun askAlwaysAllow(row: ConversationRowUi) {
@@ -341,7 +411,7 @@ public class ChatsViewModel(
         // The request it was asked for: a newer one on the same row is not what the person confirmed.
         val now = (state.value.rightNow + state.value.recent + state.value.brief?.rows.orEmpty()).firstOrNull { it.key == row.key }
         if (now?.permission?.requestId != row.permission?.requestId) return
-        sendAnswer(row, HomePermissionReply.Always)
+        hold(row, HomePermissionReply.Always)
     }
 
     override fun cancelAlwaysAllow() {
@@ -515,6 +585,15 @@ public class ChatsViewModel(
 
     override fun onCleared() {
         commitArchive()
+        // Leaving the page inside an undo window still sends what the person answered (the app scope outlives it).
+        val port = permissionAnswers.singleOrNull()
+        val scope = appScope
+        if (port != null && scope != null)
+            heldRows.values.toList().forEach { (row, reply) ->
+                val permission = row.permission ?: return@forEach
+                scope.launch { port.answer(row.ref, permission.requestId, reply) }
+            }
+        heldRows.clear()
         super.onCleared()
     }
 
@@ -814,3 +893,6 @@ public interface HomePermissionBindings {
     @dev.zacsweers.metro.Multibinds(allowEmpty = true)
     public val homePermissionAnswers: Set<HomePermissionAnswers>
 }
+
+/** F: lib/state/delayed_answers.dart: how long a permission answer waits with Undo before it is sent. */
+internal const val ANSWER_HOLD_MS: Long = 3_000L

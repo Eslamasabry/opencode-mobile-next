@@ -229,6 +229,19 @@ public data class ChatsUi(
     val alwaysAllowable: ImmutableSet<String> = persistentSetOf(),
     /** The row whose Always allow waits on its confirm, or null. */
     val confirmAlways: ConversationRowUi? = null,
+    /**
+     * H1: permission answers waiting out their 3 s undo window, by request id. The row shows the held word and Undo
+     * instead of the answers (F: chats_host.dart:236-246).
+     */
+    val held: kotlinx.collections.immutable.ImmutableMap<String, HomeHeldReply> =
+        kotlinx.collections.immutable.persistentMapOf(),
+    /**
+     * H3: set when no connection can list across projects: the one project the list shows, so "my other
+     * conversations vanished" reads as the server's limit (F: chats_home_screen.dart:333-337).
+     */
+    val onlyProject: String? = null,
+    /** G6: the phone agents' notices (signed out, stopped, plan limit, restart). */
+    val agentNotices: HomeAgentNotices = HomeAgentNotices(),
 ) {
     /** The server pill's words; null before anything is saved. */
     val connection: HomeConnectionUi?
@@ -275,6 +288,15 @@ public interface ChatsActions {
     public fun rowAct(row: ConversationRowUi, act: RowAct) {}
 
     public fun answerPermission(row: ConversationRowUi, allow: Boolean) {}
+
+    /** H1: takes back a permission answer still inside its undo window; nothing was sent. */
+    public fun undoAnswer(row: ConversationRowUi) {}
+
+    /** H3: "Try again" on the list's quiet line: asks every connection that did not answer, then reads the list. */
+    public fun retryList() {}
+
+    /** G6: a home agent notice's action (Sign in to {agent}, Resume {agent}): the Agents page, where it is done. */
+    public fun openAgents() {}
 
     /** Always allow on a row's waiting permission: asks first ([ChatsUi.confirmAlways]), as Flutter's list does. */
     public fun askAlwaysAllow(row: ConversationRowUi) {}
