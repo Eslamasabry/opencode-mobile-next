@@ -133,6 +133,8 @@ class ChatWordsGlassTest {
         /** The phrase chip above the box (a scene with chips), else null. */
         val chip: DpRect?,
         val rows: List<DpRect>,
+        /** The bottom block (padding included). */
+        val block: DpRect,
         val list: String,
         /** Whether the bottom block saw the screen's own recording (the frame handed it nothing else). */
         val bottomSawSource: Boolean,
@@ -218,7 +220,7 @@ class ChatWordsGlassTest {
         }
     }
 
-    private fun shot(appearance: KitAppearance, platform: KitPlatform, bright: Boolean, notice: Boolean = false, statusDp: Int = STATUS_DP, card: Boolean = false, chips: Boolean = false): Shot {
+    private fun shot(appearance: KitAppearance, platform: KitPlatform, bright: Boolean, notice: Boolean = false, statusDp: Int = STATUS_DP, card: Boolean = false, chips: Boolean = false, scrollTo: Int = SCROLLED_TO): Shot {
         lateinit var shot: Shot
         runDesktopComposeUiTest((W * D).toInt(), (H * D).toInt()) {
             val seen = arrayOfNulls<Any?>(2)
@@ -231,7 +233,7 @@ class ChatWordsGlassTest {
                 }
             }
             waitForIdle()
-            onNodeWithTag("transcript-list").performScrollToIndex(SCROLLED_TO)
+            onNodeWithTag("transcript-list").performScrollToIndex(scrollTo)
             waitForIdle()
             val l = lazy[0]!!
             val visible = l.layoutInfo.visibleItemsInfo.map { it.key }
@@ -254,6 +256,7 @@ class ChatWordsGlassTest {
                     label = if (card) bounds("decision-label") else null,
                     chip = if (chips) bounds("chat-phrase-chips") else null,
                     rows = visible.map { bounds(it.toString()) },
+                    block = bounds("kit-screen-bottom"),
                     list = list,
                     bottomSawSource = seen[0] === seen[1],
                 )
@@ -333,6 +336,52 @@ class ChatWordsGlassTest {
         val (mean, max) = diff(bright.image, none.image, chip.left.value + 6f, chip.top.value + 4f, chip.left.value + 60f, chip.bottom.value - 8f)
         println("chips: mean $mean max $max over $chip")
         assertTrue(mean <= WORDS_MEAN && max <= WORDS_MAX, "bright rows show behind the phrase chip: mean $mean, max $max of 255")
+    }
+
+    /** The jump pill's label band: the middle of its face, where "Jump to latest" is written. */
+    private fun labelBand(pill: DpRect): List<Float> {
+        val cx = (pill.left.value + pill.right.value) / 2f
+        val cy = (pill.top.value + pill.bottom.value) / 2f
+        return listOf(cx - 15f, cy - 6f, cx + 15f, cy + 6f)
+    }
+
+    @Test
+    fun `a bright row never shows behind the jump pill's label with phrase chips above the box`() {
+        val bright = shot(dark(Style.Glass), LensPlatform(), bright = true, chips = true)
+        val none = shot(dark(Style.Glass), LensPlatform(), bright = false, chips = true)
+        val pill = bright.pill
+        assertTrue(pill != null, "the pill shows (scrolled away from the newest)")
+        assertTrue(bright.rows.any { it.top < pill!!.bottom && it.bottom > pill.top }, "rows run behind the pill: ${bright.rows.map { it.top..it.bottom }} pill $pill")
+        val b = labelBand(pill!!)
+        val (mean, max) = diff(bright.image, none.image, b[0], b[1], b[2], b[3])
+        println("pill label (chips): mean $mean max $max over $b, pill $pill")
+        assertTrue(mean <= WORDS_MEAN && max <= WORDS_MAX, "bright rows show behind the pill's label: mean $mean, max $max of 255")
+    }
+
+    @Test
+    fun `with chips the body is cleared where the pill stands and whole above the block when the pill is hidden`() {
+        // A strip at the left, beside the pill, 20 to 40 dp above the block's top: under the pill's height (48 dp).
+        fun strip(s: Shot, n: Shot) = diff(s.image, n.image, 0f, s.block.top.value - 40f, 30f, s.block.top.value - 20f)
+        val shown = shot(dark(Style.Glass), LensPlatform(), bright = true, chips = true)
+        val shownNone = shot(dark(Style.Glass), LensPlatform(), bright = false, chips = true)
+        val hidden = shot(dark(Style.Glass), LensPlatform(), bright = true, chips = true, scrollTo = 1)
+        val hiddenNone = shot(dark(Style.Glass), LensPlatform(), bright = false, chips = true, scrollTo = 1)
+        assertTrue(hidden.pill == null, "the pill is hidden near the newest: ${hidden.pill}")
+        val (onMean, _) = strip(shown, shownNone)
+        val (offMean, _) = strip(hidden, hiddenNone)
+        println("body strip beside pill: shown mean $onMean, hidden mean $offMean")
+        assertTrue(onMean <= WORDS_MEAN, "the body is not cleared where the pill stands: mean $onMean of 255")
+        assertTrue(offMean >= EDGE_MEAN, "with the pill hidden the body's fade moved: mean $offMean of 255")
+    }
+
+    @Test
+    fun `without chips the pill joins the box and the body is whole beside it`() {
+        val bright = shot(dark(Style.Glass), LensPlatform(), bright = true)
+        val none = shot(dark(Style.Glass), LensPlatform(), bright = false)
+        assertTrue(bright.pill != null, "the pill shows")
+        val (mean, _) = diff(bright.image, none.image, 0f, bright.block.top.value - 40f, 30f, bright.block.top.value - 20f)
+        println("body strip beside pill (no chips): mean $mean")
+        assertTrue(mean >= EDGE_MEAN, "not stacked: the body's fade moved: mean $mean of 255")
     }
 
     @Test
