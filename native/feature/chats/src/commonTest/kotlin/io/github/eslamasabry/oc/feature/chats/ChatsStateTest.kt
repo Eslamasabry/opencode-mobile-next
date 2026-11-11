@@ -336,4 +336,25 @@ class ChatsStateTest {
         assertNull(ui(true).onlyProject)
         assertEquals("api", ui(false).onlyProject)
     }
+
+    @Test
+    fun `a server that lists across projects shows every project, ranks the far rows by status and narrows by chip`() {
+        val items =
+            listOf(
+                item("far-ask", "/work/web", at = 1_000, status = ChatStatus.NeedsYou),
+                item("far-run", "/work/web", at = 2_000, status = ChatStatus.Running),
+                item("near", "/work/api", at = 3_000),
+            ).toImmutableList()
+        fun ui(filters: ChatsFilters = ChatsFilters()) =
+            ChatsState.build(ChatFeedSnapshot(items, acrossProjects = true), ReturnBrief.None, filters, today, settingsAvailable = true)
+        val all = ui()
+        assertNull(all.onlyProject)
+        assertEquals(listOf("far-ask", "far-run"), all.rightNow.map { it.ref.sessionId.raw })
+        assertEquals(setOf("/work/api", "/work/web"), all.projects.map { it.directory }.toSet())
+        assertTrue(all.showProjects)
+        val web = ui(ChatsFilters(projectDirectory = "/work/web"))
+        assertEquals(listOf("far-ask", "far-run"), (web.rightNow + web.recent).map { it.ref.sessionId.raw })
+        val api = ui(ChatsFilters(projectDirectory = "/work/api"))
+        assertEquals(listOf("near"), (api.rightNow + api.recent).map { it.ref.sessionId.raw })
+    }
 }

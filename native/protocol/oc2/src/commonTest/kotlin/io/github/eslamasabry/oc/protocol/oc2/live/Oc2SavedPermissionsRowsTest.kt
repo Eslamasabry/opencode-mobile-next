@@ -27,8 +27,8 @@ class Oc2SavedPermissionsRowsTest {
     }
 
     @Test
-    fun `OpenCode 2 does not promise listGlobalSessions, which its gateway does not implement`() {
-        assertEquals(false, Oc2Gateway.Capabilities.globalSessionSearch)
+    fun `OpenCode 2 promises listGlobalSessions, which its gateway implements`() {
+        assertEquals(true, Oc2Gateway.Capabilities.globalSessionSearch)
     }
 
     @Test
