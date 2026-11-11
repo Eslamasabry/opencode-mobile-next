@@ -132,7 +132,7 @@ class ProbeStopTest {
     }
 
     @Test
-    fun `a process the stop could not drain stays retired: the profile's next probe is refused until it is gone`() {
+    fun `a process the stop could not drain stays retired and the profile's next probe is refused until it is gone`() {
         val slow = Child("", blocking = true)
         children += slow
         children += Child("{\"state\":\"signedIn\"}\n", blocking = false)
