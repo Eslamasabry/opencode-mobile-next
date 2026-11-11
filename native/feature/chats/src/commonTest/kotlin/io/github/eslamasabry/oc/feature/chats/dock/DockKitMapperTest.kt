@@ -96,7 +96,7 @@ class DockKitMapperTest {
         val frame = DockKitMapper.map(ui(named, entry("b", title = null)), emptyMap(), "Untitled")
         val rings = frame.model.rings
         assertEquals(listOf("Bank API", "Untitled"), rings.map { it.name })
-        assertEquals("claude-code", rings[0].markId)
+        assertEquals("claude", rings[0].markId)
         assertNull(rings[1].markId)
         assertTrue(rings[0].pinned)
         assertEquals(2, rings[0].pulse)
