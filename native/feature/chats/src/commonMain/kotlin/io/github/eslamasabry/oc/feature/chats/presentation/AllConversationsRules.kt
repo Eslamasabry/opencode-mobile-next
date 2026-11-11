@@ -196,7 +196,8 @@ public object AllConversationsRules {
                     },
                 updatedMs = updatedAt(e.session),
                 needsYou = needsYou,
-                unread = !needsYou && !e.running && attention?.unread == true,
+                unread = !needsYou && !e.running && attention?.unread == true && attention.stopped != true,
+                stopped = !needsYou && !e.running && attention?.stopped == true,
                 folder = e.session.directory?.trim()?.takeIf { it.isNotEmpty() },
             )
         }

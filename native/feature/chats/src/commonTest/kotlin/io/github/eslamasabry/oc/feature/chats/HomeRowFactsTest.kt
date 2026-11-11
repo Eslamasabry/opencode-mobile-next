@@ -15,7 +15,9 @@ import kotlin.test.assertTrue
 class HomeRowFactsTest {
     @Test
     fun `H6 an idle row is None until finished, Stopped when the person stopped it, else Done`() {
-        assertEquals(RowStatus.None, HomeRowStatusRules.idle(finishedUnseen = false, stoppedByPerson = true))
+        // Stopped in the open chat: the read mark already cleared the watermark, the memory of the Stop still counts.
+        assertEquals(RowStatus.Stopped, HomeRowStatusRules.idle(finishedUnseen = false, stoppedByPerson = true))
+        assertEquals(RowStatus.None, HomeRowStatusRules.idle(finishedUnseen = false, stoppedByPerson = false))
         assertEquals(RowStatus.Stopped, HomeRowStatusRules.idle(finishedUnseen = true, stoppedByPerson = true))
         assertEquals(RowStatus.Done, HomeRowStatusRules.idle(finishedUnseen = true, stoppedByPerson = false))
     }
