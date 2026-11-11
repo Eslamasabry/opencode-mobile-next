@@ -148,7 +148,7 @@ private fun ColumnScope.Code(link: String, qrTag: String, linkTag: String, onCop
         wrap = true,
         copyLabel = stringResource(Res.string.handoffUiPhoneCopyLink),
         copiedLabel = stringResource(Res.string.kitCopied),
-        onCopy = onCopy,
+        onCopy = { onCopy() },
     )
 }
 
