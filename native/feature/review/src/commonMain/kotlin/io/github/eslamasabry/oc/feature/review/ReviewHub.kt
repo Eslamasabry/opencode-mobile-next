@@ -100,12 +100,21 @@ public class ReviewHub(private val registry: ConnectionRegistry) {
      */
     public fun projectTree(profile: ProfileId, directory: String): ReviewProjectRead =
         ReviewProjectRead {
-            val graph = registry.live.value[profile] as? ReviewGraphAccessors
+            val held = registry.live.value[profile]
+            val graph = held as? ReviewGraphAccessors
                 ?: return@ReviewProjectRead Failure.Refused(RefusalReason.ProfileClosing).failed()
-            val located = graph.reviewGateway as? LocatedVcsGateway
+            val gateway = graph.reviewGateway
+            val located = gateway as? LocatedVcsGateway
+            // Without a located read the server diffs only the folder it is on now: any other folder's answer would be
+            // a different project's changes, so that is Unavailable (as Files' own project changes are).
+            fun onFolder() = gateway.location.value.directory?.trimEnd('/') == directory.trimEnd('/')
             when {
                 located != null -> located.workingTreeAt(ServerLocation(directory, null))
-                graph.reviewGateway.capabilities.value.sessionDiff -> graph.reviewOperations.listVcsDiffs(VcsDiffMode.WorkingTree)
+                gateway.capabilities.value.sessionDiff && onFolder() -> {
+                    val read = graph.reviewOperations.listVcsDiffs(VcsDiffMode.WorkingTree)
+                    if (onFolder() && registry.live.value[profile] === held) read
+                    else Failure.Unavailable(FeatureId("sessionDiff")).failed()
+                }
                 else -> Failure.Unavailable(FeatureId("sessionDiff")).failed()
             }
         }

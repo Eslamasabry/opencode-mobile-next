@@ -139,6 +139,11 @@ public data class ChangesUi(
     val scopes: ImmutableList<ReviewScope> = persistentListOf(ReviewScope.Conversation),
     /** "Send back with a note" is offered (a conversation's message can take it). */
     val canSendBack: Boolean = false,
+    /**
+     * False for a project's own uncommitted changes opened from Files (no conversation behind them): the page says
+     * nothing about undoing from a prompt or which view it picked.
+     */
+    val conversation: Boolean = true,
     /** The note field is open. */
     val noting: Boolean = false,
     /** The note could not be put into the message. */

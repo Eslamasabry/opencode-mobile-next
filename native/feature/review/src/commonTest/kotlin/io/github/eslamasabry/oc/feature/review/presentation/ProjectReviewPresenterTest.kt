@@ -44,6 +44,7 @@ class ProjectReviewPresenterTest {
         assertEquals(false, ui.canPickScope)
         assertEquals(false, ui.canSendBack)
         assertEquals(UndoAllUi.Unavailable, ui.undoAll)
+        assertEquals(false, ui.conversation)
     }
 
     @Test

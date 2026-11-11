@@ -36,6 +36,7 @@ public class ProjectChangesPresenter(
                 workingTree = true,
                 scope = ReviewScope.WorkingTree,
                 scopes = persistentListOf(ReviewScope.WorkingTree),
+                conversation = false,
             )
         )
     public val state: StateFlow<ChangesUi> = mutable.asStateFlow()
