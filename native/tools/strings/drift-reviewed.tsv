@@ -33,8 +33,6 @@ ar	phoneFileFindTitle
 ar	phoneFileInstallAction
 ar	runningPhoneLimitBody
 ar	safetyStopLocalServerTitle
-ar	scheduleForHours
-ar	scheduleRuleHours
 ar	searchClaudeCodeGateDesktop
 ar	searchClaudeCodeGateDevice
 ar	sessionContextCompactAction
@@ -54,7 +52,6 @@ ar	teamProjectGoalStatusDraft
 ar	teamUiGateAnswerRunRetry
 ar	teamUiStartRunSend
 ar	teamWatchBannerRole
-ar	transcriptFindCount
 en	agentErrorRequestTooLargeHint
 en	agentsSignInTerminalIntro
 en	capabilityCompact
