@@ -10,7 +10,9 @@ import kotlinx.coroutines.flow.update
 /**
  * What this phone approved automatically (Flutter `AutoApprovedPermission`, last five per conversation): the
  * transparency half of a setting that removes prompts. Two sweeps answer asks (the chip's own and the connection's), so
- * both write here and the approvals sheet reads one record. Memory only: it goes with the app process, like Flutter's.
+ * both write here and the approvals sheet reads one record. Memory only, and only while the server's connection is
+ * live: a closed, replaced-away or removed connection takes its record with it ([retain]). Only the permission kind is
+ * kept ("bash", "edit"), never a command or a pattern.
  */
 public object AutoApprovalRecords {
     private const val KEPT: Int = 5
@@ -27,6 +29,15 @@ public object AutoApprovalRecords {
         val key = Key(profile, entry.sessionId)
         entries.update { all -> all + (key to ((all[key].orEmpty() + entry).takeLast(KEPT))) }
         version.update { it + 1 }
+    }
+
+    /** Drops the record of every server whose connection is not live any more (closed, or the server removed). */
+    public fun retain(live: Set<ProfileId>) {
+        var dropped = false
+        entries.update { all ->
+            all.filterKeys { it.profile in live }.also { dropped = it.size != all.size }
+        }
+        if (dropped) version.update { it + 1 }
     }
 
     /** The latest approvals of [session], newest first. */

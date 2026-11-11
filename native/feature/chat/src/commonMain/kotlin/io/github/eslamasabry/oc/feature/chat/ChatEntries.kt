@@ -80,6 +80,7 @@ import io.github.eslamasabry.oc.ui.words.res.continuedIn
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.activeContextTitle
 import io.github.eslamasabry.oc.ui.words.res.chatQueueMoveTitle
+import io.github.eslamasabry.oc.ui.words.res.chatStopAfterStepPrompt
 import io.github.eslamasabry.oc.ui.words.res.devPreviewMenu
 import io.github.eslamasabry.oc.ui.words.res.firstRunNotifyTitle
 import io.github.eslamasabry.oc.ui.words.res.chatUiOtherDraftsWaiting
@@ -169,7 +170,13 @@ public class ChatEntries(
                 assistedMetroViewModel<ChatInboxViewModel, ChatInboxViewModel.Factory> {
                     create(route)
                 }
-            val pendingSends by pendingVm.state.collectAsStateWithLifecycle()
+            val inboxSends by pendingVm.state.collectAsStateWithLifecycle()
+            // C5 (Flutter `_isStopAfterStepNote`): while "Stopping after this step" is on, its own note waiting in the
+            // server's inbox is said by the live line (with Undo), not again in the waiting-messages strip.
+            val stopNoteWords = stringResource(Res.string.chatStopAfterStepPrompt).trim()
+            val pendingSends =
+                if (state.live?.stoppingAfterStep != true) inboxSends
+                else inboxSends.copy(rows = inboxSends.rows.filterNot { !it.local && it.text.trim() == stopNoteWords })
             var pendingOpen by remember(route.ref) { mutableStateOf(false) }
             val startVm =
                 assistedMetroViewModel<ChatStartViewModel, ChatStartViewModel.Factory> {
