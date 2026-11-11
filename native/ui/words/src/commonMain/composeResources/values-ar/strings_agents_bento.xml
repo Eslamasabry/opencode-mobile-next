@@ -21,4 +21,12 @@
     <string name="agentsConversationsStored">أين تُحفظ المحادثات</string>
     <string name="agentsConversationsStoredOn">أين تُحفظ المحادثات: %1$s</string>
     <string name="agentsHostAccount">حساب المضيف: %1$s</string>
+    <string name="agentsHelperUpdateRequired">وكلاء الهاتف غير متصلين: مساعد الوكلاء مفقود أو أقدم من أن يعمل.</string>
+    <string name="agentsHelperUpdateAction">حدّث مساعد الوكلاء</string>
+    <string name="agentsInstallFailedDownload">تعذّر تثبيت %1$s: لم يكتمل التنزيل. تحقق من الاتصال وحاول مجددًا.</string>
+    <string name="agentsInstallFailedChecksum">تعذّر تثبيت %1$s: الملف الذي نُزّل ليس الملف الذي يتوقعه التطبيق، فتم التخلص منه. حاول مجددًا.</string>
+    <string name="agentsInstallFailedStorage">تعذّر تثبيت %1$s: مساحة هذا الهاتف ممتلئة. أفرِغ بعض المساحة ثم حاول مجددًا.</string>
+    <string name="agentsInstallFailedVersion">تعذّر تثبيت %1$s: الإصدار الذي وصل ليس الإصدار الذي يتوقعه التطبيق. حاول مجددًا.</string>
+    <string name="agentsInstallFailedUnknown">تعذّر تثبيت %1$s. حاول مجددًا؛ تجد في التفاصيل ما أبلغ به الهاتف.</string>
+    <string name="agentsInstallInterruptedNow">انقطع تثبيت %1$s قبل أن يكتمل. حاول مجددًا لمتابعته.</string>
 </resources>
