@@ -455,7 +455,7 @@ public fun KitScreen(
                                         bottomReach = if (slab) SLAB_UNDER_FADE_DP.dp else (EDGE_LEAD_DP + COMPOSER_FADE_DP).dp,
                                         bottomReachPx =
                                             if (!slab) null
-                                            else ({ with(density) { (if (bottomState.stacked) EDGE_LEAD_DP + COMPOSER_FADE_DP else SLAB_UNDER_FADE_DP).dp.toPx() } }),
+                                            else ({ with(density) { (if (bottomState.stacked) EDGE_LEAD_DP else SLAB_UNDER_FADE_DP).dp.toPx() } }),
                                         topReachPx = {
                                             if (linePx > 0) with(density) { HEADER_FADE_DP.dp.toPx() }
                                             else statusPx + reach - statusEdgeSolid(statusPx.toFloat())
@@ -467,7 +467,7 @@ public fun KitScreen(
                 }
                 if (edgesFade && topPart != null && frost != null) {
                     if (look == KitTopEdgeLook.Ground) KitGroundBand(bandPx = { statusPx + topPx }, under = under)
-                    else KitStatusEdge(topFrost!!, statusPx, under = under, blur = statusBlur)
+                    else KitStatusEdge(frost, statusPx, under = under, blur = statusBlur)
                 }
                 // The bar, and under it the one status line: one block whose height is the body's top room, so a line
                 // folding in or out eases the transcript down or up and nothing else moves.

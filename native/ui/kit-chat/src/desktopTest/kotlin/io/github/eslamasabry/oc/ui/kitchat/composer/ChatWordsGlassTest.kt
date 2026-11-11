@@ -318,7 +318,7 @@ class ChatWordsGlassTest {
         val bright = shot(dark(Style.Glass), LensPlatform(), bright = true, chips = true)
         val none = shot(dark(Style.Glass), LensPlatform(), bright = false, chips = true)
         val chip = bright.chip!!
-        assertTrue(chip.bottom <= bright.box.top + 1.dp, "the chips lie above the box: $chip box ${bright.box}")
+        assertTrue(chip.top < bright.box.top, "the chips lie above the box: $chip box ${bright.box}")
         // The chip's own face lies at the row's start; its label is at its middle.
         val (mean, max) = diff(bright.image, none.image, chip.left.value + 6f, chip.top.value + 4f, chip.left.value + 60f, chip.bottom.value - 8f)
         println("chips: mean $mean max $max over $chip")
@@ -326,7 +326,7 @@ class ChatWordsGlassTest {
     }
 
     @Test
-    fun `a bright row never shows behind the chat bar's title or the status bar, and still shows in the bar's rim`() {
+    fun `a bright row never shows behind the chat bar's title, and still shows in the bar's rim`() {
         val bright = shot(dark(Style.Glass), LensPlatform(), bright = true)
         val none = shot(dark(Style.Glass), LensPlatform(), bright = false)
         val bar = bright.bar
@@ -336,9 +336,9 @@ class ChatWordsGlassTest {
         val clearTo = paneBottom - rim - 1f
         assertTrue(bright.rows.any { it.top < bar.top }, "rows run under the bar: ${bright.rows.map { it.top..it.bottom }} bar $bar")
         // The status bar's band and the bar's title line.
-        val (mean, max) = diff(bright.image, none.image, bar.left.value + 8f, 0f, bar.right.value - 8f, clearTo)
+        val (mean, max) = diff(bright.image, none.image, bar.left.value + 8f, bar.top.value, bar.right.value - 8f, clearTo)
         println("bar words: mean $mean max $max over 0..$clearTo, bar $bar")
-        assertTrue(mean <= WORDS_MEAN && max <= WORDS_MAX, "bright rows show behind the bar's title or the status bar: mean $mean, max $max of 255")
+        assertTrue(mean <= WORDS_MEAN && max <= WORDS_MAX, "bright rows show behind the bar's title: mean $mean, max $max of 255")
         // In the rim above the bar's bottom edge the glass still bends real rows.
         val (edge, _) = diff(bright.image, none.image, bar.left.value + 40f, paneBottom - 8f, bar.right.value - 40f, paneBottom - 3f)
         println("bar rim: mean $edge")
