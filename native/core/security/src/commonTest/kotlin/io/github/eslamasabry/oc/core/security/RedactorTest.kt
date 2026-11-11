@@ -188,4 +188,24 @@ class RedactorTest {
         assertFalse("hdr-secret-value-2" in out)
         assertTrue("https://x" in out)
     }
+
+    @Test
+    fun `W4-REDACT a bare key field is still registered, next to options and in an auth entry`() {
+        // Why the walker itself was not narrowed (w4-redact): /config/providers puts a provider's real API key under
+        // `key` beside `options`, and an auth entry pairs `type` with `key`. Only the oc2 answers that use `key` as a
+        // field NAME leave their form out before the walk.
+        val providerKey = "cfg-" + "W4ProviderSecret" + "3c4d"
+        val authKey = "auth-" + "W4EntrySecret" + "5e6f"
+        val r = Redactor()
+        r.registerCredentialValues(
+            kotlinx.serialization.json.Json.parseToJsonElement(
+                """{"providers":[{"id":"anthropic","key":"$providerKey","options":{"baseURL":"https://x"}}],
+                   "auth":{"anthropic":{"type":"api","key":"$authKey"}}}""",
+            ),
+        )
+        val out = r.redact("saw $providerKey and $authKey in /root/projects")
+        assertFalse(providerKey in out, "provider key leaks")
+        assertFalse(authKey in out, "auth key leaks")
+        assertTrue("/root/projects" in out)
+    }
 }

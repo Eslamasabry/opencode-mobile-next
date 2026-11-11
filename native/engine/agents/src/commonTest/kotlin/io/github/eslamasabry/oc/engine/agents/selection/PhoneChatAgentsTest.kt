@@ -31,14 +31,17 @@ class PhoneChatAgentsTest {
         assertEquals(listOf(claude), signedOut.needsSetup.map { it.id }, "a dimmed row that opens its setup")
     }
 
+    // Changed on purpose (owner decision 2026-11-11, "Antigravity not showing"): a ready agent is a choice whether or
+    // not the bundled matrix certifies it, as the Agents page's card offers it a conversation. The set-up half stands.
     @Test
-    fun `PHONE-CHAT an agent that is not certified for chat is neither a choice nor a set-up row`() {
+    fun `PHONE-CHAT a ready agent is a choice even when not certified for chat, an uncertified one is no set-up row`() {
+        val antigravity = AgentId("antigravity")
         val offer =
             PhoneChatAgents.offer(
-                listOf(fact(codex, ready = true), fact(AgentId("gemini"), ready = false, fixable = true)),
+                listOf(fact(antigravity, ready = true), fact(AgentId("gemini"), ready = false, fixable = true)),
                 AgentId.OPENCODE,
             )
-        assertEquals(emptyList(), offer.choices.map { it.id }, "setting it up would still not make it a choice")
+        assertEquals(listOf(antigravity), offer.choices.map { it.id }, "the card offers it a conversation, so does this list")
         assertEquals(emptyList(), offer.needsSetup.map { it.id })
     }
 

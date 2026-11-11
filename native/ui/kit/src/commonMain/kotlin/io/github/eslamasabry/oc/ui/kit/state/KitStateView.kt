@@ -29,6 +29,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Redacted
@@ -198,7 +199,7 @@ public fun KitStateView(
     // A page's state sits in the middle; an inline one starts at the gutter, where the words around it do.
     val capped = modifier.fillMaxWidth().kitMaxWidth(CapRole.State, if (page) CapAlign.Center else CapAlign.Start)
     if (kind == KitStateKind.Calm) {
-        CalmState(title, body, primary, tertiary, page, capped)
+        CalmState(title, body, primary, secondary, tertiary, page, capped)
         return
     }
 
@@ -259,14 +260,29 @@ public fun KitStateView(
     val glyphSize = if (page) FlutterKitTokens.MARK_ICON_SIZE else tokens.smallIcon
 
     val column: @Composable () -> Unit = {
-        Column(Modifier.fillMaxWidth().testTag("kit-state-view").semantics { liveRegion = LiveRegionMode.Polite }) {
+        // Alone on its page the words are centred in the free area; the inline form (inside a list or card) starts at the rail.
+        Column(
+            Modifier.fillMaxWidth().testTag("kit-state-view").semantics { liveRegion = LiveRegionMode.Polite },
+            horizontalAlignment = if (page) Alignment.CenterHorizontally else Alignment.Start,
+        ) {
             // The bare glyph on the title's rail: no tile, box or circle behind it (audit 2026-11-09 C01).
             KitGlyph(glyph, tint, glyphSize.dp, Modifier.testTag("kit-state-icon"))
             Spacer(Modifier.height(gap.dp))
-            KitText(title, Modifier.semantics { heading() }, role = if (page) TypeRole.Title else TypeRole.Headline)
+            KitText(
+                title,
+                Modifier.fillMaxWidth().semantics { heading() },
+                role = if (page) TypeRole.Title else TypeRole.Headline,
+                textAlign = if (page) TextAlign.Center else null,
+            )
             shownBody?.let {
                 Spacer(Modifier.height((if (page) Space.S2 else Space.S1).dp))
-                KitText(it, role = if (page) TypeRole.Body else TypeRole.Secondary, tone = TextTone.Secondary)
+                KitText(
+                    it,
+                    Modifier.fillMaxWidth(),
+                    role = if (page) TypeRole.Body else TypeRole.Secondary,
+                    tone = TextTone.Secondary,
+                    textAlign = if (page) TextAlign.Center else null,
+                )
             }
             progress?.let {
                 Spacer(Modifier.height(gap.dp))
@@ -319,12 +335,14 @@ private fun CalmState(
     title: String,
     body: String?,
     primary: KitAction?,
+    secondary: KitAction?,
     tertiary: List<KitAction>,
     page: Boolean,
     modifier: Modifier,
 ) {
     val tokens = LocalKitTokens.current
-    val quiet = tertiary.take(2) // F: lib/ui/kit/kit_state_view.dart:565
+    // The secondary action is a quiet text button under the primary; it was never drawn here before.
+    val quiet = listOfNotNull(secondary) + tertiary.take(2) // F: lib/ui/kit/kit_state_view.dart:565
     val answer: @Composable () -> Unit = {
         KitStatusAnswer(title, line = body, scale = if (page) KitAnswerScale.Calm else KitAnswerScale.Compact)
     }

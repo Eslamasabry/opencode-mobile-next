@@ -22,6 +22,7 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitUndoBar
 import io.github.eslamasabry.oc.ui.kit.modal.KitUndoOffer
 import io.github.eslamasabry.oc.ui.kit.modal.LocalKitToasts
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.chatHeaderRenameFailed
 import io.github.eslamasabry.oc.ui.words.res.dockAnswerFailed
 import io.github.eslamasabry.oc.ui.words.res.dockRemoved
 import io.github.eslamasabry.oc.ui.words.res.dockStaysWhileOpen
@@ -64,6 +65,7 @@ public fun EdgeDockHost(
     val staysWords = rememberUpdatedState(stringResource(Res.string.dockStaysWhileOpen, NAME))
     val stopFailedWords = rememberUpdatedState(stringResource(Res.string.dockStopFailed, NAME))
     val answerFailedWords = rememberUpdatedState(stringResource(Res.string.dockAnswerFailed, NAME))
+    val renameFailedWords = rememberUpdatedState(stringResource(Res.string.chatHeaderRenameFailed))
     var undo by remember { mutableStateOf<Pair<String, KitUndoOffer>?>(null) }
     val router =
         remember(port, toasts) {
@@ -85,6 +87,10 @@ public fun EdgeDockHost(
 
                     override fun answerFailed(name: String) {
                         toasts?.show(answerFailedWords.value.replace(NAME, name))
+                    }
+
+                    override fun renameFailed() {
+                        toasts?.show(renameFailedWords.value)
                     }
                 },
             )
