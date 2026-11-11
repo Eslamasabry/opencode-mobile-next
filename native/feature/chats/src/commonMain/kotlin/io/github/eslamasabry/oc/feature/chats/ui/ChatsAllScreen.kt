@@ -53,6 +53,7 @@ import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
 import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
+import io.github.eslamasabry.oc.ui.kit.modal.LocalKitToasts
 import io.github.eslamasabry.oc.ui.kit.modal.KitUndoBar
 import io.github.eslamasabry.oc.ui.kit.modal.KitUndoOffer
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
@@ -532,6 +533,9 @@ private fun allRowMenu(row: AllRowUi, unknownLocation: String, actions: ChatsAll
             copiedLabel = stringResource(Res.string.kitCopied),
             text = { row.folder ?: unknownLocation },
         )
+    // The menu closes on the tap, so the copy action's own "Copied" label is never seen: the toast says it.
+    val toasts = LocalKitToasts.current
+    val copiedWords = stringResource(Res.string.kitCopied)
     return listOfNotNull(
         if (row.pinAvailable) KitMenuItem(
             stringResource(if (row.pinned) Res.string.stateUnpin else Res.string.statePin),
@@ -546,7 +550,10 @@ private fun allRowMenu(row: AllRowUi, unknownLocation: String, actions: ChatsAll
         KitMenuItem(stringResource(Res.string.sessionCopyHandoff), { actions.rowAct(row.key, RowAct.CopyHandoff) }, icon = KitIcons.terminal),
         KitMenuItem(
             stringResource(Res.string.globalSessionsCopyFolder),
-            { copyFolder.onClick?.invoke() },
+            {
+                copyFolder.onClick?.invoke()
+                toasts?.show(copiedWords)
+            },
             icon = KitIcons.copy,
         ),
         KitMenuItem(
