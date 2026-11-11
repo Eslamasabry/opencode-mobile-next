@@ -76,7 +76,9 @@ object CapabilityFlowsWiring {
                                         when {
                                             graph?.session?.capabilities?.value?.serverCatalog ==
                                                 true && profile != null ->
-                                                nav.open(ProvidersRoute(profile))
+                                                nav.open(
+                                                    LibraryRoute(tab = "providers", profileId = profile)
+                                                )
                                             graph?.session?.capabilities?.value?.agentAccount ==
                                                 true && profile != null ->
                                                 nav.open(CapabilityAgentAccountRoute(profile))
