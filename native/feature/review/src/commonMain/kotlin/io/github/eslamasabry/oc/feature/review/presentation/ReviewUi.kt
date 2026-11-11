@@ -137,6 +137,8 @@ public data class ChangesUi(
     val scope: ReviewScope = ReviewScope.Conversation,
     /** The scopes this server can show, in Flutter's order; the picker shows when there are two or more. */
     val scopes: ImmutableList<ReviewScope> = persistentListOf(ReviewScope.Conversation),
+    /** A project's page (no conversation) found nothing because the folder is not under Git, not because it is clean. */
+    val notRepository: Boolean = false,
     /** "Send back with a note" is offered (a conversation's message can take it). */
     val canSendBack: Boolean = false,
     /**

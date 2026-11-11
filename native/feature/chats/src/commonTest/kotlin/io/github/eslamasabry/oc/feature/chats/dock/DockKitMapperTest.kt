@@ -96,7 +96,7 @@ class DockKitMapperTest {
         val frame = DockKitMapper.map(ui(named, entry("b", title = null)), emptyMap(), "Untitled")
         val rings = frame.model.rings
         assertEquals(listOf("Bank API", "Untitled"), rings.map { it.name })
-        assertEquals("claude-code", rings[0].markId)
+        assertEquals("claude", rings[0].markId)
         assertNull(rings[1].markId)
         assertTrue(rings[0].pinned)
         assertEquals(2, rings[0].pulse)
@@ -242,5 +242,19 @@ class DockKitMapperTest {
         assertEquals("explore", frame.nameOf(DockKitMapper.key(ref("c1"))))
         assertEquals("Old", frame.nameOf(DockKitMapper.key(ref("h"))))
         assertNull(frame.nameOf("nothing"))
+    }
+
+    @Test
+    fun `a ring draws the mark the home row shows for its conversation`() {
+        // An OpenCode conversation: its mode ("build") is no mark, so the server's OpenCode mark is used.
+        assertEquals("opencode", DockKitMapper.markOf("build", "opencode"))
+        assertEquals("opencode", DockKitMapper.markOf(null, "opencode"))
+        // A phone agent names itself.
+        assertEquals("claude", DockKitMapper.markOf("claude", null))
+        assertEquals("codex", DockKitMapper.markOf("Codex", null))
+        // Nothing known: the kit draws the monogram.
+        assertNull(DockKitMapper.markOf(null, null))
+        assertNull(DockKitMapper.markOf("build", null))
+        assertNull(DockKitMapper.markOf(" ", " "))
     }
 }

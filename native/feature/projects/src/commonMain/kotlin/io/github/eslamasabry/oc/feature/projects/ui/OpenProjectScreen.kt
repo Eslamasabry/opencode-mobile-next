@@ -77,7 +77,9 @@ public fun OpenProjectScreen(state: OpenProjectUi, actions: OpenProjectActions) 
                 title =
                     when (state.step) {
                         OpenProjectStep.Servers -> stringResource(Res.string.openProjectWhereTitle)
-                        OpenProjectStep.Projects -> stringResource(Res.string.p12ProjectsOnServer, state.serverName)
+                        OpenProjectStep.Projects ->
+                            if (state.onThisPhone) stringResource(Res.string.p12ProjectsOnThisPhone)
+                            else stringResource(Res.string.p12ProjectsOnServer, state.serverName)
                         OpenProjectStep.Folder -> folderName
                     },
                 subtitle = if (state.step == OpenProjectStep.Folder) state.path else null,

@@ -87,6 +87,12 @@ internal data class ChatLocal(
     /** C5: the words of the note that went, so Undo can find it in the inbox. */
     val stopNote: String? = null,
     val undoingStopNote: Boolean = false,
+    /**
+     * The words of a "Stop after this step" note sent in this conversation, kept after the note is gone: the note is
+     * a control message (Flutter keeps it in the inbox, never as a prompt bubble), so a prompt row with exactly these
+     * words is not drawn, while it waits, after Undo, and once it was read.
+     */
+    val hiddenStopNote: String? = null,
     /** C6: steered messages Stop-then-resend took back; the server keeps them in its record, the chat shows them once. */
     val withdrawn: PersistentSet<String> = persistentSetOf(),
     val leaving: Boolean = false,
@@ -407,7 +413,15 @@ public class ChatPresenter(
                     is ChatLoad.Failed ->
                         if (kept != null) ChatPhase.Live else ChatPhase.Failed(load.failure)
                 },
-            rows = if (l.withdrawn.isEmpty()) t.rows else t.rows.filterNot { it.key in l.withdrawn }.toImmutableList(),
+            rows =
+                if (l.withdrawn.isEmpty() && l.hiddenStopNote == null) t.rows
+                else
+                    t.rows
+                        .filterNot {
+                            it.key in l.withdrawn ||
+                                (l.hiddenStopNote != null && it is PromptRow && it.text.trim() == l.hiddenStopNote)
+                        }
+                        .toImmutableList(),
             newestRowKey = t.newestKey,
             canPutBack = world.undone.value != ChatUndone.None,
             canBackground = canBackground(t.run.busy, l),
@@ -692,7 +706,7 @@ public class ChatPresenter(
         val l = local.value
         if (note.isBlank() || l.stopping || l.stopAfterStep) return
         if (!world.transcript.value.run.busy || !world.capabilities.value.promptSteering) return
-        local.update { it.copy(stopAfterStep = true, stopNote = note) }
+        local.update { it.copy(stopAfterStep = true, stopNote = note, hiddenStopNote = note.trim()) }
         launcher.launch {
             val sent = world.sendAgain(note)
             if (sent is Outcome.Failed)

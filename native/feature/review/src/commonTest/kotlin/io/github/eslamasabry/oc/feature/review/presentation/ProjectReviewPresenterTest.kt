@@ -8,6 +8,7 @@ import io.github.eslamasabry.oc.core.model.FileDiff
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
+import io.github.eslamasabry.oc.core.model.VersionControlSetupState
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -45,6 +46,25 @@ class ProjectReviewPresenterTest {
         assertEquals(false, ui.canSendBack)
         assertEquals(UndoAllUi.Unavailable, ui.undoAll)
         assertEquals(false, ui.conversation)
+    }
+
+    @Test
+    fun `an empty answer from a folder not under Git says so, not that it is clean`() = runTest(UnconfinedTestDispatcher()) {
+        val presenter =
+            ProjectChangesPresenter({ persistentListOf<FileDiff>().ok() }, ProjectNav(), backgroundScope) {
+                VersionControlSetupState.Absent
+            }
+        assertEquals(true, presenter.state.value.notRepository)
+        assertEquals(ReviewLoad.Ready, presenter.state.value.load)
+    }
+
+    @Test
+    fun `an empty answer from a Git folder, or an unknown one, is a clean tree`() = runTest(UnconfinedTestDispatcher()) {
+        for (kind in listOf(VersionControlSetupState.Git, VersionControlSetupState.Unknown)) {
+            val presenter =
+                ProjectChangesPresenter({ persistentListOf<FileDiff>().ok() }, ProjectNav(), backgroundScope) { kind }
+            assertEquals(false, presenter.state.value.notRepository)
+        }
     }
 
     @Test

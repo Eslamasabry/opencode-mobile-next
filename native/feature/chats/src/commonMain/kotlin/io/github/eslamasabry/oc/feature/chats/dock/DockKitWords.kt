@@ -17,7 +17,6 @@ import io.github.eslamasabry.oc.ui.words.res.dockChildNeedsYou
 import io.github.eslamasabry.oc.ui.words.res.dockFailed
 import io.github.eslamasabry.oc.ui.words.res.dockFinished
 import io.github.eslamasabry.oc.ui.words.res.dockHidden
-import io.github.eslamasabry.oc.ui.words.res.dockIdle
 import io.github.eslamasabry.oc.ui.words.res.dockLabel
 import io.github.eslamasabry.oc.ui.words.res.dockMoveDock
 import io.github.eslamasabry.oc.ui.words.res.dockNeedsYou
@@ -56,7 +55,6 @@ internal class DockKitWordsImpl(
     private val needsYouWord: String,
     private val finishedWord: String,
     private val failedWord: String,
-    private val idleWord: String,
     private val childNeedsYouTemplate: String,
     private val childFailedTemplate: String,
     private val subAgentsByCount: Map<Int, String>,
@@ -93,7 +91,11 @@ internal class DockKitWordsImpl(
 
     override fun failed(): String = failedWord
 
-    override fun idle(): String = idleWord
+    /**
+     * A quiet ring says nothing: "Idle" is engine talk, and the kit's model carries no "last active" time to show
+     * instead (KitDockRing has none, idle() takes no argument), so the state word is empty.
+     */
+    override fun idle(): String = ""
 
     override fun childNeedsYou(child: String): String = childNeedsYouTemplate.replace(A, child)
 
@@ -135,7 +137,6 @@ internal fun rememberDockKitWords(model: KitDockModel): KitDockWords {
     val needsYou = stringResource(Res.string.dockNeedsYou)
     val finished = stringResource(Res.string.dockFinished)
     val failed = stringResource(Res.string.dockFailed)
-    val idle = stringResource(Res.string.dockIdle)
     val childNeedsYou = stringResource(Res.string.dockChildNeedsYou, A)
     val childFailed = stringResource(Res.string.dockChildFailed, A)
     val onServer = stringResource(Res.string.dockOnServer, A)
@@ -156,7 +157,7 @@ internal fun rememberDockKitWords(model: KitDockModel): KitDockWords {
     val actionOn = stringResource(Res.string.dockActionOn, A, B)
     return remember(
         subAgents, hidden, subAgentsOther, hiddenOther, label, working, workingTasks, thinking, needsYou, finished,
-        failed, idle, childNeedsYou, childFailed, onServer, allow, deny, stop, rename, remove, open, pin, unpin, restore,
+        failed, childNeedsYou, childFailed, onServer, allow, deny, stop, rename, remove, open, pin, unpin, restore,
         newConversation, nickname, pinned, moveDock, showDock, actionOn,
     ) {
         DockKitWordsImpl(
@@ -167,7 +168,6 @@ internal fun rememberDockKitWords(model: KitDockModel): KitDockWords {
             needsYouWord = needsYou,
             finishedWord = finished,
             failedWord = failed,
-            idleWord = idle,
             childNeedsYouTemplate = childNeedsYou,
             childFailedTemplate = childFailed,
             subAgentsByCount = subAgents,

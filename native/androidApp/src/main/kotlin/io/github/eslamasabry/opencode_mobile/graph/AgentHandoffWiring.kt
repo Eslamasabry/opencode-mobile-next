@@ -391,7 +391,12 @@ class GraphAgentHandoffHost(
             return stale()
         val spec =
             when (val target = this.source.helper(owner, directory)) {
-                is Outcome.Failed -> return target
+                // The folder passed the rule above, so a helper that cannot be reached or confirmed is an agent
+                // problem: say so (with "Open Agents"), not "open a project".
+                is Outcome.Failed ->
+                    return if (HandoffBlock.of(target.failure) == null &&
+                        (target.failure as? Failure.Refused)?.reason != RefusalReason.StaleScope
+                    ) HandoffBlock.NotConfirmed.failure().failed() else target
                 is Outcome.Ok -> target.value
             }
         if (!sourceCurrent() || !sourceProof.isCurrent() || !spec.currentOwner()) return stale()

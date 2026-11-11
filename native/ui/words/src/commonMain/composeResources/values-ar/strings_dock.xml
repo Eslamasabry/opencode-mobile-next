@@ -8,7 +8,6 @@
     <string name="dockNeedsYou">بحاجة إليك</string>
     <string name="dockFinished">انتهى</string>
     <string name="dockFailed">فشل</string>
-    <string name="dockIdle">متوقف</string>
     <string name="dockChildNeedsYou">%1$s بحاجة إليك</string>
     <string name="dockChildFailed">فشل %1$s</string>
     <plurals name="dockSubagents">
