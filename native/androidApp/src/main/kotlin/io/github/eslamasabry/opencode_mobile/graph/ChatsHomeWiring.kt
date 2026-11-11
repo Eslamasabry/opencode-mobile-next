@@ -23,6 +23,7 @@ import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
 import io.github.eslamasabry.oc.engine.agents.certification.AgentCertification
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgents
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentsState
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNotice
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNoticeKind
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNoticeSource
@@ -436,7 +437,7 @@ class AppChatsHome(
 /**
  * G6 (F: lib/ui/screens/agents/agent_notices.dart:84-157): the home's lines about the phone's agents, read from the
  * same state the Agents page shows. A sign-in or plan line only for an agent New conversation offers (certified for
- * chat); a stopped agent is always worth saying, so Resume is one tap away.
+ * chat); a stopped agent is said only when its helper really stopped ([HomeAgentNoticeRules]).
  */
 @SingleIn(AppScope::class)
 @ContributesIntoSet(AppScope::class)
@@ -445,30 +446,42 @@ class AppHomeAgentNotices(phoneAgents: PhoneAgents, appScope: AppCoroutineScope)
     override val notices: StateFlow<HomeAgentNotices> =
         phoneAgents.state
             .map { state ->
-                if (!state.available) HomeAgentNotices()
-                else
-                    HomeAgentNotices(
-                        restart = state.needsRestart,
-                        lines =
-                            state.agents
-                                .mapNotNull { row ->
-                                    val kind =
-                                        when (row.status) {
-                                            PhoneAgentStatus.SignInNeeded -> HomeAgentNoticeKind.SignedOut
-                                            PhoneAgentStatus.Stopped -> HomeAgentNoticeKind.Stopped
-                                            PhoneAgentStatus.Limit -> HomeAgentNoticeKind.LimitReached
-                                            else -> return@mapNotNull null
-                                        }
-                                    if (
-                                        kind != HomeAgentNoticeKind.Stopped &&
-                                            !AgentCertification.bundled.certifiedForChat(AgentId(row.id))
-                                    )
-                                        return@mapNotNull null
-                                    HomeAgentNotice(row.id, row.name, kind)
-                                }
-                                .toImmutableList(),
-                    )
+                HomeAgentNoticeRules.notices(state) { AgentCertification.bundled.certifiedForChat(AgentId(it)) }
             }
             .distinctUntilChanged()
             .stateIn(appScope, SharingStarted.Eagerly, HomeAgentNotices())
+}
+
+internal object HomeAgentNoticeRules {
+    /**
+     * The home's agent lines from the Agents page's [state]. A row reads Stopped whenever the agent helper is not
+     * running in this app process (PhoneAgentRules.status: `qualified && helperRunning == false`), and the helper only
+     * starts when the Agents page opens (AgentsPresenter.connectWhenInstalled). So after every app start an installed
+     * agent read "stopped in the background" although nothing had stopped. The stop line is said only when the helper
+     * was seen to stop on its own (its exit record: [PhoneAgentsState.helperStoppedUnexpectedly] or the Android
+     * variant); its Resume opens the Agents page, which starts the helper again. Flutter starts the helper itself
+     * and hides the line meanwhile (phone_agents.dart:610-616, 684-692).
+     */
+    fun notices(state: PhoneAgentsState, certifiedForChat: (String) -> Boolean): HomeAgentNotices {
+        if (!state.available) return HomeAgentNotices()
+        val helperStopped = state.helperStoppedUnexpectedly || state.helperMayHaveBeenStoppedByAndroid
+        return HomeAgentNotices(
+            restart = state.needsRestart,
+            lines =
+                state.agents
+                    .mapNotNull { row ->
+                        val kind =
+                            when (row.status) {
+                                PhoneAgentStatus.SignInNeeded -> HomeAgentNoticeKind.SignedOut
+                                PhoneAgentStatus.Stopped ->
+                                    if (helperStopped) HomeAgentNoticeKind.Stopped else return@mapNotNull null
+                                PhoneAgentStatus.Limit -> HomeAgentNoticeKind.LimitReached
+                                else -> return@mapNotNull null
+                            }
+                        if (kind != HomeAgentNoticeKind.Stopped && !certifiedForChat(row.id)) return@mapNotNull null
+                        HomeAgentNotice(row.id, row.name, kind)
+                    }
+                    .toImmutableList(),
+        )
+    }
 }
