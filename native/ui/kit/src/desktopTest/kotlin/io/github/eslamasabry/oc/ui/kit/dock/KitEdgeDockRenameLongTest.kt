@@ -80,7 +80,7 @@ class KitEdgeDockRenameLongTest {
                 val results = ArrayList<TextLayoutResult>()
                 node.config.getOrNull(SemanticsActions.GetTextLayoutResult)?.action?.invoke(results)
                 val text = assertNotNull(results.firstOrNull(), "$side: the field's text layout")
-                assertTrue(text.lineCount in 3..4, "$side: the long name wraps to 3 or 4 lines, not $text.lineCount")
+                assertTrue(text.lineCount in 3..4, "$side: the long name wraps to 3 or 4 lines, not ${text.lineCount}")
                 assertTrue(
                     text.size.height <= field.height + .5f && !text.hasVisualOverflow,
                     "$side: the whole name shows: ${text.lineCount} lines (${text.size.height} px) in a field ${field.height} px tall",

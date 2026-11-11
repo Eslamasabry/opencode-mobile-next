@@ -146,8 +146,22 @@ public object LiquidEdge {
      * the bar's at rest and the menu's fully grown, every number mixed by the growth with no step ([mix]): one frost for
      * the whole body, its blur, bend, rim and tint moving together as it grows.
      */
-    public fun dockRecipe(dark: Boolean, growth: Float, look: GlassLookPreset = GlassLooks.Glossy): LiquidRecipe =
-        mix(recipe(LiquidRole.Dock, dark, look), recipe(LiquidRole.Menu, dark, look), growth)
+    public fun dockRecipe(dark: Boolean, growth: Float, look: GlassLookPreset = GlassLooks.Glossy, list: Float = 0f): LiquidRecipe =
+        toward(mix(recipe(LiquidRole.Dock, dark, look), recipe(LiquidRole.Menu, dark, look), growth), recipe(LiquidRole.Sheet, dark, look), list)
+
+    /**
+     * [from] with its blur and its bend moved towards [sheet]'s by [t] (0 keeps [from], 1 has the sheet's): the pulled-out
+     * dock list reads rows of words over a page of words, so its glass frosts as a sheet's does (12 dp, bend 48) while its
+     * tint, rim and saturation stay the dock's. Linear in [t], so the change from the swell's glass to the list's has no step.
+     */
+    public fun toward(from: LiquidRecipe, sheet: LiquidRecipe, t: Float): LiquidRecipe {
+        val f = t.coerceIn(0f, 1f)
+        if (f == 0f) return from
+        return from.copy(
+            blurDp = from.blurDp + (sheet.blurDp - from.blurDp) * f,
+            refractionDp = from.refractionDp + (sheet.refractionDp - from.refractionDp) * f,
+        )
+    }
 
     /**
      * [from] to [to] at [t] (clamped to 0..1): the blur, the bend, the rim's width and share, the shadow and the tint
