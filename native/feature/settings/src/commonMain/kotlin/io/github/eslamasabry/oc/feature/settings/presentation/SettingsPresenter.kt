@@ -78,6 +78,7 @@ public class SettingsPresenter(
         val stack: ImmutableList<SettingsPage> = persistentListOf(SettingsPage.Hub),
         val query: String = "",
         val entries: List<SettingsSearchEntry> = emptyList(),
+        val insideEntries: List<SettingsInsideEntry> = emptyList(),
         val allPacks: Boolean = false,
         val note: SettingsNote? = null,
         val consentSaving: Boolean = false,
@@ -232,6 +233,19 @@ public class SettingsPresenter(
         local.update { it.copy(entries = entries) }
     }
 
+    override fun onInsideEntries(entries: List<SettingsInsideEntry>) {
+        local.update { it.copy(insideEntries = entries) }
+    }
+
+    override fun onInside(inside: SettingsInside) {
+        if (inside !in SettingsInside.searchable(currentFacts.value)) return
+        when (val door = inside.door()) {
+            is SettingsDoor.Page -> onOpen(door.page)
+            is SettingsDoor.Outside -> onOutside(door.place)
+            is SettingsDoor.Switch -> Unit
+        }
+    }
+
     private fun build(
         l: Local,
         f: SettingsFacts,
@@ -243,6 +257,10 @@ public class SettingsPresenter(
         val results =
             if (l.query.isBlank()) persistentListOf()
             else SettingsSearch.find(l.query, l.entries.filter { it.row in searchable })
+        val insideSearchable = SettingsInside.searchable(f)
+        val insideResults =
+            if (l.query.isBlank()) persistentListOf()
+            else SettingsSearch.findInside(l.query, l.insideEntries.filter { it.inside in insideSearchable })
         val group =
             (l.stack.last() as? SettingsPage.Group)?.let { g ->
                 GroupUi(
@@ -265,6 +283,8 @@ public class SettingsPresenter(
                     results,
                     searchable,
                     f.savedServers,
+                    insideResults,
+                    insideSearchable.toImmutableList(),
                 ),
             group = group,
             appearance =

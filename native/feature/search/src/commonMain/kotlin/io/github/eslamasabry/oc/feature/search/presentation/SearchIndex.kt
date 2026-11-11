@@ -47,6 +47,11 @@ public enum class SearchPlace {
     Usage,
     LinuxPorts,
     LinuxPackages,
+    LinuxStorage,
+    UsageSpent,
+    UsageBudgets,
+    UsagePlans,
+    UsageAlerts,
     AddServer,
     Disconnect,
     Demo,
@@ -177,6 +182,11 @@ public object SearchIndex {
         if (platform.backgroundService)
             add("settings-background", SearchPlace.KeepRunning, PhoneRoute.KeepRunning)
         add("settings-usage", SearchPlace.Usage, UsageRoute.Hub())
+        // S6: the Usage page's parts, as Flutter's inside_pages lists them (spent, budgets, plans, alerts).
+        add("inside-usage-spent", SearchPlace.UsageSpent, UsageRoute.Hub())
+        add("inside-usage-budgets", SearchPlace.UsageBudgets, UsageRoute.Hub())
+        add("inside-usage-remaining", SearchPlace.UsagePlans, UsageRoute.Hub())
+        add("inside-usage-alerts", SearchPlace.UsageAlerts, PlansAlertsRoute)
         add("settings-servers-add", SearchPlace.AddServer, ServersRoute.Edit())
         add("inside-server-disconnect", SearchPlace.Disconnect, ServersRoute.Home)
         add("settings-demo", SearchPlace.Demo, DemoRoute)
@@ -186,6 +196,7 @@ public object SearchIndex {
             add("inside-phone-storage", SearchPlace.PhoneStorage, PhoneRoute.ManageSpace)
             add("inside-linux-ports", SearchPlace.LinuxPorts, LinuxRoute.Ports)
             add("inside-linux-packages", SearchPlace.LinuxPackages, LinuxRoute.Packages)
+            add("inside-linux-storage", SearchPlace.LinuxStorage, LinuxRoute.Storage)
         }
         if (platform.notifications)
             add(

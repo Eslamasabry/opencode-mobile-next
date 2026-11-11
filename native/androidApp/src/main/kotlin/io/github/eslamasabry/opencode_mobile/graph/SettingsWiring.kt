@@ -441,6 +441,15 @@ class AndroidSettingsHost(
                 if (target != null) serverPage.open(target, place) else nav.open(ServersRoute.Home)
             }
             SettingsOutside.UsageAlerts -> nav.open(PlansAlertsRoute)
+            // S6: the Linux manager's pages (Settings search); before the phone is set up, its setup opens.
+            SettingsOutside.LinuxProcesses ->
+                nav.open(if (phoneSetUp()) PhoneRoute.Running else PhoneSetupRoute.Setup)
+            SettingsOutside.LinuxPorts ->
+                nav.open(if (phoneSetUp()) io.github.eslamasabry.oc.ui.routes.LinuxRoute.Ports else PhoneSetupRoute.Setup)
+            SettingsOutside.LinuxStorage ->
+                nav.open(if (phoneSetUp()) io.github.eslamasabry.oc.ui.routes.LinuxRoute.Storage else PhoneSetupRoute.Setup)
+            SettingsOutside.LinuxPackages ->
+                nav.open(if (phoneSetUp()) io.github.eslamasabry.oc.ui.routes.LinuxRoute.Packages else PhoneSetupRoute.Setup)
             // s28: Help › Guide's doors (F: guide_screen.dart): Add server itself, phone setup, the demo.
             SettingsOutside.AddServer -> nav.open(ServersRoute.Edit())
             SettingsOutside.PhoneSetup -> nav.open(PhoneSetupRoute.Setup)
@@ -735,6 +744,10 @@ internal val SETTINGS_OPENS: Set<SettingsOutside> =
         SettingsOutside.AddServer,
         SettingsOutside.PhoneSetup,
         SettingsOutside.Demo,
+        SettingsOutside.LinuxProcesses,
+        SettingsOutside.LinuxPorts,
+        SettingsOutside.LinuxStorage,
+        SettingsOutside.LinuxPackages,
     )
 
 /**

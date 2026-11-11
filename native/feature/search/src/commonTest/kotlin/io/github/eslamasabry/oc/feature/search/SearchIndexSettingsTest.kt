@@ -41,4 +41,19 @@ class SearchIndexSettingsTest {
         val ids = SearchIndex.entries(ProfileId("p1"), facts).map { it.id }
         assertEquals(ids.size, ids.toSet().size)
     }
+
+    @Test
+    fun `S6 Linux pages follow the built-in Linux and the usage parts always exist`() {
+        val linux = facts.copy(platform = facts.platform.copy(builtinLinux = true))
+        val none = facts.copy(platform = facts.platform.copy(builtinLinux = false))
+        fun ids(f: SearchGoToFacts) = SearchIndex.entries(ProfileId("p1"), f).map { it.id }
+        for (id in listOf("inside-linux-ports", "inside-linux-packages", "inside-linux-storage"))
+            kotlin.test.assertTrue(id in ids(linux), id)
+        for (id in listOf("inside-linux-ports", "inside-linux-packages", "inside-linux-storage"))
+            kotlin.test.assertTrue(id !in ids(none), id)
+        assertEquals(io.github.eslamasabry.oc.ui.routes.LinuxRoute.Ports,
+            SearchIndex.entries(ProfileId("p1"), linux).first { it.id == "inside-linux-ports" }.destination)
+        assertEquals(io.github.eslamasabry.oc.ui.routes.PlansAlertsRoute, destination("inside-usage-alerts"))
+        assertEquals(UsageRoute.Hub(), destination("inside-usage-budgets"))
+    }
 }

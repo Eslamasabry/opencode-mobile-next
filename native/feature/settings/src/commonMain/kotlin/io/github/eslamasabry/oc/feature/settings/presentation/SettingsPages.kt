@@ -125,6 +125,11 @@ public enum class SettingsOutside {
     AddServer,
     PhoneSetup,
     Demo,
+    // S6: the Linux manager's own pages, reached from Settings search.
+    LinuxProcesses,
+    LinuxPorts,
+    LinuxStorage,
+    LinuxPackages,
 }
 
 /** Opens a place another feature owns. */

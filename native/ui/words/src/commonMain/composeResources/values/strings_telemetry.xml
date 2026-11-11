@@ -6,7 +6,7 @@
     <string name="telemetryConsentChoose">Choose</string>
     <string name="telemetryConsentSave">Save my choices</string>
     <string name="sendReportTitle">Send a problem report</string>
-    <string name="sendReportRowDetail">Review a redacted log, then send it</string>
+    <string name="sendReportRowDetail">Review what will be sent, then send it</string>
     <string name="sendReportSubtitle">This is everything the report holds. Nothing is sent until you tap Send.</string>
     <string name="sendReportSend">Send</string>
     <string name="sendReportCollecting">Collecting the report…</string>

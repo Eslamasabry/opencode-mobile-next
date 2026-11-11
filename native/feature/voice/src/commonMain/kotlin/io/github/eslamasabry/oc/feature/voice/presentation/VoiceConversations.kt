@@ -30,6 +30,9 @@ public class NoVoiceConversations : VoiceConversations {
 public interface VoiceTeachingHub {
     public suspend fun controller():
         io.github.eslamasabry.oc.engine.settings.teaching.TipController?
+
+    /** "Show tips again" also brings the chat's one-time nudges back (Flutter tips_screen `nudges.reset()`). */
+    public suspend fun resetNudges() {}
 }
 
 @Inject

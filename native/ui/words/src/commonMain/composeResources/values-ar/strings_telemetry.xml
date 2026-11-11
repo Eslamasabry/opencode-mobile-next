@@ -6,7 +6,7 @@
     <string name="telemetryConsentChoose">اختيار</string>
     <string name="telemetryConsentSave">حفظ اختياري</string>
     <string name="sendReportTitle">إرسال تقرير مشكلة</string>
-    <string name="sendReportRowDetail">راجع سجلاً منقّحاً ثم أرسله</string>
+    <string name="sendReportRowDetail">راجع ما سيُرسل ثم أرسله</string>
     <string name="sendReportSubtitle">هذا كل ما يحتويه التقرير. لا يُرسل شيء حتى تضغط إرسال.</string>
     <string name="sendReportSend">إرسال</string>
     <string name="sendReportCollecting">جارٍ تجهيز التقرير…</string>

@@ -62,6 +62,15 @@ import io.github.eslamasabry.oc.ui.words.res.nativeSearchPlaceSkills
 import io.github.eslamasabry.oc.ui.words.res.nativeSearchPlaceTips
 import io.github.eslamasabry.oc.ui.words.res.nativeSearchPlaceTools
 import io.github.eslamasabry.oc.ui.words.res.aboutTitle
+import io.github.eslamasabry.oc.ui.words.res.discoverBudgetAliases
+import io.github.eslamasabry.oc.ui.words.res.discoverQuotaMonitorAliases
+import io.github.eslamasabry.oc.ui.words.res.discoverRemainingAliases
+import io.github.eslamasabry.oc.ui.words.res.discoverSpentAliases
+import io.github.eslamasabry.oc.ui.words.res.linuxMgrStorageTitle
+import io.github.eslamasabry.oc.ui.words.res.usageAlertsTitle
+import io.github.eslamasabry.oc.ui.words.res.usageBudgetTitle
+import io.github.eslamasabry.oc.ui.words.res.usageSectionSpent
+import io.github.eslamasabry.oc.ui.words.res.usageTabPlans
 import io.github.eslamasabry.oc.ui.words.res.appUpdatesTitle
 import io.github.eslamasabry.oc.ui.words.res.e7LibraryReportABug
 import io.github.eslamasabry.oc.ui.words.res.e7SettingsUi8
@@ -211,6 +220,18 @@ internal fun searchPlaceWords(place: SearchPlace): Pair<String, String> =
         SearchPlace.LinuxPackages ->
             stringResource(Res.string.linuxMgrPackages) to
                 stringResource(Res.string.nativeSearchAliasesLinuxPackages)
+        SearchPlace.LinuxStorage ->
+            stringResource(Res.string.linuxMgrStorageTitle) to
+                stringResource(Res.string.nativeSearchAliasesPhoneStorage)
+        SearchPlace.UsageSpent ->
+            stringResource(Res.string.usageSectionSpent) to stringResource(Res.string.discoverSpentAliases)
+        SearchPlace.UsageBudgets ->
+            stringResource(Res.string.usageBudgetTitle) to stringResource(Res.string.discoverBudgetAliases)
+        SearchPlace.UsagePlans ->
+            stringResource(Res.string.usageTabPlans) to stringResource(Res.string.discoverRemainingAliases)
+        SearchPlace.UsageAlerts ->
+            stringResource(Res.string.usageAlertsTitle) to
+                stringResource(Res.string.discoverQuotaMonitorAliases)
         SearchPlace.AddServer ->
             stringResource(Res.string.e7SetupAddServer) to
                 stringResource(Res.string.settingsHubSearchSavedServersAliases)
@@ -266,6 +287,11 @@ private val placeIcons by lazy {
         SearchPlace.Usage to KitIcons.usage,
         SearchPlace.LinuxPorts to KitIcons.network,
         SearchPlace.LinuxPackages to KitIcons.packageBox,
+        SearchPlace.LinuxStorage to KitIcons.storage,
+        SearchPlace.UsageSpent to KitIcons.usage,
+        SearchPlace.UsageBudgets to KitIcons.usage,
+        SearchPlace.UsagePlans to KitIcons.usage,
+        SearchPlace.UsageAlerts to KitIcons.usage,
         SearchPlace.AddServer to KitIcons.add,
         SearchPlace.Disconnect to KitIcons.unlink,
         SearchPlace.Demo to KitIcons.play,
