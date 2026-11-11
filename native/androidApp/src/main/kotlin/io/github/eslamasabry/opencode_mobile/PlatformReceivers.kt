@@ -3,6 +3,9 @@ package io.github.eslamasabry.opencode_mobile
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import io.github.eslamasabry.oc.android.notifications.FrozenExtras
+import io.github.eslamasabry.oc.android.notifications.StatusRenderer
+import io.github.eslamasabry.opencode_mobile.graph.attentionRuntime
 import io.github.eslamasabry.opencode_mobile.graph.platformHub
 import kotlinx.coroutines.launch
 
@@ -30,6 +33,10 @@ class CodingActionReceiver : BroadcastReceiver() {
 /** The status row's Stop and dismissal. */
 class StatusActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        // A swipe away of the conversations row: it stays away until a new request or failure raises its pulse count.
+        if (intent.getStringExtra(FrozenExtras.EXTRA_STATUS_ACTION) == StatusRenderer.DISMISSED_ACTION) {
+            context.attentionRuntime.onRowDismissed(intent.getStringExtra(FrozenExtras.EXTRA_STATUS_TURN))
+        }
         val hub = context.platformHub
         val pending = goAsync()
         hub.scope.launch {

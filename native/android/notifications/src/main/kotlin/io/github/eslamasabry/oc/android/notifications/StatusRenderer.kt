@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
 import androidx.core.net.toUri
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.launch.LaunchToken
 
 /**
@@ -25,7 +26,7 @@ public class StatusRenderer(private val context: Context, private val words: Not
     public fun build(content: StatusContent, ongoing: Boolean, chip: LiveChip?): Notification {
         val localized = words.localized()
         val builder =
-            NotificationCompat.Builder(localized, NotifyChannel.LiveConnection.id)
+            NotificationCompat.Builder(localized, NotifyChannel.LiveConversations.id)
                 .setSmallIcon(R.drawable.notify_ic_status)
                 .setContentTitle(content.title)
                 .setContentText(content.text.ifEmpty { content.lines.firstOrNull().orEmpty() })
@@ -37,7 +38,7 @@ public class StatusRenderer(private val context: Context, private val words: Not
                 .setCategory(NotificationCompat.CATEGORY_SERVICE)
                 .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
                 .setPublicVersion(
-                    NotificationCompat.Builder(localized, NotifyChannel.LiveConnection.id)
+                    NotificationCompat.Builder(localized, NotifyChannel.LiveConversations.id)
                         .setSmallIcon(R.drawable.notify_ic_status)
                         .setContentTitle(content.publicTitle)
                         .build()
@@ -87,7 +88,7 @@ public class StatusRenderer(private val context: Context, private val words: Not
                         )
                     else FrozenComponents.of(context, FrozenComponents.MAIN_ACTIVITY)
                 flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                data = targetUri("opencode://status/open", content)
+                data = targetUri("opencode://status/open", content.conversation)
                 putStatusConversation(content.conversation)
                 // EntryRouter already understands the frozen conversation routing extras.
                 content.conversation?.let {
@@ -105,12 +106,12 @@ public class StatusRenderer(private val context: Context, private val words: Not
      * Extras do not participate in PendingIntent identity; keep older delivered actions on their
      * own chat.
      */
-    private fun targetUri(base: String, content: StatusContent): android.net.Uri =
+    private fun targetUri(base: String, conversation: ConversationRef?): android.net.Uri =
         base
             .toUri()
             .buildUpon()
-            .appendQueryParameter("profile", content.conversation?.profileId?.raw.orEmpty())
-            .appendQueryParameter("session", content.conversation?.sessionId?.raw.orEmpty())
+            .appendQueryParameter("profile", conversation?.profileId?.raw.orEmpty())
+            .appendQueryParameter("session", conversation?.sessionId?.raw.orEmpty())
             .build()
 
     private fun dismissIntent(content: StatusContent): PendingIntent =
@@ -141,7 +142,7 @@ public class StatusRenderer(private val context: Context, private val words: Not
             StatusAction.Open ->
                 NotificationCompat.Action(
                     icon,
-                    words.text(R.string.notify_status_action_open),
+                    content.openLabel.ifEmpty { words.text(R.string.notify_status_action_open) },
                     openIntent(OPEN_REQUEST, null, content),
                 )
             StatusAction.Start ->
@@ -156,10 +157,12 @@ public class StatusRenderer(private val context: Context, private val words: Not
                     words.text(R.string.notify_status_action_new_chat),
                     openIntent(NEW_CHAT_REQUEST, "new_task", content),
                 )
-            StatusAction.StopReply ->
+            StatusAction.StopReply -> {
+                // The Stop button targets the one working conversation, which is not always the one Open names.
+                val stopTarget = content.stopConversation ?: content.conversation
                 NotificationCompat.Action(
                     icon,
-                    words.text(R.string.notify_status_action_stop_reply),
+                    content.stopLabel.ifEmpty { words.text(R.string.notify_status_action_stop_reply) },
                     PendingIntent.getBroadcast(
                         context,
                         STOP_REPLY_REQUEST,
@@ -169,13 +172,14 @@ public class StatusRenderer(private val context: Context, private val words: Not
                                     context,
                                     FrozenComponents.STATUS_ACTION_RECEIVER,
                                 )
-                            data = targetUri(FrozenExtras.STOP_REPLY_URI, content)
+                            data = targetUri(FrozenExtras.STOP_REPLY_URI, stopTarget)
                             putExtra(FrozenExtras.EXTRA_STATUS_ACTION, StatusAction.StopReply.wire)
-                            putStatusConversation(content.conversation)
+                            putStatusConversation(stopTarget)
                         },
                         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
                     ),
                 )
+            }
             StatusAction.StopServer ->
                 NotificationCompat.Action(
                     icon,
