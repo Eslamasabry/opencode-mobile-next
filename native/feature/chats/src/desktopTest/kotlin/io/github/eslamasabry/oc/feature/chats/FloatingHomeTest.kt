@@ -192,7 +192,7 @@ class FloatingHomeTest {
             waitForIdle()
             act()
             waitForIdle()
-            val tags = listOf("kit-liquid-bar", "kit-floating-pills", "kit-status-pill", "kit-page-heading")
+            val tags = listOf("kit-liquid-bar", "kit-floating-below", "kit-status-pill", "kit-page-heading")
             val bounds =
                 tags.associateWith { runCatching { onNodeWithTag(it, useUnmergedTree = true).getBoundsInRoot() }.getOrNull() } +
                     ("first" to runCatching { onAllNodesWithText("Explain this project", useUnmergedTree = true).onFirst().getBoundsInRoot() }.getOrNull())
@@ -221,16 +221,19 @@ class FloatingHomeTest {
         val lens = home(LensPlatform())
         val flat = home(DesktopKitPlatform())
         assertNotNull(lens.bounds["kit-liquid-bar"], "the title row is a liquid capsule")
-        assertNotNull(lens.bounds["kit-floating-pills"], "the pills float under it")
+        assertNotNull(lens.bounds["kit-floating-below"], "the chips row lies on the same pane")
         assertNull(flat.bounds["kit-liquid-bar"], "without the lens there is no capsule")
-        assertNull(flat.bounds["kit-floating-pills"], "without the lens the chips are the scrolling header's, as before")
+        assertNull(flat.bounds["kit-floating-below"], "without the lens the chips are the scrolling header's, as before")
+        // One pane under the title and the chips: it reaches from the title row down to the chips row's foot.
         val capsule = lens.bounds["kit-liquid-bar"]!!
-        val pills = lens.bounds["kit-floating-pills"]!!
-        assertTrue(pills.top.value >= capsule.bottom.value - .5f, "the pills $pills lie under the capsule $capsule")
+        val pills = lens.bounds["kit-floating-below"]!!
+        val heading = lens.bounds["kit-page-heading"]!!
+        assertTrue(capsule.top.value <= heading.top.value + 4.5f, "the pane $capsule starts at the title row $heading")
+        assertTrue(capsule.bottom.value >= pills.bottom.value - 4.5f, "the pane $capsule reaches the chips row $pills")
         val a = assertNotNull(lens.bounds["first"], "the first conversation shows under the lens")
         val b = assertNotNull(flat.bounds["first"], "the first conversation shows without the lens")
         assertTrue(abs(a.top.value - b.top.value) <= .5f, "the first conversation rests at ${a.top} under the lens, ${b.top} without")
-        assertTrue(a.top.value >= pills.bottom.value - .5f, "the first conversation $a rests below the pills $pills")
+        assertTrue(a.top.value >= capsule.bottom.value, "the first conversation $a rests below the pane $capsule")
         // Reduced motion holds the lens: the page is as it was.
         val held = home(LensPlatform(), motion = MotionLevel.Off)
         assertNull(held.bounds["kit-liquid-bar"], "reduced motion: no floating capsule")
@@ -246,7 +249,10 @@ class FloatingHomeTest {
         ImageIO.write(rest.png, "png", File(out, "render-step4-home-rest$tag.png"))
         val scrolled = home(LensPlatform()) { drag(-120f) }
         ImageIO.write(scrolled.png, "png", File(out, "render-step4-home-scrolled$tag.png"))
-        println("step 4 renders$tag: rest first=${rest.bounds["first"]} scrolled first=${scrolled.bounds["first"]}")
+        // Further, so the running row (its green "Working") lies under the pane's words.
+        val bright = home(LensPlatform()) { drag(-170f) }
+        ImageIO.write(bright.png, "png", File(out, "render-step4-home-scrolled-bright$tag.png"))
+        println("step 4 renders$tag: rest first=${rest.bounds["first"]} scrolled first=${scrolled.bounds["first"]} bright first=${bright.bounds["first"]} pane=${rest.bounds["kit-liquid-bar"]}")
     }
 
     private companion object {

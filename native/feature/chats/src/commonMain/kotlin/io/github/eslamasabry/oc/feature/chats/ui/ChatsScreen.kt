@@ -226,8 +226,8 @@ public fun ChatsScreen(
     val listed = state.phase == ChatsPhase.List
     // Shown once the home knows its server and that server is open: it fades in once, never out and in again.
     val showFab = listed && state.home.known && state.home.opening == null
-    // Under Glass the floating + is liquid glass over the list (the kit records it only then), and the floating bar
-    // and its pills bend the same recording (glass step 4).
+    // Under Glass the floating + is liquid glass over the list (the kit records it only then), and the floating bar's
+    // pane bends the same recording (glass step 4).
     val listGlass = rememberKitFrostState()
     val barActions = buildList {
         add(KitLineAction(stringResource(Res.string.kitTopBarSearch), actions::openSearch, icon = KitIcons.search))
@@ -245,9 +245,9 @@ public fun ChatsScreen(
         else pluralStringResource(Res.plurals.kitNeedsYouSpan, state.needsYou, Numbers.format(state.needsYou)).trimEnd().removeSuffix("·").trimEnd()
     KitScreen(
         // The phone's top is the page's own (Flutter conv-header): title row with plain Search and Settings icons, then
-        // the connection pill beside the filters. Glass step 4: where the lens is drawn the two float as a liquid bar
-        // and pills over the list, which scrolls on under them; everywhere else they are the page's scrolling header,
-        // as before (KitFloatingBar's scrollsElsewhere).
+        // the connection pill beside the filters. Glass step 4: where the lens is drawn the two rows lie on one floating
+        // liquid pane over the list, which scrolls on under it; everywhere else they are the page's scrolling header, as
+        // before (KitFloatingBar's scrollsElsewhere).
         topBar = {
             // The page names itself under the bar (Flutter KitPageHeading); "2 need you" opens the Inbox.
             // F: lib/ui/screens/chats/chats_home_screen.dart:380-386: room under the bar before the title, and
@@ -268,7 +268,7 @@ public fun ChatsScreen(
             KitFloatingBar(
                 scrollsElsewhere = true,
                 source = listGlass,
-                pills = {
+                below = {
                     // Nothing to filter on a list that holds nothing yet, so the chips wait for the first conversation.
                     val showFilters = state.phase == ChatsPhase.List || state.phase == ChatsPhase.NoMatch
                     val pill: (@Composable () -> Unit)? = if (!shellBar) null else state.connection?.let { connection -> { ConnectionStatusPill(connection, actions) } }

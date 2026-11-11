@@ -127,6 +127,7 @@ class KitFloatingBarTest {
         val field: Boolean = false,
         val clickRows: Boolean = false,
         val rows: Int = ROWS,
+        val fourChips: Boolean = false,
     )
 
     /** What the test reads back from a scene. */
@@ -159,6 +160,7 @@ class KitFloatingBarTest {
                         KitStatusPill("This phone", KitConnectionTone.Ok, "This phone, connected", {}, Modifier.testTag("pill-status"))
                         KitChip("All projects", Modifier.testTag("pill-projects"), kind = KitChipKind.Action, opensMenu = true, onClick = {})
                         KitChip("Running", Modifier.testTag("pill-running"), kind = KitChipKind.Action, onClick = {})
+                        if (extras.fourChips) KitChip("All sources", kind = KitChipKind.Action, opensMenu = true, onClick = {})
                     }
                 }
                 val home = page == Page.Home
@@ -170,7 +172,7 @@ class KitFloatingBarTest {
                     floatingBar =
                         when {
                             !floating -> null
-                            home -> KitFloatingBar(scrollsElsewhere = true, source = source, pills = pills)
+                            home -> KitFloatingBar(scrollsElsewhere = true, source = source, below = pills)
                             else -> KitFloatingBar()
                         },
                     refresh = refresh,
@@ -329,11 +331,11 @@ class KitFloatingBarTest {
             assertTrue(row.top.value <= bottom + LOADING_BAR_DP + .5f, "$page: the first row $row rests right below the chrome ending at $bottom")
             assertTrue(abs(row.top.value - before.bounds["row-0"]!!.top.value) <= .5f, "$page: rests where it did, ${before.bounds["row-0"]} then, $row now")
             assertTrue(float.bounds["kit-liquid-bar"] != null, "$page: the bar is a liquid capsule")
-            if (page == Page.Home) {
-                // The pills lie outside the capsule, under it.
-                val capsule = float.bounds["kit-liquid-bar"]!!
-                assertTrue(float.bounds["pills"]!!.top.value >= capsule.bottom.value - .5f, "Home: the pills ${float.bounds["pills"]} sit under the capsule $capsule")
-            }
+            // One pane holds the bar and (Home) the chips row: from the bar's top to the chrome's foot, 4 dp in.
+            val capsule = float.bounds["kit-liquid-bar"]!!
+            val bar = float.bounds["bar"]!!
+            assertTrue(abs(capsule.top.value - (bar.top.value + 4f)) <= .5f, "$page: the pane $capsule starts 4 dp into the bar $bar")
+            assertTrue(abs(capsule.bottom.value - (bottom - 4f)) <= .5f, "$page: the pane $capsule ends 4 dp above the chrome's foot $bottom")
         }
     }
 
@@ -347,17 +349,23 @@ class KitFloatingBarTest {
             val (statusMean, statusStep) = column(s.image, W / 2f, 1f, STATUS_DP * STATUS_EDGE_SOLID_SHARE - 1f)
             assertTrue(statusMean >= g + 20f, "$page: content under the status bar, mean $statusMean over ground $g")
             assertTrue(statusStep <= BLUR_STEP, "$page: cleared to a blur under the status bar, a step of $statusStep")
-            // Inside the capsule, past the end of the title's words: the rows show through its glass, blurred.
+            // Inside the pane, beside the title past its words: the rows show through its glass, blurred.
             val capsule = s.bounds["kit-liquid-bar"]!!
+            val bar = s.bounds["bar"]!!
             debugPng(s.image, "scrolled-$page")
             val inside = capsule.right.value - 24f
-            val (capsuleMean, capsuleStep) = column(s.image, inside, capsule.top.value + 8f, capsule.bottom.value - 8f)
-            println("$page capsule $capsule, column at $inside: " + stepsAt(s.image, inside, capsule.top.value + 8f, capsule.bottom.value - 8f))
+            val (capsuleMean, capsuleStep) = column(s.image, inside, capsule.top.value + 8f, bar.bottom.value - 8f)
+            println("$page pane $capsule, column at $inside: " + stepsAt(s.image, inside, capsule.top.value + 8f, bar.bottom.value - 8f))
             assertTrue(capsuleMean >= g + 15f, "$page: content behind the capsule, mean $capsuleMean over ground $g")
             assertTrue(capsuleStep <= BLUR_STEP, "$page: blurred behind the capsule, a step of $capsuleStep")
-            // Beside the capsule (its 6 dp margin) the rows run on sharp: they really pass under the bar.
-            val (_, sideStep) = column(s.image, 2f, capsule.top.value, capsule.bottom.value)
-            assertTrue(sideStep >= 100f, "$page: the rows run on beside the capsule, steepest step $sideStep")
+            // Beside the pane (its 6 dp margin), below the status edge's blur and above the pane's bottom edge: nothing of
+            // the page shows there but its ground (one body: content shows above that edge only through the glass).
+            val sideFrom = STATUS_DP + STATUS_EDGE_REACH_DP + 1f
+            val (sideMean, sideStep) = column(s.image, 2f, sideFrom, capsule.bottom.value - 1f)
+            assertTrue(abs(sideMean - g) <= 3f && sideStep <= 3f, "$page: cleared beside the pane, mean $sideMean over ground $g, step $sideStep: " + stepsAt(s.image, 2f, sideFrom, capsule.bottom.value - 1f))
+            // Below the pane's bottom edge the rows run on sharp: they really pass under it.
+            val (_, belowStep) = column(s.image, 2f, capsule.bottom.value + 1f, capsule.bottom.value + 80f)
+            assertTrue(belowStep >= 100f, "$page: the rows run on below the pane, steepest step $belowStep")
             println("$page scrolled: status mean $statusMean step $statusStep, capsule mean $capsuleMean step $capsuleStep, ground $g")
         }
     }
@@ -385,26 +393,23 @@ class KitFloatingBarTest {
     }
 
     @Test
-    fun `B-KIT-FLOAT-005 home's lens budget holds the bar, three pills and the + and a fourth kind of part goes frost`() {
+    fun `B-KIT-FLOAT-005 home's lens budget is the bar's one pane and the +, whatever chips sit on the pane`() {
         shot(
             Page.Home,
             floating = true,
-            extras = Extras(fab = true, statusPart = true),
+            extras = Extras(fab = true, fourChips = true),
             check = { seen ->
                 val budget = seen.budget!!
                 val claims = budget.claims.toList()
                 val granted = budget.granted
-                val liquid = claims.filter { it.key in granted }.map { it.role }.sortedBy { it.rank }
-                val frost = claims.filter { it.key !in granted }.map { it.role }
-                assertEquals(listOf(LiquidRole.Pill, LiquidRole.Pill, LiquidRole.Pill, LiquidRole.Action, LiquidRole.Bar), liquid, "granted")
-                assertEquals(listOf(LiquidRole.Status), frost, "held to frost")
+                // Four chips and the status pill sit on the pane as controls: they ask for no lens.
+                assertEquals(listOf(LiquidRole.Action, LiquidRole.Bar), claims.map { it.role }.sortedBy { it.rank }, "claims")
+                assertTrue(claims.all { it.key in granted }, "both granted")
             },
         )
-        // The same as LiquidEdge counts it: feature recordings are free; five panes fill the page's budget.
-        val claims =
-            listOf(LiquidRole.Bar, LiquidRole.Action, LiquidRole.Pill, LiquidRole.Pill, LiquidRole.Pill, LiquidRole.Status)
-                .mapIndexed { i, role -> LiquidClaim(i, role, source = null, order = i) }
-        assertEquals(setOf(0, 1, 2, 3, 4), LiquidEdge.grant(claims))
+        // As LiquidEdge counts it: the list's recording is the feature's (free), so the page spends 2 of its 5.
+        val claims = listOf(LiquidRole.Bar, LiquidRole.Action).mapIndexed { i, role -> LiquidClaim(i, role, source = null, order = i) }
+        assertEquals(setOf(0, 1), LiquidEdge.grant(claims))
     }
 
     @Test
@@ -453,8 +458,8 @@ class KitFloatingBarTest {
             val bar = s.bounds["bar"]!!
             val bottom = chromeBottom(s, page)
             val row = s.bounds["row-0"]!!
-            assertTrue(capsule.top >= bar.top - 4.5.dp && capsule.bottom <= bar.bottom + .5.dp, "$page: the capsule $capsule holds the bar $bar")
-            if (page == Page.Home) assertTrue(s.bounds["pills"]!!.top.value >= capsule.bottom.value - .5f, "Home: the pills stay under the capsule")
+            assertTrue(capsule.top >= bar.top - .5.dp && capsule.top <= bar.top + 4.5.dp, "$page: the pane $capsule starts at the bar $bar")
+            assertTrue(capsule.bottom.value >= bottom - 4.5f, "$page: the pane $capsule reaches the chrome's foot $bottom")
             assertTrue(row.top.value >= bottom - .5f && row.top.value <= bottom + LOADING_BAR_DP + .5f, "$page: the first row $row rests right below $bottom")
             // The pinned chrome keeps most of the window for the body.
             println("$page at text size 2: the floating chrome ends at $bottom of $TALL_H dp")

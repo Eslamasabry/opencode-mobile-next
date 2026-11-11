@@ -15,34 +15,34 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitFrostState
  * bend). Set on [KitScreen] next to its `topBar`. Opt-in: a screen without it lays out exactly as before.
  *
  * Where the lens is drawn (Glass, Android 13+, no battery saver, no reduced motion, no high contrast, a look with a lens,
- * a window that is not short) the bar is a liquid capsule pinned under the status bar, [pills] float as liquid pills
- * under it, and the body scrolls on under both: at rest its first part rests right below the pills (a spacer that
- * scrolls away first, as on a page with a header); once it scrolls, its content passes under the pills, the capsule and the
- * status bar, where it dissolves into a blur of itself. Everywhere else the page keeps today's layout: the pinned bar,
- * or with [scrollsElsewhere] the bar and pills as the first parts of the scrolling header.
+ * a window that is not short) the bar and its second row ([below]) lie on ONE liquid pane pinned under the status bar,
+ * one body of glass with one bottom edge, and the body scrolls on under it: at rest its first part rests right below
+ * the pane (a spacer that scrolls away first, as on a page with a header); once it scrolls, its content passes under
+ * the pane and the status bar, and nothing of it shows above the pane's bottom edge except through the glass.
+ * Everywhere else the page keeps today's layout: the pinned bar, or with [scrollsElsewhere] the bar and [below] as the
+ * first parts of the scrolling header.
  *
- * The pills are the one exception to the frame's "no new bar levels" (R9): they belong to the floating bar and exist
- * only with it.
+ * [below] is the one exception to the frame's "no new bar levels" (R9): it belongs to the floating bar and exists only
+ * with it. Its controls sit on the pane: they take no frost of their own and ask for no lens.
  */
 @Stable
 public class KitFloatingBar(
     /**
-     * Without the lens (or on a short window) the bar and [pills] are not pinned: they lie at the top of the page's
+     * Without the lens (or on a short window) the bar and [below] are not pinned: they lie at the top of the page's
      * scrolling header, before its own header, and scroll away with the body (the Conversations home's own heading).
      * False keeps today's pinned bar there.
      */
     public val scrollsElsewhere: Boolean = false,
     /**
-     * The feature's own recording of its body (the conversations list under its +): the capsule, the pills and the
-     * status bar's edge bend and blur it, and the kit records nothing of its own. Null: the kit records the body.
+     * The feature's own recording of its body (the conversations list under its +): the pane and the status bar's edge
+     * bend and blur it, and the kit records nothing of its own. Null: the kit records the body.
      */
     public val source: KitFrostState? = null,
     /**
-     * Small parts that float under the capsule, outside it (the home's server pill and filters). They are liquid pills
-     * when [source] is given (a kit part reads it through `LocalKitLiquidChrome`); with the kit's own recording they keep
-     * their own faces.
+     * A second row inside the bar's pane, under the bar (the home's server pill, divider and filters): controls on the
+     * glass, not panes of their own.
      */
-    public val pills: (@Composable () -> Unit)? = null,
+    public val below: (@Composable () -> Unit)? = null,
 )
 
 /**
