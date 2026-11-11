@@ -222,8 +222,8 @@
     <string name="appearanceFineTuneEdges">Bordes</string>
     <string name="runningPhoneMarkHeavy">Pesado</string>
     <string name="runningPhoneMarkLeftBehind">Abandonado</string>
-    <string name="phoneTeamProofSignal">Android cerró la prueba de seguridad (señal %1$s) antes de que pudiera terminar.</string>
-    <string name="phoneTeamProofCheckSignal">Android cerró la revisión de seguridad “%1$s” (señal %2$s).</string>
+    <string name="phoneTeamProofSignal">Android cerró la prueba de seguridad (señal %1$d) antes de que pudiera terminar.</string>
+    <string name="phoneTeamProofCheckSignal">Android cerró la revisión de seguridad “%1$s” (señal %2$d).</string>
     <string name="phoneTeamProofNotBlocked">La revisión de seguridad “%1$s” falló: este teléfono no la bloqueó como el sandbox del equipo necesita.</string>
     <string name="phoneTeamProofSandbox">El sandbox del equipo no pudo arrancar en este teléfono.</string>
     <string name="phoneTeamProofUbuntu">El paso de Ubuntu “%1$s” falló dentro del sandbox del equipo.</string>
