@@ -16,6 +16,8 @@ import io.github.eslamasabry.oc.engine.agents.feed.ChatFeed
 import io.github.eslamasabry.oc.engine.agents.feed.OpenCodeChatFeedSource
 import io.github.eslamasabry.oc.engine.agents.feed.OpenCodeListing
 import io.github.eslamasabry.oc.engine.agents.feed.ReturnBrief
+import io.github.eslamasabry.oc.feature.chats.presentation.AllConversationsRules
+import io.github.eslamasabry.oc.feature.chats.presentation.AllModel
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsFilters
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsHomeExtraState
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsListSourceUi
@@ -27,7 +29,9 @@ import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationHost
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationServer
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationSetup
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationViewModel
+import io.github.eslamasabry.oc.feature.chats.presentation.ServerName
 import io.github.eslamasabry.oc.feature.chats.presentation.ServerSwitcherRules
+import io.github.eslamasabry.oc.feature.chats.presentation.SourcePages
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.AppRoute
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
@@ -200,5 +204,31 @@ class OnePhoneTest {
         val vm = NewConversationViewModel(ChatsRoute.New(helper, phoneAgent = "claude"), Host(), Nav(), Clock.System, ListenedReports())
         assertEquals(phone, vm.state.value.profile)
         assertTrue(vm.state.value.servers.none { it.profile == helper })
+    }
+
+    @Test
+    fun `ONE-PHONE All conversations reads the agents' rows as This phone's and names a server only among several`() {
+        // The helper carries the phone's name (PhoneAgentRules.helperNames): the phone and its agents are one place.
+        val pages =
+            mapOf(
+                phone to SourcePages(sessions = listOf(s("oc", "/root/projects/app", 2_000)), loaded = true),
+                helper to SourcePages(sessions = listOf(s("cc", "/root/projects/app", 3_000)), loaded = true),
+            )
+        val alone =
+            AllConversationsRules.build(
+                AllModel(servers = listOf(ServerName(phone, "This phone"), ServerName(helper, "This phone")), known = true, sources = pages)
+            )
+        assertEquals(listOf("cc", "oc"), alone.rows.map { it.ref.sessionId.raw })
+        assertEquals(listOf(null, null), alone.rows.map { it.server }, "one place: no server named on its rows")
+        val laptop = ProfileId("laptop")
+        val several =
+            AllConversationsRules.build(
+                AllModel(
+                    servers = listOf(ServerName(phone, "This phone"), ServerName(helper, "This phone"), ServerName(laptop, "Laptop")),
+                    known = true,
+                    sources = pages + (laptop to SourcePages(sessions = listOf(s("lp", "/srv/site", 1_000)), loaded = true)),
+                )
+            )
+        assertEquals(listOf("This phone", "This phone", "Laptop"), several.rows.map { it.server })
     }
 }
