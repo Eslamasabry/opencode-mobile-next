@@ -425,6 +425,17 @@ internal fun ChatTranscriptList(
     // removed. While a reply streams the rows above it never glide (the growing reply would drag them a few pixels
     // behind every frame); the newest row stays on the bottom edge either way (reverse layout keeps it anchored).
     val glide = live == null
+    // The dock's room is a new item at index 0, but the newest key does not change, so the kit's follow (which asks
+    // for index 0 when the newest key changes) does not run, and the list anchors on the old first key: on a long
+    // transcript the room landed out of view below and the bar still covered the newest reply (gate, w4-undo-room).
+    // While following, ask for index 0 in the same frame as the insert, as the kit does for a new row. A person reading
+    // older text (not following) is never moved; the room's removal needs nothing (its key goes, index 0 stays).
+    val roomBefore = remember { intArrayOf(0) }
+    SideEffect {
+        val came = extraBottomPx > 0 && roomBefore[0] == 0
+        roomBefore[0] = extraBottomPx
+        if (came && list.following && !list.lazy.isScrollInProgress) list.lazy.requestScrollToItem(0)
+    }
     // Flutter `_liveStepsShown` (chat_stop_after_step.dart): a tap on the live line shows the running turn's steps;
     // cleared once the turn ends. Null = no running turn; false = the live line names the step and the work hides.
     var stepsShown by remember { mutableStateOf(false) }

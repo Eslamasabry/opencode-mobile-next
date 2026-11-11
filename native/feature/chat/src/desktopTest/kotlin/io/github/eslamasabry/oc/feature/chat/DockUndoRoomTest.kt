@@ -116,6 +116,29 @@ class DockUndoRoomTest {
             assertTrue(after.bottom > more.bottom, "the room went with the bar: before $more, after $after")
         }
 
+    /**
+     * Gate (w4-undo-room): a transcript longer than the screen, at its end, when the bar comes. The room is a new first
+     * item while the newest key stays the same, so without asking for index 0 the list kept the newest reply where it
+     * was and the room landed out of view under it.
+     */
+    @Test
+    fun `B-DOCK-UNDO-08 on a long transcript at its end the newest reply rises above the bar that comes`() =
+        run(rowCount = 30) { dock ->
+            runOnUiThread { dock.offered = false }
+            mainClock.advanceTimeBy(1_000)
+            val more = onNodeWithContentDescription("More for this reply", useUnmergedTree = true).getBoundsInRoot()
+            runOnUiThread { dock.offered = true }
+            mainClock.advanceTimeBy(1_000)
+            val undo = onNodeWithText("Undo").getBoundsInRoot()
+            val during = onNodeWithContentDescription("More for this reply", useUnmergedTree = true).getBoundsInRoot()
+            assertTrue(during.bottom <= undo.top, "the newest reply's footer ends above the bar: Undo $undo, More $during")
+            assertTrue(during.bottom < more.bottom, "it rose with the bar: before $more, during $during")
+            runOnUiThread { dock.offered = false }
+            mainClock.advanceTimeBy(1_000)
+            val after = onNodeWithContentDescription("More for this reply", useUnmergedTree = true).getBoundsInRoot()
+            assertEquals(more.bottom, after.bottom, "it settled back where it was when the bar went")
+        }
+
     @Test
     fun `B-DOCK-UNDO-06 reading older replies, nothing they see moves when the bar comes and goes`() =
         run(rowCount = 30) { dock ->
