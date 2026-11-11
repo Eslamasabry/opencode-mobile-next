@@ -109,7 +109,12 @@ public class KitEdgeDockState internal constructor() {
     internal var safeBottom = 0f
     internal var edgeInset = 0f
     internal var farInset = 0f
-    internal var onRight = true
+    /**
+     * The dock's physical side. Snapshot state: the rings, the "+", the swell, the peek and the list are placed in
+     * layout lambdas that read it, so a change of side (the dock dragged to the other edge) places them again with the
+     * body (device QA 2026-11-11: the body moved to the left edge while the rings and the "+" stayed on the right).
+     */
+    internal var onRight by mutableStateOf(true)
     internal var density = 1f
     internal var textScale = 1f
     internal var column: DockColumn = DockColumn(0, 0, 0, DockDims.PITCH, 0f)
@@ -591,7 +596,7 @@ public class KitEdgeDockState internal constructor() {
     }
 
     /** Whether the End side is the physical right (LTR); set from the layout direction. */
-    internal var onRightForEnd = true
+    internal var onRightForEnd by mutableStateOf(true)
 
     internal fun runTarget(i: Int, kind: DockTargetKind, child: Int) {
         val ring = rings.getOrNull(i) ?: return
