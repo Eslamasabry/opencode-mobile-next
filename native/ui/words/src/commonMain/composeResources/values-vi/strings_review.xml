@@ -10,7 +10,7 @@
     <string name="reviewWaiting">Một thao tác hoàn tác đang chờ bạn xem lại. Các tin nhắn sau lời nhắc của nó bị ẩn cho đến khi bạn chọn.</string>
     <string name="reviewUndoUnknown">Hoàn tác tất cả cần lời nhắc mà các thay đổi này bắt đầu từ đó, nhưng không đọc được nó.</string>
     <string name="reviewUndoUnavailable">Máy chủ này không hoàn tác được từ một lời nhắc.</string>
-    <string name="reviewToolEvidence">Dựa trên những gì công cụ của tác nhân báo lại. Các thay đổi do lệnh thực hiện không được liệt kê.</string>
+    <string name="reviewToolEvidence">Chỉ những gì tác nhân của cuộc trò chuyện này đã thay đổi bằng công cụ của nó. Tệp do lệnh tạo ra, tệp mới mà Git chưa theo dõi và thay đổi từ các cuộc trò chuyện khác không được liệt kê. Chưa commit liệt kê những gì Git thấy trong thư mục.</string>
     <string name="reviewSendBackFailed">Không đưa được ghi chú của bạn vào tin nhắn. Thử lại.</string>
     <string name="reviewProjectNotGitTitle">Không phải dự án Git</string>
     <string name="reviewProjectNotGitBody">Chỉ có thể liệt kê thay đổi của dự án được quản lý bằng Git. Hãy bắt đầu theo dõi dự án từ trang Git của dự án để xem chúng ở đây.</string>

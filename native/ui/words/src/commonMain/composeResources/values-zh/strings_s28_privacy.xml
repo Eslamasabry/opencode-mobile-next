@@ -6,7 +6,7 @@
     <string name="telemetryCrashesTitle">崩溃报告</string>
     <string name="telemetryCrashesDetail">向 Google Firebase Crashlytics 发送崩溃报告：错误的类型及其在应用代码中的位置（绝不包含错误消息）、你最后几步操作（以简短的词表示），以及上次 Android 结束应用的原因。不含代码、对话、文件、地址、密钥或广告 ID。</string>
     <string name="collectTitle">我们收集什么</string>
-    <string name="collectRowSummary">两个开关默认都是关闭的。可查看每个开关具体会发送什么。</string>
+    <string name="collectRowSummary">除非你在被询问时选择了同意，否则使用情况和崩溃报告会保持关闭。可查看每一项具体会发送什么。</string>
     <string name="collectUsageNotSentYet">此版本尚不发送使用情况和应用健康数据。你的选择会被保留，待支持后生效。</string>
     <string name="collectRules">只发送固定的词和数字范围，绝不发送自由文本。关闭开关会删除尚未发送的内容。</string>
     <string name="collectUsageLabel">开启“使用情况和应用健康”时</string>

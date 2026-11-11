@@ -6,7 +6,7 @@
     <string name="telemetryCrashesTitle">Relatórios de falhas</string>
     <string name="telemetryCrashesDetail">Envia relatórios de falhas ao Google Firebase Crashlytics: o tipo de erro e onde no código do app ele ocorreu, nunca a mensagem, suas últimas ações em palavras curtas e o motivo de o Android ter encerrado o app da última vez. Sem código, conversas, arquivos, endereços, chaves nem ID de publicidade.</string>
     <string name="collectTitle">O que coletamos</string>
-    <string name="collectRowSummary">As duas opções começam desativadas. Veja exatamente o que cada uma envia.</string>
+    <string name="collectRowSummary">Uso e Relatórios de falhas ficam desativados, a menos que você tenha dito sim quando perguntado. Veja exatamente o que cada um envia.</string>
     <string name="collectUsageNotSentYet">Esta versão ainda não envia uso e saúde do app. Sua resposta fica guardada e será usada quando enviar.</string>
     <string name="collectRules">Só são enviados palavras fixas e faixas de números, nunca texto livre. Desativar uma opção apaga o que ainda não foi enviado.</string>
     <string name="collectUsageLabel">Com Uso e saúde do app</string>

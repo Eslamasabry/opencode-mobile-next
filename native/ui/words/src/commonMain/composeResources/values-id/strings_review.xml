@@ -10,7 +10,7 @@
     <string name="reviewWaiting">Pembatalan menunggu tinjauan Anda. Pesan setelah perintahnya disembunyikan sampai Anda memilih.</string>
     <string name="reviewUndoUnknown">Batalkan semua memerlukan perintah awal perubahan ini, dan perintah itu tidak dapat dibaca.</string>
     <string name="reviewUndoUnavailable">Server ini tidak dapat membatalkan dari sebuah perintah.</string>
-    <string name="reviewToolEvidence">Berdasarkan laporan alat agen. Perubahan lewat perintah tidak dicantumkan.</string>
+    <string name="reviewToolEvidence">Hanya yang diubah agen percakapan ini dengan alatnya. File yang dibuat lewat perintah, file baru yang belum dilacak Git, dan perubahan dari percakapan lain tidak dicantumkan. Belum di-commit mencantumkan apa yang dilihat Git di folder.</string>
     <string name="reviewSendBackFailed">Catatan Anda tidak dapat dimasukkan ke pesan. Coba lagi.</string>
     <string name="reviewProjectNotGitTitle">Bukan proyek Git</string>
     <string name="reviewProjectNotGitBody">Perubahan hanya dapat dicantumkan untuk proyek yang dikelola Git. Mulai lacak proyek ini dari halaman Git proyek agar perubahannya tampil di sini.</string>

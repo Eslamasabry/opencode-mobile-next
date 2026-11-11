@@ -6,7 +6,7 @@
     <string name="telemetryCrashesTitle">Rapports de plantage</string>
     <string name="telemetryCrashesDetail">Envoie des rapports de plantage à Google Firebase Crashlytics\u00A0: le type d’erreur et l’endroit du code de l’application où elle s’est produite, jamais son message, vos dernières actions sous forme de mots courts, et la raison pour laquelle Android a arrêté l’application la dernière fois. Aucun code, conversation, fichier, adresse, clé ni identifiant publicitaire.</string>
     <string name="collectTitle">Ce que nous collectons</string>
-    <string name="collectRowSummary">Les deux interrupteurs sont désactivés au départ. Voyez exactement ce que chacun envoie.</string>
+    <string name="collectRowSummary">Utilisation et Rapports de plantage restent désactivés, sauf si vous avez dit oui quand la question vous a été posée. Voyez exactement ce que chacun envoie.</string>
     <string name="collectUsageNotSentYet">Cette version n’envoie pas encore l’utilisation et l’état de l’application. Votre réponse est conservée et sera utilisée dès que ce sera le cas.</string>
     <string name="collectRules">Seuls des mots fixes et des tranches de nombres sont envoyés, jamais de texte libre. Désactiver un interrupteur supprime ce qui n’a pas encore été envoyé.</string>
     <string name="collectUsageLabel">Avec Utilisation et état de l’application</string>

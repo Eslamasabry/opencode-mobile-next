@@ -6,7 +6,7 @@
     <string name="telemetryCrashesTitle">Báo cáo sự cố</string>
     <string name="telemetryCrashesDetail">Gửi báo cáo sự cố đến Google Firebase Crashlytics: loại lỗi và vị trí xảy ra trong mã của ứng dụng, không bao giờ gửi nội dung thông báo lỗi, các bước gần nhất bạn đã làm dưới dạng từ ngắn, và lý do Android kết thúc ứng dụng lần trước. Không có mã nguồn, cuộc trò chuyện, tệp, địa chỉ, khóa hay ID quảng cáo.</string>
     <string name="collectTitle">Chúng tôi thu thập gì</string>
-    <string name="collectRowSummary">Cả hai công tắc đều tắt từ đầu. Xem chính xác mỗi công tắc gửi gì.</string>
+    <string name="collectRowSummary">Mức sử dụng và Báo cáo sự cố vẫn tắt trừ khi bạn đã đồng ý khi được hỏi. Xem chính xác mỗi mục gửi gì.</string>
     <string name="collectUsageNotSentYet">Phiên bản này chưa gửi mức sử dụng và tình trạng ứng dụng. Lựa chọn của bạn được giữ lại và sẽ áp dụng khi có.</string>
     <string name="collectRules">Chỉ gửi các từ cố định và khoảng số, không bao giờ gửi văn bản tự do. Tắt một công tắc sẽ xóa những gì chưa gửi.</string>
     <string name="collectUsageLabel">Với Mức sử dụng và tình trạng ứng dụng</string>

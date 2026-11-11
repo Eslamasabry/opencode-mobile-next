@@ -2178,7 +2178,7 @@ collectPhoneSetup	ae724435ee
 collectQueue	408cf673e3
 collectReport	283ae08ce9
 collectReportLabel	87b042b051
-collectRowSummary	021028fb8b
+collectRowSummary	473d4c759b
 collectRules	cb60c61eac
 collectSend	22f0a539c9
 collectSmooth	4a0f0027c2
@@ -9468,7 +9468,7 @@ reviewSendComments	3da2466627
 reviewSummary	db8b61f0be
 reviewSummary__eq1	494b0aaced
 reviewTitle	9b14d04d7a
-reviewToolEvidence	7a221c0d8e
+reviewToolEvidence	0b5ea7caac
 reviewTurnTitle	5681b720b8
 reviewUndoAll	7edff94c95
 reviewUndoBody	9c5d561553

@@ -6,7 +6,7 @@
     <string name="telemetryCrashesTitle">Laporan crash</string>
     <string name="telemetryCrashesDetail">Mengirim laporan crash ke Google Firebase Crashlytics: jenis kesalahan dan lokasinya di kode aplikasi, tanpa pesannya, langkah terakhir Anda dalam kata singkat, dan alasan Android menutup aplikasi terakhir kali. Tanpa kode, percakapan, file, alamat, kunci, atau ID iklan.</string>
     <string name="collectTitle">Yang kami kumpulkan</string>
-    <string name="collectRowSummary">Kedua tombol mulai dalam keadaan mati. Lihat persis apa yang dikirim masing-masing.</string>
+    <string name="collectRowSummary">Penggunaan dan Laporan error aplikasi tetap nonaktif kecuali Anda menjawab ya saat ditanya. Lihat persis apa yang dikirim masing-masing.</string>
     <string name="collectUsageNotSentYet">Versi ini belum mengirim penggunaan dan kesehatan aplikasi. Jawaban Anda disimpan dan dipakai setelah fitur itu tersedia.</string>
     <string name="collectRules">Hanya kata baku dan rentang angka yang dikirim, tidak pernah teks bebas. Mematikan tombol menghapus data yang belum terkirim.</string>
     <string name="collectUsageLabel">Dengan Penggunaan dan kesehatan aplikasi</string>

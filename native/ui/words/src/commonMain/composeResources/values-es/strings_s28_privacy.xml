@@ -6,7 +6,7 @@
     <string name="telemetryCrashesTitle">Informes de fallos</string>
     <string name="telemetryCrashesDetail">Envía informes de fallos a Google Firebase Crashlytics: el tipo de error y en qué parte del código de la app ocurrió, nunca su mensaje, los últimos pasos que diste como palabras cortas, y por qué Android cerró la app la última vez. Sin código, conversaciones, archivos, direcciones, claves ni ID de publicidad.</string>
     <string name="collectTitle">Qué recopilamos</string>
-    <string name="collectRowSummary">Ambos interruptores empiezan desactivados. Mira exactamente qué envía cada uno.</string>
+    <string name="collectRowSummary">Uso e Informes de fallos siguen desactivados a menos que dijeras que sí cuando se te preguntó. Mira exactamente qué envía cada uno.</string>
     <string name="collectUsageNotSentYet">Esta versión aún no envía el uso y el estado de la app. Tu respuesta se guarda y se usará cuando lo haga.</string>
     <string name="collectRules">Solo se envían palabras fijas y rangos de números, nunca texto libre. Al desactivar un interruptor se borra lo que aún no se envió.</string>
     <string name="collectUsageLabel">Con Uso y estado de la app</string>
