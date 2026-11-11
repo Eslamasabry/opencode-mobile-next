@@ -158,6 +158,9 @@ public class KitEdgeDockState internal constructor() {
     internal var swellRing by mutableIntStateOf(-1)
     internal var target by mutableStateOf<DockTarget?>(null)
     internal var renaming by mutableStateOf<String?>(null)
+
+    /** The lines the rename field asks for (what the name measures, 1..[DockDims.RENAME_LINES]); the swell's height follows. */
+    internal var renameLines by mutableIntStateOf(1)
     internal var panelShown by mutableStateOf(false)
     internal var panelOpen by mutableStateOf(false)
     internal var carrying by mutableIntStateOf(-1)
@@ -449,6 +452,8 @@ public class KitEdgeDockState internal constructor() {
             s = textScale,
             maxLength = widthDp - edgeInset - DockDims.REST_W - farInset - DockDims.GUTTER,
             stateLine = words?.hasStateLine(ring) ?: true,
+            renameLines = renameLines,
+            maxHeight = safeBottom - safeTop,
         )
 
     /** Opens (or retargets) box B for ring [i] as [kind]; B grows out with one small overshoot. */
@@ -700,8 +705,23 @@ public class KitEdgeDockState internal constructor() {
         val ring = rings.getOrNull(i) ?: return
         haptic(KitHaptic.LongPress)
         renaming = ring.key
+        renameLines = (ring.name.length / RENAME_CHARS_PER_LINE + 1).coerceIn(1, DockDims.RENAME_LINES)
         openSwell(SwellKind.Rename, i)
         launch { ride.animateTo(1f, DockSprings.drop(reduced)) }
+    }
+
+    /** The field measured its name as [lines] lines: the swell grows or shrinks to hold them (up to four). */
+    internal fun setRenameLines(lines: Int) {
+        if (renaming == null) return
+        val n = lines.coerceIn(1, DockDims.RENAME_LINES)
+        if (n == renameLines) return
+        renameLines = n
+        val ring = rings.getOrNull(swellRing) ?: return
+        if (swell?.kind != SwellKind.Rename) return
+        val l = layoutFor(SwellKind.Rename, ring)
+        if (l.height == swell?.height && l.fieldLines == swell?.fieldLines) return
+        swell = l
+        launch { swellH.animateTo(l.height, DockSprings.fill(reduced)) }
     }
 
     internal fun endRename(save: Boolean, text: String) {
@@ -808,6 +828,9 @@ public class KitEdgeDockState internal constructor() {
     private companion object {
         const val EXCLUSION_MAX_DP = 200f
         const val PANEL_KEY_SIZE = 8
+
+        /** A first guess of how many characters a rename line holds, until the field measures its name. */
+        const val RENAME_CHARS_PER_LINE = 22
 
         /** How far the ring band reaches past the viewport (dp): room for the last name's descender, inside A. */
         const val RING_BAND_SPILL = 4f

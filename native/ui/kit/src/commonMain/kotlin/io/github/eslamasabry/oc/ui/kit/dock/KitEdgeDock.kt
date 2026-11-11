@@ -225,7 +225,11 @@ public fun KitEdgeDock(
         // While a ring is renamed (the keyboard is up and the column may have shrunk) it is the one kept in view.
         val currentIndex = model.rings.indexOfFirst { it.key == model.current }
         val renamingIndex = state.renaming?.let { k -> model.rings.indexOfFirst { it.key == k } } ?: -1
-        val shownIndex = if (renamingIndex >= 0) renamingIndex else currentIndex
+        // The renamed ring rides out into the swell, so the column keeps another ring in view (the strip keeps its rings).
+        val shownIndex =
+            if (renamingIndex >= 0 && model.rings.size > 1) {
+                if (currentIndex >= 0 && currentIndex != renamingIndex) currentIndex else if (renamingIndex > 0) renamingIndex - 1 else renamingIndex + 1
+            } else if (renamingIndex >= 0) renamingIndex else currentIndex
         LaunchedEffect(shownIndex, column) {
             val now = state.scroll.value.coerceIn(0f, column.maxScroll)
             if (now != state.scroll.value) state.scroll.snapTo(now)
@@ -508,7 +512,9 @@ private fun DockRingNode(
             .size(DockDims.REST_W.dp, state.column.pitch.dp)
             .graphicsLayer {
                 val vis = smoothstep(15f, 58f, state.out.value) * (1f - smoothstep(0.1f, 0.45f, state.panelX.value))
-                alpha = vis * m.presence.value.coerceIn(0f, 1f)
+                // While another ring is renamed the strip's rings stay, dimmed.
+                val dim = if (state.renaming != null && state.renaming != ring.key) 0.45f else 1f
+                alpha = vis * m.presence.value.coerceIn(0f, 1f) * dim
                 val s = lerp(0.3f, 1f, vis) * (1f + m.pop.value) * (if (state.carrying == index) 1.1f else 1f)
                 scaleX = s
                 scaleY = s

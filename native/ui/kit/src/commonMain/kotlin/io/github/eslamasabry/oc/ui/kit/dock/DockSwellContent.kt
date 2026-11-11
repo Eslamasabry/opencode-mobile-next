@@ -285,7 +285,9 @@ private fun RenameField(state: KitEdgeDockState, layout: SwellLayout, ring: KitD
                     .semantics { contentDescription = words.nickname },
             textStyle = style,
             // Wraps to the field's lines; Enter still saves (the IME's Done).
-            lineLimits = TextFieldLineLimits.MultiLine(1, DockDims.RENAME_LINES),
+            lineLimits = TextFieldLineLimits.MultiLine(1, layout.fieldLines.coerceAtLeast(1)),
+            // The swell grows to hold what the name measures (to four lines); beyond that the field scrolls itself.
+            onTextLayout = { result -> result()?.let { state.setRenameLines(it.lineCount) } },
             cursorBrush = SolidColor(colors.accent),
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
             onKeyboardAction = { state.endRename(save = true, text = field.text.toString()) },

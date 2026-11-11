@@ -101,7 +101,7 @@ internal object DockDims {
     /** Rename: B as long as the peek (the name gets room), the field up to this many lines, in B's own part. */
     const val RENAME_LEN = PEEK_MAX_LEN
     const val RENAME_H = 80f
-    const val RENAME_LINES = 3
+    const val RENAME_LINES = 4
     /** The rename field's line height per unit of text scale (the row title's, 16/22). */
     const val RENAME_LINE = 22f
     const val RENAME_PAD = 12f
@@ -415,6 +415,8 @@ internal data class SwellLayout(
     /** Rename: where the ring rides (centre, relative) and the field's rectangle (relative). */
     val rideX: Float = 0f,
     val field: DockRect? = null,
+    /** Rename: how many lines the field shows at once (it scrolls inside itself beyond them). */
+    val fieldLines: Int = 0,
 ) {
     /** The target at a point relative to B's top-left, or null. */
     fun targetAt(rx: Float, ry: Float): DockTarget? = targets.firstOrNull { it.kind != DockTargetKind.Header && it.rect.contains(rx, ry) }
@@ -435,18 +437,26 @@ internal fun swellLayout(
     s: Float,
     maxLength: Float,
     stateLine: Boolean = true,
+    renameLines: Int = DockDims.RENAME_LINES,
+    maxHeight: Float = Float.POSITIVE_INFINITY,
 ): SwellLayout {
     val pad = DockDims.SW_TIP_PAD + DockDims.SW_BASE_PAD
     if (kind == SwellKind.Rename) {
         val len = min(DockDims.RENAME_LEN, maxLength).coerceAtLeast(pad + 2 * DockDims.SW_CELL)
-        // The field holds up to three lines of the name (it wraps, never scrolls sideways out of sight), so the whole
-        // name being edited shows (device QA 2026-11-11, M3: "o.txt with one line", the rest scrolled out at the left).
-        val fieldH = DockDims.RENAME_LINES * DockDims.RENAME_LINE * s
+        // The field shows the whole name being edited: it grows with the name up to four lines (it wraps, never scrolls
+        // sideways out of sight), then scrolls inside itself with the caret kept in view (device QA 2026-11-11, M3: "o.txt
+        // with one line", the rest scrolled out; run 4, 3a: only two lines of a long name). A short area (the keyboard up)
+        // takes lines off the top of that, so the swell, its fillets and the strip's corners stay inside the area.
+        val lineH = DockDims.RENAME_LINE * s
+        val roomH = maxHeight - 2f * (DockDims.EDGE_MARGIN + DockDims.CORNER + DockDims.SW_FILLET_BLEND) - 2f * DockDims.RENAME_PAD
+        val cap = if (roomH.isFinite()) floor(roomH / lineH).toInt().coerceAtLeast(1) else DockDims.RENAME_LINES
+        val lines = renameLines.coerceIn(1, DockDims.RENAME_LINES).coerceAtMost(cap)
+        val fieldH = lines * lineH
         val h = max(DockDims.RENAME_H, fieldH + 2f * DockDims.RENAME_PAD)
         val rideX = DockDims.SW_TIP_PAD + 24f
         // The field: right of the ridden-out ring, in B's own part (never over the strip and its rings).
         val field = DockRect(rideX + 24f + 10f, (h - fieldH) / 2f, len - DockDims.SW_BASE_PAD, (h + fieldH) / 2f)
-        return SwellLayout(kind, len, h, min(DockDims.SW_END_R, h * 0.3f), filletFor(len, h), emptyList(), null, rideX, field)
+        return SwellLayout(kind, len, h, min(DockDims.SW_END_R, h * 0.3f), filletFor(len, h), emptyList(), null, rideX, field, lines)
     }
     val want = if (kind == SwellKind.Peek) DockDims.PEEK_MAX_LEN else pad + DockDims.SW_COLS * DockDims.SW_CELL
     val len = min(want, maxLength).coerceAtLeast(pad + 2 * DockDims.SW_CELL)
