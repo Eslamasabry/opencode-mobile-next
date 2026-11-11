@@ -44,7 +44,8 @@ object Sh {
     /** The repository root (Gradle runs desktopTest in native/engine/runtime). */
     val repo: File by lazy {
         var dir: File? = File("").absoluteFile
-        while (dir != null && !File(dir, "scripts/host/ubuntu-opencode.sh").isFile) dir = dir.parentFile
+        // native/scripts/host holds the native copy of the host script, so look for the repository's native/ build.
+        while (dir != null && !File(dir, "native/settings.gradle.kts").isFile) dir = dir.parentFile
         checkNotNull(dir) { "repository root not found" }
     }
     /** A Dart raw string constant's text, as Dart reads it (a first whitespace-only line is dropped). */

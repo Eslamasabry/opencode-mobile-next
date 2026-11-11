@@ -27,14 +27,14 @@ class BundledScriptsShellTest {
     @Test
     fun `B-LINUX-043 the Ubuntu host script passes bash syntax validation`() {
         val shell = bash ?: return
-        val script = repo?.let { File(it, "scripts/host/ubuntu-opencode.sh") }?.takeIf { it.isFile } ?: return
+        val script = repo?.let { File(it, "native/scripts/host/ubuntu-opencode.sh") }?.takeIf { it.isFile } ?: return
         val (code, text) = run(shell, "-n", script.path)
         assertEquals(0, code, text)
     }
 
     @Test
     fun `B-LINUX-043 the Ubuntu host script passes shellcheck when it is installed`() {
-        val script = repo?.let { File(it, "scripts/host/ubuntu-opencode.sh") }?.takeIf { it.isFile } ?: return
+        val script = repo?.let { File(it, "native/scripts/host/ubuntu-opencode.sh") }?.takeIf { it.isFile } ?: return
         val shellcheck = listOf("/usr/bin/shellcheck", "/usr/local/bin/shellcheck", "/bin/shellcheck")
             .firstOrNull { File(it).canExecute() } ?: return
         val (code, text) = run(shellcheck, "-S", "error", script.path)
