@@ -55,7 +55,10 @@ class KitStatusLineStackTest {
         // Squeezed beside two buttons the words got about a third of the line; now they get all of it past the glyph.
         assertTrue(words.right - words.left > (line.right - line.left) * 0.75f, "words $words in line $line")
         assertTrue(action.top >= words.bottom, "action $action under words $words")
-        assertTrue(dismiss.top >= words.bottom, "dismiss $dismiss under words $words")
+        // 23b67875e8: More and close stay on the top line at the right unless `controlsTogether` is set, and the app
+        // never sets it, so the app's placement is: close top-right beside the words, only the action under them.
+        assertTrue(dismiss.top < words.bottom, "dismiss $dismiss stays on the top line beside words $words")
+        assertTrue(dismiss.left >= words.right - 1.dp, "dismiss $dismiss at the right of words $words")
     }
 
     @Test
