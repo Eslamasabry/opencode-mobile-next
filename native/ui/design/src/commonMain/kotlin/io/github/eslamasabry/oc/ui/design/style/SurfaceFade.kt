@@ -40,6 +40,9 @@ public object SurfaceFade {
             fillStart = c(a.fillStart ?: a.fill, b.fillStart ?: b.fill),
             edgeStart = c(a.edgeStart ?: a.edgeEnd, b.edgeStart ?: b.edgeEnd),
             edgeEnd = c(a.edgeEnd ?: a.edgeStart, b.edgeEnd ?: b.edgeStart),
+            // A rim with a rest fades to and from a straight one through the straight one's own middle, so the rim never
+            // jumps (glass-in-the-kit 1a); two straight rims stay straight.
+            edgeRest = if (a.edgeRest == null && b.edgeRest == null) null else c(a.restOrMiddle(), b.restOrMiddle()),
             edgeWidthDp = d(a.edgeWidthDp, b.edgeWidthDp),
             shadows = shadows(a.shadows, b.shadows, t),
             paired = paired(a.paired, b.paired, t),
@@ -53,6 +56,14 @@ public object SurfaceFade {
             specular = c(a.specular, b.specular) ?: Argb(0),
             glint = d(a.glint, b.glint),
         )
+    }
+
+    /** The rim's colour halfway along it: its rest, or the middle of its straight fade; null without a rim colour. */
+    private fun SurfaceDecoration.restOrMiddle(): Argb? {
+        edgeRest?.let { return it }
+        val s = edgeStart ?: edgeEnd ?: return null
+        val e = edgeEnd ?: edgeStart ?: return null
+        return lerpColor(s, e, .5f)
     }
 
     /** Flutter `BoxShadow.lerpList`: pairs lerp; a shadow on one side only shrinks to nothing (`BoxShadow.scale`). */

@@ -467,22 +467,25 @@ internal fun DrawScope.drawGlassFace(d: SurfaceDecoration) {
             drawOutline(outline, Brush.linearGradient(listOf(Color(p.dark.v), Color.Transparent, Color(p.light.v))), style = Stroke(w))
         }
     }
-    // The rim, fading from the top start to the bottom end, inside the face (kit_surface_paint.dart:132-144).
+    // The rim, fading from the top start to the bottom end, inside the face (kit_surface_paint.dart:132-144); with a rest,
+    // lit at both ends.
     if (d.edgeWidthDp > 0f) {
         val s = d.edgeStart ?: d.edgeEnd
         val e = d.edgeEnd ?: d.edgeStart
-        if (s != null && e != null && (s.alpha > 0 || e.alpha > 0)) {
+        // The rest between the two lit ends (glass-in-the-kit 1a): a third stop halfway along the fade; null, a straight fade.
+        val r = d.edgeRest
+        if (s != null && e != null && (s.alpha > 0 || e.alpha > 0 || (r?.alpha ?: 0) > 0)) {
             val w = d.edgeWidthDp.dp.toPx()
             // The rim is inset by half its width: a pane narrower than the rim has no inside to draw it in.
             if (size.width > w && size.height > w) inset(w / 2f) {
                 val rim = shape.createOutline(size, layoutDirection, this)
-                if (s == e) {
+                if (s == e && r == null) {
                     drawOutline(rim, Color(s.v), style = Stroke(w))
                 } else {
                     drawOutline(
                         rim,
                         Brush.linearGradient(
-                            listOf(Color(s.v), Color(e.v)),
+                            listOfNotNull(Color(s.v), r?.let { Color(it.v) }, Color(e.v)),
                             start = Offset(if (rtl) size.width else 0f, 0f),
                             end = Offset(if (rtl) 0f else size.width, size.height),
                         ),

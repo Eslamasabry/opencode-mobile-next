@@ -72,9 +72,13 @@ public object GlassLooks {
      */
     public val Frosted: GlassLookPreset = GlassLookPreset(GlassLookId.Frosted, GlassLook.Frosted, lens = false, tintFactor = 1.3f)
 
-    /** [GlassLook.Default] with dark smoke on the floating pieces. */
+    /**
+     * [GlassLook.Default] with dark smoke on the floating pieces, and the clear pane rim it had before 2026-11-11
+     * (Frosted's): Smoked is no longer offered, so the step-1 lit bottom end does not change it
+     * (docs/designs/glass-in-the-kit.md 1a).
+     */
     public val Smoked: GlassLookPreset =
-        GlassLookPreset(GlassLookId.Smoked, GlassLook.Default, lens = true, tintFactor = 1f, smoked = true, smokeTint = .40f)
+        GlassLookPreset(GlassLookId.Smoked, GlassLook.Default.withPaneRimOf(GlassLook.Frosted), lens = true, tintFactor = 1f, smoked = true, smokeTint = .40f)
 
     /** Clear's specular, as a share of Default's. */
     public const val CLEAR_SPECULAR: Float = .8f

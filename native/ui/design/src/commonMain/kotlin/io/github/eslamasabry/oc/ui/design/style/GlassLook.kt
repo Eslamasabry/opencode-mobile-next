@@ -38,7 +38,35 @@ public data class GlassLook(
     val backdropLightGain: Float,
     val backdropLightMax: Float,
     val backdropLightBandDp: Float,
+    /**
+     * A clear pane's 1 dp white rim (owner 2026-11-09, "crisper": a sharp, thin white rim), white at these alphas along
+     * the rim's fade from the top-start corner to the bottom-end one: at its top start (the specular sits on it), in the
+     * rest of the rim between the two lit ends, and at its bottom end. One light, two lit arcs, as on the lens panes
+     * (owner 2026-11-11 on the home, "Is this supposed to be glass?"; docs/designs/glass-in-the-kit.md 1a). A null rest
+     * draws the rim straight from start to end, as before 2026-11-11. Chosen rows keep their accent rim.
+     */
+    val paneRimStartDark: Float,
+    val paneRimRestDark: Float?,
+    val paneRimEndDark: Float,
+    val paneRimStartLight: Float,
+    val paneRimRestLight: Float?,
+    val paneRimEndLight: Float,
 ) {
+    /** The clear pane rim's alphas for this theme: start, rest (null: straight from start to end), end. */
+    public fun paneRim(dark: Boolean): Triple<Float, Float?, Float> =
+        if (dark) Triple(paneRimStartDark, paneRimRestDark, paneRimEndDark) else Triple(paneRimStartLight, paneRimRestLight, paneRimEndLight)
+
+    /** This look with [other]'s clear pane rim. */
+    public fun withPaneRimOf(other: GlassLook): GlassLook =
+        copy(
+            paneRimStartDark = other.paneRimStartDark,
+            paneRimRestDark = other.paneRimRestDark,
+            paneRimEndDark = other.paneRimEndDark,
+            paneRimStartLight = other.paneRimStartLight,
+            paneRimRestLight = other.paneRimRestLight,
+            paneRimEndLight = other.paneRimEndLight,
+        )
+
     public companion object {
         /** Glass as it ships: clear and glossy, a bright Apple-like rim and specular (owner 2026-11-09, "more bright like apple"). */
         public val Default: GlassLook =
@@ -60,6 +88,16 @@ public data class GlassLook(
                 backdropLightGain = 3.2f,
                 backdropLightMax = .85f,
                 backdropLightBandDp = 1.5f,
+                // Dark (glass-in-the-kit 1a, 2026-11-11): a pane that stands on its own face on a dark page. The top start
+                // is unchanged (.24; the specular sits on it), the rest of the rim a little quieter than the old straight
+                // fade's middle (.10 against .155), and the bottom end lit (.30, was .07): the second lit arc.
+                paneRimStartDark = .24f,
+                paneRimRestDark = .10f,
+                paneRimEndDark = .30f,
+                // Light: unchanged in step 1 (the light theme's edge waits for its own mock, step 2).
+                paneRimStartLight = .60f,
+                paneRimRestLight = null,
+                paneRimEndLight = .16f,
             )
 
         /** The first clear panes (glass-v3, 2026-11-09 morning), kept for comparison and as a quieter preset. */
@@ -82,6 +120,13 @@ public data class GlassLook(
                 backdropLightGain = 0f,
                 backdropLightMax = 0f,
                 backdropLightBandDp = 1.5f,
+                // The rim as it was before 2026-11-11 (one lit arc, straight to a faint bottom end): Frosted keeps it.
+                paneRimStartDark = .24f,
+                paneRimRestDark = null,
+                paneRimEndDark = .07f,
+                paneRimStartLight = .60f,
+                paneRimRestLight = null,
+                paneRimEndLight = .16f,
             )
     }
 }

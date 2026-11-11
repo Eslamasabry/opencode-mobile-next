@@ -192,7 +192,7 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
             // A clear content pane (a card, a row group) keeps its first line of words below Glass's pane inset, where its
             // top sheen has mostly faded (GlassFinish.sheenAt); a chip's or a field's words may lie anywhere on it.
             val wordsDp = if (clear && input.role == SurfaceRole.Content) GlassFinish.PANE_WORDS_DP else 0f
-            remember(resolved, spots, solid, roles, clear) { glassRims(GlassFinish.thickened(resolved!!, roles, solid, spots, inks = if (clear) GlassFinish.paneInks(roles, solid) else null, wordsDp = wordsDp), roles, clear) }
+            remember(resolved, spots, solid, roles, clear, request.look) { glassRims(GlassFinish.thickened(resolved!!, roles, solid, spots, inks = if (clear) GlassFinish.paneInks(roles, solid) else null, wordsDp = wordsDp), roles, clear, request.look) }
         }
     // The frost under the face is decided by the decoration the surface settles on, never a fading one, so the tree
     // holds through a fade (kit_surface_look.dart:1257-1266).
@@ -360,8 +360,9 @@ public fun Modifier.kitDecorated(d: SurfaceDecoration, rtl: Boolean = false): Mo
             val end = d.edgeEnd ?: d.edgeStart
             if (start != null && end != null) {
                 val w = d.edgeWidthDp.dp.toPx()
-                if (start == end) drawOutline(outline, start.toColor(), style = Stroke(w))
-                else drawOutline(outline, Brush.linearGradient(listOf(start.toColor(), end.toColor())), style = Stroke(w))
+                val rest = d.edgeRest
+                if (start == end && rest == null) drawOutline(outline, start.toColor(), style = Stroke(w))
+                else drawOutline(outline, Brush.linearGradient(listOfNotNull(start.toColor(), rest?.toColor(), end.toColor())), style = Stroke(w))
             }
         }
     }

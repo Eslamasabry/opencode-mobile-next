@@ -68,7 +68,14 @@ class KitLiquidGlassTest {
             for (edge in listOf(lit.edgeStart!!, lit.edgeEnd!!)) {
                 assertEquals(0xFFFFFF, edge.v and 0xFFFFFF, "$pack dark=$dark: neutral white rim")
             }
-            assertTrue(lit.edgeStart!!.alpha > lit.edgeEnd!!.alpha, "$pack dark=$dark: brightest at the top start")
+            // Changed 2026-11-11 (glass-in-the-kit 1a): in dark the bottom end is lit too (one light, two lit arcs), so the
+            // top start is no longer brighter than the end there; the rest between them is the quietest part of the rim.
+            if (dark) {
+                assertTrue(lit.edgeRest!!.alpha < minOf(lit.edgeStart!!.alpha, lit.edgeEnd!!.alpha), "$pack dark: lit at both ends")
+                assertEquals(0xFFFFFF, lit.edgeRest!!.v and 0xFFFFFF, "$pack dark: neutral white rest")
+            } else {
+                assertTrue(lit.edgeStart!!.alpha > lit.edgeEnd!!.alpha, "$pack light: brightest at the top start")
+            }
         }
     }
 
