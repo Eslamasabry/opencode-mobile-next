@@ -1602,7 +1602,7 @@ class BuiltinLinux(private val context: Context) {
         val retained = diagnosticsPreferences.getStringSet("names", emptySet()).orEmpty() - names
         val edit = diagnosticsPreferences.edit().putStringSet("names", retained)
         names.forEach { name ->
-            listOf("exit", "uptime", "restarts", "launched", "exitAt", "stopRequested").forEach {
+            listOf("exit", "uptime", "restarts", "launched", "exitAt", "stopRequested", "launchedAt").forEach {
                 edit.remove("$name.$it")
             }
         }
@@ -2705,6 +2705,10 @@ class BuiltinLinux(private val context: Context) {
                 else null,
             restartCount = diagnosticsPreferences.getInt("$name.restarts", 0),
             hasLaunched = diagnosticsPreferences.getBoolean("$name.launched", false),
+            lastLaunchAtMs =
+                if (diagnosticsPreferences.contains("$name.launchedAt"))
+                    diagnosticsPreferences.getLong("$name.launchedAt", 0)
+                else null,
         )
 
     private fun saveDiagnosticRecord(name: String, record: ServiceDiagnostics) {
@@ -2722,6 +2726,8 @@ class BuiltinLinux(private val context: Context) {
         record.lastExitAtMs?.let { edit.putLong("$name.exitAt", it) } ?: edit.remove("$name.exitAt")
         record.lastStopRequested?.let { edit.putBoolean("$name.stopRequested", it) }
             ?: edit.remove("$name.stopRequested")
+        record.lastLaunchAtMs?.let { edit.putLong("$name.launchedAt", it) }
+            ?: edit.remove("$name.launchedAt")
         if (!edit.commit()) Log.w(TAG, "Service diagnostics could not be saved")
     }
 
@@ -2732,7 +2738,7 @@ class BuiltinLinux(private val context: Context) {
         notice: String?,
         script: String? = null,
     ): Service {
-        saveDiagnosticRecord(name, diagnosticRecord(name).launched())
+        saveDiagnosticRecord(name, diagnosticRecord(name).launched(System.currentTimeMillis()))
         return Service(process, port, notice, script)
     }
 

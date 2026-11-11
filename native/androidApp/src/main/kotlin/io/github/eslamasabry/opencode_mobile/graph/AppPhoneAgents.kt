@@ -2,6 +2,7 @@ package io.github.eslamasabry.opencode_mobile.graph
 
 import android.app.Application
 import android.os.Build
+import android.os.SystemClock
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.ContributesIntoSet
@@ -25,6 +26,7 @@ import io.github.eslamasabry.oc.engine.agents.catalog.AgentPins
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentDescriptor
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentSignInMethod
 import io.github.eslamasabry.oc.engine.agents.diagnostics.AgentHelperStatus
+import io.github.eslamasabry.oc.engine.agents.diagnostics.HelperNotice
 import io.github.eslamasabry.oc.engine.agents.gate.PhoneGate
 import io.github.eslamasabry.oc.engine.agents.host.AuthProbeError
 import io.github.eslamasabry.oc.engine.agents.host.AuthProjection
@@ -196,6 +198,21 @@ class AppPhoneAgents(
 
     private fun architecture(): AgentArchitecture? =
         PhoneAgentRules.architectureOf(Build.SUPPORTED_ABIS.toList())
+
+    /**
+     * The phone's boot or the app's install/update, whichever is later (wall clock): a helper exit from before it is
+     * not said as "stopped in the background" ([AgentHelperStatus.noticeSince]).
+     */
+    private val stopNewsSince: Long by lazy {
+        val boot = System.currentTimeMillis() - SystemClock.elapsedRealtime()
+        val updated =
+            try {
+                @Suppress("DEPRECATION") app.packageManager.getPackageInfo(app.packageName, 0).lastUpdateTime
+            } catch (_: Exception) {
+                0L
+            }
+        maxOf(boot, updated)
+    }
 
     /** "arm64 · Android 15" for the Agents page's phone status line. */
     private fun device(): PhoneDevice? {
@@ -429,8 +446,8 @@ class AppPhoneAgents(
             conversations = authOwner?.let { ProfileId("${it.raw}-agents") },
             device = device(),
             installation = shown,
-            helperStoppedUnexpectedly = helper?.unexpectedStop == true,
-            helperMayHaveBeenStoppedByAndroid = helper?.possibleResourceKill == true,
+            helperStoppedUnexpectedly = HelperStopNews.stopped(helper, stopNewsSince),
+            helperMayHaveBeenStoppedByAndroid = HelperStopNews.byAndroid(helper, stopNewsSince),
             agents =
                 agents
                     .map { agent ->
@@ -1140,4 +1157,16 @@ class AppPhoneAgents(
         /** A version answer a step made out of date ([forgetFacts]). */
         const val STALE = Long.MIN_VALUE
     }
+}
+
+/**
+ * The Agents state's two stop flags from the helper's exit record ([AgentHelperStatus.noticeSince]). A SIGKILL code on
+ * a stop the person asked for, an exit older than the helper's latest launch, or one from before [since] (the phone's
+ * boot or the app's install/update) is not a stop on its own; the "maybe Android" flag only refines a real one.
+ */
+internal object HelperStopNews {
+    fun stopped(helper: AgentHelperStatus?, since: Long): Boolean = helper?.noticeSince(since) != null
+
+    fun byAndroid(helper: AgentHelperStatus?, since: Long): Boolean =
+        helper?.noticeSince(since) == HelperNotice.PossiblyStoppedByAndroid
 }

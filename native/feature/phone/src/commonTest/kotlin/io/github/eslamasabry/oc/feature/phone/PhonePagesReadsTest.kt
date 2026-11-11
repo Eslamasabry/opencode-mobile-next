@@ -145,21 +145,72 @@ class PhonePagesReadsTest {
     @Test
     fun `S15 a check refused because another phone task held the slot is read again, not reported`() {
         val busy = Failure.Runtime(RuntimeProblem.SlotBusy)
+        // Busy: read again up to the bound, then say so.
+        assertNull(settle(List(InstalledInventoryRetry.ATTEMPTS - 1) { busy } + null))
+        assertEquals(busy, settle(List(InstalledInventoryRetry.ATTEMPTS) { busy }))
+        assertFalse(InstalledInventoryRetry.again(InstalledInventoryRetry.ATTEMPTS))
+    }
+
+    // Device QA basics-3 B18: the first open after a restart failed twice, 1.7 s apart (the old rule's one read again),
+    // and the same read worked a few seconds later; one press on Try again cleared it.
+    @Test
+    fun `B18 a check that fails while the phone settles is read again quietly and the list shows`() {
         val broken = Failure.Runtime(RuntimeProblem.Generic)
-        // Busy: read again up to the bound.
-        assertTrue((1 until InstalledInventoryRetry.ATTEMPTS).all { InstalledInventoryRetry.again(it, busy) })
-        assertFalse(InstalledInventoryRetry.again(InstalledInventoryRetry.ATTEMPTS, busy))
-        // Any other failure keeps its one second read, then says so.
-        assertTrue(InstalledInventoryRetry.again(1, broken))
-        assertFalse(InstalledInventoryRetry.again(2, broken))
+        assertNull(settle(listOf(broken, broken, null)))
+        // Bounded: a check that really cannot run is said after the last read, about 15 s of pauses in all.
+        assertEquals(broken, settle(List(InstalledInventoryRetry.ATTEMPTS) { broken }))
+        val pauses = (1 until InstalledInventoryRetry.ATTEMPTS).sumOf { InstalledInventoryRetry.pauseMs(it) }
+        assertEquals(15_000L, pauses)
+        // The read after the device's two failures comes 4.5 s after the first one, not 1.5 s.
+        assertTrue(InstalledInventoryRetry.pauseMs(2) > InstalledInventoryRetry.pauseMs(1))
+    }
+
+    // Gate: reads take time of their own (8.9 s on the device), so five failing reads plus 15 s of pauses could keep a
+    // really broken Linux behind "Checking…" for a minute or more. No read starts later than WINDOW_MS after the first.
+    @Test
+    fun `B18 failing reads stop at the time window, so a broken Linux is said within about 40 s`() {
+        // The device's own sequence (8.9 s fail, 3.4 s fail, then a good read) still reaches its third read.
+        assertTrue(InstalledInventoryRetry.again(2, elapsedMs = 8_900 + 1_500 + 3_400))
+        // Slow failures (9 s each): the third read is the last, and the error shows 31.5 s after the first read began.
+        assertEquals(3 to 31_500L, failingReads(9_000))
+        // Quick failures (1 s each) keep all five reads and end at 20 s.
+        assertEquals(InstalledInventoryRetry.ATTEMPTS to 20_000L, failingReads(1_000))
+        // A read that runs past the window is never followed by another.
+        assertFalse(InstalledInventoryRetry.again(1, elapsedMs = InstalledInventoryRetry.WINDOW_MS))
+    }
+
+    /** Reads that each take [readMs] and fail: how many ran, and when the last one ended (ms after the first began). */
+    private fun failingReads(readMs: Long): Pair<Int, Long> {
+        var clock = readMs
+        var attempt = 1
+        while (InstalledInventoryRetry.again(attempt, elapsedMs = clock)) {
+            clock += InstalledInventoryRetry.pauseMs(attempt) + readMs
+            attempt++
+        }
+        return attempt to clock
+    }
+
+    /**
+     * PhoneDetailsWiring's read loop over [reads] (a failure, or null for a read that worked): the failure the row is
+     * left with, or null when the list was read.
+     */
+    private fun settle(reads: List<Failure?>): Failure? {
+        val queue = ArrayDeque(reads)
+        var result = queue.removeFirst()
+        var attempt = 1
+        while (result != null && InstalledInventoryRetry.again(attempt)) {
+            result = queue.removeFirst()
+            attempt++
+        }
+        return result
     }
 
     @Test
     fun `S15 while Add tools' install runs no check is retried and the row says Installing, not a failure`() {
         val busy = Failure.Runtime(RuntimeProblem.SlotBusy)
         // The install holds the one task slot for minutes: waiting reads would only end as "busy".
-        assertFalse(InstalledInventoryRetry.again(1, busy, addingTools = true))
-        assertFalse(InstalledInventoryRetry.again(2, busy, addingTools = true))
+        assertFalse(InstalledInventoryRetry.again(1, addingTools = true))
+        assertFalse(InstalledInventoryRetry.again(2, addingTools = true))
         val names = persistentListOf("Linux base", "Git and SSH")
         val installing =
             PhoneDetailsUi(installed = true, installedNames = names, addingTools = true, inventoryFailure = busy)
