@@ -88,10 +88,10 @@ internal fun unwrapNotices(lines: List<String>): String {
 }
 
 @Composable
-internal fun ColumnScope.NoticesBody() {
+internal fun ColumnScope.NoticesBody(file: String = "files/THIRD_PARTY_NOTICES.md") {
     var text by remember { mutableStateOf<String?>(null) }
-    LaunchedEffect(Unit) {
-        text = noticesForReading(readerNotices(Res.readBytes("files/THIRD_PARTY_NOTICES.md").decodeToString()))
+    LaunchedEffect(file) {
+        text = noticesForReading(readerNotices(Res.readBytes(file).decodeToString()))
     }
     val content = text
     if (content == null) {
