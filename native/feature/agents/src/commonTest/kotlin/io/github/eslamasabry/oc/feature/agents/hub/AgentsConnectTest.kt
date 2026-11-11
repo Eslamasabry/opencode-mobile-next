@@ -188,6 +188,38 @@ class AgentsConnectTest {
     }
 
     @Test
+    fun `a helper Android ended after it was connected is started again by the page, once`() = runTest {
+        val phone = Phone(listOf(claudeReady))
+        val host = Host()
+        val presenter = presenter(this, phone, host)
+        assertEquals(1, host.calls)
+        val running = phone.state.value
+        val stopped = running.copy(helperStoppedUnexpectedly = true, helperMayHaveBeenStoppedByAndroid = true)
+        phone.state.value = stopped
+        assertEquals(2, host.calls, "the page answers the stop itself; before, nothing started the helper again")
+        // Android ends it again: no loop. The notice stays, and its own action starts the helper.
+        phone.state.value = running
+        phone.state.value = stopped
+        assertEquals(2, host.calls)
+        assertTrue(presenter.state.value.phone.helperStoppedUnexpectedly)
+        presenter.connectPhoneHelper()
+        assertEquals(3, host.calls)
+    }
+
+    @Test
+    fun `the recorded stop is not shown while the page is starting the helper`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val phone = Phone(listOf(claudeReady))
+        phone.state.value =
+            phone.state.value.copy(helperStoppedUnexpectedly = true, helperMayHaveBeenStoppedByAndroid = true)
+        val presenter = presenter(this, phone, Host().also { it.gate = gate })
+        assertTrue(presenter.state.value.helperConnecting)
+        assertFalse(presenter.state.value.phone.helperStoppedUnexpectedly)
+        assertFalse(presenter.state.value.phone.helperMayHaveBeenStoppedByAndroid)
+        gate.complete(Unit)
+    }
+
+    @Test
     fun `B-AGENT-183 an agent that finishes installing connects, a refresh of the same agents does not`() = runTest {
         val host = Host()
         val phone = Phone(listOf(geminiMissing))

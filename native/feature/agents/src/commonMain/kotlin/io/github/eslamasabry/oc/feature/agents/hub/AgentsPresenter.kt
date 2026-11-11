@@ -42,6 +42,7 @@ public class AgentsPresenter(
     /** The running helper connection, the installed agents it was last tried for, and a wish to run once more. */
     private var connectJob: Job? = null
     private var triedFor: Set<String> = emptySet()
+    private var restartedStopped = false
     private var connectAgain = false
     private var followJob: Job? = null
     private var readJob: Job? = null
@@ -122,7 +123,11 @@ public class AgentsPresenter(
 
     public val state: StateFlow<AgentsUi> =
         combine(local, computers.computers, phone.state) { own, saved, phoneState ->
-                own.copy(computers = saved, phone = phoneState.withoutStaleStop(own.helperConnectFailed))
+                own.copy(
+                    computers = saved,
+                    // While the page is starting the helper the recorded stop is already being answered.
+                    phone = phoneState.withoutStaleStop(own.helperConnectFailed || own.helperConnecting),
+                )
             }
             .stateIn(
                 scope,
@@ -549,8 +554,23 @@ public class AgentsPresenter(
     private fun connectWhenInstalled(phoneState: PhoneAgentsState) {
         if (!connectable(phoneState)) return
         val installed = phoneInstalledAgents(phoneState)
-        if (triedFor.containsAll(installed)) return
+        if (triedFor.containsAll(installed)) {
+            restartStoppedOnce(phoneState)
+            return
+        }
         triedFor = triedFor + installed
+        connectHelper()
+    }
+
+    /**
+     * The helper was connected and then stopped on its own (Android ended it): the page starts it again by itself,
+     * once. A second stop is left to the notice's own "Start the agent helper", so a phone that keeps ending the
+     * helper is never restarted in a loop.
+     */
+    private fun restartStoppedOnce(phoneState: PhoneAgentsState) {
+        val stopped = phoneState.helperStoppedUnexpectedly || phoneState.helperMayHaveBeenStoppedByAndroid
+        if (!stopped || restartedStopped || connectJob?.isActive == true || local.value.helperConnectFailed) return
+        restartedStopped = true
         connectHelper()
     }
 

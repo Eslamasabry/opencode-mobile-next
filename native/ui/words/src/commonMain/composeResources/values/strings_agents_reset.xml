@@ -6,6 +6,7 @@
     <string name="agentsRestartAfterReset">Restart the app before connecting or using phone agents again.</string>
     <string name="agentsHelperStopped">The agent helper stopped unexpectedly. Check the phone setup before starting another conversation.</string>
     <string name="agentsHelperMayHaveStopped">The agent helper stopped. Android may have stopped it to free memory or limit background processes.</string>
+    <string name="agentsHelperStartAgain">Start the agent helper</string>
     <string name="agentsPhoneHelperProfile">Phone agents</string>
     <string name="agentsPreviousVersion">Use earlier %1$s version</string>
     <string name="agentsPreviousVersionBody">Switch to the verified earlier version kept on this phone? The helper will stop first, then phone agents connect again. Sign-ins and conversations stay.</string>

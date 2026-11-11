@@ -6,6 +6,7 @@
     <string name="agentsRestartAfterReset">أعد تشغيل التطبيق قبل الاتصال أو استخدام وكلاء الهاتف مجددًا.</string>
     <string name="agentsHelperStopped">توقف مساعد الوكلاء بشكل غير متوقع. تحقق من إعداد الهاتف قبل بدء محادثة أخرى.</string>
     <string name="agentsHelperMayHaveStopped">توقف مساعد الوكلاء. ربما أوقفه Android لتحرير الذاكرة أو للحد من العمليات في الخلفية.</string>
+    <string name="agentsHelperStartAgain">تشغيل مساعد الوكلاء</string>
     <string name="agentsPhoneHelperProfile">وكلاء الهاتف</string>
     <string name="agentsPreviousVersion">استخدام إصدار أقدم من %1$s</string>
     <string name="agentsPreviousVersionBody">هل تريد التبديل إلى الإصدار الأقدم الموثّق المحفوظ على هذا الهاتف؟ سيتوقف المساعد أولًا ثم يعيد وكلاء الهاتف الاتصال. تبقى تسجيلات الدخول والمحادثات.</string>

@@ -74,6 +74,7 @@ import io.github.eslamasabry.oc.ui.words.res.agentComputerCodexNote
 import io.github.eslamasabry.oc.ui.words.res.agentComputerPaseo
 import io.github.eslamasabry.oc.ui.words.res.agentDraftTitle
 import io.github.eslamasabry.oc.ui.words.res.agentsHelperMayHaveStopped
+import io.github.eslamasabry.oc.ui.words.res.agentsHelperStartAgain
 import io.github.eslamasabry.oc.ui.words.res.agentsHelperStopped
 import io.github.eslamasabry.oc.ui.words.res.agentsHubAddComputer
 import io.github.eslamasabry.oc.ui.words.res.agentsHubAddFailed
@@ -420,6 +421,15 @@ private fun PhoneTab(
                 else Res.string.agentsHelperStopped
             ),
             gutter,
+            // The way forward sits on the notice itself: the same start the page makes on its own.
+            actions =
+                listOf(
+                    KitLineAction(
+                        stringResource(Res.string.agentsHelperStartAgain),
+                        actions::connectPhoneHelper,
+                        testTag = "agents-helper-start-again",
+                    )
+                ),
         )
     }
     if (state.resetFailed) {
