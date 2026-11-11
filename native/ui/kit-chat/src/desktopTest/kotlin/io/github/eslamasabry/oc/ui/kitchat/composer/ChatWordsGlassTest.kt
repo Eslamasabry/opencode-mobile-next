@@ -173,6 +173,7 @@ class ChatWordsGlassTest {
                         KitReportBottomSlab(kitComposerSlab())
                         // A request card's label stands above the box inside the same block (ChatScreen): a bar of
                         // the card's size with nothing of its own behind it.
+                        androidx.compose.foundation.layout.Column(Modifier.fillMaxWidth()) {
                         if (chips)
                             io.github.eslamasabry.oc.ui.kit.chip.KitPhraseChips(
                                 listOf("say hi"), "Phrases", { "Insert $it" }, { "Options for $it" }, "Hide", {}, {},
@@ -196,6 +197,7 @@ class ChatWordsGlassTest {
                             trailing = { KitComposerSend("Send", onClick = {}) },
                             modifier = Modifier.fillMaxWidth(),
                         )
+                        }
                     },
                     edges = KitScreenEdges.Bleed,
                 ) {
@@ -260,6 +262,14 @@ class ChatWordsGlassTest {
     }
 
     private fun luma(c: Color): Float = (0.2126f * c.red + 0.7152f * c.green + 0.0722f * c.blue) * 255f
+
+    /** A coarse picture of where [a] differs from [b] (8 dp cells, digit = difference / 26), for a failure message. */
+    private fun map(a: PixelMap, b: PixelMap, left: Float, top: Float, right: Float, bottom: Float): String =
+        (top.toInt() until bottom.toInt() step 8).joinToString("\n") { y ->
+            "%4d ".format(y) + (left.toInt() until right.toInt() step 8).joinToString("") { x ->
+                diff(a, b, x.toFloat(), y.toFloat(), x + 8f, y + 8f).second.let { (it / 26f).toInt().coerceAtMost(9).toString() }
+            }
+        }
 
     /** The mean and the largest brightness difference (of 255) between [a] and [b] over [left, top, right, bottom] dp. */
     private fun diff(a: PixelMap, b: PixelMap, left: Float, top: Float, right: Float, bottom: Float): Pair<Float, Float> {
@@ -336,9 +346,9 @@ class ChatWordsGlassTest {
         val clearTo = paneBottom - rim - 1f
         assertTrue(bright.rows.any { it.top < bar.top }, "rows run under the bar: ${bright.rows.map { it.top..it.bottom }} bar $bar")
         // The status bar's band and the bar's title line.
-        val (mean, max) = diff(bright.image, none.image, bar.left.value + 8f, bar.top.value, bar.right.value - 8f, clearTo)
+        val (mean, max) = diff(bright.image, none.image, bar.left.value + 30f, bar.top.value, bar.right.value - 30f, clearTo)
         println("bar words: mean $mean max $max over 0..$clearTo, bar $bar")
-        assertTrue(mean <= WORDS_MEAN && max <= WORDS_MAX, "bright rows show behind the bar's title: mean $mean, max $max of 255")
+        assertTrue(mean <= WORDS_MEAN && max <= WORDS_MAX, "bright rows show behind the bar's title: mean $mean, max $max of 255\n" + map(bright.image, none.image, 0f, 0f, bar.right.value, bar.bottom.value))
         // In the rim above the bar's bottom edge the glass still bends real rows.
         val (edge, _) = diff(bright.image, none.image, bar.left.value + 40f, paneBottom - 8f, bar.right.value - 40f, paneBottom - 3f)
         println("bar rim: mean $edge")

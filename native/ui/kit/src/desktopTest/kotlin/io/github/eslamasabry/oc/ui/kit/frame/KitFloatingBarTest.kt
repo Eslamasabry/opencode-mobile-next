@@ -399,7 +399,7 @@ class KitFloatingBarTest {
             for (line in lines) {
                 val (mean, max) = diff(bright.image, none.image, line.left.value + 8f, line.top.value + 2f, line.right.value - 8f, minOf(line.bottom.value - 2f, clear))
                 println("$page words over $line: mean $mean max $max")
-                assertTrue(mean <= WORDS_MEAN && max <= WORDS_MAX, "$page: bright rows show behind the words on the pane at $line: mean $mean, max $max of 255")
+                assertTrue(mean <= WORDS_MEAN && max <= WORDS_MAX, "$page: bright rows show behind the words on the pane at $line: mean $mean, max $max of 255, pane $capsule\n" + map(bright.image, none.image, 0f, 0f, W.toFloat(), capsule.bottom.value + 4f))
             }
             // Beside the words, in the pane's rim above its bottom edge, the rows still bend under the glass.
             val (rim, _) = diff(bright.image, none.image, capsule.left.value + 40f, capsule.bottom.value - 8f, capsule.right.value - 40f, capsule.bottom.value - 3f)
@@ -419,6 +419,14 @@ class KitFloatingBarTest {
         for (y in 0 until home.image.height) for (x in 0 until home.image.width) img.setRGB(x, y, home.image[x, y].toArgb())
         ImageIO.write(img, "png", File(out, "render-words-home-$tag.png"))
     }
+
+    /** A coarse picture of where [a] differs from [b] (8 dp cells, digit = difference / 26), for a failure message. */
+    private fun map(a: PixelMap, b: PixelMap, left: Float, top: Float, right: Float, bottom: Float): String =
+        (top.toInt() until bottom.toInt() step 8).joinToString("\n") { y ->
+            "%4d ".format(y) + (left.toInt() until right.toInt() step 8).joinToString("") { x ->
+                diff(a, b, x.toFloat(), y.toFloat(), x + 8f, y + 8f).second.let { (it / 26f).toInt().coerceAtMost(9).toString() }
+            }
+        }
 
     /** The mean and the largest brightness difference (of 255) between [a] and [b] over the dp rectangle. */
     private fun diff(a: PixelMap, b: PixelMap, left: Float, top: Float, right: Float, bottom: Float): Pair<Float, Float> {
