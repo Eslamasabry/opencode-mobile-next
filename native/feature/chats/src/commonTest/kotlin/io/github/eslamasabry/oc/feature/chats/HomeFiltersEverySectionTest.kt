@@ -69,7 +69,7 @@ class HomeFiltersEverySectionTest {
         assertEquals(listOf("w1"), second.brief?.rows?.map { it.ref.sessionId.raw }, "web's own finished run is still said")
         assertEquals(0, second.brief?.more, "the hidden api runs are not counted under web")
         assertFalse(second.brief!!.unknown, "a run the filter hides is not a run the brief cannot name")
-        assertEquals(listOf("w1"), second.brief!!.acknowledgement.unreviewed.map { it.session.id.raw }, "Mark all seen marks only what is shown")
+        assertEquals(listOf("w1"), second.brief.acknowledgement.unreviewed.map { it.session.id.raw }, "Mark all seen marks only what is shown")
         assertEquals(2, second.shownCount, "All conversations counts web's two")
         assertEquals(8, second.allCount, "the projects sheet's All projects still counts everything")
     }
@@ -120,7 +120,7 @@ class HomeFiltersEverySectionTest {
                 feed.filter { item ->
                     (filters.projectDirectory == null || item.directory == filters.projectDirectory) &&
                         (!filters.running || item.status == ChatStatus.Running) &&
-                        (filters.identities == null || item.identity in filters.identities!!) &&
+                        (filters.identities == null || item.identity in filters.identities) &&
                         (filters.query.isBlank() || "Chat ${item.sessionId.raw}".contains(filters.query)) &&
                         !filters.otherFolders
                 }.mapTo(hashSetOf()) { it.identity }
