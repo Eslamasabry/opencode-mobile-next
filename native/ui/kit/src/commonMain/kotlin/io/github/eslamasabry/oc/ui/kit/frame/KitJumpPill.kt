@@ -133,26 +133,8 @@ public fun KitJumpPill(
 ) {
     kitAssert(label.isNotBlank()) { "KitJumpPill: a pill always carries words" }
     val state = KitMotion.state
-    // Over a stacked bottom block (chips or a request card above the box) the pill stands above the block, not joined
-    // to the box: the body fades out higher (pillClear) and the pill's glass reads a copy of the list's recording
-    // cleared from its top edge down, so no transcript runs through its words.
-    val bottom = LocalKitScreenBottom.current
-    val standing = bottom != null && backdrop != null && edge == KitJumpEdge.Bottom && kitScreenBottomIsStacked()
-    val clearing = if (standing && backdrop != null) rememberKitWordsFade(backdrop) else null
-    ReportPillClear(bottom, standing && visible, state.reduced)
-    val glass = clearing?.faded ?: backdrop
-    val density = LocalDensity.current
-    val reach = LocalKitTokens.current.minTarget
-    val clearedModifier =
-        if (clearing == null || bottom == null) modifier
-        else
-            modifier.kitWordsFadeRecorder(
-                clearing,
-                { bottom.blockTop - with(density) { reach.dp.toPx() } },
-                { with(density) { PILL_CLEAR_RIM_DP.dp.toPx() } },
-            )
     if (state.reduced) {
-        if (visible) PillFace(label, onClick, clearedModifier, edge, glass)
+        if (visible) PillFace(label, onClick, modifier, edge, backdrop)
         return
     }
     val specs = KitMotion.specs
@@ -216,35 +198,9 @@ public fun KitJumpPill(
         fadeOut(specs.pace(KitPace.Quick)) +
             (if (risePx != 0) slideOutVertically(specs.pace<IntOffset>(KitPace.Quick)) { risePx } else ExitTransition.None) +
             if (grows) scaleOut(specs.spatialFast(), targetScale = PILL_ENTER_SCALE) else ExitTransition.None
-    AnimatedVisibility(visible, clearedModifier, enter = enter, exit = exit, label = "kit.jump") {
-        PillFace(label, onClick, Modifier.kitLeaving(transition.targetState == EnterExitState.PostExit), edge, glass)
+    AnimatedVisibility(visible, modifier, enter = enter, exit = exit, label = "kit.jump") {
+        PillFace(label, onClick, Modifier.kitLeaving(transition.targetState == EnterExitState.PostExit), edge, backdrop)
     }
-}
-
-/** How deep, dp, the pill's copy of the recording fades out from the pill target's top edge (its face starts 8 dp in). */
-private const val PILL_CLEAR_RIM_DP = 8
-
-/**
- * Tells the bottom block how far above it the standing pill reaches ([KitScreenBottom.pillClear]): its target's height
- * times its show fraction, on the pill's own motion (STANDARD in, QUICK out; instant when motion is reduced), so the
- * body's fade follows the pill without a step. Written while animating, read only when the body draws.
- */
-@Composable
-private fun ReportPillClear(bottom: KitScreenBottom?, shown: Boolean, reduced: Boolean) {
-    if (bottom == null) return
-    val reach = with(LocalDensity.current) { LocalKitTokens.current.minTarget.dp.toPx() }
-    val specs = KitMotion.specs
-    val fraction = remember { androidx.compose.animation.core.Animatable(0f) }
-    androidx.compose.runtime.LaunchedEffect(shown, reduced, reach) {
-        val to = if (shown) 1f else 0f
-        if (reduced) {
-            fraction.snapTo(to)
-            bottom.pillClear = to * reach
-        } else {
-            fraction.animateTo(to, specs.pace<Float>(if (shown) KitPace.Standard else KitPace.Quick)) { bottom.pillClear = value * reach }
-        }
-    }
-    androidx.compose.runtime.DisposableEffect(bottom) { onDispose { bottom.pillClear = 0f } }
 }
 
 /** How long a joined pill waits for its glass to join before it shows as a lone pane, ms. */
