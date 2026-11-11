@@ -38,12 +38,14 @@ class E20S09StateActionsTest {
             }
         }
         val tryAgain = onNodeWithText("Try again").fetchSemanticsNode().boundsInRoot
-        for (label in listOf("Change server", "Copy details")) {
-            // 0fe8167abe: a stacked text action is pulled back 8 dp and hugs its width (Dart `KitInset`), so its WORDS,
-            // not its box, start on Try again's edge, the text above's edge.
-            val words = onNodeWithText(label, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
-            assertEquals(tryAgain.left, words.left, 1f, "$label's words start where Try again starts: $words vs $tryAgain")
-            assertTrue(words.right <= tryAgain.right, "$label hugs its words inside Try again's width: $words vs $tryAgain")
-        }
+        // 0fe8167abe: stacked text actions sit in one wrapping row, pulled back 8 dp (Dart `KitInset`) and hugging their
+        // width, so the first one's WORDS (not its box) start on Try again's edge and the next one follows on the line.
+        val change = onNodeWithText("Change server", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        assertEquals(tryAgain.left, change.left, 1f, "Change server's words start where Try again starts: $change vs $tryAgain")
+        val copy = onNodeWithText("Copy details", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        val wrapped = copy.top >= change.bottom
+        if (wrapped) assertEquals(tryAgain.left, copy.left, 1f, "Copy details wrapped onto its own line: $copy vs $tryAgain")
+        else assertTrue(copy.left >= change.right, "Copy details follows Change server on the same line: $copy vs $change")
+        assertTrue(copy.right <= tryAgain.right, "Copy details stays inside Try again's width: $copy vs $tryAgain")
     }
 }
