@@ -487,7 +487,7 @@
     <string name="agentComputerCodex">Codex</string>
     <string name="agentComputerCodexNote">Hubungkan ke server aplikasi Codex resmi lewat WebSocket. Masukkan alamatnya dan folder proyek lengkap di komputer itu.</string>
     <string name="agentErrorOpenSettings">Buka pengaturan</string>
-    <string name="agentDraftTitle">Catatan percakapan</string>
+    <string name="agentDraftTitle">Salin percakapan</string>
     <string name="agentDraftReadOnly">Tinjau catatan sebelum menyalinnya ke agen lain. Ini tidak memulai, melanjutkan, atau mengubah percakapan.</string>
     <string name="agentDraftGuide">1. Pilih percakapan di bawah.\n2. Tinjau catatan dan pemberitahuan tentang giliran lama yang dihilangkan.\n3. Salin hanya saat Anda siap membagikannya.</string>
     <string name="agentDraftLoading">Membaca percakapan</string>
@@ -503,4 +503,5 @@
     <string name="agentDraftTooLarge">Giliran terbaru percakapan ini terlalu besar untuk disertakan tanpa kehilangan teks.</string>
     <string name="agentPhoneCheck">Periksa agen di ponsel</string>
     <string name="agentsCatalogNeedsPhoneSetup">Siapkan dulu server bawaan di ponsel ini. Lalu kembali ke sini untuk memasang agen ini.</string>
+    <string name="agentDraftAsCopied">Catatan seperti yang akan disalin</string>
 </resources>

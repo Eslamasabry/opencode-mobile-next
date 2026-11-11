@@ -11,7 +11,7 @@
     <string name="reportR1Send">Kirim laporan</string>
     <string name="reportR1CopyText">Salin teks</string>
     <string name="reportR1PostGitHub">Posting secara publik di GitHub</string>
-    <string name="reportR1NoSend">Versi ini tidak dapat mengirim laporan. Salin teksnya, atau posting di GitHub.</string>
+    <string name="reportR1NoSend">Versi ini tidak dapat mengirim laporan dari aplikasi. Salin teksnya untuk dibagikan lewat pesan, atau posting secara publik di GitHub.</string>
     <string name="reportR1SheetSubtitle">Inilah yang persis akan dikirim.</string>
     <string name="reportR1Words">Tulisan Anda</string>
     <string name="reportR1NoWords">Tidak ada tulisan</string>
@@ -49,4 +49,5 @@
     <string name="reportR1KindOther">Masalah lain</string>
     <string name="reportKeptCopyErrors">Salin log kesalahan</string>
     <string name="reportKeptClearErrors">Hapus kesalahan</string>
+    <string name="reportKeptErrorsNote">Error yang dicatat aplikasi dengan sendirinya. Error ini tetap di ponsel ini dan tidak ditambahkan ke laporan. Salin ke laporan jika membantu menjelaskan apa yang terjadi.</string>
 </resources>

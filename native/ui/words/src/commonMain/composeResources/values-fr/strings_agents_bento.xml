@@ -18,8 +18,8 @@
     <string name="agentsComputerReadFailed">Les agents de cet ordinateur n’ont pas pu être lus. Tirez vers le bas pour réessayer.</string>
     <string name="agentsNewChat">Nouvelle conversation</string>
     <string name="agentsNewChatWith">Nouvelle conversation avec %1$s</string>
-    <string name="agentsConversationsStored">Où les conversations sont stockées</string>
-    <string name="agentsConversationsStoredOn">Où les conversations sont stockées\u00A0: %1$s</string>
+    <string name="agentsConversationsStored">Copier une conversation pour un autre agent</string>
+    <string name="agentsConversationsStoredOn">Copier une conversation de %1$s</string>
     <string name="agentsHostAccount">Compte de l’hôte\u00A0: %1$s</string>
     <string name="agentsHelperUpdateRequired">Les agents du téléphone ne sont pas connectés\u00A0: l’assistant des agents est absent ou trop ancien pour fonctionner.</string>
     <string name="agentsHelperUpdateAction">Mettre à jour l’assistant des agents</string>

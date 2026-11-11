@@ -11,7 +11,7 @@
     <string name="reportR1Send">Отправить отчёт</string>
     <string name="reportR1CopyText">Скопировать текст</string>
     <string name="reportR1PostGitHub">Опубликовать на GitHub</string>
-    <string name="reportR1NoSend">В этой версии нельзя отправлять отчёты. Скопируйте текст или опубликуйте его на GitHub.</string>
+    <string name="reportR1NoSend">Эта версия не может отправлять отчёты из приложения. Скопируйте текст, чтобы поделиться им в сообщении, или опубликуйте его на GitHub, где его увидят все.</string>
     <string name="reportR1SheetSubtitle">Именно это и будет отправлено.</string>
     <string name="reportR1Words">Ваше описание</string>
     <string name="reportR1NoWords">Ничего не написано</string>
@@ -49,4 +49,5 @@
     <string name="reportR1KindOther">Другая проблема</string>
     <string name="reportKeptCopyErrors">Скопировать журнал ошибок</string>
     <string name="reportKeptClearErrors">Очистить ошибки</string>
+    <string name="reportKeptErrorsNote">Ошибки, которые приложение заметило само. Они остаются на этом телефоне и не добавляются в отчёт. Скопируйте их туда, если они помогают объяснить, что случилось.</string>
 </resources>

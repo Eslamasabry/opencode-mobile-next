@@ -853,4 +853,6 @@
     <string name="appearancePreviewReply">Готово. Изменено три файла, все проверки пройдены.</string>
     <string name="appearancePreviewAction">Проверить изменения</string>
     <string name="appearancePreviewSpoken">Пример приложения с этими настройками</string>
+    <string name="consentWhyNeedsYouBlocked">Android блокирует уведомления этого приложения. Нажмите, чтобы исправить это в разделе «Уведомления».</string>
+    <string name="consentWhyNeedsYouWhileOpen">Уведомления приходят, только пока приложение открыто. Нажмите, чтобы оставить фоновое подключение включённым.</string>
 </resources>

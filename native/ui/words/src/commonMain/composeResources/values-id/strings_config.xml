@@ -2,7 +2,11 @@
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
     <string name="configInspectionTitle">Konfigurasi server</string>
-    <string name="configInspectionExplanation">Baca sumber konfigurasi server menurut urutan prioritas. Kunci, token, nilai lingkungan, header, perintah, dan prompt disembunyikan. Halaman ini tidak mengubah apa pun.</string>
+    <string name="configInspectionExplanation">File konfigurasi yang dibaca server ini, yang terpenting lebih dulu. Kunci, kata sandi, dan rahasia lain disembunyikan. Halaman ini tidak mengubah apa pun.</string>
     <string name="configInspectionUnavailable">Konfigurasi server tidak bisa dimuat. Sambungkan kembali dan coba lagi.</string>
     <string name="configInspectionRefresh">Muat ulang konfigurasi</string>
+    <string name="configFilesLabel">File konfigurasi</string>
+    <string name="configFoldersLabel">Folder yang diperiksa server</string>
+    <string name="configNoFileTitle">Belum ada file konfigurasi</string>
+    <string name="configNoFileBody">Server ini memakai pengaturan bawaannya. File konfigurasi di salah satu folder di bawah akan mengubahnya. Halaman ini hanya membacanya.</string>
 </resources>

@@ -18,8 +18,8 @@
     <string name="agentsComputerReadFailed">Não foi possível ler os agentes deste computador. Puxe para baixo para tentar de novo.</string>
     <string name="agentsNewChat">Nova conversa</string>
     <string name="agentsNewChatWith">Nova conversa com %1$s</string>
-    <string name="agentsConversationsStored">Onde as conversas ficam guardadas</string>
-    <string name="agentsConversationsStoredOn">Onde as conversas ficam guardadas: %1$s</string>
+    <string name="agentsConversationsStored">Copiar uma conversa para outro agente</string>
+    <string name="agentsConversationsStoredOn">Copiar uma conversa de %1$s</string>
     <string name="agentsHostAccount">Conta do host: %1$s</string>
     <string name="agentsHelperUpdateRequired">Os agentes do celular não estão conectados: o auxiliar de agentes está ausente ou é antigo demais para rodar.</string>
     <string name="agentsHelperUpdateAction">Atualizar o auxiliar de agentes</string>

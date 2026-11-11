@@ -18,8 +18,8 @@
     <string name="agentsComputerReadFailed">تعذرت قراءة وكلاء هذا الحاسوب. اسحب للأسفل للمحاولة مجددًا.</string>
     <string name="agentsNewChat">محادثة جديدة</string>
     <string name="agentsNewChatWith">محادثة جديدة مع %1$s</string>
-    <string name="agentsConversationsStored">أين تُحفظ المحادثات</string>
-    <string name="agentsConversationsStoredOn">أين تُحفظ المحادثات: %1$s</string>
+    <string name="agentsConversationsStored">نسخ محادثة لوكيل آخر</string>
+    <string name="agentsConversationsStoredOn">نسخ محادثة من %1$s</string>
     <string name="agentsHostAccount">حساب المضيف: %1$s</string>
     <string name="agentsHelperUpdateRequired">وكلاء الهاتف غير متصلين: مساعد الوكلاء مفقود أو أقدم من أن يعمل.</string>
     <string name="agentsHelperUpdateAction">حدّث مساعد الوكلاء</string>

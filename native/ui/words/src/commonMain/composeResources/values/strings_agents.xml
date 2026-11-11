@@ -495,7 +495,7 @@
     <string name="agentComputerCodex">Codex</string>
     <string name="agentComputerCodexNote">Connect to the official Codex app server over WebSocket. Enter its address and the full project folder on that computer.</string>
     <string name="agentErrorOpenSettings">Open settings</string>
-    <string name="agentDraftTitle">Conversation records</string>
+    <string name="agentDraftTitle">Copy a conversation</string>
     <string name="agentDraftReadOnly">Review a record before copying it to another agent. This does not start, resume, or change a conversation.</string>
     <string name="agentDraftGuide">1. Choose a conversation below.
 2. Review the record and any notice about omitted older turns.
@@ -503,6 +503,7 @@
     <string name="agentDraftLoading">Reading the conversation</string>
     <string name="agentDraftFailed">The complete record could not be prepared. Check the connection and choose the conversation again.</string>
     <string name="agentDraftReview">Review the record</string>
+    <string name="agentDraftAsCopied">The record as it will be copied</string>
     <plurals name="agentDraftOmitted">
         <item quantity="one">1 older message was left out to fit the record. The newest turn is kept whole.</item>
         <item quantity="other">%1$d older messages were left out to fit the record. The newest turn is kept whole.</item>

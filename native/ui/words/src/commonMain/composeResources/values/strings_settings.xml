@@ -333,6 +333,8 @@
     <string name="consentWhyBattery">Android may stop the server on this phone while the app is closed.</string>
     <string name="consentWhyMaker">This phone may not start the server again after it stops.</string>
     <string name="consentWhyNeedsYou">You won't get a notification when the agent waits for your answer.</string>
+    <string name="consentWhyNeedsYouBlocked">Android blocks this app's notifications. Tap to fix it in Notifications.</string>
+    <string name="consentWhyNeedsYouWhileOpen">You're notified only while the app is open. Tap to keep the background connection on.</string>
     <string name="consentAllowedSystem">The phone's own setting decides. Tap to check it or turn it off.</string>
     <string name="consentAllowedNeedsYou">Tap to change it in Notifications.</string>
     <string name="consentWhyAlwaysAllow">Still asked each time. Tap to be offered Always allow again.</string>
