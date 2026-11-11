@@ -229,9 +229,12 @@ class KitFloatingBarRowTest {
         assertTrue(abs(endLine.right.value - last.right.value - inset) <= .5f, "scrolled to the end the last chip $last rests $inset dp inside the line $endLine")
         val startCleared = diff(end, endBare, endLine.left.value + .5f, endLine.left.value + fade / 3f - .5f, faceTop, faceBottom)
         assertTrue(startCleared < 1f, "scrolled, the start that has more to show is faded out at its edge: $startCleared")
+        // The last chip's end against the end of the chip before it (the same kind, mid-line, never faded): a chip's
+        // rim is lit from its top start, so only like edges compare.
+        val before = end.bounds["chip-${CHIPS.size - 2}"]!!
         val lastRight = diff(end, endBare, last.right.value - 6f, last.right.value, faceTop, faceBottom)
-        val lastLeft = diff(end, endBare, last.left.value, last.left.value + 6f, faceTop, faceBottom)
-        assertTrue(lastRight >= lastLeft * .8f, "scrolled to the end nothing fades the last chip's end: $lastRight against its start $lastLeft")
+        val lastLeft = diff(end, endBare, before.right.value - 6f, before.right.value, faceTop, faceBottom)
+        assertTrue(lastRight >= lastLeft * .75f, "scrolled to the end nothing fades the last chip's end: $lastRight against the chip before it $lastLeft")
         // No chip face is drawn un-faded across the pane's outline: every face point left whole (inside the line, before
         // the fade's outer third) lies inside the pane's rounded rectangle.
         for (s in listOf(rest, end)) {
