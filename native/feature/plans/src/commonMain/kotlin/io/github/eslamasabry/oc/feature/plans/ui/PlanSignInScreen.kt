@@ -296,7 +296,13 @@ private fun OAuthForm(
     }
     val answers = fields.mapValues { it.value.text.toString() }
     val conditions = method.presetAnswers + answers
-    for (prompt in method.prompts.filter { planPromptVisible(it, conditions) }) {
+    val shown = method.prompts.filter { planPromptVisible(it, conditions) }
+    val answered =
+        shown.all { prompt ->
+            prompt["required"] == JsonPrimitive(false) ||
+                prompt.text("key")?.let { fields[it]?.text?.isNotBlank() } != false
+        }
+    for (prompt in shown) {
         val id = prompt.text("key") ?: continue
         val field = fields[id] ?: continue
         val label = prompt.text("message")?.takeIf { it.isNotBlank() } ?: id
@@ -328,7 +334,10 @@ private fun OAuthForm(
             KitField(
                 field,
                 label,
+                kind =
+                    if (prompt.text("format") == "uri") KitFieldKind.Url else KitFieldKind.Text,
                 placeholder = prompt.text("placeholder"),
+                helper = prompt.text("description")?.takeIf { it.isNotBlank() },
                 error = if (missing) stringResource(Res.string.m40AuthEnterValue) else null,
                 enabled = enabled,
             )
@@ -336,7 +345,7 @@ private fun OAuthForm(
     KitButton(
         stringResource(Res.string.m40AuthContinue),
         { actions.submitForm(fields.mapValues { it.value.text.toString() }.toImmutableMap()) },
-        enabled = enabled,
+        enabled = if (answered) enabled else KitEnabled.Disabled(stringResource(Res.string.m40AuthEnterValue)),
         working = state.busy,
     )
 }

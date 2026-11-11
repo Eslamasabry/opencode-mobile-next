@@ -341,7 +341,18 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                                             stringResource(Res.string.nlibUnusable)
                                         else stringResource(Res.string.nlibConnected),
                                     trailing = KitRowTrailing.Chevron,
-                                    onClick = { actions.show(LibrarySheet.Provider(provider)) },
+                                    onClick = {
+                                        val only =
+                                            soleMethodToConnect(
+                                                provider,
+                                                state.inventory.capabilities
+                                                    ?.integrationCommandAuth == true,
+                                            )
+                                        actions.show(
+                                            if (only != null) LibrarySheet.Method(provider, only)
+                                            else LibrarySheet.Provider(provider)
+                                        )
+                                    },
                                 )
                             }
                         }
@@ -822,6 +833,20 @@ private fun ConversationChoice(
     )
 }
 
+/**
+ * The one method to open directly: a provider with no connection yet, nothing to read about its
+ * environment and exactly one usable method has nothing to manage, so the sheet that would list
+ * that single row is skipped.
+ */
+internal fun soleMethodToConnect(
+    provider: IntegrationInfo,
+    commandSupported: Boolean,
+): IntegrationMethodInfo? {
+    if (provider.connections.isNotEmpty()) return null
+    if (provider.methods.any { it.type == "env" && it.environmentNames.isNotEmpty() }) return null
+    return connectMethods(provider.id, provider.methods, commandSupported).singleOrNull()
+}
+
 @Composable
 private fun ProviderSheet(provider: IntegrationInfo, state: LibraryUi, actions: LibraryActions) {
     var disconnect by remember { mutableStateOf(false) }
@@ -948,16 +973,7 @@ private fun MethodSheet(
         }
     var missing by remember { mutableStateOf(false) }
     val prompts =
-        method.prompts.filter { prompt ->
-            val whenValue = prompt["when"] as? JsonObject
-            val name = (whenValue?.get("key") as? JsonPrimitive)?.content
-            val expected = (whenValue?.get("value") as? JsonPrimitive)?.content
-            when ((whenValue?.get("op") as? JsonPrimitive)?.content) {
-                "eq" -> answers[name] == expected
-                "neq" -> answers[name] != expected
-                else -> true
-            }
-        }
+        method.prompts.filter { prompt -> connectPromptVisible(prompt, answers) }
     val label =
         if (method.type == "key") stringResource(Res.string.nlibSaveKey)
         else stringResource(Res.string.nlibStartSignIn)
@@ -1031,7 +1047,17 @@ private fun MethodSheet(
                     )
                 } else
                     fields[id]?.let { field ->
-                        KitField(field, title, onTextChanged = { answers[id] = it })
+                        KitField(
+                            field,
+                            title,
+                            kind =
+                                if ((prompt["format"] as? JsonPrimitive)?.content == "uri")
+                                    KitFieldKind.Url
+                                else KitFieldKind.Text,
+                            placeholder = (prompt["placeholder"] as? JsonPrimitive)?.content,
+                            helper = (prompt["description"] as? JsonPrimitive)?.content,
+                            onTextChanged = { answers[id] = it },
+                        )
                     }
             }
         }

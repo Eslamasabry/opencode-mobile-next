@@ -42,6 +42,48 @@ internal class Oc2ProviderSignIn(
     private fun text(obj: JsonObject, key: String): String? =
         (obj[key] as? JsonPrimitive)?.takeIf { it.isString }?.contentOrNull
 
+    /**
+     * One sign-in question in the app's prompt shape (Flutter `_formPrompt`): a field with options
+     * is a choice unless the server allows its own value; defaults, placeholders, descriptions,
+     * URL formats and `when` conditions are kept so the form can show them.
+     */
+    private fun prompt(field: JsonObject, key: String): JsonObject {
+        val options =
+            (field["options"] as? JsonArray).orEmpty().mapNotNull { raw ->
+                val option = raw as? JsonObject ?: return@mapNotNull null
+                val value = text(option, "value") ?: return@mapNotNull null
+                value to safe(text(option, "label") ?: value)
+            }
+        val custom = (field["custom"] as? JsonPrimitive)?.booleanOrNull == true
+        val declared = text(field, "type")
+        val choice =
+            if (declared == "select" || declared == "text") declared == "select"
+            else options.isNotEmpty() && !custom
+        return buildJsonObject {
+            put("key", key)
+            put("message", safe(text(field, "title") ?: text(field, "message") ?: key))
+            put("type", if (choice) "select" else "text")
+            if (options.isNotEmpty())
+                put(
+                    "options",
+                    JsonArray(
+                        options.map { (value, label) ->
+                            buildJsonObject {
+                                put("value", value)
+                                put("label", label)
+                            }
+                        }
+                    ),
+                )
+            put("required", (field["required"] as? JsonPrimitive)?.booleanOrNull == true)
+            text(field, "placeholder")?.let { put("placeholder", safe(it)) }
+            text(field, "description")?.let { put("description", safe(it)) }
+            if (text(field, "format") == "uri") put("format", "uri")
+            (field["default"] as? JsonPrimitive)?.contentOrNull?.let { put("default", it) }
+            field["when"]?.takeIf { it is JsonObject || it is JsonArray }?.let { put("when", it) }
+        }
+    }
+
     private fun <T> remember(map: LinkedHashMap<String, T>, key: String, value: T) {
         map.remove(key)
         map[key] = value
@@ -84,17 +126,7 @@ internal class Oc2ProviderSignIn(
                             redactor.registerSecret(it)
                         }
                     } else {
-                        prompts += buildJsonObject {
-                            put("key", key)
-                            put(
-                                "message",
-                                safe(text(field, "title") ?: text(field, "message") ?: key),
-                            )
-                            put(
-                                "required",
-                                (field["required"] as? JsonPrimitive)?.booleanOrNull == true,
-                            )
-                        }
+                        prompts += prompt(field, key)
                     }
                 }
                 methods +=

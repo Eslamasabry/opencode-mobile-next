@@ -108,4 +108,30 @@ class ConnectMethodsTest {
         assertTrue(connectMethodHasOwnLabel(m("oauth", "a")))
         assertTrue(connectMethodHasOwnLabel(m("command", "c")))
     }
+
+    @Test
+    fun `W4-27 a device-code label gets the device-code hint, the other OpenAI rows do not`() {
+        assertEquals(ConnectHint.Device, connectMethodHint(m("oauth", "a", "Codex device code (legacy)")))
+        assertEquals(ConnectHint.Account, connectMethodHint(m("oauth", "b", "Sign in with ChatGPT")))
+    }
+
+    private fun q(vararg parts: Pair<String, String>) =
+        buildJsonObject {
+            put("key", "enterpriseUrl")
+            put(
+                "when",
+                kotlinx.serialization.json.JsonArray(
+                    listOf(buildJsonObject { parts.forEach { (k, v) -> put(k, v) } })
+                ),
+            )
+        }
+
+    @Test
+    fun `W4-28 a question with a condition shows only while the condition holds`() {
+        val enterprise = q("key" to "deploymentType", "op" to "eq", "value" to "enterprise")
+        assertFalse(connectPromptVisible(enterprise, mapOf("deploymentType" to "github.com")))
+        assertTrue(connectPromptVisible(enterprise, mapOf("deploymentType" to "enterprise")))
+        assertTrue(connectPromptVisible(q("key" to "a", "op" to "neq", "value" to "x"), mapOf("a" to "y")))
+        assertTrue(connectPromptVisible(buildJsonObject { put("key", "plain") }, emptyMap()))
+    }
 }
