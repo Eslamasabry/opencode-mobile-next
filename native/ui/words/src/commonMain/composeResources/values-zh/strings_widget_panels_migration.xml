@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="widgetPanelUpdating">正在更新你的应用…</string>
+    <string name="widgetPanelOpenAppForUpdate">请打开应用完成更新，然后再试这个小组件。</string>
+    <string name="widgetPanelOpenApp">打开应用</string>
+    <string name="widgetPanelOpenFailed">无法打开这个小组件。请关闭后重试。</string>
+</resources>

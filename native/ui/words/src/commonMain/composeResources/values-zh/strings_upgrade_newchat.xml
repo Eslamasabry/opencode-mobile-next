@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="upgNewChatKept">你的文字和选择都已保留。请重试，或先编辑它们。</string>
+    <string name="upgNewChatEdit">编辑</string>
+    <string name="upgNewChatAgentMode">%1$s · %2$s</string>
+    <string name="upgNewChatChoicesTitle">智能体和模型</string>
+    <string name="upgNewChatAgents">由谁来做</string>
+    <string name="upgNewChatModeHint">“计划”会先和你讨论。“构建”会直接做出更改。</string>
+    <string name="upgNewChatModeOnlyFor">“构建”和“计划”适用于 %1$s。</string>
+    <string name="upgNewChatModel">模型</string>
+    <string name="upgNewChatModelsSearch">搜索模型</string>
+    <string name="upgNewChatBackToAgents">返回智能体</string>
+    <string name="upgNewChatDone">完成</string>
+    <string name="upgNewChatModelsNone">此服务器没有其他模型。</string>
+</resources>

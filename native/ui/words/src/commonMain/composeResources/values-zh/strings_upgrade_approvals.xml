@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="approvalToolLabel">工具：%1$s</string>
+    <string name="approvalToolTerminal">终端命令</string>
+    <string name="approvalToolEdit">文件更改</string>
+    <string name="approvalToolRead">读取文件</string>
+    <string name="approvalToolWeb">网络请求</string>
+    <string name="approvalToolOutside">在此项目之外</string>
+    <string name="approvalToolOther">其他工具</string>
+    <string name="approvalCopyAsk">复制它要求运行的内容</string>
+    <string name="approvalCopied">已复制</string>
+    <string name="approvalAllow">允许</string>
+    <string name="approvalAlwaysAllowExact">始终允许 %1$s</string>
+    <string name="approvalDeny">拒绝</string>
+    <string name="approvalReplyLabel">告诉它改做什么</string>
+    <string name="approvalReplySend">拒绝并发送</string>
+    <string name="approvalReplyJustDeny">仅拒绝</string>
+    <string name="approvalReplyBack">返回</string>
+    <string name="approvalReplyEmpty">请写下它应该改做什么，或选择“仅拒绝”。</string>
+    <string name="approvalAllowedWhat">已允许：%1$s</string>
+    <string name="approvalAlwaysAllowedWhat">已始终允许：%1$s</string>
+    <string name="approvalDenied">已拒绝</string>
+    <string name="approvalDeniedInstead">已拒绝，并要求改做：%1$s</string>
+</resources>

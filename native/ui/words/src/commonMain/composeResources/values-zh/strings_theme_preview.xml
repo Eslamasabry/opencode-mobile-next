@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="themePreviewOnly">此预览只改变这些颜色。点击套用后才会在整个应用中使用。</string>
+</resources>
