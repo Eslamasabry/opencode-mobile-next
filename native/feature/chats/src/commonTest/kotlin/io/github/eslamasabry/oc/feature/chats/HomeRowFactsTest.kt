@@ -30,6 +30,14 @@ class HomeRowFactsTest {
     }
 
     @Test
+    fun `a request the server still holds wins over an earlier Stop, a dropped one leaves Stopped`() {
+        val pending = item("a", status = ChatStatus.NeedsYou, unseen = true).copy(stoppedByPerson = true)
+        assertEquals(RowStatus.NeedsYou, ChatsState.row(pending).status)
+        val dropped = item("a", unseen = true).copy(stoppedByPerson = true)
+        assertEquals(RowStatus.Stopped, ChatsState.row(dropped).status)
+    }
+
+    @Test
     fun `H4 a conversation that needs a new chat asks, and the question names the agent`() {
         val old = item("old").copy(agentId = "claude", needsNewChat = true)
         val ask = AgentResumeRules.ask(old, "Claude Code")!!

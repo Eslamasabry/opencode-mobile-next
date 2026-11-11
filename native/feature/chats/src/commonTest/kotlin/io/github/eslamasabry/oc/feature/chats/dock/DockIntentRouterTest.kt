@@ -163,6 +163,26 @@ class DockIntentRouterTest {
     }
 
     @Test
+    fun undo_works_after_the_ring_has_left_the_frame() {
+        val port = FakePort()
+        var gone = false
+        val shown = frame()
+        val without = DockKitFrame(shown.model, shown.refs - key("a"), shown.asks, shown.removable)
+        val r = DockIntentRouter(port, { if (gone) without else shown }, Told())
+        r.onRemove(key("a"))
+        gone = true
+        r.undoRemove(key("a"))
+        assertEquals(listOf("remove a", "undo a"), port.acts)
+        // A sub-agent too.
+        gone = false
+        val k = key("c1")
+        r.onRemove(k)
+        gone = true
+        r.undoRemove(k)
+        assertEquals(listOf("remove a", "undo a", "remove c1", "undo c1"), port.acts)
+    }
+
+    @Test
     fun the_conversation_on_screen_stays_and_the_person_is_told_why() {
         val port = FakePort()
         val told = Told()
