@@ -188,9 +188,17 @@ internal fun lerp(a: Float, b: Float, t: Float): Float = a + (b - a) * t
 // The ring column and where it sits.
 
 /** How the rings fill the strip: [visible] rings at [pitch], the rest scroll. [pinGap] holds the pin line. */
-internal data class DockColumn(val count: Int, val pinned: Int, val visible: Int, val pitch: Float, val pinGap: Float) {
+internal data class DockColumn(
+    val count: Int,
+    val pinned: Int,
+    val visible: Int,
+    val pitch: Float,
+    val pinGap: Float,
+    /** The foot's band under the rings: [DockDims.FOOT] for the "+", 0 when the dock offers no new conversation. */
+    val foot: Float = DockDims.FOOT,
+) {
     /** The strip's height (A at rest). */
-    val height: Float get() = DockDims.HEAD + visible * pitch + pinGap + DockDims.FOOT + DockDims.PAD_BOTTOM
+    val height: Float get() = DockDims.HEAD + visible * pitch + pinGap + foot + DockDims.PAD_BOTTOM
 
     /** The whole list's height when all rings are laid out (for scrolling). */
     val contentHeight: Float get() = count * pitch + pinGap
@@ -253,17 +261,18 @@ internal data class DockColumn(val count: Int, val pinned: Int, val visible: Int
          * fit; more than seven, or too little room, keep 64 dp and scroll. The pin line's gap shows when a ring is
          * pinned or while one is being reordered.
          */
-        fun of(count: Int, pinned: Int, span: Float, reordering: Boolean = false): DockColumn {
+        fun of(count: Int, pinned: Int, span: Float, reordering: Boolean = false, offersNew: Boolean = true): DockColumn {
             val gap = if (pinned > 0 || reordering) DockDims.PIN_GAP else 0f
-            val fixed = DockDims.HEAD + gap + DockDims.FOOT + DockDims.PAD_BOTTOM
+            val foot = if (offersNew) DockDims.FOOT else 0f
+            val fixed = DockDims.HEAD + gap + foot + DockDims.PAD_BOTTOM
             val room = span - 2f * (DockDims.EDGE_MARGIN + DockDims.SHOULDER_REACH) - fixed
-            if (count <= 0) return DockColumn(0, 0, 0, DockDims.PITCH, gap)
+            if (count <= 0) return DockColumn(0, 0, 0, DockDims.PITCH, gap, foot)
             val fit = room / count
             return if (count <= DockDims.MAX_VISIBLE && fit >= DockDims.PITCH_MIN) {
-                DockColumn(count, pinned, count, min(DockDims.PITCH, fit), gap)
+                DockColumn(count, pinned, count, min(DockDims.PITCH, fit), gap, foot)
             } else {
                 val v = floor(room / DockDims.PITCH).toInt().coerceIn(1, min(count, DockDims.MAX_VISIBLE))
-                DockColumn(count, pinned, v, DockDims.PITCH, gap)
+                DockColumn(count, pinned, v, DockDims.PITCH, gap, foot)
             }
         }
     }
@@ -614,11 +623,11 @@ internal fun panelContentHeight(
  * The list's box: as wide as the screen allows up to [DockDims.PANEL_MAX], as tall as its content within the safe
  * area, centred on the strip and never smaller than it (so the list's box holds the strip and the union is one box).
  */
-internal fun panelBox(width: Float, edgeInset: Float, farInset: Float, strip: DockBox, contentHeight: Float, safeTop: Float, safeBottom: Float): DockBox {
+internal fun panelBox(width: Float, edgeInset: Float, farInset: Float, strip: DockBox, contentHeight: Float, safeTop: Float, safeBottom: Float, foot: Float = DockDims.FOOT): DockBox {
     val w = min(DockDims.PANEL_MAX, width - edgeInset - farInset - DockDims.PANEL_MIN_GAP).coerceAtLeast(strip.width - DockDims.OVERHANG)
     val left = width - edgeInset - w
     val room = DockDims.EDGE_MARGIN + DockDims.SHOULDER_REACH
-    val h = min(contentHeight + 2f * DockDims.PANEL_PAD + DockDims.HEAD + DockDims.FOOT, safeBottom - safeTop - 2f * room)
+    val h = min(contentHeight + 2f * DockDims.PANEL_PAD + DockDims.HEAD + foot, safeBottom - safeTop - 2f * room)
     var top = strip.centerY - h / 2f
     top = top.coerceIn(safeTop + room, max(safeTop + room, safeBottom - room - h))
     val t = min(top, strip.top)

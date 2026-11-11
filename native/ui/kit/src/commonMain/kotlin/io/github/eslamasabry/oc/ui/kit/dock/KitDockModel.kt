@@ -126,6 +126,12 @@ public data class KitDockModel(
     /** Tucked to the nub of state dots. */
     val tucked: Boolean = false,
     val placement: KitDockPlacement = KitDockPlacement(),
+    /**
+     * Whether the dock offers a new conversation: the round "+" at the strip's foot and the "New conversation" row in
+     * the list. A screen with its own button for it (the conversations home) passes false: the strip then has no foot,
+     * and with no rings the dock draws nothing at all and takes no touches. Default true.
+     */
+    val offersNew: Boolean = true,
 )
 
 /**

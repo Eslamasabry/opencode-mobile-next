@@ -136,6 +136,14 @@ public fun KitEdgeDock(
     insets: KitDockInsets = KitDockInsets(),
     state: KitEdgeDockState = rememberKitEdgeDockState(),
 ) {
+    // No rings and no "+" to offer (a screen with its own new-conversation button): the dock draws nothing at all and
+    // takes no touches. Anything it had open closes at once, so it does not come back open when a ring does.
+    if (!model.offersNew && model.rings.isEmpty()) {
+        state.rings = emptyList()
+        state.column = DockColumn(0, 0, 0, DockDims.PITCH, 0f, 0f)
+        LaunchedEffect(state) { state.clearAll() }
+        return
+    }
     // No rings: the dock still stands (owner 2026-11-11: always there), its strip or its nub and the "+" alone.
     val density = LocalDensity.current
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
@@ -159,7 +167,7 @@ public fun KitEdgeDock(
         val safeTop = insets.top.value
         val safeBottom = h - insets.bottom.value
         val pinned = model.rings.count { it.pinned }
-        val column = DockColumn.of(model.rings.size, pinned, safeBottom - safeTop, reordering = state.carrying >= 0)
+        val column = DockColumn.of(model.rings.size, pinned, safeBottom - safeTop, reordering = state.carrying >= 0, offersNew = model.offersNew)
         val keepClear = remember(insets.keepClear, right, w) {
             insets.keepClear.map { r ->
                 val d = DockRect(r.left.value, r.top.value, r.right.value, r.bottom.value)
@@ -234,7 +242,7 @@ public fun KitEdgeDock(
                     }
                 }
             }
-            DockFootNode(state, words, intents)
+            if (model.offersNew) DockFootNode(state, words, intents)
             DockHitNode(state)
             val swell = state.swell
             if (swell != null && state.swellRing in model.rings.indices) {

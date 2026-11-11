@@ -189,12 +189,14 @@ internal fun DockPanel(state: KitEdgeDockState, model: KitDockModel, words: KitD
                     }
                 }
             }
-            Row(
-                Modifier.fillMaxWidth().heightIn(min = 48.dp).kitTappable(onClick = { intents.onNewConversation(); state.closePanel() }),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) { KitIcon(KitIcons.add, size = KitIconSize.Small, tone = TextTone.Primary) }
-                KitText(words.newConversation, role = TypeRole.RowTitle, kind = KitTextKind.Frame, maxLines = 1)
+            if (model.offersNew) {
+                Row(
+                    Modifier.fillMaxWidth().heightIn(min = 48.dp).kitTappable(onClick = { intents.onNewConversation(); state.closePanel() }),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) { KitIcon(KitIcons.add, size = KitIconSize.Small, tone = TextTone.Primary) }
+                    KitText(words.newConversation, role = TypeRole.RowTitle, kind = KitTextKind.Frame, maxLines = 1)
+                }
             }
         }
     }

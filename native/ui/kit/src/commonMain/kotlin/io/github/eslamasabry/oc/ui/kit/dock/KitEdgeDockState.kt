@@ -293,7 +293,7 @@ public class KitEdgeDockState internal constructor() {
             k[5] == safeTop && k[6] == safeBottom && k[7] == column.height
         ) return cached
         val strip = DockBox(widthDp - edgeInset - DockDims.REST_W, cTop, widthDp + DockDims.OVERHANG, cTop + column.height, DockDims.CORNER)
-        val p = panelBox(widthDp, edgeInset, farInset, strip, panelContent, safeTop, safeBottom)
+        val p = panelBox(widthDp, edgeInset, farInset, strip, panelContent, safeTop, safeBottom, column.foot)
         panelCache = p
         k[0] = cTop
         k[1] = panelContent
@@ -417,7 +417,7 @@ public class KitEdgeDockState internal constructor() {
         if (x < f.aLeft - 4f || y < f.aTop - 8f || y > f.aBottom + 8f) return DockZone.Outside
         val cTop = top.value
         if (y < cTop + DockDims.HEAD) return DockZone.Grip
-        if (y >= cTop + DockDims.HEAD + column.viewportHeight) return DockZone.Foot
+        if (y >= cTop + DockDims.HEAD + column.viewportHeight) return if (column.foot > 0f) DockZone.Foot else DockZone.Outside
         return if (column.ringAt(y, cTop, scrollNow) >= 0) DockZone.Ring else DockZone.Outside
     }
 
@@ -598,6 +598,28 @@ public class KitEdgeDockState internal constructor() {
         }
         pullStart = if (panelOpen) widthDp - edgeInset - panelTarget().left else out.value
         pullFromPanel = panelOpen
+    }
+
+    /** Closes everything and puts the body back at rest at once (the dock has nothing to show). */
+    internal suspend fun clearAll() {
+        alertJob?.cancel()
+        swellJob?.cancel()
+        panelJob?.cancel()
+        gesture.cancel()
+        swell = null
+        swellRing = -1
+        target = null
+        renaming = null
+        panelOpen = false
+        panelShown = false
+        carrying = -1
+        carryTo = -1
+        moving = false
+        pressRing = -1
+        swellGrow.snapTo(0f)
+        panelX.snapTo(0f)
+        panelY.snapTo(0f)
+        ride.snapTo(0f)
     }
 
     internal fun ringKey(i: Int): String? = rings.getOrNull(i)?.key
