@@ -60,10 +60,24 @@ class AgentVersionCheckTest {
         assertFalse(AgentVersionCheck.matches("0.66.1", "0.66.0"))
         assertFalse(AgentVersionCheck.matches("0.66.0.1", "0.66.0"))
         assertFalse(AgentVersionCheck.matches("10.66.0", "0.66.0"))
-        // The probe's pattern (Flutter's) refuses a v prefix; no catalog agent prints one.
-        assertFalse(AgentVersionCheck.matches("v0.66.0", "0.66.0"))
+        // A "v" is taken only right after a boundary (gate, 2026-11-12): a letter before it still refuses the pin.
+        assertFalse(AgentVersionCheck.matches("xv0.66.0", "0.66.0"))
+        assertFalse(AgentVersionCheck.matches("dev0.66.0", "0.66.0"))
+        assertFalse(AgentVersionCheck.matches("v0.66.1", "0.66.0"))
+        assertFalse(AgentVersionCheck.matches("vv0.66.0", "0.66.0"))
         assertFalse(AgentVersionCheck.matches("", "0.66.0"))
+        assertFalse(AgentVersionCheck.matches("\n\n", "0.66.0"))
         assertTrue(AgentVersionCheck.matches("warning: something\ncodex-cli 0.167.0", "0.167.0"))
+    }
+
+    @Test
+    fun `a banner, colour codes, a leading v and extra lines around the pin still name it`() {
+        assertTrue(AgentVersionCheck.matches("v0.66.0", "0.66.0"))
+        assertTrue(AgentVersionCheck.matches("goose v1.54.0\n", "1.54.0"))
+        assertTrue(AgentVersionCheck.matches("\u001B[32m0.66.0\u001B[0m\n", "0.66.0"))
+        assertTrue(AgentVersionCheck.matches("\u001B[1;32mv0.66.0\u001B[0m", "0.66.0"))
+        assertTrue(AgentVersionCheck.matches("Welcome to Gemini CLI\nUpdate available!\n0.66.0\n\n", "0.66.0"))
+        assertEquals("0.65.0", AgentVersionCheck.found("\u001B[32m0.65.0\u001B[0m"))
     }
 
     @Test
@@ -137,7 +151,8 @@ class AgentVersionCheckTest {
                 assertTrue("oc_sha='${artifact.sha256}'" in script, agent.id.raw)
             }
             assertFalse("latest" in script.lowercase(), agent.id.raw)
-            assertTrue("timeout ${AgentVersionCheck.PROBE_SECONDS}s" in script, agent.id.raw)
+            val limit = "timeout -k ${AgentVersionCheck.KILL_AFTER_SECONDS}s ${AgentVersionCheck.PROBE_SECONDS}s env -i"
+            assertTrue(limit in script, agent.id.raw)
         }
     }
 }

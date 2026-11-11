@@ -59,6 +59,9 @@ private fun fixtureAgent(
 
 private fun q(text: String) = "'" + text.replace("'", "'\\''") + "'"
 
+/** The version check's limit as the install script spells it (the tests shorten it). */
+private val LIMIT = " ${AgentVersionCheck.PROBE_SECONDS}s env -i"
+
 /**
  * An isolated fake guest: rewrite the fixed home only in test input. No curl/network or root paths. This container
  * keeps python3 in /usr/local/bin, so the script's own `export PATH=…:/usr/bin:/bin` is widened by the same rewrite.
@@ -446,12 +449,22 @@ with tarfile.open(sys.argv[1], 'w:gz') as t:
             "/.probe.XXXXXX)\n",
             "/.probe.XXXXXX)\n  oc_version_rc=0\n",
         )
-        change("timeout 30s", "timeout ${AgentVersionCheck.PROBE_SECONDS}s", times = 2)
+        change(
+            "timeout 30s",
+            "timeout -k ${AgentVersionCheck.KILL_AFTER_SECONDS}s ${AgentVersionCheck.PROBE_SECONDS}s",
+            times = 2,
+        )
         change(
             "PATH=\"\$PATH\" \\\n      /home/oc/.local/node/bin/node",
             "PATH=\"\$PATH\" GEMINI_CLI_NO_RELAUNCH=true \\\n      /home/oc/.local/node/bin/node",
         )
         change("--version 2>/dev/null) || oc_output=\n", "--version 2>/dev/null) || { oc_version_rc=\$?; oc_output=; }\n", 2)
+        // Colour codes go before the version is read (gate, 2026-11-12).
+        change(
+            "  rm -rf \"\$oc_probe\"\n",
+            "  rm -rf \"\$oc_probe\"\n" +
+                "  oc_output=\$(printf '%s' \"\$oc_output\" | sed \"s/\$(printf '\\033')\\[[0-9;]*[A-Za-z]//g\")\n",
+        )
         change(
             "  printf '%s' \"\$oc_output\" | grep -Eq \"\$oc_version_pattern\"\n}",
             "  printf '%s' \"\$oc_output\" | grep -Eq \"\$oc_version_pattern\" && return 0\n" +
@@ -485,7 +498,12 @@ with tarfile.open(sys.argv[1], 'w:gz') as t:
 
     @Test
     fun `B-AGENT-VER each real version output format installs`() {
-        for (output in listOf("1.2.3", "codex-cli 1.2.3", "1.2.3 (Claude Code)", " 1.2.3", "fx 1.2.3")) {
+        for (output in listOf(
+            "1.2.3", "codex-cli 1.2.3", "1.2.3 (Claude Code)", " 1.2.3", "fx 1.2.3",
+            // A leading v, colour codes and a banner with extra lines (gate, 2026-11-12).
+            "v1.2.3", "goose v1.2.3", "\u001B[32m1.2.3\u001B[0m", "\u001B[1mv1.2.3\u001B[0m",
+            "Welcome to Fixture\nUpdate available\n1.2.3\n",
+        )) {
             guest.prepare(version = output)
             File("${guest.home}/.local/share/oc-agents/fixture").deleteRecursively()
             val result = guest.run(AgentPhoneScripts.install(fixtureAgent(guest.hash)))
@@ -498,12 +516,55 @@ with tarfile.open(sys.argv[1], 'w:gz') as t:
     fun `B-AGENT-VER a program too slow to answer fails as not answering, with the limit in its line`() {
         File(guest.payload).writeText("#!/bin/sh\nsleep 5\nprintf '%s\\n' 1.2.3\n")
         val script = AgentPhoneScripts.install(fixtureAgent(guest.hash))
-        assertTrue("timeout ${AgentVersionCheck.PROBE_SECONDS}s" in script)
-        val result = guest.run(script.replace("timeout ${AgentVersionCheck.PROBE_SECONDS}s", "timeout 1s"))
+        assertTrue(LIMIT in script)
+        val result = guest.run(script.replace(LIMIT, " 1s env -i"))
         assertEquals(1, result.exitCode)
+        // It was given one more run before it counted as not answering.
+        assertTrue(AgentVersionCheck.RETRY_LINE in result.stderr, result.stderr)
         assertEquals(AgentVersionCheck.SLOW_LINE, lastMarker(result))
         assertEquals(AgentSetupFailure.NotStarted, AgentVersionCheck.failure(lastMarker(result)))
         assertFalse(isLink("${guest.bin}/fixture"))
+    }
+
+    @Test
+    fun `B-AGENT-VER a first start too slow to answer gets one more run, and an answer then installs it`() {
+        val mark = File(temp, "started-once")
+        File(guest.payload).writeText(
+            "#!/bin/sh\nif [ -e ${q(mark.path)} ]; then printf '%s\\n' 1.2.3; else : > ${q(mark.path)}; sleep 5; fi\n"
+        )
+        val script = AgentPhoneScripts.install(fixtureAgent(guest.hash)).replace(LIMIT, " 1s env -i")
+        val result = guest.run(script)
+        assertEquals(0, result.exitCode, result.stderr)
+        assertTrue(AgentVersionCheck.RETRY_LINE in result.stderr, result.stderr)
+        assertFalse(AgentVersionCheck.SLOW_LINE in result.stderr, result.stderr)
+        assertEquals("$agents/fixture/1.2.3/launch", linkTarget("${guest.bin}/fixture"))
+    }
+
+    @Test
+    fun `B-AGENT-VER a version check past its limit leaves no process behind, even one ignoring the first signal`() {
+        // The phone stops an app's agents past 32 child processes: a hung --version must not outlive its check.
+        val pids = File(temp, "pids")
+        File(guest.payload).writeText(
+            "#!/bin/sh\ntrap '' TERM\nsleep 60 &\necho \$! >> ${q(pids.path)}\necho \$\$ >> ${q(pids.path)}\nwait\n"
+        )
+        val script = AgentPhoneScripts.install(fixtureAgent(guest.hash))
+        val limit = "timeout -k ${AgentVersionCheck.KILL_AFTER_SECONDS}s ${AgentVersionCheck.PROBE_SECONDS}s env -i"
+        assertTrue(limit in script)
+        val started = System.nanoTime()
+        val result = guest.run(script.replace(limit, "timeout -k 1s 1s env -i"))
+        val seconds = (System.nanoTime() - started) / 1_000_000_000
+        assertEquals(1, result.exitCode, result.stderr)
+        assertEquals(AgentVersionCheck.SLOW_LINE, lastMarker(result))
+        assertTrue(seconds < 30, "the check waited ${seconds}s for a process it should have killed")
+        val recorded = pids.readLines().filter { it.isNotBlank() }
+        assertEquals(4, recorded.size, "two runs, each a program and its child: $recorded")
+        for (pid in recorded) assertFalse(alive(pid), "process $pid outlived the version check")
+    }
+
+    /** A live process (a zombie waiting for its parent to read it has already ended). */
+    private fun alive(pid: String): Boolean {
+        val stat = File("/proc/$pid/stat").takeIf { it.exists() }?.let { runCatching { it.readText() }.getOrNull() }
+        return stat != null && stat.substringAfterLast(") ").firstOrNull() != 'Z'
     }
 
     @Test

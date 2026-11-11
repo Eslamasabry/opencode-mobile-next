@@ -18,6 +18,9 @@ public object AgentVersionCheck {
     /** How long the program may take to print its version (Flutter: 30 s). */
     public const val PROBE_SECONDS: Int = 120
 
+    /** After the limit, a program that ignored the first signal is killed this many seconds later (`timeout -k`). */
+    public const val KILL_AFTER_SECONDS: Int = 10
+
     /** The version-shaped text the probe keeps from the program's output (grep -E). */
     public const val FOUND_PATTERN: String = "[0-9]+\\.[0-9]+\\.[0-9]+[0-9A-Za-z.+-]*"
 
@@ -26,6 +29,12 @@ public object AgentVersionCheck {
 
     /** The probe's line when the program did not answer in [PROBE_SECONDS]. */
     public const val SLOW_LINE: String = "[oc] The agent did not answer its version check within $PROBE_SECONDS seconds"
+
+    /**
+     * The install's line when the first run did not answer in time: a first start can be slow (a cold file cache on a
+     * busy phone), so it gets one more run before [SLOW_LINE].
+     */
+    public const val RETRY_LINE: String = "[oc] The agent was slow to answer its version check; checking once more"
 
     /** The Flutter line: the program ran but its output named no version (or it failed or could not start). */
     public const val SILENT_LINE: String = "[oc] The agent did not pass its version check"
@@ -44,14 +53,19 @@ public object AgentVersionCheck {
 
     private val withdrawn = Regex("^" + Regex.escape(WITHDRAWN_PREFIX) + PIN + "$")
 
-    /** Whether [output] names [expected] as a whole word, the way the probe's `oc_version_pattern` decides. */
+    private val colour = Regex("\u001B\\[[0-9;]*[A-Za-z]")
+
+    /**
+     * Whether [output] names [expected] as a whole word, optionally after a "v", the way the probe's
+     * `oc_version_pattern` decides once colour codes are dropped.
+     */
     public fun matches(output: String, expected: String): Boolean =
-        Regex("(^|[^0-9A-Za-z.])" + Regex.escape(expected) + "([^0-9A-Za-z.]|$)", RegexOption.MULTILINE)
-            .containsMatchIn(output)
+        Regex("(^|[^0-9A-Za-z.])v?" + Regex.escape(expected) + "([^0-9A-Za-z.]|$)", RegexOption.MULTILINE)
+            .containsMatchIn(output.replace(colour, ""))
 
     /** What the probe would keep from [output] when it does not [match][matches]: its first version-shaped text. */
     public fun found(output: String): String? =
-        Regex(FOUND_PATTERN).find(output)?.value?.take(FOUND_MAX)
+        Regex(FOUND_PATTERN).find(output.replace(colour, ""))?.value?.take(FOUND_MAX)
 
     /**
      * The failure kind of an agent step whose fixed last line is [error], or null when that line is not one of the

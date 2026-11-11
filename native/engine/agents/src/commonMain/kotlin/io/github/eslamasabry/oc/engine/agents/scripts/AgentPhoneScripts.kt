@@ -88,8 +88,12 @@ oc_pin_version=${quote(recipe.version)}
 """
     }
 
+    /**
+     * Flutter's whole-word pattern, plus an optional leading "v" ("goose v1.2.3"; [AgentVersionCheck.matches] is the
+     * same rule). A letter or digit right before the "v" or the number still refuses it.
+     */
     private fun versionPattern(version: String): String =
-        quote("(^|[^0-9A-Za-z.])${regexEscape(version)}([^0-9A-Za-z.]|$D)")
+        quote("(^|[^0-9A-Za-z.])v?${regexEscape(version)}([^0-9A-Za-z.]|$D)")
 
     public fun check(agent: AgentDescriptor, recipeOverride: AgentInstallRecipe? = null): String {
         val recipe = recipeOverride ?: recipe(agent)
@@ -291,8 +295,15 @@ then
 fi
 if [ "${D}oc_format" != npmTarGz ]; then chmod 700 "${D}oc_stage/payload/${D}oc_member"; fi
 if ! oc_probe_version "${D}oc_stage"; then
+  # A first start can be slow (a cold file cache on a busy phone): it gets one more try before it counts as not
+  # answering. The download already matched its pinned checksum.
+  if [ "${D}oc_probe_why" != slow ] || {
+    echo '${AgentVersionCheck.RETRY_LINE}' >&2
+    ! oc_probe_version "${D}oc_stage"
+  }; then
 $PROBE_FAILED
   echo '[oc] The agent did not pass its version check' >&2; exit 1
+  fi
 fi
 printf '%s' "${D}oc_pin" > "${D}oc_stage/.oc-pin"
 if [ "${D}oc_format" = npmTarGz ]; then
@@ -334,13 +345,19 @@ install -d -o 1000 -g 1000 /home/oc/.local /home/oc/.local/bin /home/oc/.local/s
 """
 
     /**
-     * The Flutter `_probe` (byte for byte until 2026-11-12) with two deliberate changes, recorded in
-     * AgentPhoneScriptsTest: a program gets [AgentVersionCheck.PROBE_SECONDS] (was 30 s) to print its version, and
-     * Gemini CLI is asked not to start a second Node.js just for that (`GEMINI_CLI_NO_RELAUNCH`, its own switch; other
-     * programs ignore it). Gemini CLI 0.66.0 starts two Node.js processes over its ~100 MB bundle, and on a busy phone
-     * that ran past 30 s, so a checksum-verified download failed as "the version that arrived is not the one the app
-     * expects". It also leaves why it failed in `oc_probe_why` and the version-shaped text it printed in
-     * `oc_probe_found` for [PROBE_FAILED]; nothing else the program printed survives.
+     * The Flutter `_probe` (byte for byte until 2026-11-12) with deliberate changes, each recorded in
+     * AgentPhoneScriptsTest:
+     * - a program gets [AgentVersionCheck.PROBE_SECONDS] (was 30 s) to print its version. Gemini CLI 0.66.0 starts two
+     *   Node.js processes over its ~100 MB bundle, and on a busy phone that ran past 30 s, so a checksum-verified
+     *   download failed as "the version that arrived is not the one the app expects";
+     * - Gemini CLI is asked not to start that second Node.js (`GEMINI_CLI_NO_RELAUNCH`, its own switch; other programs
+     *   ignore it);
+     * - the limit ends the whole run: GNU timeout signals its own process group, and `-k` follows with SIGKILL after
+     *   [AgentVersionCheck.KILL_AFTER_SECONDS] for a program that ignores the first signal, so no process is left
+     *   behind on the phone;
+     * - colour codes are dropped before the version is read (the pattern also takes a leading "v");
+     * - it leaves why it failed in `oc_probe_why` and the version-shaped text it printed in `oc_probe_found` for
+     *   [PROBE_FAILED]; nothing else the program printed survives.
      */
     internal val PROBE: String =
         """oc_probe_version() {
@@ -352,13 +369,14 @@ install -d -o 1000 -g 1000 /home/oc/.local /home/oc/.local/bin /home/oc/.local/s
   oc_probe=${'$'}(mktemp -d /home/oc/.local/share/oc-agents/.probe.XXXXXX)
   oc_version_rc=0
   if [ "${'$'}oc_format" = npmTarGz ]; then
-    oc_output=${'$'}(cd "${'$'}oc_probe" && timeout ${AgentVersionCheck.PROBE_SECONDS}s env -i HOME="${'$'}oc_probe" XDG_CONFIG_HOME="${'$'}oc_probe" PATH="${'$'}PATH" GEMINI_CLI_NO_RELAUNCH=true \
+    oc_output=${'$'}(cd "${'$'}oc_probe" && timeout -k ${AgentVersionCheck.KILL_AFTER_SECONDS}s ${AgentVersionCheck.PROBE_SECONDS}s env -i HOME="${'$'}oc_probe" XDG_CONFIG_HOME="${'$'}oc_probe" PATH="${'$'}PATH" GEMINI_CLI_NO_RELAUNCH=true \
       /home/oc/.local/node/bin/node "${'$'}oc_tree/payload/${'$'}oc_member" --version 2>/dev/null) || { oc_version_rc=${'$'}?; oc_output=; }
   else
-    oc_output=${'$'}(cd "${'$'}oc_probe" && timeout ${AgentVersionCheck.PROBE_SECONDS}s env -i HOME="${'$'}oc_probe" XDG_CONFIG_HOME="${'$'}oc_probe" PATH="${'$'}PATH" \
+    oc_output=${'$'}(cd "${'$'}oc_probe" && timeout -k ${AgentVersionCheck.KILL_AFTER_SECONDS}s ${AgentVersionCheck.PROBE_SECONDS}s env -i HOME="${'$'}oc_probe" XDG_CONFIG_HOME="${'$'}oc_probe" PATH="${'$'}PATH" \
       "${'$'}oc_tree/payload/${'$'}oc_member" --version 2>/dev/null) || { oc_version_rc=${'$'}?; oc_output=; }
   fi
   rm -rf "${'$'}oc_probe"
+  oc_output=${'$'}(printf '%s' "${'$'}oc_output" | sed "s/${'$'}(printf '\033')\[[0-9;]*[A-Za-z]//g")
   printf '%s' "${'$'}oc_output" | grep -Eq "${'$'}oc_version_pattern" && return 0
   oc_probe_found=${'$'}(printf '%s\n' "${'$'}oc_output" | grep -Eo '${AgentVersionCheck.FOUND_PATTERN}' | head -n 1 | cut -c 1-${AgentVersionCheck.FOUND_MAX})
   case "${'$'}oc_version_rc" in
