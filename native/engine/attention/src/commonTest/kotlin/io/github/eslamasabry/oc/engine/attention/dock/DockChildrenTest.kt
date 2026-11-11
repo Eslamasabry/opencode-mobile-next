@@ -161,7 +161,8 @@ class DockChildrenTest {
     @Test
     fun `the session record and the event stream carry the parent id`() {
         val events = DockFeed.events(p, GatewayEvent.SessionUpserted(Session(c1.sessionId, title = "T", agent = "explore", parentId = a.sessionId)))
-        assertEquals(DockEvent.Meta(c1, "T", "explore", a.sessionId), events.first())
+        assertEquals(DockEvent.Meta(c1, "T", "explore"), events.first())
+        assertTrue(DockEvent.Link(c1, a.sessionId) in events)
         val ui = (events + DockFeed.events(p, GatewayEvent.RunStarted(c1.sessionId))).fold(DockModel.empty()) { m, e -> m.reduce(e) }.ui
         assertEquals("explore", ui.entry(a).children.single().name)
     }

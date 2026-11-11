@@ -39,6 +39,8 @@ class ProfileDeletionSweepTest {
         KeyShape("oc.automation.", KeyScope.Profile, PrefType.Str, ":engine:settings", "restore authority"),
         KeyShape("oc.scheduleDeleted.", KeyScope.Profile, PrefType.Bool, ":engine:schedule", "tombstone"),
         KeyShape("oc.dockNames.", KeyScope.Profile, PrefType.Str, ":engine:attention", "edge dock nicknames"),
+        KeyShape("oc.dockRemoved.", KeyScope.Profile, PrefType.Str, ":engine:attention", "edge dock removed conversations"),
+        KeyShape("oc.dockPins.", KeyScope.Profile, PrefType.Str, ":engine:attention", "edge dock pinned conversations"),
     )
 
     /** One key of [shape] owned by [owner], following the sweep rule's owner position for that namespace. */
