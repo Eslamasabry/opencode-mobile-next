@@ -335,6 +335,7 @@ public class PaseoGateway(
      */
     internal val draftFeatureValues = HashMap<String, Map<String, JsonElement>>()
     internal val liveAgentSessions = HashSet<String>()
+    internal val resumeFailed = PaseoResumeMemory()
     internal val uncertain = HashSet<String>()
 
     /**
@@ -590,6 +591,7 @@ public class PaseoGateway(
         draftVariants.clear()
         draftFeatureValues.clear()
         liveAgentSessions.clear()
+        resumeFailed.clear()
         uncertain.clear()
         uncertainStarts.clear()
         awaitingTurn.clear()
@@ -1248,6 +1250,12 @@ public class PaseoGateway(
         } catch (e: PaseoException) {
             awaitingTurn.remove(sessionId)
             publishRecovery(sessionId)
+            if (sessionId !in drafts)
+                resumeFailed.note(
+                    sessionId,
+                    e.kind,
+                    live = sessionId in liveAgentSessions || agents[sessionId]?.let(::daemonHolds) == true,
+                )
             if (e.kind == PaseoFailureKind.DeliveryUnknown) uncertain += sessionId
             throw e
         }
@@ -1888,7 +1896,9 @@ public class PaseoGateway(
         try {
             val agent = agents[session.raw] ?: return null
             val live = session.raw in liveAgentSessions || daemonHolds(agent)
-            paseoHostAgentContinuation(session.raw, agent, live).requiresNewChat
+            // A reopen that already failed here asks for a new conversation at once (Flutter `_paResumeFailed`).
+            resumeFailed.failedBefore(session.raw, live) ||
+                paseoHostAgentContinuation(session.raw, agent, live).requiresNewChat
         } catch (_: Exception) {
             null
         }
@@ -2041,6 +2051,7 @@ public class PaseoGateway(
         draftVariants.remove(id)
         draftFeatureValues.remove(id)
         liveAgentSessions.remove(id)
+        resumeFailed.forget(id)
         uncertain.remove(id)
         uncertainStarts.remove(id)
         awaitingTurn.remove(id)
