@@ -1005,7 +1005,15 @@ public fun ChatScreen(
                     reads = replyReader != null,
                     facts = facts,
                 )
-                ChatContextSheet(facts.context, contextOpen) { contextOpen = false }
+                ChatContextSheet(
+                    facts.context,
+                    contextOpen,
+                    facts.context?.let {
+                        ContextTotals(header?.state?.serverCost, header?.state?.serverTokens, it.sheet.sessionCost)
+                    },
+                ) {
+                    contextOpen = false
+                }
                 ChatTasksSheet(
                     facts.tasks,
                     tasksOpen,
