@@ -38,8 +38,9 @@ class KitTextHaloParityTest {
     @Test
     fun `a fill covers only when it is more than 90 percent opaque`() {
         assertFalse(KitTextHaloSpec.coversFill(null))
-        assertFalse(KitTextHaloSpec.coversFill(Color.White.copy(alpha = .9f)))
-        assertTrue(KitTextHaloSpec.coversFill(Color.White.copy(alpha = .91f)))
+        // Compose keeps an sRGB alpha in 8 bits, so .9f is stored as 230/255 (above .9): test clearly either side.
+        assertFalse(KitTextHaloSpec.coversFill(Color.White.copy(alpha = .85f)))
+        assertTrue(KitTextHaloSpec.coversFill(Color.White.copy(alpha = .95f)))
         assertTrue(KitTextHaloSpec.coversFill(Color.White))
     }
 
