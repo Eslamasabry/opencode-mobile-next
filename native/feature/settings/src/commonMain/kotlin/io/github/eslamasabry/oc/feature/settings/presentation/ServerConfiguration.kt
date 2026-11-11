@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -55,13 +56,14 @@ public sealed interface ServerConfigurationUi {
  */
 public object ConfigurationSources {
     public fun ready(text: String): ServerConfigurationUi.Ready {
+        val root =
+            try {
+                Json.parseToJsonElement(text)
+            } catch (_: SerializationException) {
+                null
+            }
         val sources =
-            runCatching {
-                    (Json.parseToJsonElement(text) as? JsonObject)?.get("sources") as? JsonArray
-                }
-                .getOrNull()
-                ?.mapNotNull { it as? JsonObject }
-                .orEmpty()
+            ((root as? JsonObject)?.get("sources") as? JsonArray)?.mapNotNull { it as? JsonObject }.orEmpty()
         fun paths(type: String) =
             sources
                 .filter { (it["type"] as? JsonPrimitive)?.contentOrNull == type }
