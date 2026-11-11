@@ -12,10 +12,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onAllNodesWithText
-import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
@@ -123,14 +123,22 @@ class DockUndoRoomTest {
             mainClock.advanceTimeBy(1_000)
             onRoot().performTouchInput { swipeDown() }
             mainClock.advanceTimeBy(1_000)
-            val before = onAllNodesWithText("Reply number", substring = true).onFirst().getBoundsInRoot()
+            // One reply the person reads, followed by its own text (the composed set may differ by an off-screen row).
+            val read =
+                onAllNodesWithText("Reply number", substring = true)
+                    .fetchSemanticsNodes()
+                    .first { it.boundsInRoot.top >= 0f && it.boundsInRoot.bottom <= 820f * density.density }
+                    .config[SemanticsProperties.Text]
+                    .first()
+                    .text
+            val before = onNodeWithText(read).getBoundsInRoot()
             runOnUiThread { dock.offered = true }
             mainClock.advanceTimeBy(1_000)
-            val during = onAllNodesWithText("Reply number", substring = true).onFirst().getBoundsInRoot()
+            val during = onNodeWithText(read).getBoundsInRoot()
             assertEquals(before.top, during.top, "what the person reads moved when the bar came: $before then $during")
             runOnUiThread { dock.offered = false }
             mainClock.advanceTimeBy(1_000)
-            val after = onAllNodesWithText("Reply number", substring = true).onFirst().getBoundsInRoot()
+            val after = onNodeWithText(read).getBoundsInRoot()
             assertEquals(before.top, after.top, "what the person reads moved when the bar went: $before then $after")
         }
 }
