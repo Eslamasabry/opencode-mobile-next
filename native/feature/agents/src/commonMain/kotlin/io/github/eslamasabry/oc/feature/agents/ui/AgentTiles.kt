@@ -69,7 +69,6 @@ import io.github.eslamasabry.oc.ui.words.res.linuxAgentInstallDone
 import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadRemove
 import io.github.eslamasabry.oc.ui.words.res.serversWorking
 import io.github.eslamasabry.oc.engine.agents.check.PhoneCheckFailure
-import org.jetbrains.compose.resources.StringResource
 import io.github.eslamasabry.oc.ui.words.res.agentsChipCheck
 import io.github.eslamasabry.oc.ui.words.res.agentsCheckAction
 import io.github.eslamasabry.oc.ui.words.res.agentsChipResume
@@ -384,7 +383,7 @@ internal fun PhoneAgentSheet(state: AgentsUi, actions: AgentsActions, enabled: K
 }
 
 /** Why a phone check did not pass, in plain words (Flutter `AgentHostFailure` sentences). */
-internal fun checkFailureWords(failure: PhoneCheckFailure): StringResource =
+internal fun checkFailureWords(failure: PhoneCheckFailure): org.jetbrains.compose.resources.StringResource =
     when (failure) {
         PhoneCheckFailure.Busy -> Res.string.agentsFailBusy
         PhoneCheckFailure.WrongArchitecture -> Res.string.agentsFailArchitecture

@@ -15,7 +15,6 @@ import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
-import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
@@ -130,7 +129,6 @@ public fun FleetRigScreen(ui: FleetRigUi, actions: FleetRigActions) {
             loading = ui.kind == FleetRigKind.Starting,
             loadingLabel = stringResource(Res.string.teamJobsLoading),
             width = KitScreenWidth.Reading,
-            edges = KitScreenEdges.Bleed,
         ) {
             when (ui.kind) {
                 FleetRigKind.Starting -> Unit

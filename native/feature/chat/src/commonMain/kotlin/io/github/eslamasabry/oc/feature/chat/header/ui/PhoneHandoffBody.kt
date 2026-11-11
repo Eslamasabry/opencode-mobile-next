@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -137,7 +136,7 @@ private fun ColumnScope.Code(link: String, qrTag: String, linkTag: String, onCop
     KitQr(
         link,
         stringResource(Res.string.handoffUiPhoneQrLabel),
-        Modifier.widthIn(max = 280.dp).align(Alignment.CenterHorizontally).testTag(qrTag),
+        Modifier.align(Alignment.CenterHorizontally).testTag(qrTag),
     )
     KitSectionLabel(stringResource(Res.string.handoffUiPhoneLinkLabel))
     KitCodeBlock(

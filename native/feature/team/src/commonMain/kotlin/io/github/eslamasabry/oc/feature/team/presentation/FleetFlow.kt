@@ -4,7 +4,6 @@ import io.github.eslamasabry.oc.engine.team.TeamEngine
 import io.github.eslamasabry.oc.engine.team.TeamPhase
 import io.github.eslamasabry.oc.engine.team.TeamProvider
 import io.github.eslamasabry.oc.engine.team.fleet.FleetState
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -19,7 +18,7 @@ import kotlinx.coroutines.launch
  * collecting or the team is turned off. The connection is the page's, not the app's: it ends a few seconds after the
  * page is left.
  */
-@OptIn(ExperimentalCoroutinesApi::class)
+@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 internal fun TeamEngine.fleetState(profileId: String): Flow<FleetState> {
     val fleet = this.fleet ?: return flowOf(FleetState())
     return channelFlow {

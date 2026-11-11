@@ -88,7 +88,7 @@ public class ChatsAllViewModel(
                 // ANDR-1: a host with pin storage shows the row's visible pin action too.
                 val built =
                     AllConversationsRules.build(current)
-                        .let { it.copy(nowMs = kotlin.time.Clock.System.now().toEpochMilliseconds()) }
+                        .let { it.copy(nowMs = io.github.eslamasabry.oc.core.common.CommonBindings.clock().now().toEpochMilliseconds()) }
                 if (!pins.supported) built
                 else
                     built.copy(

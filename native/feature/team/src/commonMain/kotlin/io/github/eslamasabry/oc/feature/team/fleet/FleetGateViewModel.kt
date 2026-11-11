@@ -17,7 +17,6 @@ import io.github.eslamasabry.oc.feature.team.presentation.FleetPresent
 import io.github.eslamasabry.oc.feature.team.presentation.fleetState
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.TeamRoute
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -103,7 +102,7 @@ public class FleetGateViewModel(
             val receipt = fleet.control(profile, control)
             local.update { it.copy(sending = false, receipt = receipt, draft = if (receipt.accepted && control is FleetControl.Answer) "" else it.draft) }
             if (receipt.accepted) {
-                delay(ANSWERED_BEAT_MS)
+                kotlinx.coroutines.delay(ANSWERED_BEAT_MS)
                 nav.back()
             }
         }

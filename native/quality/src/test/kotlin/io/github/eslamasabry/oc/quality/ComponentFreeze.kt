@@ -206,7 +206,7 @@ internal object ComponentFreeze {
 
     private val moduleRef = Regex(""""(:[a-z][A-Za-z0-9_-]*(?::[A-Za-z0-9_-]+)*)"""")
     private val testDep = Regex("""\b(test|androidTest|testFixtures|kapt|ksp)\w*\s*\(\s*project\s*\(\s*"[^"]+"\s*\)\s*\)""")
-    private val excludedSet = Regex("""(?i)test|desktop|ios|jvm|benchmark|debug|preview|qa""")
+    private val excludedSet = Regex("""(?i)test|desktop|ios|jvm|benchmark|debug|preview|qa|^dev$""")
 
     /** `:androidApp` and every project module its build file reaches (test-only dependencies left out). */
     fun shippedModules(root: File): List<String> {
@@ -227,7 +227,8 @@ internal object ComponentFreeze {
     private fun sourceSets(root: File, module: String): List<File> {
         val src = File(root, module.drop(1).replace(':', '/') + "/src")
         val sets = src.listFiles().orEmpty().filter { it.isDirectory && !excludedSet.containsMatchIn(it.name) }
-        // The same-package release is the `switch` flavor; `preview` is the side-by-side id and is not frozen.
+        // The same-package release is the `switch` flavor; `preview` and `dev` (`.native.dev`, which turns off its widgets,
+        // tiles and link filter) are side-by-side ids and are not frozen.
         return sets.sortedBy { if (it.name == "main" || it.name == "commonMain") 0 else 1 }
     }
 
