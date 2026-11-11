@@ -64,6 +64,25 @@ class DockGestureTest {
     }
 
     @Test
+    fun `d - a scrub lifted after the finger left the strip sideways opens nothing, lifted on the ring it opens`() {
+        val h = Hits()
+        val off = DockGesture()
+        off.down(DockZone.Ring, x, 132f, 0L, h)
+        off.move(x, 150f, 32L, h)
+        off.move(x, 230f, 48L, h)
+        assertEquals(DockMode.Scrub, off.mode)
+        // Drifts off the strip toward the middle, at ring 2's height, outside the swell.
+        off.move(200f, 230f, 64L, h)
+        assertEquals(DockOutcome.Close, off.up(200f, 230f, 0f, h), "off the strip: nothing opens")
+
+        val on = DockGesture()
+        on.down(DockZone.Ring, x, 132f, 0L, h)
+        on.move(x, 150f, 32L, h)
+        on.move(x, 230f, 48L, h)
+        assertEquals(DockOutcome.Open(2), on.up(x, 230f, 0f, h), "on the strip: the ring under the lift opens")
+    }
+
+    @Test
     fun `an early sideways move pulls the list (or tucks) instead of scrubbing`() {
         val h = Hits()
         val g = DockGesture()
