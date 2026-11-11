@@ -38,7 +38,7 @@ internal class NativeProjectFiles(private val app: Application) {
                         count++
                         if (isPrivate(name)) private++
                     }
-                    StoredProject(top.name, bytes, count, private)
+                    StoredProject(top.name, bytes, count, private, folder = directory(top))
                 }
                 .sortedBy { it.name.lowercase() }
         var serverBytes = 0L
