@@ -7,13 +7,14 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.coroutines.test.runTest
 
 /**
  * w4-mcp-secrets, end to end through a real Oc2Gateway: a `/config` answer in the recorded 2.2.5 shape (a bare
  * `Config.Entry` list, servers under `info.mcp.servers`) registers every MCP env and header value, so the Server setup
- * page, previews, tool rows and logs mask them. Fakes are built from adjacent literals; assertion messages never print
- * them.
+ * page, previews, tool rows and logs mask them; and the typed-answer rule for named non-secret sign-in fields. Fakes
+ * are built from adjacent literals; assertion messages never print them.
  */
 class Oc2McpConfigSecretsTest {
     private val githubValue = "env-" + "W4McpGithub" + "1h2i"
@@ -112,5 +113,27 @@ class Oc2McpConfigSecretsTest {
             "github and linear at https://mcp.linear.example/sse, GITHUB_TOKEN in production",
             redactor.redact("github and linear at https://mcp.linear.example/sse, GITHUB_TOKEN in production"),
         )
+    }
+
+    @Test
+    fun `W4-MCP a plainly ordinary answer to a named non-secret sign-in field stays readable`() = runTest {
+        val redactor = Redactor()
+        server(redactor).gateway.startIntegrationOAuth("amazon-bedrock", "aws-profile", persistentMapOf("profile" to "default"), null)
+
+        assertFalse(redactor.containsSecret("default"), "an AWS profile named default is registered")
+        assertEquals("Pick the default model", redactor.redact("Pick the default model"))
+    }
+
+    @Test
+    fun `W4-MCP any other typed answer is still registered whole`() = runTest {
+        val typedProfile = "team-" + "W4Profile" + "42x"
+        val first = Redactor()
+        server(first).gateway.startIntegrationOAuth("amazon-bedrock", "aws-profile", persistentMapOf("profile" to typedProfile), null)
+        assertTrue(first.containsSecret(typedProfile), "a free-text answer to a non-secret field is not registered")
+
+        // The same ordinary word typed into a field that is not on the named list stays registered.
+        val second = Redactor()
+        server(second).gateway.startIntegrationOAuth("acme", "acme-oauth", persistentMapOf("workspace" to "default"), null)
+        assertTrue(second.containsSecret("default"), "an answer to an unlisted field is not registered")
     }
 }

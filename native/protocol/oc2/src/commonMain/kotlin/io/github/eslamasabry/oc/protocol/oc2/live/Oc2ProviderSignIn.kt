@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.protocol.oc2.live
 import io.github.eslamasabry.oc.core.common.*
 import io.github.eslamasabry.oc.core.domain.*
 import io.github.eslamasabry.oc.core.model.*
+import io.github.eslamasabry.oc.core.security.ConfigValues
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.ktor.http.*
 import kotlinx.collections.immutable.*
@@ -213,7 +214,9 @@ internal class Oc2ProviderSignIn(
         val scope = query()
         val offered = choices.load()[id to methodId].orEmpty()
         for ((field, value) in inputs) {
-            if (value !in offered[field].orEmpty()) redactor.registerSecret(value)
+            if (value in offered[field].orEmpty()) continue
+            if (field in NON_SECRET_FIELDS && ConfigValues.isPlainlyNotSecret(value)) continue
+            redactor.registerSecret(value)
         }
         val reply =
             gateway.json(
@@ -321,5 +324,19 @@ internal class Oc2ProviderSignIn(
 
     private companion object {
         const val MAX_CHOICES = 256
+
+        /**
+         * Visible sign-in fields that name a place or an account, never a credential, as a 2.2.5/2.2.6 server publishes
+         * them (Google Vertex, Amazon Bedrock, Snowflake, Cloudflare AI Gateway, Azure, GitHub Copilot, GitLab). A typed
+         * answer to one of them is left unregistered ONLY when it is also plainly ordinary by
+         * [ConfigValues.isPlainlyNotSecret] (an AWS profile "default", a custom location "global"): registered, such a
+         * word was masked in every preview and tool row. A free-text answer (a project id, an enterprise URL) is still
+         * registered whole, and so is every answer to any other field, `server` (OpenCode's hidden preset) included.
+         */
+        val NON_SECRET_FIELDS =
+            setOf(
+                "project", "location", "profile", "account", "accountId", "gatewayId", "resourceName",
+                "deploymentType", "enterpriseUrl", "instanceUrl",
+            )
     }
 }
