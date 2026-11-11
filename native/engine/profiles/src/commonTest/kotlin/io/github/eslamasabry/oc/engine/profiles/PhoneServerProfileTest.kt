@@ -81,4 +81,14 @@ class PhoneServerProfileTest {
         val created = h.store.upsert(StoredProfile(id("phone"), "This phone", "http://127.0.0.1:$port")).ok()
         assertEquals(false, created.toServerProfile(managedOnPhone = false)?.managedOnPhone)
     }
+
+    @Test
+    fun `W3-CONN-015 every build's own port flags its server, the other builds' ports do not`() {
+        // Same-package 4098, preview package 4100, a port the app moved to when its own was busy (4100..4199).
+        for (own in listOf(4098, 4100, 4102, 4117)) {
+            assertTrue(PhoneServerProfile.managedOnPhone(row("http://127.0.0.1:$own"), own), "port $own")
+            for (other in listOf(4096, 4097, 4098, 4100, 4102).filter { it != own })
+                assertFalse(PhoneServerProfile.managedOnPhone(row("http://127.0.0.1:$other"), own), "$other on a $own build")
+        }
+    }
 }
