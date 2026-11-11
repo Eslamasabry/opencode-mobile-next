@@ -79,6 +79,31 @@ class SettingsTruthUiTest {
     }
 
     @Test
+    fun `N1 a questions channel turned off in Android says so, and the row can be tapped though answers are read-only`() =
+        runComposeUiTest {
+            val asked = mutableListOf<InFlowConsentKind>()
+            val facts =
+                PermissionSettingsFacts(
+                    profile = ProfileId("phone"),
+                    name = "This phone",
+                    ticket = 1,
+                    answers = persistentListOf(InFlowConsentRow(InFlowConsentKind.NeedsYouNotifications, ConsentChoice.Denied)),
+                    writable = false,
+                    declined = 0,
+                    needsYou = NeedsYouAlerts.QuestionsChannelOff,
+                )
+            setContent {
+                SettingsThemed {
+                    PermissionSettingsContent(PermissionSettingsUi(facts), {}, {}, { asked += it }, {}, {}, {}, {})
+                }
+            }
+            onNodeWithText("question notifications", substring = true).assertExists()
+            onAllNodesWithText("Android blocks this app's notifications", substring = true).assertCountEquals(0)
+            onNodeWithText("question notifications", substring = true).performClick()
+            assertTrue(InFlowConsentKind.NeedsYouNotifications in asked, asked.toString())
+        }
+
+    @Test
     fun `S2 a connected server's missing features offer another server, never "no server yet"`() = runComposeUiTest {
         val actions = RecordingActions()
         val state =

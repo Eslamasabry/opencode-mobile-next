@@ -901,4 +901,5 @@
     <string name="appearancePreviewSpoken">عيّنة من التطبيق بهذه الاختيارات</string>
     <string name="consentWhyNeedsYouBlocked">يمنع Android إشعارات هذا التطبيق. اضغط لإصلاح ذلك في الإشعارات.</string>
     <string name="consentWhyNeedsYouWhileOpen">تصلك الإشعارات فقط والتطبيق مفتوح. اضغط لإبقاء الاتصال في الخلفية مفعّلًا.</string>
+    <string name="consentWhyNeedsYouChannelOff">أوقف Android إشعارات الأسئلة لهذا التطبيق. اضغط لتشغيلها في إعدادات Android.</string>
 </resources>

@@ -1,5 +1,8 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
+import android.app.Application
+import android.content.ActivityNotFoundException
+import android.content.Intent
 import dev.zacsweers.metro.*
 import io.github.eslamasabry.oc.core.common.*
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -34,6 +37,7 @@ class NativeSettingsAnswers(
     private val notifications: AndroidNotificationSettings,
     private val nav: AppNavigator,
     private val lifetime: NativeAnswerLifetime,
+    private val application: Application,
 ) : SettingsAnswersSource {
     override val changes: Flow<Unit> = flow {
         if (stores.warm() is Outcome.Ok)
@@ -145,6 +149,15 @@ class NativeSettingsAnswers(
         }
 
     override fun openHome(kind: InFlowConsentKind) {
+        // N1: a questions channel turned off in Android's settings has no switch on the Notifications page, so the
+        // row opens Android's notification settings for this app, where the channel is.
+        if (
+            kind == InFlowConsentKind.NeedsYouNotifications &&
+                needsYouAlerts(notifications.facts.value, background.facts.value.enabled) ==
+                    NeedsYouAlerts.QuestionsChannelOff &&
+                openAndroidNotificationSettings()
+        )
+            return
         nav.open(
             if (kind == InFlowConsentKind.NeedsYouNotifications) SettingsRoute.Notifications
             else PhoneRoute.KeepRunning
@@ -157,6 +170,22 @@ class NativeSettingsAnswers(
     }
 
     private fun stale(): Outcome<Nothing> = Failure.Refused(RefusalReason.StaleScope).failed()
+
+    /** False when this phone's settings app has no such page: the caller falls back to the Notifications page. */
+    private fun openAndroidNotificationSettings(): Boolean {
+        val intent =
+            Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                .putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, application.packageName)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        return try {
+            application.startActivity(intent)
+            true
+        } catch (_: ActivityNotFoundException) {
+            false
+        } catch (_: SecurityException) {
+            false
+        }
+    }
 }
 
 /**

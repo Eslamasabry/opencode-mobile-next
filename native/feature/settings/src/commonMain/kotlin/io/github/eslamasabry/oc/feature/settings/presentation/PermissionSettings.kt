@@ -42,8 +42,14 @@ public enum class NeedsYouAlerts {
     /** Questions are switched on, Android lets them through and the background connection runs. */
     On,
 
-    /** Android blocks this app's notifications or its questions channel. */
+    /** Android blocks all of this app's notifications (the Notifications page leads with that fix). */
     AndroidBlocks,
+
+    /**
+     * Android lets the app notify but its questions channel is turned off in Android's settings. The Notifications
+     * page shows no fix for this, so the row opens Android's own notification settings for the app.
+     */
+    QuestionsChannelOff,
 
     /** "Questions for you" is switched off in Notifications. */
     QuestionsOff,
@@ -55,11 +61,16 @@ public enum class NeedsYouAlerts {
 /** One fact for both pages: the Notifications page's switches and Android's state, plus the background connection. */
 public fun needsYouAlerts(notifications: NotificationFacts, backgroundOn: Boolean): NeedsYouAlerts =
     when {
-        notifications.blocked || !notifications.questionsAllowed -> NeedsYouAlerts.AndroidBlocks
+        notifications.blocked -> NeedsYouAlerts.AndroidBlocks
+        !notifications.questionsAllowed -> NeedsYouAlerts.QuestionsChannelOff
         !notifications.questions -> NeedsYouAlerts.QuestionsOff
         !backgroundOn -> NeedsYouAlerts.OnlyWhileOpen
         else -> NeedsYouAlerts.On
     }
+
+/** Android, not the app, stops the notification: only Android's own settings can lift it. */
+public fun NeedsYouAlerts?.blockedByAndroid(): Boolean =
+    this == NeedsYouAlerts.AndroidBlocks || this == NeedsYouAlerts.QuestionsChannelOff
 
 /**
  * The "Notify me when the agent needs me" row follows [live]: On only when it really is on, Off
@@ -151,10 +162,10 @@ public class PermissionSettingsViewModel(
         val facts = ui.facts ?: return
         val answer = facts.answers.firstOrNull { it.kind == kind } ?: return
         if (ui.busy) return
-        // Android's block is lifted on the Notifications page (it leads with that fix), not here.
+        // Android's block is lifted where Android allows it (the Notifications page leads with that fix; a channel
+        // turned off opens Android's settings for the app), not by the answer here.
         val blocked =
-            kind == InFlowConsentKind.NeedsYouNotifications &&
-                facts.needsYou == NeedsYouAlerts.AndroidBlocks
+            kind == InFlowConsentKind.NeedsYouNotifications && facts.needsYou.blockedByAndroid()
         if (answer.choice == ConsentChoice.Accepted || blocked) source.openHome(kind)
         else if (facts.writable) mutable.update { it.copy(confirm = kind) }
     }

@@ -786,4 +786,5 @@
     <string name="appearancePreviewSpoken">采用这些选择的应用示例</string>
     <string name="consentWhyNeedsYouBlocked">Android 阻止了此应用的通知。点按即可在“通知”中修复。</string>
     <string name="consentWhyNeedsYouWhileOpen">只有在应用打开时你才会收到通知。点按以保持后台连接开启。</string>
+    <string name="consentWhyNeedsYouChannelOff">Android 已关闭此应用的提问通知。点按即可在 Android 设置中开启。</string>
 </resources>

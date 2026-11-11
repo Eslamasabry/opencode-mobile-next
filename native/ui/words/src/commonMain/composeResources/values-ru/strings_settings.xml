@@ -855,4 +855,5 @@
     <string name="appearancePreviewSpoken">Пример приложения с этими настройками</string>
     <string name="consentWhyNeedsYouBlocked">Android блокирует уведомления этого приложения. Нажмите, чтобы исправить это в разделе «Уведомления».</string>
     <string name="consentWhyNeedsYouWhileOpen">Уведомления приходят, только пока приложение открыто. Нажмите, чтобы оставить фоновое подключение включённым.</string>
+    <string name="consentWhyNeedsYouChannelOff">В Android отключены уведомления с вопросами от этого приложения. Нажмите, чтобы включить их в настройках Android.</string>
 </resources>

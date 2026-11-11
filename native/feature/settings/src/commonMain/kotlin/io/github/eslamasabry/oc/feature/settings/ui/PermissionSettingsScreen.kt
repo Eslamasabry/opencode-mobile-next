@@ -252,6 +252,7 @@ private fun PermissionAnswer(
                 stringResource(
                     when (needsYou) {
                         NeedsYouAlerts.AndroidBlocks -> Res.string.consentWhyNeedsYouBlocked
+                        NeedsYouAlerts.QuestionsChannelOff -> Res.string.consentWhyNeedsYouChannelOff
                         NeedsYouAlerts.OnlyWhileOpen -> Res.string.consentWhyNeedsYouWhileOpen
                         else -> Res.string.consentWhyNeedsYou
                     }
@@ -276,7 +277,7 @@ private fun PermissionAnswer(
                 (accepted ||
                     writable ||
                     (row.kind == InFlowConsentKind.NeedsYouNotifications &&
-                        needsYou == NeedsYouAlerts.AndroidBlocks)),
+                        needsYou.blockedByAndroid())),
         disabledReason =
             stringResource(
                 if (busy) Res.string.automationSaving else Res.string.consentStorageFailed

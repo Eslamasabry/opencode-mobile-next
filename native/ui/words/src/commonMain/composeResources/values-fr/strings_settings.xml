@@ -831,4 +831,5 @@
     <string name="appearancePreviewSpoken">Un aperçu de l’application avec ces choix</string>
     <string name="consentWhyNeedsYouBlocked">Android bloque les notifications de cette app. Touchez pour corriger cela dans Notifications.</string>
     <string name="consentWhyNeedsYouWhileOpen">Vous n’êtes prévenu que lorsque l’app est ouverte. Touchez pour garder la connexion en arrière-plan.</string>
+    <string name="consentWhyNeedsYouChannelOff">Android a désactivé les notifications de questions de cette app. Touchez pour les activer dans les réglages d'Android.</string>
 </resources>

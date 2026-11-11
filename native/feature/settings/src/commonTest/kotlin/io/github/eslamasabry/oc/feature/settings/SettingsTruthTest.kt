@@ -6,6 +6,7 @@ import io.github.eslamasabry.oc.engine.settings.consent.InFlowConsentRow
 import io.github.eslamasabry.oc.feature.settings.presentation.ConfigurationSources
 import io.github.eslamasabry.oc.feature.settings.presentation.NeedsYouAlerts
 import io.github.eslamasabry.oc.feature.settings.presentation.NotificationFacts
+import io.github.eslamasabry.oc.feature.settings.presentation.blockedByAndroid
 import io.github.eslamasabry.oc.feature.settings.presentation.followingLive
 import io.github.eslamasabry.oc.feature.settings.presentation.needsYouAlerts
 import kotlin.test.Test
@@ -24,7 +25,14 @@ class SettingsTruthTest {
         assertEquals(NeedsYouAlerts.OnlyWhileOpen, needsYouAlerts(on, backgroundOn = false))
         assertEquals(NeedsYouAlerts.QuestionsOff, needsYouAlerts(on.copy(questions = false), true))
         assertEquals(NeedsYouAlerts.AndroidBlocks, needsYouAlerts(on.copy(blocked = true), true))
-        assertEquals(NeedsYouAlerts.AndroidBlocks, needsYouAlerts(on.copy(questionsAllowed = false), true))
+        // Gate: a questions channel turned off in Android is its own reason; the Notifications page has no fix for
+        // it, so the row must not send the person there with "Android blocks this app's notifications".
+        assertEquals(NeedsYouAlerts.QuestionsChannelOff, needsYouAlerts(on.copy(questionsAllowed = false), true))
+        assertEquals(NeedsYouAlerts.AndroidBlocks, needsYouAlerts(on.copy(blocked = true, questionsAllowed = false), true))
+        assertTrue(NeedsYouAlerts.QuestionsChannelOff.blockedByAndroid())
+        assertTrue(NeedsYouAlerts.AndroidBlocks.blockedByAndroid())
+        assertFalse(NeedsYouAlerts.OnlyWhileOpen.blockedByAndroid())
+        assertFalse(NeedsYouAlerts.QuestionsOff.blockedByAndroid())
     }
 
     @Test
