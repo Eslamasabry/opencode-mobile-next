@@ -304,20 +304,21 @@ public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -
             // The page does not take focus while a modal is up either (words on glass 3, coordinator 2026-11-11): its
             // content is a focus group that cancels focus entering it, and the focus it held is cleared when the modal
             // is asked to show. From the moment the modal is asked to hide (its exit has only begun) page fields may take
-            // focus again: Find opened from a sheet's row asks once, as the sheet leaves. Then the element that had focus
-            // gets it back only if (a) the page had it when the modal showed, (b) nothing on the page has taken it since,
+            // focus again: Find opened from a sheet's row asks once, as the sheet leaves. When it has gone, the element
+            // that had focus gets it back only if (a) the page had it when the modal showed, (b) nothing on the page has taken it since,
             // and (c) the soft keyboard was up when the modal showed, or none was ever seen (a hardware keyboard, a
             // desktop): focus on a field brings the keyboard back, which the person had put away.
             val modal = state.isShowing || state.isDialogShowing
             // Asked to show (entering or shown), not leaving; read live in the focus callbacks below.
-            val holds = state.shown.targetState || state.dialogShown.targetState
             val holding = { state.shown.targetState || state.dialogShown.targetState }
             val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
             val pageFocus = remember { androidx.compose.ui.focus.FocusRequester() }
             val held = remember { PageFocus() }
             PageKeyboard(held)
-            androidx.compose.runtime.LaunchedEffect(holds) {
-                if (holds) {
+            // Saved when a modal is asked to show; given back once it has gone (at the end of its exit: the page's
+            // own focus handling, such as a conversation's landing spot, sees the page uncovered by then).
+            androidx.compose.runtime.LaunchedEffect(modal) {
+                if (modal) {
                     val had = held.has
                     held.saved = had && (held.keyboardUp || !held.keyboardSeen)
                     if (held.saved) pageFocus.saveFocusedChild()

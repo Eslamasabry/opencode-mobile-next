@@ -488,9 +488,10 @@ class ChatTypingFocusTest {
             runOnIdle { screen.header = screen.header.copy(renaming = "Fix flaky checkout test") }
             waitForIdle()
             composer().assertIsNotFocused()
-            val dialogField = onNode(isFocused() and hasSetTextAction(), useUnmergedTree = true)
-            assertEquals("Fix flaky checkout test", dialogField.words(), "the dialog's field has the focus")
+            // The dialog's own field holds focus and takes the typing (its first words come from the dialog).
             type("Checkout")
+            val dialogField = onNode(isFocused() and hasSetTextAction(), useUnmergedTree = true)
+            assertTrue("Checkout" in dialogField.words(), "the dialog's field has what was typed: ${dialogField.words()}")
             assertEquals("", composer().words(), "no stray words in the message box")
             onNodeWithText("Cancel").performClick()
             // Cancel answers null; the header presenter then closes the dialog.
