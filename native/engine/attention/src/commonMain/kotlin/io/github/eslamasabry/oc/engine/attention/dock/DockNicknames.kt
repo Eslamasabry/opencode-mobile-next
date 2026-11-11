@@ -8,6 +8,7 @@ import io.github.eslamasabry.oc.core.data.scope.KeyScope
 import io.github.eslamasabry.oc.core.data.scope.KeyShape
 import io.github.eslamasabry.oc.core.data.scope.ProfileScope
 import io.github.eslamasabry.oc.engine.attention.activity.AttentionKeyStore
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
@@ -53,8 +54,8 @@ internal class DockIdList(private val store: AttentionKeyStore, private val keyO
 
     suspend fun load(profile: ProfileId): List<SessionId> =
         lock.withLock {
-            val raw = runCatching { store.read(keyOf(profile)) }.getOrNull() ?: return@withLock emptyList()
-            val array = runCatching { Json.parseToJsonElement(raw) as? JsonArray }.getOrNull() ?: return@withLock emptyList()
+            val raw = orNull { store.read(keyOf(profile)) } ?: return@withLock emptyList()
+            val array = orNull { Json.parseToJsonElement(raw) as? JsonArray } ?: return@withLock emptyList()
             array.mapNotNull { (it as? JsonPrimitive)?.takeIf { p -> p.isString }?.content?.takeIf { s -> s.isNotEmpty() } }
                 .distinct().takeLast(max).map(::SessionId)
         }
@@ -62,9 +63,9 @@ internal class DockIdList(private val store: AttentionKeyStore, private val keyO
     suspend fun save(profile: ProfileId, current: () -> List<SessionId>): Boolean =
         lock.withLock {
             val ids = current().takeLast(max)
-            runCatching {
+            orNull {
                 if (ids.isEmpty()) store.remove(keyOf(profile)) else store.write(keyOf(profile), JsonArray(ids.map { JsonPrimitive(it.raw) }).toString())
-            }.getOrDefault(false)
+            } ?: false
         }
 }
 
@@ -96,8 +97,8 @@ public class DockPlacementStore(private val store: AttentionKeyStore) {
 
     public suspend fun load(): DockPlacement =
         lock.withLock {
-            val side = runCatching { store.read(DockKeys.SIDE) }.getOrNull()
-            val bias = runCatching { store.read(DockKeys.BIAS) }.getOrNull()?.toFloatOrNull()
+            val side = orNull { store.read(DockKeys.SIDE) }
+            val bias = orNull { store.read(DockKeys.BIAS) }?.toFloatOrNull()
             DockPlacement.of(
                 if (side == "start") DockSide.Start else DockSide.End,
                 bias ?: DockPlacement.DEFAULT_BIAS,
@@ -106,10 +107,10 @@ public class DockPlacementStore(private val store: AttentionKeyStore) {
 
     public suspend fun save(placement: DockPlacement): Boolean =
         lock.withLock {
-            runCatching {
+            orNull {
                 store.write(DockKeys.SIDE, if (placement.side == DockSide.Start) "start" else "end") &&
                     store.write(DockKeys.BIAS, placement.bias.toString())
-            }.getOrDefault(false)
+            } ?: false
         }
 }
 
@@ -160,8 +161,8 @@ public class DockNicknames(private val store: AttentionKeyStore) {
         cache[profile] ?: read(profile).also { cache[profile] = it }
 
     private suspend fun read(profile: ProfileId): Map<String, String> {
-        val raw = runCatching { store.read(DockKeys.namesKey(profile)) }.getOrNull() ?: return emptyMap()
-        val obj = runCatching { Json.parseToJsonElement(raw) as? JsonObject }.getOrNull() ?: return emptyMap()
+        val raw = orNull { store.read(DockKeys.namesKey(profile)) } ?: return emptyMap()
+        val obj = orNull { Json.parseToJsonElement(raw) as? JsonObject } ?: return emptyMap()
         return buildMap {
             for ((session, value) in obj) {
                 val text = (value as? JsonPrimitive)?.takeIf { it.isString }?.content
@@ -171,13 +172,13 @@ public class DockNicknames(private val store: AttentionKeyStore) {
     }
 
     private suspend fun write(profile: ProfileId, names: Map<String, String>): Boolean =
-        runCatching {
+        orNull {
             if (names.isEmpty()) {
                 store.remove(DockKeys.namesKey(profile))
             } else {
                 store.write(DockKeys.namesKey(profile), JsonObject(names.mapValues { JsonPrimitive(it.value) }).toString())
             }
-        }.getOrDefault(false)
+        } ?: false
 
     public companion object {
         /** A label under a ring is 11 px; longer names are cut at rest and shown whole in the panel. */
@@ -207,3 +208,17 @@ public class DockNicknames(private val store: AttentionKeyStore) {
         }
     }
 }
+
+/**
+ * A failed read, parse or write reads as nothing, as before; cancellation is never swallowed (Konsist K3 bans
+ * `runCatching` in a file with suspend functions).
+ */
+@Suppress("TooGenericExceptionCaught")
+private inline fun <T> orNull(block: () -> T): T? =
+    try {
+        block()
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        null
+    }
