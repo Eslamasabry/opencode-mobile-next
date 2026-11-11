@@ -771,6 +771,9 @@ private fun DockHitNode(state: KitEdgeDockState) {
                     // so a scroll or a long press that starts on it stays the page's (dock study, finding 1).
                     val band = zone == DockZone.Nub
                     if (!band) down.consume()
+                    // The page shares the band's touches and sees them after the dock only in the Initial pass: the band
+                    // reads (and takes) its tap's lift and its sideways drag there, before the page could act on them.
+                    val pass = if (band) PointerEventPass.Initial else PointerEventPass.Main
                     val t0 = down.uptimeMillis
                     state.gesture.down(zone, x0, y0, t0, state.hits)
                     state.pressRing = if (zone == DockZone.Ring) state.gesture.ring else -1
@@ -788,9 +791,9 @@ private fun DockHitNode(state: KitEdgeDockState) {
                                     viewConfiguration.longPressTimeoutMillis - (now - t0)
                                 } else -1L
                             val event =
-                                if (wait > 0) withTimeoutOrNull(wait) { awaitPointerEvent() }
+                                if (wait > 0) withTimeoutOrNull(wait) { awaitPointerEvent(pass) }
                                 else if (band && state.gesture.mode == DockMode.NubPress) null
-                                else awaitPointerEvent()
+                                else awaitPointerEvent(pass)
                             if (event == null && band) {
                                 // A long press on the band is the page's.
                                 state.gesture.cancel()
