@@ -4,49 +4,48 @@ import androidx.compose.runtime.Composable
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsInside
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.words.res.*
-import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
 /** S6: the title and acceptance words of a page inside a row, reusing Flutter's own keys. */
-private fun insideKeys(inside: SettingsInside): Pair<StringResource, List<StringResource>> =
+@Composable
+internal fun insideTitle(inside: SettingsInside): String =
     when (inside) {
-        SettingsInside.LinuxProcesses ->
-            Res.string.linuxMgrProcTitle to listOf(Res.string.nativeSearchAliasesRunning)
-        SettingsInside.LinuxPorts ->
-            Res.string.linuxMgrPortsTitle to listOf(Res.string.nativeSearchAliasesLinuxPorts)
-        SettingsInside.LinuxStorage ->
-            Res.string.linuxMgrStorageTitle to listOf(Res.string.nativeSearchAliasesPhoneStorage)
-        SettingsInside.LinuxPackages ->
-            Res.string.linuxMgrPkgTitle to listOf(Res.string.nativeSearchAliasesLinuxPackages)
-        SettingsInside.UsageSpent ->
-            Res.string.usageSectionSpent to listOf(Res.string.discoverSpentAliases)
-        SettingsInside.UsageBudgets ->
-            Res.string.usageBudgetTitle to listOf(Res.string.discoverBudgetAliases)
-        SettingsInside.UsageRemaining ->
-            Res.string.usageTabPlans to listOf(Res.string.discoverRemainingAliases)
-        SettingsInside.UsageAlerts ->
-            Res.string.usageAlertsTitle to listOf(Res.string.discoverQuotaMonitorAliases)
-        SettingsInside.NotificationsQuiet ->
-            Res.string.monitorQuiet to listOf(Res.string.discoverNotifyQuietAliases)
-        SettingsInside.KeepRunningBattery ->
-            Res.string.r40RelationsKeepRunning to listOf(Res.string.nativeSearchAliasesKeepRunning)
-        SettingsInside.AppearanceMode ->
-            Res.string.e7SettingsUi69 to listOf(Res.string.discoverAppearanceModeAliases)
-        SettingsInside.AppearanceTheme ->
-            Res.string.e7SettingsUi70 to listOf(Res.string.discoverThemeAliases)
-        SettingsInside.VoiceNotices ->
-            Res.string.voiceNoticesTitle to listOf(Res.string.settingsHubSearchVoiceAliases)
-        SettingsInside.AddServer ->
-            Res.string.e7SetupAddServer to listOf(Res.string.discoverConnectionHelpAliases)
-        SettingsInside.Demo ->
-            Res.string.settingsTryDemo to listOf(Res.string.nativeSearchAliasesDemo)
+        SettingsInside.LinuxProcesses -> stringResource(Res.string.linuxMgrProcTitle)
+        SettingsInside.LinuxPorts -> stringResource(Res.string.linuxMgrPortsTitle)
+        SettingsInside.LinuxStorage -> stringResource(Res.string.linuxMgrStorageTitle)
+        SettingsInside.LinuxPackages -> stringResource(Res.string.linuxMgrPkgTitle)
+        SettingsInside.UsageSpent -> stringResource(Res.string.usageSectionSpent)
+        SettingsInside.UsageBudgets -> stringResource(Res.string.usageBudgetTitle)
+        SettingsInside.UsageRemaining -> stringResource(Res.string.usageTabPlans)
+        SettingsInside.UsageAlerts -> stringResource(Res.string.usageAlertsTitle)
+        SettingsInside.NotificationsQuiet -> stringResource(Res.string.monitorQuiet)
+        SettingsInside.KeepRunningBattery -> stringResource(Res.string.r40RelationsKeepRunning)
+        SettingsInside.AppearanceMode -> stringResource(Res.string.e7SettingsUi69)
+        SettingsInside.AppearanceTheme -> stringResource(Res.string.e7SettingsUi70)
+        SettingsInside.VoiceNotices -> stringResource(Res.string.voiceNoticesTitle)
+        SettingsInside.AddServer -> stringResource(Res.string.e7SetupAddServer)
+        SettingsInside.Demo -> stringResource(Res.string.settingsTryDemo)
     }
-
-@Composable internal fun insideTitle(inside: SettingsInside): String = stringResource(insideKeys(inside).first)
 
 @Composable
 internal fun insideAliases(inside: SettingsInside): String =
-    insideKeys(inside).second.map { stringResource(it) }.joinToString(" ")
+    when (inside) {
+        SettingsInside.LinuxProcesses -> stringResource(Res.string.nativeSearchAliasesRunning)
+        SettingsInside.LinuxPorts -> stringResource(Res.string.nativeSearchAliasesLinuxPorts)
+        SettingsInside.LinuxStorage -> stringResource(Res.string.nativeSearchAliasesPhoneStorage)
+        SettingsInside.LinuxPackages -> stringResource(Res.string.nativeSearchAliasesLinuxPackages)
+        SettingsInside.UsageSpent -> stringResource(Res.string.discoverSpentAliases)
+        SettingsInside.UsageBudgets -> stringResource(Res.string.discoverBudgetAliases)
+        SettingsInside.UsageRemaining -> stringResource(Res.string.discoverRemainingAliases)
+        SettingsInside.UsageAlerts -> stringResource(Res.string.discoverQuotaMonitorAliases)
+        SettingsInside.NotificationsQuiet -> stringResource(Res.string.discoverNotifyQuietAliases)
+        SettingsInside.KeepRunningBattery -> stringResource(Res.string.nativeSearchAliasesKeepRunning)
+        SettingsInside.AppearanceMode -> stringResource(Res.string.discoverAppearanceModeAliases)
+        SettingsInside.AppearanceTheme -> stringResource(Res.string.discoverThemeAliases)
+        SettingsInside.VoiceNotices -> stringResource(Res.string.settingsHubSearchVoiceAliases)
+        SettingsInside.AddServer -> stringResource(Res.string.discoverConnectionHelpAliases)
+        SettingsInside.Demo -> stringResource(Res.string.nativeSearchAliasesDemo)
+    }
 
 internal fun insideGlyph(inside: SettingsInside) =
     when (inside) {
