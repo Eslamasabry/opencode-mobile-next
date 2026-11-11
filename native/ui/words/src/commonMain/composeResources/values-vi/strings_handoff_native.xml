@@ -36,6 +36,6 @@
     <string name="handoffNativeBlockUnconfirmed">Ứng dụng không thể xác nhận rằng các tác nhân trên điện thoại này mở được thư mục của cuộc trò chuyện này, nên sẽ không khởi động tác nhân nào ở sai chỗ. Hãy mở Tác nhân để kiểm tra chúng đã được cài đặt và sẵn sàng, rồi thử lại.</string>
     <string name="handoffNativeContinueWith">Tiếp tục với %1$s</string>
     <string name="handoffNativeWhatHandedOver">Những gì sẽ được chuyển giao</string>
-    <string name="handoffNativeNoReadyTitle">Không có tác nhân nào sẵn sàng</string>
+    <string name="handoffNativeNoReadyTitle">Không có tác nhân nào sẵn sàng trên điện thoại này</string>
     <string name="handoffNativeNotStartedBody">Hiện chưa thể bắt đầu chuyển giao từ cuộc trò chuyện này. Mở Tác nhân để kiểm tra một tác nhân đã được cài và sẵn sàng trên điện thoại này, rồi thử lại.</string>
 </resources>

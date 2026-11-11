@@ -36,6 +36,6 @@
     <string name="handoffNativeBlockUnconfirmed">O app não conseguiu confirmar que os agentes deste celular podem abrir a pasta desta conversa, então nenhum é iniciado no lugar errado. Abra Agentes para ver se estão instalados e prontos e tente novamente.</string>
     <string name="handoffNativeContinueWith">Continuar com %1$s</string>
     <string name="handoffNativeWhatHandedOver">O que será repassado</string>
-    <string name="handoffNativeNoReadyTitle">Nenhum agente está pronto</string>
+    <string name="handoffNativeNoReadyTitle">Nenhum agente está pronto neste telefone</string>
     <string name="handoffNativeNotStartedBody">A transferência não pôde começar a partir desta conversa agora. Abra Agentes para verificar se há um agente instalado e pronto neste celular e tente de novo.</string>
 </resources>

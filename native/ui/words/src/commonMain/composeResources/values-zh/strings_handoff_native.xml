@@ -36,6 +36,6 @@
     <string name="handoffNativeBlockUnconfirmed">应用无法确认这部手机上的智能体能否打开此对话的文件夹，因此不会启动任何智能体，以免在错误的位置运行。请打开“智能体”检查它们是否已安装并就绪，然后重试。</string>
     <string name="handoffNativeContinueWith">用 %1$s 继续</string>
     <string name="handoffNativeWhatHandedOver">将移交的内容</string>
-    <string name="handoffNativeNoReadyTitle">没有就绪的智能体</string>
+    <string name="handoffNativeNoReadyTitle">这部手机上没有就绪的智能体</string>
     <string name="handoffNativeNotStartedBody">暂时无法从这个对话开始交接。请打开智能体，确认这部手机上已安装并准备好一个智能体，然后重试。</string>
 </resources>
