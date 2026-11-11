@@ -73,6 +73,11 @@ public data class Session(
     val compactingSinceMs: Long? = null,
     val lastRunFailed: Boolean = false,
     val contextUse: SessionContextUse? = null,
+    /**
+     * The conversation this one was forked from, when the server marks it a fork. A fork also carries [parentId]
+     * (OpenCode 2 `fork` beside `parentID`), so this is what keeps a fork out of the sub-agent lists.
+     */
+    val forkOf: SessionId? = null,
 )
 
 /** Open enum (wire value kept): `idle`, `busy`, `retry`, or anything newer. */
