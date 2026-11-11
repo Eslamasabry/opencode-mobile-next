@@ -3,7 +3,7 @@
 <resources>
     <string name="previewQrLeaveTitle">Открыть эту ссылку в браузере?</string>
     <string name="previewQrPortLabel">Номер порта</string>
-    <string name="previewQrPortHelp">Или введите порт, который прослушивает сервер разработки.</string>
+    <string name="previewQrPortHelp">Или введите номер порта запущенного приложения.</string>
     <string name="previewQrPortInvalid">Введите порт от 1 до 65535.</string>
     <string name="previewQrPortOpen">Открыть порт</string>
     <string name="previewQrPairFilled">Заполнено из кода сопряжения. Проверьте и сохраните.</string>

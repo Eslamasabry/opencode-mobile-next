@@ -3,7 +3,7 @@
 <resources>
     <string name="previewQrLeaveTitle">Mở liên kết này trong trình duyệt?</string>
     <string name="previewQrPortLabel">Số cổng</string>
-    <string name="previewQrPortHelp">Hoặc nhập cổng mà máy chủ phát triển đang lắng nghe.</string>
+    <string name="previewQrPortHelp">Hoặc nhập số cổng của một ứng dụng đang chạy.</string>
     <string name="previewQrPortInvalid">Nhập cổng từ 1 đến 65535.</string>
     <string name="previewQrPortOpen">Mở cổng</string>
     <string name="previewQrPairFilled">Đã điền từ mã ghép nối. Hãy kiểm tra rồi lưu.</string>
