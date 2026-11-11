@@ -89,7 +89,7 @@
     <string name="globalSessionsFilterActive">活动</string>
     <string name="globalSessionsArchivedNoMatchMessage">没有标题匹配的已归档对话。请尝试更短的搜索词。</string>
     <string name="globalSessionsArchivedEmptyTitle">没有已归档的对话</string>
-    <string name="globalSessionsArchivedEmptyMessage">你在“工作”中归档的对话会显示在这里。</string>
+    <string name="globalSessionsArchivedEmptyMessage">你归档的对话会显示在这里。</string>
     <string name="globalSessionsShowActive">显示活动对话</string>
     <string name="globalSessionsProjectInUse">%1$s · 使用中</string>
     <string name="globalSessionsCopyFolder">复制文件夹路径</string>
@@ -197,7 +197,7 @@
     <string name="chatsHomeFailed">已失败</string>
     <string name="chatsHomeToday">今天</string>
     <string name="chatsHomeEarlier">更早</string>
-    <string name="chatsHomeOnlyProject">仅显示 %1$s 中的对话。此服务器无法列出所有项目。</string>
+    <string name="chatsHomeOnlyProject">仅显示“%1$s”中的对话。此服务器无法列出所有项目。</string>
     <string name="chatsHomeIncomplete">部分对话无法加载</string>
     <string name="shellServerPlusOthers">%1$s +%2$d</string>
     <string name="chatsHomeOpening">正在打开…</string>

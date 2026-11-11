@@ -138,6 +138,9 @@ class KonsistRulesTest {
             mapOf(
                 "/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/DiagnosticsAttentionWiring.kt" to
                     "the uncaught-crash line: this device's logcat is the one place the crash message is kept (834d840fbd)",
+                "/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/AppLogSinks.kt" to
+                    "the logcat sink of the app's own log port (4358d7e9fe, 06ebde6313): only ever a delegate of the " +
+                    "redacting writer, so every line is already redacted; debug builds, or a tag a tester switched on",
                 "/ui/gate/src/desktopMain/kotlin/io/github/eslamasabry/oc/ui/gate/AlignGuard.kt" to
                     "test tooling, never in the app: tells the developer a baselined rule can shrink",
                 "/ui/gate/src/desktopMain/kotlin/io/github/eslamasabry/oc/ui/gate/LayoutGuard.kt" to

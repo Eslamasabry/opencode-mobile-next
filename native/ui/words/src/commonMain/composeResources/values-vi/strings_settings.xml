@@ -259,7 +259,7 @@
     <string name="serverSettingsUpgradeKeepsData">Dữ liệu máy chủ được giữ nguyên</string>
     <string name="serverSettingsCopyUpdateCommands">Sao chép lệnh cập nhật cho %1$s</string>
     <string name="serverSettingsAddressLabel">Địa chỉ</string>
-    <string name="languagePickerPartlyTranslated">Dịch một phần (%1$d %)</string>
+    <string name="languagePickerPartlyTranslated">Dịch một phần (%1$d%)</string>
     <string name="appearancePickerPreviewLabel">Xem trước %1$s</string>
     <string name="appearancePickerPreviewIn">Xem trước ở chế độ</string>
     <string name="appearancePickerInUse">Đang dùng</string>

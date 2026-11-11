@@ -19,7 +19,11 @@ public const val OPENCODE_AGENT_ID: String = "opencode"
 
 public data class FeedRunning(val sinceMs: Long?, val command: String? = null)
 
-public data class FeedPermission(val requestId: String, val command: String)
+/**
+ * A request waiting on the person. [command] is what it targets (the shell command, or the file); [kind] is the
+ * server's permission type (`bash`, `edit`, `write`, `read`, ...), which the home row words its sentence by.
+ */
+public data class FeedPermission(val requestId: String, val command: String, val kind: String = "bash")
 
 /**
  * One conversation row on Conversations (Dart `ChatFeedItem`, 17 §1.6). Immutable, and it holds

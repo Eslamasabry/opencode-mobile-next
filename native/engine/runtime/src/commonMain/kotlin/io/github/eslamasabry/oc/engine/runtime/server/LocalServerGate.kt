@@ -35,6 +35,11 @@ public class LocalServerGate(
     private val afterRestartWait: Duration = 30.seconds,
     private val firstPoll: Duration = 500.milliseconds,
     private val maxPoll: Duration = 4.seconds,
+    /**
+     * How much longer the server process may still be booting ([LaunchStartRules.stillBooting] of its age), zero when
+     * no process runs. A booting server is waited on, never restarted: a cold phone boot can take well over [firstWait].
+     */
+    private val booting: suspend (ProfileId) -> Duration = { Duration.ZERO },
 ) {
     public suspend fun awaitReady(profile: ProfileId): LocalServerWait {
         if (up(profile)) return LocalServerWait.Ready
@@ -42,6 +47,11 @@ public class LocalServerGate(
         onWaiting(profile, true)
         try {
             if (pollUntil(profile, firstWait)) return LocalServerWait.Ready
+            // Bounded: the booting window ends at LaunchStartRules.staleAfter of the process's age.
+            val young = booting(profile)
+            if (young > Duration.ZERO && pollUntil(profile, young)) return LocalServerWait.Ready
+            // The person may have stopped it meanwhile: never start what they stopped.
+            if (!mayWait(profile)) return LocalServerWait.NotAnswering
             if (restart(profile) && pollUntil(profile, afterRestartWait)) return LocalServerWait.Ready
             return LocalServerWait.NotAnswering
         } finally {

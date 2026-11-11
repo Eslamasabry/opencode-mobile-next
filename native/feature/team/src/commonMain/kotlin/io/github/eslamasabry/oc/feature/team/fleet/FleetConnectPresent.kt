@@ -11,7 +11,6 @@ import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.Redacted
-import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.team.TeamEngine
 import io.github.eslamasabry.oc.engine.team.TeamProvider
 import io.github.eslamasabry.oc.engine.team.fleet.ComputerTeamTest
@@ -19,7 +18,6 @@ import io.github.eslamasabry.oc.engine.team.fleet.FleetAddress
 import io.github.eslamasabry.oc.engine.team.fleet.FleetFailure
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.TeamRoute
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -127,11 +125,11 @@ public class FleetConnectViewModel(
     @Assisted private val route: TeamRoute.Address,
     private val engine: TeamEngine,
     private val nav: AppNavigator,
-    private val redactor: Redactor,
+    private val redactor: io.github.eslamasabry.oc.core.security.Redactor,
 ) : ViewModel(), FleetConnectActions {
     private val profile = route.profileId.raw
     private val local = MutableStateFlow(FleetConnectUi())
-    private var running: Job? = null
+    private var running: kotlinx.coroutines.Job? = null
 
     /** The address and team name that did not answer, kept for "Save the address anyway". */
     private var unanswered: Pair<String, String>? = null

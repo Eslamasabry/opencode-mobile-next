@@ -137,10 +137,10 @@ public data class DockHidden(
 }
 
 public enum class DockPresence {
-    /** Nothing live: no dock, no nub. */
+    /** Nothing to offer at all (no live, pinned, open or recent conversation): no dock, no nub. */
     Hidden,
 
-    /** Tucked to the thin edge nub (fewer than two live, or the person tucked it). */
+    /** Tucked to the thin edge nub: quiet (fewer than two live and no unanswered failure or request), or tucked. */
     Nub,
 
     /** Out: two or more live, or an unanswered failure or request, and the person has not tucked it. */
@@ -157,7 +157,7 @@ public data class DockUi(
     /** The sub-agent on screen, when one is; [open] is then its parent. */
     val openChild: ConversationRef? = null,
     val tucked: Boolean = false,
-    /** Entries that are not Idle once sub-agents are counted. */
+    /** Entries that are not Idle once sub-agents are counted. Idle recent rings are not live. */
     val liveCount: Int = 0,
     /** Removed conversations that are still live, for the "N hidden" list. */
     val hidden: ImmutableList<DockHidden> = persistentListOf(),
@@ -179,6 +179,16 @@ public enum class DockRunEnd {
     /** The person (or the server) stopped it: back to Idle without a celebration. */
     Stopped,
 }
+
+/** One row of a server's conversation list (the home list's saved rows), for the dock's recent rings. */
+public data class DockRecent(
+    val session: SessionId,
+    val title: String?,
+    /** Last activity the server reported, epoch ms: the newer, the earlier it is offered. */
+    val lastActivityMs: Long,
+    /** Set for a sub-agent: never offered as a ring of its own. */
+    val parent: SessionId? = null,
+)
 
 /** Everything that can change the dock. The reducer is [DockModel.reduce]; nothing else mutates it. */
 public sealed interface DockEvent {
@@ -215,6 +225,12 @@ public sealed interface DockEvent {
 
     /** The connection to a server closed: its conversations leave the dock (nothing is known about them now). Names stay. */
     public data class ProfileOffline(val profile: ProfileId) : DockEvent
+
+    /**
+     * A server's conversation list (what the home list holds): the recent conversations the dock offers as quiet rings
+     * when fewer than [DockModel.cap] are live. Merged with what the dock heard live; the newer activity wins.
+     */
+    public data class Recent(val profile: ProfileId, val rows: List<DockRecent>) : DockEvent
 
     /** The saved nicknames of one profile, replacing what the model held for it. */
     public data class Nicknames(val profile: ProfileId, val names: Map<SessionId, String>) : DockEvent
@@ -267,24 +283,34 @@ public sealed interface DockEvent {
 /**
  * The edge dock's brain: a pure reducer from [DockEvent]s to a [DockUi]. No clock, no I/O, no Compose.
  *
- * Rules (the owner's notes, `edge-dock/NOTES.md`):
- * - In the dock: every conversation that is not Idle, plus the open one while another is in it. Idle ones leave.
- * - The order is stable: a conversation keeps its place until it leaves; a newcomer goes last. A state change never
- *   reshuffles. Above [cap] rings the ones that matter most stay (NeedsYou, Failed, working, Finished), still in their
- *   stable order, and [DockUi.overflow] counts the rest.
- * - [DockPresence.Out] needs two or more live (anything but Idle), or an unanswered failure or request; the person
- *   can tuck it, and a NEW failure or request untucks it. With nothing live the dock is hidden and the tuck forgotten.
+ * Rules (the owner's notes, `edge-dock/NOTES.md`; "always available" is the owner's decision of 2026-11-11):
+ * - In the dock: every conversation that is not Idle, the pinned ones, and the open one (always, highlighted, not
+ *   removable). When fewer than [cap] places are taken, the rest are filled with the most recently active Idle
+ *   conversations the dock knows ([DockEvent.Recent] rows and conversations it heard work, ask or open), root
+ *   conversations only, never a removed one, most recent first. An idle ring is quiet (no progress, no alert) and a
+ *   tap opens it. Idle fillers never take a place a live, pinned or open ring needs: above [cap] there are none, and
+ *   [DockUi.overflow] counts only those. At most [MAX_RECENT] recent conversations are remembered; a deleted one, and
+ *   every one of a server that disconnected or was deleted, is forgotten.
+ * - The order is stable: a conversation keeps its place until it leaves; a newcomer goes last (fillers that join
+ *   together go most recent first). A state change never reshuffles. Above [cap] rings the ones that matter most stay
+ *   (pinned, NeedsYou, Failed, working, Finished), still in their stable order, and [DockUi.overflow] counts the rest.
+ * - The dock is never hidden for lack of live conversations. [DockPresence.Out] needs two or more live (anything but
+ *   Idle), or an unanswered failure or request; otherwise it is [DockPresence.Nub] (the thin edge nub). The person can
+ *   tuck it, and a NEW failure or request untucks it; with nothing live the tuck is forgotten. [DockPresence.Hidden]
+ *   only when there is nothing at all to offer (the app hides it too when the person turned the dock off).
  * - Removing (`DockEvent.Remove`): the ring (or sub-agent) leaves at once and stays out while nothing new happens. It
  *   comes back by itself only when it needs the person or fails AFTER the removal (a rise in its `pulse`, or a
- *   sub-agent's for a removed parent), or when the person opens it while it is still live. Plain working or finished
- *   does not bring it back. A removed parent takes its sub-agents with it; a removed sub-agent hides only itself.
- *   The conversation on screen cannot be removed. The set drops a conversation when its record leaves the dock (idle)
- *   or it is deleted, and keeps at most [MAX_REMOVED]. Removed-but-live ones are listed in [DockUi.hidden].
+ *   sub-agent's for a removed parent), or when the person opens it. Plain working or finished does not bring it back. A removed parent takes its sub-agents with it; a removed sub-agent hides only itself.
+ *   The conversation on screen cannot be removed; opening a removed conversation brings it back. A removed idle ring
+ *   stays out and the next most recent takes its place. The set drops a conversation when the dock forgets it (its
+ *   record leaves and it is no longer a recent conversation) or it is deleted, and keeps at most [MAX_REMOVED].
+ *   Removed-but-live ones are listed in [DockUi.hidden].
  * - Pinned rings (`Pin`, `Unpin`, `Reorder`) come first in the person's order, stay when idle (while their server is
  *   connected) and honour Remove. Unpinned rings keep the stable order after them. At most [MAX_PINNED]; a deleted
  *   conversation leaves the list.
  * - Opening a conversation (or [DockEvent.Seen]) clears its Finished and Failed. A run that ends in the open
- *   conversation is seen at once. A seen conversation leaves the dock when idle, so the session record cannot raise an old failure again.
+ *   conversation is seen at once. A seen conversation is Idle (at most a quiet recent ring), so the session record
+ *   cannot raise an old failure again.
  */
 public class DockModel private constructor(private val s: Snapshot) {
     public val cap: Int get() = s.cap
@@ -308,7 +334,7 @@ public class DockModel private constructor(private val s: Snapshot) {
             val pruned = s.pruneRemoved(s, event)
             return if (pruned === s) this else DockModel(pruned)
         }
-        val settled = next.unmuteAlerts(s).settled()
+        val settled = next.noted(s, event).unmuteAlerts(s).settled()
         return DockModel(settled.pruneRemoved(s, event))
     }
 
@@ -360,6 +386,11 @@ public class DockModel private constructor(private val s: Snapshot) {
         val nextSeq: Long = 0,
         /** Titles and agents heard before a conversation joined the dock, so a newcomer arrives with its name. */
         val known: PersistentMap<ConversationRef, Triple<String?, String?, SessionId?>> = persistentMapOf(),
+        /**
+         * Recent conversations and their last activity (listed epoch ms, or one past the newest for activity heard
+         * live, which is "now"). Root conversations only, at most [MAX_RECENT]: the pool idle rings are offered from.
+         */
+        val recent: Map<ConversationRef, Long> = emptyMap(),
     ) {
         /** The record for [ref], created when it is missing. */
         private fun withTracked(ref: ConversationRef, change: (Tracked) -> Tracked): Snapshot {
@@ -399,6 +430,7 @@ public class DockModel private constructor(private val s: Snapshot) {
         fun step(e: DockEvent): Snapshot =
             when (e) {
                 is DockEvent.Meta -> remember(e).ifTracked(e.ref) { it.copy(title = e.title ?: it.title, agent = e.agent ?: it.agent, parent = e.parent ?: it.parent) }
+                    .let { if (e.parent != null && e.ref in it.recent) it.copy(recent = it.recent - e.ref) else it }
                 is DockEvent.RunStarted ->
                     withTracked(e.ref) { it.copy(busy = true, thinking = false, outcome = Outcome.None) }
                 is DockEvent.RunEnded ->
@@ -430,7 +462,7 @@ public class DockModel private constructor(private val s: Snapshot) {
                             ifTracked(e.ref) { alerted(it).copy(outcome = Outcome.Failed) }.untuckFor(e.ref)
                         } else this
                     } else this
-                is DockEvent.Deleted -> copy(pinned = pinned.filter { it != e.ref }, removed = removed.filter { it != e.ref }, known = known.remove(e.ref), tracked = tracked.filter { (r, t) -> r != e.ref && !(r.profileId == e.ref.profileId && t.parent == e.ref.sessionId) }, names = names - e.ref, open = open.takeIf { it != e.ref })
+                is DockEvent.Deleted -> copy(pinned = pinned.filter { it != e.ref }, removed = removed.filter { it != e.ref }, known = known.remove(e.ref), tracked = tracked.filter { (r, t) -> r != e.ref && !(r.profileId == e.ref.profileId && t.parent == e.ref.sessionId) }, names = names - e.ref, open = open.takeIf { it != e.ref }, recent = recent - e.ref)
                 is DockEvent.ProfileGone ->
                     copy(
                         removed = removed.filter { it.profileId != e.profile },
@@ -441,9 +473,11 @@ public class DockModel private constructor(private val s: Snapshot) {
                         tracked = tracked.filterKeys { it.profileId != e.profile },
                         names = names.filterKeys { it.profileId != e.profile },
                         open = open.takeIf { it?.profileId != e.profile },
+                        recent = recent.filterKeys { it.profileId != e.profile },
                     )
                 is DockEvent.ProfileOffline ->
-                    copy(tracked = tracked.filterKeys { it.profileId != e.profile }, online = online - e.profile)
+                    copy(tracked = tracked.filterKeys { it.profileId != e.profile }, online = online - e.profile, recent = recent.filterKeys { it.profileId != e.profile })
+                is DockEvent.Recent -> listed(e)
                 is DockEvent.Nicknames ->
                     copy(names = names.filterKeys { it.profileId != e.profile } + e.names.mapKeys { ConversationRef(e.profile, it.key) })
                 is DockEvent.NicknameSet -> copy(names = if (e.name == null) names - e.ref else names + (e.ref to e.name))
@@ -491,11 +525,51 @@ public class DockModel private constructor(private val s: Snapshot) {
                     if (merged == removed) this else copy(removed = merged)
                 }
                 is DockEvent.Link ->
-                    copy(known = known.put(e.child, (known[e.child] ?: Triple(null, null, null)).copy(third = e.parent)))
+                    copy(known = known.put(e.child, (known[e.child] ?: Triple(null, null, null)).copy(third = e.parent)), recent = recent - e.child)
                         .ifTracked(e.child) { it.copy(parent = e.parent) }
                 DockEvent.Tuck -> copy(tucked = true)
                 DockEvent.Untuck -> copy(tucked = false)
             }
+
+        /** A server's conversation list: titles are remembered, root conversations join the recent pool. */
+        private fun listed(e: DockEvent.Recent): Snapshot {
+            var next = this
+            val merged = LinkedHashMap(recent)
+            for (row in e.rows) {
+                val ref = ConversationRef(e.profile, row.session)
+                next = next.remember(DockEvent.Meta(ref, row.title, null, row.parent)).ifTracked(ref) { it.copy(title = row.title ?: it.title) }
+                if (row.parent == null) merged[ref] = maxOf(merged[ref] ?: Long.MIN_VALUE, row.lastActivityMs)
+            }
+            return next.copy(recent = bounded(merged))
+        }
+
+        /**
+         * Activity heard live makes a conversation the most recent one: a run, a request or a task list that changed a
+         * record, or the person opening it. Counted for the ring it belongs to (a sub-agent's parent).
+         */
+        fun noted(prev: Snapshot, e: DockEvent): Snapshot {
+            val refs: Collection<ConversationRef> =
+                when (e) {
+                    is DockEvent.Opened -> listOfNotNull(e.ref)
+                    is DockEvent.RunStarted, is DockEvent.RunEnded, is DockEvent.Reasoning, is DockEvent.Tasks,
+                    is DockEvent.RequestOpened, is DockEvent.RequestSettled, is DockEvent.RequestsRead,
+                    is DockEvent.StatusesRead, is DockEvent.LastRunFailed ->
+                        tracked.filter { (r, t) -> prev.tracked[r] != t }.keys
+                    else -> return this
+                }
+            if (refs.isEmpty()) return this
+            var stamp = recent.values.maxOrNull() ?: 0L
+            val next = LinkedHashMap(recent)
+            for (root in refs.map { rootOf(it) }.distinct()) {
+                next.remove(root)
+                next[root] = ++stamp
+            }
+            return copy(recent = bounded(next))
+        }
+
+        private fun bounded(pool: Map<ConversationRef, Long>): Map<ConversationRef, Long> =
+            if (pool.size <= MAX_RECENT) pool
+            else pool.entries.sortedByDescending { it.value }.take(MAX_RECENT).associate { it.key to it.value }
 
         private fun readRequests(e: DockEvent.RequestsRead): Snapshot {
             var next = this
@@ -560,14 +634,9 @@ public class DockModel private constructor(private val s: Snapshot) {
         /** True while [ref], or the conversation it belongs to, is removed. */
         private fun hiddenRef(ref: ConversationRef): Boolean = ref in removed || rootOf(ref) in removed
 
-        private fun liveNow(ref: ConversationRef): Boolean {
-            val t = tracked[ref] ?: return false
-            return if (rootOf(ref) == ref) view(t, includeRemoved = true).state != DockState.Idle else t.state() != DockState.Idle
-        }
-
-        /** Opening a removed conversation that is still live brings it (and the ring it hangs under) back. */
+        /** Opening a removed conversation brings it (and the ring it hangs under) back: the open one is always shown. */
         fun reopened(ref: ConversationRef): Snapshot {
-            val back = listOf(ref, rootOf(ref)).filter { it in removed && liveNow(it) }
+            val back = listOf(ref, rootOf(ref)).filter { it in removed }
             return if (back.isEmpty()) this else copy(removed = removed - back.toSet())
         }
 
@@ -585,15 +654,18 @@ public class DockModel private constructor(private val s: Snapshot) {
             return if (back.any { it in removed }) copy(removed = removed.filter { it !in back }) else this
         }
 
-        /** The removed set only holds conversations that are still around: it drops one when its record leaves. */
+        /**
+         * The removed set only holds conversations that are still around: it drops one when its record leaves and it is
+         * not a recent conversation either (a removed idle ring stays out while it would otherwise be offered).
+         */
         fun pruneRemoved(prev: Snapshot, event: DockEvent): Snapshot {
             if (removed.isEmpty()) return this
             fun kids(of: Snapshot, r: ConversationRef) = of.tracked.values.filter { it.parent == r.sessionId && it.ref.profileId == r.profileId }
             val gone =
                 removed.filter { r ->
                     // A removed parent stays while a hidden sub-agent is still live.
-                    r !in tracked && kids(this, r).none { it.state() != DockState.Idle } &&
-                        (r in prev.tracked || kids(prev, r).isNotEmpty() ||
+                    r !in tracked && r !in recent && kids(this, r).none { it.state() != DockState.Idle } &&
+                        (r in prev.tracked || r in prev.recent || kids(prev, r).isNotEmpty() ||
                             (event is DockEvent.RequestsRead && r.profileId == event.profile))
                 }
             return if (gone.isEmpty()) this else copy(removed = removed - gone.toSet())
@@ -611,7 +683,8 @@ public class DockModel private constructor(private val s: Snapshot) {
 
         /**
          * Drops Idle records that nothing needs, adds back the parent of every kept sub-agent (a parent idle between
-         * steps stays while a child lives), recomputes membership and keeps the stable order.
+         * steps stays while a child lives), fills free places with recent idle conversations, recomputes membership and
+         * keeps the stable order.
          */
         fun settled(): Snapshot {
             val pinnedLive = pinned.filter { it.profileId in online && it !in removed }
@@ -628,18 +701,36 @@ public class DockModel private constructor(private val s: Snapshot) {
             for (ref in pinnedLive) {
                 if (ref !in kept && ref !in needed) needed[ref] = tracked[ref] ?: Tracked(ref, seq++, known[ref]?.first, known[ref]?.second)
             }
-            val all = kept + needed
-            val base = copy(tracked = all, nextSeq = seq)
-            val roots = all.values.filter { base.rootOf(it.ref) == it.ref && it.ref !in removed }
-            val openRoot = open?.let { base.rootOf(it) }
-            val live = roots.filter { base.view(it).state != DockState.Idle }
-            val members =
-                roots.filter {
-                    base.view(it).state != DockState.Idle || it.ref in pinnedLive ||
-                        (it.ref == openRoot && live.any { l -> l.ref != it.ref })
+            val core = kept + needed
+            val coreBase = copy(tracked = core, nextSeq = seq)
+            val openRoot = open?.let { coreBase.rootOf(it) }
+            val coreMembers =
+                core.values.filter {
+                    coreBase.rootOf(it.ref) == it.ref && it.ref !in removed &&
+                        (coreBase.view(it).state != DockState.Idle || it.ref in pinnedLive || it.ref == openRoot)
                 }
+            // Free places take the most recent idle conversations; they never push a live, pinned or open ring out.
+            val room = cap - coreMembers.size
+            val coreIds = coreMembers.map { it.ref }.toSet()
+            val fillers =
+                if (room <= 0) {
+                    emptyList()
+                } else {
+                    recent.entries.sortedByDescending { it.value }.map { it.key }
+                        .filter { it !in coreIds && !hiddenRef(it) && rootOf(it) == it }
+                        .take(room)
+                        .map { ref -> tracked[ref] ?: Tracked(ref, seq++, known[ref]?.first, known[ref]?.second) }
+                }
+            val all = core + fillers.associateBy { it.ref }
+            val base = copy(tracked = all, nextSeq = seq)
+            val live = coreMembers.filter { base.view(it).state != DockState.Idle }
+            val members = coreMembers + fillers
             val ids = members.map { it.ref }.toSet()
-            val nextOrder = order.filter { it in ids } + members.filter { it.ref !in order }.sortedBy { it.seq }.map { it.ref }
+            // Newcomers go last: live, pinned and open ones by arrival, then idle fillers most recent first.
+            val newcomers =
+                coreMembers.filter { it.ref !in order }.sortedBy { it.seq }.map { it.ref } +
+                    fillers.map { it.ref }.filter { it !in order }
+            val nextOrder = order.filter { it in ids } + newcomers
             return base.copy(order = nextOrder, tucked = tucked && live.isNotEmpty())
         }
 
@@ -728,9 +819,10 @@ public class DockModel private constructor(private val s: Snapshot) {
                 }
             val live = members.count { it.state != DockState.Idle }
             val alert = members.any { it.state == DockState.NeedsYou || it.state == DockState.Failed }
+            // Never hidden for lack of live conversations: quiet is the nub, nothing at all to offer is hidden.
             val presence =
                 when {
-                    live == 0 -> if (members.any { it.root.ref in pinned }) DockPresence.Nub else DockPresence.Hidden
+                    members.isEmpty() -> DockPresence.Hidden
                     !tucked && (live >= 2 || alert) -> DockPresence.Out
                     else -> DockPresence.Nub
                 }
@@ -768,6 +860,9 @@ public class DockModel private constructor(private val s: Snapshot) {
 
         /** The most pinned rings (the dock has about [DEFAULT_CAP] places; pins may not fill it with idle ones). */
         public const val MAX_PINNED: Int = 5
+
+        /** The most recent conversations remembered to offer as idle rings; the least recent is forgotten first. */
+        public const val MAX_RECENT: Int = 20
 
         public fun empty(cap: Int = DEFAULT_CAP, childCap: Int = DEFAULT_CHILD_CAP): DockModel {
             require(cap >= 1 && childCap >= 1) { "the dock needs at least one ring" }

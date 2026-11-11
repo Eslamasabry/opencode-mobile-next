@@ -70,15 +70,19 @@ public object LaunchStartRules {
             return LaunchStep.Leave(LaunchLeave.NativeRecoveryOwns)
         }
         if (!status.serverRunning) return LaunchStep.Start
-        val uptime = status.serverUptime
-        val wait =
-            when {
-                uptime == null -> unknownAgeGrace
-                uptime < staleAfter -> staleAfter - uptime
-                else -> Duration.ZERO
-            }
-        return LaunchStep.Probe(now + wait)
+        return LaunchStep.Probe(now + stillBooting(status.serverUptime))
     }
+
+    /**
+     * How much longer a RUNNING server process of this age may still be booting, so it is waited on, not replaced:
+     * zero once it is stale. The one rule for every waiter (this start and the connection's LocalServerGate).
+     */
+    public fun stillBooting(uptime: Duration?): Duration =
+        when {
+            uptime == null -> unknownAgeGrace
+            uptime < staleAfter -> staleAfter - uptime
+            else -> Duration.ZERO
+        }
 
     /** After one probe of a running server that had not answered. */
     public fun afterProbe(answer: ProbeAnswer, status: RuntimeStatus?, now: Instant, until: Instant): LaunchStep {

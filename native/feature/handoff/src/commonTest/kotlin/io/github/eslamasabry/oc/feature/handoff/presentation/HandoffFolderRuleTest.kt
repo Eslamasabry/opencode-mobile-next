@@ -64,4 +64,20 @@ class HandoffFolderRuleTest {
         assertNull(HandoffBlock.of(Failure.Unavailable(FeatureId("agentHandoffFiles"))))
         assertNull(HandoffBlock.of(null))
     }
+
+    @Test
+    fun `the folder is the session's own, the connection's project only a fallback`() {
+        // OpenCode 2: the connection has no project, the session carries /root/projects.
+        assertEquals("/root/projects", HandoffFolderRule.folderOf("/root/projects", null))
+        assertNull(HandoffFolderRule.judge(true, HandoffFolderRule.folderOf("/root/projects", null)))
+        assertEquals("/root/projects/a", HandoffFolderRule.folderOf("/root/projects/a", "/other"))
+        assertEquals("/root/projects/b", HandoffFolderRule.folderOf(null, "/root/projects/b"))
+        assertEquals("/root/projects/b", HandoffFolderRule.folderOf(" ", "/root/projects/b"))
+        assertNull(HandoffFolderRule.folderOf(null, null))
+        assertEquals(
+            HandoffBlock.FolderUnknown,
+            HandoffFolderRule.judge(true, HandoffFolderRule.folderOf("", null)),
+        )
+    }
 }
+

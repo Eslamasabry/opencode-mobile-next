@@ -259,7 +259,7 @@
     <string name="serverSettingsUpgradeKeepsData">Data server tetap di tempatnya</string>
     <string name="serverSettingsCopyUpdateCommands">Salin perintah pembaruan untuk %1$s</string>
     <string name="serverSettingsAddressLabel">Alamat</string>
-    <string name="languagePickerPartlyTranslated">Sebagian diterjemahkan (%1$d %)</string>
+    <string name="languagePickerPartlyTranslated">Sebagian diterjemahkan (%1$d%)</string>
     <string name="appearancePickerPreviewLabel">Pratinjau %1$s</string>
     <string name="appearancePickerPreviewIn">Pratinjau dalam</string>
     <string name="appearancePickerInUse">Sedang dipakai</string>

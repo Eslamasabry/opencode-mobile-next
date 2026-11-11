@@ -103,6 +103,8 @@ public data class AllRowUi(
     val updatedMs: Long = 0L,
     /** A run finished after the person last opened it ("Unread result"). */
     val unread: Boolean = false,
+    /** The person stopped the run that ended it ("Stopped"). */
+    val stopped: Boolean = false,
     /** Blocked on a permission, question or form ("Needs you"). */
     val needsYou: Boolean = false,
     /** The folder it works in, for the row menu's Copy folder path; null = the server did not say. */
@@ -113,7 +115,12 @@ public data class AllRowUi(
  * What the home feed knows about a row that the server's session list does not (Flutter
  * `controller.isSessionUnread`, the needs-you set).
  */
-public data class RowAttention(val needsYou: Boolean = false, val unread: Boolean = false)
+public data class RowAttention(
+    val needsYou: Boolean = false,
+    val unread: Boolean = false,
+    /** The person pressed Stop on the run that ended it. */
+    val stopped: Boolean = false,
+)
 
 /**
  * "Import a conversation" from All conversations (Flutter `SessionImportScreen`): [choices] while more than one

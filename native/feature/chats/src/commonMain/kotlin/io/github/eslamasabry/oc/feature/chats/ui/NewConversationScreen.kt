@@ -379,9 +379,10 @@ private fun NewConversationChoices(state: NewConversationUi, actions: NewConvers
         KitChip(
             label = modelLabel(state),
             icon = KitIcons.model,
-            opensMenu = true,
-            expanded = state.sheet == NewConversationSheet.Models,
-            onClick = { open(NewConversationSheet.Models) },
+            // With no other model to choose it only names the model in use and opens nothing.
+            opensMenu = state.modelChoosable,
+            expanded = state.modelChoosable && state.sheet == NewConversationSheet.Models,
+            onClick = if (state.modelChoosable) ({ open(NewConversationSheet.Models) }) else null,
         )
         KitChip(
             label =
@@ -613,8 +614,9 @@ private fun NewConversationAgentStep(state: NewConversationUi, actions: NewConve
         KitRow(
             title = stringResource(Res.string.upgNewChatModel),
             leading = KitRowLeading.Glyph(KitIcons.model),
-            trailing = KitRowTrailing.Value(modelLabel(state)),
-            onClick = { actions.sheet(NewConversationSheet.Models) },
+            // Nothing to choose: the row only says which model is used and opens nothing.
+            trailing = KitRowTrailing.Value(modelLabel(state), chevron = state.modelChoosable),
+            onClick = if (state.modelChoosable) ({ actions.sheet(NewConversationSheet.Models) }) else null,
         )
     }
 }

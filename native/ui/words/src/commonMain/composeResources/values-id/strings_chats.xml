@@ -88,7 +88,7 @@
     <string name="globalSessionsFilterActive">Aktif</string>
     <string name="globalSessionsArchivedNoMatchMessage">Tidak ada percakapan arsip dengan judul itu. Coba pencarian yang lebih pendek.</string>
     <string name="globalSessionsArchivedEmptyTitle">Tidak ada percakapan yang diarsipkan</string>
-    <string name="globalSessionsArchivedEmptyMessage">Percakapan yang Anda arsipkan di Work muncul di sini.</string>
+    <string name="globalSessionsArchivedEmptyMessage">Percakapan yang Anda arsipkan muncul di sini.</string>
     <string name="globalSessionsShowActive">Tampilkan percakapan aktif</string>
     <string name="globalSessionsProjectInUse">%1$s · Sedang dipakai</string>
     <string name="globalSessionsCopyFolder">Salin path folder</string>
@@ -198,7 +198,7 @@
     <string name="chatsHomeFailed">Gagal</string>
     <string name="chatsHomeToday">Hari ini</string>
     <string name="chatsHomeEarlier">Sebelumnya</string>
-    <string name="chatsHomeOnlyProject">Hanya menampilkan percakapan di %1$s. Server ini tidak bisa mencantumkan semua proyek.</string>
+    <string name="chatsHomeOnlyProject">Hanya menampilkan percakapan di “%1$s”. Server ini tidak bisa mencantumkan semua proyek.</string>
     <string name="chatsHomeIncomplete">Beberapa percakapan tidak bisa dimuat</string>
     <string name="chatsHomeIncompleteNamed">%1$s tidak bisa dimuat</string>
     <string name="shellServerPlusOthers">%1$s +%2$d</string>

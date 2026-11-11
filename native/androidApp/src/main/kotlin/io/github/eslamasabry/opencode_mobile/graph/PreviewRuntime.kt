@@ -981,6 +981,7 @@ class PreviewRuntime(
                                                             .firstOrNull()
                                                             .orEmpty()
                                                     ),
+                                                    ask.permission,
                                                 )
                                         }
                                     }

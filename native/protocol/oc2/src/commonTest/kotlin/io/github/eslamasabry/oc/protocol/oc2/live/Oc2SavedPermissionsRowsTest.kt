@@ -27,6 +27,11 @@ class Oc2SavedPermissionsRowsTest {
     }
 
     @Test
+    fun `OpenCode 2 does not promise listGlobalSessions, which its gateway does not implement`() {
+        assertEquals(false, Oc2Gateway.Capabilities.globalSessionSearch)
+    }
+
+    @Test
     fun `B-164 the list reads the current project's saved grants by project id without a location`() = runTest {
         val server =
             RowServer(location = here) { seen ->

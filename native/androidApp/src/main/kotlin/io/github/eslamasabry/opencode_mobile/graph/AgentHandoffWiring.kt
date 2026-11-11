@@ -335,14 +335,19 @@ class GraphAgentHandoffHost(
         // folder outside the phone's projects, is refused with its reason before anything is read.
         val onPhone =
             trustedOwner != null || HandoffFolderRule.isPhoneEndpoint(origin.scheme, origin.host)
-        HandoffFolderRule.judge(onPhone, location.directory)?.let {
+        // The folder is read where the record reads it: the session's own directory first, the connection's
+        // project only as a fallback (an OpenCode 2 connection reports none while its sessions carry theirs).
+        val sessionDirectory =
+            (original.session.server.session(source.sessionId) as? Outcome.Ok)?.value?.directory
+        val folder = HandoffFolderRule.folderOf(sessionDirectory, location.directory)
+        HandoffFolderRule.judge(onPhone, folder)?.let {
             return it.failure().failed()
         }
         // A direct Codex endpoint provides read-only history, but no native process attestation
         // tying its filesystem to our phone project. Its source-only draft is handled by review().
         if (original.session.server is CodexGateway) return HandoffBlock.NotConfirmed.failure().failed()
         val owner = trustedOwner ?: rawOwner(parent) ?: return stale()
-        val directory = location.directory ?: return stale()
+        val directory = folder ?: return stale()
         if (
             !this.source.project(directory) ||
                 !saved.admitting(parent) ||
@@ -382,7 +387,7 @@ class GraphAgentHandoffHost(
                 is Outcome.Failed -> return read
                 is Outcome.Ok -> read.value
             }
-        if (!sourceCurrent() || !sourceProof.isCurrent() || originalSession.directory != directory)
+        if (!sourceCurrent() || !sourceProof.isCurrent() || (originalSession.directory ?: directory) != directory)
             return stale()
         val spec =
             when (val target = this.source.helper(owner, directory)) {

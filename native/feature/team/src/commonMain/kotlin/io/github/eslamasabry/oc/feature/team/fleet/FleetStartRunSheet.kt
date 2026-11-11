@@ -35,7 +35,6 @@ import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.state.KitTechnicalValue
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import io.github.eslamasabry.oc.ui.words.res.*
-import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
 /** "Let the planner choose": the project choice with no project. */
@@ -155,7 +154,7 @@ private fun PlannerForm(ui: FleetStartUi, actions: FleetStartRunActions) {
     }
 }
 
-private fun supervisionWords(level: FleetSupervision): Pair<StringResource, StringResource> =
+private fun supervisionWords(level: FleetSupervision) =
     when (level) {
         FleetSupervision.High -> Res.string.teamUiStartRunSupervisionHigh to Res.string.teamUiStartRunSupervisionHighHint
         FleetSupervision.Balanced -> Res.string.teamUiStartRunSupervisionBalanced to Res.string.teamUiStartRunSupervisionBalancedHint

@@ -262,7 +262,7 @@
     </plurals>
     <string name="serversRemoveDrafts__eq1">1 bản nháp chưa gửi sẽ bị xóa</string>
     <string name="serversRemoveActiveNext">Bạn đang kết nối với máy chủ này: ứng dụng sẽ ngắt kết nối và hiện danh sách máy chủ của bạn</string>
-    <string name="serversRemoveServerKeeps">Không có gì bị xóa trên máy chủ hoặc ở nhà cung cấp AI của bạn</string>
+    <string name="serversRemoveServerKeeps">Không có gì bị xóa trên máy chủ hoặc ở nhà cung cấp AI của bạn.</string>
     <string name="pairingScannerAllowCamera">Cho phép dùng camera</string>
     <string name="pairingScannerStarting">Đang mở camera…</string>
     <string name="profileMonitorSwitchBody">Đang có một lượt chạy trên %1$s. Khi chuyển, ứng dụng sẽ hiện %2$s; lượt chạy trên %1$s vẫn tiếp tục.</string>

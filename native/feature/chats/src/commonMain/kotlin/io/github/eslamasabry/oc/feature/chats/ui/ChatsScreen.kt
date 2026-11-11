@@ -108,6 +108,9 @@ import io.github.eslamasabry.oc.feature.chats.presentation.HomePreviewRules
 import androidx.compose.runtime.key
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeRightNow
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeRecent
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeAsksOther
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeAsksToEdit
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeAsksToRead
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeAsksToRun
 import io.github.eslamasabry.oc.ui.words.res.chats_all_title
 import io.github.eslamasabry.oc.ui.kit.row.KitSwipeRow
@@ -331,7 +334,7 @@ public fun ChatsScreen(
             state.brief?.let { brief -> item(key = "brief", contentType = "brief") { Box(kitItemMotion()) { BriefBlock(brief, rowWords, mask, actions, state) } } }
             if (state.archiveFailure != null)
                 item(key = "archive-failure", contentType = "archive-failure") {
-                  Box(kitItemMotion()) {
+                  Box(kitItemMotion().padding(horizontal = LocalKitTokens.current.gutter.dp)) {
                     // E04-S05: the row is already back in the list, so closing the notice changes nothing real.
                     KitNotice(
                         message =
@@ -377,7 +380,7 @@ public fun ChatsScreen(
             val unreachable = state.home.sources.filter { it.shown && it.unreachable && it.profile != state.home.opening?.profile }
             unreachable.forEach { source ->
                 item(key = "unreachable-${source.profile.raw}", contentType = "unreachable") {
-                    Box(kitItemMotion()) {
+                    Box(kitItemMotion().padding(horizontal = LocalKitTokens.current.gutter.dp)) {
                         KitNotice(
                             message = stringResource(Res.string.chatsHomeUnreachableShort, KitBidi.auto(source.name)),
                             actions = listOf(KitLineAction(stringResource(Res.string.kitTryAgain), { actions.retrySource(source.profile) })),
@@ -393,7 +396,7 @@ public fun ChatsScreen(
                 }
             if (partial.isNotEmpty()) {
                 item(key = "incomplete", contentType = "incomplete") {
-                    Box(kitItemMotion()) {
+                    Box(kitItemMotion().padding(horizontal = LocalKitTokens.current.gutter.dp)) {
                         val names = KitBidi.auto(partial.joinToString(", "))
                         if (state.refreshing) KitNotice(stringResource(Res.string.chatsHomeStillLoading, names), tone = StatusTone.Progress)
                         else
@@ -406,18 +409,21 @@ public fun ChatsScreen(
             }
             state.onlyProject?.let { project ->
                 item(key = "only-project", contentType = "only-project") {
-                    Box(kitItemMotion()) { KitNotice(stringResource(Res.string.chatsHomeOnlyProject, KitBidi.auto(project))) }
+                    // On the gutter like the rows (a notice draws edge to edge; the brief block does the same).
+                    Box(kitItemMotion().padding(horizontal = LocalKitTokens.current.gutter.dp)) {
+                        KitNotice(stringResource(Res.string.chatsHomeOnlyProject, KitBidi.auto(project)))
+                    }
                 }
             }
             // G6 (F: agent_notices.dart:84-157): the phone agents' restart offer, sign-in, stopped and plan-limit lines.
             if (state.phase != ChatsPhase.Opening) {
                 if (state.agentNotices.restart)
                     item(key = "agents-restart", contentType = "agent-notice") {
-                        Box(kitItemMotion()) { KitNotice(stringResource(Res.string.agentsRestartLine)) }
+                        Box(kitItemMotion().padding(horizontal = LocalKitTokens.current.gutter.dp)) { KitNotice(stringResource(Res.string.agentsRestartLine)) }
                     }
                 state.agentNotices.lines.forEach { notice ->
                     item(key = "agent-${notice.agentId}-${notice.kind.name}", contentType = "agent-notice") {
-                        Box(kitItemMotion()) {
+                        Box(kitItemMotion().padding(horizontal = LocalKitTokens.current.gutter.dp)) {
                             val name = KitBidi.auto(notice.agentName)
                             when (notice.kind) {
                                 HomeAgentNoticeKind.SignedOut ->
@@ -887,7 +893,15 @@ private fun ConversationRow(
         row.updatedAtMs?.takeIf { flags.nowMs > 0 }?.let { kitRelativeAge(it, flags.nowMs) }
             ?: row.ago?.let { agoText(it) }
     val preview =
-        row.permission?.let { stringResource(Res.string.chatsHomeAsksToRun, KitBidi.ltr(mask(it.command))) }
+        row.permission?.let {
+            val target = KitBidi.ltr(mask(it.command))
+            when (HomePreviewRules.askKind(it.kind)) {
+                HomePreviewRules.AskKind.Run -> stringResource(Res.string.chatsHomeAsksToRun, target)
+                HomePreviewRules.AskKind.Edit -> stringResource(Res.string.chatsHomeAsksToEdit, target)
+                HomePreviewRules.AskKind.Read -> stringResource(Res.string.chatsHomeAsksToRead, target)
+                HomePreviewRules.AskKind.Other -> stringResource(Res.string.chatsHomeAsksOther, target)
+            }
+        }
             // H5: the shell command a running row is on ("Running npm test"), read left to right.
             ?: row.running?.command?.takeIf { row.status == RowStatus.Running && it.isNotBlank() }
                 ?.let { stringResource(Res.string.signalRowRunningCommand, KitBidi.ltr(mask(it))) }

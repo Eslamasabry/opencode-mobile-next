@@ -269,7 +269,7 @@
     <string name="serverSettingsUpgradeKeepsData">Server data stays in place</string>
     <string name="serverSettingsCopyUpdateCommands">Copy update commands for %1$s</string>
     <string name="serverSettingsAddressLabel">Address</string>
-    <string name="languagePickerPartlyTranslated">Partly translated (%1$d %)</string>
+    <string name="languagePickerPartlyTranslated">Partly translated (%1$d%)</string>
     <string name="appearancePickerPreviewLabel">Preview of %1$s</string>
     <string name="appearancePickerPreviewIn">Preview in</string>
     <string name="appearancePickerInUse">In use now</string>

@@ -32,4 +32,7 @@
   <string name="handoffNativeBlockComputer">This conversation is on another computer, and the agents here run on this phone, so they cannot open its project folder. Open the project on this phone first, then continue from there. You can still review and copy the record below.</string>
   <string name="handoffNativeBlockFolder">This conversation’s folder is not one of the projects on this phone, so the agents here cannot open it. Open or copy the project into this phone’s projects first, then continue from there.</string>
   <string name="handoffNativeBlockUnconfirmed">The app could not confirm that the agents on this phone can open this conversation’s folder, so none is started in the wrong place. Open Agents to check they are installed and ready, then try again.</string>
+  <string name="handoffNativeContinueWith">Continue with %1$s</string>
+  <string name="handoffNativeWhatHandedOver">What will be handed over</string>
+  <string name="handoffNativeNoReadyTitle">No agent is ready</string>
 </resources>

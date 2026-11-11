@@ -57,6 +57,21 @@ class DockKitMapperTest {
     }
 
     @Test
+    fun a_quiet_dock_with_only_idle_recent_rings_is_drawn_tucked_not_hidden() {
+        // The owner's "always available": nothing live is the nub with the recent conversations, never no dock.
+        val quiet = DockUi(entries = persistentListOf(entry("a", DockState.Idle), entry("b", DockState.Idle)), presence = DockPresence.Nub, liveCount = 0)
+        val frame = DockKitMapper.map(quiet, emptyMap(), "Untitled")
+        assertEquals(listOf(KitDockRingState.Idle, KitDockRingState.Idle), frame.model.rings.map { it.state })
+        assertTrue(frame.model.tucked)
+        assertEquals(ref("a"), frame.refs[frame.model.rings[0].key], "a tap opens that conversation")
+        // One idle open conversation alone is still a dock.
+        val open = DockUi(entries = persistentListOf(entry("a", DockState.Idle)), presence = DockPresence.Nub, open = ref("a"))
+        assertEquals(DockKitMapper.key(ref("a")), DockKitMapper.map(open, emptyMap(), "Untitled").model.current)
+        // Switched off still hides it.
+        assertTrue(DockKitMapper.map(quiet, emptyMap(), "Untitled", shown = false).model.rings.isEmpty())
+    }
+
+    @Test
     fun rings_keep_order_names_marks_pins_and_their_keys_lead_back() {
         val named = entry("a").copy(nickname = "Bank API", agent = "claude-code", pinned = true, pulse = 2)
         val frame = DockKitMapper.map(ui(named, entry("b", title = null)), emptyMap(), "Untitled")
@@ -117,6 +132,32 @@ class DockKitMapperTest {
         assertEquals("Done, tests pass", rings[0].lastLine)
         assertTrue(rings[1].peek.isEmpty())
         assertNull(rings[1].lastLine)
+    }
+
+    @Test
+    fun the_line_under_the_state_never_repeats_the_name() {
+        // The device run: a session titled from its prompt showed that prompt again under "Needs you".
+        val prompt = "create a file one.txt with one line"
+        val waiting = entry("a", DockState.NeedsYou, title = prompt)
+        val onlyPrompt = mapOf(ref("a") to DockPeek.Lines(persistentListOf(DockPeekRow(true, "  Create a file one.txt  with one line "))))
+        val ring = DockKitMapper.map(ui(waiting), onlyPrompt, "U").model.rings.single()
+        assertEquals(prompt, ring.name)
+        assertNull(ring.lastLine, "nothing new to say: no line")
+        assertTrue(ring.peek.isEmpty(), "the swell and peek draw no copy of the title")
+        // The latest activity is the agent's newest line; the person's own words are not activity.
+        val replied =
+            mapOf(ref("a") to DockPeek.Lines(persistentListOf(DockPeekRow(true, prompt), DockPeekRow(false, "Writing one.txt"), DockPeekRow(true, "thanks"))))
+        val withReply = DockKitMapper.map(ui(waiting), replied, "U").model.rings.single()
+        assertEquals("Writing one.txt", withReply.lastLine)
+        assertEquals(listOf("Writing one.txt", "thanks"), withReply.peek.map { it.text })
+        // A nickname or a cut title counts as the name too; a sub-agent's line never repeats its own name either.
+        val nicknamed = entry("a", title = "Long title that was cu…").copy(nickname = "Bank")
+        val tail = mapOf(ref("a") to DockPeek.Lines(persistentListOf(DockPeekRow(false, "Long title that was cut here"), DockPeekRow(false, "bank"))))
+        assertNull(DockKitMapper.map(ui(nicknamed), tail, "U").model.rings.single().lastLine)
+        val child = DockChild(ref("c1"), "Look around", "explore", DockState.Working, 0)
+        val childTail = mapOf(ref("c1") to DockPeek.Lines(persistentListOf(DockPeekRow(false, "Explore"))))
+        val kid = DockKitMapper.map(ui(entry("p").copy(children = persistentListOf(child))), childTail, "U").model.rings.single().children.single()
+        assertNull(kid.lastLine)
     }
 
     @Test

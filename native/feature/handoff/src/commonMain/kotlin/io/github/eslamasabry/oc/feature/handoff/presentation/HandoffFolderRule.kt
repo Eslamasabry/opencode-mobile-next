@@ -47,6 +47,14 @@ public object HandoffFolderRule {
             directory.split('/').none { it == "." || it == ".." } &&
             directory.none { it.code < 32 || it.code == 127 }
 
+    /**
+     * The folder the conversation lives in. The session's own directory is the truth the record is built from; the
+     * connection's project (`location.directory`) is only a fallback, because an OpenCode 2 connection is not scoped to
+     * one project and reports none while its sessions each carry theirs.
+     */
+    public fun folderOf(sessionDirectory: String?, connectionDirectory: String?): String? =
+        sessionDirectory?.takeIf { it.isNotBlank() } ?: connectionDirectory?.takeIf { it.isNotBlank() }
+
     /** True when the conversation's server answers on this phone itself. */
     public fun isPhoneEndpoint(scheme: String, host: String): Boolean =
         scheme in setOf("http", "https") && host in setOf("127.0.0.1", "localhost", "::1")

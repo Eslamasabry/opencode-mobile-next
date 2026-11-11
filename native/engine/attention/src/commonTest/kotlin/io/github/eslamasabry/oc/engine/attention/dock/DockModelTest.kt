@@ -5,7 +5,6 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class DockModelTest {
@@ -39,7 +38,7 @@ class DockModelTest {
                 Case("two requests need both answered", listOf(DockEvent.RunStarted(a), DockEvent.RequestOpened(a, "r1"), DockEvent.RequestOpened(a, "r2"), DockEvent.RequestSettled(a, "r1")), DockState.NeedsYou),
                 Case("busy then idle is finished", listOf(DockEvent.RunStarted(a), DockEvent.RunEnded(a, DockRunEnd.Succeeded), DockEvent.Opened(b)), DockState.Finished),
                 Case("busy then failed", listOf(DockEvent.RunStarted(a), DockEvent.RunEnded(a, DockRunEnd.Failed), DockEvent.Opened(b)), DockState.Failed),
-                Case("a stop is not a celebration", listOf(DockEvent.RunStarted(a), DockEvent.RunEnded(a, DockRunEnd.Stopped)), null),
+                Case("a stop is not a celebration: a quiet recent ring", listOf(DockEvent.RunStarted(a), DockEvent.RunEnded(a, DockRunEnd.Stopped)), DockState.Idle),
                 Case("an idle end that never saw a start", listOf(DockEvent.RunEnded(a, DockRunEnd.Succeeded)), null),
                 Case("an idle end cannot overwrite a failure", listOf(DockEvent.RunStarted(a), DockEvent.RunEnded(a, DockRunEnd.Failed), DockEvent.RunEnded(a, DockRunEnd.Succeeded), DockEvent.Opened(b)), DockState.Failed),
                 Case("a new run clears an unseen finish", listOf(DockEvent.RunStarted(a), DockEvent.RunEnded(a, DockRunEnd.Succeeded), DockEvent.RunStarted(a)), DockState.Working),
@@ -61,7 +60,7 @@ class DockModelTest {
         assertEquals(1, raised.ui.entries.first { it.ref == a }.pulse)
         // Seen, then the record repeats the same failure: it stays quiet.
         val seen = raised.reduce(DockEvent.Seen(a)).reduce(DockEvent.LastRunFailed(a, true))
-        assertNull(seen.ui.state(a))
+        assertEquals(DockState.Idle, seen.ui.state(a))
     }
 
     // ---- in / out
@@ -71,8 +70,10 @@ class DockModelTest {
         data class Case(val label: String, val events: List<DockEvent>, val expect: DockPresence)
         val cases =
             listOf(
-                Case("nothing", emptyList(), DockPresence.Hidden),
+                Case("nothing at all", emptyList(), DockPresence.Hidden),
                 Case("one live retreats to the nub", listOf(DockEvent.RunStarted(a)), DockPresence.Nub),
+                Case("nothing live is still the nub, never hidden", listOf(DockEvent.RunStarted(a), DockEvent.RunEnded(a, DockRunEnd.Stopped)), DockPresence.Nub),
+                Case("an idle open conversation alone is the nub", listOf(DockEvent.Opened(a)), DockPresence.Nub),
                 Case("two live come out", listOf(DockEvent.RunStarted(a), DockEvent.RunStarted(b)), DockPresence.Out),
                 Case("one of two stops: back to the nub", listOf(DockEvent.RunStarted(a), DockEvent.RunStarted(b), DockEvent.RunEnded(b, DockRunEnd.Stopped)), DockPresence.Nub),
                 Case("an unanswered request alone brings it out", listOf(DockEvent.RunStarted(a), DockEvent.RequestOpened(a, "r")), DockPresence.Out),
@@ -92,15 +93,18 @@ class DockModelTest {
     // ---- membership, order, cap
 
     @Test
-    fun `idle conversations leave and the open one stays only beside a live one`() {
+    fun `the open one always stays and a conversation that went idle stays as a quiet recent ring`() {
         val alone = run(DockEvent.Opened(a))
-        assertTrue(alone.entries.isEmpty(), "an idle open conversation alone is no dock")
+        assertEquals(listOf(a), alone.entries.map { it.ref }, "an idle open conversation alone is still a dock")
+        assertEquals(DockState.Idle, alone.state(a))
         val beside = run(DockEvent.Opened(a), DockEvent.RunStarted(b))
         assertEquals(listOf(b, a).toSet(), beside.entries.map { it.ref }.toSet())
         assertEquals(DockState.Idle, beside.state(a))
         assertEquals(1, beside.liveCount)
         val left = DockModel.empty().reduce(DockEvent.RunStarted(b)).reduce(DockEvent.RunEnded(b, DockRunEnd.Stopped))
-        assertTrue(left.ui.entries.isEmpty())
+        assertEquals(listOf(b), left.ui.entries.map { it.ref })
+        assertEquals(DockState.Idle, left.ui.state(b))
+        assertEquals(0, left.ui.liveCount)
     }
 
     @Test
@@ -135,9 +139,13 @@ class DockModelTest {
             val seen = m.ui.entries.map { it.ref }
             assertEquals(listOf(a, b, c).filter { it in seen }, seen, "after $e")
         }
-        // A leaves and comes back: it goes last now.
-        m = m.reduce(DockEvent.Seen(a)).reduce(DockEvent.RunStarted(a))
-        assertEquals(listOf(b, c, a), m.ui.entries.map { it.ref })
+        // A goes quiet and works again: it never left (a quiet recent ring), so it keeps its place.
+        m = m.reduce(DockEvent.Seen(a))
+        assertEquals(DockState.Idle, m.ui.state(a))
+        m = m.reduce(DockEvent.RunStarted(a))
+        assertEquals(listOf(a, b, c), m.ui.entries.map { it.ref })
+        // A newcomer goes last.
+        assertEquals(listOf(a, b, c, ref("d")), m.reduce(DockEvent.RunStarted(ref("d"))).ui.entries.map { it.ref })
     }
 
     @Test
@@ -168,11 +176,12 @@ class DockModelTest {
         assertEquals(DockState.Idle, openedA.ui.state(a), "finished cleared by opening")
         assertEquals(DockState.Failed, openedA.ui.state(b), "the other is untouched")
         val dismissed = m.reduce(DockEvent.Seen(b))
-        assertNull(dismissed.ui.state(b))
+        assertEquals(DockState.Idle, dismissed.ui.state(b))
         assertEquals(DockState.Finished, dismissed.ui.state(a))
         // On screen: no blip, no mark.
         val onScreen = DockModel.empty().reduce(DockEvent.Opened(a)).reduce(DockEvent.RunStarted(a)).reduce(DockEvent.RunEnded(a, DockRunEnd.Failed))
-        assertTrue(onScreen.ui.entries.isEmpty())
+        assertEquals(DockState.Idle, onScreen.ui.state(a))
+        assertEquals(0, onScreen.ui.entries.single().pulse)
     }
 
     @Test

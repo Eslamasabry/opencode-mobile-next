@@ -261,7 +261,7 @@
     </plurals>
     <string name="serversRemoveDrafts__eq1">将删除 1 份未发送的草稿</string>
     <string name="serversRemoveActiveNext">你当前已连接到它：应用将断开连接并显示你的服务器列表</string>
-    <string name="serversRemoveServerKeeps">服务器和你的 AI 服务商处不会删除任何内容</string>
+    <string name="serversRemoveServerKeeps">服务器和你的 AI 服务商处不会删除任何内容。</string>
     <string name="pairingScannerAllowCamera">允许使用相机</string>
     <string name="pairingScannerStarting">正在打开相机…</string>
     <string name="profileMonitorSwitchBody">%1$s 上正在进行一次运行。切换后本应用会显示 %2$s；%1$s 上的运行会继续。</string>

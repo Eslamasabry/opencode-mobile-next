@@ -32,4 +32,7 @@
   <string name="handoffNativeBlockComputer">هذه المحادثة على حاسوب آخر، والوكلاء هنا يعملون على هذا الهاتف، فلا يستطيعون فتح مجلد مشروعها. افتح المشروع على هذا الهاتف أولاً ثم تابع من هناك. ما زال بإمكانك مراجعة السجل أدناه ونسخه.</string>
   <string name="handoffNativeBlockFolder">مجلد هذه المحادثة ليس من المشاريع على هذا الهاتف، فلا يستطيع الوكلاء هنا فتحه. افتح المشروع أو انسخه إلى مشاريع هذا الهاتف أولاً ثم تابع من هناك.</string>
   <string name="handoffNativeBlockUnconfirmed">تعذّر على التطبيق التأكد من أن الوكلاء على هذا الهاتف يستطيعون فتح مجلد هذه المحادثة، لذلك لا يبدأ أي وكيل في مكان خاطئ. افتح الوكلاء للتحقق من أنهم مثبّتون وجاهزون ثم حاول مجدداً.</string>
+  <string name="handoffNativeContinueWith">المتابعة مع %1$s</string>
+  <string name="handoffNativeWhatHandedOver">ما الذي سيُسلَّم</string>
+  <string name="handoffNativeNoReadyTitle">لا يوجد وكيل جاهز</string>
 </resources>

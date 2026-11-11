@@ -275,7 +275,7 @@
     </plurals>
     <string name="serversRemoveDrafts__eq1">ستُحذف مسودة واحدة لم تُرسل</string>
     <string name="serversRemoveActiveNext">أنت متصل به: يقطع التطبيق الاتصال ويعرض خوادمك</string>
-    <string name="serversRemoveServerKeeps">لا يُحذف شيء على الخادم أو لدى مزوّدي الذكاء الاصطناعي</string>
+    <string name="serversRemoveServerKeeps">لا يُحذف شيء على الخادم أو لدى مزوّدي الذكاء الاصطناعي.</string>
     <string name="pairingScannerAllowCamera">السماح بالكاميرا</string>
     <string name="pairingScannerStarting">جارٍ فتح الكاميرا…</string>
     <string name="profileMonitorSwitchBody">هناك عمل جارٍ على %1$s. يعرض التبديل %2$s في هذا التطبيق؛ يستمر العمل على %1$s.</string>
