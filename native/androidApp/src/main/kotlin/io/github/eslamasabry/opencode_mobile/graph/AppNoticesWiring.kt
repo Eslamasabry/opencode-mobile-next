@@ -160,18 +160,13 @@ class AndroidAppNotices(
                                         at,
                                     )
                             val sentence =
-                                when {
-                                    back ->
-                                        if (exit.teamStopped) R.string.andr_appExitServerBackTeam
-                                        else R.string.andr_appExitServerBack
-                                    exit.recoveryAllowed ->
-                                        if (exit.teamStopped)
-                                            R.string.andr_appExitServerAndTeamStopped
-                                        else R.string.andr_appExitServerStopped
-                                    else ->
-                                        if (exit.teamStopped)
-                                            R.string.andr_appExitServerAndTeamStoppedManual
-                                        else R.string.andr_appExitServerStoppedManual
+                                when (exitSentence(back, exit.recoveryAllowed, exit.teamStopped)) {
+                                    ExitSentence.Back -> R.string.andr_appExitServerBack
+                                    ExitSentence.BackWithTeam -> R.string.andr_appExitServerBackTeam
+                                    ExitSentence.Starting -> R.string.andr_appExitServerStopped
+                                    ExitSentence.StartingWithTeam -> R.string.andr_appExitServerAndTeamStopped
+                                    ExitSentence.Down -> R.string.andr_appExitServerStoppedManual
+                                    ExitSentence.DownWithTeam -> R.string.andr_appExitServerAndTeamStoppedManual
                                 }
                             AppNotice(
                                 "app-exit",

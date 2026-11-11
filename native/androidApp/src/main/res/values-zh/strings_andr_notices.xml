@@ -2,7 +2,7 @@
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
     <string name="andr_appExitForceStopped">OpenCode Mobile 已于 %1$s 关闭</string>
-    <string name="andr_appExitStoppedBackground">OpenCode 已停止。如果不是你操作的，可能是手机的电池管理将其关闭了</string>
+    <string name="andr_appExitStoppedBackground">OpenCode Mobile 已关闭，可能是手机的电池管理所致</string>
     <string name="andr_appExitLowMemory">Android 为释放内存，已于 %1$s 关闭 OpenCode Mobile</string>
     <string name="andr_appExitCrashed">OpenCode Mobile 已于 %1$s 意外停止</string>
     <string name="andr_appExitKilled">Android 已于 %1$s 停止 OpenCode Mobile</string>

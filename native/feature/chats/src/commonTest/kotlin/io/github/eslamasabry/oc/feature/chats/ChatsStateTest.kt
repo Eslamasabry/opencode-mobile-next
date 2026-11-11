@@ -193,7 +193,8 @@ class ChatsStateTest {
                 { false },
                 { null },
             )
-        assertTrue(build(item("a"), brief = unknown).brief!!.unknown)
+        // Nothing to show and nothing to do: no block at all, so no "can't tell" line either.
+        assertNull(build(item("a"), brief = unknown).brief)
     }
 
     @Test

@@ -2,7 +2,7 @@
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
     <string name="andr_appExitForceStopped">OpenCode Mobile был закрыт %1$s</string>
-    <string name="andr_appExitStoppedBackground">OpenCode был остановлен. Если это сделали не вы, его мог закрыть диспетчер батареи телефона</string>
+    <string name="andr_appExitStoppedBackground">OpenCode Mobile был закрыт, возможно, диспетчером батареи телефона</string>
     <string name="andr_appExitLowMemory">Android закрыл OpenCode Mobile %1$s, чтобы освободить память</string>
     <string name="andr_appExitCrashed">OpenCode Mobile неожиданно остановился %1$s</string>
     <string name="andr_appExitKilled">Android остановил OpenCode Mobile %1$s</string>

@@ -153,15 +153,12 @@ import io.github.eslamasabry.oc.ui.words.res.chatsHomeEmptyCalmBody
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeEmptyTitle
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeFailed
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeIncompleteNamed
-import io.github.eslamasabry.oc.ui.words.res.chatsHomeOnlyProject
-import io.github.eslamasabry.oc.ui.words.res.chatsHomeStillLoading
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeUnreachableShort
 import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
 import io.github.eslamasabry.oc.ui.words.res.agentsRestartLine
 import io.github.eslamasabry.oc.ui.words.res.agentsResumeAction
 import io.github.eslamasabry.oc.ui.words.res.agentsSignInAction
 import io.github.eslamasabry.oc.ui.words.res.agentsSignedOutLine
-import io.github.eslamasabry.oc.ui.words.res.agentsStateLimit
 import io.github.eslamasabry.oc.ui.words.res.agentsStoppedLine
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysOn
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAnswerAllowed
@@ -170,6 +167,8 @@ import io.github.eslamasabry.oc.ui.words.res.signalRowRunningCommand
 import io.github.eslamasabry.oc.ui.kit.state.KitReceipt
 import io.github.eslamasabry.oc.ui.kit.state.KitReceiptState
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNoticeKind
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeNoticeKind
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeNotices
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeHeldReply
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNeedsYou
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNewChat
@@ -180,7 +179,6 @@ import io.github.eslamasabry.oc.ui.words.res.chatsHomeRunningCount
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeShowAll
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeTitle
 import io.github.eslamasabry.oc.ui.words.res.chatsReturnBriefMore
-import io.github.eslamasabry.oc.ui.words.res.chatsReturnBriefUnknown
 import io.github.eslamasabry.oc.ui.words.res.chats_back
 import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceConnecting
 import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceDaysAgo
@@ -248,6 +246,8 @@ public fun ChatsScreen(
         if (state.updateReady) add(KitLineAction(updateLabel, actions::openUpdate, icon = KitIcons.systemDownload))
     }
     val briefKeys = state.brief?.rows.orEmpty().mapTo(hashSetOf()) { it.key }
+    // At most one notice at a time, in the notice place; the order is HomeNotices' (a pure, tested rule).
+    val shownNotice = HomeNotices.shown(HomeNotices.active(state, appCondition = appStatus != null, replyOffer = replyOffer != null, backExit = backExit != null))
     // The words every row shares are read once here, not again by each row; a row's menu words are only used when it opens.
     val rowWords = rememberHomeRowWords()
     // A command or a message can carry a token: masked as the chat masks it.
@@ -293,7 +293,7 @@ public fun ChatsScreen(
                     else HeaderRow(pill, showFilters) { Filters(state, actions, bleed = pill != null) }
                 },
             ),
-        status = backExit ?: appStatus,
+        status = backExit ?: appStatus.takeIf { shownNotice == HomeNoticeKind.AppCondition },
         // F: lib/ui/screens/chats/chats_home_screen.dart:536: pull the list down to read it again; not while the server
         // is still opening. Refresh wraps the scrolling header too (the title returns before a pull starts). The kit
         // part also answers F5 / Ctrl+R and a TalkBack "Refresh" action.
@@ -335,9 +335,9 @@ public fun ChatsScreen(
             state.home.opening?.takeIf { state.newBlocked && it.phase != ChatsOpeningPhase.Failed }?.let { opening ->
                 item(key = "new-blocked", contentType = "new-blocked") { Box(kitItemMotion()) { NewConversationBlocked(opening, actions) } }
             }
-            replyOffer?.let { offer -> item(key = "reply-notification-offer", contentType = "reply-notification-offer") { Box(kitItemMotion()) { offer() } } }
+            replyOffer?.takeIf { shownNotice == HomeNoticeKind.ReplyOffer }?.let { offer -> item(key = "reply-notification-offer", contentType = "reply-notification-offer") { Box(kitItemMotion()) { offer() } } }
             state.brief?.let { brief -> item(key = "brief", contentType = "brief") { Box(kitItemMotion()) { BriefBlock(brief, rowWords, mask, actions, state) } } }
-            if (state.archiveFailure != null)
+            if (state.archiveFailure != null && shownNotice == HomeNoticeKind.ArchiveFailure)
                 item(key = "archive-failure", contentType = "archive-failure") {
                   Box(kitItemMotion().padding(horizontal = LocalKitTokens.current.gutter.dp)) {
                     // E04-S05: the row is already back in the list, so closing the notice changes nothing real.
@@ -359,7 +359,7 @@ public fun ChatsScreen(
                     )
                   }
                 }
-            if (state.renameFailure != null)
+            if (state.renameFailure != null && shownNotice == HomeNoticeKind.RenameFailure)
                 item(key = "rename-failure", contentType = "rename-failure") {
                     Box(kitItemMotion()) {
                         io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice(
@@ -368,7 +368,7 @@ public fun ChatsScreen(
                         )
                     }
                 }
-            if (state.answerFailure != null)
+            if (state.answerFailure != null && shownNotice == HomeNoticeKind.AnswerFailure)
                 item(key = "answer-failure", contentType = "answer-failure") {
                     Box(kitItemMotion()) {
                         io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice(
@@ -382,8 +382,9 @@ public fun ChatsScreen(
             // is loading, then offers Try again; a server that lists one project says so.
             // Flutter shows only "{servers} isn't answering" (chatsHomeUnreachableShort); the longer "conversations
             // aren't shown" is its screen-reader label, because the visible list may still hold remembered rows.
-            val unreachable = state.home.sources.filter { it.shown && it.unreachable && it.profile != state.home.opening?.profile }
-            unreachable.forEach { source ->
+            // One notice at a time: the first connection that did not answer; the next shows once this one is back.
+            val unreachable = HomeNotices.unreachable(state)
+            if (shownNotice == HomeNoticeKind.ServerUnreachable) unreachable.take(1).forEach { source ->
                 item(key = "unreachable-${source.profile.raw}", contentType = "unreachable") {
                     Box(kitItemMotion().padding(horizontal = LocalKitTokens.current.gutter.dp)) {
                         KitNotice(
@@ -395,38 +396,32 @@ public fun ChatsScreen(
             }
             // One place per server: a server with its own line, or the one opening (pill or failure card), is not
             // named again here.
-            val partial =
-                state.incomplete.filterNot { name ->
-                    unreachable.any { it.name == name } || name == state.home.opening?.serverName
-                }
-            if (partial.isNotEmpty()) {
+            val partial = HomeNotices.partial(state)
+            if (shownNotice == HomeNoticeKind.ListIncomplete) {
                 item(key = "incomplete", contentType = "incomplete") {
                     Box(kitItemMotion().padding(horizontal = LocalKitTokens.current.gutter.dp)) {
                         val names = KitBidi.auto(partial.joinToString(", "))
-                        if (state.refreshing) KitNotice(stringResource(Res.string.chatsHomeStillLoading, names), tone = StatusTone.Progress)
-                        else
-                            KitNotice(
-                                stringResource(Res.string.chatsHomeIncompleteNamed, names),
-                                actions = listOf(KitLineAction(stringResource(Res.string.kitTryAgain), actions::retryList)),
-                            )
-                    }
-                }
-            }
-            state.onlyProject?.let { project ->
-                item(key = "only-project", contentType = "only-project") {
-                    // On the gutter like the rows (a notice draws edge to edge; the brief block does the same).
-                    Box(kitItemMotion().padding(horizontal = LocalKitTokens.current.gutter.dp)) {
-                        KitNotice(stringResource(Res.string.chatsHomeOnlyProject, KitBidi.auto(project)))
+                        KitNotice(
+                            stringResource(Res.string.chatsHomeIncompleteNamed, names),
+                            actions = listOf(KitLineAction(stringResource(Res.string.kitTryAgain), actions::retryList)),
+                        )
                     }
                 }
             }
             // G6 (F: agent_notices.dart:84-157): the phone agents' restart offer, sign-in, stopped and plan-limit lines.
             if (state.phase != ChatsPhase.Opening) {
-                if (state.agentNotices.restart)
+                if (state.agentNotices.restart && shownNotice == HomeNoticeKind.AgentRestart)
                     item(key = "agents-restart", contentType = "agent-notice") {
                         Box(kitItemMotion().padding(horizontal = LocalKitTokens.current.gutter.dp)) { KitNotice(stringResource(Res.string.agentsRestartLine)) }
                     }
-                state.agentNotices.lines.forEach { notice ->
+                // The phone's agents, one line: a sign-in first, then a stop. A plan limit has nothing to do: no line.
+                val agentKind =
+                    when (shownNotice) {
+                        HomeNoticeKind.AgentSignedOut -> HomeAgentNoticeKind.SignedOut
+                        HomeNoticeKind.AgentStopped -> HomeAgentNoticeKind.Stopped
+                        else -> null
+                    }
+                state.agentNotices.lines.filter { it.kind == agentKind }.take(1).forEach { notice ->
                     item(key = "agent-${notice.agentId}-${notice.kind.name}", contentType = "agent-notice") {
                         Box(kitItemMotion().padding(horizontal = LocalKitTokens.current.gutter.dp)) {
                             val name = KitBidi.auto(notice.agentName)
@@ -441,8 +436,7 @@ public fun ChatsScreen(
                                         stringResource(Res.string.agentsStoppedLine, name),
                                         actions = listOf(KitLineAction(stringResource(Res.string.agentsResumeAction, name), actions::openAgents)),
                                     )
-                                HomeAgentNoticeKind.LimitReached ->
-                                    KitNotice("$name · ${stringResource(Res.string.agentsStateLimit)}")
+                                HomeAgentNoticeKind.LimitReached -> Unit
                             }
                         }
                     }
@@ -715,11 +709,6 @@ private fun Filters(state: ChatsUi, actions: ChatsActions, bleed: Boolean = fals
 private fun BriefBlock(brief: BriefUi, words: HomeRowWords, mask: (String) -> String, actions: ChatsActions, state: ChatsUi) {
     Column(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
         // On the gutter like the rows under it (its glyph sat on the screen's edge).
-        if (brief.unknown)
-            KitNotice(
-                stringResource(Res.string.chatsReturnBriefUnknown),
-                Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
-            )
         // Headed and grouped like Right now and Recent, so the top group reads as part of the same list.
         if (brief.rows.isNotEmpty())
             KitRowPanel(label = stringResource(Res.string.teamProjectDigest)) {

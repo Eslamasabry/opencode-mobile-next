@@ -254,13 +254,29 @@ public data class ChatsUi(
     /** H1: question answers on their way to the server (after the undo window). */
     val sendingQuestions: ImmutableSet<String> = persistentSetOf(),
     /**
-     * H3: set when no connection can list across projects: the one project the list shows, so "my other
-     * conversations vanished" reads as the server's limit (F: chats_home_screen.dart:333-337).
+     * H3: set when no connection can list across projects: the one project the list shows. The projects chip names
+     * it ([projectChipName]); there is no separate notice (Flutter's "This server can't list all projects" line was
+     * dropped on purpose, owner 2026-11-11: the person cannot act on it).
      */
     val onlyProject: String? = null,
     /** G6: the phone agents' notices (signed out, stopped, plan limit, restart). */
     val agentNotices: HomeAgentNotices = HomeAgentNotices(),
 ) {
+    /**
+     * The project the projects chip names, or null for "All projects" / "Other folders". A chosen project names itself;
+     * with no choice, a source that can only list one project names that one, so the chip never says "All projects"
+     * over a list limited to one (owner 2026-11-11).
+     */
+    val projectChipName: String?
+        get() =
+            when {
+                otherFoldersSelected -> null
+                filters.projectDirectory != null ->
+                    projectChoices.firstOrNull { it.directory == filters.projectDirectory }?.name
+                        ?: filters.projectDirectory.trimEnd('/').substringAfterLast('/')
+                else -> onlyProject
+            }
+
     /** The server pill's words; null before anything is saved. */
     val connection: HomeConnectionUi?
         get() = HomeConnectionUi.of(home)
