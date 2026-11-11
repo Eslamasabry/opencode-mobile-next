@@ -290,7 +290,10 @@ internal class DockGesture(private val rules: DockRules = DockRules()) {
                 when {
                     t != null -> DockOutcome.Target(ring, t.kind, t.child)
                     !hits.inStrip(x) && hits.inSwell(x, y) -> keep(peek = false)
-                    else -> hits.ringAt(y).let { if (it >= 0) DockOutcome.Open(it) else DockOutcome.Close }
+                    // Lifting off the strip cancels: a ring opens only under a finger still on the strip (its width and
+                    // the strip's own few dp of slop), never at the height of a finger that drifted away.
+                    hits.inStrip(x) -> hits.ringAt(y).let { if (it >= 0) DockOutcome.Open(it) else DockOutcome.Close }
+                    else -> DockOutcome.Close
                 }
             DockMode.Peek ->
                 when {

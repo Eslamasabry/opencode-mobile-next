@@ -153,6 +153,9 @@ public class KitEdgeDockState internal constructor() {
     /** The finger's height while a ring is carried (reorder) or the dock is moved. */
     internal var carryY by mutableFloatStateOf(0f)
 
+    /** Where the finger took the dock to move it: its height above (-) or below the column's centre (dp). */
+    private var grabDy = 0f
+
     // What is open (changes recompose; they change on decisions, not per frame).
     internal var swell by mutableStateOf<SwellLayout?>(null)
     internal var swellRing by mutableIntStateOf(-1)
@@ -598,7 +601,8 @@ public class KitEdgeDockState internal constructor() {
                 moving = true
                 carryY = y
                 val room = DockDims.EDGE_MARGIN + DockDims.SHOULDER_REACH
-                val t = (y - column.height / 2f).coerceIn(safeTop + room, max(safeTop + room, safeBottom - room - column.height))
+                // The point of the dock under the finger stays under it: no jump when the move begins.
+                val t = (y - grabDy - column.height / 2f).coerceIn(safeTop + room, max(safeTop + room, safeBottom - room - column.height))
                 launch { top.snapTo(t) }
             }
             DockMode.Pull -> {
@@ -627,7 +631,10 @@ public class KitEdgeDockState internal constructor() {
     internal fun onDown(zone: DockZone) {
         when (zone) {
             DockZone.Ring -> startCharge()
-            DockZone.Grip, DockZone.Nub -> carryY = top.value + column.height / 2f
+            DockZone.Grip, DockZone.Nub -> {
+                carryY = top.value + column.height / 2f
+                grabDy = gesture.y - carryY
+            }
             else -> Unit
         }
         pullStart = if (panelOpen) widthDp - edgeInset - panelTarget().left else out.value
@@ -706,7 +713,8 @@ public class KitEdgeDockState internal constructor() {
                 moving = false
                 placeGeneration++
                 val side = sideAt(phys(o.x), widthDp, rtl = !onRightForEnd)
-                intents.onPlacementChange(side, biasFor(o.y, column.height, safeTop, safeBottom))
+                // The height saved is the column's centre where it stands: the finger's height less the grab.
+                intents.onPlacementChange(side, biasFor(o.y - grabDy, column.height, safeTop, safeBottom))
             }
             DockOutcome.NewConversation -> intents.onNewConversation()
         }
