@@ -241,7 +241,7 @@
     <string name="workRunawaySeeRunning">Ver o que está em execução</string>
     <string name="chatsHomeRunningCount">Em execução · %1$d</string>
     <string name="chatsHomeStopped">Parado</string>
-    <string name="chatsHomeOnlyProject">Mostrando só as conversas de %1$s. Este servidor não consegue listar todos os projetos.</string>
+    <string name="chatsHomeOnlyProject">Mostrando só as conversas de “%1$s”. Este servidor não consegue listar todos os projetos.</string>
     <string name="chatsHomeIncompleteNamed">%1$s não carregou</string>
     <string name="shellServerPlusOthers">%1$s +%2$d</string>
     <string name="chatsNewSeparateCopy">Em uma cópia separada</string>

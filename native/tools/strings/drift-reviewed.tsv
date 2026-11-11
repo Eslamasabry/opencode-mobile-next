@@ -16,6 +16,7 @@ ar	chatUiCompactingConversation
 ar	chatUiCompactionFailed
 ar	chatUiCompactionStarted
 ar	chatUiSelectAModelBeforeCompactingThisSession
+ar	chatsHomeOnlyProject
 ar	discoverRemainingAliases
 ar	e7ModelUiUseModelMode
 ar	e7SettingsAlphaBody
@@ -65,6 +66,7 @@ en	chatUiCompactingConversation
 en	chatUiCompactionFailed
 en	chatUiCompactionStarted
 en	chatUiSelectAModelBeforeCompactingThisSession
+en	chatsHomeOnlyProject
 en	e7SettingsAlphaBody
 en	e7SettingsUi93
 en	e7SetupStopLocal
@@ -494,6 +496,7 @@ es	chatsHomeEmptyCalmBody
 es	chatsHomeIncompleteNamed
 es	chatsHomeNothingRunning
 es	chatsHomeNothingRunningBody
+es	chatsHomeOnlyProject
 es	chatsHomeProjectEmptyBody
 es	chatsHomeStopped
 es	chatsNewBuildPrompt
@@ -3308,6 +3311,7 @@ es	worktreesCreateHelper
 es	worktreesSetupFailedWord
 es	worktreesStartConversation
 pt	e7WorkspaceOffline
+zh	chatsHomeOnlyProject
 zh	e7SettingsAlphaBody
 zh	e7SettingsUi93
 zh	e7SetupStopLocal

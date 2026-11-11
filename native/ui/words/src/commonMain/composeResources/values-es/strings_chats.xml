@@ -22,7 +22,7 @@
     <string name="chatsHomeFailed">Fallida</string>
     <string name="chatsHomeToday">Hoy</string>
     <string name="chatsHomeEarlier">Anteriores</string>
-    <string name="chatsHomeOnlyProject">Mostrando solo las conversaciones de %1$s. Este servidor no puede listar todos los proyectos.</string>
+    <string name="chatsHomeOnlyProject">Mostrando solo las conversaciones de “%1$s”. Este servidor no puede listar todos los proyectos.</string>
     <string name="chatsHomeIncomplete">Algunas conversaciones no se pudieron cargar</string>
     <string name="shellServerPlusOthers">%1$s +%2$d</string>
     <string name="chatsHomeOpening">Abriendo…</string>

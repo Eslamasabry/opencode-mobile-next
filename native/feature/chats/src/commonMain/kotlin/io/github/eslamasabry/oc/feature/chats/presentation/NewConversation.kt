@@ -386,6 +386,13 @@ public data class NewConversationUi(
     val shownModels: List<NewConversationModel>
         get() = if (phoneAgent != null) phoneModels else setup?.models.orEmpty()
 
+    /**
+     * Whether the Model row is a control: a person can name at least two models, or the phone agent's list is
+     * still being read. With one model or none there is nothing to choose, so the row only states the model.
+     */
+    val modelChoosable: Boolean
+        get() = (phoneAgent != null && phoneModelsBusy) || filterNewConversationModels(shownModels, "").size >= 2
+
     /** The model the Model row shows. */
     val shownModel: ModelRef?
         get() = if (phoneAgent != null) phoneModel else model
@@ -1004,6 +1011,8 @@ public class NewConversationViewModel(
     }
 
     override fun sheet(sheet: NewConversationSheet?) {
+        // The model sheet never opens with nothing to choose.
+        if (sheet == NewConversationSheet.Models && !mutable.value.modelChoosable) return
         val profile = mutable.value.profile
         mutable.update {
             it.copy(
