@@ -317,3 +317,57 @@ under its tint, so no bend, no rim light, no aurora, no ink flip timing and no f
   base. No golden was recorded or changed.
 - `compileAndroidMain` for ui:kit, feature:chats and feature:settings.
 - Not run: the whole kit suite, the benchmark scene (not built), anything on a device.
+
+## Polish after the first phone look (2026-11-11, branch native/glass-polish)
+
+The owner's phone (Glass, dark, bright page glow) showed two faults on the home.
+
+**A. Chips cut by the floating pane.** Cause: the chips line on the pane's second row ran on to the window's edge
+(`KitFilterChips` with `bleed`, no end inset), past the pane's 6 dp side, so the last chip ran across the pane's rounded
+corner and outline; and the pane ends 4 dp inside the row's foot, with the chips' 48 dp targets centring 32 dp faces,
+so its bottom edge sat about 4 dp under the chips. Changed: inside the floating pane's second row (only where the lens
+is drawn) a sideways line clips at the pane's side, rests its chips on the gutter inside it (10 dp from the pane's side),
+and fades with the kit's scroll fade (`kitScrollFade`) over 16 dp only at an end with more past it
+(`FloatingPaneRow`, `LocalKitOnFloatingPane`, read by `KitFilterChips`). The row keeps 16 dp under it, the room the page
+heading keeps above its title row, so the pane's edges sit 12 dp from the title row and from the chips row. Cost: under
+the lens the list at rest now starts 16 dp lower than without the lens (it used to start on the same pixel).
+Without the lens nothing changes.
+
+**B. Thick bright bars on the panes' straight edges.** Cause: the rim's picture light (`BackdropRimLight` in
+`KitSurfaceGlass.kt`) was a 1.5 dp band clipped to two rectangles, the straight part of the top edge and of the start
+side, with hard ends at the corners' tangent points, drawn over the 1 dp rim at up to .85. With today's bright glow it
+read as a bar about 2.5 dp wide, while the corners next to it kept only the thin rim. The pane's own three-stop rim
+(`edgeRest`) is a 1 dp stroke round the whole outline and could not draw it. Changed: the light is now a ring as wide as
+the rim (1 dp, never wider) round the pane's whole outline, corners included, through one even-odd ring clip; its
+strength (gain, most) is unchanged, so it rises and falls only with the picture behind the edge. It now also lights the
+end side and the bottom edge where the picture behind them is bright. No `GlassLook` number changed; other styles,
+looks without the light and the held fallback draw no picture light, as before.
+
+**Pictures** (desktop, `KitRimLightTest`'s render: a dark 1 dp-rimmed pane over a plate with a bright green glow at
+its start side; the light drawn by the kit's own `BackdropRimLight`, no lens): `glass-in-the-kit/render-rim-light-before.png`
+shows the phone's fault: a thick white bar on the straight start side and along the top, both ending hard where the
+corners begin, the corners and the other two sides only the thin grey rim. `render-rim-light-after.png`: one thin rim all
+round, white where the glow lies behind it, fading smoothly round the corners to grey on the dark end side; no bar, no
+hard end. Note: the end side and the bottom now catch some light too where the picture behind them is a little above the
+ground (grey on the near-black side of the plate), so a pane's whole rim reads brighter over a mid-dark glow than
+before. The desktop cannot show the lens, the aurora or the phone's own rim; the chip row has no picture (the test
+measures it).
+
+**Checks run (VPS desktop tests, no device)**: `KitFloatingBarTest` 12 of 12 (two expectations moved by the pane's
+room: the list at rest and the scrolled distance), `KitFloatingBarRowTest` (new, five chips at 360 dp: the clip edge on
+the pane's side, the fade present at an end with more and absent at an end without, the last chip's rest 10 dp inside,
+every un-faded chip face inside the pane's rounded outline, equal room above the title row and under the chips row),
+`FloatingHomeTest` 2 of 2, `KitRimLightTest` (new: lit within the 1 dp rim and dark 1.5 dp in, on all four edges and
+all four corners; even along side, tangent point and arc over an even picture; no step over 16 of 255 along the edge
+over a graded one; red before the fix), `GlassPanesKitTest` 4 of 4, `compileAndroidMain` for ui:kit and feature:chats.
+Not run: goldens (the non-floating layout and the other styles are untouched in code), anything on a device.
+
+**What to look at on the phone** (Glass, a look with a lens, Background on, dark, a bright glow):
+
+1. Home at rest: the chips row has the same air under it as the title has above it; the last chip ends on the gutter
+   inside the pane when scrolled to the end, and while more lies past the end it thins out before the pane's side.
+2. Scroll the chips sideways: a chip leaving at either end thins out over a short step; nothing is cut by the pane's
+   rounded corner or at the divider.
+3. The list panel, "All conversations" and the header pane over the bright glow: one thin, even rim all round, brighter
+   where the glow behind it is brighter, with no thick bar and no hard end where a straight edge meets a corner.
+4. The list at rest starts 16 dp lower under the lens than with reduced motion; say if that jump between the two reads.
