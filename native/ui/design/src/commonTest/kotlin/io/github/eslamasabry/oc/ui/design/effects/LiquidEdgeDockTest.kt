@@ -46,6 +46,31 @@ class LiquidEdgeDockTest {
     }
 
     @Test
+    fun `dock glass - the pulled-out list frosts as a sheet does, 12 dp and bend 48, and keeps the menu's tint and rim`() {
+        for (dark in listOf(true, false)) {
+            val menu = LiquidEdge.recipe(LiquidRole.Menu, dark)
+            val sheet = LiquidEdge.recipe(LiquidRole.Sheet, dark)
+            assertEquals(12f, sheet.blurDp, "the sheet's blur (dark=$dark)")
+            assertEquals(48f, sheet.refractionDp, "the sheet's bend (dark=$dark)")
+            assertEquals(menu, LiquidEdge.dockRecipe(dark, 1f, list = 0f), "no list: the menu's (dark=$dark)")
+            val list = LiquidEdge.dockRecipe(dark, 1f, list = 1f)
+            close(list.blurDp, 12f, "the list's blur dark=$dark")
+            close(list.refractionDp, 48f, "the list's bend dark=$dark")
+            close(list.tint, menu.tint, "the tint stays the menu's dark=$dark")
+            close(list.rimMaxDp, menu.rimMaxDp, "the rim stays the menu's dark=$dark")
+            close(list.saturation, menu.saturation, "saturation stays dark=$dark")
+            assertTrue(list.blurDp > menu.blurDp, "the list frosts more than the swell did (dark=$dark)")
+            // No step as the list opens: the blur and the bend move together, a little each hundredth.
+            var last = LiquidEdge.dockRecipe(dark, 1f, list = 0f)
+            for (i in 1..100) {
+                val now = LiquidEdge.dockRecipe(dark, 1f, list = i / 100f)
+                assertTrue(abs(now.blurDp - last.blurDp) <= .15f && abs(now.refractionDp - last.refractionDp) <= .2f, "a step at ${i / 100f}")
+                last = now
+            }
+        }
+    }
+
+    @Test
     fun `dock glass - its rank lies between the + and the bars`() {
         assertTrue(LiquidRole.Dock.rank > LiquidRole.Action.rank)
         assertTrue(LiquidRole.Dock.rank < LiquidRole.Bar.rank)

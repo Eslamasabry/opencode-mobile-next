@@ -75,6 +75,9 @@ internal class KitLiquidBodyBoxes {
 
     /** 0 at rest, 1 fully grown: mixes the material. */
     var growth: Float = 0f
+
+    /** How far box B is the pulled-out list (0 when it is not, rising with its growth): frosts as a sheet's glass does. */
+    var listShare: Float = 0f
 }
 
 /**
@@ -114,6 +117,7 @@ internal fun kitLiquidFace(
     boxes: (KitLiquidBodyBoxes) -> Boolean,
     wordsArea: () -> Rect?,
     rank: Int = role.rank,
+    listed: LiquidRole? = null,
 ): KitLiquidBodyFace? {
     val platform = LocalKitPlatform.current
     val programs = remember(platform) { KitLiquidJoin() }.programs(platform)
@@ -128,6 +132,7 @@ internal fun kitLiquidFace(
     val flip = liquidFlipFor(source, role) ?: remember { LiquidFlip() }
     val restSpec = kitLiquidPaneSpec(rest, flip, chosen = false, keepRim = false)
     val grownSpec = kitLiquidPaneSpec(grown, flip, chosen = false, keepRim = false)
+    val listedSpec = listed?.let { kitLiquidPaneSpec(it, flip, chosen = false, keepRim = false) }
     // The words sample what lies under the body only: the body's bounds stretched over the node's whole area.
     val sampled = remember(backdrop, wordsArea) { areaBackdrop(backdrop, wordsArea) }
     val words = kitLiquidWords(sampled, flip)
@@ -137,7 +142,7 @@ internal fun kitLiquidFace(
     val flipInk = Color(other.text1.v)
     return KitLiquidBodyFace(
         face = Modifier.semantics { this[KitLiquidBodyDrawn] = if (granted) role.name else "${role.name} frost" } then
-            LiquidBodyElement(boxes, restSpec, grownSpec, backdrop, lens = granted),
+            LiquidBodyElement(boxes, restSpec, grownSpec, backdrop, lens = granted, listed = listedSpec),
         words = Modifier.kitLiquidPlateHost(words),
         ink = ink,
         ink2 = lerp(Color(roles.text2.v), ink, second),
@@ -165,8 +170,9 @@ private data class LiquidBodyElement(
     val grown: KitLiquidPaneSpec,
     val backdrop: KitLiquidBackdrop,
     val lens: Boolean,
+    val listed: KitLiquidPaneSpec? = null,
 ) : ModifierNodeElement<LiquidBodyNode>() {
-    override fun create(): LiquidBodyNode = LiquidBodyNode(boxes, rest, grown, backdrop, lens)
+    override fun create(): LiquidBodyNode = LiquidBodyNode(boxes, rest, grown, backdrop, lens, listed)
 
     override fun update(node: LiquidBodyNode) {
         node.boxes = boxes
@@ -174,6 +180,7 @@ private data class LiquidBodyElement(
         node.grown = grown
         node.backdrop = backdrop
         node.lens = lens
+        node.listed = listed
         node.invalidateDraw()
     }
 
@@ -189,6 +196,8 @@ private class LiquidBodyNode(
     var backdrop: KitLiquidBackdrop,
     /** False beyond the window's budget: frost of the same shape (no bend; the blur, tint, cover and rim kept). */
     var lens: Boolean,
+    /** The pulled-out list's frost (a sheet's), mixed in by [KitLiquidBodyBoxes.listShare]; null: none. */
+    var listed: KitLiquidPaneSpec? = null,
 ) : androidx.compose.ui.Modifier.Node(), DrawModifierNode, GlobalPositionAwareModifierNode, CompositionLocalConsumerModifierNode {
     private val join = KitLiquidJoin()
     private val frame = KitLiquidBodyBoxes()
@@ -243,7 +252,8 @@ private class LiquidBodyNode(
         if (area.width < 1f || area.height < 1f) return
         val full = IntSize(area.width.toInt(), area.height.toInt())
         val g = f.growth.coerceIn(0f, 1f)
-        val recipe = LiquidEdge.mix(rest.recipe, grown.recipe, g)
+        val mixed = LiquidEdge.mix(rest.recipe, grown.recipe, g)
+        val recipe = listed?.let { LiquidEdge.toward(mixed, it.recipe, f.listShare) } ?: mixed
         // One resolution for the whole growth (a step in it would show as the body grows): the grown end's.
         val res = liquidResolutionOf(grown.recipe, platform.liquidResolution)
         val small = IntSize(ceil(full.width * res).toInt().coerceAtLeast(1), ceil(full.height * res).toInt().coerceAtLeast(1))

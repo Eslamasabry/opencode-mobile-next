@@ -69,6 +69,16 @@ internal object DockDims {
     /** A ring's name's widest: the strip at rest less [LABEL_INSET] on each side (longer names end in an ellipsis). */
     const val LABEL_MAX = REST_W - 2f * LABEL_INSET
 
+    /**
+     * A ring's name's widest with the page gutter kept from the screen's own edge (device QA 2026-11-11, run 4, 4a and 4c:
+     * names started about 5 dp from the edge): from [LABEL_INSET] in from the strip's inner side to [GUTTER] short of the
+     * screen edge, which lies [edgeInset] beyond the strip's visible edge (a cutout).
+     */
+    fun labelMax(edgeInset: Float): Float = min(LABEL_MAX, REST_W - LABEL_INSET - GUTTER + edgeInset)
+
+    /** How far the name's box moves from the ring's centre toward the screen edge (edge frame; negative: toward the middle). */
+    fun labelShift(edgeInset: Float): Float = ((REST_W / 2f + edgeInset - GUTTER) - (REST_W / 2f - LABEL_INSET)) / 2f
+
     // The swell (box B while scrubbing).
     const val SW_TIP_PAD = 14f
     const val SW_BASE_PAD = 10f
@@ -101,7 +111,7 @@ internal object DockDims {
     /** Rename: B as long as the peek (the name gets room), the field up to this many lines, in B's own part. */
     const val RENAME_LEN = PEEK_MAX_LEN
     const val RENAME_H = 80f
-    const val RENAME_LINES = 3
+    const val RENAME_LINES = 4
     /** The rename field's line height per unit of text scale (the row title's, 16/22). */
     const val RENAME_LINE = 22f
     const val RENAME_PAD = 12f
@@ -158,6 +168,16 @@ internal fun mirrorX(x: Float, width: Float): Float = width - x
 
 internal fun mirrorRect(r: DockRect, width: Float): DockRect = DockRect(width - r.right, r.top, width - r.left, r.bottom)
 
+/**
+ * Whether a ring whose slot is centred at [centerY] stands whole inside the strip's ring viewport [viewTop]..[viewBottom]
+ * (dp). A ring only part in view is not in the strip at all (it stays in the list): a half ring peeping out above the
+ * "+" when the keyboard left room for one (device QA 2026-11-11, run 4, 1b).
+ */
+internal fun ringStandsWhole(centerY: Float, pitch: Float, viewTop: Float, viewBottom: Float): Boolean =
+    centerY - pitch / 2f >= viewTop - WHOLE_SLACK && centerY + pitch / 2f <= viewBottom + WHOLE_SLACK
+
+private const val WHOLE_SLACK = 0.5f
+
 /** True when [side] is on the physical right for the layout direction. */
 internal fun physicallyRight(side: KitDockSide, rtl: Boolean): Boolean = (side == KitDockSide.End) != rtl
 
@@ -178,9 +198,17 @@ internal fun lerp(a: Float, b: Float, t: Float): Float = a + (b - a) * t
 // The ring column and where it sits.
 
 /** How the rings fill the strip: [visible] rings at [pitch], the rest scroll. [pinGap] holds the pin line. */
-internal data class DockColumn(val count: Int, val pinned: Int, val visible: Int, val pitch: Float, val pinGap: Float) {
+internal data class DockColumn(
+    val count: Int,
+    val pinned: Int,
+    val visible: Int,
+    val pitch: Float,
+    val pinGap: Float,
+    /** The foot's band under the rings: [DockDims.FOOT] for the "+", 0 when the dock offers no new conversation. */
+    val foot: Float = DockDims.FOOT,
+) {
     /** The strip's height (A at rest). */
-    val height: Float get() = DockDims.HEAD + visible * pitch + pinGap + DockDims.FOOT + DockDims.PAD_BOTTOM
+    val height: Float get() = DockDims.HEAD + visible * pitch + pinGap + foot + DockDims.PAD_BOTTOM
 
     /** The whole list's height when all rings are laid out (for scrolling). */
     val contentHeight: Float get() = count * pitch + pinGap
@@ -243,17 +271,18 @@ internal data class DockColumn(val count: Int, val pinned: Int, val visible: Int
          * fit; more than seven, or too little room, keep 64 dp and scroll. The pin line's gap shows when a ring is
          * pinned or while one is being reordered.
          */
-        fun of(count: Int, pinned: Int, span: Float, reordering: Boolean = false): DockColumn {
+        fun of(count: Int, pinned: Int, span: Float, reordering: Boolean = false, offersNew: Boolean = true): DockColumn {
             val gap = if (pinned > 0 || reordering) DockDims.PIN_GAP else 0f
-            val fixed = DockDims.HEAD + gap + DockDims.FOOT + DockDims.PAD_BOTTOM
+            val foot = if (offersNew) DockDims.FOOT else 0f
+            val fixed = DockDims.HEAD + gap + foot + DockDims.PAD_BOTTOM
             val room = span - 2f * (DockDims.EDGE_MARGIN + DockDims.SHOULDER_REACH) - fixed
-            if (count <= 0) return DockColumn(0, 0, 0, DockDims.PITCH, gap)
+            if (count <= 0) return DockColumn(0, 0, 0, DockDims.PITCH, gap, foot)
             val fit = room / count
             return if (count <= DockDims.MAX_VISIBLE && fit >= DockDims.PITCH_MIN) {
-                DockColumn(count, pinned, count, min(DockDims.PITCH, fit), gap)
+                DockColumn(count, pinned, count, min(DockDims.PITCH, fit), gap, foot)
             } else {
                 val v = floor(room / DockDims.PITCH).toInt().coerceIn(1, min(count, DockDims.MAX_VISIBLE))
-                DockColumn(count, pinned, v, DockDims.PITCH, gap)
+                DockColumn(count, pinned, v, DockDims.PITCH, gap, foot)
             }
         }
     }
@@ -396,6 +425,8 @@ internal data class SwellLayout(
     /** Rename: where the ring rides (centre, relative) and the field's rectangle (relative). */
     val rideX: Float = 0f,
     val field: DockRect? = null,
+    /** Rename: how many lines the field shows at once (it scrolls inside itself beyond them). */
+    val fieldLines: Int = 0,
 ) {
     /** The target at a point relative to B's top-left, or null. */
     fun targetAt(rx: Float, ry: Float): DockTarget? = targets.firstOrNull { it.kind != DockTargetKind.Header && it.rect.contains(rx, ry) }
@@ -416,18 +447,26 @@ internal fun swellLayout(
     s: Float,
     maxLength: Float,
     stateLine: Boolean = true,
+    renameLines: Int = DockDims.RENAME_LINES,
+    maxHeight: Float = Float.POSITIVE_INFINITY,
 ): SwellLayout {
     val pad = DockDims.SW_TIP_PAD + DockDims.SW_BASE_PAD
     if (kind == SwellKind.Rename) {
         val len = min(DockDims.RENAME_LEN, maxLength).coerceAtLeast(pad + 2 * DockDims.SW_CELL)
-        // The field holds up to three lines of the name (it wraps, never scrolls sideways out of sight), so the whole
-        // name being edited shows (device QA 2026-11-11, M3: "o.txt with one line", the rest scrolled out at the left).
-        val fieldH = DockDims.RENAME_LINES * DockDims.RENAME_LINE * s
+        // The field shows the whole name being edited: it grows with the name up to four lines (it wraps, never scrolls
+        // sideways out of sight), then scrolls inside itself with the caret kept in view (device QA 2026-11-11, M3: "o.txt
+        // with one line", the rest scrolled out; run 4, 3a: only two lines of a long name). A short area (the keyboard up)
+        // takes lines off the top of that, so the swell, its fillets and the strip's corners stay inside the area.
+        val lineH = DockDims.RENAME_LINE * s
+        val roomH = maxHeight - 2f * (DockDims.EDGE_MARGIN + DockDims.CORNER + DockDims.SW_FILLET_BLEND) - 2f * DockDims.RENAME_PAD
+        val cap = if (roomH.isFinite()) floor(roomH / lineH).toInt().coerceAtLeast(1) else DockDims.RENAME_LINES
+        val lines = renameLines.coerceIn(1, DockDims.RENAME_LINES).coerceAtMost(cap)
+        val fieldH = lines * lineH
         val h = max(DockDims.RENAME_H, fieldH + 2f * DockDims.RENAME_PAD)
         val rideX = DockDims.SW_TIP_PAD + 24f
         // The field: right of the ridden-out ring, in B's own part (never over the strip and its rings).
         val field = DockRect(rideX + 24f + 10f, (h - fieldH) / 2f, len - DockDims.SW_BASE_PAD, (h + fieldH) / 2f)
-        return SwellLayout(kind, len, h, min(DockDims.SW_END_R, h * 0.3f), filletFor(len, h), emptyList(), null, rideX, field)
+        return SwellLayout(kind, len, h, min(DockDims.SW_END_R, h * 0.3f), filletFor(len, h), emptyList(), null, rideX, field, lines)
     }
     val want = if (kind == SwellKind.Peek) DockDims.PEEK_MAX_LEN else pad + DockDims.SW_COLS * DockDims.SW_CELL
     val len = min(want, maxLength).coerceAtLeast(pad + 2 * DockDims.SW_CELL)
@@ -604,11 +643,11 @@ internal fun panelContentHeight(
  * The list's box: as wide as the screen allows up to [DockDims.PANEL_MAX], as tall as its content within the safe
  * area, centred on the strip and never smaller than it (so the list's box holds the strip and the union is one box).
  */
-internal fun panelBox(width: Float, edgeInset: Float, farInset: Float, strip: DockBox, contentHeight: Float, safeTop: Float, safeBottom: Float): DockBox {
+internal fun panelBox(width: Float, edgeInset: Float, farInset: Float, strip: DockBox, contentHeight: Float, safeTop: Float, safeBottom: Float, foot: Float = DockDims.FOOT): DockBox {
     val w = min(DockDims.PANEL_MAX, width - edgeInset - farInset - DockDims.PANEL_MIN_GAP).coerceAtLeast(strip.width - DockDims.OVERHANG)
     val left = width - edgeInset - w
     val room = DockDims.EDGE_MARGIN + DockDims.SHOULDER_REACH
-    val h = min(contentHeight + 2f * DockDims.PANEL_PAD + DockDims.HEAD + DockDims.FOOT, safeBottom - safeTop - 2f * room)
+    val h = min(contentHeight + 2f * DockDims.PANEL_PAD + DockDims.HEAD + foot, safeBottom - safeTop - 2f * room)
     var top = strip.centerY - h / 2f
     top = top.coerceIn(safeTop + room, max(safeTop + room, safeBottom - room - h))
     val t = min(top, strip.top)

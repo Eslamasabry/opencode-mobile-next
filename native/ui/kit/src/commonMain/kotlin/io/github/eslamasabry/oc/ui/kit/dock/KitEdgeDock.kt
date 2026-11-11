@@ -136,6 +136,14 @@ public fun KitEdgeDock(
     insets: KitDockInsets = KitDockInsets(),
     state: KitEdgeDockState = rememberKitEdgeDockState(),
 ) {
+    // No rings and no "+" to offer (a screen with its own new-conversation button): the dock draws nothing at all and
+    // takes no touches. Anything it had open closes at once, so it does not come back open when a ring does.
+    if (!model.offersNew && model.rings.isEmpty()) {
+        state.rings = emptyList()
+        state.column = DockColumn(0, 0, 0, DockDims.PITCH, 0f, 0f)
+        LaunchedEffect(state) { state.clearAll() }
+        return
+    }
     // No rings: the dock still stands (owner 2026-11-11: always there), its strip or its nub and the "+" alone.
     val density = LocalDensity.current
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
@@ -159,7 +167,7 @@ public fun KitEdgeDock(
         val safeTop = insets.top.value
         val safeBottom = h - insets.bottom.value
         val pinned = model.rings.count { it.pinned }
-        val column = DockColumn.of(model.rings.size, pinned, safeBottom - safeTop, reordering = state.carrying >= 0)
+        val column = DockColumn.of(model.rings.size, pinned, safeBottom - safeTop, reordering = state.carrying >= 0, offersNew = model.offersNew)
         val keepClear = remember(insets.keepClear, right, w) {
             insets.keepClear.map { r ->
                 val d = DockRect(r.left.value, r.top.value, r.right.value, r.bottom.value)
@@ -217,7 +225,11 @@ public fun KitEdgeDock(
         // While a ring is renamed (the keyboard is up and the column may have shrunk) it is the one kept in view.
         val currentIndex = model.rings.indexOfFirst { it.key == model.current }
         val renamingIndex = state.renaming?.let { k -> model.rings.indexOfFirst { it.key == k } } ?: -1
-        val shownIndex = if (renamingIndex >= 0) renamingIndex else currentIndex
+        // The renamed ring rides out into the swell, so the column keeps another ring in view (the strip keeps its rings).
+        val shownIndex =
+            if (renamingIndex >= 0 && model.rings.size > 1) {
+                if (currentIndex >= 0 && currentIndex != renamingIndex) currentIndex else if (renamingIndex > 0) renamingIndex - 1 else renamingIndex + 1
+            } else if (renamingIndex >= 0) renamingIndex else currentIndex
         LaunchedEffect(shownIndex, column) {
             val now = state.scroll.value.coerceIn(0f, column.maxScroll)
             if (now != state.scroll.value) state.scroll.snapTo(now)
@@ -234,7 +246,7 @@ public fun KitEdgeDock(
                     }
                 }
             }
-            DockFootNode(state, words, intents)
+            if (model.offersNew) DockFootNode(state, words, intents)
             DockHitNode(state)
             val swell = state.swell
             if (swell != null && state.swellRing in model.rings.indices) {
@@ -479,6 +491,9 @@ private fun DockRingNode(
     val label = words.ringLabel(ring)
     val actions = ringActions(state, ring, index, words, intents)
     val towardLeft = state.onRight
+    // The name keeps the page gutter from the screen's own edge, and its inner margin from the strip's other side.
+    val labelMax = DockDims.labelMax(state.edgeInset)
+    val labelDx = DockDims.labelShift(state.edgeInset) * (if (state.onRight) 1f else -1f)
     Box(
         Modifier
             .absoluteOffset {
@@ -487,10 +502,19 @@ private fun DockRingNode(
                 val band = (ringBand(state).first * density).roundToInt()
                 IntOffset(((p.x - DockDims.REST_W / 2f) * density).roundToInt(), ((p.y - state.column.pitch / 2f) * density).roundToInt() - band)
             }
+            // Whole rings only: a ring not wholly inside the viewport takes no room and draws nothing (the others do not
+            // slide under the "+" while the column scrolls or the area changes).
+            .layout { measurable, constraints ->
+                // Measured at no size when it does not stand (so its bounds are empty and nothing of it draws).
+                val p = measurable.measure(if (ringStands(state, index, m)) constraints else Constraints.fixed(0, 0))
+                layout(p.width, p.height) { p.place(0, 0) }
+            }
             .size(DockDims.REST_W.dp, state.column.pitch.dp)
             .graphicsLayer {
                 val vis = smoothstep(15f, 58f, state.out.value) * (1f - smoothstep(0.1f, 0.45f, state.panelX.value))
-                alpha = vis * m.presence.value.coerceIn(0f, 1f)
+                // While another ring is renamed the strip's rings stay, dimmed.
+                val dim = if (state.renaming != null && state.renaming != ring.key) 0.45f else 1f
+                alpha = if (ringStands(state, index, m)) vis * m.presence.value.coerceIn(0f, 1f) * dim else 0f
                 val s = lerp(0.3f, 1f, vis) * (1f + m.pop.value) * (if (state.carrying == index) 1.1f else 1f)
                 scaleX = s
                 scaleY = s
@@ -571,13 +595,24 @@ private fun DockRingNode(
         }
         // The name under the ring (hidden while it rides out to be renamed).
         Box(
-            Modifier.align(Alignment.Center).absoluteOffset(y = 21.dp).widthIn(max = DockDims.LABEL_MAX.dp).graphicsLayer {
+            Modifier.align(Alignment.Center).absoluteOffset(x = labelDx.dp, y = 21.dp).widthIn(max = labelMax.dp).graphicsLayer {
                 alpha = 1f - state.ride.value.coerceIn(0f, 1f) * (if (state.renaming == ring.key) 1f else 0f)
             },
         ) {
             KitText(ring.name, role = TypeRole.Caption, tone = TextTone.Primary, kind = KitTextKind.Frame, maxLines = 1)
         }
     }
+}
+
+/**
+ * Whether ring [index] is in the strip now: wholly inside the column's viewport, or riding out to be renamed (it then
+ * stands in box B). Read in the layout phase.
+ */
+private fun ringStands(state: KitEdgeDockState, index: Int, m: RingMotion): Boolean {
+    if (state.renaming != null && state.renaming == state.rings.getOrNull(index)?.key) return true
+    val viewTop = state.top.value + DockDims.HEAD
+    val y = ringCenter(state, index, m).y
+    return ringStandsWhole(y, state.column.pitch, viewTop, viewTop + state.column.viewportHeight)
 }
 
 /** A ring's centre (edge frame, dp, converted to physical x): its slot (a carried ring's is its drop place), the lean, the ride out for rename. */
