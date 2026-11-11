@@ -89,8 +89,13 @@ internal object DockDims {
     const val SW_RING_BAND = 32f
     const val PEEK_MAX_LEN = 274f
     const val PEEK_LINES = 6
-    const val RENAME_LEN = 150f
+    /** Rename: B as long as the peek (the name gets room), the field up to this many lines, in B's own part. */
+    const val RENAME_LEN = PEEK_MAX_LEN
     const val RENAME_H = 80f
+    const val RENAME_LINES = 3
+    /** The rename field's line height per unit of text scale (the row title's, 16/22). */
+    const val RENAME_LINE = 22f
+    const val RENAME_PAD = 12f
 
     // The pulled-out list (box B at full size).
     const val PANEL_MAX = 320f
@@ -400,15 +405,17 @@ internal fun swellLayout(
     server: Boolean,
     s: Float,
     maxLength: Float,
-    edgeRoom: Float = 0f,
 ): SwellLayout {
     val pad = DockDims.SW_TIP_PAD + DockDims.SW_BASE_PAD
     if (kind == SwellKind.Rename) {
-        val len = min(DockDims.RENAME_LEN, maxLength)
-        val h = DockDims.RENAME_H
+        val len = min(DockDims.RENAME_LEN, maxLength).coerceAtLeast(pad + 2 * DockDims.SW_CELL)
+        // The field holds up to three lines of the name (it wraps, never scrolls sideways out of sight), so the whole
+        // name being edited shows (device QA 2026-11-11, M3: "o.txt with one line", the rest scrolled out at the left).
+        val fieldH = DockDims.RENAME_LINES * DockDims.RENAME_LINE * s
+        val h = max(DockDims.RENAME_H, fieldH + 2f * DockDims.RENAME_PAD)
         val rideX = DockDims.SW_TIP_PAD + 24f
-        // The field: right of the ridden-out ring, over the strip, to the screen edge's margin.
-        val field = DockRect(rideX + 24f + 10f, h / 2f - 18f * s, len + edgeRoom - DockDims.EDGE_MARGIN, h / 2f + 18f * s)
+        // The field: right of the ridden-out ring, in B's own part (never over the strip and its rings).
+        val field = DockRect(rideX + 24f + 10f, (h - fieldH) / 2f, len - DockDims.SW_BASE_PAD, (h + fieldH) / 2f)
         return SwellLayout(kind, len, h, min(DockDims.SW_END_R, h * 0.3f), filletFor(len, h), emptyList(), null, rideX, field)
     }
     val want = if (kind == SwellKind.Peek) DockDims.PEEK_MAX_LEN else pad + DockDims.SW_COLS * DockDims.SW_CELL

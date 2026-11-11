@@ -212,11 +212,14 @@ public fun KitEdgeDock(
         }
         // Keep the conversation on screen in view. A new column (the area changed) first settles the scroll inside what
         // it can scroll (the rings already read it so, [KitEdgeDockState.scrollNow]).
+        // While a ring is renamed (the keyboard is up and the column may have shrunk) it is the one kept in view.
         val currentIndex = model.rings.indexOfFirst { it.key == model.current }
-        LaunchedEffect(currentIndex, column) {
+        val renamingIndex = state.renaming?.let { k -> model.rings.indexOfFirst { it.key == k } } ?: -1
+        val shownIndex = if (renamingIndex >= 0) renamingIndex else currentIndex
+        LaunchedEffect(shownIndex, column) {
             val now = state.scroll.value.coerceIn(0f, column.maxScroll)
             if (now != state.scroll.value) state.scroll.snapTo(now)
-            if (currentIndex >= 0) state.scroll.animateTo(column.scrollToShow(currentIndex, now), DockSprings.fill(motion.reduced))
+            if (shownIndex >= 0) state.scroll.animateTo(column.scrollToShow(shownIndex, now), DockSprings.fill(motion.reduced))
         }
 
         DockBodyNode(state, face, inks)

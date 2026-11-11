@@ -8,6 +8,7 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.absoluteOffset
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -31,6 +32,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
@@ -267,12 +273,22 @@ private fun RenameField(state: KitEdgeDockState, layout: SwellLayout, ring: KitD
                     .size(spot.width.dp, spot.height.dp)
                     .graphicsLayer { alpha = ((state.ride.value - 0.55f) / 0.35f).coerceIn(0f, 1f) }
                     .focusRequester(focus)
+                    // A hardware Enter saves, as the IME's Done does (the field wraps; it takes no new lines).
+                    .onPreviewKeyEvent { e ->
+                        if (e.type == KeyEventType.KeyDown && (e.key == Key.Enter || e.key == Key.NumPadEnter)) {
+                            state.endRename(save = true, text = field.text.toString())
+                            true
+                        } else false
+                    }
                     .semantics { contentDescription = words.nickname },
             textStyle = style,
-            lineLimits = TextFieldLineLimits.SingleLine,
+            // Wraps to the field's lines; Enter still saves (the IME's Done).
+            lineLimits = TextFieldLineLimits.MultiLine(1, DockDims.RENAME_LINES),
             cursorBrush = SolidColor(colors.accent),
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
             onKeyboardAction = { state.endRename(save = true, text = field.text.toString()) },
+            // The name stands in the field's middle, one line or three.
+            decorator = { inner -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.CenterStart) { inner() } },
         )
     }
 }

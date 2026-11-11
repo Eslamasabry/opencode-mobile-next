@@ -446,7 +446,6 @@ public class KitEdgeDockState internal constructor() {
             server = ring.server != null,
             s = textScale,
             maxLength = widthDp - edgeInset - DockDims.REST_W - farInset - DockDims.EDGE_MARGIN,
-            edgeRoom = DockDims.REST_W,
         )
 
     /** Opens (or retargets) box B for ring [i] as [kind]; B grows out with one small overshoot. */

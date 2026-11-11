@@ -34,7 +34,7 @@ class DockBodyHandOverTest {
         s.column = DockColumn.of(5, 0, s.safeBottom - s.safeTop)
         s.top.snapTo(placeTop(s.column.height, 0.5f, s.safeTop, s.safeBottom))
         val layout =
-            swellLayout(kind, KitDockRingState.NeedsYou, 3, 6, false, 1f, width - DockDims.REST_W - DockDims.EDGE_MARGIN, DockDims.REST_W)
+            swellLayout(kind, KitDockRingState.NeedsYou, 3, 6, false, 1f, width - DockDims.REST_W - DockDims.EDGE_MARGIN)
         s.swell = layout
         s.swellCenter.snapTo(s.contentY(s.slotY(2)))
         s.swellH.snapTo(layout.height)
