@@ -98,4 +98,10 @@
     <string name="settingsPhraseChipsSupporting">你的常用短语，显示在消息框上方。根据你在此手机上发送的内容自动学习。</string>
     <string name="settingsHubSearchReasoningAliases">对话记录 显示 思考 推理</string>
     <string name="settingsHubSearchPhoneLinuxAliases">手机 linux ubuntu 本地 设备端 安卓 安装 设置 存储 服务</string>
+    <string name="tipsHubSubtitle">隐藏的手势和简短导览</string>
+    <string name="tipsSearchAliases">提示 教程 导览 引导 手势 长按 如何使用 学习</string>
+    <string name="starShareSearchAliases">星标 点赞 github 收藏 评分 喜欢 支持 项目 仓库 分享 应用 朋友 发送 链接 推荐 邀请 告诉</string>
+    <string name="appUpdatesSearchAliases">更新 升级 新版本 发布 安装 github 检查 تحديث ترقية نسخة جديدة إصدار تثبيت</string>
+    <string name="localAssistantSearchAliases">助手 gemma 总结 离线 本机 设备端 模型 本地 ai</string>
+    <string name="browserModeSubtitle">在此浏览器中可用的功能，以及哪些需要手机应用</string>
 </resources>

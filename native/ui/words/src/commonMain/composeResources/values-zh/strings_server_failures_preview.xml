@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="serverFailureCertificate">无法验证此服务器的证书。请检查服务器，然后重试。</string>
+    <string name="serverFailureIncompatible">此服务器运行的版本与本应用不兼容。</string>
+    <string name="serverFailureNetwork">无法连接到此服务器。请检查网络或服务器地址，然后重试。</string>
+    <string name="serverFailureRejected">服务器拒绝了此请求。请检查服务器，然后重试。</string>
+    <string name="serverFailureSecret">应用无法读取已保存的密码。请重新输入密码。</string>
+    <string name="serverFailureServer">服务器出了问题。请稍后重试。</string>
+    <string name="serverFailureStorage">应用无法在这部手机上读取或保存此连接。请重试。</string>
+    <string name="serverFailureTimeout">服务器未能及时响应。请重试。</string>
+    <string name="serverFailureUnreadableReply">服务器已回复，但应用无法读取它的响应。</string>
+    <string name="serverFailureOther">应用无法完成此连接。请重试。</string>
+</resources>

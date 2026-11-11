@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="searchB1Web">网络</string>
+    <string name="searchB1InsideMessages">消息内容</string>
+    <string name="searchB1AboutOptions">关于搜索选项</string>
+    <string name="searchB1OptionsTitle">搜索选项</string>
+    <string name="searchB1ChooseServer">选择要搜索的服务器</string>
+    <string name="searchB1RecentConversations">最近的对话</string>
+    <string name="searchB1Clear">清除</string>
+    <string name="searchB1Conversations">对话</string>
+    <string name="searchB1Places">设置和页面</string>
+    <string name="searchB1SeeAll">查看全部 %1$s</string>
+    <string name="searchB1SeeAllSpoken">查看全部 %1$s 个对话</string>
+    <plurals name="searchB1ProjectConversations">
+        <item quantity="other">%1$s 个对话</item>
+    </plurals>
+</resources>
