@@ -62,4 +62,3 @@ zh	settingsHubSearchPhoneAliases
 zh	setupOutputWaiting
 # 2026-11-11: problem reports no longer hold a log, so the row says what happens (other languages fall back to English until translated).
 en	sendReportRowDetail
-ar	sendReportRowDetail
