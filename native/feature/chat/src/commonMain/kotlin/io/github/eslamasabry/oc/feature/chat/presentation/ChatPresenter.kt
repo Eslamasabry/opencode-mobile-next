@@ -87,6 +87,8 @@ internal data class ChatLocal(
     /** C5: the words of the note that went, so Undo can find it in the inbox. */
     val stopNote: String? = null,
     val undoingStopNote: Boolean = false,
+    /** C6: steered messages Stop-then-resend took back; the server keeps them in its record, the chat shows them once. */
+    val withdrawn: PersistentSet<String> = persistentSetOf(),
     val leaving: Boolean = false,
     val select: SelectTextUi? = null,
     val insert: ClipUi? = null,
@@ -405,7 +407,7 @@ public class ChatPresenter(
                     is ChatLoad.Failed ->
                         if (kept != null) ChatPhase.Live else ChatPhase.Failed(load.failure)
                 },
-            rows = t.rows,
+            rows = if (l.withdrawn.isEmpty()) t.rows else t.rows.filterNot { it.key in l.withdrawn },
             newestRowKey = t.newestKey,
             canPutBack = world.undone.value != ChatUndone.None,
             canBackground = canBackground(t.run.busy, l),
@@ -695,6 +697,29 @@ public class ChatPresenter(
             val sent = world.sendAgain(note)
             if (sent is Outcome.Failed)
                 local.update { it.copy(stopAfterStep = false, stopNote = null, actionFailure = sent.failure) }
+        }
+    }
+
+    /**
+     * C6 (Flutter `_stopForSteer`): Stop on the "{agent} reads this when this step finishes" note. Stops the step the
+     * message waits on, then sends the same words again so the agent reads them at once; the stopped copy is left out
+     * of the chat so the words show once. Nothing happens when the step already ended (the agent has the message).
+     */
+    override fun stopForSteer(promptKey: String, words: String) {
+        if (local.value.stopping || words.isBlank() || !world.transcript.value.run.busy) return
+        stopInFlight = true
+        local.update { it.copy(stopping = true, actionFailure = null) }
+        launcher.launch {
+            val result = world.stopTurn()
+            stopInFlight = false
+            val failure = (result as? Outcome.Failed)?.failure
+            val asked = (result as? Outcome.Ok)?.value == true
+            local.update { it.copy(stopping = asked && world.transcript.value.run.busy, actionFailure = failure) }
+            // Too late: the stop was not asked, or the agent started on the message in the last moment.
+            if (!asked || !SteerWaitRules.unreadAfterStop(world.transcript.value.rows, promptKey)) return@launch
+            val sent = world.sendAgain(words.trim())
+            if (sent is Outcome.Failed) local.update { it.copy(actionFailure = sent.failure) }
+            else local.update { it.copy(withdrawn = it.withdrawn.add(promptKey)) }
         }
     }
 
