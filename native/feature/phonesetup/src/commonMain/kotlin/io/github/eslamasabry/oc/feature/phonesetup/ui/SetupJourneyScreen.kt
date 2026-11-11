@@ -83,7 +83,8 @@ internal enum class JourneyBody { Nothing, Hero, Job }
  */
 internal fun journeyBody(state: SetupJourneyUi): JourneyBody =
     when {
-        state.adding && state.progress.state != SetupState.Running -> JourneyBody.Nothing
+        state.adding ->
+            if (state.progress.state == SetupState.Running) JourneyBody.Job else JourneyBody.Nothing
         state.customizing || state.progress.state == SetupState.Idle -> JourneyBody.Hero
         else -> JourneyBody.Job
     }
