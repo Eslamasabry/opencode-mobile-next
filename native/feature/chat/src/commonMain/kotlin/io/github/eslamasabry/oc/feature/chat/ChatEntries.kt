@@ -131,6 +131,8 @@ public class ChatEntries(
     private val transcriptPreferences:
         Set<io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayPreferences> =
         emptySet(),
+    private val toolFileOutputs: Set<io.github.eslamasabry.oc.feature.chat.world.ToolFileOutputs> =
+        emptySet(),
     private val pictureEncoders: Set<io.github.eslamasabry.oc.feature.chat.ui.ChatPictureEncoder> =
         emptySet(),
     private val activeContextKept: Set<io.github.eslamasabry.oc.feature.chat.context.ActiveContextLastKnown> =
@@ -635,6 +637,26 @@ public class ChatEntries(
                                     prompts = prompts,
                                     facts = facts,
                                     transcriptDisplay = display,
+                                    toolFileSaver = toolFileOutputs.firstOrNull(),
+                                    onAttachToolFile = { file ->
+                                        val url = file.url
+                                        if (url != null)
+                                            inbox.offer(
+                                                ComposerInbox.target(
+                                                    route.ref.profileId.raw,
+                                                    route.ref.sessionId.raw,
+                                                ),
+                                                "",
+                                                attachments =
+                                                    listOf(
+                                                        io.github.eslamasabry.oc.core.model.PromptAttachment(
+                                                            mime = file.mime ?: "application/octet-stream",
+                                                            filename = file.displayName ?: "file",
+                                                            url = url,
+                                                        )
+                                                    ),
+                                            )
+                                    },
                                     onToggleTimestamps =
                                         transcriptPreferences
                                             .singleOrNull()

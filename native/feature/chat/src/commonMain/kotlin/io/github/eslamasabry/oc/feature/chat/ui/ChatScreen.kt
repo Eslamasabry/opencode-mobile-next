@@ -313,6 +313,10 @@ public fun ChatScreen(
     monitoredForm: (@Composable () -> Unit)? = null,
     transcriptDisplay: io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices =
         io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices(),
+    /** C7: saves an inline file the agent produced (null where the device cannot). */
+    toolFileSaver: io.github.eslamasabry.oc.feature.chat.world.ToolFileOutputs? = null,
+    /** C7: puts an inline file the agent produced on the next prompt. */
+    onAttachToolFile: ((io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolArtifact) -> Unit)? = null,
     /** C10: flips message timestamps (the Settings choice); null where it cannot be saved. */
     onToggleTimestamps: (() -> Unit)? = null,
     /** The models the error card may suggest ("Use {model} and resend"). */
@@ -364,6 +368,9 @@ public fun ChatScreen(
     val requestState by rememberUpdatedState(requests)
     val formPending by rememberUpdatedState(formWaiting)
     val headerState by rememberUpdatedState(header)
+    var toolFile by remember {
+        mutableStateOf<io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolArtifact?>(null)
+    }
     val factsState by rememberUpdatedState(facts)
     val words = rememberChatWords()
     val stopNote = stringResource(Res.string.chatStopAfterStepPrompt)
@@ -969,7 +976,11 @@ public fun ChatScreen(
                                                             workModel::openShellDialog
                                                         else null,
                                                 ),
-                                            onOpenFile = { file -> openArtifact(actions, file) },
+                                            onOpenFile = { file ->
+                                                if (io.github.eslamasabry.oc.feature.chat.world.isInlineFile(file.url) && file.path == null)
+                                                    toolFile = file
+                                                else openArtifact(actions, file)
+                                            },
                                             onAllFiles = actions::openFiles,
                                             onSendAgain = actions::retryLastPrompt,
                                             reasoningExpanded = state.reasoningExpanded,
@@ -1005,6 +1016,7 @@ public fun ChatScreen(
                     reads = replyReader != null,
                     facts = facts,
                 )
+                ToolFileSheet(toolFile, toolFileSaver, onAttachToolFile) { toolFile = null }
                 ChatContextSheet(
                     facts.context,
                     contextOpen,
@@ -1762,6 +1774,7 @@ internal fun canOpenArtifact(
     file: io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolArtifact
 ): Boolean =
     file.path != null ||
+        io.github.eslamasabry.oc.feature.chat.world.isInlineFile(file.url) ||
         file.url?.let { it.startsWith("https://") || it.startsWith("http://") } == true
 
 /** The words the transcript shows that are not server text, from `:ui:words`. */
