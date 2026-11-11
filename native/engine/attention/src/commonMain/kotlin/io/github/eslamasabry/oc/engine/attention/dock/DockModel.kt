@@ -1,0 +1,402 @@
+package io.github.eslamasabry.oc.engine.attention.dock
+
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.common.ids.SessionId
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.PersistentMap
+import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toPersistentMap
+
+/**
+ * What one ring of the edge dock says. One state per conversation, derived (never stored) from the facts the app
+ * already has. [Working] has no progress on purpose: a busy session without a task list gets no invented percentage.
+ */
+public sealed interface DockState {
+    /** Busy and the agent keeps a task list: [done] of [total] (cancelled tasks are not counted). */
+    public data class WorkingWithTasks(val done: Int, val total: Int) : DockState
+
+    /** Busy, no task list. */
+    public data object Working : DockState
+
+    /** Busy and the newest part of the reply is reasoning. Only shown when there is no task list. */
+    public data object Thinking : DockState
+
+    /** A permission, question or form waits for the person. Stays until it is answered. */
+    public data object NeedsYou : DockState
+
+    /** Went idle after working, the run did not fail, and the person has not opened the conversation since. */
+    public data object Finished : DockState
+
+    /** The last run failed and the person has not opened the conversation since. */
+    public data object Failed : DockState
+
+    /** Nothing running, nothing unseen. */
+    public data object Idle : DockState
+}
+
+/** One ring. [name] is what to draw under it: the nickname when the person set one, else the session title. */
+public data class DockEntry(
+    val ref: ConversationRef,
+    val title: String?,
+    val nickname: String?,
+    /** The agent id (mark key) the session runs, when the server said. */
+    val agent: String?,
+    val state: DockState,
+    /**
+     * Counts every time this ring entered NeedsYou or Failed. The UI plays its one-shot blip when the number goes up,
+     * so it never has to diff states itself.
+     */
+    val pulse: Int,
+) {
+    val name: String? get() = nickname ?: title
+}
+
+public enum class DockPresence {
+    /** Nothing live: no dock, no nub. */
+    Hidden,
+
+    /** Tucked to the thin edge nub (fewer than two live, or the person tucked it). */
+    Nub,
+
+    /** Out: two or more live, or an unanswered failure or request, and the person has not tucked it. */
+    Out,
+}
+
+/** The one thing the UI draws. [overflow] conversations did not fit in [DockModel.cap] rings. */
+public data class DockUi(
+    val entries: ImmutableList<DockEntry> = persistentListOf(),
+    val presence: DockPresence = DockPresence.Hidden,
+    val overflow: Int = 0,
+    val open: ConversationRef? = null,
+    val tucked: Boolean = false,
+    /** Entries that are not Idle. */
+    val liveCount: Int = 0,
+)
+
+/** How a run ended, as far as the dock cares. */
+public enum class DockRunEnd {
+    /** Finished or went idle: the ring shows Finished until seen. */
+    Succeeded,
+
+    /** The run failed: the ring shows Failed until seen. */
+    Failed,
+
+    /** The person (or the server) stopped it: back to Idle without a celebration. */
+    Stopped,
+}
+
+/** Everything that can change the dock. The reducer is [DockModel.reduce]; nothing else mutates it. */
+public sealed interface DockEvent {
+    /** Fills in the title and agent of a conversation the dock already tracks. Never adds one. */
+    public data class Meta(val ref: ConversationRef, val title: String?, val agent: String?) : DockEvent
+
+    public data class RunStarted(val ref: ConversationRef) : DockEvent
+
+    public data class RunEnded(val ref: ConversationRef, val end: DockRunEnd) : DockEvent
+
+    /** True while the newest part of the reply is reasoning. */
+    public data class Reasoning(val ref: ConversationRef, val active: Boolean) : DockEvent
+
+    /** The agent's task list. A [total] of zero or less means no list. */
+    public data class Tasks(val ref: ConversationRef, val done: Int, val total: Int) : DockEvent
+
+    public data class RequestOpened(val ref: ConversationRef, val requestId: String) : DockEvent
+
+    public data class RequestSettled(val ref: ConversationRef, val requestId: String) : DockEvent
+
+    /** A reconcile read of every waiting request of one server: replaces what the dock believed about it. */
+    public data class RequestsRead(val profile: ProfileId, val bySession: Map<SessionId, Set<String>>) : DockEvent
+
+    /** A reconcile read of the busy sessions of one server. */
+    public data class StatusesRead(val profile: ProfileId, val busy: Set<SessionId>) : DockEvent
+
+    /** The session record says its last run failed. Only a conversation sitting in the dock as Finished is raised by it (the
+     * run end event said idle, the record knows better); one that is not in the dock, or was seen, is never brought back. */
+    public data class LastRunFailed(val ref: ConversationRef, val failed: Boolean) : DockEvent
+
+    public data class Deleted(val ref: ConversationRef) : DockEvent
+
+    public data class ProfileGone(val profile: ProfileId) : DockEvent
+
+    /** The connection to a server closed: its conversations leave the dock (nothing is known about them now). Names stay. */
+    public data class ProfileOffline(val profile: ProfileId) : DockEvent
+
+    /** The saved nicknames of one profile, replacing what the model held for it. */
+    public data class Nicknames(val profile: ProfileId, val names: Map<SessionId, String>) : DockEvent
+
+    /** One nickname changed; null clears it. */
+    public data class NicknameSet(val ref: ConversationRef, val name: String?) : DockEvent
+
+    /** The conversation on screen, or null when none is. Opening a conversation marks it seen. */
+    public data class Opened(val ref: ConversationRef?) : DockEvent
+
+    /** Clears Finished or Failed without opening the conversation. */
+    public data class Seen(val ref: ConversationRef) : DockEvent
+
+    public data object Tuck : DockEvent
+
+    public data object Untuck : DockEvent
+}
+
+/**
+ * The edge dock's brain: a pure reducer from [DockEvent]s to a [DockUi]. No clock, no I/O, no Compose.
+ *
+ * Rules (the owner's notes, `edge-dock/NOTES.md`):
+ * - In the dock: every conversation that is not Idle, plus the open one while another is in it. Idle ones leave.
+ * - The order is stable: a conversation keeps its place until it leaves; a newcomer goes last. A state change never
+ *   reshuffles. Above [cap] rings the ones that matter most stay (NeedsYou, Failed, working, Finished), still in their
+ *   stable order, and [DockUi.overflow] counts the rest.
+ * - [DockPresence.Out] needs two or more live (anything but Idle), or an unanswered failure or request; the person
+ *   can tuck it, and a NEW failure or request untucks it. With nothing live the dock is hidden and the tuck forgotten.
+ * - Opening a conversation (or [DockEvent.Seen]) clears its Finished and Failed. A run that ends in the open
+ *   conversation is seen at once. A seen conversation leaves the dock when idle, so the session record cannot raise an old failure again.
+ */
+public class DockModel private constructor(private val s: Snapshot) {
+    public val cap: Int get() = s.cap
+
+    public val ui: DockUi by lazy(LazyThreadSafetyMode.NONE) { s.toUi() }
+
+    public fun reduce(event: DockEvent): DockModel {
+        val next = s.step(event)
+        return if (next === s) this else DockModel(next.settled())
+    }
+
+    private enum class Outcome { None, Finished, Failed }
+
+    private data class Tracked(
+        val ref: ConversationRef,
+        val seq: Long,
+        val title: String? = null,
+        val agent: String? = null,
+        val busy: Boolean = false,
+        val thinking: Boolean = false,
+        val done: Int = 0,
+        val total: Int = 0,
+        val requests: Set<String> = emptySet(),
+        val outcome: Outcome = Outcome.None,
+        val pulse: Int = 0,
+    ) {
+        fun state(): DockState =
+            when {
+                requests.isNotEmpty() -> DockState.NeedsYou
+                busy && total > 0 -> DockState.WorkingWithTasks(done.coerceIn(0, total), total)
+                busy && thinking -> DockState.Thinking
+                busy -> DockState.Working
+                outcome == Outcome.Failed -> DockState.Failed
+                outcome == Outcome.Finished -> DockState.Finished
+                else -> DockState.Idle
+            }
+    }
+
+    private data class Snapshot(
+        val cap: Int,
+        val tracked: Map<ConversationRef, Tracked> = emptyMap(),
+        val names: Map<ConversationRef, String> = emptyMap(),
+        val order: List<ConversationRef> = emptyList(),
+        val open: ConversationRef? = null,
+        val tucked: Boolean = false,
+        val nextSeq: Long = 0,
+        /** Titles and agents heard before a conversation joined the dock, so a newcomer arrives with its name. */
+        val known: PersistentMap<ConversationRef, Pair<String?, String?>> = persistentMapOf(),
+    ) {
+        /** The record for [ref], created when it is missing. */
+        private fun withTracked(ref: ConversationRef, change: (Tracked) -> Tracked): Snapshot {
+            val (base, next) = tracked[ref]?.let { it to nextSeq } ?: (Tracked(ref, nextSeq, known[ref]?.first, known[ref]?.second) to nextSeq + 1)
+            return copy(tracked = tracked + (ref to change(base)), nextSeq = next)
+        }
+
+        private fun ifTracked(ref: ConversationRef, change: (Tracked) -> Tracked): Snapshot =
+            if (ref in tracked) copy(tracked = tracked + (ref to change(tracked.getValue(ref)))) else this
+
+        /** A new failure or request: the ring pulses and a tucked dock comes back out. */
+        private fun alerted(t: Tracked): Tracked = if (t.ref == open) t else t.copy(pulse = t.pulse + 1)
+
+        private fun untuckFor(ref: ConversationRef): Snapshot = if (ref == open) this else copy(tucked = false)
+
+        private fun ended(t: Tracked, end: DockRunEnd): Tracked {
+            val base = t.copy(busy = false, thinking = false)
+            val onScreen = t.ref == open
+            return when (end) {
+                DockRunEnd.Failed ->
+                    if (onScreen) base.copy(outcome = Outcome.None) else alerted(base).copy(outcome = Outcome.Failed)
+                DockRunEnd.Stopped -> base
+                // A success never replaces a failure the person has not seen.
+                DockRunEnd.Succeeded ->
+                    when {
+                        onScreen -> base.copy(outcome = Outcome.None)
+                        base.outcome == Outcome.Failed -> base
+                        t.busy -> base.copy(outcome = Outcome.Finished)
+                        else -> base
+                    }
+            }
+        }
+
+        private fun seen(ref: ConversationRef): Snapshot =
+            ifTracked(ref) { it.copy(outcome = Outcome.None) }
+
+        fun step(e: DockEvent): Snapshot =
+            when (e) {
+                is DockEvent.Meta -> remember(e).ifTracked(e.ref) { it.copy(title = e.title ?: it.title, agent = e.agent ?: it.agent) }
+                is DockEvent.RunStarted ->
+                    withTracked(e.ref) { it.copy(busy = true, thinking = false, outcome = Outcome.None) }
+                is DockEvent.RunEnded ->
+                    if (e.ref !in tracked && e.end != DockRunEnd.Failed) {
+                        this
+                    } else {
+                        withTracked(e.ref) { ended(it, e.end) }.let { if (e.end == DockRunEnd.Failed) it.untuckFor(e.ref) else it }
+                    }
+                is DockEvent.Reasoning ->
+                    if ((tracked[e.ref]?.thinking ?: false) == e.active) this else withTracked(e.ref) { it.copy(thinking = e.active) }
+                is DockEvent.Tasks ->
+                    withTracked(e.ref) {
+                        if (e.total > 0) it.copy(done = e.done, total = e.total) else it.copy(done = 0, total = 0)
+                    }
+                is DockEvent.RequestOpened -> {
+                    val before = tracked[e.ref]?.requests.orEmpty()
+                    withTracked(e.ref) {
+                        val next = it.copy(requests = it.requests + e.requestId)
+                        if (before.isEmpty()) alerted(next) else next
+                    }.let { if (before.isEmpty()) it.untuckFor(e.ref) else it }
+                }
+                is DockEvent.RequestSettled -> ifTracked(e.ref) { it.copy(requests = it.requests - e.requestId) }
+                is DockEvent.RequestsRead -> readRequests(e)
+                is DockEvent.StatusesRead -> readStatuses(e)
+                is DockEvent.LastRunFailed ->
+                    if (e.failed) {
+                        val t = tracked[e.ref]
+                        if (t != null && !t.busy && t.outcome == Outcome.Finished && e.ref != open) {
+                            ifTracked(e.ref) { alerted(it).copy(outcome = Outcome.Failed) }.untuckFor(e.ref)
+                        } else this
+                    } else this
+                is DockEvent.Deleted -> copy(known = known.remove(e.ref), tracked = tracked - e.ref, names = names - e.ref, open = open.takeIf { it != e.ref })
+                is DockEvent.ProfileGone ->
+                    copy(
+                        known = known.filterKeys { it.profileId != e.profile }.toPersistentMap(),
+                        tracked = tracked.filterKeys { it.profileId != e.profile },
+                        names = names.filterKeys { it.profileId != e.profile },
+                        open = open.takeIf { it?.profileId != e.profile },
+                    )
+                is DockEvent.ProfileOffline ->
+                    copy(tracked = tracked.filterKeys { it.profileId != e.profile })
+                is DockEvent.Nicknames ->
+                    copy(names = names.filterKeys { it.profileId != e.profile } + e.names.mapKeys { ConversationRef(e.profile, it.key) })
+                is DockEvent.NicknameSet -> copy(names = if (e.name == null) names - e.ref else names + (e.ref to e.name))
+                is DockEvent.Opened -> {
+                    val moved = copy(open = e.ref)
+                    if (e.ref == null) moved else moved.withTracked(e.ref) { it }.seen(e.ref)
+                }
+                is DockEvent.Seen -> seen(e.ref)
+                DockEvent.Tuck -> copy(tucked = true)
+                DockEvent.Untuck -> copy(tucked = false)
+            }
+
+        private fun readRequests(e: DockEvent.RequestsRead): Snapshot {
+            var next = this
+            for (t in tracked.values) {
+                if (t.ref.profileId != e.profile) continue
+                val read = e.bySession[t.ref.sessionId].orEmpty()
+                if (read != t.requests) next = next.reconcileRequests(t.ref, read)
+            }
+            for ((session, ids) in e.bySession) {
+                val ref = ConversationRef(e.profile, session)
+                if (ids.isNotEmpty() && ref !in next.tracked) next = next.reconcileRequests(ref, ids)
+            }
+            return next
+        }
+
+        private fun reconcileRequests(ref: ConversationRef, read: Set<String>): Snapshot {
+            val before = tracked[ref]?.requests.orEmpty()
+            if (read.isEmpty()) return ifTracked(ref) { it.copy(requests = emptySet()) }
+            return withTracked(ref) { t -> t.copy(requests = read).let { if (before.isEmpty()) alerted(it) else it } }
+                .let { if (before.isEmpty()) it.untuckFor(ref) else it }
+        }
+
+        private fun readStatuses(e: DockEvent.StatusesRead): Snapshot {
+            var next = this
+            for (t in tracked.values) {
+                if (t.ref.profileId != e.profile) continue
+                val busyNow = t.ref.sessionId in e.busy
+                if (busyNow && !t.busy) {
+                    next = next.withTracked(t.ref) { it.copy(busy = true, outcome = Outcome.None) }
+                } else if (!busyNow && t.busy) {
+                    // The end was missed (the stream is volatile); the server says idle, so it finished.
+                    next = next.ifTracked(t.ref) { ended(it, DockRunEnd.Succeeded) }
+                }
+            }
+            for (session in e.busy) {
+                val ref = ConversationRef(e.profile, session)
+                if (ref !in next.tracked) next = next.withTracked(ref) { it.copy(busy = true) }
+            }
+            return next
+        }
+
+        private fun remember(e: DockEvent.Meta): Snapshot {
+            val old = known[e.ref]
+            val value = (e.title ?: old?.first) to (e.agent ?: old?.second)
+            if (old == value) return this
+            val next = if (e.ref in known) known.remove(e.ref).put(e.ref, value) else known.put(e.ref, value)
+            return copy(known = if (next.size > KNOWN_LIMIT) next.remove(next.keys.first()) else next)
+        }
+
+        /** Drops Idle records, recomputes membership and keeps the stable order. */
+        fun settled(): Snapshot {
+            val kept = tracked.filter { (ref, t) -> t.state() != DockState.Idle || ref == open }
+            val live = kept.values.filter { it.state() != DockState.Idle }
+            val members = kept.values.filter { it.state() != DockState.Idle || (live.any { l -> l.ref != it.ref }) }
+            val ids = members.map { it.ref }.toSet()
+            val nextOrder = order.filter { it in ids } + members.filter { it.ref !in order }.sortedBy { it.seq }.map { it.ref }
+            return copy(tracked = kept, order = nextOrder, tucked = tucked && live.isNotEmpty())
+        }
+
+        private fun rank(t: Tracked): Int {
+            val base =
+                when (t.state()) {
+                    DockState.NeedsYou -> 0
+                    DockState.Failed -> 1
+                    is DockState.WorkingWithTasks, DockState.Working, DockState.Thinking -> 2
+                    DockState.Finished -> 3
+                    DockState.Idle -> 4
+                }
+            return if (t.ref == open) minOf(base, 2) else base
+        }
+
+        fun toUi(): DockUi {
+            val members = order.mapNotNull { tracked[it] }
+            val shown =
+                if (members.size <= cap) {
+                    members
+                } else {
+                    val keep = members.withIndex().sortedWith(compareBy({ rank(it.value) }, { it.index })).take(cap).map { it.index }.toSet()
+                    members.filterIndexed { i, _ -> i in keep }
+                }
+            val entries =
+                shown.map {
+                    DockEntry(it.ref, it.title, names[it.ref], it.agent, it.state(), it.pulse)
+                }
+            val live = members.count { it.state() != DockState.Idle }
+            val alert = members.any { it.state() == DockState.NeedsYou || it.state() == DockState.Failed }
+            val presence =
+                when {
+                    live == 0 -> DockPresence.Hidden
+                    !tucked && (live >= 2 || alert) -> DockPresence.Out
+                    else -> DockPresence.Nub
+                }
+            return DockUi(entries.toImmutableList(), presence, members.size - shown.size, open, tucked, live)
+        }
+    }
+
+    public companion object {
+        /** About seven rings fit the edge before they shrink past a thumb (notes: "more than about 7"). */
+        public const val DEFAULT_CAP: Int = 7
+
+        private const val KNOWN_LIMIT: Int = 256
+
+        public fun empty(cap: Int = DEFAULT_CAP): DockModel {
+            require(cap >= 1) { "the dock needs at least one ring" }
+            return DockModel(Snapshot(cap).settled())
+        }
+    }
+}

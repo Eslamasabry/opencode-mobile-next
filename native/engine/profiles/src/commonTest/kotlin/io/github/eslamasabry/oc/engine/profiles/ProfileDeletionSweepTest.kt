@@ -38,6 +38,7 @@ class ProfileDeletionSweepTest {
         KeyShape("oc.providerRuntimeRefresh.v1.", KeyScope.Profile, PrefType.Bool, ":engine:connection", "refresh"),
         KeyShape("oc.automation.", KeyScope.Profile, PrefType.Str, ":engine:settings", "restore authority"),
         KeyShape("oc.scheduleDeleted.", KeyScope.Profile, PrefType.Bool, ":engine:schedule", "tombstone"),
+        KeyShape("oc.dockNames.", KeyScope.Profile, PrefType.Str, ":engine:attention", "edge dock nicknames"),
     )
 
     /** One key of [shape] owned by [owner], following the sweep rule's owner position for that namespace. */
