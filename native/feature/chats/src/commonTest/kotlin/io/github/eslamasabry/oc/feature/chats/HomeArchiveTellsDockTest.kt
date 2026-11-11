@@ -29,6 +29,7 @@ import kotlin.time.Instant
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -41,6 +42,7 @@ import kotlinx.coroutines.test.setMain
  * The home tells the app, by conversation, when an archive (or delete) it sent was taken, so the edge dock drops that
  * ring: only after the Undo window, never for an undone or refused one.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class HomeArchiveTellsDockTest {
     private class Feed : ConversationsFeed {
         override val snapshot = MutableStateFlow(ChatFeedSnapshot())
