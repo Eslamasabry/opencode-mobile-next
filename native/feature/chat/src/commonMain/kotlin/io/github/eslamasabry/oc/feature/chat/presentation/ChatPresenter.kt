@@ -407,7 +407,7 @@ public class ChatPresenter(
                     is ChatLoad.Failed ->
                         if (kept != null) ChatPhase.Live else ChatPhase.Failed(load.failure)
                 },
-            rows = if (l.withdrawn.isEmpty()) t.rows else t.rows.filterNot { it.key in l.withdrawn },
+            rows = if (l.withdrawn.isEmpty()) t.rows else t.rows.filterNot { it.key in l.withdrawn }.toImmutableList(),
             newestRowKey = t.newestKey,
             canPutBack = world.undone.value != ChatUndone.None,
             canBackground = canBackground(t.run.busy, l),
