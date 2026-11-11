@@ -66,15 +66,15 @@ class DockRemoveTest {
     }
 
     @Test
-    fun `opening a removed conversation brings it back only while it is live`() {
+    fun `opening a removed conversation brings it back`() {
         val live = model(DockEvent.RunStarted(a), DockEvent.RunStarted(b), DockEvent.Remove(a)).reduce(DockEvent.Opened(a))
         assertTrue(a in live.ids())
         assertTrue(live.removedRefs.isEmpty())
         val done =
             model(DockEvent.RunStarted(a), DockEvent.RunStarted(b), DockEvent.RunEnded(a, DockRunEnd.Succeeded), DockEvent.Remove(a), DockEvent.Opened(a))
-        assertFalse(a in done.ids(), "finished and now seen: idle, stays removed")
-        // Leaving it drops it from the set: nothing is left to remember.
-        assertTrue(done.reduce(DockEvent.Opened(null)).removedRefs.isEmpty())
+        assertTrue(a in done.ids(), "the open conversation is always in the dock, so opening it undoes the removal")
+        assertTrue(done.removedRefs.isEmpty())
+        assertTrue(a in done.reduce(DockEvent.Opened(null)).ids(), "left, it stays as a quiet recent ring")
     }
 
     @Test
@@ -106,7 +106,10 @@ class DockRemoveTest {
         val quiet = parentGone.reduce(DockEvent.RunEnded(a, DockRunEnd.Stopped))
         assertFalse(a in quiet.ids())
         assertEquals(listOf(a), quiet.removedRefs)
-        assertTrue(quiet.reduce(DockEvent.RunEnded(c1, DockRunEnd.Stopped)).removedRefs.isEmpty())
+        // Both quiet: it is still a recent conversation, so it stays out instead of coming back as an idle ring.
+        val allQuiet = quiet.reduce(DockEvent.RunEnded(c1, DockRunEnd.Stopped))
+        assertEquals(listOf(a), allQuiet.removedRefs)
+        assertFalse(a in allQuiet.ids())
     }
 
     @Test
@@ -137,7 +140,9 @@ class DockRemoveTest {
 
         val two = model(DockEvent.RunStarted(a), DockEvent.RunStarted(b), DockEvent.Remove(a), DockEvent.Remove(b))
         assertEquals(listOf(b), two.reduce(DockEvent.Deleted(a)).removedRefs)
-        assertEquals(listOf(a), two.reduce(DockEvent.RunEnded(b, DockRunEnd.Stopped)).removedRefs, "idle: it left the dock, so it leaves the set")
+        val stopped = two.reduce(DockEvent.RunEnded(b, DockRunEnd.Stopped))
+        assertEquals(listOf(a, b), stopped.removedRefs, "idle but still a recent conversation: it stays out")
+        assertTrue(stopped.ids().isEmpty())
         assertTrue(two.reduce(DockEvent.ProfileGone(p)).removedRefs.isEmpty())
         // A saved set meets the first full read: what the server no longer has is dropped, what is live stays.
         val loaded = DockModel.empty().reduce(DockEvent.RemovedLoaded(p, listOf(a.sessionId, b.sessionId)))

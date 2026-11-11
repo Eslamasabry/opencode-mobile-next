@@ -85,8 +85,11 @@ class DockChildrenTest {
         assertEquals(1, ui.liveCount)
         assertEquals(DockPresence.Nub, ui.presence)
         assertEquals(DockPresence.Out, model(child(c1), DockEvent.RunStarted(c1), DockEvent.RunStarted(b)).ui.presence)
-        // The child stops: parent and child leave together.
-        assertTrue(model(child(c1), DockEvent.RunStarted(c1), DockEvent.RunEnded(c1, DockRunEnd.Stopped)).ui.entries.isEmpty())
+        // The child stops: the child leaves, the parent stays as a quiet recent ring.
+        val quiet = model(child(c1), DockEvent.RunStarted(c1), DockEvent.RunEnded(c1, DockRunEnd.Stopped)).ui
+        assertEquals(listOf(a), quiet.entries.map { it.ref })
+        assertEquals(DockState.Idle, quiet.entry(a).state)
+        assertTrue(quiet.entry(a).children.isEmpty())
     }
 
     @Test

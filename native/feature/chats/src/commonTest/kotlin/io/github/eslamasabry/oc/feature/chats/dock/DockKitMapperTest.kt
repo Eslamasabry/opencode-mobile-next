@@ -57,6 +57,21 @@ class DockKitMapperTest {
     }
 
     @Test
+    fun a_quiet_dock_with_only_idle_recent_rings_is_drawn_tucked_not_hidden() {
+        // The owner's "always available": nothing live is the nub with the recent conversations, never no dock.
+        val quiet = DockUi(entries = persistentListOf(entry("a", DockState.Idle), entry("b", DockState.Idle)), presence = DockPresence.Nub, liveCount = 0)
+        val frame = DockKitMapper.map(quiet, emptyMap(), "Untitled")
+        assertEquals(listOf(KitDockRingState.Idle, KitDockRingState.Idle), frame.model.rings.map { it.state })
+        assertTrue(frame.model.tucked)
+        assertEquals(ref("a"), frame.refs[frame.model.rings[0].key], "a tap opens that conversation")
+        // One idle open conversation alone is still a dock.
+        val open = DockUi(entries = persistentListOf(entry("a", DockState.Idle)), presence = DockPresence.Nub, open = ref("a"))
+        assertEquals(DockKitMapper.key(ref("a")), DockKitMapper.map(open, emptyMap(), "Untitled").model.current)
+        // Switched off still hides it.
+        assertTrue(DockKitMapper.map(quiet, emptyMap(), "Untitled", shown = false).model.rings.isEmpty())
+    }
+
+    @Test
     fun rings_keep_order_names_marks_pins_and_their_keys_lead_back() {
         val named = entry("a").copy(nickname = "Bank API", agent = "claude-code", pinned = true, pulse = 2)
         val frame = DockKitMapper.map(ui(named, entry("b", title = null)), emptyMap(), "Untitled")

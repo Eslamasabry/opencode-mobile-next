@@ -48,8 +48,9 @@ public data class DockKitFrame(
 
 /**
  * Maps the engine's [DockUi] onto the kit's [KitDockModel]. Pure: no Compose, no copy beyond [untitled] (the name of a
- * conversation the server has not titled yet). States map one to one; a hidden dock (nothing live, or the person
- * turned it off) is an empty model, which the kit draws as nothing.
+ * conversation the server has not titled yet). States map one to one. The dock is always available: quiet (idle recent
+ * rings, or one live) is the tucked nub, never nothing. Only a switched-off dock, or one with nothing at all to offer
+ * (no ring: the kit cannot draw an empty dock), is an empty model, which the kit draws as nothing.
  */
 public object DockKitMapper {
     /** A key no two conversations share (the profile id's length keeps "a/b"+"c" apart from "a"+"b/c"). */
@@ -72,6 +73,7 @@ public object DockKitMapper {
         untitled: String,
         shown: Boolean = true,
     ): DockKitFrame {
+        // Never hidden for lack of live conversations: only switched off, or nothing at all to offer.
         if (!shown || ui.presence == DockPresence.Hidden || ui.entries.isEmpty()) return DockKitFrame.Empty
         val refs = HashMap<String, ConversationRef>()
         val asks = HashMap<String, DockAsk>()

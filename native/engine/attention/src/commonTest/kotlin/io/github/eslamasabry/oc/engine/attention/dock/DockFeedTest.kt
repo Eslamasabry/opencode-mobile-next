@@ -106,8 +106,9 @@ class DockFeedTest {
             feed(GatewayEvent.RunStarted(s), GatewayEvent.RunEnded(s, RunOutcome.Idle)).entries.single().state,
         )
         assertEquals(
-            0,
-            feed(GatewayEvent.RunStarted(s), GatewayEvent.RunEnded(s, RunOutcome.Interrupted(InterruptReason.User))).entries.size,
+            DockState.Idle,
+            feed(GatewayEvent.RunStarted(s), GatewayEvent.RunEnded(s, RunOutcome.Interrupted(InterruptReason.User))).entries.single().state,
+            "a stop is a quiet recent ring",
         )
         assertEquals(0, feed(GatewayEvent.RunStarted(s), GatewayEvent.SessionDeleted(s)).entries.size)
     }

@@ -281,6 +281,30 @@ class DockOutsideTest {
     }
 
     @Test
+    fun `quiet recent rings never make the row speak and only live rings count`() {
+        // The dock is always available: idle recent rings fill it, the row outside still speaks only of live work.
+        val quiet =
+            listOf(
+                DockEvent.Recent(p, listOf(DockRecent(SessionId("a"), "Alpha", 2), DockRecent(SessionId("b"), "Beta", 1))),
+                DockEvent.RunStarted(ref("c")), DockEvent.RunEnded(ref("c"), DockRunEnd.Stopped),
+            ).fold(DockModel.empty()) { m, e -> m.reduce(e) }
+        assertEquals(3, quiet.ui.entries.size)
+        assertEquals(0, quiet.ui.liveCount)
+        assertNull(build(quiet.ui))
+        assertFalse(DockOutsideGate().allows(build(quiet.ui)))
+        // One working beside the quiet ones: the row is about that one alone.
+        val one = quiet.reduce(DockEvent.RunStarted(ref("a"))).ui
+        val row = build(one)!!
+        assertEquals(OutsideKind.Working, row.kind)
+        assertEquals("Working on Alpha", row.title)
+        assertEquals(1, row.count)
+        assertTrue(row.lines.isEmpty())
+        assertEquals(ref("a"), row.stop?.ref)
+        // A quiet ring's old pulse is not counted.
+        assertEquals(1, build(ui(entry("a", working, pulse = 1), entry("b", DockState.Idle, pulse = 5)))!!.pulses)
+    }
+
+    @Test
     fun `pulses add up the rings and their sub-agents`() {
         val child = DockChild(ref("k"), null, "x", working, 4)
         assertEquals(7, build(ui(entry("a", working, pulse = 1, children = listOf(child)), entry("b", working, pulse = 2)))!!.pulses)
