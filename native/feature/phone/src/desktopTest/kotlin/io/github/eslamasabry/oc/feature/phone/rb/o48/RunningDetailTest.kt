@@ -110,6 +110,36 @@ class RunningDetailTest {
     }
 
     @Test
+    fun `S7 one summary line over the list, not This phone's row line from another count`() =
+        runComposeUiTest {
+            val rows =
+                persistentListOf(
+                    ProcessRowUi(41, "Linux", ProcessKind.OpenCode, 0, false, null, memoryBytes = 4 * 1048576L),
+                    ProcessRowUi(42, "OpenCode", ProcessKind.OpenCode, 4, false, null, memoryBytes = 268 * 1048576L),
+                    ProcessRowUi(43, "This app", ProcessKind.Other, 46, false, null, memoryBytes = 307 * 1048576L),
+                )
+            setContent {
+                KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                    RunningScreen(
+                        RunningUi(
+                            loading = false,
+                            rows = rows,
+                            // This phone's row counts kernel processes (OpenCode runs two): "4 running".
+                            status =
+                                io.github.eslamasabry.oc.engine.runtime.procs.RunningRowStatus.Normal(
+                                    4,
+                                    582 * 1048576L,
+                                ),
+                        ),
+                        Actions(),
+                    )
+                }
+            }
+            onNodeWithTag("running-summary").assertTextContains("3 running", substring = true)
+            onNodeWithText("4 running", substring = true).assertDoesNotExist()
+        }
+
+    @Test
     fun `binary memory keeps one decimal at the MB boundary and from gigabytes`() {
         assertEquals("1023.6 MB", runningLargeMemory((1023.6 * 1048576L).toLong()))
         assertEquals("1.5 GB", runningLargeMemory(1610612736L))
