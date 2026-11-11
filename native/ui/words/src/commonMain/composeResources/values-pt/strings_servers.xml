@@ -271,7 +271,7 @@
     </plurals>
     <string name="serversRemoveDrafts__eq1">1 rascunho não enviado será excluído</string>
     <string name="serversRemoveActiveNext">Você está conectado a ele: o app desconecta e mostra seus servidores</string>
-    <string name="serversRemoveServerKeeps">Nada é excluído no servidor nem nos seus provedores de IA</string>
+    <string name="serversRemoveServerKeeps">Nada é excluído no servidor nem nos seus provedores de IA.</string>
     <string name="pairingScannerAllowCamera">Permitir câmera</string>
     <string name="pairingScannerStarting">Abrindo a câmera…</string>
     <string name="profileMonitorSwitchBody">Uma execução está em andamento em %1$s. Ao trocar, o app mostra %2$s; a execução em %1$s continua.</string>

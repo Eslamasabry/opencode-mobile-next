@@ -139,7 +139,7 @@
     <string name="globalSessionsFilterActive">Активные</string>
     <string name="globalSessionsArchivedNoMatchMessage">Архивного чата с таким названием нет. Попробуйте более короткий запрос.</string>
     <string name="globalSessionsArchivedEmptyTitle">Архивных чатов нет</string>
-    <string name="globalSessionsArchivedEmptyMessage">Здесь появятся чаты, которые вы архивируете в разделе «Работа».</string>
+    <string name="globalSessionsArchivedEmptyMessage">Здесь появятся чаты, которые вы архивируете.</string>
     <string name="globalSessionsShowActive">Показать активные чаты</string>
     <string name="globalSessionsProjectInUse">%1$s · Используется</string>
     <string name="globalSessionsCopyFolder">Копировать путь к папке</string>

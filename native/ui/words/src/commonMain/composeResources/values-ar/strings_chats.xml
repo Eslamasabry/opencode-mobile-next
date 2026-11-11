@@ -89,7 +89,7 @@
     <string name="globalSessionsFilterActive">النشطة</string>
     <string name="globalSessionsArchivedNoMatchMessage">لا توجد محادثة مؤرشفة بهذا العنوان. جرّب بحثًا أقصر.</string>
     <string name="globalSessionsArchivedEmptyTitle">لا توجد محادثات مؤرشفة</string>
-    <string name="globalSessionsArchivedEmptyMessage">تظهر هنا المحادثات التي تؤرشفها في المهام.</string>
+    <string name="globalSessionsArchivedEmptyMessage">تظهر هنا المحادثات التي تؤرشفها.</string>
     <string name="globalSessionsShowActive">عرض المحادثات النشطة</string>
     <string name="globalSessionsProjectInUse">%1$s · قيد الاستخدام</string>
     <string name="globalSessionsCopyFolder">نسخ مسار المجلد</string>

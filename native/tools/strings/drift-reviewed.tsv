@@ -2,6 +2,7 @@
 # The ARB no longer holds the live wording of these keys. locale<TAB>name. Shrinks only: an entry whose XML
 # matches the ARB again fails the drift test until it is dropped. Changing the ARB to match is the other way out.
 # 2026-11-11: dropped the entries whose XML matches the ARB again; added the divergences found by the first full run (native English wording, and Spanish/Chinese/Arabic copy the translation pipeline or the native screens wrote after the ARB froze).
+# 2026-11-11: native corrects Flutter's wrong place name 'Work' (archived empty text), the remove-server sentence's missing full stop, and the English '(99 %)' spacing.
 ar	agentErrorRequestTooLargeHint
 ar	agentsSignInTerminalIntro
 ar	appUpdateInstall
@@ -24,6 +25,7 @@ ar	e7SettingsUi93
 ar	e7SetupStopLocal
 ar	gitPullNoRemote
 ar	gitSendNoRemote
+ar	globalSessionsArchivedEmptyMessage
 ar	kitCapClaudeLocalWhy
 ar	kitContextRingCompacting
 ar	kitContextRingCompactingSemantics
@@ -36,6 +38,7 @@ ar	runningPhoneLimitBody
 ar	safetyStopLocalServerTitle
 ar	searchClaudeCodeGateDesktop
 ar	searchClaudeCodeGateDevice
+ar	serversRemoveServerKeeps
 ar	sessionContextCompactAction
 ar	sessionContextCompactConfirm
 ar	sessionContextCompactStarted
@@ -72,10 +75,12 @@ en	e7SettingsUi93
 en	e7SetupStopLocal
 en	gitPullNoRemote
 en	gitSendNoRemote
+en	globalSessionsArchivedEmptyMessage
 en	kitCapClaudeLocalWhy
 en	kitContextRingCompacting
 en	kitContextRingCompactingSemantics
 en	kitContextSheetCompactNow
+en	languagePickerPartlyTranslated
 en	manageSpaceKeptAll
 en	nudgeCompact
 en	phoneFileFindTitle
@@ -84,6 +89,7 @@ en	runningPhoneLimitBody
 en	safetyStopLocalServerTitle
 en	searchClaudeCodeGateDesktop
 en	searchClaudeCodeGateDevice
+en	serversRemoveServerKeeps
 en	sessionContextCompactAction
 en	sessionContextCompactConfirm
 en	sessionContextCompactStarted
@@ -2169,6 +2175,7 @@ es	serverSettingsUpgradeKeepsRunning
 es	serverSettingsUpgradeRestartAfter
 es	serverSwitcherChecksAgain
 es	serverSwitcherTryAgainLabel
+es	serversRemoveServerKeeps
 es	servicesAlsoPhoneFailed
 es	servicesAlsoPhoneHint
 es	servicesAlsoRunning
@@ -3315,10 +3322,12 @@ zh	chatsHomeOnlyProject
 zh	e7SettingsAlphaBody
 zh	e7SettingsUi93
 zh	e7SetupStopLocal
+zh	globalSessionsArchivedEmptyMessage
 zh	kitCapClaudeLocalWhy
 zh	manageSpaceKeptAll
 zh	safetyStopLocalServerTitle
 zh	searchClaudeCodeGateDesktop
 zh	searchClaudeCodeGateDevice
+zh	serversRemoveServerKeeps
 zh	settingsHubSearchPhoneAliases
 zh	setupOutputWaiting

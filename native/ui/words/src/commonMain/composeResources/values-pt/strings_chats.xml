@@ -138,7 +138,7 @@
     <string name="globalSessionsFilterActive">Ativas</string>
     <string name="globalSessionsArchivedNoMatchMessage">Nenhuma conversa arquivada tem esse título. Tente uma pesquisa mais curta.</string>
     <string name="globalSessionsArchivedEmptyTitle">Nenhuma conversa arquivada</string>
-    <string name="globalSessionsArchivedEmptyMessage">As conversas que você arquivar em Trabalho aparecem aqui.</string>
+    <string name="globalSessionsArchivedEmptyMessage">As conversas que você arquivar aparecem aqui.</string>
     <string name="globalSessionsShowActive">Mostrar conversas ativas</string>
     <string name="globalSessionsProjectInUse">%1$s · Em uso</string>
     <string name="globalSessionsCopyFolder">Copiar caminho da pasta</string>
