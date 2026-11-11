@@ -176,7 +176,7 @@ class KitSheetPageFocusTest {
     // --- Gate (w4-focus2), asked by the kit owner: one save per modal, and nothing saved or restored without focus. ---
 
     @Test
-    fun `one modal saves the page's holder once: a field that asked under the sheet does not replace it`() =
+    fun `one modal saves the page's holder once, a field that asked under the sheet does not replace it`() =
         runPage { page ->
             runOnIdle { page.request.requestFocus() }
             waitForIdle()
@@ -195,7 +195,7 @@ class KitSheetPageFocusTest {
         }
 
     @Test
-    fun `each modal saves its own holder: the second sheet gives focus back to the field focused when it showed`() =
+    fun `each modal saves its own holder, the second sheet gives focus back to the field focused when it showed`() =
         runPage { page ->
             runOnIdle { page.request.requestFocus() }
             waitForIdle()
