@@ -101,14 +101,18 @@ class ProjectLifecycleGuardTest {
         val start = service.indexOf("if (intent?.action == ACTION_STOP)")
         val end = service.indexOf("return START_NOT_STICKY", start)
         assertTrue(start >= 0 && end > start)
-        assertTrue("stopRuntime(startId)" in service.substring(start, end))
+        // The notification's Stop is the person's own Stop (only it keeps the server off at the next app open).
+        assertTrue("stopRuntime(startId, cause = PhoneServerStopRecord.Cause.Person)" in service.substring(start, end))
         val stop = method(service, "private fun stopRuntime(")
         val workerStart = stop.indexOf("Thread({")
         val workerEnd = stop.indexOf("}, \"phone-service-policy-stop\").start()")
         assertTrue(workerStart >= 0 && workerEnd > workerStart)
         val revocation = stop.substring(0, workerStart)
         val worker = stop.substring(workerStart, workerEnd)
-        assertTrue("linux.requestServerStop(reason, includeOther = true, onRevoked = { revision = it })" in revocation)
+        assertTrue(
+            "linux.requestServerStop(reason, includeOther = true, onRevoked = { revision = it }, cause = cause)" in
+                revocation
+        )
         assertBefore(revocation, "linux.requestServerStop(", "val capturedRevision = revision")
         assertTrue("linux.stopAllServices(" !in revocation)
         assertTrue("linux.drainRevokedRuntimeChildren()" !in revocation)

@@ -63,6 +63,7 @@ import io.github.eslamasabry.oc.protocol.paseo.transport.PaseoTransport
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupProfileName
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
+import io.github.eslamasabry.opencode_mobile.PhoneServerStopRecord
 import io.github.eslamasabry.opencode_mobile.ServerPortBusy
 import io.github.eslamasabry.opencode_mobile.SetupPersistenceException
 import io.github.eslamasabry.opencode_mobile.SetupRunner
@@ -718,12 +719,12 @@ internal constructor(
 
     /**
      * The person's Stop, as BuiltinLinux keeps it (device-wide `builtin_server_recovery`
-     * userStopped).
+     * userStopped). Nothing recorded, or a stop the app or Android made, is not their Stop.
      */
     private fun stoppedByPerson(): Boolean =
-        app.getSharedPreferences("builtin_server_recovery", Context.MODE_PRIVATE).let { prefs ->
-            prefs.getBoolean("userStopped", !prefs.getBoolean("wanted", false))
-        }
+        PhoneServerStopRecord.read(
+            app.getSharedPreferences(PhoneServerStopRecord.PREFERENCES, Context.MODE_PRIVATE)
+        )
 
     private fun probeLoopback(password: String): ProbeAnswer {
         val auth =
@@ -1547,12 +1548,16 @@ internal constructor(
 
     /** A folder-access restart may never be redirected to a newly selected phone owner. */
     suspend fun restartOwned(profile: ProfileId): Outcome<Unit> =
-        when (val stopped = stopNow(profile)) {
+        when (val stopped = stopNow(PhoneServerStopRecord.Cause.Replace, profile)) {
             is Outcome.Failed -> stopped
             is Outcome.Ok -> startNow(profile)
         }
 
-    private suspend fun stopNow(expectedOwner: ProfileId? = null): Outcome<Unit> {
+    /** [cause] says whose stop it is: only [PhoneServerStopRecord.Cause.Person] keeps the server off. */
+    private suspend fun stopNow(
+        cause: PhoneServerStopRecord.Cause,
+        expectedOwner: ProfileId? = null,
+    ): Outcome<Unit> {
         if (expectedOwner != null && ownerId() != expectedOwner)
             return Outcome.Failed(Failure.Runtime(RuntimeProblem.InvalidProfile))
         // Withdraw a suspended probe before waiting for the lane; persistence and process drain
@@ -1560,7 +1565,7 @@ internal constructor(
         actionEpoch++
         val revoked = mutation {
             check(expectedOwner == null || ownerId() == expectedOwner)
-            linux.requestServerStop()
+            linux.requestServerStop(cause = cause)
         }
         if (revoked is Outcome.Failed) return revoked
         return lane.withLock {
@@ -1585,8 +1590,14 @@ internal constructor(
      */
     fun replyRunning(): Boolean = ownerId()?.raw?.let { owner -> leases.busy.value[owner] } == true
 
-    /** The phone team's turn-on stops OpenCode here (Flutter `PhoneTeamSetupPorts.stopServer`). */
-    suspend fun stopServer(): Outcome<Unit> = stopNow()
+    /**
+     * The phone team's turn-on stops OpenCode here (Flutter `PhoneTeamSetupPorts.stopServer`) and starts it again
+     * after: the app's stop, not the person's.
+     */
+    suspend fun stopServer(): Outcome<Unit> = stopNow(PhoneServerStopRecord.Cause.Replace)
+
+    /** Setup's finish step stops the old OpenCode before it starts the new one: the app's stop, not the person's. */
+    suspend fun stopToReplace(): Outcome<Unit> = stopNow(PhoneServerStopRecord.Cause.Replace)
 
     suspend fun refreshServer() = refreshNow()
 
@@ -1609,10 +1620,11 @@ internal constructor(
 
             override suspend fun start(): Outcome<Unit> = startNow()
 
-            override suspend fun stop(): Outcome<Unit> = stopNow()
+            override suspend fun stop(): Outcome<Unit> = stopNow(PhoneServerStopRecord.Cause.Person)
 
+            // A restart is not a Stop: if its start fails, the next app open starts it again.
             override suspend fun restart(): Outcome<Unit> =
-                when (val stopped = stopNow()) {
+                when (val stopped = stopNow(PhoneServerStopRecord.Cause.Replace)) {
                     is Outcome.Failed -> stopped
                     is Outcome.Ok -> startNow()
                 }

@@ -26,6 +26,13 @@ public data class RuntimeStatus(
     val message: String? = null,
     val serverRunning: Boolean = false,
     val serverRestartWanted: Boolean = false,
+    /**
+     * The person's own Stop holds the server off (native `userStopped`, owner rule 2026-11-11). Unlike
+     * [serverRestartWanted], which any stop withdraws (the app replacing the server, Android ending its service),
+     * only This phone › Stop, the notification's Stop or Undo of an automatic restart set it. A map without the key
+     * reads it from [serverRestartWanted], as before.
+     */
+    val serverStoppedByPerson: Boolean = false,
     val serverRecoveryGeneration: Long? = null,
     val serverRecoveryAuthority: Boolean = false,
     val serverRecoveryScheduled: Boolean = false,

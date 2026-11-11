@@ -60,6 +60,8 @@ public object NativeRuntimeStatus {
             message = (map["message"] as? String)?.takeIf { it.isNotBlank() },
             serverRunning = map["serverRunning"] == true,
             serverRestartWanted = map["serverRestartWanted"] == true,
+            serverStoppedByPerson =
+                (map["serverStoppedByPerson"] as? Boolean) ?: (map["serverRestartWanted"] != true),
             serverRecoveryGeneration = integer("serverRecoveryGeneration"),
             serverRecoveryAuthority = map["serverRecoveryAuthority"] == true,
             serverRecoveryScheduled = map["serverRecoveryScheduled"] == true,
