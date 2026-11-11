@@ -648,3 +648,16 @@ semantics, which does not go through the keyboard's input session); the change i
 the swell over the rings in view), the dock's main gesture, so a scroll by drag would collide with it. The column scrolls only
 to keep the current conversation, the renamed ring or the ring that needs the person in view (`scrollToShow`); the other rings
 are reached through the list (pull inward). `KitEdgeDockListGestureTest` holds this as a test. Not changed.
+
+**7b. The short list in the second try (run 5, d2).** A flick inward from a ring on the right edge opened the list on the right
+edge, as it should. The pane was 209 dp tall with three rows. Both boxes are as tall as the area the host hands the dock allows
+(`panelBox`: the content's height, at most the area's height minus 100 dp for the shoulders' room; the strip is capped the same way by
+`DockColumn.of`, three whole rings at 62 dp pitch fit 310 to 372 dp of area). A strip of three rings and a pane of the same height,
+centred on the same point, mean the dock's area was about 310 to 372 dp tall that moment, not 800: the kit did not cap the pane,
+and the other four rows are inside it, scrolled (`KitEdgeDockListGestureTest`, "list height", reproduces it with a 448 dp bottom
+inset: the pane takes all the height the area allows and scrolls its seven rows). What took the area is for the host to check
+(the home's `windowInsetsPadding(safeDrawing)` carries the keyboard's inset, which would leave a short area after a search or a
+rename). The pane is also 280 dp wide in both pictures where 312 dp is expected at 360 dp (`min(320, width - 48)`), so `width -
+edgeInset - farInset` was 328: 32 dp of horizontal inset the dock was given, which the kit cannot tell from a host's inset.
+Nothing here makes one movement both open the list and move the dock: the outcomes are exclusive (`PullEnd` or `Place`), and in
+the old code a flick from the head only moved the dock.
