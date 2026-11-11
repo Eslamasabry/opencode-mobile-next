@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
+import io.github.eslamasabry.oc.ui.kit.text.KitRedact
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdown
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownActions
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdSource
@@ -80,10 +81,12 @@ internal fun AgentDraftPanel(state: AgentsUi, actions: AgentsActions) {
                     )
                 if (record.redacted) KitNotice(stringResource(Res.string.agentDraftMasked))
                 // AG5: what was said, drawn as Markdown under the conversation's title; the record exactly as it
-                // will be copied (with the source's labels and ids) only under Details.
+                // will be copied (with the source's labels and ids) only under Details. The record was masked when
+                // it was built; both views pass the display redactor again, so nothing it knows can be drawn.
                 val you = stringResource(Res.string.chatUiYou)
                 val agent = stringResource(Res.string.chatUiAgent)
-                val reading = remember(record, you, agent) { HandoffReading.of(record.markdown, you, agent) }
+                val shown = remember(record) { KitRedact.text(record.markdown) }
+                val reading = remember(shown, you, agent) { HandoffReading.of(shown, you, agent) }
                 reading.title?.let { KitText(it, role = TypeRole.Title, kind = KitTextKind.Frame) }
                 val blocks =
                     remember(reading.body) { KitMdSource.blocks("handoff-record", reading.body, streaming = false) }
@@ -93,7 +96,7 @@ internal fun AgentDraftPanel(state: AgentsUi, actions: AgentsActions) {
                     label = stringResource(Res.string.agentDraftAsCopied),
                     copyLabel = stringResource(Res.string.kitCopyDetails),
                     modifier = Modifier.testTag("agent-draft-record"),
-                    child = { KitText(record.markdown, role = TypeRole.Mono, kind = KitTextKind.Reading) },
+                    child = { KitText(shown, role = TypeRole.Mono, kind = KitTextKind.Reading) },
                 )
                 KitButton(
                     stringResource(Res.string.agentDraftCopy),
