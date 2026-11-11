@@ -1,5 +1,9 @@
 package io.github.eslamasabry.oc.feature.settings
 
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
@@ -15,6 +19,11 @@ import io.github.eslamasabry.oc.feature.settings.presentation.LibrarySheet
 import io.github.eslamasabry.oc.feature.settings.presentation.LibraryTab
 import io.github.eslamasabry.oc.feature.settings.presentation.LibraryUi
 import io.github.eslamasabry.oc.feature.settings.ui.LibraryScreen
+import androidx.navigationevent.NavigationEvent
+import androidx.navigationevent.NavigationEventDispatcher
+import androidx.navigationevent.NavigationEventDispatcherOwner
+import androidx.navigationevent.NavigationEventInput
+import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
 import java.lang.reflect.Proxy
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -196,5 +205,66 @@ class LibraryProviderFormUiTest {
         setContent { SettingsThemed { LibraryScreen(providers(connected), actions) } }
         onAllNodesWithText("Anthropic").onFirst().performClick()
         assertEquals(listOf("show" to listOf<Any?>(LibrarySheet.Provider(connected))), calls.filter { it.first == "show" })
+    }
+
+    private val back =
+        object : NavigationEventInput() {
+            fun press() {
+                dispatchOnBackStarted(NavigationEvent(NavigationEvent.EDGE_LEFT, 0f))
+                dispatchOnBackCompleted()
+            }
+        }
+    private var fellThrough = 0
+    private val owner =
+        object : NavigationEventDispatcherOwner {
+            override val navigationEventDispatcher =
+                NavigationEventDispatcher(onBackCompletedFallback = { fellThrough++ }).also { it.addInput(back) }
+        }
+
+    @Test
+    fun `B19 OpenCode Go opens on the key field and one Back returns to the list`() = runComposeUiTest {
+        val env = IntegrationMethodInfo("env", null, "env", persistentListOf<JsonObject>(), persistentListOf(), persistentMapOf())
+        val go = IntegrationInfo("opencode-go", "OpenCode Go", persistentListOf(keyMethod, env), persistentListOf(), 0)
+        var sheet by mutableStateOf<LibrarySheet?>(null)
+        var leaves = 0
+        val live =
+            Proxy.newProxyInstance(LibraryActions::class.java.classLoader, arrayOf(LibraryActions::class.java)) {
+                proxy,
+                method,
+                args ->
+                when (method.name) {
+                    "equals" -> proxy === args?.getOrNull(0)
+                    "hashCode" -> System.identityHashCode(proxy)
+                    "toString" -> "LiveActions"
+                    "show" -> {
+                        sheet = args?.getOrNull(0) as LibrarySheet?
+                        null
+                    }
+                    "back" -> {
+                        leaves++
+                        null
+                    }
+                    else -> null
+                }
+            } as LibraryActions
+        setContent {
+            CompositionLocalProvider(LocalNavigationEventDispatcherOwner provides owner) {
+                SettingsThemed { LibraryScreen(providers(go).copy(sheet = sheet), live) }
+            }
+        }
+        onAllNodesWithText("OpenCode Go").onFirst().performClick()
+        waitForIdle()
+        assertEquals(LibrarySheet.Method(go, keyMethod), sheet, "the row opens the key step, not a one-row list")
+        onAllNodesWithText("Save API key").onFirst().assertExists()
+
+        runOnIdle { back.press() }
+        waitForIdle()
+        assertEquals(null, sheet, "one Back closes the key step")
+        assertEquals(0, fellThrough + leaves, "the same Back must not also leave the page")
+        onAllNodesWithText("OpenCode Go").onFirst().assertExists()
+
+        runOnIdle { back.press() }
+        waitForIdle()
+        assertEquals(1, fellThrough + leaves, "the next Back leaves the Providers page")
     }
 }

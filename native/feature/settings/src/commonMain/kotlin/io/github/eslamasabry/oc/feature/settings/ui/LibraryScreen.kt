@@ -6,6 +6,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.SessionId
@@ -48,6 +49,9 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
     val tabs = listOf(LibraryTab.Mcp, LibraryTab.Commands, LibraryTab.Skills, LibraryTab.References)
     val searches = remember { mutableMapOf<LibraryTab, TextFieldState>() }
     val search = searches.getOrPut(state.tab) { TextFieldState() }
+    // A provider tap opens a sheet over the list: the search box's keyboard goes away with it, so one Back
+    // closes that sheet instead of first only lowering a keyboard the sheet does not use (device basics B19).
+    val focus = LocalFocusManager.current
     val query = search.text.toString().trim()
     fun match(vararg values: String?) =
         query.isEmpty() || values.any { it?.contains(query, ignoreCase = true) == true }
@@ -342,6 +346,7 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                                         else stringResource(Res.string.nlibConnected),
                                     trailing = KitRowTrailing.Chevron,
                                     onClick = {
+                                        focus.clearFocus()
                                         val only =
                                             soleMethodToConnect(
                                                 provider,
