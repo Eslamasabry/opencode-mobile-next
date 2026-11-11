@@ -77,6 +77,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.JsonPrimitive
 
 /** The first message uses the same durable delivery owner as the conversation composer. */
 @SingleIn(AppScope::class)
@@ -574,11 +575,28 @@ class AndroidNewConversationHost(
         val helper = phoneHelperId() ?: return refused()
         val provider =
             AgentCatalog.builtIn.byId(AgentId(agentId))?.providerId ?: return refused()
+        val agentReady =
+            phoneAgents.state.value.agents.any { it.id == agentId && it.status == PhoneAgentStatus.Ready }
         // The helper's first model list takes about ten seconds: the screen asks while the person types.
         return withTimeoutOrNull(PHONE_MODELS_WAIT_MS) {
                 when (val ready = phoneHelperReady(helper)) {
                     is Outcome.Failed -> ready
-                    is Outcome.Ok -> setup(helper)
+                    is Outcome.Ok ->
+                        when (val first = setup(helper)) {
+                            is Outcome.Failed -> first
+                            is Outcome.Ok ->
+                                if (
+                                    phoneModelsNeedRecheck(
+                                        agentReady,
+                                        first.value.models.filter { it.model.providerId == provider },
+                                    )
+                                ) {
+                                    // The helper keeps the list it read first (before the agent was installed or
+                                    // signed in) until asked to look again: ask once, then read it again.
+                                    recheckHelperProviders(helper)
+                                    setup(helper)
+                                } else first
+                        }
                 }
             }
             ?.let { read ->
@@ -598,6 +616,12 @@ class AndroidNewConversationHost(
                     }
                 }
             } ?: Outcome.Failed(Failure.Unavailable(FeatureId("phoneAgentModels")))
+    }
+
+    /** Asks the helper to check its agents and their models again (its list is otherwise kept until a restart). */
+    private suspend fun recheckHelperProviders(helper: ProfileId) {
+        val gateway = registry.live.value[helper]?.session?.server as? PaseoGateway ?: return
+        gateway.hostAgentProviders(refresh = true)
     }
 
     override suspend fun savePhoneAgentModel(
@@ -732,12 +756,20 @@ class AndroidNewConversationHost(
                                 p.modelIds.map { model ->
                                     NewConversationModel(
                                         ModelRef(p.id, model),
-                                        catalog
-                                            ?.models
-                                            ?.firstOrNull {
-                                                it.providerId == p.id && it.id == model
-                                            }
-                                            ?.name ?: model,
+                                        // The catalog's name, else the one the server or agent reports (a phone
+                                        // agent's helper has no catalog), else the id read as words.
+                                        newConversationModelName(
+                                            model,
+                                            catalog
+                                                ?.models
+                                                ?.firstOrNull {
+                                                    it.providerId == p.id && it.id == model
+                                                }
+                                                ?.name,
+                                            (p.modelData[model]?.get("name") as? JsonPrimitive)
+                                                ?.takeIf { it.isString }
+                                                ?.content,
+                                        ),
                                         if (caps.hostAgentProviders) p.name else null,
                                         providerName = p.name.ifBlank { null },
                                     )
