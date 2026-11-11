@@ -218,7 +218,8 @@ internal data class DockColumn(val count: Int, val pinned: Int, val visible: Int
         return when {
             top < scroll + DockDims.HEAD -> (top - DockDims.HEAD).coerceIn(0f, maxScroll)
             top + pitch > scroll + DockDims.HEAD + view -> (top + pitch - DockDims.HEAD - view).coerceIn(0f, maxScroll)
-            else -> scroll
+            // In view: stay, but never past what this column can scroll (a scroll kept from a smaller column).
+            else -> scroll.coerceIn(0f, maxScroll)
         }
     }
 

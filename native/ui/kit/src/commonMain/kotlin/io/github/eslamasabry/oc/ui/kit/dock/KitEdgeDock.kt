@@ -19,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.FocusDirection
@@ -208,20 +209,24 @@ public fun KitEdgeDock(
         // The model moved on under an open swell: close it rather than show another ring's words.
         LaunchedEffect(model.rings.size) {
             if (state.swellRing >= model.rings.size) state.closeSwell()
-            state.scroll.snapTo(state.scroll.value.coerceIn(0f, column.maxScroll))
         }
-        // Keep the conversation on screen in view.
+        // Keep the conversation on screen in view. A new column (the area changed) first settles the scroll inside what
+        // it can scroll (the rings already read it so, [KitEdgeDockState.scrollNow]).
         val currentIndex = model.rings.indexOfFirst { it.key == model.current }
         LaunchedEffect(currentIndex, column) {
-            if (currentIndex >= 0) state.scroll.animateTo(column.scrollToShow(currentIndex, state.scroll.value), DockSprings.fill(motion.reduced))
+            val now = state.scroll.value.coerceIn(0f, column.maxScroll)
+            if (now != state.scroll.value) state.scroll.snapTo(now)
+            if (currentIndex >= 0) state.scroll.animateTo(column.scrollToShow(currentIndex, now), DockSprings.fill(motion.reduced))
         }
 
         DockBodyNode(state, face, inks)
         // On glass the words' second line reads brighter, as on the bar.
         CompositionLocalProvider(LocalKitOnLiquidGlass provides face.onGlass) {
-            model.rings.forEachIndexed { i, ring ->
-                androidx.compose.runtime.key(ring.key) {
-                    DockRingNode(state, ring, i, ring.key == model.current, inks, words, intents)
+            DockRingBand(state) {
+                model.rings.forEachIndexed { i, ring ->
+                    androidx.compose.runtime.key(ring.key) {
+                        DockRingNode(state, ring, i, ring.key == model.current, inks, words, intents)
+                    }
                 }
             }
             DockFootNode(state, words, intents)
@@ -319,9 +324,12 @@ private fun DrawScope.drawMarks(state: KitEdgeDockState, f: DockFrame, inks: Doc
     val vis = smoothstep(15f, 58f, out)
     if (vis < 1f) {
         val nx = state.phys(f.edgeX - max(out, DockDims.NUB_W) / 2f) * d
+        val bandTop = state.ringBandTop()
+        val bandBottom = state.ringBandBottom()
         state.rings.forEachIndexed { i, r ->
             val cy = state.slotY(i) - DockDims.RING_LIFT
-            drawCircle(inks.of(r.state), 3f * d, Offset(nx, cy * d), alpha = 1f - vis)
+            // Only the rings in view, as the strip shows them.
+            if (cy in bandTop..bandBottom) drawCircle(inks.of(r.state), 3f * d, Offset(nx, cy * d), alpha = 1f - vis)
         }
     }
     // The grip at the dock's head: a short bar (a mark, not a surface).
@@ -331,10 +339,47 @@ private fun DrawScope.drawMarks(state: KitEdgeDockState, f: DockFrame, inks: Doc
         drawLine(inks.ink2, Offset(cx - 8f * d, gy), Offset(cx + 8f * d, gy), 3f * d, StrokeCap.Round, alpha = 0.35f)
         val col = state.column
         if (col.pinGap > 0f) {
-            val ly = col.pinLineY(state.top.value, state.scroll.value) * d
+            val ly = col.pinLineY(state.top.value, state.scrollNow) * d
             drawLine(inks.ink2, Offset(cx - 14f * d, ly), Offset(cx + 14f * d, ly), 1.5f * d, StrokeCap.Round, alpha = 0.5f)
         }
     }
+}
+
+/**
+ * The band the rings stand in: the column's viewport ([KitEdgeDockState.ringBandTop]..[KitEdgeDockState.ringBandBottom])
+ * across the whole area, cut at its edges. Placed in the layout phase from the same state the body is drawn from, so
+ * the rings and the body always share one frame; a ring scrolled out of the viewport is cut away instead of standing
+ * over the head, the "+", or outside the body. While a ring rides out to be renamed the band also holds box B.
+ */
+@Composable
+private fun DockRingBand(state: KitEdgeDockState, content: @Composable () -> Unit) {
+    Box(
+        Modifier
+            .layout { measurable, constraints ->
+                val (t, b) = ringBand(state)
+                val d = density
+                val hPx = ((b - t) * d).roundToInt().coerceAtLeast(0)
+                val p = measurable.measure(Constraints.fixed(constraints.maxWidth, hPx))
+                layout(constraints.maxWidth, constraints.maxHeight) { p.place(0, (t * d).roundToInt()) }
+            }
+            .clipToBounds(),
+    ) {
+        content()
+    }
+}
+
+/** The ring band's top and bottom now (dp, area); see [DockRingBand]. */
+private fun ringBand(state: KitEdgeDockState): Pair<Float, Float> {
+    var t = state.ringBandTop()
+    var b = state.ringBandBottom()
+    if (state.renaming != null && state.ride.value > 0f) {
+        val f = state.computeFrame()
+        if (f.hasB) {
+            t = min(t, f.bTop)
+            b = max(b, f.bBottom)
+        }
+    }
+    return t to b
 }
 
 /** One ring: its art, its mark, its name, its semantics and keys. Moves by its offset; never recomposes per frame. */
@@ -432,8 +477,10 @@ private fun DockRingNode(
     Box(
         Modifier
             .absoluteOffset {
+                // Relative to the ring band (placed at its top, rounded the same way).
                 val p = ringCenter(state, index, m)
-                IntOffset(((p.x - DockDims.REST_W / 2f) * density).roundToInt(), ((p.y - state.column.pitch / 2f) * density).roundToInt())
+                val band = (ringBand(state).first * density).roundToInt()
+                IntOffset(((p.x - DockDims.REST_W / 2f) * density).roundToInt(), ((p.y - state.column.pitch / 2f) * density).roundToInt() - band)
             }
             .size(DockDims.REST_W.dp, state.column.pitch.dp)
             .graphicsLayer {
@@ -532,7 +579,7 @@ private fun DockRingNode(
 private fun ringCenter(state: KitEdgeDockState, index: Int, m: RingMotion): Offset {
     val o = max(state.out.value, DockDims.NUB_W) + state.lean.value
     val baseX = state.widthDp - state.edgeInset - o / 2f
-    var y = state.column.slotCenterAt(m.slot.value.coerceAtLeast(0f), state.top.value, state.scroll.value)
+    var y = state.column.slotCenterAt(m.slot.value.coerceAtLeast(0f), state.top.value, state.scrollNow)
     var x = baseX
     if (state.carrying == index) y = state.carryY
     val ride = state.ride.value
