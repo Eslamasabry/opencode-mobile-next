@@ -402,6 +402,8 @@ public class DockModel private constructor(private val s: Snapshot) {
          * live, which is "now"). Root conversations only, at most [MAX_RECENT]: the pool idle rings are offered from.
          */
         val recent: Map<ConversationRef, Long> = emptyMap(),
+        /** Where a removed ring stood in [order] when it left, so an Undo or a restore puts it back in that place. */
+        val slots: Map<ConversationRef, Int> = emptyMap(),
     ) {
         /** The record for [ref], created when it is missing. */
         private fun withTracked(ref: ConversationRef, change: (Tracked) -> Tracked): Snapshot {
@@ -418,7 +420,9 @@ public class DockModel private constructor(private val s: Snapshot) {
         private fun untuckFor(ref: ConversationRef): Snapshot = if (ref == open) this else copy(tucked = false)
 
         private fun ended(t: Tracked, end: DockRunEnd): Tracked {
-            val base = t.copy(busy = false, thinking = false)
+            // A run that ended (stopped, failed or finished) holds no question: a request the server dropped with it may
+            // never be announced as settled, so the ring must not keep asking after the end.
+            val base = t.copy(busy = false, thinking = false, requests = emptySet())
             val onScreen = t.ref == open
             return when (end) {
                 DockRunEnd.Failed ->
@@ -642,7 +646,8 @@ public class DockModel private constructor(private val s: Snapshot) {
             if (ref in removed || ref !in tracked || !canRemove(ref)) return this
             // A removed parent takes its sub-agents with it, so their own entries are subsumed.
             val kept = removed.filter { it == ref || rootOf(it) != ref }
-            return copy(removed = (kept + ref).takeLast(MAX_REMOVED))
+            val at = order.indexOf(ref)
+            return copy(removed = (kept + ref).takeLast(MAX_REMOVED), slots = if (at >= 0) slots + (ref to at) else slots)
         }
 
         /** True while [ref], or the conversation it belongs to, is removed. */
@@ -744,8 +749,12 @@ public class DockModel private constructor(private val s: Snapshot) {
             val newcomers =
                 coreMembers.filter { it.ref !in order }.sortedBy { it.seq }.map { it.ref } +
                     fillers.map { it.ref }.filter { it !in order }
-            val nextOrder = order.filter { it in ids } + newcomers
-            return base.copy(order = nextOrder, tucked = tucked && live.isNotEmpty())
+            val placed = order.filter { it in ids }.toMutableList()
+            // A ring coming back from a removal returns to the place it left; other newcomers go last.
+            val back = newcomers.filter { it in slots }
+            placed += newcomers.filter { it !in slots }
+            for (ref in back) placed.add(slots.getValue(ref).coerceIn(0, placed.size), ref)
+            return base.copy(order = placed, tucked = tucked && live.isNotEmpty(), slots = slots.filterKeys { it in removed })
         }
 
         /** A root with its sub-agents rolled in. */

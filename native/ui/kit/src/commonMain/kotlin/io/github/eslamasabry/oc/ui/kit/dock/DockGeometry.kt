@@ -59,6 +59,15 @@ internal object DockDims {
     const val MIN_TARGET = 48f
     /** Kept between the body and the safe area's edges (and around keep-clear spots). */
     const val EDGE_MARGIN = 12f
+    /**
+     * The page gutter (the tokens' 16 dp): kept free between the swell, the peek or the list and the far screen edge,
+     * and between the list's words and the dock's own screen edge (device QA 2026-11-11, m2: names to the edge).
+     */
+    const val GUTTER = io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens.GUTTER.toFloat()
+    /** A ring's name keeps this much in from each side of the strip, so it never runs to the screen's edge. */
+    const val LABEL_INSET = 6f
+    /** A ring's name's widest: the strip at rest less [LABEL_INSET] on each side (longer names end in an ellipsis). */
+    const val LABEL_MAX = REST_W - 2f * LABEL_INSET
 
     // The swell (box B while scrubbing).
     const val SW_TIP_PAD = 14f
@@ -89,8 +98,13 @@ internal object DockDims {
     const val SW_RING_BAND = 32f
     const val PEEK_MAX_LEN = 274f
     const val PEEK_LINES = 6
-    const val RENAME_LEN = 150f
+    /** Rename: B as long as the peek (the name gets room), the field up to this many lines, in B's own part. */
+    const val RENAME_LEN = PEEK_MAX_LEN
     const val RENAME_H = 80f
+    const val RENAME_LINES = 3
+    /** The rename field's line height per unit of text scale (the row title's, 16/22). */
+    const val RENAME_LINE = 22f
+    const val RENAME_PAD = 12f
 
     // The pulled-out list (box B at full size).
     const val PANEL_MAX = 320f
@@ -218,7 +232,8 @@ internal data class DockColumn(val count: Int, val pinned: Int, val visible: Int
         return when {
             top < scroll + DockDims.HEAD -> (top - DockDims.HEAD).coerceIn(0f, maxScroll)
             top + pitch > scroll + DockDims.HEAD + view -> (top + pitch - DockDims.HEAD - view).coerceIn(0f, maxScroll)
-            else -> scroll
+            // In view: stay, but never past what this column can scroll (a scroll kept from a smaller column).
+            else -> scroll.coerceIn(0f, maxScroll)
         }
     }
 
@@ -357,7 +372,8 @@ internal fun childCells(total: Int, cols: Int): Pair<Int, Int> =
 
 /** Heights of the swell's rows for a frame text scale [s] (already capped at 1.3). */
 internal object SwellRows {
-    fun header(s: Float, server: Boolean): Float = 20f * s + 18f * s * (if (server) 2f else 1f)
+    fun header(s: Float, server: Boolean, stateLine: Boolean = true): Float =
+        20f * s + (if (stateLine) 18f * s * (if (server) 2f else 1f) else 0f)
     fun children(s: Float): Float = 38f + 26f * s
     fun action(s: Float): Float = max(DockDims.MIN_TARGET, 36f + 14f * s)
     fun line(s: Float): Float = 18f * s
@@ -399,15 +415,18 @@ internal fun swellLayout(
     server: Boolean,
     s: Float,
     maxLength: Float,
-    edgeRoom: Float = 0f,
+    stateLine: Boolean = true,
 ): SwellLayout {
     val pad = DockDims.SW_TIP_PAD + DockDims.SW_BASE_PAD
     if (kind == SwellKind.Rename) {
-        val len = min(DockDims.RENAME_LEN, maxLength)
-        val h = DockDims.RENAME_H
+        val len = min(DockDims.RENAME_LEN, maxLength).coerceAtLeast(pad + 2 * DockDims.SW_CELL)
+        // The field holds up to three lines of the name (it wraps, never scrolls sideways out of sight), so the whole
+        // name being edited shows (device QA 2026-11-11, M3: "o.txt with one line", the rest scrolled out at the left).
+        val fieldH = DockDims.RENAME_LINES * DockDims.RENAME_LINE * s
+        val h = max(DockDims.RENAME_H, fieldH + 2f * DockDims.RENAME_PAD)
         val rideX = DockDims.SW_TIP_PAD + 24f
-        // The field: right of the ridden-out ring, over the strip, to the screen edge's margin.
-        val field = DockRect(rideX + 24f + 10f, h / 2f - 18f * s, len + edgeRoom - DockDims.EDGE_MARGIN, h / 2f + 18f * s)
+        // The field: right of the ridden-out ring, in B's own part (never over the strip and its rings).
+        val field = DockRect(rideX + 24f + 10f, (h - fieldH) / 2f, len - DockDims.SW_BASE_PAD, (h + fieldH) / 2f)
         return SwellLayout(kind, len, h, min(DockDims.SW_END_R, h * 0.3f), filletFor(len, h), emptyList(), null, rideX, field)
     }
     val want = if (kind == SwellKind.Peek) DockDims.PEEK_MAX_LEN else pad + DockDims.SW_COLS * DockDims.SW_CELL
@@ -418,7 +437,7 @@ internal fun swellLayout(
     val targets = ArrayList<DockTarget>(12)
     val x0 = DockDims.SW_TIP_PAD
     var y = DockDims.SW_PAD_T
-    val headerH = SwellRows.header(s, server)
+    val headerH = SwellRows.header(s, server, stateLine)
     targets += DockTarget(DockTargetKind.Header, -1, DockRect(x0, y, x0 + cw, y + headerH))
     y += headerH
     if (childTotal > 0) {
@@ -549,7 +568,8 @@ internal fun fittedFillet(k: Float, swellTop: Float, swellBottom: Float, stripTo
 
 /** Height of one conversation row in the list, and of a sub-agent row, for frame text scale [s]. */
 internal object PanelRows {
-    fun ring(s: Float, server: Boolean): Float = max(64f, 14f + (20f + 18f + 18f + (if (server) 18f else 0f)) * s)
+    fun ring(s: Float, server: Boolean, stateLine: Boolean = true): Float =
+        max(64f, 14f + (20f + (if (stateLine) 18f else 0f) + 18f + (if (server) 18f else 0f)) * s)
     fun child(s: Float): Float = max(DockDims.CHILD_ROW, 14f + 18f * s)
     fun hidden(s: Float): Float = max(DockDims.HIDDEN_ROW, 14f + 18f * s)
 }
@@ -562,13 +582,20 @@ internal fun panelChildRows(children: List<KitDockChild>, expanded: Boolean): In
 }
 
 /** The list's full content height. */
-internal fun panelContentHeight(rings: List<KitDockRing>, hidden: List<KitDockRing>, hiddenOpen: Boolean, expanded: Set<String>, s: Float): Float {
+internal fun panelContentHeight(
+    rings: List<KitDockRing>,
+    hidden: List<KitDockRing>,
+    hiddenOpen: Boolean,
+    expanded: Set<String>,
+    s: Float,
+    stateLine: (KitDockRing) -> Boolean = { true },
+): Float {
     var h = 0f
-    for (r in rings) h += PanelRows.ring(s, r.server != null) + panelChildRows(r.children, r.key in expanded) * PanelRows.child(s)
+    for (r in rings) h += PanelRows.ring(s, r.server != null, stateLine(r)) + panelChildRows(r.children, r.key in expanded) * PanelRows.child(s)
     if (rings.any { it.pinned }) h += DockDims.PIN_GAP * 2f
     if (hidden.isNotEmpty()) {
         h += PanelRows.hidden(s)
-        if (hiddenOpen) for (r in hidden) h += PanelRows.ring(s, r.server != null)
+        if (hiddenOpen) for (r in hidden) h += PanelRows.ring(s, r.server != null, stateLine(r))
     }
     return h
 }

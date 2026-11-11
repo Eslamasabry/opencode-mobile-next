@@ -102,30 +102,36 @@ internal class DockFrame {
  */
 @Stable
 public class KitEdgeDockState internal constructor() {
-    // Layout, written in composition when the window, insets, model or text scale change (not per frame).
-    internal var widthDp = 0f
-    internal var heightDp = 0f
-    internal var safeTop = 0f
-    internal var safeBottom = 0f
-    internal var edgeInset = 0f
-    internal var farInset = 0f
+    // Layout, written in composition when the window, insets, model or text scale change (not per frame). Snapshot
+    // state: the rings, the "+", the swell, the list and the body read them in layout and draw lambdas, and every one of
+    // those must run again when they change, or the rings stay where the old area put them while the body (drawn again
+    // for another reason, such as the glass behind it) follows the new one (device QA 2026-11-11, M1: the rings over the
+    // chat's header, the body below them, after the keyboard closed). Writing an equal value invalidates nothing.
+    internal var widthDp by mutableFloatStateOf(0f)
+    internal var heightDp by mutableFloatStateOf(0f)
+    internal var safeTop by mutableFloatStateOf(0f)
+    internal var safeBottom by mutableFloatStateOf(0f)
+    internal var edgeInset by mutableFloatStateOf(0f)
+    internal var farInset by mutableFloatStateOf(0f)
     /**
      * The dock's physical side. Snapshot state: the rings, the "+", the swell, the peek and the list are placed in
      * layout lambdas that read it, so a change of side (the dock dragged to the other edge) places them again with the
      * body (device QA 2026-11-11: the body moved to the left edge while the rings and the "+" stayed on the right).
      */
     internal var onRight by mutableStateOf(true)
-    internal var density = 1f
-    internal var textScale = 1f
-    internal var column: DockColumn = DockColumn(0, 0, 0, DockDims.PITCH, 0f)
+    internal var density by mutableFloatStateOf(1f)
+    internal var textScale by mutableFloatStateOf(1f)
+    internal var column: DockColumn by mutableStateOf(DockColumn(0, 0, 0, DockDims.PITCH, 0f))
     internal var keepClear: List<DockRect> = emptyList()
-    internal var panelContent = 0f
+    internal var panelContent by mutableFloatStateOf(0f)
     internal var reduced = false
     internal var shoulders = true
-    internal var rings: List<KitDockRing> = emptyList()
+    internal var rings: List<KitDockRing> by mutableStateOf(emptyList())
     internal var scope: CoroutineScope? = null
     internal var haptic: (KitHaptic) -> Unit = {}
     internal var intents: KitDockIntents = object : KitDockIntents {}
+    /** The host's words (for the swell's layout: a blank state line takes no row). */
+    internal var words: KitDockWords? = null
 
     // Motion, dp.
     internal val out = Animatable(DockDims.REST_W)
@@ -133,6 +139,7 @@ public class KitEdgeDockState internal constructor() {
     internal val lean = Animatable(0f)
     internal val scroll = Animatable(0f)
     internal val swellGrow = Animatable(0f)
+    /** The swell's centre height in the column's CONTENT ([contentY]): it rides with the strip when the area moves it. */
     internal val swellCenter = Animatable(0f)
     internal val swellH = Animatable(DockDims.RENAME_H)
     internal val swellLen = Animatable(0f)
@@ -178,8 +185,7 @@ public class KitEdgeDockState internal constructor() {
     /** The rename field's text as typed (saved on a tap outside). */
     internal var renameText = ""
     private var panelCache: DockBox? = null
-    private var panelKey = Float.NaN
-    private var panelKeyContent = Float.NaN
+    private val panelKey = FloatArray(PANEL_KEY_SIZE) { Float.NaN }
     private var alertJob: Job? = null
     private var swellJob: Job? = null
     private var panelJob: Job? = null
@@ -194,6 +200,28 @@ public class KitEdgeDockState internal constructor() {
 
     /** The strip's column top now (follows the placement, or the finger while the dock is moved). */
     internal val columnTop: Float get() = top.value
+
+    /**
+     * The column's scroll now, inside what the column can scroll. Everything that places or hits a ring reads this,
+     * never [scroll] itself: a column that grew back (the keyboard closed, the area grew) has nothing left to scroll, and
+     * a scroll kept from the small column put the rings above the body (device QA 2026-11-11, M1). The [scroll]
+     * animatable settles to it a frame later; the rings never wait for that.
+     */
+    internal val scrollNow: Float get() = scroll.value.coerceIn(0f, column.maxScroll)
+
+    /** A height in the area (dp) as a height in the column's content (its scroll and its top taken out), and back. */
+    internal fun contentY(y: Float): Float = y - top.value + scrollNow
+
+    internal fun areaY(contentY: Float): Float = contentY + top.value - scrollNow
+
+    /**
+     * The band the rings show in (dp, area): the column's viewport, a few dp more each way for the last name's
+     * descender. Rings scrolled out of it are cut at its edges, so a scrolled column never draws rings over the head,
+     * the "+" or past the body (device QA 2026-11-11, M1 and M3: rings above the body, a "+" amid the rings).
+     */
+    internal fun ringBandTop(): Float = top.value + DockDims.HEAD - RING_BAND_SPILL
+
+    internal fun ringBandBottom(): Float = top.value + DockDims.HEAD + column.viewportHeight + RING_BAND_SPILL
 
     /** Fills [frame] from the motion values. Reads animated values: call only in draw and layout phases. */
     internal fun computeFrame(f: DockFrame = frame): DockFrame {
@@ -232,7 +260,8 @@ public class KitEdgeDockState internal constructor() {
             val h = swellH.value
             val len = swellLen.value
             val k = filletFor(len, h)
-            val sTop = swellTop(h, k, swellCenter.value, cTop, cBottom, safeTop, safeBottom)
+            // The swell's height is kept in the column's content, so it moves with the strip when the area moves it.
+            val sTop = swellTop(h, k, swellCenterFor(areaY(swellCenter.value)), cTop, cBottom, safeTop, safeBottom)
             val g = swellGrow.value
             val gc = g.coerceIn(0f, 1f)
             val extTop = extendedStripTop(sTop, k, cTop, safeTop)
@@ -255,13 +284,25 @@ public class KitEdgeDockState internal constructor() {
     }
 
     private fun panelBoxNow(cTop: Float): DockBox {
+        // Keyed on everything the box depends on: a list kept from another area (the keyboard up, then closed) ran
+        // under the message box or past the far edge.
+        val k = panelKey
         val cached = panelCache
-        if (cached != null && panelKey == cTop && panelKeyContent == panelContent) return cached
+        if (
+            cached != null && k[0] == cTop && k[1] == panelContent && k[2] == widthDp && k[3] == edgeInset && k[4] == farInset &&
+            k[5] == safeTop && k[6] == safeBottom && k[7] == column.height
+        ) return cached
         val strip = DockBox(widthDp - edgeInset - DockDims.REST_W, cTop, widthDp + DockDims.OVERHANG, cTop + column.height, DockDims.CORNER)
         val p = panelBox(widthDp, edgeInset, farInset, strip, panelContent, safeTop, safeBottom)
         panelCache = p
-        panelKey = cTop
-        panelKeyContent = panelContent
+        k[0] = cTop
+        k[1] = panelContent
+        k[2] = widthDp
+        k[3] = edgeInset
+        k[4] = farInset
+        k[5] = safeTop
+        k[6] = safeBottom
+        k[7] = column.height
         return p
     }
 
@@ -342,7 +383,7 @@ public class KitEdgeDockState internal constructor() {
 
     internal val hits: DockHits =
         object : DockHits {
-            override fun ringAt(y: Float): Int = column.ringAt(y, top.value, scroll.value)
+            override fun ringAt(y: Float): Int = column.ringAt(y, top.value, scrollNow)
 
             override fun inStrip(x: Float): Boolean = x >= frame.aLeft - 4f
 
@@ -358,9 +399,9 @@ public class KitEdgeDockState internal constructor() {
             override fun alerting(ring: Int): Boolean =
                 rings.getOrNull(ring)?.state.let { it == KitDockRingState.NeedsYou || it == KitDockRingState.Failed }
 
-            override fun dropIndex(y: Float): Int = column.reorderIndex(y, top.value, scroll.value)
+            override fun dropIndex(y: Float): Int = column.reorderIndex(y, top.value, scrollNow)
 
-            override fun pinsAt(y: Float): Boolean = column.pinsAt(y, top.value, scroll.value)
+            override fun pinsAt(y: Float): Boolean = column.pinsAt(y, top.value, scrollNow)
         }
 
     /** The zone under a finger at ([x], [y]) (edge frame). */
@@ -377,7 +418,7 @@ public class KitEdgeDockState internal constructor() {
         val cTop = top.value
         if (y < cTop + DockDims.HEAD) return DockZone.Grip
         if (y >= cTop + DockDims.HEAD + column.viewportHeight) return DockZone.Foot
-        return if (column.ringAt(y, cTop, scroll.value) >= 0) DockZone.Ring else DockZone.Outside
+        return if (column.ringAt(y, cTop, scrollNow) >= 0) DockZone.Ring else DockZone.Outside
     }
 
     // -----------------------------------------------------------------------------------------------------------
@@ -388,13 +429,13 @@ public class KitEdgeDockState internal constructor() {
     }
 
     /** The ring centre y (slot centre) of ring [i] now. */
-    internal fun slotY(i: Int): Float = column.slotCenter(i, top.value, scroll.value)
+    internal fun slotY(i: Int): Float = column.slotCenter(i, top.value, scrollNow)
 
     /** The swell's centre for a finger at [y]: the finger's height, clamped to the first and last visible ring. */
     internal fun swellCenterFor(y: Float): Float {
         if (column.count == 0) return y
-        val first = column.slotCenter(0, top.value, scroll.value).coerceAtLeast(top.value + DockDims.HEAD + column.pitch / 2f)
-        val last = column.slotCenter(column.count - 1, top.value, scroll.value).coerceAtMost(top.value + DockDims.HEAD + column.viewportHeight - column.pitch / 2f)
+        val first = column.slotCenter(0, top.value, scrollNow).coerceAtLeast(top.value + DockDims.HEAD + column.pitch / 2f)
+        val last = column.slotCenter(column.count - 1, top.value, scrollNow).coerceAtMost(top.value + DockDims.HEAD + column.viewportHeight - column.pitch / 2f)
         return y.coerceIn(min(first, last), max(first, last))
     }
 
@@ -406,8 +447,8 @@ public class KitEdgeDockState internal constructor() {
             peekLines = ring.peek.size,
             server = ring.server != null,
             s = textScale,
-            maxLength = widthDp - edgeInset - DockDims.REST_W - farInset - DockDims.EDGE_MARGIN,
-            edgeRoom = DockDims.REST_W,
+            maxLength = widthDp - edgeInset - DockDims.REST_W - farInset - DockDims.GUTTER,
+            stateLine = words?.hasStateLine(ring) ?: true,
         )
 
     /** Opens (or retargets) box B for ring [i] as [kind]; B grows out with one small overshoot. */
@@ -421,7 +462,7 @@ public class KitEdgeDockState internal constructor() {
         swellJob?.cancel()
         swellJob = scope?.launch {
             if (first) {
-                swellCenter.snapTo(swellCenterFor(centerY))
+                swellCenter.snapTo(contentY(swellCenterFor(centerY)))
                 swellH.snapTo(l.height)
                 swellLen.snapTo(l.length)
             }
@@ -450,9 +491,16 @@ public class KitEdgeDockState internal constructor() {
         launch { ride.animateTo(0f, DockSprings.close(reduced)) }
     }
 
+    /** The carried ring's card rides to the drop place [to] (the slot the carried ring stands in). */
+    private fun followCarry(to: Int) {
+        if (swell == null) return
+        val c = contentY(swellCenterFor(slotY(to)))
+        launch { swellCenter.animateTo(c, DockSprings.follow(reduced)) }
+    }
+
     /** The swell follows the finger's height while scrubbing (the finger is the spring). */
     internal fun followFinger(y: Float) {
-        val c = swellCenterFor(y)
+        val c = contentY(swellCenterFor(y))
         launch { swellCenter.snapTo(c) }
     }
 
@@ -487,11 +535,13 @@ public class KitEdgeDockState internal constructor() {
                 openSwell(SwellKind.Peek, gesture.ring)
             }
             DockFeedback.PickUp -> {
+                // The held ring's card stays beside it while it is carried (it says which conversation moves; the names
+                // in the strip are short), riding to each drop place; its targets rest until the ring is dropped.
                 haptic(KitHaptic.LongPress)
                 carrying = gesture.ring
                 carryTo = gesture.ring
                 carryY = gesture.y
-                closeSwell()
+                followCarry(gesture.ring)
             }
         }
         target = gesture.target
@@ -507,6 +557,7 @@ public class KitEdgeDockState internal constructor() {
                 if (to != carryTo) {
                     carryTo = to
                     haptic(KitHaptic.Select)
+                    followCarry(to)
                 }
             }
             DockMode.Move -> {
@@ -573,6 +624,7 @@ public class KitEdgeDockState internal constructor() {
             }
             is DockOutcome.Drop -> {
                 val from = o.from
+                closeSwell()
                 carrying = -1
                 carryTo = -1
                 if (o.to != from) intents.onReorder(from, o.to)
@@ -733,6 +785,10 @@ public class KitEdgeDockState internal constructor() {
 
     private companion object {
         const val EXCLUSION_MAX_DP = 200f
+        const val PANEL_KEY_SIZE = 8
+
+        /** How far the ring band reaches past the viewport (dp): room for the last name's descender, inside A. */
+        const val RING_BAND_SPILL = 4f
     }
 }
 

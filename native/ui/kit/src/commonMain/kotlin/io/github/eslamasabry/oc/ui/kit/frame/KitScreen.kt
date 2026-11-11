@@ -348,6 +348,10 @@ public fun KitScreen(
             val statusBlur = if (edgesFade && look != KitTopEdgeLook.Ground) kitStatusEdgeBlur() else null
             // A bottom block that is one pane of glass (KitReportBottomSlab): the body stays sharp under it.
             val slab = bottomState.slab && bottomPart != null
+            // Words on glass (KitWordsFade.kt): where the lens is drawn, the bottom block's glass sees the body fade out
+            // under its words pane (the message box). Every other style, and Glass without a lens, hand the block the
+            // recording itself, as before.
+            val wordsFade = if (edgesFade && bottomPart != null && kitChromeIsGlass() && kitLiquidGlassOn()) rememberKitWordsFade(frost!!) else null
             val scroll = remember { KitScreenScroll() }
             val under = kitUnderTop(scroll)
             // The window's insets include the keyboard, which moves every frame while it opens: each side is read
@@ -387,6 +391,10 @@ public fun KitScreen(
             // Glass dissolves the body into the status edge's blur along the same curve the edge draws it with.
             val reach = with(density) { STATUS_EDGE_REACH_DP.dp.toPx() }
             val glassTop = edgesFade && topPart != null && look != KitTopEdgeLook.Ground && statusPx > 0
+            // A window the page does not run under the status bar in (no top inset: the system draws its own bar)
+            // has no status edge, but its line under the bar still needs the body cleared behind it (emulator
+            // 2026-11-11: "1 message is waiting to send" crossed by sharp transcript text). Only while a line shows.
+            val lineOnlyTop = edgesFade && topPart != null && look != KitTopEdgeLook.Ground && statusPx == 0
             Box(
                 Modifier.fillMaxSize()
                     .then(
@@ -409,8 +417,12 @@ public fun KitScreen(
                                         // body is cleared down to the line's foot and fades in under it, so the
                                         // line's words stand on the page's ground.
                                         clearAbove =
-                                            if (glassTop) ({ if (linePx > 0) (statusPx + topPx).toFloat() else statusEdgeSolid(statusPx.toFloat()) })
-                                            else null,
+                                            when {
+                                                glassTop -> ({ if (linePx > 0) (statusPx + topPx).toFloat() else statusEdgeSolid(statusPx.toFloat()) })
+                                                lineOnlyTop -> ({ topPx.toFloat() })
+                                                else -> null
+                                            },
+                                        strength = if (lineOnlyTop) ({ if (linePx > 0) 1f else 0f }) else ({ 1f }),
                                         topReach = HEADER_FADE_DP.dp,
                                         // From 8 dp above the block (inside the list's own 16 dp padding, so the
                                         // newest line at rest and the jump pill stay whole) over its top 16 dp.
@@ -474,6 +486,7 @@ public fun KitScreen(
                         Modifier.align(Alignment.BottomCenter)
                             .fillMaxWidth()
                             .onSizeChanged { bottomPx = it.height }
+                            .then(if (wordsFade != null) Modifier.kitWordsFadeRecorder(wordsFade, bottomState) else Modifier)
                             .then(
                                 if (edgesFade) Modifier
                                 else Modifier.kitChromeGround(FrostRole.Composer, frost, reach = insetBottom)
@@ -485,7 +498,7 @@ public fun KitScreen(
                             )
                             .testTag("kit-screen-bottom")
                     ) {
-                        CompositionLocalProvider(LocalKitLiquidChrome provides frost, LocalKitScreenBottom provides bottomState, LocalKitLiquidJoin provides join) { it() }
+                        CompositionLocalProvider(LocalKitLiquidChrome provides (wordsFade?.faded ?: frost), LocalKitScreenBottom provides bottomState, LocalKitLiquidJoin provides join) { it() }
                     }
                 }
             }

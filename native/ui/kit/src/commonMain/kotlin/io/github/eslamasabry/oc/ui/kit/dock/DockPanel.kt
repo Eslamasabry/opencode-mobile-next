@@ -6,6 +6,7 @@ import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -95,7 +96,14 @@ internal fun DockPanel(state: KitEdgeDockState, model: KitDockModel, words: KitD
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(top = (DockDims.HEAD).dp, bottom = 8.dp, start = 8.dp, end = 8.dp)
+                // The dock's own screen edge keeps the page gutter (names end in an ellipsis before it); the side
+                // toward the middle keeps the body's 8 dp. Physical sides: the dock may stand on either edge.
+                .absolutePadding(
+                    left = (if (state.onRight) PANEL_INNER_PAD else DockDims.GUTTER).dp,
+                    top = DockDims.HEAD.dp,
+                    right = (if (state.onRight) DockDims.GUTTER else PANEL_INNER_PAD).dp,
+                    bottom = 8.dp,
+                )
                 .verticalScroll(scroll),
         ) {
             val pinnedCount = model.rings.count { it.pinned }
@@ -225,7 +233,7 @@ private fun RingRow(ring: KitDockRing, current: Boolean, words: KitDockWords, in
     Row(
         Modifier
             .fillMaxWidth()
-            .heightIn(min = PanelRows.ring(s, ring.server != null).dp)
+            .heightIn(min = PanelRows.ring(s, ring.server != null, words.hasStateLine(ring)).dp)
             .graphicsLayer { alpha = if (dim) 0.6f else 1f }
             .kitTappable(onClick = onOpen, onClickLabel = words.actionOn(words.open, ring.name))
             .semantics {
@@ -250,7 +258,9 @@ private fun RingRow(ring: KitDockRing, current: Boolean, words: KitDockWords, in
         Spacer(Modifier.width(8.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.Center) {
             KitText(ring.name, role = TypeRole.RowTitle, kind = KitTextKind.Frame, maxLines = 1)
-            KitText(words.stateLine(ring), role = TypeRole.Caption, tone = if (alert) TextTone.Attention else TextTone.Accent.takeIf { ring.state.running } ?: TextTone.Secondary, kind = KitTextKind.Frame, maxLines = 1)
+            // A blank state line takes no line: the name and the last line close up.
+            val line = words.stateLine(ring)
+            if (line.isNotBlank()) KitText(line, role = TypeRole.Caption, tone = if (alert) TextTone.Attention else TextTone.Accent.takeIf { ring.state.running } ?: TextTone.Secondary, kind = KitTextKind.Frame, maxLines = 1)
             ring.lastLine?.let { KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Frame, maxLines = 1) }
         }
     }
@@ -287,7 +297,8 @@ private fun ChildRows(state: KitEdgeDockState, ring: KitDockRing, currentChild: 
             }
             KitText(c.name, role = TypeRole.Label, kind = KitTextKind.Frame, maxLines = 1)
             val alert = c.state == KitDockRingState.NeedsYou || c.state == KitDockRingState.Failed
-            KitText(words.stateWord(c.state), role = TypeRole.Caption, tone = if (alert) TextTone.Attention else TextTone.Secondary, kind = KitTextKind.Frame, maxLines = 1)
+            val word = words.stateWord(c.state)
+            if (word.isNotBlank()) KitText(word, role = TypeRole.Caption, tone = if (alert) TextTone.Attention else TextTone.Secondary, kind = KitTextKind.Frame, maxLines = 1)
             c.lastLine?.let { KitText(it, Modifier.weight(1f), role = TypeRole.Caption, tone = TextTone.Tertiary, kind = KitTextKind.Frame, maxLines = 1) }
         }
     }
@@ -306,3 +317,6 @@ private fun ChildRows(state: KitEdgeDockState, ring: KitDockRing, currentChild: 
         }
     }
 }
+
+/** The list's padding on the side toward the screen's middle (dp). */
+private const val PANEL_INNER_PAD = 8f
