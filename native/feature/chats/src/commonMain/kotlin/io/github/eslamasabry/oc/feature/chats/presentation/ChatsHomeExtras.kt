@@ -77,6 +77,8 @@ public data class ChatsListSourceUi(
     val main: Boolean,
     val onThisPhone: Boolean,
     val unreachable: Boolean,
+    /** Its saved password or token must be typed again. */
+    val secret: SwitcherSecret = SwitcherSecret.None,
 )
 
 public data class ChatsHomeExtraState(

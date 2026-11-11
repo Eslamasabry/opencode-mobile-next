@@ -405,6 +405,21 @@ public interface ChatsActions {
 
     /** The opening-failure card's "Set up Tailscale" (the address is a Tailscale one and nothing answered). */
     public fun openTailscale() {}
+
+    /**
+     * The switcher's Allow once on another server's single waiting command: held a few seconds so a slip can be
+     * undone, then sent (F: DelayedAnswers, 3 s).
+     */
+    public fun allowSwitcherRequest(
+        ref: io.github.eslamasabry.oc.core.common.ids.ConversationRef,
+        requestId: String,
+    ) {}
+
+    /** Undo for an Allow once that is still held. */
+    public fun undoSwitcherRequest(requestId: String) {}
+
+    /** The switcher's Open on a waiting request: that conversation, where the full card lives. */
+    public fun openSwitcherRequest(ref: io.github.eslamasabry.oc.core.common.ids.ConversationRef) {}
     /** First run: add a computer (the server form). */
     public fun connectComputer() {}
 

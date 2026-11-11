@@ -23,6 +23,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ChatsHomeSheet
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsMonitorStatus
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningPhase
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningUi
+import io.github.eslamasabry.oc.feature.chats.presentation.SwitcherSecret
 import io.github.eslamasabry.oc.feature.chats.presentation.ConnectionDiagnosis
 import io.github.eslamasabry.oc.feature.chats.presentation.DiagnosisAction
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi
@@ -234,8 +235,23 @@ private fun ServerSwitcher(
     val busy = switcher.switching != null
     KitRowGroup(leadingTiles = true) {
         switcher.servers.forEach { server ->
+            val ask = server.ask
+            val held = ask?.requestId != null && ask.requestId in switcher.held
+            val secretWords =
+                when (server.secret) {
+                    SwitcherSecret.Password -> stringResource(Res.string.e7SetupPasswordRequired)
+                    SwitcherSecret.Token -> stringResource(Res.string.e7SetupTokenRequired)
+                    SwitcherSecret.None -> null
+                }
             val words = buildList {
-                add(
+                if (held)
+                    add(stringResource(Res.string.chatRequestAnswerAllowed) + (ask?.command?.let { " · $it" } ?: ""))
+                else if (ask?.allowable == true && ask.command != null && secretWords == null)
+                    add(
+                        pluralStringResource(Res.plurals.kitNeedsYouSpan, 1, Numbers.format(1)).trimEnd().removeSuffix("·").trimEnd() +
+                            " · " + ask.command
+                    )
+                else add(
                     when (server.state) {
                         SwitcherServerState.Connected -> stringResource(Res.string.serverRowConnected)
                         SwitcherServerState.Connecting -> stringResource(Res.string.e7WorkspaceConnecting)
@@ -244,14 +260,16 @@ private fun ServerSwitcher(
                             stringResource(if (server.onThisPhone) Res.string.chatsSourcesOnPhone else Res.string.chatsSourcesElsewhere)
                     }
                 )
-                if (server.needsYou > 0)
+                if (server.needsYou > 0 && !held && !(ask?.allowable == true && ask.command != null && secretWords == null))
                     add(
                         pluralStringResource(Res.plurals.kitNeedsYouSpan, server.needsYou, Numbers.format(server.needsYou))
                             .trimEnd().removeSuffix("·").trimEnd()
                     )
-                if (server.working > 0)
+                if (server.working > 0 && !held)
                     add(pluralStringResource(Res.plurals.otherServerWorking, server.working, Numbers.format(server.working)))
+                if (secretWords != null) add(secretWords)
             }
+            val needsYouNow = server.needsYou > 0 && !held
             val opening = switcher.switching == server.profile
             KitRow(
                 title = server.name,
@@ -259,7 +277,7 @@ private fun ServerSwitcher(
                 supporting = if (opening) stringResource(Res.string.e7WorkspaceConnecting) else words.joinToString(" · "),
                 selected = server.current,
                 state =
-                    if (server.needsYou > 0 && !opening)
+                    if (needsYouNow && !opening)
                         io.github.eslamasabry.oc.ui.kit.row.KitRowState(null, io.github.eslamasabry.oc.ui.kit.row.KitRowStateTone.NeedsYou)
                     else null,
                 trailing =
@@ -291,6 +309,31 @@ private fun ServerSwitcher(
                                                 )
                                             )
                                         else emptyList(),
+                            )
+                        // What waits there: Allow once with the command beside it, Undo while held, else Open.
+                        !busy && ask != null && held ->
+                            KitRowTrailing.Action(
+                                io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction(
+                                    stringResource(Res.string.kitUndoAction),
+                                    { actions.undoSwitcherRequest(ask.requestId!!) },
+                                )
+                            )
+                        !busy && ask != null && ask.allowable && secretWords == null ->
+                            KitRowTrailing.Action(
+                                io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction(
+                                    stringResource(Res.string.kitRequestAllowOnce),
+                                    { actions.allowSwitcherRequest(ask.ref, ask.requestId!!) },
+                                )
+                            )
+                        !busy && ask != null && secretWords == null ->
+                            KitRowTrailing.Action(
+                                io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction(
+                                    stringResource(Res.string.serverSwitcherOpenRequest),
+                                    {
+                                        if (ask.count == 1) actions.openSwitcherRequest(ask.ref)
+                                        else actions.switchServer(server.profile)
+                                    },
+                                )
                             )
                         server.state == SwitcherServerState.NotAnswering && !busy ->
                             KitRowTrailing.Action(

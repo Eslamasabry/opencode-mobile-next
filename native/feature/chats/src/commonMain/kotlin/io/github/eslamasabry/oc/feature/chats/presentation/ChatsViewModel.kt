@@ -113,6 +113,10 @@ public class ChatsViewModel(
 
     private val switching = MutableStateFlow(Switching())
 
+    /** Allow once answers from the switcher that are held for the undo window, by request id. */
+    private val heldSwitcher = MutableStateFlow<Set<String>>(emptySet())
+    private val heldJobs = mutableMapOf<String, kotlinx.coroutines.Job>()
+
     /** The sheet-level failure of "Connections in this list": the person's choice could not be saved. */
     private val sourceFailure = MutableStateFlow<io.github.eslamasabry.oc.core.common.Failure?>(null)
 
@@ -214,6 +218,9 @@ public class ChatsViewModel(
                             now.failure,
                         )
                 )
+            }
+            .combine(heldSwitcher) { base, held ->
+                base.copy(switcher = base.switcher.copy(held = held.toImmutableSet()))
             }
             .stateIn(
                 viewModelScope,
@@ -635,6 +642,30 @@ public class ChatsViewModel(
         nav.open(ServersRoute.Edit(profile))
     }
 
+    override fun allowSwitcherRequest(ref: ConversationRef, requestId: String) {
+        val port = permissionAnswers.singleOrNull() ?: return
+        if (requestId in heldJobs || requestId in answers.value.first) return
+        heldSwitcher.update { it + requestId }
+        heldJobs[requestId] =
+            viewModelScope.launch {
+                kotlinx.coroutines.delay(SWITCHER_UNDO_WINDOW_MS)
+                port.answer(ref, requestId, HomePermissionReply.Once)
+                heldJobs.remove(requestId)
+                heldSwitcher.update { it - requestId }
+                feed.refresh()
+            }
+    }
+
+    override fun undoSwitcherRequest(requestId: String) {
+        heldJobs.remove(requestId)?.cancel()
+        heldSwitcher.update { it - requestId }
+    }
+
+    override fun openSwitcherRequest(ref: ConversationRef) {
+        // The conversation is on another server: open it from the list the sheet sits on.
+        openConversation(ref)
+    }
+
     override fun openTailscale() {
         sheet.value = null
         nav.open(CapabilityServerSetupRoute(CapabilityServerDoor.Tailscale))
@@ -657,6 +688,12 @@ public class ChatsViewModel(
         // Tapping the server already in use has nowhere to go but back to it (Flutter: reconnecting drops live state).
         if (row.current) {
             sheet.value = null
+            return
+        }
+        // A password or token the app can no longer use is typed in the server's form, not tried again here.
+        if (row.secret != SwitcherSecret.None) {
+            sheet.value = null
+            nav.open(ServersRoute.Edit(profile))
             return
         }
         if (switching.value.to != null) return
@@ -821,3 +858,6 @@ public interface HomePermissionBindings {
     @dev.zacsweers.metro.Multibinds(allowEmpty = true)
     public val homePermissionAnswers: Set<HomePermissionAnswers>
 }
+
+/** How long the switcher's Allow once can be undone before it is sent (F: DelayedAnswers window, 3 s). */
+private const val SWITCHER_UNDO_WINDOW_MS: Long = 3_000

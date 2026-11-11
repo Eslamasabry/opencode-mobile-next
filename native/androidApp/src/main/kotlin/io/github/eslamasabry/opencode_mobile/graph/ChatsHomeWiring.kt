@@ -127,6 +127,14 @@ class AppChatsHome(
                         main = loaded.id == active,
                         onThisPhone = runtime.sourceOnThisPhone(loaded.profile),
                         unreachable = loaded.id in runtime.sourceFailures,
+                        secret =
+                            when {
+                                loaded.reentry.password ->
+                                    io.github.eslamasabry.oc.feature.chats.presentation.SwitcherSecret.Password
+                                loaded.reentry.agentToken ->
+                                    io.github.eslamasabry.oc.feature.chats.presentation.SwitcherSecret.Token
+                                else -> io.github.eslamasabry.oc.feature.chats.presentation.SwitcherSecret.None
+                            },
                     )
                 }
                 .toImmutableList()

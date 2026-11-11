@@ -66,4 +66,47 @@ class ServerSwitcherRulesTest {
                 .state,
         )
     }
+
+    @Test
+    fun `S6 one waiting command is allowable, several or no command only open, a down server asks nothing`() {
+        val extra =
+            ChatsHomeExtraState(
+                sources = persistentListOf(source("main", main = true), source("one"), source("two"), source("down", down = true)),
+            )
+        val withCommand =
+            item("o1", status = ChatStatus.NeedsYou).copy(
+                profileId = ProfileId("one"),
+                permission = io.github.eslamasabry.oc.engine.agents.feed.FeedPermission("req-1", "npm install"),
+            )
+        val rows =
+            ServerSwitcherRules.rows(
+                extra,
+                listOf(
+                    withCommand,
+                    item("t1", status = ChatStatus.NeedsYou).copy(profileId = ProfileId("two")),
+                    item("t2", status = ChatStatus.NeedsYou).copy(profileId = ProfileId("two")),
+                    item("d1", status = ChatStatus.NeedsYou).copy(profileId = ProfileId("down")),
+                ),
+            )
+        val byId = rows.associateBy { it.profile.raw }
+        assertEquals(true, byId.getValue("one").ask?.allowable)
+        assertEquals("npm install", byId.getValue("one").ask?.command)
+        assertEquals(false, byId.getValue("two").ask?.allowable)
+        assertEquals(2, byId.getValue("two").ask?.count)
+        assertEquals(null, byId.getValue("down").ask)
+    }
+
+    @Test
+    fun `S6 a server whose secret must be typed again carries that state`() {
+        val extra =
+            ChatsHomeExtraState(
+                sources =
+                    persistentListOf(
+                        source("main", main = true),
+                        source("pw").copy(secret = io.github.eslamasabry.oc.feature.chats.presentation.SwitcherSecret.Password),
+                    ),
+            )
+        val row = ServerSwitcherRules.rows(extra, emptyList()).first { it.profile.raw == "pw" }
+        assertEquals(io.github.eslamasabry.oc.feature.chats.presentation.SwitcherSecret.Password, row.secret)
+    }
 }
