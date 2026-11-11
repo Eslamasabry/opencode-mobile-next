@@ -1,5 +1,8 @@
 package io.github.eslamasabry.oc.engine.attention.notify
 
+import io.github.eslamasabry.oc.core.common.KnownSecretMask
+import io.github.eslamasabry.oc.core.common.KnownSecrets
+import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.attention.notify.NotificationText.AskTitle
 import io.github.eslamasabry.oc.engine.attention.notify.NotificationText.PermissionAsk
 import io.github.eslamasabry.oc.engine.attention.notify.NotificationText.QuestionPrompt
@@ -164,5 +167,23 @@ class NotificationTextTest {
         assertEquals("main.dart", copy.askTarget)
         assertEquals("lib/main.dart", copy.detail)
         assertEquals("", copy.subtext)
+    }
+
+    @Test
+    fun `W4-MCP-GATE a value the app registered is masked on the shade though it has no secret shape`() {
+        // An MCP env value under an ordinary name: no pattern of the shade matches it, only the Redactor knows it.
+        val value = "sv-" + "ShadeEnvValue" + "4l5m"
+        val redactor = Redactor().apply { registerSecret(value) }
+        assertEquals("echo $value done", redact("echo $value done"), "the shade's own patterns are not the guard here")
+        try {
+            KnownSecrets.install(KnownSecretMask(redactor::maskKnown))
+            val line = NotificationText.firstReplyLine(listOf(reply("assistant", "The session value is $value")))
+            assertFalse(value in line, "a registered value reaches the reply line")
+            assertEquals("The session value is •••", line)
+            assertFalse(value in NotificationText.commandHead("$value --flag"), "a registered value reaches the command head")
+            assertEquals("npm run build", redact("npm run build"))
+        } finally {
+            KnownSecrets.install(null)
+        }
     }
 }

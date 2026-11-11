@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.core.security
 
+import io.github.eslamasabry.oc.core.common.KnownSecretMask
+import io.github.eslamasabry.oc.core.common.KnownSecrets
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -216,5 +218,22 @@ class McpConfigSecretsGateTest {
             assertTrue(ConfigValues.isCredentialName(name), "$name is not a credential name")
         for (name in listOf("PWD", "OLDPWD", "SPIN", "author", "MAX_TOKENS"))
             assertFalse(ConfigValues.isCredentialName(name), "$name counts as a credential name")
+    }
+
+    @Test
+    fun `W4-MCP-GATE the shade mask hides registered values and nothing else`() {
+        val redactor = Redactor()
+        val value = "sv-" + "GateShadeValue" + "4l5m"
+        redactor.registerSecret(value)
+        assertEquals("sent ••• to OpenCode", redactor.maskKnown("sent $value to OpenCode"))
+        // Patterns are NotificationText's own business: maskKnown leaves secret-shaped text alone.
+        assertEquals("password=hunter2", redactor.maskKnown("password=hunter2"))
+        try {
+            KnownSecrets.install(KnownSecretMask(redactor::maskKnown))
+            assertEquals("sent ••• to OpenCode", KnownSecrets.mask("sent $value to OpenCode"))
+        } finally {
+            KnownSecrets.install(null)
+        }
+        assertEquals("sent $value", KnownSecrets.mask("sent $value"), "nothing installed: text passes unchanged")
     }
 }

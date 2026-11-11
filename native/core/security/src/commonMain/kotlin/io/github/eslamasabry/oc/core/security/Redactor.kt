@@ -86,6 +86,17 @@ public class Redactor {
 
     public fun containsSecret(text: String): Boolean = redact(text) != text
 
+    /**
+     * Only the registered secrets of [text] masked, none of [redact]'s patterns: for text that has its own pattern
+     * rules and only lacks the values the app knows (the notification shade, through core common's KnownSecrets).
+     */
+    public fun maskKnown(text: String): String {
+        if (text.isEmpty()) return text
+        var out = text
+        for (secret in secrets.load()) out = out.replace(secret, MASK)
+        return out
+    }
+
     /** Long digit-bearing tokens (≥ 32 chars) → mask; letters-only code names stay. */
     public fun opaqueTokens(text: String): String = OPAQUE_TOKEN.replace(text, MASK)
 
