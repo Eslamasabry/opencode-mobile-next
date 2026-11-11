@@ -9,7 +9,7 @@ import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 
 private object Now : Clock {
@@ -70,7 +70,7 @@ class FleetAgentOutputTest {
             val host = SessionHost(FakeGasCity(), listOf(turn("1", "step one"), turn("2", "step one\nstep two"), FleetFrame("heartbeat", null, "{}")))
             val fleet = FleetEngine(host, Now, newRequestId = { "req-1" })
             backgroundScope.launch { fleet.live("p1", CONFIG) }
-            advanceUntilIdle()
+            runCurrent()
             val seen = fleet.agentOutput("p1", "s-1").toList()
             assertEquals(listOf("step one", "step one\nstep two"), seen)
             assertEquals("/v0/city/main/session/s-1/stream", host.streams.single().first)

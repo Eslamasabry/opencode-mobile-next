@@ -14,7 +14,7 @@ import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceTimeBy
-import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 
 /** A Gas City host in memory: GET answers by path, writes recorded, one stream fed by the test. */
@@ -92,7 +92,7 @@ class FleetEngineTest {
             val host = FakeGasCity()
             val fleet = engine(host)
             backgroundScope.launch { fleet.live("p1", CONFIG) }
-            advanceUntilIdle()
+            runCurrent()
             val state = fleet.state("p1").value
             assertEquals(FleetPhase.Ready, state.phase)
             assertEquals(FleetCapabilities.READ, state.capabilities)
@@ -120,7 +120,7 @@ class FleetEngineTest {
             val host = FakeGasCity()
             val fleet = engine(host)
             backgroundScope.launch { fleet.live("p1", CONFIG) }
-            advanceUntilIdle()
+            runCurrent()
             val receipt = fleet.control("p1", FleetControl.Agent("app/polecat-1", FleetAgentAction.Pause))
             assertEquals(ReceiptStatus.Rejected, receipt.status)
             assertEquals(FleetReceipt.FRONT_REQUIRED, receipt.message)
@@ -137,7 +137,7 @@ class FleetEngineTest {
             )
             val fleet = engine(host)
             backgroundScope.launch { fleet.live("p1", CONFIG) }
-            advanceUntilIdle()
+            runCurrent()
             assertEquals(FleetCapabilities.FRONT, fleet.state("p1").value.capabilities)
             val receipt = fleet.control("p1", FleetControl.Answer("q-1", FleetAnswer.Choice("Yes")))
             assertEquals(ReceiptStatus.Accepted, receipt.status)
@@ -159,7 +159,7 @@ class FleetEngineTest {
             )
             val fleet = engine(host)
             backgroundScope.launch { fleet.live("p1", CONFIG) }
-            advanceUntilIdle()
+            runCurrent()
             assertTrue(fleet.state("p1").value.snapshot.gates.any { it.id == "bead:g-1" && it.kind == GateKind.GateBead })
             // Flutter's resolver finds no pending interaction for a bead: nothing is posted to the assignee's session.
             val receipt = fleet.control("p1", FleetControl.Answer("bead:g-1", FleetAnswer.Confirm(true)))
@@ -173,7 +173,7 @@ class FleetEngineTest {
             val host = FakeGasCity()
             val fleet = engine(host)
             backgroundScope.launch { fleet.live("p1", CONFIG.copy(url = "http://192.168.1.20:8372")) }
-            advanceUntilIdle()
+            runCurrent()
             val state = fleet.state("p1").value
             assertEquals(FleetPhase.Failed, state.phase)
             assertEquals(FleetFailure.PlainHttpRefused, state.failure)
@@ -186,11 +186,11 @@ class FleetEngineTest {
             val host = FakeGasCity().apply { down = true }
             val fleet = engine(host)
             backgroundScope.launch { fleet.live("p1", CONFIG) }
-            advanceUntilIdle()
+            runCurrent()
             assertEquals(FleetFailure.Unreachable, fleet.state("p1").value.failure)
             host.down = false
             fleet.refresh("p1")
-            advanceUntilIdle()
+            runCurrent()
             assertEquals(FleetPhase.Ready, fleet.state("p1").value.phase)
             assertNull(fleet.state("p1").value.failure)
         }
@@ -201,13 +201,14 @@ class FleetEngineTest {
             val host = FakeGasCity()
             val fleet = engine(host)
             backgroundScope.launch { fleet.live("p1", CONFIG) }
-            advanceUntilIdle()
+            runCurrent()
             val before = host.gets.count { it == "/v0/city/main/runs" }
             host.route("/v0/city/main/beads", """{"items":[{"id":"b-1","title":"Fix the login page","status":"closed"}]}""")
             host.frames.trySend(FleetFrame("event", "7", """{"type":"bead.closed","seq":7,"subject":"b-1"}"""))
             advanceTimeBy(100)
             assertEquals(before, host.gets.count { it == "/v0/city/main/runs" })
-            advanceUntilIdle()
+            advanceTimeBy(1_000)
+            runCurrent()
             assertEquals(before + 1, host.gets.count { it == "/v0/city/main/runs" })
             assertEquals(RunState.Completed, fleet.state("p1").value.snapshot.visibleRuns.single().state)
         }
@@ -218,7 +219,7 @@ class FleetEngineTest {
             val host = FakeGasCity()
             val fleet = engine(host)
             backgroundScope.launch { fleet.live("p1", CONFIG) }
-            advanceUntilIdle()
+            runCurrent()
             assertNull(fleet.state("p1").value.jobs)
             fleet.loadJobs("p1")
             val job = fleet.state("p1").value.jobs!!.single()
@@ -232,7 +233,7 @@ class FleetEngineTest {
             val host = FakeGasCity()
             val fleet = engine(host)
             backgroundScope.launch { fleet.live("p1", CONFIG.copy(url = "http://127.0.0.1:8372", hostMode = TeamHostMode.Phone)) }
-            advanceUntilIdle()
+            runCurrent()
             assertEquals(FleetCapabilities.LOOPBACK, fleet.state("p1").value.capabilities)
             fleet.control("p1", FleetControl.Agent("app/polecat-1", FleetAgentAction.Stop))
             // No front: no idempotency key; the pool agent's session is stopped.

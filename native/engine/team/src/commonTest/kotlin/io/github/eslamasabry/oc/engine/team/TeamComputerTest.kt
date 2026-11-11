@@ -8,7 +8,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.time.Clock
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 
 /** A team on a computer: the page is the computer's team, and Turn off clears its config without the phone engine. */
@@ -48,7 +48,7 @@ class TeamComputerTest {
             assertEquals(TeamPhase.Computer, engine.state("p").value.phase)
             assertEquals(computer, engine.state("p").value.config)
             backgroundScope.launch { fleet.live("p", computer) }
-            advanceUntilIdle()
+            runCurrent()
             assertEquals(FleetPhase.Ready, fleet.state("p").value.phase)
         }
 
@@ -60,7 +60,7 @@ class TeamComputerTest {
             val engine = TeamEngine(host, fleet = fleet)
             engine.refresh("p")
             backgroundScope.launch { fleet.live("p", computer) }
-            advanceUntilIdle()
+            runCurrent()
             assertEquals(Outcome.Ok(Unit), engine.turnOff("p"))
             assertEquals(1, host.computerOff)
             assertEquals(0, host.phoneOff)

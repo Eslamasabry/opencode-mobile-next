@@ -9,7 +9,7 @@ import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 
 private object MergeClock : Clock {
@@ -37,7 +37,7 @@ class FleetMergeRouteTest {
             host.route("${FakeGasCity.CITY}/front/merge-readiness/r%201", MERGE_READY_DOC)
             val fleet = FleetEngine(host, MergeClock, newRequestId = { "req-1" })
             backgroundScope.launch { fleet.live("p1", MERGE_CONFIG) }
-            advanceUntilIdle()
+            runCurrent()
             val read = fleet.mergeReadiness("p1", "r 1") as FleetEngine.MergeRead.Found
             val r = read.readiness
             assertEquals("r 1", r.runId)
@@ -59,7 +59,7 @@ class FleetMergeRouteTest {
             val host = front()
             val fleet = FleetEngine(host, MergeClock, newRequestId = { "req-1" })
             backgroundScope.launch { fleet.live("p1", MERGE_CONFIG) }
-            advanceUntilIdle()
+            runCurrent()
             assertEquals(FleetEngine.MergeRead.NoRoles, fleet.mergeReadiness("p1", "nope"))
             host.down = true
             assertEquals(FleetEngine.MergeRead.Failed, fleet.mergeReadiness("p1", "r-1"))
@@ -71,7 +71,7 @@ class FleetMergeRouteTest {
             val host = FakeGasCity()
             val fleet = FleetEngine(host, MergeClock, newRequestId = { "req-1" })
             backgroundScope.launch { fleet.live("p1", MERGE_CONFIG) }
-            advanceUntilIdle()
+            runCurrent()
             assertEquals(FleetEngine.MergeRead.NoRoles, fleet.mergeReadiness("p1", "r-1"))
             val result = fleet.merge("p1", "r-1")
             assertEquals(ReceiptStatus.Rejected, result.receipt.status)
@@ -85,7 +85,7 @@ class FleetMergeRouteTest {
             val host = front()
             val fleet = FleetEngine(host, MergeClock, newRequestId = { "req-7" })
             backgroundScope.launch { fleet.live("p1", MERGE_CONFIG) }
-            advanceUntilIdle()
+            runCurrent()
             host.sendReply = FleetReply.Answered(200, """{"mergeCommit":"4f9c2a1deadbeef","branch":"main"}""")
             val approved = fleet.approveMerge("p1", "mr 1")
             val merged = fleet.merge("p1", "r-1")
@@ -104,7 +104,7 @@ class FleetMergeRouteTest {
             val host = front()
             val fleet = FleetEngine(host, MergeClock, newRequestId = { "req-1" })
             backgroundScope.launch { fleet.live("p1", MERGE_CONFIG) }
-            advanceUntilIdle()
+            runCurrent()
             host.sendReply =
                 FleetReply.Answered(
                     403,
@@ -122,7 +122,7 @@ class FleetMergeRouteTest {
             val host = front()
             val fleet = FleetEngine(host, MergeClock, newRequestId = { "req-1" })
             backgroundScope.launch { fleet.live("p1", MERGE_CONFIG) }
-            advanceUntilIdle()
+            runCurrent()
             host.sendReply = FleetReply.Unreachable(timedOut = true)
             val result = fleet.merge("p1", "r-1")
             assertEquals(ReceiptStatus.Pending, result.receipt.status)

@@ -9,7 +9,7 @@ import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 
 private object PolicyClock : Clock {
@@ -31,7 +31,7 @@ class FleetPolicyRouteTest {
             host.route("${FakeGasCity.CITY}/front/policy?rig=app", POLICY_DOC)
             val fleet = FleetEngine(host, PolicyClock, newRequestId = { "req-1" })
             backgroundScope.launch { fleet.live("p1", POLICY_CONFIG) }
-            advanceUntilIdle()
+            runCurrent()
             val policy = fleet.policy("p1", "app")
             assertEquals("app", policy?.rig)
             assertEquals(FleetSupervision.High, policy?.supervision)
@@ -45,7 +45,7 @@ class FleetPolicyRouteTest {
             val host = FakeGasCity()
             val fleet = FleetEngine(host, PolicyClock, newRequestId = { "req-1" })
             backgroundScope.launch { fleet.live("p1", POLICY_CONFIG) }
-            advanceUntilIdle()
+            runCurrent()
             assertNull(fleet.policy("p1", "app"))
             assertTrue(host.gets.none { "/front/" in it })
         }
@@ -55,7 +55,7 @@ class FleetPolicyRouteTest {
         runTest {
             val fleet = FleetEngine(front(), PolicyClock, newRequestId = { "req-1" })
             backgroundScope.launch { fleet.live("p1", POLICY_CONFIG) }
-            advanceUntilIdle()
+            runCurrent()
             assertNull(fleet.policy("p1"))
         }
 }
