@@ -199,8 +199,9 @@ public data class ChatsUi(
         kotlinx.collections.immutable.persistentMapOf(),
     val allCount: Int = 0,
     /**
-     * P5: the conversations the filters let through, which the list's "All conversations" row counts (it opens that
-     * same narrowing); null when no filter narrows the list, and the row counts [allCount].
+     * P5: what the list's "All conversations" row counts when it opens that page narrowed ([ChatsState.allFilter]: the
+     * chosen project, else Running), so the number is what the page shows; null when it opens the whole list, and the
+     * row counts [allCount].
      */
     val shownCount: Int? = null,
     val otherFoldersCount: Int = 0,

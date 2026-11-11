@@ -21,7 +21,8 @@ import kotlinx.collections.immutable.toImmutableList
 /**
  * P5 / P6 (device QA sweep A, 2026-11-11): with the projects chip on "second" the "Since you were away" block still
  * listed three conversations of the other project, and with Running on "Nothing running" stood beside them. One
- * filtered set feeds every section of the home: the brief, Right now, Recent and the All conversations count.
+ * filtered set feeds every section of the home: the brief, Right now and Recent; the All conversations row counts what
+ * that page opens with (the chosen project, else Running).
  */
 class HomeFiltersEverySectionTest {
     private fun away(id: String, dir: String, idle: Long) = Session(SessionId(id), directory = dir, time = SessionTime(idleMs = idle))
@@ -88,7 +89,7 @@ class HomeFiltersEverySectionTest {
         assertEquals(ChatsPhase.NoMatch, ui.phase)
         assertNull(ui.brief, "no away block beside Nothing running")
         assertTrue(ui.rightNow.isEmpty() && ui.recent.isEmpty())
-        assertEquals(0, ui.shownCount)
+        assertEquals(6, ui.shownCount, "All conversations opens on api (it cannot also hold Running) and counts api's six")
     }
 
     @Test
@@ -125,8 +126,14 @@ class HomeFiltersEverySectionTest {
                         !filters.otherFolders
                 }.mapTo(hashSetOf()) { it.identity }
             assertTrue(ui.everyRow().all { it.key in lets }, "$filters let through $lets but showed ${ui.everyRow().map { it.key }}")
-            if (filters.any) assertEquals(lets.size, ui.shownCount, "$filters: the All conversations count")
-            else assertNull(ui.shownCount, "no filter: the row counts every conversation")
+            // The All conversations row counts what that page opens with: the project, else Running, else everything.
+            val opens =
+                when {
+                    filters.projectDirectory != null && !filters.otherFolders -> feed.count { it.directory == filters.projectDirectory }
+                    filters.running -> feed.count { it.status == ChatStatus.Running }
+                    else -> null
+                }
+            assertEquals(opens, ui.shownCount, "$filters: the All conversations count")
             if (lets.isEmpty()) {
                 assertEquals(ChatsPhase.NoMatch, ui.phase, "$filters")
                 assertTrue(ui.everyRow().isEmpty() && ui.brief == null, "$filters: one empty state and nothing beside it")

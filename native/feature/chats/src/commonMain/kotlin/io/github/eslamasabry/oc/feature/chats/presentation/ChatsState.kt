@@ -98,7 +98,13 @@ public object ChatsState {
                     .mapNotNull { it.directory }
                     .toImmutableSet(),
             allCount = roots.size,
-            shownCount = if (filters.any) visible.size else null,
+            shownCount =
+                allFilter(filters)?.let { carried ->
+                    val opens =
+                        if (carried == ChatsAllViewModel.RUNNING) ChatFeedFilter(running = true)
+                        else ChatFeedFilter(projectDirectory = carried)
+                    opens.apply(roots).size
+                },
             otherFoldersCount = roots.count { it.inOtherFolder },
             otherFoldersSelected = filters.otherFolders,
             inbox =
@@ -189,6 +195,15 @@ public object ChatsState {
             AgentPersonaId.OpenCode -> "OpenCode"
             AgentPersonaId.Other -> null
         }
+
+    /**
+     * P5: the narrowing the home's "All conversations" row opens that page with, and counts: the chosen project, else
+     * Running; null (the whole list, counted as [ChatsUi.allCount]) when the home's filters carry neither, as for Needs
+     * you, a search, Other folders or the away block's overflow, which that page cannot open with.
+     */
+    public fun allFilter(filters: ChatsFilters): String? =
+        filters.projectDirectory?.takeIf { it.startsWith("/") && !filters.otherFolders }
+            ?: ChatsAllViewModel.RUNNING.takeIf { filters.running }
 
     /**
      * Brief rows are the feed rows of the sessions it names (same profile); nothing when it has
