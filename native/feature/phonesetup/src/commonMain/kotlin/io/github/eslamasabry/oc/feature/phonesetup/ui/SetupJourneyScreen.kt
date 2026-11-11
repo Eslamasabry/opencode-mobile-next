@@ -107,7 +107,11 @@ public fun SetupJourneyScreen(state: SetupJourneyUi, actions: SetupJourneyAction
             // C12: the checking page says what it is doing instead of drawing nothing under the progress line.
             KitStateView(kind = KitStateKind.Loading, title = stringResource(Res.string.phoneSetupStartChecking))
         } else {
-            if (state.customizing || idle) StartHero(state, actions)
+            // Add tools (from This phone, OpenCode already installed) opens its sheet over This phone's own
+            // name, like Flutter's sheet over this_phone_screen.dart: never over the first-run "Set up OpenCode"
+            // page, which is for a phone without it.
+            if (state.adding && job.state != SetupState.Running) Unit
+            else if (state.customizing || idle) StartHero(state, actions)
             else Job(state, actions)
         }
         KitSheet(
@@ -174,6 +178,8 @@ public fun SetupJourneyScreen(state: SetupJourneyUi, actions: SetupJourneyAction
 /** The persisted job names its additions, in job order, even after the app is reopened. */
 @Composable
 private fun journeyTitle(state: SetupJourneyUi): String {
+    if (state.adding && state.progress.adding.isEmpty())
+        return stringResource(Res.string.settingsV3ThisPhone)
     if (state.progress.adding.isEmpty())
         return stringResource(Res.string.phoneSetupStartScreenTitle)
     // F: lib/builtin/setup/setup_engine/progress_helpers.dart:335-356
