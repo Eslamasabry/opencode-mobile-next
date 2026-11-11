@@ -1005,6 +1005,59 @@ internal class Oc2Gateway(
             buildJsonObject { put("agent", agent) },
         )
 
+    /**
+     * The sub-agent sessions [id] started: `GET /session?parentID=<id>` (Flutter `listSessionChildren`, protocol
+     * notes §4.2), one page of at most [SubAgents.MAX_CHILDREN]. No location filter: `parentID` already names the
+     * family, and a child keeps working in its parent's folder whichever folder the app shows. Forks also carry
+     * `parentID`; their `fork` field keeps them out. A row that does not decode is skipped, not the whole list.
+     */
+    override suspend fun sessionChildren(id: SessionId): Outcome<ImmutableList<Session>> =
+        childRows(id).map { rows -> rows.map { it.first }.toImmutableList() }
+
+    /** [sessionChildren] with each child's state: running from `/session/active`, else its last run's `outcome`. */
+    override suspend fun subAgents(parent: SessionId): Outcome<ImmutableList<SubAgent>> =
+        when (val rows = childRows(parent)) {
+            is Outcome.Failed -> rows
+            is Outcome.Ok -> {
+                val ended =
+                    rows.value
+                        .mapNotNull { (session, outcome) -> endedState(outcome)?.let { session.id to it } }
+                        .toMap()
+                SubAgents.withStates(this, parent, rows.value.map { it.first }, ended).ok()
+            }
+        }
+
+    private suspend fun childRows(parent: SessionId): Outcome<List<Pair<Session, Oc2SessionOutcome?>>> {
+        if (parent.raw.isBlank()) return Failure.Rejected(null).failed()
+        return read(
+            "/session",
+            query =
+                mapOf(
+                    "parentID" to parent.raw,
+                    "limit" to SubAgents.MAX_CHILDREN.toString(),
+                    "order" to "desc",
+                ),
+        ) { root ->
+            val rows = pageEntries(root) ?: return@read null
+            rows.mapNotNull { row ->
+                val wire = Oc2Session.fromJson(data(row) as? JsonObject ?: return@mapNotNull null)
+                    ?: return@mapNotNull null
+                val session = sessionValue(data(row)) ?: return@mapNotNull null
+                if (session.parentId != parent || session.forkOf != null) return@mapNotNull null
+                session to wire.outcome
+            }
+        }
+    }
+
+    private fun endedState(outcome: Oc2SessionOutcome?): SubAgentState? =
+        when (outcome) {
+            Oc2SessionOutcome.Succeeded -> SubAgentState.Done
+            Oc2SessionOutcome.Failed -> SubAgentState.Failed
+            Oc2SessionOutcome.Interrupted -> SubAgentState.Stopped
+            Oc2SessionOutcome.Unknown,
+            null -> null
+        }
+
     /** The visible Fork action uses the server's own boundary contract; an anchored copy excludes its anchor. */
     override suspend fun forkSession(id: SessionId, from: MessageId?): Outcome<SessionId> {
         if (id.raw.isEmpty() || from?.raw?.isEmpty() == true) return Failure.Rejected(null).failed()
@@ -2332,6 +2385,10 @@ internal class Oc2Gateway(
         return imported.ok()
     }
 
+    /** A fork names its source (`fork.sessionID`); a fork without one still is a fork of its `parentID`. */
+    private fun forkOf(wire: Oc2Session): SessionId? =
+        wire.fork?.let { fork -> (fork.sessionID?.takeIf { it.isNotEmpty() } ?: wire.parentID)?.let(::SessionId) }
+
     internal fun sessionValue(value: JsonElement): Session? {
         val wire = Oc2Session.fromJson(value as? JsonObject ?: return null) ?: return null
         return Session(
@@ -2344,6 +2401,7 @@ internal class Oc2Gateway(
             path = wire.subpath,
             reverted = wire.reverted,
             stagedRevert = wire.revert?.let(::revertOf),
+            forkOf = forkOf(wire),
             time =
                 SessionTime(
                     wire.time.created,
@@ -2383,7 +2441,9 @@ internal class Oc2Gateway(
                 promptImagesOnly = false,
                 promptEchoTextOnly = false,
                 subagentReplies = true,
-                subagentSessions = false,
+                // Children are sessions listed by `GET /session?parentID=` (Flutter ops_sessions.dart
+                // listSessionChildren); forks are kept out by their `fork` field.
+                subagentSessions = true,
                 promptAgentMentions = true,
                 promptSteering = true,
                 offlinePromptQueue = true,
