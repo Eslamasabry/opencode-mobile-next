@@ -99,6 +99,8 @@ class AppEdgeDockPort(
 
     override fun rename(ref: ConversationRef, name: String?) = dock.rename(ref, name)
 
+    override fun rename(ref: ConversationRef, name: String?, onFailed: () -> Unit) = dock.rename(ref, name, onFailed)
+
     override fun remove(ref: ConversationRef) = dock.remove(ref)
 
     override fun undoRemove(ref: ConversationRef) = dock.undoRemove(ref)
