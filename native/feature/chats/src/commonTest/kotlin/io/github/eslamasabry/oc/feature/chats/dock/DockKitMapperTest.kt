@@ -135,6 +135,32 @@ class DockKitMapperTest {
     }
 
     @Test
+    fun the_line_under_the_state_never_repeats_the_name() {
+        // The device run: a session titled from its prompt showed that prompt again under "Needs you".
+        val prompt = "create a file one.txt with one line"
+        val waiting = entry("a", DockState.NeedsYou, title = prompt)
+        val onlyPrompt = mapOf(ref("a") to DockPeek.Lines(persistentListOf(DockPeekRow(true, "  Create a file one.txt  with one line "))))
+        val ring = DockKitMapper.map(ui(waiting), onlyPrompt, "U").model.rings.single()
+        assertEquals(prompt, ring.name)
+        assertNull(ring.lastLine, "nothing new to say: no line")
+        assertTrue(ring.peek.isEmpty(), "the swell and peek draw no copy of the title")
+        // The latest activity is the agent's newest line; the person's own words are not activity.
+        val replied =
+            mapOf(ref("a") to DockPeek.Lines(persistentListOf(DockPeekRow(true, prompt), DockPeekRow(false, "Writing one.txt"), DockPeekRow(true, "thanks"))))
+        val withReply = DockKitMapper.map(ui(waiting), replied, "U").model.rings.single()
+        assertEquals("Writing one.txt", withReply.lastLine)
+        assertEquals(listOf("Writing one.txt", "thanks"), withReply.peek.map { it.text })
+        // A nickname or a cut title counts as the name too; a sub-agent's line never repeats its own name either.
+        val nicknamed = entry("a", title = "Long title that was cu…").copy(nickname = "Bank")
+        val tail = mapOf(ref("a") to DockPeek.Lines(persistentListOf(DockPeekRow(false, "Long title that was cut here"), DockPeekRow(false, "bank"))))
+        assertNull(DockKitMapper.map(ui(nicknamed), tail, "U").model.rings.single().lastLine)
+        val child = DockChild(ref("c1"), "Look around", "explore", DockState.Working, 0)
+        val childTail = mapOf(ref("c1") to DockPeek.Lines(persistentListOf(DockPeekRow(false, "Explore"))))
+        val kid = DockKitMapper.map(ui(entry("p").copy(children = persistentListOf(child))), childTail, "U").model.rings.single().children.single()
+        assertNull(kid.lastLine)
+    }
+
+    @Test
     fun current_tuck_placement_and_hidden_follow_the_model() {
         val hidden = DockHidden(ref("h"), title = "Old work", nickname = null, agent = null, state = DockState.Finished, parent = null)
         val dockUi =

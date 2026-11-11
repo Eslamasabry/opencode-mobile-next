@@ -78,10 +78,13 @@ public object DockKitMapper {
         val refs = HashMap<String, ConversationRef>()
         val asks = HashMap<String, DockAsk>()
         val removable = HashSet<String>()
-        fun lines(ref: ConversationRef): List<KitDockLine> =
+        // The tail never repeats the conversation's own name: a session titled from its first prompt would otherwise
+        // show that prompt twice (title, then the same sentence under the state).
+        fun lines(ref: ConversationRef, vararg names: String?): List<KitDockLine> =
             when (val peek = peeks[ref]) {
                 is DockPeek.Lines ->
-                    peek.rows.map { KitDockLine(if (it.fromPerson) KitDockLineRole.Person else KitDockLineRole.Agent, it.text) }
+                    peek.rows.filterNot { repeats(it.text, *names) }
+                        .map { KitDockLine(if (it.fromPerson) KitDockLineRole.Person else KitDockLineRole.Agent, it.text) }
                 DockPeek.Unavailable, null -> emptyList()
             }
         fun named(name: String?): String = name?.trim()?.takeIf { it.isNotEmpty() } ?: untitled
@@ -89,7 +92,7 @@ public object DockKitMapper {
             val k = key(c.ref)
             refs[k] = c.ref
             if (c.removable) removable += k
-            return KitDockChild(k, named(c.name), state(c.state), c.pulse, lines(c.ref).lastOrNull()?.text)
+            return KitDockChild(k, named(c.name), state(c.state), c.pulse, activity(lines(c.ref, c.name, c.title, c.agent)))
         }
         val rings =
             ui.entries.map { e ->
@@ -97,7 +100,7 @@ public object DockKitMapper {
                 refs[k] = e.ref
                 if (e.removable) removable += k
                 askOf(e)?.let { asks[k] = it }
-                val tail = lines(e.ref)
+                val tail = lines(e.ref, e.name, e.title, e.nickname)
                 KitDockRing(
                     key = k,
                     name = named(e.name),
@@ -108,7 +111,7 @@ public object DockKitMapper {
                     childOverflow = e.childOverflow,
                     causedBy = e.causedBy?.let { key(it) },
                     server = e.serverName.takeIf { ui.severalServers },
-                    lastLine = tail.lastOrNull()?.text,
+                    lastLine = activity(tail),
                     peek = tail,
                     pinned = e.pinned,
                 )
@@ -133,6 +136,31 @@ public object DockKitMapper {
                     ),
             )
         return DockKitFrame(model, refs, asks, removable)
+    }
+
+    /**
+     * The line under a ring's state: its latest activity, the newest line of the agent's own (a reply or a step), never
+     * the person's prompt and never the name (the tail already left those out). Null when there is none.
+     */
+    private fun activity(tail: List<KitDockLine>): String? = tail.lastOrNull { it.role != KitDockLineRole.Person }?.text
+
+    private fun norm(text: String): String = text.trim().replace(spaces, " ").lowercase()
+
+    private val spaces = Regex("\\s+")
+
+    /** True when [line] says the same as one of [names] (case and spacing aside; a cut name counts as its start). */
+    internal fun repeats(line: String, vararg names: String?): Boolean {
+        val l = norm(line)
+        if (l.isEmpty()) return true
+        return names.any { raw ->
+            val n = raw?.let(::norm).orEmpty()
+            when {
+                n.isEmpty() -> false
+                n == l -> true
+                n.endsWith("…") || n.endsWith("...") -> n.trimEnd('…', '.').trimEnd().let { it.isNotEmpty() && l.startsWith(it) }
+                else -> false
+            }
+        }
     }
 
     /**
