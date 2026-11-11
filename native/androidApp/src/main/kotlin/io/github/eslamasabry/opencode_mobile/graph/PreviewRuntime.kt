@@ -82,6 +82,17 @@ class PreviewRuntime(
     override val servers: StateFlow<ImmutableList<SavedServer>> = mutableServers.asStateFlow()
     private val mutableBusy = MutableStateFlow(false)
     override val busy: StateFlow<Boolean> = mutableBusy.asStateFlow()
+    // Busy is a command holding the lock, or an attempt waiting for this phone's own server outside it.
+    private val busyLock = Any()
+    private var holding = false
+    private val localWaits =
+        io.github.eslamasabry.oc.engine.runtime.server.LocalServerWaits(
+            scope,
+            gate = { id ->
+                localGates.gate?.invoke(id) ?: io.github.eslamasabry.oc.engine.runtime.server.LocalServerWait.Ready
+            },
+            onWaitingChanged = ::publishBusy,
+        )
     internal val snapshot = MutableStateFlow(ChatFeedSnapshot())
     private val unverifiedListings = mutableSetOf<ProfileId>()
     private val listings = mutableMapOf<ProfileId, MutableStateFlow<OpenCodeListing>>()
@@ -169,7 +180,11 @@ class PreviewRuntime(
             // PORT-SCREENS-2: the home list records each source's failure, then the other shown
             // sources join. Launcher shortcuts wait for this first connection (awaitInitialConnection).
             initialConnection.complete(
-                if (active != null) command { connectForHome(active) } else Unit.ok()
+                if (active != null)
+                    connectCommand(active, makeActive = true) { turn ->
+                        connectForHome(active, makeActive = turn.activate, local = turn.local)
+                    }
+                else Unit.ok()
             )
             synchronizeListSources()
             adoptPhoneAgents()
@@ -212,16 +227,62 @@ class PreviewRuntime(
         }
         return withContext(lane) {
             order.withLock {
-                mutableBusy.value = true
+                setHolding(true)
                 try {
                     block()
                 } finally {
-                    mutableBusy.value = false
+                    setHolding(false)
                     publishServers()
                 }
             }
         }
     }
+
+    private fun setHolding(held: Boolean) {
+        synchronized(busyLock) { holding = held }
+        publishBusy()
+    }
+
+    private fun publishBusy() {
+        synchronized(busyLock) { mutableBusy.value = holding || localWaits.waiting > 0 }
+    }
+
+    /**
+     * A connection attempt. One to this phone's own server waits for it to answer BEFORE it takes the command lock
+     * (LocalServerWaits): the lock guards the connection state, and the wait (up to about 150 s while the phone boots)
+     * changes none of it, so a switch, a Try again or a Stop is never queued behind it. A newer command supersedes the
+     * waiting attempt, which then ends with StaleScope and changes nothing (no failure is recorded for it).
+     */
+    private suspend fun connectCommand(
+        id: ProfileId,
+        makeActive: Boolean,
+        connect: suspend (io.github.eslamasabry.oc.engine.runtime.server.LocalServerWaits.Turn) -> Outcome<Unit>,
+    ): Outcome<Unit> {
+        when (val start = ready.await()) {
+            is Outcome.Failed -> return start.atStage(ConnectionStage.StorageReady)
+            is Outcome.Ok -> Unit
+        }
+        return localWaits.run(
+            id,
+            makeActive,
+            waits = profiles.profile(id)?.let(::waitsForPhoneServer) == true,
+            locked = { block -> command(block) },
+            stale = ::superseded,
+        ) { turn ->
+            // The person chose another server while this one booted: it still joins the list if it is shown there.
+            if (turn.overtaken && !listSourceShown(id)) superseded() else connect(turn)
+        }
+    }
+
+    private fun superseded(): Outcome<Unit> = Failure.Refused(RefusalReason.StaleScope).failed()
+
+    /** This phone's own server, which may still be booting: the first connection waits for it (phase 0). */
+    private fun waitsForPhoneServer(loaded: LoadedProfile): Boolean =
+        localGates.gate != null &&
+            !loaded.profile.usesAgentSocket &&
+            !loaded.profile.requiresOpenCode2Migration &&
+            !loaded.cleartextUnconfirmed &&
+            io.github.eslamasabry.oc.engine.runtime.switching.ManagedLocalServer.isBuiltin(loaded.profile.baseUrl)
 
     override suspend fun save(
         name: String,
@@ -253,21 +314,28 @@ class PreviewRuntime(
             .map { id }
     }
 
-    override suspend fun connect(id: ProfileId): Outcome<Unit> = command {
-        connectForHome(id, recoverDrafts = true)
-    }
+    override suspend fun connect(id: ProfileId): Outcome<Unit> =
+        connectCommand(id, makeActive = true) { turn ->
+            connectForHome(id, recoverDrafts = true, makeActive = turn.activate, local = turn.local)
+        }
 
     /** The server on the home stays the one the person chose: opening the Agents page used to switch it to "Phone agents". */
-    override suspend fun connectInBackground(id: ProfileId): Outcome<Unit> = command {
-        connectForHome(id, makeActive = id == profiles.activeId.value)
-    }
+    override suspend fun connectInBackground(id: ProfileId): Outcome<Unit> =
+        connectCommand(id, makeActive = id == profiles.activeId.value) { turn ->
+            connectForHome(id, makeActive = turn.activate && id == profiles.activeId.value, local = turn.local)
+        }
 
+    /**
+     * [local]: how the wait for this phone's own server ended, when the attempt waited for it outside the lock
+     * (connectCommand); null when it did not.
+     */
     private suspend fun connectForHome(
         id: ProfileId,
         recoverDrafts: Boolean = false,
         makeActive: Boolean = true,
+        local: io.github.eslamasabry.oc.engine.runtime.server.LocalServerWait? = null,
     ): Outcome<Unit> {
-        val result = connectNow(id, recoverDrafts, makeActive)
+        val result = connectNow(id, recoverDrafts, makeActive, local)
         when (result) {
             is Outcome.Failed -> mutableSourceFailures.update { it + (id to result.failure) }
             is Outcome.Ok -> mutableSourceFailures.update { it - id }
@@ -300,6 +368,11 @@ class PreviewRuntime(
                 // OpenCode list (or any other command) while it starts.
                 if (isPhoneHelper(profile)) {
                     joinPhoneHelper(profile.id)
+                    continue
+                }
+                // This phone's own server may be booting: it joins once it answers, outside the lock.
+                if (waitsForPhoneServer(profile)) {
+                    joinPhoneServer(profile.id)
                     continue
                 }
                 val result = connectForHome(profile.id, makeActive = false)
@@ -339,6 +412,26 @@ class PreviewRuntime(
         }
     }
 
+    private val joiningServers = mutableSetOf<ProfileId>()
+
+    /** Connects this phone's own server as a list source once it answers; the wait holds no lock. */
+    private fun joinPhoneServer(id: ProfileId) {
+        if (!synchronized(joiningServers) { joiningServers.add(id) }) return
+        scope.launch {
+            try {
+                connectCommand(id, makeActive = false) { turn ->
+                    if (id !in listings && listSourceShown(id)) {
+                        connectForHome(id, makeActive = false, local = turn.local)
+                        rebuildFeed()
+                    }
+                    Unit.ok()
+                }
+            } finally {
+                synchronized(joiningServers) { joiningServers.remove(id) }
+            }
+        }
+    }
+
     /**
      * Cold start: with a phone agent installed, the "Phone agents" source is saved and joins the list on its own,
      * with no visit to the Agents page. Never raises a failure: the OpenCode list shows either way.
@@ -365,27 +458,33 @@ class PreviewRuntime(
         }
         // The choice is saved. A server that does not answer is recorded on its own row (sourceFailures); it is not a
         // failure to change the list, so turning it on or off here never raises the sheet's error.
-        if (shown) connectForHome(id, makeActive = false)
+        if (shown) {
+            val loaded = profiles.profile(id)
+            if (loaded != null && waitsForPhoneServer(loaded)) joinPhoneServer(id)
+            else connectForHome(id, makeActive = false)
+        }
         rebuildFeed()
         Unit.ok()
     }
 
-    internal suspend fun retryListSource(id: ProfileId): Outcome<Unit> = command {
-        if (!listSourceShown(id)) return@command Failure.Refused(RefusalReason.StaleScope).failed()
-        connectForHome(id, makeActive = id == profiles.activeId.value)
-    }
+    /** The home's Try again (and its quiet retries): supersedes an attempt for [id] still waiting for the phone. */
+    internal suspend fun retryListSource(id: ProfileId): Outcome<Unit> =
+        connectCommand(id, makeActive = id == profiles.activeId.value) { turn ->
+            if (!listSourceShown(id)) Failure.Refused(RefusalReason.StaleScope).failed()
+            else connectForHome(id, makeActive = turn.activate && id == profiles.activeId.value, local = turn.local)
+        }
 
     internal suspend fun connectWatched(id: ProfileId, expected: StoredProfile): Outcome<Unit> =
-        command {
-            if (profiles.profile(id)?.profile != expected)
-                return@command Failure.Refused(RefusalReason.StaleScope).failed()
-            connectForHome(id)
+        connectCommand(id, makeActive = true) { turn ->
+            if (profiles.profile(id)?.profile != expected) Failure.Refused(RefusalReason.StaleScope).failed()
+            else connectForHome(id, makeActive = turn.activate, local = turn.local)
         }
 
     /**
      * Runtime migration retires only local transports; saved rows, secrets and queues stay intact.
      */
     internal suspend fun disconnectForRuntimeSwitch(ids: Set<ProfileId>): Outcome<Unit> = command {
+        localWaits.cancel(ids)
         for (id in ids) {
             registry.close(id)
             eventJobs.remove(id)?.cancel()
@@ -399,6 +498,7 @@ class PreviewRuntime(
         id: ProfileId,
         recoverDrafts: Boolean = false,
         makeActive: Boolean = true,
+        local: io.github.eslamasabry.oc.engine.runtime.server.LocalServerWait? = null,
     ): Outcome<Unit> {
         val loaded =
             profiles.profile(id)
@@ -452,7 +552,9 @@ class PreviewRuntime(
             rebuildFeed()
         }
         // Phase 0: This phone's own server may still be booting (right after setup or an app start). Wait for it
-        // to answer before the first connection instead of being refused.
+        // to answer before the first connection instead of being refused. The wait ran before the lock
+        // (connectCommand, [local]); waiting here, in the lock, is left only for a profile edited into this phone's
+        // server between that wait and the lock.
         if (
             !loaded.profile.usesAgentSocket &&
                 io.github.eslamasabry.oc.engine.runtime.switching.ManagedLocalServer.isBuiltin(
@@ -460,10 +562,8 @@ class PreviewRuntime(
                 )
         ) {
             val gate = localGates.gate
-            if (
-                gate != null &&
-                    gate(id) == io.github.eslamasabry.oc.engine.runtime.server.LocalServerWait.NotAnswering
-            ) {
+            val waited = local ?: gate?.invoke(id)
+            if (waited == io.github.eslamasabry.oc.engine.runtime.server.LocalServerWait.NotAnswering) {
                 return Failure.Runtime(RuntimeProblem.ServerStartUnavailable)
                     .failed()
                     .atStage(ConnectionStage.OpenGateway)
@@ -1026,7 +1126,13 @@ anySourceLoaded = true
         registry.live.value[ref.profileId]?.session?.reads?.prefetch(ref.sessionId)
     }
 
-    override suspend fun disconnect(id: ProfileId): Outcome<Unit> = command {
+    override suspend fun disconnect(id: ProfileId): Outcome<Unit> {
+        // A waiting attempt for this server ends at once, and so does its wait (Disconnect, the person's Stop).
+        localWaits.cancel(listOf(id))
+        return disconnectNow(id)
+    }
+
+    private suspend fun disconnectNow(id: ProfileId): Outcome<Unit> = command {
         registry.close(id)
         eventJobs.remove(id)?.cancel()
         refreshJobs.remove(id)?.cancel()
@@ -1222,6 +1328,7 @@ anySourceLoaded = true
                     if (swept is Outcome.Failed) return@command swept
                 }
             }
+            localWaits.cancel(listOf(id))
             registry.close(id)
             eventJobs.remove(id)?.cancel()
             listings.remove(id)

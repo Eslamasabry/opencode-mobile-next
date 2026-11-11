@@ -1655,7 +1655,9 @@ internal constructor(
                 val password = (profiles.secret(id) as? Outcome.Ok)?.value.orEmpty()
                 if (password.isEmpty()) ProbeAnswer.NoAnswer else port.probe(password)
             },
-            restart = { id -> startNow(id) is Outcome.Ok },
+            // The wait runs outside the connection lock and a newer command may cancel it (PreviewRuntime's
+            // LocalServerWaits); a restart once begun still finishes, so the server is never left half-started.
+            restart = { id -> withContext(kotlinx.coroutines.NonCancellable) { startNow(id) is Outcome.Ok } },
             clock = clock,
             mayWait = { id ->
                 id.raw !in closedProfiles &&
