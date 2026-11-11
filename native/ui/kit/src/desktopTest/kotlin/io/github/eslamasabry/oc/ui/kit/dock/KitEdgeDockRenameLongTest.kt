@@ -91,10 +91,11 @@ class KitEdgeDockRenameLongTest {
 
     @Test
     fun `dock rename - with room for one ring the swell stays above the keyboard and the strip keeps another ring and the plus`() {
-        val keyboard = 48f + 380f
+        // The keyboard and the bar leave a span of 291 dp: room for one ring in the column.
+        val bottom = 600f
         for (side in KitDockSide.entries) {
-            rename(side, bottom = keyboard + 130f) { _, a, b, field, ui ->
-                val areaBottom = height - (keyboard + 130f)
+            rename(side, bottom = bottom) { _, a, b, field, ui ->
+                val areaBottom = height - bottom
                 assertTrue(b.top >= top - .5f && b.bottom <= areaBottom + .5f, "$side: the swell $b stays inside the area $top..$areaBottom")
                 inside("$side: the field", field, b)
                 var others = 0
