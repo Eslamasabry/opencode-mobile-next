@@ -29,7 +29,10 @@ public enum class StepState {
     Stopped,
     NotRun,
 
-    /** The person refused it at the permission card: a choice, not a failure (Dart `KitToolStatus.declined`). */
+    /**
+     * The person refused it at the permission card: a choice, not a failure (Dart `KitToolStatus.declined`). A turn that
+     * ends on it is neither failed nor stopped (Flutter `_WorkGroup._endedFailed`): its row says "You declined this".
+     */
     Declined,
 }
 
@@ -150,7 +153,6 @@ private fun work(
             waiting -> WorkLineState.WaitingForYou
             now != null && newest && busy -> WorkLineState.Running
             stopped -> WorkLineState.Stopped
-            steps.last().state == StepState.Declined && !answeredAfterLastStep(turn) -> WorkLineState.Stopped
             steps.last().state == StepState.Failed && !answeredAfterLastStep(turn) ->
                 WorkLineState.EndedFailed
             else -> WorkLineState.Done

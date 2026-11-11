@@ -11,8 +11,14 @@ import io.github.eslamasabry.oc.core.model.transcript.ToolStatus
 import io.github.eslamasabry.oc.engine.transcript.ledger.StepState
 import io.github.eslamasabry.oc.engine.transcript.ledger.WorkLineState
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.isDeclinedToolError
-import io.github.eslamasabry.oc.feature.chat.presentation.PlainMarkdown
+import io.github.eslamasabry.oc.core.common.text.PlainMarkdown
+import io.github.eslamasabry.oc.feature.chat.presentation.StoppedSteps
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsPresenter
+import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestCardRules
+import io.github.eslamasabry.oc.feature.chat.ui.shownStepDurationMs
+import io.github.eslamasabry.oc.engine.requests.ask.AskTarget
+import io.github.eslamasabry.oc.engine.requests.ask.AskVerb
+import io.github.eslamasabry.oc.engine.requests.ask.AskView
 import io.github.eslamasabry.oc.feature.chat.presentation.timelineEntries
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeedKeeper
 import kotlin.test.Test
@@ -21,6 +27,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Instant
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.serialization.json.JsonObject
@@ -79,6 +86,41 @@ class W4WordsTest {
         assertEquals(StepState.Declined, work.steps.single().state)
         assertEquals(0, work.counts.ran)
         assertTrue(work.state != WorkLineState.EndedFailed, "state was ${work.state}")
+    }
+
+    @Test
+    fun `W4 gate a turn that ends on the person's refusal is neither failed nor stopped, in both protocols' words`() {
+        for (refusal in listOf("The user declined this tool call", "The user rejected permission to use this specific tool call.")) {
+            val k = TurnFeedKeeper(sid)
+            k.history(listOf(userMessage("count words"), reply(tool(ToolStatus.Error, "bash", refusal, mapOf("command" to "wc -w a.txt")))))
+            val work = assertNotNull(TurnFactsPresenter(FixedClock).present(k.feed.value, 60_000).work["m1"])
+            assertEquals(StepState.Declined, work.steps.single().state, refusal)
+            // The 48 s it shows on the server was the wait for the answer: the row says no time.
+            assertEquals(null, shownStepDurationMs(work.steps.single().state, work.steps.single().durationMs, 1_000, 60_000))
+            assertEquals(WorkLineState.Done, work.state, refusal)
+            assertTrue(StoppedSteps.endedOnRefusal(work), refusal)
+        }
+    }
+
+    @Test
+    fun `W4 gate a real failure or no work is not a refusal end`() {
+        val k = TurnFeedKeeper(sid)
+        k.history(listOf(userMessage("go"), reply(tool(ToolStatus.Error, "bash", "make: *** No rule", mapOf("command" to "make")))))
+        val failed = assertNotNull(TurnFactsPresenter(FixedClock).present(k.feed.value, 60_000).work["m1"])
+        assertEquals(false, StoppedSteps.endedOnRefusal(failed))
+        assertEquals(false, StoppedSteps.endedOnRefusal(null))
+    }
+
+    @Test
+    fun `W4 gate the permission Details box names the folder or the pattern, never the server's dot`() {
+        val folder = AskView(AskVerb.ReadFolder, targets = persistentListOf(AskTarget("neon-breaker")))
+        assertEquals("neon-breaker", RequestCardRules.detailsText(folder, "."))
+        assertEquals(null, RequestCardRules.detailsText(AskView(AskVerb.ReadFolder), "."))
+        assertEquals(false, RequestCardRules.detailsSaysAllMatching(AskView(AskVerb.ReadFolder)))
+        val search = AskView(AskVerb.Search, targets = persistentListOf(AskTarget("TODO")))
+        assertEquals("TODO", RequestCardRules.detailsText(search, "."))
+        val run = AskView(AskVerb.Run, targets = persistentListOf(AskTarget("npm test")))
+        assertEquals("npm test", RequestCardRules.detailsText(run, "npm test"))
     }
 
     @Test

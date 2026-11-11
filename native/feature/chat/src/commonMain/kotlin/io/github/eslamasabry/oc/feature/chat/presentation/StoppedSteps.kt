@@ -42,6 +42,14 @@ public object StoppedSteps {
         return settled.copy(counts = WorkLineRules.split(settled).done)
     }
 
+    /**
+     * The turn ended on a step the person declined, not on a Stop they pressed (Flutter `message_view.dart`
+     * `declinedEnd`). The server ends such a turn as aborted, but it is their answer to a request: the turn says no
+     * "Stopped" of its own, as the home row does not; the step's row says "You declined this".
+     */
+    public fun endedOnRefusal(work: TurnWork?): Boolean =
+        work != null && work.state != WorkLineState.Stopped && work.steps.lastOrNull()?.state == StepState.Declined
+
     /** The commands a turn really ran: a command the stop ended never ran to an end. */
     public fun ranCommands(commands: List<CommandFact>, work: TurnWork?): List<CommandFact> {
         if (work == null) return commands
