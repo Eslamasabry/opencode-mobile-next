@@ -45,6 +45,7 @@ import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.foundation.relocation.bringIntoViewResponder
@@ -561,6 +562,9 @@ public fun KitScreen(
                                 floats -> Modifier.zIndex(1f).onSizeChanged { barPx = it.height }
                                     .then(if (barFace == null) Modifier.background(LocalKitColors.current.ground.copy(alpha = 1f)) else Modifier)
                                     .then(if (floatingBar?.scrollsElsewhere == true) Modifier.kitMaxWidth(cap) else Modifier)
+                                    // A touch on the floating chrome (its title, the gaps beside the pills) is the chrome's:
+                                    // it never reaches a row that has scrolled under it.
+                                    .kitTouchSink()
                                 runs -> Modifier.zIndex(1f).onSizeChanged { barPx = it.height }
                                     .then(if (barFace != null) kitLiquidWordsHost(LiquidRole.Bar, under) else Modifier.background(LocalKitColors.current.ground.copy(alpha = 1f)))
                                 barFace != null -> kitLiquidWordsHost(LiquidRole.Bar, frost)
@@ -947,6 +951,17 @@ private fun Panes(
         }
     }
 }
+
+/**
+ * Takes every touch inside this box, so nothing that lies under it (a row scrolled under the floating bar) is hit; the
+ * box's own controls still get theirs. Hit testing stops at the first sibling that has pointer input under the finger.
+ */
+private fun Modifier.kitTouchSink(): Modifier =
+    pointerInput(Unit) {
+        awaitPointerEventScope {
+            while (true) awaitPointerEvent(androidx.compose.ui.input.pointer.PointerEventPass.Final)
+        }
+    }
 
 /** How far a body has run up under its chrome, 0–1 (eases the status edge in and out with the run). */
 private fun runShare(runPx: Int, fullPx: Int): Float = if (fullPx > 0) (runPx.toFloat() / fullPx).coerceIn(0f, 1f) else 0f

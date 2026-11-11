@@ -3,6 +3,7 @@
 package io.github.eslamasabry.oc.ui.kit.frame
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,6 +42,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performTouchInput
@@ -119,6 +121,7 @@ class KitFloatingBarTest {
         val fab: Boolean = false,
         val statusPart: Boolean = false,
         val field: Boolean = false,
+        val clickRows: Boolean = false,
     )
 
     /** What the test reads back from a scene. */
@@ -126,6 +129,7 @@ class KitFloatingBarTest {
         var ground: Color = Color.Unspecified
         var budget: KitLiquidBudget? = null
         var scroll: ScrollState? = null
+        val clicks = mutableListOf<Int>()
         val focus = FocusRequester()
     }
 
@@ -185,7 +189,7 @@ class KitFloatingBarTest {
                                 state = list,
                                 modifier = Modifier.fillMaxSize().then(if (home) Modifier.kitGlassSource(source) else Modifier).testTag("list"),
                             ) {
-                                items(ROWS) { i -> BrightRow(i) }
+                                items(ROWS) { i -> BrightRow(i, if (extras.clickRows) ({ seen.clicks += i }) else null) }
                             }
                         }
                         if (extras.fab)
@@ -202,8 +206,12 @@ class KitFloatingBarTest {
     }
 
     @Composable
-    private fun BrightRow(i: Int) {
-        Box(Modifier.fillMaxWidth().height(ROW_DP.dp).padding(bottom = GAP_DP.dp).background(Color.White).testTag("row-$i"))
+    private fun BrightRow(i: Int, onClick: (() -> Unit)? = null) {
+        Box(
+            Modifier.fillMaxWidth().height(ROW_DP.dp).padding(bottom = GAP_DP.dp).background(Color.White)
+                .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+                .testTag("row-$i")
+        )
     }
 
     private class Shot(val image: PixelMap, val bounds: Map<String, DpRect?>)
@@ -447,6 +455,30 @@ class KitFloatingBarTest {
         val bar = s.bounds["bar"]!!
         assertTrue(field.top >= bar.bottom - .5.dp, "the focused field $field rests below the bar $bar")
         assertTrue(field.bottom.value <= H, "the focused field $field stays in the window")
+    }
+
+    @Test
+    fun `B-KIT-FLOAT-012 a tap on the floating chrome never reaches a row scrolled under it`() {
+        shot(
+            Page.Home,
+            floating = true,
+            extras = Extras(clickRows = true),
+            act = { seen ->
+                drag(-120f)
+                val capsule = onNodeWithTag("kit-liquid-bar", useUnmergedTree = true).getBoundsInRoot()
+                val pills = onNodeWithTag("pills", useUnmergedTree = true).getBoundsInRoot()
+                onNodeWithTag("scene").performTouchInput {
+                    // The capsule's middle (the title's empty end) and the gutter beside the pills: rows lie under both.
+                    click(Offset(capsule.right.toPx() - 24.dp.toPx(), ((capsule.top + capsule.bottom) / 2).toPx()))
+                    click(Offset(4.dp.toPx(), ((pills.top + pills.bottom) / 2).toPx()))
+                }
+                waitForIdle()
+                assertEquals(emptyList(), seen.clicks.toList(), "no row under the chrome was tapped")
+                onNodeWithTag("scene").performTouchInput { click(Offset(width / 2f, height * 0.75f)) }
+                waitForIdle()
+                assertEquals(1, seen.clicks.size, "a row below the chrome still takes its tap")
+            },
+        )
     }
 
     @Test
