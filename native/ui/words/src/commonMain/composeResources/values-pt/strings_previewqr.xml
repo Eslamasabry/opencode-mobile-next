@@ -3,7 +3,7 @@
 <resources>
     <string name="previewQrLeaveTitle">Abrir este link no navegador?</string>
     <string name="previewQrPortLabel">Número da porta</string>
-    <string name="previewQrPortHelp">Ou digite a porta em que um servidor de desenvolvimento está escutando.</string>
+    <string name="previewQrPortHelp">Ou digite o número da porta de um app em execução.</string>
     <string name="previewQrPortInvalid">Digite uma porta de 1 a 65535.</string>
     <string name="previewQrPortOpen">Abrir a porta</string>
     <string name="previewQrPairFilled">Preenchido a partir do código de pareamento. Confira e salve.</string>

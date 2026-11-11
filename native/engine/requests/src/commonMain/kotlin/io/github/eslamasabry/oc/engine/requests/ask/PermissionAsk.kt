@@ -12,7 +12,7 @@ import kotlin.math.roundToInt
 
 /** What the call asks to do (plan 09 §5.2). `:ui:words` has one question per value; nothing here is copy. */
 public enum class AskVerb {
-    Run, Edit, Create, Delete, Read, Fetch, WebSearch, Search, Task, Skill, Mode,
+    Run, Edit, Create, Delete, Read, ReadFolder, Fetch, WebSearch, Search, Task, Skill, Mode,
     OutsideWrite, OutsideRead, OutsideRun, Outside, DoomLoop,
 
     /** Any other tool: the words name it in plain words from [AskView.tool], never the id itself. */
@@ -58,7 +58,7 @@ public object PermissionAsk {
     private const val COMMAND_IN_TITLE = 32
     private val shellActions = setOf("bash", "shell")
     private val editActions = setOf("edit", "write", "multiedit", "patch", "apply_patch")
-    private val filePermissions = setOf("edit", "write", "read", "multiedit", "patch", "external_directory")
+    private val filePermissions = setOf("edit", "write", "read", "list", "ls", "multiedit", "patch", "external_directory")
     private val fileMetadataKeys = listOf("filePath", "filepath", "file_path", "path", "file")
     private val diffMetadataKeys = listOf("diff", "patch", "preview")
 
@@ -78,8 +78,19 @@ public object PermissionAsk {
         if (action in shellActions) return shell(request, project)
         val paths = editPaths(request)
         if (paths.isNotEmpty()) return edit(request, paths, directory)
-        if (action == "read") {
+        if (action == "read" || action in listActions) {
             val read = filePath(request)
+            // A listing of the chat's own folder names "." (or the folder's path): that is the folder, never a file
+            // called "."; it is named by the project's name.
+            if (read != null && isOwnFolder(read, directory)) return ownFolder(project)
+            // A listing, or a path that ends in "/.", reads a folder: "Read this folder?" with the folder under it.
+            val folder = read?.let(::folderOf) ?: read?.takeIf { action in listActions }
+            if (folder != null) {
+                return AskView(
+                    AskVerb.ReadFolder,
+                    targets = persistentListOf(AskTarget(projectPath(folder, directory), file = true)),
+                )
+            }
             if (read != null) {
                 return AskView(
                     AskVerb.Read,
@@ -89,13 +100,46 @@ public object PermissionAsk {
             }
         }
         val verb = verbOf(action, toolName)
-        val shown = target?.takeIf { it.isNotBlank() } ?: summary(request)
+        if (verb == AskVerb.ReadFolder) return ownFolder(project)
+        val shown =
+            target?.takeIf { it.isNotBlank() }
+                ?: when (verb) {
+                    // A search names what it looks for; its folder ("." or the project's path) is not the subject.
+                    AskVerb.Search -> request.metadata.string("pattern")?.takeIf { it.isNotBlank() } ?: firstPattern(request)
+                    // The question says it all; its only pattern is the id of the tool that keeps failing.
+                    AskVerb.DoomLoop -> null
+                    else -> summary(request)
+                }
         return AskView(
             verb,
             tool = request.permission.takeIf { verb == AskVerb.Use },
-            targets = listOfNotNull(shown?.let { AskTarget(it, file = verb in outsideVerbs) }).toImmutableList(),
+            targets =
+                listOfNotNull(
+                    shown?.takeUnless { isOwnFolder(it, directory) }?.let { AskTarget(it, file = verb in outsideVerbs) }
+                ).toImmutableList(),
         )
     }
+
+    private val listActions = setOf("list", "ls")
+
+    /** "Read this folder?" about the conversation's own folder, named by its project (no target when it has none). */
+    private fun ownFolder(project: String?): AskView =
+        AskView(
+            AskVerb.ReadFolder,
+            targets = listOfNotNull(project?.trim()?.takeIf { it.isNotEmpty() }?.let { AskTarget(it) }).toImmutableList(),
+        )
+
+    /** "." and its spellings ("./", "<folder>/."), or the folder's own path: the folder the conversation works in. */
+    private fun isOwnFolder(path: String, directory: String?): Boolean {
+        val raw = path.trim()
+        if (raw == "." || raw == "./") return true
+        val root = directory?.trim()?.trimEnd('/')?.takeIf { it.isNotEmpty() } ?: return false
+        return (folderOf(raw) ?: raw.trimEnd('/')) == root
+    }
+
+    /** A path that names a folder by its trailing "/." ("src/."): the folder, else null. */
+    private fun folderOf(path: String): String? =
+        path.trim().takeIf { it.endsWith("/.") }?.dropLast(2)?.trimEnd('/')?.takeIf { it.isNotEmpty() }
 
     /** The command, file or patterns in one line (lists, sheets): an edit of several files names every one. */
     public fun summary(request: PermissionRequest): String? {
@@ -120,6 +164,7 @@ public object PermissionAsk {
             "webfetch" -> AskVerb.Fetch
             "websearch" -> AskVerb.WebSearch
             "grep", "glob" -> AskVerb.Search
+            "list", "ls" -> AskVerb.ReadFolder
             "task" -> AskVerb.Task
             "skill" -> AskVerb.Skill
             "mode" -> AskVerb.Mode

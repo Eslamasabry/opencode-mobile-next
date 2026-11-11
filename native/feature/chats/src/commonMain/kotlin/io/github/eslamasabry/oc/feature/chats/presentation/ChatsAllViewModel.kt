@@ -823,6 +823,7 @@ public class ChatsAllViewModel(
                 when (val done = server.gateway.deleteSession(id)) {
                     is Outcome.Ok -> {
                         removeSession(server.profile, id)
+                        connections.left(ConversationRef(server.profile, id))
                         model.update { cur ->
                             val profile = server.profile
                             val src = cur.sources[profile]
@@ -871,7 +872,10 @@ public class ChatsAllViewModel(
                 val ops = server.operations ?: return@forEach
                 val session = AllConversationsRules.find(model.value, k)?.second ?: return@forEach
                 when (val done = ops.archiveSession(session.id)) {
-                    is Outcome.Ok -> model.update { it.copy(archivedNow = it.archivedNow + k) }
+                    is Outcome.Ok -> {
+                        connections.left(ConversationRef(server.profile, session.id))
+                        model.update { it.copy(archivedNow = it.archivedNow + k) }
+                    }
                     is Outcome.Failed ->
                         model.update {
                             it.copy(problem = AllProblem(AllProblemKind.Archive, done.failure))

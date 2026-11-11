@@ -14,4 +14,5 @@
     <string name="reviewSendBackFailed">无法把你的备注放进消息。请重试。</string>
     <string name="reviewProjectNotGitTitle">不是 Git 项目</string>
     <string name="reviewProjectNotGitBody">只有用 Git 管理的项目才能列出更改。请在项目的 Git 页面开始跟踪它，之后即可在这里看到更改。</string>
+    <string name="reviewProjectOpenGit">打开 Git 页面</string>
 </resources>

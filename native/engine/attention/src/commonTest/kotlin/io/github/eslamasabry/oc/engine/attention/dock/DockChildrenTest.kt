@@ -66,13 +66,13 @@ class DockChildrenTest {
     }
 
     @Test
-    fun `a child alert pulses the parent and untucks`() {
+    fun `a child alert pulses the parent and the dock stays tucked`() {
         val m = model(child(c1), DockEvent.RunStarted(a), DockEvent.RunStarted(b), DockEvent.RunStarted(c1), DockEvent.Tuck)
         assertEquals(0, m.ui.entry(a).pulse)
         val alerted = m.reduce(DockEvent.RequestOpened(c1, "r"))
         assertEquals(1, alerted.ui.entry(a).pulse)
         assertEquals(1, alerted.ui.entry(a).children.single().pulse)
-        assertEquals(DockPresence.Out, alerted.ui.presence)
+        assertEquals(DockPresence.Nub, alerted.ui.presence, "the nub's dot shows it; nothing opens")
         assertEquals(DockPresence.Nub, m.ui.presence)
     }
 
@@ -84,7 +84,7 @@ class DockChildrenTest {
         assertEquals(DockState.Working, ui.entry(a).state)
         assertEquals(1, ui.liveCount)
         assertEquals(DockPresence.Nub, ui.presence)
-        assertEquals(DockPresence.Out, model(child(c1), DockEvent.RunStarted(c1), DockEvent.RunStarted(b)).ui.presence)
+        assertEquals(DockPresence.Nub, model(child(c1), DockEvent.RunStarted(c1), DockEvent.RunStarted(b)).ui.presence, "never out by itself")
         // The child stops: the child leaves, the parent stays as a quiet recent ring.
         val quiet = model(child(c1), DockEvent.RunStarted(c1), DockEvent.RunEnded(c1, DockRunEnd.Stopped)).ui
         assertEquals(listOf(a), quiet.entries.map { it.ref })

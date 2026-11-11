@@ -157,7 +157,8 @@ internal fun ToolStepBody(step: TurnStep, reply: ReplyActions?) {
         TaskBody(step, reply)
         return
     }
-    if (kind == ToolKind.Card || step.state == StepState.NotRun || step.state == StepState.Stopped)
+    // A declined call has nothing to explain: the row already says so (Flutter `tool_card_body.dart`).
+    if (kind == ToolKind.Card || step.state == StepState.NotRun || step.state == StepState.Stopped || step.state == StepState.Declined)
         return
     if (output.errorText != null) {
         if (kind == ToolKind.Generic)

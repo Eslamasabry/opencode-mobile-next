@@ -96,10 +96,11 @@ public class RemoteTerminals(
         }
     }
 
-    public suspend fun create(): Unit = lane.withLock {
+    /** [title]: the name the person sees ("Terminal 2", Flutter's numbering); null leaves it to the server's own. */
+    public suspend fun create(title: String? = null): Unit = lane.withLock {
         val live = resolve() ?: return@withLock
         local.update { it.copy(working = true, failure = null) }
-        when (val created = live.gateway.createTerminal()) {
+        when (val created = live.gateway.createTerminal(title)) {
             is Outcome.Failed -> fail(created.failure)
             is Outcome.Ok -> {
                 if (!live.current()) {

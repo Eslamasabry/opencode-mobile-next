@@ -21,6 +21,8 @@ public data class ServerEditorRecord(
     /** Opaque, memory-only identity of the exact stored edit baseline; contains no credential. */
     val editToken: Any? = null,
     val reconnectOnSave: Boolean = false,
+    /** This phone's own server (the OpenCode the app runs here): its address, sign-in and HTTPS advice are the app's. */
+    val ownPhone: Boolean = false,
 )
 
 /**
@@ -64,6 +66,20 @@ public enum class EditorTailscaleState {
     Installed,
     Missing,
     Unavailable,
+}
+
+/**
+ * W4 (owner rule: no developer text): the phone's own server is edited by its name only. Its address
+ * (`http://127.0.0.1:…`), the HTTPS advice, the password the app set when it started it and the `opencode` user name are
+ * the app's own, so the page leaves them out; the password field comes back only when the server asks for it again.
+ * NV: Flutter's editor shows every field for this server too.
+ */
+public object ServerEditorRules {
+    public fun showsAddress(record: ServerEditorRecord?): Boolean = record == null || !record.ownPhone
+
+    public fun showsPassword(record: ServerEditorRecord?): Boolean = record == null || !record.ownPhone || record.needsSecret
+
+    public fun showsUsername(record: ServerEditorRecord?): Boolean = record == null || !record.ownPhone
 }
 
 public interface ServerEditorPort {

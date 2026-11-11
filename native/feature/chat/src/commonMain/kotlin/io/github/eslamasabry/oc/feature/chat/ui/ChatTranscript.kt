@@ -31,6 +31,7 @@ import io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind
 import io.github.eslamasabry.oc.engine.agents.errors.AgentErrorText
 import io.github.eslamasabry.oc.feature.chat.presentation.ErrorFix
 import io.github.eslamasabry.oc.feature.chat.presentation.ErrorRecovery
+import io.github.eslamasabry.oc.feature.chat.presentation.StoppedSteps
 import io.github.eslamasabry.oc.engine.transcript.state.BlockRow
 import io.github.eslamasabry.oc.engine.transcript.state.FooterRow
 import io.github.eslamasabry.oc.engine.transcript.state.NoticeKind
@@ -1126,7 +1127,9 @@ private fun ChatRow(
                 } else {
                     // F: message_view.dart:611-621: a finished turn names the files it changed, each one tap from
                     // its contents, and the project's Files under them, between the reply and its footer.
-                    if (!row.stopped)
+                    // W4: a turn that ended on the person's own refusal is not a stopped turn (Flutter `declinedEnd`).
+                    val stopped = row.stopped && !StoppedSteps.endedOnRefusal(facts.work[row.turnId])
+                    if (!stopped)
                         TurnChangedFiles(facts.results[row.turnId]?.files.orEmpty(), onOpenFile, onAllFiles)
                     MessageDetailsTip(eligible = teachDetails) {
                         KitReplyFooter(
@@ -1149,7 +1152,7 @@ private fun ChatRow(
                             val note = Modifier.testTag("chat-turn-footer-note")
                             val endNote = facts.reading.endNotes[row.turnId]
                             if (row.failed) KitReplyNote(words.footer(true), note)
-                            else if (row.stopped && endNote?.isServerStop != true) KitReplyNote(words.stoppedFooter(), note)
+                            else if (stopped && endNote?.isServerStop != true) KitReplyNote(words.stoppedFooter(), note)
                             endNote?.let { n -> TurnEndNote(n, reply?.let { r -> r.continueLabel?.let { w -> { r.onContinue(w) } } }) }
                             // F: kit_turn.dart:675-721: the newest turn's footer leads with its meta words
                             // (message_view.dart:423-427: the model, when it changed).

@@ -1510,6 +1510,7 @@ chatRequestAskOutsideRead	7667dddc58
 chatRequestAskOutsideRun	a057e0b034
 chatRequestAskOutsideWrite	5cb0ee699b
 chatRequestAskRead	e81121a3e8
+chatRequestAskReadFolder	fbf165fce7
 chatRequestAskReadNamed	a8bc0ceda6
 chatRequestAskRunAnyIn	8d595f8480
 chatRequestAskRunIn	5c6ff8f0ce
@@ -8633,7 +8634,7 @@ previewQrLeaveTitle	58b0449588
 previewQrLinkFilled	9f42a96805
 previewQrPairFilled	1704e74f23
 previewQrPairingCodeLabel	2f177fa6af
-previewQrPortHelp	1bc4122a9b
+previewQrPortHelp	5ef68c1d6b
 previewQrPortInvalid	27727a0a96
 previewQrPortLabel	2f5d4f01c5
 previewQrPortOpen	0fe57141ab
@@ -9401,6 +9402,7 @@ reviewNoDiff	ccd07eaa41
 reviewOneFileUnavailable	96f4106605
 reviewProjectNotGitBody	93e9ff4530
 reviewProjectNotGitTitle	2e0364b4a1
+reviewProjectOpenGit	ce19cb9956
 reviewRevertBackAction	eff7230b72
 reviewRevertFailed	c4e095c1fa
 reviewRevertFileLines	9ee36258da

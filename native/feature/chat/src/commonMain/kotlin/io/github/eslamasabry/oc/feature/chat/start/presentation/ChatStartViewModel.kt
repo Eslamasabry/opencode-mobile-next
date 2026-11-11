@@ -168,16 +168,18 @@ public class ChatStartViewModel(
                         fallback.cancel()
                         if (!current()) return@coroutineScope
                         val git =
-                            when (health?.setupState) {
-                                VersionControlSetupState.Git -> true
-                                VersionControlSetupState.Absent -> false
-                                else ->
-                                    projectFacts?.isGit
-                                        ?: true.takeIf {
-                                            !health?.branch.isNullOrBlank() ||
-                                                rootFiles?.any { it.name == ".git" } == true
-                                        }
-                            }
+                            io.github.eslamasabry.oc.core.model.gitProjectState(
+                                health,
+                                projectFacts?.isGit,
+                                // This folder's own listing says "no Git" only when it is the project's root: a
+                                // subfolder of a repository has no `.git` of its own.
+                                rootFiles?.any { it.name == ".git" }?.takeIf { found ->
+                                    found ||
+                                        projectFacts?.directory?.trimEnd('/')?.let {
+                                            it.isNotEmpty() && it == ownLocation.directory?.trimEnd('/')
+                                        } == true
+                                },
+                            )
                         val branch = health?.branch?.trim().orEmpty()
                         facts.value =
                             bare.copy(

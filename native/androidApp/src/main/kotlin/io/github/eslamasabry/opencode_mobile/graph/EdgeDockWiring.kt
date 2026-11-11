@@ -5,6 +5,8 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
+import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -17,6 +19,7 @@ import io.github.eslamasabry.oc.engine.attention.dock.DockController
 import io.github.eslamasabry.oc.engine.attention.dock.DockEvent
 import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.engine.attention.dock.DockFeed
+import io.github.eslamasabry.oc.engine.attention.dock.DockHomeWatch
 import io.github.eslamasabry.oc.engine.attention.dock.DockKeys
 import io.github.eslamasabry.oc.engine.attention.dock.DockNicknames
 import io.github.eslamasabry.oc.engine.attention.dock.DockPeek
@@ -36,13 +39,35 @@ import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+
+/**
+ * The conversations the person archived or deleted from the conversation lists, told by identity once the server took
+ * it (after the home's Undo window). The server sends the app nothing for an archive, so this is how the dock hears it.
+ */
+@SingleIn(AppScope::class)
+@Inject
+class ConversationsLeft {
+    private val flow = MutableSharedFlow<ConversationRef>(extraBufferCapacity = LEFT_BUFFER)
+    val left: SharedFlow<ConversationRef> = flow.asSharedFlow()
+
+    fun tell(ref: ConversationRef) {
+        flow.tryEmit(ref)
+    }
+
+    private companion object {
+        const val LEFT_BUFFER = 64
+    }
+}
 
 /**
  * The edge dock's data source. Feeds [DockController] from what the app already receives: the neutral gateway event
@@ -68,6 +93,8 @@ class AppEdgeDock(
     private val home: AppChatsHome,
     private val permissionAnswers: HomePermissionAnswerWiring,
     private val navigator: AppNavigator,
+    private val runtime: PreviewRuntime,
+    private val conversationsLeft: ConversationsLeft,
 ) {
     private val main: CoroutineScope = CoroutineScope(appScope.coroutineContext + dispatchers.main)
     private var navigate: (ConversationRef) -> Unit = { navigator.backToChat(it) }
@@ -116,6 +143,16 @@ class AppEdgeDock(
                 permissionAnswers.answer(ref, requestId, allow)
 
             override suspend fun stop(ref: ConversationRef): Outcome<Unit> = stopLikeTheChat(connections.graphFor(ref), ref)
+
+            // The same call the conversation's own "Rename conversation" makes, then the home list is read again so
+            // the home, the chat header and the dock show one title.
+            override suspend fun renameConversation(ref: ConversationRef, title: String): Outcome<Unit> {
+                val graph = connections.graphFor(ref) ?: return Outcome.Failed(Failure.Unavailable(FeatureId("dockRename")))
+                return graph.session.server.renameSession(ref.sessionId, title).also {
+                    // Not awaited: the ring shows the new title at once; the list read can take a while.
+                    if (it is Outcome.Ok) main.launch { runtime.refresh() }
+                }
+            }
         }
     private val controller =
         DockController(
@@ -153,6 +190,21 @@ class AppEdgeDock(
         main.launch {
             // The conversation on screen, however it was reached (a list row, a notification, the dock).
             navigator.top.map { (it as? ChatRoute)?.ref }.distinctUntilChanged().collect { conversationShown(it) }
+        }
+        main.launch {
+            // An archive or delete the home or All conversations committed (after the Undo window, so an undone one
+            // never leaves): its ring goes at once.
+            conversationsLeft.left.collect { controller.feed(DockEvent.Left(it)) }
+        }
+        main.launch {
+            // The fallback for an archive made elsewhere (the conversation's own menu, another device), which no event
+            // and no list tells the dock: the ring goes when a whole home list stops showing it.
+            val watch = DockHomeWatch()
+            runtime.snapshot.collect { list ->
+                val listed = attached.keys.filter(runtime::listSourceShown).toSet()
+                val roots = list.items.filter { it.parentId == null }.map { it.ref }
+                for (event in watch.events(roots, list.complete && list.acrossProjects && !list.loading, listed)) controller.feed(event)
+            }
         }
         main.launch {
             if (stores.warm() !is Outcome.Ok) return@launch
@@ -195,7 +247,7 @@ class AppEdgeDock(
     /** Navigation reports the conversation on screen (null for none). */
     fun conversationShown(ref: ConversationRef?) = controller.conversationShown(ref)
 
-    fun rename(ref: ConversationRef, name: String?) = controller.rename(ref, name)
+    fun rename(ref: ConversationRef, name: String?, onFailed: () -> Unit = {}) = controller.rename(ref, name, onFailed)
 
     fun dismissSeen(ref: ConversationRef) = controller.dismissSeen(ref)
 
