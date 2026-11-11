@@ -92,7 +92,7 @@ class RealArbTest {
     @Test
     fun `nothing is converted in a language that lacks the template key, and orphans are only Arabic`() {
         for (l in conv.locales.drop(1)) assertTrue(l.convertedKeys().all { it in arbs.first().messages }, l.locale)
-        assertEquals(mapOf("ar" to 1018), conv.locales.filter { it.orphans.isNotEmpty() }.associate { it.locale to it.orphans.size })
+        assertEquals(mapOf("ar" to 1002), conv.locales.filter { it.orphans.isNotEmpty() }.associate { it.locale to it.orphans.size })
     }
 
     @Test
@@ -130,12 +130,12 @@ class RealArbTest {
     }
 
     @Test
-    fun `the hand recipes convert exactly the 38 refused messages, and nothing else is refused`() {
+    fun `the hand recipes convert exactly the 48 refused messages, and nothing else is refused`() {
         val recipes = HandRecipes.read(repo.resolve("native/tools/strings/hand-recipes.tsv"))
         val e = Hand.expand(arbs, recipes)
         val handled = e.converted.flatMap { h -> h.locales.map { "$it:${h.key}" } }.toSet()
         assertEquals(conv.problems.map { "${it.locale}:${it.key}" }.toSet(), handled)
-        assertEquals(38, handled.size)
+        assertEquals(48, handled.size)
         val c = Converter({ routing.featureByKey[e.baseOf[it] ?: it] }).convert(e.arbs)
         assertEquals(emptyList(), c.problems)
         // Accounting still holds in ARB keys: every key is converted (or unused), missing, or an orphan.
@@ -160,8 +160,8 @@ class RealArbTest {
         )
         val text = err.toString(Charsets.UTF_8)
         assertEquals(1, code, text)
-        assertTrue("38 messages cannot be converted" in text, text)
-        assertTrue("runningPhoneName [en,ar]" in text, text)
+        assertTrue("48 messages cannot be converted" in text, text)
+        assertTrue("runningPhoneName [en,ar,es]" in text, text)
         assertFalse(tmp.resolve("out").exists(), "no XML written")
         assertTrue(tmp.resolve("report/unsupported.tsv").exists())
     }
