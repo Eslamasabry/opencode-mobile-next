@@ -58,7 +58,10 @@ private fun contextTypeLabel(type: String): String = when (type) {
 
 /**
  * A row's one line. The model's private reasoning is not what a row says when the entry has words of its own; a change of
- * model reads as the model's name ("Big Pickle"), never its id. (Flutter shows the first part's text as it is.)
+ * model reads as the model's name ("Big Pickle"), never its id. NV (W4, sweep-a P49): Flutter shows the first part's
+ * text as it is (often the reasoning) and an unknown kind by the server's own word; native says "Message" for an
+ * unknown kind and leads with the entry's own words. An entry that holds only reasoning still shows it: this page is
+ * where a person goes to read what the model was given, and opening a row shows every part.
  */
 private fun rowPreview(message: ActiveContextMessage, query: String): String {
     val spoken = message.content.filter { it.kind != ContextContentKind.Reasoning }
