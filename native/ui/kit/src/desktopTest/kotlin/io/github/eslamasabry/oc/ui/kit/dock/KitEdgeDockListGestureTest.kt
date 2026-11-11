@@ -68,7 +68,7 @@ class KitEdgeDockListGestureTest {
             Offset(x, run.state.slotY(i))
         }
 
-    private fun describe(run: Run): String =
+    private fun ComposeUiTest.describe(run: Run): String =
         runOnIdle {
             val b = run.state.body()
             "right=${run.state.onRight} open=${run.state.panelOpen} second=${b.hasSecond} list=${b.secondIsList} " +
