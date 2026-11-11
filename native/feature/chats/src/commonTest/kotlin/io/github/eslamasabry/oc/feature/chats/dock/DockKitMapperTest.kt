@@ -1,0 +1,186 @@
+package io.github.eslamasabry.oc.feature.chats.dock
+
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.common.ids.SessionId
+import io.github.eslamasabry.oc.engine.attention.dock.DockChild
+import io.github.eslamasabry.oc.engine.attention.dock.DockEntry
+import io.github.eslamasabry.oc.engine.attention.dock.DockHidden
+import io.github.eslamasabry.oc.engine.attention.dock.DockPeek
+import io.github.eslamasabry.oc.engine.attention.dock.DockPeekRow
+import io.github.eslamasabry.oc.engine.attention.dock.DockPlacement
+import io.github.eslamasabry.oc.engine.attention.dock.DockPresence
+import io.github.eslamasabry.oc.engine.attention.dock.DockRequestKind
+import io.github.eslamasabry.oc.engine.attention.dock.DockRequestRef
+import io.github.eslamasabry.oc.engine.attention.dock.DockSide
+import io.github.eslamasabry.oc.engine.attention.dock.DockState
+import io.github.eslamasabry.oc.engine.attention.dock.DockUi
+import io.github.eslamasabry.oc.ui.kit.dock.KitDockLine
+import io.github.eslamasabry.oc.ui.kit.dock.KitDockLineRole
+import io.github.eslamasabry.oc.ui.kit.dock.KitDockRingState
+import io.github.eslamasabry.oc.ui.kit.dock.KitDockSide
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlinx.collections.immutable.persistentListOf
+
+class DockKitMapperTest {
+    private val p = ProfileId("p1")
+
+    private fun ref(id: String, profile: ProfileId = p) = ConversationRef(profile, SessionId(id))
+
+    private fun entry(id: String, state: DockState = DockState.Working, title: String? = "T-$id") =
+        DockEntry(ref = ref(id), title = title, nickname = null, agent = null, state = state, pulse = 0)
+
+    private fun ui(vararg entries: DockEntry, presence: DockPresence = DockPresence.Out) =
+        DockUi(entries = persistentListOf(*entries), presence = presence)
+
+    @Test
+    fun every_engine_state_maps_to_the_same_kit_state() {
+        assertEquals(KitDockRingState.WorkingWithTasks(3, 7), DockKitMapper.state(DockState.WorkingWithTasks(3, 7)))
+        assertEquals(KitDockRingState.Working, DockKitMapper.state(DockState.Working))
+        assertEquals(KitDockRingState.Thinking, DockKitMapper.state(DockState.Thinking))
+        assertEquals(KitDockRingState.NeedsYou, DockKitMapper.state(DockState.NeedsYou))
+        assertEquals(KitDockRingState.Finished, DockKitMapper.state(DockState.Finished))
+        assertEquals(KitDockRingState.Failed, DockKitMapper.state(DockState.Failed))
+        assertEquals(KitDockRingState.Idle, DockKitMapper.state(DockState.Idle))
+    }
+
+    @Test
+    fun a_hidden_or_switched_off_dock_is_an_empty_model() {
+        assertTrue(DockKitMapper.map(ui(entry("a"), presence = DockPresence.Hidden), emptyMap(), "Untitled").model.rings.isEmpty())
+        assertTrue(DockKitMapper.map(ui(entry("a")), emptyMap(), "Untitled", shown = false).model.rings.isEmpty())
+        assertTrue(DockKitMapper.map(DockUi(), emptyMap(), "Untitled").model.rings.isEmpty())
+    }
+
+    @Test
+    fun rings_keep_order_names_marks_pins_and_their_keys_lead_back() {
+        val named = entry("a").copy(nickname = "Bank API", agent = "claude-code", pinned = true, pulse = 2)
+        val frame = DockKitMapper.map(ui(named, entry("b", title = null)), emptyMap(), "Untitled")
+        val rings = frame.model.rings
+        assertEquals(listOf("Bank API", "Untitled"), rings.map { it.name })
+        assertEquals("claude-code", rings[0].markId)
+        assertNull(rings[1].markId)
+        assertTrue(rings[0].pinned)
+        assertEquals(2, rings[0].pulse)
+        assertEquals(ref("a"), frame.refs[rings[0].key])
+        assertEquals(ref("b"), frame.refs[rings[1].key])
+    }
+
+    @Test
+    fun keys_of_different_profiles_never_collide() {
+        assertNotEquals(
+            DockKitMapper.key(ConversationRef(ProfileId("a/b"), SessionId("c"))),
+            DockKitMapper.key(ConversationRef(ProfileId("a"), SessionId("b/c"))),
+        )
+    }
+
+    @Test
+    fun sub_agents_become_children_with_their_states_and_the_ring_names_the_one_that_raised_it() {
+        val child = DockChild(ref = ref("c1"), title = "Look into the cache", agent = "explore", state = DockState.NeedsYou, pulse = 1)
+        val e =
+            entry("a", DockState.NeedsYou)
+                .copy(ownState = DockState.Working, causedBy = ref("c1"), children = persistentListOf(child), childOverflow = 2)
+        val frame = DockKitMapper.map(ui(e), emptyMap(), "Untitled")
+        val ring = frame.model.rings.single()
+        assertEquals(KitDockRingState.NeedsYou, ring.state)
+        assertEquals("explore", ring.children.single().name)
+        assertEquals(KitDockRingState.NeedsYou, ring.children.single().state)
+        assertEquals(2, ring.childOverflow)
+        assertEquals(ring.children.single().key, ring.causedBy)
+        assertEquals(ref("c1"), frame.refs[ring.children.single().key])
+    }
+
+    @Test
+    fun the_server_is_named_only_when_several_servers_are_live() {
+        val e = entry("a").copy(serverName = "Mac mini")
+        assertNull(DockKitMapper.map(ui(e), emptyMap(), "U").model.rings.single().server)
+        val several = DockUi(entries = persistentListOf(e), presence = DockPresence.Out, severalServers = true)
+        assertEquals("Mac mini", DockKitMapper.map(several, emptyMap(), "U").model.rings.single().server)
+    }
+
+    @Test
+    fun peek_lines_give_the_tail_and_the_last_line() {
+        val peeks =
+            mapOf(
+                ref("a") to DockPeek.Lines(persistentListOf(DockPeekRow(true, "fix it"), DockPeekRow(false, "Done, tests pass"))),
+                ref("b") to DockPeek.Unavailable,
+            )
+        val rings = DockKitMapper.map(ui(entry("a"), entry("b")), peeks, "U").model.rings
+        assertEquals(
+            listOf(KitDockLine(KitDockLineRole.Person, "fix it"), KitDockLine(KitDockLineRole.Agent, "Done, tests pass")),
+            rings[0].peek,
+        )
+        assertEquals("Done, tests pass", rings[0].lastLine)
+        assertTrue(rings[1].peek.isEmpty())
+        assertNull(rings[1].lastLine)
+    }
+
+    @Test
+    fun current_tuck_placement_and_hidden_follow_the_model() {
+        val hidden = DockHidden(ref("h"), title = "Old work", nickname = null, agent = null, state = DockState.Finished, parent = null)
+        val dockUi =
+            DockUi(
+                entries = persistentListOf(entry("a"), entry("c1")),
+                presence = DockPresence.Nub,
+                open = ref("a"),
+                openChild = ref("c1"),
+                hidden = persistentListOf(hidden),
+                placement = DockPlacement(DockSide.Start, 0.3f),
+            )
+        val frame = DockKitMapper.map(dockUi, emptyMap(), "U")
+        val model = frame.model
+        assertEquals(DockKitMapper.key(ref("a")), model.current)
+        assertEquals(DockKitMapper.key(ref("c1")), model.currentChild)
+        assertTrue(model.tucked)
+        assertEquals(KitDockSide.Start, model.placement.side)
+        assertEquals(0.3f, model.placement.verticalBias)
+        assertEquals("Old work", model.hidden.single().name)
+        assertEquals(KitDockRingState.Finished, model.hidden.single().state)
+        assertEquals(ref("h"), frame.refs[model.hidden.single().key])
+    }
+
+    @Test
+    fun only_removable_conversations_are_offered_for_removal() {
+        val frame = DockKitMapper.map(ui(entry("a").copy(removable = false), entry("b")), emptyMap(), "U")
+        assertFalse(DockKitMapper.key(ref("a")) in frame.removable)
+        assertTrue(DockKitMapper.key(ref("b")) in frame.removable)
+    }
+
+    @Test
+    fun a_waiting_ring_asks_about_its_own_oldest_request_first() {
+        val own = DockRequestRef(DockRequestKind.Permission, "r1")
+        val e = entry("a", DockState.NeedsYou).copy(requests = persistentListOf(own, DockRequestRef(DockRequestKind.Question, "r2")))
+        assertEquals(DockAsk(ref("a"), own), DockKitMapper.askOf(e))
+    }
+
+    @Test
+    fun a_ring_raised_by_a_sub_agent_asks_about_that_sub_agents_request() {
+        val ask = DockRequestRef(DockRequestKind.Permission, "c-r")
+        val child = DockChild(ref("c1"), "child", "explore", DockState.NeedsYou, 1, requests = persistentListOf(ask))
+        val e = entry("a", DockState.NeedsYou).copy(ownState = DockState.Working, causedBy = ref("c1"), children = persistentListOf(child))
+        assertEquals(DockAsk(ref("c1"), ask), DockKitMapper.askOf(e))
+        assertEquals(DockAsk(ref("c1"), ask), DockKitMapper.map(ui(e), emptyMap(), "U").asks[DockKitMapper.key(ref("a"))])
+    }
+
+    @Test
+    fun a_ring_that_waits_on_nothing_asks_nothing() {
+        assertNull(DockKitMapper.askOf(entry("a", DockState.Working)))
+        assertNull(DockKitMapper.askOf(entry("a", DockState.NeedsYou)))
+    }
+
+    @Test
+    fun names_are_found_for_rings_children_and_hidden() {
+        val child = DockChild(ref("c1"), "child", "explore", DockState.Working, 0)
+        val hidden = DockHidden(ref("h"), "Old", null, null, DockState.Failed, null)
+        val dockUi = DockUi(entries = persistentListOf(entry("a").copy(children = persistentListOf(child))), presence = DockPresence.Out, hidden = persistentListOf(hidden))
+        val frame = DockKitMapper.map(dockUi, emptyMap(), "U")
+        assertEquals("T-a", frame.nameOf(DockKitMapper.key(ref("a"))))
+        assertEquals("explore", frame.nameOf(DockKitMapper.key(ref("c1"))))
+        assertEquals("Old", frame.nameOf(DockKitMapper.key(ref("h"))))
+        assertNull(frame.nameOf("nothing"))
+    }
+}
