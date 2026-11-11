@@ -136,4 +136,14 @@ class Oc2McpConfigSecretsTest {
         server(second).gateway.startIntegrationOAuth("acme", "acme-oauth", persistentMapOf("workspace" to "default"), null)
         assertTrue(second.containsSecret("default"), "an answer to an unlisted field is not registered")
     }
+
+    @Test
+    fun `W4-MCP-GATE a listed sign-in field still registers a token-shaped or long numeric answer`() = runTest {
+        // The named list only spares plainly ordinary words ("default"); a token or an account number is registered.
+        for (typed in listOf("Pf" + "W4GateTokenShaped" + "123456", "4829" + "137560", "Ab3d" + "E5fG9h")) {
+            val redactor = Redactor()
+            server(redactor).gateway.startIntegrationOAuth("amazon-bedrock", "aws-profile", persistentMapOf("profile" to typed), null)
+            assertTrue(redactor.containsSecret(typed), "a non-ordinary answer to a listed field is not registered")
+        }
+    }
 }

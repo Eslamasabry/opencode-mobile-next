@@ -42,8 +42,10 @@ public class Redactor {
     }
 
     /**
-     * Registers every credential-named string in a config tree (Dart registerCredentialValues; B-PROTO-104), and every
-     * MCP server's environment and header values whatever their names ([registerMcpServers]).
+     * Registers every credential-named string in a config tree (Dart registerCredentialValues; B-PROTO-104), every
+     * MCP server's environment and header values whatever their names ([registerMcpServers]), the same values of LSP
+     * servers and formatters ([registerToolServers]), and the custom headers of providers, models and agents
+     * ([registerHeaderMaps]); ordinary values under ordinary names stay readable (McpConfigSecrets.kt).
      */
     public fun registerCredentialValues(value: JsonElement) {
         when (value) {
@@ -60,6 +62,8 @@ public class Redactor {
                     }
                     // MCP server values are secrets whatever they are named (McpConfigSecrets.kt).
                     if (field is JsonObject && name in MCP_CONTAINERS) registerMcpServers(field)
+                    if (field is JsonObject && name in TOOL_CONTAINERS) registerToolServers(field)
+                    if (field is JsonObject && name in HEADER_HOLDERS) registerHeaderMaps(field)
                     if (field is JsonObject || field is JsonArray) registerCredentialValues(field)
                 }
             else -> Unit
@@ -297,6 +301,12 @@ public class Redactor {
 
         /** `mcp` (OpenCode), `mcpServers` / `mcp_servers` (other agents' config files), after lowercasing and `-`/`_` removal. */
         private val MCP_CONTAINERS = setOf("mcp", "mcpservers")
+
+        /** `lsp` and `formatter` maps (2.2.5 Config.InfoEncoded): each entry has a command and an env map. */
+        private val TOOL_CONTAINERS = setOf("lsp", "formatter")
+
+        /** `providers`/`agents` (2.2.5) and `provider`/`agent` (older) maps, whose entries carry custom `headers`. */
+        private val HEADER_HOLDERS = setOf("providers", "provider", "agents", "agent")
 
         private val AUTH_HEADER =
             Regex("""(["']?)\b(?:(?:Proxy-)?Authorization|(?:Set-)?Cookie|x-api-key)(["']?)\s*[:=]\s*""", RegexOption.IGNORE_CASE)
