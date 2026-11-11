@@ -351,6 +351,28 @@ public object GlassSpec : StyleSpec {
     /** Words on a chosen control or a secondary button (hook H3): the primary ink; a part's own fill keeps its own words. */
     override fun onColor(r: SurfaceRequest): Argb? = if (r.color == null) r.roles.text1 else null
 
+    /**
+     * The words' inks on a Glass page painted with light (glass-in-the-kit 1b', coordinator 2026-11-11: "the answer for
+     * the words is brighter secondary ink, not a thicker pane"; the liquid-glass rule "a brighter second line on glass
+     * than on the page"): text1, and text2 and text3 moved [lift] of the way to text1.
+     */
+    public fun liftedInks(roles: Roles, lift: Float): List<Argb> =
+        listOf(roles.text1, lerp(roles.text2, roles.text1, lift), lerp(roles.text3, roles.text1, lift))
+
+    /**
+     * How far a Glass page painted with light moves its secondary and tertiary words toward its primary ink
+     * (glass-in-the-kit 1b'): the least lift that lets the dark aurora page carry its lights ([pageInkLift]).
+     * Measured by GlassInTheKitStep1Test over every clear pane, pack and glass look at the brightest point.
+     */
+    public const val PAGE_SECOND_INK_LIFT: Float = .30f
+
+    /**
+     * The lift for words on this page: [PAGE_SECOND_INK_LIFT] on a dark Glass page whose painted aurora the panes are
+     * clear over ([paintedClear]: Glass, the Background on and blurred, no hold); 0 otherwise, so the fallback, the light
+     * theme (no page light in step 1) and every other style keep their inks.
+     */
+    public fun pageInkLift(dark: Boolean, paintedClear: Boolean): Float = if (dark && paintedClear) PAGE_SECOND_INK_LIFT else 0f
+
     /** Under a glass sheet the page dims less (hook H6). */
     override fun adjustRoles(roles: Roles): Roles =
         roles.copy(scrim = styleShade(roles).withAlpha(if (roles.dark) .24f else .10f)) // FG: lib/ui/kit/style/kit_style_glass.dart:338
