@@ -1391,7 +1391,6 @@ es	gitStateNothingToSend
 es	gitUnavailableServerCannotRun
 es	gitUsesOwnSignIn
 es	gitUsesOwnSignInOn
-es	globalSessionsArchivedEmptyMessage
 es	globalSessionsArchivedNoMatchMessage
 es	globalSessionsCopyFolder
 es	globalSessionsMoveBack
