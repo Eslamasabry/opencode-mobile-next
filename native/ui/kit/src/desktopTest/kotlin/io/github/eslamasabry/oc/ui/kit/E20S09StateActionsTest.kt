@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /** E20-S09: the home's "isn't answering" page; every action of a failure shares one edge and one width. */
 @OptIn(ExperimentalTestApi::class)
@@ -38,10 +39,11 @@ class E20S09StateActionsTest {
         }
         val tryAgain = onNodeWithText("Try again").fetchSemanticsNode().boundsInRoot
         for (label in listOf("Change server", "Copy details")) {
-            val action = onNodeWithText(label).fetchSemanticsNode().boundsInRoot
-            // Before the fix a text action reached past the gutter on the start side (8 dp further out).
-            assertEquals(tryAgain.left, action.left, "$label starts where Try again starts: $action vs $tryAgain")
-            assertEquals(tryAgain.right, action.right, "$label ends where Try again ends: $action vs $tryAgain")
+            // 0fe8167abe: a stacked text action is pulled back 8 dp and hugs its width (Dart `KitInset`), so its WORDS,
+            // not its box, start on Try again's edge, the text above's edge.
+            val words = onNodeWithText(label, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+            assertEquals(tryAgain.left, words.left, 1f, "$label's words start where Try again starts: $words vs $tryAgain")
+            assertTrue(words.right <= tryAgain.right, "$label hugs its words inside Try again's width: $words vs $tryAgain")
         }
     }
 }
