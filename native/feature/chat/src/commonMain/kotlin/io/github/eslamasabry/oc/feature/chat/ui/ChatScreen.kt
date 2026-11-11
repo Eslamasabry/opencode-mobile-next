@@ -337,6 +337,8 @@ public fun ChatScreen(
     canGoBack: Boolean = true,
     /** S28 story 8: the conversation's handoff line, drawn at the top of the transcript; null = none. */
     handoffLine: (@Composable () -> Unit)? = null,
+    /** The edge dock over the transcript, under the chat's sheets and viewers; null = none (see [ChatEdgeDock]). */
+    edgeDock: ChatEdgeDock? = null,
 ) {
     var commandsOpen by remember(state.ref) { mutableStateOf(false) }
     val slashCommands =
@@ -1003,6 +1005,8 @@ public fun ChatScreen(
                                                     kitScreenChromePadding().calculateTopPadding()
                                         ),
                                 )
+                                // The edge dock: over the transcript, clear of the header and the composer.
+                                edgeDock?.Content(kitScreenChromePadding())
                             }
                     }
                 }

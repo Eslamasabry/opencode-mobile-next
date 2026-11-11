@@ -30,10 +30,16 @@ import io.github.eslamasabry.oc.engine.attention.dock.SubAgentChildSource
 import io.github.eslamasabry.oc.engine.attention.dock.DockUi
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
+import io.github.eslamasabry.oc.ui.routes.AppNavigator
+import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 /**
@@ -43,10 +49,12 @@ import kotlinx.coroutines.launch
  * learned by reading). No polling and no read of its own beyond that.
  *
  * Saved per profile (all swept with the profile by `DockKeys.register`): `oc.dockNames.<id>`, `oc.dockRemoved.<id>`,
- * `oc.dockPins.<id>`. Saved for the device (never swept): `oc.dockSide`, `oc.dockBias`.
+ * `oc.dockPins.<id>`. Saved for the device (never swept): `oc.dockSide`, `oc.dockBias`, and `oc.dockShown` (the
+ * person's Settings switch; absent = on).
  *
- * Nothing starts it yet: the UI that draws the dock calls [start] once and consumes [ui]. Everything runs on the main
- * dispatcher, which is what [DockController] requires.
+ * The app starts it once at app scope (`AttentionRuntime.start`). Opening a ring goes through the app's navigator
+ * ([AppNavigator.backToChat]: back to a conversation right below, else open it), and the conversation on screen is
+ * read from the navigator's top route. Everything runs on the main dispatcher, which is what [DockController] requires.
  */
 @SingleIn(AppScope::class)
 @Inject
@@ -57,16 +65,18 @@ class AppEdgeDock(
     private val dispatchers: AppDispatchers,
     private val home: AppChatsHome,
     private val permissionAnswers: HomePermissionAnswerWiring,
+    private val navigator: AppNavigator,
 ) {
     private val main: CoroutineScope = CoroutineScope(appScope.coroutineContext + dispatchers.main)
-    private var navigate: (ConversationRef) -> Unit = {}
+    private var navigate: (ConversationRef) -> Unit = { navigator.backToChat(it) }
+    private val shownState = MutableStateFlow(true)
     private val keyStore =
         object : AttentionKeyStore {
             override suspend fun read(key: String): String? = (stores.prefs.get(key) as? PrefValue.Str)?.value
 
             override suspend fun write(key: String, value: String): Boolean {
                 // Device-wide keys carry no profile id.
-                if (key == DockKeys.SIDE || key == DockKeys.BIAS) {
+                if (key == DockKeys.SIDE || key == DockKeys.BIAS || key == SHOWN_KEY) {
                     return stores.prefs.commit(stores.lanes.app) { putString(key, value) } is Outcome.Ok
                 }
                 val id =
@@ -120,7 +130,16 @@ class AppEdgeDock(
 
     val ui: StateFlow<DockUi> get() = controller.ui
 
-    /** Call once from the UI that draws the dock. [navigate] opens a conversation like a tap in the list. */
+    /** The person's Settings switch: false draws no dock in the app (the live notification row does not read it). */
+    val shown: StateFlow<Boolean> = shownState.asStateFlow()
+
+    /** Turns the in-app dock on or off for this device, saved at once. */
+    fun setShown(on: Boolean) {
+        if (shownState.value == on) return
+        shownState.value = on
+        main.launch { keyStore.write(SHOWN_KEY, on.toString()) }
+    }
+
     /**
      * Starts the dock once. [navigate] is the in-app dock UI's way to open a conversation; a caller that only reads the
      * dock (the live notification) passes none, so it never replaces the UI's navigation, whichever starts first.
@@ -130,7 +149,12 @@ class AppEdgeDock(
         if (started) return
         started = true
         main.launch {
+            // The conversation on screen, however it was reached (a list row, a notification, the dock).
+            navigator.top.map { (it as? ChatRoute)?.ref }.distinctUntilChanged().collect { conversationShown(it) }
+        }
+        main.launch {
             if (stores.warm() !is Outcome.Ok) return@launch
+            keyStore.read(SHOWN_KEY)?.let { shownState.value = it != "false" }
             controller.loadPlacement()
             combine(connections.live, stores.profiles.profiles) { live, saved -> live to saved }
                 .collect { (live, loaded) ->
@@ -185,6 +209,11 @@ class AppEdgeDock(
     fun tuck() = controller.tuck()
 
     fun untuck() = controller.untuck()
+
+    private companion object {
+        /** Device-wide, never swept: the in-app dock is on unless the person turned it off. */
+        const val SHOWN_KEY = "oc.dockShown"
+    }
 
     private fun detach(id: ProfileId) {
         if (attached.remove(id) != null) controller.feed(DockEvent.ProfileOffline(id))
