@@ -52,7 +52,7 @@ public suspend fun PaseoGateway.genUiSessionIdle(session: SessionId): Outcome<Bo
     if (
         agent == null ||
             agent.str("id") != realId ||
-            agent.str("cwd") != scope ||
+            !holds(scope, agent.str("cwd")) ||
             real(id) != realId
     ) {
         paseoFail(PaseoFailureKind.InvalidResponse)

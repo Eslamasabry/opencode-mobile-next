@@ -77,6 +77,11 @@ public class OpenCodeChatFeedSource(
     override val label: String?,
     private val listing: StateFlow<OpenCodeListing>,
     private val locationKey: String? = null,
+    /**
+     * Who runs a row, as (agent id, agent label), for a server whose conversations are an agent's (the phone's
+     * agents). Null keeps the row an OpenCode one.
+     */
+    private val agentOf: (Session) -> Pair<String, String?>? = { null },
     private val refresh: suspend () -> Outcome<Unit> = { Unit.ok() },
 ) : ChatFeedSource {
     override val id: String = "opencode:${profileId.raw}"
@@ -111,8 +116,11 @@ public class OpenCodeChatFeedSource(
                 else -> ChatStatus.Idle
             }
         val directory = session.directory
+        val agent = agentOf(session)
         return ChatFeedItem(
             sourceId = id,
+            agentId = agent?.first ?: OPENCODE_AGENT_ID,
+            agentLabel = agent?.second,
             locationKey = locationKey,
             running = listing.running[session.id].takeIf { chatStatus == ChatStatus.Running },
             permission = listing.permissions[session.id],

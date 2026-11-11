@@ -247,6 +247,11 @@ class AppPaseoGatewayFactory(
             clock,
             backgroundTasks = ::backgroundBook,
             payloadUse = payloads::callbackFor,
+            // The phone helper's list shows the conversations of every project folder under its own folder.
+            configureGateway = { spec, gateway ->
+                val owner = (stores.prefs.get("oc.phoneAgentOwner.${spec.profile.id.raw}") as? PrefValue.Str)?.value
+                if (PhoneAgentRules.isHelperProfile(spec.profile.id.raw, owner)) gateway.includeSubfolders = true
+            },
             savedTitles = { profile, key ->
                 // Before the migration gate opens the store refuses reads: no saved title then.
                 try {
