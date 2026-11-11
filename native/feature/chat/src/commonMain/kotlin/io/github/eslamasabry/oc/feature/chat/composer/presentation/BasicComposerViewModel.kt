@@ -58,11 +58,6 @@ public data class BasicComposerUi(
     val sending: Boolean,
     /** A reply runs and this server steers: a send joins the running turn (plan 09 §4.3). */
     val steers: Boolean,
-    /**
-     * C6: a reply runs on an agent that stops and starts again from a new message (Flutter `MidTurnPrompt.restartsTurn`):
-     * Send reads "Stop and send".
-     */
-    val restarts: Boolean = false,
     val draft: DraftFacts = DraftFacts(),
     val targetKey: String = "",
     val canRepeat: Boolean = false,
@@ -198,6 +193,11 @@ private data class Suggestions(
     val commands: List<ComposerCommand> = emptyList(),
     val agents: List<io.github.eslamasabry.oc.feature.chat.world.ComposerAgent> = emptyList(),
     val files: List<String> = emptyList(),
+    /**
+     * C6: a reply runs on an agent that stops and starts again from a new message (Flutter `MidTurnPrompt.restartsTurn`):
+     * Send reads "Stop and send".
+     */
+    val restarts: Boolean = false,
 )
 
 /** E04-S01: the sub-agents an `@word` matches, ranked as Flutter ranks them. */
