@@ -438,7 +438,7 @@ private class JoinedPaneNode(
  * The knee that holds back bright content in [spec]'s lens (LiquidJoin.held): it holds the bright end under light words
  * and lifts the dark end under dark words, following the words' ink flip.
  */
-private fun kneeOf(spec: KitLiquidPaneSpec): FloatArray {
+internal fun kneeOf(spec: KitLiquidPaneSpec): FloatArray {
     val flipped = (spec.flip?.progress?.value ?: 0f) > .5f
     val lightInk = spec.rimAdds != flipped
     return floatArrayOf(LiquidJoin.KNEE, LiquidJoin.KNEE_SLOPE, if (lightInk) 1f else 0f)
@@ -451,7 +451,7 @@ private fun kneeOf(spec: KitLiquidPaneSpec): FloatArray {
 public val LocalKitOnLiquidGlass: ProvidableCompositionLocal<Boolean> = staticCompositionLocalOf { false }
 
 /** A pane's tint now: its face, cross-faded to the other theme's as its words flip. */
-private fun tintNow(spec: KitLiquidPaneSpec): Color {
+internal fun tintNow(spec: KitLiquidPaneSpec): Color {
     val f = spec.flip?.progress?.value ?: 0f
     return if (f > 0f) lerp(spec.fill, spec.flipFill, f) else spec.fill
 }

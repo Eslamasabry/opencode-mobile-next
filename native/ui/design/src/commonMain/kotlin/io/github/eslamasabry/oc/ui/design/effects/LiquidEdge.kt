@@ -28,13 +28,19 @@ import kotlin.math.roundToInt
 /**
  * The floating parts that become liquid glass, highest precedence first: when a window has more of them than
  * [LiquidEdge.BUDGET] allows, the lowest drop to frost first (a menu over a sheet over the page; the composer above the
- * bars; the bars above the floating + and the pills).
+ * bars; the bars above the edge dock; the dock above the floating + and the pills).
  */
 public enum class LiquidRole(public val rank: Int) {
-    Menu(7),
-    Sheet(6),
-    Composer(5),
-    Bar(4),
+    Menu(8),
+    Sheet(7),
+    Composer(6),
+    Bar(5),
+
+    /**
+     * The edge dock's one body of glass (the strip and the swell, the peek or the list out of it): the bar's recipe at
+     * rest, the menu's fully grown ([LiquidEdge.dockRecipe]); its words' ink as the bar's.
+     */
+    Dock(4),
     Action(3),
     Pill(2),
     Status(1),
@@ -123,8 +129,8 @@ public object LiquidEdge {
         // held back inside its lens instead (LiquidJoin.held).
         return when (role) {
             // Bars and the message box carry words over moving text: their glass frosts it to colour and shape, while
-            // the rim still bends it.
-            LiquidRole.Bar -> r(3f, 34f, .14f, .18f, .12f)
+            // the rim still bends it. The dock at rest is a bar (dockRecipe mixes it towards a menu as it grows).
+            LiquidRole.Bar, LiquidRole.Dock -> r(3f, 34f, .14f, .18f, .12f)
             LiquidRole.Composer -> r(2f, 34f, .16f, .20f, .18f)
             LiquidRole.Sheet -> r(12f, 48f, 0f, .22f, .14f, rimMax = 30f)
             LiquidRole.Menu -> r(if (dark) 6f else 3f, 48f, .18f, .20f, .10f, rimMax = 26f)
@@ -135,6 +141,35 @@ public object LiquidEdge {
         }
     }
 
+    /**
+     * The dock's recipe at [growth] (0 at rest: the strip alone; 1 fully grown: the swell, the peek or the list out):
+     * the bar's at rest and the menu's fully grown, every number mixed by the growth with no step ([mix]): one frost for
+     * the whole body, its blur, bend, rim and tint moving together as it grows.
+     */
+    public fun dockRecipe(dark: Boolean, growth: Float, look: GlassLookPreset = GlassLooks.Glossy): LiquidRecipe =
+        mix(recipe(LiquidRole.Dock, dark, look), recipe(LiquidRole.Menu, dark, look), growth)
+
+    /**
+     * [from] to [to] at [t] (clamped to 0..1): the blur, the bend, the rim's width and share, the shadow and the tint
+     * mixed linearly; the colour controls too (equal in every recipe today). The depth flag is [from]'s until halfway.
+     */
+    public fun mix(from: LiquidRecipe, to: LiquidRecipe, t: Float): LiquidRecipe {
+        val f = t.coerceIn(0f, 1f)
+        fun m(a: Float, b: Float) = a + (b - a) * f
+        return LiquidRecipe(
+            saturation = m(from.saturation, to.saturation),
+            contrast = m(from.contrast, to.contrast),
+            brightness = m(from.brightness, to.brightness),
+            blurDp = m(from.blurDp, to.blurDp),
+            refractionDp = m(from.refractionDp, to.refractionDp),
+            shadowAlpha = m(from.shadowAlpha, to.shadowAlpha),
+            rimMaxDp = m(from.rimMaxDp, to.rimMaxDp),
+            rimShare = m(from.rimShare, to.rimShare),
+            depth = if (f < .5f) from.depth else to.depth,
+            tint = m(from.tint, to.tint),
+        )
+    }
+
     /** No liquid pane casts a shadow (owner 2026-11-09: crisp edges, no halo). */
     private const val NO_SHADOW: Float = 0f
 
@@ -142,7 +177,7 @@ public object LiquidEdge {
     public fun glassRole(role: LiquidRole): Pair<SurfaceRole, SurfaceLevel> =
         when (role) {
             LiquidRole.Sheet, LiquidRole.Menu -> SurfaceRole.Sheet to SurfaceLevel.Surface2
-            LiquidRole.Composer, LiquidRole.Bar -> SurfaceRole.Floating to SurfaceLevel.Surface2
+            LiquidRole.Composer, LiquidRole.Bar, LiquidRole.Dock -> SurfaceRole.Floating to SurfaceLevel.Surface2
             LiquidRole.Pill, LiquidRole.Status, LiquidRole.Action -> SurfaceRole.Floating to SurfaceLevel.Surface3
         }
 
@@ -150,7 +185,7 @@ public object LiquidEdge {
     public fun solidOf(roles: Roles, role: LiquidRole): Argb {
         val ground = roles.ground.opaqueArgb()
         return when (role) {
-            LiquidRole.Bar -> ground
+            LiquidRole.Bar, LiquidRole.Dock -> ground
             LiquidRole.Composer, LiquidRole.Sheet, LiquidRole.Menu -> roles.surface2.over(ground)
             LiquidRole.Pill, LiquidRole.Status -> roles.surface3.over(ground)
             LiquidRole.Action -> roles.accent.over(ground)
@@ -226,7 +261,7 @@ public object LiquidEdge {
         when (role) {
             LiquidRole.Sheet -> if (dark) .66f else .70f
             LiquidRole.Menu -> if (dark) .68f else .72f
-            LiquidRole.Bar, LiquidRole.Composer -> if (dark) .58f else .62f
+            LiquidRole.Bar, LiquidRole.Composer, LiquidRole.Dock -> if (dark) .58f else .62f
             LiquidRole.Pill, LiquidRole.Status -> .55f
             LiquidRole.Action -> 1f
         }

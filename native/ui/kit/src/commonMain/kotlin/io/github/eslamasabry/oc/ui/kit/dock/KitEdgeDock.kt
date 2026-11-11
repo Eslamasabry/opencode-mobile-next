@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
@@ -73,6 +74,7 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.motion.breath
 import io.github.eslamasabry.oc.ui.kit.motion.lap
+import io.github.eslamasabry.oc.ui.kit.effects.LocalKitOnLiquidGlass
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
 import kotlin.math.max
@@ -143,7 +145,8 @@ public fun KitEdgeDock(
     val haptics = rememberKitHaptics()
     val scope = rememberCoroutineScope()
     val textScale = kitTextScale().coerceIn(1f, TextScalePolicy.FRAME_CAP)
-    BoxWithConstraints(modifier.fillMaxSize().semantics { isTraversalGroup = true }.testTag("kit-edge-dock")) {
+    // Under a glass face the dock's area hosts the words on the glass (their ink flips with it), as a bar's row does.
+    BoxWithConstraints(modifier.fillMaxSize().then(face.words).semantics { isTraversalGroup = true }.testTag("kit-edge-dock")) {
         val w = maxWidth.value
         val h = maxHeight.value
         val right = physicallyRight(model.placement.side, rtl)
@@ -215,18 +218,21 @@ public fun KitEdgeDock(
         }
 
         DockBodyNode(state, face, inks)
-        model.rings.forEachIndexed { i, ring ->
-            androidx.compose.runtime.key(ring.key) {
-                DockRingNode(state, ring, i, ring.key == model.current, inks, words, intents)
+        // On glass the words' second line reads brighter, as on the bar.
+        CompositionLocalProvider(LocalKitOnLiquidGlass provides face.onGlass) {
+            model.rings.forEachIndexed { i, ring ->
+                androidx.compose.runtime.key(ring.key) {
+                    DockRingNode(state, ring, i, ring.key == model.current, inks, words, intents)
+                }
             }
+            DockFootNode(state, words, intents)
+            DockHitNode(state)
+            val swell = state.swell
+            if (swell != null && state.swellRing in model.rings.indices) {
+                DockSwellContent(state, swell, model.rings[state.swellRing], words, inks)
+            }
+            if (state.panelShown) DockPanel(state, model, words, inks, intents)
         }
-        DockFootNode(state, words, intents)
-        DockHitNode(state)
-        val swell = state.swell
-        if (swell != null && state.swellRing in model.rings.indices) {
-            DockSwellContent(state, swell, model.rings[state.swellRing], words, inks)
-        }
-        if (state.panelShown) DockPanel(state, model, words, inks, intents)
         KitBackGuard(enabled = state.anythingOpen) {
             when {
                 state.renaming != null -> state.endRename(save = false, text = "")

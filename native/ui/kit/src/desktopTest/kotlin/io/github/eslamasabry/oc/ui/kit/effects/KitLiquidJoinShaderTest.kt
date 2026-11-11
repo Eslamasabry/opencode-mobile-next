@@ -183,5 +183,63 @@ class KitLiquidJoinShaderTest {
         assertEquals(LiquidJoin.held(20 / 255f, lightInk = false) * 255f, lifted.toFloat(), 3f, "dark content lifted under dark words")
     }
 
+    /**
+     * The edge dock's body (KitLiquidBody.kt): ONE node draws both sides through the unchanged shader, handed box A as
+     * its side and a far box as B's side. Its cover equals LiquidJoin's cover of the joined body of the strip (A) and
+     * the swell (B) everywhere, both sides, at growth 0.3, 0.6 and 1 (the dock's own geometry at density 1, 412 dp wide);
+     * and at rest and tucked to the nub (A alone, 68 and 8 dp showing) and with B just out (growth 0.02: a sliver, the
+     * smallest reach) the field is well defined and the body still draws.
+     */
+    @Test
+    fun `liquid join shader - one node draws the dock's whole body, as LiquidJoin covers it`() {
+        val brush = program(effect = false)
+        val w = 412
+        val h = 520
+        val aLeft = w - DockDimsForTest.REST_W
+        val strip = JoinBox.of(aLeft, 60f, w + DockDimsForTest.OVERHANG, 460f, DockDimsForTest.CORNER)
+        val fullLeft = aLeft - 260f
+        val fullRight = aLeft + DockDimsForTest.SW_OVERLAP
+        val cases =
+            listOf(.3f, .6f, 1f, .02f).map { g ->
+                val left = io.github.eslamasabry.oc.ui.kit.dock.grownLeft(aLeft, aLeft - fullLeft, g)
+                val b = JoinBox.of(left, 210f, fullRight, 310f, io.github.eslamasabry.oc.ui.kit.dock.swellRadius(100f, fullRight - left))
+                Triple("growth $g", strip to b, io.github.eslamasabry.oc.ui.kit.dock.joinReachFor(DockDimsForTest.SW_FILLET_BLEND, g))
+            } +
+                listOf(
+                    Triple("at rest", strip to null, 0f),
+                    Triple("tucked", JoinBox.of(w - 8f, 60f, w + DockDimsForTest.OVERHANG, 460f, 4f) to null, 0f),
+                )
+        for ((what, boxes, reach) in cases) {
+            val (a, b) = boxes
+            val geometry = LiquidBodyGeometry.of(a, b)
+            val got = alphas(brush, uniforms(geometry.a, geometry.b, geometry.sideA, geometry.sideB, reach), mode = 1f, w = w, h = h)
+            val far = JoinBox(-1e6f, -1e6f, 0f, 0f, 0f)
+            var inside = 0
+            var near = 0
+            for (y in 0 until h step 2) for (x in 0 until w step 2) {
+                val s = LiquidJoin.sample(x + .5f, y + .5f, a, b ?: far, reach, LiquidJoin.BAND_DP)
+                val want = s.cover * 255f
+                assertEquals(want, got[y * w + x].toFloat(), 3f, "$what: cover at ($x, $y), dist ${s.dist}")
+                if (s.cover >= 1f) inside++
+                if (kotlin.math.abs(s.dist) <= 1.5f) near++
+            }
+            assertTrue(inside > 0 && near > 0, "$what: the body draws ($inside inside, $near on the outline)")
+            if (b != null) {
+                // Both sides are this node's: the swell's middle and the strip's middle are covered.
+                if (b.hx * 2f > 40f) assertEquals(255, got[b.cy.toInt() * w + (b.left + 16f).toInt()], "$what: B's side")
+                assertEquals(255, got[(a.cy.toInt()) * w + (aLeft + 20f).toInt()], "$what: A's side")
+            }
+        }
+    }
+
+    /** The dock's numbers this test draws with (DockDims, dp at density 1). */
+    private object DockDimsForTest {
+        val REST_W = io.github.eslamasabry.oc.ui.kit.dock.DockDims.REST_W
+        val OVERHANG = io.github.eslamasabry.oc.ui.kit.dock.DockDims.OVERHANG
+        val CORNER = io.github.eslamasabry.oc.ui.kit.dock.DockDims.CORNER
+        val SW_OVERLAP = io.github.eslamasabry.oc.ui.kit.dock.DockDims.SW_OVERLAP
+        val SW_FILLET_BLEND = io.github.eslamasabry.oc.ui.kit.dock.DockDims.SW_FILLET_BLEND
+    }
+
     private data class Quad(val a: JoinBox, val b: JoinBox, val sa: JoinBox, val sb: JoinBox)
 }

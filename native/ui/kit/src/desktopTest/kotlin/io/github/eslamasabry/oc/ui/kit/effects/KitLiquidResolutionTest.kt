@@ -99,7 +99,7 @@ class KitLiquidResolutionTest {
                     when (role) {
                         LiquidRole.Sheet -> .5f
                         LiquidRole.Menu -> if (dark) .5f else 1f
-                        LiquidRole.Bar, LiquidRole.Composer, LiquidRole.Pill, LiquidRole.Status, LiquidRole.Action -> 1f
+                        LiquidRole.Bar, LiquidRole.Dock, LiquidRole.Composer, LiquidRole.Pill, LiquidRole.Status, LiquidRole.Action -> 1f
                     }
                 assertEquals(expected, liquidResolutionOf(LiquidEdge.recipe(role, dark), .5f), "$role dark=$dark")
                 assertEquals(1f, liquidResolutionOf(LiquidEdge.recipe(role, dark), 1f), "$role dark=$dark, full platform")

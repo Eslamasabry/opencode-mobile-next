@@ -1006,10 +1006,16 @@ public fun ChatScreen(
                                                     kitScreenChromePadding().calculateTopPadding()
                                         ),
                                 )
-                                // The edge dock: over the transcript, clear of the header and the composer.
-                                edgeDock?.Content(kitScreenChromePadding())
                             }
                     }
+                    // The edge dock: over the transcript, clear of the header and the composer. Beside the
+                    // transcript's recording, not in it: under Glass it bends that recording (never itself).
+                    if (state.phase == ChatPhase.Live)
+                        androidx.compose.runtime.CompositionLocalProvider(
+                            io.github.eslamasabry.oc.ui.kit.dock.LocalKitDockGlass provides frost
+                        ) {
+                            edgeDock?.Content(kitScreenChromePadding())
+                        }
                 }
 
                 // The menu opens over the composer's end, where the action that opened it is under
