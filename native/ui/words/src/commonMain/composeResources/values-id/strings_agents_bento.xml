@@ -21,4 +21,12 @@
     <string name="agentsConversationsStored">Tempat percakapan disimpan</string>
     <string name="agentsConversationsStoredOn">Tempat percakapan disimpan: %1$s</string>
     <string name="agentsHostAccount">Akun host: %1$s</string>
+    <string name="agentsHelperUpdateRequired">Agen ponsel tidak terhubung: pembantu agen tidak ada atau terlalu lama untuk dijalankan.</string>
+    <string name="agentsHelperUpdateAction">Perbarui pembantu agen</string>
+    <string name="agentsInstallFailedDownload">%1$s tidak dapat dipasang: unduhan tidak selesai. Periksa koneksi lalu coba lagi.</string>
+    <string name="agentsInstallFailedChecksum">%1$s tidak dapat dipasang: yang terunduh bukan file yang diharapkan aplikasi, jadi dibuang. Coba lagi.</string>
+    <string name="agentsInstallFailedStorage">%1$s tidak dapat dipasang: ponsel ini kekurangan ruang. Kosongkan ruang, lalu coba lagi.</string>
+    <string name="agentsInstallFailedVersion">%1$s tidak dapat dipasang: versi yang diterima bukan yang diharapkan aplikasi. Coba lagi.</string>
+    <string name="agentsInstallFailedUnknown">%1$s tidak dapat dipasang. Coba lagi; Detail berisi apa yang dilaporkan ponsel.</string>
+    <string name="agentsInstallInterruptedNow">Pemasangan %1$s terhenti sebelum selesai. Coba lagi untuk melanjutkan.</string>
 </resources>

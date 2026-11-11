@@ -297,4 +297,6 @@
     <string name="phoneSetupRingDetailsTitle">Chi tiết thiết lập</string>
     <string name="browserTransportFailure">Trình duyệt không kết nối được tới máy chủ. Hãy kiểm tra địa chỉ và xem máy chủ có đang chạy không. Máy chủ ở nguồn gốc khác phải cho phép nguồn gốc của trang này (CORS), và trang tải qua https không thể dùng máy chủ http:// hoặc ws://.</string>
     <string name="browserProbeTimeout">Kết nối đã hết thời gian chờ. Hãy kiểm tra địa chỉ và xem máy chủ có truy cập được từ trình duyệt này không.</string>
+    <string name="phoneSetupStartStepsNoTime">Cài đặt, đặt tên dự án, bắt đầu một cuộc trò chuyện</string>
+    <string name="phoneSetupPreflightSpaceNumbers">Việc thiết lập cần khoảng %1$s trống. Điện thoại này còn %2$s.</string>
 </resources>

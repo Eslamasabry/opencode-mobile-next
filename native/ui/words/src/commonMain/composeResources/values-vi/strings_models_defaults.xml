@@ -16,4 +16,5 @@
     <string name="modelDefaultsPrice">Đầu vào $%1$s · Đầu ra $%2$s mỗi triệu token</string>
     <string name="modelDefaultsSelected">Đã chọn</string>
     <string name="modelDefaultsSaving">Đang lưu lựa chọn mô hình</string>
+    <string name="modelDefaultsChecking">Đang kiểm tra các mô hình của máy chủ</string>
 </resources>

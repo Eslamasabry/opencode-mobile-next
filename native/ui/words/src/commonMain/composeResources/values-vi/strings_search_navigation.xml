@@ -54,7 +54,7 @@
     <string name="nativeSearchPlaceLanguage">Ngôn ngữ</string>
     <string name="nativeSearchAliasesLanguage">Tiếng Việt; tiếng Anh; ngôn ngữ vùng</string>
     <string name="nativeSearchPlaceTips">Mẹo</string>
-    <string name="nativeSearchAliasesTips">Trợ giúp; hướng dẫn; cử chỉ</string>
+    <string name="nativeSearchAliasesTips">Trợ giúp; hướng dẫn; cử chỉ; hiện lại mẹo; Help; tutorials; gestures</string>
     <string name="nativeSearchPlaceShortcuts">Phím tắt bàn phím</string>
     <string name="nativeSearchAliasesShortcuts">Bàn phím; máy tính; phím</string>
     <string name="nativeSearchShortcutsBody">Các phím này hoạt động trong ô soạn tin và các điều khiển của bộ giao diện khi chúng đang được chọn.</string>
@@ -79,4 +79,9 @@
     <string name="nativeSearchHealthDisabled">Tắt</string>
     <string name="nativeSearchPlaceProjects">Dự án</string>
     <string name="nativeSearchAliasesProjects">Tệp; dự án; thư mục</string>
+    <string name="nativeSearchAliasesUpdates">Cập nhật; nâng cấp; phiên bản mới; bản phát hành; cài đặt; Update; upgrade; release; install</string>
+    <string name="nativeSearchAliasesKeepRunning">Nền; pin; giữ kết nối; dịch vụ nền trước; luôn chạy; Background; battery; foreground service; keep alive</string>
+    <string name="nativeSearchAliasesLinuxPorts">Linux; cổng mở; đang lắng nghe; cổng máy chủ; open ports; listening; server port</string>
+    <string name="nativeSearchAliasesLinuxPackages">Linux; phần mềm; gói; apt; cài đặt; chương trình; software; install; programs</string>
+    <string name="nativeSearchAliasesDemo">Demo; dùng thử; mẫu; ngoại tuyến; ví dụ; try; sample; offline; example</string>
 </resources>

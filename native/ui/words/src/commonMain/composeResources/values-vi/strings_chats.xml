@@ -88,7 +88,7 @@
     <string name="globalSessionsFilterActive">Đang hoạt động</string>
     <string name="globalSessionsArchivedNoMatchMessage">Không có cuộc trò chuyện đã lưu trữ nào có tên đó. Hãy thử tìm bằng từ khóa ngắn hơn.</string>
     <string name="globalSessionsArchivedEmptyTitle">Không có cuộc trò chuyện đã lưu trữ</string>
-    <string name="globalSessionsArchivedEmptyMessage">Các cuộc trò chuyện bạn lưu trữ sẽ hiển thị ở đây.</string>
+    <string name="globalSessionsArchivedEmptyMessage">Các cuộc trò chuyện bạn lưu trữ sẽ xuất hiện ở đây.</string>
     <string name="globalSessionsShowActive">Hiện các cuộc trò chuyện đang hoạt động</string>
     <string name="globalSessionsProjectInUse">%1$s · Đang dùng</string>
     <string name="globalSessionsCopyFolder">Sao chép đường dẫn thư mục</string>

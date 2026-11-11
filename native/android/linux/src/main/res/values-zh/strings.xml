@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <plurals name="native_chip_pending">
+        <item quantity="other">%1$d 项需要你处理</item>
+    </plurals>
+    <plurals name="native_chip_running">
+        <item quantity="other">%1$d 项运行中</item>
+    </plurals>
+    <string name="native_live_channel">实时编码连接</string>
+    <string name="native_live_description">OpenCode 在后台保持服务器会话在线时显示</string>
+    <string name="native_phone_server_body">你使用其他应用时，智能体仍在继续工作。</string>
+    <string name="native_phone_server_channel">这部手机上的 OpenCode</string>
+    <string name="native_phone_server_description">手机服务器或项目引擎运行时显示</string>
+    <string name="native_setup_channel">设置</string>
+    <string name="native_status_action_new_chat">新对话</string>
+    <string name="native_status_action_open">打开</string>
+    <string name="native_status_action_start">开始</string>
+    <string name="native_status_action_stop_opencode">停止 OpenCode</string>
+    <string name="native_status_action_stop_reply">停止回复</string>
+    <string name="native_status_on_this_phone">在这部手机上</string>
+    <string name="native_status_paused_android_body">Android 每天会在 6 小时后停止后台工作。打开 OpenCode 以继续。</string>
+    <string name="native_status_paused_android_title">已暂停 · Android 后台限制</string>
+    <string name="native_status_paused_idle_body">点按以再次启动 OpenCode</string>
+    <string name="native_status_paused_idle_title">已暂停 · 没有运行中的内容</string>
+    <string name="native_status_public_paused">OpenCode · 已暂停</string>
+    <string name="native_status_public_ready">OpenCode · 就绪</string>
+    <string name="native_status_ready_body">随时可以开始</string>
+    <string name="native_status_ready_title">就绪 · 没有运行中的内容</string>
+</resources>

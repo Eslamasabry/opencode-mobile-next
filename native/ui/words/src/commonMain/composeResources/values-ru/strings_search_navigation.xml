@@ -54,7 +54,7 @@
     <string name="nativeSearchPlaceLanguage">Язык</string>
     <string name="nativeSearchAliasesLanguage">Арабский; английский; локаль Arabic; English; locale</string>
     <string name="nativeSearchPlaceTips">Советы</string>
-    <string name="nativeSearchAliasesTips">Справка; обучение; жесты Help; tutorials; gestures</string>
+    <string name="nativeSearchAliasesTips">Справка; обучение; жесты; показать советы снова; Help; tutorials; gestures</string>
     <string name="nativeSearchPlaceShortcuts">Сочетания клавиш</string>
     <string name="nativeSearchAliasesShortcuts">Клавиатура; компьютер; клавиши Keyboard; desktop; keys</string>
     <string name="nativeSearchShortcutsBody">Эти клавиши работают в поле ввода и в элементах управления, когда на них есть фокус.</string>
@@ -79,4 +79,9 @@
     <string name="nativeSearchHealthDisabled">Выкл.</string>
     <string name="nativeSearchPlaceProjects">Проекты</string>
     <string name="nativeSearchAliasesProjects">Файлы; проекты; папки Files; projects; folders</string>
+    <string name="nativeSearchAliasesUpdates">Обновление; обновить; новая версия; релиз; установить; Update; upgrade; release; install</string>
+    <string name="nativeSearchAliasesKeepRunning">Фоновый режим; батарея; оставаться на связи; служба переднего плана; не засыпать; Background; battery; foreground service</string>
+    <string name="nativeSearchAliasesLinuxPorts">Linux; открытые порты; прослушивание; порт сервера; open ports; listening; server port</string>
+    <string name="nativeSearchAliasesLinuxPackages">Linux; программы; пакеты; apt; установка; software; install; programs</string>
+    <string name="nativeSearchAliasesDemo">Демо; попробовать; пример; офлайн; Demo; try; sample; offline; example</string>
 </resources>

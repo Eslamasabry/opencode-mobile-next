@@ -12,4 +12,5 @@
     <string name="agentsPreviousVersionBody">Voltar para a versão anterior verificada guardada neste celular? O assistente para primeiro, depois os agentes do celular se conectam de novo. Logins e conversas continuam.</string>
     <string name="agentsPreviousVersionFailed">Não foi possível restaurar a versão anterior. Termine qualquer trabalho em andamento e tente novamente.</string>
     <string name="agentsPreviousVersionRestored">A versão anterior foi restaurada.</string>
+    <string name="agentsHelperStartAgain">Iniciar o auxiliar de agentes</string>
 </resources>

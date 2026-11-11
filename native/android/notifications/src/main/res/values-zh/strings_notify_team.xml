@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="notify_team_decision_title">AI 团队需要你做决定</string>
+    <string name="notify_team_decision_body">有任务在等你回答。打开 AI 团队进行回复。</string>
+    <string name="notify_team_review_title">AI 团队的工作可以审阅了</string>
+    <string name="notify_team_review_body">有任务已完成，等你审阅。</string>
+    <string name="notify_team_failed_title">AI 团队的一项任务失败</string>
+    <string name="notify_team_failed_body">打开 AI 团队查看发生了什么，并重新开始。</string>
+    <string name="notify_team_completed_title">AI 团队已完成项目</string>
+    <string name="notify_team_completed_body">项目的所有任务都已完成。</string>
+</resources>

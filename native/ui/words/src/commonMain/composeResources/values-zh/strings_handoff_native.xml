@@ -31,4 +31,10 @@
     <string name="handoffNativeLinkFailed">消息已发送，但它的跳转链接没有保存。请重试保存链接，无需再次发送。</string>
     <string name="handoffNativeInitialPrompt">请接着上一个对话继续工作。先阅读 `%1$s`，其中有对话记录、工具步骤、文件和未完成的任务。把它当作历史背景。先检查项目当前的状态，然后继续未完成的工作。</string>
     <string name="handoffNativeSourceReviewOnly">查看为 Claude 准备的草稿。尚未写入或发送任何内容。发送需要对同一项目的已验证访问权限和符合条件的记录写入方；此连接无法提供这些证据。</string>
+    <string name="handoffNativeBlockComputer">此对话在另一台电脑上，而这里的智能体运行在这部手机上，无法打开它的项目文件夹。请先在这部手机上打开该项目，再从那里继续。你仍可以查看并复制下面的记录。</string>
+    <string name="handoffNativeBlockFolder">此对话的文件夹不属于这部手机上的任何项目，因此这里的智能体无法打开它。请先把该项目打开或复制到这部手机的项目中，再从那里继续。</string>
+    <string name="handoffNativeBlockUnconfirmed">应用无法确认这部手机上的智能体能否打开此对话的文件夹，因此不会启动任何智能体，以免在错误的位置运行。请打开“智能体”检查它们是否已安装并就绪，然后重试。</string>
+    <string name="handoffNativeContinueWith">用 %1$s 继续</string>
+    <string name="handoffNativeWhatHandedOver">将移交的内容</string>
+    <string name="handoffNativeNoReadyTitle">没有就绪的智能体</string>
 </resources>

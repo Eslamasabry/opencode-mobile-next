@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="m40UsageAlerts">提醒</string>
+    <string name="m40UsageWidget">主屏幕小组件</string>
+    <string name="m40UsageReadFrom">读取用量</string>
+    <string name="m40UsageAdd">添加订阅</string>
+    <string name="m40UsageSaveFailed">该更改未能保存。请重试。</string>
+    <string name="m40UsageAlertsWatch">关注我的套餐</string>
+    <string name="m40UsageAlertsEvery">关注所有可读取额度的订阅。</string>
+    <string name="m40UsageTellMe">在以下情况通知我</string>
+    <string name="m40UsageReset">用完的套餐恢复可用</string>
+    <string name="m40UsageDifferent">为这些套餐单独设置</string>
+    <string name="m40UsageWhen">何时通知我</string>
+    <string name="m40UsageQuiet">免打扰时段</string>
+    <string name="m40UsageQuietShared">与其他通知使用相同的免打扰时段。</string>
+    <string name="m40UsageQuietStart">开始</string>
+    <string name="m40UsageQuietEnd">结束</string>
+    <string name="m40UsageQuietAllDay">这些时间会让提醒全天静音。</string>
+    <string name="m40UsageWifi">仅限 Wi-Fi</string>
+    <string name="m40UsageNothingToWatch">还没有可读取的套餐可供关注。</string>
+    <string name="m40UsageDownTo">当套餐降至</string>
+    <string name="m40UsageSameAsOthers">与其他相同：剩余 %1$d%</string>
+    <string name="m40UsageWidgetPlans">小组件上的套餐</string>
+    <string name="m40UsageWidgetSetup">显示需要设置的套餐</string>
+    <string name="m40UsageWidgetWindows">要显示的周期</string>
+    <string name="m40UsageBoth">5 小时和本周</string>
+    <string name="m40UsageReaderGone">这个已保存的连接已不可用。</string>
+    <string name="m40UsageReadPhoneBody">在应用内 Ubuntu 中设置读取器，以读取你已登录套餐的额度。服务商密钥保留在主机上。</string>
+    <string name="m40UsageReadComputerBody">刷新用量时，允许通过此服务器进行一次简短的只读检查。它会在这台电脑上查找已登录套餐的额度。你可以在这里关闭。</string>
+    <string name="m40UsageWhatRuns">电脑上运行的内容</string>
+    <string name="m40UsageReadCommand">node --input-type=module -e &lt;check&gt;</string>
+    <string name="m40UsageReadPrivacy">该检查在本地读取服务商的登录信息，只返回套餐额度和一个不透明的账号标识。密钥和令牌绝不会回到应用。</string>
+    <string name="m40UsageCopying">正在复制读取器</string>
+    <string name="m40UsageCheckingSignIns">正在检查登录</string>
+    <string name="m40UsageStarting">正在启动读取器</string>
+    <string name="m40UsageReading">正在读取套餐额度</string>
+    <string name="m40UsageChecking">正在检查连接</string>
+    <string name="m40UsageNeedsNode">这台电脑需要 Node 20 或更高版本才能读取套餐额度。</string>
+    <string name="m40UsageLinuxNotReady">请先设置应用内 Ubuntu，然后重试。</string>
+    <string name="m40UsageServerTooOld">请更新此服务器，以便通过命令终端读取用量。</string>
+    <string name="m40UsagePrepareFailed">读取器未能准备好。请重试。</string>
+    <string name="m40UsageStartFailed">读取器没有启动。请重试。</string>
+    <string name="m40UsageRemoveFailed">读取器未能移除。请重试。</string>
+    <string name="m40UsageUnreachable">无法连接到这台电脑。请检查连接后重试。</string>
+    <string name="m40UsageNoAnswer">检查没有返回可读的结果。请重试。</string>
+    <string name="m40UsageFoundNone">检查未发现已登录且可读取额度的套餐。</string>
+    <string name="m40UsageFound">已发现：%1$s</string>
+    <string name="m40UsageReadNow">立即读取</string>
+    <string name="m40UsageTurnOn">开启读取</string>
+    <string name="m40UsageTurnOff">关闭读取</string>
+    <string name="m40UsageThreshold">此套餐的提醒阈值</string>
+    <string name="m40UsageResetHelp">此套餐恢复可用时通知我。</string>
+    <string name="m40UsageReadOff">关闭从 %1$s 读取</string>
+    <string name="m40UsageChooseSignIn">选择登录位置</string>
+</resources>

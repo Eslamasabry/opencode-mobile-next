@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="setupKilled">Телефон закрыл OpenCode во время настройки. Завершённые шаги сохранены. Нажмите «Продолжить», чтобы начать с того места, где остановились.</string>
+    <string name="setupKilledMemory">На телефоне не хватило памяти, и он закрыл OpenCode во время настройки. Завершённые шаги сохранены. Нажмите «Продолжить», чтобы начать с того места, где остановились.</string>
+    <string name="setupBatteryTitle">Не давайте закрывать OpenCode</string>
+    <string name="setupBatteryBody">Некоторые телефоны закрывают приложения, чтобы экономить заряд. Измените эти настройки, чтобы настройка не прервалась.</string>
+    <string name="setupBatteryStepUnrestricted">Откройте настройку батареи для приложения и выберите «Без ограничений» (на некоторых телефонах она называется «Нет ограничений»).</string>
+    <string name="setupBatteryStepAutostart">Включите автозапуск для OpenCode.</string>
+    <string name="setupBatteryStepNeverSleeping">Добавьте OpenCode в список приложений, которые никогда не засыпают.</string>
+    <string name="setupBatteryOpenApp">Открыть настройки приложения</string>
+    <string name="setupBatteryOpenAutostart">Открыть автозапуск</string>
+    <string name="setupBatteryOpenSamsung">Открыть настройки батареи</string>
+    <string name="setupBatteryOpenFailed">Телефон не открыл этот экран. Выполните шаги в Настройках вручную.</string>
+</resources>

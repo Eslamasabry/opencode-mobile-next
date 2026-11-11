@@ -306,4 +306,6 @@
     <string name="phoneSetupRingDetailsTitle">Detalles de la configuración</string>
     <string name="browserTransportFailure">El navegador no pudo comunicarse con el servidor. Revisa la dirección y que el servidor esté en ejecución. Un servidor de otro origen debe permitir el origen de esta página (CORS), y una página cargada por https no puede usar un servidor http:// o ws://.</string>
     <string name="browserProbeTimeout">La conexión tardó demasiado. Revisa la dirección y que el servidor sea accesible desde este navegador.</string>
+    <string name="phoneSetupStartStepsNoTime">Instala, ponle nombre a un proyecto, inicia una conversación</string>
+    <string name="phoneSetupPreflightSpaceNumbers">La configuración necesita unos %1$s libres. Este teléfono tiene %2$s.</string>
 </resources>

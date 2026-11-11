@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatStarAskTitle">Suka OpenCode Next?</string>
+    <string name="chatStarAskBody">Bintang di GitHub membantu orang lain menemukannya.</string>
+    <string name="chatStarAskAction">Beri bintang di GitHub</string>
+    <string name="chatStarAskDismiss">Nanti saja</string>
+</resources>

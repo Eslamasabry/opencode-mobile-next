@@ -16,4 +16,5 @@
     <string name="modelDefaultsPrice">Entrada $%1$s · Saída $%2$s por milhão de tokens</string>
     <string name="modelDefaultsSelected">Selecionado</string>
     <string name="modelDefaultsSaving">Salvando a escolha do modelo</string>
+    <string name="modelDefaultsChecking">Verificando os modelos do servidor</string>
 </resources>

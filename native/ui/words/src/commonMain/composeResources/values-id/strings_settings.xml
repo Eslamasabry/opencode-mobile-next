@@ -763,4 +763,24 @@
     <string name="backgroundBatterySettingsInstead">Android tidak menampilkan pertanyaannya, jadi pengaturan baterainya dibuka. Setel aplikasi ini ke Tidak dibatasi di sana.</string>
     <string name="privacyPagesSummary">Server, penyedia, suara, file, dan pembaruan</string>
     <string name="manageSpaceKeptAllComputers">Komputer Anda dan semua yang di-push ke git tetap ada</string>
+    <string name="appearanceGlassLook">Tampilan kaca</string>
+    <string name="appearanceGlassLookPick">Pilih tampilan kaca</string>
+    <string name="appearanceGlassLookGlossy">Mengilap</string>
+    <string name="appearanceGlassLookGlossyLine">Kilau terang, melengkung di tepi</string>
+    <string name="appearanceGlassLookClear">Bening</string>
+    <string name="appearanceGlassLookClearLine">Tembus pandang, kilau tipis</string>
+    <string name="appearanceGlassLookFrosted">Buram</string>
+    <string name="appearanceGlassLookFrostedLine">Blur lembut, paling mudah dibaca</string>
+    <string name="appearanceGlassLookSmoked">Asap</string>
+    <string name="appearanceGlassLookSmokedLine">Kaca gelap berwarna di bilah dan tombol</string>
+    <string name="appearanceGlassLookDisclosure">Pratinjau memakai warna terang agar perbedaannya terlihat. Halaman di belakangnya menampilkan latar Anda yang sebenarnya.</string>
+    <string name="appearanceGlassLookFrostedLighter">Buram kini memakai kartu yang lebih ringan, sehingga lebih banyak latar Anda yang terlihat.</string>
+    <string name="appearanceGlassLookHeldMotion">Tampilan kaca dijeda saat gerakan dimatikan. Aktifkan gerakan lagi untuk memilih.</string>
+    <string name="appearanceGlassLookNeedsAndroid13">Tepi melengkung memerlukan Android 13. Ponsel ini menampilkannya buram, di semua tampilan.</string>
+    <string name="appearanceGlassCardHint">Ketuk Kaca lagi untuk memilih tampilannya.</string>
+    <string name="appearanceGlassCardLook">Kaca · %1$s</string>
+    <string name="appearancePreviewAsk">Rapikan halaman pengaturan</string>
+    <string name="appearancePreviewReply">Selesai. Tiga file berubah dan semua pemeriksaan lulus.</string>
+    <string name="appearancePreviewAction">Tinjau perubahan</string>
+    <string name="appearancePreviewSpoken">Contoh aplikasi dengan pilihan ini</string>
 </resources>

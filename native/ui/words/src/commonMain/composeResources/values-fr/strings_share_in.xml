@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <plurals name="shareInPartial">
+        <item quantity="one">%1$d fichier sur %2$d ajouté. %3$s</item>
+        <item quantity="many">%1$d fichiers sur %2$d ajoutés. %3$s</item>
+        <item quantity="other">%1$d fichiers sur %2$d ajoutés. %3$s</item>
+    </plurals>
+    <string name="shareInReasonLimit">Un brouillon contient jusqu’à 5 fichiers et 20 Mo.</string>
+    <string name="shareInReasonTooLarge">Les autres sont trop volumineux pour être joints (10 Mo chacun).</string>
+    <string name="shareInReasonUnsupported">Les autres sont d’un type de fichier qui ne peut pas être joint.</string>
+    <string name="shareInReasonUnreadable">Les autres n’ont pas pu être lus. Essayez de les partager à nouveau.</string>
+    <string name="shareInNoneTooLarge">Rien n’a été ajouté. Il est trop volumineux pour être joint (10 Mo chacun, 20 Mo au total).</string>
+    <string name="shareInNoneUnsupported">Rien n’a été ajouté. Ce type de fichier ne peut pas être joint.</string>
+    <string name="shareInNoneUnreadable">Rien n’a été ajouté. Le fichier n’a pas pu être lu. Essayez de le partager à nouveau.</string>
+    <string name="shareInGotIt">Compris</string>
+</resources>

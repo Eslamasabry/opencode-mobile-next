@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="setupKilled">Ponsel Anda menutup OpenCode saat penyiapan berjalan. Langkah yang sudah selesai tetap tersimpan. Lanjutkan untuk meneruskan dari tempat terhenti.</string>
+    <string name="setupKilledMemory">Memori ponsel Anda habis dan OpenCode ditutup saat penyiapan berjalan. Langkah yang sudah selesai tetap tersimpan. Lanjutkan untuk meneruskan dari tempat terhenti.</string>
+    <string name="setupBatteryTitle">Biarkan OpenCode tetap berjalan</string>
+    <string name="setupBatteryBody">Beberapa ponsel menutup aplikasi untuk menghemat baterai. Ubah pengaturan ini agar penyiapan tidak terputus.</string>
+    <string name="setupBatteryStepUnrestricted">Buka pengaturan Baterai aplikasi dan pilih “Tanpa batasan” (beberapa ponsel menyebutnya “Tidak dibatasi”).</string>
+    <string name="setupBatteryStepAutostart">Aktifkan Mulai otomatis untuk OpenCode.</string>
+    <string name="setupBatteryStepNeverSleeping">Tambahkan OpenCode ke aplikasi yang tidak pernah tidur.</string>
+    <string name="setupBatteryOpenApp">Buka pengaturan aplikasi</string>
+    <string name="setupBatteryOpenAutostart">Buka Mulai otomatis</string>
+    <string name="setupBatteryOpenSamsung">Buka Baterai</string>
+    <string name="setupBatteryOpenFailed">Ponsel ini tidak mau membuka layar itu. Ikuti langkah-langkah di Pengaturan secara manual.</string>
+</resources>

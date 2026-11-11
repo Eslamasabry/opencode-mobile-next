@@ -262,7 +262,7 @@
     </plurals>
     <string name="serversRemoveDrafts__eq1">1 bản nháp chưa gửi sẽ bị xóa</string>
     <string name="serversRemoveActiveNext">Bạn đang kết nối với máy chủ này: ứng dụng sẽ ngắt kết nối và hiện danh sách máy chủ của bạn</string>
-    <string name="serversRemoveServerKeeps">Không có gì bị xóa trên máy chủ hoặc ở nhà cung cấp AI của bạn.</string>
+    <string name="serversRemoveServerKeeps">Không có gì bị xóa trên máy chủ hay ở các nhà cung cấp AI của bạn.</string>
     <string name="pairingScannerAllowCamera">Cho phép dùng camera</string>
     <string name="pairingScannerStarting">Đang mở camera…</string>
     <string name="profileMonitorSwitchBody">Đang có một lượt chạy trên %1$s. Khi chuyển, ứng dụng sẽ hiện %2$s; lượt chạy trên %1$s vẫn tiếp tục.</string>
@@ -500,4 +500,6 @@
     <string name="serverDetailsAccessDenied">Máy chủ từ chối truy cập. Hãy kiểm tra tài khoản nào được dùng máy chủ này.</string>
     <string name="serverDetailsFixSignIn">Sửa đăng nhập</string>
     <string name="serverDetailsLastAttempt">Lần thử kết nối gần nhất: %1$s</string>
+    <string name="connectionAgentStarting">Đang khởi động Claude Code…</string>
+    <string name="connectionAgentStartFailed">Claude Code không khởi động được. Chạm Khởi động lại Claude Code để thử một lần nữa.</string>
 </resources>

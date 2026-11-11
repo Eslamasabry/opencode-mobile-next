@@ -15,6 +15,7 @@ import kotlin.test.assertTrue
  * Each planted defect must be found; clean output must give no finding.
  */
 class DriftTest {
+
     private val recipes = HandRecipes.parse(
         listOf("runningPhoneCpu\tselect\tlevel words", "e7SettingsStorageSummary\tsplit-plurals\ttwo counts"),
     )
@@ -101,6 +102,53 @@ class DriftTest {
         assertTrue(Drift.Kind.CATEGORIES in kinds, f.joinToString("\n"))
         assertTrue(Drift.Kind.INVISIBLE in kinds, f.joinToString("\n"))
         assertTrue(Drift.Kind.EXACT in kinds, f.joinToString("\n"))
+    }
+
+    /** An Arabic value rewritten after the ARB froze, with the pipeline state file for it (or not). */
+    private fun pipelineCase(owned: (String) -> Map<String, Map<String, String>>): List<Drift.Finding> {
+        val out = written()
+        val name = "chatUiReferenceAlreadyAdded"
+        val enLine = out.resolve("composeResources/values/strings_chat.xml").readText().lines().first { "name=\"$name\"" in it }
+        val english = enLine.substringAfter(">").substringBeforeLast("</string>")
+        val arFile = out.resolve("composeResources/values-ar/strings_chat.xml")
+        val arLine = arFile.readText().lines().first { "name=\"$name\"" in it }
+        edit(arFile, arLine, arLine.substringBefore(">") + ">نص كتبه المسار</string>")
+        return Drift.check(
+            Drift.Inputs(
+                arbDir = Fixture.arbDir, recipes = recipes, androidRes = null,
+                words = out.resolve("composeResources"), unused = out.resolve("unused"), androidResOut = out.resolve("res"),
+                owned = owned(english),
+            ),
+        ).filter { it.name == name }
+    }
+
+    @Test
+    fun `a key the pipeline owns for its language is not drift`() {
+        val f = pipelineCase { english -> mapOf("ar" to mapOf("chatUiReferenceAlreadyAdded" to Drift.stateHash(english))) }
+        assertEquals(emptyList(), f)
+    }
+
+    @Test
+    fun `a hand-edited key that is not in the state file is still drift`() {
+        val f = pipelineCase { emptyMap() }
+        assertTrue(f.any { it.kind == Drift.Kind.CHANGED && it.locale == "ar" }, f.toString())
+        // Another key or another language in the state file does not own it.
+        val g = pipelineCase { english -> mapOf("ar" to mapOf("other" to Drift.stateHash(english)), "es" to mapOf("chatUiReferenceAlreadyAdded" to Drift.stateHash(english))) }
+        assertTrue(g.any { it.kind == Drift.Kind.CHANGED && it.locale == "ar" }, g.toString())
+    }
+
+    @Test
+    fun `a state entry whose English changed since is not owned, so the drift stays visible`() {
+        val f = pipelineCase { mapOf("ar" to mapOf("chatUiReferenceAlreadyAdded" to Drift.stateHash("an older English text"))) }
+        assertTrue(f.any { it.kind == Drift.Kind.CHANGED && it.locale == "ar" }, f.toString())
+    }
+
+    @Test
+    fun `the state hash is the one translate-py writes`() {
+        // python3: hashlib.sha1(json.dumps(v, ensure_ascii=False, sort_keys=True).encode()).hexdigest()[:10]
+        assertEquals("454b12ef6b", Drift.stateHash("Try again"))
+        assertEquals("f2e5516c45", Drift.stateHash("Line\n\"q\" é \\"))
+        assertEquals("ab4438bfd1", Drift.stateHash(mapOf("other" to "%1\$d files", "one" to "1 file")))
     }
 
     @Test

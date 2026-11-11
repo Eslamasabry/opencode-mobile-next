@@ -16,4 +16,5 @@
     <string name="modelDefaultsPrice">Masukan $%1$s · Keluaran $%2$s per juta token</string>
     <string name="modelDefaultsSelected">Dipilih</string>
     <string name="modelDefaultsSaving">Menyimpan pilihan model</string>
+    <string name="modelDefaultsChecking">Memeriksa model di server</string>
 </resources>

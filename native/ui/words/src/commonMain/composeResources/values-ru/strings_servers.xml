@@ -519,4 +519,6 @@
     <string name="serverDetailsAccessDenied">Сервер отказал в доступе. Проверьте, какая учётная запись может использовать этот сервер.</string>
     <string name="serverDetailsFixSignIn">Исправить вход</string>
     <string name="serverDetailsLastAttempt">Последняя попытка подключения: %1$s</string>
+    <string name="connectionAgentStarting">Запускаем Claude Code…</string>
+    <string name="connectionAgentStartFailed">Claude Code не запустился. Нажмите «Перезапустить Claude Code», чтобы попробовать ещё раз.</string>
 </resources>

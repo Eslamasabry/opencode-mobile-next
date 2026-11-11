@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="phoneTeamProofSignal">Le test de sécurité a été fermé par Android (signal %1$d) avant de pouvoir se terminer.</string>
+    <string name="phoneTeamProofCheckSignal">La vérification de sécurité «\u00A0%1$s\u00A0» a été fermée par Android (signal %2$d).</string>
+    <string name="phoneTeamProofNotBlocked">La vérification de sécurité «\u00A0%1$s\u00A0» a échoué\u00A0: ce téléphone ne l’a pas bloquée comme l’exige le bac à sable de l’équipe.</string>
+    <string name="phoneTeamProofSandbox">Le bac à sable de l’équipe n’a pas pu démarrer sur ce téléphone.</string>
+    <string name="phoneTeamProofUbuntu">L’étape Ubuntu «\u00A0%1$s\u00A0» a échoué dans le bac à sable de l’équipe.</string>
+    <string name="phoneTeamProofFixture">Les fichiers de test privés de la vérification de sécurité ont changé ou n’ont pas pu être préparés.</string>
+    <string name="phoneTeamProofNoAnswer">Le test de sécurité n’a pas répondu à temps.</string>
+    <string name="phoneTeamProofProot">La vérification de sécurité proot «\u00A0%1$s\u00A0» n’a pas réussi.</string>
+    <string name="phoneTeamProofOther">La vérification de sécurité s’est arrêtée à «\u00A0%1$s\u00A0».</string>
+</resources>

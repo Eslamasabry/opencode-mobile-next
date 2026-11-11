@@ -1736,4 +1736,8 @@
     <string name="teamVoiceApprovePlan">Commencer à construire %1$s</string>
     <string name="teamVoiceAcceptPhase">Accepter %1$s</string>
     <string name="teamVoicePutOnMain">Mettre %1$s sur main</string>
+    <string name="teamRefusalServerRestarted">OpenCode a redémarré pendant l’exécution de cette étape, qui a donc été interrompue.</string>
+    <string name="teamRefusalServerRestartedNext">Reprenez pour renvoyer cette étape. Elle repart du travail déjà accompli.</string>
+    <string name="teamRefusalRestartResend">OpenCode a redémarré pendant l’exécution de cette étape. L’équipe la renvoie.</string>
+    <string name="teamRefusalRestartResendNext">Rien à faire. Le travail déjà accompli est conservé.</string>
 </resources>

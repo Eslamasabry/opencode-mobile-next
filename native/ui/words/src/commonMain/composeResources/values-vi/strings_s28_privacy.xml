@@ -22,11 +22,11 @@
     <string name="collectAgents">Tác nhân có khởi động được không, và loại lỗi</string>
     <string name="collectBackground">Lý do dịch vụ nền dừng</string>
     <string name="collectUpdates">Bản cập nhật có cài được không, và loại lỗi</string>
-    <string name="collectPages">Bạn dùng loại trang và tính năng nào, các bước thiết lập, phản hồi đầu tiên, mỗi lần dùng kéo dài bao lâu và bạn gửi bao nhiêu tin nhắn trong đó</string>
+    <string name="collectPages">Bạn dùng những loại trang và tính năng nào, các bước thiết lập, câu trả lời đầu tiên, một lượt dùng kéo dài bao lâu và bạn đã gửi bao nhiêu tin nhắn trong đó</string>
     <string name="collectJourney">Bạn đã đi đến đâu trong các bước đầu (mở ứng dụng, thiết lập, kết nối, gửi tin nhắn, nhận phản hồi đầu tiên) và khoảng bao lâu sau khi bạn đồng ý. Mỗi bước chỉ được đếm một lần</string>
     <string name="collectStarters">Loại gợi ý bạn đã chạm trong cuộc trò chuyện mới, không bao giờ gồm lời của nó hay điều nó yêu cầu</string>
     <string name="collectStart">Ứng dụng khởi động nhanh thế nào</string>
-    <string name="collectSmooth">Các trang mượt thế nào (tỷ lệ khung hình chậm và bị đứng), và tốc độ làm mới của màn hình</string>
+    <string name="collectSmooth">Các trang chạy mượt đến mức nào (tỷ lệ khung hình chậm và bị đứng) và tần số làm tươi của màn hình</string>
     <string name="collectMemory">Cảnh báo bộ nhớ từ Android</string>
     <string name="collectDevice">Các mức bộ nhớ và dung lượng trống của điện thoại, loại bộ xử lý và phiên bản WebView, thông báo có được cho phép không, và loại cũng như phiên bản máy chủ bạn dùng</string>
     <string name="collectCrashKind">Loại lỗi và vị trí xảy ra trong mã của ứng dụng, không bao giờ gửi nội dung thông báo</string>
@@ -34,4 +34,5 @@
     <string name="collectSteps">30 bước gần nhất của bạn, dưới dạng từ ngắn như chat.send</string>
     <string name="collectCrashKeys">Phiên bản ứng dụng, cách cài đặt, loại máy chủ, máy chủ của điện thoại này có đang chạy không, số kết nối đang mở và phiên bản máy chủ</string>
     <string name="collectNever">Lời nhắc và phản hồi, tên hoặc đường dẫn tệp, địa chỉ web, tên máy chủ, địa chỉ IP, nội dung thông báo lỗi, khóa hoặc mã thông báo, ID quảng cáo hay ID Android</string>
+    <string name="collectReport">Những gì bạn viết về sự cố, lần gần nhất ứng dụng đóng đột ngột, phiên bản ứng dụng và Android, khoảng bộ nhớ và loại máy chủ; khóa, địa chỉ và đường dẫn được che đi. Không có nhật ký và không có cuộc trò chuyện. Bạn xem được toàn bộ và chọn Gửi hoặc Hủy.</string>
 </resources>

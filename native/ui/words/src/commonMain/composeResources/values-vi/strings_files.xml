@@ -24,4 +24,5 @@
     <string name="filesReasonNotShowable">Loại tệp này không thể hiện ở đây.</string>
     <string name="filesReasonNotShowableBody">Nó không phải văn bản hay hình ảnh. Hãy mở nó trên máy tính chứa tệp.</string>
     <string name="filesReasonNotShowablePhoneBody">Nó không phải văn bản hay hình ảnh. Tệp nằm trên điện thoại này nên ứng dụng khác có thể mở: hãy chọn Mở bằng.</string>
+    <string name="filesShowingSaved">Đang hiện dữ liệu đã lưu. Hiện chưa kết nối được với máy chủ.</string>
 </resources>

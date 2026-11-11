@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="widget_label">对话</string>
+    <string name="widget_description">此刻最重要的一件事：需要你处理的、正在进行的，或你的上一个对话。</string>
+    <string name="native_team_working">工作中</string>
+    <string name="native_widget_now">现在</string>
+    <string name="native_widget_minutes">%1$s分</string>
+    <string name="native_widget_hours">%1$s时</string>
+    <string name="native_widget_days">%1$s天</string>
+    <string name="usage_widget_title">用量</string>
+    <string name="usage_widget_description">每个套餐额度还剩多少，以及何时重置。</string>
+    <string name="usage_widget_empty">还没有额度读数。打开用量以连接数据来源。</string>
+    <string name="usage_widget_resets">%1$s后重置</string>
+    <string name="usage_widget_updated">%1$s前更新</string>
+    <string name="usage_widget_sign_in">登录</string>
+    <string name="usage_widget_add_key">添加密钥</string>
+    <string name="usage_widget_not_signed_in">未登录</string>
+    <string name="usage_widget_no_key">未添加密钥</string>
+    <string name="usage_widget_set_up">去设置</string>
+    <string name="usage_widget_cant_read">暂时无法读取</string>
+    <string name="usage_widget_auth">需要登录</string>
+    <string name="usage_widget_this_phone">这部手机</string>
+    <string name="usage_widget_provider_claude">Claude</string>
+    <string name="usage_widget_provider_codex">Codex</string>
+    <string name="usage_widget_provider_minimax">MiniMax</string>
+    <string name="usage_widget_provider_glm">GLM</string>
+    <string name="usage_widget_column">%1$s \u0020剩余 %2$s%%</string>
+    <string name="usage_widget_short_hours">%1$s时</string>
+    <string name="usage_widget_short_days">%1$s天</string>
+    <string name="usage_widget_short_week">每周</string>
+    <string name="usage_widget_short_month">每月</string>
+    <string name="widget_label_wide">对话</string>
+    <string name="widget_label_list">对话列表</string>
+    <string name="widget_label_strip">对话条</string>
+    <string name="widget_description_wide">需要你处理或正在进行的内容，以及接下来的对话。</string>
+    <string name="widget_description_list">此刻最重要的一件事，其下是你的其他对话。</string>
+    <string name="widget_description_strip">此刻最重要的一件事，单行显示。</string>
+    <string name="usage_widget_title_wide">用量（宽）</string>
+    <string name="usage_widget_description_wide">每个套餐额度还剩多少，两列宽。</string>
+    <string name="widget_label_status">状态</string>
+    <string name="widget_description_status">你的服务器、这部手机的 Linux、运行中的任务，以及最接近用完的套餐额度。</string>
+</resources>

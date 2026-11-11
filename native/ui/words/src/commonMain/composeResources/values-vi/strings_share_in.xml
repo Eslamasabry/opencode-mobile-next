@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <plurals name="shareInPartial">
+        <item quantity="other">Đã thêm %1$d trên %2$d tệp. %3$s</item>
+    </plurals>
+    <string name="shareInReasonLimit">Một bản nháp chứa tối đa 5 tệp và 20 MB.</string>
+    <string name="shareInReasonTooLarge">Các tệp còn lại quá lớn để đính kèm (mỗi tệp 10 MB).</string>
+    <string name="shareInReasonUnsupported">Các tệp còn lại thuộc loại không thể đính kèm.</string>
+    <string name="shareInReasonUnreadable">Các tệp còn lại không đọc được. Hãy thử chia sẻ lại.</string>
+    <string name="shareInNoneTooLarge">Chưa thêm gì. Tệp quá lớn để đính kèm (mỗi tệp 10 MB, tổng cộng 20 MB).</string>
+    <string name="shareInNoneUnsupported">Chưa thêm gì. Loại tệp này không thể đính kèm.</string>
+    <string name="shareInNoneUnreadable">Chưa thêm gì. Không đọc được tệp. Hãy thử chia sẻ lại.</string>
+    <string name="shareInGotIt">Đã hiểu</string>
+</resources>

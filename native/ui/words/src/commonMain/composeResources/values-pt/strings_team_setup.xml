@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="phoneTeamProofSignal">O teste de segurança foi encerrado pelo Android (sinal %1$d) antes de terminar.</string>
+    <string name="phoneTeamProofCheckSignal">A verificação de segurança “%1$s” foi encerrada pelo Android (sinal %2$d).</string>
+    <string name="phoneTeamProofNotBlocked">A verificação de segurança “%1$s” falhou: este celular não a bloqueou como o sandbox da equipe precisa.</string>
+    <string name="phoneTeamProofSandbox">O sandbox da equipe não conseguiu iniciar neste celular.</string>
+    <string name="phoneTeamProofUbuntu">A etapa do Ubuntu “%1$s” falhou dentro do sandbox da equipe.</string>
+    <string name="phoneTeamProofFixture">Os arquivos de teste privados da verificação de segurança mudaram ou não puderam ser preparados.</string>
+    <string name="phoneTeamProofNoAnswer">O teste de segurança não respondeu a tempo.</string>
+    <string name="phoneTeamProofProot">A verificação de segurança do proot “%1$s” não passou.</string>
+    <string name="phoneTeamProofOther">A verificação de segurança parou em “%1$s”.</string>
+</resources>

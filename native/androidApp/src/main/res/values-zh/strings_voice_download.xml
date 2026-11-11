@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="voice_download_title">语音设置</string>
+    <string name="voice_download_downloading">正在下载语音包</string>
+    <string name="voice_download_verifying">正在准备语音输入</string>
+    <string name="voice_download_complete">语音输入已就绪</string>
+    <string name="voice_download_failed">语音设置失败。请打开应用重试。</string>
+</resources>

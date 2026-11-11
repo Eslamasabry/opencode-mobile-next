@@ -54,7 +54,7 @@
     <string name="nativeSearchPlaceLanguage">Idioma</string>
     <string name="nativeSearchAliasesLanguage">Árabe; inglês; localização</string>
     <string name="nativeSearchPlaceTips">Dicas</string>
-    <string name="nativeSearchAliasesTips">Ajuda; tutoriais; gestos</string>
+    <string name="nativeSearchAliasesTips">Ajuda; tutoriais; gestos; mostrar as dicas de novo</string>
     <string name="nativeSearchPlaceShortcuts">Atalhos de teclado</string>
     <string name="nativeSearchAliasesShortcuts">Teclado; computador; teclas</string>
     <string name="nativeSearchShortcutsBody">Estas teclas funcionam na caixa de mensagem e nos controles do kit quando estão em foco.</string>
@@ -79,4 +79,9 @@
     <string name="nativeSearchHealthDisabled">Desativado</string>
     <string name="nativeSearchPlaceProjects">Projetos</string>
     <string name="nativeSearchAliasesProjects">Arquivos; projetos; pastas</string>
+    <string name="nativeSearchAliasesUpdates">Atualizar; atualização; nova versão; lançamento; instalar</string>
+    <string name="nativeSearchAliasesKeepRunning">Segundo plano; bateria; manter conectado; serviço em primeiro plano; manter ativo</string>
+    <string name="nativeSearchAliasesLinuxPorts">Linux; portas abertas; escutando; porta do servidor</string>
+    <string name="nativeSearchAliasesLinuxPackages">Linux; software; apt; instalar; programas</string>
+    <string name="nativeSearchAliasesDemo">Demo; testar; exemplo; offline; amostra</string>
 </resources>

@@ -1660,4 +1660,8 @@
     <string name="teamVoiceApprovePlan">Mulai membuat %1$s</string>
     <string name="teamVoiceAcceptPhase">Terima %1$s</string>
     <string name="teamVoicePutOnMain">Taruh %1$s di main</string>
+    <string name="teamRefusalServerRestarted">OpenCode dimulai ulang saat langkah ini berjalan, sehingga langkah terputus.</string>
+    <string name="teamRefusalServerRestartedNext">Lanjutkan untuk mengirim langkah itu lagi. Prosesnya meneruskan dari pekerjaan yang sudah selesai.</string>
+    <string name="teamRefusalRestartResend">OpenCode dimulai ulang saat langkah ini berjalan. Tim sedang mengirimnya lagi.</string>
+    <string name="teamRefusalRestartResendNext">Tidak ada yang perlu dilakukan. Pekerjaan yang sudah selesai tetap tersimpan.</string>
 </resources>

@@ -16,4 +16,5 @@
     <string name="modelDefaultsPrice">Ввод $%1$s · вывод $%2$s за миллион токенов</string>
     <string name="modelDefaultsSelected">Выбрано</string>
     <string name="modelDefaultsSaving">Сохранение выбора модели</string>
+    <string name="modelDefaultsChecking">Проверяем модели сервера</string>
 </resources>

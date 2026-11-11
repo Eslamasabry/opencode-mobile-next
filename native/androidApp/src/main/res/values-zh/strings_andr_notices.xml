@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="andr_appExitForceStopped">OpenCode Mobile 已于 %1$s 关闭</string>
+    <string name="andr_appExitStoppedBackground">OpenCode 已停止。如果不是你操作的，可能是手机的电池管理将其关闭了</string>
+    <string name="andr_appExitLowMemory">Android 为释放内存，已于 %1$s 关闭 OpenCode Mobile</string>
+    <string name="andr_appExitCrashed">OpenCode Mobile 已于 %1$s 意外停止</string>
+    <string name="andr_appExitKilled">Android 已于 %1$s 停止 OpenCode Mobile</string>
+    <string name="andr_appExitServerStopped">%1$s。这部手机上的 OpenCode 也随之停止，正在重新启动。</string>
+    <string name="andr_appExitServerAndTeamStopped">%1$s。这部手机上的 OpenCode 和 AI 团队也随之停止，正在重新启动。</string>
+    <string name="andr_appExitServerStoppedManual">%1$s。这部手机上的 OpenCode 也随之停止。准备好后请再次启动。</string>
+    <string name="andr_appExitServerAndTeamStoppedManual">%1$s。这部手机上的 OpenCode 和 AI 团队也随之停止。准备好后请再次启动。</string>
+    <string name="andr_appExitServerBack">%1$s。这部手机上的 OpenCode 也随之停止，现已重新运行。</string>
+    <string name="andr_appExitServerBackTeam">%1$s。这部手机上的 OpenCode 和 AI 团队也随之停止；OpenCode 现已重新运行。</string>
+    <string name="andr_appExitAtTime">%1$s</string>
+    <string name="andr_appExitOnDay">%1$s %2$s</string>
+    <string name="andr_appExitKeepRunning">保持运行</string>
+    <string name="andr_backgroundPauseTimeLimit">为节省电量，后台连接已于 %1$s 暂停。</string>
+    <string name="andr_backgroundPauseRestricted">后台连接已暂停：电池使用受限。</string>
+    <string name="andr_backgroundPauseUserStopped">后台连接已随应用在 %1$s 关闭而停止。</string>
+    <string name="andr_backgroundPauseAppUpdated">后台连接已随应用在 %1$s 更新而停止。</string>
+    <string name="andr_backgroundPauseInterrupted">后台连接因未知原因停止。</string>
+    <string name="andr_backgroundPauseDeviceRestarted">后台连接已随手机重启而停止。</string>
+    <string name="andr_backgroundPauseResumeShort">恢复</string>
+    <string name="andr_backgroundPauseResuming">正在恢复后台连接…</string>
+    <string name="andr_backgroundPauseResumeFailed">无法恢复。请打开“保持运行”设置。</string>
+    <string name="andr_backgroundPauseOpenKeepRunning">打开“保持运行”设置</string>
+    <string name="andr_notifyDismiss">忽略</string>
+    <string name="andr_firstRunNotifyTitle">智能体需要你时通知你？</string>
+    <string name="andr_firstRunNotifyBody">智能体工作时，你可以离开应用。它需要你回答时会通知你。保持连接期间，Android 会显示一条小的常驻通知。</string>
+    <string name="andr_firstRunNotifyAccept">通知我</string>
+    <string name="andr_firstRunNotifyDecline">暂不</string>
+    <string name="andr_notifyPermissionRefused">通知已被禁止。请在 Android 设置中允许通知，然后开启后台连接。</string>
+    <string name="andr_notifyEnableFailed">后台连接未能启动。请打开后台设置重试。</string>
+    <string name="andr_pauseBackground">暂停后台</string>
+    <string name="andr_notifySaveFailed">你的选择未能保存，因此没有开启任何内容。请重试。</string>
+    <string name="andr_termuxRetiredNotice">不再支持 Termux。请在这部手机上设置内置 Linux,或连接你的电脑。你在 Termux 中的项目仍然保留；把它们复制到手机共享存储，或用 Git 推送即可迁移。</string>
+    <string name="andr_termuxRetiredSetUpBuiltin">设置内置 Linux</string>
+    <string name="andr_termuxRetiredConnectComputer">连接电脑</string>
+    <string name="andr_crashOfferMessage">OpenCode Mobile 上次意外关闭。要发送崩溃报告吗？</string>
+    <string name="andr_crashOfferReview">查看并发送</string>
+    <string name="andr_crashOfferNotNow">暂不</string>
+</resources>
