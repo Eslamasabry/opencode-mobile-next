@@ -90,7 +90,8 @@ class Kita1FrameInsetsTest {
                     assertTrue(body.bottom <= window.bottom - (if (ime) 240 else 24).dp)
                     assertEquals(body, onNodeWithTag("child").getBoundsInRoot())
                     if (!bar && !bottom) {
-                        assertEquals(window.top + 28.dp, body.top)
+                        // 29c59aa4b7: the frame always lays out the loading bar's 2 dp (Dart `KitLoadingBar`), so nothing jumps while it loads.
+                        assertEquals(window.top + 28.dp + 2.dp, body.top)
                         assertEquals(window.bottom - (if (ime) 240 else 24).dp, body.bottom)
                     }
                 }
