@@ -60,6 +60,8 @@ public data class OpenCodeListing(
      * Sessions whose last run finished after the person last opened them (device read watermarks).
      */
     val finishedUnseen: Set<SessionId> = emptySet(),
+    /** Sessions whose latest turn the person stopped from this app (`ConnectionDelivery.stoppedByPerson`). */
+    val stoppedByPerson: Set<SessionId> = emptySet(),
     val loading: Boolean = false,
     val complete: Boolean = true,
     val failed: Boolean = false,
@@ -82,6 +84,8 @@ public class OpenCodeChatFeedSource(
      * agents). Null keeps the row an OpenCode one.
      */
     private val agentOf: (Session) -> Pair<String, String?>? = { null },
+    /** Whether reopening the session needs a new conversation (the agents helper's answer); null = unknown. */
+    private val needsNewChat: (Session) -> Boolean? = { null },
     private val refresh: suspend () -> Outcome<Unit> = { Unit.ok() },
 ) : ChatFeedSource {
     override val id: String = "opencode:${profileId.raw}"
@@ -134,6 +138,8 @@ public class OpenCodeChatFeedSource(
             parentId = session.parentId,
             sourceLabel = label,
             finishedUnseen = chatStatus == ChatStatus.Idle && session.id in listing.finishedUnseen,
+            stoppedByPerson = chatStatus == ChatStatus.Idle && session.id in listing.stoppedByPerson,
+            needsNewChat = chatStatus != ChatStatus.Running && needsNewChat(session) == true,
         )
     }
 }

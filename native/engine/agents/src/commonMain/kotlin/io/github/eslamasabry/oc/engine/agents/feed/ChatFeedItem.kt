@@ -50,6 +50,18 @@ public data class ChatFeedItem(
     /** False for an agent chat that cannot resume (always true for OpenCode). */
     val canReopen: Boolean = true,
     /**
+     * The newest turn ended because the person pressed Stop from this app (Flutter
+     * `ChatFeedItem.stoppedByPerson`, `chat_feed.dart:52`). OpenCode 2 reports a stop as a normal
+     * finish, so only this memory can tell "Stopped" from "Done". Meaningful with [finishedUnseen].
+     */
+    val stoppedByPerson: Boolean = false,
+    /**
+     * An agent conversation the helper no longer holds and cannot resume (Flutter `AgentResumeNotice
+     * .requiresAcknowledgement`): a tap offers "Start a new conversation" instead of opening a dead chat. Distinct
+     * from `canReopen = false`, which only says the listing is not verified yet.
+     */
+    val needsNewChat: Boolean = false,
+    /**
      * Opaque `[baseUrl, directory, workspace]` key shared with the return brief; null means
      * unknown.
      */

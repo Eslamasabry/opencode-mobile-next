@@ -69,6 +69,7 @@ public class ChatsViewModel(
     private val filters = MutableStateFlow(ChatsFilters())
     private val sheet = MutableStateFlow<ChatsHomeSheet?>(null)
     private val watchedSelection = MutableStateFlow<String?>(null)
+    private val startNewAsk = MutableStateFlow<StartNewUi?>(null)
     private val answers =
         MutableStateFlow<Pair<Set<String>, io.github.eslamasabry.oc.core.common.Failure?>>(
             emptySet<String>() to null
@@ -192,6 +193,7 @@ public class ChatsViewModel(
                     confirmWatched = extra.monitoring.requests.firstOrNull { it.key == selected },
                 )
             }
+            .combine(startNewAsk) { base, ask -> base.copy(startNew = ask) }
             .combine(renaming) { base, rename ->
                 base.copy(
                     renamable = editable(feed.snapshot.value),
@@ -465,10 +467,26 @@ public class ChatsViewModel(
             return
         }
         // A row whose conversation cannot be reopened yet (its workspace is still connecting) stays shut.
-        if (feed.snapshot.value.items.none { it.ref == ref && it.canReopen }) return
+        val item = feed.snapshot.value.items.firstOrNull { it.ref == ref && it.canReopen } ?: return
+        // H4: an agent conversation the helper cannot resume asks before anything opens (F: chats_home_screen.dart:186).
+        AgentResumeRules.ask(item, ChatsState.row(item).agentName)?.let {
+            sheet.value = null
+            startNewAsk.value = it
+            return
+        }
         sheet.value = null
         feed.prefetch(ref)
         nav.openChat(ref)
+    }
+
+    override fun confirmStartNew() {
+        val ask = startNewAsk.value ?: return
+        startNewAsk.value = null
+        nav.open(AgentResumeRules.route(ask))
+    }
+
+    override fun dismissStartNew() {
+        startNewAsk.value = null
     }
 
     override fun rowAct(row: ConversationRowUi, act: RowAct) {
