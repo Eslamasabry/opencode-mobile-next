@@ -12,40 +12,52 @@ import kotlinx.serialization.json.JsonPrimitive
  * credential-named member, `key` included). The redactor then masks a registered value everywhere, even inside longer
  * words, so a registered ordinary word corrupts every preview, tool row and log line that contains it.
  *
- * - A sign-in method's `form` lists the fields the sign-in asks for: each entry's `key` is the field's NAME
- *   ("project", "location", "profile", "account", "server", "accountId" on a 2.2.6 server) and a `when` condition's
- *   `key` names another field. Registered, "/root/projects/bg5.txt" was shown as "/root/•••s/bg5.txt" and "Check the
- *   server" lost its noun. The form is left out of the walk; the readers still register a hidden field's default
- *   themselves (a preset the person never sees), and a visible default is shown to the person in the clear.
- * - The built-in OpenCode provider carries `settings.apiKey = "public"`: OpenCode's published anonymous key for its
- *   free models, which guards nothing. Registered, every "public" folder was masked. Any other value stays.
- *
- * Every other member is walked exactly as before: a provider's or connection's real `key`, `apiKey`, `token`,
- * `password`, `access`, `refresh` and the rest are still registered.
+ * Both exceptions are tied to their place in the answer, never to a member name alone, so a credential the server or
+ * the person put anywhere else is walked exactly as before:
+ * - A sign-in method's `form` (`data[].methods[].form`) lists the fields the sign-in asks for: each entry's `key` is
+ *   the field's NAME ("project", "location", "profile", "account", "server", "accountId" on a 2.2.6 server) and a
+ *   `when` condition inside it names another field. Registered, "/root/projects/bg5.txt" was shown as
+ *   "/root/•••s/bg5.txt" and "Check the server" lost its noun. In the 2.2.6 schema a form field has no other
+ *   credential-named member (`additionalProperties: false`), and a hidden field's `default` (a preset the person never
+ *   sees) was never a credential-named member: the readers register it themselves.
+ * - The built-in OpenCode provider (a `data[]` row with `id` "opencode") carries `settings.apiKey = "public"`: OpenCode's
+ *   published anonymous key for its free models, which guards nothing. Registered, every "public" folder was masked.
+ *   Exact match only; any other value, and the same value under any other provider, stays registered.
  */
 internal fun Redactor.registerAnswerCredentials(answer: JsonElement) {
-    registerCredentialValues(withoutDescriptors(answer))
+    registerCredentialValues(withoutDescriptors(answer, member = null))
 }
 
-private fun withoutDescriptors(value: JsonElement): JsonElement =
+/** [member] is the name of the member that holds [value] (for an array element: the member that holds the array). */
+private fun withoutDescriptors(value: JsonElement, member: String?): JsonElement =
     when (value) {
-        is JsonArray -> JsonArray(value.map(::withoutDescriptors))
-        is JsonObject ->
+        is JsonArray -> JsonArray(value.map { withoutDescriptors(it, member) })
+        is JsonObject -> {
+            val method = member == "methods" && (value["type"] as? JsonPrimitive)?.isString == true
+            // A provider row: an element of the answer's `data` list (or of a bare top-level list).
+            val freeProvider =
+                (member == "data" || member == null) && (value["id"] as? JsonPrimitive)?.content == FREE_PROVIDER_ID
             JsonObject(
-                value
-                    .filterNot { (name, field) -> isDescriptor(name, field) || isPublicKey(name, field) }
-                    .mapValues { (_, field) -> withoutDescriptors(field) }
+                buildMap {
+                    for ((name, field) in value) {
+                        if (method && name == "form" && field is JsonArray) continue
+                        put(
+                            name,
+                            if (freeProvider && name == "settings" && field is JsonObject) withoutPublicKey(field)
+                            else withoutDescriptors(field, name),
+                        )
+                    }
+                }
             )
+        }
         else -> value
     }
 
-private fun isDescriptor(name: String, field: JsonElement): Boolean =
-    (name == "form" || name == "when") && field is JsonArray
+private fun withoutPublicKey(settings: JsonObject): JsonElement {
+    val key = settings["apiKey"] as? JsonPrimitive
+    val anonymous = key != null && key.isString && key.content == PUBLIC_ANONYMOUS_KEY
+    return withoutDescriptors(if (anonymous) JsonObject(settings - "apiKey") else settings, "settings")
+}
 
-private fun isPublicKey(name: String, field: JsonElement): Boolean =
-    name.lowercase().replace("-", "").replace("_", "") == "apikey" &&
-        field is JsonPrimitive &&
-        field.isString &&
-        field.content == PUBLIC_ANONYMOUS_KEY
-
+private const val FREE_PROVIDER_ID = "opencode"
 private const val PUBLIC_ANONYMOUS_KEY = "public"
