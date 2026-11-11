@@ -7,6 +7,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.domain.*
@@ -14,6 +15,7 @@ import io.github.eslamasabry.oc.feature.agents.tools.presentation.*
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.*
 import io.github.eslamasabry.oc.ui.kit.frame.*
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.*
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.row.*
@@ -137,20 +139,35 @@ public fun ToolsScreen(state: ToolsUi, actions: ToolsActions) {
                             !state.loading
                     )
                         KitRow(stringResource(Res.string.protoToolsEmpty))
-                    for (plugin in state.plugins) KitRow(
-                        trailing = KitRowTrailing.Chevron,
-                        onClick = { pluginDetail = plugin },
-                        title = plugin.id ?: stringResource(Res.string.protoToolsUnnamedPlugin),
-                        supporting =
-                            listOf(
-                                    pluginStatus(plugin.status),
-                                    pluginSource(plugin.source),
-                                    plugin.packageName,
-                                )
-                                .filterNotNull()
-                                .joinToString(" · "),
-                        supportingMaxLines = 3,
-                    )
+                    // A6: names a person reads, the server's own plugins folded into one row (Flutter
+                    // server_plugins_section.dart:253-283); the raw id is in the plugin's Details.
+                    val groups = PluginGroups.of(state.plugins)
+                    for (plugin in groups.added) PluginRow(plugin) { pluginDetail = plugin }
+                    if (groups.builtIn.isNotEmpty()) {
+                        var open by
+                            remember(groups.builtInFailed > 0) { mutableStateOf(groups.builtInFailed > 0) }
+                        KitExpandRow(
+                            title = stringResource(Res.string.pluginsBuiltinGroup),
+                            expanded = open,
+                            modifier = Modifier.testTag("plugins-builtin-group"),
+                            supporting =
+                                listOfNotNull(
+                                        stringResource(Res.string.pluginsBuiltinActive, groups.builtInActive),
+                                        groups.builtInFailed
+                                            .takeIf { it > 0 }
+                                            ?.let { stringResource(Res.string.pluginsBuiltinFailed, it) },
+                                    )
+                                    .joinToString(" · "),
+                            onExpandedChange = { open = it },
+                            leading = KitIcons.extensions,
+                            inset = true,
+                            titleMaxLines = 1,
+                            supportingMaxLines = 2,
+                            bare = true,
+                        ) {
+                            for (plugin in groups.builtIn) PluginRow(plugin) { pluginDetail = plugin }
+                        }
+                    }
                 }
             PluginDetailSheet(pluginDetail) { pluginDetail = null }
             if (state.catalogSupported) {
@@ -266,6 +283,23 @@ private fun issueWords(issue: ToolsIssue): String =
         }
     )
 
+/** One plugin: its readable name and where it stands; tapping opens its details, where the raw id is. */
+@Composable
+private fun PluginRow(plugin: LibraryPlugin, onOpen: () -> Unit) {
+    KitRow(
+        trailing = KitRowTrailing.Chevron,
+        onClick = onOpen,
+        title = plugin.id?.let(::readablePluginName) ?: stringResource(Res.string.protoToolsUnnamedPlugin),
+        supporting =
+            listOfNotNull(
+                    pluginStatus(plugin.status),
+                    pluginSource(plugin.source).takeIf { plugin.source != LibraryPluginSource.Builtin },
+                )
+                .joinToString(" · "),
+        supportingMaxLines = 3,
+    )
+}
+
 @Composable
 private fun pluginStatus(status: LibraryPluginStatus): String =
     stringResource(
@@ -309,7 +343,7 @@ private fun PluginDetailSheet(plugin: LibraryPlugin?, onDismiss: () -> Unit) {
     KitSheet(
         visible = plugin != null,
         onDismissRequest = onDismiss,
-        title = plugin?.id ?: stringResource(Res.string.pluginsUnnamed),
+        title = plugin?.id?.let(::readablePluginName) ?: stringResource(Res.string.pluginsUnnamed),
         closeLabel = stringResource(Res.string.kitSheetClose),
     ) {
         plugin?.let { p ->
