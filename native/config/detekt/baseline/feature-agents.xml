@@ -2,16 +2,11 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>ComplexCondition:ProvidersPresentation.kt$ProvidersViewModel$chosen.fields.any { it.required &amp;&amp; inputs[it.key].isNullOrBlank() } || inputs.any { (k, v) -&gt; chosen.fields.none { it.key == k } || v.length &gt; 65536 }</ID>
-    <ID>ComplexCondition:ProvidersPresentation.kt$ProvidersViewModel$target == null || !target.isCurrent() || (requireLocation &amp;&amp; !target.atLocation())</ID>
     <ID>ComplexCondition:RemoteTerminalScreen.kt$state.canRerun &amp;&amp; state.selected.process?.let { !it.running &amp;&amp; it.command.isNotBlank() &amp;&amp; it.directory.isNotBlank() } == true</ID>
     <ID>ComplexCondition:SignInTerminalScreen.kt$state.step == SignInStep.Running &amp;&amp; state.inputEnabled &amp;&amp; (state.canOpenPage || state.code != null)</ID>
     <ID>CyclomaticComplexMethod:AgentAccountPanel.kt$@Composable internal fun AgentAccountPanel( state: AgentsUi, actions: AgentsActions, now: Instant = CommonBindings.clock().now(), )</ID>
     <ID>CyclomaticComplexMethod:AgentInstallPanel.kt$@Composable internal fun AgentInstallPanel( state: AgentsUi, actions: AgentsActions, modifier: Modifier, enabled: KitEnabled, )</ID>
     <ID>CyclomaticComplexMethod:AgentsScreen.kt$@Composable public fun AgentsScreen( state: AgentsUi, actions: AgentsActions, hub: AgentsHubControlsUi? = null, hubActions: AgentsHubActions? = null, showArrival: Boolean = false, dismissArrival: () -&gt; Unit = {}, )</ID>
-    <ID>CyclomaticComplexMethod:ProvidersPresentation.kt$ProvidersViewModel$override fun refresh()</ID>
-    <ID>CyclomaticComplexMethod:ProvidersPresentation.kt$ProvidersViewModel$override fun start(inputs: Map&lt;String, String&gt;)</ID>
-    <ID>CyclomaticComplexMethod:ProvidersScreen.kt$@Composable public fun ProvidersScreen(state: ProvidersUi, actions: ProvidersActions)</ID>
     <ID>CyclomaticComplexMethod:RemoteTerminalScreen.kt$@Composable public fun RemoteTerminalScreen(state: RemoteTerminalUi, actions: RemoteTerminalActions)</ID>
     <ID>CyclomaticComplexMethod:RemoteTerminalViewModel.kt$RemoteTerminalViewModel$override fun send(value: String)</ID>
     <ID>CyclomaticComplexMethod:RemoteTerminalViewModel.kt$RemoteTerminalViewModel$private suspend fun open( expected: ConnectionGraph, place: ServerLocation, stamp: Long, gateway: ServerOperationsGateway, selected: RemoteTerminalItem, )</ID>
@@ -29,7 +24,6 @@
     <ID>LongMethod:AgentsEntries.kt$AgentsEntries$override fun EntryProviderScope&lt;NavKey&gt;.install()</ID>
     <ID>LongMethod:AgentsScreen.kt$@Composable private fun PhoneAgentRows(state: AgentsUi, actions: AgentsActions, enabled: KitEnabled)</ID>
     <ID>LongMethod:AgentsScreen.kt$@Composable public fun AgentsScreen( state: AgentsUi, actions: AgentsActions, hub: AgentsHubControlsUi? = null, hubActions: AgentsHubActions? = null, showArrival: Boolean = false, dismissArrival: () -&gt; Unit = {}, )</ID>
-    <ID>LongMethod:ProvidersScreen.kt$@Composable public fun ProvidersScreen(state: ProvidersUi, actions: ProvidersActions)</ID>
     <ID>LongMethod:RemoteTerminalScreen.kt$@Composable public fun RemoteTerminalScreen(state: RemoteTerminalUi, actions: RemoteTerminalActions)</ID>
     <ID>LongMethod:RemoteTerminalViewModel.kt$RemoteTerminalViewModel$private suspend fun open( expected: ConnectionGraph, place: ServerLocation, stamp: Long, gateway: ServerOperationsGateway, selected: RemoteTerminalItem, )</ID>
     <ID>LongMethod:SignInTerminalScreen.kt$@Composable public fun SignInTerminalScreen( state: SignInTerminalUi, actions: SignInTerminalActions, modifier: Modifier = Modifier, pageApproval: @Composable () -&gt; Unit = {}, )</ID>
@@ -52,7 +46,6 @@
     <ID>MagicNumber:AgentInstallPanel.kt$1_000_000L</ID>
     <ID>MagicNumber:AgentInstallPanel.kt$1_000_000_000L</ID>
     <ID>MagicNumber:AgentsPresenter.kt$AgentsPresenter$413</ID>
-    <ID>MagicNumber:ProvidersPresentation.kt$ProvidersViewModel$65536</ID>
     <ID>MagicNumber:RemoteTerminalViewModel.kt$RemoteTerminalViewModel$100</ID>
     <ID>MagicNumber:RemoteTerminalViewModel.kt$RemoteTerminalViewModel$15_000</ID>
     <ID>MagicNumber:RemoteTerminalViewModel.kt$RemoteTerminalViewModel$200</ID>
@@ -77,7 +70,6 @@
     <ID>ReturnCount:AgentsPresenter.kt$AgentsPresenter$override fun prepareDraft(id: SessionId)</ID>
     <ID>ReturnCount:AgentsScreen.kt$@Composable private fun phoneStatusWords( agent: io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRow ): String</ID>
     <ID>ReturnCount:AgentsViewModel.kt$AgentsViewModel$override fun signInPhone(id: String)</ID>
-    <ID>ReturnCount:ProvidersPresentation.kt$ProvidersViewModel$override fun start(inputs: Map&lt;String, String&gt;)</ID>
     <ID>ReturnCount:RemoteTerminalViewModel.kt$RemoteTerminalViewModel$override fun send(value: String)</ID>
     <ID>ReturnCount:RemoteTerminalViewModel.kt$RemoteTerminalViewModel$private fun command( block: suspend (ConnectionGraph, ServerLocation, Long, ServerOperationsGateway) -&gt; Unit )</ID>
     <ID>ReturnCount:RemoteTerminalViewModel.kt$RemoteTerminalViewModel$private suspend fun load(expected: ConnectionGraph, place: ServerLocation, stamp: Long)</ID>
@@ -94,8 +86,6 @@
     <ID>TooManyFunctions:AgentsUi.kt$AgentsActions</ID>
     <ID>TooManyFunctions:AgentsViewModel.kt$AgentsViewModel : ViewModelAgentsActionsAgentsHubActions</ID>
     <ID>TooManyFunctions:PhoneSignInRoute.kt$PhoneSignInRouteViewModel : ViewModelPhoneSignInController</ID>
-    <ID>TooManyFunctions:ProvidersPresentation.kt$ProvidersActions</ID>
-    <ID>TooManyFunctions:ProvidersPresentation.kt$ProvidersViewModel : ViewModelProvidersActions</ID>
     <ID>TooManyFunctions:RemoteTerminalUi.kt$RemoteTerminalActions</ID>
     <ID>TooManyFunctions:RemoteTerminalViewModel.kt$RemoteTerminalViewModel : ViewModelRemoteTerminalActions</ID>
     <ID>TooManyFunctions:SignInTerminalPresenter.kt$SignInTerminalPresenter : SignInTerminalActions</ID>
@@ -117,22 +107,6 @@
     <ID>WildcardImport:PhoneSignInScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
     <ID>WildcardImport:ProvidersEntries.kt$import dev.zacsweers.metro.*</ID>
     <ID>WildcardImport:ProvidersEntries.kt$import io.github.eslamasabry.oc.ui.routes.*</ID>
-    <ID>WildcardImport:ProvidersPresentation.kt$import dev.zacsweers.metro.*</ID>
-    <ID>WildcardImport:ProvidersPresentation.kt$import io.github.eslamasabry.oc.core.common.*</ID>
-    <ID>WildcardImport:ProvidersPresentation.kt$import io.github.eslamasabry.oc.core.model.*</ID>
-    <ID>WildcardImport:ProvidersPresentation.kt$import kotlinx.collections.immutable.*</ID>
-    <ID>WildcardImport:ProvidersPresentation.kt$import kotlinx.coroutines.flow.*</ID>
-    <ID>WildcardImport:ProvidersPresentation.kt$import kotlinx.serialization.json.*</ID>
-    <ID>WildcardImport:ProvidersScreen.kt$import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:ProvidersScreen.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:ProvidersScreen.kt$import io.github.eslamasabry.oc.feature.agents.providers.presentation.*</ID>
-    <ID>WildcardImport:ProvidersScreen.kt$import io.github.eslamasabry.oc.ui.kit.*</ID>
-    <ID>WildcardImport:ProvidersScreen.kt$import io.github.eslamasabry.oc.ui.kit.frame.*</ID>
-    <ID>WildcardImport:ProvidersScreen.kt$import io.github.eslamasabry.oc.ui.kit.input.*</ID>
-    <ID>WildcardImport:ProvidersScreen.kt$import io.github.eslamasabry.oc.ui.kit.modal.*</ID>
-    <ID>WildcardImport:ProvidersScreen.kt$import io.github.eslamasabry.oc.ui.kit.row.*</ID>
-    <ID>WildcardImport:ProvidersScreen.kt$import io.github.eslamasabry.oc.ui.kit.state.*</ID>
-    <ID>WildcardImport:ProvidersScreen.kt$import io.github.eslamasabry.oc.ui.words.res.*</ID>
     <ID>WildcardImport:RemoteTerminalScreen.kt$import io.github.eslamasabry.oc.feature.agents.remote_terminal.presentation.*</ID>
     <ID>WildcardImport:RemoteTerminalScreen.kt$import io.github.eslamasabry.oc.ui.kit.*</ID>
     <ID>WildcardImport:RemoteTerminalScreen.kt$import io.github.eslamasabry.oc.ui.kit.frame.*</ID>
