@@ -74,6 +74,13 @@ public interface TeamHost {
      */
     public suspend fun turnOffPhoneTeam(profileId: String): Outcome<Unit> =
         Outcome.Failed(Failure.Unavailable(FeatureId("team.off")))
+
+    /**
+     * Turns a computer's team off for [profileId] (Flutter `turnOffTeam` for Gas City): clears the profile's team
+     * config, so the next [config] answers null. Nothing changes on the computer; never retried.
+     */
+    public suspend fun turnOffComputerTeam(profileId: String): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("team.off")))
 }
 
 /** What the team page shows (Dart `TeamPage`'s branches). */
@@ -84,7 +91,10 @@ public enum class TeamPhase {
     /** No team on this server: the intro and turn-on. */
     Off,
 
-    /** A computer's team (Gas City) or the demo: not shown by the native team yet. */
+    /**
+     * A team that runs on a computer (Gas City): [TeamEngine.fleet] has it ([TeamState.config] is its address). Also
+     * the demo fixture, which only says so.
+     */
     Computer,
 
     /** The phone's team is on but not answering, and nothing was read before (Dart `PhoneTeamOffPage`). */
@@ -127,6 +137,9 @@ public class TeamEngine(
     private val kept: TeamLastKnown? = null,
     /** Times the turn-on's steps; the app passes its clock, a test that does not read times needs none. */
     private val clock: Clock = Unset,
+    /** A computer's team (Gas City); null where no wiring can reach one. */
+    public val fleet: io.github.eslamasabry.oc.engine.team.fleet.FleetEngine? = null,
+    /** Last, so a test can pass it as a trailing lambda. */
     private val newRequestId: () -> String = Ids()::next,
 ) {
     private val lane = Mutex()
@@ -275,8 +288,14 @@ public class TeamEngine(
      * old team shows first next time. A failure leaves the team as it was.
      */
     public suspend fun turnOff(profileId: String): Outcome<Unit> {
-        val done = lane.withLock { host.turnOffPhoneTeam(profileId) }
+        val provider = (flow(profileId).value.config ?: host.config(profileId))?.provider
+        val done =
+            lane.withLock {
+                if (provider == null || provider == TeamProvider.PhoneEngine) host.turnOffPhoneTeam(profileId)
+                else host.turnOffComputerTeam(profileId)
+            }
         if (done is Outcome.Ok) {
+            fleet?.forget(profileId)
             // The kept shelf has no delete: an empty workspace reads back as nothing to show.
             kept?.keep(profileId, KeptTeam(""))
             setup(profileId).dismiss()

@@ -46,8 +46,14 @@ import org.json.JSONObject
 object TeamBindings {
     @Provides
     @SingleIn(AppScope::class)
-    fun engine(host: AppTeamHost, kept: Set<TeamLastKnown>, clock: kotlin.time.Clock): TeamEngine =
-        TeamEngine(host, kept = kept.firstOrNull(), clock = clock)
+    fun engine(host: AppTeamHost, kept: Set<TeamLastKnown>, clock: kotlin.time.Clock, dispatchers: AppDispatchers): TeamEngine =
+        TeamEngine(
+            host,
+            kept = kept.firstOrNull(),
+            clock = clock,
+            // A team on a computer (Gas City): plain HTTP and its event stream, no credential (G2).
+            fleet = io.github.eslamasabry.oc.engine.team.fleet.FleetEngine(AppFleetTransports(dispatchers), clock),
+        )
 }
 
 /**
@@ -91,6 +97,19 @@ class AppTeamHost(
                 kotlinx.coroutines.withContext(dispatchers.io) { linux.stopPhoneEngine(profileId) }
             }
         if (stopped is Outcome.Failed) return stopped
+        return when (val saved = stores.profiles.upsert(loaded.profile.copy(orchestration = null), SecretEdit.Keep, expected = loaded)) {
+            is Outcome.Ok -> Outcome.Ok(Unit)
+            is Outcome.Failed -> saved
+        }
+    }
+
+    /**
+     * Flutter `turnOffTeam` for a computer's team: the config goes, nothing changes on the computer, and the app never
+     * stored anything else for it (Flutter's `oc.orchestration.<id>.*` leftovers go with the profile's sweep).
+     */
+    override suspend fun turnOffComputerTeam(profileId: String): Outcome<Unit> {
+        stores.warm()
+        val loaded = stores.profiles.profile(ProfileId(profileId)) ?: return Outcome.Failed(Failure.Unexpected())
         return when (val saved = stores.profiles.upsert(loaded.profile.copy(orchestration = null), SecretEdit.Keep, expected = loaded)) {
             is Outcome.Ok -> Outcome.Ok(Unit)
             is Outcome.Failed -> saved

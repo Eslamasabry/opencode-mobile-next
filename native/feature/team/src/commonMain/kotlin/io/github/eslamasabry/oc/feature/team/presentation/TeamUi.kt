@@ -72,6 +72,8 @@ public data class TeamHomeUi(
     val intro: TeamIntroUi = TeamIntroUi(),
     /** [TeamPhase.PhoneOff]: whether a check is already going (Flutter `PhoneTeamOffPage`). */
     val phoneOff: PhoneOffUi = PhoneOffUi(),
+    /** [TeamPhase.Computer]: the team on a computer (Flutter `TeamHomeScreen` over Gas City). */
+    val computer: FleetHomeUi = FleetHomeUi(),
 )
 
 public interface TeamHomeActions : TeamIntroActions {
@@ -110,6 +112,12 @@ public interface TeamHomeActions : TeamIntroActions {
     public fun openTask(projectId: String, taskId: String) {}
 
     public fun dismissRefusal() {}
+
+    /** A computer's team: read it again now, or look for it again after it was not found (Dart `_refresh`). */
+    public fun refreshComputer() {}
+
+    /** A computer's team: the finished tasks past the first three (Dart `team-home-completed-more`). */
+    public fun showMoreDone() {}
 }
 
 /**

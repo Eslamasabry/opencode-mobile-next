@@ -16,6 +16,8 @@ import io.github.eslamasabry.oc.engine.team.TeamEngine
 import io.github.eslamasabry.oc.engine.team.TeamPhase
 import io.github.eslamasabry.oc.engine.team.TeamProvider
 import io.github.eslamasabry.oc.engine.team.TeamState
+import io.github.eslamasabry.oc.engine.team.fleet.FleetState
+import kotlinx.coroutines.flow.flowOf
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.TeamRoute
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -51,6 +53,11 @@ public data class TeamSettingsUi(
     val working: Boolean = false,
     /** The last Turn off could not stop the team on this phone, so it is still on. */
     val offFailed: Boolean = false,
+    /**
+     * The team runs on a computer (Gas City): no roles editor or phone check here, the computer's words in Technical
+     * details, and Turn off only forgets it on this phone.
+     */
+    val computer: Boolean = false,
 )
 
 public interface TeamSettingsActions {
@@ -77,18 +84,26 @@ public interface TeamSettingsActions {
 
 /** Pure mapping from the engine's state to the settings page (tested without Compose). */
 public object TeamSettingsPresent {
-    public fun present(state: TeamState, redact: (String) -> Redacted): TeamSettingsUi {
+    public fun present(state: TeamState, redact: (String) -> Redacted, fleetVersion: String? = null): TeamSettingsUi {
         val config = state.config
         val phone = config?.provider == TeamProvider.PhoneEngine
         return TeamSettingsUi(
             phase = state.phase,
             roles = state.workspace?.roles?.size ?: 0,
             canCheck = phone,
+            computer = config != null && !phone,
             host =
                 config?.let {
                     TeamHostFacts(
-                        provider = redact(if (phone) "phoneEngine" else it.provider.name),
-                        version = state.health?.engineVersion?.let(redact),
+                        provider =
+                            redact(
+                                when (it.provider) {
+                                    TeamProvider.PhoneEngine -> "phoneEngine"
+                                    TeamProvider.GasCity -> "gascity"
+                                    TeamProvider.Fixture -> "fixture"
+                                },
+                            ),
+                        version = (state.health?.engineVersion ?: fleetVersion?.takeIf { _ -> !phone })?.let(redact),
                         address = redact(it.url),
                         protection = state.health?.boundaryTier?.takeIf { tier -> tier == "proot" || tier == "landlock" },
                     )
@@ -113,8 +128,8 @@ public class TeamSettingsViewModel(
     private val local = MutableStateFlow(TeamSettingsUi())
 
     public val state: StateFlow<TeamSettingsUi> =
-        combine(engine.state(profile), local) { team, mine ->
-                TeamSettingsPresent.present(team, redactor::details)
+        combine(engine.state(profile), local, engine.fleet?.state(profile) ?: flowOf(FleetState())) { team, mine, fleet ->
+                TeamSettingsPresent.present(team, redactor::details, fleet.host?.version)
                     .copy(
                         detailsOpen = mine.detailsOpen,
                         confirmingOff = mine.confirmingOff,
