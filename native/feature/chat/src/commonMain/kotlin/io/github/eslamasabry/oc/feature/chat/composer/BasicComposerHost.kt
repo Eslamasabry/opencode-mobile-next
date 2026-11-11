@@ -880,7 +880,7 @@ public fun BasicComposer(
         val inlineMic = if (voiceActive) inlineAtStart else typed
         // S28 story 14 (Flutter `_stopBeforeSend`): a hung reply on a server that does not steer is stopped first;
         // the words go once it has stopped, and nothing goes if it does not stop.
-        val stopsFirst = SendFieldRules.stopsBeforeSend(busy, state.steers, chrome.stuck())
+        val stopsFirst = (busy && state.restarts) || SendFieldRules.stopsBeforeSend(busy, state.steers, chrome.stuck())
         val stopAndSend: () -> Unit = {
             scope.launch {
                 chrome.onStop()
@@ -895,6 +895,7 @@ public fun BasicComposer(
             stringResource(
                 when {
                     state.sending -> Res.string.kitComposerSending
+                    busy && state.restarts -> Res.string.kitComposerStopAndSend
                     busy && state.steers -> Res.string.kitComposerAddToTurn
                     busy -> Res.string.kitComposerSendAfter
                     else -> Res.string.kitComposerSend

@@ -41,7 +41,22 @@ public data class ApprovalChipUi(
     val saveFailure: Failure? = null,
     /** Asks answered automatically in this conversation while it was open. */
     val autoAnswered: Int = 0,
+    /** C2: whether this conversation's sub-agents follow its automatic mode. */
+    val inheritToChildren: Boolean = false,
+    /** C2: where the mode comes from when it is not this conversation's own choice. */
+    val setBy: ApprovalSetBy = ApprovalSetBy.Itself,
+    /** C2: this conversation has its own choice and a parent exists, so it can go back to following the parent. */
+    val canFollowParent: Boolean = false,
+    /** C2: the permissions approved automatically here, newest first (at most five). */
+    val approvedPermissions: List<String> = emptyList(),
 )
+
+/** Where the effective approval mode was decided. */
+public enum class ApprovalSetBy {
+    Itself,
+    Parent,
+    Server,
+}
 
 public interface ApprovalChipActions {
     public fun openApprovalMenu()
@@ -55,6 +70,12 @@ public interface ApprovalChipActions {
     public fun cancelEverything()
 
     public fun dismissApprovalFailure()
+
+    /** C2: sub-agents follow this conversation's automatic mode (or not). */
+    public fun setInheritToChildren(on: Boolean) {}
+
+    /** C2: drop this conversation's own choice so it follows its parent again. */
+    public fun followParent() {}
 }
 
 /**
@@ -85,6 +106,7 @@ public class ApprovalPresenter(
             automatic = { session -> effective(session).automatic },
             reply = { request -> port.allowOnce(request) },
             clock = clock,
+            onRecorded = { AutoApprovalRecords.add(ref.profileId, it) },
         )
 
     private fun settings(): Map<String, SessionApproval> = store?.settings(ref.profileId).orEmpty()
@@ -101,15 +123,28 @@ public class ApprovalPresenter(
 
     public fun current(): ApprovalChipUi = present(capabilities.value, local.value)
 
-    private fun present(caps: ServerCapabilities, l: Local): ApprovalChipUi =
-        ApprovalChipUi(
+    private fun present(caps: ServerCapabilities, l: Local): ApprovalChipUi {
+        val effective = effective(ref.sessionId)
+        return ApprovalChipUi(
             offered = store != null && caps.permissionRequests,
-            choice = choiceOf(effective(ref.sessionId)),
+            choice = choiceOf(effective),
+            inheritToChildren = effective.explicit && settings()[ref.sessionId.raw]?.inheritToChildren == true,
+            setBy =
+                when {
+                    effective.explicit -> ApprovalSetBy.Itself
+                    effective.inheritedFrom != null -> ApprovalSetBy.Parent
+                    effective.serverWide -> ApprovalSetBy.Server
+                    else -> ApprovalSetBy.Itself
+                },
+            canFollowParent = effective.explicit && port.parentOf(ref.sessionId) != null,
+            approvedPermissions =
+                AutoApprovalRecords.recent(ref.profileId, ref.sessionId).map { it.permission },
             menuOpen = l.menuOpen,
             confirmEverything = l.confirmEverything,
             saveFailure = l.saveFailure,
             autoAnswered = l.autoAnswered,
         )
+    }
 
     /**
      * The chip's state, plus the sweep: every waiting ask and every mode change re-applies the
@@ -127,7 +162,7 @@ public class ApprovalPresenter(
                 if (mine > 0) local.update { it.copy(autoAnswered = it.autoAnswered + mine) }
             }
             .launchIn(scope)
-        return combine(capabilities, local, revision) { c, l, _ -> present(c, l) }
+        return combine(capabilities, local, revision, AutoApprovalRecords.revision) { c, l, _, _ -> present(c, l) }
             .stateIn(scope, started, current())
     }
 
@@ -166,6 +201,25 @@ public class ApprovalPresenter(
         local.update { it.copy(saveFailure = null) }
     }
 
+    override fun setInheritToChildren(on: Boolean) {
+        writeOwn(SessionApproval(ApprovalMode.AutoOnce, inheritToChildren = on))
+    }
+
+    override fun followParent() {
+        writeOwn(null)
+    }
+
+    private fun writeOwn(setting: SessionApproval?) {
+        val s = store ?: return
+        val profile = ref.profileId
+        val session = ref.sessionId.raw
+        launcher.launch {
+            var result: Outcome<Unit> = s.set(profile, session, setting)
+            if (result is Outcome.Ok) result = port.syncPermissions()
+            local.update { it.copy(saveFailure = (result as? Outcome.Failed)?.failure) }
+        }
+    }
+
     /** The one write path (Flutter `_writeApprovalChoice`). */
     private fun write(choice: ApprovalChoice) {
         val s = store ?: return
@@ -185,7 +239,14 @@ public class ApprovalPresenter(
                         ApprovalChoice.Ask ->
                             s.set(profile, session, SessionApproval(ApprovalMode.Ask))
                         ApprovalChoice.Auto ->
-                            s.set(profile, session, SessionApproval(ApprovalMode.AutoOnce))
+                            s.set(
+                                profile,
+                                session,
+                                SessionApproval(
+                                    ApprovalMode.AutoOnce,
+                                    inheritToChildren = s.settings(profile)[session]?.inheritToChildren == true,
+                                ),
+                            )
                         ApprovalChoice.Everything -> {
                             val all =
                                 s.set(

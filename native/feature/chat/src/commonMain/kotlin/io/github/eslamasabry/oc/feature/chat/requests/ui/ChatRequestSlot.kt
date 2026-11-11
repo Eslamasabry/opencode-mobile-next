@@ -92,6 +92,9 @@ import io.github.eslamasabry.oc.ui.words.res.chatStopAfterStepUndo
 import io.github.eslamasabry.oc.ui.words.res.chatUiAlwaysAllow
 import io.github.eslamasabry.oc.ui.words.res.invitation40Question
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmCancel
+import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceDismissDetail
+import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceDismissRequest
+import io.github.eslamasabry.oc.ui.words.res.kitSheetDismiss
 import io.github.eslamasabry.oc.ui.words.res.kitRequestAnswer
 import io.github.eslamasabry.oc.ui.words.res.kitRequestChangeSize
 import io.github.eslamasabry.oc.ui.words.res.kitRequestReplyEmptyReason
@@ -474,7 +477,19 @@ private fun QuestionWaiting(
     card: RequestCardUi.Question,
     actions: ChatRequestActions,
 ) {
+    var confirming by remember { mutableStateOf(false) }
+    KitConfirm(
+        spec = if (!confirming) null else KitConfirmSpec(
+            title = stringResource(Res.string.e7WorkspaceDismissRequest),
+            confirmLabel = stringResource(Res.string.kitSheetDismiss),
+            body = stringResource(Res.string.e7WorkspaceDismissDetail),
+            kind = KitConfirmKind.Neutral,
+        ),
+        onConfirm = { confirming = false; actions.dismissQuestion(card.id) },
+        onCancel = { confirming = false },
+    )
     KitQuestionCard(
+        dismiss = KitAction(stringResource(Res.string.kitSheetDismiss), { confirming = true }),
         title = card.title,
         question = card.question,
         summary = stringResource(Res.string.chatRequestIfIgnored),

@@ -947,6 +947,7 @@ public fun ChatScreen(
                                             display = transcriptDisplay,
                                             onOpenSession = onOpenSession,
                                             onStopLive = actions::stop,
+                                            onUndoStopAfterStep = actions::undoStopAfterStep,
                                             starAsk = state.starAsk,
                                             onStarTap = actions::starTapped,
                                             onStarDismiss = actions::starDismissed,

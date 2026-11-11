@@ -89,6 +89,8 @@ public class AutoApprovalSweep(
     private val automatic: (SessionId) -> Boolean,
     private val reply: suspend (PermissionRequest) -> Outcome<Unit>,
     private val clock: Clock,
+    /** Every recorded approval, so a second sweep over the same connection can share one record. */
+    private val onRecorded: (AutoApproved) -> Unit = {},
 ) {
     private val lock = Mutex()
     private val inFlight = HashSet<RequestId>()
@@ -142,6 +144,7 @@ public class AutoApprovalSweep(
     }
 
     private fun record(entry: AutoApproved) {
+        onRecorded(entry)
         _history.update { all ->
             val list = (all[entry.sessionId] ?: persistentListOf()) + entry
             (all + (entry.sessionId to list.takeLast(HISTORY).toImmutableList())).toImmutableMap()

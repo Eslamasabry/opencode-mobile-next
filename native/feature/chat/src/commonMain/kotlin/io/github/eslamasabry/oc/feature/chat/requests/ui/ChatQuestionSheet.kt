@@ -8,6 +8,16 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
+import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceDismissDetail
+import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceDismissRequest
+import io.github.eslamasabry.oc.ui.words.res.kitSheetDismiss
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
@@ -42,11 +52,23 @@ internal fun ChatQuestionSheet(state: QuestionSheetUi, actions: ChatRequestActio
     val question = state.question
     val id = question.id
     val tokens = LocalKitTokens.current
+    var confirming by remember { mutableStateOf(false) }
+    KitConfirm(
+        spec = if (!confirming) null else KitConfirmSpec(
+            title = stringResource(Res.string.e7WorkspaceDismissRequest),
+            confirmLabel = stringResource(Res.string.kitSheetDismiss),
+            body = stringResource(Res.string.e7WorkspaceDismissDetail),
+            kind = KitConfirmKind.Neutral,
+        ),
+        onConfirm = { confirming = false; actions.dismissQuestion(id) },
+        onCancel = { confirming = false },
+    )
     KitSheet(
         visible = true,
         onDismissRequest = { actions.closeSheet(id) },
         title = stringResource(Res.string.e7WorkspaceNeedsInput),
         icon = KitIcons.question,
+        secondary = KitAction(stringResource(Res.string.kitSheetDismiss), onClick = { confirming = true }),
         primary = KitAction(
             stringResource(Res.string.e7WorkspaceSendAnswers),
             onClick = { actions.sendSheet(id) },

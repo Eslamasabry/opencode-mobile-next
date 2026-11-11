@@ -193,6 +193,11 @@ private data class Suggestions(
     val commands: List<ComposerCommand> = emptyList(),
     val agents: List<io.github.eslamasabry.oc.feature.chat.world.ComposerAgent> = emptyList(),
     val files: List<String> = emptyList(),
+    /**
+     * C6: a reply runs on an agent that stops and starts again from a new message (Flutter `MidTurnPrompt.restartsTurn`):
+     * Send reads "Stop and send".
+     */
+    val restarts: Boolean = false,
 )
 
 /** E04-S01: the sub-agents an `@word` matches, ranked as Flutter ranks them. */
@@ -324,7 +329,14 @@ public class BasicComposerViewModel(
                                     draft.failure == null &&
                                     !draft.sendBlocked,
                             sending = inFlight,
-                            steers = t.run.busy && caps.promptSteering,
+                            steers =
+                                t.run.busy &&
+                                    (caps.promptSteering ||
+                                        world.midTurn() == io.github.eslamasabry.oc.core.model.MidTurnPrompt.JoinsTurn),
+                            restarts =
+                                t.run.busy &&
+                                    !caps.promptSteering &&
+                                    world.midTurn() == io.github.eslamasabry.oc.core.model.MidTurnPrompt.RestartsTurn,
                             attachmentsSupported = caps.promptAttachments,
                             imagesOnly = caps.promptImagesOnly,
                             draft = draft,
