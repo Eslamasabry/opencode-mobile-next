@@ -23,6 +23,11 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.test.assertIsNotFocused
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsFocused
@@ -98,6 +103,8 @@ class ShellKeyParkTest {
         var other by mutableStateOf(false)
         val composer = TextFieldState()
         val field = TextFieldState()
+        /** The keys that reached the other field on their way in (desktop key presses do not type into a field). */
+        val reached = mutableListOf<Key>()
     }
 
     @Composable
@@ -116,7 +123,13 @@ class ShellKeyParkTest {
                         }
                         focus.requestFocus()
                     }
-                    BasicTextField(swap.field, Modifier.size(200.dp, 48.dp).testTag("other").focusRequester(focus))
+                    BasicTextField(
+                        swap.field,
+                        Modifier.size(200.dp, 48.dp).testTag("other").focusRequester(focus).onPreviewKeyEvent {
+                            if (it.type == KeyEventType.KeyDown) swap.reached += it.key
+                            false
+                        },
+                    )
                 }
             }
         }
@@ -138,7 +151,10 @@ class ShellKeyParkTest {
             pressKey(Key.G)
         }
         waitForIdle()
-        assertEquals("bg", swap.field.text.toString(), "the field that asked for focus has the keys")
+        // A key the park had used would have moved focus into the message field (N-55's steer).
+        assertEquals(listOf(Key.B, Key.G), swap.reached, "the keys went to the field that asked for focus")
+        onNodeWithTag("other").assertIsFocused()
+        if (clearFirst) onNodeWithTag("composer").assertIsNotFocused()
         assertEquals("", swap.composer.text.toString(), "the message field stays as it was")
     }
 

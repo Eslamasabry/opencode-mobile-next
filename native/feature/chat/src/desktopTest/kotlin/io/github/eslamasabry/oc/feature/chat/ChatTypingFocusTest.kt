@@ -56,6 +56,11 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performSemanticsAction
 import io.github.eslamasabry.oc.feature.chat.header.presentation.ChatHeaderUi
+import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.kitConfirmCancel
+import io.github.eslamasabry.oc.ui.words.res.kitSheetClose
+import kotlinx.coroutines.runBlocking
+import org.jetbrains.compose.resources.getString
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderSlot
 import androidx.compose.ui.test.withKeyDown
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatUi
@@ -79,6 +84,13 @@ import kotlin.test.assertTrue
 @OptIn(ExperimentalTestApi::class)
 class ChatTypingFocusTest {
     private val park = FocusRequester()
+
+    /** The sheet's Close and the dialog's Cancel as the strings say them (another branch renamed Dismiss to Close). */
+    private val closeLabel: String by lazy { runBlocking { getString(Res.string.kitSheetClose) } }
+    private val cancelLabel: String by lazy { runBlocking { getString(Res.string.kitConfirmCancel) } }
+
+    /** Letters that reached the shell-like park (its N-55 steer); a field that holds focus uses them first. */
+    private var steered = 0
     private lateinit var focusManager: FocusManager
 
     @Composable
@@ -248,7 +260,7 @@ class ChatTypingFocusTest {
             waitForIdle()
             onNodeWithTag("chat-commands-sheet").fetchSemanticsNode()
             composer().assertIsNotFocused()
-            onNode(hasContentDescription("Dismiss") and hasAnyAncestor(hasTestTag("kit-sheet"))).performClick()
+            onNode(hasContentDescription(closeLabel) and hasAnyAncestor(hasTestTag("kit-sheet"))).performClick()
             waitForIdle()
             composer().assertIsFocused()
         }
@@ -385,7 +397,7 @@ class ChatTypingFocusTest {
             waitForIdle()
             onNodeWithTag("chat-commands-sheet").fetchSemanticsNode()
             openFind(screen)
-            onNode(hasContentDescription("Dismiss") and hasAnyAncestor(hasTestTag("kit-sheet"))).performClick()
+            onNode(hasContentDescription(closeLabel) and hasAnyAncestor(hasTestTag("kit-sheet"))).performClick()
             waitForIdle()
             findField().assertIsFocused()
             composer().assertIsNotFocused()
@@ -394,7 +406,7 @@ class ChatTypingFocusTest {
     // --- w4-focus2: the kit's sheet host owns the page's focus around sheets and dialogs; the chat keeps Find's. ---
 
     private fun ComposeUiTest.dismissSheet(): SemanticsNodeInteraction =
-        onNode(hasContentDescription("Dismiss") and hasAnyAncestor(hasTestTag("kit-sheet")))
+        onNode(hasContentDescription(closeLabel) and hasAnyAncestor(hasTestTag("kit-sheet")))
 
     @Test
     fun `a sheet's row that closes the sheet and opens Find leaves the next typing in Find`() =
@@ -493,7 +505,7 @@ class ChatTypingFocusTest {
             val dialogField = onNode(isFocused() and hasSetTextAction(), useUnmergedTree = true)
             assertTrue("Checkout" in dialogField.words(), "the dialog's field has what was typed: ${dialogField.words()}")
             assertEquals("", composer().words(), "no stray words in the message box")
-            onNodeWithText("Cancel").performClick()
+            onNodeWithText(cancelLabel).performClick()
             // Cancel answers null; the header presenter then closes the dialog.
             runOnIdle { screen.header = screen.header.copy(renaming = null) }
             waitForIdle()
@@ -551,6 +563,7 @@ class ChatTypingFocusTest {
                     val letter = e.utf16CodePoint > 0x1F && !e.isCtrlPressed && !e.isAltPressed && !e.isMetaPressed
                     if (!letter) return@onKeyEvent false
                     if (e.type == KeyEventType.KeyDown) {
+                        steered++
                         park.requestFocus()
                         manager.moveFocus(FocusDirection.Enter)
                     }
@@ -576,7 +589,10 @@ class ChatTypingFocusTest {
                 pressKey(Key.G)
             }
             waitForIdle()
-            assertEquals("bg", findField().words(), "the search field has the keys")
+            // Desktop key presses do not type into a field; a key the park had used would have moved focus to the box.
+            assertEquals(0, steered, "no key reached the park")
+            findField().assertIsFocused()
+            composer().assertIsNotFocused()
             assertEquals("", composer().words(), "the message box stays as it was")
         }
 
@@ -604,7 +620,9 @@ class ChatTypingFocusTest {
                 pressKey(Key.E)
             }
             waitForIdle()
-            assertEquals("ze", rename.words(), "the rename field has the keys")
+            assertEquals(0, steered, "no key reached the park")
+            rename.assertIsFocused()
+            composer().assertIsNotFocused()
             assertEquals("", composer().words(), "the message box stays as it was")
         }
 
@@ -642,7 +660,10 @@ class ChatTypingFocusTest {
                 pressKey(Key.G)
             }
             waitForIdle()
-            assertEquals("bg", findField().words(), "the search field has the keys")
+            // Desktop key presses do not type into a field; a key the park had used would have moved focus to the box.
+            assertEquals(0, steered, "no key reached the park")
+            findField().assertIsFocused()
+            composer().assertIsNotFocused()
             assertEquals("", composer().words(), "the message box stays as it was")
         }
 }

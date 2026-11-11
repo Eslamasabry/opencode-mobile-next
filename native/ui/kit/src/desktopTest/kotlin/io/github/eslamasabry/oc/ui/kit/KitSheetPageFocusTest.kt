@@ -20,6 +20,7 @@ import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.frame.LocalKitKeyboardShown
+import io.github.eslamasabry.oc.ui.kit.modal.KitInputDialog
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
@@ -38,6 +39,7 @@ class KitSheetPageFocusTest {
         var shown by mutableStateOf(false)
         var second by mutableStateOf(false)
         var keyboard by mutableStateOf(false)
+        var dialog by mutableStateOf(false)
         val request = FocusRequester()
     }
 
@@ -57,6 +59,7 @@ class KitSheetPageFocusTest {
                                 }
                             }
                             KitSheet(page.shown, { page.shown = false }, "Sheet") {}
+                            KitInputDialog(page.dialog, "Rename", "Name", "Rename", initial = "Old") { page.dialog = false }
                         }
                     }
                 }
@@ -150,5 +153,20 @@ class KitSheetPageFocusTest {
             waitForIdle()
             assertTrue(!pageFocused, "focus (and with it the keyboard) did not come back")
         }
-}
 
+    @Test
+    fun `a dialog whose field takes focus at once gives the page field its focus back when it closes`() =
+        runPage { page ->
+            runOnIdle { page.request.requestFocus() }
+            waitForIdle()
+            assertTrue(pageFocused, "focused")
+            runOnIdle { page.dialog = true }
+            mainClock.advanceTimeBy(2000)
+            waitForIdle()
+            assertTrue(!pageFocused, "the dialog's field has the focus")
+            runOnIdle { page.dialog = false }
+            mainClock.advanceTimeBy(2000)
+            waitForIdle()
+            assertTrue(pageFocused, "focus came back to the page field")
+        }
+}

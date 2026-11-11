@@ -317,12 +317,20 @@ public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -
             PageKeyboard(held)
             // Saved when a modal is asked to show; given back once it has gone (at the end of its exit: the page's
             // own focus handling, such as a conversation's landing spot, sees the page uncovered by then).
+            // A modal's own field (a dialog's input) may take focus before this effect runs: then the holder is saved
+            // on the way out of the page (onExit below, as Compose's focusRestorer does).
+            val save = {
+                if (!held.saved) {
+                    held.saved = held.keyboardUp || !held.keyboardSeen
+                    if (held.saved) pageFocus.saveFocusedChild()
+                }
+            }
             androidx.compose.runtime.LaunchedEffect(modal) {
                 if (modal) {
-                    val had = held.has
-                    held.saved = had && (held.keyboardUp || !held.keyboardSeen)
-                    if (held.saved) pageFocus.saveFocusedChild()
-                    if (had) focusManager.clearFocus(force = true)
+                    if (held.has) {
+                        save()
+                        focusManager.clearFocus(force = true)
+                    }
                 } else if (held.saved) {
                     held.saved = false
                     // The kit yields: a page field that took focus as the modal left (Find opening from a sheet's
@@ -339,7 +347,10 @@ public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -
                         if (holding() && it.hasFocus) focusManager.clearFocus(force = true)
                     }
                     .focusRequester(pageFocus)
-                    .focusProperties { if (modal) onEnter = { if (holding()) cancelFocusChange() } }
+                    .focusProperties {
+                        if (modal) onEnter = { if (holding()) cancelFocusChange() }
+                        onExit = { if (holding() && held.has) save() }
+                    }
                     .focusGroup()
                     .kitLiquidSource(page)
             ) {
