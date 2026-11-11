@@ -134,8 +134,7 @@ public fun KitEdgeDock(
     insets: KitDockInsets = KitDockInsets(),
     state: KitEdgeDockState = rememberKitEdgeDockState(),
 ) {
-    // Nothing live: no dock (the host shows none either).
-    if (model.rings.isEmpty()) return
+    // No rings: the dock still stands (owner 2026-11-11: always there), its strip or its nub and the "+" alone.
     val density = LocalDensity.current
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val motion = LocalKitMotion.current
@@ -255,7 +254,6 @@ private fun DockBodyNode(state: KitEdgeDockState, face: DockFace, inks: DockInks
     Box(
         Modifier.fillMaxSize()
             .drawWithContent {
-                if (state.column.count == 0) return@drawWithContent
                 val f = state.computeFrame()
                 val pt = state.pulse.value
                 val pulsing = pt < 1f && state.pulseRing >= 0 && !state.reduced

@@ -116,36 +116,28 @@ internal fun rememberDockFace(state: KitEdgeDockState): DockFace {
 private fun dockBodyBoxes(state: KitEdgeDockState): (KitLiquidBodyBoxes) -> Boolean {
     val body = KitDockBody()
     return { out ->
-        if (state.column.count == 0) {
-            false
-        } else {
-            state.body(body)
-            out.a = Rect(body.stripLeft, body.stripTop, body.stripRight, body.stripBottom)
-            out.aRadius = body.stripRadius
-            out.hasB = body.hasSecond
-            out.b = if (body.hasSecond) Rect(body.secondLeft, body.secondTop, body.secondRight, body.secondBottom) else Rect.Zero
-            out.bRadius = body.secondRadius
-            out.reach = body.joinReach
-            out.growth = body.growth
-            true
-        }
+        state.body(body)
+        out.a = Rect(body.stripLeft, body.stripTop, body.stripRight, body.stripBottom)
+        out.aRadius = body.stripRadius
+        out.hasB = body.hasSecond
+        out.b = if (body.hasSecond) Rect(body.secondLeft, body.secondTop, body.secondRight, body.secondBottom) else Rect.Zero
+        out.bRadius = body.secondRadius
+        out.reach = body.joinReach
+        out.growth = body.growth
+        true
     }
 }
 
-/** The body's bounds now (dock-area px): what the words' ink flip samples. Null while the dock shows nothing. */
+/** The body's bounds now (dock-area px): what the words' ink flip samples. */
 private fun dockBodyArea(state: KitEdgeDockState): () -> Rect? {
     val body = KitDockBody()
     return {
-        if (state.column.count == 0) {
-            null
-        } else {
-            state.body(body)
-            var r = Rect(body.stripLeft, body.stripTop, body.stripRight, body.stripBottom)
-            if (body.hasSecond) r = Rect(min(r.left, body.secondLeft), min(r.top, body.secondTop), max(r.right, body.secondRight), max(r.bottom, body.secondBottom))
-            // The strip runs past the screen edge: only what shows is sampled.
-            val w = state.widthDp * state.density
-            Rect(max(r.left, 0f), r.top, min(r.right, w), r.bottom)
-        }
+        state.body(body)
+        var r = Rect(body.stripLeft, body.stripTop, body.stripRight, body.stripBottom)
+        if (body.hasSecond) r = Rect(min(r.left, body.secondLeft), min(r.top, body.secondTop), max(r.right, body.secondRight), max(r.bottom, body.secondBottom))
+        // The strip runs past the screen edge: only what shows is sampled.
+        val w = state.widthDp * state.density
+        Rect(max(r.left, 0f), r.top, min(r.right, w), r.bottom)
     }
 }
 
