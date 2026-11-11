@@ -863,6 +863,17 @@ private fun ProviderSheet(provider: IntegrationInfo, state: LibraryUi, actions: 
                 KitRow(
                     if (connectMethodHasOwnLabel(method)) method.label
                     else stringResource(Res.string.m40AuthKey),
+                    supporting =
+                        stringResource(
+                            when (connectMethodHint(method)) {
+                                ConnectHint.Key -> Res.string.m40AuthKeyHelp
+                                ConnectHint.Command -> Res.string.m40AuthCommandHint
+                                ConnectHint.Browser -> Res.string.m40AuthBrowserHint
+                                ConnectHint.Device -> Res.string.m40AuthDeviceHint
+                                ConnectHint.Account -> Res.string.m40AuthAccountHint
+                            }
+                        ),
+                    supportingMaxLines = 3,
                     trailing = KitRowTrailing.Chevron,
                     onClick = { actions.show(LibrarySheet.Method(current, method)) },
                 )
@@ -985,7 +996,10 @@ private fun MethodSheet(
                 working = state.working,
             ),
     ) {
-        KitText(method.label)
+        KitText(
+            if (connectMethodHasOwnLabel(method)) method.label
+            else stringResource(Res.string.m40AuthKey)
+        )
         if (method.type == "key") {
             KitField(key, stringResource(Res.string.nlibKey), kind = KitFieldKind.Secret)
             providerKeyPageUrl(provider.id)?.let { url ->

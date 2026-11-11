@@ -62,8 +62,10 @@ public fun connectMethodHint(method: IntegrationMethodInfo): ConnectHint =
     }
 
 /**
- * False when the server gave the method no name of its own (the protocol layer then falls back to the
- * method type, so a key shows up as "key"); the page shows its own words instead.
+ * False only for a key the server gave no name of its own (the protocol layer then falls back to the
+ * method type, so it shows up as "key"); the page titles it with its own "API key" words instead.
+ * Other methods keep the server's label: "API key" would name the wrong thing for a sign-in.
  */
 public fun connectMethodHasOwnLabel(method: IntegrationMethodInfo): Boolean =
-    method.label.isNotBlank() && !method.label.equals(method.type, ignoreCase = true)
+    method.type != "key" ||
+        (method.label.isNotBlank() && !method.label.equals(method.type, ignoreCase = true))

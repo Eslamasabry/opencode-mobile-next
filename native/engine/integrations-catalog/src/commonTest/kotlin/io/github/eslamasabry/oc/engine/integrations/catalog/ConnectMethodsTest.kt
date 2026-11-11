@@ -104,5 +104,8 @@ class ConnectMethodsTest {
         assertFalse(connectMethodHasOwnLabel(m("key")))
         assertFalse(connectMethodHasOwnLabel(m("key", label = "  ")))
         assertTrue(connectMethodHasOwnLabel(m("key", label = "API key (service account)")))
+        // An unnamed sign-in is never titled "API key".
+        assertTrue(connectMethodHasOwnLabel(m("oauth", "a")))
+        assertTrue(connectMethodHasOwnLabel(m("command", "c")))
     }
 }
