@@ -463,6 +463,13 @@ internal object FleetMap {
         FleetHost(url, hostMode, city = health?.city ?: status?.name, version = health?.version ?: status?.version, front = front)
 }
 
+/** Dart `mapEvent`'s session types: each one changes the agents. */
+private val SESSION_TYPES =
+    setOf(
+        "session.woke", "session.stopped", "session.crashed", "session.idle_killed", "session.max_age_killed",
+        "session.quarantined", "session.suspended",
+    )
+
 /** What a stream frame makes stale (Dart `_onEvent`'s dirty scopes). */
 public enum class FleetScope { Projects, Runs, Work, Agents, Gates, Usage }
 
@@ -480,12 +487,6 @@ internal sealed interface FleetSignal {
     data class Other(override val seq: Long?) : FleetSignal
 
     companion object {
-        private val SESSION_TYPES =
-            setOf(
-                "session.woke", "session.stopped", "session.crashed", "session.idle_killed", "session.max_age_killed",
-                "session.quarantined", "session.suspended",
-            )
-
         fun of(frame: FleetFrame): FleetSignal {
             // Dart `OrchestrationSseClient._decode`: malformed data is skipped; the name defaults from the data's shape.
             val body = (io.github.eslamasabry.oc.core.common.dart.DartJson.decodeOrNull(frame.data) as? Map<*, *>)?.let(J::map) ?: return Other(null)

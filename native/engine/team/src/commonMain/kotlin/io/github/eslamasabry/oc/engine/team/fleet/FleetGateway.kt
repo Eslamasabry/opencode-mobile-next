@@ -79,7 +79,7 @@ internal object FleetProbe {
             val controls =
                 front != null && J.bool(J.field(front, "capabilities"), "control") == true &&
                     J.bool(J.field(front, "identity"), "allowed") == true
-            val verdict = check(transport, base, city ?: front?.let { J.text(it, "city") }, hostMode, front != null, controls)
+            val verdict = checkCity(transport, base, city ?: front?.let { J.text(it, "city") }, hostMode, front != null, controls)
             // Dart `defaultGatewayFactory`: the front's address only when it lets this phone write, else the saved one.
             return if (verdict is FleetVerdict.Found && !controls) verdict.copy(supervisorUrl = FleetAddress.normalize(url)) else verdict
         } finally {
@@ -87,7 +87,7 @@ internal object FleetProbe {
         }
     }
 
-    private suspend fun check(
+    private suspend fun checkCity(
         transport: FleetTransport,
         base: String,
         city: String?,
@@ -184,19 +184,19 @@ internal class FleetGateway(
             val ready = async { optional("/beads", listOf("ready" to "true")) }
             val waits = async { optional("/waits") }
             val pending = async { optional("/pending") }
-            val convoyList = J.items(convoys.await(), WireConvoy::parse)
-            val pendingList = J.items(pending.await(), WirePending::parse)
+            val convoyList = J.items(convoys.await(), { WireConvoy.parse(it) })
+            val pendingList = J.items(pending.await(), { WirePending.parse(it) })
             val context =
                 WorkContext.from(
-                    ready = J.items(ready.await(), WireBead::parse),
-                    waits = J.items(waits.await(), WireWait::parse, key = "waits"),
+                    ready = J.items(ready.await(), { WireBead.parse(it) }),
+                    waits = J.items(waits.await(), { WireWait.parse(it) }, key = "waits"),
                     pending = pendingList,
                     convoys = convoyList,
                 )
-            val beadList = J.items(beads.await(), WireBead::parse)
+            val beadList = J.items(beads.await(), { WireBead.parse(it) })
             val work = FleetMap.beads(beadList, context)
             val byId = work.associateBy { it.id }
-            val formula = J.items(runs.await(), WireRun::parse, key = "runs").map(FleetMap::run)
+            val formula = J.items(runs.await(), { WireRun.parse(it) }, key = "runs").map { FleetMap.run(it) }
             val finished = finishedConvoys(convoyList.map { it.id }.toSet())
             val open = convoyList.map { FleetMap.convoy(it, byId, context) }
             val done = finished.map { (convoy, closedAt) -> FleetMap.convoy(convoy, byId, context, closedAt) }
@@ -213,11 +213,11 @@ internal class FleetGateway(
      */
     private suspend fun finishedConvoys(openIds: Set<String>): List<Pair<WireConvoy, Long?>> =
         try {
-            val closed = J.items(optional("/beads", listOf("status" to "closed", "type" to "convoy", "limit" to "$FINISHED_LIMIT")), WireBead::parse)
+            val closed = J.items(optional("/beads", listOf("status" to "closed", "type" to "convoy", "limit" to "$FINISHED_LIMIT")), { WireBead.parse(it) })
             val events =
                 J.items(
                     optional("/events", listOf("type" to "convoy.closed", "since" to "${FINISHED_WINDOW_MS / 60_000}m", "limit" to "$FINISHED_LIMIT")),
-                    WireEvent::parse,
+                    { WireEvent.parse(it) },
                 )
             val closedAt = HashMap<String, Long>()
             events.filter { it.type == "convoy.closed" }.forEach { e ->
@@ -253,10 +253,10 @@ internal class FleetGateway(
             val pending = async { optional("/pending") }
             val waits = async { optional("/waits") }
             FleetMap.agents(
-                J.items(agents.await(), WireAgent::parse),
-                J.items(sessions.await(), WireSession::parse),
-                J.items(pending.await(), WirePending::parse),
-                J.items(waits.await(), WireWait::parse, key = "waits"),
+                J.items(agents.await(), { WireAgent.parse(it) }),
+                J.items(sessions.await(), { WireSession.parse(it) }),
+                J.items(pending.await(), { WirePending.parse(it) }),
+                J.items(waits.await(), { WireWait.parse(it) }, key = "waits"),
             )
         }
 
@@ -285,7 +285,7 @@ internal class FleetGateway(
             FleetMap.usage(usage.await(), status.await())
         }
 
-    suspend fun scheduledJobs(): List<FleetJob> = FleetMap.orders(J.list(city("/orders"), "orders", WireOrder::parse))
+    suspend fun scheduledJobs(): List<FleetJob> = FleetMap.orders(J.list(city("/orders"), "orders", { WireOrder.parse(it) }))
 
     /** `/events/stream` from [lastEventId]; frames go to [onFrame] until it ends. */
     suspend fun events(lastEventId: String?, onFrame: suspend (FleetFrame) -> Unit): FleetStreamEnd =

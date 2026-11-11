@@ -3,7 +3,7 @@ package io.github.eslamasabry.oc.engine.team.fleet
 import kotlin.time.Instant
 
 /*
- * Gas City's wire shapes (Dart lib/orchestration/adapters/gascity/dto/*.dart): only the fields the mappers read, with
+ * Gas City's wire shapes (Dart lib/orchestration/adapters/gascity/dto): only the fields the mappers read, with
  * Dart's lenient readers (json_read.dart). One malformed list entry never sinks the list.
  */
 
@@ -170,7 +170,7 @@ internal data class WireConvoy(val bead: WireBead, val children: List<WireBead>,
                 val progress = J.field(json, "progress")
                 return WireConvoy(
                     WireBead.parse(J.field(json, "convoy")),
-                    J.list(json, "children", WireBead::parse),
+                    J.list(json, "children", { WireBead.parse(it) }),
                     J.int(progress, "closed"),
                     J.int(progress, "total"),
                 )

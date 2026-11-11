@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal fun TeamEngine.fleetState(profileId: String): Flow<FleetState> {
-    val fleet = fleet ?: return flowOf(FleetState())
+    val fleet = this.fleet ?: return flowOf(FleetState())
     return channelFlow {
         launch {
             state(profileId)

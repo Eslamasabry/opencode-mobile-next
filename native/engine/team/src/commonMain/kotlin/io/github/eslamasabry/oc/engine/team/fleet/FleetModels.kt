@@ -3,7 +3,7 @@ package io.github.eslamasabry.oc.engine.team.fleet
 import io.github.eslamasabry.oc.engine.team.TeamHostMode
 
 /*
- * The product models of a computer's team (Dart lib/orchestration/models/*.dart). Field names follow Dart; times are
+ * The product models of a computer's team (Dart lib/orchestration/models). Field names follow Dart; times are
  * epoch milliseconds. `lastError`, `prompt` and other host text are the host's own words: pages show them only under
  * Details.
  */
