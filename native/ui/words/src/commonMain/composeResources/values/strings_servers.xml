@@ -241,6 +241,8 @@
     <string name="workServerNotAnswering">%1$s isn't answering</string>
     <string name="workServerKeepsTrying">The app keeps trying in the background.</string>
     <string name="connectionRestartAgent">Restart Claude Code</string>
+    <string name="connectionAgentStarting">Starting Claude Code…</string>
+    <string name="connectionAgentStartFailed">Claude Code didn't start. Tap Restart Claude Code to try once more.</string>
     <string name="connectionRestartPhoneServer">Restart OpenCode</string>
     <string name="connectStartingBody">Your conversations are kept. This can take a minute.</string>
     <string name="managedRecoveryRowDetail">Up to 3 tries, only while this app is open. It never installs or updates.</string>

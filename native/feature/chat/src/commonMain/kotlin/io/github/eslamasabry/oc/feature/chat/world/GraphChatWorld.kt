@@ -297,6 +297,13 @@ internal class GraphChatWorld(
     override val serverOnThisPhone: Boolean
         get() = phoneServer?.runsHere(ref.profileId) == true
 
+    override val serverIsAgentHelper: Boolean
+        get() = phoneServer?.isAgentHelper(ref.profileId) == true
+
+    override suspend fun startAgentHelper(): Outcome<Unit> =
+        phoneServer?.takeIf { it.isAgentHelper(ref.profileId) }?.startAgentHelper(ref.profileId)
+            ?: Outcome.Failed(Failure.Unavailable(FeatureId("startAgentHelper")))
+
     override suspend fun restartPhoneServer(): Outcome<Unit> =
         phoneServer?.takeIf { it.runsHere(ref.profileId) }?.restart(ref.profileId)
             ?: Outcome.Failed(Failure.Unavailable(FeatureId("restartPhoneServer")))

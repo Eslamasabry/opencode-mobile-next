@@ -9,6 +9,7 @@ import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.connectionRestartAgent
 import io.github.eslamasabry.oc.ui.words.res.connectionRestartPhoneServer
 import io.github.eslamasabry.oc.ui.words.res.e7BannerCheckingExplanation
 import io.github.eslamasabry.oc.ui.words.res.e7BannerLost
@@ -45,7 +46,12 @@ internal fun ConnectionDetailsSheet(
                 }),
         tertiary =
             listOfNotNull(
-                if (line?.canRestart == true && !reconnecting)
+                if (line?.canRestartAgent == true && !reconnecting)
+                    KitAction(stringResource(Res.string.connectionRestartAgent), {
+                        onDismiss()
+                        actions.restartAgent()
+                    })
+                else if (line?.canRestart == true && !reconnecting)
                     KitAction(stringResource(Res.string.connectionRestartPhoneServer), {
                         onDismiss()
                         actions.restartPhoneServer()

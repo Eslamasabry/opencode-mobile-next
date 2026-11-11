@@ -261,6 +261,8 @@ public class ChatViewModel(
 
     override fun restartPhoneServer(): Unit = presenter.restartPhoneServer()
 
+    override fun restartAgent(): Unit = presenter.restartAgent()
+
     override fun openParent() {
         world.parent.value?.let { nav.open(ChatRoute(it)) }
     }
