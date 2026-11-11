@@ -82,6 +82,7 @@ import io.github.eslamasabry.oc.ui.kit.chip.KitChipWrap
 import io.github.eslamasabry.oc.ui.kit.chip.KitFilterChips
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
+import io.github.eslamasabry.oc.ui.kit.frame.KitFloatingBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenRefresh
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
@@ -225,7 +226,8 @@ public fun ChatsScreen(
     val listed = state.phase == ChatsPhase.List
     // Shown once the home knows its server and that server is open: it fades in once, never out and in again.
     val showFab = listed && state.home.known && state.home.opening == null
-    // Under Glass the floating + is liquid glass over the list (the kit records it only then).
+    // Under Glass the floating + is liquid glass over the list (the kit records it only then), and the floating bar
+    // and its pills bend the same recording (glass step 4).
     val listGlass = rememberKitFrostState()
     val barActions = buildList {
         add(KitLineAction(stringResource(Res.string.kitTopBarSearch), actions::openSearch, icon = KitIcons.search))
@@ -243,35 +245,41 @@ public fun ChatsScreen(
         else pluralStringResource(Res.plurals.kitNeedsYouSpan, state.needsYou, Numbers.format(state.needsYou)).trimEnd().removeSuffix("·").trimEnd()
     KitScreen(
         // The phone's top is the page's own (Flutter conv-header): title row with plain Search and Settings icons, then
-        // the connection pill beside the filters. No separate bar.
-        topBar = null,
+        // the connection pill beside the filters. Glass step 4: where the lens is drawn the two float as a liquid bar
+        // and pills over the list, which scrolls on under them; everywhere else they are the page's scrolling header,
+        // as before (KitFloatingBar's scrollsElsewhere).
+        topBar = {
+            // The page names itself under the bar (Flutter KitPageHeading); "2 need you" opens the Inbox.
+            // F: lib/ui/screens/chats/chats_home_screen.dart:380-386: room under the bar before the title, and
+            // as much under it when no "need you" line (whose own target gives that air) follows.
+            KitPageHeading(
+                stringResource(Res.string.chatsHomeTitle),
+                Modifier.padding(top = Space.S2.dp, bottom = if (needsLine == null) Space.S2.dp else 0.dp),
+                line = needsLine,
+                onLine = actions::showInbox,
+                actions = if (!shellBar) null else ({
+                    barActions.forEach { KitIconButton(it.icon!!, it.label, it.onClick) }
+                }),
+            )
+        },
         // E20-S27: framed without the bar too, so the page lies on one continuous ground behind heading and list.
         page = true,
-        header = {
-            // The page names itself under the bar (Flutter KitPageHeading); "2 need you" opens the Inbox. Nothing to
-            // filter on a list that holds nothing yet, so the chips wait for the first conversation.
-            Column {
-                // F: lib/ui/screens/chats/chats_home_screen.dart:380-386: room under the bar before the title, and
-                // as much under it when no "need you" line (whose own target gives that air) follows.
-                KitPageHeading(
-                    stringResource(Res.string.chatsHomeTitle),
-                    Modifier.padding(top = Space.S2.dp, bottom = if (needsLine == null) Space.S2.dp else 0.dp),
-                    line = needsLine,
-                    onLine = actions::showInbox,
-                    actions = if (!shellBar) null else ({
-                        barActions.forEach { KitIconButton(it.icon!!, it.label, it.onClick) }
-                    }),
-                )
-                val showFilters = state.phase == ChatsPhase.List || state.phase == ChatsPhase.NoMatch
-                val pill: (@Composable () -> Unit)? = if (!shellBar) null else state.connection?.let { connection -> { ConnectionStatusPill(connection, actions) } }
-                // Until the saved servers are read the row keeps its room and stays empty, so the pill and the
-                // filters arrive together in their places instead of the pill pushing the filters aside.
-                if (shellBar && !state.home.known) Spacer(Modifier.height(LocalKitTokens.current.minTarget.dp))
-                // One composition whether or not the pill has arrived, so the chips keep their scroll and press state when
-                // the connection shows up beside them (they run to the edge only beside the pill).
-                else HeaderRow(pill, showFilters) { Filters(state, actions, bleed = pill != null) }
-            }
-        },
+        floatingBar =
+            KitFloatingBar(
+                scrollsElsewhere = true,
+                source = listGlass,
+                pills = {
+                    // Nothing to filter on a list that holds nothing yet, so the chips wait for the first conversation.
+                    val showFilters = state.phase == ChatsPhase.List || state.phase == ChatsPhase.NoMatch
+                    val pill: (@Composable () -> Unit)? = if (!shellBar) null else state.connection?.let { connection -> { ConnectionStatusPill(connection, actions) } }
+                    // Until the saved servers are read the row keeps its room and stays empty, so the pill and the
+                    // filters arrive together in their places instead of the pill pushing the filters aside.
+                    if (shellBar && !state.home.known) Spacer(Modifier.height(LocalKitTokens.current.minTarget.dp))
+                    // One composition whether or not the pill has arrived, so the chips keep their scroll and press state
+                    // when the connection shows up beside them (they run to the edge only beside the pill).
+                    else HeaderRow(pill, showFilters) { Filters(state, actions, bleed = pill != null) }
+                },
+            ),
         status = backExit ?: appStatus,
         // F: lib/ui/screens/chats/chats_home_screen.dart:536: pull the list down to read it again; not while the server
         // is still opening. Refresh wraps the scrolling header too (the title returns before a pull starts). The kit
