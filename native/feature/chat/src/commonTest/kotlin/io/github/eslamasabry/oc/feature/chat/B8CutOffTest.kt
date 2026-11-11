@@ -291,7 +291,7 @@ class B8CutOffTest {
         // CodexMappers.codexMessages: an `interrupted` turn has `completedAt: null` and maps to finish "cancelled".
         val interrupted =
             MessageWithParts(
-                MessageInfo("agent-1", sid, Role.Assistant, providerId = "codex", time = MsgTime(100_000, null), finish = "cancelled"),
+                MessageInfo("agent-1", sid, Role.Assistant, providerId = "codex", time = MsgTime(520_000, null), finish = "cancelled"),
                 listOf(words("Half a list", "agent-1")).toImmutableList(),
             )
         assertNull(facts(listOf(prompt(), interrupted)).reading.endNotes["m1"])
@@ -303,14 +303,15 @@ class B8CutOffTest {
     @Test
     fun `B8 gate - a Paseo reply read while its agent was idle is ended, and while busy only the chat's busy run holds it`() {
         // PaseoMappers.paseoTimeline: every item gets its timestamp as completion unless the agent is busy and it is
-        // the newest item; Paseo items name a provider and no model.
+        // the newest item; Paseo items name a provider and no model. (Replies are dated after the prompt, as the
+        // ledger orders by time.)
         val ended =
             MessageWithParts(
-                MessageInfo("p2", sid, Role.Assistant, providerId = "claude", time = MsgTime(100_000, 100_000)),
+                MessageInfo("p2", sid, Role.Assistant, providerId = "claude", time = MsgTime(520_000, 520_000)),
                 listOf(words("Done.", "p2")).toImmutableList(),
             )
         assertNull(facts(listOf(prompt(), ended)).reading.endNotes["m1"])
-        val streaming = ended.copy(info = ended.info.copy(time = MsgTime(100_000, null)))
+        val streaming = ended.copy(info = ended.info.copy(time = MsgTime(520_000, null)))
         assertNull(facts(listOf(prompt(), streaming), busy = true).reading.endNotes["m1"])
     }
 }
