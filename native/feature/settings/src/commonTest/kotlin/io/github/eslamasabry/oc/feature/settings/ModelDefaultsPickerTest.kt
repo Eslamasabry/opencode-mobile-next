@@ -9,6 +9,7 @@ import io.github.eslamasabry.oc.engine.agents.models.ModelLibrary
 import io.github.eslamasabry.oc.engine.agents.models.ModelRef
 import io.github.eslamasabry.oc.feature.settings.presentation.ModelDefaultsData
 import io.github.eslamasabry.oc.feature.settings.presentation.ModelDefaultsHost
+import io.github.eslamasabry.oc.feature.settings.presentation.ModelDefaultsMode
 import io.github.eslamasabry.oc.feature.settings.presentation.ModelDefaultsViewModel
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.AppRoute
@@ -46,6 +47,13 @@ class ModelDefaultsPickerTest {
     private class Host(var data: ModelDefaultsData) : ModelDefaultsHost {
         val variants = mutableListOf<Pair<ModelRef, String>>()
         val favorites = mutableListOf<ModelRef>()
+        val modes = mutableListOf<String>()
+
+        override suspend fun chooseMode(mode: String): Outcome<Unit> {
+            modes += mode
+            data = data.copy(mode = mode)
+            return Outcome.Ok(Unit)
+        }
 
         override suspend fun read(profile: ProfileId?): Outcome<ModelDefaultsData> = Outcome.Ok(data)
 
@@ -116,5 +124,29 @@ class ModelDefaultsPickerTest {
         vm.toggleFavorite(sonnet)
         assertEquals(listOf(sonnet), host.favorites)
         assertEquals(listOf(sonnet), vm.state.value.favorites)
+    }
+
+    @Test
+    fun `the page lists the server's modes and stores the choice`() = runTest {
+        val host = Host(data.copy(modes = listOf(ModelDefaultsMode("build"), ModelDefaultsMode("plan", "Reads only"))))
+        val vm = ModelDefaultsViewModel(SettingsRoute.ModelDefaults(), host, Nav)
+        assertEquals(listOf("build", "plan"), vm.state.value.modes.map { it.id })
+        assertEquals("", vm.state.value.mode)
+        vm.chooseMode("plan")
+        assertEquals(listOf("plan"), host.modes)
+        assertEquals("plan", vm.state.value.mode)
+        vm.chooseMode("nonsense")
+        assertEquals(1, host.modes.size, "a mode the server does not list is never saved")
+        vm.chooseMode("")
+        assertEquals(listOf("plan", ""), host.modes)
+    }
+
+    @Test
+    fun `a server with no modes shows no mode row and saves none`() = runTest {
+        val host = Host(data)
+        val vm = ModelDefaultsViewModel(SettingsRoute.ModelDefaults(), host, Nav)
+        assertEquals(emptyList(), vm.state.value.modes)
+        vm.chooseMode("plan")
+        assertEquals(emptyList(), host.modes)
     }
 }

@@ -758,7 +758,13 @@ class AndroidNewConversationHost(
                                 ?: providers.providers.firstNotNullOfOrNull { p ->
                                     p.modelIds.firstOrNull()?.let { ModelRef(p.id, it) }
                                 },
-                        agent = draftChoices?.agent?.takeIf { it in modes || it in agents },
+                        // The unsent draft's own pick, else the mode saved for new conversations (Settings > Model and mode).
+                        agent =
+                            (draftChoices?.agent
+                                    ?: stores.prefs.string("oc.agent.${profile.raw}")?.takeIf {
+                                        caps.agentSelection
+                                    })
+                                ?.takeIf { it in modes || it in agents },
                         modes = modes,
                         importDirectory =
                             importer

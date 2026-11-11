@@ -21,6 +21,7 @@ public data class KeptModelDefaults(
     public val defaults: List<Ref> = emptyList(),
     public val variant: String = "",
     public val providerNames: Map<String, String> = emptyMap(),
+    public val modes: List<ModelDefaultsMode> = emptyList(),
 ) {
     @Serializable
     public data class Model(
@@ -36,7 +37,12 @@ public data class KeptModelDefaults(
     @Serializable public data class Ref(public val providerId: String, public val modelId: String)
 
     /** [stored] is this phone's saved choice now; it wins over the kept one, as in a live read. */
-    public fun data(library: ModelLibrary, stored: ModelRef?, storedVariant: String? = null): ModelDefaultsData =
+    public fun data(
+        library: ModelLibrary,
+        stored: ModelRef?,
+        storedVariant: String? = null,
+        storedMode: String = "",
+    ): ModelDefaultsData =
         ModelDefaultsData(
             serverName,
             thisPhone,
@@ -56,6 +62,8 @@ public data class KeptModelDefaults(
             storedVariant ?: variant,
             providerNames,
             usesDefault = stored == null,
+            modes = modes,
+            mode = storedMode,
         )
 
     public companion object {
@@ -78,6 +86,7 @@ public data class KeptModelDefaults(
                 data.defaults.map { Ref(it.providerId, it.modelId) },
                 data.variant,
                 data.providerNames,
+                data.modes,
             )
     }
 }
