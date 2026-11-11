@@ -41,12 +41,17 @@ internal class PhoneAgentAuthRuntime(
             true
         },
         waitFor = { process, seconds -> waitTracked(process, seconds) },
+        // A drain asked for by a stopped read runs on that step's thread, with the same cleanup budget as a block.
+        elsewhere = { drain ->
+            deadline.set(PhoneAgentAuthDeadline(CLEANUP_SECONDS))
+            try { drain() } finally { deadline.remove() }
+        },
     )
 
-    fun run(arguments: Map<*, *>): Map<String, Any?> {
+    fun run(arguments: Map<*, *>, stop: ProbeStop? = null): Map<String, Any?> {
         val request = PhoneAgentAuthRequest.parse(arguments) ?: return PhoneAgentAuthProjection.error("invalidContext")
         deadline.set(PhoneAgentAuthDeadline(request.timeoutSeconds))
-        return try { probe.run(arguments) }
+        return try { probe.run(arguments, stop) }
         finally { deadline.remove(); before.remove() }
     }
     fun blockProfile(profileId: String): Boolean {
