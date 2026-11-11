@@ -52,6 +52,21 @@ class AppLocalAgentHostStarter(
 ) : PhoneAgentHostStarter {
     private val lane = Mutex()
 
+    /** The Paseo version the helper last answered with (a verified wire check). */
+    @Volatile private var answeredVersion: String? = null
+
+    /**
+     * The phone check's connection steps: starts the helper like any connect (without saving the "Phone agents"
+     * server) and answers the Paseo version it reported. A helper that already runs the expected version is kept.
+     */
+    suspend fun checkHelper(): Outcome<String?> {
+        answeredVersion = null
+        return when (val prepared = prepare(save = false, budgetMs = GATE_BUDGET_MS)) {
+            is Outcome.Failed -> prepared
+            is Outcome.Ok -> Outcome.Ok(answeredVersion)
+        }
+    }
+
     override suspend fun connect(): Outcome<Unit> {
         // The lock covers the helper and the saved profile only: connecting the profile asks [ensureHelper] again
         // (it is the same path any later connection of this server takes), so it must not run under the lock.
@@ -157,7 +172,7 @@ class AppLocalAgentHostStarter(
         when (val checked = answer) {
             is PaseoProbeResult.Refused -> return@withLock Outcome.Failed(checked.failure)
             is PaseoProbeResult.InvalidInput -> return@withLock unavailable()
-            is PaseoProbeResult.Verified -> Unit
+            is PaseoProbeResult.Verified -> answeredVersion = checked.version
         }
         if (phone.state.value.needsRestart || stores.profiles.profile(profile) == null)
             return@withLock unavailable()

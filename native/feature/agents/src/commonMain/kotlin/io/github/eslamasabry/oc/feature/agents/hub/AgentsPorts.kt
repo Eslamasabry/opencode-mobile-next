@@ -281,4 +281,17 @@ public fun interface PhoneAgentHostStarter {
 public interface PhoneAgentHostBindings {
     @dev.zacsweers.metro.Multibinds(allowEmpty = true)
     public val phoneAgentHostStarters: Set<PhoneAgentHostStarter>
+
+    @dev.zacsweers.metro.Multibinds(allowEmpty = true)
+    public val phoneAgentCheckers: Set<PhoneAgentChecker>
+}
+
+/**
+ * The phone check for one agent (Flutter `runAgentPhoneCheck`): installs or refreshes what the agent needs, starts the
+ * helper, asks it to answer, and stores the proof. Answers `null` when the agent passed, otherwise the one reason it
+ * did not (each has a sentence in the screen). It reports no progress of its own: an install it starts shows on the
+ * agent's tile like any install.
+ */
+public fun interface PhoneAgentChecker {
+    public suspend fun check(id: String): Outcome<io.github.eslamasabry.oc.engine.agents.check.PhoneCheckFailure?>
 }
