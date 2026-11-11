@@ -60,11 +60,11 @@ private const val SEP = " · "
 /** The clock the fleet pages age their times by: now, and again every half minute while shown. */
 @Composable
 public fun rememberFleetNow(): Long {
-    var now by remember { mutableLongStateOf(kotlin.time.Clock.System.now().toEpochMilliseconds()) }
+    var now by remember { mutableLongStateOf(io.github.eslamasabry.oc.core.common.CommonBindings.clock().now().toEpochMilliseconds()) }
     LaunchedEffect(Unit) {
         while (true) {
             delay(30_000)
-            now = kotlin.time.Clock.System.now().toEpochMilliseconds()
+            now = io.github.eslamasabry.oc.core.common.CommonBindings.clock().now().toEpochMilliseconds()
         }
     }
     return now
