@@ -4,4 +4,7 @@
     <string name="chatsHomeRightNow">Ngay lúc này</string>
     <string name="chatsHomeRecent">Gần đây</string>
     <string name="chatsHomeAsksToRun">Xin chạy: %1$s</string>
+    <string name="chatsHomeAsksToEdit">Xin sửa: %1$s</string>
+    <string name="chatsHomeAsksToRead">Xin đọc: %1$s</string>
+    <string name="chatsHomeAsksOther">Xin quyền: %1$s</string>
 </resources>

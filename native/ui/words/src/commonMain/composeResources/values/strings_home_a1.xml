@@ -4,4 +4,7 @@
     <string name="chatsHomeRightNow">Right now</string>
     <string name="chatsHomeRecent">Recent</string>
     <string name="chatsHomeAsksToRun">Asks to run: %1$s</string>
+    <string name="chatsHomeAsksToEdit">Asks to edit: %1$s</string>
+    <string name="chatsHomeAsksToRead">Asks to read: %1$s</string>
+    <string name="chatsHomeAsksOther">Asks permission: %1$s</string>
 </resources>

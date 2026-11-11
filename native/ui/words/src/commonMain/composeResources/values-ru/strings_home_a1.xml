@@ -4,4 +4,7 @@
     <string name="chatsHomeRightNow">Сейчас</string>
     <string name="chatsHomeRecent">Недавние</string>
     <string name="chatsHomeAsksToRun">Просит выполнить: %1$s</string>
+    <string name="chatsHomeAsksToEdit">Просит изменить: %1$s</string>
+    <string name="chatsHomeAsksToRead">Просит прочитать: %1$s</string>
+    <string name="chatsHomeAsksOther">Просит разрешение: %1$s</string>
 </resources>

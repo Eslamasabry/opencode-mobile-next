@@ -125,6 +125,18 @@ class HomePreviewsTest {
         assertNull(HomePreviewRules.fallback("api", null, projectShown = true))
     }
 
+    @Test
+    fun `a waiting request's line is worded by its kind, not always run`() {
+        for (kind in listOf("bash", "shell", "BASH"))
+            assertEquals(HomePreviewRules.AskKind.Run, HomePreviewRules.askKind(kind))
+        for (kind in listOf("edit", "write", "multiedit", "patch"))
+            assertEquals(HomePreviewRules.AskKind.Edit, HomePreviewRules.askKind(kind))
+        assertEquals(HomePreviewRules.AskKind.Read, HomePreviewRules.askKind("read"))
+        for (kind in listOf("webfetch", "task", "external_directory", ""))
+            assertEquals(HomePreviewRules.AskKind.Other, HomePreviewRules.askKind(kind))
+        assertEquals("bash", io.github.eslamasabry.oc.engine.agents.feed.FeedPermission("r", "ls").kind)
+    }
+
     private class Feed : ConversationsFeed {
         override val snapshot = MutableStateFlow(ChatFeedSnapshot())
 

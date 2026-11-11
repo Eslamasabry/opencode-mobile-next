@@ -4,4 +4,7 @@
     <string name="chatsHomeRightNow">الآن</string>
     <string name="chatsHomeRecent">الأحدث</string>
     <string name="chatsHomeAsksToRun">يطلب تشغيل: %1$s</string>
+    <string name="chatsHomeAsksToEdit">يطلب تعديل: %1$s</string>
+    <string name="chatsHomeAsksToRead">يطلب قراءة: %1$s</string>
+    <string name="chatsHomeAsksOther">يطلب إذنًا: %1$s</string>
 </resources>
