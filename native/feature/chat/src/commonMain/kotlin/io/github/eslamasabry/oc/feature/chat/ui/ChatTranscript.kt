@@ -3,7 +3,6 @@ package io.github.eslamasabry.oc.feature.chat.ui
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -286,6 +285,9 @@ internal fun failureCode(f: Failure): String =
 internal object ListKeys {
     const val LIVE: String = "live"
 
+    /** The room the edge dock's Undo bar takes under the newest content (first item, only while the bar shows). */
+    const val DOCK_ROOM: String = "dock-room"
+
     /** CHAT-TRANSCRIPT: background work still running (B-CHAT-007), just above the live line. */
     const val BACKGROUND: String = "background"
 
@@ -428,16 +430,6 @@ internal fun ChatTranscriptList(
     var stepsShown by remember { mutableStateOf(false) }
     if (live == null && stepsShown) stepsShown = false
     val runningSteps: Boolean? = if (live == null) null else stepsShown
-    // At the end the newest content rides up with the room (reverse layout). Away from it the room would push what the
-    // person reads, so the list scrolls by the same amount.
-    val lastRoom = remember { intArrayOf(0) }
-    LaunchedEffect(extraBottomPx) {
-        val delta = extraBottomPx - lastRoom[0]
-        lastRoom[0] = extraBottomPx
-        if (delta != 0 && (list.lazy.firstVisibleItemIndex > 0 || list.lazy.firstVisibleItemScrollOffset > 0)) {
-            list.lazy.scrollBy(delta.toFloat())
-        }
-    }
     KitTranscriptList(
         state = list,
         newestKey = newestKey,
@@ -446,8 +438,15 @@ internal fun ChatTranscriptList(
         modifier = modifier,
         // F: chat_transcript.dart:160-165 and kit_turn.dart:591: the newest turn ends space2 + space2 above the
         // composer's clearance; the composer pane already keeps its own space2 on top (ChatScreen), the rest here.
-        contentPadding = PaddingValues(top = Space.S4.dp, bottom = Space.S2.dp + with(LocalDensity.current) { extraBottomPx.toDp() }),
+        contentPadding = PaddingValues(top = Space.S4.dp, bottom = Space.S2.dp),
     ) {
+        // The dock's Undo bar takes this room under the newest content. An item, not padding: the list keeps the
+        // row the person reads in place by its key, and at the end the newest content rides up with the room.
+        if (extraBottomPx > 0) {
+            item(key = ListKeys.DOCK_ROOM, contentType = "dock-room") {
+                Spacer(Modifier.height(with(LocalDensity.current) { extraBottomPx.toDp() }))
+            }
+        }
         if (live != null && listWords != null) {
             item(key = ListKeys.LIVE, contentType = "live") {
               Box(kitItemMotion(placement = glide)) {

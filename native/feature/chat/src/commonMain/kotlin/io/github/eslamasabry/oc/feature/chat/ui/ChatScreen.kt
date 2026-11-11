@@ -436,7 +436,7 @@ public fun ChatScreen(
     val reveal = rememberRevealRegistry()
     val motion = kitChatMotion()
     val latest by rememberUpdatedState(state)
-    val itemsBelowRows = (if (state.live != null) 1 else 0) + state.pending.size
+    val itemsBelowRows = (if (state.live != null) 1 else 0) + state.pending.size + (if (dockRoomPx > 0) 1 else 0)
 
     // Read acknowledgement follows the visible list (plan 09 §6.7).
     LaunchedEffect(list) {
