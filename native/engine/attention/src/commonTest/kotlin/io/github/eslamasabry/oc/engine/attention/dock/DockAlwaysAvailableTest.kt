@@ -44,8 +44,27 @@ class DockAlwaysAvailableTest {
         val seen = model(DockEvent.RunStarted(a), DockEvent.RunEnded(a, DockRunEnd.Succeeded), DockEvent.Opened(a), DockEvent.Opened(null))
         assertEquals(DockState.Idle, seen.ui.entries.single().state)
         assertEquals(DockPresence.Nub, seen.ui.presence)
-        // Truly nothing: hidden.
+        // Nothing in the dock and no server connected (first run): hidden.
         assertEquals(DockPresence.Hidden, DockModel.empty().ui.presence)
+    }
+
+    @Test
+    fun `an empty dock is the nub while a server is connected and hidden when none is`() {
+        val none = DockModel.empty()
+        assertEquals(DockPresence.Hidden, none.ui.presence, "first run, nothing connected")
+        // Connecting (the wiring always loads the pins on attach) gives the nub with no ring: its "+" has a server.
+        val connected = none.reduce(DockEvent.PinsLoaded(p, emptyList()))
+        assertTrue(connected.ids().isEmpty())
+        assertEquals(DockPresence.Nub, connected.ui.presence)
+        assertEquals(0, connected.ui.liveCount)
+        assertEquals(DockPresence.Hidden, connected.reduce(DockEvent.ProfileOffline(p)).ui.presence, "the only server went offline")
+        val two = connected.reduce(DockEvent.PinsLoaded(q, emptyList()))
+        assertEquals(DockPresence.Nub, two.reduce(DockEvent.ProfileOffline(q)).ui.presence, "another server is still connected")
+        assertEquals(DockPresence.Hidden, two.reduce(DockEvent.ProfileGone(p)).reduce(DockEvent.ProfileOffline(q)).ui.presence)
+        // The last conversation deleted while connected: still the nub.
+        val last = model(DockEvent.PinsLoaded(p, emptyList()), recent("a" to 1L))
+        assertEquals(listOf(a), last.ids())
+        assertEquals(DockPresence.Nub, last.reduce(DockEvent.Deleted(a)).ui.presence)
     }
 
     @Test
@@ -128,7 +147,7 @@ class DockAlwaysAvailableTest {
         assertEquals(listOf(a, x), offline.reduce(recent("x" to 30L, profile = q)).ids(), "the listing on reconnect brings it back")
         val gone = offline.reduce(DockEvent.ProfileGone(p))
         assertTrue(gone.ids().isEmpty())
-        assertEquals(DockPresence.Hidden, gone.ui.presence)
+        assertEquals(DockPresence.Hidden, gone.ui.presence, "no ring and no server connected (nothing loaded pins here)")
         // At most MAX_RECENT remembered: the newest.
         val many = model(recent(*(1..30).map { "s$it" to it.toLong() }.toTypedArray()), cap = 25)
         assertEquals(DockModel.MAX_RECENT, many.ids().size)

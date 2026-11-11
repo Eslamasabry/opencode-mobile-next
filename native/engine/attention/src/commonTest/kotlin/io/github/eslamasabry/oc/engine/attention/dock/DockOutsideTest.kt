@@ -288,6 +288,7 @@ class DockOutsideTest {
                 DockEvent.Recent(p, listOf(DockRecent(SessionId("a"), "Alpha", 2), DockRecent(SessionId("b"), "Beta", 1))),
                 DockEvent.RunStarted(ref("c")), DockEvent.RunEnded(ref("c"), DockRunEnd.Stopped),
             ).fold(DockModel.empty()) { m, e -> m.reduce(e) }
+        assertNull(build(DockModel.empty().reduce(DockEvent.PinsLoaded(p, emptyList())).ui), "an empty dock never speaks")
         assertEquals(3, quiet.ui.entries.size)
         assertEquals(0, quiet.ui.liveCount)
         assertNull(build(quiet.ui))
