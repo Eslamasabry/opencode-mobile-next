@@ -45,9 +45,15 @@ public class GraphChatHeaderPorts(
     private val importFiles:
         Set<io.github.eslamasabry.oc.engine.agents.sessionimport.SessionImportFiles>,
     private val context: io.github.eslamasabry.oc.engine.settings.context.ContextUsageHistory,
+    storages: Set<io.github.eslamasabry.oc.engine.delivery.DeliveryStorage> = emptySet(),
 ) : ChatHeaderPorts {
+    private val withdrawn =
+        storages.singleOrNull()?.let {
+            io.github.eslamasabry.oc.engine.connection.adopted.WithdrawnPromptStore(it.store, it.lanes)
+        }
+
     override fun open(ref: ConversationRef): ChatHeaderPort =
-        GraphChatHeaderPort(ref, registry, dispatchers, importFiles.singleOrNull(), context).also {
+        GraphChatHeaderPort(ref, registry, dispatchers, importFiles.singleOrNull(), context, withdrawn).also {
             it.attach()
         }
 }
@@ -64,6 +70,7 @@ internal class GraphChatHeaderPort(
     private val importFiles:
         io.github.eslamasabry.oc.engine.agents.sessionimport.SessionImportFiles?,
     private val context: io.github.eslamasabry.oc.engine.settings.context.ContextUsageHistory,
+    private val withdrawn: io.github.eslamasabry.oc.engine.connection.adopted.WithdrawnPromptStore? = null,
 ) : ChatHeaderPort {
     private val sid = SessionId(ref.sessionId.raw)
     private val mutableFacts = MutableStateFlow(HeaderFacts())
@@ -297,7 +304,7 @@ internal class GraphChatHeaderPort(
 
     override suspend fun delete(): Outcome<Unit> = withGateway { gateway, _ ->
         if (!gateway.capabilities.value.sessionDelete) unavailable("sessionDelete")
-        else gateway.deleteSession(sid)
+        else gateway.deleteSession(sid).also { if (it is Outcome.Ok) withdrawn?.forget(ref.profileId, ref.sessionId.raw) }
     }
 
     override fun openImport():

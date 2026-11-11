@@ -279,6 +279,7 @@ public class PaseoGateway(
             )
         recoverySnapshots.value =
             recoverySnapshots.value + mapOf(id to snapshot, real(id) to snapshot)
+        publishContinuations()
     }
 
     internal val agentTools = PaseoAgentTools(this)
@@ -552,7 +553,7 @@ public class PaseoGateway(
         SessionId(publishedAliases.value[appId.raw] ?: real(appId.raw))
 
     private suspend inline fun <T> call(crossinline block: suspend () -> T): Outcome<T> =
-        withContext(lane) { paseoAttempt { block() } }
+        withContext(lane) { paseoAttempt { block() }.also { publishContinuations() } }
 
     override val scopeRevision: Long
         get() = (locationEpoch.toLong() shl 32) + transport.epoch
@@ -1256,6 +1257,7 @@ public class PaseoGateway(
                     e.kind,
                     live = sessionId in liveAgentSessions || agents[sessionId]?.let(::daemonHolds) == true,
                 )
+            publishContinuations()
             if (e.kind == PaseoFailureKind.DeliveryUnknown) uncertain += sessionId
             throw e
         }
@@ -1892,16 +1894,30 @@ public class PaseoGateway(
      * stays as it is). Read from the list's thread while the gateway's own lane writes the records, so a torn read
      * answers null rather than a guess.
      */
-    public fun reopenNeedsNewChat(session: SessionId): Boolean? =
-        try {
-            val agent = agents[session.raw] ?: return null
-            val live = session.raw in liveAgentSessions || daemonHolds(agent)
-            // A reopen that already failed here asks for a new conversation at once (Flutter `_paResumeFailed`).
-            resumeFailed.failedBefore(session.raw, live) ||
-                paseoHostAgentContinuation(session.raw, agent, live).requiresNewChat
-        } catch (_: Exception) {
-            null
-        }
+    public fun reopenNeedsNewChat(session: SessionId): Boolean? = continuations.value.needsNewChat[session.raw]
+
+    /**
+     * What [reopenNeedsNewChat] answers: one immutable copy, replaced whole by the gateway's lane whenever the records
+     * it is built from change, so the list's thread reads a consistent picture and never the lane's maps.
+     */
+    internal data class ContinuationSnapshot(val needsNewChat: Map<String, Boolean> = emptyMap())
+
+    private val continuations = MutableStateFlow(ContinuationSnapshot())
+
+    /** Lane only. Rebuilt from the agent records, the live set and the failed-reopen memory; unchanged = not replaced. */
+    internal fun publishContinuations() {
+        val next =
+            try {
+                agents.mapValuesTo(LinkedHashMap()) { (id, agent) ->
+                    val live = id in liveAgentSessions || daemonHolds(agent)
+                    // A reopen that already failed here asks for a new conversation at once (Flutter `_paResumeFailed`).
+                    resumeFailed.failedBefore(id, live) || paseoHostAgentContinuation(id, agent, live).requiresNewChat
+                }
+            } catch (_: Exception) {
+                return
+            }
+        if (continuations.value.needsNewChat != next) continuations.value = ContinuationSnapshot(next)
+    }
 
     public suspend fun pendingHostPermissions():
         Outcome<ImmutableList<HostAgentPermissionRequest>> = call {
@@ -2052,6 +2068,7 @@ public class PaseoGateway(
         draftFeatureValues.remove(id)
         liveAgentSessions.remove(id)
         resumeFailed.forget(id)
+        publishContinuations()
         uncertain.remove(id)
         uncertainStarts.remove(id)
         awaitingTurn.remove(id)
@@ -2198,6 +2215,7 @@ public class PaseoGateway(
 
     private fun onTransportLost() {
         liveAgentSessions.clear()
+        publishContinuations()
         providerEntries = null
         providerRevision++
         requests.disconnect()
@@ -2327,6 +2345,7 @@ public class PaseoGateway(
             retry?.cancel()
             retry = null
             agents.clear()
+            continuations.value = ContinuationSnapshot()
             sessions.clear()
             statuses.clear()
             cancelRecordBusyExpiry()

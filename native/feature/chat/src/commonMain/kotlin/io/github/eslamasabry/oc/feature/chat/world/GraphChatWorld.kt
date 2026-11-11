@@ -131,7 +131,13 @@ public class GraphChatWorlds(
     private val readSharing: Set<ChatReadSharing> = emptySet(),
     private val phoneServers: Set<ChatPhoneServer> = emptySet(),
     private val lastKnown: Set<ChatLastKnown> = emptySet(),
+    storages: Set<io.github.eslamasabry.oc.engine.delivery.DeliveryStorage> = emptySet(),
 ) : ChatWorlds {
+    private val withdrawn =
+        storages.singleOrNull()?.let {
+            io.github.eslamasabry.oc.engine.connection.adopted.WithdrawnPromptStore(it.store, it.lanes)
+        }
+
     /**
      * B3: shared by every conversation of the app run; B-STATE-032: saved per server (8 newest)
      * when the app binds a store.
@@ -164,6 +170,7 @@ public class GraphChatWorlds(
                     readSharing.singleOrNull(),
                     phoneServers.singleOrNull(),
                     lastKnown.singleOrNull(),
+                    withdrawn,
                 ) to 0)
         open[ref] = world to holders + 1
         if (holders == 0) world.attach()
@@ -206,6 +213,7 @@ internal class GraphChatWorld(
     private val readSharing: ChatReadSharing? = null,
     private val phoneServer: ChatPhoneServer? = null,
     private val lastKnown: ChatLastKnown? = null,
+    private val withdrawnStore: io.github.eslamasabry.oc.engine.connection.adopted.WithdrawnPromptStore? = null,
 ) : ChatWorld, TurnFeedSource, VoiceConversationSession {
     // CHAT-TRANSCRIPT: full messages, run and retry facts for the turn facts (steps, results,
     // context).
@@ -1853,6 +1861,18 @@ internal class GraphChatWorld(
     override suspend fun send(text: String): Outcome<Unit> = send(text, draftFiles = true)
 
     override suspend fun sendAgain(text: String): Outcome<Unit> = send(text, draftFiles = false)
+
+    override fun withdrawnPrompts(): Set<String> =
+        try {
+            withdrawnStore?.read(ref.profileId, ref.sessionId.raw).orEmpty().mapTo(HashSet()) { "prompt:$it" }
+        } catch (_: io.github.eslamasabry.oc.core.data.kv.GateNotOpen) {
+            emptySet() // before the migration gate opens: nothing is remembered yet
+        }
+
+    override suspend fun rememberWithdrawn(promptKey: String) {
+        val id = promptKey.removePrefix("prompt:").takeIf { it.isNotEmpty() } ?: return
+        withdrawnStore?.remember(ref.profileId, ref.sessionId.raw, id)
+    }
 
     override fun midTurn(): io.github.eslamasabry.oc.core.model.MidTurnPrompt? =
         (currentAttached()?.graph as? ChatGraphAccessors)

@@ -54,4 +54,38 @@ class ProotTmpCleanupTest {
         assertTrue(kept.exists())
         base.deleteRecursively()
     }
+
+    @Test
+    fun `the owner pid is read from proot's own folder name`() {
+        assertEquals(4242L, ProotTmpCleanup.ownerPid("proot-4242-AbC123"))
+        assertEquals(null, ProotTmpCleanup.ownerPid("proot-x-AbC123"))
+        assertEquals(null, ProotTmpCleanup.ownerPid("scratch"))
+    }
+
+    @Test
+    fun `a folder of a live proot stays whole even when old, a dead one's goes`() {
+        val dir = Files.createTempDirectory("proot-tmp").toFile()
+        val long = System.currentTimeMillis() - 10 * 60_000L
+        val live = File(dir, "proot-111-aaaaaa/loader").apply { parentFile.mkdirs(); writeText("x") }
+        val dead = File(dir, "proot-222-bbbbbb/loader").apply { parentFile.mkdirs(); writeText("y") }
+        val other = File(dir, "stray.tmp").apply { writeText("z") }
+        for (f in listOf(live, live.parentFile, dead, dead.parentFile, other)) f.setLastModified(long)
+        val removed = ProotTmpCleanup.clean(dir, pidAlive = { it == 111L })
+        assertEquals(3, removed)
+        assertTrue(live.exists() && live.parentFile.exists())
+        assertFalse(dead.parentFile.exists())
+        assertFalse(other.exists())
+        dir.deleteRecursively()
+    }
+
+    @Test
+    fun `a folder made after the check is still protected when its process runs`() {
+        val dir = Files.createTempDirectory("proot-tmp").toFile()
+        val late = File(dir, "proot-333-cccccc/bind").apply { parentFile.mkdirs(); writeText("x") }
+        late.setLastModified(System.currentTimeMillis() - 3_600_000L)
+        late.parentFile.setLastModified(System.currentTimeMillis() - 3_600_000L)
+        assertEquals(0, ProotTmpCleanup.clean(dir, pidAlive = { true }))
+        assertTrue(late.exists())
+        dir.deleteRecursively()
+    }
 }

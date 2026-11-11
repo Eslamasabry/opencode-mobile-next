@@ -65,4 +65,24 @@ class C6StopForSteerTest {
         presenter.stopForSteer("prompt:u2", "  ")
         assertTrue(world.calls.isEmpty())
     }
+
+    @Test
+    fun `B-CHAT-C6-7 the stopped copy is remembered, and a chat opened again leaves it out`() {
+        val kept = mutableSetOf<String>()
+        val remembering =
+            object : FakeChatWorld() {
+                override fun withdrawnPrompts(): Set<String> = kept.toSet()
+
+                override suspend fun rememberWithdrawn(promptKey: String) {
+                    kept += promptKey
+                }
+            }
+        remembering.transcript.update {
+            stateOf(prompt("u1", "run"), prompt("u2", "go on"), run = RunFacts(busy = true))
+        }
+        ChatPresenter(remembering, RecordingNavigator(), Immediate).stopForSteer("prompt:u2", "go on")
+        assertEquals(setOf("prompt:u2"), kept)
+        val reopened = ChatPresenter(remembering, RecordingNavigator(), Immediate)
+        assertFalse("prompt:u2" in reopened.current().rows.map { it.key })
+    }
 }
