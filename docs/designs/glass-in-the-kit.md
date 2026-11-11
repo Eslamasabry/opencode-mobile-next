@@ -261,8 +261,8 @@ under its tint, so no bend, no rim light, no aurora, no ink flip timing and no f
 - The kit's frame tests (54, 9 failed), the chats and settings golden tests plus `HomeJank`, `S10Home`,
   `SettingsScreenUi`, `SettingsHubScroll` and `ReportProblem` tests (chats 22, 2 failed; settings 39, 1 failed): every
   failure also fails on the base 7acb5fd8f1 with the same message (`KitScreenGateTest` missing Flutter goldens and an
-  align rule; `ChatsHeaderGoldensTest` offline variants and one `E20S09OpeningGoldensTest` test, where the base already
-  shows a "server isn't answering" notice the goldens lack; `SettingsGoldensTest` B-SEC-191). Before the one-pane
+  align rule; `ChatsHeaderGoldensTest` offline variants, where the list already shows a "This phone isn't answering"
+  notice the goldens lack; one `E20S09OpeningGoldensTest` test that cannot find "Check that the server is on"; `SettingsGoldensTest` B-SEC-191). Before the one-pane
   change the whole chats and settings desktop suites ran too (255 and 254 tests), with all 66 failures identical on the
   base. No golden was recorded or changed.
 - `compileAndroidMain` for ui:kit, feature:chats and feature:settings.
