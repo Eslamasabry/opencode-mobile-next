@@ -186,6 +186,8 @@ public data class AllConversationsUi(
     val problem: AllProblem? = null,
     val renaming: RenameUi? = null,
     val moveHere: MoveHereUi? = null,
+    /** H4: see [StartNewUi]. */
+    val startNew: StartNewUi? = null,
     val undo: DeleteUndoUi? = null,
     /** Some connected server can import a conversation file: the bar offers it. */
     val canImport: Boolean = false,
@@ -222,6 +224,11 @@ public interface ChatsAllActions {
 
     /** Asks "Move to this project?" for the row; nothing moves until [confirmContinueHere]. */
     public fun continueHere(key: String) {}
+
+    /** H4: the "Start a new conversation?" question said yes / no. */
+    public fun confirmStartNew() {}
+
+    public fun dismissStartNew() {}
 
     public fun confirmContinueHere() {}
 

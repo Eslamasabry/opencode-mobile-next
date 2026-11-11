@@ -118,7 +118,10 @@ internal fun ChatsInboxScreen(state: ChatsUi, actions: ChatsActions) {
                                 project = row.project,
                                 time = row.updatedAtMs?.takeIf { state.nowMs > 0 }?.let { kitRelativeAge(it, state.nowMs) }
                                     ?: row.ago?.let { agoText(it) },
-                                state = KitRowState(stringResource(Res.string.chatsHomeDone), KitRowStateTone.Quiet),
+                                state = KitRowState(
+                                    stringResource(if (row.status == RowStatus.Stopped) Res.string.chatsHomeStopped else Res.string.chatsHomeDone),
+                                    KitRowStateTone.Quiet,
+                                ),
                                 done = true,
                                 onClick = if (row.canOpen) ({ actions.openConversation(row.ref) }) else null,
                             )

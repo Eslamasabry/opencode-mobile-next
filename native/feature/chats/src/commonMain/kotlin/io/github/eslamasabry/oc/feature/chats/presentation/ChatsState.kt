@@ -136,6 +136,7 @@ public object ChatsState {
             project = item.projectName,
             updatedAtMs = item.lastActivityMs.takeIf { it > 0 },
             canOpen = item.canReopen,
+            needsNewChat = item.needsNewChat,
             agentMark = AgentPersona.of(item.agentId).markSlug,
             agentName = agentName(item),
             server = item.sourceLabel,
@@ -145,7 +146,7 @@ public object ChatsState {
                     ChatStatus.NeedsYou -> RowStatus.NeedsYou
                     ChatStatus.Running -> RowStatus.Running
                     ChatStatus.Failed -> RowStatus.Failed
-                    ChatStatus.Idle -> if (item.finishedUnseen) RowStatus.Done else RowStatus.None
+                    ChatStatus.Idle -> HomeRowStatusRules.idle(item.finishedUnseen, item.stoppedByPerson)
                 },
             ago = RelativeAge.of(item.lastActivityMs, nowMs),
             running = item.running,
