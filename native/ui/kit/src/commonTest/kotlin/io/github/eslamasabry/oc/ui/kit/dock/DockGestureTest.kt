@@ -188,17 +188,19 @@ class DockGestureTest {
     }
 
     @Test
-    fun `the nub - a tap brings the dock back, a drag along the edge moves it, a drag in brings it out`() {
+    fun `the nub - a tap brings the dock back, a drag along the edge is not the nub's, a drag in brings it out`() {
         val h = Hits()
         val tap = DockGesture()
         tap.down(DockZone.Nub, 405f, 300f, 0L, h)
         assertEquals(DockOutcome.Untuck, tap.up(405f, 301f, 0f, h))
 
-        val move = DockGesture()
-        move.down(DockZone.Nub, 405f, 300f, 0L, h)
-        move.move(405f, 360f, 50L, h)
-        assertEquals(DockMode.Move, move.mode)
-        assertEquals(DockOutcome.Place(405f, 500f), move.up(405f, 500f, 0f, h))
+        // Dock study, finding 1 (owner 2026-11-11): a thumb scroll that starts on the tucked band no longer moves the
+        // dock; the band gives it up to the page. Moving stays on the grip of a dock that is out.
+        val along = DockGesture()
+        along.down(DockZone.Nub, 405f, 300f, 0L, h)
+        along.move(405f, 360f, 50L, h)
+        assertEquals(DockMode.Idle, along.mode)
+        assertEquals(DockOutcome.None, along.up(405f, 500f, 0f, h))
 
         val pull = DockGesture()
         pull.down(DockZone.Nub, 405f, 300f, 0L, h)
