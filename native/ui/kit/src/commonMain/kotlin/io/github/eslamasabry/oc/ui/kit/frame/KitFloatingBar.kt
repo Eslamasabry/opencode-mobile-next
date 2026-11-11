@@ -5,8 +5,12 @@ import androidx.compose.animation.core.animate
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.relocation.BringIntoViewResponder
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.geometry.Rect
+import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.kit.effects.LIQUID_BAR_INSET_X
 import io.github.eslamasabry.oc.ui.kit.foundation.KitFrostState
 
 /**
@@ -44,6 +48,36 @@ public class KitFloatingBar(
      */
     public val below: (@Composable () -> Unit)? = null,
 )
+
+/**
+ * The floating pane's second row ([KitFloatingBar.below]) and the sideways lines on it (owner's first phone look,
+ * 2026-11-11: the last chip was sliced by the pane's rounded corner, a chip scrolled to the start was cut hard, and the
+ * pane's bottom edge sat 3 dp under the chips). Nothing here applies where the bar does not float.
+ */
+public object FloatingPaneRow {
+    /**
+     * Room under the second row inside the pane: as much as the page heading keeps above its title row (the page's
+     * space2 and the heading's own), so the pane's top and bottom edges sit equally far from the rows they hold (that
+     * room less the pane's own inset, [io.github.eslamasabry.oc.ui.kit.effects.LIQUID_BAR_INSET_Y], at both ends).
+     */
+    public const val ROOM_BELOW_DP: Int = Space.S2 + Space.S2
+
+    /** A sideways line's clip edge, in from the bar's side: the pane's own side, so nothing of it draws beside the pane. */
+    public const val EDGE_DP: Int = LIQUID_BAR_INSET_X
+
+    /** How far a sideways line fades out at an edge with more of it past that edge (the kit's scroll fade, kitScrollFade). */
+    public const val FADE_DP: Int = Space.S4
+
+    /**
+     * Where a sideways line's content rests inside its clip edge: the page gutter less the pane's inset, so its first and
+     * last chips rest on the title's gutter, clear of the pane's rounded corners, and a chip leaving the pane thins out
+     * inside it rather than meeting its outline.
+     */
+    public fun contentInsetDp(gutter: Int): Int = (gutter - LIQUID_BAR_INSET_X).coerceAtLeast(0)
+}
+
+/** True inside the floating pane's second row (where the lens is drawn): sideways lines there follow [FloatingPaneRow]. */
+public val LocalKitOnFloatingPane: ProvidableCompositionLocal<Boolean> = staticCompositionLocalOf { false }
 
 /**
  * A part brought into view on a floating page (a focused field, a part reached with the keyboard or TalkBack) never

@@ -596,7 +596,13 @@ public fun KitScreen(
                                     if (barFace != null) KitLiquidBarPane(barFace)
                                     Column(Modifier.fillMaxWidth()) {
                                         stackTop()
-                                        belowPart?.let { below -> Box(Modifier.fillMaxWidth().testTag("kit-floating-below")) { below() } }
+                                        // The second row keeps the room under it the title has above it, and its
+                                        // sideways lines stay inside the pane's sides (FloatingPaneRow).
+                                        belowPart?.let { below ->
+                                            Box(Modifier.fillMaxWidth().padding(bottom = FloatingPaneRow.ROOM_BELOW_DP.dp).testTag("kit-floating-below")) {
+                                                CompositionLocalProvider(LocalKitOnFloatingPane provides true) { below() }
+                                            }
+                                        }
                                     }
                                 }
                             }

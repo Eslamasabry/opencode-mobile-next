@@ -232,7 +232,10 @@ class FloatingHomeTest {
         assertTrue(capsule.bottom.value >= pills.bottom.value - 4.5f, "the pane $capsule reaches the chips row $pills")
         val a = assertNotNull(lens.bounds["first"], "the first conversation shows under the lens")
         val b = assertNotNull(flat.bounds["first"], "the first conversation shows without the lens")
-        assertTrue(abs(a.top.value - b.top.value) <= .5f, "the first conversation rests at ${a.top} under the lens, ${b.top} without")
+        // The pane keeps room under its chips row (FloatingPaneRow, the owner's first phone look): the list rests that
+        // much lower under the lens.
+        val room = io.github.eslamasabry.oc.ui.kit.frame.FloatingPaneRow.ROOM_BELOW_DP
+        assertTrue(abs(a.top.value - (b.top.value + room)) <= .5f, "the first conversation rests at ${a.top} under the lens, ${b.top} without, room $room")
         assertTrue(a.top.value >= capsule.bottom.value, "the first conversation $a rests below the pane $capsule")
         // Reduced motion holds the lens: the page is as it was.
         val held = home(LensPlatform(), motion = MotionLevel.Off)

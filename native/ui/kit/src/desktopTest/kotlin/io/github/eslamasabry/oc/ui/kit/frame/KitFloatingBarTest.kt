@@ -305,6 +305,9 @@ class KitFloatingBarTest {
             .joinToString { (a, b) -> "${a / D}: ${luma(image[x, a]).toInt()}→${luma(image[x, b]).toInt()}" }
     }
 
+    /** The pane's room under its second row: Home has one, Settings none. */
+    private fun roomBelow(page: Page): Float = if (page == Page.Home) FloatingPaneRow.ROOM_BELOW_DP.toFloat() else 0f
+
     /** The bottom of the floating chrome: the pills on Home, the bar on Settings. */
     private fun chromeBottom(s: Shot, page: Page) = (if (page == Page.Home) s.bounds["pills"] else s.bounds["bar"])!!.bottom.value
 
@@ -327,15 +330,18 @@ class KitFloatingBarTest {
             val row = float.bounds["row-0"]!!
             val bottom = chromeBottom(float, page)
             // The loading line's room (it always keeps its 2 dp) lies between them, as before.
-            assertTrue(row.top.value >= bottom - .5f, "$page: the first row $row starts under the chrome ending at $bottom")
-            assertTrue(row.top.value <= bottom + LOADING_BAR_DP + .5f, "$page: the first row $row rests right below the chrome ending at $bottom")
-            assertTrue(abs(row.top.value - before.bounds["row-0"]!!.top.value) <= .5f, "$page: rests where it did, ${before.bounds["row-0"]} then, $row now")
+            // Home's pane keeps room under its chips row (FloatingPaneRow.ROOM_BELOW_DP, the owner's first phone look):
+            // the first row rests that much lower than without the option.
+            val room = roomBelow(page)
+            assertTrue(row.top.value >= bottom + room - .5f, "$page: the first row $row starts under the chrome ending at $bottom")
+            assertTrue(row.top.value <= bottom + room + LOADING_BAR_DP + .5f, "$page: the first row $row rests right below the chrome ending at $bottom")
+            assertTrue(abs(row.top.value - (before.bounds["row-0"]!!.top.value + room)) <= .5f, "$page: rests where it did plus the pane's room, ${before.bounds["row-0"]} then, $row now")
             assertTrue(float.bounds["kit-liquid-bar"] != null, "$page: the bar is a liquid capsule")
             // One pane holds the bar and (Home) the chips row: from the bar's top to the chrome's foot, 4 dp in.
             val capsule = float.bounds["kit-liquid-bar"]!!
             val bar = float.bounds["bar"]!!
             assertTrue(abs(capsule.top.value - (bar.top.value + 4f)) <= .5f, "$page: the pane $capsule starts 4 dp into the bar $bar")
-            assertTrue(abs(capsule.bottom.value - (bottom - 4f)) <= .5f, "$page: the pane $capsule ends 4 dp above the chrome's foot $bottom")
+            assertTrue(abs(capsule.bottom.value - (bottom + room - 4f)) <= .5f, "$page: the pane $capsule ends 4 dp above the chrome's foot $bottom and its room $room")
         }
     }
 
@@ -460,7 +466,8 @@ class KitFloatingBarTest {
             val row = s.bounds["row-0"]!!
             assertTrue(capsule.top >= bar.top - .5.dp && capsule.top <= bar.top + 4.5.dp, "$page: the pane $capsule starts at the bar $bar")
             assertTrue(capsule.bottom.value >= bottom - 4.5f, "$page: the pane $capsule reaches the chrome's foot $bottom")
-            assertTrue(row.top.value >= bottom - .5f && row.top.value <= bottom + LOADING_BAR_DP + .5f, "$page: the first row $row rests right below $bottom")
+            val room = roomBelow(page)
+            assertTrue(row.top.value >= bottom + room - .5f && row.top.value <= bottom + room + LOADING_BAR_DP + .5f, "$page: the first row $row rests right below $bottom and the pane's room $room")
             // The pinned chrome keeps most of the window for the body.
             println("$page at text size 2: the floating chrome ends at $bottom of $TALL_H dp")
             assertTrue(bottom <= TALL_H * .4f, "$page: the floating chrome ends at $bottom of $TALL_H dp")
