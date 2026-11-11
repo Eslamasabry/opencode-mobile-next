@@ -36,7 +36,6 @@ feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/session
 feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/sessiontransfer/ui/SessionTransferSheet.kt
 feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/start/presentation/ChatStartViewModel.kt
 feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/ui/ChatCommandsSheet.kt
-feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/ui/ChatScreen.kt
 feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/ui/ChatTimelineSheet.kt
 feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/ui/ChatTranscript.kt
 feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/ui/FoldAnchor.kt

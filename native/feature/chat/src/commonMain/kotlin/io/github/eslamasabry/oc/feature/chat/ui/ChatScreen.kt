@@ -2,7 +2,6 @@ package io.github.eslamasabry.oc.feature.chat.ui
 
 import androidx.compose.runtime.saveable.rememberSaveable
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
-import androidx.compose.foundation.focusGroup
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.isAltPressed
 import androidx.compose.ui.input.key.isCtrlPressed
@@ -11,8 +10,6 @@ import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
-import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.focus.focusProperties
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -100,6 +97,7 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
+import io.github.eslamasabry.oc.ui.kit.modal.LocalKitSheetHost
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.status.KitStatus
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
@@ -607,8 +605,16 @@ public fun ChatScreen(
     // reuses this ancestor rather than creating a host scoped only to its own content.
     KitPromptLiftHost {
         KitSheetHost(modifier.fillMaxSize()) {
-            // N-55: the shell steers a stray hardware key into the page (FocusDirection.Enter);
-            // here it lands in the message field, never on the first button.
+            // w4-focus (sweep P79/P80): a sheet or dialog over the conversation owns typing; the message box under it
+            // lets go and gets its focus back when it closes, if it had it. Find's field takes focus itself.
+            val sheets = LocalKitSheetHost.current
+            val covered = sheets != null && (sheets.isShowing || sheets.isDialogShowing)
+            val coveredNow by rememberUpdatedState(covered)
+            ComposerYields(covered, chrome.typing, release = true) { latest.find == null }
+            ComposerYields(state.find != null && state.phase == ChatPhase.Live, chrome.typing, release = false) { !coveredNow }
+            // N-55: the shell steers a stray hardware key into the page (FocusDirection.Enter); it lands on the
+            // conversation itself, which hands it to the message field, never to the first button
+            // ([chatTypingLanding]: a request for a field inside, as Find's, is never redirected).
             Box(
                 Modifier.fillMaxSize()
                     .onPreviewKeyEvent { event ->
@@ -643,13 +649,7 @@ public fun ChatScreen(
                         }
                         true
                     }
-                    .focusProperties {
-                        onEnter = {
-                            if (requestedFocusDirection == FocusDirection.Enter && chrome.typing.focus())
-                                cancelFocusChange()
-                        }
-                    }
-                    .focusGroup()
+                    .chatTypingLanding(chrome.typing) { coveredNow }
             ) {
                 KitScreen(
                     modifier = Modifier.fillMaxSize(),
