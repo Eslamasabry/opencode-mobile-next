@@ -191,20 +191,21 @@ dropping it should rebound a bit and then start filling to the left at resting l
 A joined menu does not scale as a whole. In order:
 
 1. **Drop.** A column as wide as the control (56 dp), its outer edge on the bar's outer edge, falls from the bar. Its
-   length runs on a spring with damping ratio 0.62, stiffness 900, and passes the resting line (the menu's bottom
-   edge) by about 8 %, turning at about 133 ms. While it is past the line it is narrower by the same share.
+   length runs on a spring with damping ratio 0.62, stiffness 500, and passes the resting line (the menu's bottom
+   edge) by about 8 %, turning at about 179 ms. While it is past the line it is narrower by the same share.
 2. **Rebound.** It comes back to the resting line on the same spring (one overshoot, no ringing after it).
-3. **Fill.** 20 ms after the turn the width grows to the left on a calm spring (0.92, 900): no sideways bounce.
+3. **Fill.** 27 ms after the turn the width grows to the left on a calm spring (0.92, 500): no sideways bounce.
 4. **Rows are uncovered by the glass:** each row is clipped to the body and eases in over the 14 dp behind the
-   moving left edge; no word is ever drawn outside the glass.
+   moving left edge; no word is ever drawn outside the glass. No row shows while the column is still falling: the
+   rows appear over the first 8 % of the fill (closing, they are gone once half the fill is left).
 5. The reach is up to 1.5 times its rest value while the column falls, easing to rest with a critically damped
    twin of the drop spring.
 
-Closing has no bounce: the width empties to the right first (critically damped, stiffness 2400), the column is drawn
-up 70 ms later (2000), the rows fade as the edge passes them.
+Closing has no bounce: the width empties to the right first (critically damped, stiffness 1300), the column is drawn
+up 95 ms later (1100), the rows fade as the edge passes them.
 
-The pill does the same upwards: it rises 44 dp narrow (half width 24 dp) on (0.62, 800), passes its rest, turns,
-then widens to its full width on (0.92, 900); its label appears once it is 70 % wide.
+The pill does the same upwards: it rises 44 dp narrow (half width 24 dp) on (0.62, 440), passes its rest, turns,
+then widens to its full width on (0.92, 500); its label appears once it is 70 % wide.
 
 A menu that opens from a control not at the body's end, or upwards from a chip on the message box, uses the same
 order with the column under (or over) its control and the fill running both ways to its rest box.

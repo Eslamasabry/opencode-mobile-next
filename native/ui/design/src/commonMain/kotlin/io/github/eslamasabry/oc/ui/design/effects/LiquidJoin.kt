@@ -200,21 +200,25 @@ public object LiquidJoin {
     /*
      * Motion (the note's "Drop, rebound, fill"; prototype motion2.py). Progress values run 0 to 1; a spring is given by
      * its damping ratio and stiffness (mass 1, the same as Compose's spring).
+     *
+     * Owner 2026-11-11, on the phone: "can we slow things down a little bit". Every spring here is about a third
+     * slower than the first build (stiffness / 1.8, the damping ratios unchanged so the 8 % rebound is the same), and
+     * the waits between the steps are longer by the same share.
      */
 
     /** The menu's column falls on this spring and passes its resting line by about 8 %. */
     public const val DROP_ZETA: Float = .62f
-    public const val DROP_K: Float = 900f
+    public const val DROP_K: Float = 500f
 
     /** The width fills on this calm spring, [FILL_AFTER_TURN_MS] after the drop turns. */
     public const val FILL_ZETA: Float = .92f
-    public const val FILL_K: Float = 900f
-    public const val FILL_AFTER_TURN_MS: Int = 20
+    public const val FILL_K: Float = 500f
+    public const val FILL_AFTER_TURN_MS: Int = 27
 
     /** Closing: the width empties first (critically damped), then the column is drawn up [DRAW_UP_AFTER_MS] later. */
-    public const val EMPTY_K: Float = 2400f
-    public const val DRAW_UP_K: Float = 2000f
-    public const val DRAW_UP_AFTER_MS: Int = 70
+    public const val EMPTY_K: Float = 1300f
+    public const val DRAW_UP_K: Float = 1100f
+    public const val DRAW_UP_AFTER_MS: Int = 95
 
     /** The column a menu falls as: the width of a bar control. */
     public const val COLUMN_DP: Float = 56f
@@ -224,8 +228,8 @@ public object LiquidJoin {
 
     /** The pill rises this far from inside the box, narrow, on (DROP_ZETA, PILL_RISE_K). */
     public const val PILL_RISE_DP: Float = 44f
-    public const val PILL_RISE_K: Float = 800f
-    public const val PILL_DRAW_UP_AFTER_MS: Int = 60
+    public const val PILL_RISE_K: Float = 440f
+    public const val PILL_DRAW_UP_AFTER_MS: Int = 80
 
     /** The pill's half width while it rises, before it widens. */
     public const val PILL_HALF_DP: Float = 24f
@@ -239,8 +243,16 @@ public object LiquidJoin {
     /** A menu's rows ease in over this many dp behind the glass's moving edge; no word is drawn outside the glass. */
     public const val ROW_EASE_DP: Float = 14f
 
+    /**
+     * A menu's rows show only once the glass starts to fill: over the first [ROWS_FROM_FILL] of the fill opening, and
+     * until [ROWS_UNTIL_FILL] of it is left closing. While the column is still falling no word shows in it (on the
+     * phone, 2026-11-11, the ends of the rows stood in the bare column: "ion", "ript").
+     */
+    public const val ROWS_FROM_FILL: Float = .08f
+    public const val ROWS_UNTIL_FILL: Float = .5f
+
     /** How long a closing join takes at most (the width empties, then the column is drawn up), in ms. */
-    public const val CLOSE_MS: Int = 300
+    public const val CLOSE_MS: Int = 400
 
     /** When an under-damped spring of [zeta] and [k] first reaches its peak, in ms. */
     public fun turnMs(zeta: Float, k: Float): Float = (PI / (sqrt(k.toDouble()) * sqrt(1.0 - zeta * zeta))).toFloat() * 1000f

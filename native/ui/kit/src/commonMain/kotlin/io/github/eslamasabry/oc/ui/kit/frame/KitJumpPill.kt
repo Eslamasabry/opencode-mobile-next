@@ -156,8 +156,10 @@ public fun KitJumpPill(
             val motion = if (drop != null) kitJumpJoinMotion(drop, leaving) else null
             val outer = remember { androidx.compose.runtime.mutableStateOf(androidx.compose.ui.geometry.Rect.Zero) }
             val sinkPx = with(LocalDensity.current) { io.github.eslamasabry.oc.ui.design.effects.LiquidJoin.PILL_SINK_DP.dp.toPx() }
-            // It shows once its glass is joined (a frame after it is composed), so the lone pane never flashes at full
-            // width; if the join does not come it shows anyway.
+            // It shows once it is composed joined, so the lone pane never flashes at full width; if the join does not
+            // come it shows anyway. Read in composition: the join is made between a composition and its draw, and the
+            // frame it is made in still holds the lone pane (owner 2026-11-11: "it shows in full then animations start").
+            val joinedNow = drop != null && drop.owner.partnerOf(drop) != null
             val waited = remember { androidx.compose.runtime.mutableStateOf(false) }
             androidx.compose.runtime.LaunchedEffect(Unit) {
                 kotlinx.coroutines.delay(JOIN_WAIT_MS)
@@ -167,7 +169,7 @@ public fun KitJumpPill(
                 label,
                 onClick,
                 Modifier.kitLeaving(leaving)
-                    .graphicsLayer { alpha = if (drop == null || drop.owner.partnerOf(drop) != null || waited.value) 1f else 0f }
+                    .graphicsLayer { alpha = if (drop == null || joinedNow || waited.value) 1f else 0f }
                     .onGloballyPositioned { outer.value = androidx.compose.ui.geometry.Rect(it.positionInWindow(), it.size.toSize()) }
                     .offset {
                         // Rest sunk into the box (shape rule 4): the face's bottom edge PILL_SINK_DP below the box's top.
@@ -209,8 +211,9 @@ private class JumpJoinMotion(val label: () -> Float)
 
 /**
  * The joined pill's motion (`LiquidJoin`, the note's "Drop, rebound, fill" upwards): it rises [LiquidJoin.PILL_RISE_DP]
- * out of the box, half [LiquidJoin.PILL_HALF_DP] wide, on (0.62, 800), passes its rest and turns; 20 ms after the turn it
- * widens on (0.92, 900). Leaving, it narrows (2400), then sinks back in 60 ms later (2000). Written to [drop].
+ * out of the box, half [LiquidJoin.PILL_HALF_DP] wide, on its rise spring, passes its rest and turns; just after the turn
+ * it widens on the calm fill spring. Leaving, it narrows, then sinks back in a beat later (the springs and waits are
+ * `LiquidJoin`'s). Written to [drop].
  */
 @Composable
 private fun kitJumpJoinMotion(drop: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidJoinDrop, leaving: Boolean): JumpJoinMotion {
@@ -317,8 +320,14 @@ private fun VeiledPillFace(
     val liquid = kitLiquidFace(LiquidRole.Pill, backdrop, shape, join = drop)
     // The drop answers the finger: it swells a little and its edge catches light (KitLiquidTouch.kt).
     val liquidPress = rememberKitLiquidPress(interactions, on = liquid != null)
+    // Joined to the message box, its glass is drawn beyond its own capsule (the fillets at its foot, its rise out of
+    // the box), so the joined face sits on the outer box, before the tap target's clip: under that clip the fillets
+    // were cut off and the page showed through (owner 2026-11-11: "a dark spot right and left from this droplet").
+    // The joined pane draws from the drop's own box (kitLiquidJoinRest, on the row), whichever node wears it.
+    val hoisted = liquid != null && drop?.composedJoined == true
     Box(
         modifier.kitLiquidSwell(liquidPress)
+            .then(if (hoisted && liquid != null) liquid else Modifier)
             .testTag("kit-jump-pill")
             .heightIn(min = tokens.minTarget.dp)
             .kitTappable(onClick = onClick, shape = KitShapeId.Pill, interactionSource = interactions)
@@ -329,10 +338,13 @@ private fun VeiledPillFace(
             Modifier.heightIn(min = JUMP_PILL_FACE_DP.dp)
                 .kitLiquidJoinRest(drop, shape)
                 .then(
-                    liquid
-                        ?: Modifier.kitBackdropVeil(backdrop, veil, colors.surface3, shape).border(1.dp, colors.hairline, shape)
+                    when {
+                        hoisted -> Modifier
+                        liquid != null -> liquid
+                        else -> Modifier.kitBackdropVeil(backdrop, veil, colors.surface3, shape).border(1.dp, colors.hairline, shape)
+                    }
                 )
-                .kitLiquidPressLight(liquidPress, shape)
+                .kitLiquidPressLight(liquidPress, shape, drop)
                 .padding(horizontal = Space.S3.dp)
                 .testTag("kit-jump-pill-veiled"),
             verticalAlignment = Alignment.CenterVertically,

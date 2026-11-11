@@ -16,6 +16,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.isSpecified
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
@@ -52,6 +53,7 @@ import io.github.eslamasabry.oc.ui.design.effects.LiquidJoin
 import io.github.eslamasabry.oc.ui.kit.live.LiveShaderProgram
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.max
@@ -68,7 +70,10 @@ import kotlin.math.min
  *    the body's mixed direction by the join shader's lens pass (mode 0, a runtime-shader render effect), its colour
  *    controls inside that pass;
  * 2. its tint, eased to its partner's over the material band (mode 3), and the cover of its side (mode 1, DstIn);
- * 3. one rim light along the body's outline on its side (mode 2).
+ * 3. one rim light along the body's outline on its side (mode 2);
+ * 4. the finger's light (KitLiquidTouch.kt) from either pane, in the body's shape: the soft light under the finger
+ *    (mode 4) and the brighter outline (mode 5). A pane's own touch light is in its own shape, which showed its old
+ *    outline inside the body (owner 2026-11-11, on the phone: "notice the artifacts").
  * The two sides meet on the line where the two real boxes are equally near, where every mixed value is the same from
  * both sides.
  *
@@ -96,9 +101,27 @@ public sealed class KitLiquidJoinPart(
     /** The face it wears (written by `kitLiquidFace`): its recipe, tint, rim and ink flip. */
     internal var spec: KitLiquidPaneSpec? by mutableStateOf(null)
 
+    /**
+     * Whether the face was last composed as the joined pane (written by `kitLiquidFace` in composition; read after it
+     * in the same composition by a part that hosts its joined face outside a clip, and in the draw phase by the pane's
+     * own touch light, which then leaves the light to the joined pane).
+     */
+    internal var composedJoined: Boolean = false
+
+    /**
+     * The finger's light on this pane (KitLiquidTouch.kt), drawn by both joined panes over the one body: where the
+     * finger is in the window, px (unspecified: no light gathers under it), and how strongly the pane is touched
+     * (0 to 1). Read in the draw phase.
+     */
+    internal var touchAt: () -> Offset = NoTouchAt
+    internal var touchLight: () -> Float = NoTouchLight
+
     /** Its glass now, from its box at rest; a drop's motion reads its springs here (draw phase). */
     internal open fun glass(): Rect = rest
 }
+
+internal val NoTouchAt: () -> Offset = { Offset.Unspecified }
+internal val NoTouchLight: () -> Float = { 0f }
 
 /** A large pane a drop joins (the bar's capsule "bar", the message box "bottom"). */
 @Stable
@@ -117,6 +140,9 @@ public class KitLiquidJoinDrop internal constructor(owner: KitLiquidJoin, body: 
 
     /** A menu: its field reaches the body's centre line (shape rule 3). */
     internal var reachesCentre: Boolean = false
+
+    /** How much of its content (a menu's rows) shows now, 0 to 1. Read in the draw phase. */
+    internal var content: () -> Float = { 1f }
 
     override fun glass(): Rect {
         val r = rest
@@ -215,7 +241,10 @@ public fun Modifier.kitLiquidJoinRest(part: KitLiquidJoinPart?, shape: androidx.
  * face, on the same node as [kitLiquidJoinRest].
  */
 internal fun Modifier.kitLiquidJoinClip(part: KitLiquidJoinPart): Modifier =
-    this.graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }
+    this.graphicsLayer {
+            compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen
+            alpha = (part as? KitLiquidJoinDrop)?.content?.invoke()?.coerceIn(0f, 1f) ?: 1f
+        }
         .drawWithContent {
             val rest = part.rest
             val g = part.glass()
@@ -379,6 +408,28 @@ private class JoinedPaneNode(
                 colorFilter = ColorFilter.tint(spec.rim.copy(alpha = 1f)),
                 blendMode = if (spec.rimAdds) BlendMode.Plus else BlendMode.SrcOver,
             )
+            // 4. The finger's light, from this pane or its partner, on this side of the body.
+            val dark = currentValueOf(LocalKitRoles).dark
+            for (lit in arrayOf(part, partner)) {
+                if (lit == null) continue
+                val a = lit.touchLight().coerceIn(0f, 1f)
+                if (a <= 0f) continue
+                val at = lit.touchAt()
+                if (at.isSpecified) {
+                    val centre = at - area.topLeft
+                    val strength = (if (dark) LiquidTouchRules.BLOOM_DARK else LiquidTouchRules.BLOOM_LIGHT) * a
+                    u.set(programs.brush, mode = 4f, res = 1f, light = floatArrayOf(centre.x, centre.y, LiquidTouchRules.BLOOM_DP.dp.toPx(), strength))
+                    drawRect(programs.brush.brush, size = full.toSize(), blendMode = if (dark) BlendMode.Plus else BlendMode.SrcOver)
+                }
+                val edge = (if (dark) LiquidTouchRules.EDGE_DARK else LiquidTouchRules.EDGE_LIGHT) * a
+                u.set(programs.brush, mode = 5f, res = 1f, light = floatArrayOf(0f, 0f, 1.dp.toPx(), edge))
+                drawRect(
+                    programs.brush.brush,
+                    size = full.toSize(),
+                    colorFilter = if (dark) null else ColorFilter.tint(Color.Black),
+                    blendMode = if (dark) BlendMode.Plus else BlendMode.SrcOver,
+                )
+            }
         }
     }
 }
@@ -450,8 +501,10 @@ internal class JoinUniforms(
     val tintTheirs: Color,
     val rimPx: Float,
 ) {
-    fun set(p: LiveShaderProgram, mode: Float, res: Float) {
+    /** [light]: the finger's light for modes 4 and 5 (centre x, centre y, radius or line width in px, strength). */
+    fun set(p: LiveShaderProgram, mode: Float, res: Float, light: FloatArray = NO_LIGHT) {
         val g = geometry
+        p.float4("light", light[0], light[1], light[2], light[3])
         p.float4("a", g.a.cx, g.a.cy, g.a.hx, g.a.hy)
         p.float("ra", g.a.r)
         p.float4("b", g.b.cx, g.b.cy, g.b.hx, g.b.hy)
@@ -473,6 +526,8 @@ internal class JoinUniforms(
     }
 }
 
+private val NO_LIGHT: FloatArray = floatArrayOf(0f, 0f, 1f, 0f)
+
 /** How tightly the rim light gathers at its lit arcs (the library pane's, AndroidLiquidGlass.RIM_FALLOFF). */
 internal const val RIM_FALLOFF: Float = 1.6f
 
@@ -482,7 +537,8 @@ internal val KNEE_OFF: FloatArray = floatArrayOf(1f, 1f, 1f)
 /**
  * The join shader: AGSL on Android 13+ and SkSL on desktop, the same text. One source, two programs: the lens pass reads
  * the blurred backdrop as `content` (used as a render effect); the brush passes have no input. `mode` picks the pass:
- * 0 the lens (bend, colour controls, the knee), 1 this side's cover, 2 the rim light, 3 the tint. Coordinates are the
+ * 0 the lens (bend, colour controls, the knee), 1 this side's cover, 2 the rim light, 3 the tint, 4 the light under a
+ * finger and 5 the touched body's brighter outline (both on this side, `light` = centre, radius or width, strength). Coordinates are the
  * drawn area's px; the lens pass runs at `res` of them. The field is [LiquidJoin]'s, line for line.
  */
 internal object LiquidJoinShader {
@@ -510,6 +566,7 @@ uniform float4 tintA;
 uniform float4 tintB;
 uniform float rimPx;
 uniform float falloff;
+uniform float4 light;
 
 float sat01(float x) { return clamp(x, 0.0, 1.0); }
 float ss(float e0, float e1, float x) { float t = sat01((x - e0) / (e1 - e0)); return t * t * (3.0 - 2.0 * t); }
@@ -589,6 +646,14 @@ half4 main(float2 q) {
         float lit = pow(abs(dot(bend / gl, float2(0.70710678, 0.70710678))), falloff);
         float edge = sat01(0.5 - dist) * sat01(dist + rimPx + 0.5);
         return half4(edge * lit * mine);
+    }
+    if (mode > 4.5) {
+        float line = sat01(0.5 - dist) * sat01(dist + light.z + 0.5);
+        return half4(line * mine * light.w);
+    }
+    if (mode > 3.5) {
+        float glow = sat01(1.0 - length(p - light.xy) / max(light.z, 1.0));
+        return half4(sat01(0.5 - dist) * mine * glow * light.w);
     }
     return half4(mix(tintA, tintB, t));
 }

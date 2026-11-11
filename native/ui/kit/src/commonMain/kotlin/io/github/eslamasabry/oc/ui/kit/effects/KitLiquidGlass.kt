@@ -361,6 +361,7 @@ private fun liquidFace(
     // kept), never its solid face: nothing changes shape or flickers as a menu or sheet opens (owner 2026-11-08).
     val face = if (granted) transform else HeldFrost
     val joined = joinable && join!!.owner.partnerOf(join) != null
+    join?.composedJoined = joined
     return Modifier.liquidPane(role, backdrop, shape as CornerBasedShape, face, liquidFlipFor(source, role), chosen, keepRim = !granted, join = join, joined = joined)
 }
 

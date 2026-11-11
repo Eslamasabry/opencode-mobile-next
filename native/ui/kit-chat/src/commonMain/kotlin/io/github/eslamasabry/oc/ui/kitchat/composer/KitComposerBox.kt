@@ -196,7 +196,7 @@ public fun KitComposerBox(
                 .kitLiquidTouchWatch(touch)
                 .then(if (liquid != null) Modifier.kitLiquidJoinRest(joinBody, look.shape) else Modifier)
                 .then(liquid ?: look.modifier)
-                .kitLiquidTouchLight(touch, look.shape)
+                .kitLiquidTouchLight(touch, look.shape, join = joinBody)
                 .then(
                     if (solid) Modifier.border(hairline, colors.hairline, look.shape) else Modifier
                 )

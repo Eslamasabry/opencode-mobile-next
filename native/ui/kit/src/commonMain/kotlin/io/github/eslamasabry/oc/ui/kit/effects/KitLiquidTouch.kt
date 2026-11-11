@@ -7,6 +7,7 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -29,6 +30,8 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotionSpecs
@@ -46,6 +49,9 @@ import kotlinx.coroutines.launch
  * - A large pane that holds controls (a bar's capsule, a menu) does not move: a soft light gathers in the glass under
  *   the finger and follows it, and the pane's edge brightens ([rememberKitLiquidTouch], [kitLiquidTouchWatch],
  *   [kitLiquidTouchLight]). The control's own press ink stays as it is.
+ *
+ * A pane joined to another (KitLiquidJoin.kt) hands its light to the joined panes, which draw it in the body's shape:
+ * drawn in the pane's own shape it showed the pane's old outline inside the body.
  *
  * Only liquid and frosted glass faces answer; every other style keeps its own press feedback. Under reduced motion
  * nothing swells and the light comes and goes at once.
@@ -116,15 +122,24 @@ internal fun Modifier.kitLiquidSwell(press: KitLiquidPress?): Modifier {
     }
 }
 
-/** A pressed small pane's brighter edge along [shape], drawn over its glass. */
+/**
+ * A pressed small pane's brighter edge along [shape], drawn over its glass. [join]: the pane's part of a joined body;
+ * joined, the body's outline brightens instead (drawn by the joined panes).
+ */
 @Composable
-internal fun Modifier.kitLiquidPressLight(press: KitLiquidPress?, shape: Shape): Modifier {
+internal fun Modifier.kitLiquidPressLight(press: KitLiquidPress?, shape: Shape, join: KitLiquidJoinPart? = null): Modifier {
     if (press == null) return this
     val dark = LocalKitRoles.current.dark
+    if (join != null) {
+        DisposableEffect(join, press) {
+            join.touchLight = { press.amount.value }
+            onDispose { join.touchLight = NoTouchLight }
+        }
+    }
     return drawWithContent {
         drawContent()
         val a = press.amount.value.coerceIn(0f, 1f)
-        if (a > 0f) drawPressedEdge(shape, dark, a)
+        if (a > 0f && join?.composedJoined != true) drawPressedEdge(shape, dark, a)
     }
 }
 
@@ -143,6 +158,9 @@ private fun androidx.compose.ui.graphics.drawscope.ContentDrawScope.drawPressedE
 public class KitLiquidTouch internal constructor() {
     internal val light: Animatable<Float, AnimationVector1D> = Animatable(0f)
     internal var at: Offset by mutableStateOf(Offset.Unspecified)
+
+    /** Where the part that watches the finger is in the window, px ([at] is measured from it). */
+    internal var origin: Offset by mutableStateOf(Offset.Zero)
 }
 
 /** A large liquid pane's touch light; null when [on] is false (the part is not glass here). */
@@ -158,7 +176,7 @@ public fun Modifier.kitLiquidTouchWatch(touch: KitLiquidTouch?): Modifier {
     if (touch == null) return this
     val motion = KitMotion.state
     val specs = remember(motion) { KitMotionSpecs(motion) }
-    return pointerInput(touch, specs) {
+    return onGloballyPositioned { touch.origin = it.positionInWindow() }.pointerInput(touch, specs) {
         coroutineScope {
             var job: Job? = null
             awaitEachGesture {
@@ -185,16 +203,32 @@ public fun Modifier.kitLiquidTouchWatch(touch: KitLiquidTouch?): Modifier {
 /**
  * The light a finger gathers in a large liquid pane of [shape], and the pane's brighter edge while it is touched. Drawn
  * over the glass and under the pane's own content. [inset] is this pane's place inside the part that watches the
- * finger ([kitLiquidTouchWatch]), in px.
+ * finger ([kitLiquidTouchWatch]), in px. [join]: the pane's part of a joined body (KitLiquidJoin.kt); joined, the light
+ * is drawn by the joined panes in the body's shape and nothing is drawn here.
  */
 @Composable
-public fun Modifier.kitLiquidTouchLight(touch: KitLiquidTouch?, shape: Shape, inset: () -> Offset = { Offset.Zero }): Modifier {
+public fun Modifier.kitLiquidTouchLight(
+    touch: KitLiquidTouch?,
+    shape: Shape,
+    inset: () -> Offset = { Offset.Zero },
+    join: KitLiquidJoinPart? = null,
+): Modifier {
     if (touch == null) return this
     val dark = LocalKitRoles.current.dark
+    if (join != null) {
+        DisposableEffect(join, touch) {
+            join.touchAt = { if (touch.at.isSpecified) touch.origin + touch.at else Offset.Unspecified }
+            join.touchLight = { touch.light.value }
+            onDispose {
+                join.touchAt = NoTouchAt
+                join.touchLight = NoTouchLight
+            }
+        }
+    }
     return drawWithContent {
         val a = touch.light.value.coerceIn(0f, 1f)
         val at = touch.at
-        if (a > 0f && at.isSpecified) {
+        if (a > 0f && at.isSpecified && join?.composedJoined != true) {
             val centre = at - inset()
             val radius = LiquidTouchRules.BLOOM_DP.dp.toPx()
             val strength = (if (dark) LiquidTouchRules.BLOOM_DARK else LiquidTouchRules.BLOOM_LIGHT) * a

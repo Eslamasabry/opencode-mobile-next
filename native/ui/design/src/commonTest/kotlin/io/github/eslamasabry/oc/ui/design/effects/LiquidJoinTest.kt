@@ -169,8 +169,8 @@ class LiquidJoinTest {
     }
 
     @Test
-    fun `liquid join - the drop turns at about 133 ms and its column fills from the outer edge`() {
-        assertEquals(133f, LiquidJoin.turnMs(LiquidJoin.DROP_ZETA, LiquidJoin.DROP_K), 1.5f)
+    fun `liquid join - the drop turns at about 179 ms and its column fills from the outer edge`() {
+        assertEquals(179f, LiquidJoin.turnMs(LiquidJoin.DROP_ZETA, LiquidJoin.DROP_K), 1.5f)
         val (l, r) = LiquidJoin.menuColumn(bar, 320f, 344f, LiquidJoin.COLUMN_DP)
         assertEquals(bar.right, r, 1e-4f, "a control at the bar's end drops its column flush with the end")
         assertEquals(bar.right - LiquidJoin.COLUMN_DP, l, 1e-4f)

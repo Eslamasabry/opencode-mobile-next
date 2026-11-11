@@ -458,6 +458,11 @@ private fun MenuContent(
             val leaving = transition.targetState == EnterExitState.PostExit
             val placed = remember { mutableStateOf(Rect.Zero) }
             val waited = remember { mutableStateOf(false) }
+            // Whether this composition knows the join. The join is made between a composition and its draw (the face
+            // is granted in an effect, the box is placed in layout), so the frame it is made in still holds the lone
+            // pane at full size with every row; the panel shows only once it has been composed joined (owner
+            // 2026-11-11: "it shows in full then animations start drawing again").
+            val composedJoined = joinable && drop != null && joinRegistry?.partnerOf(drop) != null
             if (joinable) androidx.compose.runtime.LaunchedEffect(Unit) {
                 kotlinx.coroutines.delay(JOIN_WAIT_MS)
                 waited.value = true
@@ -477,9 +482,9 @@ private fun MenuContent(
                             scaleX = scale
                             scaleY = scale
                             transformOrigin = MenuPlacement.origin(anchor, panelBox.value, opensAbove.value)
-                            // A joined panel shows once its glass is joined (a frame after it is composed), so the
-                            // lone pane never flashes at full size; if the join does not come it shows anyway.
-                            if (joinable && drop != null) alpha = if (joinRegistry?.partnerOf(drop) != null || waited.value) 1f else 0f
+                            // A joined panel shows once it is composed joined, so the lone pane never flashes at
+                            // full size; if the join does not come it shows anyway.
+                            if (joinable && drop != null) alpha = if (composedJoined || waited.value) 1f else 0f
                         }
                         .layout { measurable, constraints ->
                         if (!constraints.hasBoundedHeight) {
@@ -528,6 +533,7 @@ private fun KitMenuJoinMotion(
     val columnPx = with(density) { j.COLUMN_DP.dp.toPx() }
     val reachPx = with(density) { j.REACH_MENU_DP.dp.toPx() }
     drop.reachesCentre = true
+    drop.content = { fill.value / if (leaving) j.ROWS_UNTIL_FILL else j.ROWS_FROM_FILL }
     drop.reach = { reachPx * (1f + j.MENU_REACH_SWELL * (1f - calm.value.coerceIn(0f, 1f))) }
     drop.shape = { rest ->
         val (l, r) = menuColumnOf(home, at, columnPx)
@@ -621,7 +627,7 @@ public fun KitMenuPanel(
             .kitLiquidTouchWatch(touch)
             .kitLiquidJoinRest(join, shape)
             .then(menuFace)
-            .kitLiquidTouchLight(touch, shape)
+            .kitLiquidTouchLight(touch, shape, join = join)
             .then(if (joined && join != null) Modifier.kitLiquidJoinClip(join) else Modifier)
             .verticalScroll(rememberScrollState())
             // Glass keeps its pane inset inside the menu (owner 2026-11-09): rows clear of the rim, sheen and lens.
