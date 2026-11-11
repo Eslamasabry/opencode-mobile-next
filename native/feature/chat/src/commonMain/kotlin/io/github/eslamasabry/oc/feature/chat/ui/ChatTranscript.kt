@@ -410,6 +410,9 @@ internal fun ChatTranscriptList(
                 .mapTo(hashSetOf()) { it.turnId }
         }
     val newestPrompt = unique.firstOrNull { it is PromptRow }?.key
+    // B8: the newest turn's footer carries "Send again" when its reply was cut off before any words.
+    val newestFooter =
+        unique.firstOrNull { it is PromptRow || it is FooterRow }?.takeIf { it is FooterRow }?.key
     val newestCompleted =
         unique
             .filterIsInstance<FooterRow>()
@@ -653,7 +656,7 @@ internal fun ChatTranscriptList(
                         onCopyReply.takeIf { row.turnId in copyableTurns },
                         teachDetails = row.key == newestCompleted,
                         onAllFiles = onAllFiles,
-                        onSendAgain = onSendAgain.takeIf { row.key == newestPrompt },
+                        onSendAgain = onSendAgain.takeIf { row.key == newestPrompt || row.key == newestFooter },
                         runningSteps = runningSteps,
                         onHideSteps = { stepsShown = false },
                     )
@@ -864,7 +867,12 @@ private fun ChatRow(
                     facts.reading.endNotes[row.turnId]?.let { note ->
                         if (note == io.github.eslamasabry.oc.feature.chat.presentation.TurnEndNote.Silent)
                             NoReplyNotice(onSendAgain)
-                        else TurnEndNote(note, reply?.let { r -> r.continueLabel?.let { w -> { r.onContinue(w) } } })
+                        else
+                            TurnEndNote(
+                                note,
+                                reply?.let { r -> r.continueLabel?.let { w -> { r.onContinue(w) } } },
+                                onSendAgain,
+                            )
                     }
             }
         is ThoughtRow -> {
@@ -1177,7 +1185,13 @@ private fun ChatRow(
                             val endNote = facts.reading.endNotes[row.turnId]
                             if (row.failed) KitReplyNote(words.footer(true), note)
                             else if (stopped && endNote?.isServerStop != true) KitReplyNote(words.stoppedFooter(), note)
-                            endNote?.let { n -> TurnEndNote(n, reply?.let { r -> r.continueLabel?.let { w -> { r.onContinue(w) } } }) }
+                            endNote?.let { n ->
+                                TurnEndNote(
+                                    n,
+                                    reply?.let { r -> r.continueLabel?.let { w -> { r.onContinue(w) } } },
+                                    onSendAgain,
+                                )
+                            }
                             // F: kit_turn.dart:675-721: the newest turn's footer leads with its meta words
                             // (message_view.dart:423-427: the model, when it changed).
                             facts.reading.metadata[row.turnId]

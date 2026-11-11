@@ -1250,7 +1250,7 @@ internal class GraphChatWorld(
                 if (currentAttached()?.handle !== handle)
                     return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
                 handle.loadHistory(page.value.items.map(bridge::message), version)
-                feedKeeper.history(page.value.items, feedVersion)
+                feedKeeper.history(page.value.items, feedVersion, newest = cursor == null)
                 publishVoiceConversation()
                 nextCursor = page.value.nextCursor
                 mutableOlder.value = nextCursor != null
@@ -1279,6 +1279,7 @@ internal class GraphChatWorld(
                 keepLastKnown(handle)
                 refreshDraftProtection()
                 mutableLoad.value = ChatLoad.Live
+                if (cursor == null) confirmIdle(gateway, handle)
                 Outcome.Ok(Unit)
             }
             is Outcome.Failed -> {
@@ -1287,6 +1288,21 @@ internal class GraphChatWorld(
                 page
             }
         }
+    }
+
+    /**
+     * B8: asks the server, after the newest history was read, whether this conversation still runs. Only its answer
+     * "not running" lets an unfinished reply read as cut off; a read that fails or a busy answer makes it unknown (no
+     * line), and a stale attachment changes nothing. Asked after the history because Codex and Paseo learn a thread's
+     * state while reading it, and because a run may have started or ended since the opening read.
+     */
+    private suspend fun confirmIdle(gateway: ServerGateway, handle: TranscriptHandle) {
+        if (feedKeeper.feed.value.busy) return
+        val statuses = gateway.sessionStatuses()
+        if (currentAttached()?.handle !== handle) return
+        // No answer: unknown, so no line.
+        val status = (statuses as? Outcome.Ok)?.value?.let { it[sid] ?: SessionStatus.Idle }
+        feedKeeper.idle(said = status != null && status != SessionStatus.Busy && status != SessionStatus.Retry)
     }
 
     override suspend fun loadOlder(): Outcome<Unit> {
