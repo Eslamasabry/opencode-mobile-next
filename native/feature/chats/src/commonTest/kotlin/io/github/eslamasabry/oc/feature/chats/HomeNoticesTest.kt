@@ -3,7 +3,11 @@ package io.github.eslamasabry.oc.feature.chats
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedSnapshot
 import io.github.eslamasabry.oc.engine.agents.feed.ReturnBrief
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsFilters
+import io.github.eslamasabry.oc.feature.chats.presentation.ChatsHomeExtraState
+import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningPhase
+import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningUi
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsState
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNotice
@@ -50,7 +54,7 @@ class HomeNoticesTest {
     fun `a limit nobody can act on never shows, alone or beside an actionable one`() {
         val limits = HomeNoticeKind.entries.filter { !it.actionable }
         assertEquals(
-            setOf(HomeNoticeKind.ListLoading, HomeNoticeKind.OnlyProject, HomeNoticeKind.BriefUnknown, HomeNoticeKind.AgentLimit),
+            setOf(HomeNoticeKind.ListLoading, HomeNoticeKind.OnlyProject, HomeNoticeKind.BriefUnknown),
             limits.toSet(),
         )
         assertNull(HomeNotices.shown(limits.toSet()))
@@ -66,7 +70,7 @@ class HomeNoticesTest {
     private fun ui(vararg items: io.github.eslamasabry.oc.engine.agents.feed.ChatFeedItem, across: Boolean = true, brief: ReturnBrief = ReturnBrief.None): ChatsUi =
         ChatsState.build(ChatFeedSnapshot(items.toList().toImmutableList(), acrossProjects = across), brief, ChatsFilters(), 10_000, true)
 
-    private fun active(state: ChatsUi) = HomeNotices.active(state, appCondition = false, replyOffer = false, backExit = false)
+    private fun active(state: ChatsUi) = HomeNotices.active(state, appCondition = false, replyOffer = false)
 
     @Test
     fun `the case from the owner's phone shows one notice and none of the two limits`() {
@@ -76,7 +80,7 @@ class HomeNoticesTest {
         assertNull(state.brief, "the server cannot tell: no line, no block")
         assertEquals("new", state.onlyProject)
         assertEquals("new", state.projectChipName, "the chip names the one project, not All projects")
-        val all = HomeNotices.active(state, appCondition = true, replyOffer = false, backExit = false)
+        val all = HomeNotices.active(state, appCondition = true, replyOffer = false)
         assertTrue(HomeNoticeKind.OnlyProject in all)
         assertEquals(HomeNoticeKind.AppCondition, HomeNotices.shown(all))
         assertNull(HomeNotices.shown(active(state)), "without the app condition nothing shows")
@@ -113,24 +117,42 @@ class HomeNoticesTest {
     }
 
     @Test
-    fun `a plan limit shows no line, a sign-in outranks a stop`() {
+    fun `a plan limit is said with the agent's page, after a sign-in and a stop`() {
+        // New conversation does not say an agent is at its limit: without this line the person learns it from a
+        // conversation that fails (Flutter keeps it on its home too, agent_notices.dart:124).
         val limit = HomeAgentNotice("claude", "Claude Code", HomeAgentNoticeKind.LimitReached)
         val stopped = HomeAgentNotice("codex", "Codex", HomeAgentNoticeKind.Stopped)
         val signedOut = HomeAgentNotice("claude", "Claude Code", HomeAgentNoticeKind.SignedOut)
         val state = ui(item("a"))
-        assertNull(HomeNotices.shown(active(state.copy(agentNotices = HomeAgentNotices(lines = persistentListOf(limit))))))
-        assertEquals(
-            HomeNoticeKind.AgentSignedOut,
-            HomeNotices.shown(active(state.copy(agentNotices = HomeAgentNotices(lines = persistentListOf(limit, stopped, signedOut))))),
-        )
+        fun shownFor(vararg lines: HomeAgentNotice) = HomeNotices.shown(active(state.copy(agentNotices = HomeAgentNotices(lines = persistentListOf(*lines)))))
+        assertEquals(HomeNoticeKind.AgentLimit, shownFor(limit))
+        assertEquals(HomeNoticeKind.AgentStopped, shownFor(limit, stopped))
+        assertEquals(HomeNoticeKind.AgentSignedOut, shownFor(limit, stopped, signedOut))
     }
 
     @Test
-    fun `a failed answer outranks everything but the exit hint`() {
+    fun `a failed answer outranks the app condition and the reply offer`() {
         val failure = Failure.Unknown()
         val state = ui(item("a")).copy(answerFailure = failure)
-        val all = HomeNotices.active(state, appCondition = true, replyOffer = true, backExit = false)
+        val all = HomeNotices.active(state, appCondition = true, replyOffer = true)
         assertEquals(HomeNoticeKind.AnswerFailure, HomeNotices.shown(all))
-        assertEquals(HomeNoticeKind.BackExit, HomeNotices.shown(HomeNotices.active(state, true, true, backExit = true)))
+    }
+
+    @Test
+    fun `the server that failed to open leads, and the app-closed notice about it waits`() {
+        // Still-down case: the app was closed, the phone's OpenCode did not come back, the home is opening it. The
+        // failure card (Start / Restart / Try again) and "it stopped" would say the same thing twice.
+        val failed = ChatsOpeningUi(ChatsOpeningPhase.Failed, "This phone", profile = ProfileId("phone"), onThisPhone = true)
+        val state = ui(item("a")).copy(home = ChatsHomeExtraState(opening = failed))
+        val all = HomeNotices.active(state, appCondition = true, replyOffer = true)
+        assertEquals(HomeNoticeKind.ServerOpening, HomeNotices.shown(all))
+        // Still connecting: no card, so the app condition is the one notice.
+        val connecting = state.copy(home = ChatsHomeExtraState(opening = failed.copy(phase = ChatsOpeningPhase.Connecting)))
+        assertEquals(HomeNoticeKind.AppCondition, HomeNotices.shown(HomeNotices.active(connecting, appCondition = true, replyOffer = false)))
+        // New conversation tapped while it still connects: its "still opening" line leads in the same place.
+        assertEquals(
+            HomeNoticeKind.ServerOpening,
+            HomeNotices.shown(HomeNotices.active(connecting.copy(newBlocked = true), appCondition = true, replyOffer = false)),
+        )
     }
 }

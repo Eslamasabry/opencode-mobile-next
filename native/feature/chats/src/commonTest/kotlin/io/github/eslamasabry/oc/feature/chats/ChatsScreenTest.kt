@@ -439,6 +439,26 @@ class ChatsScreenTest {
         }
 
     @Test
+    fun `a phone agent at its plan limit says try again later and opens that agent's page`() =
+        runComposeUiTest {
+            val actions = RecordingChatsActions()
+            val limit =
+                io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNotice(
+                    "claude",
+                    "Claude Code",
+                    io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNoticeKind.LimitReached,
+                )
+            val state =
+                ui(item("a")).copy(
+                    agentNotices = io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNotices(lines = persistentListOf(limit))
+                )
+            setContent { Themed { ChatsScreen(state, actions) } }
+            onNodeWithText("plan limit reached · try again later", substring = true).assertExists()
+            onNodeWithText("'s page", substring = true).performClick()
+            assertEquals(listOf("agent claude"), actions.calls.filter { it.startsWith("agent") })
+        }
+
+    @Test
     fun `B-CHAT-093 finding 5 overflow has a visible filtered-list action`() = runComposeUiTest {
         val actions = RecordingChatsActions()
         val brief =

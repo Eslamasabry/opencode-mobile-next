@@ -160,6 +160,8 @@ import io.github.eslamasabry.oc.ui.words.res.agentsResumeAction
 import io.github.eslamasabry.oc.ui.words.res.agentsSignInAction
 import io.github.eslamasabry.oc.ui.words.res.agentsSignedOutLine
 import io.github.eslamasabry.oc.ui.words.res.agentsStoppedLine
+import io.github.eslamasabry.oc.ui.words.res.agentsLimitUnknown
+import io.github.eslamasabry.oc.ui.words.res.gateSheetOpenAgent
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysOn
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAnswerAllowed
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAnswerRejected
@@ -247,7 +249,7 @@ public fun ChatsScreen(
     }
     val briefKeys = state.brief?.rows.orEmpty().mapTo(hashSetOf()) { it.key }
     // At most one notice at a time, in the notice place; the order is HomeNotices' (a pure, tested rule).
-    val shownNotice = HomeNotices.shown(HomeNotices.active(state, appCondition = appStatus != null, replyOffer = replyOffer != null, backExit = backExit != null))
+    val shownNotice = HomeNotices.shown(HomeNotices.active(state, appCondition = appStatus != null, replyOffer = replyOffer != null))
     // The words every row shares are read once here, not again by each row; a row's menu words are only used when it opens.
     val rowWords = rememberHomeRowWords()
     // A command or a message can carry a token: masked as the chat masks it.
@@ -379,7 +381,8 @@ public fun ChatsScreen(
                 }
             // S4 / H3 (F: chats_home_screen.dart:511-632): a connection that did not answer says so by name and offers
             // Try again on the page; the one still opening has its own card. A list that is only partly read says what
-            // is loading, then offers Try again; a server that lists one project says so.
+            // could not be read and offers Try again (a refresh in flight says nothing: the indicator shows it); a server
+            // that lists one project names it on the projects chip instead of a line.
             // Flutter shows only "{servers} isn't answering" (chatsHomeUnreachableShort); the longer "conversations
             // aren't shown" is its screen-reader label, because the visible list may still hold remembered rows.
             // One notice at a time: the first connection that did not answer; the next shows once this one is back.
@@ -414,14 +417,8 @@ public fun ChatsScreen(
                     item(key = "agents-restart", contentType = "agent-notice") {
                         Box(kitItemMotion().padding(horizontal = LocalKitTokens.current.gutter.dp)) { KitNotice(stringResource(Res.string.agentsRestartLine)) }
                     }
-                // The phone's agents, one line: a sign-in first, then a stop. A plan limit has nothing to do: no line.
-                val agentKind =
-                    when (shownNotice) {
-                        HomeNoticeKind.AgentSignedOut -> HomeAgentNoticeKind.SignedOut
-                        HomeNoticeKind.AgentStopped -> HomeAgentNoticeKind.Stopped
-                        else -> null
-                    }
-                state.agentNotices.lines.filter { it.kind == agentKind }.take(1).forEach { notice ->
+                // The phone's agents, one line: a sign-in first, then a stop, then a plan limit.
+                state.agentNotices.lines.filter { HomeNotices.agentKind(it.kind) == shownNotice }.take(1).forEach { notice ->
                     item(key = "agent-${notice.agentId}-${notice.kind.name}", contentType = "agent-notice") {
                         Box(kitItemMotion().padding(horizontal = LocalKitTokens.current.gutter.dp)) {
                             val name = KitBidi.auto(notice.agentName)
@@ -436,7 +433,14 @@ public fun ChatsScreen(
                                         stringResource(Res.string.agentsStoppedLine, name),
                                         actions = listOf(KitLineAction(stringResource(Res.string.agentsResumeAction, name), actions::openAgents)),
                                     )
-                                HomeAgentNoticeKind.LimitReached -> Unit
+                                HomeAgentNoticeKind.LimitReached ->
+                                    KitNotice(
+                                        stringResource(Res.string.agentsLimitUnknown, name),
+                                        actions =
+                                            listOf(
+                                                KitLineAction(stringResource(Res.string.gateSheetOpenAgent, name), { actions.openAgent(notice.agentId) })
+                                            ),
+                                    )
                             }
                         }
                     }

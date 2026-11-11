@@ -5,10 +5,17 @@ package io.github.eslamasabry.oc.feature.chats.presentation
  * stacked notices, two of them limits nobody can act on). A notice earns its place only when the person can do
  * something about it or must know it to avoid a mistake. The declaration order of the kinds is the priority order:
  * the first active, actionable kind shows; closing it or resolving it lets the next one show.
+ *
+ * "Press back again to exit" is not a notice: it is a two-second hint that borrows the status line and hides nothing
+ * (a notice that vanished and came back on every Back would make the list jump).
  */
 public enum class HomeNoticeKind(public val actionable: Boolean = true) {
-    /** "Press back again to exit": transient, so it outranks everything while it lasts. */
-    BackExit,
+    /**
+     * The server the home is opening failed (its card: Try again, Start, Restart, Change server), or New conversation
+     * was tapped while it still opens. The whole page waits on it, so it leads, and nothing else says it twice (the
+     * "app was closed" notice about the same server waits until it has opened).
+     */
+    ServerOpening,
 
     /** An answer to a waiting question did not go through: the person must know to send it again. */
     AnswerFailure,
@@ -34,6 +41,13 @@ public enum class HomeNoticeKind(public val actionable: Boolean = true) {
     /** A phone agent stopped in the background, with Resume. */
     AgentStopped,
 
+    /**
+     * A phone agent reached its plan limit: "try again later", with the agent's page, where its plan and usage are
+     * (Flutter keeps the line on its home, agent_notices.dart:124; New conversation does not say it, so without it the
+     * person learns only when a conversation fails).
+     */
+    AgentLimit,
+
     /** Clearing sign-ins needs the app closed and reopened. */
     AgentRestart,
 
@@ -49,9 +63,6 @@ public enum class HomeNoticeKind(public val actionable: Boolean = true) {
 
     /** "Can't tell what's new on this server": nothing to do; no line. */
     BriefUnknown(actionable = false),
-
-    /** "Plan limit reached": nothing to do from here. */
-    AgentLimit(actionable = false),
 }
 
 public object HomeNotices {
@@ -74,9 +85,9 @@ public object HomeNotices {
         state: ChatsUi,
         appCondition: Boolean,
         replyOffer: Boolean,
-        backExit: Boolean,
     ): Set<HomeNoticeKind> = buildSet {
-        if (backExit) add(HomeNoticeKind.BackExit)
+        // The same two cases the screen draws: the failure card, or the "still opening" line after New conversation.
+        state.home.opening?.let { if (it.phase == ChatsOpeningPhase.Failed || state.newBlocked) add(HomeNoticeKind.ServerOpening) }
         if (state.answerFailure != null) add(HomeNoticeKind.AnswerFailure)
         if (state.archiveFailure != null) add(HomeNoticeKind.ArchiveFailure)
         if (state.renameFailure != null) add(HomeNoticeKind.RenameFailure)
@@ -85,18 +96,18 @@ public object HomeNotices {
         if (appCondition) add(HomeNoticeKind.AppCondition)
         if (state.phase != ChatsPhase.Opening) {
             if (state.agentNotices.restart) add(HomeNoticeKind.AgentRestart)
-            state.agentNotices.lines.forEach {
-                add(
-                    when (it.kind) {
-                        HomeAgentNoticeKind.SignedOut -> HomeNoticeKind.AgentSignedOut
-                        HomeAgentNoticeKind.Stopped -> HomeNoticeKind.AgentStopped
-                        HomeAgentNoticeKind.LimitReached -> HomeNoticeKind.AgentLimit
-                    }
-                )
-            }
+            state.agentNotices.lines.forEach { add(agentKind(it.kind)) }
         }
         if (replyOffer) add(HomeNoticeKind.ReplyOffer)
         if (state.onlyProject != null) add(HomeNoticeKind.OnlyProject)
         if (state.brief?.unknown == true) add(HomeNoticeKind.BriefUnknown)
     }
+
+    /** The home's kind for one phone-agent line. */
+    public fun agentKind(kind: HomeAgentNoticeKind): HomeNoticeKind =
+        when (kind) {
+            HomeAgentNoticeKind.SignedOut -> HomeNoticeKind.AgentSignedOut
+            HomeAgentNoticeKind.Stopped -> HomeNoticeKind.AgentStopped
+            HomeAgentNoticeKind.LimitReached -> HomeNoticeKind.AgentLimit
+        }
 }

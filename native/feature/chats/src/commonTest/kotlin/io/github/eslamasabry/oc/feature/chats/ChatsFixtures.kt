@@ -163,6 +163,10 @@ internal class RecordingChatsActions : ChatsActions {
     override fun dismissArchiveFailure() {
         calls += "dismissArchiveFailure"
     }
+
+    override fun openAgent(agentId: String) {
+        calls += "agent $agentId"
+    }
 }
 
 /** Plan 06 §6's fake platform (kit's own copy is test-internal there). */

@@ -344,6 +344,9 @@ public interface ChatsActions {
     /** G6: a home agent notice's action (Sign in to {agent}, Resume {agent}): the Agents page, where it is done. */
     public fun openAgents() {}
 
+    /** A plan-limit line's action: that agent's own page, where its plan and usage are. */
+    public fun openAgent(agentId: String) {}
+
     /** Always allow on a row's waiting permission: asks first ([ChatsUi.confirmAlways]), as Flutter's list does. */
     public fun askAlwaysAllow(row: ConversationRowUi) {}
 
