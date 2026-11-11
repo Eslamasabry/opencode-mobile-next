@@ -533,6 +533,9 @@ public class NewConversationViewModel(
     /** Agent setup was opened from here: the agents may have changed when this screen is shown again. */
     private var refreshOnShown = false
 
+    /** [ChatsRoute.New.phoneAgent] is applied once, on the first setup that offers it. */
+    private var wantedApplied = false
+
     override fun shown() {
         if (!refreshOnShown) return
         val profile = mutable.value.profile ?: return
@@ -590,6 +593,12 @@ public class NewConversationViewModel(
         nav.open(AgentsRoute.Home)
     }
 
+    /** A dimmed agent's "Set up" opens that agent's own sheet (not the whole page) and comes back here when it is ready. */
+    override fun setUpPhoneAgent(agent: String) {
+        refreshOnShown = true
+        nav.open(AgentsRoute.Agent(agent, forNewChat = true))
+    }
+
     override fun addServer(): Unit = nav.open(ServersRoute.Home)
 
     override fun chooseServer(profile: ProfileId) {
@@ -634,7 +643,16 @@ public class NewConversationViewModel(
                                         true,
                             )
                         }
-                        setup.phone?.selected?.let { loadPhoneModels(profile, it) }
+                        val wanted = route.phoneAgent
+                        if (
+                            wanted != null && !wantedApplied &&
+                                setup.phone?.choices?.any { c -> c.id == wanted } == true
+                        ) {
+                            // The Agents page chose this agent: it is the one chosen here, remembered like a tap.
+                            wantedApplied = true
+                            if (setup.phone?.selected != wanted) choosePhoneAgent(wanted)
+                            else loadPhoneModels(profile, wanted)
+                        } else setup.phone?.selected?.let { loadPhoneModels(profile, it) }
                         restore(profile, setup.directory)
                         setup.directory?.let { checkFolder(profile, it) }
                     }

@@ -32,6 +32,8 @@ public sealed interface ChatsRoute : AppRoute {
          * sending, or the send is not known (F: `showNewChat(onSent:)`).
          */
         val reportKey: String? = null,
+        /** A phone agent the form starts with chosen (F: the Agents sheet's "Use {agent}"); ignored when not offered. */
+        val phoneAgent: String? = null,
     ) : ChatsRoute {
         override val motion: RouteMotion
             get() = RouteMotion.SlideUp

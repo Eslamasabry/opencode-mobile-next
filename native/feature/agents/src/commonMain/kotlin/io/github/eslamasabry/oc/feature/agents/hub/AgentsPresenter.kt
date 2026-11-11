@@ -38,6 +38,8 @@ public class AgentsPresenter(
     private val accounts: AgentAccounts? = null,
     private val clock: Clock? = null,
     private val drafts: AgentHandoffDrafts? = null,
+    /** Opens New conversation on the phone's server with an agent chosen (profile null = the form picks its server). */
+    private val openNewChat: (ProfileId?, String) -> Unit = { _, _ -> },
 ) : AgentsActions {
     private val local = MutableStateFlow(AgentsUi(helperOffered = phoneHost != null))
 
@@ -90,9 +92,10 @@ public class AgentsPresenter(
         }
     }
 
-    override fun newPhoneConversation() {
-        val id = phone.state.value.conversations ?: return
-        newConversation(id)
+    override fun newPhoneConversation(agent: String) {
+        if (phone.state.value.agents.none { it.id == agent }) return
+        local.update { it.copy(sheetAgent = null) }
+        openNewChat(phone.state.value.owner, agent)
     }
 
     /** Reads each computer's ready agents (not the phone's own helper profile), without blocking the page. */

@@ -3,6 +3,9 @@ package io.github.eslamasabry.oc.feature.agents
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
@@ -17,6 +20,7 @@ import io.github.eslamasabry.oc.engine.settings.teaching.ShowMeTarget
 import io.github.eslamasabry.oc.engine.settings.teaching.ShowMeTargets
 import io.github.eslamasabry.oc.feature.agents.hub.AgentComputerKind
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsViewModel
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
 import io.github.eslamasabry.oc.feature.agents.presentation.PhoneSignInRouteViewModel
 import io.github.eslamasabry.oc.feature.agents.ui.AgentsScreen
 import io.github.eslamasabry.oc.feature.agents.ui.PhoneSignInScreen
@@ -70,6 +74,32 @@ public class AgentsEntries(private val arrivals: ShowMeTargets) : EntryInstaller
             val state by vm.state.collectAsStateWithLifecycle()
             val pageHost by vm.pageHost.collectAsStateWithLifecycle()
             PhoneSignInScreen(state, pageHost, vm)
+        }
+        entry<AgentsRoute.Agent> { route ->
+            val vm = metroViewModel<AgentsViewModel>()
+            LifecycleResumeEffect(vm) {
+                vm.refreshPhone()
+                onPauseOrDispose {}
+            }
+            val state by vm.state.collectAsStateWithLifecycle()
+            val hubState by vm.hubState.collectAsStateWithLifecycle()
+            val row = state.phone.agents.firstOrNull { it.id == route.agentId }
+            val ready = row?.status == PhoneAgentStatus.Ready
+            // The agent's own sheet opens once the page has read the agents; a sign-in or install on top of it comes back here.
+            var opened by rememberSaveable { mutableStateOf(false) }
+            var wasNotReady by rememberSaveable { mutableStateOf(false) }
+            LaunchedEffect(row != null, ready) {
+                if (row == null) return@LaunchedEffect
+                if (!ready) wasNotReady = true
+                if (!opened) {
+                    opened = true
+                    vm.openAgent(route.agentId)
+                } else if (route.forNewChat && ready && wasNotReady) {
+                    // Set up finished: back to New conversation, which rereads its agents.
+                    vm.back()
+                }
+            }
+            AgentsScreen(state, vm, hubState, vm)
         }
         entry<AgentsRoute.Home> {
             val vm = metroViewModel<AgentsViewModel>()
