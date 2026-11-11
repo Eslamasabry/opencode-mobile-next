@@ -43,6 +43,15 @@ public data class AgentsUi(
     val removal: PhoneAgentRemoval? = null,
     val installIssue: PhoneAgentInstallIssue? = null,
     val installingAgent: PhoneAgentRow? = null,
+    /** The free space the open install review needs and what the phone has, once read; null until then or unknown. */
+    val installSpace: PhoneAgentSpace? = null,
+    /** A running install has shown no new step or byte for a while: the tile says it is still working. */
+    val installQuiet: Boolean = false,
+    /**
+     * The agent whose install this page followed and which then ended with no result at all while the agent is still
+     * not installed: it reads as an interrupted install (Try again, Dismiss), never as a silent "Not installed".
+     */
+    val lostInstall: String? = null,
     val revertingAgent: PhoneAgentRow? = null,
     val previousVersionFailed: Boolean = false,
     val previousVersionRestored: Boolean = false,
