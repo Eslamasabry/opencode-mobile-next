@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.feature.review.presentation
 
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.model.FileDiff
+import io.github.eslamasabry.oc.core.model.VersionControlSetupState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -20,6 +21,11 @@ public fun interface ReviewProjectRead {
     public suspend fun read(): Outcome<ImmutableList<FileDiff>>
 }
 
+/** Whether the folder is under Git, so an empty answer can say why it is empty. Unknown when the server cannot tell. */
+public fun interface ReviewProjectSetup {
+    public suspend fun setup(): VersionControlSetupState
+}
+
 /**
  * "Changes" of a whole project: the uncommitted files, nothing else. It has no conversation, so there is no Undo all,
  * no send-back and no comments for an agent; the scope is the working tree and is not a choice.
@@ -28,6 +34,7 @@ public class ProjectChangesPresenter(
     private val tree: ReviewProjectRead,
     private val nav: ReviewNavigation,
     private val scope: CoroutineScope,
+    private val setup: ReviewProjectSetup = ReviewProjectSetup { VersionControlSetupState.Unknown },
 ) : ChangesActions {
     private val mutable =
         MutableStateFlow(
@@ -52,10 +59,13 @@ public class ProjectChangesPresenter(
                 is Outcome.Failed -> mutable.update { it.copy(load = ReviewLoad.Failed(read.failure)) }
                 is Outcome.Ok -> {
                     val rows = read.value.map(::row).toImmutableList()
+                    val notRepository =
+                        rows.isEmpty() && setup.setup() == VersionControlSetupState.Absent
                     mutable.update {
                         it.copy(
                             load = ReviewLoad.Ready,
                             files = rows,
+                            notRepository = notRepository,
                             added = rows.sumOrNull { r -> r.added },
                             removed = rows.sumOrNull { r -> r.removed },
                         )

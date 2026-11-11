@@ -225,7 +225,7 @@ public class ProjectChangesViewModel(
     hub: ReviewHub,
     nav: AppNavigator,
 ) : ViewModel(), ChangesActions {
-    private val presenter = ProjectChangesPresenter(hub.projectTree(route.profile, route.directory), ProjectNavigation(nav, route), viewModelScope)
+    private val presenter = ProjectChangesPresenter(hub.projectTree(route.profile, route.directory), ProjectNavigation(nav, route), viewModelScope, hub.projectSetup(route.profile, route.directory))
     public val state: StateFlow<ChangesUi> = presenter.state
 
     override fun back(): Unit = presenter.back()

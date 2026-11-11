@@ -9,6 +9,9 @@ import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.model.VcsDiffMode
+import io.github.eslamasabry.oc.core.model.VersionControlSetupState
+import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.feature.review.presentation.ReviewProjectSetup
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -117,6 +120,20 @@ public class ReviewHub(private val registry: ConnectionRegistry) {
                 }
                 else -> Failure.Unavailable(FeatureId("sessionDiff")).failed()
             }
+        }
+
+    /**
+     * Whether [directory] on [profile] is under Git, from the server's own version-control health. Only the folder the
+     * connection is on can be asked; any other answer is Unknown (the page then says the tree is clean, never "no Git").
+     */
+    public fun projectSetup(profile: ProfileId, directory: String): ReviewProjectSetup =
+        ReviewProjectSetup {
+            val graph = registry.live.value[profile] as? ReviewGraphAccessors
+            val onFolder = graph?.reviewGateway?.location?.value?.directory?.trimEnd('/') == directory.trimEnd('/')
+            if (graph == null || !onFolder) VersionControlSetupState.Unknown
+            else
+                (graph.reviewOperations.versionControlHealth() as? Outcome.Ok)?.value?.setupState
+                    ?: VersionControlSetupState.Unknown
         }
 
     private fun gatewaysOf(ref: ConversationRef): ReviewGateways? =

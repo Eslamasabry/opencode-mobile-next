@@ -149,6 +149,9 @@ import io.github.eslamasabry.oc.ui.words.res.reviewFileGone
 import io.github.eslamasabry.oc.ui.words.res.reviewIncomplete
 import io.github.eslamasabry.oc.ui.words.res.reviewLooksGood
 import io.github.eslamasabry.oc.ui.words.res.reviewNoChangesBody
+import io.github.eslamasabry.oc.ui.words.res.reviewProjectNotGitBody
+import io.github.eslamasabry.oc.ui.words.res.reviewProjectNotGitTitle
+import io.github.eslamasabry.oc.ui.words.res.e7LibraryNoUncommittedChanges
 import io.github.eslamasabry.oc.ui.words.res.reviewNoDiff
 import io.github.eslamasabry.oc.ui.words.res.reviewOneFileUnavailable
 import io.github.eslamasabry.oc.ui.words.res.reviewRevertBackAction
@@ -387,7 +390,18 @@ private fun ChangesContent(state: ChangesUi, actions: ChangesActions) {
                                 body = stringResource(Res.string.reviewNoChangesBody),
                             )
                         }
-                    } else
+                    } else if (!state.conversation && state.notRepository)
+                        KitStateView(
+                            KitStateKind.Empty,
+                            stringResource(Res.string.reviewProjectNotGitTitle),
+                            body = stringResource(Res.string.reviewProjectNotGitBody),
+                        )
+                    else if (!state.conversation)
+                        KitStateView(
+                            KitStateKind.Empty,
+                            stringResource(Res.string.e7LibraryNoUncommittedChanges),
+                        )
+                    else
                         KitStateView(
                             KitStateKind.Empty,
                             stringResource(Res.string.kitDiffNoChanges),
