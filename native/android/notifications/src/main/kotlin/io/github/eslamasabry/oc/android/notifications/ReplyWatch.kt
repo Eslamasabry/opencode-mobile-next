@@ -42,7 +42,40 @@ public sealed interface ReplyWatchStart {
 
 public enum class ReplyWatchSkip { ConfigurationChange, NothingRunning, WouldNotAlert, LiveModeOn, UserPaused, OwnRequestCovering }
 
-public enum class ReplyWatchEnd { NoProgress, HardCap, AppVisible, Dismissed, SystemTimeout, ServerLeft, StartRefused }
+public enum class ReplyWatchEnd { NoProgress, HardCap, AppVisible, Dismissed, SystemTimeout, ServerLeft, StartRefused, LiveModeOn }
+
+/** One conversation as the progress rule reads it. [requestKey] is its needs-you alert key (`AlertKeys.input`). */
+public data class ReplyRunFact(val requestKey: String, val running: Boolean, val waiting: Boolean)
+
+/**
+ * "Some run is progressing" (plan 11 §9.3): a running reply counts; a reply waiting for the person counts only until
+ * its needs-you alert is shown, and only while request alerts are on. An alert that has not been shown
+ * [UNSHOWN_REQUEST_GRACE_MS] after the wait was first seen (a blocked post, a request the shade cannot carry) stops
+ * counting, so an unanswered request can never hold a `dataSync` service up to the 2 h cap. Times are monotonic.
+ */
+public class ReplyProgressTracker {
+    private val waitingSince = mutableMapOf<String, Long>()
+
+    public fun progressing(
+        facts: List<ReplyRunFact>,
+        shownRequests: Set<String>,
+        requestAlertsOn: Boolean,
+        nowMs: Long,
+    ): Boolean {
+        val waiting = facts.filter { it.waiting && !it.running }.map { it.requestKey }.toSet()
+        waitingSince.keys.retainAll(waiting)
+        waiting.forEach { waitingSince.getOrPut(it) { nowMs } }
+        if (facts.any { it.running }) return true
+        if (!requestAlertsOn) return false
+        return waiting.any { key ->
+            key !in shownRequests && nowMs - (waitingSince[key] ?: nowMs) < UNSHOWN_REQUEST_GRACE_MS
+        }
+    }
+
+    public companion object {
+        public const val UNSHOWN_REQUEST_GRACE_MS: Long = 30_000L
+    }
+}
 
 /** The moment-to-moment state the end rule reads. Times are monotonic (`elapsedRealtime`) milliseconds. */
 public data class ReplyWatchState(
@@ -153,10 +186,16 @@ public class ReplyWatchServiceBody(
     private var job: Job? = null
     private var service: Service? = null
 
+    /** The current watch joined the server's row: it never posted that row, so its end leaves the row alone. */
+    private var joinedWatch = false
+
     /** Why the last watch ended; null while one runs or before the first. */
     public val ended: StateFlow<ReplyWatchEnd?> = _ended.asStateFlow()
 
     public val active: Boolean get() = job?.isActive == true
+
+    /** A watch holds [service]'s `dataSync` promise (not a joined watch). */
+    public fun holds(service: Service): Boolean = active && this.service === service
 
     /** The service's `onStartCommand`. Returns `START_NOT_STICKY`: a killed watch is never restarted by itself. */
     public fun onStartCommand(service: Service): Int {
@@ -182,21 +221,48 @@ public class ReplyWatchServiceBody(
             finish(ReplyWatchEnd.StartRefused)
             return Service.START_NOT_STICKY
         }
+        if (active && joinedWatch) {
+            // The server left the row meanwhile and the app asked for the service: the service watch replaces the
+            // joined one, so this service has an end condition of its own.
+            job?.cancel()
+            job = null
+            owners.end(StatusOwner.Reply) { }
+        }
         owners.begin(StatusOwner.Reply, currentContent())
+        joinedWatch = false
         watch(joined = false)
         return Service.START_NOT_STICKY
     }
 
-    /** Joins the server-held row as owner `reply` (no foreground start, no budget spent). */
+    /**
+     * Joins the server-held row as owner `reply` (no foreground start, no budget spent). The phone server's own
+     * service (`:android:linux`) holds that row outside this owner set, so [ReplyRunSource.serverHoldsRow] counts too.
+     */
     public fun joinServerRow() {
-        if (!owners.has(StatusOwner.Server)) return
+        if (!owners.has(StatusOwner.Server) && !source.serverHoldsRow.value) return
+        if (active) return
         owners.begin(StatusOwner.Reply, currentContent())
+        joinedWatch = true
         watch(joined = true)
     }
 
     /** `onTimeout(startId, fgsType)` (API 35+) and `onTimeout(startId)` (API 34): stop within seconds. */
     public fun onTimeout() {
         finish(ReplyWatchEnd.SystemTimeout)
+    }
+
+    /**
+     * Live mode ("Stay connected") started while the watch ran (a Resume from the pause row or tile): live mode owns
+     * the row and the service from now on, so the watch ends without stopping the shared service.
+     */
+    public fun yieldToLive() {
+        if (active) finish(ReplyWatchEnd.LiveModeOn)
+    }
+
+    /** The status row's delete intent (`StatusActionReceiver`): ends the watch for the run that row named. */
+    public fun onRowDismissed(intent: android.content.Intent) {
+        if (intent.getStringExtra(FrozenExtras.EXTRA_STATUS_ACTION) != StatusRenderer.DISMISSED_ACTION) return
+        intent.statusRun()?.let(::onRowDismissed)
     }
 
     /** The person swiped the row away while `reply` was its only owner: the watch ends for that run only. */
@@ -305,6 +371,12 @@ public class ReplyWatchServiceBody(
     private fun releaseRow() {
         val leavingService = service
         service = null
+        if (joinedWatch) {
+            joinedWatch = false
+            // The row belongs to the server's service; reply watch only joined it and leaves it as it is.
+            owners.end(StatusOwner.Reply) { }
+            return
+        }
         owners.end(StatusOwner.Reply) { remaining ->
             // Live mode and sign-in share BackgroundConnectionService with reply watch. They keep its
             // foreground promise; the server alone has a separate service from which we may detach.

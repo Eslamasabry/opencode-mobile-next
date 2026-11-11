@@ -76,6 +76,58 @@ class ReplyWatchPolicyTest {
     }
 }
 
+/** `ReplyProgressTracker` (plan 11 §9.3): what "a run is progressing" means for the start and the end rules. */
+class ReplyProgressTrackerTest {
+    private val key = AlertKeys.input("p1", "ses_1")
+
+    @Test
+    fun `S11-4 a running reply progresses, nothing running does not`() {
+        val tracker = ReplyProgressTracker()
+        assertTrue(tracker.progressing(listOf(ReplyRunFact(key, running = true, waiting = false)), emptySet(), true, 0))
+        assertFalse(tracker.progressing(listOf(ReplyRunFact(key, running = false, waiting = false)), emptySet(), true, 0))
+        assertFalse(tracker.progressing(emptyList(), emptySet(), true, 0))
+    }
+
+    @Test
+    fun `S11-4 a reply waiting for the person counts until its alert is shown`() {
+        val tracker = ReplyProgressTracker()
+        val waiting = listOf(ReplyRunFact(key, running = false, waiting = true))
+        assertTrue(tracker.progressing(waiting, emptySet(), true, 1_000))
+        assertFalse(tracker.progressing(waiting, setOf(key), true, 2_000))
+    }
+
+    @Test
+    fun `S11-4 with request alerts off a waiting reply never holds the watch`() {
+        assertFalse(
+            ReplyProgressTracker().progressing(listOf(ReplyRunFact(key, running = false, waiting = true)), emptySet(), false, 0),
+        )
+    }
+
+    @Test
+    fun `S11-4 an alert that cannot be shown stops counting after the grace, a new wait starts a new grace`() {
+        val tracker = ReplyProgressTracker()
+        val waiting = listOf(ReplyRunFact(key, running = false, waiting = true))
+        val grace = ReplyProgressTracker.UNSHOWN_REQUEST_GRACE_MS
+        assertTrue(tracker.progressing(waiting, emptySet(), true, 10_000))
+        assertTrue(tracker.progressing(waiting, emptySet(), true, 10_000 + grace - 1))
+        assertFalse(tracker.progressing(waiting, emptySet(), true, 10_000 + grace))
+        // Answered elsewhere, then a new request on the same conversation.
+        assertFalse(tracker.progressing(emptyList(), emptySet(), true, 50_000))
+        assertTrue(tracker.progressing(waiting, emptySet(), true, 60_000))
+    }
+
+    @Test
+    fun `S11-4 another conversation still running keeps progress while one waits on a shown alert`() {
+        val tracker = ReplyProgressTracker()
+        val facts =
+            listOf(
+                ReplyRunFact(key, running = false, waiting = true),
+                ReplyRunFact(AlertKeys.input("p2", "ses_2"), running = true, waiting = false),
+            )
+        assertTrue(tracker.progressing(facts, setOf(key), true, 0))
+    }
+}
+
 /** The reply-watch service body under Robolectric's `ServiceController` (promise first, then the watch). */
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -369,5 +421,65 @@ class ReplyWatchServiceTest {
             source.serverHoldsRow.value = false
             advanceTimeBy(1_500)
             assertEquals(ReplyWatchEnd.ServerLeft, body.ended.value)
+        }
+
+    @Test
+    fun `S11-4 a watch joined to the phone server's own row leaves that row untouched when it ends`() =
+        runTest {
+            // The server's service (:android:linux) holds row 4747 outside this owner set.
+            val source = Source().apply { serverHoldsRow.value = true }
+            val body =
+                ReplyWatchServiceBody(
+                    app, words, StatusRenderer(app, words), AndroidAlertShade(app, words, registry), source, owners,
+                    scope = backgroundScope, elapsedMs = { testScheduler.currentTime },
+                )
+            manager.notify(NotificationIds.STATUS, StatusRenderer(app, words).build(StatusContent(StatusKind.Idle, "Server ready"), true, null))
+            body.joinServerRow()
+            runCurrent()
+            assertTrue(body.active)
+            source.appVisible.value = true
+            advanceTimeBy(1_500)
+            assertEquals(ReplyWatchEnd.AppVisible, body.ended.value)
+            assertFalse(owners.has(StatusOwner.Reply))
+            assertEquals("Server ready", shadowOf(manager).getNotification(NotificationIds.STATUS).extras.getCharSequence(Notification.EXTRA_TITLE).toString())
+        }
+
+    @Test
+    fun `S11-4 no join without a server holding the row`() =
+        runTest {
+            val body =
+                ReplyWatchServiceBody(
+                    app, words, StatusRenderer(app, words), AndroidAlertShade(app, words, registry), Source(), owners,
+                    scope = backgroundScope, elapsedMs = { testScheduler.currentTime },
+                )
+            body.joinServerRow()
+            assertFalse(body.active)
+        }
+
+    @Test
+    fun `S11-4 live mode starting during the watch takes the service over without a stop`() =
+        runTest {
+            val (body, service) = start(Source())
+            runCurrent()
+            owners.begin(StatusOwner.Live, StatusContent(StatusKind.Idle, "Live"))
+            body.yieldToLive()
+            assertEquals(ReplyWatchEnd.LiveModeOn, body.ended.value)
+            assertFalse(body.holds(service))
+            assertFalse(shadowOf(service).isStoppedBySelf)
+            assertFalse(shadowOf(service).isForegroundStopped)
+            owners.end(StatusOwner.Live) { }
+        }
+
+    @Test
+    fun `S11-9 the row's delete intent ends the watch for the run it named`() =
+        runTest {
+            val (body, service) = start(Source())
+            runCurrent()
+            assertTrue(body.holds(service))
+            val delete = shadowOf(shadowOf(service).lastForegroundNotification.deleteIntent).savedIntent
+            body.onRowDismissed(Intent(delete).putExtra(FrozenExtras.EXTRA_STATUS_ACTION, "open"))
+            assertTrue(body.active)
+            body.onRowDismissed(delete)
+            assertEquals(ReplyWatchEnd.Dismissed, body.ended.value)
         }
 }

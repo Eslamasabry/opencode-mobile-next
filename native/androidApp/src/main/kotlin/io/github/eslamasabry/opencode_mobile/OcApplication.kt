@@ -207,6 +207,10 @@ class OcApplication : Application(), GraphOwner {
         step("platform") {
             (appGraph as PlatformAccessors).platform.start() // P12-PLATFORM: channels, widgets feed, alerts, update check
         }
+        step("replyWatch") {
+            // Plan 11 §9.3: follows the activities from the first start, so leaving with a reply running is seen.
+            (appGraph as io.github.eslamasabry.opencode_mobile.graph.ReplyWatchAccessors).replyWatch.start()
+        }
         step("resumedActivities") {
             appGraph.resumedActivities // P12-VOICE: follow the resumed activity from the start (mic permission)
         }
