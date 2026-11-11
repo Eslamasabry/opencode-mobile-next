@@ -35,7 +35,7 @@ class PhoneAgentChecks internal constructor(private val linux: BuiltinLinux) {
     }
 
     /** Bounded version projection. No raw stdout survives this call. */
-    fun version(profile: String, executable: String, expected: String): Map<String, Any?> {
+    fun version(profile: String, executable: String, expected: String, stop: ProbeStop? = null): Map<String, Any?> {
         identity(profile)
         check(Regex("^[a-z][a-z0-9-]{0,63}$").matches(executable) &&
             Regex("^[A-Za-z0-9][A-Za-z0-9.+-]{0,63}$").matches(expected)) { "The agent is unavailable." }
@@ -43,7 +43,7 @@ class PhoneAgentChecks internal constructor(private val linux: BuiltinLinux) {
         // that runs (an older pin, the setup component's /usr/local/bin copy)
         // is still Claude Code on this phone, so the row never says "Not
         // installed" for it. Neither check needs the daemon.
-        val found = if (linux.installed) reportedVersion(profile, executable) else null
+        val found = if (linux.installed) reportedVersion(profile, executable, stop) else null
         val installed = found != null && versionMatches(found, expected)
         return mapOf(
             "installed" to installed, "version" to if (installed) expected else null,
@@ -53,15 +53,17 @@ class PhoneAgentChecks internal constructor(private val linux: BuiltinLinux) {
     }
 
     /** The first version number the program prints, or null when it will not run. */
-    private fun reportedVersion(profile: String, executable: String): String? {
+    private fun reportedVersion(profile: String, executable: String, stop: ProbeStop?): String? {
         for (dir in listOf("/home/oc/.local/bin", "/usr/local/bin")) {
-            val output = runVersion(profile, "$dir/$executable") ?: continue
+            val output = runVersion(profile, "$dir/$executable", stop) ?: continue
             Regex("(?<![0-9.])[0-9]+\\.[0-9]+\\.[0-9]+(?![0-9.])").find(output)?.let { return it.value }
         }
         return null
     }
 
-    internal fun runVersion(profile: String, path: String): String? {
+    /** [stop] ends the running `--version` (a read giving way to a person's step); it then answers null. */
+    internal fun runVersion(profile: String, path: String, stop: ProbeStop? = null): String? {
+        if (stop?.isStopped == true) return null
         val child = try {
             // The same Node.js safe mode the launch script gets, so the check sees what a launch would.
             linux.startAgentProcess(
@@ -73,6 +75,7 @@ class PhoneAgentChecks internal constructor(private val linux: BuiltinLinux) {
         var reader: Thread? = null
         return try {
             child.outputStream.close()
+            if (stop != null && !stop.attach { linux.stopAgentProcess(child) }) return null
             val thread = collectBounded(child, output)
             reader = thread
             val complete = child.waitFor(VERSION_TIMEOUT_S, TimeUnit.SECONDS)
@@ -80,11 +83,12 @@ class PhoneAgentChecks internal constructor(private val linux: BuiltinLinux) {
             synchronized(output) {
                 val value = output.toString()
                 output.setLength(0)
-                if (complete && child.exitValue() == 0) value else null
+                if (complete && child.exitValue() == 0 && stop?.isStopped != true) value else null
             }
         } catch (_: Exception) {
             null
         } finally {
+            stop?.detach()
             cleanup(linux, child, reader)
             synchronized(output) { output.setLength(0) }
         }

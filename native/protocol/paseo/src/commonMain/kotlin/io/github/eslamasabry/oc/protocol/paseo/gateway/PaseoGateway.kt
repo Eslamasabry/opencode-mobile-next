@@ -357,6 +357,9 @@ public class PaseoGateway(
     internal val titleHints = HashMap<String, String>()
     internal val archivedCopies = HashSet<String>()
 
+    /** The listings being read: what each kept so far, by the cursor that continues it (PaseoListCopies.kt). */
+    internal val listedCopies = PaseoListedCopies()
+
     /** Background work and failed turns as this gateway read them (B-AGENT-151, PaseoBackgroundTasks.kt). */
     internal val backgroundTasks = PaseoBackgroundTaskBook(sharedBackgroundTasks)
 
@@ -583,6 +586,7 @@ public class PaseoGateway(
         providerRevision++
         agents.clear()
         sessions.clear()
+        listedCopies.clear()
         providerImport.clear()
         statuses.clear()
         cancelRecordBusyExpiry()
@@ -652,9 +656,10 @@ public class PaseoGateway(
         return result.toImmutableList()
     }
 
+    /** One row per conversation: older records of a resumed or imported one are left out (PaseoListCopies.kt). */
     override suspend fun sessionPage(cursor: String?, limit: Int): Outcome<ServerPage<Session>> =
         call {
-            readSessionPage(cursor, limit)
+            withoutOlderCopies(readSessionPage(cursor, limit), cursor)
         }
 
     internal suspend fun readSessionPage(cursor: String?, limit: Int): ServerPage<Session> {
@@ -803,11 +808,16 @@ public class PaseoGateway(
         if (isReadOnlySession(id)) paseoFail(PaseoFailureKind.Unavailable)
         if (id.raw !in drafts) {
             if (id.raw !in sessions) fetchAgent(id.raw)
+            // The list shows a conversation by its newest record: its older records go with it (PaseoListCopies.kt).
+            val older = olderCopiesOf(id.raw)
             transport.request(
                 "archive_agent_request",
                 jsonOf("agentId" to real(id.raw)),
                 mutation = true,
             )
+            forget(id.raw)
+            archiveOlderCopies(older)
+            return@call
         }
         forget(id.raw)
     }
@@ -2181,7 +2191,9 @@ public class PaseoGateway(
             return
         }
         val session = remember(agent) ?: return
-        emit(GatewayEvent.SessionUpserted(session))
+        // An older record of a conversation whose newer record is known adds no second row (PaseoListCopies.kt).
+        val row = pushedRecord(session) ?: return
+        emit(GatewayEvent.SessionUpserted(row))
     }
 
     private fun removed(id: String?) {
@@ -2347,6 +2359,7 @@ public class PaseoGateway(
             agents.clear()
             continuations.value = ContinuationSnapshot()
             sessions.clear()
+            listedCopies.clear()
             statuses.clear()
             cancelRecordBusyExpiry()
             drafts.clear()

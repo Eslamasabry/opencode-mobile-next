@@ -28,8 +28,9 @@ internal class Oc2ProviderSignIn(
 
     /**
      * From the last sign-in list: per method (integration id to method id), each visible field's published choices
-     * (`options[].value`). An answer that is exactly one of them is a public choice the server offered in the clear
-     * ("github.com", "enterprise", "global"), so it is not registered as a secret: registered, it masked that word in
+     * (`options[].value`) and its string `default`, which the form prefills in the clear. An answer that is exactly one
+     * of them is a public value the server offered ("github.com", "enterprise", "global", "https://gitlab.com"), so it
+     * is not registered as a secret (a HIDDEN field's default is a preset and is registered): registered, it masked that word in
      * every preview and tool row. Every other answer is registered whole, as before (the form schema has no
      * secret/password flag, so a free-text answer may be a credential).
      */
@@ -51,6 +52,48 @@ internal class Oc2ProviderSignIn(
 
     private fun text(obj: JsonObject, key: String): String? =
         (obj[key] as? JsonPrimitive)?.takeIf { it.isString }?.contentOrNull
+
+    /**
+     * One sign-in question in the app's prompt shape (Flutter `_formPrompt`): a field with options
+     * is a choice unless the server allows its own value; defaults, placeholders, descriptions,
+     * URL formats and `when` conditions are kept so the form can show them.
+     */
+    private fun prompt(field: JsonObject, key: String): JsonObject {
+        val options =
+            (field["options"] as? JsonArray).orEmpty().take(MAX_CHOICES).mapNotNull { raw ->
+                val option = raw as? JsonObject ?: return@mapNotNull null
+                val value = text(option, "value") ?: return@mapNotNull null
+                value to safe(text(option, "label") ?: value)
+            }
+        val custom = (field["custom"] as? JsonPrimitive)?.booleanOrNull == true
+        val declared = text(field, "type")
+        val choice =
+            if (declared == "select" || declared == "text") declared == "select"
+            else options.isNotEmpty() && !custom
+        return buildJsonObject {
+            put("key", key)
+            put("message", safe(text(field, "title") ?: text(field, "message") ?: key))
+            put("type", if (choice) "select" else "text")
+            if (options.isNotEmpty())
+                put(
+                    "options",
+                    JsonArray(
+                        options.map { (value, label) ->
+                            buildJsonObject {
+                                put("value", value)
+                                put("label", label)
+                            }
+                        }
+                    ),
+                )
+            put("required", (field["required"] as? JsonPrimitive)?.booleanOrNull == true)
+            text(field, "placeholder")?.let { put("placeholder", safe(it)) }
+            text(field, "description")?.let { put("description", safe(it)) }
+            if (text(field, "format") == "uri") put("format", "uri")
+            (field["default"] as? JsonPrimitive)?.contentOrNull?.let { put("default", it) }
+            field["when"]?.takeIf { it is JsonObject || it is JsonArray }?.let { put("when", it) }
+        }
+    }
 
     private fun <T> remember(map: LinkedHashMap<String, T>, key: String, value: T) {
         map.remove(key)
@@ -96,27 +139,24 @@ internal class Oc2ProviderSignIn(
                             redactor.registerSecret(it)
                         }
                     } else {
-                        (field["options"] as? JsonArray)
-                            ?.take(MAX_CHOICES)
-                            ?.mapNotNull { option ->
-                                ((option as? JsonObject)?.get("value") as? JsonPrimitive)
-                                    ?.takeIf { it.isString }
-                                    ?.content
-                            }
-                            ?.toSet()
-                            ?.takeIf { it.isNotEmpty() }
-                            ?.let { fieldChoices[key] = it }
-                        prompts += buildJsonObject {
-                            put("key", key)
-                            put(
-                                "message",
-                                safe(text(field, "title") ?: text(field, "message") ?: key),
-                            )
-                            put(
-                                "required",
-                                (field["required"] as? JsonPrimitive)?.booleanOrNull == true,
-                            )
-                        }
+                        // A visible field's default is prefilled in the clear on the form, like its
+                        // choices: an answer left at it ("https://gitlab.com") is not a secret.
+                        val published =
+                            (field["options"] as? JsonArray)
+                                .orEmpty()
+                                .take(MAX_CHOICES)
+                                .mapNotNull { option ->
+                                    ((option as? JsonObject)?.get("value") as? JsonPrimitive)
+                                        ?.takeIf { it.isString }
+                                        ?.content
+                                } +
+                                listOfNotNull(
+                                    (field["default"] as? JsonPrimitive)
+                                        ?.takeIf { it.isString }
+                                        ?.content
+                                )
+                        if (published.isNotEmpty()) fieldChoices[key] = published.toSet()
+                        prompts += prompt(field, key)
                     }
                 }
                 if (methodId != null && fieldChoices.isNotEmpty()) offered[id to methodId] = fieldChoices

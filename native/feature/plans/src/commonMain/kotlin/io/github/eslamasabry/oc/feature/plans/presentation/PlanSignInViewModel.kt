@@ -12,6 +12,7 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.SignInWhy
 import io.github.eslamasabry.oc.core.model.IntegrationAuthState
 import io.github.eslamasabry.oc.engine.integrations.catalog.connectMethods
+import io.github.eslamasabry.oc.engine.integrations.catalog.connectPromptVisible
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableList
@@ -397,17 +398,12 @@ public class PlanSignInViewModel(
 
 private fun JsonObject.text(key: String): String? = (this[key] as? JsonPrimitive)?.content
 
-/** OC2's form conditions use the same eq/neq answer rules as Flutter. */
-public fun planPromptVisible(prompt: JsonObject, answers: Map<String, String>): Boolean {
-    val condition = prompt["when"] as? JsonObject ?: return true
-    val key = condition.text("key") ?: return true
-    val value = condition.text("value") ?: return true
-    return when (condition.text("op")) {
-        "eq" -> answers[key] == value
-        "neq" -> answers[key] != value
-        else -> true
-    }
-}
+/**
+ * OC2's form conditions use the same eq/neq answer rules as Flutter. The server sends one
+ * condition or a list of them; a field shows only while every condition holds.
+ */
+public fun planPromptVisible(prompt: JsonObject, answers: Map<String, String>): Boolean =
+    connectPromptVisible(prompt, answers)
 
 /**
  * Only a short shouted token explicitly introduced as a code is displayed; raw provider

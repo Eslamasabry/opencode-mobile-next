@@ -2,7 +2,7 @@
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
     <string name="sharedFoldersTitle">Armazenamento compartilhado</string>
-    <string name="sharedFoldersSelected">O Linux vê apenas as pastas de projeto que você abre e Download › OpenCode. O acesso a arquivos do Android permite que o app leia essas pastas; ele não compartilha todo o seu armazenamento com o Linux.</string>
+    <string name="sharedFoldersSelected">A menos que você escolha outra opção abaixo, o Linux vê apenas as pastas de projeto que você abre e Download › OpenCode, não todo o seu armazenamento. Para abrir essas pastas, o Android pede que você dê a este app Acesso a todos os arquivos, a única permissão dele para arquivos no armazenamento compartilhado.</string>
     <string name="sharedFoldersAll">Deixar o Linux ver todo o armazenamento compartilhado</string>
     <string name="sharedFoldersAllDetail">Use o acesso antigo ao armazenamento em vez das pastas de projeto selecionadas. As mudanças valem quando o servidor do celular iniciar de novo.</string>
     <string name="sharedFoldersAllRisk">Os agentes executados no Linux poderão ler e alterar arquivos fora dos seus projetos abertos.</string>
@@ -10,7 +10,7 @@
     <string name="sharedFoldersRestart">O acesso às pastas foi salvo. Reinicie o servidor do celular em Este celular quando seu trabalho estiver pronto e depois atualize Arquivos. Nenhum servidor foi parado.</string>
     <string name="sharedFoldersFailed">Não foi possível ler ou salvar o acesso às pastas. Tente novamente.</string>
     <string name="sharedFoldersAndroid">Acesso a arquivos do Android</string>
-    <string name="sharedFoldersAndroidDetail">Permita o acesso ao abrir projetos no armazenamento compartilhado.</string>
-    <string name="sharedFoldersGranted">Permitido. O Linux ainda segue a escolha de pastas abaixo.</string>
+    <string name="sharedFoldersAndroidDetail">Não permitido. Permita o Acesso a todos os arquivos para abrir projetos que estão no armazenamento compartilhado.</string>
+    <string name="sharedFoldersGranted">Permitido: este app tem Acesso a todos os arquivos. Para desativar, abra Configurações do Android › Acesso a todos os arquivos.</string>
     <string name="sharedFoldersWorking">Atualizando o acesso às pastas…</string>
 </resources>

@@ -73,6 +73,22 @@ import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.seconds
 import org.jetbrains.compose.resources.stringResource
 
+/** What the setup page draws under its sheets. */
+internal enum class JourneyBody { Nothing, Hero, Job }
+
+/**
+ * Add tools (from This phone, OpenCode already installed) opens its sheet over This phone's own name,
+ * like Flutter's sheet over this_phone_screen.dart: never over the first-run "Set up OpenCode" page,
+ * which is for a phone without it. A running add job still shows its progress.
+ */
+internal fun journeyBody(state: SetupJourneyUi): JourneyBody =
+    when {
+        state.adding ->
+            if (state.progress.state == SetupState.Running) JourneyBody.Job else JourneyBody.Nothing
+        state.customizing || state.progress.state == SetupState.Idle -> JourneyBody.Hero
+        else -> JourneyBody.Job
+    }
+
 /** One durable setup, with dependency-aware first-install and add-tools choices. */
 @Composable
 public fun SetupJourneyScreen(state: SetupJourneyUi, actions: SetupJourneyActions) {
@@ -107,8 +123,11 @@ public fun SetupJourneyScreen(state: SetupJourneyUi, actions: SetupJourneyAction
             // C12: the checking page says what it is doing instead of drawing nothing under the progress line.
             KitStateView(kind = KitStateKind.Loading, title = stringResource(Res.string.phoneSetupStartChecking))
         } else {
-            if (state.customizing || idle) StartHero(state, actions)
-            else Job(state, actions)
+            when (journeyBody(state)) {
+                JourneyBody.Nothing -> Unit
+                JourneyBody.Hero -> StartHero(state, actions)
+                JourneyBody.Job -> Job(state, actions)
+            }
         }
         KitSheet(
             visible = state.customizing,
@@ -174,6 +193,8 @@ public fun SetupJourneyScreen(state: SetupJourneyUi, actions: SetupJourneyAction
 /** The persisted job names its additions, in job order, even after the app is reopened. */
 @Composable
 private fun journeyTitle(state: SetupJourneyUi): String {
+    if (state.adding && state.progress.adding.isEmpty())
+        return stringResource(Res.string.settingsV3ThisPhone)
     if (state.progress.adding.isEmpty())
         return stringResource(Res.string.phoneSetupStartScreenTitle)
     // F: lib/builtin/setup/setup_engine/progress_helpers.dart:335-356

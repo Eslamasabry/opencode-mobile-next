@@ -11,14 +11,17 @@ internal class PhoneAgentAuthProbe(
     private val waitFor: (Process, Long) -> Boolean = { process, seconds ->
         process.waitFor(seconds, TimeUnit.SECONDS)
     },
+    /** Runs a drain asked for on another thread ([ProbeStop]), which has no request of its own. */
+    private val elsewhere: (() -> Boolean) -> Boolean = { it() },
 ) {
     private val owners = IdentityHashMap<Process, String>()
     private val retired = java.util.Collections.newSetFromMap(IdentityHashMap<Process, Boolean>())
     private val blocked = mutableSetOf<String>()
 
-    fun run(arguments: Map<*, *>): Map<String, Any?> {
+    /** [stop] (a read that gives way to a person's step) ends this request's process; it then answers an error. */
+    fun run(arguments: Map<*, *>, stop: ProbeStop? = null): Map<String, Any?> {
         val request = PhoneAgentAuthRequest.parse(arguments) ?: return PhoneAgentAuthProjection.error("invalidContext")
-        return if (retryDrain(request.profileId)) execute(request)
+        return if (retryDrain(request.profileId)) execute(request, stop)
             else PhoneAgentAuthProjection.error("hostUnavailable")
     }
 
@@ -27,9 +30,10 @@ internal class PhoneAgentAuthProbe(
         return targets.map { drain(it) }.all { it }
     }
 
-    private fun execute(request: PhoneAgentAuthRequest): Map<String, Any?> {
+    private fun execute(request: PhoneAgentAuthRequest, stop: ProbeStop?): Map<String, Any?> {
         val process = try {
             synchronized(owners) {
+                check(stop?.isStopped != true)
                 check(request.profileId !in blocked)
                 check(owners.values.none { it == request.profileId })
                 check(prepare(request.profileId, request.agentId))
@@ -41,33 +45,43 @@ internal class PhoneAgentAuthProbe(
         val capture = PhoneAgentAuthCapture(process)
         var result = PhoneAgentAuthProjection.error("hostUnavailable")
         try {
-            capture.start()
-            result = if (!waitFor(process, request.timeoutSeconds)) PhoneAgentAuthProjection.error("timedOut")
-                else capture.result(process.exitValue())
+            // Stopped between the start and here: no answer, the process is drained below.
+            if (stop == null || stop.attach { elsewhere { drain(process) } }) {
+                capture.start()
+                result = if (!waitFor(process, request.timeoutSeconds)) PhoneAgentAuthProjection.error("timedOut")
+                    else capture.result(process.exitValue())
+            }
         } catch (_: Exception) { /* Only fixed failures cross the bridge. */ }
         finally {
+            stop?.detach()
             val drained = drain(process)
             capture.close()
             if (capture.overflowed()) result = PhoneAgentAuthProjection.error("invalidResponse")
             if (!drained) result = PhoneAgentAuthProjection.error("hostUnavailable")
         }
         return synchronized(owners) {
-            if (request.profileId in blocked) PhoneAgentAuthProjection.error("hostUnavailable") else result
+            // A stopped request's answer is not news: its process may have been ended halfway.
+            val ended = request.profileId in blocked || stop?.isStopped == true
+            if (ended) PhoneAgentAuthProjection.error("hostUnavailable") else result
         }
     }
 
-    private fun drain(process: Process): Boolean = try {
-        synchronized(process) {
-            val drained = stop(process)
-            synchronized(owners) {
-                if (drained) { owners.remove(process); retired.remove(process) }
-                else retired.add(process)
+    private fun drain(process: Process): Boolean {
+        return try {
+            synchronized(process) {
+                // Drained already from another thread (a stopped read): it left the ledger only once it was gone.
+                if (synchronized(owners) { process !in owners }) return true
+                val drained = stop(process)
+                synchronized(owners) {
+                    if (drained) { owners.remove(process); retired.remove(process) }
+                    else retired.add(process)
+                }
+                drained
             }
-            drained
+        } catch (_: Exception) {
+            synchronized(owners) { retired.add(process) }
+            false
         }
-    } catch (_: Exception) {
-        synchronized(owners) { retired.add(process) }
-        false
     }
 
     fun blockProfile(profileId: String): Boolean {

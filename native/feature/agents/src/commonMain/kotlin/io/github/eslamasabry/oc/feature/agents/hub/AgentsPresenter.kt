@@ -55,6 +55,9 @@ public class AgentsPresenter(
     /** The one automatic retry of a start that did not start is spent; a start that connects earns it back. */
     private var startRetried = false
     private var followJob: Job? = null
+
+    /** The agent whose running install the page is following, to notice an install that ends with no result. */
+    private var followed: String? = null
     private var readJob: Job? = null
     private var phoneRead: Job? = null
     private var readPhoneAgain = false
@@ -75,16 +78,61 @@ public class AgentsPresenter(
     private fun installing(phoneState: PhoneAgentsState): Boolean =
         phoneState.installation?.phase == PhoneAgentInstallPhase.Installing
 
+    /**
+     * Reads a running install every [INSTALL_FOLLOW_MS] until it ends (done, failed, interrupted, or its job gone:
+     * each of those leaves its own answer on the tile). When no new step or byte arrives for [INSTALL_QUIET_MS] the
+     * tile says it is still working, so a long quiet step (a package download inside the phone's Linux) never reads as
+     * stuck.
+     */
     private fun followInstall(phoneState: PhoneAgentsState) {
-        if (!installing(phoneState) || followJob?.isActive == true) return
+        if (!installing(phoneState)) {
+            followed?.let { id ->
+                followed = null
+                noteLostInstall(id, phoneState)
+            }
+            if (local.value.installQuiet) local.update { it.copy(installQuiet = false) }
+            return
+        }
+        val id = phoneState.installation?.id
+        followed = id
+        if (local.value.lostInstall == id) local.update { it.copy(lostInstall = null) }
+        if (followJob?.isActive == true) return
         followJob =
             scope.launch {
+                var mark = progressMark(phone.state.value)
+                var quietFor = 0L
                 while (installing(phone.state.value)) {
                     delay(INSTALL_FOLLOW_MS)
                     phone.refresh()
+                    val now = progressMark(phone.state.value)
+                    if (now != mark) {
+                        mark = now
+                        quietFor = 0L
+                    } else {
+                        quietFor += INSTALL_FOLLOW_MS
+                    }
+                    val quiet = quietFor >= INSTALL_QUIET_MS && installing(phone.state.value)
+                    if (local.value.installQuiet != quiet) local.update { it.copy(installQuiet = quiet) }
                 }
+                local.update { it.copy(installQuiet = false) }
             }
     }
+
+    /**
+     * The install of [id] stopped running. A result (done, failed, interrupted) speaks for itself, and an agent that
+     * now reads installed needs no word; an install that left nothing while its agent is still not installed would go
+     * back to a plain "Not installed" without a sign, so the page keeps it as interrupted until Try again or Dismiss.
+     */
+    private fun noteLostInstall(id: String, phoneState: PhoneAgentsState) {
+        if (phoneState.installation?.id == id) return
+        val row = phoneState.agents.firstOrNull { it.id == id } ?: return
+        if (row.status != PhoneAgentStatus.NotInstalled) return
+        local.update { it.copy(lostInstall = id) }
+    }
+
+    /** What moves while an install works: its agent, its step and its counted bytes. */
+    private fun progressMark(phoneState: PhoneAgentsState): Triple<String, PhoneAgentInstallStep?, Long?>? =
+        phoneState.installation?.let { Triple(it.id, it.step, it.doneBytes) }
 
     override fun selectTab(tab: AgentsTab) {
         local.update { it.copy(tab = tab) }
@@ -146,7 +194,10 @@ public class AgentsPresenter(
                 own.copy(
                     computers = saved,
                     // While the page is starting the helper the recorded stop is already being answered.
-                    phone = phoneState.withoutStaleStop(own.helperConnectFailed || own.helperConnecting),
+                    phone =
+                        phoneState
+                            .withoutStaleStop(own.helperConnectFailed || own.helperConnecting)
+                            .withLostInstall(own.lostInstall),
                     helperConnectFailed = own.helperConnectFailed && !live,
                     helperConnectFailure = if (own.helperConnectFailed && !live) own.helperConnectFailure else null,
                 )
@@ -155,6 +206,25 @@ public class AgentsPresenter(
                 scope,
                 SharingStarted.Eagerly,
                 local.value.copy(computers = computers.computers.value, phone = phone.state.value),
+            )
+
+    /** An install that ended with no result reads as interrupted, while nothing else is shown for the install. */
+    private fun PhoneAgentsState.withLostInstall(id: String?): PhoneAgentsState =
+        if (
+            id == null ||
+                installation != null ||
+                agents.none { it.id == id && it.status == PhoneAgentStatus.NotInstalled }
+        )
+            this
+        else
+            copy(
+                installation =
+                    PhoneAgentInstallation(
+                        id,
+                        PhoneAgentInstallPhase.Interrupted,
+                        null,
+                        failure = PhoneAgentInstallFailure.Interrupted,
+                    )
             )
 
     /**
@@ -475,7 +545,12 @@ public class AgentsPresenter(
                     it.supportedInstallation &&
                     it.status == PhoneAgentStatus.NotInstalled
             } ?: return
-        local.update { it.copy(installingAgent = agent, installIssue = null, sheetAgent = null) }
+        local.update { it.copy(installingAgent = agent, installIssue = null, installSpace = null, sheetAgent = null) }
+        // The review says at once when this phone is short of space for the install (it reads no Linux, takes no lane).
+        scope.launch {
+            val space = phone.installSpace(id)
+            local.update { if (it.installingAgent?.id == id) it.copy(installSpace = space) else it }
+        }
     }
 
     /**
@@ -506,6 +581,17 @@ public class AgentsPresenter(
             val busy = phone.state.value.installation?.phase == PhoneAgentInstallPhase.Installing
             local.update {
                 it.copy(installIssue = if (busy) PhoneAgentInstallIssue.Busy else PhoneAgentInstallIssue.Unavailable)
+            }
+            return@operation
+        }
+        // Space is read again at the press: an install that cannot fit never starts, and the review says why.
+        val space = phone.installSpace(id)
+        if (space?.short == true) {
+            local.update {
+                it.copy(
+                    installIssue = PhoneAgentInstallIssue.Space,
+                    installSpace = if (it.installingAgent?.id == id) space else it.installSpace,
+                )
             }
             return@operation
         }
@@ -541,11 +627,14 @@ public class AgentsPresenter(
     }
 
     override fun dismissInstallResult(): Unit = operation {
+        local.update { it.copy(lostInstall = null) }
         phone.dismissInstallResult()
         phone.refresh()
     }
 
     override fun cancelPhoneInstall(): Unit = operation {
+        // A cancel the person asked for ends the install on purpose: not a lost one.
+        followed = null
         when (phone.cancelInstall()) {
             is Outcome.Ok -> local.update { it.copy(installIssue = null) }
             is Outcome.Failed ->
@@ -859,6 +948,9 @@ public class AgentsPresenter(
     private companion object {
         /** How often a running install is read again (the old "Tap Refresh to read its latest progress"). */
         const val INSTALL_FOLLOW_MS = 2_000L
+
+        /** How long a running install may show nothing new before its tile says it is still working. */
+        const val INSTALL_QUIET_MS = 30_000L
         const val AUTO_RETRIES = 3
         const val AUTO_RETRY_MS = 5_000L
     }

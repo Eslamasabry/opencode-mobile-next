@@ -263,6 +263,9 @@ class BuiltinLinux(private val context: Context) {
     /**
      * Runs [script] with /bin/sh inside Ubuntu as root (faked by proot). The script is a process
      * argument, so secrets travel as [stdin] only.
+     *
+     * [stop] (a read of the phone's agents giving way to a person's step) ends the script the way its time limit does
+     * ([stopInstaller]: SIGTERM, so its traps run, then SIGKILL) and makes it answer -1; a stopped read starts none.
      */
     fun run(
         script: String,
@@ -270,15 +273,18 @@ class BuiltinLinux(private val context: Context) {
         agentUser: Boolean = false,
         logOutput: Boolean = true,
         stdin: String? = null,
+        stop: ProbeStop? = null,
     ): Result {
         val began = SystemClock.elapsedRealtime()
         val timeoutMillis = TimeUnit.SECONDS.toMillis(timeoutSeconds).coerceAtLeast(0L)
-        val process = admitCheckProcess(script, timeoutMillis, began, agentUser, stdin)
+        val process = admitCheckProcess(script, timeoutMillis, began, agentUser, stdin, stop)
         val output = StringBuilder()
         val readerFailed = java.util.concurrent.atomic.AtomicBoolean()
         var reader: Thread? = null
         try {
             process.outputStream.close()
+            // Stopped between the start and here: it is ended below at once, like a time-out.
+            val running = stop == null || stop.attach { stopInstaller(process) }
             reader =
                 Thread(
                         {
@@ -311,15 +317,18 @@ class BuiltinLinux(private val context: Context) {
                     }
             val remainingMillis =
                 (timeoutMillis - (SystemClock.elapsedRealtime() - began)).coerceAtLeast(0L)
-            val finished = process.waitFor(remainingMillis, TimeUnit.MILLISECONDS)
+            val finished = running && process.waitFor(remainingMillis, TimeUnit.MILLISECONDS)
             if (!finished) stopInstaller(process)
             reader.join(2000)
-            val complete = finished && !reader.isAlive && !readerFailed.get()
+            // A stopped script's answer is not news: it may have been ended halfway.
+            val complete = finished && !reader.isAlive && !readerFailed.get() && stop?.isStopped != true
             val text =
                 if (complete) synchronized(output) { output.takeLast(OUTPUT_CAP).toString() }
                 else ""
             return Result(if (complete) process.exitValue() else -1, text)
         } finally {
+            // First: a stop ending this script right now finishes before the slot below is freed.
+            stop?.detach()
             // IO/security failure or Thread.start refusal must not leak a child
             // or replace the original safe channel failure during cleanup.
             try {
@@ -347,10 +356,13 @@ class BuiltinLinux(private val context: Context) {
         began: Long,
         agentUser: Boolean,
         stdin: String?,
+        stop: ProbeStop?,
     ): Process {
         val queueDeadline = began + timeoutMillis.coerceAtMost(RUN_ADMISSION_WINDOW_MS)
         var admitted: Process? = null
         while (admitted == null) {
+            // A stopped read neither starts its script nor waits in this queue for the slot.
+            check(stop?.isStopped != true) { "Another phone task is running. Wait a moment and try again." }
             admitted =
                 synchronized(this) {
                     reclaimDeadInstaller()
@@ -1516,8 +1528,12 @@ class BuiltinLinux(private val context: Context) {
         )
     }
 
-    /** Private auth output bypasses neither the generic receipt filter nor owner checks. */
-    fun agentAuthProbe(arguments: Map<*, *>): Map<String, Any?> = privateAgentAuth.run(arguments)
+    /**
+     * Private auth output bypasses neither the generic receipt filter nor owner checks. [stop] lets a person's step
+     * end a read's probe instead of waiting for it.
+     */
+    fun agentAuthProbe(arguments: Map<*, *>, stop: ProbeStop? = null): Map<String, Any?> =
+        privateAgentAuth.run(arguments, stop)
 
     val agentSignIn by lazy { PhoneAgentSignIn(this) }
     val agentHost by lazy { PhoneAgentHost(this) }
