@@ -128,6 +128,13 @@ public class ComposerChrome(
 public class ComposerTypingTarget {
     internal var focus: (() -> Boolean)? = null
 
+    /**
+     * True while the message box holds focus, as the composer reports it. The chat reads it when another field opens
+     * over the conversation, to give the box its focus back only if it had it (w4-focus).
+     */
+    public var focused: Boolean = false
+        internal set
+
     /** True when the message field took focus. */
     public fun focus(): Boolean = focus?.invoke() ?: false
 }
