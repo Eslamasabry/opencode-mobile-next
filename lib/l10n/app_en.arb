@@ -16487,7 +16487,7 @@
   "@serversRemoveActiveNext": {
     "description": "Servers › Remove server sheet: removing the server in use says what shows next."
   },
-  "serversRemoveServerKeeps": "Nothing is deleted on the server or at your AI providers.",
+  "serversRemoveServerKeeps": "Nothing is deleted on the server or at your AI providers",
   "@serversRemoveServerKeeps": {
     "description": "Servers › Remove server sheet: what is kept."
   },
@@ -16617,7 +16617,7 @@
   "@tailscaleSetupContinueReason": {
     "description": "Tailscale setup: why Continue to authentication is disabled while the address field is empty"
   },
-  "languagePickerPartlyTranslated": "Partly translated ({percent}%)",
+  "languagePickerPartlyTranslated": "Partly translated ({percent} %)",
   "@languagePickerPartlyTranslated": {
     "description": "Language sheet: supporting line under the Arabic choice, saying how much of the app is translated. percent is a whole number from the real coverage.",
     "placeholders": {
@@ -16916,7 +16916,7 @@
   "@globalSessionsArchivedEmptyTitle": {
     "description": "All conversations: title when the Archived filter has nothing."
   },
-  "globalSessionsArchivedEmptyMessage": "Conversations you archive appear here.",
+  "globalSessionsArchivedEmptyMessage": "Conversations you archive in Work appear here.",
   "@globalSessionsArchivedEmptyMessage": {
     "description": "All conversations: body when the Archived filter has nothing."
   },
