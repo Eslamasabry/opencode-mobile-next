@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.feature.agents.hub
 
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
@@ -48,6 +49,9 @@ public class AgentsPresenter(
     private var triedFor: Set<String> = emptySet()
     private var restartedStopped = false
     private var connectAgain = false
+
+    /** The one automatic retry of a start that did not start is spent; a start that connects earns it back. */
+    private var startRetried = false
     private var followJob: Job? = null
     private var readJob: Job? = null
 
@@ -502,7 +506,13 @@ public class AgentsPresenter(
         }
     }
 
-    override fun refreshPhone(): Unit = operation {
+    override fun refreshPhone() {
+        // The page calls this each time it is shown (its resume effect): the moment to try a failed start once more.
+        retryFailedStartOnce()
+        refreshRows()
+    }
+
+    private fun refreshRows(): Unit = operation {
         when (phone.refresh()) {
             is Outcome.Ok -> Unit
             is Outcome.Failed ->
@@ -626,6 +636,30 @@ public class AgentsPresenter(
         }
     }
 
+    /**
+     * The page is shown again after its own start of the helper did not start: it starts it once more by itself. The
+     * phone's runtime refuses a helper start while another change of that runtime is under way, and that refusal passes
+     * on its own: the start's admission ticket is taken before the start and checked again when the helper is launched
+     * and tracked (BuiltinLinux captureAgentHostStart, withAgentHostStart, trackPrivateAgentService), and the app going
+     * to the background and back, the phone server's own start (setServerWanted) or an idle resume still running
+     * (tokenless admission needs the helper not idle-stopped; PhoneAgentHost refuses a second start while one runs)
+     * makes it stale. Before, nothing but Try again started it again. Once only: a start that fails again keeps the
+     * warning and its Try again, and a helper that needs an update or a phone without its Linux is not retried.
+     */
+    private fun retryFailedStartOnce() {
+        val shown = local.value
+        if (startRetried || !shown.helperConnectFailed || connectJob?.isActive == true) return
+        val failure = shown.helperConnectFailure as? Failure.Runtime ?: return
+        if (failure.problem == RuntimeProblem.NotInstalled || failure.problem == RuntimeProblem.HelperUpdateRequired)
+            return
+        val phoneState = phone.state.value
+        // Connected another way meanwhile (New conversation starts it too): nothing to retry.
+        if (computers.computers.value.any { it.id == phoneState.conversations && it.connected }) return
+        if (phoneHost == null || !connectable(phoneState)) return
+        startRetried = true
+        connectHelper()
+    }
+
     private fun connectable(phoneState: PhoneAgentsState): Boolean =
         phoneState.available && !phoneState.needsRestart && phoneInstalledAgents(phoneState).isNotEmpty()
 
@@ -655,6 +689,7 @@ public class AgentsPresenter(
                         delay(AUTO_RETRY_MS)
                         result = host.connect()
                     }
+                    if (result is Outcome.Ok) startRetried = false
                     local.update {
                         it.copy(
                             helperConnecting = false,

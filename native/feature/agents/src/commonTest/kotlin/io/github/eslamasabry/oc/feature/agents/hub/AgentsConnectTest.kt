@@ -361,6 +361,58 @@ class AgentsConnectTest {
     }
 
     @Test
+    fun `HELPER-START a start that did not start is tried once more when the page is shown again`() = runTest {
+        val host = Host(Outcome.Failed(Failure.Runtime(RuntimeProblem.ServerStartUnavailable)))
+        val presenter = presenter(this, Phone(listOf(claudeReady)), host)
+        assertEquals(1, host.calls)
+        assertTrue(presenter.state.value.helperConnectFailed)
+        // The runtime's refusal has passed (its own start or the app's return to the front is over).
+        host.answer = Unit.ok()
+        presenter.refreshPhone()
+        assertEquals(2, host.calls, "shown again: started once more without a tap")
+        assertTrue(presenter.state.value.helperConnected)
+        assertFalse(presenter.state.value.helperConnectFailed)
+    }
+
+    @Test
+    fun `HELPER-START a start that fails twice keeps the warning and is never retried in a loop`() = runTest {
+        val failure = Failure.Runtime(RuntimeProblem.ServerStartUnavailable)
+        val host = Host(Outcome.Failed(failure))
+        val presenter = presenter(this, Phone(listOf(claudeReady)), host)
+        presenter.refreshPhone()
+        assertEquals(2, host.calls)
+        assertTrue(presenter.state.value.helperConnectFailed, "the second failure still shows the warning")
+        assertEquals(failure, presenter.state.value.helperConnectFailure)
+        presenter.refreshPhone()
+        presenter.refreshPhone()
+        assertEquals(2, host.calls, "one automatic retry only")
+        // Try again stays the way forward.
+        presenter.connectPhoneHelper()
+        assertEquals(3, host.calls)
+    }
+
+    @Test
+    fun `HELPER-START the page opening tries once, a resume right after it is not a retry of a running start`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val host = Host(Outcome.Failed(Failure.Runtime(RuntimeProblem.ServerStartUnavailable))).also { it.gate = gate }
+        val presenter = presenter(this, Phone(listOf(claudeReady)), host)
+        presenter.refreshPhone()
+        assertEquals(1, host.calls, "nothing failed yet: no retry while the first start runs")
+        gate.complete(Unit)
+        assertTrue(presenter.state.value.helperConnectFailed)
+    }
+
+    @Test
+    fun `HELPER-START a helper that needs an update or a phone without Linux is not retried on its own`() = runTest {
+        for (problem in listOf(RuntimeProblem.HelperUpdateRequired, RuntimeProblem.NotInstalled)) {
+            val host = Host(Outcome.Failed(Failure.Runtime(problem)))
+            val presenter = presenter(this, Phone(listOf(claudeReady)), host)
+            presenter.refreshPhone()
+            assertEquals(1, host.calls, "$problem: a retry cannot fix it")
+        }
+    }
+
+    @Test
     fun `HELPER-DOWN Try again that starts the helper brings the tiles back to Ready`() = runTest {
         val host = Host(Outcome.Failed(Failure.Runtime(RuntimeProblem.ServerStartUnavailable)))
         val phone = Phone(listOf(claudeReady))
