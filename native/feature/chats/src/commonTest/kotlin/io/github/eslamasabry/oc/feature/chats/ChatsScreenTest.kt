@@ -434,8 +434,8 @@ class ChatsScreenTest {
             onNodeWithText("Showing conversations in", substring = true).assertDoesNotExist()
             onNodeWithText("This server can't list all projects", substring = true).assertDoesNotExist()
             // The chip never says "All projects" over a list limited to one.
-            onNodeWithText("All projects").assertDoesNotExist()
-            onNodeWithText("new").assertExists()
+            onNodeWithContentDescription("All projects").assertDoesNotExist()
+            onNodeWithContentDescription("new").assertExists()
         }
 
     @Test
