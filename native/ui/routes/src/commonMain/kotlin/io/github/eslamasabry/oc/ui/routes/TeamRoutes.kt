@@ -44,7 +44,35 @@ public sealed interface TeamRoute : AppRoute {
     @Serializable
     public data class TurnOn(val profileId: ProfileId) : TeamRoute
 
+    /** One question of a computer's team, or a task that stopped (Dart `showGateSheet`): answer it, fix it, stop it. */
+    @Serializable
+    public data class Gate(val profileId: ProfileId, val gateId: String) : TeamRoute
+
+    /** Give a computer's team a task (Dart `showStartRunSheet`); [projectId] is the project chosen at first. */
+    @Serializable
+    public data class StartRun(val profileId: ProfileId, val projectId: String? = null) : TeamRoute
+
+    /** One project (a rig) of a computer's team (Dart `TeamRigScreen`): pause it, resume it, delete it, its scheduled jobs and the host's rules. */
+    @Serializable
+    public data class FleetRig(val profileId: ProfileId, val projectId: String) : TeamRoute
+
     /** Team settings (Dart `TeamSettingsScreen`): the agents, how the team runs here, Turn off. */
     @Serializable
     public data class Settings(val profileId: ProfileId) : TeamRoute
+
+    /** The computer's address (Dart `showTeamHostSheet`): test it, then turn the team on there; also Change address. */
+    @Serializable
+    public data class Address(val profileId: ProfileId) : TeamRoute
+
+    /** The agents of a computer's team (Dart `TeamAgentsScreen`, over Gas City): most urgent first. */
+    @Serializable
+    public data class FleetAgents(val profileId: ProfileId) : TeamRoute
+
+    /** One agent of a computer's team (Dart `AgentScreen`): Pause, Nudge, Restart, Stop, Force stop and its live output. */
+    @Serializable
+    public data class FleetAgent(val profileId: ProfileId, val agentId: String) : TeamRoute
+
+    /** One task of a computer's team (Dart Task details + Work sheet): its steps as a graph, and Stop task. */
+    @Serializable
+    public data class FleetRun(val profileId: ProfileId, val runId: String) : TeamRoute
 }

@@ -469,6 +469,12 @@ public interface ChatActions {
      */
     public fun stopAfterStep(note: String) {}
 
+    /**
+     * C6 (Flutter `_stopForSteer`): Stop on the steer note under the message [promptKey] ([words] is what it said): stops the step it waits on,
+     * then the same words go out again so the agent reads them at once. Nothing when the step already ended.
+     */
+    public fun stopForSteer(promptKey: String, words: String) {}
+
     /** C5: Undo on "Stopping after this step": withdraws the waiting [note] so the turn carries on. */
     public fun undoStopAfterStep() {}
 

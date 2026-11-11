@@ -41,14 +41,25 @@ public class TeamHomeViewModel(
     private val accepting = MutableStateFlow<AskAnswer.AcceptMilestone?>(null)
     private val intro = MutableStateFlow(TeamIntroUi())
 
+    /** A computer's team: the finished tasks past the first three are shown. */
+    private val doneExpanded = MutableStateFlow(false)
+
     public val state: StateFlow<TeamHomeUi> =
-        combine(engine.polled(profile) { clock.now().toEpochMilliseconds() }, accepting, intro, engine.setupState(profile)) {
-                (state, now),
-                accept,
-                off,
-                setup ->
+        combine(
+                engine.polled(profile) { clock.now().toEpochMilliseconds() },
+                accepting,
+                intro,
+                engine.setupState(profile),
+                combine(engine.fleetState(profile), doneExpanded) { fleet, expanded -> fleet to expanded },
+            ) { (state, now), accept, off, setup, (fleet, expanded) ->
                 val home =
-                    TeamPresent.home(state, now).copy(accepting = accept, phoneOff = TeamPresent.phoneOff(setup))
+                    TeamPresent.home(state, now).copy(
+                        accepting = accept,
+                        phoneOff = TeamPresent.phoneOff(setup),
+                        computer =
+                            if (state.phase == TeamPhase.Computer) FleetPresent.home(state.config, fleet, now, expanded)
+                            else FleetHomeUi(),
+                    )
                 // The server is read again while the page is off, so a server that connects meanwhile is named.
                 if (home.phase != TeamPhase.Off) home
                 else home.copy(intro = off.copy(server = off.server ?: facts.server(route.profileId)))
@@ -86,6 +97,11 @@ public class TeamHomeViewModel(
 
     override fun closeGuide() {
         intro.update { it.copy(guide = false) }
+    }
+
+    override fun enterAddress() {
+        intro.update { it.copy(guide = false) }
+        nav.open(TeamRoute.Address(route.profileId))
     }
 
     private fun send(projectId: String, build: (TeamProject) -> TeamCommand) {
@@ -145,6 +161,34 @@ public class TeamHomeViewModel(
 
     override fun retry() {
         viewModelScope.launch { engine.refresh(profile) }
+    }
+
+    override fun refreshComputer() {
+        viewModelScope.launch { engine.fleet?.refresh(profile) }
+    }
+
+    override fun showMoreDone() {
+        doneExpanded.value = true
+    }
+
+    override fun openGate(gateId: String) {
+        nav.open(TeamRoute.Gate(route.profileId, gateId))
+    }
+
+    override fun startRun() {
+        nav.open(TeamRoute.StartRun(route.profileId))
+    }
+
+    override fun openFleetAgents() {
+        nav.open(TeamRoute.FleetAgents(route.profileId))
+    }
+
+    override fun openFleetRun(runId: String) {
+        nav.open(TeamRoute.FleetRun(route.profileId, runId))
+    }
+
+    override fun openComputerProject(projectId: String) {
+        nav.open(TeamRoute.FleetRig(route.profileId, projectId))
     }
 
     @AssistedFactory

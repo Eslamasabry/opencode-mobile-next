@@ -335,6 +335,7 @@ public class PaseoGateway(
      */
     internal val draftFeatureValues = HashMap<String, Map<String, JsonElement>>()
     internal val liveAgentSessions = HashSet<String>()
+    internal val resumeFailed = PaseoResumeMemory()
     internal val uncertain = HashSet<String>()
 
     /**
@@ -590,6 +591,7 @@ public class PaseoGateway(
         draftVariants.clear()
         draftFeatureValues.clear()
         liveAgentSessions.clear()
+        resumeFailed.clear()
         uncertain.clear()
         uncertainStarts.clear()
         awaitingTurn.clear()
@@ -1248,6 +1250,12 @@ public class PaseoGateway(
         } catch (e: PaseoException) {
             awaitingTurn.remove(sessionId)
             publishRecovery(sessionId)
+            if (sessionId !in drafts)
+                resumeFailed.note(
+                    sessionId,
+                    e.kind,
+                    live = sessionId in liveAgentSessions || agents[sessionId]?.let(::daemonHolds) == true,
+                )
             if (e.kind == PaseoFailureKind.DeliveryUnknown) uncertain += sessionId
             throw e
         }
@@ -1877,6 +1885,24 @@ public class PaseoGateway(
             )
         }
 
+    /**
+     * The list's read of [hostAgentContinuation]: from the agent records already held, never a request. True when
+     * reopening [session] needs an explicit new conversation (the daemon no longer holds it and its runtime handle is
+     * missing or unproven), false when it reopens, null when this gateway holds no record for it (unknown: the row
+     * stays as it is). Read from the list's thread while the gateway's own lane writes the records, so a torn read
+     * answers null rather than a guess.
+     */
+    public fun reopenNeedsNewChat(session: SessionId): Boolean? =
+        try {
+            val agent = agents[session.raw] ?: return null
+            val live = session.raw in liveAgentSessions || daemonHolds(agent)
+            // A reopen that already failed here asks for a new conversation at once (Flutter `_paResumeFailed`).
+            resumeFailed.failedBefore(session.raw, live) ||
+                paseoHostAgentContinuation(session.raw, agent, live).requiresNewChat
+        } catch (_: Exception) {
+            null
+        }
+
     public suspend fun pendingHostPermissions():
         Outcome<ImmutableList<HostAgentPermissionRequest>> = call {
         requests.pendingHostPermissions()
@@ -2025,6 +2051,7 @@ public class PaseoGateway(
         draftVariants.remove(id)
         draftFeatureValues.remove(id)
         liveAgentSessions.remove(id)
+        resumeFailed.forget(id)
         uncertain.remove(id)
         uncertainStarts.remove(id)
         awaitingTurn.remove(id)

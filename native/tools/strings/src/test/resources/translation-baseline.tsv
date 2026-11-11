@@ -422,6 +422,9 @@ length	ru	usageReadFromTitleHere
 length	ru	usageReadUsage
 length	vi	fbAreaNameId
 length	vi	fbCareRiskId
+placeholders	ar	scheduleForHours__eq2
+placeholders	ar	scheduleRuleHours__eq2
+placeholders	ar	transcriptFindCount__eq0
 placeholders	ja	chatStartChangeCount__eq1
 placeholders	ja	chatStartItemCount__eq1
 placeholders	ja	chatsFilterChatCount__eq1

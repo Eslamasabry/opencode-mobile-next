@@ -578,8 +578,24 @@ public class ChatsAllViewModel(
         val (profile, session) = AllConversationsRules.find(m, key) ?: return
         commitDelete()
         val target = ConversationRef(profile, session.id)
+        // H4: an agent conversation the helper cannot resume asks before anything opens.
+        val item = feed.snapshot.value.items.firstOrNull { it.ref == target }
+        AgentResumeRules.ask(item, item?.let { ChatsState.row(it).agentName })?.let { ask ->
+            model.update { it.copy(startNew = ask) }
+            return
+        }
         connections.prefetch(target)
         nav.openChat(target)
+    }
+
+    override fun confirmStartNew() {
+        val ask = model.value.startNew ?: return
+        model.update { it.copy(startNew = null) }
+        nav.open(AgentResumeRules.route(ask))
+    }
+
+    override fun dismissStartNew() {
+        model.update { it.copy(startNew = null) }
     }
 
     override fun continueHere(key: String) {

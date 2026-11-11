@@ -6,8 +6,8 @@ import kotlin.test.assertEquals
 
 /**
  * The engine's shell text is the released Flutter app's (2.1.4+62), byte for byte, so both apps run the same scripts on
- * the phone. Read from git at the release: this branch's lib/ is an older Flutter snapshot (2.1.0+57) without the
- * crashing-curl and crashing-tar fallbacks (#117) the engine already ports.
+ * the phone. Read from the release's verbatim twins (`resources/flutter-2.1.4`, checked against git when the clone has
+ * the release): the working tree's lib/ is not that release, and CI clones have no history.
  */
 class VerbatimScriptsTest {
     @Test

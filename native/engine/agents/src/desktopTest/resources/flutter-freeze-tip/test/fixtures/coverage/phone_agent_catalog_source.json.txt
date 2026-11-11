@@ -1,0 +1,500 @@
+{
+  "agents": [
+    {
+      "id": "opencode2",
+      "name": "OpenCode 2",
+      "iconKey": "opencode2",
+      "route": "opencode2",
+      "providerId": "opencode",
+      "signInMethod": "apiKeyHost",
+      "availability": "limited",
+      "limitation": "Needs a check on your phone before use.",
+      "resumeReason": "Can't reopen old chats",
+      "capabilities": {
+        "resumeVerified": false,
+        "modelList": false,
+        "permissions": false,
+        "images": false,
+        "cancel": false
+      },
+      "recipe": {
+        "version": "2.2.5",
+        "executable": "opencode",
+        "launchArgs": [
+          "serve",
+          "--hostname",
+          "127.0.0.1"
+        ],
+        "signInArgs": [],
+        "artifacts": {
+          "arm64": {
+            "url": "https://registry.npmjs.org/@opencode/cli-linux-arm64/-/cli-linux-arm64-2.2.5.tgz",
+            "sha256": "f8c5a82075fede9b5b044ed6c8a6d13ad807a7e62caea1cd0a878adef49eb053",
+            "format": "tarGz",
+            "archiveMember": "package/bin/opencode"
+          },
+          "x64": {
+            "url": "https://registry.npmjs.org/@opencode/cli-linux-x64-baseline/-/cli-linux-x64-baseline-2.2.5.tgz",
+            "sha256": "873856acbaa71c5ed8df6433e312dfa0c82a86e2cddfb9d80f0a31123a917a08",
+            "format": "tarGz",
+            "archiveMember": "package/bin/opencode"
+          }
+        }
+      }
+    },
+    {
+      "id": "claude",
+      "name": "Claude Code",
+      "iconKey": "claude",
+      "route": "paseoNative",
+      "providerId": "claude",
+      "signInMethod": "browserOAuthHost",
+      "availability": "limited",
+      "limitation": "Needs a check on your phone before use.",
+      "resumeReason": "Can't reopen old chats",
+      "capabilities": {
+        "resumeVerified": false,
+        "modelList": false,
+        "permissions": false,
+        "images": false,
+        "cancel": false
+      },
+      "recipe": {
+        "version": "2.1.319",
+        "executable": "claude",
+        "launchArgs": [],
+        "signInArgs": [
+          "auth",
+          "login",
+          "--claudeai"
+        ],
+        "artifacts": {
+          "arm64": {
+            "url": "https://downloads.claude.ai/claude-code-releases/2.1.319/linux-arm64/claude",
+            "sha256": "a7e687fd1cb054d651c7588223de3786c99d4c682365e3c3ae1e59ce7f3a591f",
+            "format": "executable",
+            "downloadBytes": 339797432,
+            "installedBytes": 339797432
+          },
+          "x64": {
+            "url": "https://downloads.claude.ai/claude-code-releases/2.1.319/linux-x64/claude",
+            "sha256": "dabafec82ca1319fa43d8be36a10fc61b1d11821cb98ad5df04ad95e199b8eed",
+            "format": "executable",
+            "downloadBytes": 340226576,
+            "installedBytes": 340226576
+          }
+        }
+      }
+    },
+    {
+      "id": "codex",
+      "name": "Codex",
+      "iconKey": "codex",
+      "route": "paseoNative",
+      "providerId": "codex",
+      "signInMethod": "browserOAuthHost",
+      "availability": "limited",
+      "limitation": "Needs a check on your phone before use.",
+      "resumeReason": "Can't reopen old chats",
+      "capabilities": {
+        "resumeVerified": false,
+        "modelList": false,
+        "permissions": false,
+        "images": false,
+        "cancel": false
+      },
+      "recipe": {
+        "version": "0.167.0",
+        "executable": "codex",
+        "launchArgs": [
+          "app-server"
+        ],
+        "signInArgs": [
+          "login",
+          "--device-auth"
+        ],
+        "artifacts": {
+          "arm64": {
+            "url": "https://github.com/openai/codex/releases/download/rust-v0.167.0/codex-aarch64-unknown-linux-musl.tar.gz",
+            "sha256": "843489acb4d4b1079745c36b03c5963b887b83155af208fd53584e33ee8eb281",
+            "format": "tarGz",
+            "archiveMember": "codex-aarch64-unknown-linux-musl",
+            "downloadBytes": 114300898,
+            "installedBytes": 278794648
+          },
+          "x64": {
+            "url": "https://github.com/openai/codex/releases/download/rust-v0.167.0/codex-x86_64-unknown-linux-musl.tar.gz",
+            "sha256": "9d64836106d5b374e90ee4454c7ebcde7ca7106558bd7e41a34b9f26ebda251a",
+            "format": "tarGz",
+            "archiveMember": "codex-x86_64-unknown-linux-musl",
+            "downloadBytes": 122587028,
+            "installedBytes": 320575976
+          }
+        }
+      }
+    },
+    {
+      "id": "antigravity",
+      "name": "Antigravity",
+      "iconKey": "antigravity",
+      "route": "acpPaseo",
+      "providerId": "antigravity",
+      "signInMethod": "browserOAuthHost",
+      "availability": "limited",
+      "limitation": "Sign in with Google, then check it on your phone. Starts a new chat.",
+      "resumeReason": "Can't reopen old chats",
+      "capabilities": {
+        "resumeVerified": false,
+        "modelList": false,
+        "permissions": false,
+        "images": false,
+        "cancel": false
+      },
+      "recipe": {
+        "version": "1.5.3",
+        "executable": "agy",
+        "launchArgs": [
+          "acp",
+          "--disable-telemetry"
+        ],
+        "signInArgs": [
+          "acp",
+          "--login"
+        ],
+        "artifacts": {
+          "arm64": {
+            "url": "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-arm/cli_linux_arm64.tar.gz",
+            "sha256": "2d50060c7b1327995e5c81ec58829c91c2564ebb9fec165d3f9f1325ec188675",
+            "format": "tarGz",
+            "archiveMember": "antigravity",
+            "downloadBytes": 69843447,
+            "installedBytes": 235622776
+          },
+          "x64": {
+            "url": "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-x64/cli_linux_x64.tar.gz",
+            "sha256": "1b4850599cce73a17f94ffb422df3bf9531531b77dbddc40c1a435e0c2c16807",
+            "format": "tarGz",
+            "archiveMember": "antigravity",
+            "downloadBytes": 73694700,
+            "installedBytes": 246837648
+          }
+        }
+      }
+    },
+    {
+      "id": "gemini",
+      "name": "Gemini CLI",
+      "iconKey": "gemini",
+      "route": "acpPaseo",
+      "providerId": "gemini",
+      "signInMethod": "browserOAuthHost",
+      "availability": "limited",
+      "limitation": "Needs host sign-in and a phone check. Optional terminal extensions are not installed.",
+      "resumeReason": "Can't reopen old chats",
+      "capabilities": {
+        "resumeVerified": false,
+        "modelList": false,
+        "permissions": false,
+        "images": false,
+        "cancel": false
+      },
+      "recipe": {
+        "version": "0.66.0",
+        "executable": "gemini",
+        "launchArgs": [
+          "--acp"
+        ],
+        "signInArgs": [],
+        "artifacts": {
+          "arm64": {
+            "url": "https://registry.npmjs.org/@google/gemini-cli/-/gemini-cli-0.66.0.tgz",
+            "sha256": "269734d35287fbd8ed2982534258ecf4a95f184b6e06e6732e0d6850c28701d9",
+            "format": "npmTarGz",
+            "archiveMember": "package/bundle/gemini.js",
+            "downloadBytes": 20889095,
+            "installedBytes": 98815455
+          },
+          "x64": {
+            "url": "https://registry.npmjs.org/@google/gemini-cli/-/gemini-cli-0.66.0.tgz",
+            "sha256": "269734d35287fbd8ed2982534258ecf4a95f184b6e06e6732e0d6850c28701d9",
+            "format": "npmTarGz",
+            "archiveMember": "package/bundle/gemini.js",
+            "downloadBytes": 20889095,
+            "installedBytes": 98815455
+          }
+        }
+      }
+    },
+    {
+      "id": "qwen",
+      "name": "Qwen Code",
+      "iconKey": "qwen",
+      "route": "acpPaseo",
+      "providerId": "qwen",
+      "signInMethod": "apiKeyHost",
+      "availability": "limited",
+      "limitation": "Set up a provider key on the host. The old Qwen sign-in option is discontinued.",
+      "resumeReason": "Can't reopen old chats",
+      "capabilities": {
+        "resumeVerified": false,
+        "modelList": false,
+        "permissions": false,
+        "images": false,
+        "cancel": false
+      },
+      "recipe": {
+        "version": "0.26.4",
+        "executable": "qwen",
+        "launchArgs": [
+          "--acp"
+        ],
+        "signInArgs": [],
+        "artifacts": {
+          "arm64": {
+            "url": "https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.26.4.tgz",
+            "sha256": "a7640f1c0656b7e54ea5995335ed6cc18ee219b8b4200fe8a6141cff148aaa89",
+            "format": "npmTarGz",
+            "archiveMember": "package/cli-entry.js",
+            "downloadBytes": 42796897,
+            "installedBytes": 154807157
+          },
+          "x64": {
+            "url": "https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.26.4.tgz",
+            "sha256": "a7640f1c0656b7e54ea5995335ed6cc18ee219b8b4200fe8a6141cff148aaa89",
+            "format": "npmTarGz",
+            "archiveMember": "package/cli-entry.js",
+            "downloadBytes": 42796897,
+            "installedBytes": 154807157
+          }
+        }
+      }
+    },
+    {
+      "id": "kilo",
+      "name": "Kilo",
+      "iconKey": "kilo",
+      "route": "acpPaseo",
+      "providerId": "kilo",
+      "signInMethod": "browserOAuthHost",
+      "availability": "limited",
+      "limitation": "Sign in or add a provider key, then check it on your phone. Large download.",
+      "resumeReason": "Can't reopen old chats",
+      "capabilities": {
+        "resumeVerified": false,
+        "modelList": false,
+        "permissions": false,
+        "images": false,
+        "cancel": false
+      },
+      "recipe": {
+        "version": "7.8.18",
+        "executable": "kilo",
+        "launchArgs": [
+          "acp"
+        ],
+        "signInArgs": [
+          "auth",
+          "login"
+        ],
+        "artifacts": {
+          "arm64": {
+            "url": "https://registry.npmjs.org/@kilocode/cli-linux-arm64/-/cli-linux-arm64-7.8.18.tgz",
+            "sha256": "0f1bd0fb983f67ec1edf53c185e9521268f8f133af2a4cec2f1967e5d60e45ef",
+            "format": "tarGz",
+            "archiveMember": "package/bin/kilo",
+            "downloadBytes": 83529597,
+            "installedBytes": 258264056
+          },
+          "x64": {
+            "url": "https://registry.npmjs.org/@kilocode/cli-linux-x64/-/cli-linux-x64-7.8.18.tgz",
+            "sha256": "bde638d0a493155088e4454fbe4a9697571443665e2a22d5a78cad645b96b554",
+            "format": "tarGz",
+            "archiveMember": "package/bin/kilo",
+            "downloadBytes": 84132773,
+            "installedBytes": 259213488
+          }
+        }
+      }
+    },
+    {
+      "id": "cline",
+      "name": "Cline",
+      "iconKey": "cline",
+      "route": "acpPaseo",
+      "providerId": "cline",
+      "signInMethod": "browserOAuthHost",
+      "availability": "limited",
+      "limitation": "Sign in on this phone, then check it. Large download.",
+      "resumeReason": "Can't reopen old chats",
+      "capabilities": {
+        "resumeVerified": false,
+        "modelList": false,
+        "permissions": false,
+        "images": false,
+        "cancel": false
+      },
+      "recipe": {
+        "version": "3.0.74",
+        "executable": "cline",
+        "launchArgs": [
+          "--acp"
+        ],
+        "signInArgs": [
+          "auth"
+        ],
+        "artifacts": {
+          "arm64": {
+            "url": "https://registry.npmjs.org/@cline/cli-linux-arm64/-/cli-linux-arm64-3.0.74.tgz",
+            "sha256": "10c1f63c143b6f7eba3320543df2f6081232d79fb1830c293cf006115dce9049",
+            "format": "tarGz",
+            "archiveMember": "package/bin/cline",
+            "downloadBytes": 54812128,
+            "installedBytes": 162253096
+          },
+          "x64": {
+            "url": "https://registry.npmjs.org/@cline/cli-linux-x64/-/cli-linux-x64-3.0.74.tgz",
+            "sha256": "52502438a8d78a451156c38df2eb31116d658c94d1d5461b4e29761d06211bfc",
+            "format": "tarGz",
+            "archiveMember": "package/bin/cline",
+            "downloadBytes": 55037574,
+            "installedBytes": 161793504
+          }
+        }
+      }
+    },
+    {
+      "id": "goose",
+      "name": "Goose",
+      "iconKey": "goose",
+      "route": "acpPaseo",
+      "providerId": "goose",
+      "signInMethod": "apiKeyHost",
+      "availability": "limited",
+      "limitation": "Configure a provider on the host. Credential storage needs a phone check.",
+      "resumeReason": "Can't reopen old chats",
+      "capabilities": {
+        "resumeVerified": false,
+        "modelList": false,
+        "permissions": false,
+        "images": false,
+        "cancel": false
+      },
+      "recipe": {
+        "version": "1.54.0",
+        "executable": "goose",
+        "launchArgs": [
+          "acp"
+        ],
+        "signInArgs": [
+          "configure"
+        ],
+        "artifacts": {
+          "arm64": {
+            "url": "https://github.com/aaif-goose/goose/releases/download/v1.54.0/goose-aarch64-unknown-linux-gnu.tar.gz",
+            "sha256": "0f174b5118a53888cd4e65b7ca9a4b72dd0b887e89142c8ce41e2409205e40d5",
+            "format": "tarGz",
+            "archiveMember": "./goose",
+            "downloadBytes": 93850226,
+            "installedBytes": 294298272
+          },
+          "x64": {
+            "url": "https://github.com/aaif-goose/goose/releases/download/v1.54.0/goose-x86_64-unknown-linux-gnu.tar.gz",
+            "sha256": "ab396c95aebbd28b4d38c175234be8d4a3ea0c96e7ccb24c307e4618c9be57e1",
+            "format": "tarGz",
+            "archiveMember": "./goose",
+            "downloadBytes": 90912367,
+            "installedBytes": 307756800
+          }
+        }
+      }
+    },
+    {
+      "id": "omp-acp",
+      "name": "Oh My Pi",
+      "iconKey": "omp-acp",
+      "route": "acpPaseo",
+      "providerId": "omp-acp",
+      "signInMethod": "browserOAuthHost",
+      "availability": "limited",
+      "limitation": "Run /login on the host and choose a provider. Needs a phone check.",
+      "resumeReason": "Can't reopen old chats",
+      "capabilities": {
+        "resumeVerified": false,
+        "modelList": false,
+        "permissions": false,
+        "images": false,
+        "cancel": false
+      },
+      "recipe": {
+        "version": "18.5.1",
+        "executable": "omp",
+        "launchArgs": [
+          "acp"
+        ],
+        "signInArgs": [],
+        "artifacts": {
+          "arm64": {
+            "url": "https://github.com/can1357/oh-my-pi/releases/download/v18.5.1/omp-linux-arm64",
+            "sha256": "e7b81b96b3f9f391ec8afc7ee64c052ce1783290f88bbb59ba36d15b3b4e927c",
+            "format": "executable",
+            "downloadBytes": 230476072,
+            "installedBytes": 230476072
+          },
+          "x64": {
+            "url": "https://github.com/can1357/oh-my-pi/releases/download/v18.5.1/omp-linux-x64",
+            "sha256": "fb7638e82f0c9d087e96e15d3eb83a662d92374cd907187d6d4d2605e39f1e3a",
+            "format": "executable",
+            "downloadBytes": 280536544,
+            "installedBytes": 280536544
+          }
+        }
+      }
+    },
+    {
+      "id": "fx",
+      "name": "fx",
+      "iconKey": "fx",
+      "route": "acpPaseo",
+      "providerId": "fx",
+      "signInMethod": "browserOAuthHost",
+      "availability": "limited",
+      "limitation": "Choose and sign in to a provider on the host. Needs a phone check.",
+      "resumeReason": "Can't reopen old chats",
+      "capabilities": {
+        "resumeVerified": false,
+        "modelList": false,
+        "permissions": false,
+        "images": false,
+        "cancel": false
+      },
+      "recipe": {
+        "version": "0.0.13",
+        "executable": "fx",
+        "launchArgs": [
+          "acp"
+        ],
+        "signInArgs": [
+          "login"
+        ],
+        "artifacts": {
+          "arm64": {
+            "url": "https://github.com/vercel-labs/fx/releases/download/v0.0.13/fx-linux-aarch64.tar.gz",
+            "sha256": "78f6a8171193a1d2033f93d1b5a2940ea4a62147daf60a37ae670a9bf85f12e9",
+            "format": "tarGz",
+            "archiveMember": "fx",
+            "downloadBytes": 5692736,
+            "installedBytes": 11167446
+          },
+          "x64": {
+            "url": "https://github.com/vercel-labs/fx/releases/download/v0.0.13/fx-linux-x86_64.tar.gz",
+            "sha256": "53a3b30ce1541048f8fa4b42b7bc68161466bb2e3708db104449a58af3807430",
+            "format": "tarGz",
+            "archiveMember": "fx",
+            "downloadBytes": 5787883,
+            "installedBytes": 13194918
+          }
+        }
+      }
+    }
+  ]
+}

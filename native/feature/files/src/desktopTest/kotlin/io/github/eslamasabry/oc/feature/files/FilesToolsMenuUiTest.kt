@@ -56,13 +56,13 @@ class FilesToolsMenuUiTest {
         }
         waitForIdle()
         assertEquals(
-            listOf("Project health", "Worktrees", "Development services", "Switch project"),
+            listOf("Changes", "Project health", "Worktrees", "Development services", "Switch project"),
             items.map { it.label },
         )
-        assertEquals(emptyList(), none)
+        assertEquals(listOf("Changes"), none.map { it.label })
         items.forEach { it.onSelect() }
-        assertEquals(listOf("health", "worktrees", "services", "switch"), actions.calls)
-        assertEquals(4, closed)
+        assertEquals(listOf("changes", "health", "worktrees", "services", "switch"), actions.calls)
+        assertEquals(5, closed)
     }
 
     @Test

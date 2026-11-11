@@ -5,6 +5,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.feature.chats.ChatEnvironment
 import io.github.eslamasabry.oc.feature.chats.RecordingChatsActions
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsHomeSheet
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi
@@ -34,8 +35,11 @@ class ServerSwitcherSheetTest {
     @Test fun `PARITY-B-235 the sheet lists every server with its state, a tap switches and Add a server adds`() = runComposeUiTest {
         val actions = RecordingChatsActions()
         setContent {
-            KitTheme(platform = DesktopKitPlatform()) {
-                KitSheetHost { ChatsHomeSheets(ChatsUi(sheet = ChatsHomeSheet.Servers, switcher = servers), actions) }
+            // The app's root provides the redactor (KitChatEnvironment); the harness does the same.
+            ChatEnvironment {
+                KitTheme(platform = DesktopKitPlatform()) {
+                    KitSheetHost { ChatsHomeSheets(ChatsUi(sheet = ChatsHomeSheet.Servers, switcher = servers), actions) }
+                }
             }
         }
         onNodeWithText("Servers").assertExists()
@@ -51,12 +55,14 @@ class ServerSwitcherSheetTest {
     @Test fun `PARITY-B-235 while one server opens the others wait and it says Connecting`() = runComposeUiTest {
         val actions = RecordingChatsActions()
         setContent {
-            KitTheme(platform = DesktopKitPlatform()) {
-                KitSheetHost {
-                    ChatsHomeSheets(
-                        ChatsUi(sheet = ChatsHomeSheet.Servers, switcher = servers.copy(switching = ProfileId("work"))),
-                        actions,
-                    )
+            ChatEnvironment {
+                KitTheme(platform = DesktopKitPlatform()) {
+                    KitSheetHost {
+                        ChatsHomeSheets(
+                            ChatsUi(sheet = ChatsHomeSheet.Servers, switcher = servers.copy(switching = ProfileId("work"))),
+                            actions,
+                        )
+                    }
                 }
             }
         }

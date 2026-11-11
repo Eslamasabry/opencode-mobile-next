@@ -138,13 +138,16 @@ import io.github.eslamasabry.oc.ui.words.res.appUpdateUpdate
 import io.github.eslamasabry.oc.ui.words.res.chatHomeAnswerFailed
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeClearFilters
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeDone
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeStopped
+import io.github.eslamasabry.oc.ui.words.res.agentsStateCantReopen
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeRowStatusRules
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeEmptyCalmBody
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeEmptyTitle
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeFailed
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeIncompleteNamed
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeOnlyProject
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeStillLoading
-import io.github.eslamasabry.oc.ui.words.res.chatsHomeUnreachable
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeUnreachableShort
 import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
 import io.github.eslamasabry.oc.ui.words.res.agentsRestartLine
 import io.github.eslamasabry.oc.ui.words.res.agentsResumeAction
@@ -367,12 +370,14 @@ public fun ChatsScreen(
             // S4 / H3 (F: chats_home_screen.dart:511-632): a connection that did not answer says so by name and offers
             // Try again on the page; the one still opening has its own card. A list that is only partly read says what
             // is loading, then offers Try again; a server that lists one project says so.
+            // Flutter shows only "{servers} isn't answering" (chatsHomeUnreachableShort); the longer "conversations
+            // aren't shown" is its screen-reader label, because the visible list may still hold remembered rows.
             val unreachable = state.home.sources.filter { it.shown && it.unreachable && it.profile != state.home.opening?.profile }
             unreachable.forEach { source ->
                 item(key = "unreachable-${source.profile.raw}", contentType = "unreachable") {
                     Box(kitItemMotion()) {
                         KitNotice(
-                            message = stringResource(Res.string.chatsHomeUnreachable, KitBidi.auto(source.name)),
+                            message = stringResource(Res.string.chatsHomeUnreachableShort, KitBidi.auto(source.name)),
                             actions = listOf(KitLineAction(stringResource(Res.string.kitTryAgain), { actions.retrySource(source.profile) })),
                         )
                     }
@@ -766,6 +771,8 @@ private data class HomeRowWords(
     val working: String,
     val failed: String,
     val done: String,
+    val stopped: String,
+    val cantReopen: String,
     val archive: String,
     val otherAgent: String,
     val rowActions: String,
@@ -788,6 +795,8 @@ private fun rememberHomeRowWords(): HomeRowWords =
         working = stringResource(Res.string.chatsHomeRowWorking),
         failed = stringResource(Res.string.chatsHomeFailed),
         done = stringResource(Res.string.chatsHomeDone),
+        stopped = stringResource(Res.string.chatsHomeStopped),
+        cantReopen = stringResource(Res.string.agentsStateCantReopen),
         archive = stringResource(Res.string.sessionMenuArchive),
         otherAgent = stringResource(Res.string.agentPersonaOtherName),
         rowActions = stringResource(Res.string.chatsRowActions),
@@ -849,13 +858,16 @@ private fun ConversationRow(
     val title = rowTitleText(row.title)
     val canArchive = flags.canArchive
     val status =
-        when (row.status) {
+        // H4 (F: chats_home_screen.dart:901): a finished conversation that cannot reopen says so before Done/Stopped.
+        if (HomeRowStatusRules.saysCantReopen(row)) words.cantReopen
+        else when (row.status) {
             RowStatus.NeedsYou -> words.needsYou
             RowStatus.Running ->
                 // H5 (F: chats_host.dart:188-199): how long the run has gone, when its start is known.
                 words.runningFor(row.running?.sinceMs?.takeIf { flags.nowMs > 0 }?.let { flags.nowMs - it })
             RowStatus.Failed -> words.failed
             RowStatus.Done -> words.done
+            RowStatus.Stopped -> words.stopped
             RowStatus.None -> null
         }
     val tone =

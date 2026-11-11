@@ -521,6 +521,12 @@ class PreviewRuntime(
                         )
                     rebuildFeed()
                     eventJobs[id] = scope.launch {
+                        // H6: the Stops the person pressed from this app (the row says "Stopped", not "Done").
+                        launch {
+                            ListRowFacts.stopped(id, graph).collect { stopped ->
+                                listings[id]?.let { it.value = it.value.copy(stoppedByPerson = stopped) }
+                            }
+                        }
                         launch {
                             graph.session.readState.state.collect { reads ->
                                 if (registry.live.value[id] === graph) {
@@ -765,6 +771,8 @@ class PreviewRuntime(
                         if (profiles.profile(id)?.profile?.backend == BackendKind.Paseo)
                             PhoneConversationRules::agentOf
                         else ({ _: Session -> null }),
+                    // H4: an agent conversation the helper can no longer reopen offers a new one on tap.
+                    needsNewChat = { ListRowFacts.needsNewChat(registry.live.value[id], it.id) },
                     refresh = { refreshOne(id) },
                 )
             }
@@ -952,6 +960,7 @@ class PreviewRuntime(
                                 .toImmutableList(),
                         statuses = resolvedStatuses,
                         running = listing.value.running,
+                        stoppedByPerson = listing.value.stoppedByPerson,
                         permissions =
                             if (permissions is Outcome.Ok)
                                 permissions.value

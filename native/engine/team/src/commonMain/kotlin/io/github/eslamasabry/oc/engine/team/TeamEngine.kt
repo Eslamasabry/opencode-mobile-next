@@ -74,6 +74,21 @@ public interface TeamHost {
      */
     public suspend fun turnOffPhoneTeam(profileId: String): Outcome<Unit> =
         Outcome.Failed(Failure.Unavailable(FeatureId("team.off")))
+
+    /**
+     * Turns a computer's team off for [profileId] (Flutter `turnOffTeam` for Gas City): clears the profile's team
+     * config, so the next [config] answers null. Nothing changes on the computer; never retried.
+     */
+    public suspend fun turnOffComputerTeam(profileId: String): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("team.off")))
+
+    /**
+     * Saves [config] as the profile's computer team (Flutter `saveTeamHost`): the one `orchestration` object the profile
+     * already keeps, so a profile moved over from Flutter reads it unchanged. No credential is stored for this host and
+     * no other key is written. The caller has checked the address rule; never retried.
+     */
+    public suspend fun saveComputerTeam(profileId: String, config: TeamConfig): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("team.address")))
 }
 
 /** What the team page shows (Dart `TeamPage`'s branches). */
@@ -84,7 +99,10 @@ public enum class TeamPhase {
     /** No team on this server: the intro and turn-on. */
     Off,
 
-    /** A computer's team (Gas City) or the demo: not shown by the native team yet. */
+    /**
+     * A team that runs on a computer (Gas City): [TeamEngine.fleet] has it ([TeamState.config] is its address). Also
+     * the demo fixture, which only says so.
+     */
     Computer,
 
     /** The phone's team is on but not answering, and nothing was read before (Dart `PhoneTeamOffPage`). */
@@ -127,6 +145,11 @@ public class TeamEngine(
     private val kept: TeamLastKnown? = null,
     /** Times the turn-on's steps; the app passes its clock, a test that does not read times needs none. */
     private val clock: Clock = Unset,
+    /** A computer's team (Gas City); null where no wiring can reach one. */
+    public val fleet: io.github.eslamasabry.oc.engine.team.fleet.FleetEngine? = null,
+    /** How the address form reaches a computer to test it; null where no wiring can (the test then finds nobody). */
+    private val computerTransports: io.github.eslamasabry.oc.engine.team.fleet.FleetTransports? = null,
+    /** Last, so a test can pass it as a trailing lambda. */
     private val newRequestId: () -> String = Ids()::next,
 ) {
     private val lane = Mutex()
@@ -275,11 +298,50 @@ public class TeamEngine(
      * old team shows first next time. A failure leaves the team as it was.
      */
     public suspend fun turnOff(profileId: String): Outcome<Unit> {
-        val done = lane.withLock { host.turnOffPhoneTeam(profileId) }
+        val provider = (flow(profileId).value.config ?: host.config(profileId))?.provider
+        val done =
+            lane.withLock {
+                if (provider == null || provider == TeamProvider.PhoneEngine) host.turnOffPhoneTeam(profileId)
+                else host.turnOffComputerTeam(profileId)
+            }
         if (done is Outcome.Ok) {
+            fleet?.forget(profileId)
             // The kept shelf has no delete: an empty workspace reads back as nothing to show.
             kept?.keep(profileId, KeptTeam(""))
             setup(profileId).dismiss()
+            forget(profileId)
+            refresh(profileId)
+        }
+        return done
+    }
+
+    /**
+     * Tests an address for a computer's team before it is saved (Flutter's Test and turn on): the address rule first,
+     * then the same probe the live page uses. Writes nothing.
+     */
+    public suspend fun testComputerTeam(url: String, city: String?): io.github.eslamasabry.oc.engine.team.fleet.ComputerTeamTest {
+        val transports = computerTransports
+        val notFound = { why: io.github.eslamasabry.oc.engine.team.fleet.FleetFailure ->
+            io.github.eslamasabry.oc.engine.team.fleet.ComputerTeamTest.NotFound(why)
+        }
+        if (transports == null) return notFound(io.github.eslamasabry.oc.engine.team.fleet.FleetFailure.Unreachable)
+        return io.github.eslamasabry.oc.engine.team.fleet.testComputerTeam(transports, url.trim(), city?.trim())
+    }
+
+    /**
+     * Saves the address as [profileId]'s computer team (Flutter `saveTeamHost`) and shows the team from it. A refused
+     * address (not https, and not this device or a Tailscale address) is never saved. The old host's snapshot is dropped
+     * so nothing of it shows under the new address; the computer itself is not touched. A failure changes nothing.
+     */
+    public suspend fun saveComputerTeam(profileId: String, url: String, city: String, front: Boolean): Outcome<Unit> {
+        val address = url.trim()
+        if (!io.github.eslamasabry.oc.engine.team.fleet.FleetAddress.allowed(address)) {
+            return Outcome.Failed(Failure.Unavailable(FeatureId("team.address")))
+        }
+        val team = TeamConfig(TeamProvider.GasCity, address, city.trim(), TeamHostMode.Computer, front)
+        val done = lane.withLock { host.saveComputerTeam(profileId, team) }
+        if (done is Outcome.Ok) {
+            fleet?.forget(profileId)
             forget(profileId)
             refresh(profileId)
         }

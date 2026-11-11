@@ -2586,6 +2586,44 @@ class BuiltinLinux(private val context: Context) {
     fun prootTmpDir(): File =
         File(context.noBackupFilesDir, "proot-tmp").apply { mkdirs() }
 
+    @Volatile private var prootTmpCleaning = false
+
+    /**
+     * Empties proot's scratch folder at the one moment it is safe: a server start with none of our proot processes
+     * running yet. Off the calling thread, bounded, and a failure is only logged (class name, no paths).
+     */
+    private fun cleanProotTmpWhenIdle() {
+        if (prootTmpCleaning) return
+        val safe =
+            try {
+                ProotTmpCleanup.safeToClean(
+                    serviceRunning = services.values.any { it.process.isAlive },
+                    processRunning = processes.any { it.isAlive },
+                    agentRunning = agentProcessProfiles.keys.any { it.isAlive },
+                    installerRunning = installerProcess?.isAlive == true,
+                    terminalLive = LocalTerminal.get(context).hasLiveSessions(),
+                )
+            } catch (_: Exception) {
+                false
+            }
+        if (!safe) return
+        val dir = File(context.noBackupFilesDir, "proot-tmp")
+        prootTmpCleaning = true
+        Thread(
+            {
+                try {
+                    val gone = ProotTmpCleanup.clean(dir)
+                    if (gone > 0) Log.i(TAG, "proot scratch folder: $gone old entries removed")
+                } catch (error: Exception) {
+                    Log.w(TAG, "proot scratch folder not cleaned: ${error.javaClass.simpleName}")
+                } finally {
+                    prootTmpCleaning = false
+                }
+            },
+            "proot-tmp-clean",
+        ).apply { isDaemon = true }.start()
+    }
+
     /** What proot itself needs in its environment, on top of the app's own. */
     fun prootEnvironment(compat: Boolean = false): Map<String, String> {
         val tmp = prootTmpDir()
@@ -5741,6 +5779,7 @@ exec gc supervisor run
                 }
             synchronized(recoveryLock) { manualStartGeneration = recoveryGeneration }
         }
+        if (name == SERVER) cleanProotTmpWhenIdle()
         launchService(name, script, port, notice)
         if (name == SERVER) {
             workLeases.authorizeForegroundWork(workGeneration)

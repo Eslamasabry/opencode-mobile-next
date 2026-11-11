@@ -121,7 +121,9 @@ class E20S09OpeningGoldensTest {
             if (variant.locale == "en") {
                 onNodeWithContentDescription("Settings").assertExists()
                 assertEquals(0, onAllNodesWithText("saved last time", substring = true).fetchSemanticsNodes().size)
-                onNodeWithText("Check that the server is on", substring = true).assertExists()
+                // 2b4451ecbd: the card names the cause (Flutter ConnectionFailure.diagnose: nothing answered).
+                onNodeWithText("Server not reachable").assertExists()
+                onNodeWithText("Nothing answered", substring = true).assertExists()
             }
         }
 

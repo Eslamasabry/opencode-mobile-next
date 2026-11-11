@@ -9,7 +9,12 @@ import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.model.VcsDiffMode
+import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.domain.LocatedVcsGateway
+import io.github.eslamasabry.oc.core.model.ServerLocation
+import io.github.eslamasabry.oc.feature.review.presentation.ReviewProjectRead
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
@@ -87,6 +92,31 @@ public class ReviewHub(private val registry: ConnectionRegistry) {
             val ops = (registry.graphFor(ref) as? ReviewGraphAccessors)?.reviewOperations
                 ?: return@ReviewBranchRead Failure.Unavailable(FeatureId("vcsBranchDiff")).failed()
             ops.listVcsDiffs(VcsDiffMode.Branch)
+        }
+
+    /**
+     * The uncommitted changes of [directory] on [profile], read through its current connection at read time. A server
+     * that cannot diff a chosen folder nor the session's own answers Unavailable; a closed profile is refused.
+     */
+    public fun projectTree(profile: ProfileId, directory: String): ReviewProjectRead =
+        ReviewProjectRead {
+            val held = registry.live.value[profile]
+            val graph = held as? ReviewGraphAccessors
+                ?: return@ReviewProjectRead Failure.Refused(RefusalReason.ProfileClosing).failed()
+            val gateway = graph.reviewGateway
+            val located = gateway as? LocatedVcsGateway
+            // Without a located read the server diffs only the folder it is on now: any other folder's answer would be
+            // a different project's changes, so that is Unavailable (as Files' own project changes are).
+            fun onFolder() = gateway.location.value.directory?.trimEnd('/') == directory.trimEnd('/')
+            when {
+                located != null -> located.workingTreeAt(ServerLocation(directory, null))
+                gateway.capabilities.value.sessionDiff && onFolder() -> {
+                    val read = graph.reviewOperations.listVcsDiffs(VcsDiffMode.WorkingTree)
+                    if (onFolder() && registry.live.value[profile] === held) read
+                    else Failure.Unavailable(FeatureId("sessionDiff")).failed()
+                }
+                else -> Failure.Unavailable(FeatureId("sessionDiff")).failed()
+            }
         }
 
     private fun gatewaysOf(ref: ConversationRef): ReviewGateways? =

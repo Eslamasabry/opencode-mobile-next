@@ -766,8 +766,8 @@ internal fun folderToolItems(state: FolderUi, actions: FolderActions, close: () 
                 )
             )
         val tools = state.tools
-        // Flutter's first tool: the whole conversation's Changes review, with the count of changed files.
-        if (state.inConversation && state.phase == FolderPhase.Ready)
+        // Flutter's first tool: the whole conversation's (or project's) Changes review, with the count of changed files.
+        if (state.phase == FolderPhase.Ready)
             item(
                 // Flutter's =0 / =1 forms: "Changes" with nothing changed, never "Changes · 0 files".
                 when (val n = state.changes.size) {

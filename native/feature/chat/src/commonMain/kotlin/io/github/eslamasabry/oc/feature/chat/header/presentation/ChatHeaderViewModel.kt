@@ -133,6 +133,8 @@ public class ChatHeaderViewModel(
 
     override fun copyPhoneLink(): Unit = presenter.copyPhoneLink()
 
+    override fun copyPhoneAddressLink(): Unit = presenter.copyPhoneAddressLink()
+
     override fun handoffSelect(choice: ContinueChoice): Unit = presenter.handoffSelect(choice)
 
     override fun handoffSend(prompt: String): Unit = presenter.handoffSend(prompt)

@@ -61,6 +61,8 @@ public data class AllModel(
     /** The folder each server is open on now, trimmed; "Continue here" moves into it. */
     val openFolders: Map<ProfileId, String> = emptyMap(),
     val moving: MovingHere? = null,
+    /** H4: the tapped agent conversation that cannot be reopened, waiting for "Start new conversation". */
+    val startNew: StartNewUi? = null,
     /** Per row key: needs-you and unread, from the home feed. */
     val attention: Map<String, RowAttention> = emptyMap(),
     /** Servers that can import a conversation file (`sessionImportExport` and the import door). */
@@ -255,6 +257,7 @@ public object AllConversationsRules {
                     .map { it.name }
                     .toImmutableList(),
             problem = model.problem,
+            startNew = model.startNew,
             moveHere =
                 model.moving?.let { moving ->
                     val row = rows.firstOrNull { it.key == moving.key }

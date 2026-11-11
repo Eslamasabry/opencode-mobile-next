@@ -92,6 +92,8 @@ public class ChatHeaderPresenter(
         io.github.eslamasabry.oc.feature.chat.header.world.ChatAgentHandoff? =
         null,
     private val export: io.github.eslamasabry.oc.feature.chat.header.world.TranscriptExport? = null,
+    /** K1: the address switch on Open on another phone; null (the default) shows the local link alone. */
+    private val phoneAddress: PhoneAddressOffer? = null,
 ) : ChatHeaderActions, ChatAgentHandoffActions {
     private val local = MutableStateFlow(HeaderLocal())
     private var nextId = 1L
@@ -238,7 +240,7 @@ public class ChatHeaderPresenter(
                         l.handoffState,
                     )
                 SheetKind.ContinueOnComputer -> HeaderSheet.ContinueOnComputer(resumeCommand(facts))
-                SheetKind.ContinueOnPhone -> HeaderSheet.ContinueOnPhone(phoneLink())
+                SheetKind.ContinueOnPhone -> HeaderSheet.ContinueOnPhone(phoneLink(), phoneAddress)
                 SheetKind.ImportConversation ->
                     l.importState?.let { HeaderSheet.ImportConversation(it) }
             }
@@ -431,6 +433,11 @@ public class ChatHeaderPresenter(
 
     override fun copyPhoneLink() {
         val text = phoneLink() ?: return
+        local.update { it.copy(clip = HeaderClip(nextId++, text, ClipKind.PhoneLink)) }
+    }
+
+    override fun copyPhoneAddressLink() {
+        val text = (phoneAddress?.build?.invoke() as? PhoneAddressResult.Link)?.link ?: return
         local.update { it.copy(clip = HeaderClip(nextId++, text, ClipKind.PhoneLink)) }
     }
 

@@ -8,10 +8,11 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
- * What the connected server can do (PROTOCOLS-38). 86 flags with names, order and defaults
- * identical to Dart's `ServerCapabilities` (lib/domain/server_gateway/capabilities.dart);
- * `CapabilitySnapshotTest` checks it against `capabilities/default.json`. Generated once from the
- * Dart constructor, hand-owned from here (S0-CORE).
+ * What the connected server can do (PROTOCOLS-38). The first 85 flags have names, order and
+ * defaults identical to Dart's `ServerCapabilities` (lib/domain/server_gateway/capabilities.dart);
+ * the native-only ones follow, starting at [claudeAgent]. `CapabilitySnapshotTest` checks them
+ * against `capabilities/default.json`. Generated once from the Dart constructor, hand-owned from
+ * here (S0-CORE).
  *
  * Per-backend bases (`Oc2Capabilities.Base`, …) live in their protocol modules (plan 04 §11.4). The
  * UI gates on these flags and [PlatformCapabilities], never on BackendKind (AGENTS.md). Field

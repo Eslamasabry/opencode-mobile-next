@@ -18,6 +18,8 @@ public data class AgentHandoffUi(
     val prompt: String = "",
     val failure: Failure? = null,
     val sourceReview: AgentHandoffReview? = null,
+    /** Why no agent can take this conversation over, in plain words on the screen; null when none is known. */
+    val block: HandoffBlock? = null,
 )
 
 public interface AgentHandoffActions {

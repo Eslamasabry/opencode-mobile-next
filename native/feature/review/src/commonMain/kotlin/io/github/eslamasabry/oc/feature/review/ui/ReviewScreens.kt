@@ -418,19 +418,22 @@ private fun ChangesContent(state: ChangesUi, actions: ChangesActions) {
                                 tone = TextTone.Secondary,
                             )
                         if (state.canPickScope) ScopePicker(state, actions)
-                        if (state.scope != ReviewScope.Conversation) {
-                            KitNotice(
-                                stringResource(
-                                    Res.string.defaultReviewScopeNotice,
-                                    stringResource(scopeLabel(state.scope, state.turn)),
+                        // A project's own changes (no conversation): no word about which view was picked.
+                        when {
+                            !state.conversation -> Unit
+                            state.scope != ReviewScope.Conversation ->
+                                KitNotice(
+                                    stringResource(
+                                        Res.string.defaultReviewScopeNotice,
+                                        stringResource(scopeLabel(state.scope, state.turn)),
+                                    )
                                 )
-                            )
-                        } else {
-                            KitText(
-                                stringResource(Res.string.reviewToolEvidence),
-                                role = TypeRole.Body,
-                                tone = TextTone.Secondary,
-                            )
+                            else ->
+                                KitText(
+                                    stringResource(Res.string.reviewToolEvidence),
+                                    role = TypeRole.Body,
+                                    tone = TextTone.Secondary,
+                                )
                         }
                         // Flutter `review-all-viewed`: every file seen with comments written, the way back is offered.
                         if (state.allViewed && state.drafts > 0)
@@ -494,17 +497,19 @@ private fun ChangesContent(state: ChangesUi, actions: ChangesActions) {
                                 }
                             }
                         }
-                        KitText(
-                            stringResource(
-                                when (state.undoAll) {
-                                    UndoAllUi.Unavailable -> Res.string.reviewUndoUnavailable
-                                    UndoAllUi.Unknown -> Res.string.reviewUndoUnknown
-                                    else -> Res.string.reviewOneFileUnavailable
-                                }
-                            ),
-                            role = TypeRole.Body,
-                            tone = TextTone.Secondary,
-                        )
+                        // A project's own changes have no prompt to undo from: no undo footnote.
+                        if (state.conversation)
+                            KitText(
+                                stringResource(
+                                    when (state.undoAll) {
+                                        UndoAllUi.Unavailable -> Res.string.reviewUndoUnavailable
+                                        UndoAllUi.Unknown -> Res.string.reviewUndoUnknown
+                                        else -> Res.string.reviewOneFileUnavailable
+                                    }
+                                ),
+                                role = TypeRole.Body,
+                                tone = TextTone.Secondary,
+                            )
                     }
                 }
         }

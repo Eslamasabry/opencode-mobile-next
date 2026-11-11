@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.engine.agents.certification
 
+import io.github.eslamasabry.oc.engine.agents.scripts.freezeTipSource
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -20,10 +21,12 @@ class AgentCertificationFileTest {
 
     @Test
     fun `B-AGENT-009 the tested Paseo versions equal the Dart set`() {
-        val dart = File(repo, "lib/paseo/tested_versions.dart").readText()
+        // The freeze tip's set (lib/ now holds the released 2.1.5 app, without 0.12.0-0.14.0), plus 0.15.3: the phone
+        // pin that moved after the freeze (93fcf4049, the same addition AgentPinsParityTest records).
+        val dart = freezeTipSource("lib/paseo/tested_versions.dart")
         val set = Regex("paseoTestedVersions = \\{([^}]*)\\}").find(dart)!!.groupValues[1]
         assertEquals(
-            Regex("'([^']+)'").findAll(set).map { it.groupValues[1] }.toList(),
+            Regex("'([^']+)'").findAll(set).map { it.groupValues[1] }.toList() + "0.15.3",
             AgentCertification.TestedVersions.PASEO.toList(),
         )
     }

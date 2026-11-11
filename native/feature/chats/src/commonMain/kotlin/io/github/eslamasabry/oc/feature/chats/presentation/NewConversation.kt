@@ -655,9 +655,25 @@ public class NewConversationViewModel(
                         } else setup.phone?.selected?.let { loadPhoneModels(profile, it) }
                         restore(profile, setup.directory)
                         setup.directory?.let { checkFolder(profile, it) }
+                        startInWantedFolder(profile, setup.directory)
                     }
             }
         }
+    }
+
+    /**
+     * [ChatsRoute.New.directory] is applied once; a folder the server no longer has leaves the usual one. Where the app
+     * cannot check (a helper on another computer, or the phone's Linux not running) the old folder is used, as Flutter's
+     * start-new-chat uses the old conversation's folder unchecked.
+     */
+    private var wantedFolderApplied = false
+
+    private suspend fun startInWantedFolder(profile: ProfileId, current: String?) {
+        val wanted = route.directory?.trim()?.takeIf { it.isNotEmpty() } ?: return
+        if (wantedFolderApplied) return
+        wantedFolderApplied = true
+        if (wanted == current) return
+        if (host.folderExists(profile, wanted) != false) chooseDirectory(wanted)
     }
 
     private suspend fun restore(profile: ProfileId, directory: String?) {

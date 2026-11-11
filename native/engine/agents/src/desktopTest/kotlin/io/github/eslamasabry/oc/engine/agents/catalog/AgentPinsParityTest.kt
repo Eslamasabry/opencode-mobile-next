@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.engine.agents.catalog
 
 import io.github.eslamasabry.oc.engine.agents.scripts.PaseoPhoneScripts
+import io.github.eslamasabry.oc.engine.agents.scripts.freezeTipSource
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -22,11 +23,13 @@ class AgentPinsParityTest {
 
     private val repo: File = generateSequence(File("").absoluteFile) { it.parentFile }
         .first { File(it, "lib/domain/agent_catalog.dart").isFile }
-    private val dartCatalog = File(repo, "lib/domain/agent_catalog.dart").readText()
+    // The catalog and the tested sets come from the freeze tip's copies: since the master merge (4a0eac1cf4) lib/ holds
+    // the released 2.1.5 app, which predates the Gemini, Qwen, Kilo and Cline pins and the extra tested versions.
+    private val dartCatalog = freezeTipSource("lib/domain/agent_catalog.dart")
         .let { it.substring(it.indexOf("AgentCatalog _builtInCatalog()")) }
         .replace("'\$github", "'https://github.com")
     private val paseoScripts = File(repo, "lib/builtin/agents/paseo_scripts.dart").readText()
-    private val testedVersions = File(repo, "lib/paseo/tested_versions.dart").readText()
+    private val testedVersions = freezeTipSource("lib/paseo/tested_versions.dart")
     private val pinsFile = File(repo, "native/engine/agents/pins/agent-pins.json")
 
     @Test
@@ -102,6 +105,30 @@ class AgentPinsParityTest {
         assertEquals(246837648L, x64.installedBytes)
         // Gemini stays: the catalog only gains Antigravity.
         assertNotNull(AgentPins.builtIn.catalog().byId(io.github.eslamasabry.oc.engine.agents.AgentId("gemini")))
+    }
+
+    @Test
+    fun `B-AGENT-008 OpenCode 2 pins equal the native pin of commit 93fcf4049`() {
+        // Moved after the freeze (2.2.5 -> 2.2.6). Each SHA-256 is the registry tarball's, whose sha512 matches npm's
+        // published integrity; the same values pin the in-app Ubuntu install (OpenCodePins).
+        val agent = AgentPins.builtIn.catalog().byId(io.github.eslamasabry.oc.engine.agents.AgentId("opencode2"))!!
+        val recipe = agent.recipe!!
+        assertEquals("2.2.6", recipe.version)
+        assertEquals("opencode", recipe.executable)
+        assertEquals(listOf("serve", "--hostname", "127.0.0.1"), recipe.launchArgs)
+        val arm = recipe.artifacts.getValue(AgentArchitecture.Arm64)
+        assertEquals("https://registry.npmjs.org/@opencode/cli-linux-arm64/-/cli-linux-arm64-2.2.6.tgz", arm.url)
+        assertEquals("22352e200630ec61a48a65b9f5c2b627328ae5002658d81c067f67c5fb689898", arm.sha256)
+        assertEquals("package/bin/opencode", arm.archiveMember)
+        assertEquals(AgentArtifactFormat.TarGz, arm.format)
+        val x64 = recipe.artifacts.getValue(AgentArchitecture.X64)
+        assertEquals(
+            "https://registry.npmjs.org/@opencode/cli-linux-x64-baseline/-/cli-linux-x64-baseline-2.2.6.tgz",
+            x64.url,
+        )
+        assertEquals("00d8b036689fc35927d8f20f57000d5c091fe7a5a3345fef5326f330bfe6d0ce", x64.sha256)
+        assertEquals("package/bin/opencode", x64.archiveMember)
+        assertEquals(AgentArtifactFormat.TarGz, x64.format)
     }
 
     @Test

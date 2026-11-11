@@ -381,4 +381,11 @@ class SchedulesViewModelTest {
         vm.openConversation("ses_9")
         assertEquals(ConversationRef(pid, SessionId("ses_9")), nav.chats.single())
     }
+
+    @Test
+    fun `K3 the editor's last-run row opens that run's conversation`() = runTest {
+        val vm = editor()
+        vm.openConversation("ses_4")
+        assertEquals(ConversationRef(pid, SessionId("ses_4")), nav.chats.single())
+    }
 }

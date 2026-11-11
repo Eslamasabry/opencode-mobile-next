@@ -9,6 +9,18 @@ import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
+import io.github.eslamasabry.oc.feature.team.fleet.FleetConnectScreen
+import io.github.eslamasabry.oc.feature.team.fleet.FleetConnectViewModel
+import io.github.eslamasabry.oc.feature.team.fleet.FleetGateSheet
+import io.github.eslamasabry.oc.feature.team.fleet.FleetGateViewModel
+import io.github.eslamasabry.oc.feature.team.fleet.FleetRigScreen
+import io.github.eslamasabry.oc.feature.team.fleet.FleetRigViewModel
+import io.github.eslamasabry.oc.feature.team.fleet.FleetStartRunSheet
+import io.github.eslamasabry.oc.feature.team.fleet.FleetStartRunViewModel
+import io.github.eslamasabry.oc.feature.team.fleet.rememberFleetNow
+import io.github.eslamasabry.oc.feature.team.presentation.FleetAgentViewModel
+import io.github.eslamasabry.oc.feature.team.presentation.FleetAgentsViewModel
+import io.github.eslamasabry.oc.feature.team.presentation.FleetRunViewModel
 import io.github.eslamasabry.oc.feature.team.presentation.TeamBoardViewModel
 import io.github.eslamasabry.oc.feature.team.presentation.TeamEditorViewModel
 import io.github.eslamasabry.oc.feature.team.presentation.TeamHomeViewModel
@@ -18,6 +30,9 @@ import io.github.eslamasabry.oc.feature.team.presentation.TeamSettingsViewModel
 import io.github.eslamasabry.oc.feature.team.presentation.TeamSetupViewModel
 import io.github.eslamasabry.oc.feature.team.presentation.TeamTaskViewModel
 import io.github.eslamasabry.oc.feature.team.presentation.TeamTimelineViewModel
+import io.github.eslamasabry.oc.feature.team.ui.FleetAgentScreen
+import io.github.eslamasabry.oc.feature.team.ui.FleetAgentsScreen
+import io.github.eslamasabry.oc.feature.team.ui.FleetRunScreen
 import io.github.eslamasabry.oc.feature.team.ui.TeamBoardScreen
 import io.github.eslamasabry.oc.feature.team.ui.TeamEditorScreen
 import io.github.eslamasabry.oc.feature.team.ui.TeamHomeScreen
@@ -76,6 +91,42 @@ public class TeamEntries(private val environment: KitChatEnvironment) : EntryIns
             val vm = assistedMetroViewModel<TeamSettingsViewModel, TeamSettingsViewModel.Factory> { create(route) }
             val state by vm.state.collectAsStateWithLifecycle()
             TeamSettingsScreen(state, vm)
+        }
+        entry<TeamRoute.Address> { route ->
+            val vm = assistedMetroViewModel<FleetConnectViewModel, FleetConnectViewModel.Factory> { create(route) }
+            val state by vm.state.collectAsStateWithLifecycle()
+            // The set-up guide this page can open draws its commands in the kit's code block, which redacts what it shows.
+            environment.Provide { FleetConnectScreen(state, vm) }
+        }
+        entry<TeamRoute.Gate> { route ->
+            val vm = assistedMetroViewModel<FleetGateViewModel, FleetGateViewModel.Factory> { create(route) }
+            val state by vm.state.collectAsStateWithLifecycle()
+            FleetGateSheet(state, rememberFleetNow(), vm)
+        }
+        entry<TeamRoute.StartRun> { route ->
+            val vm = assistedMetroViewModel<FleetStartRunViewModel, FleetStartRunViewModel.Factory> { create(route) }
+            val state by vm.state.collectAsStateWithLifecycle()
+            FleetStartRunSheet(state, vm)
+        }
+        entry<TeamRoute.FleetAgents> { route ->
+            val vm = assistedMetroViewModel<FleetAgentsViewModel, FleetAgentsViewModel.Factory> { create(route) }
+            val state by vm.state.collectAsStateWithLifecycle()
+            FleetAgentsScreen(state, vm)
+        }
+        entry<TeamRoute.FleetAgent> { route ->
+            val vm = assistedMetroViewModel<FleetAgentViewModel, FleetAgentViewModel.Factory> { create(route) }
+            val state by vm.state.collectAsStateWithLifecycle()
+            FleetAgentScreen(state, vm)
+        }
+        entry<TeamRoute.FleetRun> { route ->
+            val vm = assistedMetroViewModel<FleetRunViewModel, FleetRunViewModel.Factory> { create(route) }
+            val state by vm.state.collectAsStateWithLifecycle()
+            FleetRunScreen(state, vm, vm.merge)
+        }
+        entry<TeamRoute.FleetRig> { route ->
+            val vm = assistedMetroViewModel<FleetRigViewModel, FleetRigViewModel.Factory> { create(route) }
+            val state by vm.state.collectAsStateWithLifecycle()
+            environment.Provide { FleetRigScreen(state, vm) }
         }
         entry<TeamRoute.Task> { route ->
             val vm = assistedMetroViewModel<TeamTaskViewModel, TeamTaskViewModel.Factory> { create(route) }

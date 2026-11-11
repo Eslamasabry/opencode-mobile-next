@@ -74,13 +74,14 @@ public fun TeamSettingsScreen(state: TeamSettingsUi, actions: TeamSettingsAction
                 if (state.offFailed) {
                     item(key = "off-failed") {
                         KitNotice(
-                            stringResource(Res.string.teamHomeTurnOffFailed),
+                            stringResource(if (state.computer) Res.string.aiteamComponentTurnOffFailed else Res.string.teamHomeTurnOffFailed),
                             inset.testTag("team-settings-turn-off-failed"),
                             dismiss = KitLineAction(stringResource(Res.string.kitConfirmCancel), actions::dismissOffFailed),
                         )
                     }
                 }
-                item(key = "team") {
+                // The roles are the phone team's; a computer's team keeps its agents on the computer.
+                if (!state.computer) item(key = "team") {
                     KitRowGroup {
                         KitRow(
                             title = pluralStringResource(Res.plurals.teamSettingsAgentsRow, state.roles, state.roles),
@@ -105,6 +106,17 @@ public fun TeamSettingsScreen(state: TeamSettingsUi, actions: TeamSettingsAction
                             )
                         },
                     ) {
+                        // Flutter's Change address: a computer's team moves to another address, tested first.
+                        if (state.canChangeAddress) {
+                            KitRow(
+                                title = stringResource(Res.string.teamHomeChangeAddress),
+                                leading = KitRowLeading.Glyph(KitIcons.edit),
+                                trailing = KitRowTrailing.Chevron,
+                                enabled = !state.working,
+                                modifier = Modifier.testTag("team-settings-change-address"),
+                                onClick = actions::changeAddress,
+                            )
+                        }
                         if (state.canCheck) {
                             KitRow(
                                 title = stringResource(Res.string.teamIntroTurnOnPhone),
@@ -119,7 +131,7 @@ public fun TeamSettingsScreen(state: TeamSettingsUi, actions: TeamSettingsAction
                         // How fast it runs where it runs; the address, version and protection are behind it.
                         KitRow(
                             title = stringResource(Res.string.teamUiTechnicalDetails),
-                            supporting = stringResource(Res.string.teamUiDisclaimerPhone),
+                            supporting = stringResource(if (state.computer && !state.onPhone) Res.string.teamUiDisclaimerComputer else Res.string.teamUiDisclaimerPhone),
                             supportingMaxLines = 2,
                             leading = KitRowLeading.Glyph(KitIcons.speed),
                             trailing = KitRowTrailing.Chevron,
@@ -133,7 +145,16 @@ public fun TeamSettingsScreen(state: TeamSettingsUi, actions: TeamSettingsAction
         HostDetails(state, actions)
         KitConfirm(
             spec =
-                if (state.confirmingOff) {
+                if (state.confirmingOff && state.computer) {
+                    // Flutter `showTeamTurnOffSheet`: this phone forgets the team; nothing changes on the computer.
+                    KitConfirmSpec(
+                        title = stringResource(Res.string.aiteamComponentTurnOffTitle),
+                        confirmLabel = stringResource(Res.string.teamUiTurnOffConfirm),
+                        kind = KitConfirmKind.Destructive,
+                        body = stringResource(Res.string.teamUiTurnOffBody),
+                        cancelLabel = stringResource(Res.string.teamUiKeep),
+                    )
+                } else if (state.confirmingOff) {
                     KitConfirmSpec(
                         title = stringResource(Res.string.aiteamComponentTurnOffTitle),
                         confirmLabel = stringResource(Res.string.aiteamComponentTurnOff),
@@ -163,11 +184,11 @@ private fun HostDetails(state: TeamSettingsUi, actions: TeamSettingsActions) {
             KitRowGroup {
                 KitRow(
                     title = stringResource(Res.string.teamUiLabelHost),
-                    supporting = stringResource(Res.string.teamUiHostModePhone),
+                    supporting = stringResource(if (state.computer && !state.onPhone) Res.string.teamUiHostModeComputer else Res.string.teamUiHostModePhone),
                 )
             }
             KitText(
-                stringResource(Res.string.teamUiDisclaimerPhone),
+                stringResource(if (state.computer && !state.onPhone) Res.string.teamUiDisclaimerComputer else Res.string.teamUiDisclaimerPhone),
                 Modifier.testTag("team-host-disclaimer"),
                 role = TypeRole.Secondary,
                 tone = TextTone.Secondary,

@@ -27,6 +27,8 @@ public enum class RowStatus {
     Running,
     Failed,
     Done,
+    /** Finished because the person pressed Stop (Flutter: finishedUnseen and stoppedByPerson). */
+    Stopped,
     None,
 }
 
@@ -46,6 +48,8 @@ public data class ConversationRowUi(
     val permission: io.github.eslamasabry.oc.engine.agents.feed.FeedPermission? = null,
     val updatedAtMs: Long? = null,
     val canOpen: Boolean = true,
+    /** H4: an agent conversation that cannot be reopened; a tap asks "Start a new conversation?" first. */
+    val needsNewChat: Boolean = false,
     /** The agent's bundled mark slug (empty: a neutral mark) and its plain name, from the persona table. */
     val agentMark: String = "",
     val agentName: String? = null,
@@ -195,6 +199,8 @@ public data class ChatsUi(
     val inbox: ImmutableList<ConversationRowUi> = persistentListOf(),
     val finished: ImmutableList<ConversationRowUi> = persistentListOf(),
     val confirmWatched: ChatsWatchedRequestUi? = null,
+    /** H4: the "Start a new conversation?" question for a tapped agent conversation that cannot be reopened. */
+    val startNew: StartNewUi? = null,
     val answering: ImmutableSet<String> = persistentSetOf(),
     val answerFailure: io.github.eslamasabry.oc.core.common.Failure? = null,
     /** Row keys whose server can archive them (OpenCode conversations on a server with `sessionArchive`). */
@@ -311,6 +317,11 @@ public interface ChatsActions {
     public fun openInbox() {}
 
     public fun openConversation(ref: ConversationRef)
+
+    /** The question said yes: open the new-conversation form with the same agent. */
+    public fun confirmStartNew() {}
+
+    public fun dismissStartNew() {}
 
     /** Hides the row at once and archives it when the undo window ends; one offer at a time. */
     public fun archive(row: ConversationRowUi) {}
