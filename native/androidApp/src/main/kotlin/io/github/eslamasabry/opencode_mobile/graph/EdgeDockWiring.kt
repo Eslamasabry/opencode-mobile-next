@@ -28,6 +28,7 @@ import io.github.eslamasabry.oc.engine.attention.dock.DockPlacementStore
 import io.github.eslamasabry.oc.engine.attention.dock.DockRemovals
 import io.github.eslamasabry.oc.engine.attention.dock.DockRequestRef
 import io.github.eslamasabry.oc.engine.attention.dock.DockSide
+import io.github.eslamasabry.oc.engine.attention.dock.SubAgentChildSource
 import io.github.eslamasabry.oc.engine.attention.dock.DockUi
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
@@ -205,6 +206,16 @@ class AppEdgeDock(
                 peeks.feed(id, envelope.event)
                 for (event in DockFeed.events(id, envelope.event)) controller.feed(event)
             }
+        }
+        graph.scope.launch(dispatchers.main) {
+            // Sub-agents that existed before the app connected: no event names their parent, the backfill reads them
+            // (on attach, on every reconnect and when a conversation starts a run; nothing while the server cannot
+            // list sub-agents). The same neutral source as Go to > Subagents.
+            graph.subAgentReads { controller.ui.value.entries.filter { it.ref.profileId == id }.map { it.ref.sessionId } }
+                .collect { read ->
+                    if (attached[id] !== graph) return@collect
+                    for (event in SubAgentChildSource.events(id, read)) controller.feed(event)
+                }
         }
         graph.scope.launch(dispatchers.main) {
             // Saved names, removed set and pins first, so the first reconcile lands on a model that already knows them.

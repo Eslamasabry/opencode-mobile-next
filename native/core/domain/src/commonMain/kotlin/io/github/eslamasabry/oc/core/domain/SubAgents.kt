@@ -38,7 +38,7 @@ public object SubAgents {
     ): ImmutableList<SubAgent> =
         children
             .asSequence()
-            .filter { it.parentId == parent && it.forkOf == null && it.id != parent }
+            .filter { it.parentId == parent && isSubAgent(it) }
             .distinctBy { it.id }
             .take(MAX_CHILDREN)
             .map { child ->
@@ -54,6 +54,13 @@ public object SubAgents {
             }
             .toList()
             .toImmutableList()
+
+    /**
+     * The one rule for "this session is a sub-agent of [Session.parentId]": it has a parent, is not a fork and is not
+     * its own parent. Lists ([of]) and live events (the edge dock's child source) both ask this.
+     */
+    public fun isSubAgent(session: Session): Boolean =
+        session.parentId != null && session.forkOf == null && session.parentId != session.id
 
     /** The agent or task name when the server says it, else the title. */
     public fun nameOf(child: Session): String? =

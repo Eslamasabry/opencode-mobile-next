@@ -4,6 +4,8 @@ import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.events.DeltaField
+import io.github.eslamasabry.oc.core.domain.SubAgents
+import io.github.eslamasabry.oc.core.domain.SubAgentsRead
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.domain.events.RunOutcome
 import io.github.eslamasabry.oc.core.model.FormSpec
@@ -24,15 +26,24 @@ public fun interface DockChildSource {
     public fun links(profile: ProfileId, event: GatewayEvent): List<DockEvent.Link>
 }
 
-/** The session record's `parentId` (OpenCode 1 and 2). */
-public object SessionParentChildSource : DockChildSource {
-    override fun links(profile: ProfileId, event: GatewayEvent): List<DockEvent.Link> =
-        if (event is GatewayEvent.SessionUpserted) {
-            event.session.parentId
-                ?.let { listOf(DockEvent.Link(ConversationRef(profile, event.session.id), it)) }
-                .orEmpty()
-        } else {
-            emptyList()
+/**
+ * The dock's sub-agents from the app's one provider-neutral source (`core/domain` [SubAgents]): a live session event
+ * links a child to its parent by the same rule the sub-agent lists use (a parent, not a fork), and a backfill read
+ * ([SubAgentsRead], from `SubAgentBackfill`) names the children that existed before the app connected, which no event
+ * ever announces.
+ */
+public object SubAgentChildSource : DockChildSource {
+    override fun links(profile: ProfileId, event: GatewayEvent): List<DockEvent.Link> {
+        val session = (event as? GatewayEvent.SessionUpserted)?.session ?: return emptyList()
+        val parent = session.parentId?.takeIf { SubAgents.isSubAgent(session) } ?: return emptyList()
+        return listOf(DockEvent.Link(ConversationRef(profile, session.id), parent))
+    }
+
+    /** One backfill read as dock events: each sub-agent's title and name, then its parent. */
+    public fun events(profile: ProfileId, read: SubAgentsRead): List<DockEvent> =
+        read.subAgents.flatMap { s ->
+            val ref = ConversationRef(profile, s.id)
+            listOf(DockEvent.Meta(ref, s.title, s.name.takeIf { it != s.title }), DockEvent.Link(ref, s.parent))
         }
 }
 
@@ -45,7 +56,7 @@ public object DockFeed {
     private const val GLOBAL_FORM = "global"
     private val TODO_TOOLS = setOf("todowrite", "todo")
 
-    public fun events(profile: ProfileId, event: GatewayEvent, children: DockChildSource = SessionParentChildSource): List<DockEvent> = base(profile, event) + children.links(profile, event)
+    public fun events(profile: ProfileId, event: GatewayEvent, children: DockChildSource = SubAgentChildSource): List<DockEvent> = base(profile, event) + children.links(profile, event)
 
     private fun base(profile: ProfileId, event: GatewayEvent): List<DockEvent> {
         fun ref(session: SessionId) = ConversationRef(profile, session)
