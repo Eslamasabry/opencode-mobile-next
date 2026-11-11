@@ -40,6 +40,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiMessage
 import io.github.eslamasabry.oc.ui.words.res.chatUiMessageTimeline
 import io.github.eslamasabry.oc.ui.words.res.chatUiNoMatchingMessages
 import io.github.eslamasabry.oc.ui.words.res.chatUiSearchMessages
+import io.github.eslamasabry.oc.ui.words.res.chatUiToolsSummary
 import io.github.eslamasabry.oc.ui.words.res.chatUiYou
 import io.github.eslamasabry.oc.ui.words.res.commonRetry
 import io.github.eslamasabry.oc.ui.words.res.historyLoadOlder
@@ -63,6 +64,7 @@ internal fun ChatTimelineSheet(timeline: TimelineUi?, actions: ChatActions, nowM
         val field = rememberTextFieldState(timeline.query)
         val mask = rememberKitMask()
         val platform = LocalKitPlatform.current
+        val stepTitle = rememberStepTitles()
         // Flutter filters every keystroke; the search field settles only its announcement.
         LaunchedEffect(field, actions) {
             snapshotFlow { field.text.toString() }.drop(1).collect(actions::timelineQuery)
@@ -103,7 +105,21 @@ internal fun ChatTimelineSheet(timeline: TimelineUi?, actions: ChatActions, nowM
         if (timeline.entries.isNotEmpty()) KitRowGroup {
         for (entry in timeline.entries) {
             KitRow(
-                title = mask(entry.preview.ifBlank { stringResource(Res.string.chatUiMessage) }),
+                title =
+                    mask(
+                        entry.preview.ifBlank {
+                            // Flutter: "Tools: Shell · uptime" (each tool once, as its step row names it).
+                            if (entry.tools.isEmpty()) stringResource(Res.string.chatUiMessage)
+                            else
+                                stringResource(
+                                    Res.string.chatUiToolsSummary,
+                                    entry.tools.joinToString(", ") { facts ->
+                                        listOfNotNull(stepTitle(facts), facts.subject?.takeIf { it.isNotBlank() })
+                                            .joinToString(" · ")
+                                    },
+                                )
+                        }
+                    ),
                 titleMaxLines = 2, // F: lib/ui/screens/chat/timeline_sheet.dart:242
                 leading = KitRowLeading.Glyph(if (entry.prompt) KitIcons.person else KitIcons.sparkle),
                 supporting =

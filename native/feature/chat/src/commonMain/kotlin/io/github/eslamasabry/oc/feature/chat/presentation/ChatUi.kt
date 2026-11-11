@@ -7,6 +7,7 @@ import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.ImmutableSet
+import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolFacts
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.persistentSetOf
@@ -239,6 +240,8 @@ public data class TimelineEntryUi(
     val preview: String,
     val createdMs: Long?,
     val forkable: Boolean,
+    /** The tools a message with no words of its own did; the screen names them in plain words. */
+    val tools: ImmutableList<ToolFacts> = persistentListOf(),
 )
 
 public data class TimelineUi(
