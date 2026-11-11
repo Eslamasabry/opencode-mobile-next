@@ -334,6 +334,7 @@ class PlatformHub(
     // s28-app: what a link that cannot complete says (F: link_routes.dart).
     private val linkNotices: AppLinkNotices,
     private val composerFiles: AndroidComposerFiles,
+    private val teamAlerts: TeamAlertsWatcher,
 ) {
     private val mainDispatcher = dispatchers.main
     private val appScope = CoroutineScope(appScope.coroutineContext + mainDispatcher)
@@ -472,6 +473,7 @@ class PlatformHub(
         WidgetFeed.backgroundRunner = widgetRunner
         sharedProjectFolders.start()
         monitoring.start()
+        teamAlerts.start()
         channels.ensure()
         // B-L10N-002: channel names follow an acknowledged language save (the stored value, never
         // an attempt).

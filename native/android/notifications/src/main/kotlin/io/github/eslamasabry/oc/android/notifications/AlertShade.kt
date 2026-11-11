@@ -243,6 +243,10 @@ public class AndroidAlertShade(
             AlertKind.QuotaReset -> words.text(R.string.notify_alert_quota_reset_generic_title)
             AlertKind.CheckIn -> words.text(R.string.notify_alert_checkin_title, "OpenCode")
             AlertKind.Test -> words.text(R.string.notify_test_title)
+            AlertKind.TeamDecision -> words.text(R.string.notify_team_decision_title)
+            AlertKind.TeamReview -> words.text(R.string.notify_team_review_title)
+            AlertKind.TeamRunFailed -> words.text(R.string.notify_team_failed_title)
+            AlertKind.TeamCompleted -> words.text(R.string.notify_team_completed_title)
         }
 
     /**
@@ -269,6 +273,18 @@ public class AndroidAlertShade(
             AlertKind.Test ->
                 return words.text(R.string.notify_test_title) to
                     words.text(R.string.notify_test_body)
+            AlertKind.TeamDecision ->
+                return words.text(R.string.notify_team_decision_title) to
+                    words.text(R.string.notify_team_decision_body)
+            AlertKind.TeamReview ->
+                return words.text(R.string.notify_team_review_title) to
+                    words.text(R.string.notify_team_review_body)
+            AlertKind.TeamRunFailed ->
+                return words.text(R.string.notify_team_failed_title) to
+                    words.text(R.string.notify_team_failed_body)
+            AlertKind.TeamCompleted ->
+                return words.text(R.string.notify_team_completed_title) to
+                    words.text(R.string.notify_team_completed_body)
             else -> Unit
         }
         val copy = AlertCopy.of(alert) ?: return publicTitle to ""
@@ -307,7 +323,8 @@ public class AndroidAlertShade(
         when (kind) {
             AlertKind.Permission,
             AlertKind.Question -> NotificationCompat.CATEGORY_RECOMMENDATION
-            AlertKind.Error -> NotificationCompat.CATEGORY_ERROR
+            AlertKind.Error, AlertKind.TeamRunFailed -> NotificationCompat.CATEGORY_ERROR
+            AlertKind.TeamDecision -> NotificationCompat.CATEGORY_RECOMMENDATION
             else -> NotificationCompat.CATEGORY_STATUS
         }
 
