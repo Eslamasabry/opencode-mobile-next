@@ -508,7 +508,7 @@ public fun ChatsScreen(
                             ) {
                                 KitPanelLinkRow(
                                     label = stringResource(Res.string.chats_all_title),
-                                    count = Numbers.format(state.allCount),
+                                    count = Numbers.format(state.shownCount ?: state.allCount),
                                     onClick = actions::showAll,
                                 )
                             }

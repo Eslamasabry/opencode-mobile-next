@@ -198,6 +198,11 @@ public data class ChatsUi(
     val projectFacts: kotlinx.collections.immutable.ImmutableMap<String, HomeProjectFacts> =
         kotlinx.collections.immutable.persistentMapOf(),
     val allCount: Int = 0,
+    /**
+     * P5: the conversations the filters let through, which the list's "All conversations" row counts (it opens that
+     * same narrowing); null when no filter narrows the list, and the row counts [allCount].
+     */
+    val shownCount: Int? = null,
     val otherFoldersCount: Int = 0,
     val otherFoldersSelected: Boolean = false,
     val sheet: ChatsHomeSheet? = null,

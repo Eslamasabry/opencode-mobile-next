@@ -764,7 +764,12 @@ public class ChatsViewModel(
         filters.value = ChatsFilters(identities = shown.overflowKeys)
     }
 
-    override fun showAll(): Unit = nav.open(ChatsRoute.All(filter = null))
+    /** P5: All conversations opens with the home's narrowing (its project, else Running), as the row's count says. */
+    override fun showAll() {
+        val chosen = filters.value
+        val filter = chosen.projectDirectory?.takeIf { it.startsWith("/") } ?: ChatsAllViewModel.RUNNING.takeIf { chosen.running }
+        nav.open(ChatsRoute.All(filter = filter))
+    }
 
     override fun openUsage(): Unit = nav.open(UsageRoute.Hub())
 
