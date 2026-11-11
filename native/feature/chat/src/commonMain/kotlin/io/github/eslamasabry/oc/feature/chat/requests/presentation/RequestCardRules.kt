@@ -16,6 +16,20 @@ public object RequestCardRules {
     /** The "Tool: …" line only where the question does not already say what kind of thing asks. */
     public fun showsToolLine(ask: AskView): Boolean = ask.verb !in selfNaming
 
+    /**
+     * What the Details sheet's box shows for [ask], given the request's own full text: a folder read or a search shows
+     * what the card names (the project or folder, the pattern), never the server's "." or the folder it searches. Null
+     * when there is nothing to show there.
+     */
+    public fun detailsText(ask: AskView, fullText: String?): String? =
+        when (ask.verb) {
+            AskVerb.ReadFolder, AskVerb.Search -> ask.targets.firstOrNull()?.text
+            else -> fullText
+        }
+
+    /** Whether a box with nothing of its own says "(all matching requests)": not for the asks [detailsText] names. */
+    public fun detailsSaysAllMatching(ask: AskView): Boolean = ask.verb != AskVerb.ReadFolder && ask.verb != AskVerb.Search
+
     /** "Copy what it asks to run" belongs to commands only, never to a file change. */
     public fun copiesTargets(ask: AskView): Boolean = ask.verb == AskVerb.Run || ask.verb == AskVerb.OutsideRun
 
