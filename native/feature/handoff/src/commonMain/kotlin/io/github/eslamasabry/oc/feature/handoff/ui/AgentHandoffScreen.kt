@@ -42,10 +42,16 @@ public fun AgentHandoffScreen(state: AgentHandoffUi, actions: AgentHandoffAction
     LaunchedEffect(state.prompt) {
         if (field.text.toString() != state.prompt) field.setTextAndPlaceCursorAtEnd(state.prompt)
     }
-    // Back from Agents (the set-up), the list of ready agents must be read again.
-    LifecycleResumeEffect(page) {
-        if (page == HandoffPage.NoAgent) actions.refresh()
-        onPauseOrDispose {}
+    // Back from Agents (the set-up), the list of ready agents must be read again. Only a real return counts:
+    // the effect is not keyed on the page, or each reload would trigger the next one.
+    val currentPage by rememberUpdatedState(page)
+    var wasAway by remember { mutableStateOf(false) }
+    LifecycleResumeEffect(Unit) {
+        if (wasAway && currentPage == HandoffPage.NoAgent) {
+            wasAway = false
+            actions.refresh()
+        }
+        onPauseOrDispose { wasAway = true }
     }
     KitScreen(
         topBar = {
@@ -61,28 +67,40 @@ public fun AgentHandoffScreen(state: AgentHandoffUi, actions: AgentHandoffAction
     ) {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
             if (state.loading) item { KitSkeletonRows(count = 3) }
-            if (page == HandoffPage.Refused)
+            val view = state.stateView()
+            if (view != null)
                 item {
+                    val refresh =
+                        KitAction(stringResource(Res.string.handoffNativeRefresh), actions::refresh)
+                    val agents =
+                        KitAction(stringResource(Res.string.handoffNativeSetup), actions::setup)
                     KitStateView(
                         kind = KitStateKind.Calm,
-                        title = stringResource(Res.string.handoffNativeUnavailable),
-                        body = blockWords(state.block)
-                            ?: stringResource(Res.string.handoffNativeNotStartedBody),
-                        primary =
-                            KitAction(
-                                stringResource(Res.string.handoffNativeRefresh),
-                                actions::refresh,
+                        title =
+                            stringResource(
+                                when (view.headline) {
+                                    HandoffHeadline.Unavailable ->
+                                        Res.string.handoffNativeUnavailable
+                                    HandoffHeadline.NoAgentReady ->
+                                        Res.string.handoffNativeNoReadyTitle
+                                }
                             ),
-                        secondary =
-                            if (state.offersAgents())
-                                KitAction(
-                                    stringResource(Res.string.handoffNativeSetup),
-                                    actions::setup,
-                                )
-                            else null,
+                        body = stringResource(
+                            when (view.body) {
+                                HandoffBody.Computer -> Res.string.handoffNativeBlockComputer
+                                HandoffBody.Folder -> Res.string.handoffNativeBlockFolder
+                                HandoffBody.FolderUnknown -> Res.string.handoffUiUnavailableDirectory
+                                HandoffBody.Unconfirmed -> Res.string.handoffNativeBlockUnconfirmed
+                                HandoffBody.NotStarted -> Res.string.handoffNativeNotStartedBody
+                                HandoffBody.NoAgentReady -> Res.string.handoffNativeNoTargets
+                            }
+                        ),
+                        primary = if (view.primary == HandoffButton.OpenAgents) agents else refresh,
+                        // The calm state draws its primary and its quiet (tertiary) actions only.
+                        tertiary = if (view.secondary == null) emptyList() else listOf(refresh),
                     )
                 }
-            if (page == HandoffPage.Refused && sourceReview != null)
+            if (!state.connected && sourceReview != null && view != null)
                 item {
                     RecordDisclosure(sourceReview.draft.record.markdown)
                 }
@@ -135,19 +153,6 @@ public fun AgentHandoffScreen(state: AgentHandoffUi, actions: AgentHandoffAction
                                 )
                             }
                         }
-                    }
-                if (page == HandoffPage.NoAgent)
-                    item {
-                        KitStateView(
-                            kind = KitStateKind.Calm,
-                            title = stringResource(Res.string.handoffNativeNoReadyTitle),
-                            body = stringResource(Res.string.handoffNativeNoTargets),
-                            primary =
-                                KitAction(
-                                    stringResource(Res.string.handoffNativeSetup),
-                                    actions::setup,
-                                ),
-                        )
                     }
                 if (page == HandoffPage.Choose) {
                     item { KitNotice(stringResource(Res.string.handoffNativeExplanation)) }
@@ -260,18 +265,6 @@ public fun AgentHandoffScreen(state: AgentHandoffUi, actions: AgentHandoffAction
         }
     }
 }
-
-/** The plain words and the way forward for a folder-check reason; null when there is none. */
-@Composable
-private fun blockWords(block: HandoffBlock?): String? =
-    when (block) {
-        HandoffBlock.SourceOnComputer ->
-            stringResource(Res.string.handoffNativeBlockComputer)
-        HandoffBlock.FolderNotOnPhone -> stringResource(Res.string.handoffNativeBlockFolder)
-        HandoffBlock.FolderUnknown -> stringResource(Res.string.handoffUiUnavailableDirectory)
-        HandoffBlock.NotConfirmed -> stringResource(Res.string.handoffNativeBlockUnconfirmed)
-        null -> null
-    }
 
 @Composable
 private fun failureText(kind: HandoffFailureKind): String =

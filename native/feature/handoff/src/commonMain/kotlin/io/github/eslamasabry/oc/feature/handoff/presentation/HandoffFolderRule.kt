@@ -19,6 +19,9 @@ public enum class HandoffBlock(public val tag: String) {
 
     /** The app could not prove the agents on this phone share the conversation's folder. Spelling kept from the first build. */
     NotConfirmed("sharedProject"),
+
+    /** Nothing on this phone can take the conversation over: no agent helper installed, or no agent ready. */
+    NoAgentReady("handoffNoAgentReady"),
     ;
 
     public fun failure(): Failure = Failure.Unavailable(FeatureId(tag))

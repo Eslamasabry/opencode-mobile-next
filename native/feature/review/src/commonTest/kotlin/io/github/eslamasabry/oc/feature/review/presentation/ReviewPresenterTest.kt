@@ -478,4 +478,48 @@ class ReviewPresenterTest {
         p.chooseScope(ReviewScope.Conversation)
         assertTrue(p.state.value.files.single { it.path == "src/a.kt" }.viewed)
     }
+
+    // The Uncommitted view's empty state: not a repository vs a clean tree vs the agent's reported edits.
+
+    private fun TestScope.emptyTree(setup: io.github.eslamasabry.oc.core.model.VersionControlSetupState): ChangesPresenter {
+        fake.history = listOf(prompt("u1", 1), reply("a1", 2))
+        gateways.value = ReviewGateways(VcsFake(fake, emptyList()), FakeOperationsGateway())
+        return ChangesPresenter(review(), null, nav, backgroundScope, setup = ReviewProjectSetup { setup })
+    }
+
+    @Test
+    fun `an Uncommitted view of a folder that is not a Git repository says so`() = runTest(UnconfinedTestDispatcher()) {
+        val p = emptyTree(io.github.eslamasabry.oc.core.model.VersionControlSetupState.Absent)
+        p.chooseScope(ReviewScope.WorkingTree)
+        val ui = p.state.value
+        assertEquals(ReviewScope.WorkingTree, ui.scope)
+        assertTrue(ui.files.isEmpty())
+        assertTrue(ui.notRepository)
+    }
+
+    @Test
+    fun `an Uncommitted view of a clean repository is not the not-Git state`() = runTest(UnconfinedTestDispatcher()) {
+        for (setup in listOf(io.github.eslamasabry.oc.core.model.VersionControlSetupState.Git, io.github.eslamasabry.oc.core.model.VersionControlSetupState.Unknown)) {
+            val p = emptyTree(setup)
+            p.chooseScope(ReviewScope.WorkingTree)
+            assertFalse(p.state.value.notRepository)
+            assertTrue(p.state.value.files.isEmpty())
+        }
+    }
+
+    @Test
+    fun `the Conversation view never claims not-Git, it lists the agent's reported edits`() = runTest(UnconfinedTestDispatcher()) {
+        val p = emptyTree(io.github.eslamasabry.oc.core.model.VersionControlSetupState.Absent)
+        p.chooseScope(ReviewScope.Conversation)
+        assertEquals(ReviewScope.Conversation, p.state.value.scope)
+        assertFalse(p.state.value.notRepository)
+    }
+
+    @Test
+    fun `a view with files is never not-Git`() = runTest(UnconfinedTestDispatcher()) {
+        fake.history = listOf(prompt("u1", 1), reply("a1", 2))
+        gateways.value = ReviewGateways(VcsFake(fake, listOf(FileDiff("lib/x.kt", patch = "x"))), FakeOperationsGateway())
+        val p = ChangesPresenter(review(), null, nav, backgroundScope, setup = ReviewProjectSetup { io.github.eslamasabry.oc.core.model.VersionControlSetupState.Absent })
+        assertFalse(p.state.value.notRepository)
+    }
 }

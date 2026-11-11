@@ -35,5 +35,5 @@
   <string name="handoffNativeBlockUnconfirmed">The app could not confirm that the agents on this phone can open this conversation’s folder, so none is started in the wrong place. Open Agents to check they are installed and ready, then try again.</string>
   <string name="handoffNativeContinueWith">Continue with %1$s</string>
   <string name="handoffNativeWhatHandedOver">What will be handed over</string>
-  <string name="handoffNativeNoReadyTitle">No agent is ready</string>
+  <string name="handoffNativeNoReadyTitle">No agent is ready on this phone</string>
 </resources>

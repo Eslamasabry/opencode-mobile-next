@@ -15,7 +15,9 @@ import io.github.eslamasabry.oc.feature.review.presentation.ReviewProjectSetup
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.domain.LocatedFileGateway
 import io.github.eslamasabry.oc.core.domain.LocatedVcsGateway
+import io.github.eslamasabry.oc.core.domain.WorktreeInspectionGateway
 import io.github.eslamasabry.oc.core.model.ServerLocation
 import io.github.eslamasabry.oc.feature.review.presentation.ReviewProjectRead
 import io.github.eslamasabry.oc.core.domain.ServerGateway
@@ -123,18 +125,53 @@ public class ReviewHub(private val registry: ConnectionRegistry) {
         }
 
     /**
-     * Whether [directory] on [profile] is under Git, from the server's own version-control health. Only the folder the
-     * connection is on can be asked; any other answer is Unknown (the page then says the tree is clean, never "no Git").
+     * Whether [directory] on [profile] is under Git, so an empty answer can say why it is empty. Unknown when the
+     * server cannot tell (the page then says the tree is clean, never "no Git").
      */
     public fun projectSetup(profile: ProfileId, directory: String): ReviewProjectSetup =
         ReviewProjectSetup {
             val graph = registry.live.value[profile] as? ReviewGraphAccessors
-            val onFolder = graph?.reviewGateway?.location?.value?.directory?.trimEnd('/') == directory.trimEnd('/')
-            if (graph == null || !onFolder) VersionControlSetupState.Unknown
-            else
-                (graph.reviewOperations.versionControlHealth() as? Outcome.Ok)?.value?.setupState
-                    ?: VersionControlSetupState.Unknown
+            if (graph == null) VersionControlSetupState.Unknown else gitSetup(graph, directory)
         }
+
+    /** The same answer for the folder this conversation lives in (the session's own folder, else the connection's). */
+    public fun conversationSetup(ref: ConversationRef): ReviewProjectSetup =
+        ReviewProjectSetup {
+            val graph = registry.graphFor(ref) as? ReviewGraphAccessors
+            val gateway = graph?.reviewGateway
+            val directory =
+                (gateway?.session(ref.sessionId) as? Outcome.Ok)?.value?.directory?.takeIf { it.isNotBlank() }
+                    ?: gateway?.location?.value?.directory?.takeIf { it.isNotBlank() }
+            if (graph == null || directory == null) VersionControlSetupState.Unknown else gitSetup(graph, directory)
+        }
+
+    /**
+     * Git, Absent (the server says the folder is not a repository) or Unknown. The project record's own `vcs` field
+     * answers for any folder; the version-control health only for the folder the connection is on; a project record
+     * with no `vcs` and no `.git` in the folder is how OpenCode describes a plain folder.
+     */
+    private suspend fun gitSetup(graph: ReviewGraphAccessors, directory: String): VersionControlSetupState {
+        val gateway = graph.reviewGateway
+        val location = ServerLocation(directory, null)
+        val capabilities = gateway.capabilities.value
+        val onFolder = gateway.location.value.directory?.trimEnd('/') == directory.trimEnd('/')
+        val record =
+            if (capabilities.projectManagement)
+                ((gateway as? WorktreeInspectionGateway)?.inspectionProject(location) as? Outcome.Ok)?.value
+            else null
+        if (record?.isGit == true) return VersionControlSetupState.Git
+        if (onFolder) {
+            val health = (graph.reviewOperations.versionControlHealth() as? Outcome.Ok)?.value?.setupState
+            if (health != null && health != VersionControlSetupState.Unknown) return health
+        }
+        if (record?.isGit == false) return VersionControlSetupState.Absent
+        if (record != null && capabilities.fileBrowsing) {
+            val files = (gateway as? LocatedFileGateway)?.filesAt(location) ?: gateway.takeIf { onFolder }
+            val listed = (files?.listFiles("") as? Outcome.Ok)?.value
+            if (listed != null && listed.none { it.name == ".git" }) return VersionControlSetupState.Absent
+        }
+        return VersionControlSetupState.Unknown
+    }
 
     private fun gatewaysOf(ref: ConversationRef): ReviewGateways? =
         (registry.graphFor(ref) as? ReviewGraphAccessors)?.let { ReviewGateways(it.reviewGateway, it.reviewOperations) }

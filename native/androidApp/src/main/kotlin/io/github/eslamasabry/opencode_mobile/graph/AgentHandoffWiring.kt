@@ -129,6 +129,25 @@ class NativeHandoffSource(
     suspend fun helper(owner: ProfileId, directory: String): Outcome<TransientConnection> =
         lane.withLock {
             if (!project(directory) || !ownerCurrent(owner)) return@withLock stale()
+            // A phone with no agent set up has no agent helper either: that is the normal state of a phone
+            // without agents (the page says "No agent is ready" with Open Agents), not a failed start. A helper
+            // that is there but older, or a probe that itself fails, stays a real failure further down.
+            val probe =
+                withContext(dispatchers.io) {
+                    attempt({ Failure.Runtime(RuntimeProblem.Generic) }) {
+                        linux.agentHost.checks.version(
+                            owner.raw,
+                            "paseo",
+                            AgentPins.builtIn.paseo.version,
+                        )
+                    }
+                }
+            if (
+                (probe as? Outcome.Ok)?.value?.let {
+                    it["installed"] != true && it["foundVersion"] == null
+                } == true
+            )
+                return@withLock HandoffBlock.NoAgentReady.failure().failed()
             val claim =
                 when (val claimed = payloads.reserveNativeSignIn(owner)) {
                     is Outcome.Failed -> return@withLock claimed

@@ -55,6 +55,7 @@ public class ChangesViewModel(
                 ReviewAgentPorts(notes.comments, agent.sender(route.ref), agent.guideAsk(route.ref), notes.guides),
                 hub.branch(route.ref),
                 kept.firstOrNull()?.let { ReviewShelf(it, route.ref) },
+                hub.conversationSetup(route.ref),
             )
         }
     public val state: StateFlow<ChangesUi> = presenter.state
