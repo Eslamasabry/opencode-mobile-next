@@ -148,7 +148,7 @@
     <string name="globalSessionsFilterActive">Activas</string>
     <string name="globalSessionsArchivedNoMatchMessage">Ninguna conversación archivada tiene ese título. Prueba con una búsqueda más corta.</string>
     <string name="globalSessionsArchivedEmptyTitle">No hay conversaciones archivadas</string>
-    <string name="globalSessionsArchivedEmptyMessage">Aquí aparecen las conversaciones que archives.</string>
+    <string name="globalSessionsArchivedEmptyMessage">Las conversaciones que archives aparecen aquí.</string>
     <string name="globalSessionsShowActive">Mostrar conversaciones activas</string>
     <string name="globalSessionsProjectInUse">%1$s · En uso</string>
     <string name="globalSessionsCopyFolder">Copiar ruta de la carpeta</string>
