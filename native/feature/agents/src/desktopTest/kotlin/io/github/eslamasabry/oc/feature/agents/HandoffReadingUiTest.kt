@@ -48,7 +48,7 @@ class HandoffReadingUiTest {
     @AfterTest fun restore() = Locale.setDefault(previousLocale)
 
     // A fake key (the shape of an Anthropic key, never a real one), placed raw in the record on purpose.
-    private val fakeKey = "sk-ant-api03-FAKEFIXTUREVALUE0123456789"
+    private val fakeKey = "sk-ant-api03-FAKEFIXTURE01234"
 
     private val record =
         listOf(
@@ -113,12 +113,12 @@ class HandoffReadingUiTest {
             }
             onNodeWithText("List what's in this folder").assertExists()
             onNodeWithText("The folder holds two files.", substring = true).assertExists()
-            for (hidden in listOf("TOOLOUTPUTLINE", "ProviderError", "ses_e347", "FAKEFIXTUREVALUE"))
+            for (hidden in listOf("TOOLOUTPUTLINE", "ProviderError", "ses_e347", "FAKEFIXTURE"))
                 onAllNodesWithText(hidden, substring = true).assertCountEquals(0)
 
             onNodeWithText("The record as it will be copied").performScrollTo().performClick()
             waitForIdle()
             onNodeWithText("ses_e3477280fffe1UFTUl2SW5rj2r", substring = true).assertExists()
-            onAllNodesWithText("FAKEFIXTUREVALUE", substring = true).assertCountEquals(0)
+            onAllNodesWithText("FAKEFIXTURE", substring = true).assertCountEquals(0)
         }
 }

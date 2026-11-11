@@ -150,7 +150,7 @@ class SettingsTruthUiTest {
     @Test
     fun `S4 Details shows the source through the redactor, a key masked and a folder path whole`() = runComposeUiTest {
         // A fake key (never a real one), left raw in the answer on purpose: the fold must mask it by its shape.
-        val fakeKey = "sk-ant-api03-FAKEFIXTUREVALUE0123456789"
+        val fakeKey = "sk-ant-api03-FAKEFIXTURE01234"
         val ready =
             ConfigurationSources.ready(
                 """{"sources":[{"type":"directory","path":"/root/projects"},""" +
@@ -161,7 +161,7 @@ class SettingsTruthUiTest {
         onNodeWithText("Details").performScrollTo().performClick()
         waitForIdle()
         onNodeWithText("\"sources\"", substring = true).assertExists()
-        onAllNodesWithText("FAKEFIXTUREVALUE", substring = true).assertCountEquals(0)
+        onAllNodesWithText("FAKEFIXTURE", substring = true).assertCountEquals(0)
         // Masking is by value and shape, never by a word inside a path (w4-redact).
         onAllNodesWithText("/root/•••", substring = true).assertCountEquals(0)
         assertTrue(onAllNodesWithText("/root/projects", substring = true).fetchSemanticsNodes().size >= 2)
