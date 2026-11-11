@@ -35,7 +35,7 @@ class GitProjectStateTest {
         )
 
     @Test
-    fun `one fixture, three screens: the header, Changes and the Git page never contradict each other`() {
+    fun `one fixture for three screens - the header, Changes and the Git page never contradict each other`() {
         for (f in folders) {
             // The header reads only the server's answer; Changes and the new-chat start add the project root's listing.
             val header = gitProjectState(f.health)
