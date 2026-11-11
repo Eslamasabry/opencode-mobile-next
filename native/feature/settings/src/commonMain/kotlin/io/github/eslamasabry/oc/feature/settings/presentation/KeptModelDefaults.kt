@@ -20,6 +20,7 @@ public data class KeptModelDefaults(
     public val current: Ref? = null,
     public val defaults: List<Ref> = emptyList(),
     public val variant: String = "",
+    public val providerNames: Map<String, String> = emptyMap(),
 ) {
     @Serializable
     public data class Model(
@@ -53,6 +54,8 @@ public data class KeptModelDefaults(
             defaults.map { ModelRef(it.providerId, it.modelId) },
             library,
             storedVariant ?: variant,
+            providerNames,
+            usesDefault = stored == null,
         )
 
     public companion object {
@@ -74,6 +77,7 @@ public data class KeptModelDefaults(
                 data.current?.let { Ref(it.providerId, it.modelId) },
                 data.defaults.map { Ref(it.providerId, it.modelId) },
                 data.variant,
+                data.providerNames,
             )
     }
 }

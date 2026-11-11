@@ -27,6 +27,10 @@ public data class ModelDefaultsData(
     val library: ModelLibrary,
     /** The saved thinking level for [current]; empty = the model's default. */
     val variant: String = "",
+    /** Provider id -> the name the server gives it, so the picker's groups read "Anthropic", not "anthropic". */
+    val providerNames: Map<String, String> = emptyMap(),
+    /** Nothing is saved on this phone: [current] is only the server's own default. */
+    val usesDefault: Boolean = false,
 )
 
 public interface ModelDefaultsHost {
@@ -63,6 +67,8 @@ public data class ModelDefaultsRow(
     val selected: Boolean = false,
     /** The thinking levels this model offers (enabled ones only); empty = none. */
     val variants: List<String> = emptyList(),
+    /** The provider's name as the server gives it; empty = unknown (the kit falls back to the id). */
+    val providerName: String = "",
 )
 
 public data class ModelDefaultsUi(
@@ -73,8 +79,10 @@ public data class ModelDefaultsUi(
     val failure: Failure? = null,
     val recommended: List<ModelDefaultsRow> = emptyList(),
     val models: List<ModelDefaultsRow> = emptyList(),
-    /** The chosen model, or null while the server's own default applies. */
+    /** The model new conversations start with: the saved one, else the server's default (see [usesDefault]). */
     val current: ModelRef? = null,
+    /** Nothing is saved on this phone, so the server's default applies. */
+    val usesDefault: Boolean = false,
     /** The chosen thinking level; empty = the model's default. */
     val variant: String = "",
     val favorites: List<ModelRef> = emptyList(),
@@ -145,6 +153,7 @@ public class ModelDefaultsViewModel(
                 model.cost?.outputPerMillion,
                 data.current?.sameModel(model.ref) == true,
                 model.variants.filterNot { it.disabled }.map { it.id },
+                data.providerNames[model.providerId].orEmpty(),
             )
         val recommended =
             recommendModels(
@@ -160,6 +169,7 @@ public class ModelDefaultsViewModel(
             data.thisPhone,
             loading = false,
             current = data.current,
+            usesDefault = data.usesDefault,
             variant = data.variant,
             favorites = data.library.favorites.toList(),
             recent = data.library.recent.toList(),

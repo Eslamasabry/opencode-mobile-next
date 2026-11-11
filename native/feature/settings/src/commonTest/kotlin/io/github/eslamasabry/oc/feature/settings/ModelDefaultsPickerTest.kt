@@ -101,6 +101,15 @@ class ModelDefaultsPickerTest {
     }
 
     @Test
+    fun `rows carry the server's provider name and the page knows when only the server default applies`() = runTest {
+        val host = Host(data.copy(providerNames = mapOf("anthropic" to "Anthropic"), usesDefault = true))
+        val vm = ModelDefaultsViewModel(SettingsRoute.ModelDefaults(), host, Nav)
+        assertEquals("Anthropic", vm.state.value.models.first { it.model == sonnet }.providerName)
+        assertEquals("", vm.state.value.models.first { it.model.providerId == "openai" }.providerName)
+        assertEquals(true, vm.state.value.usesDefault)
+    }
+
+    @Test
     fun `a favourite star reaches the host and the page shows it`() = runTest {
         val host = Host(data)
         val vm = ModelDefaultsViewModel(SettingsRoute.ModelDefaults(), host, Nav)

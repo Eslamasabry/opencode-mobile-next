@@ -69,7 +69,14 @@ public fun ModelDefaultsScreen(state: ModelDefaultsUi, actions: ModelDefaultsAct
                 val currentRow = state.current?.let { c -> state.models.firstOrNull { it.model.sameModel(c) } }
                 KitRow(
                     title = stringResource(Res.string.composerPreviewModelsTitle),
-                    supporting = currentRow?.name ?: stringResource(Res.string.composerPreviewModelDefault),
+                    // The server's default says so, with the model it means today when the list knows it.
+                    supporting =
+                        when {
+                            currentRow == null -> stringResource(Res.string.composerPreviewModelDefault)
+                            state.usesDefault ->
+                                stringResource(Res.string.composerPreviewModelDefault) + " · " + currentRow.name
+                            else -> currentRow.name
+                        },
                     supportingMaxLines = 2,
                     enabled = !state.saving && !state.loading,
                     disabledReason = busyReason(state),
@@ -95,7 +102,10 @@ public fun ModelDefaultsScreen(state: ModelDefaultsUi, actions: ModelDefaultsAct
         visible = picking,
         onDismissRequest = { picking = false },
         options = options,
-        current = state.current?.let { c -> state.models.firstOrNull { it.model.sameModel(c) }?.let(::kitOption)?.key },
+        // Null marks the sheet's "Server default" row, as the chat's sheet does while nothing is chosen.
+        current =
+            if (state.usesDefault) null
+            else state.current?.let { c -> state.models.firstOrNull { it.model.sameModel(c) }?.let(::kitOption)?.key },
         onChoose = { option ->
             val chosen = option?.let { o -> state.models.firstOrNull { it.model.providerId == o.providerId && it.model.modelId == o.modelId } }
             actions.choose(chosen?.model)
@@ -127,7 +137,7 @@ public fun ModelDefaultsScreen(state: ModelDefaultsUi, actions: ModelDefaultsAct
 }
 
 private fun kitOption(row: ModelDefaultsRow): KitModelOption =
-    KitModelOption(row.model.providerId, row.model.modelId, row.name, providerName = "")
+    KitModelOption(row.model.providerId, row.model.modelId, row.name, providerName = row.providerName)
 
 /** A thinking level as people read it: "Extra high" for `xhigh`; unknown ids as they are. */
 @Composable

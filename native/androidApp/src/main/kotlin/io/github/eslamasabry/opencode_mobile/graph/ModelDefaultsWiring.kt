@@ -112,6 +112,9 @@ class LiveModelDefaultsHost(
                 serverDefaults,
                 modelStore.modelLibrary(profile),
                 stores.prefs.string("oc.variant.${profile.raw}").orEmpty(),
+                // The chat's sheet groups by the server's provider names; the ids are the fallback.
+                providers.providers.filter { it.name.isNotBlank() }.associate { it.id to it.name },
+                usesDefault = stored == null,
             )
         shelf.keep(profile, value = KeptModelDefaults.of(data))
         return Outcome.Ok(data)
