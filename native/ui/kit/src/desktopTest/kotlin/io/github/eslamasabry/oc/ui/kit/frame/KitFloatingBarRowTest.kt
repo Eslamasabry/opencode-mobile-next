@@ -211,7 +211,8 @@ class KitFloatingBarRowTest {
         val faceTop = face0.top.value + 8f
         val faceBottom = face0.bottom.value - 8f
         // At rest more lies past the end: a chip runs under the end edge, and its outer third there is cleared.
-        val under = CHIPS.indices.map { rest.bounds["chip-$it"]!! }.any { it.left.value < line.right.value - 1f && it.right.value > line.right.value }
+        // (A node's bounds are clipped to the line, so a chip running past its end ends on it.)
+        val under = CHIPS.indices.map { rest.bounds["chip-$it"]!! }.any { it.left.value < line.right.value - 1f && it.right.value >= line.right.value - .5f }
         assertTrue(under, "at rest a chip runs past the line's end (the line overflows at 360 dp)")
         val endCleared = diff(rest, restBare, line.right.value - fade / 3f + .5f, line.right.value - .5f, faceTop, faceBottom)
         assertTrue(endCleared < 1f, "at rest the end that has more to show is faded out at its edge: $endCleared")

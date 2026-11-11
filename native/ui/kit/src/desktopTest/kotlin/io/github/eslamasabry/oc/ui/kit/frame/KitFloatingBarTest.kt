@@ -349,7 +349,8 @@ class KitFloatingBarTest {
     fun `B-KIT-FLOAT-002 scrolled, the content passes under the bar and is blurred and cleared under the status bar`() {
         for (page in Page.entries) {
             var ground = Color.Unspecified
-            val s = shot(page, floating = true, act = { drag(-120f) }, check = { ground = it.ground })
+            // About 120 dp past the spacer's resting height (Home's pane keeps its room under the chips too).
+            val s = shot(page, floating = true, act = { drag(-120f - roomBelow(page)) }, check = { ground = it.ground })
             val g = luma(ground)
             // Under the status bar, above where the edge's dissolve starts: blur only, no sharp row edge.
             val (statusMean, statusStep) = column(s.image, W / 2f, 1f, STATUS_DP * STATUS_EDGE_SOLID_SHARE - 1f)
