@@ -126,12 +126,13 @@ public class ChatsAllViewModel(
             feed.snapshot.collect { snap ->
                 val next =
                     snap.items
-                        .filter { it.status == ChatStatus.NeedsYou || it.finishedUnseen }
+                        .filter { it.status == ChatStatus.NeedsYou || it.finishedUnseen || it.stoppedByPerson }
                         .associate {
                             AllConversationsRules.key(it.profileId, it.sessionId) to
                                 RowAttention(
                                     needsYou = it.status == ChatStatus.NeedsYou,
                                     unread = it.finishedUnseen && it.status == ChatStatus.Idle,
+                                    stopped = it.stoppedByPerson && it.status == ChatStatus.Idle,
                                 )
                         }
                 model.update { it.copy(attention = next) }
