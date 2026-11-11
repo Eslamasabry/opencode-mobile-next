@@ -92,7 +92,6 @@ public fun IntegrationsScreen(
                                 leading =
                                     provider.logo?.let { KitRowLeading.Svg(it) }
                                         ?: KitRowLeading.Glyph(KitIcons.extensions, tile = true),
-                                selected = provider.id == state.selected,
                                 trailing = KitRowTrailing.Chevron,
                                 onClick = { onConnect(provider.id) },
                             )
