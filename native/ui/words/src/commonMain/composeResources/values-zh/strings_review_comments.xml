@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="reviewCommentTitleLine">评论第 %1$s 行</string>
+    <string name="reviewCommentTitleLines">评论第 %1$s–%2$s 行</string>
+    <string name="reviewCommentField">智能体应该改什么？</string>
+    <string name="reviewCommentAdd">添加评论</string>
+    <string name="reviewCommentLine">第 %1$s 行</string>
+    <string name="reviewCommentLines">第 %1$s–%2$s 行</string>
+    <string name="reviewCommentRemovedLine">已删除的第 %1$s 行</string>
+    <string name="reviewCommentRemovedLines">已删除的第 %1$s–%2$s 行</string>
+    <string name="reviewCommentDraft">未发送</string>
+    <string name="reviewCommentSending">正在发送</string>
+    <string name="reviewCommentWaiting">等待智能体处理</string>
+    <string name="reviewCommentFixed">已修复</string>
+    <string name="reviewCommentRemove">移除</string>
+    <string name="reviewCommentsLabel">你的评论</string>
+    <string name="reviewCommentHint">点按行号，再点“评论”，即可请智能体在那里做出更改。</string>
+    <string name="reviewCommentNotPlaced">无法确定是哪几行。请重新选择这些行。</string>
+    <string name="reviewCommentsSendFailed">无法发送评论。它们仍保存在这里。</string>
+    <plurals name="reviewSendComments">
+        <item quantity="other">发送 %1$d 条评论</item>
+    </plurals>
+    <plurals name="reviewCommentsWaitingNotice">
+        <item quantity="other">有 %1$d 条评论等待智能体处理。</item>
+    </plurals>
+    <string name="reviewGuided">引导式</string>
+    <string name="reviewGuidedSupporting">智能体会按重要程度从高到低，带你逐项了解它的更改</string>
+    <string name="reviewGuideMaking">正在请智能体带你了解它的更改…</string>
+    <string name="reviewGuideFallback">这次无法生成引导。显示所有文件。</string>
+    <string name="reviewGuideBusy">引导要等智能体完成后才能生成。目前显示所有文件。</string>
+    <string name="reviewGuideAlsoChanged">另外更改的</string>
+</resources>

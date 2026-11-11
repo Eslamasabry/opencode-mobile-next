@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="runningDetailMemory">%1$d MB 内存</string>
+    <string name="runningDetailElapsed">已运行 %1$d 分钟</string>
+    <string name="runningDetailPid">进程 %1$d</string>
+    <plurals name="runningDetailHelpers">
+        <item quantity="other">同时会停止它的 %1$d 个助手进程。每个身份都会再次核对。</item>
+    </plurals>
+    <string name="runningDetailBusy">繁忙</string>
+    <string name="runningDetailIdle">空闲</string>
+</resources>

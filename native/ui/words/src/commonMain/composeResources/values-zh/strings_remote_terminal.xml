@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="remoteTerminalTitle">终端</string>
+    <string name="remoteTerminalWorking">处理中…</string>
+    <string name="remoteTerminalUnavailable">请连接到支持终端的服务器后使用此页面。</string>
+    <string name="remoteTerminalFailed">终端请求失败。请重试。</string>
+    <string name="remoteTerminalInputUncertain">发送输入时连接中断了。请先查看终端，再决定是否重新发送。</string>
+    <string name="remoteTerminalIntro">命令在此服务器上运行。离开此页面只会断开视图；要停止其中的 shell，请使用“结束终端”。</string>
+    <string name="remoteTerminalCreate">新建终端</string>
+    <string name="remoteTerminalRefresh">刷新</string>
+    <string name="remoteTerminalEmpty">还没有终端。</string>
+    <string name="remoteTerminalRunning">运行中</string>
+    <string name="remoteTerminalEnded">已结束</string>
+    <string name="remoteTerminalList">所有终端</string>
+    <string name="remoteTerminalDisconnect">断开</string>
+    <string name="remoteTerminalReconnect">重新连接</string>
+    <string name="remoteTerminalEnd">结束终端</string>
+    <string name="remoteTerminalDisconnected">已断开。请重新连接以继续查看此终端。</string>
+    <string name="remoteTerminalInputOff">请重新连接后再向终端发送输入。</string>
+    <string name="remoteTerminalInterrupt">中断（Ctrl-C）</string>
+    <string name="remoteTerminalEndInput">结束输入（Ctrl-D）</string>
+    <string name="remoteTerminalEscape">Escape</string>
+    <string name="remoteTerminalTab">Tab</string>
+    <string name="remoteTerminalReadable">易读终端</string>
+    <string name="remoteTerminalTranscript">终端输出</string>
+    <string name="remoteTerminalNoOutput">终端暂无输出。</string>
+    <string name="remoteTerminalInput">发送到终端</string>
+    <string name="remoteTerminalSend">发送</string>
+    <string name="remoteTerminalEndQuestion">结束此终端？</string>
+    <string name="remoteTerminalEndBody">这会停止远程 shell 以及其中正在运行的所有内容。</string>
+    <string name="remoteTerminalKeep">保留终端</string>
+    <string name="remoteTerminalOffline">终端已断开。请重新打开它以重新连接。</string>
+    <string name="remoteTerminalSize">终端大小</string>
+    <string name="remoteTerminalRows">行数</string>
+    <string name="remoteTerminalColumns">列数</string>
+    <string name="remoteTerminalApplySize">套用大小</string>
+    <string name="remoteTerminalSizeRange">行数和列数请选择 1 到 1000 之间的值。</string>
+    <string name="remoteTerminalServiceUnavailable">此服务器不提供终端服务。</string>
+    <string name="remoteTerminalProjectChanged">此对话的项目已变更。请返回并重新打开终端。</string>
+    <string name="remoteTerminalSignInRequired">请重新登录此服务器，才能使用它的终端。</string>
+    <string name="remoteTerminalServiceNoAnswer">终端服务没有响应。请重试。</string>
+</resources>
