@@ -123,6 +123,7 @@ class ReviewScreensTest {
                             io.github.eslamasabry.oc.feature.review.presentation.ReviewScope.Conversation,
                             io.github.eslamasabry.oc.feature.review.presentation.ReviewScope.WorkingTree,
                         ),
+                        canPickScope = true,
                         notRepository = true,
                     ),
                     actions,

@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.feature.git.servertools.GitServerToolsUi
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.KitTheme
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import java.util.Locale
 import kotlin.test.AfterTest
@@ -50,7 +51,7 @@ class GitServerToolsPanelTest {
     private fun androidx.compose.ui.test.ComposeUiTest.show(state: GitServerToolsUi) =
         setContent {
             KitTheme(platform = DesktopKitPlatform(), appearance = KitAppearance(motion = MotionLevel.Off), localeTag = "en", stillFrame = true) {
-                Box(Modifier.width(412.dp)) { GitServerToolsPanel(state, actions) }
+                Box(Modifier.width(412.dp)) { KitSheetHost { GitServerToolsPanel(state, actions) } }
             }
         }
 
