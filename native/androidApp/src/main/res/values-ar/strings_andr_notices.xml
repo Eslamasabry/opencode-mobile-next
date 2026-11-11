@@ -1,15 +1,15 @@
 <resources>
-    <string name="andr_appExitForceStopped">أغلق أندرويد OpenCode Mobile %1$s</string>
-    <string name="andr_appExitStoppedBackground">أُغلق OpenCode Mobile، ربما بسبب مدير البطارية في هاتفك</string>
-    <string name="andr_appExitLowMemory">أغلق أندرويد OpenCode Mobile %1$s لتحرير الذاكرة</string>
-    <string name="andr_appExitCrashed">توقّف OpenCode Mobile على نحو غير متوقع %1$s</string>
-    <string name="andr_appExitKilled">أوقف أندرويد OpenCode Mobile %1$s</string>
-    <string name="andr_appExitServerStopped">%1$s. توقّف OpenCode على هاتفك معه، وهو يبدأ من جديد.</string>
-    <string name="andr_appExitServerAndTeamStopped">%1$s. توقّف OpenCode على هاتفك وفريق الذكاء الاصطناعي معه، وهما يبدآن من جديد.</string>
-    <string name="andr_appExitServerStoppedManual">%1$s. توقف OpenCode على هاتفك معه. شغّله مجددًا عندما تكون جاهزًا.</string>
-    <string name="andr_appExitServerAndTeamStoppedManual">%1$s. توقف OpenCode وAI Team على هاتفك معه. شغّلهما مجددًا عندما تكون جاهزًا.</string>
-    <string name="andr_appExitServerBack">%1$s. توقف OpenCode على هاتفك معه ثم عاد إلى العمل.</string>
-    <string name="andr_appExitServerBackTeam">%1$s. توقف OpenCode وAI Team على هاتفك معه؛ عاد OpenCode إلى العمل.</string>
+    <string name="andr_appExitForceStopped">أُغلق التطبيق %1$s</string>
+    <string name="andr_appExitStoppedBackground">أُغلق التطبيق وهو في الخلفية</string>
+    <string name="andr_appExitLowMemory">أغلق أندرويد التطبيق %1$s لتحرير الذاكرة</string>
+    <string name="andr_appExitCrashed">أُغلق التطبيق على نحو غير متوقع %1$s</string>
+    <string name="andr_appExitKilled">أوقف أندرويد التطبيق %1$s</string>
+    <string name="andr_appExitServerStopped">%1$s، فتوقّف OpenCode. يجري تشغيله من جديد.</string>
+    <string name="andr_appExitServerAndTeamStopped">%1$s، فتوقّف OpenCode وفريق الذكاء الاصطناعي. يجري تشغيلهما من جديد.</string>
+    <string name="andr_appExitServerStoppedManual">%1$s، فتوقّف OpenCode. شغّله من جديد من «هذا الهاتف».</string>
+    <string name="andr_appExitServerAndTeamStoppedManual">%1$s، فتوقّف OpenCode وفريق الذكاء الاصطناعي. شغّلهما من جديد من «هذا الهاتف».</string>
+    <string name="andr_appExitServerBack">%1$s، فتوقّف OpenCode. عاد إلى العمل الآن.</string>
+    <string name="andr_appExitServerBackTeam">%1$s، فتوقّف OpenCode وفريق الذكاء الاصطناعي. عاد OpenCode إلى العمل الآن.</string>
     <string name="andr_appExitAtTime">عند %1$s</string>
     <string name="andr_appExitOnDay">يوم %1$s عند %2$s</string>
     <string name="andr_appExitKeepRunning">أبقِه يعمل</string>
@@ -38,4 +38,5 @@
     <string name="andr_crashOfferMessage">أُغلق OpenCode Mobile بشكل غير متوقع في المرة الماضية. هل تريد إرسال تقرير عن العطل؟</string>
     <string name="andr_crashOfferReview">مراجعة وإرسال</string>
     <string name="andr_crashOfferNotNow">ليس الآن</string>
+    <string name="andr_appExitOpenThisPhone">فتح هذا الهاتف</string>
 </resources>

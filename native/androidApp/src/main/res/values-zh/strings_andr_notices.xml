@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
-    <string name="andr_appExitForceStopped">OpenCode Mobile 已于 %1$s 关闭</string>
-    <string name="andr_appExitStoppedBackground">OpenCode Mobile 已关闭，可能是手机的电池管理所致</string>
-    <string name="andr_appExitLowMemory">Android 为释放内存，已于 %1$s 关闭 OpenCode Mobile</string>
-    <string name="andr_appExitCrashed">OpenCode Mobile 已于 %1$s 意外停止</string>
-    <string name="andr_appExitKilled">Android 已于 %1$s 停止 OpenCode Mobile</string>
-    <string name="andr_appExitServerStopped">%1$s。这部手机上的 OpenCode 也随之停止，正在重新启动。</string>
-    <string name="andr_appExitServerAndTeamStopped">%1$s。这部手机上的 OpenCode 和 AI 团队也随之停止，正在重新启动。</string>
-    <string name="andr_appExitServerStoppedManual">%1$s。这部手机上的 OpenCode 也随之停止。准备好后请再次启动。</string>
-    <string name="andr_appExitServerAndTeamStoppedManual">%1$s。这部手机上的 OpenCode 和 AI 团队也随之停止。准备好后请再次启动。</string>
-    <string name="andr_appExitServerBack">%1$s。这部手机上的 OpenCode 也随之停止，现已重新运行。</string>
-    <string name="andr_appExitServerBackTeam">%1$s。这部手机上的 OpenCode 和 AI 团队也随之停止；OpenCode 现已重新运行。</string>
+    <string name="andr_appExitForceStopped">应用已于 %1$s 关闭</string>
+    <string name="andr_appExitStoppedBackground">应用在后台被关闭</string>
+    <string name="andr_appExitLowMemory">Android 为释放内存，已于 %1$s 关闭应用</string>
+    <string name="andr_appExitCrashed">应用已于 %1$s 意外关闭</string>
+    <string name="andr_appExitKilled">Android 已于 %1$s 停止应用</string>
+    <string name="andr_appExitServerStopped">%1$s，OpenCode 随之停止。正在重新启动。</string>
+    <string name="andr_appExitServerAndTeamStopped">%1$s，OpenCode 和 AI 团队随之停止。正在重新启动。</string>
+    <string name="andr_appExitServerStoppedManual">%1$s，OpenCode 随之停止。请在“这部手机”中重新启动。</string>
+    <string name="andr_appExitServerAndTeamStoppedManual">%1$s，OpenCode 和 AI 团队随之停止。请在“这部手机”中重新启动。</string>
+    <string name="andr_appExitServerBack">%1$s，OpenCode 随之停止。现已重新运行。</string>
+    <string name="andr_appExitServerBackTeam">%1$s，OpenCode 和 AI 团队随之停止。OpenCode 现已重新运行。</string>
     <string name="andr_appExitAtTime">%1$s</string>
     <string name="andr_appExitOnDay">%1$s %2$s</string>
     <string name="andr_appExitKeepRunning">保持运行</string>
@@ -40,4 +40,5 @@
     <string name="andr_crashOfferMessage">OpenCode Mobile 上次意外关闭。要发送崩溃报告吗？</string>
     <string name="andr_crashOfferReview">查看并发送</string>
     <string name="andr_crashOfferNotNow">暂不</string>
+    <string name="andr_appExitOpenThisPhone">打开这部手机</string>
 </resources>

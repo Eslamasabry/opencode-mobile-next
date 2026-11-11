@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
-    <string name="andr_appExitForceStopped">OpenCode Mobile был закрыт %1$s</string>
-    <string name="andr_appExitStoppedBackground">OpenCode Mobile был закрыт, возможно, диспетчером батареи телефона</string>
-    <string name="andr_appExitLowMemory">Android закрыл OpenCode Mobile %1$s, чтобы освободить память</string>
-    <string name="andr_appExitCrashed">OpenCode Mobile неожиданно остановился %1$s</string>
-    <string name="andr_appExitKilled">Android остановил OpenCode Mobile %1$s</string>
-    <string name="andr_appExitServerStopped">%1$s. OpenCode на вашем телефоне остановился вместе с ним и запускается снова.</string>
-    <string name="andr_appExitServerAndTeamStopped">%1$s. OpenCode на вашем телефоне и AI Team остановились вместе с ним и запускаются снова.</string>
-    <string name="andr_appExitServerStoppedManual">%1$s. OpenCode на вашем телефоне остановился вместе с ним. Запустите его снова, когда будете готовы.</string>
-    <string name="andr_appExitServerAndTeamStoppedManual">%1$s. OpenCode на вашем телефоне и AI Team остановились вместе с ним. Запустите их снова, когда будете готовы.</string>
-    <string name="andr_appExitServerBack">%1$s. OpenCode на вашем телефоне остановился вместе с ним и снова работает.</string>
-    <string name="andr_appExitServerBackTeam">%1$s. OpenCode на вашем телефоне и AI Team остановились вместе с ним; OpenCode снова работает.</string>
+    <string name="andr_appExitForceStopped">Приложение было закрыто %1$s</string>
+    <string name="andr_appExitStoppedBackground">Приложение было закрыто в фоновом режиме</string>
+    <string name="andr_appExitLowMemory">Android закрыл приложение %1$s, чтобы освободить память</string>
+    <string name="andr_appExitCrashed">Приложение неожиданно закрылось %1$s</string>
+    <string name="andr_appExitKilled">Android остановил приложение %1$s</string>
+    <string name="andr_appExitServerStopped">%1$s, поэтому OpenCode остановился. Он запускается снова.</string>
+    <string name="andr_appExitServerAndTeamStopped">%1$s, поэтому OpenCode и AI Team остановились. Они запускаются снова.</string>
+    <string name="andr_appExitServerStoppedManual">%1$s, поэтому OpenCode остановился. Запустите его снова в разделе «Этот телефон».</string>
+    <string name="andr_appExitServerAndTeamStoppedManual">%1$s, поэтому OpenCode и AI Team остановились. Запустите их снова в разделе «Этот телефон».</string>
+    <string name="andr_appExitServerBack">%1$s, поэтому OpenCode остановился. Он снова работает.</string>
+    <string name="andr_appExitServerBackTeam">%1$s, поэтому OpenCode и AI Team остановились. OpenCode снова работает.</string>
     <string name="andr_appExitAtTime">в %1$s</string>
     <string name="andr_appExitOnDay">%1$s в %2$s</string>
     <string name="andr_appExitKeepRunning">Не останавливать</string>
@@ -40,4 +40,5 @@
     <string name="andr_crashOfferMessage">В прошлый раз OpenCode Mobile неожиданно закрылся. Отправить отчёт о сбое?</string>
     <string name="andr_crashOfferReview">Проверить и отправить</string>
     <string name="andr_crashOfferNotNow">Не сейчас</string>
+    <string name="andr_appExitOpenThisPhone">Открыть «Этот телефон»</string>
 </resources>

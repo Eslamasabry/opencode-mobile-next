@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
-    <string name="andr_appExitForceStopped">OpenCode Mobile ditutup %1$s</string>
-    <string name="andr_appExitStoppedBackground">OpenCode Mobile ditutup, mungkin oleh pengelola baterai ponsel Anda</string>
-    <string name="andr_appExitLowMemory">Android menutup OpenCode Mobile %1$s untuk mengosongkan memori</string>
-    <string name="andr_appExitCrashed">OpenCode Mobile berhenti tiba-tiba %1$s</string>
-    <string name="andr_appExitKilled">Android menghentikan OpenCode Mobile %1$s</string>
-    <string name="andr_appExitServerStopped">%1$s. OpenCode di ponsel Anda ikut berhenti dan sedang dimulai lagi.</string>
-    <string name="andr_appExitServerAndTeamStopped">%1$s. OpenCode di ponsel Anda dan AI Team ikut berhenti dan sedang dimulai lagi.</string>
-    <string name="andr_appExitServerStoppedManual">%1$s. OpenCode di ponsel Anda ikut berhenti. Mulai lagi saat Anda siap.</string>
-    <string name="andr_appExitServerAndTeamStoppedManual">%1$s. OpenCode di ponsel Anda dan AI Team ikut berhenti. Mulai lagi saat Anda siap.</string>
-    <string name="andr_appExitServerBack">%1$s. OpenCode di ponsel Anda ikut berhenti dan kini berjalan lagi.</string>
-    <string name="andr_appExitServerBackTeam">%1$s. OpenCode di ponsel Anda dan AI Team ikut berhenti; OpenCode kini berjalan lagi.</string>
+    <string name="andr_appExitForceStopped">Aplikasi ditutup %1$s</string>
+    <string name="andr_appExitStoppedBackground">Aplikasi ditutup saat berjalan di latar belakang</string>
+    <string name="andr_appExitLowMemory">Android menutup aplikasi %1$s untuk mengosongkan memori</string>
+    <string name="andr_appExitCrashed">Aplikasi tertutup tiba-tiba %1$s</string>
+    <string name="andr_appExitKilled">Android menghentikan aplikasi %1$s</string>
+    <string name="andr_appExitServerStopped">%1$s, jadi OpenCode berhenti. OpenCode sedang dimulai lagi.</string>
+    <string name="andr_appExitServerAndTeamStopped">%1$s, jadi OpenCode dan AI Team berhenti. Keduanya sedang dimulai lagi.</string>
+    <string name="andr_appExitServerStoppedManual">%1$s, jadi OpenCode berhenti. Mulai lagi dari Ponsel ini.</string>
+    <string name="andr_appExitServerAndTeamStoppedManual">%1$s, jadi OpenCode dan AI Team berhenti. Mulai lagi keduanya dari Ponsel ini.</string>
+    <string name="andr_appExitServerBack">%1$s, jadi OpenCode berhenti. Sekarang sudah berjalan lagi.</string>
+    <string name="andr_appExitServerBackTeam">%1$s, jadi OpenCode dan AI Team berhenti. OpenCode sekarang sudah berjalan lagi.</string>
     <string name="andr_appExitAtTime">pukul %1$s</string>
     <string name="andr_appExitOnDay">pada %1$s pukul %2$s</string>
     <string name="andr_appExitKeepRunning">Tetap jalankan</string>
@@ -40,4 +40,5 @@
     <string name="andr_crashOfferMessage">OpenCode Mobile tertutup tiba-tiba terakhir kali. Kirim laporan error?</string>
     <string name="andr_crashOfferReview">Tinjau dan kirim</string>
     <string name="andr_crashOfferNotNow">Nanti saja</string>
+    <string name="andr_appExitOpenThisPhone">Buka Ponsel ini</string>
 </resources>

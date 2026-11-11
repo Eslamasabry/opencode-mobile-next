@@ -159,8 +159,9 @@ class AndroidAppNotices(
                                         },
                                         at,
                                     )
+                            val state = exitSentence(back, exit.recoveryAllowed, exit.teamStopped)
                             val sentence =
-                                when (exitSentence(back, exit.recoveryAllowed, exit.teamStopped)) {
+                                when (state) {
                                     ExitSentence.Back -> R.string.andr_appExitServerBack
                                     ExitSentence.BackWithTeam -> R.string.andr_appExitServerBackTeam
                                     ExitSentence.Starting -> R.string.andr_appExitServerStopped
@@ -168,17 +169,23 @@ class AndroidAppNotices(
                                     ExitSentence.Down -> R.string.andr_appExitServerStoppedManual
                                     ExitSentence.DownWithTeam -> R.string.andr_appExitServerAndTeamStoppedManual
                                 }
+                            // Still down: This phone, where it is started, leads; Keep it running follows.
+                            val acts = exitActions(state, exit.offersKeepAlive)
+                            fun label(action: AppNoticeAction?): String? =
+                                when (action) {
+                                    AppNoticeAction.OpenThisPhone -> words.text(R.string.andr_appExitOpenThisPhone)
+                                    AppNoticeAction.KeepRunning -> words.text(R.string.andr_appExitKeepRunning)
+                                    else -> null
+                                }
                             AppNotice(
                                 "app-exit",
                                 words.text(sentence, why),
-                                action =
-                                    if (exit.offersKeepAlive) AppNoticeAction.KeepRunning else null,
-                                actionLabel =
-                                    if (exit.offersKeepAlive)
-                                        words.text(R.string.andr_appExitKeepRunning)
-                                    else null,
+                                action = acts.getOrNull(0),
+                                actionLabel = label(acts.getOrNull(0)),
                                 dismissLabel = dismiss,
                                 stoppedApp = true,
+                                secondAction = acts.getOrNull(1),
+                                secondActionLabel = label(acts.getOrNull(1)),
                             )
                         }
                         live.pause != null -> {
@@ -407,6 +414,7 @@ class AndroidAppNotices(
                 navigator.open(ServersRoute.Edit())
             }
             // Either answer ends the offer for this crash; Report a problem sends nothing until the person does.
+            AppNoticeAction.OpenThisPhone -> navigator.open(PhoneRoute.ThisPhone)
             AppNoticeAction.ReviewCrash -> {
                 continuity.runtime.takeCrash()
                 navigator.open(io.github.eslamasabry.oc.ui.routes.SettingsRoute.ReportProblem)

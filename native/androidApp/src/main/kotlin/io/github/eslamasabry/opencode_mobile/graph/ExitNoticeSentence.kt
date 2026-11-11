@@ -13,3 +13,14 @@ internal fun exitSentence(serverBack: Boolean, recoveryAllowed: Boolean, teamSto
         recoveryAllowed -> if (teamStopped) ExitSentence.StartingWithTeam else ExitSentence.Starting
         else -> if (teamStopped) ExitSentence.DownWithTeam else ExitSentence.Down
     }
+
+/**
+ * The notice's actions, first the lead: still down, the lead opens This phone (where the phone's OpenCode is started)
+ * and Keep it running follows; running or starting again, only Keep it running. A crash offers no Keep it running.
+ */
+internal fun exitActions(sentence: ExitSentence, offersKeepAlive: Boolean): List<io.github.eslamasabry.oc.core.domain.platform.AppNoticeAction> =
+    buildList {
+        if (sentence == ExitSentence.Down || sentence == ExitSentence.DownWithTeam)
+            add(io.github.eslamasabry.oc.core.domain.platform.AppNoticeAction.OpenThisPhone)
+        if (offersKeepAlive) add(io.github.eslamasabry.oc.core.domain.platform.AppNoticeAction.KeepRunning)
+    }

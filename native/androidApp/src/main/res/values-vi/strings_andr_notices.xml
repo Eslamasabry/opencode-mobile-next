@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
-    <string name="andr_appExitForceStopped">OpenCode Mobile đã bị đóng %1$s</string>
-    <string name="andr_appExitStoppedBackground">OpenCode Mobile đã bị đóng, có thể do trình quản lý pin của điện thoại</string>
-    <string name="andr_appExitLowMemory">Android đã đóng OpenCode Mobile %1$s để giải phóng bộ nhớ</string>
-    <string name="andr_appExitCrashed">OpenCode Mobile đã dừng đột ngột %1$s</string>
-    <string name="andr_appExitKilled">Android đã dừng OpenCode Mobile %1$s</string>
-    <string name="andr_appExitServerStopped">%1$s. OpenCode trên điện thoại của bạn đã dừng theo và đang khởi động lại.</string>
-    <string name="andr_appExitServerAndTeamStopped">%1$s. OpenCode và AI Team trên điện thoại của bạn đã dừng theo và đang khởi động lại.</string>
-    <string name="andr_appExitServerStoppedManual">%1$s. OpenCode trên điện thoại của bạn đã dừng theo. Hãy khởi động lại khi bạn sẵn sàng.</string>
-    <string name="andr_appExitServerAndTeamStoppedManual">%1$s. OpenCode và AI Team trên điện thoại của bạn đã dừng theo. Hãy khởi động lại khi bạn sẵn sàng.</string>
-    <string name="andr_appExitServerBack">%1$s. OpenCode trên điện thoại của bạn đã dừng theo và hiện đang chạy lại.</string>
-    <string name="andr_appExitServerBackTeam">%1$s. OpenCode và AI Team trên điện thoại của bạn đã dừng theo; OpenCode hiện đang chạy lại.</string>
+    <string name="andr_appExitForceStopped">Ứng dụng đã bị đóng %1$s</string>
+    <string name="andr_appExitStoppedBackground">Ứng dụng đã bị đóng khi chạy nền</string>
+    <string name="andr_appExitLowMemory">Android đã đóng ứng dụng %1$s để giải phóng bộ nhớ</string>
+    <string name="andr_appExitCrashed">Ứng dụng đã đóng đột ngột %1$s</string>
+    <string name="andr_appExitKilled">Android đã dừng ứng dụng %1$s</string>
+    <string name="andr_appExitServerStopped">%1$s nên OpenCode đã dừng. OpenCode đang khởi động lại.</string>
+    <string name="andr_appExitServerAndTeamStopped">%1$s nên OpenCode và AI Team đã dừng. Chúng đang khởi động lại.</string>
+    <string name="andr_appExitServerStoppedManual">%1$s nên OpenCode đã dừng. Hãy khởi động lại từ Điện thoại này.</string>
+    <string name="andr_appExitServerAndTeamStoppedManual">%1$s nên OpenCode và AI Team đã dừng. Hãy khởi động lại chúng từ Điện thoại này.</string>
+    <string name="andr_appExitServerBack">%1$s nên OpenCode đã dừng. OpenCode đã chạy lại.</string>
+    <string name="andr_appExitServerBackTeam">%1$s nên OpenCode và AI Team đã dừng. OpenCode đã chạy lại.</string>
     <string name="andr_appExitAtTime">lúc %1$s</string>
     <string name="andr_appExitOnDay">vào %1$s lúc %2$s</string>
     <string name="andr_appExitKeepRunning">Giữ cho tiếp tục chạy</string>
@@ -40,4 +40,5 @@
     <string name="andr_crashOfferMessage">Lần trước OpenCode Mobile đã đóng đột ngột. Gửi báo cáo sự cố?</string>
     <string name="andr_crashOfferReview">Xem lại và gửi</string>
     <string name="andr_crashOfferNotNow">Để sau</string>
+    <string name="andr_appExitOpenThisPhone">Mở Điện thoại này</string>
 </resources>
