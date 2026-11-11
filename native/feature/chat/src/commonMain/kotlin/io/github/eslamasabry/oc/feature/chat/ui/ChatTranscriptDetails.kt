@@ -352,6 +352,7 @@ internal fun TurnMetadata(
 internal fun TurnEndNote(
     note: io.github.eslamasabry.oc.feature.chat.presentation.TurnEndNote,
     onContinue: (() -> Unit)? = null,
+    onSendAgain: (() -> Unit)? = null,
 ) {
     // Flutter `_stoppedLine`: a pause or restart ends the reply on its own line, with a way to carry on from there.
     androidx.compose.foundation.layout.Column {
@@ -362,6 +363,14 @@ internal fun TurnEndNote(
                 onContinue,
                 role = KitButtonRole.Tertiary,
                 modifier = Modifier.testTag("stopped-continue"),
+            )
+        // F: message_view.dart:658-665 `interrupted-send-again`: a reply cut off before any words is sent again.
+        if (note.canSendAgain && onSendAgain != null)
+            KitButton(
+                stringResource(Res.string.chatUiSendPromptAgain),
+                onSendAgain,
+                role = KitButtonRole.Tertiary,
+                modifier = Modifier.testTag("interrupted-send-again"),
             )
     }
 }
@@ -383,6 +392,10 @@ private fun TurnEndLine(note: io.github.eslamasabry.oc.feature.chat.presentation
                     Res.string.kitToolStopped
                 io.github.eslamasabry.oc.feature.chat.presentation.TurnEndNote.Failed ->
                     Res.string.chatReplyFailedOther
+                // F: kit_turn.dart:648-652 `KitTurnPhase.interrupted` → kitTurnInterrupted.
+                io.github.eslamasabry.oc.feature.chat.presentation.TurnEndNote.CutOff,
+                io.github.eslamasabry.oc.feature.chat.presentation.TurnEndNote.CutOffBeforeReply ->
+                    Res.string.kitTurnInterrupted
             }
         )
     )
