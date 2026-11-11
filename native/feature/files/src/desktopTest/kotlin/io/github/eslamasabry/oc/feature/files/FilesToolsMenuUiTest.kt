@@ -75,7 +75,8 @@ class FilesToolsMenuUiTest {
             }
         }
         waitForIdle()
-        assertEquals(listOf("Changes"), items.map { it.label }.map { it.substringBefore(" ·") })
+        // Nothing changed: Flutter's =0 form, "Changes", never "Changes · 0 files".
+        assertEquals(listOf("Changes"), items.map { it.label })
         items.first().onSelect()
         assertEquals(listOf("changes"), actions.calls)
     }
