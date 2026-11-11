@@ -151,7 +151,8 @@ class AgentVersionCheckTest {
                 assertTrue("oc_sha='${artifact.sha256}'" in script, agent.id.raw)
             }
             assertFalse("latest" in script.lowercase(), agent.id.raw)
-            val limit = "timeout -k ${AgentVersionCheck.KILL_AFTER_SECONDS}s ${AgentVersionCheck.PROBE_SECONDS}s env -i"
+            val limit =
+                "\"\$oc_probe_run\" ${AgentVersionCheck.PROBE_SECONDS} ${AgentVersionCheck.KILL_AFTER_SECONDS} env -i"
             assertTrue(limit in script, agent.id.raw)
         }
     }

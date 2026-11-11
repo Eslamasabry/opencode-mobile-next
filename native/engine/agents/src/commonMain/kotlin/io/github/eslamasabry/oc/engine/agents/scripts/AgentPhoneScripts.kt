@@ -352,9 +352,10 @@ install -d -o 1000 -g 1000 /home/oc/.local /home/oc/.local/bin /home/oc/.local/s
      *   download failed as "the version that arrived is not the one the app expects";
      * - Gemini CLI is asked not to start that second Node.js (`GEMINI_CLI_NO_RELAUNCH`, its own switch; other programs
      *   ignore it);
-     * - the limit ends the whole run: GNU timeout signals its own process group, and `-k` follows with SIGKILL after
-     *   [AgentVersionCheck.KILL_AFTER_SECONDS] for a program that ignores the first signal, so no process is left
-     *   behind on the phone;
+     * - the run is [PROBE_RUN] instead of `timeout 30s`: the program gets its own process group, and at the limit
+     *   the whole group gets SIGTERM, then SIGKILL [AgentVersionCheck.KILL_AFTER_SECONDS] later for anything still
+     *   there; after any run the group's leftovers are killed, so no process stays behind on the phone, whichever
+     *   `timeout` the Linux image carries (the CI runner's Ubuntu 26.04 one left a child ignoring SIGTERM running);
      * - colour codes are dropped before the version is read (the pattern also takes a leading "v");
      * - it leaves why it failed in `oc_probe_why` and the version-shaped text it printed in `oc_probe_found` for
      *   [PROBE_FAILED]; nothing else the program printed survives.
@@ -368,11 +369,12 @@ install -d -o 1000 -g 1000 /home/oc/.local /home/oc/.local/bin /home/oc/.local/s
     [ -z "${'$'}(find "${'$'}oc_tree" -type l -print -quit)" ] || return 1
   oc_probe=${'$'}(mktemp -d /home/oc/.local/share/oc-agents/.probe.XXXXXX)
   oc_version_rc=0
+  oc_probe_run='$PROBE_RUN'
   if [ "${'$'}oc_format" = npmTarGz ]; then
-    oc_output=${'$'}(cd "${'$'}oc_probe" && timeout -k ${AgentVersionCheck.KILL_AFTER_SECONDS}s ${AgentVersionCheck.PROBE_SECONDS}s env -i HOME="${'$'}oc_probe" XDG_CONFIG_HOME="${'$'}oc_probe" PATH="${'$'}PATH" GEMINI_CLI_NO_RELAUNCH=true \
+    oc_output=${'$'}(cd "${'$'}oc_probe" && python3 -I -c "${'$'}oc_probe_run" ${AgentVersionCheck.PROBE_SECONDS} ${AgentVersionCheck.KILL_AFTER_SECONDS} env -i HOME="${'$'}oc_probe" XDG_CONFIG_HOME="${'$'}oc_probe" PATH="${'$'}PATH" GEMINI_CLI_NO_RELAUNCH=true \
       /home/oc/.local/node/bin/node "${'$'}oc_tree/payload/${'$'}oc_member" --version 2>/dev/null) || { oc_version_rc=${'$'}?; oc_output=; }
   else
-    oc_output=${'$'}(cd "${'$'}oc_probe" && timeout -k ${AgentVersionCheck.KILL_AFTER_SECONDS}s ${AgentVersionCheck.PROBE_SECONDS}s env -i HOME="${'$'}oc_probe" XDG_CONFIG_HOME="${'$'}oc_probe" PATH="${'$'}PATH" \
+    oc_output=${'$'}(cd "${'$'}oc_probe" && python3 -I -c "${'$'}oc_probe_run" ${AgentVersionCheck.PROBE_SECONDS} ${AgentVersionCheck.KILL_AFTER_SECONDS} env -i HOME="${'$'}oc_probe" XDG_CONFIG_HOME="${'$'}oc_probe" PATH="${'$'}PATH" \
       "${'$'}oc_tree/payload/${'$'}oc_member" --version 2>/dev/null) || { oc_version_rc=${'$'}?; oc_output=; }
   fi
   rm -rf "${'$'}oc_probe"
@@ -387,6 +389,36 @@ install -d -o 1000 -g 1000 /home/oc/.local /home/oc/.local/bin /home/oc/.local/s
   return 1
 }
 """
+
+    /**
+     * The version run of [PROBE] (python3 is one of the install's own requirements): `limit grace command…`. Exits as
+     * the program did (128 + n for a signal), 124 when the limit ended it, or 137 when it needed SIGKILL; the program's
+     * whole process group is gone when it exits. No single quote and no dollar sign in it (it sits in a shell
+     * single-quoted string).
+     */
+    internal const val PROBE_RUN: String =
+        """import os, signal, subprocess, sys
+limit, grace = float(sys.argv[1]), float(sys.argv[2])
+child = subprocess.Popen(sys.argv[3:], stdin=subprocess.DEVNULL, start_new_session=True)
+def group(sig):
+    try:
+        os.killpg(child.pid, sig)
+    except OSError:
+        pass
+try:
+    code = child.wait(timeout=limit)
+    code = 128 - code if code < 0 else code
+except subprocess.TimeoutExpired:
+    group(signal.SIGTERM)
+    try:
+        child.wait(timeout=grace)
+        code = 124
+    except subprocess.TimeoutExpired:
+        group(signal.SIGKILL)
+        child.wait()
+        code = 137
+group(signal.SIGKILL)
+sys.exit(code)"""
 
     /**
      * Why a fresh download did not pass [PROBE], as one fixed `[oc] ` line the setup job keeps (the program's own

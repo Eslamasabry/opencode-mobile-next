@@ -18,7 +18,7 @@ public object AgentVersionCheck {
     /** How long the program may take to print its version (Flutter: 30 s). */
     public const val PROBE_SECONDS: Int = 120
 
-    /** After the limit, a program that ignored the first signal is killed this many seconds later (`timeout -k`). */
+    /** After the limit, what is left of the program's process group gets SIGKILL this many seconds after SIGTERM. */
     public const val KILL_AFTER_SECONDS: Int = 10
 
     /** The version-shaped text the probe keeps from the program's output (grep -E). */

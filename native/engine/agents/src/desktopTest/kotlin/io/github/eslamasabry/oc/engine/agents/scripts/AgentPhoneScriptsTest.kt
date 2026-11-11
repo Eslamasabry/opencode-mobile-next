@@ -60,7 +60,10 @@ private fun fixtureAgent(
 private fun q(text: String) = "'" + text.replace("'", "'\\''") + "'"
 
 /** The version check's limit as the install script spells it (the tests shorten it). */
-private val LIMIT = " ${AgentVersionCheck.PROBE_SECONDS}s env -i"
+private val LIMIT = "\"\$oc_probe_run\" ${AgentVersionCheck.PROBE_SECONDS} ${AgentVersionCheck.KILL_AFTER_SECONDS} env -i"
+
+/** [LIMIT] shortened to one second, and one more second before SIGKILL. */
+private const val ONE_SECOND = "\"\$oc_probe_run\" 1 1 env -i"
 
 /**
  * An isolated fake guest: rewrite the fixed home only in test input. No curl/network or root paths. This container
@@ -447,11 +450,12 @@ with tarfile.open(sys.argv[1], 'w:gz') as t:
         change("  oc_tree=\$1\n", "  oc_tree=\$1\n  oc_probe_why=missing\n  oc_probe_found=\n")
         change(
             "/.probe.XXXXXX)\n",
-            "/.probe.XXXXXX)\n  oc_version_rc=0\n",
+            "/.probe.XXXXXX)\n  oc_version_rc=0\n  oc_probe_run='${AgentPhoneScripts.PROBE_RUN}'\n",
         )
+        // The run kills the program's whole process group (gate, 2026-11-12): Ubuntu 26.04's timeout does not.
         change(
             "timeout 30s",
-            "timeout -k ${AgentVersionCheck.KILL_AFTER_SECONDS}s ${AgentVersionCheck.PROBE_SECONDS}s",
+            "python3 -I -c \"\$oc_probe_run\" ${AgentVersionCheck.PROBE_SECONDS} ${AgentVersionCheck.KILL_AFTER_SECONDS}",
             times = 2,
         )
         change(
@@ -517,7 +521,7 @@ with tarfile.open(sys.argv[1], 'w:gz') as t:
         File(guest.payload).writeText("#!/bin/sh\nsleep 5\nprintf '%s\\n' 1.2.3\n")
         val script = AgentPhoneScripts.install(fixtureAgent(guest.hash))
         assertTrue(LIMIT in script)
-        val result = guest.run(script.replace(LIMIT, " 1s env -i"))
+        val result = guest.run(script.replace(LIMIT, ONE_SECOND))
         assertEquals(1, result.exitCode)
         // It was given one more run before it counted as not answering.
         assertTrue(AgentVersionCheck.RETRY_LINE in result.stderr, result.stderr)
@@ -532,7 +536,7 @@ with tarfile.open(sys.argv[1], 'w:gz') as t:
         File(guest.payload).writeText(
             "#!/bin/sh\nif [ -e ${q(mark.path)} ]; then printf '%s\\n' 1.2.3; else : > ${q(mark.path)}; sleep 5; fi\n"
         )
-        val script = AgentPhoneScripts.install(fixtureAgent(guest.hash)).replace(LIMIT, " 1s env -i")
+        val script = AgentPhoneScripts.install(fixtureAgent(guest.hash)).replace(LIMIT, ONE_SECOND)
         val result = guest.run(script)
         assertEquals(0, result.exitCode, result.stderr)
         assertTrue(AgentVersionCheck.RETRY_LINE in result.stderr, result.stderr)
@@ -548,10 +552,9 @@ with tarfile.open(sys.argv[1], 'w:gz') as t:
             "#!/bin/sh\ntrap '' TERM\nsleep 60 &\necho \$! >> ${q(pids.path)}\necho \$\$ >> ${q(pids.path)}\nwait\n"
         )
         val script = AgentPhoneScripts.install(fixtureAgent(guest.hash))
-        val limit = "timeout -k ${AgentVersionCheck.KILL_AFTER_SECONDS}s ${AgentVersionCheck.PROBE_SECONDS}s env -i"
-        assertTrue(limit in script)
+        assertTrue(LIMIT in script)
         val started = System.nanoTime()
-        val result = guest.run(script.replace(limit, "timeout -k 1s 1s env -i"))
+        val result = guest.run(script.replace(LIMIT, ONE_SECOND))
         val seconds = (System.nanoTime() - started) / 1_000_000_000
         assertEquals(1, result.exitCode, result.stderr)
         assertEquals(AgentVersionCheck.SLOW_LINE, lastMarker(result))
@@ -559,6 +562,23 @@ with tarfile.open(sys.argv[1], 'w:gz') as t:
         val recorded = pids.readLines().filter { it.isNotBlank() }
         assertEquals(4, recorded.size, "two runs, each a program and its child: $recorded")
         for (pid in recorded) assertFalse(alive(pid), "process $pid outlived the version check")
+    }
+
+    @Test
+    fun `B-AGENT-VER a program that answers but leaves a process running installs at once, and that process is gone`() {
+        val pids = File(temp, "pids")
+        File(guest.payload).writeText(
+            "#!/bin/sh\nsleep 60 &\necho \$! >> ${q(pids.path)}\nprintf '%s\\n' 1.2.3\n"
+        )
+        val started = System.nanoTime()
+        val result = guest.run(AgentPhoneScripts.install(fixtureAgent(guest.hash)))
+        val seconds = (System.nanoTime() - started) / 1_000_000_000
+        assertEquals(0, result.exitCode, result.stderr)
+        assertTrue(seconds < 30, "the check waited ${seconds}s for a process the program left behind")
+        assertEquals("$agents/fixture/1.2.3/launch", linkTarget("${guest.bin}/fixture"))
+        val recorded = pids.readLines().filter { it.isNotBlank() }
+        assertEquals(1, recorded.size, "$recorded")
+        assertFalse(alive(recorded.single()), "process ${recorded.single()} outlived the version check")
     }
 
     /** A live process (a zombie waiting for its parent to read it has already ended). */
