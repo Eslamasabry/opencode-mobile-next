@@ -25,6 +25,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowState
 import io.github.eslamasabry.oc.ui.kit.row.KitRowStateTone
+import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
@@ -212,7 +213,9 @@ private fun Ready(ui: FleetHomeUi, nowMs: Long, actions: TeamHomeActions) {
                             title = stringResource(Res.string.teamUiCardAgentsSummary, a.total, a.working, a.waiting, a.idle, a.stopped),
                             titleMaxLines = 2,
                             leading = KitRowLeading.Glyph(KitIcons.agent),
+                            trailing = KitRowTrailing.Chevron,
                             modifier = Modifier.testTag("team-computer-agents"),
+                            onClick = actions::openFleetAgents,
                         )
                     }
                     ui.costToday?.let { cost ->

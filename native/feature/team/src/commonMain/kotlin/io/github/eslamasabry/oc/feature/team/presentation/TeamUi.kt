@@ -118,6 +118,9 @@ public interface TeamHomeActions : TeamIntroActions {
 
     /** A computer's team: the finished tasks past the first three (Dart `team-home-completed-more`). */
     public fun showMoreDone() {}
+
+    /** A computer's team: the agents row opens the Agents page. */
+    public fun openFleetAgents() {}
 }
 
 /**

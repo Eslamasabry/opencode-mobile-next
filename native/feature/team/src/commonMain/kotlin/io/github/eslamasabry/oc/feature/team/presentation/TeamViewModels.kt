@@ -166,6 +166,10 @@ public class TeamHomeViewModel(
         doneExpanded.value = true
     }
 
+    override fun openFleetAgents() {
+        nav.open(TeamRoute.FleetAgents(route.profileId))
+    }
+
     @AssistedFactory
     @ManualViewModelAssistedFactoryKey
     @ContributesIntoMap(AppScope::class)

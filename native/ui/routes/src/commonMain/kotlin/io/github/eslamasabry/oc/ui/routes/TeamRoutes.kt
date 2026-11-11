@@ -47,4 +47,13 @@ public sealed interface TeamRoute : AppRoute {
     /** Team settings (Dart `TeamSettingsScreen`): the agents, how the team runs here, Turn off. */
     @Serializable
     public data class Settings(val profileId: ProfileId) : TeamRoute
+
+    /** The agents of a computer's team (Dart `TeamAgentsScreen`, over Gas City): most urgent first. */
+    @Serializable
+    public data class FleetAgents(val profileId: ProfileId) : TeamRoute
+
+    /** One agent of a computer's team (Dart `AgentScreen`): Pause, Nudge, Restart, Stop, Force stop and its live output. */
+    @Serializable
+    public data class FleetAgent(val profileId: ProfileId, val agentId: String) : TeamRoute
+
 }

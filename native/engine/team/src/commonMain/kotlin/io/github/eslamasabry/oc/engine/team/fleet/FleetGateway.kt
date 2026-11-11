@@ -291,6 +291,10 @@ internal class FleetGateway(
     suspend fun events(lastEventId: String?, onFrame: suspend (FleetFrame) -> Unit): FleetStreamEnd =
         transport.stream("$cityPath/events/stream", lastEventId, onFrame = onFrame)
 
+    /** `GET /session/<id>/stream` (Dart `agentOutput`): the agent's `turn` frames until the stream ends; a 404 ends it for good. */
+    suspend fun sessionOutput(sessionId: String, lastEventId: String?, onFrame: suspend (FleetFrame) -> Unit): FleetStreamEnd =
+        transport.stream("${session(sessionId)}/stream", lastEventId, onFrame = onFrame)
+
     // ---- writes (Dart GasCityControl)
 
     private fun session(id: String) = "$cityPath/session/${FleetAddress.segment(id)}"
