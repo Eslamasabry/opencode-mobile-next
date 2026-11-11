@@ -257,6 +257,11 @@ class PreviewRuntime(
         connectForHome(id, recoverDrafts = true)
     }
 
+    /** The server on the home stays the one the person chose: opening the Agents page used to switch it to "Phone agents". */
+    override suspend fun connectInBackground(id: ProfileId): Outcome<Unit> = command {
+        connectForHome(id, makeActive = id == profiles.activeId.value)
+    }
+
     private suspend fun connectForHome(
         id: ProfileId,
         recoverDrafts: Boolean = false,

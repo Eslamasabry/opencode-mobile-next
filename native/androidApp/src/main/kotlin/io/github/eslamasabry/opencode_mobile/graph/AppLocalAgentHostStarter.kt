@@ -61,7 +61,8 @@ class AppLocalAgentHostStarter(
                 is Outcome.Failed -> return prepared
                 is Outcome.Ok -> prepared.value
             }
-        return connections.connect(id)
+        // In the background: the Agents page must not change which server the home shows.
+        return connections.connectInBackground(id)
     }
 
     /**

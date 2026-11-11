@@ -561,7 +561,7 @@ class AndroidNewConversationHost(
     private suspend fun phoneHelperReady(helper: ProfileId): Outcome<Unit> {
         if (registry.live.value[helper] != null) return Outcome.Ok(Unit)
         if (stores.profiles.profile(helper) == null) return phoneHelper.connect()
-        return when (val connected = connections.connect(helper)) {
+        return when (val connected = connections.connectInBackground(helper)) {
             is Outcome.Failed -> connected
             is Outcome.Ok -> Outcome.Ok(Unit)
         }
