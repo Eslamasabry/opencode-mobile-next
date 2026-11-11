@@ -55,14 +55,9 @@ class AndroidIntegrationsSource(
         return PinnedSession(graph, operations)
     }
 
-    override fun keyPage(provider: String): String? = providerKeyPageUrl(provider)
-
     override fun openLink(url: String, confirmed: Boolean): Outcome<IntegrationLinkPrompt?> {
-        val origin =
-            if (url == providerKeyPageUrl("anthropic") || url == providerKeyPageUrl("google"))
-                LinkOrigin.AppAuthored
-            else LinkOrigin.ServerContent
-        return when (val result = policy.check(url, origin)) {
+        // Only server-sent addresses arrive here (connector sign-in pages): always asked first.
+        return when (val result = policy.check(url, LinkOrigin.ServerContent)) {
             is LinkDecision.Refuse -> Failure.Rejected(400).failed()
             is LinkDecision.Open -> opener.open(result.link).map { null }
             is LinkDecision.AskFirst ->
@@ -84,8 +79,6 @@ class AndroidIntegrationsSource(
         private var connectorJob: Job? = null
         private val connectorState = MutableStateFlow<McpChatSnapshot?>(null)
         override val connector: StateFlow<McpChatSnapshot?> = connectorState.asStateFlow()
-        private val methods = LinkedHashMap<Pair<String, String>, IntegrationMethodInfo>()
-        private val oauth = LinkedHashSet<String>()
         private val observer = scope.launch {
             registry.live.collect { if (it[profile] !== graph) invalidate() }
         }
@@ -150,7 +143,6 @@ class AndroidIntegrationsSource(
         private fun invalidate() {
             invalidated = true
             controller?.invalidate()
-            oauth.clear()
         }
 
         private fun stale(): Outcome<Nothing> = Failure.Refused(RefusalReason.StaleScope).failed()
@@ -178,41 +170,18 @@ class AndroidIntegrationsSource(
                 else persistentListOf<McpServerInfo>().ok()
             if (providers is Outcome.Failed && connectors is Outcome.Failed)
                 return@guarded providers
-            methods.clear()
+            // Rows only: a tap opens the shared sign-in page (ServerProviderAuthRoute), which
+            // offers the provider's methods by the one rule in ConnectMethods.kt.
             val rows =
                 (providers as? Outcome.Ok)
                     ?.value
                     .orEmpty()
                     .map { provider ->
-                        val supported =
-                            provider.methods
-                                .mapNotNull { method ->
-                                    if (method.type != "key" && method.type != "oauth")
-                                        return@mapNotNull null
-                                    if (
-                                        method.prompts.any {
-                                            (it["required"]
-                                                    as? kotlinx.serialization.json.JsonPrimitive)
-                                                ?.content == "true"
-                                        }
-                                    )
-                                        return@mapNotNull null
-                                    val id = method.id ?: method.type
-                                    methods[provider.id to id] = method
-                                    ProviderMethodUi(
-                                        id,
-                                        clean(method.label),
-                                        method.type == "oauth",
-                                    )
-                                }
-                                .toImmutableList()
                         ProviderUi(
                             provider.id,
                             clean(provider.name),
                             provider.connectionCount > 0,
-                            supported,
                             logos.svg(provider.id),
-                            providerKeyPageUrl(provider.id) != null,
                         )
                     }
                     .toImmutableList()
@@ -228,70 +197,6 @@ class AndroidIntegrationsSource(
                 )
                 .ok()
         }
-
-        override suspend fun saveKey(provider: String, key: String): Outcome<Unit> = guarded {
-            if (!gateway.capabilities.value.integrationCredentials) return@guarded unavailable()
-            if (
-                methods.none { (target, method) ->
-                    target.first == provider && method.type == "key"
-                } || key.isBlank()
-            )
-                return@guarded Failure.Rejected(400).failed()
-            redactor.registerSecret(key)
-            operations.connectIntegrationKey(provider, key)
-        }
-
-        override suspend fun startOAuth(
-            provider: String,
-            method: String,
-        ): Outcome<ProviderAuthorization> = guarded {
-            val selected =
-                methods[provider to method] ?: return@guarded Failure.Rejected(400).failed()
-            if (!gateway.capabilities.value.integrationCredentials || selected.type != "oauth")
-                return@guarded unavailable()
-            when (
-                val result =
-                    operations.startIntegrationOAuth(
-                        provider,
-                        selected.id ?: method,
-                        selected.presetAnswers,
-                    )
-            ) {
-                is Outcome.Failed -> result
-                is Outcome.Ok -> {
-                    val launch = result.value
-                    val url =
-                        parseAuthorizationUrl(launch.url)
-                            ?: return@guarded Failure.Rejected(400).failed()
-                    // A raw empty userinfo delimiter must not disappear in a parser.
-                    if (
-                        '@' in
-                            url.substringAfter("://")
-                                .substringBefore('/')
-                                .substringBefore('?')
-                                .substringBefore('#')
-                    )
-                        return@guarded Failure.Rejected(400).failed()
-                    oauth += launch.attemptId
-                    ProviderAuthorization(launch.attemptId, url).ok()
-                }
-            }
-        }
-
-        override suspend fun completeOAuth(attempt: String, input: String): Outcome<Unit> =
-            guarded {
-                if (attempt !in oauth || !gateway.capabilities.value.integrationCredentials)
-                    return@guarded unavailable()
-                if (input.length > 8192 || input.any { it.code < 32 })
-                    return@guarded Failure.Rejected(400).failed()
-                redactor.registerSecret(input)
-                val code = providerOAuthCompletionCode(input)
-                if (code.isBlank()) return@guarded Failure.Rejected(400).failed()
-                redactor.registerSecret(code)
-                operations.completeIntegrationOAuth(attempt, code).also {
-                    if (it is Outcome.Ok) oauth.remove(attempt)
-                }
-            }
 
         override suspend fun saveConnector(
             name: String,
@@ -370,8 +275,6 @@ class AndroidIntegrationsSource(
             observer.cancel()
             connectorJob?.cancel()
             controller?.dispose()
-            oauth.clear()
-            methods.clear()
         }
     }
 }
