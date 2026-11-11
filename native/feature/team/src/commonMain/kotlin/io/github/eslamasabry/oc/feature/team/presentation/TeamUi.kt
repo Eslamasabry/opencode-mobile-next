@@ -118,6 +118,9 @@ public interface TeamHomeActions : TeamIntroActions {
 
     /** A computer's team: the finished tasks past the first three (Dart `team-home-completed-more`). */
     public fun showMoreDone() {}
+
+    /** A computer's team: a question or a stopped task opens its Gate sheet. */
+    public fun openGate(gateId: String) {}
 }
 
 /**

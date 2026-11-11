@@ -166,6 +166,10 @@ public class TeamHomeViewModel(
         doneExpanded.value = true
     }
 
+    override fun openGate(gateId: String) {
+        nav.open(TeamRoute.Gate(route.profileId, gateId))
+    }
+
     @AssistedFactory
     @ManualViewModelAssistedFactoryKey
     @ContributesIntoMap(AppScope::class)

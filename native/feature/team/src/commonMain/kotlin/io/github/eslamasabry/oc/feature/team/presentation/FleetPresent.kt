@@ -55,6 +55,8 @@ public data class FleetTaskRow(
     /** The question the row is ("Needs you · <question>"), when one waits on this task. */
     val question: String? = null,
     val questionAtMs: Long? = null,
+    /** The gate behind [question] (or the run's failure): the row opens its Gate sheet. */
+    val gateId: String? = null,
     /** Needs the person without a question of its own (a failed step, a gate bead). */
     val needsYou: Boolean = false,
     val done: Int? = null,
@@ -188,6 +190,7 @@ public object FleetPresent {
                     state = run.state,
                     question = gate?.title,
                     questionAtMs = gate?.createdAtMs,
+                    gateId = gate?.id,
                     needsYou = needsYou,
                     done = run.completedSteps,
                     total = run.stepCount,

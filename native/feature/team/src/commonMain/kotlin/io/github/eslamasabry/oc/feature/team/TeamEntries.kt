@@ -9,6 +9,9 @@ import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
+import io.github.eslamasabry.oc.feature.team.fleet.FleetGateSheet
+import io.github.eslamasabry.oc.feature.team.fleet.FleetGateViewModel
+import io.github.eslamasabry.oc.feature.team.fleet.rememberFleetNow
 import io.github.eslamasabry.oc.feature.team.presentation.TeamBoardViewModel
 import io.github.eslamasabry.oc.feature.team.presentation.TeamEditorViewModel
 import io.github.eslamasabry.oc.feature.team.presentation.TeamHomeViewModel
@@ -76,6 +79,11 @@ public class TeamEntries(private val environment: KitChatEnvironment) : EntryIns
             val vm = assistedMetroViewModel<TeamSettingsViewModel, TeamSettingsViewModel.Factory> { create(route) }
             val state by vm.state.collectAsStateWithLifecycle()
             TeamSettingsScreen(state, vm)
+        }
+        entry<TeamRoute.Gate> { route ->
+            val vm = assistedMetroViewModel<FleetGateViewModel, FleetGateViewModel.Factory> { create(route) }
+            val state by vm.state.collectAsStateWithLifecycle()
+            FleetGateSheet(state, rememberFleetNow(), vm)
         }
         entry<TeamRoute.Task> { route ->
             val vm = assistedMetroViewModel<TeamTaskViewModel, TeamTaskViewModel.Factory> { create(route) }
