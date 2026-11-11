@@ -19,6 +19,18 @@ class ServiceDiagnosticsTest {
         assertEquals(3000L, deliberate["lastExitAtMs"])
     }
 
+    // Gate (device QA basics-3 B1): a launch after an exit is kept, so that exit reads as an earlier run's, not news.
+    @Test
+    fun launchTimeIsKeptAcrossExitsAndReplacedByTheNextLaunch() {
+        val exited = ServiceDiagnostics().launched(1_000L).exited(137, 100L, 2_000L, false)
+        assertEquals(1_000L, exited.snapshot(false, null)["lastLaunchAtMs"])
+        val relaunched = exited.launched(3_000L).snapshot(true, 5L)
+        assertEquals(3_000L, relaunched["lastLaunchAtMs"])
+        assertEquals(2_000L, relaunched["lastExitAtMs"])
+        // A launch without a time keeps the one known.
+        assertEquals(3_000L, exited.launched(3_000L).launched().lastLaunchAtMs)
+    }
+
     @Test
     fun firstLaunchIsNotARestartAndLaterLaunchesAre() {
         val initial = ServiceDiagnostics()
@@ -118,6 +130,7 @@ class ServiceDiagnosticsTest {
                 "lastUptimeMs" to null,
                 "lastExitAtMs" to null,
                 "lastStopRequested" to null,
+                "lastLaunchAtMs" to null,
                 "uptimeMs" to null,
                 "restartCount" to 0,
                 "exitReason" to "unknown",

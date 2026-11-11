@@ -31,9 +31,20 @@ public data class AgentHelperStatus(
     val lastExitCode: Long? = null,
     val lastStopRequested: Boolean? = null,
     val possibleResourceKill: Boolean = false,
+    /** When the helper's latest run began; null on records written before this was kept. */
+    val lastLaunchAtEpochMillis: Long? = null,
 ) {
+    /**
+     * The helper's latest run ended on its own. An exit older than the latest launch belongs to an earlier run: that
+     * later run ended with the app (force-stop, update, the app process killed), which writes no exit, so the old exit
+     * is not news.
+     */
     public val unexpectedStop: Boolean
-        get() = running == false && lastExitAtEpochMillis != null && lastStopRequested == false
+        get() =
+            running == false &&
+                lastExitAtEpochMillis != null &&
+                lastStopRequested == false &&
+                (lastLaunchAtEpochMillis == null || lastExitAtEpochMillis >= lastLaunchAtEpochMillis)
 
     public val notice: HelperNotice?
         get() = when {
@@ -41,6 +52,13 @@ public data class AgentHelperStatus(
             possibleResourceKill -> HelperNotice.PossiblyStoppedByAndroid
             else -> HelperNotice.StoppedUnexpectedly
         }
+
+    /**
+     * [notice], only for an exit at or after [sinceEpochMillis] (the phone's boot or the app's install/update): an
+     * exit from before either is not said as "stopped in the background" on this run of the app.
+     */
+    public fun noticeSince(sinceEpochMillis: Long): HelperNotice? =
+        notice?.takeIf { (lastExitAtEpochMillis ?: return@takeIf false) >= sinceEpochMillis }
 
     public companion object {
         /** Dart's largest DateTime in milliseconds; a later or non-positive stamp cannot invent a dated kill. */
@@ -60,6 +78,7 @@ public data class AgentHelperStatus(
                 lastExitCode = int("lastExitCode"),
                 lastStopRequested = bool("lastStopRequested"),
                 possibleResourceKill = prim("exitReason")?.takeIf { it.isString }?.content == "memory_or_phantom_kill",
+                lastLaunchAtEpochMillis = int("lastLaunchAtMs")?.takeIf { it in 1..MAX_EPOCH_MILLIS },
             )
         }
     }

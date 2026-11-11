@@ -458,13 +458,15 @@ internal object HomeAgentNoticeRules {
      * running in this app process (PhoneAgentRules.status: `qualified && helperRunning == false`), and the helper only
      * starts when the Agents page opens (AgentsPresenter.connectWhenInstalled). So after every app start an installed
      * agent read "stopped in the background" although nothing had stopped. The stop line is said only when the helper
-     * was seen to stop on its own (its exit record: [PhoneAgentsState.helperStoppedUnexpectedly] or the Android
-     * variant); its Resume opens the Agents page, which starts the helper again. Flutter starts the helper itself
-     * and hides the line meanwhile (phone_agents.dart:610-616, 684-692).
+     * was seen to stop on its own ([PhoneAgentsState.helperStoppedUnexpectedly]: its exit record, not asked for, from
+     * its latest run and since boot and the app's update; the "maybe Android" flag only refines that and never says a
+     * stop by itself). Its Resume opens the Agents page, which starts the helper again; that launch supersedes the
+     * record, so the line does not come back. Flutter starts the helper itself and hides the line meanwhile
+     * (phone_agents.dart:610-616, 684-692).
      */
     fun notices(state: PhoneAgentsState, certifiedForChat: (String) -> Boolean): HomeAgentNotices {
         if (!state.available) return HomeAgentNotices()
-        val helperStopped = state.helperStoppedUnexpectedly || state.helperMayHaveBeenStoppedByAndroid
+        val helperStopped = state.helperStoppedUnexpectedly
         return HomeAgentNotices(
             restart = state.needsRestart,
             lines =

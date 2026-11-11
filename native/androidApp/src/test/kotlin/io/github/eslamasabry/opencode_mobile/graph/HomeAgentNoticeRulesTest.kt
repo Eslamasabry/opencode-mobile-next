@@ -1,5 +1,6 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
+import io.github.eslamasabry.oc.engine.agents.diagnostics.AgentHelperStatus
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRow
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentsState
@@ -9,6 +10,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 /** Device QA basics-3 B1: "fx stopped in the background / Resume fx" at app open, although nothing had stopped. */
 class HomeAgentNoticeRulesTest {
@@ -51,5 +55,75 @@ class HomeAgentNoticeRulesTest {
             lines,
         )
         assertTrue(HomeAgentNoticeRules.notices(state.copy(available = false)) { true }.lines.isEmpty())
+    }
+
+    // Gate: the same lines read from the helper's own exit record, the way AppPhoneAgents builds the state.
+    private val exitAt = 1_791_633_600_000L
+    private val since = exitAt - 3_600_000 // boot or the app's update, an hour before the exit
+
+    private fun record(
+        stopRequested: Boolean = false,
+        code: Int = 137,
+        launchAt: Long? = exitAt - 600_000,
+        running: Boolean = false,
+    ): AgentHelperStatus =
+        AgentHelperStatus.fromRecord(
+            JsonObject(
+                buildMap<String, JsonElement> {
+                    put("running", JsonPrimitive(running))
+                    put("lastExitCode", JsonPrimitive(code))
+                    put("lastExitAtMs", JsonPrimitive(exitAt))
+                    put("lastStopRequested", JsonPrimitive(stopRequested))
+                    put("exitReason", JsonPrimitive(if (code == 137) "memory_or_phantom_kill" else "exited"))
+                    launchAt?.let { put("lastLaunchAtMs", JsonPrimitive(it)) }
+                }
+            )
+        )
+
+    private fun lines(helper: AgentHelperStatus?, since: Long = this.since) =
+        HomeAgentNoticeRules.notices(
+                PhoneAgentsState(
+                    available = true,
+                    agents = persistentListOf(fx),
+                    helperStoppedUnexpectedly = HelperStopNews.stopped(helper, since),
+                    helperMayHaveBeenStoppedByAndroid = HelperStopNews.byAndroid(helper, since),
+                ),
+                notCertified,
+            )
+            .lines
+
+    private val stoppedLine = listOf(HomeAgentNotice("fx", "fx", HomeAgentNoticeKind.Stopped))
+
+    @Test
+    fun `a fresh start with no exit record says nothing`() {
+        assertTrue(lines(null).isEmpty())
+        assertTrue(lines(AgentHelperStatus.fromRecord(JsonObject(mapOf("running" to JsonPrimitive(false))))).isEmpty())
+    }
+
+    @Test
+    fun `a helper whose latest run ended on its own while the app lived is said, Android kill or not`() {
+        assertEquals(stoppedLine, lines(record()))
+        assertEquals(stoppedLine, lines(record(code = 1)))
+        // A record written before launch times were kept still counts.
+        assertEquals(stoppedLine, lines(record(launchAt = null)))
+    }
+
+    @Test
+    fun `a helper the person stopped is not said, even when it had to be killed`() {
+        assertTrue(lines(record(stopRequested = true)).isEmpty())
+        assertTrue(lines(record(stopRequested = true, code = 143)).isEmpty())
+    }
+
+    @Test
+    fun `an exit from before the phone's boot or the app's update is not said`() {
+        assertTrue(lines(record(), since = exitAt + 1).isEmpty())
+    }
+
+    @Test
+    fun `after Resume started the helper again the old exit is not said again`() {
+        // Running now.
+        assertTrue(lines(record(launchAt = exitAt + 5_000, running = true)).isEmpty())
+        // That run then ended with the app (force-stop, update, the app killed): no exit is written, the old one stays.
+        assertTrue(lines(record(launchAt = exitAt + 5_000)).isEmpty())
     }
 }
