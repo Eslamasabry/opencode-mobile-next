@@ -25,21 +25,31 @@ public object HomeRowStatusRules {
 }
 
 /** The question "Start a new conversation?" for one agent conversation that cannot be reopened. */
-public data class StartNewUi(val ref: ConversationRef, val agentId: String, val agentName: String?)
+public data class StartNewUi(
+    val ref: ConversationRef,
+    val agentId: String,
+    val agentName: String?,
+    /** The old conversation's folder: the new one starts there. */
+    val directory: String? = null,
+)
 
 /** H4: tapping an old agent conversation the helper cannot resume (Flutter `chats_home_screen.dart:186-206`). */
 public object AgentResumeRules {
     /** The question to ask for [item], or null when it just opens. */
     public fun ask(item: ChatFeedItem?, agentName: String?): StartNewUi? =
-        item?.takeIf { it.needsNewChat }?.let { StartNewUi(it.ref, it.agentId, agentName) }
+        item?.takeIf { it.needsNewChat }?.let { StartNewUi(it.ref, it.agentId, agentName, it.directory?.takeIf { dir -> dir.isNotBlank() }) }
 
     /**
      * Where "Start new conversation" goes: the new-conversation form on the same server with the same agent chosen.
-     * The form's folder is the helper's single folder (an agents helper works in one at a time), so the folder is the
-     * old conversation's. The old conversation is left as it is.
+     * It starts in the old conversation's folder (the form falls back to its own folder when that is gone). The old
+     * conversation is left as it is.
      */
     public fun route(ask: StartNewUi): ChatsRoute.New =
-        ChatsRoute.New(profile = ask.ref.profileId, phoneAgent = agentChoiceId(ask.agentId))
+        ChatsRoute.New(
+            profile = ask.ref.profileId,
+            phoneAgent = agentChoiceId(ask.agentId),
+            directory = ask.directory,
+        )
 
     /** The agents list names an agent by its own id; a conversation carries its runtime's provider id. */
     internal fun agentChoiceId(providerId: String): String =

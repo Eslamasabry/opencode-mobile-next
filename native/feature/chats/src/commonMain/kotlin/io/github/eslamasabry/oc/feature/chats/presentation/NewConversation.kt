@@ -655,9 +655,21 @@ public class NewConversationViewModel(
                         } else setup.phone?.selected?.let { loadPhoneModels(profile, it) }
                         restore(profile, setup.directory)
                         setup.directory?.let { checkFolder(profile, it) }
+                        startInWantedFolder(profile, setup.directory)
                     }
             }
         }
+    }
+
+    /** [ChatsRoute.New.directory] is applied once; a folder the server no longer has leaves the usual one. */
+    private var wantedFolderApplied = false
+
+    private suspend fun startInWantedFolder(profile: ProfileId, current: String?) {
+        val wanted = route.directory?.trim()?.takeIf { it.isNotEmpty() } ?: return
+        if (wantedFolderApplied) return
+        wantedFolderApplied = true
+        if (wanted == current) return
+        if (host.folderExists(profile, wanted) == true) chooseDirectory(wanted)
     }
 
     private suspend fun restore(profile: ProfileId, directory: String?) {
