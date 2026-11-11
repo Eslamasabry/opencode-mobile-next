@@ -301,6 +301,16 @@ public class FleetEngine(
     }
 
     /**
+     * Dart `OrchestrationPolicyGateway.policy`: the host front's read-only supervision policy for [projectId] (a rig), or
+     * the host's default rig when null. Null when the host has no such route (no front), the read failed, or no team is
+     * connected. Never throws.
+     */
+    public suspend fun policy(profileId: String, projectId: String? = null): FleetPolicy? {
+        val gateway = runs.load()[profileId]?.gateway ?: return null
+        return quiet { gateway.policy(projectId) }
+    }
+
+    /**
      * Sends one write (Dart `mutate`): refused without a request when the capability is off or no team is connected,
      * else one call whose receipt lands in [FleetState.receipts]; the team is read again after it. Never re-sent.
      */

@@ -118,6 +118,9 @@ public interface TeamHomeActions : TeamIntroActions {
 
     /** A computer's team: the finished tasks past the first three (Dart `team-home-completed-more`). */
     public fun showMoreDone() {}
+
+    /** A project row of a computer's team: its own page (Dart `openTeamRig`). */
+    public fun openComputerProject(projectId: String) {}
 }
 
 /**

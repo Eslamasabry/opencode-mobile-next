@@ -287,6 +287,18 @@ internal class FleetGateway(
 
     suspend fun scheduledJobs(): List<FleetJob> = FleetMap.orders(J.list(city("/orders"), "orders", { WireOrder.parse(it) }))
 
+    // ---- the host front's own routes (Dart `GasCityControl` policy); never on a bare supervisor or loopback
+
+    /** Dart `policy`: `GET /front/policy[?rig=]`. No front, a 404 or a 422 (unusable rig name) answers null; other failures throw. */
+    suspend fun policy(projectId: String?): FleetPolicy? {
+        if (!front) return null
+        return try {
+            FleetPolicyWire.policy(city("/front/policy", if (projectId.isNullOrEmpty()) emptyList() else listOf("rig" to projectId)))
+        } catch (e: FleetHttpError) {
+            if (e.notFound || e.status == 422) null else throw e
+        }
+    }
+
     /** `/events/stream` from [lastEventId]; frames go to [onFrame] until it ends. */
     suspend fun events(lastEventId: String?, onFrame: suspend (FleetFrame) -> Unit): FleetStreamEnd =
         transport.stream("$cityPath/events/stream", lastEventId, onFrame = onFrame)

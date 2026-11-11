@@ -24,6 +24,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowState
+import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitRowStateTone
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
@@ -233,7 +234,9 @@ private fun Ready(ui: FleetHomeUi, nowMs: Long, actions: TeamHomeActions) {
                             title = p.name,
                             supporting = stringResource(if (p.paused) Res.string.teamRigStatePaused else Res.string.teamRigStateActive),
                             leading = KitRowLeading.Glyph(KitIcons.projects),
+                            trailing = KitRowTrailing.Chevron,
                             modifier = Modifier.testTag("team-computer-project-${p.id}"),
+                            onClick = { actions.openComputerProject(p.id) },
                         )
                     }
                 }
