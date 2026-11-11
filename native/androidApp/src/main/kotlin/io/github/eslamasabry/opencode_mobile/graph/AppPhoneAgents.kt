@@ -64,14 +64,13 @@ import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentsState
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneDevice
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
 import io.github.eslamasabry.opencode_mobile.PhoneAgentPayloads
+import io.github.eslamasabry.opencode_mobile.ProbeStop
 import io.github.eslamasabry.opencode_mobile.SetupRunner
 import java.security.SecureRandom
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -105,7 +104,8 @@ class AppPhoneAgents(
     private val catalog = AgentCatalog.builtIn
     private val mutable = MutableStateFlow(PhoneAgentsState(agents = catalogRows()))
     override val state = mutable.asStateFlow()
-    private val lane = Mutex()
+    /** Reads and steps take turns here; a read gives way to a step instead of making it wait ([PhoneReadLane]). */
+    private val lane = PhoneReadLane { block -> withContext(dispatchers.io) { block() } }
     private val linux by lazy { BuiltinLinux.get(app) }
     private val installers = HashMap<ProfileId, AgentInstaller>()
 
@@ -251,12 +251,22 @@ class AppPhoneAgents(
         )
 
     /**
-     * "Check phone agents" (AGENT-1) re-reads the payloads; each installed agent's read-only
-     * sign-in probe runs inside the read ([signInStatus], keyed by the runtime owner).
+     * "Check phone agents" (AGENT-1) re-reads the payloads; each installed agent's read-only sign-in probe runs inside
+     * the read ([signInPhase], keyed by the runtime owner). The read gives way to a person's step ([PhoneReadLane]):
+     * it stops between or inside its checks and the step's own re-read replaces it.
      */
-    override suspend fun refresh(): Outcome<Unit> = lane.withLock { refreshLocked() }
+    override suspend fun refresh(): Outcome<Unit> = lane.read { stop -> refreshLocked(stop) } ?: Outcome.Ok(Unit)
 
-    private suspend fun refreshLocked(): Outcome<Unit> {
+    /** A step's re-read at its end, under the lane the step holds; it gives way to the next step as well. */
+    private suspend fun rereadLocked(): Outcome<Unit> =
+        lane.readHeld { stop -> refreshLocked(stop) } ?: Outcome.Ok(Unit)
+
+    private fun phoneCatalog(): List<AgentDescriptor> =
+        catalog.agents.filter {
+            it.runsOnPhoneHost && it.recipe != null && it.availability != AgentAvailability.Hidden
+        }
+
+    private suspend fun refreshLocked(stop: ProbeStop): Outcome<Unit> {
         if (needsRestart) {
             mutable.value = PhoneAgentsState(needsRestart = true)
             return Outcome.Ok(Unit)
@@ -302,160 +312,322 @@ class AppPhoneAgents(
             }
         }
         val installing = shown?.phase == PhoneAgentInstallPhase.Installing
-        val rows = native {
-            val installed = linux.installed
-            var helperRunning: Boolean? = null
-            val helper =
-                if (authOwner != null && synchronized(admission) { authOwner !in denied }) {
-                    val record = linux.agentHost.status(authOwner.raw)
-                    helperRunning = record["running"] as? Boolean
-                    AgentHelperStatus.fromRecord(
-                        JsonObject(
-                            record.mapValues { (_, value) ->
-                                when (value) {
-                                    null -> JsonNull
-                                    is Boolean -> JsonPrimitive(value)
-                                    is Number -> JsonPrimitive(value)
-                                    else -> JsonPrimitive(value as? String ?: "")
-                                }
-                            }
-                        )
-                    )
-                } else null
-            PhoneAgentsState(
-                available = installed,
-                owner = owner,
-                // The helper's own profile (AppLocalAgentHostStarter: "<agent owner>-agents").
-                conversations = authOwner?.let { ProfileId("${it.raw}-agents") },
-                device = device(),
-                installation = shown,
-                helperStoppedUnexpectedly = helper?.unexpectedStop == true,
-                helperMayHaveBeenStoppedByAndroid = helper?.possibleResourceKill == true,
-                agents =
-                    catalog.agents
-                        .filter {
-                            it.runsOnPhoneHost &&
-                                it.recipe != null &&
-                                it.availability != AgentAvailability.Hidden
-                        }
-                        .map { agent ->
-                            val payload =
-                                if (installed)
-                                    PhoneAgentPayloads.present(linux, agent.recipe!!.executable)
-                                else false
-                            val version =
-                                if (installed && authOwner != null)
-                                    versionOf(authOwner, agent, payload, installing)
-                                else null
-                            val present = PhoneAgentRules.present(payload, version)
-                            val signIn =
-                                if (present == true) signInPhase(authOwner, agent, installing)
-                                else null
-                            val status =
-                                when (present) {
-                                    null -> PhoneAgentStatus.Unavailable
-                                    else ->
-                                        architecture()?.let { arch ->
-                                            PhoneAgentRules.status(
-                                                agent,
-                                                arch,
-                                                installed = present == true,
-                                                payloadPresent = payload == true,
-                                                qualified =
-                                                    authOwner != null &&
-                                                        PhoneAgentRules.qualified(
-                                                            agent,
-                                                            arch,
-                                                            PhoneGate.read(
-                                                                KvAgentPrefs(
-                                                                    stores.prefs,
-                                                                    stores.lanes.forProfile(authOwner),
-                                                                ),
-                                                                authOwner,
-                                                            )[agent.id.raw],
-                                                            PhoneAgentRules.foundVersion(version),
-                                                        ),
-                                                signIn = signIn,
-                                                helperRunning = helperRunning,
-                                            )
-                                        } ?: PhoneAgentStatus.Unavailable
-                                }
-                            PhoneAgentRow(
-                                agent.id.raw,
-                                agent.name,
-                                status,
-                                signOutAvailable =
-                                    owner != null &&
-                                        signIn == AgentSignInPhase.SignedIn &&
-                                        AgentAuthScripts.supportsSignOut(agent.id) &&
-                                        !installing,
-                                previousVersionAvailable =
-                                    agent.id == AgentId.CLAUDE &&
-                                        present == true &&
-                                        shown?.phase != PhoneAgentInstallPhase.Installing &&
-                                        previousAvailable(agent),
-                                removable =
-                                    removal.removable(agent.id) &&
-                                        present == true &&
-                                        shown?.phase != PhoneAgentInstallPhase.Installing,
-                                downloadBytes =
-                                    architecture()?.let(agent::artifactFor)?.downloadBytes,
-                                supportedInstallation =
-                                    architecture()?.let(agent::installableOn) == true,
-                                signInAvailable =
-                                    owner != null &&
-                                        present == true &&
-                                        agent.signInMethod != AgentSignInMethod.None &&
-                                        shown?.phase != PhoneAgentInstallPhase.Installing,
-                                installable =
-                                    owner != null &&
-                                        present == false &&
-                                        architecture()?.let(agent::installableOn) == true &&
-                                        shown?.phase != PhoneAgentInstallPhase.Installing,
-                            )
-                        }
-                        .toImmutableList(),
-            )
-        }
-        return when (rows) {
-            is Outcome.Ok -> {
-                var shownState = rows.value
-                if (owner != null && PhoneAgentRules.staleResult(shownState.installation, shownState.agents)) {
-                    // The agent is there: the earlier cut-short install is forgotten, silently.
-                    installation(owner).dismissResult(owner)
-                    shownState = shownState.copy(installation = null)
+        val agents = phoneCatalog()
+        // Every check starts a process in the phone's Linux: none while an install runs (it is what they could get
+        // killed), and one at a time, each ended at once when a person's step asks for the lane.
+        if (authOwner != null && !installing) {
+            // What is known before any check starts (the last answers, kept across app starts): shown at once.
+            when (val now = native { snapshot(owner, authOwner, shown, false, agents, final = false) }) {
+                is Outcome.Failed -> return now
+                is Outcome.Ok -> publish(owner, now.value, final = false)
+            }
+            for (agent in agents) {
+                if (stop.isStopped) return Outcome.Ok(Unit)
+                when (val checked = native { check(authOwner, agent, stop) }) {
+                    is Outcome.Failed -> return checked
+                    is Outcome.Ok -> if (!checked.value) continue
                 }
-                mutable.value =
-                    if (owner != null && synchronized(admission) { owner in denied })
-                        PhoneAgentsState(needsRestart = needsRestart)
-                    else shownState
+                // A check cut short is not news: its answer was dropped and the step's re-read checks again.
+                if (stop.isStopped) return Outcome.Ok(Unit)
+                when (val now = native { snapshot(owner, authOwner, shown, false, agents, final = false) }) {
+                    is Outcome.Failed -> return now
+                    is Outcome.Ok -> publish(owner, now.value, final = false)
+                }
+            }
+        }
+        if (stop.isStopped) return Outcome.Ok(Unit)
+        return when (val rows = native { snapshot(owner, authOwner, shown, installing, agents, final = true) }) {
+            is Outcome.Ok -> {
+                publish(owner, rows.value, final = true)
+                if (authOwner != null && !installing) remember(authOwner, agents)
                 Outcome.Ok(Unit)
             }
             is Outcome.Failed -> rows
         }
     }
 
-    override suspend fun install(id: String): Outcome<PhoneAgentInstallResult> = lane.withLock {
+    private suspend fun publish(owner: ProfileId?, state: PhoneAgentsState, final: Boolean) {
+        var shownState = state
+        if (owner != null && PhoneAgentRules.staleResult(shownState.installation, shownState.agents)) {
+            // The agent is there: the earlier cut-short install is forgotten, silently.
+            if (final) installation(owner).dismissResult(owner)
+            shownState = shownState.copy(installation = null)
+        }
+        mutable.value =
+            if (owner != null && synchronized(admission) { owner in denied })
+                PhoneAgentsState(needsRestart = needsRestart)
+            else shownState
+    }
+
+    /**
+     * One agent's checks, one process at a time: its version, its sign-in and (Claude Code) whether the previous
+     * version is kept. False when nothing had to run. [stop] ends the running one and keeps the rest from starting.
+     */
+    private fun check(owner: ProfileId, agent: AgentDescriptor, stop: ProbeStop): Boolean {
+        if (!linux.installed) return false
+        val payload = PhoneAgentPayloads.present(linux, agent.recipe!!.executable)
+        val version = versionOf(owner, agent, payload, installing = false, stop = stop)
+        if (stop.isStopped || PhoneAgentRules.present(payload, version) != true) return true
+        signInPhase(owner, agent, installing = false, stop = stop)
+        if (agent.id == AgentId.CLAUDE && !stop.isStopped)
+            previousOf(owner, agent, PhoneAgentRules.foundVersion(version))
+        return true
+    }
+
+    /**
+     * The page's state from what is known now; no process starts here. [final] is the read's own answer, built from
+     * this read's checks as before. Otherwise (shown while the checks run) the last answers stand in, also those kept
+     * across app starts ([PhoneAgentFacts]), and an agent with no known answer keeps the row it shows.
+     */
+    private fun snapshot(
+        owner: ProfileId?,
+        authOwner: ProfileId?,
+        shown: PhoneAgentInstallation?,
+        installing: Boolean,
+        agents: List<AgentDescriptor>,
+        final: Boolean,
+    ): PhoneAgentsState {
+        val installed = linux.installed
+        var helperRunning: Boolean? = null
+        val helper =
+            if (authOwner != null && synchronized(admission) { authOwner !in denied }) {
+                val record = linux.agentHost.status(authOwner.raw)
+                helperRunning = record["running"] as? Boolean
+                AgentHelperStatus.fromRecord(
+                    JsonObject(
+                        record.mapValues { (_, value) ->
+                            when (value) {
+                                null -> JsonNull
+                                is Boolean -> JsonPrimitive(value)
+                                is Number -> JsonPrimitive(value)
+                                else -> JsonPrimitive(value as? String ?: "")
+                            }
+                        }
+                    )
+                )
+            } else null
+        val showing = mutable.value.agents.associateBy { it.id }
+        val kept = if (final || authOwner == null) emptyMap() else keptFacts(authOwner)
+        return PhoneAgentsState(
+            available = installed,
+            owner = owner,
+            // The helper's own profile (AppLocalAgentHostStarter: "<agent owner>-agents").
+            conversations = authOwner?.let { ProfileId("${it.raw}-agents") },
+            device = device(),
+            installation = shown,
+            helperStoppedUnexpectedly = helper?.unexpectedStop == true,
+            helperMayHaveBeenStoppedByAndroid = helper?.possibleResourceKill == true,
+            agents =
+                agents
+                    .map { agent ->
+                        val payload =
+                            if (installed) PhoneAgentPayloads.present(linux, agent.recipe!!.executable)
+                            else false
+                        val needsVersion =
+                            installed &&
+                                authOwner != null &&
+                                PhoneAgentRules.needsVersionProbe(agent.id, payload)
+                        val version =
+                            if (needsVersion)
+                                knownVersion(authOwner!!, agent)
+                                    ?: PhoneAgentFacts.version(kept[agent.id.raw])
+                            else null
+                        val present = PhoneAgentRules.present(payload, version)
+                        val signIn =
+                            if (present == true) knownSignIn(authOwner, agent, kept[agent.id.raw]) else null
+                        if (!final && ((needsVersion && version == null) || (present == true && signIn == null)))
+                            return@map showing[agent.id.raw] ?: checkingRow(agent)
+                        val status =
+                            when (present) {
+                                null -> PhoneAgentStatus.Unavailable
+                                else ->
+                                    architecture()?.let { arch ->
+                                        PhoneAgentRules.status(
+                                            agent,
+                                            arch,
+                                            installed = present == true,
+                                            payloadPresent = payload == true,
+                                            qualified =
+                                                authOwner != null &&
+                                                    PhoneAgentRules.qualified(
+                                                        agent,
+                                                        arch,
+                                                        PhoneGate.read(
+                                                            KvAgentPrefs(
+                                                                stores.prefs,
+                                                                stores.lanes.forProfile(authOwner),
+                                                            ),
+                                                            authOwner,
+                                                        )[agent.id.raw],
+                                                        PhoneAgentRules.foundVersion(version),
+                                                    ),
+                                            signIn = signIn,
+                                            helperRunning = helperRunning,
+                                        )
+                                    } ?: PhoneAgentStatus.Unavailable
+                            }
+                        PhoneAgentRow(
+                            agent.id.raw,
+                            agent.name,
+                            status,
+                            signOutAvailable =
+                                owner != null &&
+                                    signIn == AgentSignInPhase.SignedIn &&
+                                    AgentAuthScripts.supportsSignOut(agent.id) &&
+                                    !installing,
+                            previousVersionAvailable =
+                                agent.id == AgentId.CLAUDE &&
+                                    present == true &&
+                                    shown?.phase != PhoneAgentInstallPhase.Installing &&
+                                    authOwner != null &&
+                                    knownPrevious(authOwner, agent, PhoneAgentRules.foundVersion(version)),
+                            removable =
+                                removal.removable(agent.id) &&
+                                    present == true &&
+                                    shown?.phase != PhoneAgentInstallPhase.Installing,
+                            downloadBytes = architecture()?.let(agent::artifactFor)?.downloadBytes,
+                            supportedInstallation = architecture()?.let(agent::installableOn) == true,
+                            signInAvailable =
+                                owner != null &&
+                                    present == true &&
+                                    agent.signInMethod != AgentSignInMethod.None &&
+                                    shown?.phase != PhoneAgentInstallPhase.Installing,
+                            installable =
+                                owner != null &&
+                                    present == false &&
+                                    architecture()?.let(agent::installableOn) == true &&
+                                    shown?.phase != PhoneAgentInstallPhase.Installing,
+                        )
+                    }
+                    .toImmutableList(),
+        )
+    }
+
+    /** The row an agent shows while nothing is known about it (the catalog's own rows say "checking" too). */
+    private fun checkingRow(agent: AgentDescriptor) =
+        PhoneAgentRow(
+            id = agent.id.raw,
+            name = agent.name,
+            status = PhoneAgentStatus.Checking,
+            downloadBytes = architecture()?.let(agent::artifactFor)?.downloadBytes,
+            supportedInstallation = architecture()?.let(agent::installableOn) == true,
+        )
+
+    private fun knownVersion(owner: ProfileId, agent: AgentDescriptor): Map<String, Any?>? =
+        synchronized(admission) { versions[owner to agent.id]?.second }
+
+    /** The sign-in a tile shows without checking: the agent's last answer, or (shown while checking) the kept one. */
+    private fun knownSignIn(
+        owner: ProfileId?,
+        agent: AgentDescriptor,
+        kept: PhoneAgentFacts.Fact?,
+    ): AgentSignInPhase? {
+        if (agent.signInMethod == AgentSignInMethod.None) return AgentSignInPhase.SignedIn
+        if (owner == null || AgentAuthScripts.script(agent, AuthScriptAction.Probe) == null)
+            return AgentSignInPhase.Failed
+        return synchronized(admission) {
+            if (owner in denied) return AgentSignInPhase.Failed
+            accounts[owner to agent.id]
+        }
+            ?.let(::phaseOf) ?: PhoneAgentFacts.signIn(kept)?.let(::phaseOf)
+    }
+
+    /**
+     * Whether Claude Code's previous version is kept, for the copy found now. Its check hashes the kept program and
+     * runs it, so it runs once per version found (it used to run on every read), and only an install, a removal or
+     * going back to the previous version asks again.
+     */
+    private fun previousOf(owner: ProfileId, agent: AgentDescriptor, found: String?) {
+        val key = owner to agent.id
+        val cached = synchronized(admission) { previous[key] }
+        if (cached != null && cached.first == found) return
+        val available = previousAvailable(agent)
+        synchronized(admission) { previous[key] = found to available }
+    }
+
+    private fun knownPrevious(owner: ProfileId, agent: AgentDescriptor, found: String?): Boolean =
+        synchronized(admission) { previous[owner to agent.id] }?.let { it.first == found && it.second } == true
+
+    private fun keptFacts(owner: ProfileId): Map<String, PhoneAgentFacts.Fact> =
+        PhoneAgentFacts.decode(gatePrefs(owner).string(PhoneAgentFacts.key(owner.raw)))
+
+    /** This read's answers, kept for the next app start ([PhoneAgentFacts]); written only when they changed. */
+    private suspend fun remember(owner: ProfileId, agents: List<AgentDescriptor>) {
+        val facts =
+            synchronized(admission) {
+                if (owner in denied) return
+                agents.associate { agent ->
+                    agent.id.raw to
+                        PhoneAgentFacts.of(versions[owner to agent.id]?.second, accounts[owner to agent.id])
+                }
+            }
+        val kept = keptFacts(owner)
+        val merged = PhoneAgentFacts.merge(kept, facts)
+        if (merged == kept) return
+        gatePrefs(owner).commit { putString(PhoneAgentFacts.key(owner.raw), PhoneAgentFacts.encode(merged)) }
+    }
+
+    /**
+     * A person's step on [agent] forgets what was known about it, here and across app starts, so neither the next
+     * read nor the tile shown while it runs uses an answer the step may have changed. Other agents keep theirs.
+     */
+    private suspend fun forgetFacts(owner: ProfileId, agent: AgentId, version: Boolean, signIn: Boolean) {
+        val key = owner to agent
+        synchronized(admission) {
+            if (version) {
+                // Kept for the tile while an install runs (no check runs then), never reused as fresh.
+                versions[key]?.let { versions[key] = STALE to it.second }
+                previous.remove(key)
+            }
+            if (signIn) {
+                accounts.remove(key)
+                answeredAt.remove(key)
+            }
+        }
+        val kept = keptFacts(owner)
+        val left = PhoneAgentFacts.forget(kept, agent.raw, version, signIn)
+        if (left == kept) return
+        gatePrefs(owner).commit { putString(PhoneAgentFacts.key(owner.raw), PhoneAgentFacts.encode(left)) }
+    }
+
+    /** Every kept "signed in" or "signed out" of [owner]'s agents (their versions stay). */
+    private suspend fun forgetSignIns(owner: ProfileId) {
+        val kept = keptFacts(owner)
+        if (kept.values.none { it.signedIn != null }) return
+        gatePrefs(owner).commit {
+            putString(
+                PhoneAgentFacts.key(owner.raw),
+                PhoneAgentFacts.encode(kept.mapValues { (_, fact) -> fact.copy(signedIn = null) }),
+            )
+        }
+    }
+
+    override suspend fun install(id: String): Outcome<PhoneAgentInstallResult> = lane.step {
         if (needsRestart)
-            return@withLock Outcome.Ok(
+            return@step Outcome.Ok(
                 PhoneAgentInstallResult.Refused(PhoneAgentInstallIssue.Unavailable)
             )
         val owner =
             ownerId()
-                ?: return@withLock Outcome.Ok(
+                ?: return@step Outcome.Ok(
                     PhoneAgentInstallResult.Refused(PhoneAgentInstallIssue.Unavailable)
                 )
         val abi =
             architecture()
-                ?: return@withLock Outcome.Ok(
+                ?: return@step Outcome.Ok(
                     PhoneAgentInstallResult.Refused(PhoneAgentInstallIssue.Unavailable)
                 )
         val answer =
             when (val started = installation(owner).install(owner, AgentId(id), abi)) {
-                is Outcome.Failed -> return@withLock started
+                is Outcome.Failed -> return@step started
                 is Outcome.Ok ->
                     when (val value = started.value) {
-                        InstallStart.Started -> PhoneAgentInstallResult.Started
+                        InstallStart.Started -> {
+                            agentOwner(owner)?.let {
+                                forgetFacts(it, AgentId(id), version = true, signIn = false)
+                            }
+                            PhoneAgentInstallResult.Started
+                        }
                         is InstallStart.Refused ->
                             PhoneAgentInstallResult.Refused(
                                 when (value.reason) {
@@ -468,16 +640,16 @@ class AppPhoneAgents(
                             )
                     }
             }
-        refreshLocked()
+        rereadLocked()
         Outcome.Ok(answer)
     }
 
-    override suspend fun cancelInstall(): Outcome<Unit> = lane.withLock {
+    override suspend fun cancelInstall(): Outcome<Unit> = lane.step {
         val owner =
-            ownerId() ?: return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
+            ownerId() ?: return@step Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
         when (val cancelled = installation(owner).cancel(owner)) {
             is Outcome.Failed -> cancelled
-            is Outcome.Ok -> refreshLocked()
+            is Outcome.Ok -> rereadLocked()
         }
     }
 
@@ -495,7 +667,7 @@ class AppPhoneAgents(
         }
     }
 
-    private suspend fun removeLocked(id: String): Outcome<PhoneAgentRemoval> = lane.withLock {
+    private suspend fun removeLocked(id: String): Outcome<PhoneAgentRemoval> = lane.step {
         val owner =
             try {
                 (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value
@@ -503,7 +675,7 @@ class AppPhoneAgents(
                 null
             }
         if (owner.isNullOrEmpty())
-            return@withLock Outcome.Ok(
+            return@step Outcome.Ok(
                 PhoneAgentRemoval.Refused(PhoneAgentRemovalIssue.Unavailable)
             )
         val busy =
@@ -520,7 +692,7 @@ class AppPhoneAgents(
             }
         val answer =
             when (val result = removal.remove(ProfileId(owner), AgentId(id), busy)) {
-                is Outcome.Failed -> return@withLock result
+                is Outcome.Failed -> return@step result
                 is Outcome.Ok ->
                     when (val value = result.value) {
                         is RemovalResult.Removed -> PhoneAgentRemoval.Removed(value.freedBytes)
@@ -537,7 +709,10 @@ class AppPhoneAgents(
                     }
             }
         synchronized(admission) { versions.clear() }
-        refreshLocked()
+        agentOwner(ProfileId(owner))?.let {
+            forgetFacts(it, AgentId(id), version = true, signIn = true)
+        }
+        rereadLocked()
         Outcome.Ok(answer)
     }
 
@@ -548,15 +723,15 @@ class AppPhoneAgents(
             false
         }
 
-    override suspend fun usePreviousVersion(id: String): Outcome<Unit> = lane.withLock {
+    override suspend fun usePreviousVersion(id: String): Outcome<Unit> = lane.step {
         if (needsRestart || id != AgentId.CLAUDE.raw)
-            return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
+            return@step Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
         val owner =
             agentOwner(ownerId())
-                ?: return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
+                ?: return@step Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
         val agent =
             catalog.byId(AgentId.CLAUDE)
-                ?: return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
+                ?: return@step Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
         val result = native {
             check(synchronized(admission) { owner !in denied })
             // Both the busy check and the official backup verification are fresh after
@@ -577,30 +752,31 @@ class AppPhoneAgents(
                     .exitCode == 0
             )
         }
-        if (result is Outcome.Failed) return@withLock result
+        if (result is Outcome.Failed) return@step result
         synchronized(admission) {
             accounts.remove(owner to agent.id)
             versions.clear()
         }
-        refreshLocked()
+        forgetFacts(owner, agent.id, version = true, signIn = true)
+        rereadLocked()
     }
 
     /**
      * Runs the agent's own logout, then reads the status again: signed out only when that read
      * says so (the logout's exit code is not trusted). Conversations are not touched.
      */
-    override suspend fun signOut(id: String): Outcome<Boolean> = lane.withLock {
+    override suspend fun signOut(id: String): Outcome<Boolean> = lane.step {
         val agent =
             catalog.byId(AgentId(id))
-                ?: return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
+                ?: return@step Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
         val owner =
             agentOwner(ownerId())
-                ?: return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
+                ?: return@step Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
         val script =
             AgentAuthScripts.script(agent, AuthScriptAction.SignOut)
-                ?: return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
+                ?: return@step Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
         if (!AgentAuthScripts.supportsSignOut(agent.id) || synchronized(admission) { owner in denied })
-            return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
+            return@step Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
         val ran = native {
             linux.agentAuthProbe(
                 mapOf(
@@ -612,10 +788,10 @@ class AppPhoneAgents(
                 )
             )
         }
-        if (ran is Outcome.Failed) return@withLock ran
-        synchronized(admission) { accounts.remove(owner to agent.id) }
+        if (ran is Outcome.Failed) return@step ran
+        forgetFacts(owner, agent.id, version = false, signIn = true)
         val after = native { signInPhase(owner, agent, installing = false) }
-        refreshLocked()
+        rereadLocked()
         when (after) {
             is Outcome.Failed -> after
             is Outcome.Ok -> Outcome.Ok(after.value == AgentSignInPhase.SignedOut)
@@ -623,9 +799,9 @@ class AppPhoneAgents(
     }
 
     /** Reset closes clients first; only the engine's allowlisted secure slots are erased. */
-    override suspend fun resetSavedSignIns(): Outcome<Unit> = lane.withLock {
+    override suspend fun resetSavedSignIns(): Outcome<Unit> = lane.step {
         when (val warm = stores.warm()) {
-            is Outcome.Failed -> return@withLock warm
+            is Outcome.Failed -> return@step warm
             is Outcome.Ok -> Unit
         }
         val owners = buildSet {
@@ -644,7 +820,10 @@ class AppPhoneAgents(
         synchronized(admission) {
             denied.addAll(owners)
             accounts.clear()
+            answeredAt.clear()
         }
+        // Sign-ins are being reset: no tile may show a kept "signed in" after the restart.
+        owners.forEach { forgetSignIns(it) }
         mutable.value = PhoneAgentsState(needsRestart = true)
         registry.live.value.keys.toList().forEach { registry.close(it) }
         val participant =
@@ -692,12 +871,15 @@ class AppPhoneAgents(
     }
 
     /**
-     * Private status reads are keyed by the runtime owner, never by the selected remote profile.
+     * Private status reads are keyed by the runtime owner, never by the selected remote profile. A read passes its
+     * [stop]: it may then reuse a recent "signed in" ([PhoneAgentRules.reuseSignIn]), and a probe it cut short leaves
+     * the last answer as it was.
      */
     private fun signInPhase(
         owner: ProfileId?,
         agent: AgentDescriptor,
         installing: Boolean,
+        stop: ProbeStop? = null,
     ): AgentSignInPhase? {
         // Nothing to sign in to.
         if (agent.signInMethod == AgentSignInMethod.None) return AgentSignInPhase.SignedIn
@@ -711,6 +893,14 @@ class AppPhoneAgents(
         // runs. The last answer stands in, or none (the row says it is checking).
         if (!PhoneAgentRules.mayProbeSignIn(installing))
             return synchronized(admission) { accounts[key] }?.let(::phaseOf)
+        if (stop != null) {
+            val now = android.os.SystemClock.elapsedRealtime()
+            synchronized(admission) {
+                val last = accounts[key]
+                if (last != null && PhoneAgentRules.reuseSignIn(last, answeredAt[key]?.let { now - it }))
+                    return phaseOf(last)
+            }
+        }
         val response =
             linux.agentAuthProbe(
                 mapOf(
@@ -719,8 +909,11 @@ class AppPhoneAgents(
                     "action" to "probe",
                     "script" to AgentAuthScripts.forProfile(owner, authored),
                     "timeoutSeconds" to if (agent.id == AgentId.CLAUDE) 65L else 10L,
-                )
+                ),
+                stop,
             )
+        // Ended by a person's step: not news about the account.
+        if (stop?.isStopped == true) return synchronized(admission) { accounts[key] }?.let(::phaseOf)
         val probed =
             AuthProjectionJson.decode(
                 JsonObject(
@@ -760,7 +953,11 @@ class AppPhoneAgents(
                         previous.state != AuthState.Error
                 )
                     previous
-                else fresh.also { accounts[key] = it }
+                else
+                    fresh.also {
+                        accounts[key] = it
+                        answeredAt[key] = android.os.SystemClock.elapsedRealtime()
+                    }
             }
         return phaseOf(answer)
     }
@@ -774,32 +971,42 @@ class AppPhoneAgents(
 
     private val versions = HashMap<Pair<ProfileId, AgentId>, Pair<Long, Map<String, Any?>>>()
 
+    /** When the agent itself last answered its sign-in check ([accounts]). */
+    private val answeredAt = HashMap<Pair<ProfileId, AgentId>, Long>()
+
+    /** Claude Code's previous version: kept or not, for the version found then ([previousOf]). */
+    private val previous = HashMap<Pair<ProfileId, AgentId>, Pair<String?, Boolean>>()
+
     /**
      * What `agentHostVersion` says about the agent (Flutter read it for every row). Only Claude Code, which the
      * payload inventory has no folder for, and agents that have a payload are asked: the rest cannot be installed.
-     * A version read starts a process, so none runs while an install does, and an answer is reused for a minute.
+     * A version read starts a process, so none runs while an install does, and an answer is reused for a minute. A
+     * read cut short by a person's step ([stop]) keeps the last answer.
      */
     private fun versionOf(
         owner: ProfileId,
         agent: AgentDescriptor,
         payload: Boolean?,
         installing: Boolean,
+        stop: ProbeStop? = null,
     ): Map<String, Any?>? {
         if (!PhoneAgentRules.needsVersionProbe(agent.id, payload)) return null
         val key = owner to agent.id
         val now = android.os.SystemClock.elapsedRealtime()
         val cached = synchronized(admission) { versions[key] }
-        if (cached != null && (installing || now - cached.first < VERSION_REUSE_MS)) return cached.second
+        if (cached != null && (installing || (cached.first != STALE && now - cached.first < VERSION_REUSE_MS)))
+            return cached.second
         if (installing) return null
         val recipe = agent.recipe ?: return null
         val read =
             try {
-                linux.agentHost.checks.version(owner.raw, recipe.executable, recipe.version)
+                linux.agentHost.checks.version(owner.raw, recipe.executable, recipe.version, stop)
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {
                 null
             }
+        if (stop?.isStopped == true) return cached?.second
         synchronized(admission) {
             if (read != null) versions[key] = now to read else versions.remove(key)
         }
@@ -817,12 +1024,12 @@ class AppPhoneAgents(
             null -> PhoneAgentInstallFailure.Unknown
         }
 
-    override suspend fun dismissInstallResult(): Outcome<Unit> = lane.withLock {
+    override suspend fun dismissInstallResult(): Outcome<Unit> = lane.step {
         val owner =
-            ownerId() ?: return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
+            ownerId() ?: return@step Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
         when (val cleared = installation(owner).dismissResult(owner)) {
             is Outcome.Failed -> cleared
-            is Outcome.Ok -> refreshLocked()
+            is Outcome.Ok -> rereadLocked()
         }
     }
 
@@ -833,10 +1040,10 @@ class AppPhoneAgents(
         }
     }
 
-    override suspend fun drain(profile: ProfileId): Outcome<Unit> = lane.withLock {
+    override suspend fun drain(profile: ProfileId): Outcome<Unit> = lane.step {
         synchronized(admission) { accounts.keys.removeAll { it.first == profile } }
         val nativeOwner = agentOwner(profile) ?: profile
-        if (!Regex("[A-Za-z0-9_-]{1,80}").matches(nativeOwner.raw)) return@withLock Outcome.Ok(Unit)
+        if (!Regex("[A-Za-z0-9_-]{1,80}").matches(nativeOwner.raw)) return@step Outcome.Ok(Unit)
         val retained =
             (nativeOwner != profile && stores.profiles.profile(nativeOwner) != null) ||
                 stores.prefs.keys("oc.phoneAgentOwner.").any { key ->
@@ -845,7 +1052,7 @@ class AppPhoneAgents(
                         (stores.prefs.get(key) as? PrefValue.Str)?.value == nativeOwner.raw &&
                         stores.profiles.profile(ProfileId(alias)) != null
                 }
-        if (retained) return@withLock Outcome.Ok(Unit)
+        if (retained) return@step Outcome.Ok(Unit)
         synchronized(admission) {
             denied.add(nativeOwner)
             accounts.keys.removeAll { it.first == nativeOwner }
@@ -889,5 +1096,8 @@ class AppPhoneAgents(
 
     private companion object {
         const val VERSION_REUSE_MS = 60_000L
+
+        /** A version answer a step made out of date ([forgetFacts]). */
+        const val STALE = Long.MIN_VALUE
     }
 }

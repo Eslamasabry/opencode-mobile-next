@@ -6,6 +6,8 @@ import io.github.eslamasabry.oc.engine.agents.catalog.AgentArchitecture
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentDescriptor
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentPins
 import io.github.eslamasabry.oc.engine.agents.gate.PhoneGate
+import io.github.eslamasabry.oc.engine.agents.host.AuthProjection
+import io.github.eslamasabry.oc.engine.agents.host.AuthState
 import io.github.eslamasabry.oc.engine.agents.readiness.AgentHiddenReason
 import io.github.eslamasabry.oc.engine.agents.readiness.AgentReadiness
 import io.github.eslamasabry.oc.engine.agents.readiness.AgentSignInPhase
@@ -61,6 +63,17 @@ internal object PhoneAgentRules {
      * so none starts while an install runs (the install is the thing those processes could kill).
      */
     fun mayProbeSignIn(installRunning: Boolean): Boolean = !installRunning
+
+    /**
+     * Whether a read may reuse the sign-in answer the agent gave [ageMillis] ago instead of starting its check again
+     * (each one starts the agent's own program; Claude Code's may take a minute on a cold start). Only "signed in",
+     * and only for [SIGN_IN_REUSE_MS]: a person who signs in on the sign-in page comes back to a tile that still said
+     * "Sign in", and that answer is always checked again. A step on the agent forgets its answer.
+     */
+    fun reuseSignIn(answer: AuthProjection?, ageMillis: Long?): Boolean =
+        answer?.state == AuthState.SignedIn && ageMillis != null && ageMillis in 0 until SIGN_IN_REUSE_MS
+
+    const val SIGN_IN_REUSE_MS = 60_000L
 
     /**
      * This phone's own install of the pinned version is verified by its install step, so it needs no earlier proof; a
