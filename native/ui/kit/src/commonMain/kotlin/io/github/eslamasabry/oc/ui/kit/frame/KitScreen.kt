@@ -47,7 +47,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.graphics.drawscope.translate
-import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
+import androidx.compose.foundation.relocation.bringIntoViewResponder
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.runtime.derivedStateOf
@@ -676,21 +676,26 @@ public fun KitScreen(
                                     else ({ with(density) { COMPOSER_FADE_DP.dp.toPx() } }),
                                 bottomReach = COMPOSER_FADE_DP.dp,
                             )
-                    // A floating bar: a part brought into view (a focused field, a keyboard move) rests below the bar,
-                    // never under it. Elsewhere the scrollers keep the spec they had.
+                    // A floating bar: a part brought into view (a focused field, a keyboard move) that would rest under
+                    // the bar brings the spacer back, so it lies below the bar (KitFloatingBar.kt).
+                    val reducedMotion = KitMotion.state.reduced
+                    val intoSpec = KitMotion.specs.enter<Float>()
                     val intoView =
-                        if (!floats) LocalBringIntoViewSpec.current
-                        else remember(headerState) { FloatingBarBringIntoView { (runPx - headerState.shown(headerState.height)).coerceAtLeast(0) } }
+                        if (!floats) Modifier
+                        else
+                            Modifier.bringIntoViewResponder(
+                                remember(headerState) {
+                                    FloatingBarIntoView(headerState, { runPx }, { if (reducedMotion) null else intoSpec })
+                                }
+                            )
                     val scrolling: @Composable (Modifier) -> Unit = { m ->
                         if (pageHeader != null) {
                             val runDp = with(LocalDensity.current) { runPx.toDp() }
                             val shownHeader: @Composable ColumnScope.() -> Unit =
                                 if (!runs) pageHeader else ({ Spacer(Modifier.height(runDp)); pageHeader() })
-                            KitScrollingHeaderFrame(shownHeader, m, headerState) {
+                            KitScrollingHeaderFrame(shownHeader, m.then(intoView), headerState) {
                                 KitLoadingBar(loading, loadingLabel.orEmpty(), if (loading) Modifier.testTag("kit-screen-loading") else Modifier)
-                                Box(Modifier.fillMaxWidth().weight(1f)) {
-                                    CompositionLocalProvider(LocalBringIntoViewSpec provides intoView) { KitScreenBody(edges) { bodyPart() } }
-                                }
+                                Box(Modifier.fillMaxWidth().weight(1f)) { KitScreenBody(edges) { bodyPart() } }
                             }
                         } else {
                             // Dart: KitLoadingBar(loading:, label:) always takes its 2 dp, so the page never jumps.

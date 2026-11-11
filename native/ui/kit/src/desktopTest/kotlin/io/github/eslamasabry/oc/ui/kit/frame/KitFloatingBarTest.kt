@@ -450,14 +450,13 @@ class KitFloatingBarTest {
     }
 
     @Test
-    fun `B-KIT-FLOAT-011 bring into view counts the bar's room as hidden`() {
-        // A part 50 px down, 40 px tall, in an 800 px scroller whose top 100 px lie under the bar: Compose's own rule
-        // leaves it (it is inside the scroller); the floating page's scrolls it 50 px back to rest below the bar.
-        assertEquals(0f, bringIntoViewDistance(50f, 40f, 800f))
-        assertEquals(-50f, FloatingBarBringIntoView { 100 }.calculateScrollDistance(50f, 40f, 800f))
-        // Already below the bar: nothing moves; at rest (nothing hidden) it is Compose's rule.
-        assertEquals(0f, FloatingBarBringIntoView { 100 }.calculateScrollDistance(120f, 40f, 800f))
-        assertEquals(30f, FloatingBarBringIntoView { 0 }.calculateScrollDistance(790f, 40f, 800f))
+    fun `B-KIT-FLOAT-011 a part brought into view under the bar brings the whole spacer back`() {
+        // Chrome 160 px tall, the header 160 px scrolled away: a part 60 px down lies under the chrome, so all of the
+        // header comes back; a part below the chrome, or a header already at rest, changes nothing.
+        assertEquals(160f, floatingBringBack(top = 60f, chromePx = 160, offset = -160f))
+        assertEquals(0f, floatingBringBack(top = 170f, chromePx = 160, offset = -160f))
+        assertEquals(0f, floatingBringBack(top = 60f, chromePx = 160, offset = 0f))
+        assertEquals(40f, floatingBringBack(top = -10f, chromePx = 160, offset = -40f))
     }
 
     private companion object {

@@ -1,11 +1,13 @@
 package io.github.eslamasabry.oc.ui.kit.frame
 
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.animate
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.gestures.BringIntoViewSpec
+import androidx.compose.foundation.relocation.BringIntoViewResponder
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.ui.geometry.Rect
 import io.github.eslamasabry.oc.ui.kit.foundation.KitFrostState
-import kotlin.math.abs
 
 /**
  * A page whose body runs under a floating liquid bar (glass in the kit, step 4; owner 2026-11-11 on the home in Glass:
@@ -44,30 +46,42 @@ public class KitFloatingBar(
 )
 
 /**
- * How far a scroller in a floating page scrolls to bring a part into view (a focused field, a part reached with the
- * keyboard): as Compose's default, but over the room below the floating bar, so the part never rests under the bar.
- * [obscured] is how many px at the scroller's top lie under the bar and the status bar right now (0 at rest, where the
- * spacer holds the body below them).
+ * A part brought into view on a floating page (a focused field, a part reached with the keyboard or TalkBack) never
+ * rests under the bar. The page's scroller has already brought it into its own room, which runs on under the bar; when
+ * what it asked to show still starts under the bar and the status bar ([chromePx] from the frame's top), the frame
+ * brings its header (the spacer) back, all of it, so the page returns to its resting layout and the part lies below
+ * the bar as it did before the page floated. Nothing is asked of the page's own scrollers, so a sideways one (a chip
+ * row) is untouched.
  */
 @OptIn(ExperimentalFoundationApi::class)
-internal class FloatingBarBringIntoView(private val obscured: () -> Int) : BringIntoViewSpec {
-    override fun calculateScrollDistance(offset: Float, size: Float, containerSize: Float): Float {
-        val top = obscured().toFloat().coerceIn(0f, containerSize)
-        return bringIntoViewDistance(offset - top, size, containerSize - top)
+internal class FloatingBarIntoView(
+    private val header: KitScrollingHeaderState,
+    private val chromePx: () -> Int,
+    private val spec: () -> AnimationSpec<Float>?,
+) : BringIntoViewResponder {
+    override fun calculateRectForParent(localRect: Rect): Rect = localRect
+
+    override suspend fun bringChildIntoView(localRect: () -> Rect?) {
+        val rect = localRect() ?: return
+        val back = floatingBringBack(rect.top, chromePx(), header.offset)
+        if (back <= 0f) return
+        val motion = spec()
+        if (motion == null) {
+            header.bringBack(back)
+            return
+        }
+        var done = 0f
+        animate(0f, back, animationSpec = motion) { value, _ ->
+            header.bringBack(value - done)
+            done = value
+        }
     }
 }
 
 /**
- * Compose's default bring-into-view rule for a part [leading] px from the top of [room] px of visible room: no scroll
- * when it fits (or is bigger than the room and covers it), else the smaller of the moves that align its leading or its
- * trailing edge with the room's.
+ * How far a floating page's header comes back for a part whose top is [top] px below the frame's top, under chrome
+ * [chromePx] tall, with the header [offset] px scrolled away (0 … −height): all of it while the part starts under the
+ * chrome, nothing once it lies below.
  */
-internal fun bringIntoViewDistance(leading: Float, size: Float, room: Float): Float {
-    val trailing = leading + size
-    return when {
-        leading >= 0f && trailing <= room -> 0f
-        leading < 0f && trailing > room -> 0f
-        abs(leading) < abs(trailing - room) -> leading
-        else -> trailing - room
-    }
-}
+internal fun floatingBringBack(top: Float, chromePx: Int, offset: Float): Float =
+    if (top >= chromePx || offset >= 0f) 0f else -offset
