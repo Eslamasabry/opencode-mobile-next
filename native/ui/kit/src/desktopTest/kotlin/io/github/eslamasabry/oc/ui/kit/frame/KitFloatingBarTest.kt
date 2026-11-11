@@ -128,6 +128,8 @@ class KitFloatingBarTest {
         val clickRows: Boolean = false,
         val rows: Int = ROWS,
         val fourChips: Boolean = false,
+        /** False: the rows draw nothing (same layout), to tell what the rows add to a picture. */
+        val rowsDraw: Boolean = true,
     )
 
     /** What the test reads back from a scene. */
@@ -196,7 +198,7 @@ class KitFloatingBarTest {
                                 state = list,
                                 modifier = Modifier.fillMaxSize().then(if (home) Modifier.kitGlassSource(source) else Modifier).testTag("list"),
                             ) {
-                                items(extras.rows) { i -> BrightRow(i, if (extras.clickRows) ({ seen.clicks += i }) else null) }
+                                items(extras.rows) { i -> BrightRow(i, if (extras.clickRows) ({ seen.clicks += i }) else null, extras.rowsDraw) }
                             }
                         }
                         if (extras.fab)
@@ -213,9 +215,9 @@ class KitFloatingBarTest {
     }
 
     @Composable
-    private fun BrightRow(i: Int, onClick: (() -> Unit)? = null) {
+    private fun BrightRow(i: Int, onClick: (() -> Unit)? = null, draws: Boolean = true) {
         Box(
-            Modifier.fillMaxWidth().height(ROW_DP.dp).padding(bottom = GAP_DP.dp).background(Color.White)
+            Modifier.fillMaxWidth().height(ROW_DP.dp).padding(bottom = GAP_DP.dp).then(if (draws) Modifier.background(Color.White) else Modifier)
                 .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
                 .testTag("row-$i")
         )
@@ -360,9 +362,13 @@ class KitFloatingBarTest {
             val capsule = s.bounds["kit-liquid-bar"]!!
             val bar = s.bounds["bar"]!!
             debugPng(s.image, "scrolled-$page")
+            // Words on the pane's glass: the copy of the page it bends is whole at the pane's bottom edge and gone by the
+            // inner end of its lens rim, so the rows show through its last few dp, not behind the title.
             val inside = capsule.right.value - 24f
-            val (capsuleMean, capsuleStep) = column(s.image, inside, capsule.top.value + 8f, bar.bottom.value - 8f)
-            println("$page pane $capsule, column at $inside: " + stepsAt(s.image, inside, capsule.top.value + 8f, bar.bottom.value - 8f))
+            val from = capsule.bottom.value - 10f
+            val to = capsule.bottom.value - 3f
+            val (capsuleMean, capsuleStep) = column(s.image, inside, from, to)
+            println("$page pane $capsule, column at $inside: " + stepsAt(s.image, inside, from, to))
             assertTrue(capsuleMean >= g + 15f, "$page: content behind the capsule, mean $capsuleMean over ground $g")
             assertTrue(capsuleStep <= BLUR_STEP, "$page: blurred behind the capsule, a step of $capsuleStep")
             // Beside the pane (its 6 dp margin), below the status edge's blur and above the pane's bottom edge: nothing of
@@ -375,6 +381,46 @@ class KitFloatingBarTest {
             assertTrue(belowStep >= 100f, "$page: the rows run on below the pane, steepest step $belowStep")
             println("$page scrolled: status mean $statusMean step $statusStep, capsule mean $capsuleMean step $capsuleStep, ground $g")
         }
+    }
+
+    @Test
+    fun `B-KIT-FLOAT-013 words on the pane - bright rows add nothing under the title and the chips and still show in the pane's rim`() {
+        for (page in Page.entries) {
+            val drag: ComposeUiTest.(Seen) -> Unit = { drag(-120f - roomBelow(page)) }
+            val bright = shot(page, floating = true, act = drag)
+            val none = shot(page, floating = true, act = drag, extras = Extras(rowsDraw = false))
+            val capsule = bright.bounds["kit-liquid-bar"]!!
+            val bar = bright.bounds["bar"]!!
+            // The title's line (the bar's rows) and, on Home, the chips' line, down to where the lens rim begins (the
+            // recipe's rim: 22 dp, or 40 % of the pane's short side).
+            val rimDp = minOf(22f, 0.4f * (capsule.bottom - capsule.top).value)
+            val clear = capsule.bottom.value - rimDp - 1f
+            val lines = listOfNotNull(bar, bright.bounds["pills"])
+            for (line in lines) {
+                val (mean, max) = diff(bright.image, none.image, line.left.value + 8f, line.top.value + 2f, line.right.value - 8f, minOf(line.bottom.value - 2f, clear))
+                println("$page words over $line: mean $mean max $max")
+                assertTrue(mean <= WORDS_MEAN && max <= WORDS_MAX, "$page: bright rows show behind the words on the pane at $line: mean $mean, max $max of 255")
+            }
+            // Beside the words, in the pane's rim above its bottom edge, the rows still bend under the glass.
+            val (rim, _) = diff(bright.image, none.image, capsule.left.value + 40f, capsule.bottom.value - 8f, capsule.right.value - 40f, capsule.bottom.value - 3f)
+            println("$page rim: mean $rim over $capsule")
+            assertTrue(rim >= RIM_MEAN, "$page: the pane's rim shows nothing of the rows: mean $rim of 255")
+        }
+    }
+
+    /** The mean and the largest brightness difference (of 255) between [a] and [b] over the dp rectangle. */
+    private fun diff(a: PixelMap, b: PixelMap, left: Float, top: Float, right: Float, bottom: Float): Pair<Float, Float> {
+        var sum = 0f
+        var max = 0f
+        var n = 0
+        for (y in (top * D).roundToInt() until (bottom * D).roundToInt()) for (x in (left * D).roundToInt() until (right * D).roundToInt()) {
+            if (x !in 0 until a.width || y !in 0 until a.height) continue
+            val d = abs(luma(a[x, y]) - luma(b[x, y]))
+            sum += d
+            max = maxOf(max, d)
+            n++
+        }
+        return (if (n == 0) 0f else sum / n) to max
     }
 
     @Test
@@ -555,5 +601,12 @@ class KitFloatingBarTest {
 
         /** The most brightness may step between two rows where the content is blurred (a sharp row edge is ~200). */
         const val BLUR_STEP = 24f
+
+        /** Behind the words on a top pane: at most this much brightness of 255 from the rows, on average and at any pixel. */
+        const val WORDS_MEAN = 2f
+        const val WORDS_MAX = 8f
+
+        /** In the pane's rim the rows still show: at least this much on average. */
+        const val RIM_MEAN = 15f
     }
 }

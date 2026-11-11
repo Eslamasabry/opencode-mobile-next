@@ -127,6 +127,9 @@ class ChatWordsGlassTest {
         val field: DpRect,
         val status: DpRect?,
         val pill: DpRect?,
+        val bar: DpRect,
+        /** The "Needs your decision" label above the box (a scene with a card), else null. */
+        val label: DpRect?,
         val rows: List<DpRect>,
         val list: String,
         /** Whether the bottom block saw the screen's own recording (the frame handed it nothing else). */
@@ -141,7 +144,7 @@ class ChatWordsGlassTest {
      * that draw nothing) scrolled well away from the newest so it runs under the bar and the message box, and the box.
      */
     @Composable
-    private fun Scene(bright: Boolean, notice: Boolean, seen: Array<Any?>, lazy: Array<LazyListState?>, statusDp: Int) {
+    private fun Scene(bright: Boolean, notice: Boolean, seen: Array<Any?>, lazy: Array<LazyListState?>, statusDp: Int, card: Boolean = false) {
         CompositionLocalProvider(LocalKitScreenInsets provides WindowInsets(top = statusDp.dp, bottom = NAV_DP.dp)) {
             Box(Modifier.size(W.dp, H.dp).testTag("scene")) {
                 val source = rememberKitFrostState()
@@ -166,6 +169,9 @@ class ChatWordsGlassTest {
                     bottom = {
                         seen[0] = LocalKitLiquidChrome.current
                         KitReportBottomSlab(kitComposerSlab())
+                        // A request card's label stands above the box inside the same block (ChatScreen): a bar of
+                        // the card's size with nothing of its own behind it.
+                        if (card) Box(Modifier.fillMaxWidth().height(LABEL_DP.dp).testTag("decision-label"))
                         KitComposerBox(
                             running = false,
                             field = {
@@ -203,7 +209,7 @@ class ChatWordsGlassTest {
         }
     }
 
-    private fun shot(appearance: KitAppearance, platform: KitPlatform, bright: Boolean, notice: Boolean = false, statusDp: Int = STATUS_DP): Shot {
+    private fun shot(appearance: KitAppearance, platform: KitPlatform, bright: Boolean, notice: Boolean = false, statusDp: Int = STATUS_DP, card: Boolean = false): Shot {
         lateinit var shot: Shot
         runDesktopComposeUiTest((W * D).toInt(), (H * D).toInt()) {
             val seen = arrayOfNulls<Any?>(2)
@@ -211,7 +217,7 @@ class ChatWordsGlassTest {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(D)) {
                     KitTheme(appearance = appearance, platform = platform, localeTag = "en", stillFrame = true) {
-                        Scene(bright, notice, seen, lazy, statusDp)
+                        Scene(bright, notice, seen, lazy, statusDp, card)
                     }
                 }
             }
@@ -235,6 +241,8 @@ class ChatWordsGlassTest {
                     field = bounds("field"),
                     status = if (notice) bounds("kit-screen-status") else null,
                     pill = boundsOrNull("jump-to-latest"),
+                    bar = bounds("bar"),
+                    label = if (card) bounds("decision-label") else null,
                     rows = visible.map { bounds(it.toString()) },
                     list = list,
                     bottomSawSource = seen[0] === seen[1],
@@ -278,6 +286,43 @@ class ChatWordsGlassTest {
         val (edgeMean, _) = diff(bright.image, none.image, left, box.top.value + 1f, right, box.top.value + 5f)
         println("top edge: mean $edgeMean")
         assertTrue(edgeMean >= EDGE_MEAN, "the box's top edge shows nothing of the rows behind it: mean $edgeMean of 255")
+    }
+
+    @Test
+    fun `a bright row never shows behind the Needs your decision label above the box, and the pill stays above the card`() {
+        val bright = shot(dark(Style.Glass), LensPlatform(), bright = true, card = true)
+        val none = shot(dark(Style.Glass), LensPlatform(), bright = false, card = true)
+        val label = bright.label!!
+        assertTrue(bright.rows.any { it.top < label.top && it.bottom > label.bottom }, "rows run behind the label: ${bright.rows.map { it.top..it.bottom }} label $label")
+        val (mean, max) = diff(bright.image, none.image, label.left.value, label.top.value, label.right.value, label.bottom.value)
+        println("label: mean $mean max $max over $label, pill ${bright.pill}, box ${bright.box}")
+        assertTrue(mean <= NOTICE_MEAN && max <= NOTICE_MAX, "bright rows show behind the label: mean $mean, max $max of 255")
+        // The words on the box are as clear as without a card.
+        val (wordsMean, wordsMax) =
+            diff(bright.image, none.image, bright.field.left.value, bright.placeholder.top.value, bright.field.right.value, bright.placeholder.bottom.value)
+        assertTrue(wordsMean <= WORDS_MEAN && wordsMax <= WORDS_MAX, "bright rows show behind the placeholder: mean $wordsMean, max $wordsMax")
+        // The jump pill sits above the card (where the layout puts it), not joined onto the box's top under the label.
+        bright.pill?.let { assertTrue(it.bottom <= label.top + 1.dp, "the pill ${it} lies below the label's top ${label.top}") }
+    }
+
+    @Test
+    fun `a bright row never shows behind the chat bar's title or the status bar, and still shows in the bar's rim`() {
+        val bright = shot(dark(Style.Glass), LensPlatform(), bright = true)
+        val none = shot(dark(Style.Glass), LensPlatform(), bright = false)
+        val bar = bright.bar
+        // The bar's pane lies 4 dp in from the bar's top and bottom; its rim is 22 dp (40 % of its 48 dp is 19 dp).
+        val paneBottom = bar.bottom.value - 4f
+        val rim = minOf(22f, 0.4f * (bar.bottom - bar.top).value)
+        val clearTo = paneBottom - rim - 1f
+        assertTrue(bright.rows.any { it.top < bar.top }, "rows run under the bar: ${bright.rows.map { it.top..it.bottom }} bar $bar")
+        // The status bar's band and the bar's title line.
+        val (mean, max) = diff(bright.image, none.image, bar.left.value + 8f, 0f, bar.right.value - 8f, clearTo)
+        println("bar words: mean $mean max $max over 0..$clearTo, bar $bar")
+        assertTrue(mean <= WORDS_MEAN && max <= WORDS_MAX, "bright rows show behind the bar's title or the status bar: mean $mean, max $max of 255")
+        // In the rim above the bar's bottom edge the glass still bends real rows.
+        val (edge, _) = diff(bright.image, none.image, bar.left.value + 40f, paneBottom - 8f, bar.right.value - 40f, paneBottom - 3f)
+        println("bar rim: mean $edge")
+        assertTrue(edge >= EDGE_MEAN, "the bar's rim shows nothing of the rows: mean $edge of 255")
     }
 
     @Test
@@ -436,6 +481,7 @@ class ChatWordsGlassTest {
         const val NAV_DP = 16
         const val BAR_DP = 56
         const val ROW_DP = 40
+        const val LABEL_DP = 64
         const val ROWS = 60
         const val SCROLLED_TO = 20
 
