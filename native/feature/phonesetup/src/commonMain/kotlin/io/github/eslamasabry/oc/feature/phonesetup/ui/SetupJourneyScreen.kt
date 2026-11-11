@@ -1003,6 +1003,11 @@ internal class JourneyProgressMemory {
         // number itself is the steps' own sizes: the running step's part not yet done plus every pending step, so it
         // drops as seconds pass and as steps complete, and a step with no size makes it unknown rather than a guess.
         if (progress.etaSeconds == null && remaining == null) return null
+        if (progress.components.isEmpty()) {
+            // No step is listed: the engine's own figure is all there is, and it still never rises.
+            progress.etaSeconds?.let { remaining = remaining?.let { r -> minOf(r, it) } ?: it }
+            return remaining
+        }
         val sizes = progress.components.filter { it.state == ComponentState.Pending }.map { row ->
             registry.firstOrNull { it.id == row.id }?.estimatedSeconds?.takeIf { it > 0 }
         }

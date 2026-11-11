@@ -37,10 +37,11 @@ class SetupEtaHonestyTest {
     @Test
     fun `the time left only goes down`() {
         val memory = JourneyProgressMemory()
-        assertEquals(180, memory.eta(running(180, 20), registry))
+        // Built from the steps' sizes (this step's 40 s left + the pending 60 s), not the pace guess.
+        assertEquals(100, memory.eta(running(180, 20), registry))
         val later = memory.eta(running(360, 40), registry)
         assertNotNull(later)
-        assertEquals(180, later)
+        assertEquals(80, later)
     }
 
     @Test
