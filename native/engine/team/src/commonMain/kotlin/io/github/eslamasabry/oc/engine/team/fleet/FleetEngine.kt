@@ -109,8 +109,16 @@ public class FleetEngine(
         val dirty = mutableSetOf<FleetScope>()
         val dirtyLock = Mutex()
         val retries = MutableStateFlow(0)
+
+        /** Where a run writes once it is no longer the profile's (the address changed, or the team was forgotten). */
+        private val detached = MutableStateFlow(FleetState())
+
+        /**
+         * The profile's state while this is the profile's run, else a state nobody shows: an old connection still winding
+         * down (its page not yet cancelled) never writes the old host's snapshot or stream into the new address's page.
+         */
         val state: MutableStateFlow<FleetState>
-            get() = flow(profileId)
+            get() = if (runs.load()[profileId] === this) flow(profileId) else detached
     }
 
     private fun run(profileId: String, config: TeamConfig): Run {
