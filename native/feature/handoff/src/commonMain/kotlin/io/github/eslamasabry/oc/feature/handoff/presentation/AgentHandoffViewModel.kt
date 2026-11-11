@@ -45,14 +45,16 @@ public class AgentHandoffViewModel(
             when (val opened = host.open(route.source)) {
                 is Outcome.Failed -> {
                     val review = host.review(route.source)
+                    val block = HandoffBlock.of(opened.failure)
                     if (run == generation)
                         mutable.update {
                             it.copy(
                                 loading = false,
+                                block = block,
                                 failure =
                                     (review as? Outcome.Failed)?.failure
                                         ?: opened.failure.takeIf {
-                                            (review as? Outcome.Ok)?.value == null
+                                            block == null && (review as? Outcome.Ok)?.value == null
                                         },
                                 sourceReview = (review as? Outcome.Ok)?.value,
                                 title = (review as? Outcome.Ok)?.value?.title.orEmpty(),
