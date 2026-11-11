@@ -30,8 +30,10 @@ import kotlinx.coroutines.selects.select
  *   cancel also ends the shared wait.
  * - An attempt that would make its server the active one, overtaken by a later choice of another server, may still
  *   connect it in the background ([Turn.overtaken]); it never takes the active server back.
- * - [waiting] counts the attempts from their start until they let go of the lock, so the runtime's busy flag stays true
- *   while the phone's server boots ("Starting", then "Connecting") and drops when the last one ends or is superseded.
+ * - [waiting] counts the attempts that would make their server the active one, from their start until they let go of
+ *   the lock, so the runtime's busy flag stays true while the phone's server boots ("Starting", then "Connecting") and
+ *   drops when the last one ends or is superseded. A background join (a list source) does not hold the home's
+ *   "Connecting" while it waits.
  */
 public class LocalServerWaits(
     private val scope: CoroutineScope,
@@ -64,7 +66,7 @@ public class LocalServerWaits(
     private val tickets = MutableStateFlow(Tickets())
     private val shared = MutableStateFlow<Map<ProfileId, Shared>>(emptyMap())
 
-    /** Attempts that waited, or wait, for the phone's server and have not yet let go of the lock. */
+    /** Attempts to make a server the active one that wait, or waited, for the phone's server and still run. */
     public val waiting: Int
         get() = tickets.value.waiting
 
@@ -83,7 +85,7 @@ public class LocalServerWaits(
     ): T {
         val attempt = begin(id, makeActive)
         if (!waits) return locked { connect(Turn(null, makeActive, overtaken = false)) }
-        count(+1)
+        if (makeActive) count(+1)
         try {
             val local = await(attempt) ?: return stale()
             return locked {
@@ -95,7 +97,7 @@ public class LocalServerWaits(
                 }
             }
         } finally {
-            count(-1)
+            if (makeActive) count(-1)
         }
     }
 

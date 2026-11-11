@@ -211,4 +211,18 @@ class LocalServerWaitsTest {
         assertEquals(phone, app.active)
         assertEquals(listOf(true, false), app.waitingShown)
     }
+
+    @Test
+    fun `W3-CONN-008 a background join waiting for This phone does not hold the home's Connecting`() = runTest {
+        val app = App(backgroundScope, this, phone)
+        // The list's sources join This phone while another server is the active one (synchronizeListSources).
+        val join = async { app.connect(phone, makeActive = false) }
+        advanceTimeBy(1_000)
+        runCurrent()
+        assertFalse(app.busy, "the active server's opening card would read Connecting for the phone's boot")
+        assertFalse(app.order.isLocked)
+        advanceTimeBy(30.seconds)
+        runCurrent()
+        assertEquals("connected phone in the list", join.await())
+    }
 }
