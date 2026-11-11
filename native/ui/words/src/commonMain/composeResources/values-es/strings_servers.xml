@@ -136,7 +136,7 @@
     </plurals>
     <string name="serversRemoveDrafts__eq1">Se eliminará 1 borrador sin enviar</string>
     <string name="serversRemoveActiveNext">Estás conectado a él: la app se desconecta y muestra tus servidores</string>
-    <string name="serversRemoveServerKeeps">No se elimina nada en el servidor ni en tus proveedores de IA</string>
+    <string name="serversRemoveServerKeeps">No se elimina nada en el servidor ni en tus proveedores de IA.</string>
     <string name="pairingScannerAllowCamera">Permitir cámara</string>
     <string name="pairingScannerStarting">Abriendo la cámara…</string>
     <string name="tailscaleSetupAppTitle">Tailscale en este teléfono</string>

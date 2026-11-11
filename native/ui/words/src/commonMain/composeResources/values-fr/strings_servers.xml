@@ -266,7 +266,7 @@
     </plurals>
     <string name="serversRemoveDrafts__eq1">1 brouillon non envoyé sera supprimé</string>
     <string name="serversRemoveActiveNext">Vous y êtes connecté\u00A0: l'app se déconnecte et affiche vos serveurs</string>
-    <string name="serversRemoveServerKeeps">Rien n'est supprimé sur le serveur ni chez vos fournisseurs d'IA</string>
+    <string name="serversRemoveServerKeeps">Rien n'est supprimé sur le serveur ni chez vos fournisseurs d'IA.</string>
     <string name="pairingScannerAllowCamera">Autoriser la caméra</string>
     <string name="pairingScannerStarting">Ouverture de la caméra…</string>
     <string name="profileMonitorSwitchBody">Une exécution est en cours sur %1$s. Le changement affiche %2$s dans cette app\u00A0; l'exécution sur %1$s continue.</string>

@@ -267,7 +267,7 @@
     </plurals>
     <string name="serversRemoveDrafts__eq1">1 unsent draft will be deleted</string>
     <string name="serversRemoveActiveNext">You are connected to it: the app disconnects and shows your servers</string>
-    <string name="serversRemoveServerKeeps">Nothing is deleted on the server or at your AI providers</string>
+    <string name="serversRemoveServerKeeps">Nothing is deleted on the server or at your AI providers.</string>
     <string name="pairingScannerAllowCamera">Allow camera</string>
     <string name="pairingScannerStarting">Opening the camera…</string>
     <string name="profileMonitorSwitchBody">A run is going on %1$s. Switching shows %2$s in this app; the run on %1$s keeps going.</string>
