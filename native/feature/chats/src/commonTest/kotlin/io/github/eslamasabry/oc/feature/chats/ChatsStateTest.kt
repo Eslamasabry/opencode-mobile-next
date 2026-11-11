@@ -193,7 +193,8 @@ class ChatsStateTest {
                 { false },
                 { null },
             )
-        assertTrue(build(item("a"), brief = unknown).brief!!.unknown)
+        // Nothing to show and nothing to do: no block at all, so no "can't tell" line either.
+        assertNull(build(item("a"), brief = unknown).brief)
     }
 
     @Test
@@ -232,7 +233,8 @@ class ChatsStateTest {
             )
         assertEquals(listOf(right.ref), ui.brief!!.rows.map { it.ref })
         assertEquals(listOf(right.identity), ui.brief!!.rows.map { it.key })
-        assertTrue(
+        // Failing closed now means no block at all: a brief with no row to show says nothing (owner 2026-11-11).
+        assertNull(
             build(
                     otherProfile,
                     otherFolder,
@@ -241,14 +243,9 @@ class ChatsStateTest {
                     unknownLocation,
                     brief = brief,
                 )
-                .brief!!
-                .rows
-                .isEmpty()
+                .brief
         )
-        assertTrue(
-            build(right, brief = brief.copy(scope = null)).brief!!.rows.isEmpty(),
-            "unscoped briefs fail closed",
-        )
+        assertNull(build(right, brief = brief.copy(scope = null)).brief, "unscoped briefs fail closed")
     }
 
     @Test

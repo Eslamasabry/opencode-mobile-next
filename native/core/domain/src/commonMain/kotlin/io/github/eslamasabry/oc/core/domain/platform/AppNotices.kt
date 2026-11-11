@@ -27,6 +27,9 @@ public enum class AppNoticeAction {
 
     /** The crash offer's "Review and send" (Flutter 2.1.5 `CrashReportOffer`): opens Report a problem; sends nothing. */
     ReviewCrash,
+
+    /** The app-closed notice when the phone's OpenCode did not come back by itself: This phone, where it is started. */
+    OpenThisPhone,
 }
 
 /** The one-time question, offered only after a real reply has completed. */

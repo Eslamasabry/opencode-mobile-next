@@ -493,6 +493,10 @@ public class ChatsViewModel(
         nav.open(io.github.eslamasabry.oc.ui.routes.AgentsRoute.Home)
     }
 
+    override fun openAgent(agentId: String) {
+        nav.open(io.github.eslamasabry.oc.ui.routes.AgentsRoute.Agent(agentId))
+    }
+
     override fun askAlwaysAllow(row: ConversationRowUi) {
         if (row.permission == null || row.key !in state.value.alwaysAllowable) return
         confirmingAlways.value = row

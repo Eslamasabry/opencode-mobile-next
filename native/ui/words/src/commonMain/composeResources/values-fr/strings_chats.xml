@@ -324,7 +324,6 @@
     <string name="chats_all_filter">Filtre\u00A0: %1$s</string>
     <string name="chats_all_none">Aucun filtre</string>
     <string name="chats_back">Retour</string>
-    <string name="chatsReturnBriefUnknown">Impossible de savoir ce qui est nouveau sur ce serveur</string>
     <string name="chatsReturnBriefMore">et %1$d autres</string>
     <string name="workRunawayStopFailedRetry">Impossible d’arrêter %1$s. Réessayez.</string>
     <string name="chatsHomeInterrupted">Interrompue</string>
