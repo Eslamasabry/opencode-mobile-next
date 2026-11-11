@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatReplyFailedSignIn">模型提供方不接受此登录。请重新登录该提供方，或选择其他模型。</string>
+    <string name="chatReplyFailedModel">此模型不可用。请选择其他模型后重新发送。</string>
+    <string name="chatReplyFailedBusy">模型提供方现在很忙。请稍等片刻，或选择其他模型。</string>
+    <string name="chatReplyFailedOther">回复因错误而停止。请重新发送，或选择其他模型。</string>
+    <string name="chatReplyFailedDetails">详情</string>
+    <string name="chatReplyFailedCopy">复制详情</string>
+    <string name="chatSendFailedOffline">现在无法连接到服务器。</string>
+    <string name="chatSendFailedChanged">发送时连接发生了变化。没有发送任何内容。</string>
+    <string name="chatSendFailedRefused">服务器没有接收这条消息。没有发送任何内容。</string>
+    <string name="chatModelsSearch">查找模型</string>
+    <string name="chatModelsRecent">最近</string>
+    <string name="chatModelsCurrent">当前</string>
+    <string name="chatModelsNoMatch">没有匹配的模型</string>
+    <string name="chatsHomeNewShort">新对话</string>
+</resources>

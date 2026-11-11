@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentsTileInstalling">正在安装…</string>
+    <string name="agentsHelperNotConnected">手机智能体未连接。</string>
+    <string name="agentsHelperNotStarted">手机智能体未连接：助手程序没有启动。</string>
+    <string name="agentsHelperNoAnswer">手机智能体未连接：助手程序没有响应。</string>
+    <string name="agentsHelperKeyRefused">手机智能体未连接：助手程序不接受此应用的密钥。</string>
+    <string name="agentsHelperKeyUnreadable">手机智能体未连接：这部手机无法读取助手程序的密钥。</string>
+    <string name="agentsHelperNoLinux">手机智能体未连接：这部手机的内置 Linux 尚未设置。</string>
+    <string name="agentsHelperUpdateRequired">手机智能体未连接：助手程序缺失或版本过旧，无法运行。</string>
+    <string name="agentsHelperUpdateAction">更新助手程序</string>
+    <string name="agentsInstallFailedDownload">无法安装 %1$s：下载没有完成。请检查连接后重试。</string>
+    <string name="agentsInstallFailedChecksum">无法安装 %1$s：下载的文件与应用预期的不符，已丢弃。请重试。</string>
+    <string name="agentsInstallFailedStorage">无法安装 %1$s：这部手机空间不足。请腾出一些空间后重试。</string>
+    <string name="agentsInstallFailedVersion">无法安装 %1$s：收到的版本与应用预期的不符。请重试。</string>
+    <string name="agentsInstallFailedUnknown">无法安装 %1$s。请重试；详情中有手机上报的信息。</string>
+    <string name="agentsInstallInterruptedNow">安装 %1$s 在完成前被中断。请重试以继续。</string>
+    <string name="agentsTabsLabel">智能体运行的位置</string>
+    <string name="agentsTabComputers">在电脑上</string>
+    <string name="agentsPhoneReady">这部手机已就绪</string>
+    <string name="agentsPhoneReadyDetails">这部手机已就绪 · %1$s · Android %2$s</string>
+    <string name="agentsCheckAgain">刷新</string>
+    <string name="agentsAddComputerLine">在运行 Paseo 的电脑上使用 Claude Code 或 Pi。</string>
+    <string name="agentsComputerLooking">正在这台电脑上查找智能体…</string>
+    <string name="agentsComputerReadFailed">无法读取这台电脑的智能体。下拉可重试。</string>
+    <string name="agentsNewChat">新对话</string>
+    <string name="agentsNewChatWith">与 %1$s 开始新对话</string>
+    <string name="agentsConversationsStored">对话的存放位置</string>
+    <string name="agentsConversationsStoredOn">对话的存放位置：%1$s</string>
+    <string name="agentsHostAccount">主机账号：%1$s</string>
+</resources>

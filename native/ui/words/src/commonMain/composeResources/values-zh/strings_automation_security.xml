@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="secAutomationTitle">自动运行的内容</string>
+    <string name="secAutomationDetail">选择此服务器可以自动做什么。选择只是允许已有的工作，不会启动它。</string>
+    <string name="secAutomationReconnect">重新连接</string>
+    <string name="secAutomationRetryIntake">重试收到的任务</string>
+    <string name="secAutomationReconcileQueuedSends">核对排队的发送</string>
+    <string name="secAutomationRetryProviderErrors">重试提供方错误</string>
+    <string name="secAutomationRestartPhoneServer">重启手机服务器</string>
+    <string name="secAutomationResumeSetup">继续设置</string>
+    <string name="secAutomationRecheckEnvironment">重新检查环境</string>
+    <string name="secAutomationPollRestartHealth">检查重启后的状态</string>
+    <string name="secAutomationThermalRecovery">过热后恢复</string>
+    <string name="secAutomationReduceEffects">减弱视觉效果</string>
+    <string name="secAutomationChooseDefaults">选择默认值</string>
+    <string name="secAutomationDetectInstallations">检测已安装的内容</string>
+    <string name="secAutomationPreserveDrafts">保留草稿</string>
+    <string name="secAutomationFollowOutput">跟随输出</string>
+    <string name="secAutomationPollOpenPages">刷新已打开的页面</string>
+    <string name="secAutomationBoundedPaging">加载更多结果</string>
+    <string name="secAutomationRouteReadyWork">分配就绪的工作</string>
+    <string name="secAutomationWakeStalledPool">唤醒停滞的工作进程</string>
+    <string name="secAutomationRestartWorkers">重启工作进程</string>
+    <string name="secAutomationRecycleWorkers">回收工作进程</string>
+    <string name="secAutomationHoldAtProviderLimit">达到提供方限额时等待</string>
+    <string name="secAutomationRetryUnconfirmedAnswer">重试未确认的回答</string>
+    <string name="secAutomationRetryTransientTask">重试临时失败的任务</string>
+    <string name="secAutomationFallBackToDirectTask">改用直接任务</string>
+    <string name="secAutomationApplyCodePush">应用代码更新</string>
+    <string name="secAutomationRestartDevServices">重启开发服务</string>
+    <string name="secAutomationStopIdleHelpers">停止空闲的助手程序</string>
+    <string name="secAutomationCleanCaches">清理缓存</string>
+    <string name="secAutomationUpdateWhenIdle">空闲时更新</string>
+    <string name="secAutomationMonitorOtherServers">监控其他服务器</string>
+    <string name="secAutomationMonitorQuota">监控额度</string>
+</resources>

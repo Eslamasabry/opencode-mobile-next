@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="activityUndoRestart">停止重启后的服务器</string>
+    <string name="activityUndoing">正在停止重启后的服务器…</string>
+    <string name="activityUndone">重启已撤销。</string>
+    <string name="activityUndoFailed">撤销失败。</string>
+    <string name="activityUndoUnconfirmed">撤销结果未知，不会重试。</string>
+    <string name="activityUndoUnavailable">无法撤销。</string>
+</resources>

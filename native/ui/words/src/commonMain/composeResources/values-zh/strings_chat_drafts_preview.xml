@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatDraftRestoring">正在打开你保存的草稿…</string>
+    <string name="chatDraftAlreadySent">这段文字可能已经发送。再次发送前，请先查看对话。</string>
+    <string name="chatDraftRepeatTitle">再次发送这段文字？</string>
+    <string name="chatDraftRepeatAction">再次发送</string>
+    <string name="chatDraftRepeatBody">这段文字已在对话中。只有想要新的回复时才再次发送。</string>
+</resources>

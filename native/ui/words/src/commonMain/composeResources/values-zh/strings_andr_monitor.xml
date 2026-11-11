@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="andrMonitorExplanation">在此应用打开期间，或后台连接运行期间，检查其他已保存的服务器。每个服务器都需要你的许可。监控绝不会开启后台连接。</string>
+    <string name="andrMonitorEnabled">检查此服务器</string>
+    <string name="andrMonitorOff">已关闭。不进行后台检查。</string>
+    <string name="andrMonitorWaiting">等待下一次检查。之前的信息可能已过时。</string>
+    <string name="andrMonitorChecking">正在检查。之前的信息可能已过时。</string>
+    <string name="andrMonitorCurrent">最近一次检查后已是最新。</string>
+    <string name="andrMonitorUnavailable">无法检查。请打开此服务器查看它的最新动态。</string>
+    <string name="andrMonitorWifi">正在等待 Wi-Fi。</string>
+    <string name="andrMonitorPaused">应用和后台连接都已停止，因此暂停。</string>
+    <string name="andrMonitorSaveFailed">无法保存此选择。请重试。</string>
+    <string name="andrMonitorCheckIn">长时间回复时提醒我</string>
+    <string name="andrMonitorCheckInDetail">当观察到某个对话持续工作这么久后，提醒一次。检查失败不计入工作时间。</string>
+    <string name="andrMonitorMinutes">%1$s 分钟</string>
+</resources>
