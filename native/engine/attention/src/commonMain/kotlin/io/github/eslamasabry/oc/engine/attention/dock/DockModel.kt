@@ -50,8 +50,30 @@ public data class DockEntry(
      * so it never has to diff states itself.
      */
     val pulse: Int,
+    /**
+     * The conversation's own state before sub-agents are rolled in; [state] is the one to draw. They differ only when a
+     * sub-agent raises the ring (see [causedBy]) or works while this conversation is idle between steps.
+     */
+    val ownState: DockState = state,
+    /** The sub-agent that raised [state] to NeedsYou or Failed, so the UI can say "explore needs you". Null otherwise. */
+    val causedBy: ConversationRef? = null,
+    /** Sub-agents this conversation spawned (sessions whose parent is this one), in creation order, capped. */
+    val children: ImmutableList<DockChild> = persistentListOf(),
+    /** Sub-agents that did not fit [DockModel.childCap]. */
+    val childOverflow: Int = 0,
 ) {
     val name: String? get() = nickname ?: title
+}
+
+/** One sub-agent under a ring. Never a ring of its own. [name] is its agent when known, else its title. */
+public data class DockChild(
+    val ref: ConversationRef,
+    val title: String?,
+    val agent: String?,
+    val state: DockState,
+    val pulse: Int,
+) {
+    val name: String? get() = agent ?: title
 }
 
 public enum class DockPresence {
@@ -70,9 +92,12 @@ public data class DockUi(
     val entries: ImmutableList<DockEntry> = persistentListOf(),
     val presence: DockPresence = DockPresence.Hidden,
     val overflow: Int = 0,
+    /** The ring of the conversation on screen; for a sub-agent on screen this is its parent. */
     val open: ConversationRef? = null,
+    /** The sub-agent on screen, when one is; [open] is then its parent. */
+    val openChild: ConversationRef? = null,
     val tucked: Boolean = false,
-    /** Entries that are not Idle. */
+    /** Entries that are not Idle once sub-agents are counted. */
     val liveCount: Int = 0,
 )
 
@@ -91,7 +116,7 @@ public enum class DockRunEnd {
 /** Everything that can change the dock. The reducer is [DockModel.reduce]; nothing else mutates it. */
 public sealed interface DockEvent {
     /** Fills in the title and agent of a conversation the dock already tracks. Never adds one. */
-    public data class Meta(val ref: ConversationRef, val title: String?, val agent: String?) : DockEvent
+    public data class Meta(val ref: ConversationRef, val title: String?, val agent: String?, val parent: SessionId? = null) : DockEvent
 
     public data class RunStarted(val ref: ConversationRef) : DockEvent
 
@@ -157,6 +182,8 @@ public sealed interface DockEvent {
 public class DockModel private constructor(private val s: Snapshot) {
     public val cap: Int get() = s.cap
 
+    public val childCap: Int get() = s.childCap
+
     public val ui: DockUi by lazy(LazyThreadSafetyMode.NONE) { s.toUi() }
 
     public fun reduce(event: DockEvent): DockModel {
@@ -178,6 +205,7 @@ public class DockModel private constructor(private val s: Snapshot) {
         val requests: Set<String> = emptySet(),
         val outcome: Outcome = Outcome.None,
         val pulse: Int = 0,
+        val parent: SessionId? = null,
     ) {
         fun state(): DockState =
             when {
@@ -193,6 +221,7 @@ public class DockModel private constructor(private val s: Snapshot) {
 
     private data class Snapshot(
         val cap: Int,
+        val childCap: Int,
         val tracked: Map<ConversationRef, Tracked> = emptyMap(),
         val names: Map<ConversationRef, String> = emptyMap(),
         val order: List<ConversationRef> = emptyList(),
@@ -200,11 +229,11 @@ public class DockModel private constructor(private val s: Snapshot) {
         val tucked: Boolean = false,
         val nextSeq: Long = 0,
         /** Titles and agents heard before a conversation joined the dock, so a newcomer arrives with its name. */
-        val known: PersistentMap<ConversationRef, Pair<String?, String?>> = persistentMapOf(),
+        val known: PersistentMap<ConversationRef, Triple<String?, String?, SessionId?>> = persistentMapOf(),
     ) {
         /** The record for [ref], created when it is missing. */
         private fun withTracked(ref: ConversationRef, change: (Tracked) -> Tracked): Snapshot {
-            val (base, next) = tracked[ref]?.let { it to nextSeq } ?: (Tracked(ref, nextSeq, known[ref]?.first, known[ref]?.second) to nextSeq + 1)
+            val (base, next) = tracked[ref]?.let { it to nextSeq } ?: (Tracked(ref, nextSeq, known[ref]?.first, known[ref]?.second, parent = known[ref]?.third) to nextSeq + 1)
             return copy(tracked = tracked + (ref to change(base)), nextSeq = next)
         }
 
@@ -239,7 +268,7 @@ public class DockModel private constructor(private val s: Snapshot) {
 
         fun step(e: DockEvent): Snapshot =
             when (e) {
-                is DockEvent.Meta -> remember(e).ifTracked(e.ref) { it.copy(title = e.title ?: it.title, agent = e.agent ?: it.agent) }
+                is DockEvent.Meta -> remember(e).ifTracked(e.ref) { it.copy(title = e.title ?: it.title, agent = e.agent ?: it.agent, parent = e.parent ?: it.parent) }
                 is DockEvent.RunStarted ->
                     withTracked(e.ref) { it.copy(busy = true, thinking = false, outcome = Outcome.None) }
                 is DockEvent.RunEnded ->
@@ -271,7 +300,7 @@ public class DockModel private constructor(private val s: Snapshot) {
                             ifTracked(e.ref) { alerted(it).copy(outcome = Outcome.Failed) }.untuckFor(e.ref)
                         } else this
                     } else this
-                is DockEvent.Deleted -> copy(known = known.remove(e.ref), tracked = tracked - e.ref, names = names - e.ref, open = open.takeIf { it != e.ref })
+                is DockEvent.Deleted -> copy(known = known.remove(e.ref), tracked = tracked.filter { (r, t) -> r != e.ref && !(r.profileId == e.ref.profileId && t.parent == e.ref.sessionId) }, names = names - e.ref, open = open.takeIf { it != e.ref })
                 is DockEvent.ProfileGone ->
                     copy(
                         known = known.filterKeys { it.profileId != e.profile }.toPersistentMap(),
@@ -286,7 +315,19 @@ public class DockModel private constructor(private val s: Snapshot) {
                 is DockEvent.NicknameSet -> copy(names = if (e.name == null) names - e.ref else names + (e.ref to e.name))
                 is DockEvent.Opened -> {
                     val moved = copy(open = e.ref)
-                    if (e.ref == null) moved else moved.withTracked(e.ref) { it }.seen(e.ref)
+                    if (e.ref == null) {
+                        moved
+                    } else {
+                        // Opening a conversation shows its sub-agents' results: their Finished marks clear too, their
+                        // Failed and NeedsYou ones stay until that sub-agent itself is opened.
+                        val parent = e.ref
+                        val cleared = moved.copy(
+                            tracked = moved.tracked.mapValues { (r, t) ->
+                                if (r.profileId == parent.profileId && t.parent == parent.sessionId && t.outcome == Outcome.Finished) t.copy(outcome = Outcome.None) else t
+                            },
+                        )
+                        cleared.withTracked(parent) { it }.seen(parent)
+                    }
                 }
                 is DockEvent.Seen -> seen(e.ref)
                 DockEvent.Tuck -> copy(tucked = true)
@@ -335,56 +376,127 @@ public class DockModel private constructor(private val s: Snapshot) {
 
         private fun remember(e: DockEvent.Meta): Snapshot {
             val old = known[e.ref]
-            val value = (e.title ?: old?.first) to (e.agent ?: old?.second)
+            val value = Triple(e.title ?: old?.first, e.agent ?: old?.second, e.parent ?: old?.third)
             if (old == value) return this
             val next = if (e.ref in known) known.remove(e.ref).put(e.ref, value) else known.put(e.ref, value)
             return copy(known = if (next.size > KNOWN_LIMIT) next.remove(next.keys.first()) else next)
         }
 
-        /** Drops Idle records, recomputes membership and keeps the stable order. */
-        fun settled(): Snapshot {
-            val kept = tracked.filter { (ref, t) -> t.state() != DockState.Idle || ref == open }
-            val live = kept.values.filter { it.state() != DockState.Idle }
-            val members = kept.values.filter { it.state() != DockState.Idle || (live.any { l -> l.ref != it.ref }) }
-            val ids = members.map { it.ref }.toSet()
-            val nextOrder = order.filter { it in ids } + members.filter { it.ref !in order }.sortedBy { it.seq }.map { it.ref }
-            return copy(tracked = kept, order = nextOrder, tucked = tucked && live.isNotEmpty())
+        private fun parentOf(ref: ConversationRef): ConversationRef? =
+            (tracked[ref]?.parent ?: known[ref]?.third)?.let { ConversationRef(ref.profileId, it) }
+
+        /** The top-level conversation a sub-agent belongs to (itself when it has no parent). */
+        fun rootOf(ref: ConversationRef): ConversationRef {
+            var at = ref
+            repeat(MAX_DEPTH) { at = parentOf(at)?.takeIf { it != at } ?: return at }
+            return at
         }
 
-        private fun rank(t: Tracked): Int {
+        /**
+         * Drops Idle records that nothing needs, adds back the parent of every kept sub-agent (a parent idle between
+         * steps stays while a child lives), recomputes membership and keeps the stable order.
+         */
+        fun settled(): Snapshot {
+            val kept = tracked.filter { (ref, t) -> t.state() != DockState.Idle || ref == open }
+            var seq = nextSeq
+            val needed = LinkedHashMap<ConversationRef, Tracked>()
+            for (ref in kept.keys) {
+                val root = rootOf(ref)
+                if (root !in kept && root !in needed) {
+                    needed[root] = tracked[root] ?: Tracked(root, seq++, known[root]?.first, known[root]?.second)
+                }
+            }
+            val all = kept + needed
+            val base = copy(tracked = all, nextSeq = seq)
+            val roots = all.values.filter { base.rootOf(it.ref) == it.ref }
+            val openRoot = open?.let { base.rootOf(it) }
+            val live = roots.filter { base.view(it).state != DockState.Idle }
+            val members = roots.filter { base.view(it).state != DockState.Idle || (it.ref == openRoot && live.any { l -> l.ref != it.ref }) }
+            val ids = members.map { it.ref }.toSet()
+            val nextOrder = order.filter { it in ids } + members.filter { it.ref !in order }.sortedBy { it.seq }.map { it.ref }
+            return base.copy(order = nextOrder, tucked = tucked && live.isNotEmpty())
+        }
+
+        /** A root with its sub-agents rolled in. */
+        private class View(val root: Tracked, val kids: List<Tracked>, val state: DockState, val causedBy: ConversationRef?)
+
+        private fun view(root: Tracked): View {
+            val kids = tracked.values.filter { it.ref != root.ref && rootOf(it.ref) == root.ref }.sortedBy { it.seq }
+            val own = root.state()
+            val needs = kids.firstOrNull { it.state() == DockState.NeedsYou }
+            val failed = kids.firstOrNull { it.state() == DockState.Failed }
+            val working = kids.any { k -> k.state().let { it is DockState.WorkingWithTasks || it == DockState.Working || it == DockState.Thinking } }
+            return when {
+                own == DockState.NeedsYou -> View(root, kids, own, null)
+                needs != null -> View(root, kids, DockState.NeedsYou, needs.ref)
+                own == DockState.Failed -> View(root, kids, own, null)
+                failed != null -> View(root, kids, DockState.Failed, failed.ref)
+                (own == DockState.Idle || own == DockState.Finished) && working -> View(root, kids, DockState.Working, null)
+                own == DockState.Idle && kids.any { it.state() != DockState.Idle } -> View(root, kids, DockState.Finished, null)
+                else -> View(root, kids, own, null)
+            }
+        }
+
+        private fun rank(state: DockState, onScreen: Boolean): Int {
             val base =
-                when (t.state()) {
+                when (state) {
                     DockState.NeedsYou -> 0
                     DockState.Failed -> 1
                     is DockState.WorkingWithTasks, DockState.Working, DockState.Thinking -> 2
                     DockState.Finished -> 3
                     DockState.Idle -> 4
                 }
-            return if (t.ref == open) minOf(base, 2) else base
+            return if (onScreen) minOf(base, 2) else base
         }
 
         fun toUi(): DockUi {
-            val members = order.mapNotNull { tracked[it] }
+            val openRoot = open?.let { rootOf(it) }
+            val members = order.mapNotNull { tracked[it] }.map { view(it) }
             val shown =
                 if (members.size <= cap) {
                     members
                 } else {
-                    val keep = members.withIndex().sortedWith(compareBy({ rank(it.value) }, { it.index })).take(cap).map { it.index }.toSet()
+                    val keep =
+                        members.withIndex()
+                            .sortedWith(compareBy({ rank(it.value.state, it.value.root.ref == openRoot) }, { it.index }))
+                            .take(cap).map { it.index }.toSet()
                     members.filterIndexed { i, _ -> i in keep }
                 }
             val entries =
-                shown.map {
-                    DockEntry(it.ref, it.title, names[it.ref], it.agent, it.state(), it.pulse)
+                shown.map { v ->
+                    val kept =
+                        if (v.kids.size <= childCap) {
+                            v.kids
+                        } else {
+                            val keep =
+                                v.kids.withIndex()
+                                    .sortedWith(compareBy({ rank(it.value.state(), it.value.ref == open) }, { it.index }))
+                                    .take(childCap).map { it.index }.toSet()
+                            v.kids.filterIndexed { i, _ -> i in keep }
+                        }
+                    val r = v.root
+                    DockEntry(
+                        ref = r.ref,
+                        title = r.title,
+                        nickname = names[r.ref],
+                        agent = r.agent,
+                        state = v.state,
+                        pulse = r.pulse + v.kids.sumOf { it.pulse },
+                        ownState = r.state(),
+                        causedBy = v.causedBy,
+                        children = kept.map { DockChild(it.ref, it.title, it.agent, it.state(), it.pulse) }.toImmutableList(),
+                        childOverflow = v.kids.size - kept.size,
+                    )
                 }
-            val live = members.count { it.state() != DockState.Idle }
-            val alert = members.any { it.state() == DockState.NeedsYou || it.state() == DockState.Failed }
+            val live = members.count { it.state != DockState.Idle }
+            val alert = members.any { it.state == DockState.NeedsYou || it.state == DockState.Failed }
             val presence =
                 when {
                     live == 0 -> DockPresence.Hidden
                     !tucked && (live >= 2 || alert) -> DockPresence.Out
                     else -> DockPresence.Nub
                 }
-            return DockUi(entries.toImmutableList(), presence, members.size - shown.size, open, tucked, live)
+            return DockUi(entries.toImmutableList(), presence, members.size - shown.size, openRoot, open.takeIf { it != openRoot }, tucked, live)
         }
     }
 
@@ -392,11 +504,15 @@ public class DockModel private constructor(private val s: Snapshot) {
         /** About seven rings fit the edge before they shrink past a thumb (notes: "more than about 7"). */
         public const val DEFAULT_CAP: Int = 7
 
-        private const val KNOWN_LIMIT: Int = 256
+        /** Sub-agents kept under one ring; alerts and working ones first, the rest are counted in `childOverflow`. */
+        public const val DEFAULT_CHILD_CAP: Int = 4
 
-        public fun empty(cap: Int = DEFAULT_CAP): DockModel {
-            require(cap >= 1) { "the dock needs at least one ring" }
-            return DockModel(Snapshot(cap).settled())
+        private const val KNOWN_LIMIT: Int = 256
+        private const val MAX_DEPTH: Int = 8
+
+        public fun empty(cap: Int = DEFAULT_CAP, childCap: Int = DEFAULT_CHILD_CAP): DockModel {
+            require(cap >= 1 && childCap >= 1) { "the dock needs at least one ring" }
+            return DockModel(Snapshot(cap, childCap).settled())
         }
     }
 }

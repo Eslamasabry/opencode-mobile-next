@@ -30,7 +30,7 @@ public object DockFeed {
         return when (event) {
             is GatewayEvent.SessionUpserted ->
                 listOf(
-                    DockEvent.Meta(ref(event.session.id), event.session.title, event.session.agent),
+                    DockEvent.Meta(ref(event.session.id), event.session.title, event.session.agent, event.session.parentId),
                     DockEvent.LastRunFailed(ref(event.session.id), event.session.lastRunFailed),
                 )
             is GatewayEvent.SessionChanged ->
