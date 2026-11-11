@@ -1,5 +1,7 @@
 package io.github.eslamasabry.opencode_mobile
 
+import java.util.concurrent.CountDownLatch
+
 /**
  * Ends one read's checks from another thread. A read of the phone's agents runs its sign-in and version checks one
  * at a time, each a process in the phone's Linux, and Android stops an app's child processes past a limit, so a
@@ -10,6 +12,9 @@ class ProbeStop {
     private val lock = Any()
     private var stopped = false
     private var end: (() -> Unit)? = null
+
+    /** Open while [stop] runs a check's end: [detach] waits for it, so the check's own cleanup never races it. */
+    private var ending: CountDownLatch? = null
 
     val isStopped: Boolean
         get() = synchronized(lock) { stopped }
@@ -24,22 +29,47 @@ class ProbeStop {
             }
         }
 
-    /** The check's process ended on its own. */
+    /**
+     * The check is done with its process (it ended on its own, or it is about to clean it up). When [stop] is ending
+     * it right now, this waits until that is over: the check's cleanup (which frees the process's slot) and the
+     * stopper never act on the same process at once, and the stopper never acts on a slot already handed to another
+     * process. Call it outside any lock the end takes.
+     */
     fun detach() {
-        synchronized(lock) { end = null }
+        val inFlight =
+            synchronized(lock) {
+                end = null
+                ending
+            } ?: return
+        var interrupted = false
+        while (true) {
+            try {
+                inFlight.await()
+                break
+            } catch (_: InterruptedException) {
+                interrupted = true
+            }
+        }
+        if (interrupted) Thread.currentThread().interrupt()
     }
 
     /** Blocks until the running check's process has been ended (a few seconds at most). */
     fun stop() {
+        val done = CountDownLatch(1)
         val running =
             synchronized(lock) {
                 stopped = true
-                end.also { end = null }
-            }
+                end.also {
+                    end = null
+                    if (it != null) ending = done
+                }
+            } ?: return
         try {
-            running?.invoke()
+            running()
         } catch (_: Exception) {
             // The check's own thread drains it as well and reports what it could not end.
+        } finally {
+            done.countDown()
         }
     }
 }

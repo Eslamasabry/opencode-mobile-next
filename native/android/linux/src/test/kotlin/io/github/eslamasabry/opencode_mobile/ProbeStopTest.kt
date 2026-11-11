@@ -65,6 +65,10 @@ class ProbeStopTest {
 
     private val children = ArrayDeque<Child>()
     private var starts = 0
+
+    /** Whether a drain confirms the process tree gone; false is a tree that would not die (it stays "retired"). */
+    @Volatile private var drains = true
+    @Volatile private var drainCalls = 0
     private val probe =
         PhoneAgentAuthProbe(
             start = { _, _ ->
@@ -72,8 +76,9 @@ class ProbeStopTest {
                 children.removeFirst()
             },
             stop = { process ->
+                drainCalls++
                 (process as Child).end()
-                true
+                drains
             },
             waitFor = { process, seconds -> process.waitFor(seconds, TimeUnit.SECONDS) },
         )
@@ -124,5 +129,76 @@ class ProbeStopTest {
         assertEquals("signedOut", probe.run(request(), stop)["state"])
         stop.stop()
         assertEquals(1, starts)
+    }
+
+    @Test
+    fun `a process the stop could not drain stays retired: the profile's next probe is refused until it is gone`() {
+        val slow = Child("", blocking = true)
+        children += slow
+        children += Child("{\"state\":\"signedIn\"}\n", blocking = false)
+        drains = false
+        val stop = ProbeStop()
+        var answer: Map<String, Any?>? = null
+        val done = CountDownLatch(1)
+        Thread {
+                answer = probe.run(request(), stop)
+                done.countDown()
+            }
+            .start()
+        assertTrue(slow.started.await(5, TimeUnit.SECONDS))
+
+        stop.stop()
+        assertTrue(done.await(5, TimeUnit.SECONDS))
+        assertEquals(mapOf("state" to "error", "error" to "hostUnavailable"), answer)
+        // The stopping thread tried, then the probe's own thread tried again: neither may forget the process.
+        assertEquals(2, drainCalls)
+
+        // Not drained: the next probe of that profile tries the drain again and, still failing, starts nothing.
+        assertEquals(mapOf("state" to "error", "error" to "hostUnavailable"), probe.run(request()))
+        assertEquals(1, starts)
+
+        // Once the tree is really gone the profile probes again.
+        drains = true
+        assertEquals("signedIn", probe.run(request())["state"])
+        assertEquals(2, starts)
+    }
+
+    @Test
+    fun `a check's own cleanup waits for a stop that is ending its process right now`() {
+        val stop = ProbeStop()
+        val ending = CountDownLatch(1)
+        val release = CountDownLatch(1)
+        val ended = CountDownLatch(1)
+        assertTrue(stop.attach {
+            ending.countDown()
+            release.await(5, TimeUnit.SECONDS)
+            ended.countDown()
+        })
+        Thread { stop.stop() }.start()
+        assertTrue("the stop is ending the process", ending.await(5, TimeUnit.SECONDS))
+
+        // The check's thread is done with its process and is about to free its slot: it must not do so mid-stop.
+        val detached = CountDownLatch(1)
+        Thread {
+                stop.detach()
+                detached.countDown()
+            }
+            .start()
+        assertTrue("detach waited for the stop", !detached.await(300, TimeUnit.MILLISECONDS))
+        release.countDown()
+        assertTrue(detached.await(5, TimeUnit.SECONDS))
+        assertEquals("the stop had finished before detach returned", 0L, ended.count)
+        assertTrue(stop.isStopped)
+        // Nothing attaches after a stop: a later check is ended at once by its own thread.
+        assertTrue(!stop.attach {})
+    }
+
+    @Test
+    fun `detach with no stop running returns at once`() {
+        val stop = ProbeStop()
+        assertTrue(stop.attach {})
+        stop.detach()
+        stop.stop()
+        assertTrue(stop.isStopped)
     }
 }
