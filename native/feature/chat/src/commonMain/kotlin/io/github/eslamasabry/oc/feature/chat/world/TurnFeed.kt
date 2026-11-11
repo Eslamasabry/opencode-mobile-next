@@ -167,11 +167,12 @@ internal class TurnFeedKeeper(private val sessionId: String) {
                             lastProgressAtMs = atMs,
                             // Fresh output means the retry worked.
                             retry = null,
-                            // B8: streamed words, a new turn or a new reply mean the conversation is active again: not
-                            // idle as said. A durable event replayed after a reconnect is none of these and keeps it.
+                            // B8: streamed words, a new turn or reply, a reply that opens or a step that runs mean the
+                            // conversation is active again: not idle as said. A durable event replayed unchanged after a
+                            // reconnect is not applied at all and keeps it.
                             idleSaid =
                                 s.idleSaid &&
-                                    event !is GatewayEvent.PartDelta &&
+                                    !active(event) &&
                                     snapshot.newestMark() == s.ledger.newestMark(),
                         )
                 } else if (event is GatewayEvent.PartDelta && event.sessionId.raw == sessionId) {
@@ -179,6 +180,23 @@ internal class TurnFeedKeeper(private val sessionId: String) {
                 }
         }
     }
+
+    /** B8: an applied event that shows the conversation working (whatever the status said before it). */
+    private fun active(event: GatewayEvent): Boolean =
+        when (event) {
+            is GatewayEvent.PartDelta -> true
+            is GatewayEvent.MessageUpserted ->
+                event.message.role == Role.Assistant &&
+                    event.message.time?.completedMs == null &&
+                    event.message.finish == null &&
+                    event.message.errorText == null
+            is GatewayEvent.PartUpserted ->
+                event.part.tool?.status.let {
+                    it == io.github.eslamasabry.oc.core.model.transcript.ToolStatus.Pending ||
+                        it == io.github.eslamasabry.oc.core.model.transcript.ToolStatus.Running
+                }
+            else -> false
+        }
 
     /** B-CHAT-092: times the reply from this conversation's own events; a finished timing joins its turn. */
     private fun time(event: GatewayEvent, atMs: Long) {

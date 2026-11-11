@@ -245,6 +245,10 @@ class B8CutOffTest {
             GatewayEvent.PartDelta(SessionId(sid), MessageId("m2"), PartId("text-9"), DeltaField.Text, "The Nile"),
             // A new reply in the turn (the step after a tool), before the run's own start arrives.
             GatewayEvent.MessageUpserted(MessageInfo("m3", sid, Role.Assistant, providerId = "opencode", modelId = "big-pickle", time = MsgTime(530_000, null))),
+            // The same reply, changed and still open (the server is writing it).
+            GatewayEvent.MessageUpserted(page[1].info.copy(cost = 0.01)),
+            // A step of it starts running.
+            GatewayEvent.PartUpserted(tool(ToolStatus.Running, null, "m2")),
         )) {
             val keeper = TurnFeedKeeper(sid)
             keeper.history(page, newest = true)
