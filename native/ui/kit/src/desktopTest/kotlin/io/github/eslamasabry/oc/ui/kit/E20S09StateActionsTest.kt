@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /** E20-S09: the home's "isn't answering" page; every action of a failure shares one edge and one width. */
 @OptIn(ExperimentalTestApi::class)
@@ -37,11 +38,14 @@ class E20S09StateActionsTest {
             }
         }
         val tryAgain = onNodeWithText("Try again").fetchSemanticsNode().boundsInRoot
-        for (label in listOf("Change server", "Copy details")) {
-            val action = onNodeWithText(label).fetchSemanticsNode().boundsInRoot
-            // Before the fix a text action reached past the gutter on the start side (8 dp further out).
-            assertEquals(tryAgain.left, action.left, "$label starts where Try again starts: $action vs $tryAgain")
-            assertEquals(tryAgain.right, action.right, "$label ends where Try again ends: $action vs $tryAgain")
-        }
+        // 0fe8167abe: stacked text actions sit in one wrapping row, pulled back 8 dp (Dart `KitInset`) and hugging their
+        // width, so the first one's WORDS (not its box) start on Try again's edge and the next one follows on the line.
+        val change = onNodeWithText("Change server", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        assertEquals(tryAgain.left, change.left, 1f, "Change server's words start where Try again starts: $change vs $tryAgain")
+        val copy = onNodeWithText("Copy details", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        val wrapped = copy.top >= change.bottom
+        if (wrapped) assertEquals(tryAgain.left, copy.left, 1f, "Copy details wrapped onto its own line: $copy vs $tryAgain")
+        else assertTrue(copy.left >= change.right, "Copy details follows Change server on the same line: $copy vs $change")
+        assertTrue(copy.right <= tryAgain.right, "Copy details stays inside Try again's width: $copy vs $tryAgain")
     }
 }

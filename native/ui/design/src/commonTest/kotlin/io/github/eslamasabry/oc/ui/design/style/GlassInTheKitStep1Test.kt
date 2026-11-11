@@ -245,6 +245,81 @@ class GlassInTheKitStep1Test {
         }
     }
 
+    /** One clear pane as the kit draws it today: thickened over the capped spots with today's inks. */
+    private class Pane(val name: String, val roles: Roles, val d: SurfaceDecoration, val sheen: Argb, val words: List<Pair<Argb, Double>>, val icons: List<Pair<Argb, Double>>)
+
+    private val clearPanes: List<Pane> by lazy {
+        buildList {
+            for (pack in PackId.entries) for (id in GlassLookId.entries) for ((role, level) in panes) for (chosen in listOf(false, true)) {
+                if (chosen && role != SurfaceRole.Content && role != SurfaceRole.Control) continue
+                val r = roles(pack, true)
+                val ground = r.ground.withAlpha(1f)
+                val measured = listOf(ground) + AuroraImage.clearSpotsOf(r.ground, r.accent, true)
+                val request = SurfaceRequest(r, role, Knobs(), level, selected = chosen, look = GlassLooks.of(id).spec)
+                val solid = request.levelFill.over(ground)
+                val wordsDp = if (role == SurfaceRole.Content) GlassFinish.PANE_WORDS_DP else 0f
+                val d = GlassFinish.thickened(GlassSpec.resolveClear(request)!!, r, solid, measured, GlassFinish.paneInks(r, solid), wordsDp = wordsDp)
+                add(Pane("$id $pack $role/$level chosen=$chosen", r, d, GlassFinish.sheenAt(d.sheen, wordsDp), GlassFinish.textInks(r, solid), GlassFinish.glyphInks(r, solid)))
+            }
+        }
+    }
+
+    /** What lies behind [p] on the page drawn at [chroma] with lights of [peak] luma, at the brightest point. */
+    private fun behind(p: Pane, chroma: Float, peak: Float): List<Argb> {
+        val drawn = listOf(p.roles.ground.withAlpha(1f)) + AuroraImage.clearSpotsOf(p.roles.ground, p.roles.accent, true, chroma = chroma)
+        return if (peak <= 0f) drawn else drawn + drawn.map { AuroraImage.lit(it, p.roles.accent, brightestLight, peak) }
+    }
+
+    /** The worst margin of [p]'s words, its secondary and tertiary inks lifted [lift] of the way to its primary. */
+    private fun wordsMargin(p: Pane, lift: Float, chroma: Float, peak: Float): Pair<Double, String> {
+        var worst = Double.MAX_VALUE
+        var what = ""
+        val inks = GlassSpec.liftedInks(p.roles, lift)
+        for (face in listOfNotNull(p.d.fill, p.d.fillStart)) for (spot in behind(p, chroma, peak)) {
+            val bare = face.over(spot)
+            for (seen in listOf(bare, p.sheen.over(bare))) for ((i, pair) in p.words.withIndex()) {
+                val m = wcagContrast(inks[i], seen) - pair.second
+                if (m < worst) { worst = m; what = "${p.name}: ink ${inks[i]} over $spot (target ${pair.second})" }
+            }
+        }
+        return worst to what
+    }
+
+    /** The worst margin of [p]'s icons and track edges (drawn in today's inks, not lifted). */
+    private fun iconsMargin(p: Pane, chroma: Float, peak: Float): Pair<Double, String> {
+        var worst = Double.MAX_VALUE
+        var what = ""
+        for (face in listOfNotNull(p.d.fill, p.d.fillStart)) for (spot in behind(p, chroma, peak)) for ((ink, target) in p.icons) {
+            val m = wcagContrast(ink.withAlpha(1f), face.over(spot)) - target
+            if (m < worst) { worst = m; what = "${p.name}: icon $ink over $spot (target $target)" }
+        }
+        return worst to what
+    }
+
+    @Test
+    fun `B-KIT-003 1b' report - the brightest light the clear panes read under, per secondary ink lift, at chroma 20 percent`() {
+        fun most(ok: (Float) -> Boolean): Float {
+            if (!ok(0f)) return -1f
+            var lo = 0f
+            var hi = .2f
+            repeat(14) { val mid = (lo + hi) / 2f; if (ok(mid)) lo = mid else hi = mid }
+            return lo
+        }
+        val icons = most { peak -> clearPanes.all { iconsMargin(it, .20f, peak).first >= -1e-3 } }
+        val iconsWorst = clearPanes.map { iconsMargin(it, .20f, .10f) }.minBy { it.first }
+        println("glass-in-the-kit 1b': icons read under a peak of up to ${"%.4f".format(icons)} (at .10: ${"%.3f".format(iconsWorst.first)}, ${iconsWorst.second})")
+        for (step in 0..10) {
+            val lift = step * .05f
+            val words = most { peak -> clearPanes.all { wordsMargin(it, lift, .20f, peak).first >= -1e-3 } }
+            val worst = clearPanes.map { wordsMargin(it, lift, .20f, .08f) }.minBy { it.first }
+            val hierarchy = clearPanes.minOf { p -> listOfNotNull(p.d.fill, p.d.fillStart).minOf { f -> wcagContrast(p.roles.text1, GlassSpec.liftedInks(p.roles, lift)[1].over(f.over(p.roles.ground.withAlpha(1f)))) } }
+            println(
+                "glass-in-the-kit 1b': lift ${"%.2f".format(lift)}: words read under a peak of up to ${"%.4f".format(words)}; " +
+                    "at .08 the worst margin ${"%.3f".format(worst.first)} (${worst.second}); text1/text2 ratio at least ${"%.2f".format(hierarchy)}",
+            )
+        }
+    }
+
     /**
      * What letting the words pay would cost (for the owner's call, not a pass/fail): how much thicker each clear pane's
      * tint would have to be to read over the page as the design note drew it (chroma .20 and a .10 light at the
@@ -300,6 +375,26 @@ class GlassInTheKitStep1Test {
             }
         }
     }
+
+    @Test
+    fun `B-KIT-003 1b' the page's ink lift applies only on a dark Glass page painted clear, and keeps the hierarchy`() {
+        assertEquals(GlassSpec.PAGE_SECOND_INK_LIFT, GlassSpec.pageInkLift(dark = true, paintedClear = true))
+        assertEquals(0f, GlassSpec.pageInkLift(dark = true, paintedClear = false), "the fallback keeps its inks")
+        assertEquals(0f, GlassSpec.pageInkLift(dark = false, paintedClear = true), "the light page has no light to answer")
+        assertTrue(GlassSpec.PAGE_SECOND_INK_LIFT in 0f..LiftLimit, "at most half way to the primary ink")
+        // The secondary words stay visibly below the primary ones on every clear pane's face.
+        for (p in clearPanes) for (f in listOfNotNull(p.d.fill, p.d.fillStart)) {
+            val face = f.over(p.roles.ground.withAlpha(1f))
+            val inks = GlassSpec.liftedInks(p.roles, GlassSpec.PAGE_SECOND_INK_LIFT)
+            val ratio = wcagContrast(inks[0], inks[1].over(face))
+            assertTrue(ratio >= 1.3 - 1e-3, "${p.name}: text1 / lifted text2 only $ratio")
+        }
+        // The lifted inks are the plain ones at no lift.
+        val r = roles(PackId.Opencode, true)
+        assertEquals(listOf(r.text1, r.text2, r.text3), GlassSpec.liftedInks(r, 0f))
+    }
+
+    private val LiftLimit = .5f
 
     // ---- 1c. Dividers stop before the rim under Glass
 

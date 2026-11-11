@@ -311,16 +311,33 @@ class PartADesktopTest {
 
     @Test
     fun `B-KIT-035 the status action moves under the words at large text`() = runComposeUiTest {
+        // 23b67875e8: the line stacks by measure (as Dart `_stacks`), not at 1.3x text: a short line stays inline at
+        // large text, a long one puts its action under the words.
         var scale by mutableStateOf(1f)
-        setContent { Themed(fontScale = scale) { Box(Modifier.width(412.dp)) { KitStatusLine(reconnecting(w)) } } }
+        var long by mutableStateOf(false)
+        val longWords = "OpenCode Mobile was closed 11/6/26, 3:10 PM. The server and its team stopped with it. " +
+            "Open the app to start them running again."
+        setContent {
+            Themed(fontScale = scale) {
+                Box(Modifier.width(412.dp)) { KitStatusLine(reconnecting(w).let { if (long) it.copy(message = longWords) else it }) }
+            }
+        }
         val inline = onNodeWithTag("kit-status-action").getBoundsInRoot()
         val words = onNodeWithTag("kit-status-message", useUnmergedTree = true).getBoundsInRoot()
         assertTrue(inline.left > words.right - 1.dp)
         scale = 1.3f
         waitForIdle()
         assertTrue(
+            onNodeWithTag("kit-status-action").getBoundsInRoot().left >
+                onNodeWithTag("kit-status-message", useUnmergedTree = true).getBoundsInRoot().right - 1.dp,
+            "a short line still fits one line at 130% text",
+        )
+        long = true
+        waitForIdle()
+        assertTrue(
             onNodeWithTag("kit-status-action").getBoundsInRoot().top >=
                 onNodeWithTag("kit-status-message", useUnmergedTree = true).getBoundsInRoot().bottom,
+            "a long line puts its action under the words",
         )
     }
 
