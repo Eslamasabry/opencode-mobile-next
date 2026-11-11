@@ -139,6 +139,40 @@ class Oc2OperationsRowsTest {
         server.gateway.close()
     }
 
+    @Test
+    fun `GET vcs as a real 2_2_6 server answers it - only provider git is an answer`() = runTest {
+        // Measured 2026-11-11 (paths replaced): a repository, a detached HEAD, and a plain folder (also what a
+        // repository answers on the server's first reads of a folder it has not looked at yet).
+        val answers =
+            mapOf(
+                "/root/projects/repo" to """{"location":{"directory":"/root/projects/repo"},"data":{"provider":"git","branch":{"current":"main","default":"main"}}}""",
+                "/root/projects/detached" to """{"location":{"directory":"/root/projects/detached"},"data":{"provider":"git","branch":{"default":"main"}}}""",
+                "/root/projects/plain" to """{"location":{"directory":"/root/projects/plain"},"data":{"branch":{}}}""",
+            )
+        val server = RowServer(location = ServerLocation("/root/projects/repo")) { seen ->
+            when {
+                seen.method == "GET" && seen.path == "/api/vcs" -> json(answers.getValue(seen.query["location[directory]"]!!))
+                seen.method == "GET" && seen.path == "/api/vcs/status" ->
+                    json("""{"location":{"directory":"/root/projects/repo"},"data":[{"file":"a.txt","additions":1,"deletions":0,"status":"added"}]}""")
+                else -> respond("", HttpStatusCode.NoContent)
+            }
+        }
+        val repo = assertIs<Outcome.Ok<VersionControlHealth>>(server.gateway.versionControlHealth()).value
+        assertEquals(VersionControlSetupState.Git, repo.setupState)
+        assertEquals("main", repo.branch)
+        assertEquals(listOf(VersionControlFile("a.txt", "added", 1, 0)), repo.changes.toList())
+        val detached =
+            assertIs<Outcome.Ok<VersionControlHealth>>(server.gateway.versionControlHealthAt(ServerLocation("/root/projects/detached"))).value
+        assertEquals(VersionControlSetupState.Git, detached.setupState)
+        assertEquals(null, detached.branch)
+        val plain =
+            assertIs<Outcome.Ok<VersionControlHealth>>(server.gateway.versionControlHealthAt(ServerLocation("/root/projects/plain"))).value
+        assertEquals(VersionControlSetupState.Unknown, plain.setupState, "silence is not 'not a repository'")
+        assertEquals(null, plain.branch)
+        assertEquals(0, server.seen.count { it.path == "/api/vcs/status" && it.query["location[directory]"] == "/root/projects/plain" })
+        server.gateway.close()
+    }
+
     // The shapes a real OpenCode 2.2.6 server answered (2026-11-11, local probe; paths replaced): GET /config is a bare
     // Config.Entry[] where a searched folder is `{type:"directory", path}` with NO `info`, and only a config file is
     // `{type:"document", path, info}`. A server with no config file at all answers directory entries only.

@@ -37,17 +37,31 @@ public data class VersionControlHealth(
 
 /**
  * The one rule for "is this a Git project" that the chat header, the Changes page and the new-chat start share:
- * the server's own setup state first, then the project record's flag, then a branch name or a `.git` entry in the
- * folder as proof of Git. null = not known (not loaded yet, or the server did not say): callers show nothing
- * about Git then, never "Git".
+ * the server's own setup state first, then the project record's flag, then a branch name or the project root's
+ * listing. null = not known (not loaded yet, or the server did not say): callers show nothing about Git then, never
+ * "Git" and never "not a Git project".
+ *
+ * [rootHasDotGit] is whether a listing of the project's ROOT folder (the folder the server names as the project's
+ * directory) holds `.git`; null when no such listing was read. Only a root listing may say "no": a subfolder of a
+ * repository has no `.git` of its own and is still in Git (the Git page's own `git status` finds the repository above
+ * it). An OpenCode 2.2.x server's `GET /vcs` answers "no provider" for a folder it has not looked at yet, so its
+ * silence is Unknown, never Absent; a server whose answer is final (Paseo) says Absent itself.
  */
-public fun gitProjectState(health: VersionControlHealth?, projectIsGit: Boolean? = null, hasDotGit: Boolean? = null): Boolean? =
+public fun gitProjectState(
+    health: VersionControlHealth?,
+    projectIsGit: Boolean? = null,
+    rootHasDotGit: Boolean? = null,
+): Boolean? =
     when (health?.setupState) {
         VersionControlSetupState.Git -> true
         VersionControlSetupState.Absent -> false
         else ->
             projectIsGit
-                ?: true.takeIf { !health?.branch.isNullOrBlank() || hasDotGit == true }
+                ?: when {
+                    !health?.branch.isNullOrBlank() || rootHasDotGit == true -> true
+                    rootHasDotGit == false -> false
+                    else -> null
+                }
     }
 
 public data class LanguageServiceHealth(val id: String, val name: String, val root: String, val status: String)

@@ -177,8 +177,20 @@ internal class GraphChatHeaderPort(
                     gateway.location.collectLatest { location ->
                         val key = ref.profileId.raw to location.directory
                         mutableFacts.update { it.copy(branch = branches[key], git = gitKnown[key]) }
-                        val health =
-                            (graph as ChatGraphAccessors).chatOperations.versionControlHealth()
+                        val operations = (graph as ChatGraphAccessors).chatOperations
+                        var health = operations.versionControlHealth()
+                        // An OpenCode 2.2.x server answers "no provider" for a folder it has not looked at yet and
+                        // finds Git a moment later: one more read then, so a repository opened cold still gets its
+                        // chip (a plain folder stays without one: unknown shows nothing).
+                        if (
+                            health is Outcome.Ok &&
+                                health.value.setupState ==
+                                    io.github.eslamasabry.oc.core.model.VersionControlSetupState.Unknown &&
+                                health.value.branch.isNullOrBlank()
+                        ) {
+                            kotlinx.coroutines.delay(GIT_SETTLE_MS)
+                            health = operations.versionControlHealth()
+                        }
                         if (
                             bound === graph &&
                                 gateway.location.value == location &&
@@ -371,3 +383,6 @@ private const val MAX_PARENT_DEPTH = 8
  */
 private val branches = mutableMapOf<Pair<String, String?>, String>()
 private val gitKnown = mutableMapOf<Pair<String, String?>, Boolean>()
+
+/** How long a 2.2.x server takes to find Git in a folder it was just asked about (measured: under a second). */
+private const val GIT_SETTLE_MS = 1_500L
