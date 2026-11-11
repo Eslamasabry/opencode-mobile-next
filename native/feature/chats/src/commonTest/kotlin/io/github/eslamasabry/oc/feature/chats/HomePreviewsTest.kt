@@ -75,6 +75,34 @@ class HomePreviewsTest {
     }
 
     @Test
+    fun `B-266 the line shows a reply's words, not the marks it was written with`() {
+        // The two lines seen raw on the owner's phone.
+        assertEquals(
+            "Made you something. http://127.0.0.1:8150/ A process is serving it.",
+            HomePreviewRules.oneLine("Made you something. **http://127.0.0.1:8150/** A process is serving it."),
+        )
+        assertEquals(
+            "PC Health Check ✅ System is fine",
+            HomePreviewRules.oneLine("**PC Health Check** ✅ **System** is fine"),
+        )
+        // Headings, bullets, code marks and links keep their words.
+        assertEquals(
+            "Summary Edited src/app/Main.kt See the docs and shot",
+            HomePreviewRules.oneLine(
+                "## Summary\n- Edited `src/app/Main.kt`\n- See [the docs](https://example.com/a) and ![shot](x.png)"
+            ),
+        )
+        // Code keeps its stars, names keep their underscores, a quote loses only its lead.
+        assertEquals(
+            "val a = 2 * 3 * 4 quoted _as is_ and snake_case_name stay",
+            HomePreviewRules.oneLine("```kotlin\nval a = 2 * 3 * 4\n```\n> quoted _as is_ and snake_case_name stay"),
+        )
+        // A reply cut mid-emphasis leaves no stray stars.
+        assertEquals("an unfinished bold that never clo", HomePreviewRules.oneLine("an unfinished **bold that never clo"))
+        assertEquals("old new, 2 * 3 = 6, a_b_c", HomePreviewRules.oneLine("~~old~~ new, 2 * 3 = 6, a_b_c"))
+    }
+
+    @Test
     fun `A1-HOME-12 a row is read once, again only when it moved, a running one at most every 15 seconds`() {
         val idle = item("a", at = 1_000)
         assertTrue(HomePreviewRules.needsRead(idle, null, null, nowMs = 0), "never read")
