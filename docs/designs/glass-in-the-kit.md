@@ -516,3 +516,33 @@ dark page) neither flips.
 3. Scroll fast: the faint band at the box's top edge follows the transcript with no lag and no flash.
 4. Keyboard up (the box moves): the clear area moves with it at once.
 5. Frosted look, Solid and the other styles: exactly as before.
+
+### The notice line
+
+Seen on the emulator (Android 15, build 6fe709ef3, `16-glass-header/d-chat-scrolled-up.png`): "1 message is waiting to
+send. Review" crossed by sharp transcript text. On the owner's phone the same line was clear. **Cause:** `KitScreen`
+cleared the body down to the line's foot only where the page runs under the status bar (`glassTop` asked for
+`statusPx > 0`). That emulator's status bar is drawn by the system (a dark band, no top inset for the page), so nothing
+was cleared there at all. **Changed:** with a line under a liquid or frosted bar and no top inset, the body is cleared
+down to the line's foot and fades in over the same 12 dp under it; with no line, nothing changes; the Ground look (the
+solid styles) keeps its band. **Test:** `ChatWordsGlassTest` now runs the line with a 24 dp inset and with none: with
+none, before the fix the rows added mean 233 of 255 inside the line (failed); after, 0. With the inset: 0 before and
+after.
+
+### Not done yet: the top panes
+
+The coordinator's rule for the top (2026-11-11, from `16-glass-header`): under every liquid top pane (the chat's bar,
+the floating header on home, the floating bar on Settings) the content its glass sees is whole at the pane's bottom
+edge and gone by the inner end of its lens rim, measured upward; nothing of it remains under the title, the chips or
+the status bar. This build does not do it. What it takes, by the same means as the message box:
+- The chat's bar: a faded copy of the transcript's recording (`KitWordsFade`, cleared above the pane's bottom edge less
+  its rim, `LiquidEdge.rimPx` with the bar's recipe) handed to the bar's face, its words host and the status edge, and
+  the body cleared above the pane's bottom edge.
+- The floating header and bar: the same for a feature's recording (`floatingBar.source`); for the kit's own recording
+  (`KitLiquidSource`) a faded copy of that type, which must also keep the source recording while it is used.
+- Tests: a bright row under each pane adds nothing inside the title's and the chips' bounds and still shows at the
+  pane's bottom edge; failing first.
+
+Last run on the branch tip (VPS desktop): `ChatWordsGlassTest` 5 of 5, `JumpFadeEdgeTest`, `ChatEdgeATest`,
+`KitFloatingBarTest`, `KitFloatingBarRowTest`, `KitScreen*`, `ScrollEdgeWholePixelTest` green; `compileAndroidMain` for
+ui:kit, ui:kit-chat and feature:chat green. Nothing was run on a device.
