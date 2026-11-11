@@ -168,6 +168,7 @@ object PhoneSetupWiring {
         app: Application,
         stores: PreviewStores,
         server: PhoneServerSource,
+        runtime: BuiltinRuntime,
         linux: LinuxHost,
         dispatchers: AppDispatchers,
         redactor: Redactor,
@@ -218,7 +219,13 @@ object PhoneSetupWiring {
                     io.github.eslamasabry.opencode_mobile.BuiltinLinux.get(app).beginServerStart()
                 }
                 val finisher =
-                    finisher(stores, server, linux, getString(Res.string.phoneSetupProfileName))
+                    finisher(
+                        stores,
+                        server,
+                        runtime,
+                        linux,
+                        getString(Res.string.phoneSetupProfileName),
+                    )
                 val failure =
                     try {
                         finisher.finish(SetupFinishRequest(openCodeChanged = openCodeChanged))
@@ -268,6 +275,7 @@ object PhoneSetupWiring {
     private fun finisher(
         stores: PreviewStores,
         server: PhoneServerSource,
+        runtime: BuiltinRuntime,
         linux: LinuxHost,
         name: String,
     ): SetupFinisher {
@@ -336,8 +344,9 @@ object PhoneSetupWiring {
                     )
                 }
 
+                // The old OpenCode is stopped to start the new one: the app's stop, never the person's Stop.
                 override suspend fun stop() {
-                    server.stop()
+                    runtime.stopToReplace()
                 }
 
                 override suspend fun start(

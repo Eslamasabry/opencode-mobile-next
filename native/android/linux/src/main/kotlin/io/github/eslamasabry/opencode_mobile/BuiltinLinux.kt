@@ -2744,11 +2744,13 @@ class BuiltinLinux(private val context: Context) {
     private var activityEpoch = 0L
     @Volatile private var idleServerLive = false
     private var wantedRevision = 0L
+    // Only the person's own Stop is recorded here; nothing saved is not their Stop (PhoneServerStopRecord).
     private var userStopped =
-        recoveryPreferences.getBoolean(
-            "userStopped",
-            !recoveryPreferences.getBoolean("wanted", false),
-        )
+        try {
+            PhoneServerStopRecord.read(recoveryPreferences)
+        } catch (_: Throwable) {
+            true
+        }
     private var restartWanted = recoveryPreferences.getBoolean("wanted", false) && !userStopped
     private val restartBackoff = RestartBackoff()
     private var supervisionProfile: String? = recoveryPreferences.getString("owner", null)
@@ -2834,6 +2836,7 @@ class BuiltinLinux(private val context: Context) {
             "phase" to phase,
             "serverRunning" to serverRunning,
             "serverRestartWanted" to serverRestartWanted,
+            "serverStoppedByPerson" to serverStoppedByPerson,
             "serverRecoveryAuthority" to true,
             "serverRecoveryGeneration" to serverRecoveryGeneration,
             "serverRecoveryScheduled" to serverRecoveryScheduled,
@@ -3233,6 +3236,10 @@ class BuiltinLinux(private val context: Context) {
 
     val serverRestartWanted: Boolean
         get() = synchronized(recoveryLock) { restartWanted }
+
+    /** The person's own Stop holds the server off (PhoneServerStopRecord); no other stop does. */
+    val serverStoppedByPerson: Boolean
+        get() = synchronized(recoveryLock) { userStopped }
 
     val serverRecoveryGeneration: Long
         get() =
@@ -4984,18 +4991,23 @@ class BuiltinLinux(private val context: Context) {
         if (!resumed) cancelServerRecovery()
     }
 
-    /** Revokes admission immediately, before an asynchronous explicit stop. */
+    /**
+     * Revokes admission immediately, before an asynchronous explicit stop. Only [PhoneServerStopRecord.Cause.Person]
+     * records the person's Stop; any other cause withdraws the background restore and leaves the next app open free
+     * to start it again.
+     */
     fun requestServerStop(
         reason: String = "stopped",
         includeOther: Boolean = false,
         onRevoked: ((Long) -> Unit)? = null,
+        cause: PhoneServerStopRecord.Cause = PhoneServerStopRecord.Cause.Person,
     ): Long =
         synchronized(recoveryLock) {
             idleReturnNotification.clear()
             restartWanted = false
             serverEventTicket = null
             serverEventWorkerStarted = false
-            userStopped = true
+            userStopped = PhoneServerStopRecord.afterStop(userStopped, cause)
             supervisionGeneration++
             scheduledRecovery = false
             recoveryGeneration++
@@ -5013,7 +5025,8 @@ class BuiltinLinux(private val context: Context) {
                 recoveryPreferences
                     .edit()
                     .putBoolean("wanted", false)
-                    .putBoolean("userStopped", true)
+                    .putBoolean(PhoneServerStopRecord.LEGACY_KEY, true)
+                    .putBoolean(PhoneServerStopRecord.KEY, userStopped)
                     .remove("restoreOwner")
                     .putString("restoreReason", reason)
             capturePendingDrain(edit, profile, includeOther)
@@ -5139,7 +5152,7 @@ class BuiltinLinux(private val context: Context) {
                     confirmedRecoveryUndoProcess(profileId, expectedGeneration) ?: return false
                 // Save revocation and the exact owned drain before any signal. Holding this
                 // monitor prevents every service-start path from replacing the checked process.
-                requestServerStop()
+                requestServerStop(cause = PhoneServerStopRecord.Cause.Person)
                 serverRecipe = null
                 stoppedPhoneServer = null
                 owned
@@ -5176,7 +5189,9 @@ class BuiltinLinux(private val context: Context) {
                 recoveryPreferences
                     .edit()
                     .putBoolean("wanted", wanted)
-                    .putBoolean("userStopped", !wanted)
+                    .putBoolean(PhoneServerStopRecord.LEGACY_KEY, !wanted)
+                    // A start clears the person's Stop; a stop here is the app's own and keeps the record as it is.
+                    .putBoolean(PhoneServerStopRecord.KEY, !wanted && userStopped)
             val reason =
                 if (wanted) null
                 else
@@ -5200,7 +5215,7 @@ class BuiltinLinux(private val context: Context) {
             }
             revokeIdleTransition()
             restartWanted = wanted
-            userStopped = !wanted
+            userStopped = !wanted && userStopped
         }
     }
 
@@ -5531,11 +5546,14 @@ exec gc supervisor run
         restoreRecipe: Map<*, *>? = null,
     ) {
         synchronized(recoveryLock) {
+            // Opening the app in front is the person's own act: an app or Android stop does not hold it back, only
+            // the person's Stop does (PhoneServerStopRecord). A Stop that came first still moved the generation.
             check(
-                activityResumed &&
-                    restartWanted &&
-                    !userStopped &&
-                    recoveryGeneration == expectedGeneration
+                PhoneServerStopRecord.openStartAdmitted(
+                    activityResumed,
+                    userStopped,
+                    recoveryGeneration == expectedGeneration,
+                )
             ) {
                 "The phone server could not start."
             }

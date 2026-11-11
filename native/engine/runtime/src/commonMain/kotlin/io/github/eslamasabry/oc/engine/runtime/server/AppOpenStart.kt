@@ -17,7 +17,11 @@ public enum class LaunchLeave {
     StatusUnreadable,
     NotInstalled,
 
-    /** The person stopped it (Stop, the row's Stop OpenCode, the service timeout): it stays stopped (plan 11 §6.4 R6). */
+    /**
+     * The person stopped it (This phone › Stop, the notification's Stop OpenCode, Undo of an automatic restart): it
+     * stays stopped (plan 11 §6.4 R6). A stop the app or Android made (a restart or update that did not finish, the
+     * service refused or timed out, nothing recorded) is not this: opening the app starts it (owner rule 2026-11-11).
+     */
     PersonStopped,
 
     /** The idle owner holds it: only a foreground resume brings it back (R6). */
@@ -89,12 +93,15 @@ public object LaunchStartRules {
         return if (now >= until) LaunchStep.Start else LaunchStep.Probe(until)
     }
 
-    /** The checks every step repeats: readable, installed, still wanted (never restart what the person stopped), idle. */
+    /**
+     * The checks every step repeats: readable, installed, not stopped by the person (never restart what the person
+     * stopped; any other stop does not hold an app open back), idle.
+     */
     private fun held(status: RuntimeStatus?): LaunchLeave? =
         when {
             status == null -> LaunchLeave.StatusUnreadable
             !status.installed -> LaunchLeave.NotInstalled
-            !status.serverRestartWanted -> LaunchLeave.PersonStopped
+            status.serverStoppedByPerson -> LaunchLeave.PersonStopped
             status.idleBlocksLaunch -> LaunchLeave.IdleHolds
             else -> null
         }
@@ -170,7 +177,7 @@ public class AppOpenStart(
     private suspend fun admission(): Long? {
         if (!mayAct()) return null
         val status = status() ?: return null
-        if (!mayAct() || !status.serverRestartWanted || status.idleBlocksLaunch) return null
+        if (!mayAct() || status.serverStoppedByPerson || status.idleBlocksLaunch) return null
         return status.serverRecoveryGeneration
     }
 

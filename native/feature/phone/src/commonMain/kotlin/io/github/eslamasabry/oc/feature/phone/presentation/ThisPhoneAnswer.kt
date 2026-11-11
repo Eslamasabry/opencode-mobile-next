@@ -82,8 +82,9 @@ public sealed interface PhoneServerState {
                     null -> Checking
                 }
             }
-            if (facts.stoppedByPerson || status.restoreReason == RestoreReason.Stopped)
-                return Stopped(StoppedBy.Person)
+            // Only the person's own Stop record says "you stopped it": the native restore reason `stopped` is also
+            // written when the app replaced the server or Android refused its service (owner rule 2026-11-11).
+            if (facts.stoppedByPerson) return Stopped(StoppedBy.Person)
             gaveUp(status.restoreReason)?.let {
                 return GaveUp(it)
             }

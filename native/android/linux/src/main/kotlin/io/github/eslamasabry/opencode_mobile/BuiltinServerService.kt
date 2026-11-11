@@ -52,8 +52,9 @@ class BuiltinServerService : Service() {
                 try { stopSelf(startId) } catch (_: Throwable) { }
             }
         } else {
-            // Policy rejection cannot throw through the caller's channel guard.
-            stopRuntime(startId)
+            // Policy rejection cannot throw through the caller's channel guard. Android refusing the service is not
+            // the person's Stop: the next app open in front starts the server again.
+            stopRuntime(startId, cause = PhoneServerStopRecord.Cause.Refused)
         }
     }
 
@@ -82,7 +83,8 @@ class BuiltinServerService : Service() {
 
     private fun startOrStopRuntime(intent: Intent?, startId: Int): Int {
         if (intent?.action == ACTION_STOP) {
-            stopRuntime(startId)
+            // The notification's "Stop OpenCode": the person's own Stop.
+            stopRuntime(startId, cause = PhoneServerStopRecord.Cause.Person)
             return START_NOT_STICKY
         }
         // One shared status row: the live connection service uses the same ID,
@@ -137,19 +139,19 @@ class BuiltinServerService : Service() {
 
     // No foreground service has an unbounded lifetime, including specialUse.
     override fun onTimeout(startId: Int, fgsType: Int) {
-        stopRuntime(startId, "systemTimeout")
+        stopRuntime(startId, "systemTimeout", PhoneServerStopRecord.Cause.SystemTimeout)
         releaseStatus()
         // Android gives only a few seconds: tree shutdown must not delay revocation.
         try { stopSelf(startId) } catch (_: Throwable) { }
     }
 
-    private fun stopRuntime(startId: Int, reason: String = "stopped") {
+    private fun stopRuntime(startId: Int, reason: String = "stopped", cause: PhoneServerStopRecord.Cause) {
         cancelPendingRestore(applicationContext)
         try {
             val linux = BuiltinLinux.get(applicationContext)
             linux.revokeForegroundWork()
             var revision: Long? = null
-            try { linux.requestServerStop(reason, includeOther = true, onRevoked = { revision = it }) }
+            try { linux.requestServerStop(reason, includeOther = true, onRevoked = { revision = it }, cause = cause) }
             catch (_: Throwable) { /* Retain the exact invalidation revision even if durable storage failed. */ }
             val capturedRevision = revision
             Thread({

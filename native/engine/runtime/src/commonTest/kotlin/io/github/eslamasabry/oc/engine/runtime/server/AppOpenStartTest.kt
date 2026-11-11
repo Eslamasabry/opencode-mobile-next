@@ -47,6 +47,44 @@ class AppOpenStartTest {
     }
 
     @Test
+    fun `owner rule a stop the app or Android made does not keep the server off when the app opens`() = runTest {
+        // A restart or OpenCode update whose start never came back, the service Android refused or timed out.
+        host.generation = 4
+        host.stopsWithoutPerson()
+        val result = opening().run(phone)
+        assertEquals(AppOpenResult(starts = 1), result)
+        assertEquals(listOf<LaunchMode>(LaunchMode.ForAppOpen(5)), host.launches)
+        assertTrue(host.running)
+        assertTrue(host.wanted, "the opening start makes it wanted again, so the background restore is back too")
+    }
+
+    @Test
+    fun `owner rule an earlier Stop by the person still holds after the app's own stop`() = runTest {
+        host.personStops()
+        host.stopsWithoutPerson()
+        assertEquals(LaunchLeave.PersonStopped, opening().run(phone).leave)
+        assertEquals(0, host.launchCount)
+    }
+
+    @Test
+    fun `owner rule only the person's Stop is a reason to leave it off, at every step`() {
+        val now = Instant.parse("2026-11-11T08:00:00Z")
+        val withdrawn = RuntimeStatus(installed = true, serverRestartWanted = false)
+        val byPerson = withdrawn.copy(serverStoppedByPerson = true)
+        assertEquals(LaunchStep.Start, LaunchStartRules.firstLook(withdrawn, now))
+        assertEquals(LaunchStep.Leave(LaunchLeave.PersonStopped), LaunchStartRules.firstLook(byPerson, now))
+        assertEquals(LaunchStep.Start, LaunchStartRules.afterProbe(ProbeAnswer.NoAnswer, withdrawn, now, now))
+        assertEquals(
+            LaunchStep.Leave(LaunchLeave.PersonStopped),
+            LaunchStartRules.afterProbe(ProbeAnswer.NoAnswer, byPerson, now, now),
+        )
+        // The idle owner keeps its own rule: only its foreground resume brings the server back.
+        val idle =
+            withdrawn.copy(serverRestartWanted = true, serverIdlePolicySupported = true, serverIdleStopped = true)
+        assertEquals(LaunchStep.Leave(LaunchLeave.IdleHolds), LaunchStartRules.firstLook(idle, now))
+    }
+
+    @Test
     fun `B-LINUX-151 leaves it stopped when restarting the phone server is off`() = runTest {
         policyAllows = false
         assertEquals(LaunchLeave.NotNow, opening().run(phone).leave)
