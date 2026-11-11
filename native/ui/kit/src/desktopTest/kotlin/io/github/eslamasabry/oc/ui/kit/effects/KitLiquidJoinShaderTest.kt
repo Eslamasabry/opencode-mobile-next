@@ -49,8 +49,8 @@ class KitLiquidJoinShaderTest {
         )
 
     /** The shader's mode-[mode] output alpha (0-255) over a [w] x [h] px area. */
-    private fun alphas(p: LiveShaderProgram, u: JoinUniforms, mode: Float, w: Int, h: Int): IntArray {
-        u.set(p, mode, res = 1f)
+    private fun alphas(p: LiveShaderProgram, u: JoinUniforms, mode: Float, w: Int, h: Int, light: FloatArray? = null): IntArray {
+        if (light == null) u.set(p, mode, res = 1f) else u.set(p, mode, res = 1f, light = light)
         val shader = (p as DesktopLiveShader).skiaShader()
         val bitmap = Bitmap()
         bitmap.allocPixels(ImageInfo.makeN32(w, h, ColorAlphaType.PREMUL))
@@ -92,6 +92,44 @@ class KitLiquidJoinShaderTest {
                 assertTrue(near >= 100, "the points cover the outline")
             }
         }
+    }
+
+    /**
+     * Owner 2026-11-11, on the phone: a press on the bar's control lit the bar in its own capsule, which drew the bar's
+     * old bottom edge and end cap inside the joined glass while the menu dropped. The finger's light is the body's: the
+     * two sides together light every point of the body near the finger (nothing stops at the bar's own edge), nothing
+     * outside the body, and the brighter outline lies on the body's outline only.
+     */
+    @Test
+    fun `liquid join shader - the finger's light fills the body's shape, not the touched pane's own`() {
+        val brush = program(effect = false)
+        val w = 360
+        val h = 420
+        val field = LiquidJoin.fieldBox(menu, bar)
+        val reach = LiquidJoin.REACH_MENU_DP
+        // A finger on the control at the bar's end, right above the menu.
+        val glow = floatArrayOf(320f, 52f, 72f, 1f)
+        val barSide = alphas(brush, uniforms(bar, field, bar, menu, reach), mode = 4f, w = w, h = h, light = glow)
+        val menuSide = alphas(brush, uniforms(field, bar, menu, bar, reach), mode = 4f, w = w, h = h, light = glow)
+        val line = floatArrayOf(0f, 0f, 1f, 1f)
+        val barLine = alphas(brush, uniforms(bar, field, bar, menu, reach), mode = 5f, w = w, h = h, light = line)
+        val menuLine = alphas(brush, uniforms(field, bar, menu, bar, reach), mode = 5f, w = w, h = h, light = line)
+        var below = 0
+        var onOldEdge = 0
+        for (y in 0 until h) for (x in 0 until w) {
+            val s = LiquidJoin.sample(x + .5f, y + .5f, bar, field, reach, LiquidJoin.BAND_DP, bar, menu)
+            val fall = (1f - kotlin.math.hypot(x + .5f - 320f, y + .5f - 52f) / 72f).coerceIn(0f, 1f)
+            val i = y * w + x
+            assertEquals(s.cover * fall * 255f, (barSide[i] + menuSide[i]).toFloat(), 4f, "the light at ($x, $y), dist ${s.dist}")
+            // Inside the body just under the bar's bottom edge (y 80), where the bar's own shape ends.
+            if (y in 82..100 && s.dist < -2f && fall > .2f) below++
+            val lit = barLine[i] + menuLine[i]
+            if (lit > 2) assertTrue(s.dist > -2.5f && s.dist < 1f, "the brighter outline at ($x, $y) is on the body's outline, dist ${s.dist}")
+            // The bar's own bottom edge where it runs inside the body (over the menu's column).
+            if (y in 79..80 && x in 260..340 && lit > 2) onOldEdge++
+        }
+        assertTrue(below > 200, "the light carries on below the bar's own edge into the menu ($below points)")
+        assertEquals(0, onOldEdge, "no line along the bar's old bottom edge inside the body")
     }
 
     @Test
