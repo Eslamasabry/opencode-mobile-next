@@ -5476,6 +5476,9 @@ class BuiltinLinux(private val context: Context) {
     val serverRunning: Boolean
         get() = serviceRunning(SERVER)
 
+    /** The phone server's own service holds the shared status row now (so the app may lend it its words). */
+    fun holdsStatusRow(): Boolean = StatusNotification.isOwned(StatusNotification.OWNER_SERVER)
+
     /**
      * Posts the shared status row with the phone server's own words again, after the app's reply watch showed its
      * working words there. False when no service of ours holds the row any more (the server is stopping, or its
