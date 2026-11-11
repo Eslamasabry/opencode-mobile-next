@@ -420,8 +420,10 @@ public class KitEdgeDockState internal constructor() {
                 swellH.snapTo(l.height)
                 swellLen.snapTo(l.length)
             }
+            // One overshoot along the travel: the growth drops (B's width is growth x length); the length and the
+            // height fill calmly, so the tip passes its rest once by the drop's ~8 %, never by a product of two.
             launch { swellH.animateTo(l.height, DockSprings.fill(reduced)) }
-            launch { swellLen.animateTo(l.length, DockSprings.drop(reduced)) }
+            launch { swellLen.animateTo(l.length, DockSprings.fill(reduced)) }
             swellGrow.animateTo(1f, DockSprings.drop(reduced))
         }
     }
@@ -453,12 +455,12 @@ public class KitEdgeDockState internal constructor() {
         launch {
             charge.snapTo(0f)
             if (!reduced) delay(90)
-            charge.animateTo(1f, DockSprings.timed(DockRules().holdMs.toInt() - 90))
+            charge.animateTo(1f, DockSprings.timed(reduced, DockRules().holdMs.toInt() - 90))
         }
     }
 
     internal fun stopCharge() {
-        launch { charge.animateTo(0f, DockSprings.timed(if (reduced) 0 else 120)) }
+        launch { charge.animateTo(0f, DockSprings.timed(reduced, 120)) }
     }
 
     internal fun onFeedback(fb: DockFeedback) {
@@ -709,7 +711,7 @@ public class KitEdgeDockState internal constructor() {
             pulseRing = i
             launch {
                 pulse.snapTo(0f)
-                pulse.animateTo(1f, DockSprings.timed(600))
+                pulse.animateTo(1f, DockSprings.timed(reduced, 600))
             }
         }
         if (gesture.mode != DockMode.Idle || anythingOpen || out.value < DockDims.REST_W * 0.5f) return

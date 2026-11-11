@@ -342,7 +342,7 @@ private fun DockRingNode(
         }
     LaunchedEffect(arcTarget) {
         val grew = arcTarget > m.arc.value + 0.001f && m.arc.value > 0f
-        if (grew && !reduced) launch { m.pop.animateTo(0f, DockSprings.kick(), initialVelocity = 2.4f) }
+        if (grew && !reduced) launch { m.pop.animateTo(0f, DockSprings.kick(reduced), initialVelocity = 2.4f) }
         m.arc.animateTo(arcTarget, DockSprings.arc(reduced))
     }
     // Finished: the arc closes, the check draws itself, then the ring settles dim.
@@ -355,14 +355,14 @@ private fun DockRingNode(
         }
         if (reduced) {
             m.check.snapTo(1f)
-            m.settle.animateTo(1f, DockSprings.look())
+            m.settle.animateTo(1f, DockSprings.look(reduced))
             return@LaunchedEffect
         }
         kotlinx.coroutines.delay(200)
-        m.check.animateTo(1f, DockSprings.timed(340))
-        launch { m.pop.animateTo(0f, DockSprings.kick(), initialVelocity = 3f) }
+        m.check.animateTo(1f, DockSprings.timed(reduced, 340))
+        launch { m.pop.animateTo(0f, DockSprings.kick(reduced), initialVelocity = 3f) }
         kotlinx.coroutines.delay(2100)
-        m.settle.animateTo(1f, DockSprings.timed(400))
+        m.settle.animateTo(1f, DockSprings.timed(reduced, 400))
     }
     // An alert: a request pops twice and leans the dock out; a failure flashes, shakes once and pulses the body.
     LaunchedEffect(ring.pulse) {
@@ -375,13 +375,13 @@ private fun DockRingNode(
         if (failed) {
             launch {
                 m.flash.snapTo(1f)
-                m.flash.animateTo(0f, DockSprings.timed(220))
+                m.flash.animateTo(0f, DockSprings.timed(reduced, 220))
             }
-            m.shake.animateTo(0f, DockSprings.shake(), initialVelocity = 560f)
+            m.shake.animateTo(0f, DockSprings.shake(reduced), initialVelocity = 560f)
         } else {
-            m.pop.animateTo(0f, DockSprings.pop(), initialVelocity = 3f)
+            m.pop.animateTo(0f, DockSprings.pop(reduced), initialVelocity = 3f)
             kotlinx.coroutines.delay(360)
-            m.pop.animateTo(0f, DockSprings.pop(), initialVelocity = 3f)
+            m.pop.animateTo(0f, DockSprings.pop(reduced), initialVelocity = 3f)
         }
     }
     // Loops (the comet, the breath) run only where the kit allows ambient loops: never under reduced motion or stills.

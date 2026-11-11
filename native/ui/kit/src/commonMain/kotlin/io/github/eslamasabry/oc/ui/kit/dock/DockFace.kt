@@ -79,12 +79,14 @@ internal fun dockFailureInk(colors: KitColors): Color = colors.attention
 
 /**
  * The dock's springs. The kit's motion scheme has no "liquid" pair yet (asked of the design owner as
- * `KitMotionSpecs.liquidDrop` and `liquidFill`); they live here, in one place, and every one turns into an instant
- * change (travel) or a short cross-fade (looks) under reduced motion.
+ * `KitMotionSpecs.liquidDrop` and `liquidFill`); they live here, in one place. EVERY spec takes `reduced` and snaps by
+ * itself under reduced motion, so no caller has to remember to gate it.
  *
- * The rule (joined-glass.md, "Motion"): one small overshoot along the direction of travel (damping ratio 0.62: the dock
- * arriving from the edge, the swell coming out, the ring riding out, the list's width), a calm fill sideways (0.92: the
- * swell or the list growing taller), no bounce on closing.
+ * The rule (joined-glass.md, "Motion"): liquid levels, it does not ring. One small overshoot along the direction of
+ * travel (damping ratio 0.62, about 8 %: the dock arriving from the edge, the swell's growth, the ring riding out, the
+ * list's width), and only ONE value of a motion takes it (the swell's length and height fill calmly while its growth
+ * drops); a calm fill sideways (0.92: the swell or the list growing taller); no bounce on closing. The ring's own
+ * accents (arc, kick, pop) overshoot once at most (damping 0.6 or more); the failure's shake swings twice at most.
  */
 internal object DockSprings {
     fun <T> drop(reduced: Boolean, stiffness: Float = 300f): FiniteAnimationSpec<T> =
@@ -100,21 +102,25 @@ internal object DockSprings {
     fun <T> follow(reduced: Boolean): FiniteAnimationSpec<T> =
         if (reduced) snap() else spring(dampingRatio = 1f, stiffness = 900f)
 
-    /** A look change (colour, alpha): a short cross-fade, also under reduced motion. */
-    fun <T> look(): AnimationSpec<T> = tween(140, easing = KitEasing.Enter)
+    /** A look change (colour, alpha): a short cross-fade; a snap under reduced motion, as every kit look. */
+    fun <T> look(reduced: Boolean): AnimationSpec<T> = if (reduced) snap() else tween(140, easing = KitEasing.Enter)
 
     /** A timed part of a ring's motion (the check drawing, the settle, the flash, the charge, the pulse's run). */
-    fun <T> timed(ms: Int): FiniteAnimationSpec<T> = tween(ms.coerceAtLeast(0), easing = KitEasing.Steady)
+    fun <T> timed(reduced: Boolean, ms: Int): FiniteAnimationSpec<T> =
+        if (reduced) snap() else tween(ms.coerceAtLeast(0), easing = KitEasing.Steady)
 
-    /** The task arc advancing: one small overshoot. */
-    fun <T> arc(reduced: Boolean): FiniteAnimationSpec<T> = if (reduced) snap() else spring(dampingRatio = 0.55f, stiffness = 190f)
+    /** The task arc advancing: one small overshoot along its travel (the drop's ratio). */
+    fun <T> arc(reduced: Boolean): FiniteAnimationSpec<T> = if (reduced) snap() else spring(dampingRatio = 0.62f, stiffness = 190f)
 
-    /** A kick in a ring's scale (a tap, a task done, the check landing), released with a velocity. */
-    fun <T> kick(): FiniteAnimationSpec<T> = spring(dampingRatio = 0.4f, stiffness = 600f)
+    /** A kick in a ring's scale (a tap, a task done, the check landing), released with a velocity: one overshoot. */
+    fun <T> kick(reduced: Boolean): FiniteAnimationSpec<T> = if (reduced) snap() else spring(dampingRatio = 0.6f, stiffness = 600f)
 
-    /** The request's pop (played twice). */
-    fun <T> pop(): FiniteAnimationSpec<T> = spring(dampingRatio = 0.35f, stiffness = 760f)
+    /** The request's pop (played twice), released with a velocity: one overshoot each. */
+    fun <T> pop(reduced: Boolean): FiniteAnimationSpec<T> = if (reduced) snap() else spring(dampingRatio = 0.6f, stiffness = 760f)
 
-    /** The failure's one sideways shake (a stiff, lightly damped spring released with a velocity). */
-    fun <T> shake(): FiniteAnimationSpec<T> = spring(dampingRatio = 0.2f, stiffness = 2600f)
+    /**
+     * The failure's sideways shake, released with a velocity: the one cue that may swing, and only twice (at 0.45 each
+     * swing keeps a fifth of the last: about 6.5, 1.3, then 0.3 dp for the release the ring uses).
+     */
+    fun <T> shake(reduced: Boolean): FiniteAnimationSpec<T> = if (reduced) snap() else spring(dampingRatio = 0.45f, stiffness = 2600f)
 }
