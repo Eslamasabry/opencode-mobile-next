@@ -19,6 +19,18 @@ import kotlinx.coroutines.launch
  * newest message that says something, whitespace folded, cut at 120).
  */
 public object HomePreviewRules {
+    /** How a waiting request's home line is worded: by what the request is, not always "run". */
+    public enum class AskKind { Run, Edit, Read, Other }
+
+    /** The server's permission type (`bash`, `edit`, ...) as a sentence kind; the same sets the request card reads. */
+    public fun askKind(permission: String): AskKind =
+        when (permission.trim().lowercase()) {
+            "bash", "shell" -> AskKind.Run
+            "edit", "write", "multiedit", "patch" -> AskKind.Edit
+            "read" -> AskKind.Read
+            else -> AskKind.Other
+        }
+
     /** The longest preview kept; the row cuts it again to its width. */
     public const val MAX_CHARS: Int = 120
 

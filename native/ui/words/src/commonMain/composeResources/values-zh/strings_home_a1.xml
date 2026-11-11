@@ -4,4 +4,7 @@
     <string name="chatsHomeRightNow">此刻</string>
     <string name="chatsHomeRecent">最近</string>
     <string name="chatsHomeAsksToRun">请求运行：%1$s</string>
+    <string name="chatsHomeAsksToEdit">请求编辑：%1$s</string>
+    <string name="chatsHomeAsksToRead">请求读取：%1$s</string>
+    <string name="chatsHomeAsksOther">请求权限：%1$s</string>
 </resources>
