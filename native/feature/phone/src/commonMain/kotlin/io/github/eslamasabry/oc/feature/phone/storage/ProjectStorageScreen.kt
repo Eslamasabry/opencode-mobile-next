@@ -29,6 +29,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.kitDiffFiles
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.manageSpaceCacheCleared
 import io.github.eslamasabry.oc.ui.words.res.manageSpaceCacheFailed
@@ -260,12 +261,18 @@ public fun ProjectStorageScreen(
                                 supporting =
                                     if (facts.projects.isEmpty())
                                         stringResource(Res.string.projectExportNoProjects)
+                                    else if (!manageSpace && facts.folders.isEmpty())
+                                        pluralStringResource(
+                                            Res.plurals.kitDiffFiles,
+                                            facts.looseFiles.size,
+                                            facts.looseFiles.size,
+                                        ) + " · " + PhoneSizes.text(facts.looseBytes)
                                     else
                                         pluralStringResource(
                                             Res.plurals.projectExportDetail,
                                             if (manageSpace) facts.projects.size else facts.folders.size,
                                             if (manageSpace) facts.projects.size else facts.folders.size,
-                                            PhoneSizes.text(facts.projectBytes),
+                                            PhoneSizes.text(if (manageSpace) facts.projectBytes else facts.folderBytes),
                                         ),
                                 enabled = !state.busy,
                                 disabledReason = busy,
@@ -342,9 +349,16 @@ public fun ProjectStorageScreen(
                     }
                 if (!manageSpace && facts.looseFiles.isNotEmpty())
                     KitRowGroup(label = stringResource(Res.string.readerUiFiles)) {
-                        facts.looseFiles.forEach { file ->
-                            KitRow(title = file.name, supporting = PhoneSizes.text(file.bytes))
-                        }
+                        // One row, not one per file: they ride along in the zip, they are not projects.
+                        KitRow(
+                            title = stringResource(Res.string.readerUiFiles),
+                            supporting =
+                                pluralStringResource(
+                                    Res.plurals.kitDiffFiles,
+                                    facts.looseFiles.size,
+                                    facts.looseFiles.size,
+                                ) + " · " + PhoneSizes.text(facts.looseBytes),
+                        )
                     }
                 if (manageSpace)
                     KitRowGroup(label = stringResource(Res.string.manageSpaceKeptLabel)) {

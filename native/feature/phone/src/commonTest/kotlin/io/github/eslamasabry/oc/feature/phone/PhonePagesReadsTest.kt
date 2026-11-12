@@ -242,5 +242,8 @@ class PhonePagesReadsTest {
         assertEquals(listOf("bg5.txt"), stored.looseFiles.map { it.name })
         // The zip still holds everything: the size counts the loose file too.
         assertEquals(6_156, stored.projectBytes)
+        // The project line counts and sizes the folders alone; loose files get their own one row figure.
+        assertEquals(6_144, stored.folderBytes)
+        assertEquals(12, stored.looseBytes)
     }
 }
