@@ -6,6 +6,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -34,6 +37,11 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
@@ -43,6 +51,7 @@ import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
+import io.github.eslamasabry.oc.ui.kit.action.KitWorkingMark
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceMark
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceRow
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
@@ -72,6 +81,8 @@ import io.github.eslamasabry.oc.ui.words.res.chat_model_favorite_add
 import io.github.eslamasabry.oc.ui.words.res.chat_model_favorite_remove
 import io.github.eslamasabry.oc.ui.words.res.chat_model_favorites
 import io.github.eslamasabry.oc.ui.words.res.chat_model_favorites_empty
+import io.github.eslamasabry.oc.ui.words.res.chat_model_loading
+import io.github.eslamasabry.oc.ui.words.res.chat_model_updating
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewModelDefault
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewModelDefaultHint
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewModelsTitle
@@ -293,6 +304,13 @@ public fun KitModelSheet(
     visible: Boolean,
     onDismissRequest: () -> Unit,
     options: List<KitModelOption>,
+    /**
+     * The list is being fetched. With no [options] yet the sheet shows one quiet "Loading models…" row (the working
+     * mark and the words) in place of [above], so a caller's "no models" notice cannot show while they are on the way;
+     * [below] is drawn as ever. With a last known list the rows stay usable and a small working mark (read out as
+     * "Updating…") sits over the sheet's top-right corner, taking no height, so the list does not move when it ends.
+     */
+    loading: Boolean = false,
     current: String?,
     onChoose: (KitModelOption?) -> Unit,
     favorites: List<KitModelOption> = emptyList(),
@@ -322,7 +340,7 @@ public fun KitModelSheet(
         bodyFills = true,
     ) {
         ModelSheetBody(
-            options, current, onChoose, favorites, recent, onToggleFavorite, offersServerDefault, resetKey, suggested,
+            options, loading, current, onChoose, favorites, recent, onToggleFavorite, offersServerDefault, resetKey, suggested,
             suggestedLabel, above, below,
         )
     }
@@ -331,6 +349,7 @@ public fun KitModelSheet(
 @Composable
 private fun ColumnScope.ModelSheetBody(
     options: List<KitModelOption>,
+    loading: Boolean,
     current: String?,
     onChoose: (KitModelOption?) -> Unit,
     favorites: List<KitModelOption>,
@@ -354,12 +373,13 @@ private fun ColumnScope.ModelSheetBody(
                     .padding(start = rail, end = rail, bottom = rail),
                 verticalArrangement = gap,
             ) {
-                above()
+                if (loading) LoadingRow() else above()
                 below()
             }
         }
         return
     }
+    if (loading) UpdatingMark(rail)
     val search = rememberTextFieldState()
     var query by remember(resetKey) { mutableStateOf("") }
     // The search field stands directly under the title; the caller's notices lead each list instead (they scroll
@@ -438,6 +458,43 @@ private fun ColumnScope.ModelSheetBody(
                 val items = remember(page, offersServerDefault, lead, twins, current) { pageItems(page, offersServerDefault, lead, twins, current) }
                 list(items, entrance)
             }
+        }
+    }
+}
+
+/** The one quiet row of an empty sheet whose list is on its way; announced politely when it appears. */
+@Composable
+private fun LoadingRow() {
+    val colors = LocalKitColors.current
+    Row(
+        Modifier.fillMaxWidth().padding(vertical = Space.S4.dp).testTag("chat-model-loading").semantics { liveRegion = LiveRegionMode.Polite },
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
+    ) {
+        KitWorkingMark(colors.accent, size = 16.dp)
+        KitText(stringResource(Res.string.chat_model_loading), role = TypeRole.Secondary, tone = TextTone.Secondary)
+    }
+}
+
+/**
+ * A last known list is being refreshed: a small working mark over the sheet's top-right corner. The title row belongs to
+ * [KitSheet] (another file), so the mark sits at the top of this body instead, in a box of no height: it takes no room
+ * and nothing below it moves when it goes.
+ */
+@Composable
+private fun UpdatingMark(rail: Dp) {
+    val colors = LocalKitColors.current
+    val words = stringResource(Res.string.chat_model_updating)
+    Box(Modifier.fillMaxWidth().height(0.dp).zIndex(1f)) {
+        Box(
+            Modifier.align(Alignment.TopEnd).wrapContentHeight(Alignment.Top, unbounded = true).padding(end = rail)
+                .testTag("chat-model-updating")
+                .semantics {
+                    contentDescription = words
+                    liveRegion = LiveRegionMode.Polite
+                },
+        ) {
+            KitWorkingMark(colors.accent, size = 14.dp)
         }
     }
 }
