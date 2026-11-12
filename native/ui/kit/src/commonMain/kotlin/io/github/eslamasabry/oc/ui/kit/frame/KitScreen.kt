@@ -441,14 +441,13 @@ public fun KitScreen(
                                         // slab's bottom edge and the window's dissolves, so no half line shows there.
                                         // With something above the box inside the block (a request card and its label),
                                         // the body fades out from the block's top as it does under a block that is not a
-                                        // slab, so that stands on the page's ground, not on sharp lines; while the jump pill
-                                        // stands above that block it starts higher by the pill's height (pillClear).
+                                        // slab, so that stands on the page's ground, not on sharp lines.
                                         fadeFromBottom =
                                             when {
                                                 bottomPart == null -> null
                                                 slab ->
                                                     ({
-                                                        if (bottomState.stacked) bottomPx + with(density) { EDGE_LEAD_DP.dp.toPx() } + bottomState.pillClear
+                                                        if (bottomState.stacked) bottomPx + with(density) { EDGE_LEAD_DP.dp.toPx() }
                                                         else with(density) { (SLAB_UNDER_FADE_DP + SLAB_UNDER_CLEAR_DP).dp.toPx() }
                                                     })
                                                 else -> ({ bottomPx + with(density) { EDGE_LEAD_DP.dp.toPx() } })

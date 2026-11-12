@@ -3,7 +3,6 @@ package io.github.eslamasabry.oc.feature.phone.presentation
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.Redacted
-import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.StateFlow
 
@@ -99,19 +98,33 @@ public interface PhoneDetailsSource {
  * When This phone reads what is installed again. The check runs inside Linux, which runs one phone
  * task at a time: a check refused because another task held that slot (Add tools' own check, a git
  * read, an agent probe) is not a failure, so the page keeps saying "Checking…" and asks again, up to
- * [ATTEMPTS] reads in all. Any other failure gets the one second read it always had.
+ * [ATTEMPTS] reads in all.
+ *
+ * The same holds for a check that fails while the phone is still settling after the app starts
+ * (device QA basics-3 B18): the first open after a restart failed its read twice, 1.7 s apart, while
+ * the agent helper's processes were starting, and the same read worked a few seconds later with
+ * nothing pressed. So every failure is read again, with a growing pause ([pauseMs]), and "Could not
+ * check" is said only when all [ATTEMPTS] reads failed (about 15 s of pauses in all).
+ *
+ * A read can itself take seconds (8.9 s on the device during that settling), so the reads are also
+ * bounded in time: no read starts later than [WINDOW_MS] after the first one started. A phone whose
+ * Linux is really broken gets its "Could not check" within that window plus one read, not after five
+ * slow reads.
  */
 public object InstalledInventoryRetry {
     public const val ATTEMPTS: Int = 5
     public const val PAUSE_MS: Long = 1_500
 
+    /** No read starts later than this after the first read started. */
+    public const val WINDOW_MS: Long = 25_000
+
     /**
-     * Whether to read again after the [attempt]-th read (1-based) failed with [failure]. Never while a
-     * setup job runs ([addingTools]): the job holds the slot for minutes, so waiting reads would end in
-     * a false "Could not check"; the job's end reads again instead.
+     * Whether to read again after the [attempt]-th read (1-based) failed, [elapsedMs] after the first
+     * read started. Never while a setup job runs ([addingTools]): the job holds the slot for minutes,
+     * so waiting reads would end in a false "Could not check"; the job's end reads again instead.
      */
-    public fun again(attempt: Int, failure: Failure, addingTools: Boolean = false): Boolean =
-        !addingTools &&
-            attempt < ATTEMPTS &&
-            (attempt == 1 || (failure as? Failure.Runtime)?.problem == RuntimeProblem.SlotBusy)
+    public fun again(attempt: Int, addingTools: Boolean = false, elapsedMs: Long = 0): Boolean =
+        !addingTools && attempt < ATTEMPTS && elapsedMs + pauseMs(attempt) <= WINDOW_MS
+    /** The pause before read [attempt] + 1: 1.5 s, then 3, 4.5 and 6 s. */
+    public fun pauseMs(attempt: Int): Long = PAUSE_MS * attempt.coerceIn(1, ATTEMPTS)
 }

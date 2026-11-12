@@ -75,8 +75,13 @@ public enum class AgentSetupFailure {
     Checksum,
     Storage,
     Interrupted,
+    /** The pinned download ran but named another version ([AgentVersionCheck.reported] has both). */
     Version,
     Unknown,
+    /** The pinned download did not answer its version check: too slow, crashed, or printed no version. */
+    NotStarted,
+    /** The pinned file's address answered 404/410: upstream withdrew that release. */
+    Withdrawn,
 }
 
 public enum class AgentSetupPhase {

@@ -502,7 +502,7 @@
     <string name="agentComputerCodex">Codex</string>
     <string name="agentComputerCodexNote">Conéctate al servidor oficial de la app de Codex mediante WebSocket. Escribe su dirección y la carpeta completa del proyecto en esa computadora.</string>
     <string name="agentErrorOpenSettings">Abrir ajustes</string>
-    <string name="agentDraftTitle">Registros de conversaciones</string>
+    <string name="agentDraftTitle">Copiar una conversación</string>
     <string name="agentDraftReadOnly">Revisa un registro antes de copiarlo a otro agente. Esto no inicia, reanuda ni cambia una conversación.</string>
     <string name="agentDraftGuide">1. Elige una conversación abajo.\n2. Revisa el registro y cualquier aviso sobre turnos anteriores omitidos.\n3. Cópialo solo cuando estés listo para compartirlo.</string>
     <string name="agentDraftLoading">Leyendo la conversación</string>
@@ -520,4 +520,5 @@
     <string name="agentDraftTooLarge">El turno más reciente de esta conversación es demasiado grande para incluirlo sin perder texto.</string>
     <string name="agentPhoneCheck">Revisar agentes del teléfono</string>
     <string name="agentsCatalogNeedsPhoneSetup">Primero configura el servidor integrado en este teléfono. Luego vuelve aquí para instalar este agente.</string>
+    <string name="agentDraftAsCopied">El registro tal como se copiará</string>
 </resources>

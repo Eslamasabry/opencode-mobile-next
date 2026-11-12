@@ -28,12 +28,17 @@ import io.github.eslamasabry.oc.ui.routes.AgentsRoute
 import io.github.eslamasabry.oc.ui.routes.CapabilityAddComputerRoute
 import io.github.eslamasabry.oc.ui.routes.CapabilityAgentAccountRoute
 import io.github.eslamasabry.oc.ui.routes.CapabilityComputerKind
+import io.github.eslamasabry.oc.ui.kitchat.KitChatEnvironment
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 
 /** The Agents hub and the agent-owned sign-in terminal. */
 @Inject
 @ContributesIntoSet(AppScope::class, binding = binding<EntryInstaller>())
-public class AgentsEntries(private val arrivals: ShowMeTargets) : EntryInstaller {
+public class AgentsEntries(
+    private val arrivals: ShowMeTargets,
+    // AG5: the conversation-record page draws Markdown, whose code parts read the app's redactor.
+    private val environment: KitChatEnvironment,
+) : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
         entry<CapabilityAddComputerRoute> { route ->
             val vm = metroViewModel<AgentsViewModel>()
@@ -50,7 +55,7 @@ public class AgentsEntries(private val arrivals: ShowMeTargets) : EntryInstaller
                 )
                 vm.startAdding()
             }
-            AgentsScreen(state, vm, hubState, vm)
+            environment.Provide { AgentsScreen(state, vm, hubState, vm) }
         }
         entry<CapabilityAgentAccountRoute> { route ->
             val vm = metroViewModel<AgentsViewModel>()
@@ -61,7 +66,7 @@ public class AgentsEntries(private val arrivals: ShowMeTargets) : EntryInstaller
             val state by vm.state.collectAsStateWithLifecycle()
             val hubState by vm.hubState.collectAsStateWithLifecycle()
             LaunchedEffect(route) { vm.openAccount(route.profile) }
-            AgentsScreen(state, vm, hubState, vm)
+            environment.Provide { AgentsScreen(state, vm, hubState, vm) }
         }
         entry<AgentsRoute.SignInTerminal> { route ->
             val vm =
@@ -100,7 +105,7 @@ public class AgentsEntries(private val arrivals: ShowMeTargets) : EntryInstaller
                     vm.leave()
                 }
             }
-            AgentsScreen(state, vm, hubState, vm)
+            environment.Provide { AgentsScreen(state, vm, hubState, vm) }
         }
         entry<AgentsRoute.Home> {
             val vm = metroViewModel<AgentsViewModel>()
@@ -112,14 +117,16 @@ public class AgentsEntries(private val arrivals: ShowMeTargets) : EntryInstaller
             val hubState by vm.hubState.collectAsStateWithLifecycle()
             val arrival by arrivals.active.collectAsStateWithLifecycle()
             DisposableEffect(Unit) { onDispose { arrivals.dismiss(ShowMeTarget.Agents) } }
-            AgentsScreen(
-                state,
-                vm,
-                hubState,
-                vm,
-                showArrival = arrival == ShowMeTarget.Agents,
-                dismissArrival = { arrivals.dismiss(ShowMeTarget.Agents) },
-            )
+            environment.Provide {
+                AgentsScreen(
+                    state,
+                    vm,
+                    hubState,
+                    vm,
+                    showArrival = arrival == ShowMeTarget.Agents,
+                    dismissArrival = { arrivals.dismiss(ShowMeTarget.Agents) },
+                )
+            }
         }
     }
 }

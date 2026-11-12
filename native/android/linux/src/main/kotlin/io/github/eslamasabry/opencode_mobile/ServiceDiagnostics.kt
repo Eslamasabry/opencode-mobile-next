@@ -8,10 +8,13 @@ data class ServiceDiagnostics(
     val lastStopRequested: Boolean? = null,
     val restartCount: Int = 0,
     val hasLaunched: Boolean = false,
+    /** When the latest run began (wall clock). An exit older than this belongs to an earlier run. */
+    val lastLaunchAtMs: Long? = null,
 ) {
-    fun launched(): ServiceDiagnostics = copy(
+    fun launched(atMs: Long? = null): ServiceDiagnostics = copy(
         restartCount = restartCount + if (hasLaunched) 1 else 0,
         hasLaunched = true,
+        lastLaunchAtMs = atMs?.takeIf { it > 0 } ?: lastLaunchAtMs,
     )
 
     fun exited(exitCode: Int?, uptimeMs: Long, atMs: Long? = null,
@@ -28,6 +31,7 @@ data class ServiceDiagnostics(
         "lastUptimeMs" to lastUptimeMs,
         "lastExitAtMs" to lastExitAtMs,
         "lastStopRequested" to lastStopRequested,
+        "lastLaunchAtMs" to lastLaunchAtMs,
         "uptimeMs" to uptimeMs,
         "restartCount" to restartCount,
         // Exit 137 indicates SIGKILL; it cannot distinguish memory pressure

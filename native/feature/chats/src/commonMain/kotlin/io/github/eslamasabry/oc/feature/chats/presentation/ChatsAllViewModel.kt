@@ -981,7 +981,8 @@ public class ChatsAllViewModel(
         public fun create(@Assisted route: ChatsRoute.All): ChatsAllViewModel
     }
 
-    private companion object {
+    internal companion object {
+        /** The route filter that opens the list with Running on (a filter starting with "/" is a project). */
         const val RUNNING = "running"
     }
 }

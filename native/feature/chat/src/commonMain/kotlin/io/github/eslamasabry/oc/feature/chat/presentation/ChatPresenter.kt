@@ -175,6 +175,8 @@ public class ChatPresenter(
     private var readAllowed = false
     private var readBusy = false
     private var stopInFlight = false
+    /** B8: the turn whose prompt Send again is sending, or sent; one tap sends it once. */
+    private var resentTurn: String? = null
     private var historySearchGeneration = 0L
     private val feed = (world as? TurnFeedSource)?.turnFeed ?: MutableStateFlow(TurnFeed.Empty)
 
@@ -652,8 +654,25 @@ public class ChatPresenter(
     }
 
     override fun retryLastPrompt() {
-        val text = newestPrompt()?.text?.takeIf { it.isNotBlank() } ?: return
-        launcher.launch { world.sendAgain(text) }
+        val row = newestPrompt() ?: return
+        val text = row.text.takeIf { it.isNotBlank() } ?: return
+        // B8 (Flutter `_retryLast` returns while `_sending`): a second tap before the copy lands sends nothing.
+        if (resentTurn == row.turnId) return
+        resentTurn = row.turnId
+        // The prompt as the transcript holds it, with its files (Flutter `_retryLast` carries them), on the
+        // conversation's current agent and model as Flutter sends it; a file that can no longer be read leaves the
+        // words alone, as before.
+        val prompt =
+            world.stoppedPrompt(row.turnId)
+                ?.takeIf { it.text.isNotBlank() && it.unreadable.isEmpty() }
+                ?.copy(agent = null)
+        launcher.launch {
+            val sent = if (prompt != null) world.sendAgainWith(prompt) else world.sendAgain(text)
+            if (sent is Outcome.Failed) {
+                resentTurn = null
+                local.update { it.copy(actionFailure = sent.failure) }
+            }
+        }
     }
 
     override fun undoLastPrompt() {

@@ -18,8 +18,8 @@
     <string name="agentsComputerReadFailed">Agen di komputer ini tidak dapat dibaca. Tarik ke bawah untuk mencoba lagi.</string>
     <string name="agentsNewChat">Percakapan baru</string>
     <string name="agentsNewChatWith">Percakapan baru dengan %1$s</string>
-    <string name="agentsConversationsStored">Tempat percakapan disimpan</string>
-    <string name="agentsConversationsStoredOn">Tempat percakapan disimpan: %1$s</string>
+    <string name="agentsConversationsStored">Salin percakapan untuk agen lain</string>
+    <string name="agentsConversationsStoredOn">Salin percakapan dari %1$s</string>
     <string name="agentsHostAccount">Akun host: %1$s</string>
     <string name="agentsHelperUpdateRequired">Agen ponsel tidak terhubung: pembantu agen tidak ada atau terlalu lama untuk dijalankan.</string>
     <string name="agentsHelperUpdateAction">Perbarui pembantu agen</string>
@@ -29,4 +29,7 @@
     <string name="agentsInstallFailedVersion">%1$s tidak dapat dipasang: versi yang diterima bukan yang diharapkan aplikasi. Coba lagi.</string>
     <string name="agentsInstallFailedUnknown">%1$s tidak dapat dipasang. Coba lagi; Detail berisi apa yang dilaporkan ponsel.</string>
     <string name="agentsInstallInterruptedNow">Pemasangan %1$s terhenti sebelum selesai. Coba lagi untuk melanjutkan.</string>
+    <string name="agentsInstallFailedVersionOther">%1$s tidak dapat dipasang: unduhan menyebut dirinya versi %2$s, sedangkan aplikasi ini bekerja dengan %3$s. Mencoba lagi tidak akan mengubahnya; pembaruan aplikasi ini akan mengubahnya.</string>
+    <string name="agentsInstallFailedNotStarted">%1$s sudah diunduh tetapi tidak berjalan di ponsel ini, jadi versinya tidak dapat diperiksa. Coba lagi; jika terjadi lagi, Detail berisi apa yang dilaporkan ponsel.</string>
+    <string name="agentsInstallFailedWithdrawn">%1$s tidak dapat dipasang: versi %2$s, yang dipasang aplikasi ini, tidak lagi tersedia untuk diunduh. Mencoba lagi tidak akan mengubahnya; pembaruan aplikasi ini akan mengubahnya.</string>
 </resources>

@@ -18,6 +18,8 @@ kotlin {
         ) // KitTerminalView (.live + .accessible, plan 06 §7.7)
         implementation(project(":engine:agents"))
         implementation(project(":engine:settings"))
+        // AG5: a conversation record is read through the kit's Markdown part.
+        implementation(project(":ui:kit-chat"))
     }
     // The golden-diff gate is the test-only :ui:gate module (E02-S01: no borrowed source folders).
     sourceSets.getByName("desktopTest").dependencies { implementation(project(":ui:gate")) }

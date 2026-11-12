@@ -487,7 +487,7 @@
     <string name="agentComputerCodex">Codex</string>
     <string name="agentComputerCodexNote">Kết nối với máy chủ ứng dụng Codex chính thức qua WebSocket. Hãy nhập địa chỉ của nó và đường dẫn đầy đủ của thư mục dự án trên máy tính đó.</string>
     <string name="agentErrorOpenSettings">Mở cài đặt</string>
-    <string name="agentDraftTitle">Bản ghi cuộc trò chuyện</string>
+    <string name="agentDraftTitle">Sao chép cuộc trò chuyện</string>
     <string name="agentDraftReadOnly">Hãy xem lại một bản ghi trước khi sao chép sang tác nhân khác. Thao tác này không bắt đầu, tiếp tục hay thay đổi cuộc trò chuyện.</string>
     <string name="agentDraftGuide">1. Chọn một cuộc trò chuyện bên dưới.\n2. Xem lại bản ghi và mọi thông báo về các lượt cũ bị lược bỏ.\n3. Chỉ sao chép khi bạn sẵn sàng chia sẻ.</string>
     <string name="agentDraftLoading">Đang đọc cuộc trò chuyện</string>
@@ -503,4 +503,5 @@
     <string name="agentDraftTooLarge">Lượt mới nhất của cuộc trò chuyện này quá lớn để đưa vào mà không mất văn bản.</string>
     <string name="agentPhoneCheck">Kiểm tra tác nhân trên điện thoại</string>
     <string name="agentsCatalogNeedsPhoneSetup">Hãy thiết lập máy chủ tích hợp trên điện thoại này trước. Sau đó quay lại đây để cài tác nhân này.</string>
+    <string name="agentDraftAsCopied">Bản ghi đúng như khi được sao chép</string>
 </resources>

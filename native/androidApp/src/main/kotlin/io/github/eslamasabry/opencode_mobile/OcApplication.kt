@@ -12,6 +12,8 @@ import io.github.eslamasabry.oc.android.platform.NativeCrashStore
 import io.github.eslamasabry.oc.core.common.AppBuildInfo
 import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Channel
+import io.github.eslamasabry.oc.core.common.KnownSecretMask
+import io.github.eslamasabry.oc.core.common.KnownSecrets
 import io.github.eslamasabry.oc.core.common.LaunchMode
 import io.github.eslamasabry.oc.core.common.Severity
 import io.github.eslamasabry.oc.core.security.RedactingWriter
@@ -87,6 +89,8 @@ class OcApplication : Application(), GraphOwner {
             ), // P12: warnings/errors feed Report a problem
             Severity.Info,
         ) // ring + logcat sinks: slice 1
+        // The notification shade masks every value registered here, not only secret-shaped text (w4-mcp-secrets gate).
+        KnownSecrets.install(KnownSecretMask(redactor::maskKnown))
         buildInfo =
             AppBuildInfo(
                 versionName = BuildConfig.VERSION_NAME,

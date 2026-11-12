@@ -18,8 +18,8 @@
     <string name="agentsComputerReadFailed">Не удалось прочитать список агентов этого компьютера. Потяните вниз, чтобы повторить.</string>
     <string name="agentsNewChat">Новый чат</string>
     <string name="agentsNewChatWith">Новый чат с %1$s</string>
-    <string name="agentsConversationsStored">Где хранятся чаты</string>
-    <string name="agentsConversationsStoredOn">Где хранятся чаты: %1$s</string>
+    <string name="agentsConversationsStored">Копировать чат для другого агента</string>
+    <string name="agentsConversationsStoredOn">Копировать чат с %1$s</string>
     <string name="agentsHostAccount">Учётная запись хоста: %1$s</string>
     <string name="agentsHelperUpdateRequired">Агенты на телефоне не подключены: помощник агентов отсутствует или слишком старый для запуска.</string>
     <string name="agentsHelperUpdateAction">Обновить помощник агентов</string>
@@ -29,4 +29,7 @@
     <string name="agentsInstallFailedVersion">Не удалось установить %1$s: загружена не та версия, которую ожидает приложение. Повторите.</string>
     <string name="agentsInstallFailedUnknown">Не удалось установить %1$s. Повторите; в подробностях есть сообщение телефона.</string>
     <string name="agentsInstallInterruptedNow">Установка %1$s прервана до завершения. Повторите, чтобы продолжить.</string>
+    <string name="agentsInstallFailedVersionOther">Не удалось установить %1$s: загрузка сообщает версию %2$s, а это приложение работает с %3$s. Повторная попытка этого не изменит; изменит обновление этого приложения.</string>
+    <string name="agentsInstallFailedNotStarted">%1$s загружен, но не запустился на этом телефоне, поэтому его версию не удалось проверить. Повторите; если это повторится, в подробностях есть сообщение телефона.</string>
+    <string name="agentsInstallFailedWithdrawn">Не удалось установить %1$s: версия %2$s, которую устанавливает это приложение, больше недоступна для загрузки. Повторная попытка этого не изменит; изменит обновление этого приложения.</string>
 </resources>

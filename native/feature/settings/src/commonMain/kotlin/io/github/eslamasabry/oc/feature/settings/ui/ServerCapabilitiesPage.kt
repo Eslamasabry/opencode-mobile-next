@@ -3,7 +3,11 @@ package io.github.eslamasabry.oc.feature.settings.ui
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.runtime.*
 import io.github.eslamasabry.oc.feature.settings.presentation.*
-import io.github.eslamasabry.oc.ui.kit.capability.KitCapabilityExplainer
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
+import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
@@ -19,8 +23,15 @@ internal fun ColumnScope.ServerCapabilitiesBody(
     actions: SettingsActions,
 ) {
     var expanded by remember(ui.serverName) { mutableStateOf(false) }
-    KitGroupNote(stringResource(Res.string.capabilityScreenIntro, KitBidi.auto(ui.serverName)))
     val missing = ui.features.filter { !it.available }
+    val serverGaps = missing.any { !it.device }
+    KitGroupNote(
+        stringResource(
+            if (serverGaps) Res.string.capabilityScreenIntroWithGaps
+            else Res.string.capabilityScreenIntro,
+            KitBidi.auto(ui.serverName),
+        )
+    )
     if (missing.none { !it.device }) KitNotice(stringResource(Res.string.capabilityAllAvailable))
     for (device in listOf(false, true)) {
         val rows = missing.filter { it.device == device }
@@ -34,11 +45,18 @@ internal fun ColumnScope.ServerCapabilitiesBody(
             rows.forEach { feature -> CapabilityRow(feature) }
         }
     }
-    if (missing.any { !it.device })
-        KitCapabilityExplainer(
-            "server.any",
-            serverName = ui.serverName,
-            source = "server-capabilities",
+    // S2 (sweep-b 2026-11-11): what is missing here may work on another server, so the way there is one row
+    // (Flutter server_capabilities_screen.dart capabilities-add-server). It is never the "no server yet" explainer:
+    // this page always belongs to a server.
+    if (serverGaps)
+        KitRow(
+            title = stringResource(Res.string.capabilityAddServer),
+            modifier = Modifier.testTag("capabilities-add-server"),
+            leading = KitRowLeading.Glyph(KitIcons.add),
+            supporting = stringResource(Res.string.capabilityAddServerDetail),
+            supportingMaxLines = 2,
+            trailing = KitRowTrailing.Chevron,
+            onClick = { actions.onOutside(SettingsOutside.Servers) },
         )
     val available = ui.features.filter { it.available }
     if (available.isNotEmpty()) {

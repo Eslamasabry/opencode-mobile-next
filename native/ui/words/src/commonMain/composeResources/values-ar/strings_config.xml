@@ -1,6 +1,10 @@
 <resources>
     <string name="configInspectionTitle">إعدادات الخادم</string>
-    <string name="configInspectionExplanation">اعرض مصادر إعدادات الخادم حسب الأولوية. تُخفى المفاتيح والرموز وقيم البيئة والترويسات والأوامر والتعليمات. لا تغيّر هذه الصفحة أي إعداد.</string>
+    <string name="configInspectionExplanation">ملفات الإعدادات التي يقرؤها هذا الخادم، الأهم أولًا. تُخفى المفاتيح وكلمات المرور وغيرها من الأسرار. لا تغيّر هذه الصفحة أي شيء.</string>
     <string name="configInspectionUnavailable">تعذّر تحميل إعدادات الخادم. أعد الاتصال ثم حاول مرة أخرى.</string>
     <string name="configInspectionRefresh">تحديث عرض الإعدادات</string>
+    <string name="configFilesLabel">ملفات الإعدادات</string>
+    <string name="configFoldersLabel">المجلدات التي يبحث فيها الخادم</string>
+    <string name="configNoFileTitle">لا يوجد ملف إعدادات بعد</string>
+    <string name="configNoFileBody">يعمل هذا الخادم بإعداداته المدمجة. ملف إعدادات في أحد المجلدات أدناه سيغيّرها. هذه الصفحة تقرؤه فقط.</string>
 </resources>

@@ -557,7 +557,6 @@ private class PlateHostNode(var words: KitLiquidWords) :
                 val v = backdrop.version()
                 if (v == seen) continue
                 val c = coordinates?.takeIf { it.isAttached } ?: continue
-                seen = v
                 val w = (c.size.width / SAMPLE_SCALE).coerceAtLeast(1)
                 val h = (c.size.height / SAMPLE_SCALE).coerceAtLeast(1)
                 val small: DrawScope.() -> Unit = { scale(1f / SAMPLE_SCALE, 1f / SAMPLE_SCALE, Offset.Zero) { backdrop.draw(this, c) } }
@@ -572,6 +571,9 @@ private class PlateHostNode(var words: KitLiquidWords) :
                         if (!platform.readPixels(layer.toImageBitmap(), read, w, h)) continue
                         read
                     }
+                // Counted as seen only once a sample came back: a sample the sampler skipped (another pane's was in
+                // flight, or the GPU is slow) is asked for again on the next tick, not only when the content next moves.
+                seen = v
                 if (pixels.size < w * h || pixels.count { (it ushr 24) > 0x80 } < pixels.size / 2) continue
                 val (mean, _) = LiquidInkRule.measure(pixels)
                 val next = LiquidInkRule.next(ink, mean)

@@ -2,7 +2,11 @@
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
     <string name="configInspectionTitle">服务器配置</string>
-    <string name="configInspectionExplanation">按优先级顺序查看服务器的配置来源。密钥、令牌、环境值、请求头、命令和提示词都已隐藏。此页面不会更改任何内容。</string>
+    <string name="configInspectionExplanation">此服务器读取哪些配置文件，最重要的在前。密钥、密码和其他机密都已隐藏。此页面不会更改任何内容。</string>
     <string name="configInspectionUnavailable">无法加载服务器的配置。请重新连接后重试。</string>
     <string name="configInspectionRefresh">刷新配置</string>
+    <string name="configFilesLabel">配置文件</string>
+    <string name="configFoldersLabel">服务器查找的文件夹</string>
+    <string name="configNoFileTitle">还没有配置文件</string>
+    <string name="configNoFileBody">此服务器正在使用内置设置。在下方任一文件夹中放入配置文件会改变这些设置。此页面只读取它。</string>
 </resources>

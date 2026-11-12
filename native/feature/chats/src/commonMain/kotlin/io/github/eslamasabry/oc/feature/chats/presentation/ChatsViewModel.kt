@@ -146,6 +146,9 @@ public class ChatsViewModel(
     /** The row whose Always allow waits on its confirm. */
     private val confirmingAlways = MutableStateFlow<ConversationRowUi?>(null)
 
+    /** P14: the row whose Details sheet is open over the home. */
+    private val rowDetails = MutableStateFlow<RowDetailsUi?>(null)
+
     /** A1: the last-message lines of the rows the home shows, read lazily and kept while the screen lives. */
     private val previews =
         HomePreviews(viewModelScope, { connections.servers.value }, { clock.now().toEpochMilliseconds() })
@@ -220,6 +223,7 @@ public class ChatsViewModel(
                 )
             }
             .combine(confirmingAlways) { base, row -> base.copy(confirmAlways = row) }
+            .combine(rowDetails) { base, details -> base.copy(rowDetails = details) }
             .combine(heldAnswers) { base, held -> base.copy(held = held.toImmutableMap()) }
             .combine(questionState) { base, q ->
                 base.copy(
@@ -537,6 +541,8 @@ public class ChatsViewModel(
             try {
                 // A source that fails says so in its own line, as after any read.
                 feed.refresh()
+                // B8: the rows' last words are read again too, so a refreshed list never keeps an old line.
+                previews.refresh()
             } finally {
                 refreshing.value = false
             }
@@ -572,9 +578,20 @@ public class ChatsViewModel(
     }
 
     override fun rowAct(row: ConversationRowUi, act: RowAct) {
+        // P14 (F: session_menu.dart:42-48, Details does not need the conversation): the row's facts in a sheet over the
+        // home; Back closes it and the person is still on the list.
+        if (act == RowAct.Details) {
+            sheet.value = null
+            rowDetails.value = RowDetailsUi.of(row, state.value.home.sources)
+            return
+        }
         if (!row.canOpen || state.value.home.opening != null) return
         sheet.value = null
         nav.openRowAct(row.ref, act)
+    }
+
+    override fun closeRowDetails() {
+        rowDetails.value = null
     }
 
     override fun archive(row: ConversationRowUi) {
@@ -762,7 +779,8 @@ public class ChatsViewModel(
         filters.value = ChatsFilters(identities = shown.overflowKeys)
     }
 
-    override fun showAll(): Unit = nav.open(ChatsRoute.All(filter = null))
+    /** P5: All conversations opens with the home's narrowing (its project, else Running), as the row's count says. */
+    override fun showAll(): Unit = nav.open(ChatsRoute.All(filter = ChatsState.allFilter(filters.value)))
 
     override fun openUsage(): Unit = nav.open(UsageRoute.Hub())
 

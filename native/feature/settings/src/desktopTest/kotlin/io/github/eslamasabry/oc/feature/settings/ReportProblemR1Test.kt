@@ -153,7 +153,12 @@ class ReportProblemR1Test {
         onNodeWithText("Send report").assertDoesNotExist()
         onNodeWithText("Copy text").assertExists()
         onNodeWithText("Post publicly on GitHub").assertExists()
-        onNodeWithText("This version can't send reports. Copy the text, or post it on GitHub.").assertExists()
+        // H4 (w4-settings-truth): the line says how to share the copied text, so it no longer reads as about timings.
+        onNodeWithText(
+                "This version can't send reports from the app. Copy the text to share it in a message, or post it " +
+                    "publicly on GitHub."
+            )
+            .assertExists()
     }
 
     // ---- QA renders: -Poc.r1Renders=true (build/reports/r1-renders), or R1_RENDER_DIR=<dir> ----

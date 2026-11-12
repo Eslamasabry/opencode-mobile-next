@@ -18,8 +18,8 @@
     <string name="agentsComputerReadFailed">تعذرت قراءة وكلاء هذا الحاسوب. اسحب للأسفل للمحاولة مجددًا.</string>
     <string name="agentsNewChat">محادثة جديدة</string>
     <string name="agentsNewChatWith">محادثة جديدة مع %1$s</string>
-    <string name="agentsConversationsStored">أين تُحفظ المحادثات</string>
-    <string name="agentsConversationsStoredOn">أين تُحفظ المحادثات: %1$s</string>
+    <string name="agentsConversationsStored">نسخ محادثة لوكيل آخر</string>
+    <string name="agentsConversationsStoredOn">نسخ محادثة من %1$s</string>
     <string name="agentsHostAccount">حساب المضيف: %1$s</string>
     <string name="agentsHelperUpdateRequired">وكلاء الهاتف غير متصلين: مساعد الوكلاء مفقود أو أقدم من أن يعمل.</string>
     <string name="agentsHelperUpdateAction">حدّث مساعد الوكلاء</string>
@@ -29,4 +29,7 @@
     <string name="agentsInstallFailedVersion">تعذّر تثبيت %1$s: الإصدار الذي وصل ليس الإصدار الذي يتوقعه التطبيق. حاول مجددًا.</string>
     <string name="agentsInstallFailedUnknown">تعذّر تثبيت %1$s. حاول مجددًا؛ تجد في التفاصيل ما أبلغ به الهاتف.</string>
     <string name="agentsInstallInterruptedNow">انقطع تثبيت %1$s قبل أن يكتمل. حاول مجددًا لمتابعته.</string>
+    <string name="agentsInstallFailedVersionOther">تعذّر تثبيت %1$s: يقول التنزيل إنه الإصدار %2$s، وهذا التطبيق يعمل مع %3$s. لن تغيّر إعادة المحاولة ذلك؛ سيغيّره تحديث هذا التطبيق.</string>
+    <string name="agentsInstallFailedNotStarted">نُزّل %1$s لكنه لم يبدأ على هذا الهاتف، فتعذّر التحقق من إصداره. حاول مجددًا؛ وإن تكرر ذلك فستجد في التفاصيل ما أبلغ به الهاتف.</string>
+    <string name="agentsInstallFailedWithdrawn">تعذّر تثبيت %1$s: الإصدار %2$s، وهو الذي يثبّته هذا التطبيق، لم يعد متاحًا للتنزيل. لن تغيّر إعادة المحاولة ذلك؛ سيغيّره تحديث هذا التطبيق.</string>
 </resources>

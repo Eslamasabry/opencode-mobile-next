@@ -7,6 +7,7 @@ import io.github.eslamasabry.oc.engine.agents.catalog.AgentAvailability
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentDescriptor
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentInstallRecipe
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentPins
+import io.github.eslamasabry.oc.engine.agents.install.AgentVersionCheck
 
 private const val D = "$"
 
@@ -83,11 +84,16 @@ esac
 oc_final=/home/oc/.local/share/oc-agents/${agent.id}/${recipe.version}
 oc_bin=/home/oc/.local/bin/${recipe.executable}
 oc_pin=${quote("${recipe.version}|")}"${D}oc_arch|${D}oc_sha"
+oc_pin_version=${quote(recipe.version)}
 """
     }
 
+    /**
+     * Flutter's whole-word pattern, plus an optional leading "v" ("goose v1.2.3"; [AgentVersionCheck.matches] is the
+     * same rule). A letter or digit right before the "v" or the number still refuses it.
+     */
     private fun versionPattern(version: String): String =
-        quote("(^|[^0-9A-Za-z.])${regexEscape(version)}([^0-9A-Za-z.]|$D)")
+        quote("(^|[^0-9A-Za-z.])v?${regexEscape(version)}([^0-9A-Za-z.]|$D)")
 
     public fun check(agent: AgentDescriptor, recipeOverride: AgentInstallRecipe? = null): String {
         val recipe = recipeOverride ?: recipe(agent)
@@ -267,7 +273,16 @@ fi
 rm -rf "${D}oc_stage"
 mkdir -p "${D}oc_stage/payload"
 oc_stage 'Downloading agent'
-oc_download "${D}oc_url" "${D}oc_artifact" "${D}oc_sha" "${D}oc_bytes"
+oc_download_rc=0
+oc_download "${D}oc_url" "${D}oc_artifact" "${D}oc_sha" "${D}oc_bytes" || oc_download_rc=${D}?
+if [ "${D}oc_download_rc" != 0 ]; then
+  # A pinned release its publisher took down is not a dropped connection: say so (AgentVersionCheck). The exit status
+  # stays the downloader's, which the setup runner reads (a crash is tried again).
+  case "${D}{oc_http:-}" in
+    404|410) echo "${AgentVersionCheck.WITHDRAWN_PREFIX}${D}oc_pin_version" >&2 ;;
+  esac
+  exit "${D}oc_download_rc"
+fi
 # Independently enforce the pin even if the shared downloader changes.
 [ "${D}(sha256sum "${D}oc_artifact" | cut -d ' ' -f1)" = "${D}oc_sha" ] || {
   echo '[oc] The agent download did not match its checksum' >&2; exit 1
@@ -280,7 +295,15 @@ then
 fi
 if [ "${D}oc_format" != npmTarGz ]; then chmod 700 "${D}oc_stage/payload/${D}oc_member"; fi
 if ! oc_probe_version "${D}oc_stage"; then
+  # A first start can be slow (a cold file cache on a busy phone): it gets one more try before it counts as not
+  # answering. The download already matched its pinned checksum.
+  if [ "${D}oc_probe_why" != slow ] || {
+    echo '${AgentVersionCheck.RETRY_LINE}' >&2
+    ! oc_probe_version "${D}oc_stage"
+  }; then
+$PROBE_FAILED
   echo '[oc] The agent did not pass its version check' >&2; exit 1
+  fi
 fi
 printf '%s' "${D}oc_pin" > "${D}oc_stage/.oc-pin"
 if [ "${D}oc_format" = npmTarGz ]; then
@@ -321,23 +344,92 @@ done
 install -d -o 1000 -g 1000 /home/oc/.local /home/oc/.local/bin /home/oc/.local/share
 """
 
+    /**
+     * The Flutter `_probe` (byte for byte until 2026-11-12) with deliberate changes, each recorded in
+     * AgentPhoneScriptsTest:
+     * - a program gets [AgentVersionCheck.PROBE_SECONDS] (was 30 s) to print its version. Gemini CLI 0.66.0 starts two
+     *   Node.js processes over its ~100 MB bundle, and on a busy phone that ran past 30 s, so a checksum-verified
+     *   download failed as "the version that arrived is not the one the app expects";
+     * - Gemini CLI is asked not to start that second Node.js (`GEMINI_CLI_NO_RELAUNCH`, its own switch; other programs
+     *   ignore it);
+     * - the run is [PROBE_RUN] instead of `timeout 30s`: the program gets its own process group, and at the limit
+     *   the whole group gets SIGTERM, then SIGKILL [AgentVersionCheck.KILL_AFTER_SECONDS] later for anything still
+     *   there; after any run the group's leftovers are killed, so no process stays behind on the phone, whichever
+     *   `timeout` the Linux image carries (the CI runner's Ubuntu 26.04 one left a child ignoring SIGTERM running);
+     * - colour codes are dropped before the version is read (the pattern also takes a leading "v");
+     * - it leaves why it failed in `oc_probe_why` and the version-shaped text it printed in `oc_probe_found` for
+     *   [PROBE_FAILED]; nothing else the program printed survives.
+     */
     internal val PROBE: String =
         """oc_probe_version() {
   oc_tree=${'$'}1
+  oc_probe_why=missing
+  oc_probe_found=
   [ -d "${'$'}oc_tree" ] && [ ! -L "${'$'}oc_tree" ] &&
     [ -z "${'$'}(find "${'$'}oc_tree" -type l -print -quit)" ] || return 1
   oc_probe=${'$'}(mktemp -d /home/oc/.local/share/oc-agents/.probe.XXXXXX)
+  oc_version_rc=0
+  oc_probe_run='$PROBE_RUN'
   if [ "${'$'}oc_format" = npmTarGz ]; then
-    oc_output=${'$'}(cd "${'$'}oc_probe" && timeout 30s env -i HOME="${'$'}oc_probe" XDG_CONFIG_HOME="${'$'}oc_probe" PATH="${'$'}PATH" \
-      /home/oc/.local/node/bin/node "${'$'}oc_tree/payload/${'$'}oc_member" --version 2>/dev/null) || oc_output=
+    oc_output=${'$'}(cd "${'$'}oc_probe" && python3 -I -c "${'$'}oc_probe_run" ${AgentVersionCheck.PROBE_SECONDS} ${AgentVersionCheck.KILL_AFTER_SECONDS} env -i HOME="${'$'}oc_probe" XDG_CONFIG_HOME="${'$'}oc_probe" PATH="${'$'}PATH" GEMINI_CLI_NO_RELAUNCH=true \
+      /home/oc/.local/node/bin/node "${'$'}oc_tree/payload/${'$'}oc_member" --version 2>/dev/null) || { oc_version_rc=${'$'}?; oc_output=; }
   else
-    oc_output=${'$'}(cd "${'$'}oc_probe" && timeout 30s env -i HOME="${'$'}oc_probe" XDG_CONFIG_HOME="${'$'}oc_probe" PATH="${'$'}PATH" \
-      "${'$'}oc_tree/payload/${'$'}oc_member" --version 2>/dev/null) || oc_output=
+    oc_output=${'$'}(cd "${'$'}oc_probe" && python3 -I -c "${'$'}oc_probe_run" ${AgentVersionCheck.PROBE_SECONDS} ${AgentVersionCheck.KILL_AFTER_SECONDS} env -i HOME="${'$'}oc_probe" XDG_CONFIG_HOME="${'$'}oc_probe" PATH="${'$'}PATH" \
+      "${'$'}oc_tree/payload/${'$'}oc_member" --version 2>/dev/null) || { oc_version_rc=${'$'}?; oc_output=; }
   fi
   rm -rf "${'$'}oc_probe"
-  printf '%s' "${'$'}oc_output" | grep -Eq "${'$'}oc_version_pattern"
+  oc_output=${'$'}(printf '%s' "${'$'}oc_output" | sed "s/${'$'}(printf '\033')\[[0-9;]*[A-Za-z]//g")
+  printf '%s' "${'$'}oc_output" | grep -Eq "${'$'}oc_version_pattern" && return 0
+  oc_probe_found=${'$'}(printf '%s\n' "${'$'}oc_output" | grep -Eo '${AgentVersionCheck.FOUND_PATTERN}' | head -n 1 | cut -c 1-${AgentVersionCheck.FOUND_MAX})
+  case "${'$'}oc_version_rc" in
+    0) if [ -n "${'$'}oc_probe_found" ]; then oc_probe_why=other; else oc_probe_why=silent; fi ;;
+    124|137) oc_probe_why=slow ;;
+    *) oc_probe_why=failed ;;
+  esac
+  return 1
 }
 """
+
+    /**
+     * The version run of [PROBE] (python3 is one of the install's own requirements): `limit grace command…`. Exits as
+     * the program did (128 + n for a signal), 124 when the limit ended it, or 137 when it needed SIGKILL; the program's
+     * whole process group is gone when it exits. No single quote and no dollar sign in it (it sits in a shell
+     * single-quoted string).
+     */
+    internal const val PROBE_RUN: String =
+        """import os, signal, subprocess, sys
+limit, grace = float(sys.argv[1]), float(sys.argv[2])
+child = subprocess.Popen(sys.argv[3:], stdin=subprocess.DEVNULL, start_new_session=True)
+def group(sig):
+    try:
+        os.killpg(child.pid, sig)
+    except OSError:
+        pass
+try:
+    code = child.wait(timeout=limit)
+    code = 128 - code if code < 0 else code
+except subprocess.TimeoutExpired:
+    group(signal.SIGTERM)
+    try:
+        child.wait(timeout=grace)
+        code = 124
+    except subprocess.TimeoutExpired:
+        group(signal.SIGKILL)
+        child.wait()
+        code = 137
+group(signal.SIGKILL)
+sys.exit(code)"""
+
+    /**
+     * Why a fresh download did not pass [PROBE], as one fixed `[oc] ` line the setup job keeps (the program's own
+     * output never does). [AgentVersionCheck.failure] reads it back. A run that printed nothing usable ends on the
+     * Flutter line after this block.
+     */
+    internal val PROBE_FAILED: String =
+        """  case "${'$'}oc_probe_why" in
+    slow) echo '${AgentVersionCheck.SLOW_LINE}' >&2; exit 1 ;;
+    other) echo "${AgentVersionCheck.OTHER_PREFIX}${'$'}oc_probe_found${AgentVersionCheck.OTHER_MIDDLE}${'$'}oc_pin_version" >&2; exit 1 ;;
+  esac"""
 
     internal val CLAUDE_UPDATE_PROBE: String =
         """oc_claude_probe_active() {

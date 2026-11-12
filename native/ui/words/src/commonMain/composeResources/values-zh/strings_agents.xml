@@ -488,7 +488,7 @@
     <string name="agentComputerCodex">Codex</string>
     <string name="agentComputerCodexNote">通过 WebSocket 连接到官方 Codex 应用服务器。请输入它的地址和那台电脑上完整的项目文件夹路径。</string>
     <string name="agentErrorOpenSettings">打开设置</string>
-    <string name="agentDraftTitle">对话记录</string>
+    <string name="agentDraftTitle">复制对话</string>
     <string name="agentDraftReadOnly">复制到另一个智能体之前，请先查看记录。这不会开始、恢复或更改任何对话。</string>
     <string name="agentDraftGuide">1. 在下方选择一个对话。\n2. 查看记录，以及关于省略较早轮次的提示。\n3. 准备好分享时再复制。</string>
     <string name="agentDraftLoading">正在读取对话</string>
@@ -504,4 +504,5 @@
     <string name="agentDraftTooLarge">此对话的最新一轮太长，无法完整包含而不丢失文字。</string>
     <string name="agentPhoneCheck">检查手机智能体</string>
     <string name="agentsCatalogNeedsPhoneSetup">请先设置这部手机上的内置服务器，然后回到这里安装此智能体。</string>
+    <string name="agentDraftAsCopied">将被复制的完整记录</string>
 </resources>

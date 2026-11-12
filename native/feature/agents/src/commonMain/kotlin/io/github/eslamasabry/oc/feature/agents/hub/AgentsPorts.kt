@@ -246,12 +246,21 @@ public data class PhoneAgentInstallation(
     val failure: PhoneAgentInstallFailure? = null,
     /** The technical side, already redacted; shown only under Details. */
     val details: io.github.eslamasabry.oc.core.common.Redacted? = null,
+    /**
+     * For [PhoneAgentInstallFailure.Version] and [PhoneAgentInstallFailure.Withdrawn]: the version the downloaded
+     * program named (Version only) and the one this app installs, when the install said so (version text only; nothing
+     * else the program printed).
+     */
+    val versions: PhoneAgentVersions? = null,
     /** The step a running install is on; null before the job names one. */
     val step: PhoneAgentInstallStep? = null,
     /** Measured bytes of the running step (a download), when the job counts them. */
     val doneBytes: Long? = null,
     val totalBytes: Long? = null,
 )
+
+/** The version an agent's download [found] (null when it never ran) and the one this app [expected]. */
+public data class PhoneAgentVersions(val found: String?, val expected: String)
 
 /** The steps of a phone agent install, in order (AgentInstaller.components); the words live in the screen. */
 public enum class PhoneAgentInstallStep {
@@ -309,8 +318,13 @@ public enum class PhoneAgentInstallFailure {
     Checksum,
     Storage,
     Interrupted,
+    /** The download named another version than the one this app installs; trying again does not change it. */
     Version,
     Unknown,
+    /** The download did not answer its version check (too slow, crashed, or printed none); trying again may help. */
+    NotStarted,
+    /** The pinned version is no longer offered for download; trying again does not change it. */
+    Withdrawn,
 }
 
 public enum class PhoneAgentInstallPhase {

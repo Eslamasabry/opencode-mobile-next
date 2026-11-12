@@ -11,7 +11,7 @@
     <string name="reportR1Send">Gửi báo cáo</string>
     <string name="reportR1CopyText">Sao chép văn bản</string>
     <string name="reportR1PostGitHub">Đăng công khai trên GitHub</string>
-    <string name="reportR1NoSend">Phiên bản này không gửi được báo cáo. Hãy sao chép văn bản hoặc đăng lên GitHub.</string>
+    <string name="reportR1NoSend">Phiên bản này không gửi được báo cáo từ ứng dụng. Hãy sao chép văn bản để chia sẻ trong tin nhắn, hoặc đăng công khai lên GitHub.</string>
     <string name="reportR1SheetSubtitle">Đây chính xác là nội dung sẽ được gửi.</string>
     <string name="reportR1Words">Nội dung bạn viết</string>
     <string name="reportR1NoWords">Chưa viết gì</string>
@@ -49,4 +49,5 @@
     <string name="reportR1KindOther">Sự cố khác</string>
     <string name="reportKeptCopyErrors">Sao chép nhật ký lỗi</string>
     <string name="reportKeptClearErrors">Xóa lỗi</string>
+    <string name="reportKeptErrorsNote">Các lỗi ứng dụng tự ghi nhận. Chúng nằm lại trên điện thoại này và không được thêm vào báo cáo. Hãy sao chép vào nếu chúng giúp giải thích chuyện đã xảy ra.</string>
 </resources>

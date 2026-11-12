@@ -1,13 +1,19 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
 import io.github.eslamasabry.oc.engine.agents.install.AgentSetupFailure
+import io.github.eslamasabry.oc.engine.agents.install.AgentVersionCheck
 
 /**
  * Why a phone agent install failed, from the setup job's record: its [error] (the failed step's fixed sentence or its
  * last line) and the job's [logTail]. The kind picks the words the Agents page shows; the text itself only ever goes
  * under Details.
  *
- * The error decides first. The log tail only speaks for the unmistakable signs (a full disk, a name that did not
+ * The agent's own version check speaks first ([AgentVersionCheck.failure]): its fixed lines say a slow or silent
+ * read-back (not an install failure), another version, or a withdrawn pinned download, and they hold words
+ * ("version", "download") the rules below would misread. Only the step's error is read for them, never the log tail,
+ * so an earlier attempt's line cannot relabel a later full disk or failed download.
+ *
+ * Then the error decides. The log tail only speaks for the unmistakable signs (a full disk, a name that did not
  * resolve): it holds every line of the run, and apt prints "disk space will be used" on every install, which made any
  * failed package step read as "short of space" before.
  */
@@ -35,6 +41,7 @@ internal object AgentInstallFailureRules {
     const val PERSISTENCE_CODE: String = "setup_persistence"
 
     fun of(error: String?, logTail: String?, code: String? = null): AgentSetupFailure {
+        AgentVersionCheck.failure(error)?.let { return it }
         val said = error.orEmpty().lowercase()
         val tail = logTail.orEmpty().lowercase()
         return when {

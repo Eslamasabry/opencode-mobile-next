@@ -44,15 +44,39 @@ public enum class TurnEndNote {
     StoppedServerRestart,
 
     /** A newer run took the reply's place. */
-    Superseded;
+    Superseded,
+
+    /**
+     * B8: the run ended with the reply unfinished and no end was ever said (the server, or the phone's own server with
+     * the app, stopped mid-run): Flutter `KitTurnPhase.interrupted`. Words had come: Continue picks the reply up.
+     */
+    CutOff,
+
+    /** [CutOff] before any words came: the way on is to send the prompt again. */
+    CutOffBeforeReply,
+
+    /**
+     * The person pressed Deny on the step that ended the reply and the agent stopped there (Flutter hides this inside
+     * the step row; the surface says it in the row's own words, "You declined this").
+     */
+    Declined;
 
     /** The server's own stop, which says why in its own words instead of the generic "Stopped". */
     public val isServerStop: Boolean
-        get() = this == PausedInactive || this == StoppedServerRestart || this == Superseded
+        get() =
+            this == PausedInactive ||
+                this == StoppedServerRestart ||
+                this == Superseded ||
+                this == CutOff ||
+                this == CutOffBeforeReply
 
     /** Whether the person can carry the reply on from where it stopped. */
     public val canContinue: Boolean
-        get() = this == PausedInactive || this == StoppedServerRestart
+        get() = this == PausedInactive || this == StoppedServerRestart || this == CutOff
+
+    /** Whether the way on is to send the newest prompt again (nothing of the reply came). */
+    public val canSendAgain: Boolean
+        get() = this == CutOffBeforeReply
 }
 
 /** How an interrupted run reads on the newest turn: a server stop names its reason; anything else stays "Stopped". */
@@ -83,6 +107,8 @@ internal fun transcriptReading(
     snapshot: LedgerSnapshot,
     busy: Boolean,
     outcome: io.github.eslamasabry.oc.core.domain.events.RunOutcome? = null,
+    /** B8: the server said nothing runs ([io.github.eslamasabry.oc.feature.chat.world.TurnFeed.idleSaid]). */
+    idleSaid: Boolean = false,
 ): TranscriptReadingUi {
     val details = LinkedHashMap<String, TranscriptDetailUi>()
     val hidden = HashSet<String>()
@@ -117,9 +143,23 @@ internal fun transcriptReading(
                 (outcome as? io.github.eslamasabry.oc.core.domain.events.RunOutcome.Interrupted)
                     ?.let { stopNote(it.reason) }
                     ?.takeIf { it.isServerStop }
-            if (prompt != null && !command && !compact && serverStop != null && said)
+            val cutOff = prompt != null && !command && !compact && idleSaid && cutOff(turn, assistants, outcome)
+            // The W4 rule (endsOnRefusal), and no words after the refused step: a reply that went on past a refusal
+            // and finished keeps no such line. A Stop the person pressed keeps "Stopped". Only an ended turn gets
+            // here (a live one is skipped above), so a Deny the agent may still answer by trying something else
+            // says nothing yet. One closing line per turn: Declined, else cut off, else the server's own stop.
+            val declined =
+                prompt != null && !command && !compact && !cutOff &&
+                    !(outcome is io.github.eslamasabry.oc.core.domain.events.RunOutcome.Interrupted &&
+                        outcome.reason == io.github.eslamasabry.oc.core.domain.events.InterruptReason.User) &&
+                    io.github.eslamasabry.oc.engine.transcript.ledger.endsOnRefusal(turn) &&
+                    noWordsAfterLastStep(assistants)
+            if (declined) endNotes[turn.turnId] = TurnEndNote.Declined
+            else if (cutOff)
+                endNotes[turn.turnId] = if (said) TurnEndNote.CutOff else TurnEndNote.CutOffBeforeReply
+            else if (prompt != null && !command && !compact && serverStop != null && said)
                 endNotes[turn.turnId] = serverStop
-            if (prompt != null && !command && !compact && !said) {
+            if (!declined && !cutOff && prompt != null && !command && !compact && !said) {
                 val last = assistants.lastOrNull()?.info
                 val end =
                     when {
@@ -225,6 +265,42 @@ internal fun transcriptReading(
         if (hasTools) work[turn.turnId] = entries
     }
     return TranscriptReadingUi(details, hidden, work, metadata, endNotes, switches)
+}
+
+/**
+ * B8 (Flutter message_view.dart `looksCut`: a reply still unfinished in a turn that no longer runs, the server asked
+ * and idle): the newest turn's reply was cut off before it finished. Nothing is running, as the server said after the
+ * newest history was read (`idleSaid` in [transcriptReading]: "not known yet" or a failed status read never counts),
+ * no end was seen here ([outcome] null: after a reopen, or a run that ended while this chat was closed), and the
+ * newest model reply has no end of its own (no completion time, no finish reason, no error). OpenCode 2 keeps only
+ * what was durable when its process died (the phone's server dies with a force-stopped app): the reply's shell, its
+ * streamed words never come back. A turn that ended on the person's refusal is not cut off (W4: OpenCode 2 ends it as
+ * an interruption too).
+ */
+private fun cutOff(
+    turn: io.github.eslamasabry.oc.engine.transcript.ledger.LedgerTurn,
+    assistants: List<io.github.eslamasabry.oc.core.model.transcript.MessageWithParts>,
+    outcome: io.github.eslamasabry.oc.core.domain.events.RunOutcome?,
+): Boolean {
+    if (outcome != null) return false
+    // A model reply names its model; a server notice, switch or compaction written as a message does not.
+    val reply = assistants.lastOrNull { !it.info.modelId.isNullOrBlank() || !it.info.providerId.isNullOrBlank() }
+    val info = reply?.info ?: return false
+    // A finish reason ends a reply too: Codex keeps no completion time for a turn the person interrupted.
+    if (info.time?.completedMs != null || info.finish != null || info.errorText != null || info.errorKind != null)
+        return false
+    // A reply that went on in words past the refused step (a refusal with a message lets the agent carry on) and was
+    // then lost is cut off like any other; only a turn that stopped at the refusal is the person's answer.
+    return !(io.github.eslamasabry.oc.engine.transcript.ledger.endsOnRefusal(turn) && noWordsAfterLastStep(assistants))
+}
+
+/** No words came after the turn's last tool step (so the reply did not go on past it and finish). */
+private fun noWordsAfterLastStep(
+    assistants: List<io.github.eslamasabry.oc.core.model.transcript.MessageWithParts>,
+): Boolean {
+    val parts = assistants.flatMap { it.parts }
+    val lastTool = parts.indexOfLast { it.type == PartType.Tool }
+    return parts.drop(lastTool + 1).none { it.type == PartType.Text && it.text.isNotBlank() }
 }
 
 private fun passingWords(text: String): Boolean {

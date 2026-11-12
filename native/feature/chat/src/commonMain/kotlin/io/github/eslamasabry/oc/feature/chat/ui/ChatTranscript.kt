@@ -20,6 +20,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
@@ -284,6 +285,9 @@ internal fun failureCode(f: Failure): String =
 internal object ListKeys {
     const val LIVE: String = "live"
 
+    /** The room the edge dock's Undo bar takes under the newest content (first item, only while the bar shows). */
+    const val DOCK_ROOM: String = "dock-room"
+
     /** CHAT-TRANSCRIPT: background work still running (B-CHAT-007), just above the live line. */
     const val BACKGROUND: String = "background"
 
@@ -378,6 +382,8 @@ internal fun ChatTranscriptList(
     starAsk: Boolean = false,
     onStarTap: () -> Unit = {},
     onStarDismiss: () -> Unit = {},
+    /** Extra room (px) under the newest content: the edge dock's Undo bar while it shows. */
+    extraBottomPx: Int = 0,
 ) {
     val currentRows by rememberUpdatedState(rows)
     // B-SEC-094 / R18: a code block's Copy hands over what the block shows (redacted), never the
@@ -404,6 +410,9 @@ internal fun ChatTranscriptList(
                 .mapTo(hashSetOf()) { it.turnId }
         }
     val newestPrompt = unique.firstOrNull { it is PromptRow }?.key
+    // B8: the newest turn's footer carries "Send again" when its reply was cut off before any words.
+    val newestFooter =
+        unique.firstOrNull { it is PromptRow || it is FooterRow }?.takeIf { it is FooterRow }?.key
     val newestCompleted =
         unique
             .filterIsInstance<FooterRow>()
@@ -419,6 +428,17 @@ internal fun ChatTranscriptList(
     // removed. While a reply streams the rows above it never glide (the growing reply would drag them a few pixels
     // behind every frame); the newest row stays on the bottom edge either way (reverse layout keeps it anchored).
     val glide = live == null
+    // The dock's room is a new item at index 0, but the newest key does not change, so the kit's follow (which asks
+    // for index 0 when the newest key changes) does not run, and the list anchors on the old first key: on a long
+    // transcript the room landed out of view below and the bar still covered the newest reply (gate, w4-undo-room).
+    // While following, ask for index 0 in the same frame as the insert, as the kit does for a new row. A person reading
+    // older text (not following) is never moved; the room's removal needs nothing (its key goes, index 0 stays).
+    val roomBefore = remember { intArrayOf(0) }
+    SideEffect {
+        val came = extraBottomPx > 0 && roomBefore[0] == 0
+        roomBefore[0] = extraBottomPx
+        if (came && list.following && !list.lazy.isScrollInProgress) list.lazy.requestScrollToItem(0)
+    }
     // Flutter `_liveStepsShown` (chat_stop_after_step.dart): a tap on the live line shows the running turn's steps;
     // cleared once the turn ends. Null = no running turn; false = the live line names the step and the work hides.
     var stepsShown by remember { mutableStateOf(false) }
@@ -434,6 +454,13 @@ internal fun ChatTranscriptList(
         // composer's clearance; the composer pane already keeps its own space2 on top (ChatScreen), the rest here.
         contentPadding = PaddingValues(top = Space.S4.dp, bottom = Space.S2.dp),
     ) {
+        // The dock's Undo bar takes this room under the newest content. An item, not padding: the list keeps the
+        // row the person reads in place by its key, and at the end the newest content rides up with the room.
+        if (extraBottomPx > 0) {
+            item(key = ListKeys.DOCK_ROOM, contentType = "dock-room") {
+                Spacer(Modifier.height(with(LocalDensity.current) { extraBottomPx.toDp() }))
+            }
+        }
         if (live != null && listWords != null) {
             item(key = ListKeys.LIVE, contentType = "live") {
               Box(kitItemMotion(placement = glide)) {
@@ -629,7 +656,7 @@ internal fun ChatTranscriptList(
                         onCopyReply.takeIf { row.turnId in copyableTurns },
                         teachDetails = row.key == newestCompleted,
                         onAllFiles = onAllFiles,
-                        onSendAgain = onSendAgain.takeIf { row.key == newestPrompt },
+                        onSendAgain = onSendAgain.takeIf { row.key == newestPrompt || row.key == newestFooter },
                         runningSteps = runningSteps,
                         onHideSteps = { stepsShown = false },
                     )
@@ -840,7 +867,12 @@ private fun ChatRow(
                     facts.reading.endNotes[row.turnId]?.let { note ->
                         if (note == io.github.eslamasabry.oc.feature.chat.presentation.TurnEndNote.Silent)
                             NoReplyNotice(onSendAgain)
-                        else TurnEndNote(note, reply?.let { r -> r.continueLabel?.let { w -> { r.onContinue(w) } } })
+                        else
+                            TurnEndNote(
+                                note,
+                                reply?.let { r -> r.continueLabel?.let { w -> { r.onContinue(w) } } },
+                                onSendAgain,
+                            )
                     }
             }
         is ThoughtRow -> {
@@ -1153,7 +1185,13 @@ private fun ChatRow(
                             val endNote = facts.reading.endNotes[row.turnId]
                             if (row.failed) KitReplyNote(words.footer(true), note)
                             else if (stopped && endNote?.isServerStop != true) KitReplyNote(words.stoppedFooter(), note)
-                            endNote?.let { n -> TurnEndNote(n, reply?.let { r -> r.continueLabel?.let { w -> { r.onContinue(w) } } }) }
+                            endNote?.let { n ->
+                                TurnEndNote(
+                                    n,
+                                    reply?.let { r -> r.continueLabel?.let { w -> { r.onContinue(w) } } },
+                                    onSendAgain,
+                                )
+                            }
                             // F: kit_turn.dart:675-721: the newest turn's footer leads with its meta words
                             // (message_view.dart:423-427: the model, when it changed).
                             facts.reading.metadata[row.turnId]

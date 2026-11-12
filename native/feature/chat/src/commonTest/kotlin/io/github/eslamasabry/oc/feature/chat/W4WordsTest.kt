@@ -116,7 +116,8 @@ class W4WordsTest {
         assertEquals(StepState.Declined, work.steps.single().state)
         assertEquals(WorkLineState.Done, work.state)
         assertTrue(StoppedSteps.endedOnRefusal(work))
-        assertEquals(null, facts.reading.endNotes["m1"])
+        // Changed on purpose (W4 surface): the turn closes with "You declined this", never the restart line.
+        assertEquals(TurnEndNote.Declined, facts.reading.endNotes["m1"])
     }
 
     @Test
