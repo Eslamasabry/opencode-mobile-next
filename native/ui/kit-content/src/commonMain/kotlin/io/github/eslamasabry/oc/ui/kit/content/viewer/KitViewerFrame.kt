@@ -26,11 +26,9 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
-import io.github.eslamasabry.oc.ui.kit.content.foundation.ContentTextAction
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
-import io.github.eslamasabry.oc.ui.words.res.kitTopBarClose
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -52,6 +50,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.graphics.vector.ImageVector
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
+import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
+import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
+import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
+import io.github.eslamasabry.oc.ui.words.res.kitTopBarMore
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -132,19 +139,33 @@ public object KitViewerTags {
 /** The viewer's widest frame (plan 06 viewer cap; prose inside keeps its own 720 dp rails). */
 private const val VIEWER_MAX_WIDTH_DP = 960
 
+/** One row of the viewer's "More actions" menu. [checked] non-null makes it a toggle drawn with its state. */
+@Immutable
+public data class KitViewerMenuItem(
+    val label: String,
+    val onClick: () -> Unit,
+    val icon: ImageVector? = null,
+    val checked: Boolean? = null,
+    val enabled: Boolean = true,
+)
+
 /**
- * The file viewer's frame (plan 10 §11.3, MEDIA-VOICE-37): the same for every body. The name in file-name style, the
- * muted parent folder under it ([ViewerPaths.folderOf], B-NAV-028), Close at the end of the header, the body, and at the
- * bottom where the thumb is, one labelled [primary] and an optional [secondary]. The host places the frame as a page,
- * a sheet or a pane by window size; the frame does not decide.
+ * The file viewer as a page of the app (plan 10 §11.3, MEDIA-VOICE-37): the same page frame as every other page. The
+ * top bar carries Back (it calls [onClose]), the file name as the title and the muted parent folder under it
+ * ([ViewerPaths.folderOf], B-NAV-028); Find, when the body is a text document, is the bar's icon action; the bar's
+ * "More actions" menu holds, in this order, the document's own tools (Copy contents, Show source, Wrap lines with its
+ * state), then the host's [menu] rows, then [secondary]. The body fills the page; at the bottom, on the page margin, sits
+ * the one filled [primary] button (full width up to the kit's button cap), and the host's [footer] (notices) above it.
+ * Nothing shows for what the host does not pass: no menu without rows, no button without [primary]. [onClose] null is an
+ * embedded pane: no Back.
  *
  * Paths and names are isolated left to right inside an Arabic interface (a path never reorders).
  *
  * States: content (the body decides loading, error, empty and its own states)
- * Text: frame (name, folder, buttons); the body is reading text
+ * Text: frame (name, folder, button); the body is reading text
  * Cap: Viewer (960 dp)
  * Motion: none of its own
- * Hidden: none
+ * Hidden: none (every tool is in the bar or its labelled menu)
  * Replaces: KitViewer frame (lib/ui/kit/kit_viewer.dart)
  */
 @Composable
@@ -155,56 +176,91 @@ public fun KitViewerFrame(
     primary: KitViewerAction? = null,
     secondary: KitViewerAction? = null,
     onClose: (() -> Unit)? = null,
+    menu: List<KitViewerMenuItem> = emptyList(),
+    footer: (@Composable () -> Unit)? = null,
     body: @Composable BoxScope.() -> Unit,
 ) {
-    val colors = LocalKitColors.current
-    val tokens = LocalKitTokens.current
     val folder = path?.let { ViewerPaths.folderOf(it, name) }
-    Column(
-        modifier.widthIn(max = VIEWER_MAX_WIDTH_DP.dp).background(colors.ground),
-        verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
-    ) {
-        Row(
-            Modifier.fillMaxWidth().padding(start = tokens.gutter.dp, end = Space.S2.dp, top = Space.S2.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
-                KitText(
-                    isolateLtr(name),
-                    Modifier.testTag(KitViewerTags.NAME).semantics { heading() },
-                    role = TypeRole.RowTitle,
-                    kind = KitTextKind.Frame,
-                    maxLines = 2,
+    val chrome = remember { ViewerChrome() }
+    var open by remember { mutableStateOf(false) }
+    val moreLabel = stringResource(Res.string.kitTopBarMore)
+    val backLabel = stringResource(Res.string.kitTopBarBack)
+    val find = chrome.tools.firstOrNull { it.id == "find" }
+    val items =
+        buildList {
+            chrome.tools.filter { it.id != "find" }.forEach { tool ->
+                add(
+                    KitMenuItem(
+                        tool.label,
+                        { chrome.run(tool.id) },
+                        icon = tool.icon,
+                        checked = tool.checked,
+                    ),
                 )
-                if (folder != null) {
-                    KitText(
-                        isolateLtr(folder),
-                        Modifier.testTag(KitViewerTags.FOLDER),
-                        role = TypeRole.Secondary,
-                        tone = TextTone.Secondary,
-                        kind = KitTextKind.Frame,
-                        maxLines = 2,
-                    )
-                }
             }
-            if (onClose != null) {
-                ContentTextAction(stringResource(Res.string.kitTopBarClose), onClose, Modifier.testTag(KitViewerTags.CLOSE))
+            menu.forEach { row ->
+                add(
+                    KitMenuItem(
+                        row.label,
+                        row.onClick,
+                        icon = row.icon,
+                        checked = row.checked,
+                        enabled = if (row.enabled) KitEnabled.Enabled else KitEnabled.Disabled(row.label),
+                    ),
+                )
             }
+            if (secondary != null) add(KitMenuItem(secondary.label, secondary.onClick))
         }
-        Box(Modifier.fillMaxWidth().weight(1f).testTag(KitViewerTags.BODY), content = body)
-        if (primary != null || secondary != null) {
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = tokens.gutter.dp, vertical = Space.S2.dp),
-                horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                if (primary != null) {
-                    KitButton(primary.label, primary.onClick, Modifier.weight(1f).tagged(primary.tag))
-                }
-                if (secondary != null) {
-                    ContentTextAction(secondary.label, secondary.onClick, Modifier.tagged(secondary.tag))
-                }
-            }
+    CompositionLocalProvider(LocalViewerChrome provides chrome) {
+        KitScreen(
+            modifier = modifier.widthIn(max = VIEWER_MAX_WIDTH_DP.dp),
+            page = true,
+            edges = KitScreenEdges.Bleed,
+            topBar = {
+                KitTopBar(
+                    title = isolateLtr(name),
+                    subtitle = folder?.let { isolateLtr(it) },
+                    exit = if (onClose != null) KitTopBarExit.Back else KitTopBarExit.None,
+                    exitLabel = backLabel,
+                    onExit = onClose,
+                    actions =
+                        listOfNotNull(
+                            find?.let { tool ->
+                                KitLineAction(tool.label, { chrome.run("find") }, icon = tool.icon, testTag = KitViewerKeys.FIND)
+                            },
+                        ),
+                    more = {
+                        if (items.isNotEmpty()) {
+                            KitMenu(
+                                expanded = open,
+                                items = items,
+                                onDismissRequest = { open = false },
+                                title = moreLabel,
+                            ) {
+                                KitIconButton(KitIcons.more, moreLabel, { open = true })
+                            }
+                        }
+                    },
+                )
+            },
+            bottom =
+                if (primary != null || footer != null) {
+                    {
+                        Column {
+                            footer?.invoke()
+                            if (primary != null) {
+                                Box(
+                                    Modifier.fillMaxWidth().padding(horizontal = kitPageGutter(), vertical = Space.S2.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    KitButton(primary.label, primary.onClick, Modifier.tagged(primary.tag), fullWidth = true)
+                                }
+                            }
+                        }
+                    }
+                } else null,
+        ) {
+            Box(Modifier.fillMaxSize().testTag(KitViewerTags.BODY), content = body)
         }
     }
 }

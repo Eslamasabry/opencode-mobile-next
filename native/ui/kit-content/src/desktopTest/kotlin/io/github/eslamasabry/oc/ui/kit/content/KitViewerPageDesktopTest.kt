@@ -23,6 +23,7 @@ import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerAction
 import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerDocument
 import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerFrame
+import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerMenuItem
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -100,23 +101,35 @@ class KitViewerPageDesktopTest {
     }
 
     @Test
-    fun `Copy contents then Wrap lines are in the bar's menu, in that order, then Share`() = runComposeUiTest {
-        var shared = 0
-        setContent {
-            Themed {
-                KitViewerFrame(
-                    "b4.txt", path = "b4.txt", onClose = {},
-                    secondary = KitViewerAction("Share on Wi-Fi", { shared++ }),
-                ) { KitViewerDocument(text) }
+    fun `the bar's menu lists Copy contents, Wrap lines, Open with, Save, Share in that order and each acts`() =
+        runComposeUiTest {
+            val calls = mutableListOf<String>()
+            setContent {
+                Themed {
+                    KitViewerFrame(
+                        "b4.txt", path = "b4.txt", onClose = {},
+                        menu = listOf(
+                            KitViewerMenuItem("Open with", { calls += "open" }),
+                            KitViewerMenuItem("Save", { calls += "save" }),
+                        ),
+                        secondary = KitViewerAction("Share on Wi-Fi", { calls += "share" }),
+                    ) { KitViewerDocument(text) }
+                }
             }
+            // Closed menu: none of them is a row on the page.
+            listOf("Copy contents", "Wrap lines", "Open with", "Save", "Share on Wi-Fi").forEach {
+                onNodeWithText(it).assertDoesNotExist()
+            }
+            onNodeWithContentDescription("More actions").performClick()
+            val order = listOf("Copy contents", "Wrap lines", "Open with", "Save", "Share on Wi-Fi").map { onNodeWithText(it).top() }
+            assertEquals(order.sorted(), order, "menu order")
+            onNodeWithText("Open with").performClick()
+            onNodeWithContentDescription("More actions").performClick()
+            onNodeWithText("Save").performClick()
+            onNodeWithContentDescription("More actions").performClick()
+            onNodeWithText("Share on Wi-Fi").performClick()
+            assertEquals(listOf("open", "save", "share"), calls)
         }
-        listOf("Copy contents", "Wrap lines", "Share on Wi-Fi").forEach { onNodeWithText(it).assertDoesNotExist() }
-        onNodeWithContentDescription("More actions").performClick()
-        val order = listOf("Copy contents", "Wrap lines", "Share on Wi-Fi").map { onNodeWithText(it).top() }
-        assertEquals(order.sorted(), order, "menu order")
-        onNodeWithText("Share on Wi-Fi").performClick()
-        assertEquals(1, shared)
-    }
 
     @Test
     fun `Ask about this file is pinned at the bottom on the side margin`() = runComposeUiTest {
