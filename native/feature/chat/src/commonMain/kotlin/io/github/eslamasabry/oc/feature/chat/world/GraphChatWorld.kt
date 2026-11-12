@@ -1366,7 +1366,17 @@ internal class GraphChatWorld(
 
     override suspend fun loadModels(): Outcome<Unit> {
         val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
-        if (!a.gateway.capabilities.value.sessionModelProviderSwitching)
+        // PZ4: a server that cannot switch a conversation's runtime (Paseo) still offers that
+        // runtime's models; the list is only narrowed to it (Flutter `catalogForSession`). A new
+        // conversation not yet bound to a runtime offers all of them.
+        val runtime = boundRuntime(a.gateway)
+        // A non-switching server without a catalog of its own still has nothing to offer; any other
+        // failed read shows as the sheet's failure below (with its way to try again).
+        val early =
+            if (a.gateway.capabilities.value.sessionModelProviderSwitching) null
+            else (a.graph as ChatGraphAccessors).chatOperations.catalog()
+        if (currentAttached() !== a) return staleModels()
+        if (early is Outcome.Failed && early.failure is Failure.Unavailable)
             return Outcome.Failed(Failure.Unavailable(FeatureId("sessionModelProviderSwitching")))
         val epoch = selectionEpoch
         if (mutableModels.value.selected == null) {
@@ -1387,7 +1397,7 @@ internal class GraphChatWorld(
         }
         mutableModels.value = mutableModels.value.copy(loading = true, failure = null)
         val operations = (a.graph as ChatGraphAccessors).chatOperations
-        val catalog = operations.catalog()
+        val catalog = early ?: operations.catalog()
         if (currentAttached() !== a) return staleModels()
         if (catalog is Outcome.Failed) {
             mutableModels.value =
@@ -1405,6 +1415,7 @@ internal class GraphChatWorld(
         val seen = HashSet<Pair<String, String>>()
         for (m in snapshot.models) {
             if (m.providerId !in enabledProviders) continue
+            if (runtime != null && m.providerId != runtime) continue
             if (!seen.add(m.providerId to m.id)) continue
             // Safe display metadata only; raw provider config never leaves the catalog.
             choices +=
@@ -1567,6 +1578,14 @@ internal class GraphChatWorld(
         return result
     }
 
+    /**
+     * The runtime this conversation is bound to on a server that cannot switch it (Flutter
+     * `catalogForSession`); null where models of every runtime may be chosen.
+     */
+    private fun boundRuntime(gateway: ServerGateway): String? =
+        if (gateway.capabilities.value.sessionModelProviderSwitching) null
+        else gateway.facet<io.github.eslamasabry.oc.core.domain.AgentFeaturesGateway>()?.providerIdForSession(sid)
+
     /** A graph swapped mid-load owns the next load; this one publishes nothing new. */
     private fun staleModels(): Outcome<Unit> {
         mutableModels.value = mutableModels.value.copy(loading = false)
@@ -1668,7 +1687,9 @@ internal class GraphChatWorld(
         recordRecent: Boolean = true,
     ): Outcome<Unit> {
         val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
-        if (!a.gateway.capabilities.value.sessionModelProviderSwitching)
+        // PZ4: without runtime switching only the conversation's own runtime's models are offered.
+        val runtime = boundRuntime(a.gateway)
+        if (runtime != null && choice != null && choice.providerId != runtime)
             return Outcome.Failed(Failure.Unavailable(FeatureId("sessionModelProviderSwitching")))
         if (a.gateway.events.status.value != StreamStatus.Connected)
             return Outcome.Failed(Failure.Network(NetworkWhy.Offline))

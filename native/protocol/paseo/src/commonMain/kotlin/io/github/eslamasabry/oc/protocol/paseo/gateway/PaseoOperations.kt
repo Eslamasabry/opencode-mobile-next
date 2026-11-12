@@ -13,7 +13,67 @@ import io.github.eslamasabry.oc.core.model.VcsDiffMode
 import io.github.eslamasabry.oc.core.model.VersionControlFile
 import io.github.eslamasabry.oc.core.model.VersionControlHealth
 import io.github.eslamasabry.oc.core.model.WorktreeInfo
+import io.github.eslamasabry.oc.core.model.CatalogModel
+import io.github.eslamasabry.oc.core.model.CatalogProvider
+import io.github.eslamasabry.oc.core.model.CatalogSnapshot
+import io.github.eslamasabry.oc.core.model.CatalogVariant
+import io.github.eslamasabry.oc.core.model.ChatDefaults
+import io.github.eslamasabry.oc.core.model.ProvidersResponse
+import io.github.eslamasabry.oc.protocol.paseo.boolOrNull
+import io.github.eslamasabry.oc.protocol.paseo.numberOrNull
+import io.github.eslamasabry.oc.protocol.paseo.obj
+import io.github.eslamasabry.oc.protocol.paseo.objectOrNull
+import io.github.eslamasabry.oc.protocol.paseo.str
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.serialization.json.JsonObject
+
+/**
+ * [ProvidersResponse] as a catalog (Dart `_catalogModelFromProvider`): one row per runtime that can
+ * start, its models with their names, context window and thinking levels.
+ */
+internal fun paseoCatalog(providers: ProvidersResponse): CatalogSnapshot =
+    CatalogSnapshot(
+        providers =
+            providers.providers
+                .map { CatalogProvider(it.id, it.name, enabled = true, integrationId = null) }
+                .toImmutableList(),
+        models =
+            providers.providers
+                .flatMap { provider ->
+                    provider.modelIds.map { id ->
+                        val raw = provider.modelData[id] ?: JsonObject(emptyMap())
+                        CatalogModel(
+                            id = id,
+                            providerId = provider.id,
+                            name = raw.str("name") ?: id,
+                            family = null,
+                            enabled = true,
+                            status = "unknown",
+                            contextLimit =
+                                raw.obj("limit")?.get("context").numberOrNull()?.toInt() ?: 0,
+                            outputLimit = 0,
+                            reasoning = raw.obj("capabilities")?.get("reasoning").boolOrNull() == true,
+                            attachments = false,
+                            tools = true,
+                            variants =
+                                raw.obj("variants")
+                                    ?.mapNotNull { (variant, options) ->
+                                        options.objectOrNull()?.let {
+                                            CatalogVariant(variant, disabled = false, options = it)
+                                        }
+                                    }
+                                    .orEmpty()
+                                    .toImmutableList(),
+                            cost = null,
+                            releasedAtMs = null,
+                        )
+                    }
+                }
+                .toImmutableList(),
+        agents = persistentListOf(),
+    )
 
 /**
  * The Paseo half of the gateway pair's operations (Dart `PaseoGateway` as a ProductRepository
@@ -47,6 +107,22 @@ public class PaseoOperations(private val gateway: PaseoGateway) : ServerOperatio
         Outcome<ImmutableList<io.github.eslamasabry.oc.core.model.CommandInfo>> = gateway.laneCall {
         gateway.readCommands()
     }
+
+    // ---- CatalogGateway: the model sheet (PZ4)
+
+    /**
+     * The runtimes and models the daemon's provider snapshot offers, as Flutter's controller builds
+     * its fallback catalog from `providers` (lib/state/connection/catalog.dart `fallbackCatalog`).
+     * Without it the chat's "Choose a model" read nothing on a Paseo computer and stayed empty.
+     */
+    override suspend fun catalog(): Outcome<CatalogSnapshot> =
+        when (val read = gateway.providers()) {
+            is Outcome.Failed -> read
+            is Outcome.Ok -> Outcome.Ok(paseoCatalog(read.value))
+        }
+
+    /** The model a new conversation starts on when nobody picks one (the snapshot's default). */
+    override suspend fun chatDefaults(): Outcome<ChatDefaults> = gateway.chatDefaults()
 
     // ---- VcsGateway
 
